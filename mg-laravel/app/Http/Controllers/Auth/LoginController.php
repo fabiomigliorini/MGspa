@@ -43,17 +43,19 @@ class LoginController extends Controller
     public function authenticate(Request $request)
     {
         // grab credentials from the request
-        //$credentials = $request->only('email', 'password');
-        $credentials = $request->only('usuario', 'password');
+        $credentials = [
+          'usuario' => $request->usuario,
+          'password' => $request->senha,
+        ];
 
         try {
             // attempt to verify the credentials and create a token for the user
             if (! $token = JWTAuth::attempt($credentials)) {
-                return response()->json(['error' => 'invalid_credentials'], 401);
+                return response()->json(['mensagem' => 'Credenciais Inválidas'], 401);
             }
         } catch (JWTException $e) {
             // something went wrong whilst attempting to encode the token
-            return response()->json(['error' => 'could_not_create_token'], 500);
+            return response()->json(['mensagem' => 'impossivel_criar_token'], 500);
         }
 
         // all good so return the token
