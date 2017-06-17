@@ -64,14 +64,15 @@ class LoginController extends Controller
 
     public function check()
     {
-
+      //dd($_SERVER);
         try {
             JWTAuth::parseToken()->authenticate();
         } catch (JWTException $e) {
-            return response(['authenticated' => false]);
+
+            return response(['autenticado' => false]);
         }
 
-        return response(['authenticated' => true]);
+        return response(['autenticado' => true]);
     }
 
     public function logout()
