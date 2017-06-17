@@ -18,7 +18,7 @@
             <a class="nav-link" href="#">Profile</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Help</a>
+            <a class="nav-link" href="#" @click.prevent="logout()">Sair</a>
           </li>
         </ul>
         <form class="form-inline mt-2 mt-md-0">
@@ -35,8 +35,18 @@
 
 <script>
 export default {
-  name: 'app'
+  name: 'app',
+  methods: {
+    logout () {
+      var vm = this
+      this.axios.get('http://api.notmig01.teste/api/auth/logout').then(response => {
+        localStorage.removeItem('auth.token')
+        vm.$router.push('/Login')
+      })
+    }
+  }
 }
+
 </script>
 
 <style>
