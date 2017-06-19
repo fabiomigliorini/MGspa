@@ -31,7 +31,7 @@
 </template>
 
 <script>
-
+import axios from 'axios'
 export default {
 
   name: 'login',
@@ -50,7 +50,7 @@ export default {
     login: function (e) {
       var vm = this
       // Busca Autenticacao
-      this.axios.post('http://api.notmig01.teste/api/auth/login', {
+      axios.post('http://api.notmig01.teste/api/auth/login', {
         usuario: this.usuario,
         senha: this.senha
       }).then(response => {

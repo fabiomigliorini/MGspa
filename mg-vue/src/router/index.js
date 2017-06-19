@@ -3,7 +3,7 @@ import Router from 'vue-router'
 import Hello from '@/components/Hello'
 import BootstrapTest from '@/components/BootstrapTest'
 import Login from '@/components/Login'
-// import Axios from 'axios'
+import axios from 'axios'
 
 Vue.use(Router)
 
@@ -33,12 +33,12 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(m => m.meta.requerAutenticacao)) {
-    Vue.axios.get('http://api.notmig01.teste/api/auth/check').then(response => {
+    axios.get('http://api.notmig01.teste/api/auth/check').then(response => {
       if (!response.data.autenticado) {
         return next({ path: '/Login' })
       }
     }).catch(error => {
-      console.log(error)
+      console.log(error.response)
     })
   }
   return next()

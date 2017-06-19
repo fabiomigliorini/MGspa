@@ -34,12 +34,13 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'app',
   methods: {
     logout () {
       var vm = this
-      this.axios.get('http://api.notmig01.teste/api/auth/logout').then(response => {
+      axios.get('http://api.notmig01.teste/api/auth/logout').then(response => {
         localStorage.removeItem('auth.token')
         vm.$router.push('/Login')
       })
@@ -51,8 +52,7 @@ export default {
 
 <style>
 
-#app {
-}
+
 
 /*
  * Base structure
