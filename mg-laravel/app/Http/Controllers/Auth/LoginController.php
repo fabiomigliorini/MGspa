@@ -1,4 +1,4 @@
-<?php
+s<?php
 
 namespace App\Http\Controllers\Auth;
 
@@ -64,7 +64,6 @@ class LoginController extends Controller
 
     public function check()
     {
-      //dd($_SERVER);
         try {
             JWTAuth::parseToken()->authenticate();
         } catch (JWTException $e) {
