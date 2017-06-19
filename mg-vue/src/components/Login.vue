@@ -1,4 +1,4 @@
-<template>
+  <template>
   <div class="container">
     <br>
     <br>
@@ -55,8 +55,9 @@ export default {
         senha: this.senha
       }).then(response => {
         // salva token no Local Storage
-        // localStorage.setItem('auth.token', response.data.token)
-        console.log(response)
+        var token = response.data.token
+        localStorage.setItem('auth.token', token)
+        // console.log(response)
         vm.$router.push('/')
       }).catch(error => {
         // Mensagem de erro

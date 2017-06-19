@@ -13,15 +13,15 @@ Vue.config.productionTip = false
 Vue.use(VueAxios, axios)
 axios.defaults.headers.common = {
   'X-Requested-With': 'XMLHttpRequest'
+  // 'Authorization' : localStorage.getItem('auth.token') ? 'Bearer ' + localStorage.getItem('auth.token') : null
 }
 
 axios.interceptors.response.use(config => {
   const AUTH_TOKEN = localStorage.getItem('auth.token')
-  console.log(config)
+  console.log('token => ' + AUTH_TOKEN)
   if (AUTH_TOKEN) {
-    config.headers.push({
-      'Authorization': `Bearer ${AUTH_TOKEN}`
-    })
+    config.config.headers['Authorization'] = 'Bearer ' + AUTH_TOKEN
+    console.log('anexado => ' + JSON.stringify(config.config.headers))
   }
   return config
 }, error => {

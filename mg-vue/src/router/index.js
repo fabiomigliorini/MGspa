@@ -38,7 +38,7 @@ router.beforeEach((to, from, next) => {
         return next({ path: '/Login' })
       }
     }).catch(error => {
-      console.log(error.response)
+      console.log(error)
     })
   }
   return next()
