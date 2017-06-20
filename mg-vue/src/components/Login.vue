@@ -1,37 +1,51 @@
-  <template>
-  <div class="container">
-    <br>
-    <br>
-    <br>
-    <br>
-    <div id="login" class="col-md-4 offset-md-4" @submit.prevent="login()">
-      <form>
+<template>
+  <v-layout row class="layout-login">
+    <v-flex xs12 sm4 offset-sm4 lg3 offset-lg4>
+    <v-card id="card-login">
+        <v-card-text>
+          <form @submit.prevent="login()">
+          <v-container>
 
-        <!-- Usuario -->
-        <fieldset class="form-group" :class="{ 'has-danger': erro }">
-          <label class="form-control-label" for="usuario">Usuário</label>
-          <input type="text" class="form-control" id="usuario" name="usuario" v-model="usuario">
-        </fieldset>
+            <v-layout row>
+              <v-flex xl4 xs12>
+                <v-text-field
+                  name="usuario"
+                  label="Usuário"
+                  v-model="usuario"
+                  type="text"
+                ></v-text-field>
+              </v-flex>
+            </v-layout>
 
-        <!-- Senha -->
-        <fieldset class="form-group" :class="{ 'has-danger': erro }">
-          <label class="form-control-label" for="senha">Senha</label>
-          <input type="password" class="form-control" id="senha" name="senha" v-model="senha">
-          <div v-if="erro" class="form-control-feedback">
-            {{ mensagem }}
-          </div>
-        </fieldset>
+            <v-layout row>
+              <v-flex xl4 xs12>
+                <v-text-field
+                  name="senha"
+                  label="Senha"
+                  v-model="senha"
+                  type="password"
+                ></v-text-field>
+              </v-flex>
+            </v-layout>
 
-        <!-- Botao confirmar -->
-        <button type="submit" class="btn btn-default">Entrar</button>
+            <v-layout row>
+              <v-flex xl4 xs12>
+                <v-btn block light primary type="submit">
+                  entrar
+                  <v-icon right light>send</v-icon>
+                </v-btn>
+              </v-flex>
+            </v-layout>
 
-      </form>
-    </div>
-  </div>
+          </v-container>
+        </form>
+        </v-card-text>
+    </v-card>
+  </v-flex>
+  </v-layout>
 </template>
 
 <script>
-import axios from 'axios'
 export default {
 
   name: 'login',
@@ -50,7 +64,7 @@ export default {
     login: function (e) {
       var vm = this
       // Busca Autenticacao
-      axios.post('http://api.notmig01.teste/api/auth/login', {
+      window.axios.post('http://api.notmig01.teste/api/auth/login', {
         usuario: this.usuario,
         senha: this.senha
       }).then(response => {
@@ -72,6 +86,26 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
+.layout-login {
+  background-image: url("/static/imagens/fundo-login.jpg");
+  background-position: center center;
+  background-repeat:  no-repeat;
+  background-attachment: fixed;
+  background-size:  cover;
+  background-color: #999;
+  height: 100%;
+  /* border: 5px solid yellow; */
+  display: table-cell;
+  vertical-align: middle;
+}
 
+#app {
+  display: table;
+  width: 100%;
+}
+
+#card-login {
+  background-color: rgba(255, 255, 255, 0.9);
+}
 </style>

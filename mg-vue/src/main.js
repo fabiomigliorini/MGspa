@@ -1,19 +1,22 @@
-
+// Padrão Vue
 import Vue from 'vue'
-// import { HTTP } from 'http'
-import axios from 'axios'
 import App from './App'
 import router from './router'
 
 Vue.config.productionTip = false
 
-window._ = require('lodash')
-// window.axios = require('axios')
-// axios.defaults.headers.common = {
-//   'X-Requested-With': 'XMLHttpRequest'
-// }
+// Vuetify
+import Vuetify from 'vuetify'
+import 'vuetify/dist/vuetify.min.css'
+import 'material-design-icons/iconfont/material-icons.css'
+Vue.use(Vuetify)
 
-axios.interceptors.request.use(function (config) {
+// Precisamos descobrir o que é
+window._ = require('lodash')
+
+// Axios
+import Axios from 'axios'
+Axios.interceptors.request.use(function (config) {
   const AUTH_TOKEN = localStorage.getItem('auth.token')
 
   if (AUTH_TOKEN) {
@@ -24,19 +27,9 @@ axios.interceptors.request.use(function (config) {
 }, function (error) {
   return Promise.reject(error)
 })
+window.axios = Axios
 
-// axios.interceptors.response.use(config => {
-//   const AUTH_TOKEN = localStorage.getItem('auth.token')
-//   console.log('token => ' + AUTH_TOKEN)
-//   if (AUTH_TOKEN) {
-//     config.config.headers['Authorization'] = 'Bearer ' + AUTH_TOKEN
-//     console.log('anexado => ' + JSON.stringify(config.config.headers))
-//   }
-//   return config
-// }, error => {
-//   return error
-// })
-
+// Inciializa Vue
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
