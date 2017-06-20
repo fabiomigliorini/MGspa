@@ -29,6 +29,6 @@ Route::group(['middleware'=>['cors', 'auth:api']], function () {
 
   // Usuários
   Route::resource('usuarios', 'UsuarioController');
-  Route::resource('marcas', 'MarcaController');
 
 });
+Route::resource('marcas', 'MarcaController');
