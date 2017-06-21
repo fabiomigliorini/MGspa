@@ -64,7 +64,7 @@ export default {
     login: function (e) {
       var vm = this
       // Busca Autenticacao
-      window.axios.post('http://api.notmig01.teste/api/auth/login', {
+      window.axios.post('auth/login', {
         usuario: this.usuario,
         senha: this.senha
       }).then(response => {

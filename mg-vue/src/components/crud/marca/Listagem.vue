@@ -87,7 +87,7 @@ export default {
       var params = this.filtro
       params.page = this.pagina
       this.carregando = true
-      window.axios.get('http://api.notmig01.teste/api/marcas', {params}).then(response => {
+      window.axios.get('marcas', {params}).then(response => {
         vm.marca = vm.marca.concat(response.data.data)
         this.fim = (response.data.current_page >= response.data.last_page)
         this.carregando = false

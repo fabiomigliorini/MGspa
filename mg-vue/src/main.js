@@ -16,7 +16,11 @@ window._ = require('lodash')
 
 // Axios
 import Axios from 'axios'
-Axios.interceptors.request.use(function (config) {
+window.axios = Axios.create({
+  baseURL: 'http://api.escmig05.teste/api/',
+  'X-Requested-With': 'XMLHttpRequest'
+})
+window.axios.interceptors.request.use(function (config) {
   const AUTH_TOKEN = localStorage.getItem('auth.token')
 
   if (AUTH_TOKEN) {
@@ -27,7 +31,6 @@ Axios.interceptors.request.use(function (config) {
 }, function (error) {
   return Promise.reject(error)
 })
-window.axios = Axios
 
 // Inciializa Vue
 /* eslint-disable no-new */
