@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Hello from '@/components/Hello'
-import BootstrapTest from '@/components/BootstrapTest'
 import VuetifyTest from '@/components/VuetifyTest'
+import MarcaListagem from '@/components/crud/marca/Listagem'
 import Login from '@/components/Login'
 
 Vue.use(Router)
@@ -20,15 +20,15 @@ const routes = [
     component: Login
   },
   {
-    path: '/bootstrap-test',
-    name: 'BootstrapTest',
-    component: BootstrapTest,
-    meta: { requerAutenticacao: true }
-  },
-  {
     path: '/vuetify-test',
     name: 'VuetifyTest',
     component: VuetifyTest,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/marca',
+    name: 'MarcaListagem',
+    component: MarcaListagem,
     meta: { requerAutenticacao: true }
   }
 ]

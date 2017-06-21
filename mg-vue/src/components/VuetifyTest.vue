@@ -5,7 +5,7 @@
       <v-navigation-drawer persistent clipped v-model="drawer" light enable-resize-watcher>
         <v-list dense>
           <v-list-item>
-            <v-list-tile @click.native.stop="left = !left">
+            <v-list-tile>
               <v-list-tile-action>
                 <v-icon>exit_to_app</v-icon>
               </v-list-tile-action>
@@ -21,7 +21,7 @@
       <v-navigation-drawer temporary v-model="drawerRight" right>
         <v-list dense>
           <v-list-item>
-            <v-list-tile @click.native.stop="right = !right">
+            <v-list-tile>
               <v-list-tile-action>
                 <v-icon>exit_to_app</v-icon>
               </v-list-tile-action>
@@ -34,7 +34,7 @@
       </v-navigation-drawer>
 
       <!-- menu superior - titulo -->
-      <v-toolbar class="yellow">
+      <v-toolbar fixed class="yellow">
 
         <!-- botão menu esquerda -->
         <v-toolbar-side-icon @click.native.stop="drawer = !drawer" v-tooltip:bottom="{ html: 'Opções'}"></v-toolbar-side-icon>
@@ -67,23 +67,108 @@
       </v-toolbar>
 
       <main>
-        <v-navigation-drawer
-          temporary
-          v-model="left"
-        ></v-navigation-drawer>
         <v-container fluid>
           asdasd
+          <v-fab error @click.native.stop="testeFab()">
+            <v-icon light>add</v-icon>
+          </v-fab>
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <hr>
+          teste
+          <!--
+          <v-btn error floating id="btn-adicionar">
+            <v-icon light>add</v-icon>
+          </v-btn>
+        -->
           <!--v-router-->
         </v-container>
-        <v-navigation-drawer
-          right
-          temporary
-          v-model="right"
-        ></v-navigation-drawer>
       </main>
 
 
-      <v-footer class="yellow">
+      <v-footer fixed class="yellow">
         <span class="black--text">© 2017</span>
       </v-footer>
     </v-app>
@@ -94,9 +179,7 @@
     data () {
       return {
         drawer: true,
-        drawerRight: false,
-        right: null,
-        left: null
+        drawerRight: false
       }
     },
     methods: {
@@ -106,6 +189,10 @@
           localStorage.removeItem('auth.token')
           vm.$router.push('/Login')
         })
+      },
+
+      testeFab () {
+        console.log('aqui no fab')
       }
     }
   }
@@ -113,4 +200,9 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+  #btn-adicionar {
+    position: fixed;
+    bottom: 50px;
+    right: 15px
+  }
 </style>
