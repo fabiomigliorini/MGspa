@@ -41,6 +41,7 @@ class MarcaController extends Controller
           break;
 
         case 'marca':
+        default:
           $qry->orderBy('marca', 'ASC');
           break;
 
