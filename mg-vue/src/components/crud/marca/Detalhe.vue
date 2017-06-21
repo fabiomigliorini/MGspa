@@ -15,10 +15,17 @@
           <v-card-text>
             <v-container fluid>
                 <h4>{{ dados.marca }}</h4>
+                <p><strong>CodOpencart:</strong> {{ dados.codopencart }}</p>
+                <p><strong>Disponível no site:</strong> {{ dados.site ? 'Sim':'Não' }}</p>
+                <p><strong>Descrição do site:</strong> {{ dados.descricaosite }}</p>
+
+                <span v-if="dados.alteracao != null">
+                  Alteração {{ dados.alteracao }}
+                </span>
+
             </v-container>
           </v-card-text>
         </v-card>
-
       <v-fab error router :to="{ path: '/marca/' + dados.codmarca + '/editar' }" style="bottom:190px">
         <v-icon light>mode_edit</v-icon>
       </v-fab>

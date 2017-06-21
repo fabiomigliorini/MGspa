@@ -21,6 +21,7 @@
                       name="input-2"
                       label="Marca"
                       v-model="dados.marca"
+                      required
                       autofocus
                     ></v-text-field>
                   </v-flex>
@@ -36,8 +37,8 @@
                       name="descricaosite"
                       label="Descricão site"
                       multi-line
-                      v-model="dados.descricaosite"
-                    ></v-text-field>
+                      v-model="dados.descricaosite">
+                    </v-text-field>
                   </v-flex>
                 </v-layout>
                 <v-layout row>

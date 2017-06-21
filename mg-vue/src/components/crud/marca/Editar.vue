@@ -22,6 +22,7 @@
                       label="Marca"
                       v-model="dados.marca"
                       autofocus
+                      required
                     ></v-text-field>
                   </v-flex>
                 </v-layout>
