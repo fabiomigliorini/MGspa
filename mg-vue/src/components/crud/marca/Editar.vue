@@ -24,25 +24,13 @@
                       autofocus
                       required
                     ></v-text-field>
-                  </v-flex>
-                </v-layout>
-                <v-layout row>
-                  <v-flex xs12>
                     <v-checkbox label="Site" v-model="dados.site"></v-checkbox>
-                  </v-flex>
-                </v-layout>
-                <v-layout row>
-                  <v-flex xs12>
                     <v-text-field
                       name="descricaosite"
                       label="Descricão site"
                       multi-line
                       v-model="dados.descricaosite"
                     ></v-text-field>
-                  </v-flex>
-                </v-layout>
-                <v-layout row>
-                  <v-flex xs12>
                     <v-btn type="submit" primary light>Salvar</v-btn>
                   </v-flex>
                 </v-layout>

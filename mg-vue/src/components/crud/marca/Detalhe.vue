@@ -2,7 +2,7 @@
   <mg-layout>
 
     <div slot="titulo">
-      Marcas - {{ dados.marca }}
+      {{ dados.marca }}
     </div>
 
     <div slot="menu">
@@ -16,17 +16,20 @@
             <v-container fluid>
               <v-layout row wrap>
                 <v-flex sm6>
-                  <h4>{{ dados.marca }}</h4>
-                  <p><strong>CodOpencart:</strong> {{ dados.codopencart }}</p>
-                  <p><strong>Disponível no site:</strong> {{ dados.site ? 'Sim':'Não' }}</p>
-                  <p><strong>Descrição do site:</strong> {{ dados.descricaosite }}</p>
-                  <span v-if="dados.alteracao != null">
-                    Alteração {{ dados.alteracao }}
-                  </span>
-                </v-flex>
-                <v-flex sm6>
                   <img v-if="dados.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ dados.codimagem + '.jpg'" width="100%">
                   <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'" width="100%">
+                </v-flex>
+                <v-flex sm6>
+                  <dl>
+                      <dt>Código OpenCart</dt>
+                      <dd>{{ dados.codopencart }}</dd>
+
+                      <dt>Site:</dt>
+                      <dd>{{ dados.site ? 'Disponível no Site':'Não Disponível' }}</dd>
+
+                      <dt v-if="dados.descricaosite">Descrição Site:</dt>
+                      <dd v-if="dados.descricaosite" style="white-space: pre;">{{ dados.descricaosite }}</dd>
+                  </dl>
                 </v-flex>
               </v-layout>
             </v-container>
@@ -90,4 +93,14 @@ export default {
 </script>
 
 <style scoped>
+  dt {
+    font-size: 0.8em;
+    color: grey;
+  }
+  dd {
+    margin-bottom: 7px;
+    font-weight: 300;
+  }
+
+
 </style>

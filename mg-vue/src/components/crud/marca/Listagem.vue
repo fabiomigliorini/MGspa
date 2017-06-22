@@ -1,5 +1,5 @@
 <template>
-  <mg-layout>
+  <mg-layout menu>
 
     <div slot="titulo">
       Marcas
@@ -24,20 +24,44 @@
        <v-list two-line>
         <template v-for="item in marca">
           <transition name="component-fade">
-          <v-list-item v-bind:key="item.codmarca">
-            <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }">
-              <v-list-tile-avatar>
-                <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
-                <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
-                <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'">
-              </v-list-tile-avatar>
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title v-html="item.marca"></v-list-tile-title>
-                <v-list-tile-sub-title v-html="item.alteracao"></v-list-tile-sub-title>
-              </v-list-tile-content>
-            </v-list-tile>
-          </v-list-item>
+            <v-list-item v-bind:key="item.codmarca">
+              <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }">
+                <v-list-tile-avatar>
+                  <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
+                  <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
+                  <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'">
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                  <v-list-tile-title>
+                    {{ item.marca }}
+                  </v-list-tile-title>
+                  <v-list-tile-sub-title>
+                    #{{ item.codmarca }}
+                  </v-list-tile-sub-title>
+                </v-list-tile-content>
+                <v-list-tile-content class="hidden-sm-and-down">
+                  <v-list-tile-sub-title>
+                    5 abaixo do mínimo /
+                    2 acima do máximo
+                  </v-list-tile-sub-title>
+                  <v-list-tile-sub-title>
+                    25/dez/16 Última compra
+                  </v-list-tile-sub-title>
+                </v-list-tile-content>
+                <v-list-tile-content>
+                  <v-list-tile-title class="text-xs-right">
+                    <v-icon class="yellow--text text--darken-3">star</v-icon>
+                    <v-icon class="yellow--text text--darken-3">star</v-icon>
+                    <v-icon class="grey--text text--lighten-1">star_border</v-icon>
+                  </v-list-tile-title>
+                  <v-list-tile-sub-title class="text-xs-right">
+                    #1
+                  </v-list-tile-sub-title>
+                </v-list-tile-content>
+              </v-list-tile>
+              <v-divider></v-divider>
+            </v-list-item>
+
           </transition>
         </template>
       </v-list>
