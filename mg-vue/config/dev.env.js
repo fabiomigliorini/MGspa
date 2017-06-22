@@ -3,5 +3,5 @@ var prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  SERVER: '"http://api.escmig05.teste/api/"'
+  API_BASE_URL: '"http://api.escmig98.teste/api/"'
 })

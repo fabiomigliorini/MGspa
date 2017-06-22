@@ -185,7 +185,7 @@
     methods: {
       logout () {
         var vm = this
-        window.axios.get('http://api.notmig01.teste/api/auth/logout').then(response => {
+        window.axios.get('auth/logout').then(response => {
           localStorage.removeItem('auth.token')
           vm.$router.push('/Login')
         })

@@ -17,7 +17,7 @@ window._ = require('lodash')
 // Axios
 import Axios from 'axios'
 window.axios = Axios.create({
-  baseURL: 'http://api.escmig05.teste/api/',
+  baseURL: process.env.API_BASE_URL,
   'X-Requested-With': 'XMLHttpRequest'
 })
 window.axios.interceptors.request.use(function (config) {
