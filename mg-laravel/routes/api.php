@@ -22,7 +22,7 @@ Route::group(['prefix' => 'auth'], function () {
 //    return $request->user();
 //});
 
-Route::group(['middleware'=>['cors', 'auth:api']], function () {
+Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
   Route::get('/user', function (Request $request) {
       return $request->user();
   })->middleware('auth:api');
@@ -30,5 +30,5 @@ Route::group(['middleware'=>['cors', 'auth:api']], function () {
   // Usuários
   Route::resource('usuarios', 'UsuarioController');
 
+  Route::resource('marcas', 'MarcaController');
 });
-Route::resource('marcas', 'MarcaController');

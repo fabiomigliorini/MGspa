@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 use Illuminate\Http\Request;
 use JWTAuth;
@@ -22,24 +21,6 @@ class LoginController extends Controller
     |
     */
 
-    #use AuthenticatesUsers;
-
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    #protected $redirectTo = '/home';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    #public function __construct()
-    #{
-    #    $this->middleware('guest')->except('logout');
-    #}
     public function authenticate(Request $request)
     {
         // grab credentials from the request
@@ -51,11 +32,11 @@ class LoginController extends Controller
         try {
             // attempt to verify the credentials and create a token for the user
             if (! $token = JWTAuth::attempt($credentials)) {
-                return response()->json(['mensagem' => 'Credenciais Inválidas'], 401);
+                return response()->json(['mensagem' => 'Usuário ou senha inválido(a)'], 401);
             }
         } catch (JWTException $e) {
             // something went wrong whilst attempting to encode the token
-            return response()->json(['mensagem' => 'impossivel_criar_token'], 500);
+            return response()->json(['mensagem' => 'Erro ao cria Token'], 500);
         }
 
         // all good so return the token
@@ -85,10 +66,9 @@ class LoginController extends Controller
             }
 
         } catch (JWTException $e) {
-            return response()->json($e->getMessage(), 401);
+            return response()->json(['mensagem' => $e->getMessage()], 401);
         }
 
-        return response()->json(['message' => 'Log out success'], 200);
+        return response()->json(['mensagem' => 'Logout realizado com sucesso!'], 200);
     }
-
 }
