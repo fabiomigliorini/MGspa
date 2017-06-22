@@ -6,6 +6,7 @@ import MarcaListagem from '@/components/crud/marca/Listagem'
 import MarcaNova from '@/components/crud/marca/Nova'
 import MarcaDetalhe from '@/components/crud/marca/Detalhe'
 import MarcaEditar from '@/components/crud/marca/Editar'
+import MarcaImagem from '@/components/crud/marca/Imagem'
 import Login from '@/components/Login'
 
 Vue.use(Router)
@@ -50,6 +51,12 @@ const routes = [
     path: '/marca/:id/editar',
     name: 'marca-editar',
     component: MarcaEditar,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/marca/:id/imagem',
+    name: 'marca-imagem',
+    component: MarcaImagem,
     meta: { requerAutenticacao: true }
   }
 ]

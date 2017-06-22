@@ -27,7 +27,10 @@
           <v-list-item v-bind:key="item.codmarca">
             <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }">
               <v-list-tile-avatar>
-                <img src="https://www.logotipo.pt/wp-content/uploads/2016/09/logotipo-gratis-1-344x245.png"></v-list-tile-avatar>
+                <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
+                <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
+                <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'">
+              </v-list-tile-avatar>
               </v-list-tile-avatar>
               <v-list-tile-content>
                 <v-list-tile-title v-html="item.marca"></v-list-tile-title>
