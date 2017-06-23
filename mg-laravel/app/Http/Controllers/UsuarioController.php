@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Usuario;
+use App\Repositories\UsuarioRepository as Repository;
 
 class UsuarioController extends Controller
 {
@@ -12,10 +13,18 @@ class UsuarioController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $model = Usuario::paginate(15);
-        return $model;
+        $parametros = $request->all();
+
+        $data = Repository::search($parametros)
+            ->orderBy('usuario', 'ASC')
+            ->paginate(20);
+
+        return response()->json(
+            $data,
+            200
+        );
     }
 
     /**
@@ -47,7 +56,13 @@ class UsuarioController extends Controller
      */
     public function show($id)
     {
-        //
+        Repository::authorize('view');
+        $data = Repository::findOrFail($id);
+
+        return response()->json(
+            $data,
+            200
+        );
     }
 
     /**
