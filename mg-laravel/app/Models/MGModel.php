@@ -17,12 +17,12 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class MGModel extends Model {
 
-
+    
     const CREATED_AT = 'criacao';
     const UPDATED_AT = 'alteracao';
-
+    
     public $timestamps = true;
-
+    
     public static function boot()
     {
         parent::boot();
@@ -33,13 +33,13 @@ abstract class MGModel extends Model {
                 $model->attributes['codusuarioalteracao'] = Auth::user()->codusuario;
             }
         });
-
+        
         static::updating(function($model) {
             if (Auth::user() !== NULL) {
                 $model->attributes['codusuarioalteracao'] = Auth::user()->codusuario;
             }
         });
-
+        
         static::saving(function($model) {
             foreach ($model->toArray() as $fieldName => $fieldValue) {
                 if ( $fieldValue === '' ) {
@@ -49,15 +49,15 @@ abstract class MGModel extends Model {
             return true;
         });
     }
-
+    
     public function scopeAtivo($query) {
         $query->whereNull("{$this->table}.inativo");
     }
-
+    
     public function scopeInativo($query) {
         $query->whereNotNull("{$this->table}.inativo");
     }
-
+    
     public function scopePalavras($query, $campo, $palavras) {
         foreach(explode(' ', trim($palavras)) as $palavra) {
             if (!empty($palavra)) {
@@ -65,5 +65,5 @@ abstract class MGModel extends Model {
             }
         }
     }
-
+    
 }

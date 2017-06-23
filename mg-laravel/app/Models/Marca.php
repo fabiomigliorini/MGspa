@@ -5,13 +5,13 @@ namespace App\Models;
 /**
  * Campos
  * @property  bigint                         $codmarca                           NOT NULL DEFAULT nextval('tblmarca_codmarca_seq'::regclass)
- * @property  varchar(50)                    $marca
+ * @property  varchar(50)                    $marca                              
  * @property  boolean                        $site                               NOT NULL DEFAULT false
- * @property  varchar(1024)                  $descricaosite
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
+ * @property  varchar(1024)                  $descricaosite                      
+ * @property  timestamp                      $alteracao                          
+ * @property  bigint                         $codusuarioalteracao                
+ * @property  timestamp                      $criacao                            
+ * @property  bigint                         $codusuariocriacao                  
  *
  * Chaves Estrangeiras
  * @property  Usuario                        $UsuarioAlteracao
@@ -39,20 +39,20 @@ class Marca extends MGModel
     ];
 
     public function validate() {
-
+        
         $this->_regrasValidacao = [
-            'marca' => 'required|min:1',
+            'marca' => 'required|min:1', 
         ];
-
+    
         $this->_mensagensErro = [
             'marca.required' => 'O campo Marca não pode ser vazio',
             'marca.min' => 'O campo Marca deve ter mais de 1 caracteres',
         ];
-
+        
         return parent::validate();
-
+        
     }
-
+    
     // Chaves Estrangeiras
     public function UsuarioAlteracao()
     {
@@ -63,7 +63,7 @@ class Marca extends MGModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
+    
     public function Imagem()
     {
         return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
@@ -83,7 +83,7 @@ class Marca extends MGModel
     public static function search($parametros)
     {
         $query = Marca::query();
-
+        
         if (!empty($parametros['codmarca'])) {
             $query->where('codmarca', $parametros['codmarca']);
         }
@@ -103,7 +103,7 @@ class Marca extends MGModel
             case 9; //Todos
             default:
         }
-
+        
         return $query;
     }
 
@@ -111,7 +111,7 @@ class Marca extends MGModel
     {
         if (trim($marca) === '')
             return;
-
+        
         $marca = explode(' ', $marca);
         foreach ($marca as $str) {
             $query->where('marca', 'ILIKE', "%$str%");
@@ -127,5 +127,5 @@ class Marca extends MGModel
     {
         $query->whereNull('inativo');
     }
-
+    
 }

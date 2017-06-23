@@ -6,35 +6,35 @@ namespace App\Models;
  * Campos
  * @property  bigint                         $codusuario                         NOT NULL DEFAULT nextval('tblusuario_codusuario_seq'::regclass)
  * @property  varchar(50)                    $usuario                            NOT NULL
- * @property  varchar(100)                   $senha
- * @property  bigint                         $codecf
- * @property  bigint                         $codfilial
+ * @property  varchar(100)                   $senha                              
+ * @property  bigint                         $codecf                             
+ * @property  bigint                         $codfilial                          
  * @property  bigint                         $codoperacao                        NOT NULL
- * @property  bigint                         $codpessoa
- * @property  varchar(100)                   $impressoratelanegocio
- * @property  bigint                         $codportador
- * @property  varchar(50)                    $impressoratermica
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  timestamp                      $ultimoacesso
- * @property  date                           $inativo
- * @property  varchar(50)                    $impressoramatricial
- * @property  varchar(100)                   $remember_token
+ * @property  bigint                         $codpessoa                          
+ * @property  varchar(100)                   $impressoratelanegocio              
+ * @property  bigint                         $codportador                        
+ * @property  varchar(50)                    $impressoratermica                  
+ * @property  timestamp                      $alteracao                          
+ * @property  bigint                         $codusuarioalteracao                
+ * @property  timestamp                      $criacao                            
+ * @property  bigint                         $codusuariocriacao                  
+ * @property  timestamp                      $ultimoacesso                       
+ * @property  date                           $inativo                            
+ * @property  varchar(50)                    $impressoramatricial                
+ * @property  varchar(100)                   $remember_token                     
  *
  * Chaves Estrangeiras
- * @property  Ecf                            $Ecf
- * @property  Filial                         $Filial
- * @property  Operacao                       $Operacao
- * @property  Pessoa                         $Pessoa
- * @property  Portador                       $Portador
+ * @property  Ecf                            $Ecf                           
+ * @property  Filial                         $Filial                        
+ * @property  Operacao                       $Operacao                      
+ * @property  Pessoa                         $Pessoa                        
+ * @property  Portador                       $Portador                      
  * @property  Usuario                        $UsuarioAlteracao
  * @property  Usuario                        $UsuarioCriacao
  *
  * Tabelas Filhas
  * @property  GrupoUsuarioUsuario[]          $GrupoUsuarioUsuarioS
- *
+ * 
  * @property  Cest[]                         $CestAlteracaoS
  * @property  Cest[]                         $CestCriacaoS
  * @property  EstoqueLocal[]                 $EstoqueLocalAlteracaoS
@@ -208,6 +208,7 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use App\Models\MGModel;
 
 
 class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswordContract
@@ -229,7 +230,7 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
         'impressoramatricial',
         'remember_token',
     ];
-
+    
     protected $dates = [
         'alteracao',
         'criacao',
@@ -238,34 +239,34 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     ];
 
     protected $hidden = ['senha', 'remember_token'];
-
-
+    
+    
     public function validate() {
-
+        
     	if ($this->codusuario)
     		$unique_usuario = "unique:tblusuario,usuario,$this->codusuario,codusuario|required|min:2";
     	else
-    		$unique_usuario = "unique:tblusuario,usuario|required|min:2";
-
+    		$unique_usuario = "unique:tblusuario,usuario|required|min:2";    	
+    	
         $this->_regrasValidacao = [
-            'usuario' => $unique_usuario,
-            'senha' => 'required_if:codusuario,null|min:6',
-            'impressoramatricial' => 'required',
-            'impressoratermica' => 'required',
+            'usuario' => $unique_usuario, 
+            'senha' => 'required_if:codusuario,null|min:6', 
+            'impressoramatricial' => 'required', 
+            'impressoratermica' => 'required', 
         ];
-
+    
         $this->_mensagensErro = [
             'usuario.required' => 'O campo usuário não pode ser vazio',
             'usuario.min' => 'O campo usuário deve ter mais de 2 caracteres',
         ];
-
+        
         return parent::validate();
     }
 
     public function getAuthPassword(){
         return $this->senha;
     }
-
+    
     // Chaves Estrangeiras
     public function Filial()
     {
@@ -291,14 +292,14 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
+    
 
     // Tabelas Filhas
     public function GrupoUsuarioUsuarioS()
     {
         return $this->hasMany(GrupoUsuarioUsuario::class, 'codusuario', 'codusuario');
     }
-
+    
     public function CestAlteracaoS()
     {
         return $this->hasMany(Cest::class, 'codusuario', 'codusuarioalteracao');
@@ -338,7 +339,7 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     {
         return $this->hasMany(EstoqueMovimento::class, 'codusuario', 'codusuariocriacao');
     }
-
+    
     public function EstoqueSaldoConferenciaAlteracaoS()
     {
         return $this->hasMany(EstoqueSaldoConferencia::class, 'codusuario', 'codusuarioalteracao');
@@ -357,7 +358,7 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     public function FamiliaProdutoCriacaoS()
     {
         return $this->hasMany(FamiliaProduto::class, 'codusuario', 'codusuarioalteracao');
-    }
+    }    
 
     public function GrupoUsuarioAlteracaoS()
     {
@@ -1083,7 +1084,7 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     {
         return $this->hasMany(UnidadeMedida::class, 'codusuario', 'codusuariocriacao');
     }
-
+    
     public function MetaCriacaoS()
     {
         return $this->hasMany(Meta::class, 'codusuario', 'codusuarioalteracao');
@@ -1112,7 +1113,7 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     public function MetaFilialPessoaAlteracaoS()
     {
         return $this->hasMany(MetaFilialPessoa::class, 'codusuario', 'codusuariocriacao');
-    }
+    }    
 
     public function CargoCriacaoS()
     {
@@ -1122,8 +1123,8 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     public function CargoAlteracaoS()
     {
         return $this->hasMany(Cargo::class, 'codusuario', 'codusuariocriacao');
-    }
-
+    }    
+    
     public function UsuarioAlteracaoS()
     {
         return $this->hasMany(Usuario::class, 'codusuario', 'codusuarioalteracao');
@@ -1133,11 +1134,11 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     {
         return $this->hasMany(Usuario::class, 'codusuario', 'codusuariocriacao');
     }
-
+    
     public function can($permissao = null, $codfilial = null)
     {
         $query = Permissao::where('permissao', $permissao);
-
+            
         $query->join('tblgrupousuariopermissao', 'tblgrupousuariopermissao.codpermissao', '=', 'tblpermissao.codpermissao')
             ->join('tblgrupousuariousuario', 'tblgrupousuariousuario.codgrupousuario', '=', 'tblgrupousuariopermissao.codgrupousuario')
             ->where('tblgrupousuariousuario.codusuario', $this->codusuario);
@@ -1150,5 +1151,5 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
 
         return $count > 0;
     }
-
+    
 }
