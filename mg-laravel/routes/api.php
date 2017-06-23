@@ -13,18 +13,19 @@ use Illuminate\Http\Request;
 |
 */
 Route::group(['prefix' => 'auth'], function () {
-    Route::post('login','Auth\LoginController@authenticate');
-    Route::get('logout','Auth\LoginController@logout');
-    Route::get('check','Auth\LoginController@check');
+    Route::post('login', 'Auth\LoginController@authenticate');
+    Route::get('logout', 'Auth\LoginController@logout');
+    Route::get('check', 'Auth\LoginController@check');
 });
 
 Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
-  Route::get('/user', function (Request $request) {
-      return $request->user();
-  })->middleware('auth:api');
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    })->middleware('auth:api');
 
-  // Usuários
-  Route::resource('usuarios', 'UsuarioController');
-
-  Route::resource('marcas', 'MarcaController');
+    // Usuários
+    Route::resource('usuarios', 'UsuarioController');
+    Route::resource('marcas', 'MarcaController');
 });
+
+Route::get('permissao', 'PermissaoController@index');

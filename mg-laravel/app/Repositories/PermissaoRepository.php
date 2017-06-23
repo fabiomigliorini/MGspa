@@ -1,59 +1,54 @@
 <?php
 
 namespace App\Repositories;
-    
-use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Gate;
 
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 use App\Models\Permissao;
 
 /**
  * Description of PermissaoRepository
- * 
- * @property Validator $validator
- * @property Permissao $model
+ *
  */
-class PermissaoRepository extends MGRepository {
-    
-    public function boot() {
-        $this->model = new Permissao();
-    }
-    
-    //put your code here
-    public function validate($data = null, $id = null) {
-        
+class PermissaoRepository extends MGRepositoryStatic
+{
+    public static $modelClass = 'Permissao';
+
+    public static function validate($model = null, array $data = null, &$errors)
+    {
         if (empty($data)) {
+            if (empty($model)) {
+                return false;
+            }
             $data = $model->getAttributes();
         }
-        
-        if (empty($id)) {
-            $id = $model->codpermissao;
-        }
-        
-        $this->validator = Validator::make($data, [
-            // ...
+
+        $id = $data['codpermissao']??$model->codpermissao??null;
+
+        $validator = Validator::make($data, [
+            'permissao' => [
+                'required',
+                Rule::unique('tblpermissao')->ignore($id, 'codpermissao')
+            ],
         ], [
-            //...
+            'permissao.required' => 'O campo Permissao não pode ser vazio',
+            'permissao.unique' => 'Esta Permissao já esta cadastrada',
         ]);
 
-        return $this->validator->passes();
-        
-    }
-    
-    public function used($id = null) {
-        if (!empty($id)) {
-            $this->findOrFail($id);
+        if (!$validator->passes()) {
+            $errors = $validator->errors()->all();
+            return false;
         }
-        if ($this->model->GrupoUsuario->count() > 0) {
-            return 'Permissão sendo utilizada em Grupo Usuario!';
+
+        return true;
+    }
+
+    public static function used($model)
+    {
+        if ($model->GrupoUsuario->count() > 0) {
+            return 'Permissão já anexada para um Grupo de Usuários!';
         }
         return false;
     }
-    
-    public function listing($filters = [], $sort = [], $start = null, $length = null) {
-        
-    }
-    
 }

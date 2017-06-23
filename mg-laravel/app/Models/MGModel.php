@@ -7,6 +7,7 @@
  */
 
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,55 +16,58 @@ use Illuminate\Support\Facades\Auth;
  *
  * @author escmig05
  */
-abstract class MGModel extends Model {
+abstract class MGModel extends Model
+{
+    protected $perPage = 50;
 
-    
     const CREATED_AT = 'criacao';
     const UPDATED_AT = 'alteracao';
-    
+
     public $timestamps = true;
-    
+
     public static function boot()
     {
         parent::boot();
 
-        static::creating(function($model) {
-            if (Auth::user() !== NULL) {
+        static::creating(function ($model) {
+            if (Auth::user() !== null) {
                 $model->attributes['codusuariocriacao'] = Auth::user()->codusuario;
                 $model->attributes['codusuarioalteracao'] = Auth::user()->codusuario;
             }
         });
-        
-        static::updating(function($model) {
-            if (Auth::user() !== NULL) {
+
+        static::updating(function ($model) {
+            if (Auth::user() !== null) {
                 $model->attributes['codusuarioalteracao'] = Auth::user()->codusuario;
             }
         });
-        
-        static::saving(function($model) {
+
+        static::saving(function ($model) {
             foreach ($model->toArray() as $fieldName => $fieldValue) {
-                if ( $fieldValue === '' ) {
+                if ($fieldValue === '') {
                     $model->attributes[$fieldName] = null;
                 }
             }
             return true;
         });
     }
-    
-    public function scopeAtivo($query) {
+
+    public function scopeAtivo($query)
+    {
         $query->whereNull("{$this->table}.inativo");
     }
-    
-    public function scopeInativo($query) {
+
+    public function scopeInativo($query)
+    {
         $query->whereNotNull("{$this->table}.inativo");
     }
-    
-    public function scopePalavras($query, $campo, $palavras) {
-        foreach(explode(' ', trim($palavras)) as $palavra) {
+
+    public function scopePalavras($query, $campo, $palavras)
+    {
+        foreach (explode(' ', trim($palavras)) as $palavra) {
             if (!empty($palavra)) {
                 $query->where($campo, 'ilike', "%$palavra%");
             }
         }
     }
-    
 }

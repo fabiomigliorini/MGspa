@@ -7,6 +7,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -29,7 +30,7 @@ class Handler extends ExceptionHandler
      *
      * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
      *
-     * @param  \Exception  $exception
+     *▶ @param  \Exception  $exception
      * @return void
      */
     public function report(Exception $exception)
@@ -54,6 +55,12 @@ class Handler extends ExceptionHandler
             return response()->json(['mensagem' => 'Página não encontrada'], 404);
         }
 
+        if ($e instanceof HttpException) {
+            if ($e->getStatusCode() == 403) {
+                return response()->json(['mensagem' => 'Operação não autorizada para seu usuário'], 403);
+            }
+        }
+
         return parent::render($request, $e);
     }
 
@@ -67,7 +74,7 @@ class Handler extends ExceptionHandler
     protected function unauthenticated($request, AuthenticationException $exception)
     {
         if ($request->expectsJson()) {
-            return response()->json(['mensagem' => 'Não autenticado.'], 401);
+            return response()->json(['mensagem' => 'Usuário não autenticado'], 401);
         }
 
         return redirect()->guest(route('auth/login'));
