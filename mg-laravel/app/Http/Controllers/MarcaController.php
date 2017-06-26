@@ -17,37 +17,12 @@ class MarcaController extends Controller
      */
     public function index(Request $request)
     {
-      $qry = Marca::query();
+        MarcaRepository::authorize('listing');
 
-      if (!empty($request->codmarca)) {
-          $qry->where('codmarca', $request->codmarca);
-      }
+        list($filter, $sort, $fields) = $this->parseSearchRequest($request);
+        $qry = MarcaRepository::query($filter, $sort, $fields);
+        return response()->json($qry->paginate()->appends($request->all()), 206);
 
-      if (!empty($request->marca)) {
-          $qry->where('marca', 'ilike', "%{$request->marca}%");
-      }
-
-      switch ($request->sort) {
-        case 'codmarca':
-          $qry->orderBy('codmarca', 'asc');
-          break;
-
-        case '-codmarca':
-          $qry->orderBy('codmarca', 'DESC');
-          break;
-
-        case '-marca':
-          $qry->orderBy('marca', 'DESC');
-          break;
-
-        case 'marca':
-        default:
-          $qry->orderBy('marca', 'ASC');
-          break;
-
-      }
-
-      $data = $qry->paginate(50);
         return response()->json(
             $data,
             200

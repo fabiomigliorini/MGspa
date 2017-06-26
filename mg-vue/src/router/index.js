@@ -7,6 +7,15 @@ import MarcaNova from '@/components/crud/marca/Nova'
 import MarcaDetalhe from '@/components/crud/marca/Detalhe'
 import MarcaEditar from '@/components/crud/marca/Editar'
 import MarcaImagem from '@/components/crud/marca/Imagem'
+
+import PermissaoListagem from '@/components/crud/permissao/Listagem'
+import PermissaoDetalhe from '@/components/crud/permissao/Detalhe'
+
+import GrupoUsuarioListagem from '@/components/crud/grupo-usuario/Listagem'
+import GrupoUsuarioNovo from '@/components/crud/grupo-usuario/Novo'
+import GrupoUsuarioDetalhe from '@/components/crud/grupo-usuario/Detalhe'
+import GrupoUsuarioEditar from '@/components/crud/grupo-usuario/Editar'
+
 import Login from '@/components/Login'
 
 Vue.use(Router)
@@ -29,6 +38,7 @@ const routes = [
     component: VuetifyTest,
     meta: { requerAutenticacao: true }
   },
+
   {
     path: '/marca',
     name: 'MarcaListagem',
@@ -57,6 +67,46 @@ const routes = [
     path: '/marca/:id/imagem',
     name: 'marca-imagem',
     component: MarcaImagem,
+    meta: { requerAutenticacao: true }
+  },
+
+  // Grupos de usuário
+  {
+    path: '/grupo-usuario',
+    name: 'GrupoUsuarioListagem',
+    component: GrupoUsuarioListagem,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/grupo-usuario/novo',
+    name: 'grupo-usuario-nova',
+    component: GrupoUsuarioNovo,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/grupo-usuario/:id',
+    name: 'grupo-usuario-detalhe',
+    component: GrupoUsuarioDetalhe,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/grupo-usuario/:id/editar',
+    name: 'grupo-usuario-editar',
+    component: GrupoUsuarioEditar,
+    meta: { requerAutenticacao: true }
+  },
+
+  // Permissões
+  {
+    path: '/permissao',
+    name: 'permissao',
+    component: PermissaoListagem,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/permissao/:id',
+    name: 'permissao-detalhe',
+    component: PermissaoDetalhe,
     meta: { requerAutenticacao: true }
   }
 ]

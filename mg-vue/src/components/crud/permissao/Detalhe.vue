@@ -2,7 +2,7 @@
   <mg-layout>
 
     <div slot="titulo">
-      Marcas - {{ dados.marca }} - Imagem
+      {{ dados.permissao }}
     </div>
 
     <div slot="menu">
@@ -16,12 +16,18 @@
             <v-container fluid>
               <v-layout row wrap>
                 <v-flex sm6>
-                  <h4>{{ dados.marca }}</h4>
+                  <p>Lista</p>
                 </v-flex>
               </v-layout>
             </v-container>
           </v-card-text>
         </v-card>
+      <v-fab error router :to="{ path: '/marca/' + dados.codmarca + '/editar' }" style="bottom:190px">
+        <v-icon light>mode_edit</v-icon>
+      </v-fab>
+      <v-fab error @click.native.stop="deletar()">
+        <v-icon light>delete</v-icon>
+      </v-fab>
 
     </div>
 
@@ -49,7 +55,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       var vm = this
-      window.axios.get('marca/' + this.$route.params.id).then(function (request) {
+      window.axios.get('permissao/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
         console.log(error)
@@ -57,8 +63,8 @@ export default {
     },
     deletar: function (id) {
       var vm = this
-      window.axios.delete('marca/' + this.$route.params.id).then(function (request) {
-        vm.$router.push('/marca')
+      window.axios.delete('permissao/' + this.$route.params.id).then(function (request) {
+        vm.$router.push('/permissao')
       }).catch(function (error) {
         console.log(error)
       })
@@ -71,4 +77,14 @@ export default {
 </script>
 
 <style scoped>
+  dt {
+    font-size: 0.8em;
+    color: grey;
+  }
+  dd {
+    margin-bottom: 7px;
+    font-weight: 300;
+  }
+
+
 </style>

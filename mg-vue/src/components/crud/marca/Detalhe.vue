@@ -71,7 +71,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       var vm = this
-      window.axios.get('marcas/' + this.$route.params.id).then(function (request) {
+      window.axios.get('marca/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
         console.log(error)
@@ -79,7 +79,7 @@ export default {
     },
     deletar: function (id) {
       var vm = this
-      window.axios.delete('marcas/' + this.$route.params.id).then(function (request) {
+      window.axios.delete('marca/' + this.$route.params.id).then(function (request) {
         vm.$router.push('/marca')
       }).catch(function (error) {
         console.log(error)

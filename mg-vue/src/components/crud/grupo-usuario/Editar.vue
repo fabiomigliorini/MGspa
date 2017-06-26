@@ -2,7 +2,7 @@
   <mg-layout>
 
     <div slot="titulo">
-      Marcas
+      Grupos de Usuário
     </div>
 
     <div slot="menu">
@@ -14,35 +14,16 @@
       <v-card class="elevation-0">
           <v-card-text>
             <v-container fluid>
-              <form autocomplete="off" @submit.prevent="create">
+              <form autocomplete="off" @submit.prevent="update">
                 <v-layout row>
                   <v-flex xs12>
                     <v-text-field
                       name="input-2"
-                      label="Marca"
-                      v-model="dados.marca"
-                      required
+                      label="Grupo"
+                      v-model="dados.grupousuario"
                       autofocus
+                      required
                     ></v-text-field>
-                  </v-flex>
-                </v-layout>
-                <v-layout row>
-                  <v-flex xs12>
-                    <v-checkbox label="Site" v-model="dados.site"></v-checkbox>
-                  </v-flex>
-                </v-layout>
-                <v-layout row>
-                  <v-flex xs12>
-                    <v-text-field
-                      name="descricaosite"
-                      label="Descricão site"
-                      multi-line
-                      v-model="dados.descricaosite">
-                    </v-text-field>
-                  </v-flex>
-                </v-layout>
-                <v-layout row>
-                  <v-flex xs12>
                     <v-btn type="submit" primary light>Salvar</v-btn>
                   </v-flex>
                 </v-layout>
@@ -51,7 +32,7 @@
           </v-card-text>
         </v-card>
 
-      <v-fab error router :to="{path: '/marca/nova'}">
+      <v-fab error router :to="{path: '/grupo-usuario/novo'}">
         <v-icon light>add</v-icon>
       </v-fab>
 
@@ -75,25 +56,29 @@ export default {
   },
   data () {
     return {
-      dados: {
-        marca: null,
-        descricaosite: null,
-        site: null
-      }
+      dados: {}
     }
   },
   methods: {
-    create: function () {
+    carregaDados: function (id) {
       var vm = this
-      window.axios.post('marca', vm.dados).then(function (request) {
-        vm.$router.push('/marca/' + request.data.codmarca)
+      window.axios.get('grupo-usuario/' + this.$route.params.id).then(function (request) {
+        vm.dados = request.data
+      }).catch(function (error) {
+        console.log(error)
+      })
+    },
+    update: function () {
+      var vm = this
+      window.axios.patch('grupo-usuario/' + this.$route.params.id, vm.dados).then(function (request) {
+        vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
       }).catch(function (error) {
         console.log(error)
       })
     }
   },
   mounted () {
-
+    this.carregaDados(this.$route.params.id)
   }
 }
 </script>

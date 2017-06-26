@@ -135,6 +135,7 @@ class MGRepositoryStatic
         if (empty($model)) {
             $model = static::new();
         }
+
         if (!Gate::allows($ability, $model)) {
             return false;
         }

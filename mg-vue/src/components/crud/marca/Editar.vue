@@ -69,7 +69,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       var vm = this
-      window.axios.get('marcas/' + this.$route.params.id).then(function (request) {
+      window.axios.get('marca/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
         console.log(error)
@@ -77,7 +77,7 @@ export default {
     },
     update: function () {
       var vm = this
-      window.axios.patch('marcas/' + this.$route.params.id, vm.dados).then(function (request) {
+      window.axios.patch('marca/' + this.$route.params.id, vm.dados).then(function (request) {
         vm.$router.push('/marca/' + request.data.codmarca)
       }).catch(function (error) {
         console.log(error)

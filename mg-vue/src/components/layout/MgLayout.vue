@@ -116,6 +116,14 @@
             subapps: [
               { titulo: 'Marcas', path: '/marca' }
             ]
+          },
+          {
+            icone: 'account_circle',
+            titulo: 'Usuário',
+            subapps: [
+              { titulo: 'Permissões', path: '/permissao' },
+              { titulo: 'Grupos', path: '/grupo-usuario' }
+            ]
           }
         ]
       }

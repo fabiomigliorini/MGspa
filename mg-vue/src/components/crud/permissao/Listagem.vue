@@ -2,7 +2,7 @@
   <mg-layout menu>
 
     <div slot="titulo">
-      Marcas
+      Permissões
     </div>
 
     <div slot="menu">
@@ -12,7 +12,7 @@
                 name="filtro"
                 label="Busca"
                 id="filtro"
-                v-model="filtro.marca"
+                v-model="filtro.permissao"
                 @change.native.stop="pesquisar()"
               ></v-text-field>
             </v-flex>
@@ -22,42 +22,20 @@
     <div slot="conteudo">
 
        <v-list two-line>
-        <template v-for="item in marca">
+        <template v-for="item in dados">
           <transition name="component-fade">
-            <v-list-item v-bind:key="item.codmarca">
-              <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }">
-                <v-list-tile-avatar>
-                  <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
-                  <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
-                  <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'">
-                </v-list-tile-avatar>
+            <v-list-item v-bind:key="item.codpermissao">
+              <v-list-tile avatar router :to="{path: '/permissao/' + item.codpermissao }">
+
                 <v-list-tile-content>
                   <v-list-tile-title>
-                    {{ item.marca }}
+                    {{ item.permissao }}
                   </v-list-tile-title>
                   <v-list-tile-sub-title>
-                    #{{ item.codmarca }}
+                    #{{ item.codpermissao }}
                   </v-list-tile-sub-title>
                 </v-list-tile-content>
-                <v-list-tile-content class="hidden-sm-and-down">
-                  <v-list-tile-sub-title>
-                    5 abaixo do mínimo /
-                    2 acima do máximo
-                  </v-list-tile-sub-title>
-                  <v-list-tile-sub-title>
-                    25/dez/16 Última compra
-                  </v-list-tile-sub-title>
-                </v-list-tile-content>
-                <v-list-tile-content>
-                  <v-list-tile-title class="text-xs-right">
-                    <v-icon class="yellow--text text--darken-3">star</v-icon>
-                    <v-icon class="yellow--text text--darken-3">star</v-icon>
-                    <v-icon class="grey--text text--lighten-1">star_border</v-icon>
-                  </v-list-tile-title>
-                  <v-list-tile-sub-title class="text-xs-right">
-                    #1
-                  </v-list-tile-sub-title>
-                </v-list-tile-content>
+
               </v-list-tile>
               <v-divider></v-divider>
             </v-list-item>
@@ -75,7 +53,7 @@
         </div>
       </transition>
 
-      <v-fab error router :to="{path: '/marca/nova'}">
+      <v-fab error router :to="{path: '/permissao/nova'}">
         <v-icon light>add</v-icon>
       </v-fab>
 
@@ -99,10 +77,10 @@ export default {
   },
   data () {
     return {
-      marca: [],
+      dados: [],
       pagina: 1,
       filtro: {
-        marca: null
+        permissao: null
       },
       fim: false,
       carregando: false
@@ -114,8 +92,8 @@ export default {
       var params = this.filtro
       params.page = this.pagina
       this.carregando = true
-      window.axios.get('marca', {params}).then(response => {
-        vm.marca = vm.marca.concat(response.data.data)
+      window.axios.get('permissao', {params}).then(response => {
+        vm.dados = vm.dados.concat(response.data.data)
         this.fim = (response.data.current_page >= response.data.last_page)
         this.carregando = false
       })
@@ -126,7 +104,7 @@ export default {
     },
     pesquisar () {
       this.pagina = 1
-      this.marca = []
+      this.dados = []
       this.fim = false
       this.carregaListagem()
     }

@@ -9,7 +9,6 @@ use App\Repositories\PermissaoRepository;
 
 class PermissaoController extends Controller
 {
-
     /**
      * Display a listing of the resource.
      *
@@ -17,6 +16,8 @@ class PermissaoController extends Controller
      */
     public function index(Request $request)
     {
+        // Permissao
+        $this->repository->authorize('listing');
 
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
         $qry = PermissaoRepository::query($filter, $sort, $fields);
@@ -24,8 +25,6 @@ class PermissaoController extends Controller
 
         /*
 
-        // Permissao
-        $this->repository->authorize('listing');
 
         // Pega todos arquivos da pasta de Policies
         $arquivos = scandir(base_path() . '/app/Policies/');

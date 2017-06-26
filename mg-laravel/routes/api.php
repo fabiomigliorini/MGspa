@@ -24,8 +24,14 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
     })->middleware('auth:api');
 
     // Usuários
-    Route::resource('usuarios', 'UsuarioController');
-    Route::resource('marcas', 'MarcaController');
-});
+    Route::resource('usuario', 'UsuarioController');
 
-Route::get('permissao', 'PermissaoController@index');
+    // Marcas
+    Route::resource('marca', 'MarcaController');
+
+    // Permissões de Grupo
+    Route::resource('permissao', 'PermissaoController');
+
+    // Grupos de usuário
+    Route::resource('grupo-usuario', 'GrupoUsuarioController');
+});

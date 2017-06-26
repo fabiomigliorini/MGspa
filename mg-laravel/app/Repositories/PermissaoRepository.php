@@ -51,4 +51,5 @@ class PermissaoRepository extends MGRepositoryStatic
         }
         return false;
     }
+
 }
