@@ -54,7 +54,10 @@ class GrupoUsuarioController extends Controller
         $model = GrupoUsuarioRepository::new();
 
         if (!GrupoUsuarioRepository::validate($model, $data, $errors)) {
-            $this->throwValidationException($request, GrupoUsuarioRepository::validator());
+            return response()->json(
+                $errors,
+                422
+            );
         }
 
         $model->fill($data);
@@ -65,7 +68,7 @@ class GrupoUsuarioController extends Controller
 
         return response()->json(
             $model,
-            200
+            201
         );
     }
 
@@ -82,8 +85,11 @@ class GrupoUsuarioController extends Controller
 
         $model = GrupoUsuarioRepository::findOrFail($id);
 
-        if (!$this->repository->validate($data, $id)) {
-            $this->throwValidationException($request, $this->repository->validator);
+        if (!GrupoUsuarioRepository::validate($model, $data, $errors)) {
+            return response()->json(
+                $errors,
+                422
+            );
         }
 
         $model->fill($data);
@@ -96,7 +102,7 @@ class GrupoUsuarioController extends Controller
 
         return response()->json(
             $model,
-            200
+            201
         );
     }
 

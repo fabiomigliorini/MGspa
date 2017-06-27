@@ -37,7 +37,7 @@
 
   <div slot="conteudo">
     <template v-for="item in dados">
-      <p v-if="item.codpermissao">{{ item.permissao }}</p>
+      <p v-if="item.codpermissao == tabs">{{ item.permissao }}</p>
     </template>
 
 
@@ -99,7 +99,7 @@ export default {
   data () {
     return {
       dados: [],
-      tabs: [],
+      tabs: null,
       pagina: 1,
       filtro: {
         permissao: null
@@ -118,16 +118,11 @@ export default {
         params
       }).then(response => {
         vm.dados = response.data.data
-        // var
-        // for ( i < vm.dados.length i++) {
-        //   this.tabs[dados.codpermissao] = dados.codpermissao
-        // }
       })
     },
     tab (codpermissao) {
-      this.tabs.codpermissao = true
-      console.log(codpermissao)
-      console.log(this.tab)
+      this.tabs = codpermissao
+      console.log(this.tabs)
     },
     pesquisar () {
       this.pagina = 1
