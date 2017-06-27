@@ -23,6 +23,7 @@ class ProdutoUpdateRequest extends FormRequest
     public function rules()
     {
         $id = $this->route('produto');
+        
         $rules = [
             'produto' => [
                 'max:100',
