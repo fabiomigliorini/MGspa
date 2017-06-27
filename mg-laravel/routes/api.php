@@ -23,6 +23,7 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
         return $request->user();
     })->middleware('auth:api');
 
+
     // Usuários
     Route::resource('usuario', 'UsuarioController');
 
@@ -34,4 +35,12 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     // Grupos de usuário
     Route::resource('grupo-usuario', 'GrupoUsuarioController');
+
+    // Marcas
+    //Route::resource('produto', 'ProdutoController');
+    //Route::post('produto/{id}/inativo', 'ProdutoController@activate');
+    //Route::delete('produto/{id}/inativo', 'ProdutoController@inactivate');
+    Route::resource('produto', 'ProdutoController');
+    //Route::options('produto/{id}', 'ProdutoController@options');
+
 });

@@ -8,6 +8,9 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Access\AuthorizationException;
+
 
 class Handler extends ExceptionHandler
 {
@@ -47,6 +50,10 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $e)
     {
+        if ($e instanceof AuthorizationException) {
+            return response()->json(['mensagem' => 'Operação não autorizada para seu usuário'], 403);
+        }
+
         if ($e instanceof ModelNotFoundException) {
             return response()->json(['mensagem' => 'Registro não encontrado'], 404);
         }
@@ -61,6 +68,13 @@ class Handler extends ExceptionHandler
             }
         }
 
+        if ($e instanceof ValidationException) {
+            return response()->json([
+                'mensagem' => 'Erro de validação!',
+                'erros' => $e->validator->errors()
+            ], 422);
+        }
+
         return parent::render($request, $e);
     }
 
@@ -73,10 +87,11 @@ class Handler extends ExceptionHandler
      */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
+        /*
         if ($request->expectsJson()) {
             return response()->json(['mensagem' => 'Usuário não autenticado'], 401);
         }
-
+        */
         return redirect()->guest(route('auth/login'));
     }
 }

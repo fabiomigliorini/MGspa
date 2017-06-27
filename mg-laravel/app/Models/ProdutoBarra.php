@@ -6,15 +6,15 @@ namespace App\Models;
  * Campos
  * @property  bigint                         $codprodutobarra                    NOT NULL DEFAULT nextval('tblprodutobarra_codprodutobarra_seq'::regclass)
  * @property  bigint                         $codproduto                         NOT NULL
- * @property  varchar(100)                   $variacao                           
+ * @property  varchar(100)                   $variacao
  * @property  varchar(50)                    $barras                             NOT NULL
- * @property  varchar(50)                    $referencia                         
- * @property  bigint                         $codmarca                           
- * @property  bigint                         $codprodutoembalagem                
- * @property  timestamp                      $alteracao                          
- * @property  bigint                         $codusuarioalteracao                
- * @property  timestamp                      $criacao                            
- * @property  bigint                         $codusuariocriacao                  
+ * @property  varchar(50)                    $referencia
+ * @property  bigint                         $codmarca
+ * @property  bigint                         $codprodutoembalagem
+ * @property  timestamp                      $alteracao
+ * @property  bigint                         $codusuarioalteracao
+ * @property  timestamp                      $criacao
+ * @property  bigint                         $codusuariocriacao
  * @property  bigint                         $codprodutovariacao                 NOT NULL
  *
  * Chaves Estrangeiras
@@ -62,7 +62,7 @@ class ProdutoBarra extends MGModel
         }
         return trim($descr);
     }
-    
+
     /*
     // Atributo referencia
     public function getReferenciaAttribute()
@@ -72,8 +72,8 @@ class ProdutoBarra extends MGModel
         }
         if (!empty($this->ProdutoVariacao->referencia)) {
             return $this->ProdutoVariacao->referencia;
-        } 
-        
+        }
+
         return $this->Produto->referencia;
     }
 
@@ -87,9 +87,9 @@ class ProdutoBarra extends MGModel
             return (float) $this->ProdutoEmbalagem->preco;
         }
         return (float) $this->Produto->preco;
-    }    
+    }
     */
-    
+
     // Chaves Estrangeiras
     public function ProdutoVariacao()
     {
@@ -152,21 +152,30 @@ class ProdutoBarra extends MGModel
     {
         return $this->hasMany(NotaFiscalProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
-    
+
     public function UnidadeMedida()
     {
         if (!empty($this->codprodutoembalagem)) {
             return $this->ProdutoEmbalagem->UnidadeMedida();
-        } 
+        }
         return $this->Produto->UnidadeMedida();
     }
-    
+
     public function Marca()
     {
         if (!empty($this->ProdutoVariacao->codmarca)) {
             return $this->ProdutoVariacao->Marca();
-        } 
+        }
         return $this->Produto->Marca();
     }
-    
+
+    // Campos calculados
+    public function getPrecoProntoAttribute()
+    {
+        if (!empty($this->codprodutoembalagem)) {
+            return $this->ProdutoEmbalagem->precopronto;
+        }
+        return $this->Produto->preco;
+    }
+
 }

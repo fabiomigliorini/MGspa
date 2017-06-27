@@ -6,7 +6,7 @@ use App\Models\Usuario;
 
 class ProdutoPolicy extends MGPolicy
 {
-    
+
     /**
      * Determine whether the user can list the model.
      *
@@ -20,4 +20,5 @@ class ProdutoPolicy extends MGPolicy
     public function site(Usuario $user) {
         return $user->can('ProdutoPolicy.site');
     }
+
 }

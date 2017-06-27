@@ -1,52 +1,41 @@
 <?php
 
 namespace App\Repositories;
-    
+
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
+
 use App\Models\Produto;
-use App\Models\Tributacao;
-use App\Models\EstoqueLocal;
+
 /**
  * Description of ProdutoRepository
- * 
- * @property  Validator $validator
- * @property  Produto $model
+ *
  */
-class ProdutoRepository extends MGRepository {
-    
-    public function boot() {
-        $this->model = new Produto();
-    }
+class ProdutoRepository extends MGRepositoryStatic
+{
+    public static $modelClass = 'Produto';
 
-    //put your code here
-    public function validate($data = null, $id = null) {
-        
-        if (empty($data)) {
-            $data = $this->model->getAttributes();
-        }
-        
-        if (empty($id)) {
-            $id = $this->model->codproduto;
-        }
+    public static function rules($data)
+    {
+        $id = $data['codproduto']??$model->codproduto??null;
 
         Validator::extend('nomeMarca', function ($attribute, $value, $parameters) {
+            if (empty($parameters[0])) {
+                return false;
+            }
             $marca = new MarcaRepository();
-            $marca = $marca->findOrFail($parameters[0]);
+            $marca = MarcaRepository::findOrFail($parameters[0]);
             if (!empty($value) && !empty($parameters[0])) {
                 if (strpos(strtoupper($value), strtoupper($marca->marca)) === false) {
                     return false;
                 } else {
                     return true;
-                }    
+                }
             } else {
                 return true;
             }
-        });         
-                
+        });
+
         Validator::extend('tributacao', function ($attribute, $value, $parameters) {
             $ncm = new NcmRepository();
             $ncm = $ncm->findOrFail($parameters[0]);
@@ -58,19 +47,19 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         Validator::extend('tributacaoSubstituicao', function ($attribute, $value, $parameters) {
             $ncm = new NcmRepository();
             $ncm = $ncm->findOrFail($parameters[0]);
             $regs = $ncm->regulamentoIcmsStMtsDisponiveis();
-            if(empty($regs)) {
+            if (empty($regs)) {
                 if ($value == Tributacao::SUBSTITUICAO) {
                     return false;
                 }
             }
             return true;
         });
-        
+
         Validator::extend('ncm', function ($attribute, $value, $parameters) {
             $ncm = new NcmRepository();
             $ncm = $ncm->findOrFail($value);
@@ -79,15 +68,15 @@ class ProdutoRepository extends MGRepository {
             } else {
                 return false;
             }
-        });          
-        
-        $this->validator = Validator::make($data, [
+        });
+
+        $rules = [
             'produto' => [
                 'max:100',
                 'min:10',
                 'required',
                 Rule::unique('tblproduto')->ignore($id, 'codproduto'),
-                'nomeMarca:'.$data['codmarca'],
+                //'nomeMarca:'.($data['codmarca']??null),
             ],
             'referencia' => [
                 'max:50',
@@ -115,8 +104,8 @@ class ProdutoRepository extends MGRepository {
             'codtributacao' => [
                 'numeric',
                 'required',
-                'tributacao:'.$data['codncm'],
-                'tributacaoSubstituicao:'.$data['codncm'],
+                //'tributacao:'.($data['codncm']??null),
+                //'tributacaoSubstituicao:'.($data['codncm']??null),
             ],
             'codtipoproduto' => [
                 'numeric',
@@ -132,7 +121,7 @@ class ProdutoRepository extends MGRepository {
             'codncm' => [
                 'numeric',
                 'nullable',
-                'ncm'
+                //'ncm'
             ],
             'codcest' => [
                 'numeric',
@@ -150,12 +139,26 @@ class ProdutoRepository extends MGRepository {
                 'numeric',
                 'nullable',
             ],
-        ], [
+        ];
+
+        return $rules;
+
+        $validator = Validator::make($data, $rules, $messages);
+        return [
+           'produto' => 'required|max:255|min:50',
+           //'body' => 'required',
+       ];
+    }
+
+    public static function rulesMessages()
+    {
+        $messages = [
             'produto.max' => 'O campo "produto" não pode conter mais que 100 caracteres!',
             'produto.min' => 'O campo "produto" não pode conter menos que 9 caracteres!',
             'produto.required' => 'O campo "produto" deve ser preenchido!',
             'produto.nome_marca' => 'Não contem o nome da marca no campo "produto"!',
-            
+            'produto.unique' => 'Já existe um produto com esta descrição!',
+
             'referencia.max' => 'O campo "referencia" não pode conter mais que 50 caracteres!',
             'codunidademedida.numeric' => 'O campo "codunidademedida" deve ser um número!',
             'codunidademedida.required' => 'O campo "codunidademedida" deve ser preenchido!',
@@ -169,8 +172,8 @@ class ProdutoRepository extends MGRepository {
             'codtributacao.numeric' => 'O campo "codtributacao" deve ser um número!',
             'codtributacao.required' => 'O campo "codtributacao" deve ser preenchido!',
             'codtributacao.tributacao' => 'Existe Regulamento de ICMS ST para este NCM!',
-            'codtributacao.tributacao_substituicao' => 'Não existe regulamento de ICMS ST para este NCM!',            
-            
+            'codtributacao.tributacao_substituicao' => 'Não existe regulamento de ICMS ST para este NCM!',
+
             'codtipoproduto.numeric' => 'O campo "codtipoproduto" deve ser um número!',
             'codtipoproduto.required' => 'O campo "codtipoproduto" deve ser preenchido!',
             'site.boolean' => 'O campo "site" deve ser um verdadeiro/falso (booleano)!',
@@ -181,14 +184,115 @@ class ProdutoRepository extends MGRepository {
             'observacoes.max' => 'O campo "observacoes" não pode conter mais que 255 caracteres!',
             'codopencart.numeric' => 'O campo "codopencart" deve ser um número!',
             'codopencartvariacao.numeric' => 'O campo "codopencartvariacao" deve ser um número!',
-        ]);
-
-        return $this->validator->passes();
-        
+        ];
+        return $messages;
     }
-    
+
+    public static function used($id = null)
+    {
+        if (!empty($id)) {
+            $mdoel->findOrFail($id);
+        }
+        if ($model->ProdutoS->count() > 0) {
+            return 'Produto sendo utilizada em Produtos!';
+        }
+        return false;
+    }
+
+    public static function details($model = null)
+    {
+        $details = $model->getAttributes();
+        $details['Marca'] = [
+            'codmarca' => $model->Marca->codmarca,
+            'marca' => $model->Marca->marca,
+        ];
+        $details['SubGrupoProduto'] = $model->SubGrupoProduto->getAttributes();
+        $details['GrupoProduto'] = $model->SubGrupoProduto->GrupoProduto->getAttributes();
+        $details['FamiliaProduto'] = $model->SubGrupoProduto->GrupoProduto->FamiliaProduto->getAttributes();
+        $details['SecaoProduto'] = $model->SubGrupoProduto->GrupoProduto->FamiliaProduto->SecaoProduto->getAttributes();
+        if (!empty($model->codprodutoimagem)) {
+            $details['Imagem'] = $model->ProdutoImagem->Imagem->getAttributes();
+            $details['Imagem']['url'] = $model->ProdutoImagem->Imagem->url;
+        }
+
+        $variacoes = [];
+        foreach ($model->ProdutoVariacaoS()->orderByRaw('variacao ASC NULLS FIRST')->get() as $pv) {
+            $variacao = $pv->getAttributes();
+
+            if (!empty($model->codprodutoimagem)) {
+                $details['Imagem'] = $model->ProdutoImagem->Imagem->getAttributes();
+                $details['Imagem']['url'] = $model->ProdutoImagem->Imagem->url;
+            }
+
+            $variacoes[] = $variacao;
+        }
+        $details['Variacoes'] = $variacoes;
+
+        $barras = [];
+        foreach ($model->ProdutoBarraS()->orderByRaw('barras ASC NULLS FIRST')->get() as $pb) {
+            $barra = $pb->getAttributes();
+            $barra['preco'] = $pb->precopronto;
+            $barras[] = $barra;
+        }
+        $details['Barras'] = $barras;
+
+        $embalagens = [];
+        $embalagens[] = [
+            'codprodutoembalagem' => null,
+            'codunidademedida' => $model->codunidademedida,
+            'quantidade' => 1,
+            'preco' => $model->preco,
+            'UnidadeMedida' => $model->UnidadeMedida->getAttributes(),
+        ];
+        foreach ($model->ProdutoEmbalagemS()->orderByRaw('quantidade ASC NULLS FIRST')->get() as $pe) {
+            $embalagem = $pe->getAttributes();
+            $embalagem['preco'] = $pe->precopronto;
+            $embalagem['UnidadeMedida'] = $pe->UnidadeMedida->getAttributes();
+
+            $embalagens[] = $embalagem;
+        }
+        $details['Embalagens'] = $embalagens;
+
+        return $details;
+    }
+
+    public static function detailsById($id)
+    {
+        if (!$model = static::find($id)) {
+            return false;
+        }
+        return static::details($model);
+    }
+}
+/*
+
+<?php
+
+namespace App\Repositories;
+
+use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use App\Models\Produto;
+use App\Models\Tributacao;
+use App\Models\EstoqueLocal;
+
+class ProdutoRepository extends MGRepository {
+
+    public function boot() {
+        $this->model = new Produto();
+    }
+
+    //put your code here
+    public function validate($data = null, $id = null) {
+
+
+    }
+
     public function validateSite($data, $id = null) {
-        
+
         if (empty($id)) {
             $id = $this->model->codproduto;
         }
@@ -196,7 +300,7 @@ class ProdutoRepository extends MGRepository {
         foreach ($this->model->ProdutoEmbalagemS()->orderBy('quantidade')->get() as $pe) {
             $quantidade[$pe->codprodutoembalagem] = $pe->quantidade;
         }
-        
+
         // Valida se peso é obrigatório
         Validator::extend('pesoObrigatorio', function ($attribute, $value, $parameters) use ($quantidade, $data) {
             foreach ($value as $codprodutoembalagem => $peso) {
@@ -215,7 +319,7 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         // Valida se medidas são obrigatórias
         Validator::extend('medidaObrigatoria', function ($attribute, $value, $parameters) use ($quantidade, $data) {
             foreach ($value as $codprodutoembalagem => $altura) {
@@ -234,7 +338,7 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         // Valida peso da unidade X peso da embalagem
         Validator::extend('pesoCoerente', function ($attribute, $value, $parameters) use ($quantidade, $data) {
             $unitario = (double) $value[0]??0;
@@ -256,7 +360,7 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         // Valida medidas da unidade X medidas da embalagem
         Validator::extend('medidaCoerente', function ($attribute, $value, $parameters) use ($quantidade, $data) {
             $unitario = ((double) $data['largura'][0]??0) * ((double) $data['altura'][0]??0) * ((double) $data['profundidade'][0]??0);
@@ -278,7 +382,7 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         // Valida peso da unidade * quantidade da embalagem
         Validator::extend('minimo', function ($attribute, $value, $parameters) {
             $minimo = (double) $parameters[0];
@@ -292,7 +396,7 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         // Valida peso da unidade * quantidade da embalagem
         Validator::extend('maximo', function ($attribute, $value, $parameters) {
             $maximo = (double) $parameters[0];
@@ -306,7 +410,7 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         // Valida peso da unidade * quantidade da embalagem
         Validator::extend('vendeSite', function ($attribute, $value, $parameters) use ($data) {
             foreach ($value as $codprodutoembalagem => $vendesite) {
@@ -319,7 +423,7 @@ class ProdutoRepository extends MGRepository {
             }
             return true;
         });
-        
+
         $rules = [
             'peso' => [
                 'pesoObrigatorio',
@@ -345,7 +449,7 @@ class ProdutoRepository extends MGRepository {
                 'vendeSite'
             ],
         ];
-        
+
         $messages = [
             'peso.peso_obrigatorio' => 'Preencha o peso de todos as embalagens vendidas via site, e também da unidade mínima!',
             'peso.peso_coerente' => 'O peso das embalagens não está coerente com o peso da unidade mínima!',
@@ -361,64 +465,64 @@ class ProdutoRepository extends MGRepository {
             'profundidade.maximo' => 'A profundidade deve ser inferior à 999999,99 Centímetros!',
             'vendesite.vende_site' => 'Para habilitar vendas pelo site, deve-se marcar como disponível no site!',
         ];
-        
+
 
         $this->validator = Validator::make($data, $rules, $messages);
 
         return $this->validator->passes();
-        
+
         return true;
     }
-    
+
     public function used($id = null) {
         if (!empty($id)) {
             $this->findOrFail($id);
         }
-        
+
         if ($this->model->ImagemS->count() > 0) {
             return 'Produto sendo utilizada em "Produtoimagem"!';
         }
-        
+
         if ($this->model->ProdutoVariacaoS->count() > 0) {
             return 'Produto sendo utilizada em "ProdutoVariacao"!';
         }
-        
+
         if ($this->model->ProdutoBarraS->count() > 0) {
             return 'Produto sendo utilizada em "ProdutoBarra"!';
         }
-        
+
         if ($this->model->ProdutoEmbalagemS->count() > 0) {
             return 'Produto sendo utilizada em "ProdutoEmbalagem"!';
         }
-        
+
         if ($this->model->ProdutoHistoricoPrecoS->count() > 0) {
             return 'Produto sendo utilizada em "ProdutoHistoricoPreco"!';
         }
-        
+
         return false;
     }
-    
+
     public function listing($filters = [], $sort = [], $start = null, $length = null) {
-        
+
         // Query da Entidade
         $qry = Produto::query();
-        
+
         // Filtros
         if (!empty($filters['codproduto'])) {
             $qry->where('codproduto', '=', $filters['codproduto']);
         }
 
         if(!empty($filters['barras'])) {
-            
+
             $barras = $filters['barras'];
-            
+
             $qry->whereIn('codproduto', function ($query) use ($barras) {
                 $query->select('codproduto')
                     ->from('tblprodutobarra')
                     ->where('barras', 'ilike', "%$barras%");
             });
         }
-        
+
         if (!empty($filters['produto'])) {
             $qry->palavras('produto', $filters['produto']);
         }
@@ -426,63 +530,63 @@ class ProdutoRepository extends MGRepository {
         if (!empty($filters['referencia'])) {
             $qry->palavras('referencia', $filters['referencia']);
         }
-        
+
         if(empty($filters['preco_de']) && !empty($filters['preco_ate'])) {
-            
+
             $sql = "codproduto in (
-                        select pe.codproduto 
-                        from tblprodutoembalagem pe 
-                        inner join tblproduto p on (p.codproduto = pe.codproduto) 
+                        select pe.codproduto
+                        from tblprodutoembalagem pe
+                        inner join tblproduto p on (p.codproduto = pe.codproduto)
                         where coalesce(pe.preco, pe.quantidade * p.preco) <= {$filters['preco_ate']}
                         or p.preco <= {$filters['preco_ate']}
                     )
                     ";
-            
+
             $qry->whereRaw($sql);
-            
+
         }
-        
+
         if(!empty($filters['preco_de']) && !empty($filters['preco_ate'])) {
-            
+
             $sql = "codproduto in (
-                        select pe.codproduto 
-                        from tblprodutoembalagem pe 
-                        inner join tblproduto p on (p.codproduto = pe.codproduto) 
+                        select pe.codproduto
+                        from tblprodutoembalagem pe
+                        inner join tblproduto p on (p.codproduto = pe.codproduto)
                         where coalesce(pe.preco, pe.quantidade * p.preco) between {$filters['preco_de']} and {$filters['preco_ate']}
                         or p.preco between {$filters['preco_de']} and {$filters['preco_ate']}
                             )
                     ";
-            
+
             $qry->whereRaw($sql);
-            
+
         }
 
         if (!empty($filters['codmarca'])) {
             $qry->where('codmarca', '=', $filters['codmarca']);
         }
-        
+
         if(!empty($filters['codsubgrupoproduto'])) {
-            
+
             $qry->where('codsubgrupoproduto', $filters['codsubgrupoproduto']);
-            
+
         } elseif (!empty($filters['codgrupoproduto'])) {
-            
+
             $qry->join('tblsubgrupoproduto', 'tblsubgrupoproduto.codsubgrupoproduto', '=', 'tblproduto.codsubgrupoproduto');
             $qry->where('tblsubgrupoproduto.codgrupoproduto', $filters['codgrupoproduto']);
-            
+
         } elseif (!empty($filters['codfamiliaproduto'])) {
-            
+
             $qry->join('tblsubgrupoproduto', 'tblsubgrupoproduto.codsubgrupoproduto', '=', 'tblproduto.codsubgrupoproduto');
             $qry->join('tblgrupoproduto', 'tblgrupoproduto.codgrupoproduto', '=', 'tblsubgrupoproduto.codgrupoproduto');
             $qry->where('tblgrupoproduto.codfamiliaproduto', $filters['codfamiliaproduto']);
-            
+
         } elseif (!empty($filters['codsecaoproduto'])) {
-            
+
             $qry->join('tblsubgrupoproduto', 'tblsubgrupoproduto.codsubgrupoproduto', '=', 'tblproduto.codsubgrupoproduto');
             $qry->join('tblgrupoproduto', 'tblgrupoproduto.codgrupoproduto', '=', 'tblsubgrupoproduto.codgrupoproduto');
             $qry->join('tblfamiliaproduto', 'tblfamiliaproduto.codfamiliaproduto', '=', 'tblgrupoproduto.codfamiliaproduto');
             $qry->where('tblfamiliaproduto.codsecaoproduto', $filters['codsecaoproduto']);
-            
+
         }
 
         if (!empty($filters['codtributacao'])) {
@@ -492,7 +596,7 @@ class ProdutoRepository extends MGRepository {
         if (!empty($filters['codncm'])) {
             $qry->where('codncm', '=', $filters['codncm']);
         }
-        
+
         if (!empty($filters['site'])) {
             $qry->where('site', '=', $filters['site']);
         }
@@ -512,70 +616,16 @@ class ProdutoRepository extends MGRepository {
         if(!empty($filters['alteracao_ate'])) {
             $qry->where('alteracao', '<=', $filters['alteracao_ate']);
         }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        /*
-         if (!empty($filters['importado'])) {
-            $qry->where('importado', '=', $filters['importado']);
-        }
 
 
-          if (!empty($filters['codtipoproduto'])) {
-            $qry->where('codtipoproduto', '=', $filters['codtipoproduto']);
-        }
 
-         if (!empty($filters['site'])) {
-            $qry->where('site', '=', $filters['site']);
-        }
 
-         if (!empty($filters['descricaosite'])) {
-            $qry->palavras('descricaosite', $filters['descricaosite']);
-        }
 
-         if (!empty($filters['alteracao'])) {
-            $qry->where('alteracao', '=', $filters['alteracao']);
-        }
 
-         if (!empty($filters['codusuarioalteracao'])) {
-            $qry->where('codusuarioalteracao', '=', $filters['codusuarioalteracao']);
-        }
 
-         if (!empty($filters['criacao'])) {
-            $qry->where('criacao', '=', $filters['criacao']);
-        }
 
-         if (!empty($filters['codusuariocriacao'])) {
-            $qry->where('codusuariocriacao', '=', $filters['codusuariocriacao']);
-        }
 
-         if (!empty($filters['codncm'])) {
-            $qry->where('codncm', '=', $filters['codncm']);
-        }
 
-         if (!empty($filters['codcest'])) {
-            $qry->where('codcest', '=', $filters['codcest']);
-        }
-
-         if (!empty($filters['observacoes'])) {
-            $qry->palavras('observacoes', $filters['observacoes']);
-        }
-
-         if (!empty($filters['codopencart'])) {
-            $qry->where('codopencart', '=', $filters['codopencart']);
-        }
-
-         if (!empty($filters['codopencartvariacao'])) {
-            $qry->where('codopencartvariacao', '=', $filters['codopencartvariacao']);
-        }
-        */
-    
         switch ($filters['inativo']) {
             case 2: //Inativos
                 $qry = $qry->inativo();
@@ -589,9 +639,9 @@ class ProdutoRepository extends MGRepository {
                 $qry = $qry->ativo();
                 break;
         }
-        
+
         $count = $qry->count();
-        
+
         // Paginacao
         if (!empty($start)) {
             $qry->offset($start);
@@ -599,21 +649,21 @@ class ProdutoRepository extends MGRepository {
         if (!empty($length)) {
             $qry->limit($length);
         }
-        
+
         // Ordenacao
         foreach ($sort as $s) {
             $qry->orderBy($s['column'], $s['dir']);
         }
-        
+
         // Registros
         return [
             'recordsFiltered' => $count
             , 'recordsTotal' => Produto::count()
             , 'data' => $qry->get()
         ];
-        
+
     }
-    
+
     public function getArraySaldoEstoque()
     {
 
@@ -622,7 +672,7 @@ class ProdutoRepository extends MGRepository {
             'local' => [],
             //'total' => [],
         ];
-        
+
         // Array com Totais
         $arrTotal = [
             'estoqueminimo' => null,
@@ -641,7 +691,7 @@ class ProdutoRepository extends MGRepository {
             ],
             'variacao' => [],
         ];
-        
+
         // Array com Totais Por Variacao
         $pvs = $this->model->ProdutoVariacaoS()->orderBy(DB::raw("coalesce(variacao, '')"), 'ASC')->get();
         foreach ($pvs as $pv) {
@@ -668,10 +718,10 @@ class ProdutoRepository extends MGRepository {
                 ],
             ];
         }
-        
+
         // Percorrre todos os Locais
         foreach (EstoqueLocal::ativo()->orderBy('codestoquelocal', 'asc')->get() as $el) {
-            
+
             // Array com Totais por Local
             $arrLocal = [
                 'codestoquelocal' => $el->codestoquelocal,
@@ -692,10 +742,10 @@ class ProdutoRepository extends MGRepository {
                 ],
                 'variacao' => [],
             ];
-            
-            
+
+
             foreach ($pvs as $pv) {
-                
+
                 // Array com Saldo de Cada EstoqueLocalProdutoVariacao
                 $arrVar = [
                     'codprodutovariacao' => $pv->codprodutovariacao,
@@ -722,10 +772,10 @@ class ProdutoRepository extends MGRepository {
                         'ultimaconferencia' => null,
                     ],
                 ];
-                
+
                 //Se já existe a combinação de Variacao para o Local
                 if ($elpv = $pv->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $el->codestoquelocal)->first()) {
-                    
+
                     $arrVar['codestoquelocalprodutovariacao'] = $elpv->codestoquelocalprodutovariacao;
 
                     //Acumula Estoque Mínimo
@@ -735,7 +785,7 @@ class ProdutoRepository extends MGRepository {
                         $arrTotal['estoqueminimo'] += $elpv->estoqueminimo;
                         $arrTotalVar[$pv->codprodutovariacao]['estoqueminimo'] += $elpv->estoqueminimo;
                     }
-                    
+
                     //Acumula Estoque Máximo
                     $arrVar['estoquemaximo'] = $elpv->estoquemaximo;
                     if (!empty($elpv->estoquemaximo)) {
@@ -763,12 +813,12 @@ class ProdutoRepository extends MGRepository {
                     if (!empty($elpv->bloco)) {
                         $arrLocal['bloco'] = $elpv->bloco;
                     }
-                    
+
                     //Percorre os Saldos Físico e Fiscal
                     foreach($elpv->EstoqueSaldoS as $es) {
-                        
+
                         $tipo = ($es->fiscal == true)?'fiscal':'fisico';
-                        
+
                         $arrVar[$tipo]["codestoquesaldo"] = $es->codestoquesaldo;
 
                         //Acumula as quantidades de Saldo
@@ -776,58 +826,58 @@ class ProdutoRepository extends MGRepository {
                         $arrLocal[$tipo]["saldoquantidade"] += $es->saldoquantidade;
                         $arrTotal[$tipo]["saldoquantidade"] += $es->saldoquantidade;
                         $arrTotalVar[$pv->codprodutovariacao][$tipo]["saldoquantidade"] += $es->saldoquantidade;
-                        
+
                         //Acumula os valores de Saldo
                         $arrVar[$tipo]["saldovalor"] = $es->saldovalor;
                         $arrLocal[$tipo]["saldovalor"] += $es->saldovalor;
                         $arrTotal[$tipo]["saldovalor"] += $es->saldovalor;
                         $arrTotalVar[$pv->codprodutovariacao][$tipo]["saldovalor"] += $es->saldovalor;
-                        
+
                         $arrVar[$tipo]["customedio"] = $es->customedio;
-                        
+
                         $arrVar[$tipo]["ultimaconferencia"] = $es->ultimaconferencia;
-                        
+
                         //Pega a data de conferência mais antiga para o total do Local
                         if (empty($arrLocal[$tipo]["ultimaconferencia"])) {
                             $arrLocal[$tipo]["ultimaconferencia"] = $es->ultimaconferencia;
                         } elseif (!empty($es->ultimaconferencia) && $es->ultimaconferencia < $arrLocal[$tipo]["ultimaconferencia"]) {
                             $arrLocal[$tipo]["ultimaconferencia"] = $es->ultimaconferencia;
                         }
-                        
+
                         //Pega a data de conferência mais antiga para o total da variacao
                         if (empty($arrTotalVar[$pv->codprodutovariacao][$tipo]["ultimaconferencia"])) {
                             $arrTotalVar[$pv->codprodutovariacao][$tipo]["ultimaconferencia"] = $es->ultimaconferencia;
                         } elseif (!empty($es->ultimaconferencia) && $es->ultimaconferencia < $arrTotalVar[$pv->codprodutovariacao][$tipo]["ultimaconferencia"]) {
-                            $arrTotalVar[$pv->codprodutovariacao][$tipo]["ultimaconferencia"] = $es->ultimaconferencia;                            
+                            $arrTotalVar[$pv->codprodutovariacao][$tipo]["ultimaconferencia"] = $es->ultimaconferencia;
                         }
-                        
+
                         //Pega a data de conferência mais antiga para o total geral
                         if (empty($arrTotal[$tipo]["ultimaconferencia"])) {
                             $arrTotal[$tipo]["ultimaconferencia"] = $es->ultimaconferencia;
                         } elseif (!empty($es->ultimaconferencia) && $es->ultimaconferencia < $arrTotal[$tipo]["ultimaconferencia"]) {
-                            $arrTotal[$tipo]["ultimaconferencia"] = $es->ultimaconferencia;                            
+                            $arrTotal[$tipo]["ultimaconferencia"] = $es->ultimaconferencia;
                         }
-                        
+
                     }
 
                 }
-                
+
                 // Adiciona variacao ao array de locais
                 $arrLocal['variacao'][$pv->codprodutovariacao] = $arrVar;
-                
+
             }
-            
+
             // Calcula o custo médio do Local
             if ($arrLocal['fisico']['saldoquantidade'] > 0)
                 $arrLocal['fisico']['customedio'] = $arrLocal['fisico']['saldovalor'] / $arrLocal['fisico']['saldoquantidade'];
             if ($arrLocal['fiscal']['saldoquantidade'] > 0)
                 $arrLocal['fiscal']['customedio'] = $arrLocal['fiscal']['saldovalor'] / $arrLocal['fiscal']['saldoquantidade'];
-            
+
             // Adiciona local no array de retorno
             $arrRet['local'][$el->codestoquelocal] = $arrLocal;
-            
+
         }
-        
+
         // Calcula o custo médio dos totais de cada variacao
         foreach($arrTotalVar as $codvariacao => $arr) {
             if ($arrTotalVar[$codvariacao]['fisico']['saldoquantidade'] > 0)
@@ -835,7 +885,7 @@ class ProdutoRepository extends MGRepository {
             if ($arrTotalVar[$codvariacao]['fiscal']['saldoquantidade'] > 0)
                 $arrTotalVar[$codvariacao]['fiscal']['customedio'] = $arrTotalVar[$codvariacao]['fiscal']['saldovalor'] / $arrTotalVar[$codvariacao]['fiscal']['saldoquantidade'];
         }
-        
+
         // Adiciona totais das variações ao array de totais
         $arrTotal['variacao'] = $arrTotalVar;
 
@@ -844,28 +894,24 @@ class ProdutoRepository extends MGRepository {
             $arrTotal['fisico']['customedio'] = $arrTotal['fisico']['saldovalor'] / $arrTotal['fisico']['saldoquantidade'];
         if ($arrTotal['fiscal']['saldoquantidade'] > 0)
             $arrTotal['fiscal']['customedio'] = $arrTotal['fiscal']['saldovalor'] / $arrTotal['fiscal']['saldoquantidade'];
-        
+
         // Adiciona totais no array de retorno
         $arrRet['local']['total'] = $arrTotal;
         //$arrRet['total'] = $arrTotal;
 
-        /*
-        echo json_encode($arrRet);
-        die();
-        */
-        
+
         //retorna
         return $arrRet;
     }
-    
+
     public function detalhes ($model = null, $codestoquelocal = null) {
-        
+
         if (empty($model)) {
             $model = $this->model;
         }
-        
+
         $produto = $model;
-        
+
         //Embalagem
         $embalagens = collect();
         $embalagens[0] = (object)[
@@ -894,7 +940,7 @@ class ProdutoRepository extends MGRepository {
                 'variacao' => collect(),
             ];
         }
-        
+
         $filtro_estoquelocal = empty($codestoquelocal)?'':"and elpv.codestoquelocal = $codestoquelocal";
         $sql_saldos = "
             select pv.codprodutovariacao, sum(es.saldoquantidade) as saldoquantidade
@@ -907,7 +953,7 @@ class ProdutoRepository extends MGRepository {
             ";
         $saldos = collect(DB::select($sql_saldos));
         $saldos = $saldos->keyBy('codprodutovariacao');
-        
+
         $variacao = collect();
         foreach ($model->ProdutoVariacaoS()->orderByRaw('variacao asc nulls first')->get() as $pv) {
 
@@ -939,19 +985,19 @@ class ProdutoRepository extends MGRepository {
 
             }
         }
-        
+
         $repo_imagem = new ProdutoImagemRepository();
         $imagem = $repo_imagem->buscaPorProdutos($model->codproduto);
-        
+
         $produto->imagens = $imagem[$model->codproduto];
         $produto->embalagens = $embalagens;
         $produto->variacoes = $variacao;
-        
+
         return $produto;
     }
-    
+
     public function alterarImagemPadrao ($codimagem = null, $codprodutoembalagem = null, $codprodutovariacao = null) {
-        
+
         if (!empty($codimagem)) {
             if (!$pi = $this->model->ProdutoImagemS()->where('codimagem', $codimagem)->first()) {
                 return false;
@@ -959,24 +1005,24 @@ class ProdutoRepository extends MGRepository {
         } else {
             if (!$pi = $this->model->ProdutoImagemS()->orderBy('ordem')->first()) {
                 return false;
-            }            
+            }
         }
-        
+
         if (!empty($codprodutoembalagem)) {
             $repo = new ProdutoEmbalagemRepository();
             $repo->findOrFail($codprodutoembalagem);
             return $repo->update(null, ['codprodutoimagem' => $pi->codprodutoimagem]);
         }
-        
+
         if (!empty($codprodutovariacao)) {
             $repo = new ProdutoVariacaoRepository();
             $repo->findOrFail($codprodutovariacao);
             return $repo->update(null, ['codprodutoimagem' => $pi->codprodutoimagem]);
         }
-        
+
         return $this->update(null, ['codprodutoimagem' => $pi->codprodutoimagem]);
     }
-    
+
     public function alterarImagemOrdem($codimagemS) {
 
         $i = 1;
@@ -988,36 +1034,40 @@ class ProdutoRepository extends MGRepository {
         }
         return true;
     }
-    
+
     public function setarImagemPadrao() {
         $codimagem = $this->model->ImagemS->first()->codimagem;
         $this->alterarImagemPadrao($codimagem, null, null);
     }
-    
+
     public function listingPrecoEmbalagens($produtoembalagens, $preco, $unidademedida) {
         $embalagens = [[
             'preco' => formataNumero($preco),
             'embalagem' => $unidademedida
         ]];
-        
+
         foreach($produtoembalagens as $pe){
             if(empty($pe->preco)) {
-                $precoembalagens = formataNumero($preco * $pe->quantidade);
+                $precoembal    public static function find(int $id)
+    {
+        return app('App\\Models\\' . static::$modelClass)::find($id);
+    }
+agens = formataNumero($preco * $pe->quantidade);
             } else {
                 $precoembalagens = formataNumero($pe->preco);
             }
-            
+
         $embalagens[] = ['preco'=> $precoembalagens,'embalagem' => $pe->descricao];
-            
+
         }
-        
+
         return $embalagens;
     }
-    
+
     public function listingProdutoVariacao($pvs, $unidademedida) {
         $variacoes = [];
         foreach ($pvs as $pv) {
-            
+
             $pbs = $pv->ProdutoBarraS()->leftJoin('tblprodutoembalagem as pe', 'pe.codprodutoembalagem', '=', 'tblprodutobarra.codprodutoembalagem')
                         ->orderBy(DB::raw('coalesce(pe.quantidade, 0)'), 'ASC')
                         ->with('ProdutoEmbalagem')->get();
@@ -1028,7 +1078,7 @@ class ProdutoRepository extends MGRepository {
                     'embalagem' => !empty($pb->codprodutoembalagem) ? $pb->ProdutoEmbalagem->descricao : $unidademedida
                 ];
             }
-            
+
             $variacoes[] = [
                 'variacao'      => $pv->variacao ?? 'Sem Variação',
                 'marca'         => $pv->marca ?? null,
@@ -1036,7 +1086,8 @@ class ProdutoRepository extends MGRepository {
                 'barras'        => $barras
             ];
         }
-        
+
         return $variacoes;
     }
 }
+*/

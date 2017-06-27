@@ -14,7 +14,7 @@ class MGPolicy
             return false;
         }
     }
-    
+
     /**
      * Determine whether the user can list the model.
      *
@@ -25,7 +25,7 @@ class MGPolicy
         return $user->can(class_basename($this) . '.' . __FUNCTION__);
     }
 
-    
+
     /**
      * Determine whether the user can view the model.
      *
