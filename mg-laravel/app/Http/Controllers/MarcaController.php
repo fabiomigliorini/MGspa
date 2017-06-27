@@ -59,7 +59,7 @@ class MarcaController extends Controller
      */
     public function show($id)
     {
-        $model = Marca::findOrFail($id);
+        $model = MarcaRepository::findOrFail($id);
         return response()->json(
             $model,
             200
@@ -75,7 +75,7 @@ class MarcaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $model = Marca::findOrFail($id);
+        $model = MarcaRepository::findOrFail($id);
         $model->fill($request->all());
         $model->save();
 

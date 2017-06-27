@@ -74,7 +74,7 @@ export default {
       window.axios.get('marca/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     },
     deletar: function (id) {
@@ -82,7 +82,7 @@ export default {
       window.axios.delete('marca/' + this.$route.params.id).then(function (request) {
         vm.$router.push('/marca')
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     }
   },

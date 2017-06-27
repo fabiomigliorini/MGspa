@@ -28,7 +28,15 @@
       <v-fab error @click.native.stop="deletar()">
         <v-icon light>delete</v-icon>
       </v-fab>
-
+      <v-snackbar
+            :success="snackbar.contexto === 'success'"
+            :error="snackbar.contexto === 'error'"
+            multi-line
+            v-model="snackbar.status"
+            >
+        {{ snackbar.mensagem }}
+        <v-btn light flat @click.native="snackbar = false">Fechar</v-btn>
+      </v-snackbar>
     </div>
 
     <!--
@@ -49,7 +57,12 @@ export default {
   },
   data () {
     return {
-      dados: {}
+      dados: {},
+      snackbar: {
+        status: false,
+        contexto: '',
+        mensagem: ''
+      }
     }
   },
   methods: {
@@ -58,7 +71,7 @@ export default {
       window.axios.get('grupo-usuario/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     },
     deletar: function (id) {
@@ -66,7 +79,10 @@ export default {
       window.axios.delete('grupo-usuario/' + this.$route.params.id).then(function (request) {
         vm.$router.push('/grupo-usuario')
       }).catch(function (error) {
-        console.log(error)
+        vm.snackbar.status = true
+        vm.snackbar.mensagem = error.response.data.mensagem
+        vm.snackbar.contexto = 'error'
+        console.log(error.response.data)
       })
     }
   },

@@ -88,7 +88,7 @@ export default {
       window.axios.post('marca', vm.dados).then(function (request) {
         vm.$router.push('/marca/' + request.data.codmarca)
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     }
   },

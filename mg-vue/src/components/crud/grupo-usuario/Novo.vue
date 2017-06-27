@@ -68,7 +68,7 @@ export default {
       window.axios.post('grupo-usuario', vm.dados).then(function (request) {
         vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     }
   },

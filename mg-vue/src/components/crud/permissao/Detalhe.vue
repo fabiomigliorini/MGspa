@@ -58,7 +58,7 @@ export default {
       window.axios.get('permissao/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     },
     deletar: function (id) {
@@ -66,7 +66,7 @@ export default {
       window.axios.delete('permissao/' + this.$route.params.id).then(function (request) {
         vm.$router.push('/permissao')
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     }
   },

@@ -17,7 +17,7 @@ class PermissaoController extends Controller
     public function index(Request $request)
     {
         // Permissao
-        $this->repository->authorize('listing');
+        PermissaoRepository::authorize('listing');
 
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
         $qry = PermissaoRepository::query($filter, $sort, $fields);

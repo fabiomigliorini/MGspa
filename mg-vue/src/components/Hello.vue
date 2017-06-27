@@ -1,23 +1,45 @@
 <template>
-  <div class="container">
-    <small class='text-muted'>{{ token }}</small>
-  </div>
+  <mg-layout>
+
+    <div slot="titulo">
+      Início
+    </div>
+
+    <div slot="menu">
+      <div class="container">
+      </div>
+    </div>
+
+    <div slot="conteudo">
+      <v-card class="elevation-0">
+          <v-card-text>
+            <v-container fluid>
+              <v-layout row wrap>
+                ...
+              </v-layout>
+            </v-container>
+          </v-card-text>
+        </v-card>
+    </div>
+
+    <!--
+    <div fixed slot="rodape">
+    </div>
+    -->
+
+  </mg-layout>
 </template>
 
 <script>
+import MgLayout from './layout/MgLayout'
+
 export default {
   name: 'hello',
-  data () {
-    return {
-      token: null
-    }
+  components: {
+    MgLayout
   },
-  mounted () {
-    this.token = localStorage.getItem('auth.token')
+  data () {
+    return {}
   }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-</style>

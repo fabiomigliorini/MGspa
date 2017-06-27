@@ -1,28 +1,49 @@
 <template>
-  <mg-layout menu>
+<mg-layout menu>
 
-    <div slot="titulo">
-      Permissões
+  <div slot="titulo">
+    Permissões
+  </div>
+
+  <div slot="menu">
+    <div class="container">
+      <v-flex xs8>
+        <v-text-field name="filtro" label="Busca" id="filtro" v-model="filtro.permissao" @change.native.stop="pesquisar()"></v-text-field>
+
+
+      </v-flex>
     </div>
+    <v-list two-line>
+      <template v-for="item in dados">
+          <transition name="component-fade">
+            <v-list-item v-bind:key="item.codpermissao">
+              <v-list-tile @click.native.stop="tab(item.codpermissao)">
+                <v-list-tile-content>
+                  <v-list-tile-title>
+                    {{ item.permissao }}
+                  </v-list-tile-title>
+                  <v-list-tile-sub-title>
+                    #{{ item.codpermissao }}
+                  </v-list-tile-sub-title>
+                </v-list-tile-content>
+              </v-list-tile>
+              <v-divider></v-divider>
+            </v-list-item>
+          </transition>
+        </template>
+      </v-list>
 
-    <div slot="menu">
-      <div class="container">
-        <v-flex xs8>
-              <v-text-field
-                name="filtro"
-                label="Busca"
-                id="filtro"
-                v-model="filtro.permissao"
-                @change.native.stop="pesquisar()"
-              ></v-text-field>
-            </v-flex>
-      </div>
-    </div>
+  </div>
 
-    <div slot="conteudo">
+  <div slot="conteudo">
+    <template v-for="item in dados">
+      <p v-if="item.codpermissao">{{ item.permissao }}</p>
+    </template>
 
-       <v-list two-line>
-        <template v-for="item in dados">
+
+<!--
+    <v-list two-line>
+      <template v-for="item in dados">
           <transition name="component-fade">
             <v-list-item v-bind:key="item.codpermissao">
               <v-list-tile avatar router :to="{path: '/permissao/' + item.codpermissao }">
@@ -42,29 +63,29 @@
 
           </transition>
         </template>
-      </v-list>
+    </v-list>
 
-      <transition name="component-fade">
-        <div class="container" v-if="!fim">
-          <v-btn @click.native.stop="mais()" block info :loading="carregando">
-            Mais
-            <v-icon right>expand_more</v-icon>
-          </v-btn>
-        </div>
-      </transition>
+    <transition name="component-fade">
+      <div class="container" v-if="!fim">
+        <v-btn @click.native.stop="mais()" block info :loading="carregando">
+          Mais
+          <v-icon right>expand_more</v-icon>
+        </v-btn>
+      </div>
+    </transition>
+-->
+    <v-fab error router :to="{path: '/permissao/nova'}">
+      <v-icon light>add</v-icon>
+    </v-fab>
 
-      <v-fab error router :to="{path: '/permissao/nova'}">
-        <v-icon light>add</v-icon>
-      </v-fab>
+  </div>
 
-    </div>
-
-    <!--
+  <!--
     <div fixed slot="rodape">
     </div>
     -->
 
-  </mg-layout>
+</mg-layout>
 </template>
 
 <script>
@@ -78,6 +99,7 @@ export default {
   data () {
     return {
       dados: [],
+      tabs: [],
       pagina: 1,
       filtro: {
         permissao: null
@@ -92,15 +114,20 @@ export default {
       var params = this.filtro
       params.page = this.pagina
       this.carregando = true
-      window.axios.get('permissao', {params}).then(response => {
-        vm.dados = vm.dados.concat(response.data.data)
-        this.fim = (response.data.current_page >= response.data.last_page)
-        this.carregando = false
+      window.axios.get('permissao', {
+        params
+      }).then(response => {
+        vm.dados = response.data.data
+        // var
+        // for ( i < vm.dados.length i++) {
+        //   this.tabs[dados.codpermissao] = dados.codpermissao
+        // }
       })
     },
-    mais () {
-      this.pagina++
-      this.carregaListagem()
+    tab (codpermissao) {
+      this.tabs.codpermissao = true
+      console.log(codpermissao)
+      console.log(this.tab)
     },
     pesquisar () {
       this.pagina = 1

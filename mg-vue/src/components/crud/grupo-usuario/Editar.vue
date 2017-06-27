@@ -65,7 +65,7 @@ export default {
       window.axios.get('grupo-usuario/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     },
     update: function () {
@@ -73,7 +73,7 @@ export default {
       window.axios.patch('grupo-usuario/' + this.$route.params.id, vm.dados).then(function (request) {
         vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
       }).catch(function (error) {
-        console.log(error)
+        console.log(error.response)
       })
     }
   },
