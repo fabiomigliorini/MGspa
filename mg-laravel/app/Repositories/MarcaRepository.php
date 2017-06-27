@@ -46,10 +46,7 @@ class MarcaRepository extends MGRepositoryStatic {
         return true;
     }
 
-    public static function used($id = null) {
-        if (!empty($id)) {
-            $mdoel->findOrFail($id);
-        }
+    public static function used($model) {
         if ($model->ProdutoS->count() > 0) {
             return 'Marca sendo utilizada em Produtos!';
         }

@@ -36,20 +36,32 @@ class MarcaController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        $this->validate($request, [
-            'marca' => 'required',
-        ]);
+     public function store(Request $request)
+     {
+         MarcaRepository::authorize('create');
 
-        $model = new Marca($request->all());
-        $model->save();
+         $data = $request->all();
 
-        return response()->json(
-            $model,
-            200
-        );
-    }
+         $model = MarcaRepository::new();
+
+         if (!MarcaRepository::validate($model, $data, $errors)) {
+             return response()->json(
+                 $errors,
+                 422
+             );
+         }
+
+         $model->fill($data);
+
+         if (!$model->save()) {
+             abort(500);
+         }
+
+         return response()->json(
+             $model,
+             201
+         );
+     }
 
     /**
      * Display the specified resource.
@@ -73,17 +85,32 @@ class MarcaController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        $model = MarcaRepository::findOrFail($id);
-        $model->fill($request->all());
-        $model->save();
+     public function update(Request $request, $id)
+     {
+         $data = $request->all();
 
-        return response()->json(
-            $model,
-            200
-        );
-    }
+         $model = MarcaRepository::findOrFail($id);
+
+         if (!MarcaRepository::validate($model, $data, $errors)) {
+             return response()->json(
+                 $errors,
+                 422
+             );
+         }
+
+         $model->fill($data);
+
+         MarcaRepository::authorize('update');
+
+         if (!$model->save()) {
+             abort(500);
+         }
+
+         return response()->json(
+             $model,
+             201
+         );
+     }
 
     /**
      * Remove the specified resource from storage.
@@ -91,17 +118,16 @@ class MarcaController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-        try{
-            Marca::find($id)->delete();
-            $ret = ['resultado' => true, 'mensagem' => 'Marca excluída com sucesso!'];
-        }
-        catch(\Exception $e){
-            $ret = ['resultado' => false, 'mensagem' => 'Erro ao excluir marca!', 'exception' => $e];
-        }
-        return json_encode($ret);
-    }
+     public function destroy($id)
+     {
+         $model = MarcaRepository::findOrFail($id);
 
+         MarcaRepository::authorize('delete');
 
+         if ($mensagem = MarcaRepository::used($model)) {
+             return response()->json(['mensagem' => $mensagem], 422);
+         }
+
+         return response()->json(['mensagem' => MarcaRepository::delete($model)], 204);
+     }
 }
