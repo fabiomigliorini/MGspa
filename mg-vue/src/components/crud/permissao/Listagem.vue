@@ -14,17 +14,14 @@
       </v-flex>
     </div>
     <v-list two-line>
-      <template v-for="item in dados">
+      <template v-for="(item, index) in dados.classes">
           <transition name="component-fade">
             <v-list-item v-bind:key="item.codpermissao">
-              <v-list-tile @click.native.stop="tab(item.codpermissao)">
+              <v-list-tile @click.native.stop="tab(index)">
                 <v-list-tile-content>
                   <v-list-tile-title>
-                    {{ item.permissao }}
+                    {{ index }}
                   </v-list-tile-title>
-                  <v-list-tile-sub-title>
-                    #{{ item.codpermissao }}
-                  </v-list-tile-sub-title>
                 </v-list-tile-content>
               </v-list-tile>
               <v-divider></v-divider>
@@ -36,10 +33,11 @@
   </div>
 
   <div slot="conteudo">
-    <template v-for="item in dados">
-      <p v-if="item.codpermissao == tabs">{{ item.permissao }}</p>
+    <template v-for="(item, index) in dados.classes">
+      <div v-if="index == tabs">
+        {{ item }}
+      </div>
     </template>
-
 
 <!--
     <v-list two-line>
@@ -92,7 +90,7 @@
 import MgLayout from '../../layout/MgLayout'
 
 export default {
-  name: 'hello',
+  name: 'permissao-listagem',
   components: {
     MgLayout
   },
@@ -117,7 +115,7 @@ export default {
       window.axios.get('permissao', {
         params
       }).then(response => {
-        vm.dados = response.data.data
+        vm.dados = response.data
       })
     },
     tab (codpermissao) {
