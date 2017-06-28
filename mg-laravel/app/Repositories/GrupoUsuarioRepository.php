@@ -10,36 +10,36 @@ use App\Models\GrupoUsuario;
 /**
  * Description of GrupoUsuarioRepository
  *
- * @property Validator $validator
- * @property GrupoUsuario $model
  */
 class GrupoUsuarioRepository extends MGRepositoryStatic {
 
-    public static $modelClass = 'GrupoUsuario';
+    public static $modelClass = 'App\\Models\\GrupoUsuario';
 
-    public static function validate($model = null, array $data = null, &$errors)
+    public static function validate($model = null, &$errors = null, $throwsException = true)
     {
-        if (empty($data)) {
-            if (empty($model)) {
-                return false;
-            }
-            $data = $model->getAttributes();
-        }
+        $data = $model->getAttributes();
 
-        $id = $data['codgrupousuario']??$model->codgrupousuario??null;
-
-        $validator = Validator::make($data, [
+        $rules = [
             'grupousuario' => [
                 'required',
-                Rule::unique('tblgrupousuario')->ignore($id, 'codgrupousuario')
+                Rule::unique('tblgrupousuario')->ignore($model->codgrupousuario, 'codgrupousuario')
             ],
-        ], [
+        ];
+
+        $messages = [
             'grupousuario.required' => 'O campo Grupo de Usuario não pode ser vazio',
             'grupousuario.unique' => 'Este Grupo de Usuario já esta cadastrado',
-        ]);
+        ];
+
+        $validator = Validator::make($data, $rules, $messages);
+
+        if ($throwsException) {
+            $validator->validate();
+            return true;
+        }
 
         if (!$validator->passes()) {
-            $errors = $validator->errors()->all();
+            $errors = $validator->errors();
             return false;
         }
 

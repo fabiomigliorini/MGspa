@@ -6,20 +6,37 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 use App\Models\Usuario;
-use App\Models\Permissao;
 
 /**
  * Description of UsuarioRepository
  *
- * @property Validator $validator
- * @property Usuario $model
  */
 class UsuarioRepository extends MGRepositoryStatic
 {
-    const PERMISSAO_CONSULTA = 100;
-    const PERMISSAO_MANUTENCAO = 200;
-    const PERMISSAO_ADMINISTRACAO = 300;
+    public static $modelClass = '\\App\\Models\\Usuario';
 
-    public static $modelClass = 'Usuario';
+    public static function validate($model = null, &$errors = null, $throwsException = true)
+    {
+        $data = $model->getAttributes();
 
+        $rules = [
+        ];
+
+        $messages = [
+        ];
+
+        $validator = Validator::make($data, $rules, $messages);
+
+        if ($throwsException) {
+            $validator->validate();
+            return true;
+        }
+
+        if (!$validator->passes()) {
+            $errors = $validator->errors();
+            return false;
+        }
+
+        return true;
+    }
 }

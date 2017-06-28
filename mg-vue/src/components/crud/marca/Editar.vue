@@ -77,7 +77,7 @@ export default {
     },
     update: function () {
       var vm = this
-      window.axios.patch('marca/' + this.$route.params.id, vm.dados).then(function (request) {
+      window.axios.put('marca/' + this.$route.params.id, vm.dados).then(function (request) {
         vm.$router.push('/marca/' + request.data.codmarca)
       }).catch(function (error) {
         console.log(error.response)

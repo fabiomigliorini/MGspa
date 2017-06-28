@@ -70,7 +70,7 @@ export default {
     },
     update: function () {
       var vm = this
-      window.axios.patch('grupo-usuario/' + this.$route.params.id, vm.dados).then(function (request) {
+      window.axios.put('grupo-usuario/' + this.$route.params.id, vm.dados).then(function (request) {
         vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
       }).catch(function (error) {
         console.log(error.response)
