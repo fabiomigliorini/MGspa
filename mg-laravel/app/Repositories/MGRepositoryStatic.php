@@ -18,18 +18,25 @@ class MGRepositoryStatic
 
     public static function find(int $id)
     {
-        return app('App\\Models\\' . static::$modelClass)::find($id);
+        return app(static::$modelClass)::find($id);
     }
 
     public static function findOrFail(int $id)
     {
-        return app('App\\Models\\' . static::$modelClass)::findOrFail($id);
+        return app(static::$modelClass)::findOrFail($id);
     }
 
-    public static function new()
+    public static function details($model = null)
     {
-        $class = "App\\Models\\" . static::$modelClass;
-        $model = new $class();
+        return $model->getAttributes();
+    }
+
+    public static function new(array $data = null)
+    {
+        $model = new static::$modelClass();
+        if (!empty($data)) {
+            $model = static::fill($model, $data);
+        }
         return $model;
     }
 
@@ -42,10 +49,9 @@ class MGRepositoryStatic
     public static function create($model = null, array $data = null)
     {
         if (empty($model)) {
-            if (empty($data)) {
-                return false;
-            }
             $model = static::new();
+        }
+        if (!empty($data)) {
             $model = static::fill($model, $data);
         }
         if (!$model->save()) {
@@ -65,7 +71,6 @@ class MGRepositoryStatic
         return $model;
     }
 
-
     public static function save($model)
     {
         if ($model->exists) {
@@ -75,7 +80,7 @@ class MGRepositoryStatic
         }
     }
 
-    public static function delete($model = null)
+    public static function delete($model)
     {
         return $model->delete();
     }
@@ -86,14 +91,9 @@ class MGRepositoryStatic
         return true;
     }
 
-    public static function used($model)
-    {
-        return false;
-    }
-
     public static function query(array $filter = null, array $sort = null, array $fields = null)
     {
-        $qry = app('App\\Models\\' . static::$modelClass)::query();
+        $qry = app(static::$modelClass)::query();
         foreach ($filter as $field => $value) {
             if (is_numeric($value) || ($value instanceof Carbon)) {
                 $qry->where($field, $value);
@@ -128,6 +128,19 @@ class MGRepositoryStatic
             $qry->orderBy($field, $dir);
         }
         return $qry;
+    }
+
+    public static function activate ($model) {
+        $model->inativo = null;
+        return static::update($model);
+    }
+
+    public static function inactivate ($model, $date = null) {
+        if (empty($date)) {
+            $date = Carbon::now();
+        }
+        $model->inativo = $date;
+        return static::update($model);
     }
 
 }

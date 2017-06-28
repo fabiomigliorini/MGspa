@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 use App\Models\Permissao;
+use App\Models\GrupoUsuarioPermissao;
+use App\Models\GrupoUsuario;
 use Auth;
 use Route;
 
@@ -42,7 +44,7 @@ class PermissaoRepository extends MGRepositoryStatic
     public static function used($model)
     {
         if ($model->GrupoUsuario->count() > 0) {
-            return 'Permissão já anexada para um Grupo de Usuários!';
+            return 'Permissão já anexada em um Grupo de Usuários!';
         }
         return false;
     }
@@ -185,7 +187,7 @@ class PermissaoRepository extends MGRepositoryStatic
         foreach ($nomes as $nome) {
             $arr = explode('.', $nome);
             $grupo = $arr[0]??null;
-            $ret[$grupo][$nome] = null;
+            $ret[$grupo][$nome]['codpermissao'] = null;
         }
 
         // retorna array com as rotas agrupadas
@@ -208,18 +210,43 @@ class PermissaoRepository extends MGRepositoryStatic
             $arr = explode('.', $permissao->permissao);
             $grupo = $arr[0]??null;
 
-            // se a rota nao esta registrada no Laravel, joga no grupo de 'INATIVOS'
+            // se a rota nao esta registralistagemPermissoesda no Laravel, joga no grupo de 'INATIVOS'
             if (!isset($rotas[$grupo][$permissao->permissao])) {
                 $grupo = 'INATIVOS';
             }
 
             // associa a rota ao codigo gravado no banco de dados
-            $rotas[$grupo][$permissao->permissao] = $permissao->codpermissao;
+            $rotas[$grupo][$permissao->permissao]['codpermissao'] = $permissao->codpermissao;
 
         }
 
         // retorna as rotas
         return $rotas;
+    }
+
+    public static function listagemPermissoesPorGrupoUsuario ()
+    {
+        $permissoes = static::listagemPermissoes();
+        $gups = GrupoUsuarioPermissao::orderBy('codpermissao')->with('Permissao')->get();
+        foreach ($gups as $gup) {
+            // agrupa as rotas pelo primeiro nome
+            // ex 'produto.store', o grupo sera 'produto'
+            $arr = explode('.', $gup->Permissao->permissao);
+            $grupo = $arr[0]??null;
+
+            // se a rota nao esta registralistagemPermissoesda no Laravel, joga no grupo de 'INATIVOS'
+            if (!isset($permissoes[$grupo][$gup->Permissao->permissao])) {
+                $grupo = 'INATIVOS';
+            }
+
+            // associa a rota ao codigo gravado no banco de dados
+            $permissoes[$grupo][$gup->Permissao->permissao]['codgrupousuario'][] = $gup->codgrupousuario;
+        }
+
+        return [
+            'Grupos' => GrupoUsuario::orderBy('codgrupousuario')->get(),
+            'Permissoes' => $permissoes
+        ];
     }
 
     public static function adicionaPermissao ($rota, $codgrupousuario)
@@ -229,8 +256,8 @@ class PermissaoRepository extends MGRepositoryStatic
         }
         if (!GrupoUsuarioPermissao::where('codgrupousuario', $codgrupousuario)->where('codpermissao', $permissao->codpermissao)->first()) {
             if (!$gup = GrupoUsuarioPermissao::create([
-                'codgrupousuario', $codgrupousuario,
-                'codpermissao', $permissao->codpermissao,
+                'codgrupousuario' => $codgrupousuario,
+                'codpermissao' => $permissao->codpermissao,
             ])) {
                 return false;
             }
@@ -244,10 +271,8 @@ class PermissaoRepository extends MGRepositoryStatic
             return true;
         }
         if (!$gup = GrupoUsuarioPermissao::where('codgrupousuario', $codgrupousuario)->where('codpermissao', $permissao->codpermissao)->first()) {
-            if (!$gup->delete()) {
-                return false;
-            }
+            return true;
         }
-        return true;
+        return $gup->delete();
     }
 }

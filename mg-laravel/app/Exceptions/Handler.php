@@ -9,8 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\Access\AuthorizationException;
-
+use Illuminate\Database\QueryException;
 
 class Handler extends ExceptionHandler
 {
@@ -21,7 +20,6 @@ class Handler extends ExceptionHandler
      */
     protected $dontReport = [
         \Illuminate\Auth\AuthenticationException::class,
-        \Illuminate\Auth\Access\AuthorizationException::class,
         \Symfony\Component\HttpKernel\Exception\HttpException::class,
         \Illuminate\Database\Eloquent\ModelNotFoundException::class,
         \Illuminate\Session\TokenMismatchException::class,
@@ -51,18 +49,6 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $e)
     {
-        if ($e instanceof AuthorizationException) {
-            return response()->json(['mensagem' => 'Operação não autorizada para seu usuário'], 403);
-        }
-
-        if ($e instanceof ModelNotFoundException) {
-            return response()->json(['mensagem' => 'Registro não encontrado'], 404);
-        }
-
-        if ($e instanceof NotFoundHttpException) {
-            return response()->json(['mensagem' => 'Página não encontrada'], 404);
-        }
-
         if ($e instanceof HttpException) {
             if ($e->getStatusCode() == 403) {
                 return response()->json(['mensagem' => 'Operação não autorizada para seu usuário'], 403);
@@ -74,6 +60,34 @@ class Handler extends ExceptionHandler
                 'mensagem' => 'Erro de validação!',
                 'erros' => $e->validator->errors()
             ], 422);
+        }
+
+        if ($e instanceof QueryException) {
+            $codigo = $e->getCode();
+            $mensagem = 'Falha na Execução no Banco de Dados!';
+            $erro = $e->getMessage();
+            $sql = $e->getSql();
+            if ($codigo == 23503) {
+                if (strtolower(substr($sql, 0, 6)) == 'delete') {
+                    $mensagem = 'Impossível excluir registro! Ele já está sendo utilizado!';
+                } else {
+                    $mensagem = 'Violação de chave estrangeira ao executar operação no Banco de Dados!';
+                }
+            }
+            return response()->json([
+                'mensagem' => $mensagem,
+                'erros' => [$codigo => $erro],
+                'sql' => $sql,
+                'bindings' => $e->getBindings(),
+            ], 409);
+        }
+
+        if ($e instanceof ModelNotFoundException) {
+            return response()->json(['mensagem' => 'Registro não encontrado'], 404);
+        }
+
+        if ($e instanceof NotFoundHttpException) {
+            return response()->json(['mensagem' => 'Página não encontrada'], 404);
         }
 
         return parent::render($request, $e);
@@ -88,11 +102,9 @@ class Handler extends ExceptionHandler
      */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
-        /*
         if ($request->expectsJson()) {
             return response()->json(['mensagem' => 'Usuário não autenticado'], 401);
         }
-        */
         return redirect()->guest(route('auth/login'));
     }
 }

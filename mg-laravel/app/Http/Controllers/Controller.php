@@ -45,8 +45,6 @@ class Controller extends BaseController
 
     public function authorize ($codfilial = null, $codusuario = null, $rota = null)
     {
-        $rotas = PermissaoRepository::listagemPermissoes();
-        dd($rotas);
         if (!PermissaoRepository::authorize($codfilial, $codusuario, $rota)) {
             abort(403);
         }

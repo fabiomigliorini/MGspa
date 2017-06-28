@@ -15,7 +15,7 @@ use App\Models\Marca;
  */
 class MarcaRepository extends MGRepositoryStatic {
 
-    public static $modelClass = 'Marca';
+    public static $modelClass = '\\App\\Models\\Marca';
 
     public static function validate($model = null, &$errors)
     {
