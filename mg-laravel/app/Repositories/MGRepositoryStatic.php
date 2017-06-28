@@ -85,9 +85,34 @@ class MGRepositoryStatic
         return $model->delete();
     }
 
-
-    public static function validate($model = null, &$errors)
+    public static function validationRules ($model = null)
     {
+        return [];
+    }
+
+    public static function validationMessages ($model = null)
+    {
+        return [];
+    }
+
+    public static function validate ($model = null, &$errors = null, $throwsException = true)
+    {
+        $rules = static::validationRules($model);
+
+        $messages = static::validationMessages($model);
+
+        $validator = Validator::make($model->getAttributes(), $rules, $messages);
+
+        if ($throwsException) {
+            $validator->validate();
+            return true;
+        }
+
+        if (!$validator->passes()) {
+            $errors = $validator->errors();
+            return false;
+        }
+
         return true;
     }
 
