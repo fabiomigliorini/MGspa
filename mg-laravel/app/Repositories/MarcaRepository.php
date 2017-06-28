@@ -10,49 +10,39 @@ use App\Models\Marca;
 /**
  * Description of MarcaRepository
  *
- * @property Validator $validator
- * @property Marca $model
  */
 class MarcaRepository extends MGRepositoryStatic {
 
     public static $modelClass = '\\App\\Models\\Marca';
 
-    public static function validate($model = null, &$errors)
+    public static function validate($model = null, &$errors = null, $throwsException = true)
     {
-        if (empty($data)) {
-            if (empty($model)) {
-                return false;
-            }
-            $data = $model->getAttributes();
-        }
+        $data = $model->getAttributes();
 
-        $id = $data['codmarca']??$model->codmarca??null;
-
-        $validator = Validator::make($data, [
+        $rules = [
             'marca' => [
                 'required',
-                Rule::unique('tblmarca')->ignore($id, 'codmarca')
+                Rule::unique('tblmarca')->ignore($data['id']??null, 'codmarca')
             ],
-        ], [
+        ];
+
+        $messages = [
             'marca.required' => 'O campo marca não pode ser vazio',
             'marca.unique' => 'Esta marca já esta cadastrada',
-        ]);
+        ];
+
+        $validator = Validator::make($data, $rules, $messages);
+
+        if ($throwsException) {
+            $validator->validate();
+            return true;
+        }
 
         if (!$validator->passes()) {
-            $errors = $validator->errors()->all();
+            $errors = $validator->errors();
             return false;
         }
 
         return true;
     }
-
-    public static function used($model) {
-        if ($model->ProdutoS->count() > 0) {
-            return 'Marca sendo utilizada em Produtos!';
-        }
-        return false;
-    }
-
-
-
 }

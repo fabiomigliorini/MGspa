@@ -45,6 +45,14 @@ class Controller extends BaseController
 
     public function authorize ($codfilial = null, $codusuario = null, $rota = null)
     {
+        // PermissaoRepository::adicionaPermissao('usuario.index', 1);
+        // PermissaoRepository::adicionaPermissao('usuario.show', 1);
+        // PermissaoRepository::adicionaPermissao('usuario.store', 1);
+        //PermissaoRepository::adicionaPermissao('usuario.update', 1);
+        // PermissaoRepository::adicionaPermissao('usuario.destroy', 1);
+        // PermissaoRepository::adicionaPermissao('usuario.inactivate', 1);
+        // PermissaoRepository::adicionaPermissao('usuario.activate', 1);
+
         if (!PermissaoRepository::authorize($codfilial, $codusuario, $rota)) {
             abort(403);
         }
