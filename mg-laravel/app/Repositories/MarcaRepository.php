@@ -17,7 +17,7 @@ class MarcaRepository extends MGRepositoryStatic {
 
     public static $modelClass = 'Marca';
 
-    public static function validate($model = null, array $data = null, &$errors)
+    public static function validate($model = null, &$errors)
     {
         if (empty($data)) {
             if (empty($model)) {

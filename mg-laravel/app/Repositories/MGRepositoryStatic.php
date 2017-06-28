@@ -81,7 +81,7 @@ class MGRepositoryStatic
     }
 
 
-    public static function validate($model = null, array $data = null, &$errors)
+    public static function validate($model = null, &$errors)
     {
         return true;
     }
@@ -130,23 +130,4 @@ class MGRepositoryStatic
         return $qry;
     }
 
-    public static function allows($ability, $model = null)
-    {
-        if (empty($model)) {
-            $model = static::new();
-        }
-
-        if (!Gate::allows($ability, $model)) {
-            return false;
-        }
-        return true;
-    }
-
-    public static function authorize($ability, $model = null)
-    {
-        if (!self::allows($ability, $model)) {
-            abort(403);
-        }
-        return true;
-    }
 }

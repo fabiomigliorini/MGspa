@@ -8,6 +8,10 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
+use Route;
+
+use App\Repositories\PermissaoRepository;
+
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
@@ -37,5 +41,15 @@ class Controller extends BaseController
             $sort,
             $fields,
         ];
+    }
+
+    public function authorize ($codfilial = null, $codusuario = null, $rota = null)
+    {
+        $rotas = PermissaoRepository::listagemPermissoes();
+        dd($rotas);
+        if (!PermissaoRepository::authorize($codfilial, $codusuario, $rota)) {
+            abort(403);
+        }
+        return true;
     }
 }

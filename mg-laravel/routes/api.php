@@ -43,4 +43,7 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
     Route::resource('produto', 'ProdutoController');
     //Route::options('produto/{id}', 'ProdutoController@options');
 
+    Route::get('asdads', 'ProdutoController@index')->name('asdads');
+    Route::get('asdads2', 'ProdutoController@index')->name('asdads');
+
 });

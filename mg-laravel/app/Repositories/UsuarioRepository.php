@@ -22,36 +22,4 @@ class UsuarioRepository extends MGRepositoryStatic
 
     public static $modelClass = 'Usuario';
 
-    public static function permitido (
-        Usuario $usuario,
-        $permissao,
-        $nivel = self::PERMISSAO_CONSULTA,
-        $codfilial = null,
-        $codfilial_anterior = null)
-    {
-
-        if (!empty($codfilial_anterior)) {
-            if (!static::permitido($usuario, $permissao, $nivel, $codfilial_anterior)) {
-                return false;
-            }
-        }
-
-        $query = Permissao::where('permissao', $permissao);
-
-        $query->join('tblgrupousuariopermissao', 'tblgrupousuariopermissao.codpermissao', '=', 'tblpermissao.codpermissao')
-            ->join('tblgrupousuariousuario', 'tblgrupousuariousuario.codgrupousuario', '=', 'tblgrupousuariopermissao.codgrupousuario')
-            ->where('tblgrupousuariousuario.codusuario', $usuario->codusuario)
-            ->where('tblgrupousuariopermissao.nivel', '>=', $nivel)
-            ;
-
-        if (!empty($codfilial)) {
-            $query->where('tblgrupousuariousuario.codfilial', $codfilial);
-        }
-
-        $count = $query->count();
-
-        return true;
-        return $count > 0;
-
-    }
 }

@@ -8,12 +8,6 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use App\Repositories\ProdutoRepository;
 
-use App\Http\Requests\Produto\ProdutoStoreRequest;
-use App\Http\Requests\Produto\ProdutoDeleteRequest;
-use App\Http\Requests\Produto\ProdutoIndexRequest;
-use App\Http\Requests\Produto\ProdutoShowRequest;
-use App\Http\Requests\Produto\ProdutoUpdateRequest;
-
 class ProdutoController extends Controller
 {
     /**
@@ -21,7 +15,7 @@ class ProdutoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(ProdutoIndexRequest $request)
+    public function index(Request $request)
     {
         //ProdutoRepository::authorize('listing');
 
@@ -41,7 +35,7 @@ class ProdutoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(ProdutoStoreRequest $request)
+    public function store(Request $request)
     {
         $dados =  $request->all();
         $model = ProdutoRepository::validate(null, $dados, $errors);
@@ -57,7 +51,7 @@ class ProdutoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(ProdutoShowRequest $request, $id)
+    public function show(Request $request, $id)
     {
         $details = ProdutoRepository::detailsById($id);
         return response()->json(
@@ -73,13 +67,25 @@ class ProdutoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(ProdutoUpdateRequest $request, $id)
+    public function update(Request $request, $id)
     {
+        $this->authorize();
+
+        $dados = $request->all();
         $model = ProdutoRepository::findOrFail($id);
-        $model = ProdutoRepository::update($model, $request->all());
+        $model = ProdutoRepository::fill($model, $dados);
+
+        if (!ProdutoRepository::validate($model, $errors)) {
+            return response()->json(
+                $errors,
+                422
+            );
+        }
+
+        $model = ProdutoRepository::update($model, $dados);
         return response()->json(
             $model,
-            200
+            201
         );
     }
 
@@ -89,7 +95,7 @@ class ProdutoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ProdutoDeleteRequest $request, $id)
+    public function destroy(Request $request, $id)
     {
         try{
             Produto::find($id)->delete();
@@ -102,11 +108,11 @@ class ProdutoController extends Controller
     }
 
 
-    public function activate(ProdutoDeleteRequest $request, $id) {
+    public function activate(Request $request, $id) {
         dd('ativando' . $id);
     }
 
-    public function inactivate(ProdutoDeleteRequest $request, $id) {
+    public function inactivate(Request $request, $id) {
         dd('inativando' . $id);
     }
 

@@ -15,15 +15,15 @@ class ProdutoRepository extends MGRepositoryStatic
 {
     public static $modelClass = 'Produto';
 
-    public static function rules($data)
+    public static function validate($model = null, &$errors)
     {
-        $id = $data['codproduto']??$model->codproduto??null;
+        $data = $model->getAttributes();
 
         Validator::extend('nomeMarca', function ($attribute, $value, $parameters) {
             if (empty($parameters[0])) {
                 return false;
             }
-            $marca = new MarcaRepository();
+            //$marca = new MarcaRepository();
             $marca = MarcaRepository::findOrFail($parameters[0]);
             if (!empty($value) && !empty($parameters[0])) {
                 if (strpos(strtoupper($value), strtoupper($marca->marca)) === false) {
@@ -37,8 +37,7 @@ class ProdutoRepository extends MGRepositoryStatic
         });
 
         Validator::extend('tributacao', function ($attribute, $value, $parameters) {
-            $ncm = new NcmRepository();
-            $ncm = $ncm->findOrFail($parameters[0]);
+            $ncm = NcmRepository::findOrFail($parameters[0]);
             $regs = $ncm->regulamentoIcmsStMtsDisponiveis();
             if (sizeof($regs) > 0) {
                 if ($value != Tributacao::SUBSTITUICAO) {
@@ -49,8 +48,7 @@ class ProdutoRepository extends MGRepositoryStatic
         });
 
         Validator::extend('tributacaoSubstituicao', function ($attribute, $value, $parameters) {
-            $ncm = new NcmRepository();
-            $ncm = $ncm->findOrFail($parameters[0]);
+            $ncm = NcmRepository::findOrFail($parameters[0]);
             $regs = $ncm->regulamentoIcmsStMtsDisponiveis();
             if (empty($regs)) {
                 if ($value == Tributacao::SUBSTITUICAO) {
@@ -61,8 +59,7 @@ class ProdutoRepository extends MGRepositoryStatic
         });
 
         Validator::extend('ncm', function ($attribute, $value, $parameters) {
-            $ncm = new NcmRepository();
-            $ncm = $ncm->findOrFail($value);
+            $ncm = NcmRepository::findOrFail($value);
             if (strlen($ncm->ncm) == 8) {
                 return true;
             } else {
@@ -75,8 +72,8 @@ class ProdutoRepository extends MGRepositoryStatic
                 'max:100',
                 'min:10',
                 'required',
-                Rule::unique('tblproduto')->ignore($id, 'codproduto'),
-                //'nomeMarca:'.($data['codmarca']??null),
+                Rule::unique('tblproduto')->ignore($data['id']??null, 'codproduto'),
+                'nomeMarca:'.($data['codmarca']??null),
             ],
             'referencia' => [
                 'max:50',
@@ -139,19 +136,9 @@ class ProdutoRepository extends MGRepositoryStatic
                 'numeric',
                 'nullable',
             ],
+
         ];
 
-        return $rules;
-
-        $validator = Validator::make($data, $rules, $messages);
-        return [
-           'produto' => 'required|max:255|min:50',
-           //'body' => 'required',
-       ];
-    }
-
-    public static function rulesMessages()
-    {
         $messages = [
             'produto.max' => 'O campo "produto" não pode conter mais que 100 caracteres!',
             'produto.min' => 'O campo "produto" não pode conter menos que 9 caracteres!',
@@ -184,9 +171,20 @@ class ProdutoRepository extends MGRepositoryStatic
             'observacoes.max' => 'O campo "observacoes" não pode conter mais que 255 caracteres!',
             'codopencart.numeric' => 'O campo "codopencart" deve ser um número!',
             'codopencartvariacao.numeric' => 'O campo "codopencartvariacao" deve ser um número!',
+
         ];
-        return $messages;
+
+
+        $validator = Validator::make($data, $rules, $messages);
+
+        if (!$validator->passes()) {
+            $errors = $validator->errors()->all();
+            return false;
+        }
+
+        return true;
     }
+
 
     public static function used($id = null)
     {
