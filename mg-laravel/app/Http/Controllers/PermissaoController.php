@@ -11,4 +11,24 @@ class PermissaoController extends ControllerCrud
 {
     protected $repositoryName = 'App\\Repositories\\PermissaoRepository';
 
+    public function index(Request $request)
+    {
+        $this->authorize();
+        $qry = app($this->repositoryName)::listagemPermissoesPorGrupoUsuario();
+        return response()->json($qry, 200);
+    }
+
+    public function store(Request $request)
+    {
+        $this->authorize();
+        app($this->repositoryName)::adicionaPermissao($request->get('permissao'), $request->get('codgrupousuario'));
+        return response()->json(true, 201);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $this->authorize();
+        app($this->repositoryName)::removePermissao($request->get('permissao'), $request->get('codgrupousuario'));
+        return response()->json('', 204);
+    }
 }

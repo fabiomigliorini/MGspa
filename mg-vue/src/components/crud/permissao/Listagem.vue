@@ -10,11 +10,10 @@
       <v-flex xs8>
         <v-text-field name="filtro" label="Busca" id="filtro" v-model="filtro.permissao" @change.native.stop="pesquisar()"></v-text-field>
 
-
       </v-flex>
     </div>
     <v-list two-line>
-      <template v-for="(item, index) in dados.classes">
+      <template v-for="(item, index) in dados.Permissoes">
           <transition name="component-fade">
             <v-list-item v-bind:key="item.codpermissao">
               <v-list-tile @click.native.stop="tab(index)">
@@ -33,36 +32,37 @@
   </div>
 
   <div slot="conteudo">
-    <template v-for="(item, index) in dados.classes">
+    <template v-for="(permissao, index) in dados.Permissoes">
       <div v-if="index == tabs">
-        {{ item }}
+        <table class="datatable table">
+          <thead>
+            <tr>
+              <th>
+                &nbsp;
+              </th>
+                <th v-for="(grupos, index) in dados.Grupos">
+                    {{ grupos.grupousuario }}
+                </th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(item, index) in permissao">
+              <tr>
+                <th style="text-align: right">
+                  {{ index }}
+                </th>
+                  <td style="text-align: center" v-for="grupo in dados.Grupos">
+                    <!-- <input v-on:click="removePermissao(index, grupo.codgrupousuario)" type="checkbox" v-if="item.codgrupousuario.includes(grupo.codgrupousuario)" checked=""> -->
+                    <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]">
+                  </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
     </template>
 
 <!--
-    <v-list two-line>
-      <template v-for="item in dados">
-          <transition name="component-fade">
-            <v-list-item v-bind:key="item.codpermissao">
-              <v-list-tile avatar router :to="{path: '/permissao/' + item.codpermissao }">
-
-                <v-list-tile-content>
-                  <v-list-tile-title>
-                    {{ item.permissao }}
-                  </v-list-tile-title>
-                  <v-list-tile-sub-title>
-                    #{{ item.codpermissao }}
-                  </v-list-tile-sub-title>
-                </v-list-tile-content>
-
-              </v-list-tile>
-              <v-divider></v-divider>
-            </v-list-item>
-
-          </transition>
-        </template>
-    </v-list>
-
     <transition name="component-fade">
       <div class="container" v-if="!fim">
         <v-btn @click.native.stop="mais()" block info :loading="carregando">
@@ -76,6 +76,15 @@
       <v-icon light>add</v-icon>
     </v-fab>
 
+    <v-snackbar
+          :success="snackbar.contexto === 'success'"
+          :error="snackbar.contexto === 'error'"
+          multi-line
+          v-model="snackbar.status"
+          >
+      {{ snackbar.mensagem }}
+      <v-btn light flat @click.native="snackbar = false">Fechar</v-btn>
+    </v-snackbar>
   </div>
 
   <!--
@@ -103,7 +112,17 @@ export default {
         permissao: null
       },
       fim: false,
-      carregando: false
+      carregando: false,
+      snackbar: {
+        status: false,
+        contexto: '',
+        mensagem: ''
+      }
+    }
+  },
+  directives: {
+    checked: {
+      // directive definition
     }
   },
   methods: {
@@ -120,15 +139,51 @@ export default {
     },
     tab (codpermissao) {
       this.tabs = codpermissao
-      console.log(this.tabs)
     },
     pesquisar () {
       this.pagina = 1
       this.dados = []
       this.fim = false
       this.carregaListagem()
+    },
+    mudarPermissao (permissao, codgrupousuario, checked) {
+      if (checked) {
+        this.adicionaPermissao(permissao, codgrupousuario)
+      } else {
+        this.removePermissao(permissao, codgrupousuario)
+      }
+    },
+    adicionaPermissao (permissao, codgrupousuario) {
+      var vm = this
+      var dados = {
+        permissao: permissao,
+        codgrupousuario: codgrupousuario
+      }
+      window.axios.post('permissao', dados).then(function (request) {
+        console.log(request.data)
+        if (request.data === true) {
+          vm.snackbar.status = true
+          vm.snackbar.mensagem = 'Permissão adicionada!'
+          vm.snackbar.contexto = 'success'
+        }
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
+    removePermissao (permissao, codgrupousuario) {
+      var vm = this
+      var dados = {
+        permissao: permissao,
+        codgrupousuario: codgrupousuario
+      }
+      window.axios.delete('permissao/' + 1, {params: dados}).then(function (request) {
+        vm.snackbar.status = true
+        vm.snackbar.mensagem = 'Permissão removida!'
+        vm.snackbar.contexto = 'success'
+      }).catch(function (error) {
+        console.log(error.response)
+      })
     }
-
   },
   mounted () {
     this.carregaListagem()
