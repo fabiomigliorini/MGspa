@@ -15,28 +15,20 @@ class UsuarioRepository extends MGRepositoryStatic
 {
     public static $modelClass = '\\App\\Models\\Usuario';
 
-    public static function validate($model = null, &$errors = null, $throwsException = true)
+    public static function validationRules ($model = null)
     {
-        $data = $model->getAttributes();
 
         $rules = [
         ];
 
+        return $rules;
+    }
+
+    public static function validationMessages ($model = null)
+    {
         $messages = [
         ];
-
-        $validator = Validator::make($data, $rules, $messages);
-
-        if ($throwsException) {
-            $validator->validate();
-            return true;
-        }
-
-        if (!$validator->passes()) {
-            $errors = $validator->errors();
-            return false;
-        }
-
-        return true;
+        
+        return $messages;
     }
 }

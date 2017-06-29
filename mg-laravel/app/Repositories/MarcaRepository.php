@@ -15,10 +15,8 @@ class MarcaRepository extends MGRepositoryStatic {
 
     public static $modelClass = '\\App\\Models\\Marca';
 
-    public static function validate($model = null, &$errors = null, $throwsException = true)
+    public static function validationRules ($model = null)
     {
-        $data = $model->getAttributes();
-
         $rules = [
             'marca' => [
                 'required',
@@ -26,23 +24,16 @@ class MarcaRepository extends MGRepositoryStatic {
             ],
         ];
 
+        return $rules;
+    }
+
+    public static function validationMessages ($model = null)
+    {
         $messages = [
             'marca.required' => 'O campo marca não pode ser vazio',
             'marca.unique' => 'Esta marca já esta cadastrada',
         ];
 
-        $validator = Validator::make($data, $rules, $messages);
-
-        if ($throwsException) {
-            $validator->validate();
-            return true;
-        }
-
-        if (!$validator->passes()) {
-            $errors = $validator->errors();
-            return false;
-        }
-
-        return true;
+        return $messages;
     }
 }

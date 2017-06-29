@@ -15,10 +15,8 @@ class ProdutoRepository extends MGRepositoryStatic
 {
     public static $modelClass = 'App\\Models\\Produto';
 
-    public static function validate($model = null, &$errors = null, $throwsException = true)
+    public static function validationRules ($model = null)
     {
-        $data = $model->getAttributes();
-
         Validator::extend('nomeMarca', function ($attribute, $value, $parameters) {
             if (empty($parameters[0])) {
                 return false;
@@ -136,9 +134,13 @@ class ProdutoRepository extends MGRepositoryStatic
                 'numeric',
                 'nullable',
             ],
-
         ];
 
+        return $rules;
+    }
+
+    public static function validationMessages ($model = null)
+    {
         $messages = [
             'produto.max' => 'O campo "produto" não pode conter mais que 100 caracteres!',
             'produto.min' => 'O campo "produto" não pode conter menos que 9 caracteres!',
@@ -174,20 +176,7 @@ class ProdutoRepository extends MGRepositoryStatic
 
         ];
 
-
-        $validator = Validator::make($data, $rules, $messages);
-
-        if ($throwsException) {
-            $validator->validate();
-            return true;
-        }
-
-        if (!$validator->passes()) {
-            $errors = $validator->errors();
-            return false;
-        }
-
-        return true;
+        return $messages;
     }
 
     public static function details($model = null)
