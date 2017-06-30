@@ -56,13 +56,20 @@
                     <template v-for="item in item.codgrupousuario">
                     </template>
                     -->
-                    {{ grupo.codgrupousuario }}
+                    <!-- Grupo: {{ grupo.codgrupousuario }} -->
+                    <!-- Grupo: {{ item.codgrupousuario[grupo.codgrupousuario -1] }} -->
+                    {{ item.codgrupousuario.includes(grupo.codgrupousuario) }}
+                    <!--
                     <br>
-                    {{ item }}
-                    <v-switch v-model="item.codgrupousuario.includes(grupo.codgrupousuario)"></v-switch>
+                    Codgrupo: [{{ grupo.codgrupousuario }}]
+                    <br>
+                    <br>
+                    -->
+
+                    <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]">
+                    <!-- <v-switch v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" v-model="item.codgrupousuario[grupo.codgrupousuario]"></v-switch> -->
                     <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario)" type="checkbox" v-if="item[codgrupousuario].includes(2)"> -->
                     <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario)" type="checkbox" v-model="item.codgrupousuario"> -->
-                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]"> -->
                   </td>
               </tr>
             </template>
@@ -139,6 +146,7 @@ export default {
         params
       }).then(response => {
         vm.dados = response.data
+        // console.log(JSON.stringify(vm.dados.Permissoes.marca['marca.index'].codgrupousuario.includes(1)))
       })
     },
     tab (codpermissao) {
@@ -158,36 +166,38 @@ export default {
       }
     },
     adicionaPermissao (permissao, codgrupousuario) {
-      var vm = this
-      var dados = {
-        permissao: permissao,
-        codgrupousuario: codgrupousuario
-      }
-      window.axios.post('permissao', dados).then(function (request) {
-        console.log(request.data)
-        if (request.data === true) {
-          vm.snackbar.status = true
-          vm.snackbar.mensagem = 'Permissão adicionada!'
-          vm.snackbar.contexto = 'success'
-          vm.dados.Permissoes[permissao][codgrupousuario].push(codgrupousuario)
-        }
-      }).catch(function (error) {
-        console.log(error.response)
-      })
+      console.log('Adicionando ' + permissao)
+      // var vm = this
+      // var dados = {
+      //   permissao: permissao,
+      //   codgrupousuario: codgrupousuario
+      // }
+      // window.axios.post('permissao', dados).then(function (request) {
+      //   console.log(request.data)
+      //   if (request.data === true) {
+      //     vm.snackbar.status = true
+      //     vm.snackbar.mensagem = 'Permissão adicionada!'
+      //     vm.snackbar.contexto = 'success'
+      //     vm.dados.Permissoes[permissao][codgrupousuario].push(codgrupousuario)
+      //   }
+      // }).catch(function (error) {
+      //   console.log(error.response)
+      // })
     },
     removePermissao (permissao, codgrupousuario) {
-      var vm = this
-      var dados = {
-        permissao: permissao,
-        codgrupousuario: codgrupousuario
-      }
-      window.axios.delete('permissao/' + 1, {params: dados}).then(function (request) {
-        vm.snackbar.status = true
-        vm.snackbar.mensagem = 'Permissão removida!'
-        vm.snackbar.contexto = 'success'
-      }).catch(function (error) {
-        console.log(error.response)
-      })
+      console.log('Removendo ' + permissao)
+      // var vm = this
+      // var dados = {
+      //   permissao: permissao,
+      //   codgrupousuario: codgrupousuario
+      // }
+      // window.axios.delete('permissao/' + 1, {params: dados}).then(function (request) {
+      //   vm.snackbar.status = true
+      //   vm.snackbar.mensagem = 'Permissão removida!'
+      //   vm.snackbar.contexto = 'success'
+      // }).catch(function (error) {
+      //   console.log(error.response)
+      // })
     }
   },
   mounted () {
@@ -198,4 +208,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.list__tile {
+  height: 50px;
+}
 </style>

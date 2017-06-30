@@ -22,13 +22,27 @@ window.axios = Axios.create({
 })
 window.axios.interceptors.request.use(function (config) {
   const AUTH_TOKEN = localStorage.getItem('auth.token')
-
   if (AUTH_TOKEN) {
     config.headers.common['Authorization'] = `Bearer ${AUTH_TOKEN}`
   }
 
   return config
 }, function (error) {
+  return Promise.reject(error)
+})
+
+window.axios.interceptors.response.use((response) => {
+  return response
+}, function (error) {
+  let originalRequest = error.config
+  // console.log(originalRequest)
+  console.log('aqu')
+  console.log(error.response)
+  if (error.response.status === 401 && !originalRequest._retry) {
+    console.log(error.response)
+    // alert()
+  }
+  // Do something with response error
   return Promise.reject(error)
 })
 
