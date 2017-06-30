@@ -52,8 +52,17 @@
                   {{ index }}
                 </th>
                   <td style="text-align: center" v-for="grupo in dados.Grupos">
-                    <!-- <input v-on:click="removePermissao(index, grupo.codgrupousuario)" type="checkbox" v-if="item.codgrupousuario.includes(grupo.codgrupousuario)" checked=""> -->
-                    <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]">
+                    <!--
+                    <template v-for="item in item.codgrupousuario">
+                    </template>
+                    -->
+                    {{ grupo.codgrupousuario }}
+                    <br>
+                    {{ item }}
+                    <v-switch v-model="item.codgrupousuario.includes(grupo.codgrupousuario)"></v-switch>
+                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario)" type="checkbox" v-if="item[codgrupousuario].includes(2)"> -->
+                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario)" type="checkbox" v-model="item.codgrupousuario"> -->
+                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]"> -->
                   </td>
               </tr>
             </template>
@@ -120,11 +129,6 @@ export default {
       }
     }
   },
-  directives: {
-    checked: {
-      // directive definition
-    }
-  },
   methods: {
     carregaListagem () {
       var vm = this
@@ -165,6 +169,7 @@ export default {
           vm.snackbar.status = true
           vm.snackbar.mensagem = 'Permissão adicionada!'
           vm.snackbar.contexto = 'success'
+          vm.dados.Permissoes[permissao][codgrupousuario].push(codgrupousuario)
         }
       }).catch(function (error) {
         console.log(error.response)
