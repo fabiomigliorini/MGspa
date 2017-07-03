@@ -2,6 +2,7 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import store from './store'
 
 Vue.config.productionTip = false
 
@@ -34,13 +35,19 @@ window.axios.interceptors.request.use(function (config) {
 window.axios.interceptors.response.use((response) => {
   return response
 }, function (error) {
-  let originalRequest = error.config
-
+  const originalRequest = error.config
   if (error.response.status === 401 && !originalRequest._retry) {
-    console.log('originalRequest: ' + JSON.stringify(originalRequest.url))
     return router.push('/login/')
+  } else {
+    router.go(window.history.back())
   }
-
+  let mensagem = error.response.status
+  if (error.response.data.mensagem) {
+    mensagem += ' - ' + error.response.data.mensagem
+  } else {
+    mensagem += ' - Erro ao acessar API'
+  }
+  store.commit('snackbar/error', mensagem)
   return Promise.reject(error)
 })
 
@@ -50,6 +57,7 @@ new Vue({
   el: '#app',
   router,
   template: '<App/>',
+  store,
   components: {
     App
   }
