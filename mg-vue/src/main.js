@@ -35,14 +35,12 @@ window.axios.interceptors.response.use((response) => {
   return response
 }, function (error) {
   let originalRequest = error.config
-  // console.log(originalRequest)
-  console.log('aqu')
-  console.log(error.response)
+
   if (error.response.status === 401 && !originalRequest._retry) {
-    console.log(error.response)
-    // alert()
+    console.log('originalRequest: ' + JSON.stringify(originalRequest.url))
+    return router.push('/login/')
   }
-  // Do something with response error
+
   return Promise.reject(error)
 })
 

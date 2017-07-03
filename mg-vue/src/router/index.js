@@ -28,7 +28,7 @@ const routes = [
     meta: { requerAutenticacao: true }
   },
   {
-    path: '/Login',
+    path: '/login',
     name: 'Login',
     component: Login
   },
@@ -113,20 +113,6 @@ const routes = [
 
 const router = new Router({
   routes: routes
-})
-
-router.beforeEach((to, from, next) => {
-  if (to.matched.some(m => m.meta.requerAutenticacao)) {
-    window.axios.get('auth/check').then(response => {
-      if (response.data.autenticado) {
-        return next()
-      }
-      return next({ path: '/Login' })
-    }).catch(error => {
-      console.log(error.response)
-    })
-  }
-  return next()
 })
 
 export default router
