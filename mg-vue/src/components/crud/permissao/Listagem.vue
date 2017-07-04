@@ -52,24 +52,12 @@
                   {{ index }}
                 </th>
                   <td style="text-align: center" v-for="grupo in dados.Grupos">
-                    <!--
-                    <template v-for="item in item.codgrupousuario">
-                    </template>
-                    -->
-                    <!-- Grupo: {{ grupo.codgrupousuario }} -->
-                    <!-- Grupo: {{ item.codgrupousuario[grupo.codgrupousuario -1] }} -->
-                    <!-- {{ item.codgrupousuario.includes(1) }} -->
-                    <!--
-                    <br>
-                    Codgrupo: [{{ grupo.codgrupousuario }}]
-                    <br>
-                    <br>
-                    -->
-                    <!-- {{ item[codgrupousuario][grupo.codgrupousuario] }} -->
-                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]"> -->
-                    <!-- <v-switch v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" v-model="item.codgrupousuario"></v-switch> -->
-                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario)" type="checkbox" v-if="item[codgrupousuario].includes(2)"> -->
-                    <input type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]">
+                    <v-btn @click.native.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" icon v-if="item.codgrupousuario.includes(grupo.codgrupousuario)" class="green--text" small>
+                      <v-icon>thumb_up</v-icon>
+                    </v-btn>
+                    <v-btn @click.native.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" icon v-else class="red--text" small>
+                      <v-icon>thumb_down</v-icon>
+                    </v-btn>
                   </td>
               </tr>
             </template>
@@ -139,14 +127,9 @@ export default {
   methods: {
     carregaListagem () {
       var vm = this
-      var params = this.filtro
-      params.page = this.pagina
       this.carregando = true
-      window.axios.get('permissao', {
-        params
-      }).then(response => {
+      window.axios.get('permissao').then(response => {
         vm.dados = response.data
-        // console.log(JSON.stringify(vm.dados.Permissoes.marca['marca.index'].codgrupousuario[1]))
       })
     },
     tab (codpermissao) {
@@ -158,46 +141,37 @@ export default {
       this.fim = false
       this.carregaListagem()
     },
-    mudarPermissao (permissao, codgrupousuario, checked) {
-      if (checked) {
-        this.adicionaPermissao(permissao, codgrupousuario)
-      } else {
-        this.removePermissao(permissao, codgrupousuario)
+    adicionaPermissao (index, permissao, codgrupousuario) {
+      var vm = this
+      var dados = {
+        permissao: permissao,
+        codgrupousuario: codgrupousuario
       }
+      window.axios.post('permissao', dados).then(function (request) {
+        console.log(request.data)
+        if (request.data === true) {
+          vm.dados.Permissoes[index][permissao].codgrupousuario.push(codgrupousuario)
+        }
+      }).catch(function (error) {
+        console.log(error.response)
+      })
     },
-    adicionaPermissao (permissao, codgrupousuario) {
-      console.log('Adicionando ' + permissao)
-      // var vm = this
-      // var dados = {
-      //   permissao: permissao,
-      //   codgrupousuario: codgrupousuario
-      // }
-      // window.axios.post('permissao', dados).then(function (request) {
-      //   console.log(request.data)
-      //   if (request.data === true) {
-      //     vm.snackbar.status = true
-      //     vm.snackbar.mensagem = 'Permissão adicionada!'
-      //     vm.snackbar.contexto = 'success'
-      //     vm.dados.Permissoes[permissao][codgrupousuario].push(codgrupousuario)
-      //   }
-      // }).catch(function (error) {
-      //   console.log(error.response)
-      // })
-    },
-    removePermissao (permissao, codgrupousuario) {
-      console.log('Removendo ' + permissao)
-      // var vm = this
-      // var dados = {
-      //   permissao: permissao,
-      //   codgrupousuario: codgrupousuario
-      // }
-      // window.axios.delete('permissao/' + 1, {params: dados}).then(function (request) {
-      //   vm.snackbar.status = true
-      //   vm.snackbar.mensagem = 'Permissão removida!'
-      //   vm.snackbar.contexto = 'success'
-      // }).catch(function (error) {
-      //   console.log(error.response)
-      // })
+    removePermissao (index, permissao, codgrupousuario) {
+      var vm = this
+      var dados = {
+        permissao: permissao,
+        codgrupousuario: codgrupousuario
+      }
+      window.axios.delete('permissao/' + dados.permissao + '/' + dados.codgrupousuario).then(function (request) {
+        if (request.status === 204) {
+          var rm = vm.dados.Permissoes[index][permissao]['codgrupousuario'].indexOf(codgrupousuario)
+          if (rm !== -1) {
+            vm.dados.Permissoes[index][permissao]['codgrupousuario'].splice(rm, 1)
+          }
+        }
+      }).catch(function (error) {
+        console.log(error.response)
+      })
     }
   },
   mounted () {

@@ -45,16 +45,16 @@ class Controller extends BaseController
 
     public function authorize ($codfilial = null, $codusuario = null, $rota = null)
     {
-        /*
-        PermissaoRepository::adicionaPermissao('natureza-operacao.index', 1);
-        PermissaoRepository::adicionaPermissao('natureza-operacao.show', 1);
-        PermissaoRepository::adicionaPermissao('natureza-operacao.store', 1);
-        PermissaoRepository::adicionaPermissao('natureza-operacao.update', 1);
-        PermissaoRepository::adicionaPermissao('natureza-operacao.delete', 1);
-        PermissaoRepository::adicionaPermissao('natureza-operacao.activate', 1);
-        PermissaoRepository::adicionaPermissao('natureza-operacao.inactivate', 1);
-        dd(Route::currentRouteName());
-        */
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.index', 1);
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.show', 1);
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.store', 1);
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.update', 1);
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.delete', 1);
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.activate', 1);
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.inactivate', 1);
+        // PermissaoRepository::adicionaPermissao('natureza-operacao.destroy', 1);
+        // dd(Route::currentRouteName());
+
         if (!PermissaoRepository::authorize($codfilial, $codusuario, $rota)) {
             abort(403);
         }
