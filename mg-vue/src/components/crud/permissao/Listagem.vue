@@ -58,18 +58,18 @@
                     -->
                     <!-- Grupo: {{ grupo.codgrupousuario }} -->
                     <!-- Grupo: {{ item.codgrupousuario[grupo.codgrupousuario -1] }} -->
-                    {{ item.codgrupousuario.includes(grupo.codgrupousuario) }}
+                    <!-- {{ item.codgrupousuario.includes(1) }} -->
                     <!--
                     <br>
                     Codgrupo: [{{ grupo.codgrupousuario }}]
                     <br>
                     <br>
                     -->
-
-                    <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]">
-                    <!-- <v-switch v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" v-model="item.codgrupousuario[grupo.codgrupousuario]"></v-switch> -->
+                    <!-- {{ item[codgrupousuario][grupo.codgrupousuario] }} -->
+                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]"> -->
+                    <!-- <v-switch v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario, item.codgrupousuario[grupo.codgrupousuario])" v-model="item.codgrupousuario"></v-switch> -->
                     <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario)" type="checkbox" v-if="item[codgrupousuario].includes(2)"> -->
-                    <!-- <input v-on:click.prevent="mudarPermissao(index, grupo.codgrupousuario)" type="checkbox" v-model="item.codgrupousuario"> -->
+                    <input type="checkbox" v-model="item.codgrupousuario[grupo.codgrupousuario]">
                   </td>
               </tr>
             </template>
@@ -146,7 +146,7 @@ export default {
         params
       }).then(response => {
         vm.dados = response.data
-        // console.log(JSON.stringify(vm.dados.Permissoes.marca['marca.index'].codgrupousuario.includes(1)))
+        // console.log(JSON.stringify(vm.dados.Permissoes.marca['marca.index'].codgrupousuario[1]))
       })
     },
     tab (codpermissao) {
