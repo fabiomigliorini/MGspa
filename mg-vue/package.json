@@ -19,6 +19,7 @@
     "material-design-icons": "^3.0.1",
     "vue": "^2.3.3",
     "vue-router": "^2.3.1",
+    "vuetify": "^0.13.0",
     "vuex": "^2.3.1"
   },
   "devDependencies": {
@@ -80,7 +81,6 @@
     "vue-loader": "^12.1.0",
     "vue-style-loader": "^3.0.1",
     "vue-template-compiler": "^2.3.3",
-    "vuetify": "^0.12.7",
     "webpack": "^2.6.1",
     "webpack-bundle-analyzer": "^2.2.1",
     "webpack-dev-middleware": "^1.10.0",

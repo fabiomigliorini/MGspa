@@ -21,14 +21,14 @@ class PermissaoController extends ControllerCrud
     public function store(Request $request)
     {
         $this->authorize();
-        app($this->repositoryName)::adicionaPermissao($request->get('permissao'), $request->get('codgrupousuario'));
+        PermissaoRepository::adicionaPermissao($request->get('permissao'), $request->get('codgrupousuario'));
         return response()->json(true, 201);
     }
 
     public function destroy(Request $request, $id)
     {
         $this->authorize();
-        app($this->repositoryName)::removePermissao($request->get('permissao'), $request->get('codgrupousuario'));
+        PermissaoRepository::removePermissao($request->get('permissao'), $request->get('codgrupousuario'));
         return response()->json('', 204);
     }
 }

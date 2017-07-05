@@ -76,19 +76,6 @@
       </div>
     </transition>
 -->
-    <v-fab error router :to="{path: '/permissao/nova'}">
-      <v-icon light>add</v-icon>
-    </v-fab>
-
-    <v-snackbar
-          :success="snackbar.contexto === 'success'"
-          :error="snackbar.contexto === 'error'"
-          multi-line
-          v-model="snackbar.status"
-          >
-      {{ snackbar.mensagem }}
-      <v-btn light flat @click.native="snackbar = false">Fechar</v-btn>
-    </v-snackbar>
   </div>
 
   <!--
@@ -162,7 +149,7 @@ export default {
         permissao: permissao,
         codgrupousuario: codgrupousuario
       }
-      window.axios.delete('permissao/' + dados.permissao + '/' + dados.codgrupousuario).then(function (request) {
+      window.axios.delete('permissao/' + 1, {params: dados}).then(function (request) {
         if (request.status === 204) {
           var rm = vm.dados.Permissoes[index][permissao]['codgrupousuario'].indexOf(codgrupousuario)
           if (rm !== -1) {

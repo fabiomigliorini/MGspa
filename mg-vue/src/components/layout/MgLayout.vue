@@ -121,8 +121,9 @@
             icone: 'account_circle',
             titulo: 'Usuário',
             subapps: [
-              { titulo: 'Permissões', path: '/permissao' },
-              { titulo: 'Grupos', path: '/grupo-usuario' }
+              { titulo: 'Usuários', path: '/usuario' },
+              { titulo: 'Grupos', path: '/grupo-usuario' },
+              { titulo: 'Permissões', path: '/permissao' }
             ]
           }
         ]

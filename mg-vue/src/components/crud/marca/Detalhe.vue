@@ -35,16 +35,21 @@
             </v-container>
           </v-card-text>
         </v-card>
-      <v-fab error router :to="{ path: '/marca/' + dados.codmarca + '/imagem' }" style="bottom:255px">
-        <v-icon light>add_a_photo</v-icon>
-      </v-fab>
-      <v-fab error router :to="{ path: '/marca/' + dados.codmarca + '/editar' }" style="bottom:190px">
-        <v-icon light>mode_edit</v-icon>
-      </v-fab>
-      <v-fab error @click.native.stop="deletar()">
-        <v-icon light>delete</v-icon>
-      </v-fab>
-
+        <v-speed-dial v-model="fab.fab" :bottom="fab.bottom" :right="fab.right" direction="top" transition="scale">
+          <v-btn slot="activator" class="blue darken-2" dark fab hover v-model="fab">
+            <v-icon>keyboard_arrow_down</v-icon>
+            <v-icon>keyboard_arrow_up</v-icon>
+          </v-btn>
+          <v-btn fab dark small class="indigo" router :to="{ path: '/marca/' + dados.codmarca + '/imagem' }">
+            <v-btn fab dark small class="red" @click.native.stop="deletar()">
+              <v-icon>delete</v-icon>
+            </v-btn>
+            <v-icon>add_a_photo</v-icon>
+          </v-btn>
+          <v-btn fab dark small class="green" router :to="{ path: '/marca/' + dados.codmarca + '/editar' }">
+            <v-icon>edit</v-icon>
+          </v-btn>
+        </v-speed-dial>
     </div>
 
     <!--
@@ -65,9 +70,15 @@ export default {
   },
   data () {
     return {
+      fab: {
+        fab: false,
+        right: true,
+        bottom: true
+      },
       dados: {}
     }
   },
+
   methods: {
     carregaDados: function (id) {
       var vm = this
@@ -101,6 +112,10 @@ export default {
     margin-bottom: 7px;
     font-weight: 300;
   }
-
-
+  .speed-dial {
+    position: absolute;
+  }
+  .btn--floating {
+    position: relative;
+  }
 </style>

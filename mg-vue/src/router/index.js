@@ -9,13 +9,16 @@ import MarcaEditar from '@/components/crud/marca/Editar'
 import MarcaImagem from '@/components/crud/marca/Imagem'
 
 import PermissaoListagem from '@/components/crud/permissao/Listagem'
-import PermissaoDetalhe from '@/components/crud/permissao/Detalhe'
 
 import GrupoUsuarioListagem from '@/components/crud/grupo-usuario/Listagem'
 import GrupoUsuarioNovo from '@/components/crud/grupo-usuario/Novo'
 import GrupoUsuarioDetalhe from '@/components/crud/grupo-usuario/Detalhe'
 import GrupoUsuarioEditar from '@/components/crud/grupo-usuario/Editar'
 
+import UsuarioListagem from '@/components/crud/usuario/Listagem'
+import UsuarioNovo from '@/components/crud/usuario/Novo'
+import UsuarioDetalhe from '@/components/crud/usuario/Detalhe'
+import UsuarioEditar from '@/components/crud/usuario/Editar'
 import Login from '@/components/Login'
 
 Vue.use(Router)
@@ -70,6 +73,32 @@ const routes = [
     meta: { requerAutenticacao: true }
   },
 
+  // Usuários
+  {
+    path: '/usuario',
+    name: 'suarioListagem',
+    component: UsuarioListagem,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/usuario/novo',
+    name: 'usuario-nova',
+    component: UsuarioNovo,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/usuario/:id',
+    name: 'usuario-detalhe',
+    component: UsuarioDetalhe,
+    meta: { requerAutenticacao: true }
+  },
+  {
+    path: '/usuario/:id/editar',
+    name: 'usuario-editar',
+    component: UsuarioEditar,
+    meta: { requerAutenticacao: true }
+  },
+
   // Grupos de usuário
   {
     path: '/grupo-usuario',
@@ -101,12 +130,6 @@ const routes = [
     path: '/permissao',
     name: 'permissao',
     component: PermissaoListagem,
-    meta: { requerAutenticacao: true }
-  },
-  {
-    path: '/permissao/:id',
-    name: 'permissao-detalhe',
-    component: PermissaoDetalhe,
     meta: { requerAutenticacao: true }
   }
 ]

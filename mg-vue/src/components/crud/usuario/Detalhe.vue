@@ -2,7 +2,7 @@
   <mg-layout>
 
     <div slot="titulo">
-      {{ dados.permissao }}
+      {{ dados.usuario }}
     </div>
 
     <div slot="menu">
@@ -16,19 +16,27 @@
             <v-container fluid>
               <v-layout row wrap>
                 <v-flex sm6>
-                  <p>Lista</p>
+                  {{ dados.usuario }}
                 </v-flex>
               </v-layout>
             </v-container>
           </v-card-text>
         </v-card>
-      <v-fab error router :to="{ path: '/marca/' + dados.codmarca + '/editar' }" style="bottom:190px">
+      <v-fab error router :to="{ path: '/usuario/' + dados.codusuario + '/editar' }" style="bottom:190px">
         <v-icon light>mode_edit</v-icon>
       </v-fab>
       <v-fab error @click.native.stop="deletar()">
         <v-icon light>delete</v-icon>
       </v-fab>
-
+      <v-snackbar
+            :success="snackbar.contexto === 'success'"
+            :error="snackbar.contexto === 'error'"
+            multi-line
+            v-model="snackbar.status"
+            >
+        {{ snackbar.mensagem }}
+        <v-btn light flat @click.native="snackbar = false">Fechar</v-btn>
+      </v-snackbar>
     </div>
 
     <!--
@@ -49,13 +57,18 @@ export default {
   },
   data () {
     return {
-      dados: {}
+      dados: {},
+      snackbar: {
+        status: false,
+        contexto: '',
+        mensagem: ''
+      }
     }
   },
   methods: {
     carregaDados: function (id) {
       var vm = this
-      window.axios.get('permissao/' + this.$route.params.id).then(function (request) {
+      window.axios.get('usuario/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -63,10 +76,13 @@ export default {
     },
     deletar: function (id) {
       var vm = this
-      window.axios.delete('permissao/' + this.$route.params.id).then(function (request) {
-        vm.$router.push('/permissao')
+      window.axios.delete('usuario/' + this.$route.params.id).then(function (request) {
+        vm.$router.push('/usuario')
       }).catch(function (error) {
-        console.log(error.response)
+        vm.snackbar.status = true
+        vm.snackbar.mensagem = error.response.data.mensagem
+        vm.snackbar.contexto = 'error'
+        console.log(error.response.data)
       })
     }
   },
