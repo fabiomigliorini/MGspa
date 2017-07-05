@@ -22,21 +22,26 @@
             </v-container>
           </v-card-text>
         </v-card>
-      <v-fab error router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" style="bottom:190px">
-        <v-icon light>mode_edit</v-icon>
-      </v-fab>
-      <v-fab error @click.native.stop="deletar()">
-        <v-icon light>delete</v-icon>
-      </v-fab>
-      <v-snackbar
-            :success="snackbar.contexto === 'success'"
-            :error="snackbar.contexto === 'error'"
-            multi-line
-            v-model="snackbar.status"
-            >
-        {{ snackbar.mensagem }}
-        <v-btn light flat @click.native="snackbar = false">Fechar</v-btn>
-      </v-snackbar>
+
+        <v-speed-dial v-model="fab.fab" :bottom="fab.bottom" :right="fab.right" direction="top" transition="scale">
+          <v-btn slot="activator" class="blue darken-2" dark fab hover v-model="fab">
+            <v-icon>keyboard_arrow_down</v-icon>
+            <v-icon>keyboard_arrow_up</v-icon>
+          </v-btn>
+          <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
+            <v-icon>delete</v-icon>
+          </v-btn>
+          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.stop="inativar()" v-tooltip:left="{ html: 'inativar'}">
+            <v-icon>thumb_down</v-icon>
+          </v-btn>
+          <v-btn v-else fab dark small class="orange" @click.native.stop="ativar()" v-tooltip:left="{ html: 'inativar'}">
+            <v-icon>thumb_up</v-icon>
+          </v-btn>
+          <v-btn fab dark small class="green" router :to="{ path: '/grupousuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
+            <v-icon>edit</v-icon>
+          </v-btn>
+        </v-speed-dial>
+
     </div>
 
     <!--
@@ -58,10 +63,10 @@ export default {
   data () {
     return {
       dados: {},
-      snackbar: {
-        status: false,
-        contexto: '',
-        mensagem: ''
+      fab: {
+        fab: false,
+        right: true,
+        bottom: true
       }
     }
   },
@@ -101,6 +106,10 @@ export default {
     margin-bottom: 7px;
     font-weight: 300;
   }
-
-
+  .speed-dial {
+    position: absolute;
+  }
+  .btn--floating {
+    position: relative;
+  }
 </style>
