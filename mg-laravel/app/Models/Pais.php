@@ -5,8 +5,8 @@ namespace App\Models;
 /**
  * Campos
  * @property  bigint                         $codpais                            NOT NULL DEFAULT nextval('tblpais_codpais_seq'::regclass)
- * @property  varchar(50)                    $pais                               
- * @property  varchar(2)                     $sigla                              
+ * @property  varchar(50)                    $pais                               NOT NULL
+ * @property  varchar(2)                     $sigla                              NOT NULL
  * @property  timestamp                      $alteracao                          
  * @property  bigint                         $codusuarioalteracao                
  * @property  timestamp                      $criacao                            
@@ -27,16 +27,15 @@ class Pais extends MGModel
     protected $table = 'tblpais';
     protected $primaryKey = 'codpais';
     protected $fillable = [
-          'pais',
-         'sigla',
-             'codigooficial',
-     ];
+        'pais',
+        'sigla',
+        'codigooficial',
+    ];
     protected $dates = [
         'alteracao',
         'criacao',
         'inativo',
     ];
-
 
     // Chaves Estrangeiras
     public function UsuarioAlteracao()
@@ -48,7 +47,6 @@ class Pais extends MGModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
 
     // Tabelas Filhas
     public function EstadoS()

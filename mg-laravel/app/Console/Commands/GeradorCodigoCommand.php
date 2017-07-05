@@ -13,7 +13,7 @@ class GeradorCodigoCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'gerador {--tabela=}';
+    protected $signature = 'gerador {--tabela=} {--model=} {--url=}';
 
     /**
      * The console command description.
@@ -39,20 +39,68 @@ class GeradorCodigoCommand extends Command
      */
     public function handle()
     {
-        $this->info('teste:');
 
         // Pega opcao do estoquelocal
-        $nome_tabela = $this->option('tabela');
+        $tabela = $this->option('tabela');
+        $model = $this->option('model');
+        $url = $this->option('url');
 
-        if (empty($nome_tabela)) {
+        if (empty($tabela)) {
             $this->line('');
             $this->error('Informe a Tabela! --tabela=');
             $this->line('');
             return;
         }
 
-        GeradorCodigoRepository::model($nome_tabela);
+        if (empty($model)) {
+            $this->line('');
+            $this->error('Informe o Nome do Model! --model=');
+            $this->line('');
+            return;
+        }
 
+        if (empty($url)) {
+            $this->line('');
+            $this->error('Informe a URL! --url=');
+            $this->line('');
+            return;
+        }
+
+
+        $this->line('');
+        if ($this->confirm('Gerar Model?')) {
+            GeradorCodigoRepository::salvaModel($tabela, $model);
+            $this->info('Model Gerado!');
+        }
+
+        $this->line('');
+        if ($this->confirm('Gerar Repository?')) {
+            GeradorCodigoRepository::salvaRepository($tabela, $model);
+            $this->info('Repository Gerado!');
+        }
+
+        $this->line('');
+        if ($this->confirm('Gerar Controller?')) {
+            GeradorCodigoRepository::salvaController($model);
+            $this->info('Controller Gerado!');
+        }
+
+        $this->line('');
+        if ($this->confirm('Registrar Rota?')) {
+            GeradorCodigoRepository::registraRota($model, $url);
+            $this->info('Rota Registrada!');
+        }
+
+        $arquivosOld = GeradorCodigoRepository::arquivosOld();
+        if (!empty($arquivosOld)) {
+            $this->line('');
+            $this->info('Não esqueça de excluir os arquivos:');
+            foreach ($arquivosOld as $arquivo) {
+                $this->line($arquivo);
+            }
+        }
+
+        $this->line('');
     }
 
 }

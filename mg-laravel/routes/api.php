@@ -45,7 +45,15 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     Route::resource('natureza-operacao', 'NaturezaOperacaoController');
 
-    Route::get('asdads', 'ProdutoController@index')->name('asdads');
-    Route::get('asdads2', 'ProdutoController@index')->name('asdads');
+    // Rotas Dinamicas
+
+    // Cidade
+    Route::resource('cidade', 'CidadeController');
+
+    // Estado
+    Route::resource('estado', 'EstadoController');
+
+    // Pais
+    Route::resource('pais', 'PaisController');
 
 });

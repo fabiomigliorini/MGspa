@@ -179,7 +179,7 @@ class ProdutoRepository extends MGRepositoryStatic
         return $messages;
     }
 
-    public static function details($model = null)
+    public static function details($model)
     {
         $details = $model->getAttributes();
         $details['Marca'] = [

@@ -26,7 +26,7 @@ class MGRepositoryStatic
         return app(static::$modelClass)::findOrFail($id);
     }
 
-    public static function details($model = null)
+    public static function details($model)
     {
         return $model->getAttributes();
     }
@@ -95,7 +95,7 @@ class MGRepositoryStatic
         return [];
     }
 
-    public static function validate ($model = null, &$errors = null, $throwsException = true)
+    public static function validate ($model = null, &$validator = null, $throwsException = true)
     {
         $rules = static::validationRules($model);
 
@@ -109,7 +109,6 @@ class MGRepositoryStatic
         }
 
         if (!$validator->passes()) {
-            $errors = $validator->errors();
             return false;
         }
 
