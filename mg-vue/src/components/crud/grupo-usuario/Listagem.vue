@@ -23,34 +23,32 @@
 
        <v-list two-line>
         <template v-for="item in dados">
-          <transition name="component-fade">
-            <v-list-tile avatar router :to="{path: '/grupo-usuario/' + item.codgrupousuario }" v-bind:key="item.codgrupousuario">
-              <v-list-tile-content>
-                <v-list-tile-title>
-                  {{ item.grupousuario }}
-                </v-list-tile-title>
-                <v-list-tile-sub-title>
-                  #{{ item.codgrupousuario }}
-                </v-list-tile-sub-title>
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-divider></v-divider>
-          </transition>
+          <v-list-tile avatar router :to="{path: '/grupo-usuario/' + item.codgrupousuario }" v-bind:key="item.codgrupousuario">
+            <v-list-tile-content>
+              <v-list-tile-title>
+                {{ item.grupousuario }}
+              </v-list-tile-title>
+              <v-list-tile-sub-title>
+                #{{ item.codgrupousuario }}
+              </v-list-tile-sub-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-divider></v-divider>
         </template>
       </v-list>
 
-      <transition name="component-fade">
-        <div class="container" v-if="!fim">
-          <v-btn @click.native.stop="mais()" block info :loading="carregando">
-            Mais
-            <v-icon right>expand_more</v-icon>
-          </v-btn>
-        </div>
-      </transition>
+      <div class="container" v-if="!fim">
+        <v-btn @click.native.stop="mais()" block info :loading="carregando">
+          Mais
+          <v-icon right>expand_more</v-icon>
+        </v-btn>
+      </div>
 
-      <v-fab error router :to="{path: '/grupo-usuario/novo'}">
-        <v-icon light>add</v-icon>
-      </v-fab>
+      <v-fab-transition >
+        <v-btn router :to="{path: '/grupo-usuario/novo'}" class="red white--text" light absolute bottom right fab>
+          <v-icon>add</v-icon>
+        </v-btn>
+      </v-fab-transition>
 
     </div>
 

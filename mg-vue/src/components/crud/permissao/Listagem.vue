@@ -14,16 +14,14 @@
     </div>
     <v-list two-line>
       <template v-for="(item, index) in dados.Permissoes">
-          <transition name="component-fade">
-            <v-list-tile @click.native.stop="tab(index)" v-bind:key="item.codpermissao">
-              <v-list-tile-content>
-                <v-list-tile-title>
-                  {{ index }}
-                </v-list-tile-title>
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-divider></v-divider>
-          </transition>
+          <v-list-tile @click.native.stop="tab(index)" v-bind:key="item.codpermissao">
+            <v-list-tile-content>
+              <v-list-tile-title>
+                {{ index }}
+              </v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-divider></v-divider>
         </template>
       </v-list>
 
@@ -64,16 +62,6 @@
       </div>
     </template>
 
-<!--
-    <transition name="component-fade">
-      <div class="container" v-if="!fim">
-        <v-btn @click.native.stop="mais()" block info :loading="carregando">
-          Mais
-          <v-icon right>expand_more</v-icon>
-        </v-btn>
-      </div>
-    </transition>
--->
   </div>
 
   <!--
@@ -167,7 +155,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.list__tile {
-  height: 50px;
-}
+  .list--two-line .list__tile {
+    height: 50px;
+  }
 </style>

@@ -23,54 +23,50 @@
 
        <v-list two-line>
         <template v-for="item in marca">
-          <transition name="component-fade">
-            <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }" v-bind:key="item.codmarca">
-              <v-list-tile-avatar>
-                <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
-                <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
-                <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'">
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title>
-                  {{ item.marca }}
-                </v-list-tile-title>
-                <v-list-tile-sub-title>
-                  #{{ item.codmarca }}
-                </v-list-tile-sub-title>
-              </v-list-tile-content>
-              <v-list-tile-content class="hidden-sm-and-down">
-                <v-list-tile-sub-title>
-                  5 abaixo do mínimo /
-                  2 acima do máximo
-                </v-list-tile-sub-title>
-                <v-list-tile-sub-title>
-                  25/dez/16 Última compra
-                </v-list-tile-sub-title>
-              </v-list-tile-content>
-              <v-list-tile-content>
-                <v-list-tile-title class="text-xs-right">
-                  <v-icon class="yellow--text text--darken-3">star</v-icon>
-                  <v-icon class="yellow--text text--darken-3">star</v-icon>
-                  <v-icon class="grey--text text--lighten-1">star_border</v-icon>
-                </v-list-tile-title>
-                <v-list-tile-sub-title class="text-xs-right">
-                  #1
-                </v-list-tile-sub-title>
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-divider></v-divider>
-        </transition>
+          <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }" v-bind:key="item.codmarca">
+            <v-list-tile-avatar>
+              <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
+              <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
+              <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'">
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title>
+                {{ item.marca }}
+              </v-list-tile-title>
+              <v-list-tile-sub-title>
+                #{{ item.codmarca }}
+              </v-list-tile-sub-title>
+            </v-list-tile-content>
+            <v-list-tile-content class="hidden-sm-and-down">
+              <v-list-tile-sub-title>
+                5 abaixo do mínimo /
+                2 acima do máximo
+              </v-list-tile-sub-title>
+              <v-list-tile-sub-title>
+                25/dez/16 Última compra
+              </v-list-tile-sub-title>
+            </v-list-tile-content>
+            <v-list-tile-content>
+              <v-list-tile-title class="text-xs-right">
+                <v-icon class="yellow--text text--darken-3">star</v-icon>
+                <v-icon class="yellow--text text--darken-3">star</v-icon>
+                <v-icon class="grey--text text--lighten-1">star_border</v-icon>
+              </v-list-tile-title>
+              <v-list-tile-sub-title class="text-xs-right">
+                #1
+              </v-list-tile-sub-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-divider></v-divider>
       </template>
     </v-list>
 
-    <transition name="component-fade">
-      <div class="container" v-if="!fim">
-        <v-btn @click.native.stop="mais()" block info :loading="carregando">
-          Mais
-          <v-icon right>expand_more</v-icon>
-        </v-btn>
-      </div>
-    </transition>
+    <div class="container" v-if="!fim">
+      <v-btn @click.native.stop="mais()" block info :loading="carregando">
+        Mais
+        <v-icon right>expand_more</v-icon>
+      </v-btn>
+    </div>
 
     <v-fab-transition >
       <v-btn router :to="{path: '/marca/nova'}" class="red white--text" light absolute bottom right fab>
