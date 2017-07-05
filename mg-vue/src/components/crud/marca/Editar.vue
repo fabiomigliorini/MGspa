@@ -38,11 +38,6 @@
             </v-container>
           </v-card-text>
         </v-card>
-
-      <v-fab error router :to="{path: '/marca/nova'}">
-        <v-icon light>add</v-icon>
-      </v-fab>
-
     </div>
 
     <!--

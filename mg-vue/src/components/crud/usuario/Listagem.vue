@@ -24,30 +24,27 @@
        <v-list two-line>
         <template v-for="item in dados">
           <transition name="component-fade">
-            <v-list-item v-bind:key="item.codusuario">
-              <v-list-tile avatar router :to="{path: '/usuario/' + item.codusuario }">
-                <v-list-tile-content>
-                  <v-list-tile-title>
-                    {{ item.usuario }}
-                  </v-list-tile-title>
-                  <v-list-tile-sub-title>
-                    #{{ item.codusuario }}
-                  </v-list-tile-sub-title>
-                </v-list-tile-content>
+            <v-list-tile avatar router :to="{path: '/usuario/' + item.codusuario }" v-bind:key="item.codusuario">
+              <v-list-tile-content>
+                <v-list-tile-title>
+                  {{ item.usuario }}
+                </v-list-tile-title>
+                <v-list-tile-sub-title>
+                  #{{ item.codusuario }}
+                </v-list-tile-sub-title>
+              </v-list-tile-content>
 
-                <v-list-tile-content class="hidden-sm-and-down">
-                  <v-list-tile-sub-title>
-                    < PESSOA >
-                  </v-list-tile-sub-title>
-                  <v-list-tile-sub-title>
-                    < FILIAL >
-                  </v-list-tile-sub-title>
-                </v-list-tile-content>
+              <v-list-tile-content class="hidden-sm-and-down">
+                <v-list-tile-sub-title>
+                  < PESSOA >
+                </v-list-tile-sub-title>
+                <v-list-tile-sub-title>
+                  < FILIAL >
+                </v-list-tile-sub-title>
+              </v-list-tile-content>
 
-              </v-list-tile>
-              <v-divider></v-divider>
-            </v-list-item>
-
+            </v-list-tile>
+            <v-divider></v-divider>
           </transition>
         </template>
       </v-list>

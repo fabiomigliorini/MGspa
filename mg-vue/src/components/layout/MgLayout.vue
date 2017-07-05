@@ -25,8 +25,7 @@
             </v-list-tile>
 
             <!-- SubMenu -->
-            <v-list-item v-for="subapp in item.subapps" v-bind:key="subapp.titulo">
-              <v-list-tile router :to="{path: subapp.path}">
+              <v-list-tile router :to="{path: subapp.path}" v-for="subapp in item.subapps" v-bind:key="subapp.titulo">
                 <v-list-tile-content>
                   <v-list-tile-title>{{ subapp.titulo }}</v-list-tile-title>
                 </v-list-tile-content>
@@ -34,7 +33,6 @@
                   <v-icon>{{ subapp.icone }}</v-icon>
                 </v-list-tile-action>
               </v-list-tile>
-            </v-list-item>
 
           </v-list-group>
         </v-list>
@@ -69,7 +67,7 @@
           <v-icon>exit_to_app</v-icon>
         </v-btn>
         -->
-
+        <v-spacer></v-spacer>
         <!-- botao aplicativos -->
         <v-btn icon v-tooltip:bottom="{ html: 'Aplicações'}" @click.native.stop="menuApps = !menuApps" class="blue--text">
           <v-icon>apps</v-icon>

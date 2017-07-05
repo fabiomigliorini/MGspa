@@ -40,23 +40,27 @@
             <v-icon>keyboard_arrow_down</v-icon>
             <v-icon>keyboard_arrow_up</v-icon>
           </v-btn>
-          <v-btn fab dark small class="indigo" router :to="{ path: '/marca/' + dados.codmarca + '/imagem' }">
-            <v-btn fab dark small class="red" @click.native.stop="deletar()">
-              <v-icon>delete</v-icon>
-            </v-btn>
+          <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
+            <v-icon>delete</v-icon>
+          </v-btn>
+          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.stop="inativar()" v-tooltip:left="{ html: 'inativar'}">
+            <v-icon>thumb_down</v-icon>
+          </v-btn>
+          <v-btn v-else fab dark small class="orange" @click.native.stop="ativar()" v-tooltip:left="{ html: 'inativar'}">
+            <v-icon>thumb_up</v-icon>
+          </v-btn>
+          <v-btn fab dark small class="indigo" router :to="{ path: '/marca/' + dados.codmarca + '/imagem' }" v-tooltip:left="{ html: 'Imagem'}">
             <v-icon>add_a_photo</v-icon>
           </v-btn>
-          <v-btn fab dark small class="green" router :to="{ path: '/marca/' + dados.codmarca + '/editar' }">
+          <v-btn fab dark small class="green" router :to="{ path: '/marca/' + dados.codmarca + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
             <v-icon>edit</v-icon>
           </v-btn>
         </v-speed-dial>
-    </div>
-
-    <!--
-    <div fixed slot="rodape">
-    </div>
-    -->
-
+      </div>
+      <!--
+      <div fixed slot="rodape">
+      </div>
+      -->
   </mg-layout>
 </template>
 

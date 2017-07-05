@@ -15,16 +15,14 @@
     <v-list two-line>
       <template v-for="(item, index) in dados.Permissoes">
           <transition name="component-fade">
-            <v-list-item v-bind:key="item.codpermissao">
-              <v-list-tile @click.native.stop="tab(index)">
-                <v-list-tile-content>
-                  <v-list-tile-title>
-                    {{ index }}
-                  </v-list-tile-title>
-                </v-list-tile-content>
-              </v-list-tile>
-              <v-divider></v-divider>
-            </v-list-item>
+            <v-list-tile @click.native.stop="tab(index)" v-bind:key="item.codpermissao">
+              <v-list-tile-content>
+                <v-list-tile-title>
+                  {{ index }}
+                </v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-divider></v-divider>
           </transition>
         </template>
       </v-list>
