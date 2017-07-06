@@ -96,15 +96,14 @@ export default {
     return {
       marca: [],
       pagina: 1,
-      filtro: {
-        marca: null
-      },
+      filtro: { }, // Vem do Store
       fim: false,
       carregando: false
     }
   },
   methods: {
     carregaListagem () {
+      this.$store.commit('filtro/marca', this.filtro)
       var vm = this
       var params = this.filtro
       params.page = this.pagina
@@ -128,6 +127,7 @@ export default {
 
   },
   mounted () {
+    this.filtro = this.$store.getters['filtro/marca']
     this.carregaListagem()
   }
 }
