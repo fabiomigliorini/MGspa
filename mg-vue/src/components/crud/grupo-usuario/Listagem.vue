@@ -45,7 +45,7 @@
       </div>
 
       <v-fab-transition >
-        <v-btn router :to="{path: '/grupo-usuario/novo'}" class="red white--text" light absolute bottom right fab>
+        <v-btn router :to="{path: '/grupo-usuario/novo'}" class="red white--text" light fixed bottom right fab>
           <v-icon>add</v-icon>
         </v-btn>
       </v-fab-transition>

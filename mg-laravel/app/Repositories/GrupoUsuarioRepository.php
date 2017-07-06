@@ -36,4 +36,34 @@ class GrupoUsuarioRepository extends MGRepositoryStatic {
 
         return $messages;
     }
+
+    public static function details($model)
+    {
+        $details = $model->getAttributes();
+        $usuarios = [];
+        foreach ($model->GrupoUsuarioUsuarioS as $usuario) {
+            $usuarios[] = [
+                'codusuario' => $usuario->Usuario->codusuario,
+                'usuario' => $usuario->Usuario->usuario,
+                'filial' => [
+                    'codfilial' => $usuario->Usuario->Filial->codfilial,
+                    'filial' => $usuario->Usuario->Filial->filial
+                ]
+            ];
+        }
+
+        $permissoes = [];
+        foreach ($model->GrupoUsuarioPermissaoS as $permissao) {
+            $permissoes[] = [
+                'codpermissao' => $permissao->Permissao->codpermissao,
+                'permissao' => $permissao->Permissao->permissao
+            ];
+        }
+
+        $details['Usuarios'] = $usuarios;
+        $details['Permissoes'] = $permissoes;
+
+        return $details;
+    }
+
 }

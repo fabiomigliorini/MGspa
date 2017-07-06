@@ -43,8 +43,6 @@ window.axios.interceptors.response.use((response) => {
   const originalRequest = error.config
   if (error.response.status === 401 && !originalRequest._retry) {
     return router.push('/login/')
-  } else {
-    router.go(window.history.back())
   }
   let mensagem = error.response.status
   if (error.response.data.mensagem) {
