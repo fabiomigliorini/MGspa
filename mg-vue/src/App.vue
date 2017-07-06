@@ -32,4 +32,7 @@ export default {
 #app {
   height: 100%
 }
+/*.toolbar--absolute+main, .toolbar--fixed+main {
+  padding-top: 50px;
+}*/
 </style>

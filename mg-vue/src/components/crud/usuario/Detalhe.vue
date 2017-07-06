@@ -105,7 +105,7 @@ export default {
     font-weight: 300;
   }
   .speed-dial {
-    position: absolute;
+    position: fixed;
   }
   .btn--floating {
     position: relative;
