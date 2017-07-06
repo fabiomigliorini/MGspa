@@ -102,7 +102,7 @@ class PermissaoRepository extends MGRepositoryStatic
             $arr = explode('.', $nome);
             $grupo = $arr[0]??null;
             $ret[$grupo][$nome]['codpermissao'] = '';
-            $ret[$grupo][$nome]['codgrupousuario'] = '';
+            $ret[$grupo][$nome]['codgrupousuario'] = [];
         }
 
         // retorna array com as rotas agrupadas
