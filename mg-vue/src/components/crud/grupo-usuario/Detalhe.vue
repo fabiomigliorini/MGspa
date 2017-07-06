@@ -16,7 +16,14 @@
             <v-container fluid>
               <v-layout row wrap>
                 <v-flex sm6>
-                  {{ dados.grupousuario }}
+                  {{ dialog }}
+                  <dl>
+                      <dd v-if="dados.inativo" class="red--text">Inativo desde {{ dados.inativo }}</dd>
+                      <dt>#</dt>
+                      <dd>{{ dados.codgrupousuario }}</dd>
+                      <dt>Grupo:</dt>
+                      <dd>{{ dados.grupousuario }}</dd>
+                  </dl>
                 </v-flex>
               </v-layout>
             </v-container>
@@ -31,16 +38,28 @@
           <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
             <v-icon>delete</v-icon>
           </v-btn>
-          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.stop="inativar()" v-tooltip:left="{ html: 'inativar'}">
+          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="ativar(dados.codgrupousuario)" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_down</v-icon>
           </v-btn>
-          <v-btn v-else fab dark small class="orange" @click.native.stop="ativar()" v-tooltip:left="{ html: 'inativar'}">
+          <v-btn v-else fab dark small class="orange" @click.native.prevent="inativar(dados.codgrupousuario)" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_up</v-icon>
           </v-btn>
           <v-btn fab dark small class="green" router :to="{ path: '/grupousuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
             <v-icon>edit</v-icon>
           </v-btn>
         </v-speed-dial>
+
+        <v-dialog v-model="dialog.dialog" persistent>
+          <!-- <v-btn primary dark slot="activator">Open Dialog</v-btn> -->
+          <v-card>
+            <v-card-title class="headline">Tem certeza de desenha inativar {{ dados.grupousuario }}?</v-card-title>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn class="green--text darken-1" flat="flat" @click.native="dialog.dialog = false">Cancelar</v-btn>
+              <v-btn class="green--text darken-1" flat="flat" @click.native="confirmar(inativar)">OK</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
 
     </div>
 
@@ -67,28 +86,50 @@ export default {
         fab: false,
         right: true,
         bottom: true
+      },
+      dialog: {
+        dialog: false,
+        confirma: false
       }
     }
   },
   methods: {
     carregaDados: function (id) {
-      var vm = this
+      let vm = this
       window.axios.get('grupo-usuario/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
         console.log(error.response)
       })
     },
-    deletar: function (id) {
-      var vm = this
-      window.axios.delete('grupo-usuario/' + this.$route.params.id).then(function (request) {
+    deletar: function () {
+      let vm = this
+      window.axios.delete('grupo-usuario/' + vm.dados.codgrupousuario).then(function (request) {
         vm.$router.push('/grupo-usuario')
       }).catch(function (error) {
-        vm.snackbar.status = true
-        vm.snackbar.mensagem = error.response.data.mensagem
-        vm.snackbar.contexto = 'error'
         console.log(error.response.data)
       })
+    },
+    inativar: function () {
+      let vm = this
+      console.log('confirmado')
+      window.axios.post('grupo-usuario/' + this.dados.codgrupousuario + '/inativo').then(function (request) {
+        vm.dados = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
+    ativar: function () {
+      let vm = this
+      window.axios.delete('grupo-usuario/' + this.dados.codgrupousuario + '/inativo').then(function (request) {
+        vm.dados = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
+    confirmar: function (metodo) {
+      let vm = this
+      vm.dialog.confirma = true
     }
   },
   mounted () {
