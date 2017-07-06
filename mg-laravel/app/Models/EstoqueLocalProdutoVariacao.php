@@ -42,23 +42,23 @@ class EstoqueLocalProdutoVariacao extends MGModel
     protected $table = 'tblestoquelocalprodutovariacao';
     protected $primaryKey = 'codestoquelocalprodutovariacao';
     protected $fillable = [
-          'codestoquelocal',
-         'corredor',
-         'prateleira',
-         'coluna',
-         'bloco',
-             'estoqueminimo',
-         'estoquemaximo',
-         'codprodutovariacao',
-         'vendabimestrequantidade',
-         'vendabimestrevalor',
-         'vendasemestrequantidade',
-         'vendasemestrevalor',
-         'vendaanoquantidade',
-         'vendaanovalor',
-         'vendaultimocalculo',
-         'vencimento',
-         'vendadiaquantidadeprevisao',
+        'codestoquelocal',
+        'corredor',
+        'prateleira',
+        'coluna',
+        'bloco',
+        'estoqueminimo',
+        'estoquemaximo',
+        'codprodutovariacao',
+        'vendabimestrequantidade',
+        'vendabimestrevalor',
+        'vendasemestrequantidade',
+        'vendasemestrevalor',
+        'vendaanoquantidade',
+        'vendaanovalor',
+        'vendaultimocalculo',
+        'vencimento',
+        'vendadiaquantidadeprevisao',
     ];
     protected $dates = [
         'alteracao',
@@ -66,7 +66,6 @@ class EstoqueLocalProdutoVariacao extends MGModel
         'vendaultimocalculo',
         'vencimento',
     ];
-
 
     // Chaves Estrangeiras
     public function UsuarioAlteracao()
@@ -88,7 +87,6 @@ class EstoqueLocalProdutoVariacao extends MGModel
     {
         return $this->belongsTo(ProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
     }
-
 
     // Tabelas Filhas
     public function EstoqueSaldoS()

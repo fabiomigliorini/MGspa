@@ -47,6 +47,9 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     // Rotas Dinamicas
 
+    // EstoqueLocalProdutoVariacao
+    Route::resource('estoque-local-produto-variacao', 'EstoqueLocalProdutoVariacaoController');
+
     // Cidade
     Route::resource('cidade', 'CidadeController');
 

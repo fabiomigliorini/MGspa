@@ -12,12 +12,20 @@ namespace App\Models;
  * @property  bigint                         $codusuarioalteracao                
  * @property  timestamp                      $criacao                            
  * @property  bigint                         $codusuariocriacao                  
+ * @property  timestamp                      $inativo                            
+ * @property  bigint                         $codimagem                          
+ * @property  bigint                         $codopencart                        
+ * @property  smallint                       $abccategoria                       NOT NULL DEFAULT 4
+ * @property  bigint                         $abcposicao                         
+ * @property  numeric(14,2)                  $vendaanovalor                      
  *
  * Chaves Estrangeiras
+ * @property  Imagem                         $Imagem
  * @property  Usuario                        $UsuarioAlteracao
  * @property  Usuario                        $UsuarioCriacao
  *
  * Tabelas Filhas
+ * @property  ProdutoVariacao[]              $ProdutoVariacaoS
  * @property  ProdutoBarra[]                 $ProdutoBarraS
  * @property  Produto[]                      $ProdutoS
  */
@@ -27,33 +35,27 @@ class Marca extends MGModel
     protected $table = 'tblmarca';
     protected $primaryKey = 'codmarca';
     protected $fillable = [
-        'codimagem',
         'marca',
         'site',
         'descricaosite',
+        'codimagem',
+        'codopencart',
+        'abccategoria',
+        'abcposicao',
+        'vendaanovalor',
     ];
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo'
+        'inativo',
     ];
 
-    public function validate() {
-        
-        $this->_regrasValidacao = [
-            'marca' => 'required|min:1', 
-        ];
-    
-        $this->_mensagensErro = [
-            'marca.required' => 'O campo Marca não pode ser vazio',
-            'marca.min' => 'O campo Marca deve ter mais de 1 caracteres',
-        ];
-        
-        return parent::validate();
-        
-    }
-    
     // Chaves Estrangeiras
+    public function Imagem()
+    {
+        return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -63,13 +65,13 @@ class Marca extends MGModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-    
-    public function Imagem()
-    {
-        return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
-    }
 
     // Tabelas Filhas
+    public function ProdutoVariacaoS()
+    {
+        return $this->hasMany(ProdutoVariacao::class, 'codmarca', 'codmarca');
+    }
+
     public function ProdutoBarraS()
     {
         return $this->hasMany(ProdutoBarra::class, 'codmarca', 'codmarca');
@@ -77,55 +79,8 @@ class Marca extends MGModel
 
     public function ProdutoS()
     {
-        return $this->hasMany(Produto::class, 'codmarca', 'codmarca')->orderBy('produto');
+        return $this->hasMany(Produto::class, 'codmarca', 'codmarca');
     }
 
-    public static function search($parametros)
-    {
-        $query = Marca::query();
-        
-        if (!empty($parametros['codmarca'])) {
-            $query->where('codmarca', $parametros['codmarca']);
-        }
 
-        if (!empty($parametros['marca'])) {
-            $query->marca($parametros['marca']);
-        }
-
-        switch (isset($parametros['ativo']) ? $parametros['ativo']:'9')
-        {
-            case 1: //Ativos
-                $query->ativo();
-                break;
-            case 2: //Inativos
-                $query->inativo();
-                break;
-            case 9; //Todos
-            default:
-        }
-        
-        return $query;
-    }
-
-    public function scopeMarca($query, $marca)
-    {
-        if (trim($marca) === '')
-            return;
-        
-        $marca = explode(' ', $marca);
-        foreach ($marca as $str) {
-            $query->where('marca', 'ILIKE', "%$str%");
-        }
-    }
-
-    public function scopeInativo($query)
-    {
-        $query->whereNotNull('inativo');
-    }
-
-    public function scopeAtivo($query)
-    {
-        $query->whereNull('inativo');
-    }
-    
 }

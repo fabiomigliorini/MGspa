@@ -200,6 +200,7 @@ class GeradorCodigoRepository
                     break;
 
                 case 'numeric':
+                case 'float8':
                 case 'int8':
                 case 'int4':
                 case 'int2':

@@ -119,11 +119,18 @@ class MGRepositoryStatic
     {
         $qry = app(static::$modelClass)::query();
         foreach ($filter as $field => $value) {
+
+            if ($field == 'inativo') {
+                $qry->AtivoInativo($value);
+                continue;
+            }
+
             if (is_numeric($value) || ($value instanceof Carbon)) {
                 $qry->where($field, $value);
-            } else {
-                $qry->palavras($field, $value);
+                continue;
             }
+
+            $qry->palavras($field, $value);
         }
         $qry = static::querySort($qry, $sort);
         $qry = static::queryFields($qry, $fields);

@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\GeradorCodigoCommand::class,
+        \App\Console\Commands\EstoqueCalculaEstatisticasCommand::class,
     ];
 
     /**
@@ -26,6 +27,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')
         //          ->hourly();
+        $schedule->command('estoque:calcula-estatisticas')->dailyAt('00:00');
     }
 
     /**

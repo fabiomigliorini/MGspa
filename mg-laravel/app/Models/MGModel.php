@@ -62,6 +62,23 @@ abstract class MGModel extends Model
         $query->whereNotNull("{$this->table}.inativo");
     }
 
+    public function scopeAtivoInativo($query, $valor)
+    {
+        switch ($valor) {
+            case 1:
+                $query->ativo();
+                break;
+
+            case 2:
+                $query->inativo();
+                break;
+
+            default:
+            case 9:
+                break;
+        }
+    }
+
     public function scopePalavras($query, $campo, $palavras)
     {
         foreach (explode(' ', trim($palavras)) as $palavra) {
