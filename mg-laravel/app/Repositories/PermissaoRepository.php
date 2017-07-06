@@ -132,6 +132,7 @@ class PermissaoRepository extends MGRepositoryStatic
 
             // associa a rota ao codigo gravado no banco de dados
             $rotas[$grupo][$permissao->permissao]['codpermissao'] = $permissao->codpermissao;
+            $rotas[$grupo][$permissao->permissao]['codgrupousuario'] = [];
         }
 
         // retorna as rotas
