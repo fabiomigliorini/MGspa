@@ -4,7 +4,9 @@ export default {
 
   state: {
     marca: {
-      marca: null
+      marca: null,
+      sort: 'abcposicao',
+      inativo: 1
     }
   },
 

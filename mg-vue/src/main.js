@@ -4,6 +4,11 @@ import App from './App'
 import router from './router'
 import store from './store'
 
+// Moment js
+import moment from 'moment'
+moment.locale('pt-BR')
+Vue.prototype.moment = moment
+
 Vue.config.productionTip = false
 
 // Vuetify

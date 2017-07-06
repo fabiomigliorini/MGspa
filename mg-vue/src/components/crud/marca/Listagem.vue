@@ -6,21 +6,95 @@
     </div>
 
     <div slot="menu">
-      <div class="container">
-        <v-flex xs8>
-              <v-text-field
-                name="filtro"
-                label="Busca"
-                id="filtro"
-                v-model="filtro.marca"
-                @change.native.stop="pesquisar()"
-              ></v-text-field>
-            </v-flex>
-      </div>
+
+      <v-flex xs12 class="container pt-3 pb-0 mb-0 mt-0">
+
+        <v-text-field
+         class="pt-0 pb-0 mb-0 mt-4"
+          name="filtro"
+          append-icon="search"
+          label="Descrição"
+          id="filtro"
+          v-model="filtro.marca"
+          @change.native.stop="pesquisar()"
+        ></v-text-field>
+      </v-flex>
+
+      <v-list dense>
+
+        <v-subheader class="mt-0 grey--text text--darken-1">ORDENAR POR</v-subheader>
+
+        <v-list-tile @click.native="ordena('abcposicao')">
+          <v-list-tile-action>
+            <v-icon :class="(filtro.sort=='abcposicao')?'blue--text':''">trending_up</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="(filtro.sort=='abcposicao')?'blue--text':''">Vendas</v-list-tile-title>
+        </v-list-tile>
+
+        <v-list-tile @click.native="ordena('marca')">
+          <v-list-tile-action>
+            <v-icon :class="(filtro.sort=='marca')?'blue--text':''">sort_by_alpha</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="(filtro.sort=='marca')?'blue--text':''">Descrição</v-list-tile-title>
+        </v-list-tile>
+
+        <v-subheader class="mt-0 grey--text text--darken-1">FILTRAR</v-subheader>
+
+        <v-list-tile @click.native="sobrando()">
+          <v-list-tile-action>
+            <v-icon :class="(filtro.sobrando==true)?'blue--text':''">arrow_upward</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="(filtro.sobrando==true)?'blue--text':''">Estoque Sobrando</v-list-tile-title>
+        </v-list-tile>
+
+        <v-list-tile @click.native="faltando()">
+          <v-list-tile-action>
+            <v-icon :class="(filtro.faltando==true)?'blue--text':''">arrow_downward</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="(filtro.faltando==true)?'blue--text':''">Estoque Faltando</v-list-tile-title>
+        </v-list-tile>
+
+        <v-list-tile @click.native="abccategoria()">
+          <v-list-tile-action>
+            <v-icon :class="filtro.abccategoria?'blue--text':''">star</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="filtro.abccategoria?'blue--text':''">
+            <span v-if="filtro.abccategoria">
+            {{ 4 - filtro.abccategoria }}
+            </span>
+            Estrelas
+          </v-list-tile-title>
+        </v-list-tile>
+
+        <v-subheader class="mt-0 grey--text text--darken-1">ATIVOS</v-subheader>
+
+        <v-list-tile @click.native="inativo(1)">
+          <v-list-tile-action>
+            <v-icon :class="(filtro.inativo==1)?'blue--text':''">thumb_up</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="(filtro.inativo==1)?'blue--text':''">Ativos</v-list-tile-title>
+        </v-list-tile>
+
+        <v-list-tile @click.native="inativo(2)">
+          <v-list-tile-action>
+            <v-icon :class="(filtro.inativo==2)?'blue--text':''">thumb_down</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="(filtro.inativo==2)?'blue--text':''">Inativos</v-list-tile-title>
+        </v-list-tile>
+
+        <v-list-tile @click.native="inativo(9)">
+          <v-list-tile-action>
+            <v-icon :class="(filtro.inativo==9)?'blue--text':''">thumbs_up_down</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title :class="(filtro.inativo==9)?'blue--text':''">Ativos e Inativos</v-list-tile-title>
+        </v-list-tile>
+
+      </v-list>
+
+
     </div>
 
     <div slot="conteudo">
-
        <v-list two-line>
         <template v-for="item in marca">
           <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }" v-bind:key="item.codmarca">
@@ -37,23 +111,38 @@
                 #{{ item.codmarca }}
               </v-list-tile-sub-title>
             </v-list-tile-content>
+
             <v-list-tile-content class="hidden-sm-and-down">
               <v-list-tile-sub-title>
-                5 abaixo do mínimo /
-                2 acima do máximo
+                <span v-if="item.itensabaixominimo > 0">
+                  {{ item.itensabaixominimo }} abaixo do mínimo /
+                </span>
+                <span v-if="item.itensacimamaximo > 0">
+                  {{ item.itensacimamaximo }} acima do máximo
+                </span>
               </v-list-tile-sub-title>
               <v-list-tile-sub-title>
-                25/dez/16 Última compra
+                <span v-if="item.dataultimacompra">
+                   Comprado
+                   {{ moment(item.dataultimacompra).fromNow() }}
+                 </span>
               </v-list-tile-sub-title>
             </v-list-tile-content>
+
+            <v-list-tile-content class="hidden-sm-and-down">
+              <v-list-tile-sub-title>
+                Estoque de
+                {{ item.estoqueminimodias }} à
+                {{ item.estoquemaximodias }} Dias
+              </v-list-tile-sub-title>
+            </v-list-tile-content>
+
             <v-list-tile-content>
               <v-list-tile-title class="text-xs-right">
-                <v-icon class="yellow--text text--darken-3">star</v-icon>
-                <v-icon class="yellow--text text--darken-3">star</v-icon>
-                <v-icon class="grey--text text--lighten-1">star_border</v-icon>
+                <mg-abc-categoria :abccategoria="item.abccategoria"></mg-abc-categoria>
               </v-list-tile-title>
               <v-list-tile-sub-title class="text-xs-right">
-                #1
+                # {{ item.abcposicao }}
               </v-list-tile-sub-title>
             </v-list-tile-content>
           </v-list-tile>
@@ -69,7 +158,7 @@
     </div>
 
     <v-fab-transition >
-      <v-btn router :to="{path: '/marca/nova'}" class="red white--text" light absolute bottom right fab>
+      <v-btn router :to="{path: '/marca/nova'}" class="red white--text" light fixed bottom right fab>
         <v-icon>add</v-icon>
       </v-btn>
     </v-fab-transition>
@@ -86,11 +175,12 @@
 
 <script>
 import MgLayout from '../../layout/MgLayout'
+import MgAbcCategoria from '../../layout/MgAbcCategoria'
 
 export default {
   name: 'hello',
   components: {
-    MgLayout
+    MgLayout, MgAbcCategoria
   },
   data () {
     return {
@@ -98,6 +188,7 @@ export default {
       pagina: 1,
       filtro: { }, // Vem do Store
       fim: false,
+      tab: 0,
       carregando: false
     }
   },
@@ -123,8 +214,33 @@ export default {
       this.marca = []
       this.fim = false
       this.carregaListagem()
+    },
+    ordena (campo) {
+      this.filtro.sort = campo
+      this.pesquisar()
+    },
+    inativo (valor) {
+      this.filtro.inativo = valor
+      this.pesquisar()
+    },
+    sobrando () {
+      this.filtro.sobrando = !this.filtro.sobrando
+      this.pesquisar()
+    },
+    faltando () {
+      this.filtro.faltando = !this.filtro.faltando
+      this.pesquisar()
+    },
+    abccategoria () {
+      if (!this.filtro.abccategoria) {
+        this.filtro.abccategoria = 0
+      }
+      this.filtro.abccategoria++
+      if (this.filtro.abccategoria > 4) {
+        this.filtro.abccategoria = 0
+      }
+      this.pesquisar()
     }
-
   },
   mounted () {
     this.filtro = this.$store.getters['filtro/marca']
