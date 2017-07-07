@@ -12,23 +12,25 @@
 
       </v-flex>
     </div>
-    <v-list two-line>
-      <template v-for="(item, index) in dados.Permissoes">
-          <v-list-tile @click.native.stop="tab(index)" v-bind:key="item.codpermissao">
-            <v-list-tile-content>
-              <v-list-tile-title>
-                {{ index }}
-              </v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
-          <v-divider></v-divider>
-        </template>
-      </v-list>
-
+    <v-list dense>
+      <v-list-tile
+        @click.native.stop="tab(index)"
+        v-bind:key="item.codpermissao"
+        v-for="(item, index) in dados.Permissoes"
+      >
+        <v-list-tile-content>
+          <v-list-tile-title>
+            {{ index }}
+          </v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+      <v-divider></v-divider>
+    </v-list>
   </div>
 
   <div slot="conteudo">
     <template v-for="(permissao, index) in dados.Permissoes">
+      <transition name="slide-fade">
       <div v-if="index == tabs">
         <table class="datatable table">
           <thead>
@@ -60,6 +62,7 @@
           </tbody>
         </table>
       </div>
+    </transition>
     </template>
 
   </div>
@@ -155,7 +158,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-  .list--two-line .list__tile {
-    height: 50px;
-  }
 </style>

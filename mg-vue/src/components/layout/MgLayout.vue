@@ -80,7 +80,7 @@
       </main>
 
 
-      <v-footer class="blue">
+      <v-footer class="blue" fixed>
         <span class="yellow--text"><slot name="rodape">© 2017</slot></span>
       </v-footer>
     </v-app>
