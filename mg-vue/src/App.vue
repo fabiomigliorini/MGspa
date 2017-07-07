@@ -40,6 +40,8 @@ export default {
 .speed-dial {
   z-index: 5;
 }
+
+/*TRANSIÇÕES CSS3 DA DOCUMENTAÇÃO DO VUE 2*/
 .fade-enter-active, .fade-leave-active {
   transition: opacity .5s
 }
@@ -50,7 +52,7 @@ export default {
 /* Enter and leave animations can use different */
 /* durations and timing functions.              */
 .slide-fade-enter-active {
-  transition: all .3s ease;
+  transition: all .5s ease;
 }
 /*.slide-fade-leave-active {
 transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
@@ -58,9 +60,10 @@ transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
 
 .slide-fade-enter, .slide-fade-leave-to
 /* .slide-fade-leave-active for <2.1.8 */ {
-  transform: translateX(15px);
+  transform: translateX(50px);
   opacity: 0;
 }
+/*---------------*/
 
 /*.toolbar--absolute+main, .toolbar--fixed+main {
   padding-top: 50px;

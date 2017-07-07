@@ -11,12 +11,12 @@
     </div>
 
     <div slot="conteudo">
-      <v-card class="elevation-0">
+      <v-card class="elevation-0" absolute>
           <v-card-text>
             <v-container fluid>
               <form autocomplete="off" @submit.prevent="create">
                 <v-layout row>
-                  <v-flex xs12>
+                  <v-flex  md4 sm8 xs12>
                     <v-text-field
                       name="input-2"
                       label="Grupo"
@@ -27,16 +27,15 @@
                   </v-flex>
                 </v-layout>
                 <v-layout row>
-                  <v-flex xs12>
-                    <v-btn type="submit" primary light>Salvar</v-btn>
+                  <v-flex>
+                    <v-btn class="white--text" error light router :to="{ path: '/grupo-usuario/' }">Cancelar</v-btn>
+                    <v-btn class="white--text" type="submit" primary light>Salvar</v-btn>
                   </v-flex>
                 </v-layout>
               </form>
             </v-container>
           </v-card-text>
         </v-card>
-
-
     </div>
 
     <!--

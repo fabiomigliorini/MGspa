@@ -21,7 +21,7 @@
 
     <div slot="conteudo">
 
-       <v-list two-line>
+       <v-list>
         <template v-for="item in dados">
           <v-list-tile avatar router :to="{path: '/grupo-usuario/' + item.codgrupousuario }" v-bind:key="item.codgrupousuario">
             <v-list-tile-content>

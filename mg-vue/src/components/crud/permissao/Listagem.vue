@@ -9,10 +9,9 @@
     <div class="container">
       <v-flex xs8>
         <v-text-field name="filtro" label="Busca" id="filtro" v-model="filtro.permissao" @change.native.stop="pesquisar()"></v-text-field>
-
       </v-flex>
     </div>
-    <v-list dense>
+    <v-list>
       <v-list-tile
         @click.native.stop="tab(index)"
         v-bind:key="item.codpermissao"
@@ -31,38 +30,38 @@
   <div slot="conteudo">
     <template v-for="(permissao, index) in dados.Permissoes">
       <transition name="slide-fade">
-      <div v-if="index == tabs">
-        <table class="datatable table">
-          <thead>
-            <tr>
-              <th>
-                &nbsp;
-              </th>
-                <th v-for="(grupos, index) in dados.Grupos">
-                    {{ grupos.grupousuario }}
-                </th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(item, index) in permissao">
+        <div v-if="index == tabs" class="permissoes">
+          <div class="container-tabela">
+          <table class="datatable table">
+            <thead class="datatable__progress">
               <tr>
-                <th style="text-align: right">
-                  {{ index }}
+                <th>&nbsp;</th>
+                <th v-for="(grupos, index) in dados.Grupos" class="column">
+                    <div>{{ grupos.grupousuario }}</div>
                 </th>
-                  <td style="text-align: center" v-for="grupo in dados.Grupos">
-                    <v-btn @click.native.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" icon v-if="item.codgrupousuario.includes(grupo.codgrupousuario)" class="green--text" small>
-                      <v-icon>thumb_up</v-icon>
-                    </v-btn>
-                    <v-btn @click.native.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" icon v-else class="red--text" small>
-                      <v-icon>thumb_down</v-icon>
-                    </v-btn>
-                  </td>
               </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
-    </transition>
+            </thead>
+            <tbody>
+              <template v-for="(item, index) in permissao">
+                <tr>
+                  <th>
+                    {{ index }}
+                  </th>
+                    <td style="text-align: center" v-for="grupo in dados.Grupos">
+                      <v-btn @click.native.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" icon v-if="item.codgrupousuario.includes(grupo.codgrupousuario)" class="green--text" small>
+                        <v-icon>thumb_up</v-icon>
+                      </v-btn>
+                      <v-btn @click.native.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" icon v-else class="red--text" small>
+                        <v-icon>thumb_down</v-icon>
+                      </v-btn>
+                    </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </transition>
     </template>
 
   </div>
@@ -90,13 +89,6 @@ export default {
       pagina: 1,
       filtro: {
         permissao: null
-      },
-      fim: false,
-      carregando: false,
-      snackbar: {
-        status: false,
-        contexto: '',
-        mensagem: ''
       }
     }
   },
@@ -158,4 +150,13 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
+.permissoes {
+  position: absolute;
+}
+.column div {
+  padding: 15px 0;
+}
+table.table tr:not(:last-child) {
+  border-bottom: 1px solid rgba(0,0,0,0.100);
+}
 </style>

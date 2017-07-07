@@ -14,7 +14,7 @@
       <v-card class="elevation-0">
         <v-card-text>
           <v-layout row wrap>
-            <v-flex xs4>
+            <v-flex md4 xs12>
               <v-card>
                 <v-card-text>
                   <dl>
@@ -27,12 +27,12 @@
                 </v-card-text>
               </v-card>
             </v-flex>
-            <v-flex xs4>
+            <v-flex md4 xs12>
               <v-card>
                 <v-card-title primary-title>
                   <h5 class="headline mb-0 mt-0">Usuários</h5>
                 </v-card-title>
-                <v-list two-line>
+                <v-list>
                   <v-list-tile v-for="usuario in dados.Usuarios" router :to="{path: '/usuario/' + usuario.codusuario }" :key="usuario.codusuario">
                     <v-list-tile-content>
                       <v-list-tile-title>{{ usuario.usuario }}</v-list-tile-title>
@@ -42,12 +42,12 @@
                 </v-list>
               </v-card>
             </v-flex>
-            <v-flex xs4>
+            <v-flex md4 xs12>
               <v-card>
                 <v-card-title primary-title>
                   <h5 class="headline mb-0 mt-0">Permissões</h5>
                 </v-card-title>
-                <v-list two-line>
+                <v-list>
                   <v-list-tile v-for="permissao in dados.Permissoes" :key="permissao.codpermissao">
                     <v-list-tile-content>
                       <v-list-tile-title>{{ permissao.permissao }}</v-list-tile-title>
@@ -59,38 +59,45 @@
           </v-layout>
         </v-container>
       </v-card-text>
-    </v-card>
+      </v-card>
 
-        <v-speed-dial v-model="fab.fab" :bottom="fab.bottom" :right="fab.right" direction="top" transition="scale">
-          <v-btn slot="activator" class="blue darken-2" dark fab hover v-model="fab">
-            <v-icon>keyboard_arrow_down</v-icon>
-            <v-icon>keyboard_arrow_up</v-icon>
-          </v-btn>
-          <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
-            <v-icon>delete</v-icon>
-          </v-btn>
-          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="ativar(dados.codgrupousuario)" v-tooltip:left="{ html: 'inativar'}">
-            <v-icon>thumb_down</v-icon>
-          </v-btn>
-          <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar')" v-tooltip:left="{ html: 'inativar'}">
-            <v-icon>thumb_up</v-icon>
-          </v-btn>
-          <v-btn fab dark small class="green" router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
-            <v-icon>edit</v-icon>
-          </v-btn>
-        </v-speed-dial>
+      <v-speed-dial
+        v-model="fab"
+        :top="top"
+        :bottom="bottom"
+        :right="right"
+        :left="left"
+        :direction="direction"
+        :hover="hover"
+        :transition="transition">
+        <v-btn slot="activator" class="blue darken-2" dark fab hover v-model="fab">
+          <v-icon>edit</v-icon>
+          <v-icon>close</v-icon>
+        </v-btn>
+        <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
+          <v-icon>delete</v-icon>
+        </v-btn>
+        <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="ativar(dados.codgrupousuario)" v-tooltip:left="{ html: 'inativar'}">
+          <v-icon>thumb_down</v-icon>
+        </v-btn>
+        <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar')" v-tooltip:left="{ html: 'inativar'}">
+          <v-icon>thumb_up</v-icon>
+        </v-btn>
+        <v-btn fab dark small class="green" router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
+          <v-icon>edit</v-icon>
+        </v-btn>
+      </v-speed-dial>
 
-        <v-dialog v-model="dialog.dialog" width="50%" persistent>
-          <v-card>
-            <v-card-title class="headline">{{ dialog.perunta }} '{{ dados.grupousuario }}'?</v-card-title>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn class="green--text darken-1" flat="flat" @click.native="dialog.dialog = false">Cancelar</v-btn>
-              <v-btn class="green--text darken-1" flat="flat" @click.native="inativar()">OK</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
+      <v-dialog v-model="dialog.dialog" width="50%" persistent>
+        <v-card>
+          <v-card-title class="headline">{{ dialog.perunta }} '{{ dados.grupousuario }}'?</v-card-title>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn class="green--text darken-1" flat="flat" @click.native="dialog.dialog = false">Cancelar</v-btn>
+            <v-btn class="green--text darken-1" flat="flat" @click.native="inativar()">OK</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </div>
 
     <!--
@@ -111,12 +118,17 @@ export default {
   },
   data () {
     return {
+      direction: 'top',
+      fab: false,
+      fling: false,
+      hover: false,
+      tabs: null,
+      top: false,
+      right: true,
+      bottom: true,
+      left: false,
+      transition: 'scale',
       dados: {},
-      fab: {
-        fab: false,
-        right: true,
-        bottom: true
-      },
       dialog: {
         dialog: false,
         pergunta: ''
