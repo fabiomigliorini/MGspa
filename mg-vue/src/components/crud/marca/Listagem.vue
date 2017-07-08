@@ -190,6 +190,7 @@ export default {
       carregando: false
     }
   },
+
   methods: {
     carregaListagem () {
       this.$store.commit('filtro/marca', this.filtro)
