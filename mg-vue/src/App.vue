@@ -42,6 +42,6 @@ export default {
 }
 
 .toolbar--absolute+main, .toolbar--fixed+main {
-  padding-top: 55px;
+  padding-top: 40px;
 }
 </style>
