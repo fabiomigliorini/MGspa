@@ -65,7 +65,7 @@ transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
 }
 /*---------------*/
 
-/*.toolbar--absolute+main, .toolbar--fixed+main {
-  padding-top: 50px;
-}*/
+.toolbar--absolute+main, .toolbar--fixed+main {
+  padding-top: 55px;
+}
 </style>
