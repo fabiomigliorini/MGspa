@@ -13,7 +13,7 @@ class ResourceRegistrar extends OriginalRegistrar
      * @var array
      */
     //protected $resourceDefaults = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'data'];
-    protected $resourceDefaults = ['index', 'store', 'show', 'update', 'destroy', 'activate', 'inactivate'];
+    protected $resourceDefaults = ['index', 'store', 'show', 'update', 'destroy', 'activate', 'inactivate', 'details'];
 
     protected function addResourceInactivate($name, $base, $controller, $options)
     {
@@ -27,5 +27,12 @@ class ResourceRegistrar extends OriginalRegistrar
         $uri = $this->getResourceUri($name).'/{'.$base.'}/inativo';
         $action = $this->getResourceAction($name, $controller, 'activate', $options);
         return $this->router->match(['DELETE'], $uri, $action);
+    }
+
+    protected function addResourceDetails($name, $base, $controller, $options)
+    {
+        $uri = $this->getResourceUri($name).'/{'.$base.'}/details';
+        $action = $this->getResourceAction($name, $controller, 'details', $options);
+        return $this->router->match(['GET'], $uri, $action);
     }
 }
