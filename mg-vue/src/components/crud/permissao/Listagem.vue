@@ -29,7 +29,7 @@
 
   <div slot="conteudo">
     <template v-for="(permissao, index) in dados.Permissoes">
-      <transition name="slide-fade">
+      <transition name="slide-x-transition">
         <div v-if="index == tabs" class="permissoes">
           <div class="container-tabela">
           <table class="datatable table">
