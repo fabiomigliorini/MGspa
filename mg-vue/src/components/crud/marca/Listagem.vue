@@ -87,9 +87,9 @@
 
   <template slot="conteudo">
     <v-list two-line>
-      <transition-group name="slide-fade">
+      <transition-group name="slide-x-transition" tag="div">
         <template v-for="item in marca">
-          <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }" v-bind:key="item.codmarca" class="red lighten-4">
+          <v-list-tile avatar router :to="{path: '/marca/' + item.codmarca }" v-bind:key="item.codmarca" :class="(item.inativo)?'red lighten-4':''">
             <v-list-tile-avatar>
               <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
               <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
@@ -137,7 +137,9 @@
                 # {{ item.abcposicao }}
               </v-list-tile-sub-title>
             </v-list-tile-content>
+
           </v-list-tile>
+
           <v-divider></v-divider>
         </template>
       </transition-group>
@@ -162,7 +164,7 @@
   </div>
   -->
 
-</mg-layout>
+  </mg-layout>
 </template>
 
 <script>
