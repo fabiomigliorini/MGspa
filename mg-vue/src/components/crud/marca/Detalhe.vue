@@ -1,7 +1,6 @@
 <template>
   <mg-layout>
 
-
     <template slot="titulo">
       {{ dados.marca }}
     </template>

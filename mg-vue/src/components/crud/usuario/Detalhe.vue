@@ -1,16 +1,16 @@
 <template>
   <mg-layout>
 
-    <div slot="titulo">
+    <template slot="titulo">
       {{ dados.usuario }}
-    </div>
+    </template>
 
-    <div slot="menu">
+    <template slot="menu">
       <div class="container">
       </div>
-    </div>
+    </template>
 
-    <div slot="conteudo">
+    <template slot="conteudo">
       <v-card class="elevation-0">
           <v-card-text>
             <v-container fluid>
@@ -43,7 +43,7 @@
             <v-icon>edit</v-icon>
           </v-btn>
         </v-speed-dial>
-    </div>
+    </template>
 
     <!--
     <div fixed slot="rodape">

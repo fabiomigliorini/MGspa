@@ -1,11 +1,11 @@
 <template>
   <mg-layout menu>
 
-    <div slot="titulo">
+    <template slot="titulo">
       Grupos de Usuário
-    </div>
+    </template>
 
-    <div slot="menu">
+    <template slot="menu">
       <div class="container">
         <v-flex xs8>
               <v-text-field
@@ -17,9 +17,9 @@
               ></v-text-field>
             </v-flex>
       </div>
-    </div>
+    </template>
 
-    <div slot="conteudo">
+    <template slot="conteudo">
 
        <v-list>
         <template v-for="item in dados">
@@ -48,7 +48,7 @@
         <v-icon>add</v-icon>
       </v-btn>
 
-    </div>
+    </template>
 
     <!--
     <div fixed slot="rodape">

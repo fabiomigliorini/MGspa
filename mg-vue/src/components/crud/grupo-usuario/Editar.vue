@@ -1,16 +1,16 @@
 <template>
   <mg-layout>
 
-    <div slot="titulo">
+    <template slot="titulo">
       Grupos de Usuário
-    </div>
+    </template>
 
-    <div slot="menu">
+    <template slot="menu">
       <div class="container">
       </div>
-    </div>
+    </template>
 
-    <div slot="conteudo">
+    <template slot="conteudo">
       <v-card class="elevation-0">
           <v-card-text>
             <v-container fluid>
@@ -36,7 +36,7 @@
         <v-icon>add</v-icon>
       </v-btn>
 
-    </div>
+    </template>
 
     <!--
     <div fixed slot="rodape">
