@@ -1,11 +1,11 @@
 <template>
 <mg-layout menu>
 
-  <div slot="titulo">
+  <template slot="titulo">
     Marcas
-  </div>
+  </template>
 
-  <div slot="menu">
+  <template slot="menu">
 
     <v-flex xs12 class="container pt-3 pb-0 mb-0 mt-0">
 
@@ -83,9 +83,9 @@
     </v-list>
 
 
-  </div>
+  </template>
 
-  <div slot="conteudo">
+  <template slot="conteudo">
     <v-list two-line>
       <transition-group name="slide-fade">
         <template v-for="item in marca">
@@ -155,7 +155,7 @@
     <v-btn router :to="{path: '/marca/nova'}" class="red white--text" light fixed bottom right fab>
       <v-icon>add</v-icon>
     </v-btn>
-  </div>
+  </template>
 
   <!--
   <div fixed slot="rodape">

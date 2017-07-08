@@ -1,11 +1,11 @@
 <template>
 <mg-layout menu>
 
-  <div slot="titulo">
+  <template slot="titulo">
     Permissões
-  </div>
+  </template>
 
-  <div slot="menu">
+  <template slot="menu">
     <div class="container">
       <v-flex xs8>
         <v-text-field name="filtro" label="Busca" id="filtro" v-model="filtro.permissao" @change.native.stop="pesquisar()"></v-text-field>
@@ -25,9 +25,9 @@
       </v-list-tile>
       <v-divider></v-divider>
     </v-list>
-  </div>
+  </template>
 
-  <div slot="conteudo">
+  <template slot="conteudo">
     <template v-for="(permissao, index) in dados.Permissoes">
       <transition name="slide-fade">
         <div v-if="index == tabs" class="permissoes">
@@ -64,7 +64,7 @@
       </transition>
     </template>
 
-  </div>
+  </template>
 
   <!--
     <div fixed slot="rodape">

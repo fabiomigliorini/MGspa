@@ -1,43 +1,43 @@
 <template>
   <mg-layout>
 
-    <div slot="titulo">
+    <template slot="titulo">
       Grupo de Usuario
-    </div>
+    </template>
 
-    <div slot="menu">
-      <div class="container">
-      </div>
-    </div>
+    <template slot="botoes-menu-esquerda">
+      <v-btn icon class="blue--text" router :to="{ path: '/grupo-usuario/' }">
+        <v-icon>arrow_back</v-icon>
+      </v-btn>
+    </template>
 
-    <div slot="conteudo">
-      <v-card class="elevation-0" absolute>
-          <v-card-text>
-            <v-container fluid>
-              <form autocomplete="off" @submit.prevent="create">
-                <v-layout row>
-                  <v-flex  md4 sm8 xs12>
-                    <v-text-field
-                      name="input-2"
-                      label="Grupo"
-                      v-model="dados.grupousuario"
-                      required
-                      autofocus
-                    ></v-text-field>
-                  </v-flex>
-                </v-layout>
-                <v-layout row>
-                  <v-flex>
-                    <v-btn class="white--text" error light router :to="{ path: '/grupo-usuario/' }">Cancelar</v-btn>
-                    <v-btn class="white--text" type="submit" primary>Salvar</v-btn>
-                    <v-btn small primary dark>Small Button</v-btn>
-                  </v-flex>
-                </v-layout>
-              </form>
-            </v-container>
-          </v-card-text>
-        </v-card>
-    </div>
+    <template slot="botoes-menu-direita">
+      <v-btn icon class="blue--text" @click.native="create()" v-tooltip:left="{ html: 'Salvar'}">
+        <v-icon>done</v-icon>
+      </v-btn>
+    </template>
+
+    <template slot="conteudo">
+      <v-card class="elevation-0">
+        <v-card-text>
+          <v-container fluid>
+            <form autocomplete="off" @submit.prevent="create" ref="form">
+              <v-layout row>
+                <v-flex  md4 sm8 xs12>
+                  <v-text-field
+                    name="grupousuario"
+                    label="Grupo"
+                    v-model="dados.grupousuario"
+                    required
+                    autofocus
+                  ></v-text-field>
+                </v-flex>
+              </v-layout>
+            </form>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </template>
 
     <!--
     <div fixed slot="rodape">

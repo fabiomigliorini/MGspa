@@ -1,19 +1,18 @@
 <template>
   <mg-layout>
 
-    <div slot="titulo">
+    <template slot="titulo">
       {{ dados.grupousuario }}
-    </div>
+    </template>
 
-    <div slot="menu">
-      <div class="container">
-      </div>
-    </div>
+    <template slot="botoes-menu-esquerda">
+      <v-btn icon class="blue--text" router :to="{ path: '/grupo-usuario/' }">
+        <v-icon>arrow_back</v-icon>
+      </v-btn>
+    </template>
 
-    <div slot="conteudo">
+    <template slot="conteudo">
       <v-container fluid>
-      <!-- <v-card class="elevation-0">
-        <v-card-text> -->
           <v-layout row wrap>
             <v-flex md4 xs12>
               <v-card>
@@ -59,36 +58,34 @@
             </v-flex>
           </v-layout>
         </v-container>
-      <!-- </v-card-text>
-      </v-card> -->
-    </div>
+        <v-speed-dial
+          v-model="fab"
+          :top="top"
+          :bottom="bottom"
+          :right="right"
+          :left="left"
+          :direction="direction"
+          :hover="hover"
+          :transition="transition">
+          <v-btn slot="activator" class="blue darken-2" dark fab hover v-model="fab">
+            <v-icon>edit</v-icon>
+            <v-icon>close</v-icon>
+          </v-btn>
+          <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
+            <v-icon>delete</v-icon>
+          </v-btn>
+          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="ativar(dados.codgrupousuario)" v-tooltip:left="{ html: 'inativar'}">
+            <v-icon>thumb_down</v-icon>
+          </v-btn>
+          <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar')" v-tooltip:left="{ html: 'inativar'}">
+            <v-icon>thumb_up</v-icon>
+          </v-btn>
+          <v-btn fab dark small class="green" router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
+            <v-icon>edit</v-icon>
+          </v-btn>
+        </v-speed-dial>
+    </template>
 
-      <v-speed-dial
-        v-model="fab"
-        :top="top"
-        :bottom="bottom"
-        :right="right"
-        :left="left"
-        :direction="direction"
-        :hover="hover"
-        :transition="transition">
-        <v-btn slot="activator" class="blue darken-2" dark fab hover v-model="fab">
-          <v-icon>edit</v-icon>
-          <v-icon>close</v-icon>
-        </v-btn>
-        <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
-          <v-icon>delete</v-icon>
-        </v-btn>
-        <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="ativar(dados.codgrupousuario)" v-tooltip:left="{ html: 'inativar'}">
-          <v-icon>thumb_down</v-icon>
-        </v-btn>
-        <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar')" v-tooltip:left="{ html: 'inativar'}">
-          <v-icon>thumb_up</v-icon>
-        </v-btn>
-        <v-btn fab dark small class="green" router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
-          <v-icon>edit</v-icon>
-        </v-btn>
-      </v-speed-dial>
 
       <v-dialog v-model="dialog.dialog" width="50%" persistent>
         <v-card>
