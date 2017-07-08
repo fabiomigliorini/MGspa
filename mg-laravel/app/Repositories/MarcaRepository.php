@@ -180,4 +180,13 @@ class MarcaRepository extends MGRepositoryStatic
 
         return $afetados;
     }
+
+    public static function details($model)
+    {
+        $data = $model->getAttributes();
+        $data['numero_produtos'] = 99;
+        return $data;
+    }
+
+
 }

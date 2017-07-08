@@ -1,16 +1,18 @@
 <template>
   <mg-layout>
 
-    <div slot="titulo">
+
+    <template slot="titulo">
       {{ dados.marca }}
-    </div>
+    </template>
 
-    <div slot="menu">
-      <div class="container">
-      </div>
-    </div>
+    <template slot="botoes-menu-esquerda">
+      <v-btn icon class="blue--text" router :to="{path: '/marca/' }">
+        <v-icon>arrow_back</v-icon>
+      </v-btn>
+    </template>
 
-    <div slot="conteudo">
+    <template slot="conteudo">
       <v-card class="elevation-0">
           <v-card-text>
             <v-container fluid>
@@ -56,11 +58,9 @@
             <v-icon>edit</v-icon>
           </v-btn>
         </v-speed-dial>
-      </div>
-      <!--
-      <div fixed slot="rodape">
-      </div>
-      -->
+      </template>
+
+
   </mg-layout>
 </template>
 

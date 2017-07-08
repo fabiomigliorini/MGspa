@@ -42,7 +42,9 @@
       <v-toolbar fixed class="yellow">
 
         <!-- botão menu esquerda -->
-        <v-toolbar-side-icon class="blue--text" @click.native.stop="menuContexto = !menuContexto" v-tooltip:bottom="{ html: 'Opções'}"></v-toolbar-side-icon>
+        <slot name="botoes-menu-esquerda">
+          <v-toolbar-side-icon class="blue--text" @click.native.stop="menuContexto = !menuContexto" v-tooltip:bottom="{ html: 'Opções'}"></v-toolbar-side-icon>
+        </slot>
 
         <!-- titulo -->
         <v-toolbar-title class="blue--text">
@@ -69,9 +71,11 @@
         -->
         <v-spacer></v-spacer>
         <!-- botao aplicativos -->
-        <v-btn icon v-tooltip:bottom="{ html: 'Aplicações'}" @click.native.stop="menuApps = !menuApps" class="blue--text">
-          <v-icon>apps</v-icon>
-        </v-btn>
+        <slot name="botoes-menu-direita">
+          <v-btn icon v-tooltip:bottom="{ html: 'Aplicações'}" @click.native.stop="menuApps = !menuApps" class="blue--text">
+            <v-icon>apps</v-icon>
+          </v-btn>
+        </slot>
 
       </v-toolbar>
 
@@ -148,13 +152,6 @@
 
   main {
     margin-bottom: 45px
-  }
-
-  .component-fade-enter-active, .component-fade-leave-active {
-    transition: opacity .3s ease;
-  }
-  .component-fade-enter, .component-fade-leave-to {
-    opacity: 0;
   }
 
 </style>

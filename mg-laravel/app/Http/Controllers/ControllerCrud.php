@@ -9,12 +9,19 @@ class ControllerCrud extends Controller
 
     protected $repositoryName = '';
 
-    public function show(Request $request, $id)
+    public function details(Request $request, $id)
     {
         $this->authorize();
         $model = app($this->repositoryName)::findOrFail($id);
         $details = app($this->repositoryName)::details($model);
         return response()->json($details, 200);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $this->authorize();
+        $model = app($this->repositoryName)::findOrFail($id);
+        return response()->json($model, 200);
     }
 
     public function index(Request $request)
