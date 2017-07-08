@@ -11,8 +11,9 @@
     </div>
 
     <div slot="conteudo">
-      <v-card class="elevation-0">
-        <v-card-text>
+      <v-container fluid>
+      <!-- <v-card class="elevation-0">
+        <v-card-text> -->
           <v-layout row wrap>
             <v-flex md4 xs12>
               <v-card>
@@ -58,8 +59,9 @@
             </v-flex>
           </v-layout>
         </v-container>
-      </v-card-text>
-      </v-card>
+      <!-- </v-card-text>
+      </v-card> -->
+    </div>
 
       <v-speed-dial
         v-model="fab"
@@ -140,6 +142,7 @@ export default {
       let vm = this
       window.axios.get('grupo-usuario/' + this.$route.params.id).then(function (request) {
         vm.dados = request.data
+        // store.commit('grupoUsuario/dados', mensagem)
       }).catch(function (error) {
         console.log(error.response)
       })

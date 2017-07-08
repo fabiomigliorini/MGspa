@@ -29,7 +29,8 @@
                 <v-layout row>
                   <v-flex>
                     <v-btn class="white--text" error light router :to="{ path: '/grupo-usuario/' }">Cancelar</v-btn>
-                    <v-btn class="white--text" type="submit" primary light>Salvar</v-btn>
+                    <v-btn class="white--text" type="submit" primary>Salvar</v-btn>
+                    <v-btn small primary dark>Small Button</v-btn>
                   </v-flex>
                 </v-layout>
               </form>
