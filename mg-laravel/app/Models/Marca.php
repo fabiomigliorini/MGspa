@@ -18,6 +18,15 @@ namespace App\Models;
  * @property  smallint                       $abccategoria                       NOT NULL DEFAULT 4
  * @property  bigint                         $abcposicao                         
  * @property  numeric(14,2)                  $vendaanovalor                      
+ * @property  numeric(14,2)                  $vendabimestrevalor                 
+ * @property  numeric(14,2)                  $vendasemestrevalor                 
+ * @property  date                           $dataultimacompra                   
+ * @property  smallint                       $itensabaixominimo                  
+ * @property  smallint                       $itensacimamaximo                   
+ * @property  smallint                       $estoqueminimodias                  NOT NULL DEFAULT 15
+ * @property  smallint                       $estoquemaximodias                  NOT NULL DEFAULT 30
+ * @property  boolean                        $abcignorar                         NOT NULL DEFAULT false
+ * @property  numeric(5,2)                   $vendaanopercentual                 
  *
  * Chaves Estrangeiras
  * @property  Imagem                         $Imagem
@@ -43,11 +52,21 @@ class Marca extends MGModel
         'abccategoria',
         'abcposicao',
         'vendaanovalor',
+        'vendabimestrevalor',
+        'vendasemestrevalor',
+        'dataultimacompra',
+        'itensabaixominimo',
+        'itensacimamaximo',
+        'estoqueminimodias',
+        'estoquemaximodias',
+        'abcignorar',
+        'vendaanopercentual',
     ];
     protected $dates = [
         'alteracao',
         'criacao',
         'inativo',
+        'dataultimacompra',
     ];
 
     // Chaves Estrangeiras

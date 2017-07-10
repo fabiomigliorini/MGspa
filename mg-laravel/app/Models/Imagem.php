@@ -5,13 +5,13 @@ namespace App\Models;
 /**
  * Campos
  * @property  bigint                         $codimagem                          NOT NULL DEFAULT nextval('tblimagem_codimagem_seq'::regclass)
- * @property  varchar(200)                   $observacoes                        
- * @property  timestamp                      $inativo                            
- * @property  timestamp                      $criacao                            
- * @property  bigint                         $codusuariocriacao                  
- * @property  timestamp                      $alteracao                          
- * @property  bigint                         $codusuarioalteracao                
- * @property  varchar(150)                   $arquivo                            
+ * @property  varchar(200)                   $observacoes
+ * @property  timestamp                      $inativo
+ * @property  timestamp                      $criacao
+ * @property  bigint                         $codusuariocriacao
+ * @property  timestamp                      $alteracao
+ * @property  bigint                         $codusuarioalteracao
+ * @property  varchar(150)                   $arquivo
  *
  * Chaves Estrangeiras
  * @property  Usuario                        $UsuarioCriacao
@@ -24,10 +24,10 @@ namespace App\Models;
  * @property  ProdutoImagem[]                $ProdutoImagemS
  * @property  SecaoProduto[]                 $SecaoProdutoS
  * @property  SubGrupoProduto[]              $SubGrupoProdutoS
- * 
+ *
  * Relacionamentos N x N
  * @property  Produto[]                       $ProdutoS
- * 
+ *
  */
 
 class Imagem extends MGModel
@@ -91,22 +91,22 @@ class Imagem extends MGModel
     // Relacionamento N x N
     public function ProdutoS()
     {
-        return $this->belongsToMany(Produto::class, 'tblprodutoimagem', 'codimagem', 'codproduto');        
+        return $this->belongsToMany(Produto::class, 'tblprodutoimagem', 'codimagem', 'codproduto');
     }
 
     // Campos calculados
     public function getUrlAttribute()
     {
-        return url(asset("public/imagens/{$this->arquivo}"));
+        return url(asset("imagens/{$this->arquivo}"));
     }
-    
+
     public function getPathAttribute()
     {
         return "$this->directory/{$this->arquivo}";
     }
-    
+
     public function getDirectoryAttribute()
     {
-        return public_path("imagens");        
+        return public_path("imagens");
     }
 }

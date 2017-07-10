@@ -25,9 +25,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
-        $schedule->command('estoque:calcula-estatisticas')->dailyAt('00:00');
+        // $schedule->command('inspire')->hourly();
+        $schedule->command('estoque:calcula-estatisticas')->dailyAt('00:30');
     }
 
     /**

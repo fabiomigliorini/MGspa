@@ -92,31 +92,31 @@
       <template v-for="item in marca">
           <v-list-tile  avatar router :to="{path: '/marca/' + item.codmarca }" v-bind:key="item.codmarca" :class="(item.inativo)?'red lighten-4':''">
             <v-list-tile-avatar>
-              <!-- <img src="http://localhost/MGUplon/public/imagens/{{ item.codimagem }}.jpg"> -->
-              <img v-if="item.codimagem" :src="'http://localhost/MGUplon/public/imagens/'+ item.codimagem + '.jpg'">
-              <img v-else :src="'http://localhost/MGUplon/public/imagens/semimagem.jpg'">
+              <img v-if="item.imagem" :src="item.imagem.url">
             </v-list-tile-avatar>
             <v-list-tile-content>
               <v-list-tile-title>
                 {{ item.marca }}
               </v-list-tile-title>
               <v-list-tile-sub-title>
-                #{{ item.codmarca }}
+                #{{ parseInt(item.codmarca).toLocaleString('pt-BR', { minimumIntegerDigits: 8, useGrouping: false }) }}
               </v-list-tile-sub-title>
+
             </v-list-tile-content>
 
             <v-list-tile-content class="hidden-sm-and-down">
               <v-list-tile-sub-title>
                 <span v-if="item.itensabaixominimo > 0">
-                  {{ item.itensabaixominimo }} abaixo do mínimo /
+                  {{ item.itensabaixominimo }} <v-icon>arrow_downward</v-icon>
                 </span>
                 <span v-if="item.itensacimamaximo > 0">
-                  {{ item.itensacimamaximo }} acima do máximo
+                   <v-icon>arrow_upward</v-icon>
+                  {{ item.itensacimamaximo }}
                 </span>
               </v-list-tile-sub-title>
               <v-list-tile-sub-title>
                 <span v-if="item.dataultimacompra">
-                   Comprado
+                  <v-icon>add_shopping_cart</v-icon>
                    {{ moment(item.dataultimacompra).fromNow() }}
                  </span>
               </v-list-tile-sub-title>
@@ -124,7 +124,7 @@
 
             <v-list-tile-content class="hidden-sm-and-down">
               <v-list-tile-sub-title>
-                Estoque de
+                <v-icon>date_range</v-icon>
                 {{ item.estoqueminimodias }} à
                 {{ item.estoquemaximodias }} Dias
               </v-list-tile-sub-title>
@@ -135,11 +135,17 @@
                 <mg-abc-categoria :abccategoria="item.abccategoria"></mg-abc-categoria>
               </v-list-tile-title>
               <v-list-tile-sub-title class="text-xs-right">
-                # {{ item.abcposicao }}
+                {{ parseFloat(item.vendaanopercentual).toLocaleString('pt-BR', {minimumFractionDigits: 4, maximumFractionDigits: 4}) }}%
+                <template v-if="item.abcposicao">
+                   ({{ parseInt(item.abcposicao).toLocaleString('pt-BR') }}&deg;)
+                </template>
+                <template v-else>
+                  (&#8212;)
+                </template>
               </v-list-tile-sub-title>
             </v-list-tile-content>
           </v-list-tile>
-          <v-divider></v-divider>
+          <v-divider inset v-bind:key="item.codmarca"></v-divider>
         </template>
       </transition-group>
     </v-list>

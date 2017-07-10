@@ -43,7 +43,9 @@ class MarcaRepository extends MGRepositoryStatic
     {
         $qry = app(static::$modelClass)::query();
 
-        $qry->AtivoInativo($filter['inativo']);
+        if (!empty($filter['inativo'])) {
+            $qry->AtivoInativo($filter['inativo']);
+        }
 
         if (!empty($filter['marca'])) {
             $qry->palavras('marca', $filter['marca']);
@@ -76,7 +78,8 @@ class MarcaRepository extends MGRepositoryStatic
             'itensacimamaximo' => null,
             'vendabimestrevalor' => null,
             'vendasemestrevalor' => null,
-            'vendaanovalor' => null
+            'vendaanovalor' => null,
+            'vendaanopercentual' => null,
         ]);
 
         // Calcula total de vendas baseado no calculo dos produtos
@@ -102,29 +105,35 @@ class MarcaRepository extends MGRepositoryStatic
         $afetados = DB::update($sql);
 
         // Monta classificacao ABC
-        $totalvendaano = Marca::sum('vendaanovalor');
+        $totalvendaano_geral = Marca::sum('vendaanovalor');
+        $totalvendaano = Marca::where('abcignorar', '=', false)->sum('vendaanovalor');
         $posicao = 0;
         $percentual_acumulado = 0;
 
         foreach (Marca::orderByRaw('vendaanovalor DESC NULLS LAST')->orderBy('marca', 'ASC')->get() as $marca) {
 
-            $posicao++;
+            $abccategoria = 4;
+            $abcposicao = null;
 
-            $percentual = (($marca->vendaanovalor / $totalvendaano) * 100);
-            $percentual_acumulado += $percentual;
-            if ($percentual_acumulado <= 20) {
-                $categoria = 1;
-            } elseif ($percentual_acumulado <= 50) {
-                $categoria = 2;
-            } elseif ($percentual_acumulado <= 90) {
-                $categoria = 3;
-            } else {
-                $categoria = 4;
+            if (!$marca->abcignorar) {
+                $posicao++;
+                $abcposicao = $posicao;
+                $percentual_acumulado += (($marca->vendaanovalor / $totalvendaano) * 100);
+                if ($percentual_acumulado <= 20) {
+                    $abccategoria = 1;
+                } elseif ($percentual_acumulado <= 50) {
+                    $abccategoria = 2;
+                } elseif ($percentual_acumulado <= 90) {
+                    $abccategoria = 3;
+                } else {
+                    $abccategoria = 4;
+                }
             }
 
             $marca->update([
-                'abccategoria' => $categoria,
-                'abcposicao' => $posicao,
+                'abccategoria' => $abccategoria,
+                'abcposicao' => $abcposicao,
+                'vendaanopercentual' => (($marca->vendaanovalor / $totalvendaano_geral) * 100),
             ]);
 
             $afetados++;
@@ -184,7 +193,10 @@ class MarcaRepository extends MGRepositoryStatic
     public static function details($model)
     {
         $data = $model->getAttributes();
-        $data['numero_produtos'] = 99;
+        if (!empty($model->codimagem)) {
+            $data['imagem'] = $model->Imagem->getAttributes();
+            $data['imagem']['url'] = $model->Imagem->url;
+        }
         return $data;
     }
 

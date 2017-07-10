@@ -31,17 +31,23 @@ export default {
 </script>
 
 <style>
-#app {
-  height: 100%
-}
-.btn--floating {
-  z-index: 4;
-}
-.speed-dial {
-  z-index: 5;
-}
+  #app {
+    height: 100%
+  }
+  .btn--floating {
+    z-index: 4;
+  }
+  .speed-dial {
+    z-index: 5;
+  }
 
-.toolbar--absolute+main, .toolbar--fixed+main {
-  padding-top: 40px;
-}
+  dt {
+    font-size: 0.8em;
+    color: grey;
+  }
+  dd {
+    margin-bottom: 7px;
+    font-weight: 300;
+  }
+
 </style>
