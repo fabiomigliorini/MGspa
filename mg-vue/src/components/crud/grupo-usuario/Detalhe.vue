@@ -137,7 +137,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      window.axios.get('grupo-usuario/' + this.$route.params.id).then(function (request) {
+      window.axios.get('grupo-usuario/' + this.$route.params.id + '/details').then(function (request) {
         vm.dados = request.data
         // store.commit('grupoUsuario/dados', mensagem)
       }).catch(function (error) {

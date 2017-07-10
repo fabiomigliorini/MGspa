@@ -12,31 +12,30 @@
     </template>
 
     <template slot="botoes-menu-direita">
-      <v-btn icon class="blue--text" @click.native="create()" v-tooltip:left="{ html: 'Salvar'}">
+      <v-btn icon class="blue--text" @click.native="create()" v-tooltip:left="{ html: 'Salvar' }">
         <v-icon>done</v-icon>
       </v-btn>
     </template>
 
     <template slot="conteudo">
-      <v-card class="elevation-0">
-        <v-card-text>
-          <v-container fluid>
-            <form autocomplete="off" @submit.prevent="create" ref="form">
-              <v-layout row>
-                <v-flex  md4 sm8 xs12>
-                  <v-text-field
-                    name="grupousuario"
-                    label="Grupo"
-                    v-model="dados.grupousuario"
-                    required
-                    autofocus
-                  ></v-text-field>
-                </v-flex>
-              </v-layout>
-            </form>
-          </v-container>
-        </v-card-text>
-      </v-card>
+      <v-container fluid white>
+        <form autocomplete="off" @submit.prevent="create" class="pt-2">
+          <!-- <ul>
+            <li></li>
+          </ul> -->
+          <v-layout row>
+            <v-flex md4 sm8 xs12>
+              <v-text-field
+                name="grupousuario"
+                label="Grupo"
+                v-model="dados.grupousuario"
+                required
+                v-set-case
+              ></v-text-field>
+            </v-flex>
+          </v-layout>
+        </form>
+      </v-container>
     </template>
 
     <!--
@@ -49,6 +48,7 @@
 
 <script>
 import MgLayout from '../../layout/MgLayout'
+import SetCase from '../../../directives/SetCase'
 
 export default {
   name: 'hello',
@@ -61,6 +61,9 @@ export default {
         grupousuario: null
       }
     }
+  },
+  directives: {
+    SetCase
   },
   methods: {
     create: function () {

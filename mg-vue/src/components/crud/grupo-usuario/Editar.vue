@@ -2,40 +2,37 @@
   <mg-layout>
 
     <template slot="titulo">
-      Grupos de Usuário
+      Grupo de Usuário
     </template>
 
-    <template slot="menu">
-      <div class="container">
-      </div>
+    <template slot="botoes-menu-esquerda">
+      <v-btn icon class="blue--text" router :to="{ path: '/grupo-usuario/' }">
+        <v-icon>arrow_back</v-icon>
+      </v-btn>
+    </template>
+
+    <template slot="botoes-menu-direita">
+      <v-btn icon class="blue--text" @click.native="update()" v-tooltip:left="{ html: 'Salvar' }">
+        <v-icon>done</v-icon>
+      </v-btn>
     </template>
 
     <template slot="conteudo">
-      <v-card class="elevation-0">
-          <v-card-text>
-            <v-container fluid>
-              <form autocomplete="off" @submit.prevent="update">
-                <v-layout row>
-                  <v-flex xs12>
-                    <v-text-field
-                      name="input-2"
-                      label="Grupo"
-                      v-model="dados.grupousuario"
-                      autofocus
-                      required
-                    ></v-text-field>
-                    <v-btn type="submit" primary light>Salvar</v-btn>
-                  </v-flex>
-                </v-layout>
-              </form>
-            </v-container>
-          </v-card-text>
-        </v-card>
-
-      <v-btn router :to="{path: '/grupo-usuario/novo'}" class="red white--text" light fixed bottom right fab>
-        <v-icon>add</v-icon>
-      </v-btn>
-
+      <v-container fluid white>
+        <form autocomplete="off" @submit.prevent="update" class="pt-2">
+          <v-layout row>
+            <v-flex md4 sm8 xs12>
+              <v-text-field
+                name="grupousuario"
+                label="Grupo"
+                v-model="dados.grupousuario"
+                autofocus
+                required
+              ></v-text-field>
+            </v-flex>
+          </v-layout>
+        </form>
+      </v-container>
     </template>
 
     <!--
