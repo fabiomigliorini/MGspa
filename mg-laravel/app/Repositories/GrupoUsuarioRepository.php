@@ -20,7 +20,8 @@ class GrupoUsuarioRepository extends MGRepositoryStatic {
         $rules = [
             'grupousuario' => [
                 'required',
-                Rule::unique('tblgrupousuario')->ignore($model->codgrupousuario, 'codgrupousuario')
+                Rule::unique('tblgrupousuario')->ignore($model->codgrupousuario, 'codgrupousuario'),
+                'min:3',
             ],
         ];
 
@@ -32,6 +33,7 @@ class GrupoUsuarioRepository extends MGRepositoryStatic {
         $messages = [
             'grupousuario.required' => 'O campo Grupo de Usuario não pode ser vazio',
             'grupousuario.unique' => 'Este Grupo de Usuario já esta cadastrado',
+            'grupousuario.min' => 'O campo Grupo de Usuario deve ter no mínimo 3 caracteres.',
         ];
 
         return $messages;

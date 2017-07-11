@@ -20,9 +20,6 @@
     <template slot="conteudo">
       <v-container fluid white>
         <form autocomplete="off" @submit.prevent="create" class="pt-2">
-          <!-- <ul>
-            <li></li>
-          </ul> -->
           <v-layout row>
             <v-flex md4 sm8 xs12>
               <v-text-field
@@ -30,7 +27,8 @@
                 label="Grupo"
                 v-model="dados.grupousuario"
                 required
-                v-set-case
+                autofocus
+                v-bind:rules="erros.grupousuario"
               ></v-text-field>
             </v-flex>
           </v-layout>
@@ -48,7 +46,7 @@
 
 <script>
 import MgLayout from '../../layout/MgLayout'
-import SetCase from '../../../directives/SetCase'
+// import SetCase from '../../../directives/SetCase'
 
 export default {
   name: 'hello',
@@ -57,21 +55,20 @@ export default {
   },
   data () {
     return {
-      dados: {
-        grupousuario: null
-      }
+      dados: {},
+      erros: {}
     }
   },
-  directives: {
-    SetCase
-  },
+  // directives: {
+  //   SetCase
+  // },
   methods: {
     create: function () {
       var vm = this
       window.axios.post('grupo-usuario', vm.dados).then(function (request) {
         vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
       }).catch(function (error) {
-        console.log(error.response)
+        vm.erros = error.response.data.erros
       })
     }
   },

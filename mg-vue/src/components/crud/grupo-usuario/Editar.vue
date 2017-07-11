@@ -26,8 +26,9 @@
                 name="grupousuario"
                 label="Grupo"
                 v-model="dados.grupousuario"
-                autofocus
                 required
+                autofocus
+                v-bind:rules="erros.grupousuario"
               ></v-text-field>
             </v-flex>
           </v-layout>
@@ -53,7 +54,8 @@ export default {
   },
   data () {
     return {
-      dados: {}
+      dados: {},
+      erros: {}
     }
   },
   methods: {
@@ -70,7 +72,7 @@ export default {
       window.axios.put('grupo-usuario/' + this.$route.params.id, vm.dados).then(function (request) {
         vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
       }).catch(function (error) {
-        console.log(error.response)
+        vm.erros = error.response.data.erros
       })
     }
   },

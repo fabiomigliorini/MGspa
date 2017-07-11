@@ -77,27 +77,25 @@
           <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="ativar(dados.codgrupousuario)" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_down</v-icon>
           </v-btn>
-          <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar')" v-tooltip:left="{ html: 'inativar'}">
+          <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar', 'inativar()')" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_up</v-icon>
           </v-btn>
           <v-btn fab dark small class="green" router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
             <v-icon>edit</v-icon>
           </v-btn>
         </v-speed-dial>
-    </template>
 
-
-      <v-dialog v-model="dialog.dialog" width="50%" persistent>
-        <v-card>
-          <v-card-title class="headline">{{ dialog.perunta }} '{{ dados.grupousuario }}'?</v-card-title>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn class="green--text darken-1" flat="flat" @click.native="dialog.dialog = false">Cancelar</v-btn>
-            <v-btn class="green--text darken-1" flat="flat" @click.native="inativar()">OK</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </div>
+        <v-dialog v-model="dialog.dialog" width="50%" persistent>
+          <v-card>
+            <v-card-title class="headline">{{ dialog.pergunta }} '{{ dados.grupousuario }}'?</v-card-title>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn class="green--text darken-1" flat="flat" @click.native="dialog.dialog = false">Cancelar</v-btn>
+              <v-btn class="green--text darken-1" flat="flat" @click.native="this.eval(dialog.metodo)">OK => {{ dialog.metodo }}</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </template>
 
     <!--
     <div fixed slot="rodape">
@@ -129,8 +127,7 @@ export default {
       transition: 'scale',
       dados: {},
       dialog: {
-        dialog: false,
-        pergunta: ''
+        dialog: false
       }
     }
   },
@@ -165,16 +162,19 @@ export default {
     },
     ativar: function () {
       let vm = this
+      vm.dialog.dialog = false
       window.axios.delete('grupo-usuario/' + this.dados.codgrupousuario + '/inativo').then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
         console.log(error.response)
       })
     },
-    confirmar: function (pergunta) {
+    confirmar: function (pergunta, metodo) {
       let vm = this
-      vm.dialog.perunta = pergunta
       vm.dialog.dialog = true
+      vm.dialog.pergunta = pergunta
+      vm.dialog.metodo = metodo
+      console.log(metodo)
     }
   },
   mounted () {

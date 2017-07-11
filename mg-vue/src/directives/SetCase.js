@@ -1,7 +1,9 @@
 import Vue from 'vue'
 
 const SetCase = {
-  update: function (el, binding, vnode) {
+  twoWay: true,
+  update: function (el, binding) {
+    // let _self = this
     let input = el.querySelector('div').querySelector('input')
     let string = input.value
     // console.log('valor ' + string)
