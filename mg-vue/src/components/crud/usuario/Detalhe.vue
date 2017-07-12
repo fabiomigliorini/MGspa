@@ -22,10 +22,15 @@
             </v-container>
           </v-card-text>
         </v-card>
-        <v-speed-dial v-model="fab.fab" :bottom="fab.bottom" :right="fab.right" direction="top" transition="scale">
+        <v-speed-dial
+          v-model="fab"
+          bottom="bottom"
+          right="right"
+          direction="top"
+          transition="scale">
           <v-btn slot="activator" class="blue darken-2" dark fab hover v-model="fab">
-            <v-icon>keyboard_arrow_down</v-icon>
-            <v-icon>keyboard_arrow_up</v-icon>
+            <v-icon>edit</v-icon>
+            <v-icon>close</v-icon>
           </v-btn>
           <v-btn fab dark small class="red" @click.native.stop="deletar()" v-tooltip:left="{ html: 'Excluir'}">
             <v-icon>delete</v-icon>
@@ -63,11 +68,7 @@ export default {
   },
   data () {
     return {
-      fab: {
-        fab: false,
-        right: true,
-        bottom: true
-      },
+      fab: false,
       dados: {}
     }
   },
