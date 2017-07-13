@@ -1,12 +1,10 @@
 import Vue from 'vue'
 
-const SetCase = {
+const Case = {
   twoWay: true,
-  update: function (el, binding) {
-    // let _self = this
+  update: function (el, binding, vnode) {
     let input = el.querySelector('div').querySelector('input')
     let string = input.value
-    // console.log('valor ' + string)
 
     string = string.replace(/'/g, ' ')
     string = string.replace(/'/g, ' ')
@@ -28,10 +26,23 @@ const SetCase = {
     string = string.replace(/[ń|ñ|ǹ]/gi, 'n')
     string = string.replace(/[Ń|Ñ|Ǹ]/gi, 'N')
 
+    function findVModelName (vnode) {
+    	return vnode.data.directives.find(function (o) {
+        return o.name === 'model'
+      }).expression
+    }
+
+    function setVModelValue (string, vnode) {
+      vnode.context[findVModelName(vnode)] = string
+    }
+    setVModelValue()
+
+    input.value = string
+    console.log(vnode.context)
     console.log(string)
   }
 }
 
-Vue.directive('set-case', SetCase)
+Vue.directive('case', Case)
 
-export default SetCase
+export default Case

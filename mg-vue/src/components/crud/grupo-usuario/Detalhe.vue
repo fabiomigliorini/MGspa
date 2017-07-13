@@ -96,10 +96,10 @@
           <v-btn fab dark small class="red" @click.native.stop="confirmar('Tem certeza que deseja deletar', 'deletar()')" v-tooltip:left="{ html: 'Excluir'}">
             <v-icon>delete</v-icon>
           </v-btn>
-          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja ativar', 'ativar()')" v-tooltip:left="{ html: 'inativar'}">
+          <v-btn v-if="dados.inativo" fab dark small slot="activator" class="orange" @click.native.prevent="confirmar('Tem certeza que deseja ativar', 'ativar()')" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_down</v-icon>
           </v-btn>
-          <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar', 'inativar()')" v-tooltip:left="{ html: 'inativar'}">
+          <v-btn v-else fab dark small class="orange" slot="activator" @click.native.prevent="confirmar('Tem certeza que deseja inativar', 'inativar()')" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_up</v-icon>
           </v-btn>
           <v-btn fab dark small class="green" router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">

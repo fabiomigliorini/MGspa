@@ -25,11 +25,13 @@
               <v-text-field
                 name="grupousuario"
                 label="Grupo"
-                v-model="dados.grupousuario"
+                v-case
                 required
                 autofocus
+                v-model="dados.grupousuario"
                 v-bind:rules="erros.grupousuario"
               ></v-text-field>
+              {{ dados.grupousuario }}
             </v-flex>
           </v-layout>
         </form>
@@ -46,22 +48,24 @@
 
 <script>
 import MgLayout from '../../layout/MgLayout'
-// import SetCase from '../../../directives/SetCase'
+import Case from '../../../directives/Case'
 
 export default {
-  name: 'hello',
+  name: 'grupo-usuario-novo',
   components: {
     MgLayout
   },
   data () {
     return {
-      dados: {},
+      dados: {
+        grupousuario: ''
+      },
       erros: {}
     }
   },
-  // directives: {
-  //   SetCase
-  // },
+  directives: {
+    Case
+  },
   methods: {
     create: function () {
       var vm = this
