@@ -346,28 +346,32 @@
 
         <v-subheader>ABAIXO DO MÍNIMO</v-subheader>
 
+        <detalhe-produtos :produtos="dados.produtosAbaixoMinimo"></detalhe-produtos>
+
+        <v-subheader>ACIMA DO MAXIMO</v-subheader>
+
         <v-layout row wrap>
 
-          <template v-for="produto in dados.produtosAbaixoMinimo">
+          <template v-for="produto in dados.produtosAcimaMaximo">
+
               <v-flex lg3 md4 sm6 xs12 style="height:100%">
-                <v-card hover>
-                  <v-card-media class="" height="200px" :src="produto.imagem">
-                    <v-container fill-height fluid>
-                      <v-layout fill-height>
-                        <v-flex xs12 align-end flexbox>
-                          <span class="headline sombra">
-                            {{produto.produto}}
-                            <small>{{produto.variacao}}</small>
-                            <small>
-                              R$ {{ parseFloat(produto.preco).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) }}
-                            </small>
-                          </span>
-                        </v-flex>
-                      </v-layout>
-                    </v-container>
+                <v-card hover >
+                  <v-card-media class="" height="200px" :src="produto.imagem" v-if="produto.imagem">
                   </v-card-media>
                   <v-card-title>
-                    <div class="grey--text text--darken-2">
+                    <h3 class="headline mb-0" style="width: 100%">
+                      {{produto.produto}}
+                    </h3>
+                    <span v-if="produto.variacao">
+                      {{produto.variacao}}
+                      -
+                    </span>
+                    <span class="grey--text text--darken-2">
+                      R$ {{ parseFloat(produto.preco).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) }}
+                    </span>
+                  </v-card-title>
+                  <v-card-text class="pt-0">
+                    <small class="grey--text text--darken-2">
 
                       #{{ parseInt(produto.codproduto).toLocaleString('pt-BR', { minimumIntegerDigits: 6, useGrouping: false }) }}
                       Referencia {{ produto.referencia }}
@@ -381,9 +385,11 @@
                       </span>
 
                       ({{ parseInt(produto.estoqueminimo).toLocaleString('pt-BR') }}<v-icon>arrow_downward</v-icon><v-icon>arrow_upward</v-icon>{{ parseInt(produto.estoquemaximo).toLocaleString('pt-BR') }})
-                      /
-                      <span class="red--text">
-                        {{ parseFloat(produto.dias).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }} dias
+                      <span v-if="produto.dias">
+                        /
+                        <span class="red--text">
+                          {{ parseFloat(produto.dias).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }} dias
+                        </span>
                       </span>
 
                       <br>
@@ -394,9 +400,6 @@
                       </span>
 
 
-                      Preço de Venda R$ {{ parseFloat(produto.preco).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) }}
-                      <br>
-
                       <span v-if="produto.quantidadeultimacompra">
                         Comprado
                         {{ moment(produto.dataultimacompra).fromNow() }}
@@ -406,16 +409,13 @@
                         {{ parseFloat(produto.custoultimacompra).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) }}
                       </span>
 
-                    </div>
-                  </v-card-title>
-                  <v-card-actions>
-                    <v-btn flat class="orange--text">Share</v-btn>
-                    <v-btn flat class="orange--text">Explore</v-btn>
-                  </v-card-actions>
+                    </small>
+                  </v-card-text>
                 </v-card>
               </v-flex>
           </template>
         </v-layout>
+
       </v-container>
 
       <v-speed-dial v-model="fab.fab" :bottom="fab.bottom" :right="fab.right" direction="top" transition="scale">
@@ -448,12 +448,14 @@
 <script>
 import MgLayout from '../../layout/MgLayout'
 import MgAbcCategoria from '../../layout/MgAbcCategoria'
+import DetalheProdutos from './DetalheProdutos'
 
 export default {
   name: 'hello',
   components: {
     MgLayout,
-    MgAbcCategoria
+    MgAbcCategoria,
+    DetalheProdutos
   },
   data () {
     return {
