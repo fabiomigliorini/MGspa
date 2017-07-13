@@ -24,7 +24,6 @@ class MarcaController extends ControllerCrud
                 $res[$i]->imagem->url = $marca->Imagem->url;
             }
         }
-
         return response()->json($res, 206);
     }
 
