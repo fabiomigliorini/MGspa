@@ -11,7 +11,7 @@
       </v-btn>
     </template>
 
-    <template slot="conteudo">
+    <template slot="conteudo" v-if="!carregando">
 
       <v-container fluid grid-list-md class="grey lighten-4">
         <v-layout row wrap>
@@ -280,6 +280,7 @@
           </v-flex>
         -->
 
+        <!--
           <v-flex xs12 sm6 md6>
 
               <v-card hover>
@@ -334,10 +335,86 @@
                 </v-list>
               </v-card>
 
+              <br>
+
+
           </v-flex>
+        -->
 
 
+        </v-layout>
 
+        <v-subheader>ABAIXO DO MÍNIMO</v-subheader>
+
+        <v-layout row wrap>
+
+          <template v-for="produto in dados.produtosAbaixoMinimo">
+              <v-flex lg3 md4 sm6 xs12 style="height:100%">
+                <v-card hover>
+                  <v-card-media class="" height="200px" :src="produto.imagem">
+                    <v-container fill-height fluid>
+                      <v-layout fill-height>
+                        <v-flex xs12 align-end flexbox>
+                          <span class="headline sombra">
+                            {{produto.produto}}
+                            <small>{{produto.variacao}}</small>
+                            <small>
+                              R$ {{ parseFloat(produto.preco).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) }}
+                            </small>
+                          </span>
+                        </v-flex>
+                      </v-layout>
+                    </v-container>
+                  </v-card-media>
+                  <v-card-title>
+                    <div class="grey--text text--darken-2">
+
+                      #{{ parseInt(produto.codproduto).toLocaleString('pt-BR', { minimumIntegerDigits: 6, useGrouping: false }) }}
+                      Referencia {{ produto.referencia }}
+
+                      <br>
+
+                      Saldo:
+                      <span class="red--text">
+                        {{ parseFloat(produto.saldoquantidade).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }}
+                        {{ produto.unidademedida }}
+                      </span>
+
+                      ({{ parseInt(produto.estoqueminimo).toLocaleString('pt-BR') }}<v-icon>arrow_downward</v-icon><v-icon>arrow_upward</v-icon>{{ parseInt(produto.estoquemaximo).toLocaleString('pt-BR') }})
+                      /
+                      <span class="red--text">
+                        {{ parseFloat(produto.dias).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }} dias
+                      </span>
+
+                      <br>
+
+                      <span v-if="produto.saldovalor >0">
+                        Valor do Estoque: R$ {{ parseFloat(produto.saldovalor).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits: 2 }) }}
+                        <br>
+                      </span>
+
+
+                      Preço de Venda R$ {{ parseFloat(produto.preco).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) }}
+                      <br>
+
+                      <span v-if="produto.quantidadeultimacompra">
+                        Comprado
+                        {{ moment(produto.dataultimacompra).fromNow() }}
+                        {{ parseFloat(produto.quantidadeultimacompra).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) }}
+                        {{ produto.unidademedida }}
+                        por R$
+                        {{ parseFloat(produto.custoultimacompra).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) }}
+                      </span>
+
+                    </div>
+                  </v-card-title>
+                  <v-card-actions>
+                    <v-btn flat class="orange--text">Share</v-btn>
+                    <v-btn flat class="orange--text">Explore</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-flex>
+          </template>
         </v-layout>
       </v-container>
 
@@ -385,7 +462,8 @@ export default {
         right: true,
         bottom: true
       },
-      dados: {}
+      dados: {},
+      carregando: true
     }
   },
 
@@ -394,6 +472,7 @@ export default {
       var vm = this
       window.axios.get('marca/' + this.$route.params.id + '/details').then(function (request) {
         vm.dados = request.data
+        vm.carregando = false
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -414,4 +493,9 @@ export default {
 </script>
 
 <style scoped>
+.sombra {
+  text-shadow: 0 0 2px #FFF; /* horizontal-offset vertical-offset 'blur' colour */
+  -moz-text-shadow: 0 0 2px #FFF;
+  -webkit-text-shadow: 0 0 2px #FFF;
+}
 </style>
