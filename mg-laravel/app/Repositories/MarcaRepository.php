@@ -262,17 +262,18 @@ class MarcaRepository extends MGRepositoryStatic
             case 'abaixoMinimo':
                 $sql .= "
                     and coalesce(sld.saldoquantidade, 0) < coalesce(sld.estoqueminimo, 0)
-                    order by dias
                 ";
                 break;
 
             case 'acimaMaximo':
                 $sql .= "
                     and coalesce(sld.saldoquantidade, 0) > coalesce(sld.estoquemaximo, 0)
-                    order by dias DESC
                 ";
                 break;
         }
+        $sql .= "
+            order by p.produto, pv.variacao
+        ";
 
         $prods = DB::select($sql);
 
