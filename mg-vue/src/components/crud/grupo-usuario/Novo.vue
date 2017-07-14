@@ -49,6 +49,7 @@
 <script>
 import MgLayout from '../../layout/MgLayout'
 import Case from '../../../directives/Case'
+import Mask from '../../../directives/Teste/index'
 
 export default {
   name: 'grupo-usuario-novo',
@@ -57,6 +58,7 @@ export default {
   },
   data () {
     return {
+      dynamicMask: '###.###.###/###',
       dados: {
         grupousuario: ''
       },
@@ -64,7 +66,8 @@ export default {
     }
   },
   directives: {
-    Case
+    Case,
+    Mask
   },
   methods: {
     create: function () {

@@ -1,45 +1,73 @@
 import Vue from 'vue'
 
+export const trigger = (el, type) => {
+  const e = document.createEvent('HTMLEvents')
+  e.initEvent(type, true, true)
+  el.dispatchEvent(e)
+}
+
+function updateValue (el, force = false) {
+  let {
+    value,
+    dataset: {
+      previousValue = ''
+    }
+  } = el
+
+  if (force || (value && value !== previousValue && value.length > previousValue.length)) {
+    // REMOVE OS ACENTOS
+    value = value.replace(/'/g, ' ')
+    value = value.replace(/'/g, ' ')
+    value = value.replace(/\s{2,}/g, ' ')
+    value = value.replace(/(-)1+/gi, '-')
+    value = value.replace(/[á|ã|â|à|ª]/g, 'a')
+    value = value.replace(/[Á|Ã|Â|À]/g, 'A')
+    value = value.replace(/[é|ẽ|ê|è]/g, 'e')
+    value = value.replace(/[É|Ẽ|Ê|È]/g, 'E')
+    value = value.replace(/[í|ĩ|î|ì]/g, 'i')
+    value = value.replace(/[Í|Ĩ|Î|Ì]/g, 'I')
+    value = value.replace(/[ó|õ|ô|ò|º]/g, 'o')
+    value = value.replace(/[Ó|Õ|Ô|Ò]/g, 'O')
+    value = value.replace(/[ú|ũ|û|ù]/g, 'u')
+    value = value.replace(/[Ú|Ũ|Û|Ù]/g, 'U')
+    value = value.replace(/[ĉ|ç]/g, 'c')
+    value = value.replace(/[Ĉ|Ç]/g, 'C')
+    value = value.replace(/[ń|ñ|ǹ]/gi, 'n')
+    value = value.replace(/[Ń|Ñ|Ǹ]/gi, 'N')
+
+    var i, lowers, uppers
+    value = value.replace(/([^\W_]+[^\s-]*) */g, function (txtVal) {
+      return txtVal.charAt(0).toUpperCase() + txtVal.substr(1).toLowerCase()
+    })
+
+    // PALAVRAS QUE DEVEM FICAR EM MINÚSCULO
+    lowers = ['De', 'Da', 'Do', 'Dos', 'E', 'Em']
+    for (i = 0; i < lowers.length; i++) {
+      value = value.replace(new RegExp('\\s' + lowers[i] + '\\s', 'g'), function (txt) {
+        return txt.toLowerCase()
+      })
+    }
+    // PALAVRAS QUE DEVEM FICAR EM MAIÚSCULO
+    uppers = ['Cdce', 'Sa', 'S/a']
+    for (i = 0; i < uppers.length; i++) {
+      value = value.replace(new RegExp('\\b' + uppers[i] + '\\b', 'g'), uppers[i].toUpperCase())
+    }
+
+    el.value = value
+    trigger(el, 'input')
+  }
+  // el.dataset.previousValue = value
+}
+
 const Case = {
   twoWay: true,
-  update: function (el, binding, vnode) {
-    let input = el.querySelector('div').querySelector('input')
-    let string = input.value
-
-    string = string.replace(/'/g, ' ')
-    string = string.replace(/'/g, ' ')
-    string = string.trim()
-    string = string.replace(/\s{2,}/g, ' ')
-    string = string.replace(/(-)1+/gi, '-')
-    string = string.replace(/[á|ã|â|à|ª]/g, 'a')
-    string = string.replace(/[Á|Ã|Â|À]/g, 'A')
-    string = string.replace(/[é|ẽ|ê|è]/g, 'e')
-    string = string.replace(/[É|Ẽ|Ê|È]/g, 'E')
-    string = string.replace(/[í|ĩ|î|ì]/g, 'i')
-    string = string.replace(/[Í|Ĩ|Î|Ì]/g, 'I')
-    string = string.replace(/[ó|õ|ô|ò|º]/g, 'o')
-    string = string.replace(/[Ó|Õ|Ô|Ò]/g, 'O')
-    string = string.replace(/[ú|ũ|û|ù]/g, 'u')
-    string = string.replace(/[Ú|Ũ|Û|Ù]/g, 'U')
-    string = string.replace(/[ĉ|ç]/g, 'c')
-    string = string.replace(/[Ĉ|Ç]/g, 'C')
-    string = string.replace(/[ń|ñ|ǹ]/gi, 'n')
-    string = string.replace(/[Ń|Ñ|Ǹ]/gi, 'N')
-
-    function findVModelName (vnode) {
-    	return vnode.data.directives.find(function (o) {
-        return o.name === 'model'
-      }).expression
-    }
-
-    function setVModelValue (string, vnode) {
-      vnode.context[findVModelName(vnode)] = string
-    }
-    setVModelValue()
-
-    input.value = string
-    console.log(vnode.context)
-    console.log(string)
+  bind (el, {
+    value
+  }) {
+    updateValue(el)
+  },
+  update: function (el) {
+    updateValue(el.querySelector('div').querySelector('input'))
   }
 }
 
