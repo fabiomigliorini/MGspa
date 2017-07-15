@@ -66,7 +66,15 @@ const Case = {
   }) {
     updateValue(el)
   },
+  inserted: function (el) {
+    console.log('inserted')
+    updateValue(el.querySelector('div').querySelector('input'))
+  },
   update: function (el) {
+    updateValue(el.querySelector('div').querySelector('input'))
+  },
+  unbind: function (el) {
+    console.log('unbind')
     updateValue(el.querySelector('div').querySelector('input'))
   }
 }

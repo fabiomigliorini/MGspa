@@ -22,7 +22,6 @@
               </v-card>
             </v-flex>
           </v-layout>
-          {{ dialog }}
           <v-layout row wrap>
             <v-flex md4 xs12>
               <v-card hover>
@@ -67,19 +66,20 @@
             </v-flex>
           </v-layout>
 
-          <v-layout row justify-center style="position: relative;">
-            <v-dialog v-model="dialog" persistent>
-              <v-card>
-                <v-card-title class="headline">Use Google's location service?</v-card-title>
-                <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn class="green--text darken-1" flat="flat" @click.native="dialog = false">Disagree</v-btn>
-                  <v-btn class="green--text darken-1" flat="flat" @click.native="dialog = false">Agree</v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-          </v-layout>
+
+          <v-dialog v-model="dialog" width="50%" persistent>
+            <v-card>
+              <v-card-title class="headline">{{ pergunta }} '{{ dados.grupousuario }}'?</v-card-title>
+              <v-divider></v-divider>
+              <v-card-actions class="grey lighten-4">
+                <v-spacer></v-spacer>
+                <v-btn flat @click.native="dialog = false">Cancelar</v-btn>
+                <v-btn v-if="metodo == 'inativar()'" primary dark @click.prevent="inativar()">Confirmar</v-btn>
+                <v-btn v-if="metodo == 'ativar()'" primary dark @click.prevent="ativar()">Confirmar</v-btn>
+                <v-btn v-if="metodo == 'deletar()'" primary dark @click.prevent="deletar()">Confirmar</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
 
         </v-container>
 
@@ -96,31 +96,16 @@
           <v-btn fab dark small class="red" @click.native.stop="confirmar('Tem certeza que deseja deletar', 'deletar()')" v-tooltip:left="{ html: 'Excluir'}">
             <v-icon>delete</v-icon>
           </v-btn>
-          <v-btn v-if="dados.inativo" fab dark small slot="activator" class="orange" @click.native.prevent="confirmar('Tem certeza que deseja ativar', 'ativar()')" v-tooltip:left="{ html: 'inativar'}">
+          <v-btn v-if="dados.inativo" fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja ativar', 'ativar()')" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_down</v-icon>
           </v-btn>
-          <v-btn v-else fab dark small class="orange" slot="activator" @click.native.prevent="confirmar('Tem certeza que deseja inativar', 'inativar()')" v-tooltip:left="{ html: 'inativar'}">
+          <v-btn v-else fab dark small class="orange" @click.native.prevent="confirmar('Tem certeza que deseja inativar', 'inativar()')" v-tooltip:left="{ html: 'inativar'}">
             <v-icon>thumb_up</v-icon>
           </v-btn>
           <v-btn fab dark small class="green" router :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/editar' }" v-tooltip:left="{ html: 'Editar'}">
             <v-icon>edit</v-icon>
           </v-btn>
         </v-speed-dial>
-        <!--
-        <v-dialog v-model="dialog" width="50%" persistent>
-          <v-card>
-            <v-card-title class="headline">{{ dialog.pergunta }} '{{ dados.grupousuario }}'?</v-card-title>
-            <v-divider></v-divider>
-            <v-card-actions class="grey lighten-4">
-              <v-spacer></v-spacer>
-              <v-btn flat @click.native="dialog = false">Cancelar</v-btn>
-              <v-btn v-if="dialog.metodo == 'inativar()'" primary dark @click.native="inativar()">Confirmar</v-btn>
-              <v-btn v-if="dialog.metodo == 'ativar()'" primary dark @click.native="ativar()">Confirmar</v-btn>
-              <v-btn v-if="dialog.metodo == 'deletar()'" primary dark @click.native="deletar()">Confirmar</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-        -->
       </template>
 
     <!--

@@ -25,9 +25,10 @@
               <v-text-field
                 name="grupousuario"
                 label="Grupo"
-                v-model="dados.grupousuario"
+                v-case
                 required
                 autofocus
+                v-model="dados.grupousuario"
                 v-bind:rules="erros.grupousuario"
               ></v-text-field>
             </v-flex>
@@ -46,6 +47,7 @@
 
 <script>
 import MgLayout from '../../layout/MgLayout'
+import Case from '../../../directives/Case'
 
 export default {
   name: 'hello',
@@ -57,6 +59,9 @@ export default {
       dados: {},
       erros: {}
     }
+  },
+  directives: {
+    Case
   },
   methods: {
     carregaDados: function (id) {

@@ -35,6 +35,14 @@
               </v-list-tile>
 
           </v-list-group>
+          <v-list-tile @click.native="logout()">
+            <v-list-tile-action>
+              <v-icon>exit_to_app</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Sair</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
         </v-list>
       </v-navigation-drawer>
 
@@ -128,6 +136,11 @@
               { titulo: 'Permissões', path: '/permissao' }
             ]
           }
+          // {
+          //   icone: 'exit_to_app',
+          //   titulo: 'Sair',
+          //   path: '/logout'
+          // }
         ]
       }
     },
@@ -135,8 +148,9 @@
       logout () {
         var vm = this
         window.axios.get('auth/logout').then(response => {
+          console.log(response)
           localStorage.removeItem('auth.token')
-          vm.$router.push('/Login')
+          vm.$router.push('/login')
         })
       },
       voltar () {
