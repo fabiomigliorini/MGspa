@@ -2,16 +2,19 @@
 <q-layout>
 
   <div slot="header" class="toolbar">
+
     <button class="hide-on-drawer-visible" @click="$refs.drawer.toggle()">
-        <i>menu</i>
-      </button>
+      <i>menu</i>
+    </button>
+
     <q-toolbar-title :padding="1">
       <slot name="title"></slot>
     </q-toolbar-title>
 
     <button @click="$refs.rightDrawer.open()">
-        <i>apps</i>
-      </button>
+      <i>apps</i>
+    </button>
+
   </div>
 
   <q-tabs slot="navigation" v-if="navigation">
@@ -32,61 +35,32 @@
 
   <q-drawer ref="rightDrawer" swipe-only right-side>
 
-    <div class="container">
-    <div class="list-header">
-      Right Side Drawer
-    </div>
+
+    <div class="list">
+
+      <div class="item">
+        <img class="item-primary" :src="'https://randomuser.me/api/portraits/men/3.jpg'">
+        <div class="item-content has-secondary">
+          Fabio Migliorini
+        </div>
+        <i class="item-secondary">
+          exit_to_app
+        </i>
+      </div>
     </div>
 
     <div class="row wrap">
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
-        </router-link>
-      </div>
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
-        </router-link>
-      </div>
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
-        </router-link>
-      </div>
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
-        </router-link>
-      </div>
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
-        </router-link>
-      </div>
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
-        </router-link>
-      </div>
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
-        </router-link>
-      </div>
-      <div class="auto text-center width-1of4" style="border: 1px solid blue">
-        <router-link :to="{ path: '/marca', params: {} }">
-          <i style="font-size: 48px;">account_circle</i>
+
+      <div class="text-center width-1of5" v-for="aplicativo in aplicativos">
+        <router-link :to="{ path: aplicativo.path, params: {} }">
+          <i class="icone-app">{{aplicativo.icon}}</i>
+          <br>
+          <small>
+            {{aplicativo.title}}
+          </small>
         </router-link>
       </div>
 
-    </div>
-    <div class="list platform-delimiter item-inset-delimiter">
-      <div class="list-header">
-        Right Side Drawer
-      </div>
-      <q-drawer-link icon="mail" to="/shopping-cart">Shopping Cart</q-drawer-link>
-      <q-drawer-link icon="mail" to="/weather">Weather</q-drawer-link>
     </div>
   </q-drawer>
 
@@ -102,7 +76,20 @@
 <script>
 export default {
   data () {
-    return {}
+    return {
+      aplicativos: [
+        {
+          icon: 'home',
+          title: 'Início',
+          path: '/'
+        },
+        {
+          icon: 'label_outline',
+          title: 'Marcas',
+          path: '/marca'
+        }
+      ]
+    }
   },
   props: {
     navigation: {
@@ -118,4 +105,7 @@ export default {
 </script>
 
 <style>
+.icone-app {
+  font-size: 50px
+}
 </style>
