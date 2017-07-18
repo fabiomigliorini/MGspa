@@ -9,95 +9,113 @@
 
       <div class="list">
 
-        <div class="item three-lines">
-          <div class="item-content">
-            <div class="floating-label">
-              <input required class="full-width" v-model="filtro.marca" @change.native.stop="pesquisar()">
-              <label>Descrição</label>
+        <form @change="pesquisar()">
+
+          <div class="item three-lines">
+            <i class="item-primary">search</i>
+            <div class="item-content">
+              <div class="floating-label">
+                <input required class="full-width" v-model="filtro.marca">
+                <label>Descrição</label>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="item">
-        </div>
+          <div class="list-label">Ordenar Por</div>
+
+          <label class="item">
+            <i class="item-primary">trending_up</i>
+            <div class="item-content has-secondary">
+              Vendas
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filtro.sort" val="abcposicao"></q-radio>
+            </div>
+          </label>
+
+          <label class="item">
+            <i class="item-primary">sort_by_alpha</i>
+            <div class="item-content has-secondary">
+              Descrição
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filtro.sort" val="marca"></q-radio>
+            </div>
+          </label>
+
+          <div class="list-label">Estoque</div>
+
+          <label class="item">
+            <i class="item-primary">arrow_upward</i>
+            <div class="item-content has-secondary">
+              Sobrando
+            </div>
+            <div class="item-secondary">
+              <q-toggle v-model="filtro.sobrando"></q-toggle>
+            </div>
+          </label>
+
+          <label class="item">
+            <i class="item-primary">arrow_downward</i>
+            <div class="item-content has-secondary">
+              Faltando
+            </div>
+            <div class="item-secondary">
+              <q-toggle v-model="filtro.faltando"></q-toggle>
+            </div>
+          </label>
+
+          <div class="list-label">Curva ABC</div>
+
+          <div class="item two-lines">
+            <i class="item-primary">star</i>
+            <div class="item-content">
+              <q-double-range
+                v-model="filtro.abccategoriaB"
+                label
+                markers
+                snap
+                :min="0"
+                :max="3"
+                :step="1"
+                @input="sliderInput()"
+              ></q-double-range>
+            </div>
+          </div>
+
+          <div class="list-label">Ativos</div>
+
+          <label class="item">
+            <i class="item-primary">thumb_up</i>
+            <div class="item-content has-secondary">
+              Ativos
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filtro.inativo" val="1"></q-radio>
+            </div>
+          </label>
+
+          <label class="item">
+            <i class="item-primary">thumb_down</i>
+            <div class="item-content has-secondary">
+              Inativos
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filtro.inativo" val="2"></q-radio>
+            </div>
+          </label>
+
+          <label class="item">
+            <i class="item-primary">thumbs_up_down</i>
+            <div class="item-content has-secondary">
+              Ativos e Inativos
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filtro.inativo" val="9"></q-radio>
+            </div>
+          </label>
+        </form>
       </div>
-
-      <!--
-      <v-flex xs12 class="container pt-3 pb-0 mb-0 mt-0">
-      <v-text-field class="pt-0 pb-0 mb-0 mt-4"   ></v-text-field>
-
-      </v-flex>
-
-      <v-list dense>
-
-        <v-subheader class="mt-0 grey--text text--darken-1">ORDENAR POR</v-subheader>
-
-        <v-list-tile @click.native="ordena('abcposicao')">
-          <v-list-tile-action>
-            <v-icon :class="(filtro.sort=='abcposicao')?'blue--text':''">trending_up</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="(filtro.sort=='abcposicao')?'blue--text':''">Vendas</v-list-tile-title>
-        </v-list-tile>
-
-        <v-list-tile @click.native="ordena('marca')">
-          <v-list-tile-action>
-            <v-icon :class="(filtro.sort=='marca')?'blue--text':''">sort_by_alpha</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="(filtro.sort=='marca')?'blue--text':''">Descrição</v-list-tile-title>
-        </v-list-tile>
-
-        <v-subheader class="mt-0 grey--text text--darken-1">FILTRAR</v-subheader>
-
-        <v-list-tile @click.native="sobrando()">
-          <v-list-tile-action>
-            <v-icon :class="(filtro.sobrando==true)?'blue--text':''">arrow_upward</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="(filtro.sobrando==true)?'blue--text':''">Estoque Sobrando</v-list-tile-title>
-        </v-list-tile>
-
-        <v-list-tile @click.native="faltando()">
-          <v-list-tile-action>
-            <v-icon :class="(filtro.faltando==true)?'blue--text':''">arrow_downward</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="(filtro.faltando==true)?'blue--text':''">Estoque Faltando</v-list-tile-title>
-        </v-list-tile>
-
-        <v-list-tile @click.native="abccategoria()">
-          <v-list-tile-action>
-            <v-icon :class="filtro.abccategoria?'blue--text':''">star</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="filtro.abccategoria?'blue--text':''">
-            <span v-if="filtro.abccategoria">
-              {{ 4 - filtro.abccategoria }}
-              </span> Estrelas
-          </v-list-tile-title>
-        </v-list-tile>
-
-        <v-subheader class="mt-0 grey--text text--darken-1">ATIVOS</v-subheader>
-
-        <v-list-tile @click.native="inativo(1)">
-          <v-list-tile-action>
-            <v-icon :class="(filtro.inativo==1)?'blue--text':''">thumb_up</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="(filtro.inativo==1)?'blue--text':''">Ativos</v-list-tile-title>
-        </v-list-tile>
-
-        <v-list-tile @click.native="inativo(2)">
-          <v-list-tile-action>
-            <v-icon :class="(filtro.inativo==2)?'blue--text':''">thumb_down</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="(filtro.inativo==2)?'blue--text':''">Inativos</v-list-tile-title>
-        </v-list-tile>
-
-        <v-list-tile @click.native="inativo(9)">
-          <v-list-tile-action>
-            <v-icon :class="(filtro.inativo==9)?'blue--text':''">thumbs_up_down</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title :class="(filtro.inativo==9)?'blue--text':''">Ativos e Inativos</v-list-tile-title>
-        </v-list-tile>
-
-      </v-list>
-      -->
 
     </template>
 
@@ -131,6 +149,13 @@ export default {
     }
   },
 
+  watch: {
+    filtro: function (novoFiltro) {
+      console.log('aqui no watcher')
+      console.log(novoFiltro)
+    }
+  },
+
   methods: {
     carregaListagem () {
       this.$store.commit('filtro/marca', this.filtro)
@@ -157,6 +182,10 @@ export default {
       this.marca = []
       this.carregaListagem()
     },
+
+    sliderInput: window._.debounce(function () {
+      this.pesquisar()
+    }, 500),
 
     ordena (campo) {
       this.filtro.sort = campo
@@ -189,7 +218,7 @@ export default {
       this.pesquisar()
     }
   },
-  mounted () {
+  created () {
     this.filtro = this.$store.getters['filtro/marca']
     this.carregaListagem()
   }
