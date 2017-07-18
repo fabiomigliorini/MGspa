@@ -136,11 +136,6 @@
               { titulo: 'Permissões', path: '/permissao' }
             ]
           }
-          // {
-          //   icone: 'exit_to_app',
-          //   titulo: 'Sair',
-          //   path: '/logout'
-          // }
         ]
       }
     },

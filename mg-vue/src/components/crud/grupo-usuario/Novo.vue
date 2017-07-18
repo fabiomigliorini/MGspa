@@ -25,7 +25,6 @@
               <v-text-field
                 name="grupousuario"
                 label="Grupo"
-                v-case
                 required
                 autofocus
                 v-model="dados.grupousuario"
@@ -47,12 +46,11 @@
 
 <script>
 import MgLayout from '../../layout/MgLayout'
-import Case from '../../../directives/Case'
 
 export default {
   name: 'grupo-usuario-novo',
   components: {
-    MgLayout
+    MgLayout, MgInput
   },
   data () {
     return {
@@ -61,9 +59,6 @@ export default {
       },
       erros: {}
     }
-  },
-  directives: {
-    Case
   },
   methods: {
     create: function () {
@@ -76,7 +71,6 @@ export default {
     }
   },
   mounted () {
-
   }
 }
 </script>
