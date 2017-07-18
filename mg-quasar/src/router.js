@@ -24,6 +24,9 @@ export default new VueRouter({
     { path: '/', component: load('Index') }, // Default
     { path: '/login', component: load('Login') }, // Login
     { path: '/marca', component: load('views/marca/Index') }, // Marca
+    { path: '/grupo-usuario', component: load('views/grupo-usuario/Index') },
+    { path: '/grupo-usuario/create', component: load('views/grupo-usuario/Create') },
+    { path: '/grupo-usuario/:id', component: load('views/grupo-usuario/View') },
     { path: '*', component: load('Error404') } // Not found
   ]
 })
