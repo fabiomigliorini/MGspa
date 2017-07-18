@@ -40,8 +40,8 @@ export default {
 
   data () {
     return {
-      usuario: 'fabio',
-      senha: 'baseteste',
+      usuario: null,
+      senha: null,
       erro: false,
       mensagem: 'mensagem'
     }

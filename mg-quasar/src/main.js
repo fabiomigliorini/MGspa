@@ -37,6 +37,7 @@ window.axios.interceptors.response.use((response) => {
   if (error.response.status === 401 && !originalRequest._retry) {
     return router.push('/login/')
   }
+  /*
   let mensagem = error.response.status
   if (error.response.data.mensagem) {
     mensagem += ' - ' + error.response.data.mensagem
@@ -45,6 +46,7 @@ window.axios.interceptors.response.use((response) => {
     mensagem += ' - Erro ao acessar API'
   }
   store.commit('snackbar/error', mensagem)
+  */
   return Promise.reject(error)
 })
 

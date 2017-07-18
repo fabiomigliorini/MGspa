@@ -41,11 +41,15 @@
       <div class="item">
         <img class="item-primary" :src="'https://randomuser.me/api/portraits/men/3.jpg'">
         <div class="item-content has-secondary">
-          Fabio Migliorini
+          Usuário
         </div>
-        <i class="item-secondary">
-          exit_to_app
-        </i>
+        <div class="item-secondary">
+          <a @click="logout()">
+            <i>
+              exit_to_app
+            </i>
+          </a>
+        </div>
       </div>
     </div>
 
@@ -74,21 +78,17 @@
 </template>
 
 <script>
+import { Dialog, Toast } from 'quasar'
+
 export default {
   data () {
     return {
-      aplicativos: [
-        {
-          icon: 'home',
-          title: 'Início',
-          path: '/'
-        },
-        {
-          icon: 'label_outline',
-          title: 'Marcas',
-          path: '/marca'
-        }
-      ]
+    }
+  },
+  computed: {
+    aplicativos: function () {
+      const aplicativos = this.$store.getters['aplicativos/listagem']
+      return aplicativos
     }
   },
   props: {
@@ -99,6 +99,34 @@ export default {
     drawer: {
       type: Boolean,
       default: false
+    }
+  },
+  methods: {
+    logout () {
+      var vm = this
+      Dialog.create({
+        title: 'Sair do sistema',
+        message: 'Tem certeza que deseja sair?',
+        buttons: [
+          {
+            label: 'Não',
+            handler () {
+            }
+          },
+          {
+            label: 'Sim',
+            handler () {
+              window.axios.get('auth/logout').then(response => {
+                localStorage.removeItem('auth.token')
+                vm.$router.push('/login')
+                Toast.create('Até mais...')
+              })
+            }
+          }
+        ]
+      })
+                  /*
+      */
     }
   }
 }
