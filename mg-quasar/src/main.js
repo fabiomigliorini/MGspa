@@ -13,6 +13,11 @@ import store from './store'
 
 Vue.use(Quasar) // Install Quasar Framework
 
+// Moment js
+import moment from 'moment'
+moment.locale('pt-BR')
+Vue.prototype.moment = moment
+
 window._ = require('lodash')
 
 // Axios
@@ -26,29 +31,31 @@ window.axios.interceptors.request.use(function (config) {
   if (AUTH_TOKEN) {
     config.headers.common['Authorization'] = `Bearer ${AUTH_TOKEN}`
   }
-
+  Quasar.Loading.show()
   return config
 }, function (error) {
   return Promise.reject(error)
 })
 
 window.axios.interceptors.response.use((response) => {
+  Quasar.Loading.hide()
   return response
 }, function (error) {
-  const originalRequest = error.config
-  if (error.response.status === 401 && !originalRequest._retry) {
-    return router.push('/login/')
+  Quasar.Loading.hide()
+  let mensagem = 'Erro ao acessar API'
+  if (error.response) {
+    if (error.response.status) {
+      const originalRequest = error.config
+      if (error.response.status === 401 && !originalRequest._retry) {
+        return router.push('/login/')
+      }
+      mensagem += ' - ' + error.response.status
+      if (error.response.data.mensagem) {
+        mensagem += ' - ' + error.response.data.mensagem
+      }
+    }
   }
-  /*
-  let mensagem = error.response.status
-  if (error.response.data.mensagem) {
-    mensagem += ' - ' + error.response.data.mensagem
-  }
-  else {
-    mensagem += ' - Erro ao acessar API'
-  }
-  store.commit('snackbar/error', mensagem)
-  */
+  Quasar.Toast.create.negative({html: mensagem})
   return Promise.reject(error)
 })
 

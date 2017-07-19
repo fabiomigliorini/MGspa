@@ -9,21 +9,21 @@ export default {
       inativo: 1,
       sobrando: false,
       faltando: false,
-      abccategoriaB: {
+      abccategoria: {
         min: 0,
         max: 3
       }
     }
   },
 
-  // this.$store.getters['filtro/marca']
+  // this.$store.getters['filter/marca']
   getters: {
     marca: state => {
       return state.marca
     }
   },
 
-  // this.$store.commit('filtro/marca', filtro)
+  // this.$store.commit('filter/marca', filter)
   mutations: {
 
     marca (state, payload) {

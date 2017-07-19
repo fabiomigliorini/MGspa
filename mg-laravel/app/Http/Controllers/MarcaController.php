@@ -13,8 +13,13 @@ class MarcaController extends ControllerCrud
 
     public function index(Request $request)
     {
+
         $this->authorize();
+
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
+
+        $filter['abccategoria'] = json_decode($filter['abccategoria'], true);
+
         $qry = app($this->repositoryName)::query($filter, $sort, $fields)->with('Imagem');
 
         $res = $qry->paginate()->appends($request->all());
@@ -24,6 +29,7 @@ class MarcaController extends ControllerCrud
                 $res[$i]->imagem->url = $marca->Imagem->url;
             }
         }
+
         return response()->json($res, 206);
     }
 

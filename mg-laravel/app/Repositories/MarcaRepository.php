@@ -59,8 +59,12 @@ class MarcaRepository extends MGRepositoryStatic
             $qry->where('itensabaixominimo', '>', 0);
         }
 
-        if (!empty($filter['abccategoria'])) {
-            $qry->where('abccategoria', $filter['abccategoria']);
+        if (!empty($filter['abccategoria']['min'])) {
+            $qry->where('abccategoria', '>=', $filter['abccategoria']['min']);
+        }
+
+        if (!empty($filter['abccategoria']['max'])) {
+            $qry->where('abccategoria', '<=', $filter['abccategoria']['max']);
         }
 
         $qry = static::querySort($qry, $sort);
@@ -111,7 +115,7 @@ class MarcaRepository extends MGRepositoryStatic
         $percentual_acumulado = 0;
 
         foreach (Marca::orderByRaw('vendaanovalor DESC NULLS LAST')->orderBy('marca', 'ASC')->get() as $marca) {
-            $abccategoria = 4;
+            $abccategoria = 0;
             $abcposicao = null;
 
             if (!$marca->abcignorar) {
@@ -119,13 +123,13 @@ class MarcaRepository extends MGRepositoryStatic
                 $abcposicao = $posicao;
                 $percentual_acumulado += (($marca->vendaanovalor / $totalvendaano) * 100);
                 if ($percentual_acumulado <= 20) {
-                    $abccategoria = 1;
+                    $abccategoria = 3;
                 } elseif ($percentual_acumulado <= 50) {
                     $abccategoria = 2;
                 } elseif ($percentual_acumulado <= 90) {
-                    $abccategoria = 3;
+                    $abccategoria = 1;
                 } else {
-                    $abccategoria = 4;
+                    $abccategoria = 0;
                 }
             }
 

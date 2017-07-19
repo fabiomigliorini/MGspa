@@ -43,7 +43,7 @@ class EstoqueCalculaEstatisticasCommand extends Command
         $codprodutovariacao = $this->option('codprodutovariacao');
         $codestoquelocal = $this->option('codestoquelocal');
 
-        EstoqueLocalProdutoVariacaoRepository::calculaVenda($codestoquelocal, $codprodutovariacao);
+        // EstoqueLocalProdutoVariacaoRepository::calculaVenda($codestoquelocal, $codprodutovariacao);
         MarcaRepository::calculaVenda();
 
     }
