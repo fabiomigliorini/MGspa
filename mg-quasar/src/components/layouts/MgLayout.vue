@@ -3,9 +3,11 @@
 
   <div slot="header" class="toolbar">
 
+  <slot name="menu">
     <button class="hide-on-drawer-visible" @click="$refs.drawer.toggle()">
       <i>menu</i>
     </button>
+  </slot>
 
     <q-toolbar-title :padding="1">
       <slot name="title"></slot>

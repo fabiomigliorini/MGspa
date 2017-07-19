@@ -1,6 +1,10 @@
 <template>
   <mg-layout>
 
+    <button slot="menu" v-link=" '/grupo-usuario' ">
+      <i>arrow_back</i>
+    </button>
+
     <template slot="title">
       Novo Grupos de usuário
     </template>
@@ -12,9 +16,10 @@
           <div class="item-content row">
             <div class="width-1of3">
               <div class="floating-label">
-                <input required class="full-width" v-model="dados.grupousuario" @change.native.stop="pesquisar()" v-bind:rules="erros.grupousuario">
+                <input required class="full-width" v-model="dados.grupousuario"  v-bind:class="{ 'has-error': erros.grupousuario }">
                 <label>Descrição</label>
               </div>
+              <erros-validacao :erros="erros.grupousuario"></erros-validacao>
             </div>
           </div>
         </div>
@@ -27,21 +32,20 @@
 
 <script>
 import MgLayout from '../../layouts/MgLayout'
+import ErrosValidacao from '../../errors/ErrosValidacao'
 import { Loading } from 'quasar'
 
 export default {
   name: 'grupo-usuario-create',
   components: {
-    MgLayout, Loading
+    MgLayout, Loading, ErrosValidacao
   },
   data () {
     return {
       dados: {
         grupousuario: ''
       },
-      erros: {
-
-      }
+      erros: false
     }
   },
   methods: {

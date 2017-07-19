@@ -12,4 +12,9 @@
 export default {}
 </script>
 
-<style></style>
+<style>
+.erros-validacao {
+  font-size: 0.8rem;
+  width: 100%
+}
+</style>
