@@ -246,7 +246,8 @@ export default {
       }).then(response => {
         if (concat) {
           vm.data = vm.data.concat(response.data.data)
-        }else{
+        }
+        else {
           vm.data = response.data.data
         }
         this.fim = (response.data.current_page >= response.data.last_page)
