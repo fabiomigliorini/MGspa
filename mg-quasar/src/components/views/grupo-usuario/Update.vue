@@ -1,21 +1,21 @@
 <template>
   <mg-layout>
 
-    <button slot="menu" v-link=" '/grupo-usuario' ">
+    <button slot="menu" v-link=" '/grupo-usuario/' + dados.codgrupousuario ">
       <i>arrow_back</i>
     </button>
 
-    <button slot="rightMenu" @click.prevent="create()">
+    <button slot="rightMenu" @click.prevent="update()">
       <i>done</i>
     </button>
 
     <template slot="title">
-      Novo Grupos de usuário
+      {{ dados.grupousuario }}
     </template>
 
     <div slot="content">
 
-      <form @submit.prevent="create()">
+      <form @submit.prevent="update()">
         <div class="item">
           <div class="item-content row">
             <div class="width-1of3">
@@ -40,7 +40,7 @@ import MgLayout from '../../layouts/MgLayout'
 import ErrosValidacao from '../../errors/ErrosValidacao'
 
 export default {
-  name: 'grupo-usuario-create',
+  name: 'grupo-usuario-update',
   components: {
     MgLayout, ErrosValidacao
   },
@@ -53,7 +53,15 @@ export default {
     }
   },
   methods: {
-    create: function () {
+    carregaDados: function (id) {
+      let vm = this
+      window.axios.get('grupo-usuario/' + id).then(function (request) {
+        vm.dados = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
+    update: function () {
       var vm = this
       Dialog.create({
         title: 'Salvar',
@@ -67,7 +75,7 @@ export default {
             label: 'Salvar',
             handler () {
               Loading.show()
-              window.axios.post('grupo-usuario', vm.dados).then(function (request) {
+              window.axios.put('grupo-usuario/' + vm.dados.codgrupousuario, vm.dados).then(function (request) {
                 Loading.hide()
                 Toast.create.positive('Registro inserido')
                 vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
@@ -83,6 +91,7 @@ export default {
     }
   },
   mounted () {
+    this.carregaDados(this.$route.params.id)
   }
 }
 </script>

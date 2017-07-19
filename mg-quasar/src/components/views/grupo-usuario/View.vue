@@ -1,38 +1,40 @@
 <template>
   <mg-layout>
 
+    <button slot="menu" v-link=" '/grupo-usuario' ">
+      <i>arrow_back</i>
+    </button>
+
     <template slot="title">
       {{ dados.grupousuario }}
     </template>
-<!--
-    <template slot="drawer">
-      <div class="list">
-        <div class="item three-lines">
-          <div class="item-content">
-            <form @submit.prevent="pesquisar()">
-              <div class="floating-label">
-                <input class="full-width" v-model="filtro.grupousuario">
-                <label>Descrição</label>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </template>
--->
+
     <div slot="content">
       <div class="card-content">
         {{ dados.grupousuario }}
       </div>
 
+      <q-fab
+        icon="keyboard_arrow_up"
+        direction="up"
+        class="primary circular absolute-bottom-right"
+      >
+        <router-link :to="{ path: '/grupo-usuario/' + dados.codgrupousuario + '/update'}">
+          <q-small-fab class="primary" icon="edit" ></q-small-fab>
+        </router-link>
+        <q-small-fab class="orange" @click.native="activate()" icon="thumb_up" v-if="dados.inativo"></q-small-fab>
+        <q-small-fab class="orange" @click.native="inactivate()" icon="thumb_down" v-else></q-small-fab>
+        <q-small-fab class="primary" @click.native="photo()" icon="insert_photo"></q-small-fab>
+        <q-small-fab class="red" @click.native="destroy()" icon="delete"></q-small-fab>
+      </q-fab>
     </div>
 
   </mg-layout>
 </template>
 
 <script>
-import MgLayout from '../../layouts/MgLayout'
 import { Loading } from 'quasar'
+import MgLayout from '../../layouts/MgLayout'
 
 export default {
   name: 'grupo-usuario-view',
@@ -47,7 +49,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      window.axios.get('grupo-usuario/' + this.$route.params.id + '/details').then(function (request) {
+      window.axios.get('grupo-usuario/' + id + '/details').then(function (request) {
         vm.dados = request.data
       }).catch(function (error) {
         console.log(error.response)
