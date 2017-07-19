@@ -6,7 +6,13 @@ export default {
     marca: {
       marca: null,
       sort: 'abcposicao',
-      inativo: 1
+      inativo: 1,
+      sobrando: false,
+      faltando: false,
+      abccategoriaB: {
+        min: 0,
+        max: 3
+      }
     }
   },
 

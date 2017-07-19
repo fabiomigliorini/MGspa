@@ -13,6 +13,8 @@ import store from './store'
 
 Vue.use(Quasar) // Install Quasar Framework
 
+window._ = require('lodash')
+
 // Axios
 import Axios from 'axios'
 window.axios = Axios.create({
