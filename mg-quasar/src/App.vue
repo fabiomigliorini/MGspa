@@ -17,4 +17,8 @@ export default {}
   font-size: 0.8rem;
   width: 100%
 }
+.absolute-bottom-right {
+  right: 18px;
+  bottom: 18px;
+}
 </style>

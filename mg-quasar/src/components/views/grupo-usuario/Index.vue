@@ -6,7 +6,7 @@
     </template>
 
     <template slot="drawer">
-      <div class="list">
+      <div class="list no-border">
 
         <div class="item three-lines">
           <div class="item-content">
@@ -24,7 +24,7 @@
 
     <div slot="content">
 
-      <div class="list">
+      <div class="list no-border">
         <div class="item" v-for="item in dados">
           <q-drawer-link :to="{ path: '/grupo-usuario/' + item.codgrupousuario }">
             <div class="item-content">
@@ -35,10 +35,7 @@
       </div>
 
       <router-link :to="{ path: '/grupo-usuario/create' }">
-        <button
-          class="primary circular absolute-bottom-right"
-          router :to="{ path: '/grupo-usuario/novo' }"
-          style="right: 18px; bottom: 18px;">
+        <button class="primary circular absolute-bottom-right">
           <i>add</i>
         </button>
       </router-link>
@@ -55,7 +52,7 @@ import { Loading } from 'quasar'
 export default {
   name: 'grupo-usuario',
   components: {
-    MgLayout, Loading
+    MgLayout
   },
   data () {
     return {

@@ -27,6 +27,7 @@ export default new VueRouter({
     { path: '/grupo-usuario', component: load('views/grupo-usuario/Index') },
     { path: '/grupo-usuario/create', component: load('views/grupo-usuario/Create') },
     { path: '/grupo-usuario/:id', component: load('views/grupo-usuario/View') },
+    { path: '/grupo-usuario/:id/update', component: load('views/grupo-usuario/Update') },
     { path: '*', component: load('Error404') } // Not found
   ]
 })

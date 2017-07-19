@@ -13,6 +13,11 @@ export default {
         icon: 'label_outline',
         title: 'Marcas',
         path: '/marca'
+      },
+      {
+        icon: 'supervisor_account',
+        title: 'Grupos de usuário',
+        path: '/grupo-usuario'
       }
     ]
   },

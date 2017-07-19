@@ -13,9 +13,11 @@
       <slot name="title"></slot>
     </q-toolbar-title>
 
-    <button @click="$refs.rightDrawer.open()">
-      <i>apps</i>
-    </button>
+    <slot name="rightMenu">
+      <button @click="$refs.rightDrawer.open()">
+        <i>apps</i>
+      </button>
+    </slot>
 
   </div>
 
