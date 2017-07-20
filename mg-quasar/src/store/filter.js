@@ -13,6 +13,10 @@ export default {
         min: 0,
         max: 3
       }
+    },
+    grupousuario: {
+      grupousuario: null,
+      inativo: 1
     }
   },
 
@@ -20,6 +24,9 @@ export default {
   getters: {
     marca: state => {
       return state.marca
+    },
+    grupousuario: state => {
+      return state.grupousuario
     }
   },
 
@@ -28,8 +35,10 @@ export default {
 
     marca (state, payload) {
       state.marca = payload
+    },
+    grupousuario (state, payload) {
+      state.grupousuario = payload
     }
-
   }
 
 }

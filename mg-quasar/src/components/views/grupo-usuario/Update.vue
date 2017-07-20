@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { Loading, Dialog, Toast } from 'quasar'
+import { Dialog, Toast } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import ErrosValidacao from '../../errors/ErrosValidacao'
 
@@ -74,14 +74,10 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              Loading.show()
               window.axios.put('grupo-usuario/' + vm.dados.codgrupousuario, vm.dados).then(function (request) {
-                Loading.hide()
                 Toast.create.positive('Registro inserido')
                 vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
               }).catch(function (error) {
-                Loading.hide()
-                Toast.create.negative(error.response.data.mensagem)
                 vm.erros = error.response.data.erros
               })
             }
