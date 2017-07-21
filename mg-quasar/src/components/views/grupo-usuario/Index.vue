@@ -17,38 +17,38 @@
             </div>
           </div>
 
+          <div class="list-label">Ativos</div>
 
-                    <div class="list-label">Ativos</div>
+          <label class="item">
+            <i class="item-primary">thumb_up</i>
+            <div class="item-content has-secondary">
+              Ativos
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filter.inativo" val="1"></q-radio>
+            </div>
+          </label>
 
-                    <label class="item">
-                      <i class="item-primary">thumb_up</i>
-                      <div class="item-content has-secondary">
-                        Ativos
-                      </div>
-                      <div class="item-secondary">
-                        <q-radio v-model="filter.inativo" val="1"></q-radio>
-                      </div>
-                    </label>
+          <label class="item">
+            <i class="item-primary">thumb_down</i>
+            <div class="item-content has-secondary">
+              Inativos
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filter.inativo" val="2"></q-radio>
+            </div>
+          </label>
 
-                    <label class="item">
-                      <i class="item-primary">thumb_down</i>
-                      <div class="item-content has-secondary">
-                        Inativos
-                      </div>
-                      <div class="item-secondary">
-                        <q-radio v-model="filter.inativo" val="2"></q-radio>
-                      </div>
-                    </label>
+          <label class="item">
+            <i class="item-primary">thumbs_up_down</i>
+            <div class="item-content has-secondary">
+              Ativos e Inativos
+            </div>
+            <div class="item-secondary">
+              <q-radio v-model="filter.inativo" val="9"></q-radio>
+            </div>
+          </label>
 
-                    <label class="item">
-                      <i class="item-primary">thumbs_up_down</i>
-                      <div class="item-content has-secondary">
-                        Ativos e Inativos
-                      </div>
-                      <div class="item-secondary">
-                        <q-radio v-model="filter.inativo" val="9"></q-radio>
-                      </div>
-                    </label>
         </form>
       </div>
     </template>
@@ -56,12 +56,11 @@
     <div slot="content">
 
       <div class="list no-border striped">
-        <div class="item" v-for="item in data">
-          <q-drawer-link :to="{ path: '/grupo-usuario/' + item.codgrupousuario }">
-            <div class="item-content">
-              {{ item.grupousuario }}
-            </div>
-          </q-drawer-link>
+        <div class="item item-link" v-for="item in data">
+          <div class="item-content" v-link="'/grupo-usuario/' + item.codgrupousuario">
+            {{ item.grupousuario }}
+            <span v-if="item.inativo" class="label pointing-left bg-red text-white">inativo</span>
+          </div>
         </div>
       </div>
 
@@ -104,27 +103,6 @@ export default {
     }
   },
   methods: {
-    // carregaListagem () {
-    //   var vm = this
-    //   var params = this.filter
-    //   params.page = this.page
-    //   window.axios.get('grupo-usuario', {params}).then(response => {
-    //     vm.data = vm.data.concat(response.data.data)
-    //     this.fim = (response.data.current_page >= response.data.last_page)
-    //   }).catch(function (error) {
-    //     console.log(error.response)
-    //   })
-    // },
-    // mais () {
-    //   this.page++
-    //   this.carregaListagem()
-    // },
-    // pesquisar () {
-    //   this.page = 1
-    //   this.data = []
-    //   this.fim = false
-    //   this.carregaListagem()
-    // },
     refresher (index, done) {
       this.page++
       this.loadData(true, done)

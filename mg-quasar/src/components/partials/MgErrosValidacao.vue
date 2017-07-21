@@ -5,7 +5,7 @@
 </template>
 <script>
   export default {
-    name: 'erros-validacao',
+    name: 'mg-erros-validacao',
     props: ['erros']
   }
 </script>

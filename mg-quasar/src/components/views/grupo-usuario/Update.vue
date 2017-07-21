@@ -23,7 +23,7 @@
                 <input required class="full-width" v-model="dados.grupousuario"  v-bind:class="{ 'has-error': erros.grupousuario }">
                 <label>Descrição</label>
               </div>
-              <erros-validacao :erros="erros.grupousuario"></erros-validacao>
+              <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
             </div>
           </div>
         </div>
@@ -37,12 +37,12 @@
 <script>
 import { Dialog, Toast } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
-import ErrosValidacao from '../../errors/ErrosValidacao'
+import MgErrosValidacao from '../../partials/MgErrosValidacao'
 
 export default {
   name: 'grupo-usuario-update',
   components: {
-    MgLayout, ErrosValidacao
+    MgLayout, MgErrosValidacao
   },
   data () {
     return {

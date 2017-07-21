@@ -36,14 +36,21 @@
                 Usuários
               </div>
               <div class="list no-border">
+                <!--
                 <div class="item item-link two-lines" v-for="usuario in dados.Usuarios" v-link="'/usuario/' + usuario.codusuario">
-                  <!-- <q-drawer-link :to="{ path: '/usuario/' + usuario.codusuario }"> -->
                     <div class="item-content has-secondary">
                       <div>{{ usuario.usuario }}</div>
-                      <div>{{ usuario.filial.filial }}</div>
+                      <div v-for="filial in usuario.filiais">{{ filial }}</div>
                     </div>
-                  <!-- </q-drawer-link> -->
                 </div>
+                -->
+                <q-collapsible v-for="usuario in dados.Usuarios" :key="usuario.codpermissao" :label="usuario.usuario">
+                  <div class="item" v-for="filial in usuario.filiais">
+                    <div class="item-content">
+                      {{ filial }}
+                    </div>
+                  </div>
+                </q-collapsible>
                 <div class="item two-lines"  v-if="dados.Usuarios.length === 0">
                     <div class="item-content has-secondary">
                       <div>Nenhum usuário</div>
@@ -54,11 +61,22 @@
           </div>
           <div class="width-1of3">
             <div class="card">
-              <div class="card-title">
+              <div class="card-title bg-light">
                 Permissões
               </div>
-              <div class="card-content">
-                Card Content
+              <div class="list no-border">
+                <q-collapsible v-for="(permissao, index) in dados.Permissoes" :key="permissao.codpermissao" :label="index">
+                  <div class="item" v-for="item in permissao">
+                    <div class="item-content">
+                      {{ item.permissao }}
+                    </div>
+                  </div>
+                </q-collapsible>
+                <div class="item two-lines"  v-if="dados.Permissoes.length === 0">
+                    <div class="item-content has-secondary">
+                      <div>Nenhuma permissão</div>
+                    </div>
+                </div>
               </div>
             </div>
           </div>
@@ -79,17 +97,27 @@
       </q-fab>
     </div>
 
+    <div slot="footer">
+      <mg-autor
+        :criacao="dados.criacao"
+        :usuariocriacao="dados.usuario.usuariocriacao"
+        :alteracao="dados.alteracao"
+        :usuarioalteracao="dados.usuario.usuarioalteracao"
+        ></mg-autor>
+    </div>
+
   </mg-layout>
 </template>
 
 <script>
 import { Dialog, Toast } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
+import MgAutor from '../../partials/MgAutor'
 
 export default {
   name: 'grupo-usuario-view',
   components: {
-    MgLayout
+    MgLayout, MgAutor
   },
   data () {
     return {
