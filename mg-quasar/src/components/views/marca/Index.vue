@@ -9,6 +9,19 @@
 
       <div class="list">
 
+        {{ numeral(1234567890).format('0,0.[000]') }}
+
+        <br>
+        {{ numeral(1234567890.12345).format() }}
+        <br>
+        {{ numeral(10000000000000.12345).format('0,0 b') }}
+        <br>
+        {{ numeral(1111111111.12345).format('0.[0] a') }}
+        <br>
+        {{ numeral(1).format('0 o') }}
+        <br>
+        {{ numeral(.12).format('0 %') }}
+
         <form>
 
           <div class="item three-lines">
@@ -123,7 +136,7 @@
       <div class="list striped no-border item-delimiter" v-if="data.length > 0">
         <q-infinite-scroll :handler="refresher">
           <template v-for="item in data">
-            <div class="item item-link two-lines" @click="go(item.codmarca)">
+            <div class="item item-link two-lines" v-link="'/marca/' + item.codmarca">
               <img class="item-primary thumbnail hoverable-2" v-if="item.imagem" :src="item.imagem.url">
               <img class="item-primary thumbnail hoverable-2" v-else>
               <div class="item-content">
@@ -185,14 +198,9 @@
           </template>
         </q-infinite-scroll>
       </div>
-      <div v-else class="layout-padding">
-        <h5 class="text-red">
-          Nenhum registro encontrado!
-        </h5>
-      </div>
+      <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
     </div>
-
 
   </mg-layout>
 </template>
@@ -200,11 +208,14 @@
 <script>
 
 import MgLayout from '../../layouts/MgLayout'
+import MgNoData from '../../utils/MgNoData'
+import { Utils } from 'quasar'
 
 export default {
 
   components: {
-    MgLayout
+    MgLayout,
+    MgNoData
   },
 
   data () {
@@ -212,18 +223,16 @@ export default {
       data: [],
       page: 1,
       filter: {}, // Vem do Store
-      fim: true,
-      tab: 0,
-      carregando: false
+      loading: true
     }
   },
 
   watch: {
     filter: {
-      handler: window._.debounce(function (val, oldVal) {
+      handler: function (val, oldVal) {
         this.page = 1
         this.loadData(false, null)
-      }, 500),
+      },
       deep: true
     }
   },
@@ -235,12 +244,12 @@ export default {
       this.loadData(true, done)
     },
 
-    loadData (concat, done) {
+    loadData: Utils.debounce(function (concat, done) {
       this.$store.commit('filter/marca', this.filter)
       var vm = this
       var params = this.filter
       params.page = this.page
-      this.carregando = true
+      this.loading = true
       window.axios.get('marca', {
         params
       }).then(response => {
@@ -250,13 +259,12 @@ export default {
         else {
           vm.data = response.data.data
         }
-        this.fim = (response.data.current_page >= response.data.last_page)
-        this.carregando = false
+        this.loading = false
         if (done) {
           done()
         }
       })
-    },
+    }, 500),
 
     go (id) {
       this.$router.push('/marca/' + id)
