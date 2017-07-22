@@ -16,6 +16,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('login', 'Auth\LoginController@authenticate');
     Route::get('logout', 'Auth\LoginController@logout');
     Route::get('check', 'Auth\LoginController@check');
+    Route::get('refresh', 'Auth\LoginController@refreshToken');
 });
 
 Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {

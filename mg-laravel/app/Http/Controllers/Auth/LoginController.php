@@ -54,6 +54,28 @@ class LoginController extends Controller
 
         return response(['autenticado' => true]);
     }
+    /**
+     * Refresh JWT Token
+     *
+     * @return mixed
+     * @throws AccessDeniedHttpException
+     * @throws BadRequestHttpException
+     */
+    public function refreshToken()
+    {
+        $token = JWTAuth::getToken();
+        if (! $token) {
+            return response(['mensagem' => 'Token não existe']);
+        }
+
+        try {
+            $token = JWTAuth::refresh($token);
+        } catch (TokenInvalidException $e) {
+            return response(['mensagem' => 'Token inválido']);
+        }
+
+        return $token;
+    }
 
     public function logout()
     {

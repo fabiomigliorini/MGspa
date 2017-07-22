@@ -37,7 +37,7 @@
 <script>
 import { Dialog, Toast } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
-import MgErrosValidacao from '../../partials/MgErrosValidacao'
+import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
   name: 'grupo-usuario-update',

@@ -112,7 +112,7 @@
 <script>
 import { Dialog, Toast } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
-import MgAutor from '../../partials/MgAutor'
+import MgAutor from '../../utils/MgAutor'
 
 export default {
   name: 'grupo-usuario-view',

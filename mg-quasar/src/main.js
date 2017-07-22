@@ -10,6 +10,7 @@ import Vue from 'vue'
 import Quasar from 'quasar'
 import router from './router'
 import store from './store'
+// import refresh from 'jwt/Refresh'
 
 Vue.use(Quasar) // Install Quasar Framework
 
@@ -47,6 +48,7 @@ window.axios.interceptors.response.use((response) => {
     if (error.response.status) {
       const originalRequest = error.config
       if (error.response.status === 401 && !originalRequest._retry) {
+        // refresh.handle()
         return router.push('/login/')
       }
       mensagem += ' - ' + error.response.status
