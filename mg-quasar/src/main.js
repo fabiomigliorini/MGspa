@@ -18,7 +18,29 @@ import moment from 'moment'
 moment.locale('pt-BR')
 Vue.prototype.moment = moment
 
-window._ = require('lodash')
+// Moment js
+import numeral from 'numeral'
+numeral.register('locale', 'pt-BR', {
+  delimiters: {
+    thousands: '.',
+    decimal: ','
+  },
+  abbreviations: {
+    thousand: 'K',
+    million: 'M',
+    billion: 'B',
+    trillion: 'T'
+  },
+  ordinal: function (number) {
+    return 'º'
+  },
+  currency: {
+    symbol: 'R$'
+  }
+})
+numeral.locale('pt-BR')
+numeral.defaultFormat('0,0.00')
+Vue.prototype.numeral = numeral
 
 // Axios
 import Axios from 'axios'

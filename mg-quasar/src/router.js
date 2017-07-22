@@ -21,13 +21,22 @@ export default new VueRouter({
    */
 
   routes: [
+
+    // Básicos
     { path: '/', component: load('Index') }, // Default
     { path: '/login', component: load('Login') }, // Login
-    { path: '/marca', component: load('views/marca/Index') }, // Marca
+
+     // Marca
+    { path: '/marca', component: load('views/marca/Index') },
+    { path: '/marca/:id', component: load('views/marca/View') }, // Marca
+
+    // Grupo de Usuarios
     { path: '/grupo-usuario', component: load('views/grupo-usuario/Index') },
     { path: '/grupo-usuario/create', component: load('views/grupo-usuario/Create') },
     { path: '/grupo-usuario/:id', component: load('views/grupo-usuario/View') },
     { path: '/grupo-usuario/:id/update', component: load('views/grupo-usuario/Update') },
+
+    // Erro
     { path: '*', component: load('Error404') } // Not found
   ]
 })
