@@ -198,39 +198,39 @@ export default {
     }
   },
   props: {
-    // navigation: {
-    //   type: Boolean,
-    //   default: false
-    // },
-    // drawer: {
-    //   type: Boolean,
-    //   default: false
-    // }
+    navigation: {
+      type: Boolean,
+      default: false
+    },
+    drawer: {
+      type: Boolean,
+      default: false
+    }
   },
   methods: {
     logout () {
-      // var vm = this
-      // Dialog.create({
-      //   title: 'Sair do sistema',
-      //   message: 'Tem certeza que deseja sair?',
-      //   buttons: [
-      //     {
-      //       label: 'Não',
-      //       handler () {
-      //       }
-      //     },
-      //     {
-      //       label: 'Sim',
-      //       handler () {
-      //         window.axios.get('auth/logout').then(response => {
-      //           localStorage.removeItem('auth.token')
-      //           vm.$router.push('/login')
-      //           Toast.create('Até mais...')
-      //         })
-      //       }
-      //     }
-      //   ]
-      // })
+      var vm = this
+      Dialog.create({
+        title: 'Sair do sistema',
+        message: 'Tem certeza que deseja sair?',
+        buttons: [
+          {
+            label: 'Não',
+            handler () {
+            }
+          },
+          {
+            label: 'Sim',
+            handler () {
+              window.axios.get('auth/logout').then(response => {
+                localStorage.removeItem('auth.token')
+                vm.$router.push('/login')
+                Toast.create('Até mais...')
+              })
+            }
+          }
+        ]
+      })
     }
   }
 }

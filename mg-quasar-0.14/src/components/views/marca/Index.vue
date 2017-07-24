@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
   <mg-layout drawer>
 
     <template slot="title">
@@ -209,11 +209,13 @@
 
 import MgLayout from '../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { Utils } from 'quasar'
+import { QRadio, QToggle, debounce } from 'quasar'
 
 export default {
 
   components: {
+    QRadio,
+    QToggle,
     MgLayout,
     MgNoData
   },
@@ -244,7 +246,7 @@ export default {
       this.loadData(true, done)
     },
 
-    loadData: Utils.debounce(function (concat, done) {
+    loadData: debounce(function (concat, done) {
       this.$store.commit('filter/marca', this.filter)
       var vm = this
       var params = this.filter
@@ -280,4 +282,4 @@ export default {
 </script>
 
 <style>
-</style> -->
+</style>
