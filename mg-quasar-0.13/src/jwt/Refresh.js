@@ -1,3 +1,4 @@
+// import router from 'vue-router'
 
 export default {
   handle: function (response) {
@@ -19,9 +20,9 @@ export default {
   retry: function (request) {
     var method = request.method.toLowerCase()
     return window.axios[method](request.url, request.params)
-  },
-
-  redirect: function () {
-    this.$router.push('/login/')
   }
+
+  // redirect: function () {
+  //   router.push('/login/')
+  // }
 }
