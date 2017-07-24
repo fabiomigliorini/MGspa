@@ -9,9 +9,10 @@
 
       <div class="row wrap">
 
-        <q-icon name="menu" />
-        <div class="text-center" v-for="aplicativo in aplicativos" :key="aplicativo.title">
-          <router-link :icon="aplicativo.icon" :to="{ path: aplicativo.path }">
+        <div class="text-center col-md-1 col-xs-3 col-sm-2" v-for="aplicativo in aplicativos">
+          <router-link :to="{ path: aplicativo.path, params: {} }">
+            <q-icon :name="aplicativo.icon" style="font-size:3em" />
+            <br>
             <small>
               {{aplicativo.title}}
             </small>
@@ -19,14 +20,13 @@
         </div>
 
       </div>
-
     </div>
 
   </mg-layout>
 </template>
 
 <script>
-import QIcon from 'quasar'
+import { QIcon } from 'quasar'
 import MgLayout from './layouts/MgLayout'
 
 export default {
