@@ -31,10 +31,10 @@ export default new VueRouter({
     { path: '/marca/:id', component: load('views/marca/View') }, // Marca
 
     // Grupo de Usuarios
-    { path: '/grupo-usuario', component: load('views/grupo-usuario/Index') },
-    { path: '/grupo-usuario/create', component: load('views/grupo-usuario/Create') },
-    { path: '/grupo-usuario/:id', component: load('views/grupo-usuario/View') },
-    { path: '/grupo-usuario/:id/update', component: load('views/grupo-usuario/Update') },
+    { path: '/usuario', component: load('views/usuario/Index') },
+    { path: '/usuario/create', component: load('views/usuario/Create') },
+    { path: '/usuario/:id', component: load('views/usuario/View') },
+    { path: '/usuario/:id/update', component: load('views/usuario/Update') },
 
     // Permissao
     { path: '/permissao', component: load('views/permissao/Index') },

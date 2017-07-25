@@ -1,9 +1,9 @@
 <template>
   <mg-layout>
 
-    <button slot="menu" v-link=" '/grupo-usuario' ">
-      <i>arrow_back</i>
-    </button>
+    <router-link :to="{ path: '/grupo-usuario/create' }" slot="menu">
+      <q-btn round icon="arrow_back"/>
+    </router-link>
 
     <button slot="rightMenu" @click.prevent="create()">
       <i>done</i>
@@ -16,6 +16,16 @@
     <div slot="content">
 
       <form @submit.prevent="create()">
+        <q-field
+           :count="10"
+           helper="Some helper"
+           :error="error"
+           error-label="Oops, we got an error."
+         >
+           <q-input v-model="text" />
+         </q-field>
+
+
         <div class="item">
           <div class="item-content row">
             <div class="width-1of3">
@@ -35,14 +45,23 @@
 </template>
 
 <script>
-import { Dialog, Toast } from 'quasar'
+import {
+  Dialog,
+  Toast,
+  QField,
+  QInput
+} from 'quasar'
+
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
   name: 'grupo-usuario-create',
   components: {
-    MgLayout, MgErrosValidacao
+    MgLayout,
+    MgErrosValidacao,
+    QField,
+    QInput
   },
   data () {
     return {

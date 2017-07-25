@@ -16,8 +16,8 @@ export default {
       },
       {
         icon: 'supervisor_account',
-        title: 'Grupos de usuário',
-        path: '/grupo-usuario'
+        title: 'Usuários',
+        path: '/usuario'
       }
     ]
   },

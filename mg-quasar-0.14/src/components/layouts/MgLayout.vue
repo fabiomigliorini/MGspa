@@ -17,7 +17,6 @@
       <slot name="title"></slot>
     </q-toolbar-title>
 
-
     <q-btn class="within-iframe-hide" v-if="backPath" flat @click="$router.replace(backPath)" style="margin-right: 15px">
       <q-icon name="arrow_back" />
     </q-btn>
