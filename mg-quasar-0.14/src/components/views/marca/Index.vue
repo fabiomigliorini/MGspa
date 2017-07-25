@@ -1,203 +1,218 @@
 <template>
   <mg-layout drawer back-path="/">
 
+    <!-- Título da Página -->
     <template slot="title">
       Marcas
     </template>
 
+    <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
 
-      <div class="list">
+      <q-list no-border>
 
-        {{ numeral(1234567890).format('0,0.[000]') }}
+        <!-- Filtro de Descricao -->
+        <q-item>
+          <q-item-main>
+            <q-field icon="search">
+              <q-input v-model="filter.marca" float-label="Descrição" />
+            </q-field>
+          </q-item-main>
+        </q-item>
 
-        <br>
-        {{ numeral(1234567890.12345).format() }}
-        <br>
-        {{ numeral(10000000000000.12345).format('0,0 b') }}
-        <br>
-        {{ numeral(1111111111.12345).format('0.[0] a') }}
-        <br>
-        {{ numeral(1).format('0 o') }}
-        <br>
-        {{ numeral(.12).format('0 %') }}
+        <q-list-header>Ordenar Por</q-list-header>
 
-        <form>
+        <!-- Ordena por Vendas -->
+        <q-item tag="label">
+          <q-item-side icon="trending_up">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Vendas</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.sort" val="abcposicao" />
+          </q-item-side>
+        </q-item>
 
-          <div class="item three-lines">
-            <i class="item-primary">search</i>
-            <div class="item-content">
-              <div class="floating-label">
-                <input required class="full-width" v-model="filter.marca">
-                <label>Descrição</label>
-              </div>
-            </div>
-          </div>
+        <!-- Ordena Alfabeticamente -->
+        <q-item tag="label">
+          <q-item-side icon="sort_by_alpha">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Descrição</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.sort" val="marca" />
+          </q-item-side>
+        </q-item>
 
-          <div class="list-label">Ordenar Por</div>
+        <q-list-header>Estoque</q-list-header>
 
-          <label class="item">
-            <i class="item-primary">trending_up</i>
-            <div class="item-content has-secondary">
-              Vendas
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.sort" val="abcposicao"></q-radio>
-            </div>
-          </label>
+        <!-- Filtra Estoque Sobrando -->
+        <q-item tag="label">
+          <q-item-side icon="arrow_upward">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Sobrando</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-toggle v-model="filter.sobrando" />
+          </q-item-side>
+        </q-item>
 
-          <label class="item">
-            <i class="item-primary">sort_by_alpha</i>
-            <div class="item-content has-secondary">
-              Descrição
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.sort" val="marca"></q-radio>
-            </div>
-          </label>
+        <!-- Filtra Estoque Faltando -->
+        <q-item tag="label">
+          <q-item-side icon="arrow_downward">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Faltando</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-toggle v-model="filter.faltando" />
+          </q-item-side>
+        </q-item>
 
-          <div class="list-label">Estoque</div>
+        <q-list-header>Curva ABC</q-list-header>
 
-          <label class="item">
-            <i class="item-primary">arrow_upward</i>
-            <div class="item-content has-secondary">
-              Sobrando
-            </div>
-            <div class="item-secondary">
-              <q-toggle v-model="filter.sobrando"></q-toggle>
-            </div>
-          </label>
+        <!-- Filtra Pela Classificação da CURVA ABC -->
+        <q-item tag="label">
+          <q-item-side icon="star">
+          </q-item-side>
+          <q-item-main>
+            <q-range
+              v-model="filter.abccategoria"
+              label
+              markers
+              snap
+              :min="0"
+              :max="3"
+              :step="1"
+            ></q-range>
+          </q-item-main>
+        </q-item>
 
-          <label class="item">
-            <i class="item-primary">arrow_downward</i>
-            <div class="item-content has-secondary">
-              Faltando
-            </div>
-            <div class="item-secondary">
-              <q-toggle v-model="filter.faltando"></q-toggle>
-            </div>
-          </label>
+        <q-list-header>Ativos</q-list-header>
 
-          <div class="list-label">Curva ABC</div>
+        <!-- Filtra Ativos -->
+        <q-item tag="label">
+          <q-item-side icon="thumb_up">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Ativos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.inativo" val="1" />
+          </q-item-side>
+        </q-item>
 
-          <div class="item two-lines">
-            <i class="item-primary">star</i>
-            <div class="item-content">
-              <q-double-range
-                v-model="filter.abccategoria"
-                label
-                markers
-                snap
-                :min="0"
-                :max="3"
-                :step="1"
-              ></q-double-range>
-            </div>
-          </div>
+        <!-- Filtra Inativos -->
+        <q-item tag="label">
+          <q-item-side icon="thumb_down">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Inativos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.inativo" val="2" />
+          </q-item-side>
+        </q-item>
 
-          <div class="list-label">Ativos</div>
+        <!-- Filtra Ativos e Inativos -->
+        <q-item tag="label">
+          <q-item-side icon="thumbs_up_down">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Ativos e Inativos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.inativo" val="9" />
+          </q-item-side>
+        </q-item>
 
-          <label class="item">
-            <i class="item-primary">thumb_up</i>
-            <div class="item-content has-secondary">
-              Ativos
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.inativo" val="1"></q-radio>
-            </div>
-          </label>
 
-          <label class="item">
-            <i class="item-primary">thumb_down</i>
-            <div class="item-content has-secondary">
-              Inativos
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.inativo" val="2"></q-radio>
-            </div>
-          </label>
-
-          <label class="item">
-            <i class="item-primary">thumbs_up_down</i>
-            <div class="item-content has-secondary">
-              Ativos e Inativos
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.inativo" val="9"></q-radio>
-            </div>
-          </label>
-        </form>
-      </div>
+      </q-list>
 
     </template>
 
+    <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
 
-      <div class="list striped no-border item-delimiter" v-if="data.length > 0">
-        <q-infinite-scroll :handler="refresher">
+      <!-- Se tiver registros -->
+      <q-list v-if="data.length > 0">
+
+        <!-- Scroll infinito -->
+        <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
+
+          <!-- Percorre registros  -->
           <template v-for="item in data">
-            <div class="item item-link two-lines" v-link="'/marca/' + item.codmarca">
-              <img class="item-primary thumbnail hoverable-2" v-if="item.imagem" :src="item.imagem.url">
-              <img class="item-primary thumbnail hoverable-2" v-else>
-              <div class="item-content">
-                <div class="row">
-                  <div class="gt-sm-width-1of4">
-                    {{ item.marca }}
-                  </div>
-                  <div class="gt-sm gt-sm-width-1of4 text-grey">
-                    <span v-if="item.itensabaixominimo > 0">
-                      {{ item.itensabaixominimo }} <i>arrow_downward</i>
-                    </span>
-                    <span v-if="item.itensacimamaximo > 0">
-                       <i>arrow_upward</i>
-                      {{ item.itensacimamaximo }}
-                    </span>
-                  </div>
-                  <div class="gt-sm gt-sm-width-1of4 text-grey">
-                  </div>
-                  <div class="auto">
-                  </div>
-                  <div>
-                    <q-rating
-                      disable
-                      class="orange"
-                      v-model="item.abccategoria"
-                      :max="3"
-                    ></q-rating>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="gt-sm-width-1of4">
-                    #{{ parseInt(item.codmarca).toLocaleString('pt-BR', { minimumIntegerDigits: 8, useGrouping: false }) }}
-                  </div>
-                  <div class="gt-sm gt-sm-width-1of4 text-grey">
-                    <i>date_range</i>
-                    {{ item.estoqueminimodias }} à
-                    {{ item.estoquemaximodias }} Dias
-                  </div>
-                  <div class="gt-sm gt-sm-width-1of4 text-grey">
-                    <span v-if="item.dataultimacompra" class="text-grey">
-                      <i>add_shopping_cart</i>
-                       {{ moment(item.dataultimacompra).fromNow() }}
-                    </span>
-                  </div>
-                  <div class="auto">
-                  </div>
-                  <div>
-                    {{ parseFloat(item.vendaanopercentual).toLocaleString('pt-BR', {minimumFractionDigits: 4, maximumFractionDigits: 4}) }}%
-                    <template v-if="item.abcposicao">
-                       ({{ parseInt(item.abcposicao).toLocaleString('pt-BR') }}&deg;)
-                    </template>
-                    <template v-else>
-                      (&#8212;)
-                    </template>
-                  </div>
-                </div>
-              </div>
-            </div>
+
+            <!-- Link para detalhes -->
+            <q-item :to="'/marca/' + item.codmarca">
+
+              <!-- Imagem -->
+              <q-item-side :image="item.imagem.url" v-if="item.imagem" />
+
+              <!-- Coluna 1 -->
+              <q-item-main>
+                <q-item-tile>
+                  {{ item.marca }}
+                </q-item-tile>
+                <q-item-tile sublabel>
+                  #{{ numeral(item.codmarca).format('00000000') }}
+                </q-item-tile>
+              </q-item-main>
+
+              <!-- Coluna 2 -->
+              <q-item-main class="col-sm-2 gt-sm">
+                <q-item-tile sublabel>
+                  <span v-if="item.itensabaixominimo > 0">
+                    {{ numeral(item.itensabaixominimo).format('0,0') }} <q-icon name="arrow_downward" />
+                  </span>
+                  <span v-if="item.itensacimamaximo > 0">
+                    <q-icon name="arrow_upward" /> {{ numeral(item.itensacimamaximo).format('0,0') }}
+                  </span>
+                </q-item-tile>
+                <q-item-tile sublabel>
+                  <q-icon name="date_range" />
+                  {{ item.estoqueminimodias }} à
+                  {{ item.estoquemaximodias }} Dias
+                </q-item-tile>
+              </q-item-main>
+
+              <!-- Coluna 3 -->
+              <q-item-main class="col-sm-2 gt-xs">
+                <q-item-tile sublabel>
+                  <template v-if="item.dataultimacompra" class="text-grey">
+                    <q-icon name="add_shopping_cart" />
+                    {{ moment(item.dataultimacompra).fromNow() }}
+                  </template>
+                </q-item-tile>
+              </q-item-main>
+
+              <!-- Direita (Estrelas) -->
+              <q-item-side right>
+                <q-item-tile>
+                  <q-rating readonly v-model="item.abccategoria" :max="3" size="1.7rem" />
+                </q-item-tile>
+                <q-item-tile sublabel >
+                  {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%
+                  <template v-if="item.abcposicao">
+                    ({{ numeral(item.abcposicao).format('0,0') }}&deg;)
+                  </template>
+                  <template v-else>
+                    (&#8212;)
+                  </template>
+                </q-item-tile>
+              </q-item-side>
+
+            </q-item>
+            <q-item-separator />
+
           </template>
         </q-infinite-scroll>
-      </div>
+      </q-list>
+
+      <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
     </div>
@@ -209,15 +224,30 @@
 
 import MgLayout from '../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { QRadio, QToggle, debounce } from 'quasar'
+import { QInput, QSideLink, QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce } from 'quasar'
 
 export default {
 
   components: {
-    QRadio,
-    QToggle,
     MgLayout,
-    MgNoData
+    MgNoData,
+    QInput,
+    QSideLink,
+    QIcon,
+    QField,
+    QRadio,
+    QList,
+    QListHeader,
+    QItem,
+    QItemSeparator,
+    QItemMain,
+    QItemSide,
+    QItemTile,
+    QToggle,
+    QRange,
+    QInfiniteScroll,
+    QSpinnerDots,
+    QRating
   },
 
   data () {
@@ -230,6 +260,8 @@ export default {
   },
 
   watch: {
+
+    // observa filtro, sempre que alterado chama a api
     filter: {
       handler: function (val, oldVal) {
         this.page = 1
@@ -237,43 +269,63 @@ export default {
       },
       deep: true
     }
+
   },
 
   methods: {
 
-    refresher (index, done) {
+    // scroll infinito - carregar mais registros
+    loadMore (index, done) {
       this.page++
       this.loadData(true, done)
     },
 
+    // carrega registros da api
     loadData: debounce(function (concat, done) {
+      // salva no Vuex filtro da marca
       this.$store.commit('filter/marca', this.filter)
+
+      // inicializa variaveis
       var vm = this
       var params = this.filter
       params.page = this.page
       this.loading = true
+
+      // faz chamada api
       window.axios.get('marca', {
         params
       }).then(response => {
+        // Se for para concatenar, senao inicializa
         if (concat) {
           vm.data = vm.data.concat(response.data.data)
         }
         else {
           vm.data = response.data.data
         }
+
+        // Desativa Scroll Infinito se chegou no fim
+        if (vm.$refs.infiniteScroll) {
+          if (response.data.data.length === 0) {
+            vm.$refs.infiniteScroll.stop()
+          }
+          else {
+            vm.$refs.infiniteScroll.resume()
+          }
+        }
+
+        // desmarca flag de carregando
         this.loading = false
+
+        // Executa done do scroll infinito
         if (done) {
           done()
         }
       })
-    }, 500),
-
-    go (id) {
-      this.$router.push('/marca/' + id)
-    }
+    }, 500)
 
   },
 
+  // na criacao, busca filtro do Vuex
   created () {
     this.filter = this.$store.getters['filter/marca']
   }

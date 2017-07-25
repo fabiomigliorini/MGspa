@@ -1,7 +1,7 @@
 <template>
   <div class="text-center text-grey">
     <span style="font-size: 15em">
-      <i>sentiment_dissatisfied</i>
+      <q-icon name="sentiment_dissatisfied" />
     </span>
     <br>
     Nenhum registro encontrado!
@@ -11,10 +11,19 @@
 </template>
 
 <script>
+
+import { QIcon } from 'quasar'
+
 export default {
+
+  components: {
+    QIcon
+  },
+
   data () {
     return {}
   }
+
 }
 </script>
 

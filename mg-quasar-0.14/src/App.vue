@@ -12,4 +12,11 @@
 export default {}
 </script>
 
-<style></style>
+<style>
+
+.q-rating i.q-icon:not(.active) {
+  color: grey;
+  opacity: 0.1;
+}
+
+</style>
