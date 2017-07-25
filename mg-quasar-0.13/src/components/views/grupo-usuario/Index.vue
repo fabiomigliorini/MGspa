@@ -95,10 +95,10 @@ export default {
   },
   watch: {
     filter: {
-      handler: window._.debounce(function (val, oldVal) {
+      handler: function (val, oldVal) {
         this.page = 1
         this.loadData(false, null)
-      }, 500),
+      },
       deep: true
     }
   },

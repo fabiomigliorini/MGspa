@@ -67,17 +67,17 @@ window.axios.interceptors.request.use(function (config) {
   if (AUTH_TOKEN) {
     config.headers.common['Authorization'] = `Bearer ${AUTH_TOKEN}`
   }
-  Quasar.Loading.show()
+  // Quasar.Loading.show()
   return config
 }, function (error) {
   return Promise.reject(error)
 })
 
 window.axios.interceptors.response.use((response) => {
-  Quasar.Loading.hide()
+  // Quasar.Loading.hide()
   return response
 }, function (error) {
-  Quasar.Loading.hide()
+  // Quasar.Loading.hide()
   let mensagem = 'Erro ao acessar API'
   if (error.response) {
     if (error.response.status) {

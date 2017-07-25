@@ -5,70 +5,56 @@
       Grupos de usuário
     </template>
 
-    <template slot="drawer">
-      <div class="list no-border">
-        <form>
-          <div class="item three-lines">
-            <div class="item-content">
-              <div class="floating-label">
-                <input required class="full-width" v-model="filter.grupousuario">
-                <label>Descrição</label>
-              </div>
-            </div>
-          </div>
+    <div slot="drawer">
+      <form>
+      <q-list no-border inset-delimiter>
+        <q-item>
+          <q-item-main>
+             <q-input v-model="filter.grupousuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
+          </q-item-main>
+        </q-item>
+        <q-list-header>Ativos</q-list-header>
+        <q-item>
+          <q-item-side icon="thumb_up" />
+          <q-item-main label="Ativos" />
+          <q-item-side>
+            <q-radio v-model="filter.inativo" val="1"></q-radio>
+          </q-item-side>
+        </q-item>
+        <q-item>
+          <q-item-side icon="thumb_down" />
+          <q-item-main label="Inativos" />
+          <q-item-side>
+            <q-radio v-model="filter.inativo" val="2"></q-radio>
+          </q-item-side>
+        </q-item>
+        <q-item>
+          <q-item-side icon="thumbs_up_down" />
+          <q-item-main label="Ativos e Inativos" />
+          <q-item-side>
+            <q-radio v-model="filter.inativo" val="9"></q-radio>
+          </q-item-side>
+        </q-item>
+      </q-list>
+      </form>
 
-          <div class="list-label">Ativos</div>
-
-          <label class="item">
-            <i class="item-primary">thumb_up</i>
-            <div class="item-content has-secondary">
-              Ativos
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.inativo" val="1"></q-radio>
-            </div>
-          </label>
-
-          <label class="item">
-            <i class="item-primary">thumb_down</i>
-            <div class="item-content has-secondary">
-              Inativos
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.inativo" val="2"></q-radio>
-            </div>
-          </label>
-
-          <label class="item">
-            <i class="item-primary">thumbs_up_down</i>
-            <div class="item-content has-secondary">
-              Ativos e Inativos
-            </div>
-            <div class="item-secondary">
-              <q-radio v-model="filter.inativo" val="9"></q-radio>
-            </div>
-          </label>
-
-        </form>
-      </div>
-    </template>
+    </div>
 
     <div slot="content">
-
-      <div class="list no-border striped">
-        <div class="item item-link" v-for="item in data">
-          <div class="item-content" v-link="'/grupo-usuario/' + item.codgrupousuario">
-            {{ item.grupousuario }}
-            <span v-if="item.inativo" class="label pointing-left bg-red text-white">inativo</span>
-          </div>
-        </div>
-      </div>
-
-      <router-link :to="{ path: '/grupo-usuario/create' }">
-        <button class="primary circular absolute-bottom-right">
-          <i>add</i>
-        </button>
-      </router-link>
+      <q-list no-border inset-delimiter striped link>
+        <template v-for="row in data">
+            <q-item :to=" '/grupo-usuario/' + row.codgrupousuario ">
+              <q-item-main>
+                {{ row.grupousuario }}
+              </q-item-main>
+            </q-item>
+        </template>
+      </q-list>
+      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+        <router-link :to="{ path: '/grupo-usuario/create' }">
+          <q-btn round color="primary" icon="add" class="animate-pop"/>
+        </router-link>
+      </q-fixed-position>
     </div>
 
 
@@ -77,11 +63,34 @@
 
 <script>
 import MgLayout from '../../layouts/MgLayout'
+import {
+  debounce,
+  QList,
+  QListHeader,
+  QItem,
+  QItemSide,
+  QItemMain,
+  QInput,
+  QIcon,
+  QRadio,
+  QFixedPosition,
+  QBtn
+ } from 'quasar'
 
 export default {
   name: 'grupo-usuario',
   components: {
-    MgLayout
+    MgLayout,
+    QList,
+    QListHeader,
+    QItem,
+    QItemSide,
+    QItemMain,
+    QInput,
+    QIcon,
+    QRadio,
+    QFixedPosition,
+    QBtn
   },
   data () {
     return {
@@ -95,10 +104,10 @@ export default {
   },
   watch: {
     filter: {
-      handler: window._.debounce(function (val, oldVal) {
+      handler: function (val, oldVal) {
         this.page = 1
         this.loadData(false, null)
-      }, 500),
+      },
       deep: true
     }
   },
@@ -108,12 +117,12 @@ export default {
       this.loadData(true, done)
     },
 
-    loadData (concat, done) {
+    loadData: debounce(function (concat, done) {
       this.$store.commit('filter/grupousuario', this.filter)
       var vm = this
       var params = this.filter
       params.page = this.page
-      this.carregando = true
+      this.loading = true
       window.axios.get('grupo-usuario', {
         params
       }).then(response => {
@@ -123,13 +132,12 @@ export default {
         else {
           vm.data = response.data.data
         }
-        this.fim = (response.data.current_page >= response.data.last_page)
-        this.carregando = false
+        this.loading = false
         if (done) {
           done()
         }
       })
-    }
+    }, 500)
   },
   created () {
     this.filter = this.$store.getters['filter/grupousuario']

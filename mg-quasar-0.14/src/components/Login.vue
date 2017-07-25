@@ -2,30 +2,32 @@
 
   <div id="row-login">
 
+    <!-- <q-card>
+      <q-card-title>
+        Card Title
+      </q-card-title>
+      <q-card-separator />
+      <q-card-main>
+        Card Content
+      </q-card-main>
+    </q-card> -->
+
     <div class="card" id="card-login">
 
       <div class="card-content">
         <form @submit.prevent="login()">
 
           <div class="item-content">
-            <div class="floating-label">
-              <input required class="full-width" v-model="usuario">
-              <label>Usuário</label>
-            </div>
+            <q-input v-model="usuario" float-label="Usuário" />
           </div>
 
           <div class="item-content">
-            <div class="floating-label">
-              <input required class="full-width" v-model="senha" type="password">
-              <label>Senha</label>
-            </div>
+            <q-input v-model="senha" type="password" float-label="Senha" />
           </div>
           <br>
-          <button class="primary" type="submit">
+          <q-btn color="primary" icon="send" type="submit">
             entrar
-            <i>send</i>
-          </button>
-
+          </q-btn>
         </form>
       </div>
     </div>
@@ -34,10 +36,16 @@
 </template>
 
 <script>
+import {
+  QBtn,
+  QIcon,
+  QInput,
+  QCard,
+  QCardMain
+} from 'quasar'
+
 export default {
-
   name: 'login',
-
   data () {
     return {
       usuario: null,
@@ -45,6 +53,14 @@ export default {
       erro: false,
       mensagem: 'mensagem'
     }
+  },
+
+  components: {
+    QBtn,
+    QIcon,
+    QInput,
+    QCard,
+    QCardMain
   },
 
   methods: {
