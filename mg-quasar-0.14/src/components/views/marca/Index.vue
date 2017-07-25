@@ -156,6 +156,7 @@
               <q-item-main>
                 <q-item-tile>
                   {{ item.marca }}
+                  <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
                 </q-item-tile>
                 <q-item-tile sublabel>
                   #{{ numeral(item.codmarca).format('00000000') }}
@@ -224,13 +225,14 @@
 
 import MgLayout from '../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { QInput, QSideLink, QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce } from 'quasar'
+import { QChip, QInput, QSideLink, QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce } from 'quasar'
 
 export default {
 
   components: {
     MgLayout,
     MgNoData,
+    QChip,
     QInput,
     QSideLink,
     QIcon,
