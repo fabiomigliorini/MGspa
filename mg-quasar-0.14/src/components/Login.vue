@@ -2,35 +2,24 @@
 
   <div id="row-login">
 
-    <!-- <q-card>
-      <q-card-title>
-        Card Title
-      </q-card-title>
-      <q-card-separator />
+    <q-card id="card-login">
       <q-card-main>
-        Card Content
-      </q-card-main>
-    </q-card> -->
-
-    <div class="card" id="card-login">
-
-      <div class="card-content">
         <form @submit.prevent="login()">
 
           <div class="item-content">
-            <q-input v-model="usuario" float-label="Usuário" />
+            <q-input v-model="usuario" float-label="Usuário" autofocus />
           </div>
 
           <div class="item-content">
             <q-input v-model="senha" type="password" float-label="Senha" />
           </div>
           <br>
-          <q-btn color="primary" icon="send" type="submit">
+          <q-btn color="primary" icon-right="send" type="submit">
             entrar
           </q-btn>
         </form>
-      </div>
-    </div>
+      </q-card-main>
+    </q-card>
 
   </div>
 </template>
@@ -89,34 +78,27 @@ export default {
 
 }
 </script>
-
 <style>
+#row-login {
+  background-image: url("/statics/fundo-login.jpg");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-color:#464646;
+  height: 100%;
+  padding-top: 10%;
+}
 
 #q-app {
   width: 100%;
   height: 100%;
-}
-
-#row-login {
-  background-image: url("/statics/fundo-login.jpg");
-  background-position: center center;
-  background-repeat:  no-repeat;
-  background-attachment: fixed;
-  background-size:  cover;
-  background-color: #999;
-
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-  align-items: center;
-
-  justify-content: center;
+  position: absolute;
 }
 
 #card-login {
   background-color: rgba(255, 255, 255, 0.8);
-  text-align: center;
+  margin: 0 auto;
   width: 280px;
 }
 </style>
