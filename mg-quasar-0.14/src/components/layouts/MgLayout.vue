@@ -98,7 +98,7 @@ import {
 export default {
   data () {
     return {
-      view: 'hHr LpR fFr',
+      view: 'hHr LpR ffr',
       reveal: true,
       leftScroll: false,
       rightScroll: true,
