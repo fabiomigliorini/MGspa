@@ -17,7 +17,7 @@
         </q-item>
         <q-list no-border link>
           <template v-for="row in grupos">
-            <q-item>
+            <q-item :to=" '/usuario/grupo-usuario/' + row.codgrupousuario ">
               <q-item-main>
                 {{ row.grupousuario }}
               </q-item-main>
@@ -30,21 +30,56 @@
     </div>
 
     <div slot="content">
-      <q-modal ref="basicModal" :content-css="{ minWidth: '50vw' }">
-        <q-card>
+      <q-modal ref="createModal" :content-css="{ minWidth: '50vw' }">
+        <q-card style="box-shadow:none;">
           <q-card-title>
             Novo Grupo de Usuário
           </q-card-title>
-          <q-card-separator />
           <q-card-main>
-            <q-input v-model="filter.grupousuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
-            <q-btn color="" @click="$refs.basicModal.close()">Cancelar</q-btn>
-            <q-btn color="primary" @click="$refs.basicModal.close()">Salvar</q-btn>
+            <form @submit.prevent="createGrupoUsuario()">
+              <q-field>
+                <q-input
+                  type="text"
+                  v-model="dataGrupousuario.grupousuario"
+                  float-label="Grupo"
+                />
+              </q-field>
+              <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
+            </form>
+            <br />
+            <q-card-actions vertival>
+              <q-btn color="" @click="$refs.createModal.close()">Cancelar</q-btn>
+              <q-btn @click.prevent="createGrupoUsuario()" color="primary">Salvar</q-btn>
+            </q-card-actions>
+          </q-card-main>
+        </q-card>
+      </q-modal>
+      <q-modal ref="updateModal" :content-css="{ minWidth: '50vw' }">
+        <q-card style="box-shadow:none;">
+          <q-card-title>
+            Editar Grupo
+          </q-card-title>
+          <q-card-main>
+            <form @submit.prevent="updateGrupoUsuario()">
+              <q-field>
+                <q-input
+                  type="text"
+                  v-model="grupousuario.grupousuario"
+                  float-label="Grupo"
+                />
+              </q-field>
+              <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
+            </form>
+            <br />
+            <q-card-actions vertival>
+              <q-btn color="" @click="$refs.updateModal.close()">Cancelar</q-btn>
+              <q-btn @click.prevent="updateGrupoUsuario()" color="primary">Salvar</q-btn>
+            </q-card-actions>
           </q-card-main>
         </q-card>
       </q-modal>
 
-      <q-list no-border inset-delimiter link>
+      <q-list no-border inset-delimiter link v-if="!grupousuario">
         <template v-for="row in data">
             <q-item :to=" '/usuario/' + row.codusuario ">
               <q-item-main>
@@ -52,6 +87,18 @@
               </q-item-main>
             </q-item>
         </template>
+      </q-list>
+      <q-list multiline no-border inset-delimiter link v-else>
+        <q-item v-for="row in grupousuario.Usuarios" :to=" '/usuario/' + row.codusuario " :key="row.codusuario">
+          <q-item-main>
+            <q-item-tile>
+              {{ row.usuario }}
+            </q-item-tile>
+            <q-item-tile sublabel>
+              {{ Object.values(row.grupos).toString() }}
+            </q-item-tile>
+          </q-item-main>
+        </q-item>
       </q-list>
 
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
@@ -66,11 +113,12 @@
                 <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Usuário</q-tooltip>
             </q-fab-action>
           </router-link>
-          <!-- <router-link :to="{ path: '/usuario/grupo-usuario/create'}"> -->
-            <q-fab-action color="primary" icon="supervisor_account" @click="$refs.basicModal.open()">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Grupo</q-tooltip>
-            </q-fab-action>
-          <!-- </router-link> -->
+          <q-fab-action color="primary" icon="supervisor_account" @click="$refs.createModal.open()">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Grupo</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="primary" icon="edit" @click="$refs.updateModal.open()" v-if="grupousuario">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
+          </q-fab-action>
         </q-fab>
       </q-fixed-position>
     </div>
@@ -81,15 +129,18 @@
 
 <script>
 import MgLayout from '../../layouts/MgLayout'
+import MgErrosValidacao from '../../utils/MgErrosValidacao'
+
 import {
   debounce,
-  // Dialog,
-  // Toast,
+  Toast,
   QList,
   QListHeader,
   QItem,
+  QItemTile,
   QItemSide,
   QItemMain,
+  QField,
   QInput,
   QIcon,
   QRadio,
@@ -102,18 +153,22 @@ import {
   QCard,
   QCardTitle,
   QCardMain,
-  QCardSeparator
+  QCardSeparator,
+  QCardActions
  } from 'quasar'
 
 export default {
   name: 'grupo-usuario',
   components: {
     MgLayout,
+    MgErrosValidacao,
     QList,
     QListHeader,
     QItem,
+    QItemTile,
     QItemSide,
     QItemMain,
+    QField,
     QInput,
     QIcon,
     QRadio,
@@ -126,37 +181,82 @@ export default {
     QCard,
     QCardTitle,
     QCardMain,
-    QCardSeparator
+    QCardSeparator,
+    QCardActions
   },
   data () {
     return {
-      data: [],
-      grupos: [],
+      data: [], // Lista de Usuários
+      grupos: [], // Lista de Grupos
+      grupousuario: false, // Grupo selecionado
       page: 1,
       filter: {},
       fim: true,
-      tab: 0,
-      carregando: false,
-      grupousuario: false
+      dataGrupousuario: {
+        grupousuario: null
+      },
+      erros: false
     }
   },
   watch: {
     filter: {
       handler: function (val, oldVal) {
         this.page = 1
-        this.loadData(false, null)
-        this.loadDataGrupo(false, null)
+        if (this.$route.name === 'grupo-usuario') {
+          this.loadDataGrupo(this.$route.params.id)
+        }
+        else {
+          this.loadData(false, null)
+        }
       },
       deep: true
+    },
+    '$route' (to, from) {
+      if (this.$route.name === 'grupo-usuario') {
+        this.loadDataGrupo(this.$route.params.id)
+      }
     }
   },
   methods: {
-    grupoUsuarioCreate: function () {
+    createGrupoUsuario: function () {
+      let vm = this
+      vm.$refs.createModal.open()
+      window.axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
+        Toast.create.positive('Novo grupo inserido')
+        vm.dataGrupousuario.grupousuario = null
+        vm.erros = false
+        vm.loadDataGrupos()
+        vm.$refs.createModal.close()
+      }).catch(function (error) {
+        vm.erros = error.response.data.erros
+      })
+    },
+
+    updateGrupoUsuario: function () {
+      let vm = this
+      window.axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
+        Toast.create.positive('Grupo atualizado')
+        vm.erros = false
+        vm.loadDataGrupos()
+        vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+        vm.$refs.updateModal.close()
+      }).catch(function (error) {
+        vm.erros = error.response.data.erros
+      })
     },
 
     refresher (index, done) {
       this.page++
       this.loadData(true, done)
+    },
+
+    loadDataGrupo: function (id) {
+      let vm = this
+      window.axios.get('grupo-usuario/' + id + '/details').then(function (request) {
+        vm.grupousuario = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
     },
 
     loadData: debounce(function (concat, done) {
@@ -180,30 +280,19 @@ export default {
         }
       })
     }, 500),
-    loadDataGrupo: debounce(function (concat, done) {
-      this.$store.commit('filter/grupousuario', this.filter)
-      var vm = this
-      var params = this.filter
-      params.page = this.page
-      this.loading = true
-      window.axios.get('grupo-usuario', {
-        params
-      }).then(response => {
-        if (concat) {
-          vm.grupos = vm.grupos.concat(response.data.data)
-        }
-        else {
-          vm.grupos = response.data.data
-        }
-        this.loading = false
-        if (done) {
-          done()
-        }
+
+    loadDataGrupos: function (id) {
+      let vm = this
+      window.axios.get('grupo-usuario').then(function (response) {
+        vm.grupos = response.data.data
+      }).catch(function (error) {
+        console.log(error.response)
       })
-    }, 500)
+    }
   },
   created () {
     this.filter = this.$store.getters['filter/grupousuario']
+    this.loadDataGrupos()
   }
 }
 </script>

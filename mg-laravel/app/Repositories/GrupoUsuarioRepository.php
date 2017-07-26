@@ -45,46 +45,19 @@ class GrupoUsuarioRepository extends MGRepositoryStatic {
 
         $usuarios = [];
         foreach ($model->GrupoUsuarioUsuarioS as $usuario) {
-            $fil[] = $usuario->Filial->filial;
+
+            foreach ($usuario->Usuario->GrupoUsuarioUsuarioS as $grupo) {
+                $grupos[$grupo->GrupoUsuario->codgrupousuario] = $grupo->GrupoUsuario->grupousuario;
+            }
+
             $usuarios[$usuario['codusuario']] = [
                 'codusuario' => $usuario->Usuario->codusuario,
                 'usuario' => $usuario->Usuario->usuario,
-                'filiais' => $fil
+                'grupos' => $grupos
             ];
-        }
-
-        $permissoes = [];
-        foreach ($model->GrupoUsuarioPermissaoS as $permissao) {
-            $permissoes[] = [
-                'codpermissao' => $permissao->Permissao->codpermissao,
-                'permissao' => $permissao->Permissao->permissao
-            ];
-        }
-
-        $routes = \Route::getRoutes();
-        foreach ($routes as $rota) {
-            $nome = $rota->getName();
-            if (!empty($nome)) {
-                $rotas[] = $nome;
-            }
-        }
-        $rotas = array_unique($rotas);
-
-        $permissoes_collapse = [];
-        foreach ($permissoes as $permissao) {
-            if (in_array($permissao['permissao'], $rotas)) {
-                $key = explode('.', $permissao['permissao']);
-                if(!isset($permissoes_collapse[$key[0]])){
-                    $permissoes_collapse[$key[0]] = array();
-                }
-                $permissoes_collapse[$key[0]][] = $permissao;
-            } else {
-                $permissoes_collapse['INATIVO'][] = $permissao;
-            }
         }
 
         $details['Usuarios'] = $usuarios;
-        $details['Permissoes'] = $permissoes_collapse;
         $details['usuario'] = [
             'usuariocriacao' => $model->UsuarioCriacao->usuario ?? false,
             'usuarioalteracao' => $model->UsuarioAlteracao->usuario ?? false

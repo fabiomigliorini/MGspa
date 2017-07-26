@@ -92,7 +92,8 @@ window.axios.interceptors.response.use((response) => {
       }
     }
   }
-  Quasar.Toast.create.negative({html: mensagem})
+  // Quasar.Toast.create.negative({html: mensagem})
+  console.log(mensagem)
   return Promise.reject(error)
 })
 
