@@ -58,10 +58,8 @@ class GrupoUsuarioRepository extends MGRepositoryStatic {
         }
 
         $details['Usuarios'] = $usuarios;
-        $details['usuario'] = [
-            'usuariocriacao' => $model->UsuarioCriacao->usuario ?? false,
-            'usuarioalteracao' => $model->UsuarioAlteracao->usuario ?? false
-        ];
+        $details['usuariocriacao'] = $model->UsuarioCriacao->usuario ?? false;
+        $details['usuarioalteracao'] = $model->UsuarioAlteracao->usuario ?? false;
 
         return $details;
     }

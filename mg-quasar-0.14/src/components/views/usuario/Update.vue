@@ -1,30 +1,27 @@
 <template>
   <mg-layout>
 
-    <button slot="menu" v-link=" '/grupo-usuario/' + dados.codgrupousuario ">
-      <i>arrow_back</i>
-    </button>
+    <q-btn flat icon="arrow_back" slot="menu" />
 
-    <button slot="rightMenu" @click.prevent="update()">
-      <i>done</i>
-    </button>
+    <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
 
     <template slot="title">
-      {{ dados.grupousuario }}
+      {{ data.usuario }}
     </template>
 
     <div slot="content">
 
-      <form @submit.prevent="update()">
-        <div class="item">
-          <div class="item-content row">
-            <div class="width-1of3">
-              <div class="floating-label">
-                <input required class="full-width" v-model="dados.grupousuario"  v-bind:class="{ 'has-error': erros.grupousuario }">
-                <label>Descrição</label>
-              </div>
-              <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
-            </div>
+      <form @submit.prevent="update()" style="padding:20px">
+        <div class="row">
+          <div class="col-xs-12 col-sm-6 col-md-4">
+            <q-field>
+              <q-input
+              type="text"
+              v-model="data.usuario"
+              float-label="Usuário"
+              />
+            </q-field>
+            <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
           </div>
         </div>
       </form>
@@ -35,19 +32,29 @@
 </template>
 
 <script>
-import { Dialog, Toast } from 'quasar'
+import {
+  Dialog,
+  Toast,
+  QBtn,
+  QField,
+  QInput
+} from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
-  name: 'grupo-usuario-update',
+  name: 'usuario-update',
   components: {
-    MgLayout, MgErrosValidacao
+    MgLayout,
+    MgErrosValidacao,
+    QBtn,
+    QField,
+    QInput
   },
   data () {
     return {
-      dados: {
-        grupousuario: ''
+      data: {
+        usuario: ''
       },
       erros: false
     }
@@ -55,8 +62,8 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      window.axios.get('grupo-usuario/' + id).then(function (request) {
-        vm.dados = request.data
+      window.axios.get('usuario/' + id).then(function (request) {
+        vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -74,9 +81,9 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.put('grupo-usuario/' + vm.dados.codgrupousuario, vm.dados).then(function (request) {
+              window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
                 Toast.create.positive('Registro inserido')
-                vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
+                vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {
                 vm.erros = error.response.data.erros
               })

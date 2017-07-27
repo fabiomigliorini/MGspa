@@ -1,44 +1,29 @@
 <template>
   <mg-layout>
 
-    <router-link :to="{ path: '/grupo-usuario/create' }" slot="menu">
-      <q-btn round icon="arrow_back"/>
-    </router-link>
+    <q-btn flat icon="arrow_back" slot="menu" />
 
-    <button slot="rightMenu" @click.prevent="create()">
-      <i>done</i>
-    </button>
+    <q-btn flat icon="done" slot="menuRight" @click.prevent="create()" />
 
     <template slot="title">
-      Novo Grupos de usuário
+      Novo usuário
     </template>
 
     <div slot="content">
-
-      <form @submit.prevent="create()">
-        <q-field
-           :count="10"
-           helper="Some helper"
-           :error="error"
-           error-label="Oops, we got an error."
-         >
-           <q-input v-model="text" />
-         </q-field>
-
-
-        <div class="item">
-          <div class="item-content row">
-            <div class="width-1of3">
-              <div class="floating-label">
-                <input required class="full-width" v-model="dados.grupousuario"  v-bind:class="{ 'has-error': erros.grupousuario }">
-                <label>Descrição</label>
-              </div>
-              <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
-            </div>
+      <form @submit.prevent="create()" style="padding:20px">
+        <div class="row">
+          <div class="col-xs-12 col-sm-6 col-md-4">
+            <q-field>
+              <q-input
+              type="text"
+              v-model="data.usuario"
+              float-label="Usuário"
+              />
+            </q-field>
+            <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
           </div>
         </div>
       </form>
-
     </div>
 
   </mg-layout>
@@ -49,24 +34,26 @@ import {
   Dialog,
   Toast,
   QField,
-  QInput
+  QInput,
+  QBtn
 } from 'quasar'
 
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
-  name: 'grupo-usuario-create',
+  name: 'usuario-create',
   components: {
     MgLayout,
     MgErrosValidacao,
     QField,
-    QInput
+    QInput,
+    QBtn
   },
   data () {
     return {
-      dados: {
-        grupousuario: ''
+      data: {
+        usuario: ''
       },
       erros: false
     }
@@ -85,9 +72,9 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.post('grupo-usuario', vm.dados).then(function (request) {
+              window.axios.post('usuario', vm.data).then(function (request) {
                 Toast.create.positive('Registro inserido')
-                vm.$router.push('/grupo-usuario/' + request.data.codgrupousuario)
+                // vm.$router.push('/usuario/' + request.data.codgrupousuario)
               }).catch(function (error) {
                 vm.erros = error.response.data.erros
               })

@@ -79,6 +79,14 @@
         </q-card>
       </q-modal>
 
+      <q-card v-if="grupousuario.inativo">
+        <q-card-main>
+          <span class="text-red">
+            Inativo desde {{ moment(grupousuario.inativo).format('L') }}
+          </span>
+        </q-card-main>
+      </q-card>
+
       <q-list no-border inset-delimiter link v-if="!grupousuario">
         <template v-for="row in data">
             <q-item :to=" '/usuario/' + row.codusuario ">
@@ -96,6 +104,14 @@
             </q-item-tile>
             <q-item-tile sublabel>
               {{ Object.values(row.grupos).toString() }}
+            </q-item-tile>
+          </q-item-main>
+        </q-item>
+
+        <q-item v-if="grupousuario.Usuarios.length === 0">
+          <q-item-main>
+            <q-item-tile>
+              Nenhum usuário
             </q-item-tile>
           </q-item-main>
         </q-item>
@@ -117,12 +133,29 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Grupo</q-tooltip>
           </q-fab-action>
           <q-fab-action color="primary" icon="edit" @click="$refs.updateModal.open()" v-if="grupousuario">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar Grupo</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="orange" icon="thumb_up" @click="activate()" v-if="grupousuario.inativo">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="orange" icon="thumb_down" @click="inactivate()" v-if="!grupousuario.inativo">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="red" icon="delete" @click.native="destroy()" v-if="grupousuario">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
       </q-fixed-position>
     </div>
 
+    <div slot="footer" v-if="grupousuario">
+      <mg-autor
+        :criacao="grupousuario.criacao"
+        :usuariocriacao="grupousuario.usuariocriacao"
+        :alteracao="grupousuario.alteracao"
+        :usuarioalteracao="grupousuario.usuarioalteracao"
+        ></mg-autor>
+    </div>
 
   </mg-layout>
 </template>
@@ -130,10 +163,12 @@
 <script>
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
+import MgAutor from '../../utils/MgAutor'
 
 import {
   debounce,
   Toast,
+  Dialog,
   QList,
   QListHeader,
   QItem,
@@ -162,6 +197,7 @@ export default {
   components: {
     MgLayout,
     MgErrosValidacao,
+    MgAutor,
     QList,
     QListHeader,
     QItem,
@@ -220,28 +256,125 @@ export default {
   methods: {
     createGrupoUsuario: function () {
       let vm = this
-      vm.$refs.createModal.open()
-      window.axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
-        Toast.create.positive('Novo grupo inserido')
-        vm.dataGrupousuario.grupousuario = null
-        vm.erros = false
-        vm.loadDataGrupos()
-        vm.$refs.createModal.close()
-      }).catch(function (error) {
-        vm.erros = error.response.data.erros
+      Dialog.create({
+        title: 'Salvar',
+        message: 'Tem certeza que deseja salvar?',
+        buttons: [
+          {
+            label: 'Cancelar',
+            handler () {}
+          },
+          {
+            label: 'Salvar',
+            handler () {
+              window.axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
+                Toast.create.positive('Novo grupo inserido')
+                vm.dataGrupousuario.grupousuario = null
+                vm.erros = false
+                vm.loadDataGrupos()
+                vm.$refs.createModal.close()
+              }).catch(function (error) {
+                vm.erros = error.response.data.erros
+              })
+            }
+          }
+        ]
       })
     },
 
     updateGrupoUsuario: function () {
       let vm = this
-      window.axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
-        Toast.create.positive('Grupo atualizado')
-        vm.erros = false
-        vm.loadDataGrupos()
-        vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-        vm.$refs.updateModal.close()
-      }).catch(function (error) {
-        vm.erros = error.response.data.erros
+      Dialog.create({
+        title: 'Salvar',
+        message: 'Tem certeza que deseja salvar?',
+        buttons: [
+          {
+            label: 'Cancelar',
+            handler () {}
+          },
+          {
+            label: 'Salvar',
+            handler () {
+              window.axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
+                Toast.create.positive('Grupo atualizado')
+                vm.erros = false
+                vm.loadDataGrupos()
+                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+                vm.$refs.updateModal.close()
+              }).catch(function (error) {
+                vm.erros = error.response.data.erros
+              })
+            }
+          }
+        ]
+      })
+    },
+
+    activate: function () {
+      let vm = this
+      Dialog.create({
+        title: 'Ativar',
+        message: 'Tem certeza de deseja ativar?',
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Ativar',
+            handler () {
+              window.axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+                Toast.create.positive('Registro ativado')
+              }).catch(function (error) {
+                console.log(error.response)
+              })
+            }
+          }
+        ]
+      })
+    },
+
+    inactivate: function () {
+      let vm = this
+      Dialog.create({
+        title: 'Inativar',
+        message: 'Tem certeza que deseja inativar?',
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Inativar',
+            handler () {
+              window.axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+                Toast.create.positive('Registro inativado')
+              }).catch(function (error) {
+                console.log(error.response)
+              })
+            }
+          }
+        ]
+      })
+    },
+
+    destroy: function () {
+      let vm = this
+      Dialog.create({
+        title: 'Excluir',
+        message: 'Tem certeza que deseja excluir?',
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Excluir',
+            handler () {
+              window.axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
+                vm.$router.push('/usuario')
+                vm.loadDataGrupos()
+                vm.grupousuario = false
+                Toast.create.positive('Registro excluído')
+              }).catch(function (error) {
+                console.log(error)
+              })
+            }
+          }
+        ]
       })
     },
 
@@ -281,7 +414,7 @@ export default {
       })
     }, 500),
 
-    loadDataGrupos: function (id) {
+    loadDataGrupos: function () {
       let vm = this
       window.axios.get('grupo-usuario').then(function (response) {
         vm.grupos = response.data.data
