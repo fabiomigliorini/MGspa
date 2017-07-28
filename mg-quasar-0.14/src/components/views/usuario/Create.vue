@@ -10,20 +10,22 @@
     </template>
 
     <div slot="content">
-      <form @submit.prevent="create()" style="padding:20px">
-        <div class="row">
-          <div class="col-xs-12 col-sm-6 col-md-4">
-            <q-field>
-              <q-input
-              type="text"
-              v-model="data.usuario"
-              float-label="Usuário"
-              />
-            </q-field>
-            <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
+      <div class="layout-padding">
+        <form @submit.prevent="create()">
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-field>
+                <q-input
+                type="text"
+                v-model="data.usuario"
+                float-label="Usuário"
+                />
+              </q-field>
+              <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
 
   </mg-layout>

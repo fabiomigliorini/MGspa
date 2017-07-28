@@ -48,4 +48,5 @@ class UsuarioRepository extends MGRepositoryStatic
 
         return $details;
     }
+    
 }

@@ -3950,6 +3950,7 @@
 			<column name="inativo" type="date" length="13" decimal="0" jt="91" />
 			<column name="impressoramatricial" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="remember_token" type="varchar" length="100" jt="12" />
+			<column name="codimagem" type="bigint" jt="-5" />
 			<index name="tblusuario_pkey" unique="PRIMARY_KEY" >
 				<column name="codusuario" />
 			</index>
@@ -3988,6 +3989,9 @@
 			</fk>
 			<fk name="tblusuario_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="tblusuario_codimagem_fkey" to_schema="mgsis" to_table="tblimagem" >
+				<fk_column name="codimagem" pk="codimagem" />
 			</fk>
 		</table>
 		<table name="tblvalecompra" >
@@ -6263,15 +6267,16 @@ $function$
 ;]]></string>
 		</function>
 	</schema>
-	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.4.1208.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
-	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.4.1213.jar" driver_desc="Standard" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.1.jre6.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Prod" database="PostgreSQL" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblusuario" color="b7c8e3" x="48" y="64" />
 		<entity schema="mgsis" name="tblfilial" color="b7c8e3" x="784" y="64" />
 		<entity schema="mgsis" name="tblpermissao" color="b7c8e3" x="64" y="592" />
 		<entity schema="mgsis" name="tblgrupousuariousuario" color="b7c8e3" x="448" y="48" />
 		<entity schema="mgsis" name="tblgrupousuario" color="b7c8e3" x="464" y="368" />
-		<entity schema="mgsis" name="tblgrupousuariopermissao" color="b7c8e3" x="400" y="624" />
+		<entity schema="mgsis" name="tblgrupousuariopermissao" color="b7c8e3" x="480" y="624" />
+		<entity schema="mgsis" name="tblusuario" color="b7c8e3" x="48" y="64" />
+		<entity schema="mgsis" name="tblimagem" color="c1d8ee" x="240" y="448" />
 		<browser id="Browse_260dba35" name="tblgrupousuario" confirm_updates="y" confirmed="y" >
 			<browse_table schema="mgsis" entity="tblgrupousuario" x="10" y="10" width="453" height="349" />
 		</browser>

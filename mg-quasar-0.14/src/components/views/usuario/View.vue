@@ -1,19 +1,24 @@
 <template>
   <mg-layout>
 
-    <q-btn flat icon="arrow_back" slot="menu" />
+    <q-side-link to="/usuario" slot="menu">
+      <q-btn flat icon="arrow_back"  />
+    </q-side-link>
 
     <template slot="title">
       {{ data.usuario }}
     </template>
 
     <div slot="content">
-      <div class="card-content">
-        <div class="card" v-if="data.inativo">
-          <div class="card-content text-red">
-            Inativo desde {{ moment(data.inativo).format('L') }}
-          </div>
-        </div>
+      <div class="layout-padding">
+
+        <q-card v-if="data.inativo">
+          <q-card-main>
+            <span class="text-red">
+              Inativo desde {{ moment(data.inativo).format('L') }}
+            </span>
+          </q-card-main>
+        </q-card>
 
         <div class="row gutter">
           <div class="width-1of3">
@@ -77,7 +82,8 @@ import {
   QBtn,
   QFab,
   QFabAction,
-  QTooltip
+  QTooltip,
+  QSideLink
  } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
@@ -91,7 +97,8 @@ export default {
     QBtn,
     QFab,
     QFabAction,
-    QTooltip
+    QTooltip,
+    QSideLink
   },
   data () {
     return {

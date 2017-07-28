@@ -14,8 +14,8 @@ export default {
         max: 3
       }
     },
-    grupousuario: {
-      grupousuario: null,
+    usuario: {
+      usuario: null,
       inativo: 1
     }
   },
@@ -25,8 +25,8 @@ export default {
     marca: state => {
       return state.marca
     },
-    grupousuario: state => {
-      return state.grupousuario
+    usuario: state => {
+      return state.usuario
     }
   },
 
@@ -36,8 +36,8 @@ export default {
     marca (state, payload) {
       state.marca = payload
     },
-    grupousuario (state, payload) {
-      state.grupousuario = payload
+    usuario (state, payload) {
+      state.usuario = payload
     }
   }
 

@@ -18,5 +18,14 @@ export default {}
   color: grey;
   opacity: 0.1;
 }
+@media (max-width: 1366px) and (min-width: 992px) {
+  .layout-padding {
+    padding: 1.5rem 2rem;
+    margin: auto;
+  }
+  .layout-padding.horizontal {
+    padding: 0 3rem;
+  }
+}
 
 </style>

@@ -4,7 +4,7 @@
     <template slot="title">
       <span v-if="grupousuario">{{ grupousuario.grupousuario }}</span>
       <span v-else>
-        Grupos de usuários
+        Usuários
       </span>
     </template>
 
@@ -12,7 +12,7 @@
       <form>
         <q-item>
           <q-item-main>
-            <q-input v-model="filter.grupousuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
+            <q-input v-model="filter.usuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
           </q-item-main>
         </q-item>
         <q-list no-border link>
@@ -23,7 +23,6 @@
               </q-item-main>
             </q-item>
           </template>
-
         </q-list>
       </form>
 
@@ -87,34 +86,16 @@
         </q-card-main>
       </q-card>
 
-      <q-list no-border inset-delimiter link v-if="!grupousuario">
+      <q-list multiline no-border inset-delimiter link>
         <template v-for="row in data">
             <q-item :to=" '/usuario/' + row.codusuario ">
               <q-item-main>
-                {{ row.usuario }}
+                <q-item-tile{{ row.usuario }}
               </q-item-main>
+              <q-item-tile sublabel>
+              </q-item-tile>
             </q-item>
         </template>
-      </q-list>
-      <q-list multiline no-border inset-delimiter link v-else>
-        <q-item v-for="row in grupousuario.Usuarios" :to=" '/usuario/' + row.codusuario " :key="row.codusuario">
-          <q-item-main>
-            <q-item-tile>
-              {{ row.usuario }}
-            </q-item-tile>
-            <q-item-tile sublabel>
-              {{ Object.values(row.grupos).toString() }}
-            </q-item-tile>
-          </q-item-main>
-        </q-item>
-
-        <q-item v-if="grupousuario.Usuarios.length === 0">
-          <q-item-main>
-            <q-item-tile>
-              Nenhum usuário
-            </q-item-tile>
-          </q-item-main>
-        </q-item>
       </q-list>
 
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
@@ -238,12 +219,13 @@ export default {
     filter: {
       handler: function (val, oldVal) {
         this.page = 1
-        if (this.$route.name === 'grupo-usuario') {
-          this.loadDataGrupo(this.$route.params.id)
-        }
-        else {
-          this.loadData(false, null)
-        }
+        this.loadData(false, null)
+        // if (this.$route.name === 'grupo-usuario') {
+        //   this.loadDataGrupo(this.$route.params.id)
+        // }
+        // else {
+        //   this.loadData(false, null)
+        // }
       },
       deep: true
     },
@@ -393,7 +375,7 @@ export default {
     },
 
     loadData: debounce(function (concat, done) {
-      // this.$store.commit('filter/usuario', this.filter)
+      this.$store.commit('filter/usuario', this.filter)
       var vm = this
       var params = this.filter
       params.page = this.page
@@ -424,7 +406,7 @@ export default {
     }
   },
   created () {
-    this.filter = this.$store.getters['filter/grupousuario']
+    this.filter = this.$store.getters['filter/usuario']
     this.loadDataGrupos()
   }
 }
