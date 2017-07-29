@@ -16,16 +16,30 @@
             <q-input v-model="filter.usuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
           </q-item-main>
         </q-item>
+        <q-list-header>Grupos</q-list-header>
+        <q-item tag="label">
+          <q-item-side icon="done_all">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Todos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.grupo" :val="null" />
+          </q-item-side>
+        </q-item>
         <template v-for="grupo in grupos">
           <q-item tag="label">
+            <q-item-side icon="people">
+            </q-item-side>
             <q-item-main>
               <q-item-tile title>{{ grupo.grupousuario }}</q-item-tile>
             </q-item-main>
             <q-item-side right>
-              <q-toggle v-model="filter.grupos" :val="grupo.codgrupousuario" />
+              <q-radio v-model="filter.grupo" :val="grupo.codgrupousuario" />
             </q-item-side>
           </q-item>
         </template>
+        <q-list-header>Ativos</q-list-header>
         <!-- Filtra Ativos -->
         <q-item tag="label">
           <q-item-side icon="thumb_up">
@@ -34,7 +48,7 @@
             <q-item-tile title>Ativos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.inativo" val="1" />
+            <q-radio v-model="filter.inativo" :val="1" />
           </q-item-side>
         </q-item>
 
@@ -46,7 +60,7 @@
             <q-item-tile title>Inativos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.inativo" val="2" />
+            <q-radio v-model="filter.inativo" :val="2" />
           </q-item-side>
         </q-item>
 
@@ -58,7 +72,7 @@
             <q-item-tile title>Ativos e Inativos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.inativo" val="9" />
+            <q-radio v-model="filter.inativo" :val="9" />
           </q-item-side>
         </q-item>
 
@@ -115,7 +129,7 @@
           </q-card-main>
         </q-card>
       </q-modal>
-      {{ filter }}
+
       <q-card v-if="grupousuario.inativo">
         <q-card-main>
           <span class="text-red">
@@ -137,7 +151,9 @@
             <q-item :to="'/usuario/' + item.codusuario">
 
               <!-- Imagem -->
-              <q-item-side :image="item.imagem.url" v-if="item.imagem" />
+              <!-- <q-item-side :image="item.imagem.url" v-if="item.imagem" /> -->
+              <q-item-side :avatar="item.imagem.url" v-if="item.imagem" />
+              <q-item-side v-else />
               <q-item-main>
                 <q-item-tile>
                   {{ item.usuario }}
@@ -150,12 +166,35 @@
                 </q-item-tile>
               </q-item-main>
             </q-item>
-            <q-item-separator />
+            <q-item-separator inset />
           </template>
         </q-infinite-scroll>
       </q-list>
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
+
+      <q-fixed-position corner="bottom-right" :offset="[90, 18]" v-if="grupousuario">
+        <q-fab
+          color="primary"
+          active-icon="edit"
+          icon="edit"
+          direction="up"
+          class="animate-pop"
+        >
+          <q-fab-action color="primary" icon="edit" @click="$refs.updateModal.open()">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar Grupo</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="orange" icon="thumb_up" @click="activate()" v-if="grupousuario.inativo">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="orange" icon="thumb_down" @click="inactivate()" v-if="!grupousuario.inativo">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="red" icon="delete" @click.native="destroy()">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
+          </q-fab-action>
+        </q-fab>
+      </q-fixed-position>
 
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
         <q-fab
@@ -171,18 +210,6 @@
           </router-link>
           <q-fab-action color="primary" icon="supervisor_account" @click="$refs.createModal.open()">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Grupo</q-tooltip>
-          </q-fab-action>
-          <q-fab-action color="primary" icon="edit" @click="$refs.updateModal.open()" v-if="grupousuario">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar Grupo</q-tooltip>
-          </q-fab-action>
-          <q-fab-action color="orange" icon="thumb_up" @click="activate()" v-if="grupousuario.inativo">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
-          </q-fab-action>
-          <q-fab-action color="orange" icon="thumb_down" @click="inactivate()" v-if="!grupousuario.inativo">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
-          </q-fab-action>
-          <q-fab-action color="red" icon="delete" @click.native="destroy()" v-if="grupousuario">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
       </q-fixed-position>
@@ -289,19 +316,14 @@ export default {
       handler: function (val, oldVal) {
         this.page = 1
         this.loadData(false, null)
-        // if (this.$route.name === 'grupo-usuario') {
-        //   this.loadDataGrupo(this.$route.params.id)
-        // }
-        // else {
-        //   this.loadData(false, null)
-        // }
+        if (val.grupo !== null) {
+          this.loadDataGrupo(val.grupo)
+        }
+        else {
+          this.grupousuario = false
+        }
       },
       deep: true
-    },
-    '$route' (to, from) {
-      if (this.$route.name === 'grupo-usuario') {
-        this.loadDataGrupo(this.$route.params.id)
-      }
     }
   },
   methods: {
@@ -320,6 +342,8 @@ export default {
       var vm = this
       var params = this.filter
       params.page = this.page
+      params.sort = 'usuario'
+      params.fields = 'usuario,codusuario,inativo,codimagem'
       this.loading = true
 
       // faz chamada api
@@ -494,7 +518,12 @@ export default {
 
     loadDataGrupos: function () {
       let vm = this
-      window.axios.get('grupo-usuario').then(function (response) {
+      let params = {
+        sort: 'grupousuario'
+      }
+      window.axios.get('grupo-usuario', {
+        params
+      }).then(function (response) {
         vm.grupos = response.data.data
       }).catch(function (error) {
         console.log(error.response)

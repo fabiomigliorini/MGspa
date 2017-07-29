@@ -61,10 +61,12 @@ class UsuarioRepository extends MGRepositoryStatic
             $qry->palavras('usuario', $filter['usuario']);
         }
 
-        if (!empty($filter['grupos'])) {
-            $qry->join('tblgrupousuariousuario', 'tblgrupousuariousuario.codusuario', '=', 'tblusuario.codusuario');
-            $qry->whereIn('tblgrupousuariousuario.codgrupousuario', array_values($filter['grupos']));
-            //$qry->groupBy('tblusuario.codusuario');
+        if (!empty($filter['grupo'])) {
+            $qry->whereIn("codusuario", function ($qry2) use ($filter) {
+                $qry2->select('codusuario')
+                    ->from('tblgrupousuariousuario')
+                    ->where('codgrupousuario', $filter['grupo']);
+            });
         }
 
         $qry = static::querySort($qry, $sort);
