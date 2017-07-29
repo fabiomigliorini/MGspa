@@ -101,7 +101,7 @@
             <q-item-tile title>Ativos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.inativo" val="1" />
+            <q-radio v-model="filter.inativo" :val='1' />
           </q-item-side>
         </q-item>
 
@@ -113,7 +113,7 @@
             <q-item-tile title>Inativos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.inativo" val="2" />
+            <q-radio v-model="filter.inativo" :val="2" />
           </q-item-side>
         </q-item>
 
@@ -125,7 +125,7 @@
             <q-item-tile title>Ativos e Inativos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.inativo" val="9" />
+            <q-radio v-model="filter.inativo" :val="9" />
           </q-item-side>
         </q-item>
 
@@ -191,17 +191,14 @@
               </q-item-main>
 
               <!-- Direita (Estrelas) -->
-              <q-item-side right>
-                <q-item-tile>
+              <q-item-side class="col-xs-1" right>
+                <q-item-tile v-if="!item.abcignorar">
                   <q-rating readonly v-model="item.abccategoria" :max="3" size="1.7rem" />
                 </q-item-tile>
                 <q-item-tile sublabel >
                   {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%
                   <template v-if="item.abcposicao">
                     ({{ numeral(item.abcposicao).format('0,0') }}&deg;)
-                  </template>
-                  <template v-else>
-                    (&#8212;)
                   </template>
                 </q-item-tile>
               </q-item-side>

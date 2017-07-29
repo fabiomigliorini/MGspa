@@ -35,4 +35,22 @@ class UsuarioController extends ControllerCrud
 
         return response()->json($res, 206);
     }
+
+    public function autor(Request $request, $id) {
+        $usuario = UsuarioRepository::findOrFail($id);
+        $res = [
+            'codusuario' => $usuario->codusuario,
+            'usuario' => $usuario->usuario,
+            'pessoa' => null,
+            'imagem' => null,
+        ];
+        if (!empty($usuario->codpessoa)) {
+            $res['pessoa'] = $usuario->Pessoa->pessoa;
+        }
+        if (!empty($usuario->codimagem)) {
+            $res['imagem'] = $usuario->Imagem->url;
+        }
+        return response()->json($res, 200);
+    }
+
 }
