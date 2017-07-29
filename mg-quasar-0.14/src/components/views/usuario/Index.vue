@@ -9,21 +9,59 @@
     </template>
 
     <div slot="drawer">
+
       <form>
         <q-item>
           <q-item-main>
             <q-input v-model="filter.usuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
           </q-item-main>
         </q-item>
-        <q-list no-border link>
-          <template v-for="row in grupos">
-            <q-item :to=" '/usuario/grupo-usuario/' + row.codgrupousuario ">
-              <q-item-main>
-                {{ row.grupousuario }}
-              </q-item-main>
-            </q-item>
-          </template>
-        </q-list>
+        <template v-for="grupo in grupos">
+          <q-item tag="label">
+            <q-item-main>
+              <q-item-tile title>{{ grupo.grupousuario }}</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-toggle v-model="filter.grupos" :val="grupo.codgrupousuario" />
+            </q-item-side>
+          </q-item>
+        </template>
+        <!-- Filtra Ativos -->
+        <q-item tag="label">
+          <q-item-side icon="thumb_up">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Ativos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.inativo" val="1" />
+          </q-item-side>
+        </q-item>
+
+        <!-- Filtra Inativos -->
+        <q-item tag="label">
+          <q-item-side icon="thumb_down">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Inativos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.inativo" val="2" />
+          </q-item-side>
+        </q-item>
+
+        <!-- Filtra Ativos e Inativos -->
+        <q-item tag="label">
+          <q-item-side icon="thumbs_up_down">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Ativos e Inativos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.inativo" val="9" />
+          </q-item-side>
+        </q-item>
+
       </form>
 
     </div>
@@ -77,7 +115,7 @@
           </q-card-main>
         </q-card>
       </q-modal>
-
+      {{ filter }}
       <q-card v-if="grupousuario.inativo">
         <q-card-main>
           <span class="text-red">
@@ -86,17 +124,38 @@
         </q-card-main>
       </q-card>
 
-      <q-list multiline no-border inset-delimiter link>
-        <template v-for="row in data">
-            <q-item :to=" '/usuario/' + row.codusuario ">
+      <!-- Se tiver registros -->
+      <q-list v-if="data.length > 0">
+
+        <!-- Scroll infinito -->
+        <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
+
+          <!-- Percorre registros  -->
+          <template v-for="item in data">
+
+            <!-- Link para detalhes -->
+            <q-item :to="'/usuario/' + item.codusuario">
+
+              <!-- Imagem -->
+              <q-item-side :image="item.imagem.url" v-if="item.imagem" />
               <q-item-main>
-                <q-item-tile{{ row.usuario }}
+                <q-item-tile>
+                  {{ item.usuario }}
+                  <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
+                </q-item-tile>
+                <q-item-tile sublabel>
+                  <span v-for="grupo in item.grupos">
+                    {{ grupo.grupousuario }}: {{ grupo.filial }},
+                  </span>
+                </q-item-tile>
               </q-item-main>
-              <q-item-tile sublabel>
-              </q-item-tile>
             </q-item>
-        </template>
+            <q-item-separator />
+          </template>
+        </q-infinite-scroll>
       </q-list>
+      <!-- Se não tiver registros -->
+      <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
         <q-fab
@@ -145,6 +204,7 @@
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutor from '../../utils/MgAutor'
+import MgNoData from '../../utils/MgNoData'
 
 import {
   debounce,
@@ -156,6 +216,8 @@ import {
   QItemTile,
   QItemSide,
   QItemMain,
+  QItemSeparator,
+  QInfiniteScroll,
   QField,
   QInput,
   QIcon,
@@ -165,12 +227,14 @@ import {
   QFab,
   QFabAction,
   QTooltip,
+  QToggle,
   QModal,
   QCard,
   QCardTitle,
   QCardMain,
   QCardSeparator,
-  QCardActions
+  QCardActions,
+  QChip
  } from 'quasar'
 
 export default {
@@ -179,12 +243,15 @@ export default {
     MgLayout,
     MgErrosValidacao,
     MgAutor,
+    MgNoData,
     QList,
     QListHeader,
     QItem,
     QItemTile,
     QItemSide,
     QItemMain,
+    QItemSeparator,
+    QInfiniteScroll,
     QField,
     QInput,
     QIcon,
@@ -194,12 +261,14 @@ export default {
     QFab,
     QFabAction,
     QTooltip,
+    QToggle,
     QModal,
     QCard,
     QCardTitle,
     QCardMain,
     QCardSeparator,
-    QCardActions
+    QCardActions,
+    QChip
   },
   data () {
     return {
@@ -208,7 +277,7 @@ export default {
       grupousuario: false, // Grupo selecionado
       page: 1,
       filter: {},
-      fim: true,
+      loading: true,
       dataGrupousuario: {
         grupousuario: null
       },
@@ -236,6 +305,55 @@ export default {
     }
   },
   methods: {
+    // scroll infinito - carregar mais registros
+    loadMore (index, done) {
+      this.page++
+      this.loadData(true, done)
+    },
+
+    // carrega registros da api
+    loadData: debounce(function (concat, done) {
+      // salva no Vuex filtro da marca
+      this.$store.commit('filter/usuario', this.filter)
+
+      // inicializa variaveis
+      var vm = this
+      var params = this.filter
+      params.page = this.page
+      this.loading = true
+
+      // faz chamada api
+      window.axios.get('usuario', {
+        params
+      }).then(response => {
+        // Se for para concatenar, senao inicializa
+        if (concat) {
+          vm.data = vm.data.concat(response.data.data)
+        }
+        else {
+          vm.data = response.data.data
+        }
+
+        // Desativa Scroll Infinito se chegou no fim
+        if (vm.$refs.infiniteScroll) {
+          if (response.data.data.length === 0) {
+            vm.$refs.infiniteScroll.stop()
+          }
+          else {
+            vm.$refs.infiniteScroll.resume()
+          }
+        }
+
+        // desmarca flag de carregando
+        this.loading = false
+
+        // Executa done do scroll infinito
+        if (done) {
+          done()
+        }
+      })
+    }, 500),
+
     createGrupoUsuario: function () {
       let vm = this
       Dialog.create({
@@ -374,28 +492,6 @@ export default {
       })
     },
 
-    loadData: debounce(function (concat, done) {
-      this.$store.commit('filter/usuario', this.filter)
-      var vm = this
-      var params = this.filter
-      params.page = this.page
-      this.loading = true
-      window.axios.get('usuario', {
-        params
-      }).then(response => {
-        if (concat) {
-          vm.data = vm.data.concat(response.data.data)
-        }
-        else {
-          vm.data = response.data.data
-        }
-        this.loading = false
-        if (done) {
-          done()
-        }
-      })
-    }, 500),
-
     loadDataGrupos: function () {
       let vm = this
       window.axios.get('grupo-usuario').then(function (response) {
@@ -414,4 +510,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.q-item-sublabel > span {
+  font-weight: normal;
+}
 </style>

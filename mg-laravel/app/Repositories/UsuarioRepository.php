@@ -48,5 +48,27 @@ class UsuarioRepository extends MGRepositoryStatic
 
         return $details;
     }
-    
+
+    public static function query(array $filter = null, array $sort = null, array $fields = null)
+    {
+        $qry = app(static::$modelClass)::query();
+
+        if (!empty($filter['inativo'])) {
+            $qry->AtivoInativo($filter['inativo']);
+        }
+
+        if (!empty($filter['usuario'])) {
+            $qry->palavras('usuario', $filter['usuario']);
+        }
+
+        if (!empty($filter['grupos'])) {
+            $qry->join('tblgrupousuariousuario', 'tblgrupousuariousuario.codusuario', '=', 'tblusuario.codusuario');
+            $qry->whereIn('tblgrupousuariousuario.codgrupousuario', array_values($filter['grupos']));
+            //$qry->groupBy('tblusuario.codusuario');
+        }
+
+        $qry = static::querySort($qry, $sort);
+        $qry = static::queryFields($qry, $fields);
+        return $qry;
+    }
 }

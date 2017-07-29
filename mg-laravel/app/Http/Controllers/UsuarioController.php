@@ -16,18 +16,20 @@ class UsuarioController extends ControllerCrud
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
         $qry = app($this->repositoryName)::query($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
+        //dd($filter);
 
         foreach ($res as $i => $usuario) {
             if (!empty($usuario->codimagem)) {
                 $res[$i]->imagem->url = $usuario->Imagem->url;
             }
-            
+
             $grupos = [];
             foreach ($usuario->GrupoUsuarioUsuarioS as $grupo) {
                 $grupos[] = [
                     'grupousuario' => $grupo->GrupoUsuario->grupousuario,
                     'filial' => $grupo->Filial->filial
                 ];
+
             }
 
             $res[$i]->grupos = $grupos;

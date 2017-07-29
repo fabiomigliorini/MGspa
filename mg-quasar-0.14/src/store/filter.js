@@ -16,7 +16,8 @@ export default {
     },
     usuario: {
       usuario: null,
-      inativo: 1
+      inativo: 1,
+      grupos: []
     }
   },
 
