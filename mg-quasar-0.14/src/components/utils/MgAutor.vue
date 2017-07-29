@@ -6,15 +6,22 @@
       <span v-else-if="usuariocriacao">
         {{ usuariocriacao }}
       </span>
-      <small>
-      {{ moment(data.criacao).fromNow() }}
+      <small v-if="data.criacao">
+        {{ moment(data.criacao).fromNow() }}
       </small>
-      <q-popover>
-        Criado por
-        <router-link :to="{ path: '/usuario/' + data.codusuariocriacao }">
-          {{ pessoacriacao }}
-        </router-link>,
-        {{ moment(data.criacao).format('LLLL') }}
+      <q-popover style="width: 220px;">
+        <q-card-media v-if="imagemusuariocriacao">
+          <img :src="imagemusuariocriacao">
+        </q-card-media>
+        <q-card-title v-if="usuariocriacao">
+          <router-link :to="{ path: '/usuario/' + data.codusuariocriacao }">
+            {{ usuariocriacao }}
+          </router-link>
+        </q-card-title>
+        <q-card-main>
+          <span class="text-faded" v-if="pessoacriacao">{{ pessoacriacao }}<br /></span>
+          <small class="text-faded" v-if="data.criacao">{{ moment(data.criacao).format('LLLL') }}</small>
+        </q-card-main>
       </q-popover>
     </span>
 
@@ -24,72 +31,30 @@
       <span v-else-if="usuarioalteracao">
         {{ usuarioalteracao }}
       </span>
-      <small>
-      {{ moment(data.alteracao).fromNow() }}
+      <small v-if="data.alteracao">
+        {{ moment(data.alteracao).fromNow() }}
       </small>
-      <q-popover>
-        <div class="group" style="width: 220px; padding:10px; text-align: center;">
-          Alterado por
+      <q-popover style="width: 220px;">
+        <q-card-media v-if="imagemusuarioalteracao">
+          <img :src="imagemusuarioalteracao">
+        </q-card-media>
+        <q-card-title v-if="usuarioalteracao">
           <router-link :to="{ path: '/usuario/' + data.codusuarioalteracao }">
-            {{ pessoaalteracao }}
-          </router-link>,
-          {{ moment(data.alteracao).format('LLLL') }}
-        </div>
+            {{ usuarioalteracao }}
+          </router-link>
+        </q-card-title>
+        <q-card-main>
+          <span class="text-faded" v-if="pessoaalteracao">{{ pessoaalteracao }}<br /></span>
+          <small class="text-faded" v-if="data.alteracao">{{ moment(data.alteracao).format('LLLL') }}</small>
+        </q-card-main>
       </q-popover>
     </span>
-
-
-    <!--
-    <div class="row items-baseline">
-      <div class="col">
-        teste
-      </div>
-      <div class="col">
-
-        <a>
-          Hover
-          <q-tooltip anchor="top middle" self="bottom middle" :offset="[10, 10]">
-            <strong>Tooltip</strong> on <em>top</em> (<q-icon name="keyboard_arrow_up" />)
-          </q-tooltip>
-        </a>
-        <span v-if="data.criacao || data.codusuariocriacao">
-          <span v-if="data.criacao">
-            <img :src="imagemusuariocriacao" v-if="imagemusuariocriacao" class="q-item-avatar"/>
-            <abbr :title="moment(data.alteracao).format('LLLL')">{{ moment(data.criacao).fromNow() }}</abbr>
-            <q-tooltip anchor="top middle" self="bottom middle" :offset="[10, 10]">
-              <strong>Tooltip</strong> on <em>top</em> (<q-icon name="keyboard_arrow_up" />)
-            </q-tooltip>
-          </span>
-          <span v-if="data.codusuariocriacao">
-            por
-            <router-link :to="{ path: '/usuario/' + data.codusuariocriacao }">
-              <abbr :title="pessoacriacao">{{ usuariocriacao }}</abbr>
-              <q-tooltip anchor="top middle" self="bottom middle" :offset="[10, 10]">
-                <strong>Tooltip</strong> on <em>top</em> (<q-icon name="keyboard_arrow_up" />)
-              </q-tooltip>
-            </router-link>
-          </span>
-        </span>
-        <BR class="xs" />
-        <span v-if="data.alteracao && (data.alteracao !== data.criacao) || data.codusuarioalteracao">
-          <q-icon name="edit" />
-          <span v-if="data.alteracao && (data.alteracao !== data.criacao)"> <abbr :title="moment(data.alteracao).format('LLLL')">{{ moment(data.alteracao).fromNow() }}</abbr> </span>
-          <span v-if="data.codusuarioalteracao">
-            por
-            <router-link :to="{ path: '/usuario/' + data.codusuarioalteracao }">
-              <abbr :title="pessoaalteracao">{{ usuarioalteracao }}</abbr>
-            </router-link>
-          </span>
-        </span>
-      </div>
-    </div>
-    -->
   </span>
 </template>
 
 <script>
 
-  import { QIcon, QBtn, QPopover, QList, QItem, QItemSide, QItemMain } from 'quasar'
+  import { QIcon, QBtn, QPopover, QList, QItem, QItemSide, QItemMain, QCard, QCardMedia, QCardTitle, QCardMain, QCardSeparator } from 'quasar'
 
   export default {
 
@@ -102,7 +67,12 @@
       QList,
       QItem,
       QItemSide,
-      QItemMain
+      QItemMain,
+      QCard,
+      QCardMedia,
+      QCardTitle,
+      QCardMain,
+      QCardSeparator
     },
 
     props: [
@@ -132,7 +102,7 @@
           const vm = this
           console.log(this.data.codusuariocriacao)
 
-          // faz chamada api
+          // TODO: Adicionar cache usando vuex para não chamar API toda hora
           if (this.data.codusuariocriacao != null) {
             window.axios.get('usuario/' + this.data.codusuariocriacao + '/autor', { params }).then(response => {
               vm.usuariocriacao = response.data.usuario
@@ -141,7 +111,7 @@
             })
           }
 
-          // faz chamada api
+          // TODO: Adicionar cache usando vuex para não chamar API toda hora
           if (this.data.codusuarioalteracao != null) {
             window.axios.get('usuario/' + this.data.codusuarioalteracao + '/autor', { params }).then(response => {
               vm.usuarioalteracao = response.data.usuario
@@ -160,7 +130,7 @@
 
 <style scoped>
 
-img {
+img.avatar {
   max-height: 40px;
   max-width: 40px;
 }
