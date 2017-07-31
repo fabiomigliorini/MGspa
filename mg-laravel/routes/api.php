@@ -27,6 +27,7 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     // Usuários
     Route::get('usuario/{id}/autor', 'UsuarioController@autor');
+    Route::get('usuario/impressoras', 'UsuarioController@impressoras');
     Route::resource('usuario', 'UsuarioController');
 
     // Marcas

@@ -100,7 +100,6 @@
           }
 
           const vm = this
-          console.log(this.data.codusuariocriacao)
 
           // TODO: Adicionar cache usando vuex para não chamar API toda hora
           if (this.data.codusuariocriacao != null) {

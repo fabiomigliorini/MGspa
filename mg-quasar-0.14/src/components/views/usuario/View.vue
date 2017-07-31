@@ -6,16 +6,16 @@
     </q-side-link>
 
     <template slot="title">
-      {{ data.usuario }}
+      {{ item.usuario }}
     </template>
 
     <div slot="content">
       <div class="layout-padding">
 
-        <q-card v-if="data.inativo">
+        <q-card v-if="item.inativo">
           <q-card-main>
             <span class="text-red">
-              Inativo desde {{ moment(data.inativo).format('L') }}
+              Inativo desde {{ moment(item.inativo).format('L') }}
             </span>
           </q-card-main>
         </q-card>
@@ -26,9 +26,9 @@
               <div class="card-content">
                 <dl>
                     <dt>#</dt>
-                    <dd>{{ data.codusuario }}</dd>
+                    <dd>{{ item.codusuario }}</dd>
                     <dt>Usuário</dt>
-                    <dd>{{ data.usuario }}</dd>
+                    <dd>{{ item.usuario }}</dd>
                 </dl>
               </div>
             </div>
@@ -43,12 +43,12 @@
           direction="up"
           class="animate-pop"
         >
-          <router-link :to="{ path: '/usuario/' + data.codusuario + '/edit' }">
+          <router-link :to="{ path: '/usuario/' + item.codusuario + '/edit' }">
             <q-fab-action color="primary" icon="edit">
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
             </q-fab-action>
           </router-link>
-          <q-fab-action color="orange" @click.native="activate()" icon="thumb_up" v-if="data.inativo">
+          <q-fab-action color="orange" @click.native="activate()" icon="thumb_up" v-if="item.inativo">
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
           </q-fab-action>
           <q-fab-action color="orange" @click.native="inactivate()" icon="thumb_down" v-else>
@@ -64,10 +64,7 @@
 
     <div slot="footer">
       <mg-autor
-        :criacao="data.criacao"
-        :usuariocriacao="data.usuariocriacao"
-        :alteracao="data.alteracao"
-        :usuarioalteracao="data.usuarioalteracao"
+        :data="item"
         ></mg-autor>
     </div>
 
@@ -102,14 +99,14 @@ export default {
   },
   data () {
     return {
-      data: []
+      item: []
     }
   },
   methods: {
     carregaDados: function (id) {
       let vm = this
       window.axios.get('usuario/' + id + '/details').then(function (request) {
-        vm.data = request.data
+        vm.item = request.data
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -124,8 +121,8 @@ export default {
           {
             label: 'Ativar',
             handler () {
-              window.axios.delete('usuario/' + vm.data.codusuario + '/inativo').then(function (request) {
-                vm.carregaDados(vm.data.codusuario)
+              window.axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+                vm.carregaDados(vm.item.codusuario)
                 Toast.create.positive('Registro ativado')
               }).catch(function (error) {
                 console.log(error.response)
@@ -145,8 +142,8 @@ export default {
           {
             label: 'Inativar',
             handler () {
-              window.axios.post('usuario/' + vm.data.codusuario + '/inativo').then(function (request) {
-                vm.carregaDados(vm.data.codusuario)
+              window.axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+                vm.carregaDados(vm.item.codusuario)
                 Toast.create.positive('Registro inativado')
               }).catch(function (error) {
                 console.log(error.response)
@@ -166,7 +163,7 @@ export default {
           {
             label: 'Excluir',
             handler () {
-              window.axios.delete('usuario/' + vm.data.codusuario).then(function (request) {
+              window.axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
                 vm.$router.push('/usuario')
                 Toast.create.positive('Registro excluído')
               }).catch(function (error) {

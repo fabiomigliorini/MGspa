@@ -24,6 +24,45 @@
               <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
             </div>
           </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-select
+                stack-label="Filial"
+                v-model="data.codfilial"
+                :options="filiais"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-input v-model="data.codpessoa" placeholder="Pessoa">
+                <q-autocomplete
+                  @search="searchPessoa"
+                  :min-characters="2"
+                  @selected=""
+                />
+              </q-input>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-select
+              stack-label="Impressora Matricial"
+              v-model="data.impressoramatricial"
+              :options="impressoras"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-select
+              stack-label="Impressora Térmica"
+              v-model="data.impressoratermica"
+              :options="impressoras"
+              />
+            </div>
+          </div>
+
         </form>
       </div>
     </div>
@@ -36,8 +75,11 @@ import {
   Dialog,
   Toast,
   QField,
+  QBtn,
   QInput,
-  QBtn
+  QSelect,
+  QSearch,
+  QAutocomplete
 } from 'quasar'
 
 import MgLayout from '../../layouts/MgLayout'
@@ -49,18 +91,71 @@ export default {
     MgLayout,
     MgErrosValidacao,
     QField,
+    QBtn,
     QInput,
-    QBtn
+    QSelect,
+    QSearch,
+    QAutocomplete
   },
   data () {
     return {
       data: {
-        usuario: ''
+        usuario: null,
+        codfilial: null,
+        codpessoa: null,
+        impressoramatricial: null,
+        impressoratermica: null
       },
+      impressoras: [],
+      filiais: [
+        {
+          label: 'Filial',
+          value: null
+        },
+        {
+          label: 'Google',
+          value: 1
+        },
+        {
+          label: 'Facebook',
+          value: 2
+        },
+        {
+          label: 'Twitter',
+          value: 3
+        },
+        {
+          label: 'Apple Inc.',
+          value: 4
+        },
+        {
+          label: 'Oracle',
+          value: 5
+        }
+      ],
       erros: false
     }
   },
   methods: {
+    searchPessoa: function () {
+      console.log()
+    },
+    carregaImpressoras: function () {
+      let vm = this
+      window.axios.get('usuario/impressoras').then(function (request) {
+        vm.impressoras = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
+    carregaFiliais: function () {
+      let vm = this
+      window.axios.get('filial').then(function (request) {
+        vm.filiais = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
     create: function () {
       var vm = this
       Dialog.create({
@@ -87,6 +182,8 @@ export default {
     }
   },
   mounted () {
+    this.carregaImpressoras()
+    // this.carregaFiliais()
   }
 }
 </script>

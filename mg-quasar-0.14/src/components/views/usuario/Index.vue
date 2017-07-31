@@ -217,10 +217,7 @@
 
     <div slot="footer" v-if="grupousuario">
       <mg-autor
-        :criacao="grupousuario.criacao"
-        :usuariocriacao="grupousuario.usuariocriacao"
-        :alteracao="grupousuario.alteracao"
-        :usuarioalteracao="grupousuario.usuarioalteracao"
+        :data="grupousuario"
         ></mg-autor>
     </div>
 
