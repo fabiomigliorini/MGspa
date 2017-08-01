@@ -31,7 +31,7 @@ and em.codestoquemovimento is not null
 order by n.codfilial, n.codnegocio, p.produto
 
 --Quantidade Negocio Diferente do Estoque
-select n.codfilial, n.codnegocio, pb.codproduto, npb.codnegocioprodutobarra, em.codestoquemovimento, p.codproduto, p.produto, round((coalesce(em.entradaquantidade, 0) + coalesce(em.saidaquantidade, 0)), 1), round((npb.quantidade * coalesce(pe.quantidade, 1)), 1), 'http://192.168.1.205/MGLara/estoque/gera-movimento-negocio-produto-barra/' || cast(npb.codnegocioprodutobarra as varchar)
+select n.codfilial, n.codnegocio, pb.codproduto, npb.codnegocioprodutobarra, em.codestoquemovimento, p.codproduto, p.produto, round((coalesce(em.entradaquantidade, 0) + coalesce(em.saidaquantidade, 0)), 1), round((npb.quantidade * coalesce(pe.quantidade, 1)), 1), 'wget http://192.168.1.205/MGLara/estoque/gera-movimento-negocio-produto-barra/' || cast(npb.codnegocioprodutobarra as varchar)
 from tblnegocio n
 inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoperacao)
 inner join tblnegocioprodutobarra npb on (npb.codnegocio = n.codnegocio)
@@ -47,9 +47,8 @@ and no.estoque = true
 and round((coalesce(em.entradaquantidade, 0) + coalesce(em.saidaquantidade, 0)), 1) != round((npb.quantidade * coalesce(pe.quantidade, 1)), 1)
 order by p.codproduto, n.codfilial, n.codnegocio, p.produto
 
-
 --Notas Sem Movimentacao de estoque
-select n.codfilial, n.codnotafiscal, n.saida, n.alteracao, npb.codnotafiscalprodutobarra, em.codestoquemovimento, p.codproduto, p.produto
+select n.codfilial, n.codnotafiscal, n.saida, n.alteracao, npb.codnotafiscalprodutobarra, em.codestoquemovimento, p.codproduto, p.produto, 'wget http://192.168.1.205/MGLara/estoque/gera-movimento-nota-fiscal-produto-barra/' || cast(npb.codnotafiscalprodutobarra as varchar)
 from tblnotafiscal n
 inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoperacao)
 inner join tblnotafiscalprodutobarra npb on (npb.codnotafiscal = n.codnotafiscal)
@@ -58,15 +57,15 @@ inner join tblproduto p on (p.codproduto = pb.codproduto)
 inner join tbltipoproduto tp on (tp.codtipoproduto = p.codtipoproduto)
 left join tblestoquemovimento em on (em.codnotafiscalprodutobarra = npb.codnotafiscalprodutobarra)
 where ((n.emitida = true and n.nfeautorizacao is not null and n.nfeinutilizacao is null and n.nfecancelamento is null) or n.emitida = false)
-and n.saida >= '2017-06-01 00:00:00' 
---and n.saida >= '2016-01-01 00:00:00' 
+--and n.saida >= '2017-07-31 00:00:00' 
+and n.saida >= '2016-01-01 00:00:00' 
 and tp.estoque = true
 and no.estoque = true
 and em.codestoquemovimento is null
 order by n.saida, n.codfilial, n.codnotafiscal, p.produto
 
 --Notas Canceladas/Inutilizadas/Nao Autorizadas Com Movimentacao de estoque
-select n.codfilial, n.codnotafiscal, npb.codnotafiscalprodutobarra, em.codestoquemovimento, p.codproduto, p.produto
+select n.codfilial, n.codnotafiscal, npb.codnotafiscalprodutobarra, em.codestoquemovimento, p.codproduto, p.produto, 'wget http://192.168.1.205/MGLara/estoque/gera-movimento-nota-fiscal-produto-barra/' || cast(npb.codnotafiscalprodutobarra as varchar)
 from tblnotafiscal n
 inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoperacao)
 inner join tblnotafiscalprodutobarra npb on (npb.codnotafiscal = n.codnotafiscal)
@@ -83,7 +82,7 @@ and em.codestoquemovimento is not null
 order by n.codfilial, n.codnotafiscal, p.produto
 
 --Quantidade Nota Diferente do Estoque
-select n.codfilial, n.codnotafiscal, pb.codproduto, npb.codnotafiscalprodutobarra, em.codestoquemovimento, p.codproduto, p.produto, round((coalesce(em.entradaquantidade, 0) + coalesce(em.saidaquantidade, 0)), 1), round((npb.quantidade * coalesce(pe.quantidade, 1)), 1), 'http://192.168.1.205/MGLara/estoque/gera-movimento-nota-fiscal-produto-barra/' || cast(npb.codnotafiscalprodutobarra as varchar)
+select n.codfilial, n.codnotafiscal, pb.codproduto, npb.codnotafiscalprodutobarra, em.codestoquemovimento, p.codproduto, p.produto, round((coalesce(em.entradaquantidade, 0) + coalesce(em.saidaquantidade, 0)), 1), round((npb.quantidade * coalesce(pe.quantidade, 1)), 1), 'wget http://192.168.1.205/MGLara/estoque/gera-movimento-nota-fiscal-produto-barra/' || cast(npb.codnotafiscalprodutobarra as varchar)
 from tblnotafiscal n
 inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoperacao)
 inner join tblnotafiscalprodutobarra npb on (npb.codnotafiscal = n.codnotafiscal)
