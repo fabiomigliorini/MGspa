@@ -1880,6 +1880,9 @@
 				<defo>false</defo>
 			</column>
 			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
+			<column name="controlada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<index name="tblmarca_pkey" unique="PRIMARY_KEY" >
 				<column name="codmarca" />
 			</index>
@@ -6268,7 +6271,7 @@ $function$
 		</function>
 	</schema>
 	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.1.jre6.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
-	<connector name="MGsis_Prod" database="PostgreSQL" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.1.jre6.jar" driver_desc="Standard" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblfilial" color="b7c8e3" x="784" y="64" />
 		<entity schema="mgsis" name="tblpermissao" color="b7c8e3" x="64" y="592" />

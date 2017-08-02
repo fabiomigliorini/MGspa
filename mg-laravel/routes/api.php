@@ -50,6 +50,13 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     // Rotas Dinamicas
 
+    // Filial
+    Route::resource('filial', 'FilialController');
+
+    // Pessoa
+    Route::get('pessoa/autocomplete', 'PessoaController@autocomplete');
+    Route::resource('pessoa', 'PessoaController');
+
     // EstoqueLocalProdutoVariacao
     Route::resource('estoque-local-produto-variacao', 'EstoqueLocalProdutoVariacaoController');
 

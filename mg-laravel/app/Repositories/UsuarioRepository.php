@@ -43,8 +43,32 @@ class UsuarioRepository extends MGRepositoryStatic
     public static function details($model)
     {
         $details = $model->getAttributes();
-        $details['usuariocriacao'] = $model->UsuarioCriacao->usuario ?? false;
-        $details['usuarioalteracao'] = $model->UsuarioAlteracao->usuario ?? false;
+        $details['pessoa'] = [
+            'codpessoa' => $model->Pessoa->codpessoa ?? null,
+            'pessoa' => $model->Pessoa->pessoa ?? null
+        ];
+
+        $details['filial'] = [
+            'codfilial' => $model->Filial->codfilial,
+            'filial' => $model->Filial->filial
+        ];
+
+        $grupos = [];
+        foreach ($model->GrupoUsuarioUsuarioS as $grupo) {
+
+            $grupos[$grupo->GrupoUsuario->grupousuario]['grupousuario'] = $grupo->GrupoUsuario->grupousuario;
+
+            if (!isset($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'])) {
+                $grupos[$grupo->GrupoUsuario->grupousuario]['filiais'] = [];
+            }
+
+            array_push($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'], $grupo->Filial->filial);
+
+        }
+
+
+        $details['grupos'] = $grupos;
+        $details['permissoes'] = [];
 
         return $details;
     }

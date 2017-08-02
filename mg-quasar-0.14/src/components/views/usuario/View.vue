@@ -20,20 +20,61 @@
           </q-card-main>
         </q-card>
 
-        <div class="row gutter">
-          <div class="width-1of3">
-            <div class="card">
-              <div class="card-content">
+        <div class="row">
+          <div class="col-md-4">
+            <q-card>
+              <q-card-main>
                 <dl>
-                    <dt>#</dt>
-                    <dd>{{ item.codusuario }}</dd>
-                    <dt>Usuário</dt>
-                    <dd>{{ item.usuario }}</dd>
+                  <dt>#</dt>
+                  <dd>{{ item.codusuario }}</dd>
+                  <dt>Usuário</dt>
+                  <dd>{{ item.usuario }}</dd>
+                  <dt>Filial</dt>
+                  <dd>{{ item.filial.filial }}</dd>
+                  <dt>Pessoa</dt>
+                  <dd>{{ item.pessoa.pessoa }}</dd>
+                  <dt>Impressora Matricial</dt>
+                  <dd>{{ item.impressoramatricial }}</dd>
+                  <dt>Impressora Térmica</dt>
+                  <dd>{{ item.impressoratermica }}</dd>
+                  <dt>Último acesso</dt>
+                  <dd>{{ moment(item.ultimoacesso).format('LLLL') }}</dd>
                 </dl>
-              </div>
-            </div>
+              </q-card-main>
+            </q-card>
+          </div>
+          <div class="col-md-4">
+            <q-card>
+              <q-card-title>
+                Grupos
+              </q-card-title>
+              <q-card-main>
+                <dl>
+                  <template v-for="grupo in item.grupos">
+                    <dt>{{ grupo.grupousuario }}</dt>
+                    <dd>{{ grupo.filiais.toString() }}</dd>
+                  </template>
+                </dl>
+              </q-card-main>
+            </q-card>
+          </div>
+          <div class="col-md-4">
+            <q-card>
+              <q-card-title>
+                Permissões
+              </q-card-title>
+              <q-card-main>
+                <dl>
+                  <template v-for="permissao in item.permissoes">
+                    <dt>{{ permissao.grupousuario }}</dt>
+                    <dd>{{ permissao.filiais.toString() }}</dd>
+                  </template>
+                </dl>
+              </q-card-main>
+            </q-card>
           </div>
         </div>
+
       </div>
 
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
@@ -80,7 +121,10 @@ import {
   QFab,
   QFabAction,
   QTooltip,
-  QSideLink
+  QSideLink,
+  QCard,
+  QCardMain,
+  QCardTitle
  } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
@@ -95,7 +139,10 @@ export default {
     QFab,
     QFabAction,
     QTooltip,
-    QSideLink
+    QSideLink,
+    QCard,
+    QCardMain,
+    QCardTitle
   },
   data () {
     return {
@@ -175,7 +222,7 @@ export default {
       })
     }
   },
-  mounted () {
+  created () {
     this.carregaDados(this.$route.params.id)
   }
 }
@@ -183,4 +230,16 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+dl {
+  margin: 0;
+}
+dt {
+  color: rgba(0,0,0,0.54);
+}
+dd {
+  margin-bottom: 16px;
+}
+dd:last-child {
+  margin-bottom: 0;
+}
 </style>

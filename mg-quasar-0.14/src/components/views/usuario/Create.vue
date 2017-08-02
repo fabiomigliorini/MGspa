@@ -1,7 +1,9 @@
 <template>
   <mg-layout>
 
-    <q-btn flat icon="arrow_back" slot="menu" />
+    <q-side-link to="/usuario" slot="menu">
+      <q-btn flat icon="arrow_back"  />
+    </q-side-link>
 
     <q-btn flat icon="done" slot="menuRight" @click.prevent="create()" />
 
@@ -26,28 +28,38 @@
           </div>
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-field>
+                <q-input
+                type="password"
+                v-model="data.senha"
+                float-label="Senha"
+                />
+              </q-field>
+              <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
               <q-select
-                stack-label="Filial"
+                float-label="Filial"
                 v-model="data.codfilial"
                 :options="filiais"
               />
             </div>
           </div>
+          <!--
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-input v-model="data.codpessoa" placeholder="Pessoa">
-                <q-autocomplete
-                  @search="searchPessoa"
-                  :min-characters="2"
-                  @selected=""
-                />
-              </q-input>
+              <q-search v-model="data.codpessoa" placeholder="Pessoa">
+                <q-autocomplete @search="search" />
+              </q-search>
             </div>
           </div>
+          -->
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-select
-              stack-label="Impressora Matricial"
+              float-label="Impressora Matricial"
               v-model="data.impressoramatricial"
               :options="impressoras"
               />
@@ -56,7 +68,7 @@
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-select
-              stack-label="Impressora Térmica"
+              float-label="Impressora Térmica"
               v-model="data.impressoratermica"
               :options="impressoras"
               />
@@ -72,6 +84,7 @@
 
 <script>
 import {
+  QSideLink,
   Dialog,
   Toast,
   QField,
@@ -90,6 +103,7 @@ export default {
   components: {
     MgLayout,
     MgErrosValidacao,
+    QSideLink,
     QField,
     QBtn,
     QInput,
@@ -107,39 +121,11 @@ export default {
         impressoratermica: null
       },
       impressoras: [],
-      filiais: [
-        {
-          label: 'Filial',
-          value: null
-        },
-        {
-          label: 'Google',
-          value: 1
-        },
-        {
-          label: 'Facebook',
-          value: 2
-        },
-        {
-          label: 'Twitter',
-          value: 3
-        },
-        {
-          label: 'Apple Inc.',
-          value: 4
-        },
-        {
-          label: 'Oracle',
-          value: 5
-        }
-      ],
+      filiais: [],
       erros: false
     }
   },
   methods: {
-    searchPessoa: function () {
-      console.log()
-    },
     carregaImpressoras: function () {
       let vm = this
       window.axios.get('usuario/impressoras').then(function (request) {
@@ -150,8 +136,13 @@ export default {
     },
     carregaFiliais: function () {
       let vm = this
-      window.axios.get('filial').then(function (request) {
-        vm.filiais = request.data
+      window.axios.get('filial', { params: { fields: 'codfilial,filial' } }).then(function (request) {
+        vm.filiais = request.data.data.map(filial => {
+          return {
+            value: filial.codfilial,
+            label: filial.filial
+          }
+        })
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -171,7 +162,7 @@ export default {
             handler () {
               window.axios.post('usuario', vm.data).then(function (request) {
                 Toast.create.positive('Registro inserido')
-                // vm.$router.push('/usuario/' + request.data.codgrupousuario)
+                vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {
                 vm.erros = error.response.data.erros
               })
@@ -183,7 +174,7 @@ export default {
   },
   mounted () {
     this.carregaImpressoras()
-    // this.carregaFiliais()
+    this.carregaFiliais()
   }
 }
 </script>
