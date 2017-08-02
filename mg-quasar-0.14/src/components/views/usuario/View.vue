@@ -64,12 +64,13 @@
                 Permissões
               </q-card-title>
               <q-card-main>
-                <dl>
-                  <template v-for="permissao in item.permissoes">
-                    <dt>{{ permissao.grupousuario }}</dt>
-                    <dd>{{ permissao.filiais.toString() }}</dd>
-                  </template>
-                </dl>
+                <template v-for="(permissao, index) in item.permissoes">
+                  <q-collapsible :label="index">
+                    <div v-for="item in permissao">
+                      {{ item }}
+                    </div>
+                  </q-collapsible>
+                </template>
               </q-card-main>
             </q-card>
           </div>
@@ -80,7 +81,8 @@
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
         <q-fab
           color="primary"
-          active-icon="add"
+          icon="edit"
+          active-icon="edit"
           direction="up"
           class="animate-pop"
         >
@@ -95,6 +97,11 @@
           <q-fab-action color="orange" @click.native="inactivate()" icon="thumb_down" v-else>
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
           </q-fab-action>
+          <router-link :to="{ path: '/usuario/' + item.codusuario + '/grupos' }">
+            <q-fab-action color="primary" icon="supervisor_account">
+              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Grupos</q-tooltip>
+            </q-fab-action>
+          </router-link>
           <q-fab-action color="red" @click.native="destroy()" icon="delete">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
@@ -124,7 +131,8 @@ import {
   QSideLink,
   QCard,
   QCardMain,
-  QCardTitle
+  QCardTitle,
+  QCollapsible
  } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
@@ -142,7 +150,8 @@ export default {
     QSideLink,
     QCard,
     QCardMain,
-    QCardTitle
+    QCardTitle,
+    QCollapsible
   },
   data () {
     return {

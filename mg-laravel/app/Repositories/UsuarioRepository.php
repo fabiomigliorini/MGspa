@@ -54,6 +54,9 @@ class UsuarioRepository extends MGRepositoryStatic
         ];
 
         $grupos = [];
+        $permissoes_array = [];
+        $permissoes = [];
+
         foreach ($model->GrupoUsuarioUsuarioS as $grupo) {
 
             $grupos[$grupo->GrupoUsuario->grupousuario]['grupousuario'] = $grupo->GrupoUsuario->grupousuario;
@@ -64,11 +67,21 @@ class UsuarioRepository extends MGRepositoryStatic
 
             array_push($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'], $grupo->Filial->filial);
 
+            foreach ($grupo->GrupoUsuario->GrupoUsuarioPermissaoS as $permissao) {
+                $permissoes_array[] = $permissao->Permissao->permissao;
+            }
         }
 
+        foreach ($permissoes_array as $permissao) {
+            $key = explode('.', $permissao);
+            if (!isset($permissoes[$key[0]])) {
+                $permissoes[$key[0]] = array();
+            }
+            $permissoes[$key[0]][] = $permissao;
+        }
 
         $details['grupos'] = $grupos;
-        $details['permissoes'] = [];
+        $details['permissoes'] = $permissoes;
 
         return $details;
     }
