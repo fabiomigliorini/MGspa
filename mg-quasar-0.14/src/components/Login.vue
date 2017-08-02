@@ -65,7 +65,7 @@ export default {
         var token = response.data.token
         localStorage.setItem('auth.token', token)
         // console.log(response)
-        vm.$router.push('/')
+        vm.$router.go(-1)
       }).catch(error => {
         // Mensagem de erro
         console.log('erro no login')
@@ -75,7 +75,6 @@ export default {
     }
 
   }
-
 }
 </script>
 <style>
