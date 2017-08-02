@@ -80,7 +80,7 @@ inner join (
 where p.inativo is null
 and m.controlada = true
 and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
-and m.marca not ilike '%acrilex%'
+--and m.marca not ilike '%acrilex%'
 order by m.marca, p.produto, pv.variacao
 
 */
