@@ -32,10 +32,11 @@ export default new VueRouter({
 
     // Grupo de Usuarios
     { path: '/usuario', component: load('views/usuario/Index') },
-    { path: '/usuario/grupo-usuario/:id', name: 'grupo-usuario', component: load('views/usuario/Index') },
     { path: '/usuario/create', component: load('views/usuario/Create') },
+    { path: '/usuario/grupo-usuario/:id', name: 'grupo-usuario', component: load('views/usuario/Index') },
     { path: '/usuario/:id', component: load('views/usuario/View') },
     { path: '/usuario/:id/update', component: load('views/usuario/Update') },
+    { path: '/usuario/:id/grupos', component: load('views/usuario/Grupos') },
 
     // Permissao
     { path: '/permissao', component: load('views/permissao/Index') },

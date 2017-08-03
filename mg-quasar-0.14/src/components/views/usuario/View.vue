@@ -59,11 +59,10 @@
             </q-card>
           </div>
           <div class="col-md-4">
-            <q-card>
+            <q-card inline>
               <q-card-title>
                 Permissões
               </q-card-title>
-              <q-card-main>
                 <template v-for="(permissao, index) in item.permissoes">
                   <q-collapsible :label="index">
                     <div v-for="item in permissao">
@@ -71,7 +70,6 @@
                     </div>
                   </q-collapsible>
                 </template>
-              </q-card-main>
             </q-card>
           </div>
         </div>
@@ -86,7 +84,7 @@
           direction="up"
           class="animate-pop"
         >
-          <router-link :to="{ path: '/usuario/' + item.codusuario + '/edit' }">
+          <router-link :to="{ path: '/usuario/' + item.codusuario + '/update' }">
             <q-fab-action color="primary" icon="edit">
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
             </q-fab-action>
@@ -250,5 +248,8 @@ dd {
 }
 dd:last-child {
   margin-bottom: 0;
+}
+.q-collapsible-sub-item div {
+  margin: 5px 0;
 }
 </style>

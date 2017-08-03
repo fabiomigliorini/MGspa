@@ -110,4 +110,37 @@ class UsuarioRepository extends MGRepositoryStatic
         $qry = static::queryFields($qry, $fields);
         return $qry;
     }
+
+    public static function grupos($model)
+    {
+        $grupos_usuario = [];
+        foreach ($model->GrupoUsuarioUsuarioS as $guu) {
+            $grupos_usuario[$guu->codgrupousuario][$guu->codfilial] = $guu->codgrupousuariousuario;
+        }
+        return $grupos_usuario;
+    }
+
+    public static function adicionaGrupo($model, $codfilial, $codgrupousuario)
+    {
+        if (!$model->GrupoUsuarioUsuarioS()->where('codgrupousuario', $codgrupousuario)->where('codfilial', $codfilial)->first()) {
+            if (!$grupo_usuario = GrupoUsuarioUsuarioRepository::create(null, [
+                'codusuario' => $model->codusuario,
+                'codgrupousuario' => $codgrupousuario,
+                'codfilial'=> $codfilial
+            ])) {
+                return false;
+            }
+        }
+        return $grupo_usuario;
+    }
+
+    public static function removeGrupo($model, $codfilial, $codgrupousuario)
+    {
+        if ($model->GrupoUsuarioUsuarioS()->where('codgrupousuario', $codgrupousuario)->where('codfilial', $codfilial)->delete()) {
+            return true;
+        }
+        
+        return false;
+    }
+
 }
