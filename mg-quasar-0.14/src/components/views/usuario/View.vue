@@ -153,7 +153,14 @@ export default {
   },
   data () {
     return {
-      item: []
+      item: {
+        filial: {
+          filial: null
+        },
+        pessoa: {
+          pessoa: null
+        }
+      }
     }
   },
   methods: {
@@ -229,7 +236,7 @@ export default {
       })
     }
   },
-  created () {
+  mounted () {
     this.carregaDados(this.$route.params.id)
   }
 }

@@ -18,6 +18,11 @@ export default {
         icon: 'supervisor_account',
         title: 'Usuários',
         path: '/usuario'
+      },
+      {
+        icon: 'lock_open',
+        title: 'Permissões',
+        path: '/permissao'
       }
     ]
   },

@@ -24,12 +24,11 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
         return $request->user();
     })->middleware('auth:api');
 
-
     // Usuários
     Route::get('usuario/{id}/autor', 'UsuarioController@autor');
-    Route::get('usuario/{id}/grupos', 'UsuarioController@grupos');
-    Route::post('usuario/{id}/grupos', 'UsuarioController@gruposCreate');
-    Route::delete('usuario/{id}/grupos', 'UsuarioController@gruposDestroy');
+    Route::get('usuario/{id}/grupos', 'UsuarioController@grupos')->name('usuario.grupos');
+    Route::post('usuario/{id}/grupos', 'UsuarioController@gruposCreate')->name('usuario.grupos.adicionar');
+    Route::delete('usuario/{id}/grupos', 'UsuarioController@gruposDestroy')->name('usuario.grupos.remover');
     Route::get('usuario/impressoras', 'UsuarioController@impressoras');
     Route::resource('usuario', 'UsuarioController');
 

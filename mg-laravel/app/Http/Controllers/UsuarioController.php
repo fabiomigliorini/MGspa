@@ -50,6 +50,7 @@ class UsuarioController extends ControllerCrud
         if (!empty($usuario->codimagem)) {
             $res['imagem'] = $usuario->Imagem->url;
         }
+        
         return response()->json($res, 200);
     }
 
@@ -75,7 +76,7 @@ class UsuarioController extends ControllerCrud
 
     public function grupos(Request $request, $id)
     {
-        // $this->authorize();
+        $this->authorize();
         $model = UsuarioRepository::findOrFail($id);
         $details = UsuarioRepository::grupos($model);
         return response()->json($details, 200);
@@ -83,7 +84,7 @@ class UsuarioController extends ControllerCrud
 
     public function gruposCreate(Request $request, $id)
     {
-        // $this->authorize();
+        $this->authorize();
         $model = UsuarioRepository::findOrFail($id);
         $grupo_usuario = UsuarioRepository::adicionaGrupo($model, $request->get('codfilial'), $request->get('codgrupousuario'));
         return response()->json($grupo_usuario, 201);
@@ -91,31 +92,10 @@ class UsuarioController extends ControllerCrud
 
     public function gruposDestroy(Request $request, $id)
     {
-        // $this->authorize();
+        $this->authorize();
         $model = UsuarioRepository::findOrFail($id);
         UsuarioRepository::removeGrupo($model, $request->get('codfilial'), $request->get('codgrupousuario'));
         return response()->json('', 204);
-
-    }
-
-    public function gruposDelete(Request $request, $id) {
-
-        $usuario = $this->repository->findOrFail($id);
-
-        // autorizacao
-        $this->repository->authorize('gruposDestroy');
-
-        // Exclui registros
-        $excluidos = $usuario->GrupoUsuarioUsuarioS()->where('codgrupousuario', $request->codgrupousuario)->where('codfilial', $request->codfilial)->delete();
-
-        //retorna
-        return [
-            'OK' => $excluidos,
-            'grupousuario' => $this->grupoUsuarioRepository->model->findOrFail($request->codgrupousuario)->grupousuario,
-            'filial' => $this->filialRepository->model->findOrFail($request->codfilial)->filial,
-        ];
-
-
     }
 
 }

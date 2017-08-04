@@ -7,21 +7,24 @@
 
     <template slot="drawer">
 
-      <div class="list no-border striped">
-        <div class="item item-link" v-for="(item, index) in dados.Permissoes">
-          <div class="item-content" @click.prevent="tab(index)">
-            {{ index }}
-          </div>
-        </div>
-      </div>
+      <q-list highlight>
+        <q-item link v-for="(item, index) in dados.Permissoes">
+          <q-item-main>
+            <q-item-tile title @click.prevent="tab(index)">
+              {{ index }}
+            </q-item-tile>
+          </q-item-main>
+        </q-item>
+      </q-list highlight>
 
     </template>
 
     <div slot="content">
+      <div class="layout-padding">
       <template v-for="(permissao, index) in dados.Permissoes">
           <div v-if="index == tabs" class="permissoes">
             <div class="container-tabela">
-            <table class="q-table normal">
+            <table class="q-table striped-odd">
               <thead>
                 <tr>
                   <th>&nbsp;</th>
@@ -33,16 +36,12 @@
               <tbody>
                 <template v-for="(item, index) in permissao">
                   <tr>
-                    <td>
+                    <td class="text-left">
                       <strong>{{ index }}</strong>
                     </td>
-                    <td style="text-align: center" v-for="grupo in dados.Grupos">
-                      <button @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" icon v-if="item.codgrupousuario.includes(grupo.codgrupousuario)" class="small clear green circular">
-                        <i>thumb_up</i>
-                      </button>
-                      <button @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" icon v-else class="small clear circular red" small>
-                        <i>thumb_down</i>
-                      </button>
+                    <td class="text-center" v-for="grupo in dados.Grupos">
+                      <q-btn @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="item.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
+                      <q-btn @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
                     </td>
                   </tr>
                 </template>
@@ -52,17 +51,36 @@
           </div>
       </template>
     </div>
+    </div>
 
   </mg-layout>
 </template>
 
 <script>
 import MgLayout from '../../layouts/MgLayout'
+import {
+  QList,
+  QListHeader,
+  QItem,
+  QItemTile,
+  QItemSide,
+  QItemMain,
+  QItemSeparator,
+  QBtn
+ } from 'quasar'
 
 export default {
   name: 'permissao-listagem',
   components: {
-    MgLayout
+    MgLayout,
+    QList,
+    QListHeader,
+    QItem,
+    QItemTile,
+    QItemSide,
+    QItemMain,
+    QItemSeparator,
+    QBtn
   },
   data () {
     return {
