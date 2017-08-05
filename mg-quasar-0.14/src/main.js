@@ -68,7 +68,6 @@ window.axios.interceptors.request.use(function (config) {
   const AUTH_TOKEN = localStorage.getItem('auth.token')
   if (AUTH_TOKEN) {
     config.headers.common['Authorization'] = `Bearer ${AUTH_TOKEN}`
-    console.log(router.currentRoute.path)
   }
   Loading.show()
   return config
@@ -86,8 +85,7 @@ window.axios.interceptors.response.use((response) => {
     if (error.response.status) {
       const originalRequest = error.config
       if (error.response.status === 401 && !originalRequest._retry) {
-        refresh.handle(error.response, router.currentRoute.path)
-        // return router.push('/login/')
+        refresh.handle(error.response)
       }
       mensagem += ' - ' + error.response.status
       if (error.response.data.mensagem) {
