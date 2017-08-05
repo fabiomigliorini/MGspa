@@ -1,4 +1,4 @@
-import router from 'vue-router'
+import router from '../router'
 
 export default {
   handle: function (response) {
@@ -8,10 +8,8 @@ export default {
       localStorage.setItem('auth.token', response.data)
       let method = resource.config.method.toLowerCase()
       return window.axios[method](resource.config.url, resource.config.params)
-    }).catch(this.redirect())
-  },
-
-  redirect: function () {
-    router.push('/login')
+    }).catch(function () {
+      return router.push('/login/')
+    })
   }
 }

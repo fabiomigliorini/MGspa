@@ -8,7 +8,7 @@
     <template slot="drawer">
 
       <q-list highlight>
-        <q-item link v-for="(item, index) in dados.Permissoes">
+        <q-item link v-for="(item, index) in dados.Permissoes" :key="item.codpermissao">
           <q-item-main>
             <q-item-tile title @click.prevent="tab(index)">
               {{ index }}
