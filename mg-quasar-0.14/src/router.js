@@ -37,6 +37,7 @@ export default new VueRouter({
     { path: '/usuario/:id', component: load('views/usuario/View') },
     { path: '/usuario/:id/update', component: load('views/usuario/Update') },
     { path: '/usuario/:id/grupos', component: load('views/usuario/Grupos') },
+    { path: '/usuario/:id/perfil', component: load('views/usuario/Profile') },
 
     // Permissao
     { path: '/permissao', component: load('views/permissao/Index') },
