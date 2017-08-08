@@ -252,30 +252,30 @@ class PessoaRepository extends MGRepositoryStatic
         return parent::query ($filter, $sort, $fields);
     }
 
-    public static function autocomplete($terms)
+    public static function autocomplete($params)
     {
         $qry = app(static::$modelClass)::query();
 
-        foreach (explode(' ', $terms) as $palavra) {
+        foreach (explode(' ', $params['pessoa']) as $palavra) {
             if (!empty($palavra)) {
                 $qry->whereRaw("(tblpessoa.pessoa ilike '%{$palavra}%' or tblpessoa.fantasia ilike '%{$palavra}%')");
             }
         }
 
-        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica');
-
-        $qry->limit(10);
+        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica')
+            ->limit(10)
+            ->orderBy('fantasia')
+            ->orderBy('pessoa');
         $res = [];
         foreach ($qry->get() as $item) {
-            array_push($res, $item->fantasia); //[
-                // 'value' => $item->codpessoa,
-                // 'label' => $item->pessoa,
-                // 'sublabel' => $item->fantasia,
-                //'cnpj' => formataCnpjCpf($item->cnpj, $item->fisica),
-                //'inativo' => $item->inativo,
-            //];
+            $res[] = [
+                'label' => $item->fantasia,
+                'value' => $item->fantasia,
+                'id' => $item->codpessoa,
+                'sublabel' => $item->pessoa,
+                'stamp' => $item->cnpj
+            ];
         }
-
         return $res;
     }
 

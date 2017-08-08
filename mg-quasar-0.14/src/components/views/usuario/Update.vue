@@ -35,15 +35,15 @@
               />
             </div>
           </div>
-          <!--
+
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-search v-model="data.codpessoa" placeholder="Pessoa">
-                <q-autocomplete @search="search" />
+              <q-search v-model="terms" placeholder="Pessoa">
+                <q-autocomplete @search="pessoaSearch" @selected="pessoaSelected" :min-characters="3" :debounce="600"/>
               </q-search>
             </div>
           </div>
-          -->
+
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-select
@@ -104,14 +104,50 @@ export default {
       },
       impressoras: [],
       filiais: [],
+      terms: '',
       erros: false
     }
   },
+  watch: {
+    terms: {
+      handler: function (val, oldVal) {
+        if (val.length === 0) {
+          this.data.codpessoa = null
+        }
+      }
+    }
+  },
   methods: {
+    initSelect (codpessoa) {
+      let vm = this
+      window.axios.get('pessoa/' + codpessoa).then(response => {
+        let pessoa = response.data
+        vm.terms = pessoa.pessoa
+      }).catch(function (error) {
+        console.log(error)
+      })
+    },
+    pessoaSelected (item) {
+      let vm = this
+      vm.data.codpessoa = item.id
+    },
+    pessoaSearch (terms, done) {
+      let params = {}
+      params.sort = 'fantasia'
+      params.pessoa = terms
+      window.axios.get('pessoa/autocomplete', { params }).then(response => {
+        let results = response.data
+        done(results)
+      }).catch(function (error) {
+        done([])
+        console.log(error.response)
+      })
+    },
     carregaDados: function (id) {
       let vm = this
       window.axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
+        vm.initSelect(vm.data.codpessoa)
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -162,7 +198,7 @@ export default {
       })
     }
   },
-  mounted () {
+  created () {
     this.carregaDados(this.$route.params.id)
     this.carregaImpressoras()
     this.carregaFiliais()
