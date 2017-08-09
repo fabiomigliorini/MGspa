@@ -11,7 +11,6 @@
 
     <div slot="content">
       <div class="layout-padding">
-
         <q-card v-if="item.inativo">
           <q-card-main>
             <span class="text-red">
@@ -64,7 +63,10 @@
                 Foto
               </q-card-title>
               <q-card-main>
-                <q-uploader url="url" />
+                <q-uploader
+                  :url=" 'http://api.escmig05.teste/api/imagem?codusuario=' + item.codusuario"
+                  :headers= headers
+                />
               </q-card-main>
             </q-card>
           </div>
@@ -149,6 +151,10 @@ export default {
   },
   data () {
     return {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        Authorization: `Bearer ${localStorage.getItem('auth.token')}`
+      },
       item: {
         filial: {
           filial: null
