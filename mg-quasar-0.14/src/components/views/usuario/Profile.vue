@@ -239,7 +239,7 @@ export default {
     }
   },
   mounted () {
-    this.carregaDados(this.$route.params.id)
+    this.carregaDados(localStorage.getItem('auth.codusuario'))
   }
 }
 </script>
