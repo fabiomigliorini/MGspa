@@ -85,6 +85,8 @@ class LoginController extends Controller
     			return response()->json(['user_not_found'], 404);
     		}
 
+            $user->avatar = $user->Imagem->url ?? '';
+
     	} catch (Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
 
     		return response()->json(['token_expired'], $e->getStatusCode());
@@ -102,7 +104,7 @@ class LoginController extends Controller
     	// the token is valid and we have found the user via the sub claim
     	return response()->json(compact('user'));
     }
-    
+
     public function logout()
     {
 

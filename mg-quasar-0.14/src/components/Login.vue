@@ -66,14 +66,14 @@ export default {
         localStorage.setItem('auth.token', token)
 
         window.axios.get('auth/user').then(response => {
-          console.log(response.data)
           // salva código da imagem avatar do usuário
-          let codimagem = response.data.user.codimagem
-          localStorage.setItem('auth.codimagem', codimagem)
+          let avatar = response.data.user.avatar
+          let usuario = response.data.user.usuario
+          localStorage.setItem('auth.avatar', avatar)
+          localStorage.setItem('auth.usuario', usuario)
         }).catch(error => {
           console.log(error.response)
         })
-
         vm.$router.go(-1)
       }).catch(error => {
         // Mensagem de erro
