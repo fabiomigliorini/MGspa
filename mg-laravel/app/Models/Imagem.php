@@ -19,6 +19,7 @@ namespace App\Models;
  *
  * Tabelas Filhas
  * @property  FamiliaProduto[]               $FamiliaProdutoS
+ * @property  Usuario[]                      $UsuarioS
  * @property  GrupoProduto[]                 $GrupoProdutoS
  * @property  Marca[]                        $MarcaS
  * @property  ProdutoImagem[]                $ProdutoImagemS
@@ -58,6 +59,11 @@ class Imagem extends MGModel
 
 
     // Tabelas Filhas
+    public function UsuarioS()
+    {
+        return $this->hasMany(Usuario::class, 'codimagem', 'codimagem');
+    }
+
     public function FamiliaProdutoS()
     {
         return $this->hasMany(FamiliaProduto::class, 'codimagem', 'codimagem');

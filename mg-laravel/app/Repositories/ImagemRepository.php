@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use App\Models\Imagem;
 use DB;
 use Storage;
+use Carbon\Carbon;
 
 class ImagemRepository extends MGRepositoryStatic
 {
@@ -116,6 +117,130 @@ class ImagemRepository extends MGRepositoryStatic
             ]);
         }
 
-        return true;
+        return $model;
     }
+
+    public static function update($model, array $data = null)
+    {
+        if (!empty($data)) {
+            static::fill($model, $data);
+        }
+
+        // Limpa relacionamento com SecaoProduto
+        foreach ($model->SecaoProdutoS as $model) {
+            $data['codsecaoproduto'] = $model->codsecaoproduto;
+        }
+
+        // Limpa relacionamento com FamiliaProduto
+        foreach ($model->FamiliaProdutoS as $model) {
+            $data['codfamiliaproduto'] = $model->codfamiliaproduto;
+        }
+
+        // Limpa relacionamento com GrupoProduto
+        foreach ($model->GrupoProdutoS as $model) {
+            $data['codgrupoproduto'] = $model->codgrupoproduto;
+        }
+
+        // Limpa relacionamento com SubGrupoProduto
+        foreach ($model->SubGrupoProdutoS as $model) {
+            $data['codsubgrupoproduto'] = $model->codsubgrupoproduto;
+        }
+
+        // Limpa relacionamento com Marca
+        foreach ($model->MarcaS as $model) {
+            $data['codmarca'] = $model->codmarca;
+        }
+
+        // Limpa relacionamento com ProdutoImagem
+        foreach ($model->ProdutoImagemS as $model) {
+            $data['codproduto'] = $model->codproduto;
+        }
+
+        static::inactivateImagem($model, $data);
+
+        if (!$model->save()) {
+            return false;
+        }
+
+        return $model->create($model, $data);
+    }
+
+    public static function inactivateImagem ($model, $data) {
+        $date = Carbon::now();
+
+        // Limpa relacionamento com Usuario
+        foreach ($model->UsuarioS as $model) {
+            $usuario = UsuarioRepository::findOrFail($data['codusuario']);
+            UsuarioRepository::update($usuario, [
+                'codimagem' => null
+            ]);
+        }
+
+        // // Limpa relacionamento com SecaoProduto
+        // foreach ($model->SecaoProdutoS as $model) {
+        //     $repo = new SecaoProdutoRepository();
+        //     $model->codimagem = null;
+        //     $repo->model = $model;
+        //     $repo->update();
+        // }
+        //
+        // // Limpa relacionamento com FamiliaProduto
+        // foreach ($model->FamiliaProdutoS as $model) {
+        //     $repo = new FamiliaProdutoRepository();
+        //     $model->codimagem = null;
+        //     $repo->model = $model;
+        //     $repo->update();
+        // }
+        //
+        // // Limpa relacionamento com GrupoProduto
+        // foreach ($model->GrupoProdutoS as $model) {
+        //     $repo = new GrupoProdutoRepository();
+        //     $model->codimagem = null;
+        //     $repo->model = $model;
+        //     $repo->update();
+        // }
+        //
+        // // Limpa relacionamento com SubGrupoProduto
+        // foreach ($model->SubGrupoProdutoS as $model) {
+        //     $repo = new SubGrupoProdutoRepository();
+        //     $model->codimagem = null;
+        //     $repo->model = $model;
+        //     $repo->update();
+        // }
+        //
+        // // Limpa relacionamento com Marca
+        // foreach ($model->MarcaS as $model) {
+        //     $repo = new MarcaRepository();
+        //     $model->codimagem = null;
+        //     $repo->model = $model;
+        //     $repo->update();
+        // }
+        //
+        // // Limpa relacionamento com ProdutoImagem
+        // foreach ($model->ProdutoImagemS as $model) {
+        //     $repo = new ProdutoImagemRepository();
+        //     $repo->model = $model;
+        //     $repo->delete();
+        // }
+
+        $model->inativo = $date;
+
+        return static::update($model);
+    }
+
+
+
+    public static function inactivate_($model) {
+
+        if (!empty($model->inativo)) {
+            return true;
+        }
+
+
+        $model->inativo = Carbon::now();
+
+        return $model->save();
+    }
+
+
 }

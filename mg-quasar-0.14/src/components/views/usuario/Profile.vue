@@ -1,115 +1,73 @@
 <template>
   <mg-layout>
 
-    <q-side-link to="/usuario" slot="menu">
+    <q-side-link :to="'/usuario/' + data.codusuario" slot="menu">
       <q-btn flat icon="arrow_back"  />
     </q-side-link>
 
+    <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
+
     <template slot="title">
-      Perfil {{ item.usuario }}
+      {{ data.usuario }}
     </template>
 
     <div slot="content">
       <div class="layout-padding">
-        <q-card v-if="item.inativo">
-          <q-card-main>
-            <span class="text-red">
-              Inativo desde {{ moment(item.inativo).format('L') }}
-            </span>
-          </q-card-main>
-        </q-card>
 
         <div class="row">
           <div class="col-md-4">
-            <q-card>
-              <q-card-main>
-                <dl>
-                  <dt>#</dt>
-                  <dd>{{ item.codusuario }}</dd>
-                  <dt>Usuário</dt>
-                  <dd>{{ item.usuario }}</dd>
-                  <dt>Filial</dt>
-                  <dd>{{ item.filial.filial }}</dd>
-                  <dt>Pessoa</dt>
-                  <dd>{{ item.pessoa.pessoa }}</dd>
-                  <dt>Impressora Matricial</dt>
-                  <dd>{{ item.impressoramatricial }}</dd>
-                  <dt>Impressora Térmica</dt>
-                  <dd>{{ item.impressoratermica }}</dd>
-                  <dt>Último acesso</dt>
-                  <dd>{{ moment(item.ultimoacesso).format('LLLL') }}</dd>
-                </dl>
-              </q-card-main>
-            </q-card>
+            <form @submit.prevent="update()">
+              <q-input
+                type="password"
+                v-model="data.senha"
+                float-label="Nova senha"
+              />
+              </q-field>
+              <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
+              <q-select
+                style="width:100%"
+                float-label="Impressora Matricial"
+                v-model="data.impressoramatricial"
+                :options="impressoras"
+              />
+              <q-select
+                style="width:100%"
+                float-label="Impressora Térmica"
+                v-model="data.impressoratermica"
+                :options="impressoras"
+              />
+            </form>
           </div>
           <div class="col-md-4">
             <q-card>
-              <q-card-title>
-                Grupos
-              </q-card-title>
-              <q-card-main>
-                <dl>
-                  <template v-for="grupo in item.grupos">
-                    <dt>{{ grupo.grupousuario }}</dt>
-                    <dd>{{ grupo.filiais.toString() }}</dd>
-                  </template>
-                </dl>
-              </q-card-main>
-            </q-card>
-          </div>
-          <div class="col-md-4">
-            <q-card>
-              <q-card-title>
+              <!-- <q-card-title>
                 Foto
-              </q-card-title>
+              </q-card-title> -->
               <q-card-main>
+                <q-card-media v-if="data.imagem">
+                  <img :src="data.imagem">
+                </q-card-media>
                 <q-uploader
-                  :url=" 'http://api.escmig05.teste/api/imagem?codusuario=' + item.codusuario"
-                  :headers= headers
-                />
+                  v-if="data.imagem"
+                  :url=" endpoint + 'imagem/' + data.codimagem + '?codusuario=' + data.codusuario"
+                  :headers= "headers"
+                  method="PUT"
+                  stack-label="Alterar imagem"
+                  :multiple="false"
+                  @finish="uploaded(data.codusuario)" />
+
+                <q-uploader
+                  v-else
+                  :url=" endpoint + 'imagem?codusuario=' + data.codusuario"
+                  :headers= "headers"
+                  stack-label="Cadastrar Imagem"
+                  :multiple="false"
+                  @finish="uploaded(data.codusuario)" />
               </q-card-main>
             </q-card>
           </div>
         </div>
-
       </div>
-
-      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
-        <q-fab
-          color="primary"
-          icon="edit"
-          active-icon="edit"
-          direction="up"
-          class="animate-pop"
-        >
-          <router-link :to="{ path: '/usuario/' + item.codusuario + '/update' }">
-            <q-fab-action color="primary" icon="edit">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
-            </q-fab-action>
-          </router-link>
-          <q-fab-action color="orange" @click.native="activate()" icon="thumb_up" v-if="item.inativo">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
-          </q-fab-action>
-          <q-fab-action color="orange" @click.native="inactivate()" icon="thumb_down" v-else>
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
-          </q-fab-action>
-          <router-link :to="{ path: '/usuario/' + item.codusuario + '/grupos' }">
-            <q-fab-action color="primary" icon="supervisor_account">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Grupos</q-tooltip>
-            </q-fab-action>
-          </router-link>
-          <q-fab-action color="red" @click.native="destroy()" icon="delete">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
-          </q-fab-action>
-        </q-fab>
-      </q-fixed-position>
-
-    </div>
-
-    <div slot="footer">
-      <mg-autor
-        :data="item"
-        ></mg-autor>
     </div>
 
   </mg-layout>
@@ -119,35 +77,39 @@
 import {
   Dialog,
   Toast,
-  QFixedPosition,
   QBtn,
-  QFab,
-  QFabAction,
-  QTooltip,
+  QField,
+  QInput,
+  QSelect,
+  QSearch,
+  QAutocomplete,
   QSideLink,
+  QUploader,
+  QCardMedia,
   QCard,
   QCardMain,
-  QCardTitle,
-  QUploader
- } from 'quasar'
+  QCardTitle
+} from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
-import MgAutor from '../../utils/MgAutor'
+import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
-  name: 'usuario-view',
+  name: 'usuario-update',
   components: {
     MgLayout,
-    MgAutor,
-    QFixedPosition,
+    MgErrosValidacao,
     QBtn,
-    QFab,
-    QFabAction,
-    QTooltip,
+    QField,
+    QInput,
+    QSelect,
+    QSearch,
+    QAutocomplete,
     QSideLink,
+    QUploader,
+    QCardMedia,
     QCard,
     QCardMain,
-    QCardTitle,
-    QUploader
+    QCardTitle
   },
   data () {
     return {
@@ -155,82 +117,53 @@ export default {
         'X-Requested-With': 'XMLHttpRequest',
         Authorization: `Bearer ${localStorage.getItem('auth.token')}`
       },
-      item: {
-        filial: {
-          filial: null
-        },
-        pessoa: {
-          pessoa: null
-        }
-      }
+      endpoint: process.env.API_BASE_URL,
+      data: {
+        usuario: ''
+      },
+      impressoras: [],
+      erros: false
     }
   },
   methods: {
     carregaDados: function (id) {
       let vm = this
       window.axios.get('usuario/' + id + '/details').then(function (request) {
-        vm.item = request.data
+        vm.data = request.data
+        vm.data.senha = null
       }).catch(function (error) {
         console.log(error.response)
       })
     },
-    activate: function () {
+    carregaImpressoras: function () {
       let vm = this
-      Dialog.create({
-        title: 'Ativar',
-        message: 'Tem certeza de deseja ativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Ativar',
-            handler () {
-              window.axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
-                vm.carregaDados(vm.item.codusuario)
-                Toast.create.positive('Registro ativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+      window.axios.get('usuario/impressoras').then(function (request) {
+        vm.impressoras = request.data
+      }).catch(function (error) {
+        console.log(error.response)
       })
     },
-    inactivate: function () {
-      let vm = this
-      Dialog.create({
-        title: 'Inativar',
-        message: 'Tem certeza que deseja inativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Inativar',
-            handler () {
-              window.axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
-                vm.carregaDados(vm.item.codusuario)
-                Toast.create.positive('Registro inativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
-      })
+    uploaded (codusuario) {
+      this.carregaDados(codusuario)
     },
-    destroy: function () {
-      let vm = this
+    update: function () {
+      var vm = this
       Dialog.create({
-        title: 'Excluir',
-        message: 'Tem certeza que deseja excluir?',
+        title: 'Salvar',
+        message: 'Tem certeza que deseja salvar?',
         buttons: [
-          'Cancelar',
           {
-            label: 'Excluir',
+            label: 'Cancelar',
+            handler () {}
+          },
+          {
+            label: 'Salvar',
             handler () {
-              window.axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
-                vm.$router.push('/usuario')
-                Toast.create.positive('Registro excluído')
+              window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
+                Toast.create.positive('Registro atualizado')
+                vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {
-                console.log(error)
+                vm.erros = error.response.data.erros
               })
             }
           }
@@ -238,27 +171,13 @@ export default {
       })
     }
   },
-  mounted () {
+  created () {
     this.carregaDados(localStorage.getItem('auth.codusuario'))
+    this.carregaImpressoras()
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-dl {
-  margin: 0;
-}
-dt {
-  color: rgba(0,0,0,0.54);
-}
-dd {
-  margin-bottom: 16px;
-}
-dd:last-child {
-  margin-bottom: 0;
-}
-.q-collapsible-sub-item div {
-  margin: 5px 0;
-}
 </style>

@@ -246,10 +246,11 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
 
     public function validate() {
 
-    	if ($this->codusuario)
-    		$unique_usuario = "unique:tblusuario,usuario,$this->codusuario,codusuario|required|min:2";
-    	else
-    		$unique_usuario = "unique:tblusuario,usuario|required|min:2";
+    	if ($this->codusuario) {
+            $unique_usuario = "unique:tblusuario,usuario,$this->codusuario,codusuario|required|min:2";
+        } else {
+            $unique_usuario = "unique:tblusuario,usuario|required|min:2";
+        }
 
         $this->_regrasValidacao = [
             'usuario' => $unique_usuario,
@@ -266,7 +267,7 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
         return parent::validate();
     }
 
-    public function getAuthPassword(){
+    public function getAuthPassword() {
         return $this->senha;
     }
 
