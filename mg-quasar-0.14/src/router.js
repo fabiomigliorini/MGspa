@@ -33,6 +33,7 @@ export default new VueRouter({
     // Grupo de Usuarios
     { path: '/usuario', component: load('views/usuario/Index') },
     { path: '/usuario/create', component: load('views/usuario/Create') },
+    { path: '/usuario/perfil', component: load('views/usuario/Profile') },
     { path: '/usuario/grupo-usuario/:id', name: 'grupo-usuario', component: load('views/usuario/Index') },
     { path: '/usuario/:id', component: load('views/usuario/View') },
     { path: '/usuario/:id/update', component: load('views/usuario/Update') },

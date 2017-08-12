@@ -40,8 +40,12 @@
   <q-scroll-area slot="right" style="width: 100%; height: 100%">
     <q-list inset-separator>
       <q-item>
-        <q-item-side :avatar="'https://randomuser.me/api/portraits/men/3.jpg'" />
-        <q-item-main :label="'Usuário'" />
+        <q-item-side :avatar="avatar" v-if="avatar.length > 0"/>
+          <q-item-main>
+        <router-link :to="{ path: '/usuario/perfil' }">
+            {{ usuario }}
+        </router-link>
+      </q-item-main>
         <q-item-side right icon="exit_to_app" @click="logout" style="cursor:pointer"/>
       </q-item>
     </q-list>
@@ -104,7 +108,9 @@ export default {
       rightScroll: true,
       leftBreakpoint: 996,
       rightBreakpoint: 2000,
-      hideTabs: true
+      hideTabs: true,
+      usuario: `${localStorage.getItem('auth.usuario')}`,
+      avatar: `${localStorage.getItem('auth.avatar')}`
       // right: false
     }
   },
@@ -162,6 +168,9 @@ export default {
             handler () {
               window.axios.get('auth/logout').then(response => {
                 localStorage.removeItem('auth.token')
+                localStorage.removeItem('auth.usuario')
+                localStorage.removeItem('auth.codusuario')
+                localStorage.removeItem('auth.avatar')
                 vm.$router.push('/login')
                 Toast.create('Até mais...')
               })

@@ -62,9 +62,17 @@ export default {
         senha: this.senha
       }).then(response => {
         // salva token no Local Storage
-        var token = response.data.token
+        let token = response.data.token
         localStorage.setItem('auth.token', token)
-        // console.log(response)
+
+        window.axios.get('auth/user').then(response => {
+          // salva código da imagem avatar do usuário
+          localStorage.setItem('auth.avatar', response.data.user.avatar)
+          localStorage.setItem('auth.usuario', response.data.user.usuario)
+          localStorage.setItem('auth.codusuario', response.data.user.codusuario)
+        }).catch(error => {
+          console.log(error.response)
+        })
         vm.$router.go(-1)
       }).catch(error => {
         // Mensagem de erro

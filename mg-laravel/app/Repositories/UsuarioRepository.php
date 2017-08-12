@@ -23,6 +23,16 @@ class UsuarioRepository extends MGRepositoryStatic
                 'required',
                 Rule::unique('tblusuario')->ignore($model->codusuario, 'codusuario'),
                 'min:2',
+            ],
+            'senha' => [
+                'required_if:codusuario,null',
+                'min:6'
+            ],
+            'impressoramatricial' => [
+                'required'
+            ],
+            'impressoratermica' => [
+                'required'
             ]
         ];
 
@@ -82,7 +92,7 @@ class UsuarioRepository extends MGRepositoryStatic
 
         $details['grupos'] = $grupos;
         $details['permissoes'] = $permissoes;
-
+        $details['imagem'] = $model->Imagem->url ?? false;
         return $details;
     }
 
@@ -109,6 +119,47 @@ class UsuarioRepository extends MGRepositoryStatic
         $qry = static::querySort($qry, $sort);
         $qry = static::queryFields($qry, $fields);
         return $qry;
+    }
+
+    public static function create($model = null, array $data = null)
+    {
+        if (empty($model)) {
+            $model = static::new();
+        }
+
+        if (!empty($data)) {
+            $model = static::fill($model, $data);
+        }
+
+        $model->senha = bcrypt($model->senha);
+
+        if (!$model->save()) {
+            return false;
+        }
+
+        return $model;
+    }
+
+    public static function update($model, array $data = null)
+    {
+
+        if (!empty($data)) {
+            static::fill($model, $data);
+        }
+
+        if(empty($data['senha'])) {
+            unset($model->senha);
+        }
+
+        if(isset($data['senha'])) {
+            $model->senha = bcrypt($model->senha);
+        }
+        
+        if (!$model->save()) {
+            return false;
+        }
+
+        return $model;
     }
 
     public static function grupos($model)
@@ -139,7 +190,7 @@ class UsuarioRepository extends MGRepositoryStatic
         if ($model->GrupoUsuarioUsuarioS()->where('codgrupousuario', $codgrupousuario)->where('codfilial', $codfilial)->delete()) {
             return true;
         }
-        
+
         return false;
     }
 

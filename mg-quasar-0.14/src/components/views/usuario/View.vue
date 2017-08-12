@@ -59,7 +59,7 @@
             </q-card>
           </div>
           <div class="col-md-4">
-            <q-card inline>
+            <q-card>
               <q-card-title>
                 Permissões
               </q-card-title>

@@ -17,6 +17,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::get('logout', 'Auth\LoginController@logout');
     Route::get('check', 'Auth\LoginController@check');
     Route::get('refresh', 'Auth\LoginController@refreshToken');
+    Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
 });
 
 Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
@@ -51,6 +52,9 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
     Route::resource('natureza-operacao', 'NaturezaOperacaoController');
 
     // Rotas Dinamicas
+
+    // Imagem
+    Route::resource('imagem', 'ImagemController');
 
     // Filial
     Route::resource('filial', 'FilialController');

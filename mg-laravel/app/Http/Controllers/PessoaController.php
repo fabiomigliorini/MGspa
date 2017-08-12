@@ -13,7 +13,7 @@ class PessoaController extends ControllerCrud
 
     public function autocomplete (Request $request)
     {
-        $qry = PessoaRepository::autocomplete($request->get('0'));
+        $qry = PessoaRepository::autocomplete($request->all());
 
         return response()->json($qry, 206);
     }
