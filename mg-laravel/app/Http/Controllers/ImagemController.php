@@ -26,9 +26,8 @@ class ImagemController extends ControllerCrud
         $this->authorize();
         $data = $request->all();
         $model = ImagemRepository::findOrFail($id);
-        // $model = ImagemRepository::fill($model, $request->all());
         // ImagemRepository::validate($model);
-        $model = ImagemRepository::update($model, $data);
+        ImagemRepository::update($model, $data);
         return response()->json($model, 200);
     }
 
