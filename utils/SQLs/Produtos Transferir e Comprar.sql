@@ -1,7 +1,7 @@
 ﻿-- alter table tblmarca add controlada boolean not null default false
 
 -- update tblmarca set controlada = true where marca ilike 'Xpto'
-
+/*
 -- PARA SEPARAR
 select 
 	-- m.marca, 
@@ -38,13 +38,13 @@ inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
 inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codestoquelocal = 101001 and elpv_deposito.codprodutovariacao = elpv.codprodutovariacao)
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
-where elpv.codestoquelocal = 103001
+where elpv.codestoquelocal = 104001
 and m.controlada = true
-and es.saldoquantidade < elpv.estoqueminimo
+and es.saldoquantidade <= elpv.estoqueminimo
 and es_deposito.saldoquantidade > 0
 order by m.marca, p.produto, pv.variacao
+*/
 
-/*
 -- PARA COMPRAR
 select 
 	--m.marca,
@@ -79,8 +79,61 @@ inner join (
 	) sld on (sld.codprodutovariacao = pv.codprodutovariacao)
 where p.inativo is null
 and m.controlada = true
-and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
---and m.marca not ilike '%acrilex%'
+--and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
+and m.marca ilike '%brasil%form%'
 order by m.marca, p.produto, pv.variacao
 
-*/
+
+-- PARA RECOLHER PRO DEPOSITO
+select 
+    iq.*
+    , iq.loja - iq.deixar as recolher
+from (
+    select 
+        -- m.marca, 
+        p.codproduto, 
+        -- p.produto, 
+        -- pv.variacao, 
+        p.produto || coalesce(' | ' || pv.variacao, ''),
+        um.sigla as um,
+        --p.preco,
+        --coalesce(pv.referencia, p.referencia), 
+        (
+            select pb.barras || coalesce(' ' || pe_um.sigla || ' C/' || cast(pe.quantidade as bigint), '')
+            from tblprodutobarra pb
+            left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
+            left join tblunidademedida pe_um on (pe_um.codunidademedida = pe.codunidademedida)
+            where pb.codprodutovariacao = pv.codprodutovariacao
+            order by pe.quantidade nulls first, pb.barras
+            limit 1
+        ) as barras,
+        -- elpv_deposito.corredor, 
+        -- elpv_deposito.prateleira, 
+        -- elpv_deposito.coluna, 
+        -- elpv_deposito.bloco,
+        cast(es_deposito.saldoquantidade as bigint) as deposito,
+        --elpv_deposito.estoqueminimo as min, 
+        --elpv_deposito.estoquemaximo as max, 
+        cast(es.saldoquantidade as bigint) as loja, 
+        case when elpv.vendadiaquantidadeprevisao > 0 then cast(es.saldoquantidade / elpv.vendadiaquantidadeprevisao as bigint) else null end as dias, 
+        elpv.estoqueminimo as min, 
+        elpv.estoquemaximo as max, 
+        --elpv.vendadiaquantidadeprevisao,
+        case when cast(coalesce(elpv.vendadiaquantidadeprevisao, 0) * 90 as bigint) < 2 then 2 else cast(elpv.vendadiaquantidadeprevisao * 90 as bigint) end as deixar
+    from tblestoquelocalprodutovariacao elpv
+    inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
+    inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
+    inner join tblproduto p on (p.codproduto = pv.codproduto)
+    inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
+    inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codestoquelocal = 101001 and elpv_deposito.codprodutovariacao = elpv.codprodutovariacao)
+    inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
+    inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
+    where elpv.codestoquelocal = 102001
+    and m.controlada = true
+    and m.marca not ilike 'pilot'
+    --and (es.saldoquantidade - (coalesce(elpv.vendadiaquantidadeprevisao, 0) * 90) > 1)
+    and coalesce(es_deposito.saldoquantidade, 0) <= coalesce(elpv_deposito.estoqueminimo, 0)
+    --and es_deposito.saldoquantidade > 0
+    order by m.marca, p.produto, pv.variacao
+    ) iq 
+where iq.deixar < iq.loja
