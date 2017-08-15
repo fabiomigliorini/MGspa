@@ -49,10 +49,9 @@
                 </q-card-media>
                 <q-uploader
                   v-if="data.imagem"
-                  :url=" endpoint + 'imagem/' + data.codimagem + '?codusuario=' + data.codusuario"
+                  :url=" endpoint + 'imagem/' + data.codimagem + '?_method=PUT&codusuario=' + data.codusuario"
                   :headers= "headers"
-                  method="PUT"
-                  stack-label="Alterar imagem"
+                  stack-label="ALTERAR IMAGEM"
                   :multiple="false"
                   @finish="uploaded(data.codusuario)" />
 
@@ -60,7 +59,7 @@
                   v-else
                   :url=" endpoint + 'imagem?codusuario=' + data.codusuario"
                   :headers= "headers"
-                  stack-label="Cadastrar Imagem"
+                  stack-label="CADASTRAR IMAGEM"
                   :multiple="false"
                   @finish="uploaded(data.codusuario)" />
               </q-card-main>
