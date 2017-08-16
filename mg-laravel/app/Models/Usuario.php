@@ -241,8 +241,7 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
         'inativo',
     ];
 
-    protected $hidden = ['senha', 'remember_token'];
-
+    // protected $hidden = ['senha', 'remember_token'];
 
     public function validate() {
 

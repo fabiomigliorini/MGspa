@@ -13,7 +13,6 @@
 
     <div slot="content">
       <div class="layout-padding">
-
         <div class="row">
           <div class="col-md-4">
             <form @submit.prevent="update()">
@@ -22,20 +21,22 @@
                 v-model="data.senha"
                 float-label="Nova senha"
               />
-              </q-field>
-              <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
+              <mg-erros-validacao :erros="erros.senha"></mg-erros-validacao>
+
               <q-select
                 style="width:100%"
                 float-label="Impressora Matricial"
                 v-model="data.impressoramatricial"
                 :options="impressoras"
               />
+
               <q-select
                 style="width:100%"
                 float-label="Impressora Térmica"
                 v-model="data.impressoratermica"
                 :options="impressoras"
               />
+
             </form>
           </div>
           <div class="col-md-4">
@@ -53,6 +54,7 @@
                   :headers= "headers"
                   stack-label="ALTERAR IMAGEM"
                   :multiple="false"
+                  hide-upload-progress
                   @finish="uploaded(data.codusuario)" />
 
                 <q-uploader
@@ -80,8 +82,6 @@ import {
   QField,
   QInput,
   QSelect,
-  QSearch,
-  QAutocomplete,
   QSideLink,
   QUploader,
   QCardMedia,
@@ -93,7 +93,7 @@ import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
-  name: 'usuario-update',
+  name: 'usuario-profile',
   components: {
     MgLayout,
     MgErrosValidacao,
@@ -101,8 +101,6 @@ export default {
     QField,
     QInput,
     QSelect,
-    QSearch,
-    QAutocomplete,
     QSideLink,
     QUploader,
     QCardMedia,
@@ -117,9 +115,7 @@ export default {
         Authorization: `Bearer ${localStorage.getItem('auth.token')}`
       },
       endpoint: process.env.API_BASE_URL,
-      data: {
-        usuario: ''
-      },
+      data: {},
       impressoras: [],
       erros: false
     }
@@ -129,7 +125,7 @@ export default {
       let vm = this
       window.axios.get('usuario/' + id + '/details').then(function (request) {
         vm.data = request.data
-        vm.data.senha = null
+        vm.data.senha = ''
       }).catch(function (error) {
         console.log(error.response)
       })
