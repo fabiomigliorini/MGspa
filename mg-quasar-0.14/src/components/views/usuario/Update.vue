@@ -99,9 +99,7 @@ export default {
   },
   data () {
     return {
-      data: {
-        usuario: ''
-      },
+      data: {},
       impressoras: [],
       filiais: [],
       terms: '',

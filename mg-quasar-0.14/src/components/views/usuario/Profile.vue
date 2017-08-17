@@ -15,39 +15,36 @@
       <div class="layout-padding">
         <div class="row">
           <div class="col-md-4">
-            <form @submit.prevent="update()">
-              <q-input
-                type="password"
-                v-model="data.senha"
-                float-label="Nova senha"
-              />
-              <mg-erros-validacao :erros="erros.senha"></mg-erros-validacao>
+            <q-card>
+              <q-card-main>
+                <form @submit.prevent="update()">
+                  <q-input
+                    type="password"
+                    v-model="data.senha"
+                    float-label="Nova senha"
+                  />
+                  <mg-erros-validacao :erros="erros.senha"></mg-erros-validacao>
 
-              <q-select
-                style="width:100%"
-                float-label="Impressora Matricial"
-                v-model="data.impressoramatricial"
-                :options="impressoras"
-              />
+                  <q-select
+                    style="width:100%"
+                    float-label="Impressora Matricial"
+                    v-model="data.impressoramatricial"
+                    :options="impressoras"
+                  />
 
-              <q-select
-                style="width:100%"
-                float-label="Impressora Térmica"
-                v-model="data.impressoratermica"
-                :options="impressoras"
-              />
-
-            </form>
+                  <q-select
+                    style="width:100%"
+                    float-label="Impressora Térmica"
+                    v-model="data.impressoratermica"
+                    :options="impressoras"
+                  />
+                </form>
+              </q-card-main>
+            </q-card>
           </div>
           <div class="col-md-4">
             <q-card>
-              <!-- <q-card-title>
-                Foto
-              </q-card-title> -->
               <q-card-main>
-                <q-card-media v-if="data.imagem">
-                  <img :src="data.imagem">
-                </q-card-media>
                 <q-uploader
                   v-if="data.imagem"
                   :url=" endpoint + 'imagem/' + data.codimagem + '?_method=PUT&codusuario=' + data.codusuario"
@@ -64,6 +61,10 @@
                   stack-label="CADASTRAR IMAGEM"
                   :multiple="false"
                   @finish="uploaded(data.codusuario)" />
+
+                <q-card-media v-if="data.imagem">
+                  <img :src="data.imagem">
+                </q-card-media>
               </q-card-main>
             </q-card>
           </div>

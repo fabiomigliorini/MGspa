@@ -117,7 +117,8 @@ export default {
   data () {
     return {
       data: {
-        usuario: null,
+        usuario: '',
+        senha: '',
         codfilial: null,
         codpessoa: null,
         impressoramatricial: null,

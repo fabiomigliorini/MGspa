@@ -17,9 +17,7 @@ class UsuarioRepository extends MGRepositoryStatic
 
     public static function validationRules ($model = null)
     {
-        if ($model->codusuario) {
-            $min = 0;
-        }
+        $min = ($model->codusuario) ? 6 : 0;
         $rules = [
             'usuario' => [
                 'required',
@@ -150,7 +148,7 @@ class UsuarioRepository extends MGRepositoryStatic
         if (!empty($data)) {
             static::fill($model, $data);
         }
-        
+
         if (empty($model->senha)) {
             unset($model->senha);
         } else {
