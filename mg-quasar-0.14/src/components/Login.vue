@@ -73,7 +73,7 @@ export default {
         }).catch(error => {
           console.log(error.response)
         })
-        vm.$router.go(-1)
+        vm.$router.push('/')
       }).catch(error => {
         // Mensagem de erro
         console.log('erro no login')

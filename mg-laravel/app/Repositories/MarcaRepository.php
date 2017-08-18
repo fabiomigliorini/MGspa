@@ -17,12 +17,13 @@ class MarcaRepository extends MGRepositoryStatic
 {
     public static $modelClass = '\\App\\Models\\Marca';
 
-    public static function validationRules($model = null)
+    public static function validationRules ($model = null)
     {
         $rules = [
             'marca' => [
                 'required',
-                Rule::unique('tblmarca')->ignore($data['id']??null, 'codmarca')
+                Rule::unique('tblmarca')->ignore($model->codmarca, 'codmarca'),
+                'min:2'
             ],
         ];
 
@@ -34,6 +35,7 @@ class MarcaRepository extends MGRepositoryStatic
         $messages = [
             'marca.required' => 'O campo marca não pode ser vazio',
             'marca.unique' => 'Esta marca já esta cadastrada',
+            'narca.min' => 'O campo Marca deve ter no mínimo 2 caracteres.',
         ];
 
         return $messages;

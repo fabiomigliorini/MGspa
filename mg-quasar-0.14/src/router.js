@@ -28,7 +28,9 @@ export default new VueRouter({
 
      // Marca
     { path: '/marca', component: load('views/marca/Index') },
-    { path: '/marca/:id', component: load('views/marca/View') }, // Marca
+    { path: '/marca/create', component: load('views/marca/Create') },
+    { path: '/marca/:id', component: load('views/marca/View') },
+    { path: '/marca/:id/update', component: load('views/marca/Update') },
 
     // Grupo de Usuarios
     { path: '/usuario', component: load('views/usuario/Index') },

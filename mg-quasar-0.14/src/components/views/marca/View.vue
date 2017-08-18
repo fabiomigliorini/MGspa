@@ -58,6 +58,32 @@
 
 
       </div>
+
+      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+        <q-fab
+          color="primary"
+          icon="edit"
+          active-icon="edit"
+          direction="up"
+          class="animate-pop"
+        >
+          <router-link :to="{ path: '/marca/' + item.codmarca + '/update' }">
+            <q-fab-action color="primary" icon="edit">
+              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
+            </q-fab-action>
+          </router-link>
+          <q-fab-action color="orange" @click.native="activate()" icon="thumb_up" v-if="item.inativo">
+              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="orange" @click.native="inactivate()" icon="thumb_down" v-else>
+              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
+          </q-fab-action>
+          <q-fab-action color="red" @click.native="destroy()" icon="delete">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
+          </q-fab-action>
+        </q-fab>
+      </q-fixed-position>
+
     </div>
 
     <div slot="footer">
@@ -73,7 +99,7 @@
 
 import MgLayout from '../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
-import { QIcon, QCard, QCardMedia, QCardTitle, QRating, debounce } from 'quasar'
+import { QIcon, QCard, QCardMedia, QCardTitle, QRating, debounce, QBtn, QFixedPosition, QFab, QFabAction, QTooltip } from 'quasar'
 
 export default {
 
@@ -84,7 +110,12 @@ export default {
     QCard,
     QCardMedia,
     QCardTitle,
-    QRating
+    QRating,
+    QBtn,
+    QFixedPosition,
+    QFabAction,
+    QFab,
+    QTooltip
   },
 
   data () {

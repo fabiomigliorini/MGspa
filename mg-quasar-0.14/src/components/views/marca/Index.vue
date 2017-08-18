@@ -212,6 +212,13 @@
 
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
+      <router-link :to="{ path: 'marca/create' }">
+        <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+          <q-btn round color="primary" @click="method">
+            <q-icon name="add" />
+          </q-btn>
+        </q-fixed-position>
+      </router-link>
 
     </div>
 
@@ -222,7 +229,7 @@
 
 import MgLayout from '../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { QChip, QInput, QSideLink, QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce } from 'quasar'
+import { QChip, QInput, QSideLink, QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QFixedPosition, QBtn } from 'quasar'
 
 export default {
 
@@ -246,7 +253,9 @@ export default {
     QRange,
     QInfiniteScroll,
     QSpinnerDots,
-    QRating
+    QRating,
+    QBtn,
+    QFixedPosition
   },
 
   data () {
