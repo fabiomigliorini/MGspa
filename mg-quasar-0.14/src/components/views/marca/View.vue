@@ -27,6 +27,14 @@
         </li>
       </ul>
 
+      <q-card v-if="item.inativo">
+        <q-card-main>
+          <span class="text-red">
+            Inativo desde {{ moment(item.inativo).format('L') }}
+          </span>
+        </q-card-main>
+      </q-card>
+
       <div class="row">
         <q-card inline class="col-md-2">
 
@@ -99,7 +107,7 @@
 
 import MgLayout from '../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
-import { QIcon, QCard, QCardMedia, QCardTitle, QRating, debounce, QBtn, QFixedPosition, QFab, QFabAction, QTooltip } from 'quasar'
+import { QIcon, QCard, QCardMedia, QCardTitle, QRating, debounce, QBtn, QFixedPosition, QFab, QFabAction, QTooltip, Dialog, Toast, QCardMain } from 'quasar'
 
 export default {
 
@@ -110,6 +118,7 @@ export default {
     QCard,
     QCardMedia,
     QCardTitle,
+    QCardMain,
     QRating,
     QBtn,
     QFixedPosition,
@@ -140,8 +149,70 @@ export default {
         // desmarca flag de carregando
         this.loading = false
       })
-    }, 500)
-
+    }, 500),
+    activate: function () {
+      let vm = this
+      Dialog.create({
+        title: 'Ativar',
+        message: 'Tem certeza de deseja ativar?',
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Ativar',
+            handler () {
+              window.axios.delete('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
+                vm.loadData(vm.item.codmarca)
+                Toast.create.positive('Registro ativado')
+              }).catch(function (error) {
+                console.log(error.response)
+              })
+            }
+          }
+        ]
+      })
+    },
+    inactivate: function () {
+      let vm = this
+      Dialog.create({
+        title: 'Inativar',
+        message: 'Tem certeza que deseja inativar?',
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Inativar',
+            handler () {
+              window.axios.post('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
+                vm.loadData(vm.item.codusuario)
+                Toast.create.positive('Registro inativado')
+              }).catch(function (error) {
+                console.log(error.response)
+              })
+            }
+          }
+        ]
+      })
+    },
+    destroy: function () {
+      let vm = this
+      Dialog.create({
+        title: 'Excluir',
+        message: 'Tem certeza que deseja excluir?',
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Excluir',
+            handler () {
+              window.axios.delete('marca/' + vm.item.codmarca).then(function (request) {
+                vm.$router.push('/marca')
+                Toast.create.positive('Registro excluído')
+              }).catch(function (error) {
+                console.log(error)
+              })
+            }
+          }
+        ]
+      })
+    }
   },
 
   // na criacao, busca filtro do Vuex
