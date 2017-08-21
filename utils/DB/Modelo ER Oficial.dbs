@@ -935,6 +935,9 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="deposito" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<index name="pk_tblestoquelocal" unique="PRIMARY_KEY" >
 				<column name="codestoquelocal" />
 			</index>
@@ -1013,6 +1016,42 @@
 			</fk>
 			<fk name="fk_tblestoquelocalproduto_3" to_schema="mgsis" to_table="tblprodutovariacao" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
+			</fk>
+		</table>
+		<table name="tblestoquelocalprodutovariacaovenda" >
+			<column name="codestoquelocalprodutovariacaovenda" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codestoquelocalprodutovariacao" type="bigint" jt="-5" mandatory="y" />
+			<column name="mes" type="date" jt="91" mandatory="y" />
+			<column name="quantidade" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblestoquelocalprodutovariacaovenda" unique="PRIMARY_KEY" >
+				<column name="codestoquelocalprodutovariacaovenda" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_mes" unique="UNIQUE" >
+				<column name="codestoquelocalprodutovariacao" />
+				<column name="mes" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda" unique="NORMAL" >
+				<column name="codestoquelocalprodutovariacao" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_0" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_1" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<fk name="fk_tblestoquelocalprodutovariacaovenda" to_schema="mgsis" to_table="tblestoquelocalprodutovariacao" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codestoquelocalprodutovariacao" pk="codestoquelocalprodutovariacao" />
+			</fk>
+			<fk name="fk_tblestoquelocalprodutovariacaovenda_0" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblestoquelocalprodutovariacaovenda_1" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblestoquemes" >
@@ -2142,6 +2181,9 @@
 				<defo>false</defo>
 			</column>
 			<column name="venda" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="vendadevolucao" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<index name="tblnaturezaoperacao_pkey" unique="PRIMARY_KEY" >
@@ -5289,6 +5331,7 @@
 		<sequence name="tblestadocivil_codestadocivil_seq" start="1" />
 		<sequence name="tblestoquelocal_codestoquelocal_seq" start="1" />
 		<sequence name="tblestoquelocalproduto_codestoquelocalproduto_seq" start="1" />
+		<sequence name="tblestoquelocalprodutovariaca_codestoquelocalprodutovariaca_seq" start="1" />
 		<sequence name="tblestoquemes_codestoquemes_seq" start="1" />
 		<sequence name="tblestoquemovimento_codestoquemovimento_seq" start="1" />
 		<sequence name="tblestoquemovimentotipo_codestoquemovimentotipo_seq" start="1" />
@@ -6881,5 +6924,13 @@ FROM
 			<column name="codusuariocriacao" />
 			<column name="inativo" />
 		</entity>
+	</layout>
+	<layout name="Layout_Vendas" id="Layout_4271ffc" show_relation="columns" >
+		<entity schema="mgsis" name="tblestoquelocal" color="c1d8ee" x="448" y="64" />
+		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="944" y="48" />
+		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="656" y="192" />
+		<entity schema="mgsis" name="tblestoquelocalprodutovariacaovenda" color="c1d8ee" x="48" y="512" />
+		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="c1d8ee" x="64" y="64" />
+		<entity schema="mgsis" name="tblmarca" color="c1d8ee" x="416" y="464" />
 	</layout>
 </project>

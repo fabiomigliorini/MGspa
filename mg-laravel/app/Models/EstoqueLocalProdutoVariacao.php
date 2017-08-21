@@ -34,6 +34,7 @@ namespace App\Models;
  * @property  ProdutoVariacao                $ProdutoVariacao
  *
  * Tabelas Filhas
+ * @property  EstoqueLocalProdutoVariacaoVenda[] $EstoqueLocalProdutoVariacaoVendaS
  * @property  EstoqueSaldo[]                 $EstoqueSaldoS
  */
 
@@ -89,6 +90,11 @@ class EstoqueLocalProdutoVariacao extends MGModel
     }
 
     // Tabelas Filhas
+    public function EstoqueLocalProdutoVariacaoVendaS()
+    {
+        return $this->hasMany(EstoqueLocalProdutoVariacaoVenda::class, 'codestoquelocalprodutovariacao', 'codestoquelocalprodutovariacao');
+    }
+
     public function EstoqueSaldoS()
     {
         return $this->hasMany(EstoqueSaldo::class, 'codestoquelocalprodutovariacao', 'codestoquelocalprodutovariacao');

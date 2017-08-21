@@ -2,6 +2,7 @@
 
 -- update tblmarca set controlada = true where marca ilike 'Xpto'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
+/*
 select 
 	-- m.marca, 
 	p.codproduto, 
@@ -43,8 +44,8 @@ and m.controlada = true
 and es.saldoquantidade <= elpv.estoqueminimo
 and es_deposito.saldoquantidade > 0
 order by m.marca, p.produto, pv.variacao
+*/
 
-/*
 -- PARA COMPRAR
 select 
 	--m.marca,
@@ -80,9 +81,8 @@ inner join (
 where p.inativo is null
 and m.controlada = true
 and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
-and m.marca ilike '%pilot%'
+and m.marca ilike '%maxprint%'
 order by m.marca, p.produto, pv.variacao
-*/
 
 -- PARA RECOLHER PRO DEPOSITO
 /*
