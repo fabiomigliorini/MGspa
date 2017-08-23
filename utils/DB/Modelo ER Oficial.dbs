@@ -1028,7 +1028,6 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="vendadiaquantidadeprevisao" type="float8" length="17" decimal="17" jt="6" />
 			<index name="pk_tblestoquelocalprodutovariacaovenda" unique="PRIMARY_KEY" >
 				<column name="codestoquelocalprodutovariacaovenda" />
 			</index>
@@ -3454,6 +3453,7 @@
 			<column name="quantidadeultimacompra" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="inativo" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codprodutoimagem" type="bigint" jt="-5" />
+			<column name="vendadiaquantidadeprevisao" type="float8" length="17" decimal="17" jt="6" />
 			<index name="pk_tblprodutovariacao" unique="PRIMARY_KEY" >
 				<column name="codprodutovariacao" />
 			</index>
@@ -6930,8 +6930,8 @@ FROM
 		<entity schema="mgsis" name="tblestoquelocal" color="c1d8ee" x="448" y="64" />
 		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="944" y="48" />
 		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="656" y="192" />
-		<entity schema="mgsis" name="tblestoquelocalprodutovariacaovenda" color="c1d8ee" x="48" y="512" />
 		<entity schema="mgsis" name="tblmarca" color="c1d8ee" x="416" y="464" />
+		<entity schema="mgsis" name="tblestoquelocalprodutovariacaovenda" color="c1d8ee" x="48" y="512" />
 		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="c1d8ee" x="64" y="64" />
 	</layout>
 </project>
