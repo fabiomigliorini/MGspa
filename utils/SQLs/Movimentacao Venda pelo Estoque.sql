@@ -22,7 +22,7 @@ inner join tblgrupoproduto gp on (gp.codgrupoproduto = sgp.codgrupoproduto)
 inner join tblfamiliaproduto fp on (fp.codfamiliaproduto = gp.codfamiliaproduto)
 inner join tblsecaoproduto sp on (sp.codsecaoproduto = fp.codsecaoproduto)
 where mov.codestoquemovimentotipo = 3001
-and pv.codprodutovariacao = 77458
+and pv.codprodutovariacao = 61424
 --and m.marca ilike 'xpto'
 group by 
     sp.secaoproduto, 

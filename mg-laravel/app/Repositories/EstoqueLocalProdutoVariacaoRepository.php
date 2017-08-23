@@ -141,18 +141,21 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
 
     public static function calculaMediaVendaDia (EstoqueLocalProdutoVariacao $elpv)
     {
-        $vendas = $elpv->EstoqueLocalProdutoVariacaoVendaS;
+        //$vendas = $elpv->EstoqueLocalProdutoVariacaoVendaS;
+        $mes_inicial = Carbon::now()->startOfMonth()->addYears(-1)->addMonths(-1);
+        $vendas = $elpv->EstoqueLocalProdutoVariacaoVendaS()
+            ->where('mes', '>=', $mes_inicial)
+            ->whereNotNull('quantidade')
+            ->where('quantidade', '>', 0)->get();
 
         if ($vendas->count() == 0) {
             return null;
         }
 
-        /*
         echo "Iniciando {$elpv->codestoquelocal} {$elpv->codprodutovariacao}\n";
         foreach ($vendas as $venda) {
             echo "{$venda->mes} => {$venda->quantidade}\n";
         }
-        */
 
         // Ignora Janeiro e fevereiro
         if ($vendas->count() > 3) {
@@ -166,16 +169,9 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
 
         // Ignora dois meses com menos movimentacao
         if ($vendas->count() > 3) {
-            for ($i = 0; $i < 2; $i++) {
-                $min = $vendas->min('quantidade');
-                $vendas = $vendas->reject(function ($venda) use ($min) {
-                    if ($min == $venda->quantidade) {
-                        $min = null;
-                        return true;
-                    }
-                    return false;
-                });
-            }
+            $vendas->sortBy('quantidade');
+            $vendas->shift();
+            $vendas->shift();
         }
 
         // Soma quantidade
@@ -197,31 +193,62 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
 
     }
 
-    public static function calculaVenda ($codestoquelocal, $codprodutovariacao)
+    public static function criaCombinacoesInexistentes ()
+    {
+        $sql = "
+            insert into tblestoquelocalprodutovariacao (codestoquelocal, codprodutovariacao, criacao, alteracao)
+            select el.codestoquelocal, pv.codprodutovariacao, date_trunc('second', now()), date_trunc('second', now())
+            from tblestoquelocal el
+            inner join tblproduto p on (p.inativo is null)
+            inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
+            left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = el.codestoquelocal and elpv.codprodutovariacao = pv.codprodutovariacao)
+            where el.inativo is null
+            and elpv.codestoquelocalprodutovariacao is null
+            ";
+        return DB::insert($sql);
+    }
+
+    public static function calculaVenda ($codestoquelocal, $codprodutovariacao, $codproduto = null)
     {
 
         /*
+        // Sumariza o total de venda por mes na tabela de EstoqueLocalProdutoVariacaoVenda
         if (!EstoqueLocalProdutoVariacaoVendaRepository::sumarizaPorMes()) {
             return false;
         }
         */
 
+        /*
+        DB::listen(function($sql) {
+            echo "Executando\n\n{$sql->sql}\n\nTime {$sql->time}";
+            echo "---\n\n\n";
+        });
+        */
 
-        DB::EnableQueryLog();
         $agora = Carbon::now();
 
-        // Busca todos produtos variacao
+        // Cria combinacoes de EstoqueLocalProdutoVariacao que ainda nao existam na tabela
+        static::criaCombinacoesInexistentes();
+
+        // Filtra de acordo com os parametros recebidos
         $qry = EstoqueLocalProdutoVariacao::query();
         if (!empty($codestoquelocal)) {
             $qry->where('codestoquelocal', $codestoquelocal);
         }
         if (!empty($codprodutovariacao)) {
-            $qry->where('codprodutovariacao', $codprodutovariacao);
+            $codprodutovariacaos = [$codprodutovariacao];
+        }
+        if (!empty($codproduto)) {
+            $codprodutovariacaos = \App\Models\ProdutoVariacao::where('codproduto', $codproduto)->get()->pluck('codprodutovariacao');
+        }
+        if (!empty($codprodutovariacaos)) {
+            $qry->whereIn('codprodutovariacao', $codprodutovariacaos);
         }
 
-        //$qry->where('codprodutovariacao', 1038);
-        $qry->where('codprodutovariacao', 77458);
+        echo "Ponto 2\n";
 
+        // Eager Loading para trazer as vendas por mes
+        /*
         $mes_inicial = Carbon::now()->startOfMonth()->addYears(-1)->addMonths(-1);
         $qry->with(['EstoqueLocalProdutoVariacaoVendaS' => function ($query) use ($mes_inicial) {
             $query->where('mes', '>=', $mes_inicial);
@@ -229,19 +256,60 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
             $query->where('quantidade', '>', 0);
             $query->orderBy('mes');
         }]);
+        */
 
-        $qry->with('ProdutoVariacao.Produto.Marca');
+        // Eager Loading trazendo mais tabelas que vamos utilizar
+        //$qry->with('EstoqueLocal');
+        //$qry->with('ProdutoVariacao.Produto.Marca');
 
+        $marcas = \App\Models\Marca::all();
+        $marcas = $marcas->keyBy('codmarca');
+
+        $produtos = \App\Models\Produto::all();
+        $produtos = $produtos->keyBy('codproduto');
+
+        $variacoes = \App\Models\ProdutoVariacao::all();
+        $variacoes = $variacoes->keyBy('codprodutovariacao');
+
+        /*
+        */
+        echo "Ponto 3\n";
+
+        // Percorre registros calculando Estoque Minimo e Maximo das Lojas
+        $media_pv = [];
+        $i = 0;
         foreach ($qry->get() as $elpv) {
+
+            $i++;
+            echo "{$i} {$elpv->ProdutoVariacao->codproduto} {$elpv->codprodutovariacao} {$elpv->codestoquelocal}\n";
+
+            // Calcula Media de Vendas para O Local
             $media = static::calculaMediaVendaDia($elpv);
-            $minimo = ceil($media * $elpv->ProdutoVariacao->Produto->Marca->estoqueminimodias);
-            if ($minimo == 0) {
-                $minimo = 1;
+
+            // Acumula Media de Vendas para a Variacao
+            if (!isset($media_pv[$elpv->codprodutovariacao])) {
+                $media_pv[$elpv->codprodutovariacao] = [
+                    'ProdutoVariacao' => $elpv->ProdutoVariacao,
+                    'media' => 0
+                ];
             }
-            $maximo = ceil($media * $elpv->ProdutoVariacao->Produto->Marca->estoquemaximodias);
-            if ($maximo <= $minimo) {
-                $maximo = $minimo + 1;
+            $media_pv[$elpv->codprodutovariacao]['media'] += $media;
+
+            // Calcula Minimo e Maximo para as Lojas
+            $minimo = null;
+            $maximo = null;
+            if (!$elpv->EstoqueLocal->deposito) {
+                if ($minimo == 0) {
+                    $minimo = ceil($media * $marcas[$produtos[$elpv->ProdutoVariacao->codproduto]->codmarca]->estoqueminimodias);
+                    $minimo = 1;
+                }
+                $maximo = ceil($media * $marcas[$produtos[$elpv->ProdutoVariacao->codproduto]->codmarca]->estoquemaximodias);
+                if ($maximo <= $minimo) {
+                    $maximo = $minimo + 1;
+                }
             }
+
+            // Atualiza no Banco de Dados
             EstoqueLocalProdutoVariacao::where('codestoquelocalprodutovariacao', $elpv->codestoquelocalprodutovariacao)->update([
                 'vendadiaquantidadeprevisao' => $media,
                 'estoqueminimo' => $minimo,
@@ -250,184 +318,54 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
             ]);
         }
 
-        EstoqueLocalProdutoVariacao::where('alteracao', '<', $agora)->update([
-            'vendadiaquantidadeprevisao' => null,
-            'estoqueminimo' => 1,
-            'estoquemaximo' => 2,
-            'alteracao' => $agora
-        ]);
+        // Se estava calculando para todos EstoqueLocal
+        if (empty($codestoquelocal)) {
 
-        dd(DB::getQueryLog());
-        dd('aqui');
+            // Busca todos EstoqueLocal marcados como 'deposito'
+            $depositos = \App\Models\EstoqueLocal::where('deposito', true)->get()->pluck('codestoquelocal');
 
-        /*
+            // Percorre as medias de venda acumuladas para o ProdutoVariacao
+            foreach ($media_pv as $cod => $item) {
 
+                // Calcula o Minimo e Maximo baseado na venda de todas as lojas somadas
+                $minimo = ceil($item['media'] * $marcas[$item['ProdutoVariacao']->Produto->codmarca]->estoqueminimodias);
+                if ($minimo == 0) {
+                    $minimo = 1;
+                }
+                $maximo = ceil($item['media'] * $marcas[$item['ProdutoVariacao']->Produto->codmarca]->estoquemaximodias);
+                if ($maximo <= $minimo) {
+                    $maximo = $minimo + 1;
+                }
 
-        // Percorre ajustando a data da ultima compra
-        foreach ($pvs->get() as $pv) {
-            $data = null;
-            $quantidade = null;
-            $custo = null;
-            $sql = "
-                select
-                    nf.emissao
-                    , sum(nfpb.quantidade * coalesce(pe.quantidade, 1)) as quantidade
-                    , sum(nfpb.valortotal) as valortotal
-                from tblprodutobarra pb
-                left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
-                inner join tblnotafiscalprodutobarra nfpb on (nfpb.codprodutobarra = pb.codprodutobarra)
-                inner join tblnotafiscal nf on (nf.codnotafiscal = nfpb.codnotafiscal)
-                inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = nf.codnaturezaoperacao)
-                where pb.codprodutovariacao = {$pv->codprodutovariacao}
-                and no.compra = true
-                group by pb.codprodutovariacao, nf.emissao
-                order by nf.emissao desc
-                limit 1
-                ";
-            $compra = DB::select($sql);
-            if (isset($compra[0])) {
-                $data = $compra[0]->emissao;
-                $quantidade = $compra[0]->quantidade;
-                $custo = $compra[0]->valortotal;
+                // Atualiza no Banco de Dados
+                EstoqueLocalProdutoVariacao::where('codprodutovariacao', $cod)->whereIn('codestoquelocal', $depositos)->update([
+                    'vendadiaquantidadeprevisao' => $item['media'],
+                    'estoqueminimo' => $minimo,
+                    'estoquemaximo' => $maximo,
+                    'alteracao' => $agora
+                ]);
+
+                // Atualiza no Banco de Dados Soma das vendas do ProdutoVariacao
+                \App\Models\ProdutoVariacao::where('codprodutovariacao', $cod)->update([
+                    'vendadiaquantidadeprevisao' => $item['media']
+                ]);
             }
-            if ($quantidade > 0) {
-                $custo /= $quantidade;
+
+            // Reinicializa registros de Minimo e Maximo que nao passaram pelo calculo
+            $qry = EstoqueLocalProdutoVariacao::where('alteracao', '<', $agora);
+            if (!empty($codprodutovariacaos)) {
+                $qry->whereIn('codprodutovariacao', $codprodutovariacaos);
             }
-            $ret = \App\Models\ProdutoVariacao::where('codprodutovariacao', $pv->codprodutovariacao)->update([
-                'dataultimacompra' => $data,
-                'quantidadeultimacompra' => $quantidade,
-                'custoultimacompra' => $custo,
+            $qry->update([
+                'vendadiaquantidadeprevisao' => null,
+                'estoqueminimo' => 1,
+                'estoquemaximo' => 2,
+                'alteracao' => $agora
             ]);
+
         }
 
-        // Monta faixa de datas
-        $bimestre = new Carbon('today - 2 months');
-        $semestre = new Carbon('today - 6 months');
-        $ano = new Carbon('today - 1 year');
-        $agora = new Carbon('now');
+        return true;
 
-        // consulta total vendido
-        $sql = "
-            select
-                tblnegocio.codestoquelocal
-                , tblprodutobarra.codprodutovariacao
-                --, tblprodutobarra.codproduto
-                , sum(tblnegocioprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1)) as vendaanoquantidade
-                , sum(tblnegocioprodutobarra.valortotal) as vendaanovalor
-                , sum(case when (tblnegocio.lancamento >= '{$semestre->toIso8601String()}') then tblnegocioprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1) else 0 end) as vendasemestrequantidade
-                , sum(case when (tblnegocio.lancamento >= '{$semestre->toIso8601String()}') then tblnegocioprodutobarra.valortotal * (tblnegocio.valortotal / tblnegocio.valorprodutos) else 0 end) as vendasemestrevalor
-                , sum(case when (tblnegocio.lancamento >= '{$bimestre->toIso8601String()}') then tblnegocioprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1) else 0 end) as vendabimestrequantidade
-                , sum(case when (tblnegocio.lancamento >= '{$bimestre->toIso8601String()}') then tblnegocioprodutobarra.valortotal * (tblnegocio.valortotal / tblnegocio.valorprodutos) else 0 end) as vendabimestrevalor
-            from tblnegocio
-            inner join tblnaturezaoperacao on (tblnaturezaoperacao.codnaturezaoperacao = tblnegocio.codnaturezaoperacao)
-            inner join tblnegocioprodutobarra on (tblnegocioprodutobarra.codnegocio = tblnegocio.codnegocio)
-            inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnegocioprodutobarra.codprodutobarra)
-            left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
-            where tblnegocio.codnegociostatus = 2 --Fechado
-            and tblnegocio.lancamento >= '{$ano->toIso8601String()}'
-            and tblnaturezaoperacao.venda = true
-            --and tblprodutobarra.codproduto in (select tblproduto.codproduto from tblproduto where tblproduto.codmarca = 29) -- ACRILEX
-            ";
-        if (!empty($codprodutovariacao)) {
-            $sql .= "
-                and tblprodutobarra.codprodutovariacao = {$codprodutovariacao}
-            ";
-        }
-        if (!empty($codestoquelocal)) {
-            $sql .= "
-                and tblnegocio.codestoquelocal = {$codestoquelocal}
-            ";
-        }
-        $sql .= "
-            group by
-                    tblnegocio.codestoquelocal
-                    , tblprodutobarra.codprodutovariacao
-                    , tblprodutobarra.codproduto
-        ";
-
-        // Atualiza total vendido
-        $regs = DB::select($sql);
-        $atualizados = [];
-        $diassemestre = $semestre->diffInDays();
-        foreach ($regs as $reg) {
-            $elpv = static::buscaOuCria($reg->codestoquelocal, $reg->codprodutovariacao);
-            $elpv->vendaanoquantidade = $reg->vendaanoquantidade;
-            $elpv->vendaanovalor = $reg->vendaanovalor;
-            $elpv->vendasemestrequantidade = $reg->vendasemestrequantidade;
-            $elpv->vendasemestrevalor = $reg->vendasemestrevalor;
-            $elpv->vendabimestrequantidade = $reg->vendabimestrequantidade;
-            $elpv->vendabimestrevalor = $reg->vendabimestrevalor;
-            $elpv->vendaultimocalculo = $agora;
-            $elpv->vendadiaquantidadeprevisao = ($reg->vendasemestrequantidade / $diassemestre);
-            static::save($elpv);
-            $atualizados[] = $elpv->codestoquelocalprodutovariacao;
-        }
-
-        // Limpa total vendido dos que nao foram atualizados
-        $elpvs = EstoqueLocalProdutoVariacao::whereNotIn('codestoquelocalprodutovariacao', $atualizados);
-        if (!empty($codprodutovariacao)) {
-            $elpvs = $elpvs->where('codprodutovariacao', $codprodutovariacao);
-        }
-        if (!empty($codestoquelocal)) {
-            $elpvs = $elpvs->where('codestoquelocal', $codestoquelocal);
-        }
-        $ret = $elpvs->update([
-            'vendaanoquantidade' => null,
-            'vendaanovalor' => null,
-            'vendasemestrequantidade' => null,
-            'vendasemestrevalor' => null,
-            'vendabimestrequantidade' => null,
-            'vendabimestrevalor' => null,
-            'vendaultimocalculo' => $agora,
-            'vendadiaquantidadeprevisao' => null,
-        ]);
-
-        // Limpa Estoque Minimo e Estoque Maximo
-        $sql = "
-            update tblestoquelocalprodutovariacao
-            set estoqueminimo = null
-            , estoquemaximo = null
-            where estoqueminimo is not null
-            or estoquemaximo is not null
-        ";
-        $afetados = DB::update($sql);
-
-        // Calcula Estoque Minimo/Maximo das Lojas
-        $sql = "
-            update tblestoquelocalprodutovariacao
-            set estoqueminimo = ceil(vendadiaquantidadeprevisao * m.estoqueminimodias)
-            , estoquemaximo = ceil(vendadiaquantidadeprevisao * m.estoquemaximodias)
-            from tblprodutovariacao pv
-            inner join tblproduto p on (p.codproduto = pv.codproduto)
-            inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
-            where tblestoquelocalprodutovariacao.codprodutovariacao = pv.codprodutovariacao
-            and codestoquelocal != 101001
-        ";
-        $afetados = DB::update($sql);
-
-        // Calcula Estoque Minimo/Maximo do Deposito pela venda das lojas
-        $sql = "
-            update tblestoquelocalprodutovariacao
-            set estoqueminimo = ceil(iq.vendadiaquantidadeprevisao * 15) -- 15 dias
-            , estoquemaximo = ceil(iq.vendadiaquantidadeprevisao * 60) -- 60 dias
-            from (
-            	select elpv_iq.codprodutovariacao, sum(coalesce(elpv_iq.vendadiaquantidadeprevisao, 0)) as vendadiaquantidadeprevisao
-            	from tblestoquelocalprodutovariacao elpv_iq
-            	where elpv_iq.codestoquelocal != 101001 -- deposito
-            	group by elpv_iq.codprodutovariacao
-            	) iq
-            where tblestoquelocalprodutovariacao.codprodutovariacao = iq.codprodutovariacao
-            and tblestoquelocalprodutovariacao.codestoquelocal = 101001
-        ";
-        $afetados = DB::update($sql);
-
-        // Coloca estoque maximo como dobro do minimo quando maximo igual a minimo
-        $sql = "
-            update tblestoquelocalprodutovariacao
-            set estoquemaximo = estoqueminimo + 1
-            where estoquemaximo <= estoqueminimo
-        ";
-        $afetados = DB::update($sql);
-        */
     }
 }
