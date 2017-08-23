@@ -139,39 +139,37 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
         return static::save($model);
     }
 
-    public static function calculaMediaVendaDia (EstoqueLocalProdutoVariacao $elpv)
+    public static function calculaVendaDia ($vendas)
     {
-        //$vendas = $elpv->EstoqueLocalProdutoVariacaoVendaS;
-        $mes_inicial = Carbon::now()->startOfMonth()->addYears(-1)->addMonths(-1);
-        $vendas = $elpv->EstoqueLocalProdutoVariacaoVendaS()
-            ->where('mes', '>=', $mes_inicial)
-            ->whereNotNull('quantidade')
-            ->where('quantidade', '>', 0)->get();
-
         if ($vendas->count() == 0) {
             return null;
         }
 
-        echo "Iniciando {$elpv->codestoquelocal} {$elpv->codprodutovariacao}\n";
+        /*
         foreach ($vendas as $venda) {
             echo "{$venda->mes} => {$venda->quantidade}\n";
         }
-
-        // Ignora Janeiro e fevereiro
-        if ($vendas->count() > 3) {
-            $vendas = $vendas->reject(function ($venda) {
-                if ($venda->mes->month == 1 or $venda->mes->month == 2) {
-                    return true;
-                }
-                return false;
-            });
-        }
+        */
 
         // Ignora dois meses com menos movimentacao
-        if ($vendas->count() > 3) {
+        if ($vendas->count() > 4) {
             $vendas->sortBy('quantidade');
             $vendas->shift();
             $vendas->shift();
+        }
+
+        // Ignora Janeiro
+        if ($vendas->count() > 4) {
+            $vendas = $vendas->reject(function ($venda) {
+                return $venda->mes->month == 1;
+            });
+        }
+
+        // Ignora Fevereiro
+        if ($vendas->count() > 4) {
+            $vendas = $vendas->reject(function ($venda) {
+                return $venda->mes->month == 2;
+            });
         }
 
         // Soma quantidade
@@ -186,10 +184,10 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
             return $venda->mes->daysInMonth;
         });
 
-        // calcula media
-        $media = $quantidade / $dias;
+        // calcula vendadia
+        $vendadia = $quantidade / $dias;
 
-        return $media;
+        return $vendadia;
 
     }
 
@@ -218,12 +216,10 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
         }
         */
 
-        /*
         DB::listen(function($sql) {
             echo "Executando\n\n{$sql->sql}\n\nTime {$sql->time}";
             echo "---\n\n\n";
         });
-        */
 
         $agora = Carbon::now();
 
@@ -232,86 +228,99 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
 
         // Filtra de acordo com os parametros recebidos
         $qry = EstoqueLocalProdutoVariacao::query();
+        $qry->select([
+            'tblestoquelocalprodutovariacao.codestoquelocalprodutovariacao',
+            'tblestoquelocalprodutovariacao.codestoquelocal',
+            'tblestoquelocalprodutovariacao.codprodutovariacao',
+            'tblprodutovariacao.codproduto',
+            'tblproduto.codmarca',
+            'tblmarca.estoqueminimodias',
+            'tblmarca.estoquemaximodias',
+            'tblestoquelocal.deposito',
+        ]);
+        $qry->join('tblestoquelocal', 'tblestoquelocal.codestoquelocal', 'tblestoquelocalprodutovariacao.codestoquelocal');
+        $qry->join('tblprodutovariacao', 'tblprodutovariacao.codprodutovariacao', 'tblestoquelocalprodutovariacao.codprodutovariacao');
+        $qry->join('tblproduto', 'tblproduto.codproduto', 'tblprodutovariacao.codproduto');
+        $qry->join('tblmarca', 'tblmarca.codmarca', 'tblproduto.codmarca');
+        $qry->where('tblproduto.codtipoproduto', 0);
+        $qry->whereNull('tblproduto.inativo');
+        $qry->whereNull('tblestoquelocal.inativo');
         if (!empty($codestoquelocal)) {
             $qry->where('codestoquelocal', $codestoquelocal);
         }
         if (!empty($codprodutovariacao)) {
             $codprodutovariacaos = [$codprodutovariacao];
-        }
-        if (!empty($codproduto)) {
+            $qry->where('tblestoquelocalprodutovariacao.codprodutovariacao', $codprodutovariacao);
+        } elseif (!empty($codproduto)) {
             $codprodutovariacaos = \App\Models\ProdutoVariacao::where('codproduto', $codproduto)->get()->pluck('codprodutovariacao');
+            $qry->where('tblprodutovariacao.codproduto', $codproduto);
         }
-        if (!empty($codprodutovariacaos)) {
-            $qry->whereIn('codprodutovariacao', $codprodutovariacaos);
+        $regs = $qry->get();
+
+        // Busca Vendas
+        $qry = \App\Models\EstoqueLocalProdutoVariacaoVenda::select(['codestoquelocalprodutovariacao', 'mes', 'quantidade', 'valor']);
+        $mes_inicial = $agora->startOfMonth()->addYears(-1)->addMonths(-1);
+        $qry->where('mes', '>=', $mes_inicial);
+        $qry->whereNotNull('quantidade');
+        $qry->where('quantidade', '>', 0);
+        if (!empty($codprodutovariacao) or !empty($codestoquelocal) or !empty($codproduto)) {
+            $qry->whereIn('codestoquelocalprodutovariacao', $regs->pluck('codestoquelocalprodutovariacao'));
         }
+        $vendas = $qry->get()->groupBy('codestoquelocalprodutovariacao');
 
-        echo "Ponto 2\n";
-
-        // Eager Loading para trazer as vendas por mes
-        /*
-        $mes_inicial = Carbon::now()->startOfMonth()->addYears(-1)->addMonths(-1);
-        $qry->with(['EstoqueLocalProdutoVariacaoVendaS' => function ($query) use ($mes_inicial) {
-            $query->where('mes', '>=', $mes_inicial);
-            $query->whereNotNull('quantidade');
-            $query->where('quantidade', '>', 0);
-            $query->orderBy('mes');
-        }]);
-        */
-
-        // Eager Loading trazendo mais tabelas que vamos utilizar
-        //$qry->with('EstoqueLocal');
-        //$qry->with('ProdutoVariacao.Produto.Marca');
-
-        $marcas = \App\Models\Marca::all();
-        $marcas = $marcas->keyBy('codmarca');
-
-        $produtos = \App\Models\Produto::all();
-        $produtos = $produtos->keyBy('codproduto');
-
-        $variacoes = \App\Models\ProdutoVariacao::all();
-        $variacoes = $variacoes->keyBy('codprodutovariacao');
-
-        /*
-        */
-        echo "Ponto 3\n";
+        echo "\n\n\n\nDAQUI PRA BAIXO SO PODE UPDATE\n\n\n\n\n";
 
         // Percorre registros calculando Estoque Minimo e Maximo das Lojas
-        $media_pv = [];
+        $vendadia_variacao = [];
         $i = 0;
-        foreach ($qry->get() as $elpv) {
+        foreach ($regs as $reg) {
 
             $i++;
-            echo "{$i} {$elpv->ProdutoVariacao->codproduto} {$elpv->codprodutovariacao} {$elpv->codestoquelocal}\n";
+            // echo "{$i} {$variacao->codproduto} {$reg->codprodutovariacao} {$reg->codestoquelocal}\n";
+            /*
+            */
+
+            if ($i > 5000) {
+                dd('parou em 5000 registros');
+                die();
+            }
 
             // Calcula Media de Vendas para O Local
-            $media = static::calculaMediaVendaDia($elpv);
+            // echo "Iniciando {$reg->codestoquelocal} {$reg->codprodutovariacao}\n";
+            $vendadia = null;
+            if (!empty($vendas[$reg->codestoquelocalprodutovariacao])) {
+                $vendadia = static::calculaVendaDia($vendas[$reg->codestoquelocalprodutovariacao]);
+            }
+
 
             // Acumula Media de Vendas para a Variacao
-            if (!isset($media_pv[$elpv->codprodutovariacao])) {
-                $media_pv[$elpv->codprodutovariacao] = [
-                    'ProdutoVariacao' => $elpv->ProdutoVariacao,
-                    'media' => 0
+            if (!isset($vendadia_variacao[$reg->codprodutovariacao])) {
+                $vendadia_variacao[$reg->codprodutovariacao] = (object) [
+                    'codprodutovariacao' => $reg->codprodutovariacao,
+                    'estoqueminimodias' => $reg->estoqueminimodias,
+                    'estoquemaximodias' => $reg->estoquemaximodias,
+                    'vendadia' => 0
                 ];
             }
-            $media_pv[$elpv->codprodutovariacao]['media'] += $media;
+            $vendadia_variacao[$reg->codprodutovariacao]->vendadia += $vendadia;
 
             // Calcula Minimo e Maximo para as Lojas
             $minimo = null;
             $maximo = null;
-            if (!$elpv->EstoqueLocal->deposito) {
-                if ($minimo == 0) {
-                    $minimo = ceil($media * $marcas[$produtos[$elpv->ProdutoVariacao->codproduto]->codmarca]->estoqueminimodias);
+            if (!$reg->deposito) {
+                $minimo = ceil($vendadia * $reg->estoqueminimodias);
+                if ($minimo < 1) {
                     $minimo = 1;
                 }
-                $maximo = ceil($media * $marcas[$produtos[$elpv->ProdutoVariacao->codproduto]->codmarca]->estoquemaximodias);
+                $maximo = ceil($vendadia * $reg->estoquemaximodias);
                 if ($maximo <= $minimo) {
                     $maximo = $minimo + 1;
                 }
             }
 
             // Atualiza no Banco de Dados
-            EstoqueLocalProdutoVariacao::where('codestoquelocalprodutovariacao', $elpv->codestoquelocalprodutovariacao)->update([
-                'vendadiaquantidadeprevisao' => $media,
+            EstoqueLocalProdutoVariacao::where('codestoquelocalprodutovariacao', $reg->codestoquelocalprodutovariacao)->update([
+                'vendadiaquantidadeprevisao' => $vendadia,
                 'estoqueminimo' => $minimo,
                 'estoquemaximo' => $maximo,
                 'alteracao' => $agora
@@ -322,24 +331,24 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
         if (empty($codestoquelocal)) {
 
             // Busca todos EstoqueLocal marcados como 'deposito'
-            $depositos = \App\Models\EstoqueLocal::where('deposito', true)->get()->pluck('codestoquelocal');
+            $depositos = \App\Models\EstoqueLocal::where('deposito', true)->pluck('codestoquelocal');
 
-            // Percorre as medias de venda acumuladas para o ProdutoVariacao
-            foreach ($media_pv as $cod => $item) {
+            // Percorre as vendadias de venda acumuladas para o ProdutoVariacao
+            foreach ($vendadia_variacao as $cod => $item) {
 
                 // Calcula o Minimo e Maximo baseado na venda de todas as lojas somadas
-                $minimo = ceil($item['media'] * $marcas[$item['ProdutoVariacao']->Produto->codmarca]->estoqueminimodias);
+                $minimo = ceil($item->vendadia * $item->estoqueminimodias);
                 if ($minimo == 0) {
                     $minimo = 1;
                 }
-                $maximo = ceil($item['media'] * $marcas[$item['ProdutoVariacao']->Produto->codmarca]->estoquemaximodias);
+                $maximo = ceil($item->vendadia * $item->estoquemaximodias);
                 if ($maximo <= $minimo) {
                     $maximo = $minimo + 1;
                 }
 
                 // Atualiza no Banco de Dados
                 EstoqueLocalProdutoVariacao::where('codprodutovariacao', $cod)->whereIn('codestoquelocal', $depositos)->update([
-                    'vendadiaquantidadeprevisao' => $item['media'],
+                    'vendadiaquantidadeprevisao' => $item->vendadia,
                     'estoqueminimo' => $minimo,
                     'estoquemaximo' => $maximo,
                     'alteracao' => $agora
@@ -347,23 +356,53 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
 
                 // Atualiza no Banco de Dados Soma das vendas do ProdutoVariacao
                 \App\Models\ProdutoVariacao::where('codprodutovariacao', $cod)->update([
-                    'vendadiaquantidadeprevisao' => $item['media']
+                    'vendadiaquantidadeprevisao' => $item->vendadia
                 ]);
             }
 
-            // Reinicializa registros de Minimo e Maximo que nao passaram pelo calculo
-            $qry = EstoqueLocalProdutoVariacao::where('alteracao', '<', $agora);
-            if (!empty($codprodutovariacaos)) {
-                $qry->whereIn('codprodutovariacao', $codprodutovariacaos);
+            // Limpa registros inativos
+            $qry = EstoqueLocalProdutoVariacao::query();
+            $qry->join('tblestoquelocal', 'tblestoquelocal.codestoquelocal', 'tblestoquelocalprodutovariacao.codestoquelocal');
+            $qry->join('tblprodutovariacao', 'tblprodutovariacao.codprodutovariacao', 'tblestoquelocalprodutovariacao.codprodutovariacao');
+            $qry->join('tblproduto', 'tblproduto.codproduto', 'tblprodutovariacao.codproduto');
+            $qry->where(function ($query) {
+                $query->whereNotNull('tblproduto.inativo');
+                $query->orWhere('tblproduto.codtipoproduto', '!=', 0);
+                $query->orWhereNotNull('tblestoquelocal.inativo');
+            });
+            if (!empty($codestoquelocal)) {
+                $qry->where('codestoquelocal', $codestoquelocal);
             }
-            $qry->update([
+            if (!empty($codprodutovariacao)) {
+                $qry->where('tblestoquelocalprodutovariacao.codprodutovariacao', $codprodutovariacao);
+            } elseif (!empty($codproduto)) {
+                $qry->where('tblprodutovariacao.codproduto', $codproduto);
+            }
+            $regs = $qry->update([
                 'vendadiaquantidadeprevisao' => null,
-                'estoqueminimo' => 1,
-                'estoquemaximo' => 2,
+                'estoqueminimo' => null,
+                'estoquemaximo' => null,
                 'alteracao' => $agora
             ]);
 
+            // Limpa registros inativos
+            $qry = \App\Models\ProdutoVariacao::query();
+            $qry->join('tblproduto', 'tblproduto.codproduto', 'tblprodutovariacao.codproduto');
+            $qry->where(function ($query) {
+                $query->whereNotNull('tblproduto.inativo');
+                $query->orWhere('tblproduto.codtipoproduto', '!=', 0);
+            });
+            if (!empty($codprodutovariacao)) {
+                $qry->where('tblprodutovariacao.codprodutovariacao', $codprodutovariacao);
+            } elseif (!empty($codproduto)) {
+                $qry->where('tblprodutovariacao.codproduto', $codproduto);
+            }
+            $regs = $qry->update([
+                'vendadiaquantidadeprevisao' => null,
+            ]);
+
         }
+
 
         return true;
 
