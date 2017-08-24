@@ -52,9 +52,8 @@
 
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-search v-model="terms" placeholder="Pessoa">
-                <q-autocomplete @search="pessoaSearch" @selected="pessoaSelected" :min-characters="3" :debounce="600"/>
-              </q-search>
+              <mg-autocomplete-pessoa placeholder="Pessoa" v-on:seleciona="pessoa"></mg-autocomplete-pessoa>
+              <mg-erros-validacao :erros="erros.codpessoa"></mg-erros-validacao>
             </div>
           </div>
 
@@ -65,6 +64,7 @@
               v-model="data.impressoramatricial"
               :options="impressoras"
               />
+              <mg-erros-validacao :erros="erros.impressoramatricial"></mg-erros-validacao>
             </div>
           </div>
 
@@ -75,6 +75,7 @@
               v-model="data.impressoratermica"
               :options="impressoras"
               />
+              <mg-erros-validacao :erros="erros.impressoratermica"></mg-erros-validacao>
             </div>
           </div>
 
@@ -93,13 +94,12 @@ import {
   QField,
   QBtn,
   QInput,
-  QSelect,
-  QSearch,
-  QAutocomplete
+  QSelect
 } from 'quasar'
 
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
+import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
 
 export default {
   name: 'usuario-create',
@@ -111,14 +111,14 @@ export default {
     QBtn,
     QInput,
     QSelect,
-    QSearch,
-    QAutocomplete
+    MgAutocompletePessoa
   },
   data () {
     return {
+      teste: '',
       data: {
-        usuario: '',
-        senha: '',
+        usuario: null,
+        senha: null,
         codfilial: null,
         codpessoa: null,
         impressoramatricial: null,
@@ -126,35 +126,13 @@ export default {
       },
       impressoras: [],
       filiais: [],
-      terms: '',
       erros: false
     }
   },
-  watch: {
-    terms: {
-      handler: function (val, oldVal) {
-        if (val.length === 0) {
-          this.data.codpessoa = null
-        }
-      }
-    }
-  },
   methods: {
-    pessoaSelected (item) {
+    pessoa (value) {
       let vm = this
-      vm.data.codpessoa = item.id
-    },
-    pessoaSearch (terms, done) {
-      let params = {}
-      params.sort = 'fantasia'
-      params.pessoa = terms
-      window.axios.get('pessoa/autocomplete', { params }).then(response => {
-        let results = response.data
-        done(results)
-      }).catch(function (error) {
-        done([])
-        console.log(error.response)
-      })
+      vm.data.codpessoa = value
     },
     carregaImpressoras: function () {
       let vm = this

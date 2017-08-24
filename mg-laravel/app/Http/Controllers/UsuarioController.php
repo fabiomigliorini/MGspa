@@ -50,7 +50,7 @@ class UsuarioController extends ControllerCrud
         if (!empty($usuario->codimagem)) {
             $res['imagem'] = $usuario->Imagem->url;
         }
-        
+
         return response()->json($res, 200);
     }
 
@@ -98,4 +98,28 @@ class UsuarioController extends ControllerCrud
         return response()->json('', 204);
     }
 
+    public function store(Request $request)
+    {
+        $this->authorize();
+        $model = UsuarioRepository::new($request->all());
+        if (is_null($model->senha)) {
+            unset($model->senha);
+        }
+        UsuarioRepository::validate($model);
+        $model = UsuarioRepository::create($model);
+        return response()->json($model, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->authorize();
+        $model = UsuarioRepository::findOrFail($id);
+        $model = UsuarioRepository::fill($model, $request->all());
+        if (is_null($model->senha)) {
+            unset($model->senha);
+        }
+        UsuarioRepository::validate($model);
+        $model = UsuarioRepository::update($model);
+        return response()->json($model, 200);
+    }
 }
