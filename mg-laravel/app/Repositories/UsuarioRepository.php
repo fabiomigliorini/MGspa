@@ -17,7 +17,6 @@ class UsuarioRepository extends MGRepositoryStatic
 
     public static function validationRules ($model = null)
     {
-        $min = ($model->codusuario) ? 6 : 0;
         $rules = [
             'usuario' => [
                 'required',
@@ -25,8 +24,8 @@ class UsuarioRepository extends MGRepositoryStatic
                 'min:2',
             ],
             'senha' => [
-                'required_if:codusuario,null',
-                "min:$min"
+                'required_without:codusuario',
+                "min:6"
             ],
             'impressoramatricial' => [
                 'required'
@@ -42,12 +41,16 @@ class UsuarioRepository extends MGRepositoryStatic
     public static function validationMessages ($model = null)
     {
         $messages = [
-            'usuario.required' => 'O campo Usuario não pode ser vazio',
+            'usuario.required' => 'O campo "Usuario" deve ser preenchido!',
             'usuario.unique' => 'Este Usuario já esta cadastrado',
             'usuario.min' => 'O campo Usuario deve ter no mínimo 2 caracteres.',
 
             'senha.min' => 'O campo Senha deve ter no mínimo 6 caracteres.',
-            'senha.required' => 'O campo Senha não pode ser vazio',
+            'senha.required' => 'O campo "Senha" deve ser preenchido!',
+            'senha.required_without' => 'O campo "Senha" deve ser preenchido!',
+
+            'impressoratermica.required' => 'O campo "Impressora Termica" deve ser preenchido!',
+            'impressoramatricial.required' => 'O campo "Impressora Matricial" deve ser preenchido!',
         ];
 
         return $messages;
@@ -149,11 +152,7 @@ class UsuarioRepository extends MGRepositoryStatic
             static::fill($model, $data);
         }
 
-        if (empty($model->senha)) {
-            unset($model->senha);
-        } else {
-            $model->senha = bcrypt($model->senha);
-        }
+        $model->senha = bcrypt($model->senha);
 
         if (!$model->save()) {
             return false;

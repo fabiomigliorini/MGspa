@@ -56,11 +56,12 @@ export default {
 
     login: function (e) {
       var vm = this
+      let data = {
+        usuario: vm.usuario,
+        senha: vm.senha
+      }
       // Busca Autenticacao
-      window.axios.post('auth/login', {
-        usuario: this.usuario,
-        senha: this.senha
-      }).then(response => {
+      window.axios.post('auth/login', data).then(response => {
         // salva token no Local Storage
         let token = response.data.token
         localStorage.setItem('auth.token', token)
