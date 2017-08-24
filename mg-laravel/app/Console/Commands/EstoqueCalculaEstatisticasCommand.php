@@ -14,7 +14,7 @@ class EstoqueCalculaEstatisticasCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'estoque:calcula-estatisticas {--codprodutovariacao=} {--codestoquelocal=} {--codproduto=}';
+    protected $signature = 'estoque:calcula-estatisticas {--codprodutovariacao=} {--codestoquelocal=} {--codproduto=} {--codmarca=}';
 
     /**
      * The console command description.
@@ -43,8 +43,9 @@ class EstoqueCalculaEstatisticasCommand extends Command
         $codprodutovariacao = $this->option('codprodutovariacao');
         $codestoquelocal = $this->option('codestoquelocal');
         $codproduto = $this->option('codproduto');
+        $codmarca = $this->option('codmarca');
 
-        EstoqueLocalProdutoVariacaoRepository::calculaVenda($codestoquelocal, $codprodutovariacao, $codproduto);
+        EstoqueLocalProdutoVariacaoRepository::calculaVenda($codestoquelocal, $codprodutovariacao, $codproduto, $codmarca);
         // MarcaRepository::calculaVenda();
 
     }
