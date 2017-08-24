@@ -2,7 +2,6 @@
 
 -- update tblmarca set controlada = true where marca ilike 'sandisk'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
-/*
 select 
 	-- m.marca, 
 	p.codproduto, 
@@ -38,15 +37,15 @@ inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
 inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codestoquelocal = 101001 and elpv_deposito.codprodutovariacao = elpv.codprodutovariacao)
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
-where elpv.codestoquelocal = 102001
+where elpv.codestoquelocal = 104001
 --and m.marca not ilike 'delta'
 and m.controlada = true
 and es.saldoquantidade <= elpv.estoqueminimo
 and es_deposito.saldoquantidade > 0
 order by m.marca, p.produto, pv.variacao
-*/
 
 -- PARA COMPRAR
+/*
 select 
 	--m.marca,
 	p.codproduto,
@@ -83,6 +82,7 @@ and m.controlada = true
 --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
 and m.marca ilike '%tek%bond%'
 order by m.marca, p.produto, pv.variacao
+*/
 
 -- PARA RECOLHER PRO DEPOSITO
 /*
