@@ -209,12 +209,17 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
     public static function calculaVenda ($codestoquelocal = null, $codprodutovariacao = null, $codproduto = null, $codmarca = null)
     {
 
+        // Cria combinacoes de EstoqueLocalProdutoVariacao que ainda nao existam na tabela
+        static::criaCombinacoesInexistentes();
+
         // Sumariza o total de venda por mes na tabela de EstoqueLocalProdutoVariacaoVenda
-        /*
         if (!EstoqueLocalProdutoVariacaoVendaRepository::sumarizaPorMes($codestoquelocal, $codprodutovariacao, $codproduto, $codmarca)) {
             return false;
         }
 
+        die('aqui');
+
+        /*
         DB::listen(function($sql) {
             echo "Executando\n\n{$sql->sql}\n\nTime {$sql->time}";
             echo "---\n\n\n";
@@ -229,9 +234,6 @@ class EstoqueLocalProdutoVariacaoRepository extends MGRepositoryStatic
         $mes_ano = (clone $mes_atual)->addMonths(-11);
         $mes_semestre = (clone $mes_atual)->addMonths(-5);
         $mes_bimestre = (clone $mes_atual)->addMonths(-1);
-
-        // Cria combinacoes de EstoqueLocalProdutoVariacao que ainda nao existam na tabela
-        static::criaCombinacoesInexistentes();
 
         // Filtra de acordo com os parametros recebidos
         $qry = EstoqueLocalProdutoVariacao::query();
