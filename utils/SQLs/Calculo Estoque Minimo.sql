@@ -1,14 +1,70 @@
 ﻿/*
+drop table if exists tmpestoquelocalprodutovariacaovenda 
+
+create temporary table tmpestoquelocalprodutovariacaovenda as
+select
+    tblprodutobarra.codprodutovariacao
+    , tblnegocio.codestoquelocal
+    , date_trunc('month', tblnegocio.lancamento) as mes
+    , sum(tblnegocioprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1) * (case when tblnaturezaoperacao.codoperacao = 1 then -1 else 1 end)) as quantidade
+    , sum(tblnegocioprodutobarra.valortotal * (case when tblnaturezaoperacao.codoperacao = 1 then -1 else 1 end)) as valor
+    , cast(null as bigint) as codestoquelocalprodutovariacao
+from tblnegocio
+inner join tblnaturezaoperacao on (tblnaturezaoperacao.codnaturezaoperacao = tblnegocio.codnaturezaoperacao)
+inner join tblnegocioprodutobarra on (tblnegocioprodutobarra.codnegocio = tblnegocio.codnegocio)
+inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnegocioprodutobarra.codprodutobarra)
+left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
+where tblnegocio.codnegociostatus = 2 --Fechado
+and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
+--and tblprodutobarra.codproduto in (select tblproduto.codproduto from tblproduto where tblproduto.codmarca = 29) -- ACRILEX
+--and tblprodutobarra.codproduto = 555
+group by
+     tblprodutobarra.codprodutovariacao
+    , tblnegocio.codestoquelocal
+    , date_trunc('month', tblnegocio.lancamento)
+
+-- Atualiza codestoquelocalprodutovariacao
+update tmpestoquelocalprodutovariacaovenda
+set codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao
+from tblestoquelocalprodutovariacao elpv
+where tmpestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao is null
+and tmpestoquelocalprodutovariacaovenda.codestoquelocal = elpv.codestoquelocal
+and tmpestoquelocalprodutovariacaovenda.codprodutovariacao = elpv.codprodutovariacao
+
+insert into tblestoquelocalprodutovariacao (codestoquelocal, codprodutovariacao, criacao, alteracao)
+select distinct tmp.codestoquelocal, tmp.codprodutovariacao, '2017-08-25 15:35:00'::timestamp, '2017-08-25 15:35:00'::timestamp
+from tmpestoquelocalprodutovariacaovenda tmp
+where tmp.codestoquelocalprodutovariacao is null
+
+update tblestoquelocalprodutovariacaovenda
+set quantidade = tmp.quantidade
+, valor = tmp.valor
+, alteracao = '2017-08-25 15:35:00'::timestamp
+from tmpestoquelocalprodutovariacaovenda tmp
+where tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao
+and tblestoquelocalprodutovariacaovenda.mes = tmp.mes
+**
+
+insert into tblestoquelocalprodutovariacaovenda (codestoquelocalprodutovariacao, mes, quantidade, valor, criacao, alteracao)
+select tmp.codestoquelocalprodutovariacao, tmp.mes, tmp.quantidade, tmp.valor, '2017-08-25 15:35:00'::timestamp, '2017-08-25 15:35:00'::timestamp
+from tmpestoquelocalprodutovariacaovenda tmp
+left join tblestoquelocalprodutovariacaovenda venda on (venda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao and venda.mes = tmp.mes)
+where venda.codestoquelocalprodutovariacaovenda is null
+
+rodar novamente 0 -- Atualiza codestoquelocalprodutovariacao
+
+
+delete from tblestoquelocalprodutovariacaovenda
+where alteracao < '2017-08-25 15:35:00'::timestamp
+
+drop table tmpestoquelocalprodutovariacaovenda
+*/
+/*
 --select * from tblestoquelocalprodutovariacaovenda limit 5
 
 --delete from tblestoquelocalprodutovariacaovenda  where codestoquelocalprodutovariacao = 239241
 --select * from tblestoquelocalprodutovariacaovenda  where codestoquelocalprodutovariacao = 239241
 
-
--- Limpa dados ignorados
-update tblestoquelocalprodutovariacaovenda
-set ignorar = false
-where ignorar = true
 
 
 -- Ignora de um ano pra tras

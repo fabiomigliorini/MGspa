@@ -3232,6 +3232,7 @@
 			<column name="metadescriptionsite" type="text" jt="12" />
 			<column name="codprodutoimagem" type="bigint" jt="-5" />
 			<column name="dataultimacompra" type="date" jt="91" />
+			<column name="custoultimacompra" type="numeric" length="14" decimal="6" jt="2" />
 			<column name="estoqueminimo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="estoquemaximo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="vendadiaquantidadeprevisao" type="float8" length="17" decimal="17" jt="6" />
@@ -7942,10 +7943,10 @@ FROM
 	</layout>
 	<layout name="Layout_Vendas" id="Layout_4271ffc" show_relation="columns" >
 		<entity schema="mgsis" name="tblmarca" color="c1d8ee" x="400" y="304" />
-		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="656" y="48" />
-		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="944" y="48" />
 		<entity schema="mgsis" name="tblestoquelocal" color="c1d8ee" x="416" y="48" />
 		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="c1d8ee" x="48" y="48" />
 		<entity schema="mgsis" name="tblestoquelocalprodutovariacaovenda" color="c1d8ee" x="48" y="496" />
+		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="656" y="48" />
+		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="944" y="48" />
 	</layout>
 </project>
