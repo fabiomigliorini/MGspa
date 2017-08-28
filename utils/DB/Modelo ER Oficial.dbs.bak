@@ -1028,6 +1028,10 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="ignorar" type="bool" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="vendadiaquantidade" type="float8" length="17" decimal="17" jt="6" />
 			<index name="pk_tblestoquelocalprodutovariacaovenda" unique="PRIMARY_KEY" >
 				<column name="codestoquelocalprodutovariacaovenda" />
 			</index>
@@ -1043,6 +1047,16 @@
 			</index>
 			<index name="idx_tblestoquelocalprodutovariacaovenda_1" unique="NORMAL" >
 				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_ignorar" unique="NORMAL" >
+				<column name="ignorar" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_mes_2" unique="NORMAL" >
+				<column name="mes" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_ignorar_mes" unique="NORMAL" >
+				<column name="ignorar" />
+				<column name="mes" />
 			</index>
 			<fk name="fk_tblestoquelocalprodutovariacaovenda" to_schema="mgsis" to_table="tblestoquelocalprodutovariacao" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codestoquelocalprodutovariacao" pk="codestoquelocalprodutovariacao" />
@@ -1894,16 +1908,6 @@
 			</column>
 			<column name="inativo" type="timestamp" jt="93" />
 			<column name="descricaosite" type="varchar" length="1024" decimal="0" jt="12" />
-			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
-				<defo>4</defo>
-			</column>
-			<column name="abcposicao" type="bigint" jt="-5" />
-			<column name="vendabimestrevalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="dataultimacompra" type="date" jt="91" />
-			<column name="itensabaixominimo" type="smallint" jt="5" />
-			<column name="itensacimamaximo" type="smallint" jt="5" />
 			<column name="estoqueminimodias" type="smallint" jt="5" mandatory="y" >
 				<defo>15</defo>
 			</column>
@@ -1911,16 +1915,27 @@
 				<defo>30</defo>
 			</column>
 			<column name="codopencart" type="bigint" jt="-5" />
+			<column name="controlada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="dataultimacompra" type="date" jt="91" />
+			<column name="itensabaixominimo" type="smallint" jt="5" />
+			<column name="itensacimamaximo" type="smallint" jt="5" />
+			<column name="vendabimestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
+			<column name="vendaultimocalculo" type="timestamp" jt="93" />
 			<column name="abcignorar" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
-			<column name="controlada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
-				<defo>false</defo>
+			<column name="abcposicao" type="bigint" jt="-5" />
+			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
+				<defo>4</defo>
 			</column>
 			<index name="tblmarca_pkey" unique="PRIMARY_KEY" >
 				<column name="codmarca" />
@@ -3216,6 +3231,26 @@
 			<column name="metakeywordsite" type="varchar" length="200" jt="12" />
 			<column name="metadescriptionsite" type="text" jt="12" />
 			<column name="codprodutoimagem" type="bigint" jt="-5" />
+			<column name="dataultimacompra" type="date" jt="91" />
+			<column name="custoultimacompra" type="numeric" length="14" decimal="6" jt="2" />
+			<column name="estoqueminimo" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="estoquemaximo" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="vendadiaquantidadeprevisao" type="float8" length="17" decimal="17" jt="6" />
+			<column name="vendaultimocalculo" type="timestamp" jt="93" />
+			<column name="vendabimestrequantidade" type="numeric" length="14" decimal="3" jt="2" />
+			<column name="vendabimestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendasemestrequantidade" type="numeric" length="14" decimal="3" jt="2" />
+			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanoquantidade" type="numeric" length="14" decimal="3" jt="2" />
+			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
+			<column name="abcignorar" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="abcposicao" type="bigint" jt="-5" />
+			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
+				<defo>4</defo>
+			</column>
 			<index name="tblproduto_pkey" unique="PRIMARY_KEY" >
 				<column name="codproduto" />
 			</index>
@@ -5443,32 +5478,1003 @@
 		<sequence name="tblvalecompramodelo_codvalecompramodelo_seq" start="1" />
 		<sequence name="tblvalecompramodeloprodutobarra_codvalecompraprodutobarra_seq" start="1" />
 		<sequence name="tblvalecompraprodutobarra_codvalecompraprodutobarra_seq" start="1" />
+		<procedure name="criatriggers_geraauditoria" id="Procedure_273d4fb" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.criatriggers_geraauditoria(brecria boolean DEFAULT false)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	rTabelas RECORD;
+BEGIN
+	--percorre as tabelas do banco de dados
+	FOR rTabelas IN 
+		select tablename, tgname
+		from pg_tables
+		left join pg_trigger on (pg_trigger.tgname = pg_tables.tablename || '_trigger_geraauditoria')
+		where pg_tables.tablename not in ('tblauditoria', 'tblbaseremota', 'tblauditoriatransmissao', 'tblcodigo')
+		AND pg_tables.schemaname = 'mgsis'
+	LOOP	
+	
+		--se jah tem a trigger, apaga
+		IF rTabelas.tgname IS NOT NULL AND brecria = true THEN
+			RAISE NOTICE E'Apagando Trigger %', rtabelas.tgname;
+			EXECUTE 'DROP TRIGGER ' || rtabelas.tgname || ' ON ' || rTabelas.tablename;
+		END IF;
+		
+		--cria nova trigger
+		IF rTabelas.tgname IS NULL OR brecria = true THEN
+			RAISE NOTICE E'Criando Trigger %', rTabelas.tablename || '_trigger_geraauditoria';
+			EXECUTE 'CREATE TRIGGER ' || rtabelas.tablename || '_trigger_geraauditoria AFTER INSERT OR UPDATE OR DELETE ON ' || rtabelas.tablename || ' FOR EACH ROW EXECUTE PROCEDURE GeraAuditoria()' ;
+		end if;
+		
+	END LOOP;
+	
+	RETURN TRUE;
+END;
+$function$
+]]></string>
+			<input_param name="brecria" jt="-7" type="bool" />
+			<result_param name="returnValue" jt="-7" type="bool" />
+		</procedure>
+		<procedure name="fncalculaestoque" id="Procedure_57afa02" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fncalculaestoque(pcodproduto bigint)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+--
+--DECLARE
+--	rTabelas RECORD;
+BEGIN
+	--limpa movimento
+	delete from tblestoquemovimento where codproduto = pCodProduto;
+	--insere estoque inicial
+	insert into tblestoquemovimento (codfilial, codproduto, fiscal, codestoquemovimentotipo, lancamento, entradaquantidade, entradavalor)
+	  select codfilial, codproduto, fiscal, 100, '2011-12-31', saldoquantidade, saldovalor from tblestoquesaldo where codproduto = pCodProduto;
+	-- NOTAS DE ENTRADAS
+	insert into tblestoquemovimento (codfilial, codproduto, fiscal, codestoquemovimentotipo, lancamento, entradaquantidade, entradavalor, codnotafiscalprodutobarra)
+	select 
+	       codfilial
+	     , tblprodutobarra.codproduto
+	     , true
+	     , 200
+	     , saida
+	     --, tblnotafiscalprodutobarra.quantidade
+	     --, tblprodutoembalagem.quantidade
+	     , tblnotafiscalprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1)
+	     , tblnotafiscalprodutobarra.valortotal
+	     , tblnotafiscalprodutobarra.codnotafiscalprodutobarra
+	  from tblnotafiscal 
+	 inner join tblnotafiscalprodutobarra on (tblnotafiscalprodutobarra.codnotafiscal = tblnotafiscal.codnotafiscal)
+	 inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnotafiscalprodutobarra.codprodutobarra)
+	  left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
+	 where tblnotafiscal.saida between '2012-01-01 00:00:00.0' and '2012-12-31 23:59:59.9'
+	   and tblnotafiscal.nfecancelamento is null
+	   and tblnotafiscal.codoperacao = 1
+	   and tblprodutobarra.codproduto = pCodProduto;
+	-- NOTAS DE SAIDAS
+	insert into tblestoquemovimento (codfilial, codproduto, fiscal, codestoquemovimentotipo, lancamento, saidaquantidade, saidavalor, codnotafiscalprodutobarra)
+	select 
+	       tblnotafiscal.codfilial
+	     , tblprodutobarra.codproduto
+	     , true
+	     , 200
+	     , saida
+	     , tblnotafiscalprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1)
+	     , tblnotafiscalprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1) * coalesce(iqprecofilial.media, iqprecoproduto.media, tblnotafiscalprodutobarra.valorunitario * 0.6, 0) as custo
+	     , tblnotafiscalprodutobarra.codnotafiscalprodutobarra
+	  from tblnotafiscal 
+	 inner join tblnotafiscalprodutobarra on (tblnotafiscalprodutobarra.codnotafiscal = tblnotafiscal.codnotafiscal)
+	 inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnotafiscalprodutobarra.codprodutobarra)
+	  left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
+	  left join (
+			  select tblestoquemovimento.codproduto
+			       , tblestoquemovimento.codfilial
+			       , sum(tblestoquemovimento.entradavalor) / sum(tblestoquemovimento.entradaquantidade) as media 
+			  from tblestoquemovimento 
+			  group by tblestoquemovimento.codproduto
+				 , tblestoquemovimento.codfilial
+		    ) iqprecofilial on (iqprecofilial.codproduto = tblprodutobarra.codproduto and iqprecofilial.codfilial = tblnotafiscal.codfilial)
+	  left join (
+			  select tblestoquemovimento.codproduto
+			       , sum(tblestoquemovimento.entradavalor) / sum(tblestoquemovimento.entradaquantidade) as media 
+			  from tblestoquemovimento 
+			  group by tblestoquemovimento.codproduto
+		    ) iqprecoproduto on (iqprecoproduto.codproduto = tblprodutobarra.codproduto)
+	 where tblnotafiscal.saida between '2012-01-01 00:00:00.0' and '2012-12-31 23:59:59.9'
+	   and tblnotafiscal.nfecancelamento is null
+	   and tblnotafiscal.codoperacao = 2
+	   and tblprodutobarra.codproduto = pCodProduto;
+
+	--CUPOM FISCAL
+	insert into tblestoquemovimento (codfilial, codproduto, fiscal, codestoquemovimentotipo, lancamento, saidaquantidade, saidavalor, codcupomfiscalprodutobarra)
+	select 
+	       tblecf.codfilial
+	     , tblprodutobarra.codproduto
+	     , true
+	     , 300
+	     , datamovimento
+	     , tblcupomfiscalprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1)
+	     , tblcupomfiscalprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1) * coalesce(iqprecofilial.media, iqprecoproduto.media, tblcupomfiscalprodutobarra.valorunitario * 0.6, 0) as custo
+	     , tblcupomfiscalprodutobarra.codcupomfiscalprodutobarra
+	  from tblcupomfiscal 
+	 inner join tblecf on (tblecf.codecf = tblcupomfiscal.codecf)
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblcupomfiscalprodutobarra.codprodutobarra)
+	  left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
+	  left join (
+			  select tblestoquemovimento.codproduto
+			       , tblestoquemovimento.codfilial
+			       , sum(tblestoquemovimento.entradavalor) / sum(tblestoquemovimento.entradaquantidade) as media 
+			  from tblestoquemovimento 
+			  group by tblestoquemovimento.codproduto
+				 , tblestoquemovimento.codfilial
+		    ) iqprecofilial on (iqprecofilial.codproduto = tblprodutobarra.codproduto and iqprecofilial.codfilial = tblecf.codfilial)
+	  left join (
+			  select tblestoquemovimento.codproduto
+			       , sum(tblestoquemovimento.entradavalor) / sum(tblestoquemovimento.entradaquantidade) as media 
+			  from tblestoquemovimento 
+			  group by tblestoquemovimento.codproduto
+		    ) iqprecoproduto on (iqprecoproduto.codproduto = tblprodutobarra.codproduto)
+	 where tblcupomfiscal.datamovimento between '2012-01-01 00:00:00.0' and '2012-12-31 23:59:59.9'
+	   and tblcupomfiscal.cancelado = false
+	   and tblprodutobarra.codproduto = pCodProduto;
+	 
+	return true;
+END;
+$function$
+]]></string>
+			<input_param name="pcodproduto" jt="-5" type="int8" />
+			<result_param name="returnValue" jt="-7" type="bool" />
+		</procedure>
+		<procedure name="fnlistaprodutorelacionadosite" id="Procedure_25a6a3f" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistaprodutorelacionadosite()
+ RETURNS TABLE(codprodutocombinado text, codproduto bigint, codprodutorelacionado bigint, vendas bigint)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	rProduto RECORD;
+BEGIN
+	CREATE TEMPORARY TABLE tmpProdutoRelacionadoSite (codProdutoCombinado TEXT, codProduto BIGINT, codProdutoRelacionado BIGINT, vendas BIGINT) ON COMMIT DROP;
+	FOR rProduto IN 
+		SELECT tblProduto.codProduto FROM tblProduto WHERE site = true -- limit 10
+	LOOP
+		INSERT INTO tmpProdutoRelacionadoSite
+		SELECT cast(rProduto.codProduto as text) || '-' || cast(tblProdutoBarra_iq2.codProduto as text) as codProdutoCombinado
+		     , rProduto.codProduto::bigint as codProduto
+		     , tblProdutoBarra_iq2.codProduto as codProdutoRelacionado
+		     , count(*)::bigint as vendas
+		  FROM tblNegocioProdutoBarra tblNegocioProdutoBarra_iq2
+		 INNER JOIN tblNegocio      tblNegocio_iq2       ON (tblNegocio_iq2.codNegocio = tblNegocioProdutoBarra_iq2.codNegocio)
+		 INNER JOIN tblProdutoBarra tblProdutoBarra_iq2  ON (tblProdutoBarra_iq2.codProdutoBarra = tblNegocioProdutoBarra_iq2.codProdutoBarra )
+		 INNER JOIN tblProduto      tblProduto_iq2       ON (tblProduto_iq2.codProduto = tblProdutoBarra_iq2.codProduto)
+		 WHERE tblNegocio_iq2.codNegocio IN (
+						 -- descobre os negocios onde aquele produto foi vendido
+						SELECT tblNegocioProdutoBarra_iq1.codNegocio
+						  FROM tblNegocioProdutoBarra tblNegocioProdutoBarra_iq1
+						 INNER JOIN tblProdutoBarra tblProdutoBarra_iq1 ON (tblProdutoBarra_iq1.codProdutoBarra = tblNegocioProdutoBarra_iq1.codProdutoBarra )
+						 WHERE tblProdutoBarra_iq1.codProduto = rProduto.codProduto
+		 )
+		   AND tblNegocio_iq2.codNegocioStatus = 2 -- Fechado
+		   AND tblProduto_iq2.Site = true
+		   AND tblProduto_iq2.codProduto <> rProduto.codProduto
+		 GROUP BY tblProdutoBarra_iq2.codProduto
+		 ORDER BY vendas DESC
+		 LIMIT 8;
+		 
+	END LOOP;
+/*
+	INSERT INTO tmpProdutoRelacionadoSite
+        SELECT cast(3878 as text) || '-' || cast(tblProdutoBarra_iq2.codProduto as text) as codProdutoCombinado
+             , 3878::bigint as codProduto
+             , tblProdutoBarra_iq2.codProduto as codProdutoRelacionado
+             , count(*)::bigint as vendas
+          FROM tblNegocioProdutoBarra tblNegocioProdutoBarra_iq2
+         INNER JOIN tblNegocio      tblNegocio_iq2       ON (tblNegocio_iq2.codNegocio = tblNegocioProdutoBarra_iq2.codNegocio)
+         INNER JOIN tblProdutoBarra tblProdutoBarra_iq2  ON (tblProdutoBarra_iq2.codProdutoBarra = tblNegocioProdutoBarra_iq2.codProdutoBarra )
+         INNER JOIN tblProduto      tblProduto_iq2       ON (tblProduto_iq2.codProduto = tblProdutoBarra_iq2.codProduto)
+         WHERE tblNegocio_iq2.codNegocio IN (
+                                         -- descobre os negocios onde aquele produto foi vendido
+                                        SELECT tblNegocioProdutoBarra_iq1.codNegocio
+                                          FROM tblNegocioProdutoBarra tblNegocioProdutoBarra_iq1
+                                         INNER JOIN tblProdutoBarra tblProdutoBarra_iq1 ON (tblProdutoBarra_iq1.codProdutoBarra = tblNegocioProdutoBarra_iq1.codProdutoBarra )
+                                         WHERE tblProdutoBarra_iq1.codProduto = 3878
+         )
+           AND tblNegocio_iq2.codNegocioStatus = 2 -- Fechado
+           AND tblProduto_iq2.Site = true
+           AND tblProduto_iq2.codProduto <> 3878
+         GROUP BY tblProdutoBarra_iq2.codProduto
+         ORDER BY vendas DESC
+         LIMIT 8;
+*/
+	RETURN QUERY SELECT * FROM tmpProdutoRelacionadoSite;
+         
+END;
+$function$
+]]></string>
+			<result_param name="codprodutocombinado" jt="12" type="text" />
+			<result_param name="codproduto" jt="-5" type="int8" />
+			<result_param name="codprodutorelacionado" jt="-5" type="int8" />
+			<result_param name="vendas" jt="-5" type="int8" />
+		</procedure>
+		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_31071f" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
+ RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	pcodecf bigint;
+BEGIN
+	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Geral' as tipo
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
+	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
+	  from tblecfreducaoz
+	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblecfreducaoz.movimento = pmovimento
+	   and tblecfreducaoz.crz = pcrz
+	 group by 
+	       tblecfreducaoz.codecfreducaoz
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     ;
+	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
+/*
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscalprodutobarra.aliquotaicms
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+*/
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Cancelado' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = true
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Desconto' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(descontoacrescimo)  as total
+	  from tblcupomfiscal 
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
+         
+END;
+$function$
+]]></string>
+			<input_param name="pmovimento" jt="91" type="date" />
+			<input_param name="pcrz" jt="-5" type="int8" />
+			<result_param name="tipo" jt="12" type="text" />
+			<result_param name="codecf" jt="-5" type="int8" />
+			<result_param name="movimento" jt="91" type="date" />
+			<result_param name="valor" jt="2" type="numeric" />
+		</procedure>
+		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_1cbcbd7" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint, pdesejado numeric)
+ RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric, diferenca numeric)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	pcodecf bigint;
+BEGIN
+	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3), diferenca numeric(20,3)) ON COMMIT DROP;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Geral' as tipo
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
+	     , pdesejado - (sum(coalesce(quantidade, 0) * coalesce(valorunitario)))
+	  from tblecfreducaoz
+	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblecfreducaoz.movimento = pmovimento
+	   and tblecfreducaoz.crz = pcrz
+	 group by 
+	       tblecfreducaoz.codecfreducaoz
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     ;
+	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
+/*
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscalprodutobarra.aliquotaicms
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+*/
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Cancelado' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	     , null
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = true
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Desconto' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(descontoacrescimo)  as total
+	     , null
+	  from tblcupomfiscal 
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
+         
+END;
+$function$
+]]></string>
+			<input_param name="pmovimento" jt="91" type="date" />
+			<input_param name="pcrz" jt="-5" type="int8" />
+			<input_param name="pdesejado" jt="2" type="numeric" />
+			<result_param name="tipo" jt="12" type="text" />
+			<result_param name="codecf" jt="-5" type="int8" />
+			<result_param name="movimento" jt="91" type="date" />
+			<result_param name="valor" jt="2" type="numeric" />
+			<result_param name="diferenca" jt="2" type="numeric" />
+		</procedure>
+		<procedure name="fntblmovimentotituloaiauad" id="Procedure_342935b" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblmovimentotituloaiauad()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+				DECLARE
+				vCodTitulo bigint;
+				vCodLiquidacaoTitulo bigint;
+				vTransacaoLiquidacao date;
+				vTransacaoEstorno timestamp without time zone;
+				vDebitoTotal numeric (14,2);
+				vDebitoSaldo numeric (14,2);
+				vCreditoTotal numeric (14,2);
+				vCreditoSaldo numeric (14,2);
+				vSaldo numeric (14,2);
+				BEGIN
+				-- Descobre codTitulo
+				IF (TG_OP = 'DELETE') THEN
+					vCodTitulo = OLD.codTitulo;
+					vCodLiquidacaoTitulo = OLD.codLiquidacaoTitulo;
+				ELSE
+					vCodTitulo = NEW.codTitulo;
+					vCodLiquidacaoTitulo = NEW.codLiquidacaoTitulo;
+				END IF;
+				-- calcula total Debito e Credito
+				SELECT 
+				  INTO vDebitoTotal
+					 , vCreditoTotal
+					   SUM(COALESCE(tblMovimentoTitulo.Debito, 0))
+					 , SUM(COALESCE(tblMovimentoTitulo.Credito, 0))
+				FROM tblMovimentoTitulo
+				WHERE tblMovimentoTitulo.codTitulo = vCodTitulo;
+				-- calcula Saldo
+				vSaldo := COALESCE(vDebitoTotal, 0) - COALESCE(vCreditoTotal, 0);
+				vTransacaoLiquidacao := NULL;
+				vTransacaoEstorno := NULL;
+				-- calcula DebitoSaldo e CreditoSaldo
+				IF vSaldo > 0 THEN 
+					vDebitoSaldo := vSaldo;
+					vCreditoSaldo := 0;
+				ELSIF vSaldo < 0 THEN 
+					vDebitoSaldo := 0;
+					vCreditoSaldo := vSaldo * -1;
+				ELSE
+					vDebitoSaldo := 0;
+					vCreditoSaldo := 0;
+					-- Pega data estorno
+					SELECT INTO vTransacaoEstorno MAX(COALESCE(criacao, sistema)) 
+					  FROM tblMovimentoTitulo
+					 WHERE tblMovimentoTitulo.codTitulo = vCodTitulo
+					   AND tblMovimentoTitulo.codTipoMovimentoTitulo = 900;
+					-- Pega data liquidacao
+					SELECT INTO vTransacaoLiquidacao MAX(Transacao) 
+					  FROM tblMovimentoTitulo 
+					 WHERE tblMovimentoTitulo.codTitulo = vCodTitulo;
+				END IF;
+				-- Atualiza Tabela com valores calculados
+				UPDATE tblTitulo
+				   SET DebitoTotal         = vDebitoTotal
+					 , CreditoTotal        = vCreditoTotal
+					 , DebitoSaldo         = vDebitoSaldo
+					 , CreditoSaldo        = vCreditoSaldo
+					 , Saldo               = vSaldo
+					 , TransacaoLiquidacao = vTransacaoLiquidacao
+					 , Estornado           = vTransacaoEstorno
+				 WHERE tblTitulo.codTitulo = vCodTitulo;
+				-- Atualiza Tabela tblliquidacaotitulos
+				IF vCodLiquidacaoTitulo	IS NOT NULL THEN
+					update tblliquidacaotitulo
+					set 
+						debito = q.debito,
+						credito = q.credito
+					from (
+						SELECT 
+							  tblmovimentotitulo.codliquidacaotitulo
+							, sum(coalesce(tblmovimentotitulo.debito, 0)) AS debito
+							, sum(coalesce(tblmovimentotitulo.credito, 0)) AS credito
+						FROM tblmovimentotitulo
+						WHERE tblmovimentotitulo.codliquidacaotitulo = vCodLiquidacaoTitulo
+						AND tblmovimentotitulo.codtipomovimentotitulo = 600 
+						GROUP BY tblmovimentotitulo.codliquidacaotitulo
+						) q
+					where tblliquidacaotitulo.codliquidacaotitulo = vCodLiquidacaoTitulo
+					and tblliquidacaotitulo.codliquidacaotitulo = q.codliquidacaotitulo;
+				END IF;
+				RETURN NEW;
+				END;
+			$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntblnegocio_atualiza_valoraprazo" id="Procedure_3809574" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocio_atualiza_valoraprazo(pcodnegocio bigint)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vValoAPrazo numeric (14,2);
+			BEGIN
+				-- calcula total produtos
+				SELECT 
+				  INTO vValoAPrazo
+					   SUM(COALESCE(tblnegocioformapagamento.valorpagamento, 0))
+				  FROM tblnegocioformapagamento
+				 INNER JOIN tblformapagamento ON tblformapagamento.codformapagamento = tblnegocioformapagamento.codformapagamento
+				 WHERE tblnegocioformapagamento.CodNegocio = pCodNegocio
+				   AND COALESCE(tblformapagamento.avista, true) = false;
+				-- Atualiza Tabela com valores calculados
+				UPDATE tblNegocio
+				   SET valorAPrazo       = coalesce(vValoAPrazo, 0)
+				 WHERE tblNegocio.CodNegocio = pCodNegocio;
+				RETURN TRUE;
+			END;
+			$function$
+]]></string>
+			<input_param name="pcodnegocio" jt="-5" type="int8" />
+			<result_param name="returnValue" jt="-7" type="bool" />
+		</procedure>
+		<procedure name="fntblnegocio_atualiza_valorprodutos" id="Procedure_158fc5a" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocio_atualiza_valorprodutos(pcodnegocio bigint)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vValorProdutos numeric (14,2);
+			BEGIN
+				-- calcula total produtos
+				SELECT 
+				  INTO vValorProdutos
+					   SUM(COALESCE(tblNegocioProdutoBarra.valortotal, 0))
+				FROM tblNegocioProdutoBarra
+				WHERE tblNegocioProdutoBarra.codNegocio = pCodNegocio;
+				-- Atualiza Tabela com valores calculados
+				UPDATE tblNegocio
+				   SET valorProdutos       = coalesce(vValorProdutos, 0)
+				 WHERE tblNegocio.CodNegocio = pCodNegocio;
+				RETURN TRUE;
+			END;
+			$function$
+]]></string>
+			<input_param name="pcodnegocio" jt="-5" type="int8" />
+			<result_param name="returnValue" jt="-7" type="bool" />
+		</procedure>
+		<procedure name="fntblnegocio_atualiza_valortotal" id="Procedure_4c377ad" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocio_atualiza_valortotal(pcodnegocio bigint)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+			BEGIN
+				-- Atualiza Tabela com valores calculados
+				UPDATE tblNegocio
+				   SET valorAVista = coalesce(tblNegocio.valorProdutos, 0) - coalesce(tblNegocio.valorDesconto, 0) - coalesce(tblNegocio.valorAPrazo, 0)
+					 , valorTotal  = coalesce(tblNegocio.valorProdutos, 0) - coalesce(tblNegocio.valorDesconto, 0) 
+				 WHERE tblNegocio.CodNegocio = pCodNegocio;
+				RETURN TRUE;
+			END;
+			$function$
+]]></string>
+			<input_param name="pcodnegocio" jt="-5" type="int8" />
+			<result_param name="returnValue" jt="-7" type="bool" />
+		</procedure>
+		<procedure name="fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto" id="Procedure_3710e4d" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vRetorno BOOLEAN;
+			BEGIN
+				-- Descobre codTitulo
+				IF (TG_OP = 'DELETE') THEN
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorTotal(OLD.codNegocio);
+				ELSIF (TG_OP = 'INSERT') THEN
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorTotal(NEW.codNegocio);
+				ELSE 
+					IF (NEW.codNegocio <> OLD.codNegocio) THEN
+						SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorTotal(OLD.codNegocio);
+					END IF;
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorTotal(NEW.codNegocio);
+				END IF;
+				RETURN NEW;
+			END;
+			$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntblnegocioformapagamentoaiauad" id="Procedure_6cb780" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocioformapagamentoaiauad()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vRetorno BOOLEAN;
+			BEGIN
+				-- Descobre codTitulo
+				IF (TG_OP = 'DELETE') THEN
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorAPrazo(OLD.codNegocio);
+				ELSIF (TG_OP = 'INSERT') THEN
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorAPrazo(NEW.codNegocio);
+				ELSE 
+					IF (NEW.codNegocio <> OLD.codNegocio) THEN
+						SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorAPrazo(OLD.codNegocio);
+					END IF;
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorAPrazo(NEW.codNegocio);
+				END IF;
+				RETURN NEW;
+			END;
+			$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntblnegocioprodutobarraaiauad" id="Procedure_2dae6bb" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocioprodutobarraaiauad()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vRetorno BOOLEAN;
+			BEGIN
+				-- Descobre codTitulo
+				IF (TG_OP = 'DELETE') THEN
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorProdutos(OLD.codNegocio);
+				ELSIF (TG_OP = 'INSERT') THEN
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorProdutos(NEW.codNegocio);
+				ELSE 
+					IF (NEW.codNegocio <> OLD.codNegocio) THEN
+						SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorProdutos(OLD.codNegocio);
+					END IF;
+					SELECT INTO vRetorno fnTblNegocio_Atualiza_ValorProdutos(NEW.codNegocio);
+				END IF;
+				RETURN NEW;
+			END;
+			$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntblnotafiscal_atualiza_valorprodutos" id="Procedure_316a445" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnotafiscal_atualiza_valorprodutos(pcodnotafiscal bigint)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vValorProdutos numeric (14,2);
+				vIcmsBase      numeric (14,2);
+				vIcmsValor     numeric (14,2);
+				vIcmsStBase    numeric (14,2);
+				vIcmsStValor   numeric (14,2);
+				vIpiBase       numeric (14,2);
+				vIpiValor      numeric (14,2);
+			BEGIN
+				-- calcula total produtos
+				SELECT 
+				  INTO vValorProdutos
+				     , vIcmsBase
+				     , vIcmsValor
+				     , vIcmsStBase
+				     , vIcmsStValor
+				     , vIpiBase
+				     , vIpiValor
+					   SUM(COALESCE(tblNotaFiscalProdutoBarra.valortotal, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsBase, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsValor, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsStBase, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsStValor, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiBase, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiValor, 0))
+					   
+				FROM tblNotaFiscalProdutoBarra
+				WHERE tblNotaFiscalProdutoBarra.codNotaFiscal = pCodNotaFiscal;
+				-- Atualiza Tabela com valores calculados
+				UPDATE tblNotaFiscal
+				   SET valorProdutos   = coalesce(vValorProdutos, 0)
+				     , IcmsBase       = coalesce(vIcmsBase     , 0)
+				     , IcmsValor      = coalesce(vIcmsValor    , 0)
+				     , IcmsStBase     = coalesce(vIcmsStBase   , 0)
+				     , IcmsStValor    = coalesce(vIcmsStValor  , 0)
+				     , IpiBase        = coalesce(vIpiBase      , 0)
+				     , IpiValor       = coalesce(vIpiValor     , 0)
+				 WHERE tblNotaFiscal.CodNotaFiscal = pCodNotaFiscal;
+				RETURN TRUE;
+			END;
+			$function$
+]]></string>
+			<input_param name="pcodnotafiscal" jt="-5" type="int8" />
+			<result_param name="returnValue" jt="-7" type="bool" />
+		</procedure>
+		<procedure name="fntblnotafiscal_atualiza_valortotal" id="Procedure_5295468" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnotafiscal_atualiza_valortotal(pcodnotafiscal bigint)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+			BEGIN
+				-- Atualiza Tabela com valores calculados
+				UPDATE tblNotaFiscal
+				   SET valorTotal  = 
+						coalesce(tblNotaFiscal.valorProdutos, 0)
+						+ coalesce(tblNotaFiscal.icmsstvalor, 0)
+						+ coalesce(tblNotaFiscal.ipivalor, 0)
+						+ coalesce(tblNotaFiscal.valorfrete, 0)
+						+ coalesce(tblNotaFiscal.valorseguro, 0)
+						- coalesce(tblNotaFiscal.valordesconto, 0)
+						+ coalesce(tblNotaFiscal.valoroutras, 0)
+				 WHERE tblNotaFiscal.CodNotaFiscal = pCodNotaFiscal;
+				RETURN TRUE;
+			END;
+			$function$
+]]></string>
+			<input_param name="pcodnotafiscal" jt="-5" type="int8" />
+			<result_param name="returnValue" jt="-7" type="bool" />
+		</procedure>
+		<procedure name="fntblnotafiscalaiau_valorprodutos" id="Procedure_50670df" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnotafiscalaiau_valorprodutos()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vRetorno BOOLEAN;
+			BEGIN
+				-- Descobre codTitulo
+				IF (TG_OP = 'DELETE') THEN
+					SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorTotal(OLD.codNotaFiscal);
+				ELSIF (TG_OP = 'INSERT') THEN
+					SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorTotal(NEW.codNotaFiscal);
+				ELSE 
+					IF (NEW.codNotaFiscal <> OLD.codNotaFiscal) THEN
+						SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorTotal(OLD.codNotaFiscal);
+					END IF;
+					SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorTotal(NEW.codNotaFiscal);
+				END IF;
+				RETURN NEW;
+			END;
+			$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntblnotafiscalprodutobarraaiauad" id="Procedure_5331e91" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnotafiscalprodutobarraaiauad()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+			DECLARE
+				vRetorno BOOLEAN;
+			BEGIN
+				-- Descobre codTitulo
+				IF (TG_OP = 'DELETE') THEN
+					SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorProdutos(OLD.codNotaFiscal);
+				ELSIF (TG_OP = 'INSERT') THEN
+					SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorProdutos(NEW.codNotaFiscal);
+				ELSE 
+					IF (NEW.codNotaFiscal <> OLD.codNotaFiscal) THEN
+						SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorProdutos(OLD.codNotaFiscal);
+					END IF;
+					SELECT INTO vRetorno fnTblNotaFiscal_Atualiza_ValorProdutos(NEW.codNotaFiscal);
+				END IF;
+				RETURN NEW;
+			END;
+			$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntbltituloai" id="Procedure_5d28d02" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntbltituloai()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+	IF current_user <> 'mgsis_replicacao' AND current_user <> 'mgsis_yii' THEN
+		INSERT INTO tblMovimentoTitulo
+			( codTipoMovimentoTitulo 
+			, codTitulo 
+			, codPortador 
+			, codTituloRelacionado
+			, Debito
+			, Credito 
+			, Historico 
+			, Transacao 
+			, Sistema
+			, codTituloAgrupamento 		
+			)
+		SELECT 
+			  tblTipoTitulo.codTipoMovimentoTitulo
+			, NEW.codTitulo
+			, NEW.codPortador
+			, null
+			, NEW.Debito
+			, NEW.Credito
+			, null
+			, NEW.Transacao
+			, NEW.Sistema
+			, NEW.codTituloAgrupamento 		
+		FROM tblTipoTitulo 
+		WHERE tblTipoTitulo.codTipoTitulo = NEW.codTipoTitulo;
+	END IF;
+	RETURN NEW;
+END;
+$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntbltituloaiauad" id="Procedure_d6188d" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntbltituloaiauad()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+				DECLARE
+				vCodTituloAgrupamento bigint;
+				vDebitoTotal numeric (14,2);
+				vCreditoTotal numeric (14,2);
+				BEGIN
+				-- Descobre codTitulo
+				IF (TG_OP = 'DELETE') THEN
+					vCodTituloAgrupamento = OLD.codTituloAgrupamento;
+				ELSE
+					vCodTituloAgrupamento = NEW.codTituloAgrupamento;
+				END IF;
+				IF vCodTituloAgrupamento IS NOT NULL THEN
+					update tbltituloagrupamento
+					set 
+						debito = q.debito,
+						credito = q.credito
+					from (
+						select 
+							tbltitulo.codtituloagrupamento, 
+							sum(coalesce(tbltitulo.debito, 0)) as debito, 
+							sum(coalesce(tbltitulo.credito, 0)) as credito
+						from tbltitulo
+						where tbltitulo.codtituloagrupamento = vCodTituloAgrupamento
+						group by tbltitulo.codtituloagrupamento
+						) q
+					where tbltituloagrupamento.codtituloagrupamento = vCodTituloAgrupamento
+					AND tbltituloagrupamento.codtituloagrupamento = q.codtituloagrupamento;
+				END IF;
+				RETURN NEW;
+				END;
+			$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="fntbltituloau" id="Procedure_5a236c1" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntbltituloau()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	DebitoMov numeric(14,2);
+	CreditoMov numeric(14,2);
+BEGIN
+	IF current_user <> 'mgsis_replicacao' AND current_user <> 'mgsis_yii' THEN
+		IF COALESCE(NEW.DEBITO, 0) > COALESCE(OLD.DEBITO, 0) THEN
+			DebitoMov = COALESCE(NEW.DEBITO, 0) - COALESCE(OLD.DEBITO, 0);
+		END IF;
+		IF COALESCE(NEW.DEBITO, 0) < COALESCE(OLD.DEBITO, 0) THEN
+			CreditoMov = COALESCE(OLD.DEBITO, 0) - COALESCE(NEW.DEBITO, 0);
+		END IF;
+		IF COALESCE(NEW.Credito, 0) > COALESCE(OLD.Credito, 0) THEN
+			CreditoMov = COALESCE(NEW.Credito, 0) - COALESCE(OLD.Credito, 0);
+		END IF;
+		IF COALESCE(NEW.Credito, 0) < COALESCE(OLD.Credito, 0) THEN
+			DebitoMov = COALESCE(OLD.Credito, 0) - COALESCE(NEW.Credito, 0);
+		END IF;
+		IF COALESCE(DebitoMov, 0) <> 0 OR COALESCE(CreditoMov, 0) <> 0 THEN
+			INSERT INTO tblMovimentoTitulo
+				( codTipoMovimentoTitulo 
+				, codTitulo 
+				, codPortador 
+				, codTituloRelacionado
+				, Debito
+				, Credito 
+				, Historico 
+				, Transacao 
+				, Sistema 		
+				)
+			SELECT 
+				  200
+				, NEW.codTitulo
+				, NEW.codPortador
+				, null
+				, DebitoMov
+				, CreditoMov
+				, null
+				, NOW()
+				, NOW()
+			FROM tblTipoTitulo 
+			WHERE tblTipoTitulo.codTipoTitulo = NEW.codTipoTitulo;
+		END IF;
+	END IF;
+	RETURN NEW;
+END;
+$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
+		<procedure name="geraauditoria" id="Procedure_6b35ff" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.geraauditoria()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	--codigo
+	tcolunacodigo text;
+	tcodantigo bigint;
+	tcodnovo bigint;
+	
+	--coluna alterada
+	tcolunaalterada TEXT;
+	tantigo TEXT;
+	tnovo TEXT;
+	
+BEGIN
+	IF current_user <> 'mgsis_replicacao' THEN
+		--Pega o campo da chave primaria
+		SELECT min(column_name) INTO tcolunacodigo 
+		  FROM information_schema.key_column_usage 
+		 WHERE TABLE_SCHEMA = TG_TABLE_SCHEMA
+		   AND TABLE_NAME = TG_TABLE_NAME  
+		   AND constraint_name like '%pkey';
+		--Pega o Valor antigo da chave primaria
+		IF TG_OP IN ('UPDATE', 'DELETE') THEN
+			EXECUTE 'SELECT ($1).' || tcolunacodigo || '::text' INTO tcodantigo USING OLD;
+		END IF;
+		
+		--Pega o Valor novo da chave primaria
+		IF TG_OP IN ('INSERT', 'UPDATE') THEN
+			EXECUTE 'SELECT ($1).' || tcolunacodigo || '::text' INTO tcodnovo USING NEW;
+		END IF;
+		--se for delete ou insert grava na tabela de auditoria
+		IF TG_OP IN ('INSERT', 'DELETE') THEN
+			INSERT INTO tblAuditoria (tabela       , colunacodigo , codantigo , codnovo , colunaalterada , antigo , novo , operacao              )
+					  VALUES (TG_TABLE_NAME, tcolunacodigo, tcodantigo, tcodnovo, tcolunaalterada, tantigo, tnovo, SUBSTRING(TG_OP, 1, 1));
+					  
+		--se for update percorre campos da tabela, e tem campo alterado
+		ELSIF NEW IS DISTINCT FROM OLD THEN
+			--se foi alterado o codigo da chave primaria
+			--altera o codigo na tabela de auditoria
+			IF tcodnovo <> tcodantigo THEN
+			
+				UPDATE tblAuditoria 
+				   SET codnovo = tcodnovo
+				 WHERE tabela = TG_TABLE_NAME
+				   AND colunacodigo = tcolunacodigo
+				   AND codantigo = tcodantigo;
+				   
+				UPDATE tblAuditoria 
+				   SET codnovo = tcodnovo
+				 WHERE tabela = TG_TABLE_NAME
+				   AND colunacodigo = tcolunacodigo
+				   AND codnovo = tcodantigo;
+				   
+			END IF;
+		
+			--percorre campos da tabela
+			FOR tcolunaalterada IN SELECT column_name 
+						FROM information_schema.columns 
+						WHERE table_schema = TG_TABLE_SCHEMA
+						AND table_name = TG_TABLE_NAME
+						AND column_name <> tcolunacodigo
+			LOOP	
+				--soh entra se a coluna da tabela nao estiver na lista de excecoes 
+				IF (SELECT COUNT(codAuditoriaExcecao) FROM tblAuditoriaExcecao WHERE tabela = TG_TABLE_NAME AND campo = tcolunaalterada) = 0 THEN
+			
+					--busca valor antigo do campo
+					EXECUTE 'SELECT ($1).' || tcolunaalterada || '::text' INTO tantigo USING OLD;
+					
+					--busca valor novo do campo
+					EXECUTE 'SELECT ($1).' || tcolunaalterada || '::text' INTO tnovo   USING NEW;
+					-- se valor antigo diferente do novo, grava na tabela de auditoria
+					IF COALESCE(tantigo, '') <> COALESCE(tnovo, '') THEN
+						INSERT INTO tblAuditoria (tabela       , colunacodigo , codantigo , codnovo , colunaalterada , antigo , novo , operacao              )
+								  VALUES (TG_TABLE_NAME, tcolunacodigo, tcodantigo, tcodnovo, tcolunaalterada, tantigo, tnovo, SUBSTRING(TG_OP, 1, 1));
+					END IF;
+					
+				END IF;
+				
+			END LOOP;
+			
+		END IF;
+	END IF;
+	RETURN NULL;
+END;
+$function$
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
+		</procedure>
 		<trigger name="tblmovimentotituloaiauad" table="tblmovimentotitulo" id="Trigger4846959" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblmovimentotituloaiauad AFTER INSERT OR DELETE OR UPDATE ON tblmovimentotitulo FOR EACH ROW EXECUTE PROCEDURE fntblmovimentotituloaiauad();]]></string>
+			<string><![CDATA[CREATE TRIGGER tblmovimentotituloaiauad AFTER INSERT OR DELETE OR UPDATE ON tblmovimentotitulo FOR EACH ROW EXECUTE PROCEDURE fntblmovimentotituloaiauad()]]></string>
 		</trigger>
 		<trigger name="tblnegocioaiau_valorprodutos_valoraprazo_valordesconto" table="tblnegocio" id="Trigger4846960" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnegocioaiau_valorprodutos_valoraprazo_valordesconto AFTER INSERT OR UPDATE OF valorprodutos, valoraprazo, valordesconto ON tblnegocio FOR EACH ROW EXECUTE PROCEDURE fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto();]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnegocioaiau_valorprodutos_valoraprazo_valordesconto AFTER INSERT OR UPDATE OF valorprodutos, valoraprazo, valordesconto ON tblnegocio FOR EACH ROW EXECUTE PROCEDURE fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto()]]></string>
 		</trigger>
 		<trigger name="tblnegocioformapagamentoaiauad" table="tblnegocioformapagamento" id="Trigger4846961" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnegocioformapagamentoaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnegocioformapagamento FOR EACH ROW EXECUTE PROCEDURE fntblnegocioformapagamentoaiauad();]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnegocioformapagamentoaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnegocioformapagamento FOR EACH ROW EXECUTE PROCEDURE fntblnegocioformapagamentoaiauad()]]></string>
 		</trigger>
 		<trigger name="tblnegocioprodutobarraaiauad" table="tblnegocioprodutobarra" id="Trigger4846961" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnegocioprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnegocioprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnegocioprodutobarraaiauad();]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnegocioprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnegocioprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnegocioprodutobarraaiauad()]]></string>
 		</trigger>
 		<trigger name="tblnotafiscalaiau_valorprodutos" table="tblnotafiscal" id="Trigger4846962" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnotafiscalaiau_valorprodutos AFTER INSERT OR UPDATE OF valorprodutos, valorfrete, valorseguro, valordesconto, valoroutras, icmsstvalor, ipivalor ON tblnotafiscal FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalaiau_valorprodutos();]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnotafiscalaiau_valorprodutos AFTER INSERT OR UPDATE OF valorprodutos, valorfrete, valorseguro, valordesconto, valoroutras, icmsstvalor, ipivalor ON tblnotafiscal FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalaiau_valorprodutos()]]></string>
 		</trigger>
 		<trigger name="tblnotafiscalprodutobarraaiauad" table="tblnotafiscalprodutobarra" id="Trigger4846963" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnotafiscalprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnotafiscalprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalprodutobarraaiauad();]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnotafiscalprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnotafiscalprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalprodutobarraaiauad()]]></string>
 		</trigger>
 		<trigger name="tbltituloai" table="tbltitulo" id="Trigger4846967" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tbltituloai AFTER INSERT ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloai();]]></string>
+			<string><![CDATA[CREATE TRIGGER tbltituloai AFTER INSERT ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloai()]]></string>
 		</trigger>
 		<trigger name="tbltituloaiauad" table="tbltitulo" id="Trigger4846967" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tbltituloaiauad AFTER INSERT OR DELETE OR UPDATE ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloaiauad();]]></string>
+			<string><![CDATA[CREATE TRIGGER tbltituloaiauad AFTER INSERT OR DELETE OR UPDATE ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloaiauad()]]></string>
 		</trigger>
 		<trigger name="tbltituloau" table="tbltitulo" id="Trigger4846967" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tbltituloau AFTER UPDATE ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloau();]]></string>
+			<string><![CDATA[CREATE TRIGGER tbltituloau AFTER UPDATE ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloau()]]></string>
 		</trigger>
 		<function name="criatriggers_geraauditoria" id="Function4846928" isSystem="false" params_known="n" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.criatriggers_geraauditoria(brecria boolean DEFAULT false)
@@ -6323,8 +7329,8 @@ $function$
 ;]]></string>
 		</function>
 	</schema>
-	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.1.jre6.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
-	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.1.jre6.jar" driver_desc="Standard" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.4.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.4.jar" driver_desc="Standard" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblfilial" color="b7c8e3" x="784" y="64" />
 		<entity schema="mgsis" name="tblpermissao" color="b7c8e3" x="64" y="592" />
@@ -6936,11 +7942,11 @@ FROM
 		</entity>
 	</layout>
 	<layout name="Layout_Vendas" id="Layout_4271ffc" show_relation="columns" >
-		<entity schema="mgsis" name="tblestoquelocal" color="c1d8ee" x="448" y="48" />
-		<entity schema="mgsis" name="tblmarca" color="c1d8ee" x="416" y="448" />
+		<entity schema="mgsis" name="tblmarca" color="c1d8ee" x="400" y="304" />
+		<entity schema="mgsis" name="tblestoquelocal" color="c1d8ee" x="416" y="48" />
+		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="c1d8ee" x="48" y="48" />
 		<entity schema="mgsis" name="tblestoquelocalprodutovariacaovenda" color="c1d8ee" x="48" y="496" />
-		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="960" y="48" />
-		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="c1d8ee" x="64" y="48" />
-		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="672" y="48" />
+		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="656" y="48" />
+		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="944" y="48" />
 	</layout>
 </project>

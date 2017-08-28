@@ -1028,6 +1028,10 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="ignorar" type="bool" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="vendadiaquantidade" type="float8" length="17" decimal="17" jt="6" />
 			<index name="pk_tblestoquelocalprodutovariacaovenda" unique="PRIMARY_KEY" >
 				<column name="codestoquelocalprodutovariacaovenda" />
 			</index>
@@ -1043,6 +1047,16 @@
 			</index>
 			<index name="idx_tblestoquelocalprodutovariacaovenda_1" unique="NORMAL" >
 				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_ignorar" unique="NORMAL" >
+				<column name="ignorar" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_mes_2" unique="NORMAL" >
+				<column name="mes" />
+			</index>
+			<index name="idx_tblestoquelocalprodutovariacaovenda_ignorar_mes" unique="NORMAL" >
+				<column name="ignorar" />
+				<column name="mes" />
 			</index>
 			<fk name="fk_tblestoquelocalprodutovariacaovenda" to_schema="mgsis" to_table="tblestoquelocalprodutovariacao" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codestoquelocalprodutovariacao" pk="codestoquelocalprodutovariacao" />
@@ -1894,16 +1908,6 @@
 			</column>
 			<column name="inativo" type="timestamp" jt="93" />
 			<column name="descricaosite" type="varchar" length="1024" decimal="0" jt="12" />
-			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
-				<defo>4</defo>
-			</column>
-			<column name="abcposicao" type="bigint" jt="-5" />
-			<column name="vendabimestrevalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="dataultimacompra" type="date" jt="91" />
-			<column name="itensabaixominimo" type="smallint" jt="5" />
-			<column name="itensacimamaximo" type="smallint" jt="5" />
 			<column name="estoqueminimodias" type="smallint" jt="5" mandatory="y" >
 				<defo>15</defo>
 			</column>
@@ -1911,16 +1915,27 @@
 				<defo>30</defo>
 			</column>
 			<column name="codopencart" type="bigint" jt="-5" />
+			<column name="controlada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="dataultimacompra" type="date" jt="91" />
+			<column name="itensabaixominimo" type="smallint" jt="5" />
+			<column name="itensacimamaximo" type="smallint" jt="5" />
+			<column name="vendabimestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
+			<column name="vendaultimocalculo" type="timestamp" jt="93" />
 			<column name="abcignorar" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
-			<column name="controlada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
-				<defo>false</defo>
+			<column name="abcposicao" type="bigint" jt="-5" />
+			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
+				<defo>4</defo>
 			</column>
 			<index name="tblmarca_pkey" unique="PRIMARY_KEY" >
 				<column name="codmarca" />
@@ -3216,6 +3231,26 @@
 			<column name="metakeywordsite" type="varchar" length="200" jt="12" />
 			<column name="metadescriptionsite" type="text" jt="12" />
 			<column name="codprodutoimagem" type="bigint" jt="-5" />
+			<column name="dataultimacompra" type="date" jt="91" />
+			<column name="custoultimacompra" type="numeric" length="14" decimal="6" jt="2" />
+			<column name="estoqueminimo" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="estoquemaximo" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="vendadiaquantidadeprevisao" type="float8" length="17" decimal="17" jt="6" />
+			<column name="vendaultimocalculo" type="timestamp" jt="93" />
+			<column name="vendabimestrequantidade" type="numeric" length="14" decimal="3" jt="2" />
+			<column name="vendabimestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendasemestrequantidade" type="numeric" length="14" decimal="3" jt="2" />
+			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanoquantidade" type="numeric" length="14" decimal="3" jt="2" />
+			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
+			<column name="abcignorar" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="abcposicao" type="bigint" jt="-5" />
+			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
+				<defo>4</defo>
+			</column>
 			<index name="tblproduto_pkey" unique="PRIMARY_KEY" >
 				<column name="codproduto" />
 			</index>
@@ -5661,89 +5696,6 @@ $function$
 			<result_param name="codprodutorelacionado" jt="-5" type="int8" />
 			<result_param name="vendas" jt="-5" type="int8" />
 		</procedure>
-		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_31071f" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
- RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	pcodecf bigint;
-BEGIN
-	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Geral' as tipo
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
-	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
-	  from tblecfreducaoz
-	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblecfreducaoz.movimento = pmovimento
-	   and tblecfreducaoz.crz = pcrz
-	 group by 
-	       tblecfreducaoz.codecfreducaoz
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     ;
-	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
-/*
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscalprodutobarra.aliquotaicms
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-*/
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Cancelado' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = true
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Desconto' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(descontoacrescimo)  as total
-	  from tblcupomfiscal 
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
-         
-END;
-$function$
-]]></string>
-			<input_param name="pmovimento" jt="91" type="date" />
-			<input_param name="pcrz" jt="-5" type="int8" />
-			<result_param name="tipo" jt="12" type="text" />
-			<result_param name="codecf" jt="-5" type="int8" />
-			<result_param name="movimento" jt="91" type="date" />
-			<result_param name="valor" jt="2" type="numeric" />
-		</procedure>
 		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_1cbcbd7" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint, pdesejado numeric)
  RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric, diferenca numeric)
@@ -5830,6 +5782,89 @@ $function$
 			<result_param name="movimento" jt="91" type="date" />
 			<result_param name="valor" jt="2" type="numeric" />
 			<result_param name="diferenca" jt="2" type="numeric" />
+		</procedure>
+		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_31071f" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
+ RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	pcodecf bigint;
+BEGIN
+	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Geral' as tipo
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
+	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
+	  from tblecfreducaoz
+	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblecfreducaoz.movimento = pmovimento
+	   and tblecfreducaoz.crz = pcrz
+	 group by 
+	       tblecfreducaoz.codecfreducaoz
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     ;
+	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
+/*
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscalprodutobarra.aliquotaicms
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+*/
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Cancelado' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = true
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Desconto' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(descontoacrescimo)  as total
+	  from tblcupomfiscal 
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
+         
+END;
+$function$
+]]></string>
+			<input_param name="pmovimento" jt="91" type="date" />
+			<input_param name="pcrz" jt="-5" type="int8" />
+			<result_param name="tipo" jt="12" type="text" />
+			<result_param name="codecf" jt="-5" type="int8" />
+			<result_param name="movimento" jt="91" type="date" />
+			<result_param name="valor" jt="2" type="numeric" />
 		</procedure>
 		<procedure name="fntblmovimentotituloaiauad" id="Procedure_342935b" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblmovimentotituloaiauad()
@@ -7294,8 +7329,8 @@ $function$
 ;]]></string>
 		</function>
 	</schema>
-	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.1.jre6.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
-	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.1.jre6.jar" driver_desc="Standard" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.4.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.4.jar" driver_desc="Standard" host="192.168.1.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblfilial" color="b7c8e3" x="784" y="64" />
 		<entity schema="mgsis" name="tblpermissao" color="b7c8e3" x="64" y="592" />
@@ -7907,11 +7942,11 @@ FROM
 		</entity>
 	</layout>
 	<layout name="Layout_Vendas" id="Layout_4271ffc" show_relation="columns" >
-		<entity schema="mgsis" name="tblestoquelocal" color="c1d8ee" x="448" y="48" />
+		<entity schema="mgsis" name="tblmarca" color="c1d8ee" x="400" y="304" />
+		<entity schema="mgsis" name="tblestoquelocal" color="c1d8ee" x="416" y="48" />
+		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="c1d8ee" x="48" y="48" />
 		<entity schema="mgsis" name="tblestoquelocalprodutovariacaovenda" color="c1d8ee" x="48" y="496" />
-		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="960" y="48" />
-		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="c1d8ee" x="64" y="48" />
-		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="672" y="48" />
-		<entity schema="mgsis" name="tblmarca" color="c1d8ee" x="400" y="336" />
+		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="656" y="48" />
+		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="944" y="48" />
 	</layout>
 </project>
