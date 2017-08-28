@@ -46,22 +46,22 @@
 
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-select
-              float-label="Impressora Matricial"
-              v-model="data.impressoramatricial"
-              :options="impressoras"
-              />
+              <mg-select-impressora
+                label="Impressora Matricial"
+                v-model="data.impressoramatricial">
+              </mg-select-impressora>
             </div>
           </div>
+
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-select
-              float-label="Impressora Térmica"
-              v-model="data.impressoratermica"
-              :options="impressoras"
-              />
+              <mg-select-impressora
+                label="Impressora Térmica"
+                v-model="data.impressoratermica">
+              </mg-select-impressora>
             </div>
           </div>
+
         </form>
       </div>
     </div>
@@ -83,6 +83,7 @@ import {
 } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
+import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
 
 export default {
   name: 'usuario-update',
@@ -95,7 +96,8 @@ export default {
     QSelect,
     QSearch,
     QAutocomplete,
-    QSideLink
+    QSideLink,
+    MgSelectImpressora
   },
   data () {
     return {
