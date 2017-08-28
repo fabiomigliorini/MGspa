@@ -31,9 +31,9 @@
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-field>
                 <q-input
-                type="password"
-                v-model="data.senha"
-                float-label="Senha"
+                  type="password"
+                  v-model="data.senha"
+                  float-label="Senha"
                 />
               </q-field>
               <mg-erros-validacao :erros="erros.senha"></mg-erros-validacao>
@@ -59,22 +59,20 @@
 
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-select
-              float-label="Impressora Matricial"
-              v-model="data.impressoramatricial"
-              :options="impressoras"
-              />
+              <mg-select-impressora
+                label="Impressora Matricial"
+                v-model="data.impressoramatricial">
+              </mg-select-impressora>
               <mg-erros-validacao :erros="erros.impressoramatricial"></mg-erros-validacao>
             </div>
           </div>
 
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-select
-              float-label="Impressora Térmica"
-              v-model="data.impressoratermica"
-              :options="impressoras"
-              />
+              <mg-select-impressora
+                label="Impressora Térmica"
+                v-model="data.impressoratermica">
+              </mg-select-impressora>
               <mg-erros-validacao :erros="erros.impressoratermica"></mg-erros-validacao>
             </div>
           </div>
@@ -100,6 +98,7 @@ import {
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
+import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
 
 export default {
   name: 'usuario-create',
@@ -111,7 +110,8 @@ export default {
     QBtn,
     QInput,
     QSelect,
-    MgAutocompletePessoa
+    MgAutocompletePessoa,
+    MgSelectImpressora
   },
   data () {
     return {

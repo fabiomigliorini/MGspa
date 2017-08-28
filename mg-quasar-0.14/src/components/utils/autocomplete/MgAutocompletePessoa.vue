@@ -32,6 +32,15 @@ export default {
     }
   },
   methods: {
+    initSelect (codpessoa) {
+      let vm = this
+      window.axios.get('pessoa/' + codpessoa).then(response => {
+        let pessoa = response.data
+        vm.terms = pessoa.pessoa
+      }).catch(function (error) {
+        console.log(error)
+      })
+    },
     selected (item) {
       let vm = this
       vm.$emit('seleciona', item.id)
