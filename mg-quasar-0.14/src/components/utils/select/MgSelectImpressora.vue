@@ -1,7 +1,7 @@
 <template>
   <q-select
     :value="value"
-    :options="impressoras"
+    :options="data"
     :float-label="label"
     @change="handleChange"
   />
@@ -19,24 +19,24 @@ export default {
   },
   data () {
     return {
-      impressoras: []
+      data: []
     }
   },
   methods: {
     handleChange (newVal) {
       this.$emit('input', newVal)
     },
-    loadImpressoras: function () {
+    loadData: function () {
       let vm = this
       window.axios.get('usuario/impressoras').then(function (request) {
-        vm.impressoras = request.data
+        vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
       })
     }
   },
   created () {
-    this.loadImpressoras()
+    this.loadData()
   }
 }
 </script>

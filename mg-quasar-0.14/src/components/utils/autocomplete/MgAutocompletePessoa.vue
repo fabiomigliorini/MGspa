@@ -11,19 +11,17 @@
 </template>
 
 <script>
-
-import { QSearch, QAutocomplete } from 'quasar'
+import {
+  QSearch,
+  QAutocomplete
+} from 'quasar'
 
 export default {
   name: 'mg-autocomplete-pessoa',
   props: ['init', 'placeholder'],
   components: {
-    QSearch, QAutocomplete
-  },
-  computed: {
-    initPessoa () {
-      return this.init
-    }
+    QSearch,
+    QAutocomplete
   },
   data () {
     return {
@@ -36,6 +34,13 @@ export default {
         if (val.length === 0) {
           let vm = this
           vm.$emit('seleciona', null)
+        }
+      }
+    },
+    init: {
+      handler: function (val, oldVal) {
+        if (val !== null) {
+          this.initSelect(val)
         }
       }
     }
@@ -65,13 +70,6 @@ export default {
         done([])
         console.log(error.response)
       })
-    }
-  },
-  created () {
-    console.log('init: ' + this.init)
-    console.log('place: ' + this.placeholder)
-    if (this.init) {
-      this.initSelect(this.init)
     }
   }
 }
