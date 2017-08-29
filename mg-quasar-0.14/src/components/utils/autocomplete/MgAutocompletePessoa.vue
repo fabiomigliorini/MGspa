@@ -1,6 +1,12 @@
 <template>
-  <q-search v-model="terms" :placeholder="placeholder">
-    <q-autocomplete v-on:selected="selected" @search="search" @selected="selected" :min-characters="3" :debounce="600"/>
+  <q-search v-model="terms"  :init="init" :placeholder="placeholder">
+    <q-autocomplete
+      v-on:selected="selected"
+      @search="search"
+      @selected="selected"
+      :min-characters="3"
+      :debounce="600"
+      />
   </q-search>
 </template>
 
@@ -10,11 +16,14 @@ import { QSearch, QAutocomplete } from 'quasar'
 
 export default {
   name: 'mg-autocomplete-pessoa',
-  props: [
-    'placeholder'
-  ],
+  props: ['init', 'placeholder'],
   components: {
     QSearch, QAutocomplete
+  },
+  computed: {
+    initPessoa () {
+      return this.init
+    }
   },
   data () {
     return {
@@ -56,6 +65,13 @@ export default {
         done([])
         console.log(error.response)
       })
+    }
+  },
+  created () {
+    console.log('init: ' + this.init)
+    console.log('place: ' + this.placeholder)
+    if (this.init) {
+      this.initSelect(this.init)
     }
   }
 }

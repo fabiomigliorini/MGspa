@@ -18,9 +18,9 @@
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-field>
                 <q-input
-                type="text"
-                v-model="data.usuario"
-                float-label="Usuário"
+                  type="text"
+                  v-model="data.usuario"
+                  float-label="Usuário"
                 />
               </q-field>
               <mg-erros-validacao :erros="erros.usuario"></mg-erros-validacao>
@@ -42,11 +42,11 @@
 
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <q-select
-                float-label="Filial"
-                v-model="data.codfilial"
-                :options="filiais"
-              />
+              <mg-select-filial
+                label="Filial"
+                v-model="data.codfilial">
+              </mg-select-filial>
+              <mg-erros-validacao :erros="erros.codfilial"></mg-erros-validacao>
             </div>
           </div>
 
@@ -99,6 +99,7 @@ import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
 import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
+import MgSelectFilial from '../../utils/select/MgSelectFilial'
 
 export default {
   name: 'usuario-create',
@@ -111,11 +112,11 @@ export default {
     QInput,
     QSelect,
     MgAutocompletePessoa,
-    MgSelectImpressora
+    MgSelectImpressora,
+    MgSelectFilial
   },
   data () {
     return {
-      teste: '',
       data: {
         usuario: null,
         senha: null,
@@ -124,8 +125,6 @@ export default {
         impressoramatricial: null,
         impressoratermica: null
       },
-      impressoras: [],
-      filiais: [],
       erros: false
     }
   },
@@ -133,27 +132,6 @@ export default {
     pessoa (value) {
       let vm = this
       vm.data.codpessoa = value
-    },
-    carregaImpressoras: function () {
-      let vm = this
-      window.axios.get('usuario/impressoras').then(function (request) {
-        vm.impressoras = request.data
-      }).catch(function (error) {
-        console.log(error.response)
-      })
-    },
-    carregaFiliais: function () {
-      let vm = this
-      window.axios.get('filial', { params: { fields: 'codfilial,filial' } }).then(function (request) {
-        vm.filiais = request.data.data.map(filial => {
-          return {
-            value: filial.codfilial,
-            label: filial.filial
-          }
-        })
-      }).catch(function (error) {
-        console.log(error.response)
-      })
     },
     create: function () {
       var vm = this
@@ -179,10 +157,6 @@ export default {
         ]
       })
     }
-  },
-  mounted () {
-    this.carregaImpressoras()
-    this.carregaFiliais()
   }
 }
 </script>
