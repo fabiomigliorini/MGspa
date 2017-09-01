@@ -33,3 +33,18 @@ delete from tblchequerepassecheque where codchequerepassecheque between 15837 an
 
 update tblchequerepassecheque set codchequerepasse = 2049 where codchequerepassecheque = 15793
 delete from tblchequerepassecheque where codchequerepassecheque in (15693, 15692)
+
+
+/*
+-- INSERE CHEQUE COMO DEVOLVIDO
+insert into tblchequedevolucao (codchequerepassecheque, codchequemotivodevolucao, data, observacoes, criacao, alteracao, codusuariocriacao, codusuarioalteracao)
+select crc.codchequerepassecheque, cmd.codchequemotivodevolucao, '2017-08-15', 'Repassado para cobranca', '2017-08-31', '2017-08-31', 1, 1
+from tblchequerepassecheque crc
+inner join tblcheque c on (c.codcheque = crc.codcheque)
+inner join tblchequemotivodevolucao cmd on (cmd.numero = 12)
+where c.cmc7 = '<34182182<0480000685>871591656302:'
+
+-- MARCA INDSTATUS - EM COBRANCA
+update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select codcheque from tblcheque where cmc7 = '<34182182<0480000685>871591656302:')
+*/
+
