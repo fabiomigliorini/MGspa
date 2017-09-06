@@ -2,7 +2,7 @@
 
 -- update tblmarca set controlada = true where marca ilike 'mielle'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
-
+/*
 select 
 	-- m.marca, 
 	p.codproduto, 
@@ -38,14 +38,14 @@ inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
 inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codestoquelocal = 101001 and elpv_deposito.codprodutovariacao = elpv.codprodutovariacao)
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
-where elpv.codestoquelocal = 102001
+where elpv.codestoquelocal = 104001
 --and m.marca not ilike 'delta'
 and m.controlada = true
 and coalesce(es.saldoquantidade, 0) <= coalesce(elpv.estoqueminimo, 0)
 and es_deposito.saldoquantidade > 0
 --and es.saldoquantidade is null
 order by m.marca, p.produto, pv.variacao
-
+*/
 
 -- PARA COMPRAR
 /*
@@ -158,7 +158,6 @@ from (
 where iq.deixar < iq.loja
 */
 
-/*
 -- Transferir de uma loja para outra
 select 
     iq.codproduto,
@@ -213,11 +212,11 @@ from (
     inner join tblproduto p on (p.codproduto = pv.codproduto)
     inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
     -- DESTINO
-    inner join tblestoquelocalprodutovariacao elpv_destino on (elpv_destino.codestoquelocal = 102001 and elpv_destino.codprodutovariacao = elpv.codprodutovariacao)
+    inner join tblestoquelocalprodutovariacao elpv_destino on (elpv_destino.codestoquelocal = 103001 and elpv_destino.codprodutovariacao = elpv.codprodutovariacao)
     inner join tblestoquesaldo es_destino on (es_destino.codestoquelocalprodutovariacao = elpv_destino.codestoquelocalprodutovariacao and es_destino.fiscal = false)
     inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
     -- ORIGEM
-    where elpv.codestoquelocal = 103001 
+    where elpv.codestoquelocal = 102001 
     and m.controlada = true
     and m.marca not ilike 'pilot'
     --and (es.saldoquantidade - (coalesce(elpv.vendadiaquantidadeprevisao, 0) * 90) > 1)
@@ -226,4 +225,3 @@ from (
     order by m.marca, p.produto, pv.variacao
 ) iq
 where iq.origem > iq.origem_90dd
-*/
