@@ -12,7 +12,7 @@
 import { QSelect } from 'quasar'
 
 export default {
-  name: 'mg-select-impressora',
+  name: 'mg-select-filial',
   props: ['value', 'label'],
   components: {
     QSelect
@@ -28,8 +28,13 @@ export default {
     },
     loadData: function () {
       let vm = this
-      window.axios.get('usuario/impressoras').then(function (request) {
-        vm.data = request.data
+      window.axios.get('filial', { params: { fields: 'codfilial,filial' } }).then(function (request) {
+        vm.data = request.data.data.map(filial => {
+          return {
+            value: filial.codfilial,
+            label: filial.filial
+          }
+        })
       }).catch(function (error) {
         console.log(error.response)
       })
