@@ -5,6 +5,7 @@
       @search="search"
       @selected="selected"
       :min-characters="3"
+      max-results="90"
       :debounce="600"
       />
   </q-search>
