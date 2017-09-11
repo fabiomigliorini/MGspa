@@ -1,49 +1,46 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/' + data.codusuario" slot="menu">
+    <q-side-link :to="'/usuario/perfil'" slot="menu">
       <q-btn flat icon="arrow_back"  />
     </q-side-link>
 
     <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
 
     <template slot="title">
-      {{ data.usuario }}
+      Alterar senha
     </template>
 
     <div slot="content">
       <div class="layout-padding">
+
         <div class="row">
           <div class="col-md-4">
-            <q-list multiline link>
-              <q-item to="impressoras">
-                <q-item-main>
-                  <q-item-tile label>Impressoras</q-item-tile>
-                  <q-item-tile sublabel>Alterar impressoras</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="print" color="" />
-                </q-item-side>
-              </q-item>
-              <q-item to="senha">
-                <q-item-main>
-                  <q-item-tile label>Senha</q-item-tile>
-                  <q-item-tile sublabel>Trocar senha do sistema</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="vpn_key" color="" />
-                </q-item-side>
-              </q-item>
-              <q-item to="foto">
-                <q-item-main>
-                  <q-item-tile label>Foto</q-item-tile>
-                  <q-item-tile sublabel>Cadastrar/Alterar foto</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="account_box" color="" />
-                </q-item-side>
-              </q-item>
-            </q-list>
+            <q-card>
+              <q-card-main>
+                <form @submit.prevent="update()">
+                  <q-input
+                    type="password"
+                    v-model="data.senha"
+                    float-label="Senha antiga"
+                  />
+
+                  <q-input
+                    type="password"
+                    v-model="data.senha"
+                    float-label="Nova senha"
+                  />
+                  <mg-erros-validacao :erros="erros.senha"></mg-erros-validacao>
+
+                  <q-input
+                    type="password"
+                    v-model="data.senha"
+                    float-label="Confirmar senha"
+                  />
+
+                </form>
+              </q-card-main>
+            </q-card>
           </div>
         </div>
       </div>
@@ -61,18 +58,9 @@ import {
   QInput,
   QSelect,
   QSideLink,
-  QUploader,
-  QCardMedia,
   QCard,
   QCardMain,
-  QCardTitle,
-  QList,
-  QListHeader,
-  QItem,
-  QItemSeparator,
-  QItemSide,
-  QItemMain,
-  QItemTile
+  QCardTitle
 } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
@@ -87,18 +75,9 @@ export default {
     QInput,
     QSelect,
     QSideLink,
-    QUploader,
-    QCardMedia,
     QCard,
     QCardMain,
-    QCardTitle,
-    QList,
-    QListHeader,
-    QItem,
-    QItemSeparator,
-    QItemSide,
-    QItemMain,
-    QItemTile
+    QCardTitle
   },
   data () {
     return {
@@ -109,8 +88,9 @@ export default {
   methods: {
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      window.axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
+        vm.data.senha_antiga = request.data.senha
         vm.data.senha = ''
       }).catch(function (error) {
         console.log(error.response)

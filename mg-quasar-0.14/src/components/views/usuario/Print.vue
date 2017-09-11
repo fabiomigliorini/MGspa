@@ -1,50 +1,48 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/' + data.codusuario" slot="menu">
+    <q-side-link :to="'/usuario/perfil'" slot="menu">
       <q-btn flat icon="arrow_back"  />
     </q-side-link>
 
     <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
 
     <template slot="title">
-      {{ data.usuario }}
+      Alterar impressoras
     </template>
 
     <div slot="content">
       <div class="layout-padding">
+
         <div class="row">
           <div class="col-md-4">
-            <q-list multiline link>
-              <q-item to="impressoras">
-                <q-item-main>
-                  <q-item-tile label>Impressoras</q-item-tile>
-                  <q-item-tile sublabel>Alterar impressoras</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="print" color="" />
-                </q-item-side>
-              </q-item>
-              <q-item to="senha">
-                <q-item-main>
-                  <q-item-tile label>Senha</q-item-tile>
-                  <q-item-tile sublabel>Trocar senha do sistema</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="vpn_key" color="" />
-                </q-item-side>
-              </q-item>
-              <q-item to="foto">
-                <q-item-main>
-                  <q-item-tile label>Foto</q-item-tile>
-                  <q-item-tile sublabel>Cadastrar/Alterar foto</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="account_box" color="" />
-                </q-item-side>
-              </q-item>
-            </q-list>
+            <q-card>
+              <q-card-main>
+                <form @submit.prevent="update()">
+                  <div class="row">
+                    <div class="col-md-12">
+                      <mg-select-impressora
+                        label="Impressora Matricial"
+                        v-model="data.impressoramatricial">
+                      </mg-select-impressora>
+                      <mg-erros-validacao :erros="erros.impressoramatricial"></mg-erros-validacao>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-12">
+                      <mg-select-impressora
+                        label="Impressora Térmica"
+                        v-model="data.impressoratermica">
+                      </mg-select-impressora>
+                      <mg-erros-validacao :erros="erros.impressoratermica"></mg-erros-validacao>
+                    </div>
+                  </div>
+                </form>
+              </q-card-main>
+            </q-card>
           </div>
+
         </div>
       </div>
     </div>
@@ -65,17 +63,12 @@ import {
   QCardMedia,
   QCard,
   QCardMain,
-  QCardTitle,
-  QList,
-  QListHeader,
-  QItem,
-  QItemSeparator,
-  QItemSide,
-  QItemMain,
-  QItemTile
+  QCardTitle
+
 } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
+import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
 
 export default {
   name: 'usuario-profile',
@@ -92,13 +85,7 @@ export default {
     QCard,
     QCardMain,
     QCardTitle,
-    QList,
-    QListHeader,
-    QItem,
-    QItemSeparator,
-    QItemSide,
-    QItemMain,
-    QItemTile
+    MgSelectImpressora
   },
   data () {
     return {
@@ -109,7 +96,7 @@ export default {
   methods: {
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      window.axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
         vm.data.senha = ''
       }).catch(function (error) {

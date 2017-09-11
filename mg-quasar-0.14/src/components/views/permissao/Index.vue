@@ -2,13 +2,13 @@
   <mg-layout drawer>
 
     <template slot="title">
-      Permissões
+      Permissões – {{ tabs }}
     </template>
 
     <template slot="drawer">
 
       <q-list highlight>
-        <q-item link v-for="(item, index) in dados.Permissoes" :key="item.codpermissao">
+        <q-item link v-for="(item, index) in dados.Permissoes" :key="item.codpermissao" v-bind:class="{ 'active': tabs == index }">
           <q-item-main>
             <q-item-tile title @click.prevent="tab(index)">
               {{ index }}
@@ -160,4 +160,5 @@ export default {
 table.table tr:not(:last-child) {
   border-bottom: 1px solid rgba(0,0,0,0.100);
 }
+
 </style>
