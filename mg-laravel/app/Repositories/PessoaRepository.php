@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use DB;
 
 use App\Models\Pessoa;
 
@@ -255,17 +256,24 @@ class PessoaRepository extends MGRepositoryStatic
     public static function autocomplete($params)
     {
         $qry = app(static::$modelClass)::query();
+        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica');
 
-        foreach (explode(' ', $params['pessoa']) as $palavra) {
-            if (!empty($palavra)) {
-                $qry->whereRaw("(tblpessoa.pessoa ilike '%{$palavra}%' or tblpessoa.fantasia ilike '%{$palavra}%')");
-            }
-        }
+        // foreach (explode(' ', $params['pessoa']) as $palavra) {
+        //     if (!empty($palavra)) {
+        //         $qry->whereRaw("(tblpessoa.pessoa ilike '%{$palavra}%' or tblpessoa.fantasia ilike '%{$palavra}%')");
+        //     }
+        // }
 
-        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica')
-            ->limit(10)
-            ->orderBy('fantasia')
-            ->orderBy('pessoa');
+        //$numero = (int)numeroLimpo($params['pessoa']);
+        $numero = preg_replace("/[^0-9]/", "", $params['pessoa']);
+		if ($numero > 0) {
+          //$qry->orWhere('codpessoa', $numero);
+          //$qry->whereRaw("OR cast(Cnpj as char(20)) ILIKE '%{$numero}%'");
+          $qry->where('cnpj', 'ilike', "$numero");
+		}
+
+        $qry->limit(10)->orderBy('fantasia')->orderBy('pessoa');
+
         $res = [];
         foreach ($qry->get() as $item) {
             $res[] = [
