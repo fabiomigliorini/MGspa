@@ -253,30 +253,31 @@ class PessoaRepository extends MGRepositoryStatic
         return parent::query ($filter, $sort, $fields);
     }
 
-    public static function autocomplete($params)
+    /**
+     * Busca Autocomplete Quasar
+     */
+    public static function autocomplete ($params)
     {
-        $qry = app(static::$modelClass)::query();
-        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica');
+        $sql = "
+            select
+            codpessoa, fantasia, pessoa, cnpj, inativo
+            FROM tblpessoa
+        ";
+        foreach (explode(' ', trim($params['pessoa'])) as $palavra) {
+            if (!empty($palavra)) {
+                $sql.= "WHERE fantasia ILIKE '%$palavra%' OR pessoa ILIKE '%$palavra%'";
+            }
+        }
 
-        // foreach (explode(' ', $params['pessoa']) as $palavra) {
-        //     if (!empty($palavra)) {
-        //         $qry->whereRaw("(tblpessoa.pessoa ilike '%{$palavra}%' or tblpessoa.fantasia ilike '%{$palavra}%')");
-        //     }
-        // }
-
-        //$numero = (int)numeroLimpo($params['pessoa']);
-        $numero = preg_replace("/[^0-9]/", "", $params['pessoa']);
+        $numero = (int) preg_replace('/[^0-9]/', '', $params['pessoa']);
 		if ($numero > 0) {
-          //$qry->orWhere('codpessoa', $numero);
-          //$qry->whereRaw("OR cast(Cnpj as char(20)) ILIKE '%{$numero}%'");
-          $qry->where('cnpj', 'ilike', "$numero");
+            $sql.= " OR codpessoa = $numero OR cast(Cnpj as char(20)) ILIKE '%$numero%'";
 		}
 
-        $qry->limit(10)->orderBy('fantasia')->orderBy('pessoa');
-
-        $res = [];
-        foreach ($qry->get() as $item) {
-            $res[] = [
+        $regs = DB::select($sql);
+        $ret = [];
+        foreach ($regs as $item) {
+            $ret[] = [
                 'label' => $item->fantasia,
                 'value' => $item->fantasia,
                 'id' => $item->codpessoa,
@@ -284,7 +285,7 @@ class PessoaRepository extends MGRepositoryStatic
                 'stamp' => $item->cnpj
             ];
         }
-        return $res;
-    }
 
+        return $ret;
+    }
 }
