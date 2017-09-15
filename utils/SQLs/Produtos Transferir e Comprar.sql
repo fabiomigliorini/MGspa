@@ -39,7 +39,7 @@ inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codest
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
 where elpv.codestoquelocal = 104001
---and m.marca not ilike 'delta'
+and m.marca not ilike 'gitex'
 and m.controlada = true
 and coalesce(es.saldoquantidade, 0) <= coalesce(elpv.estoqueminimo, 0)
 and es_deposito.saldoquantidade > 0
@@ -48,7 +48,7 @@ order by m.marca, p.produto, pv.variacao
 */
 
 -- PARA COMPRAR
-/*
+
 select 
     * 
     , case when (x.repor > 0) then ceil(x.repor::float / x.lote::float) * x.lote else 0 end as comprar
@@ -56,7 +56,8 @@ from
 (
     select 
         --m.marca,
-        p.codproduto,
+        p.codproduto as "#",
+        pv.codprodutovariacao as "# Var",
         --p.produto,
         --pv.variacao,
         p.produto || coalesce(' | ' || pv.variacao, '') as produto,
@@ -92,13 +93,13 @@ from
     where m.controlada = true
     and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
-    --and m.marca ilike '%ACRIMET%'
+    and m.marca ilike '%acrilex%'
     --and pv.codprodutovariacao = 15218
     and p.inativo is null
     order by m.marca, p.produto, pv.variacao
 ) x
 --where x.dias < 60
-*/
+
 
 --update tblestoquelocal set inativo = '2016-12-31' where codestoquelocal in (201001, 301001)
 
@@ -159,6 +160,7 @@ where iq.deixar < iq.loja
 */
 
 -- Transferir de uma loja para outra
+/*
 select 
     iq.codproduto,
     iq.produto,
@@ -225,3 +227,4 @@ from (
     order by m.marca, p.produto, pv.variacao
 ) iq
 where iq.origem > iq.origem_90dd
+*/
