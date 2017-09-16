@@ -13,7 +13,9 @@
 
     <div slot="content">
       <div class="layout-padding">
-
+        <p>senha antiga: {{ data.senha_antiga }}</p>
+        <p>senha: {{ data.senha }}</p>
+        <p>confirma: {{ data.senha_confirmation }}</p>
         <div class="row">
           <div class="col-md-4">
             <q-card>
@@ -21,9 +23,10 @@
                 <form @submit.prevent="update()">
                   <q-input
                     type="password"
-                    v-model="data.senha"
+                    v-model="data.senha_antiga"
                     float-label="Senha antiga"
                   />
+                  <mg-erros-validacao :erros="erros.senha_antiga"></mg-erros-validacao>
 
                   <q-input
                     type="password"
@@ -34,9 +37,10 @@
 
                   <q-input
                     type="password"
-                    v-model="data.senha"
+                    v-model="data.senha_confirmation"
                     float-label="Confirmar senha"
                   />
+                  <mg-erros-validacao :erros="erros.senha_confirmation"></mg-erros-validacao>
 
                 </form>
               </q-card-main>
@@ -81,21 +85,15 @@ export default {
   },
   data () {
     return {
-      data: {},
+      data: {
+        senha: null,
+        senha_antiga: null,
+        senha_confirmation: null
+      },
       erros: false
     }
   },
   methods: {
-    loadData: function (id) {
-      let vm = this
-      window.axios.get('usuario/' + id).then(function (request) {
-        vm.data = request.data
-        vm.data.senha_antiga = request.data.senha
-        vm.data.senha = ''
-      }).catch(function (error) {
-        console.log(error.response)
-      })
-    },
     update: function () {
       var vm = this
       Dialog.create({
@@ -109,7 +107,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
+              window.axios.put('usuario/' + localStorage.getItem('auth.codusuario'), vm.data).then(function (request) {
                 Toast.create.positive('Registro atualizado')
                 vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {
@@ -122,7 +120,7 @@ export default {
     }
   },
   created () {
-    this.loadData(localStorage.getItem('auth.codusuario'))
+
   }
 }
 </script>

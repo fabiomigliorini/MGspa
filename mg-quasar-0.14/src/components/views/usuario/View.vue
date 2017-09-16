@@ -23,6 +23,11 @@
         <div class="row">
           <div class="col-md-4">
             <q-card>
+              <q-card-title>
+                Dados
+                <span slot="subtitle">Dados do usuário</span>
+                <q-icon slot="right" name="account_circle" />
+              </q-card-title>
               <q-card-main>
                 <dl>
                   <dt>#</dt>
@@ -47,6 +52,8 @@
             <q-card>
               <q-card-title>
                 Grupos
+                <span slot="subtitle">Grupos do usuário</span>
+                <q-icon slot="right" name="supervisor_account" />
               </q-card-title>
               <q-card-main>
                 <dl>
@@ -62,6 +69,8 @@
             <q-card>
               <q-card-title>
                 Permissões
+                <span slot="subtitle">Permissões do usuário</span>
+                <q-icon slot="right" name="lock_open" />
               </q-card-title>
                 <template v-for="(permissao, index) in item.permissoes">
                   <q-collapsible :label="index">
@@ -123,6 +132,7 @@ import {
   Toast,
   QFixedPosition,
   QBtn,
+  QIcon,
   QFab,
   QFabAction,
   QTooltip,
@@ -142,6 +152,7 @@ export default {
     MgAutor,
     QFixedPosition,
     QBtn,
+    QIcon,
     QFab,
     QFabAction,
     QTooltip,

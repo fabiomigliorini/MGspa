@@ -98,7 +98,6 @@ export default {
       let vm = this
       window.axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
-        vm.data.senha = ''
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -118,7 +117,7 @@ export default {
             handler () {
               window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
                 Toast.create.positive('Registro atualizado')
-                vm.$router.push('/usuario/' + request.data.codusuario)
+                vm.$router.push('/usuario/perfil')
               }).catch(function (error) {
                 vm.erros = error.response.data.erros
               })

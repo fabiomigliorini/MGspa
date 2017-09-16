@@ -2,7 +2,9 @@
 
 namespace App\Repositories;
 
-use Illuminate\Support\Facades\Validator;
+use Validator;
+use Illuminate\Support\Facades\Hash;
+
 use Illuminate\Validation\Rule;
 
 use App\Models\Usuario;
@@ -15,8 +17,13 @@ class UsuarioRepository extends MGRepositoryStatic
 {
     public static $modelClass = '\\App\\Models\\Usuario';
 
+
     public static function validationRules ($model = null)
     {
+        Validator::extendImplicit('senhaantiga', function ($attribute, $value, $parameters) {
+            return Hash::check($value, $parameters[0]);
+        });
+
         $rules = [
             'usuario' => [
                 'required',
@@ -25,7 +32,15 @@ class UsuarioRepository extends MGRepositoryStatic
             ],
             'senha' => [
                 'required_without:codusuario',
-                "min:6"
+                'confirmed',
+                'min:6'
+            ],
+            'senha_antiga' => [
+                'senhaantiga:' . \Auth::user()->senha,
+                'required_with:senha',
+            ],
+            'senha_confirmation' => [
+                'min:6'
             ],
             'impressoramatricial' => [
                 'required'
@@ -51,6 +66,9 @@ class UsuarioRepository extends MGRepositoryStatic
 
             'impressoratermica.required' => 'O campo "Impressora Termica" deve ser preenchido!',
             'impressoramatricial.required' => 'O campo "Impressora Matricial" deve ser preenchido!',
+
+            'senha_antiga.senhaantiga' => 'Senha antiga não confere',
+            //'senha_antiga.senhaantiga' => 'Senha antiga não confere'
         ];
 
         return $messages;
