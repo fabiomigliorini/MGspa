@@ -1,7 +1,7 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/'" slot="menu">
+    <q-side-link :to="'/usuario/' + data.codusuario" slot="menu">
       <q-btn flat icon="arrow_back"  />
     </q-side-link>
 

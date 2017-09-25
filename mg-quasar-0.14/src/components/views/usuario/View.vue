@@ -63,6 +63,12 @@
                   </template>
                 </dl>
               </q-card-main>
+              <q-card-separator />
+              <q-card-actions>
+                <router-link :to="{ path: '/usuario/' + item.codusuario + '/grupos' }">
+                  <q-btn flat><q-icon name="add" />  Grupos</q-btn>
+                </router-link>
+              </q-card-actions>
             </q-card>
           </div>
           <div class="col-md-4">
@@ -104,11 +110,6 @@
           <q-fab-action color="orange" @click.native="inactivate()" icon="thumb_down" v-else>
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
           </q-fab-action>
-          <router-link :to="{ path: '/usuario/' + item.codusuario + '/grupos' }">
-            <q-fab-action color="primary" icon="supervisor_account">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Grupos</q-tooltip>
-            </q-fab-action>
-          </router-link>
           <q-fab-action color="red" @click.native="destroy()" icon="delete">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
@@ -140,6 +141,8 @@ import {
   QCard,
   QCardMain,
   QCardTitle,
+  QCardSeparator,
+  QCardActions,
   QCollapsible
  } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
@@ -160,6 +163,8 @@ export default {
     QCard,
     QCardMain,
     QCardTitle,
+    QCardSeparator,
+    QCardActions,
     QCollapsible
   },
   data () {

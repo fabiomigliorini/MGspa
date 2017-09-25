@@ -32,16 +32,16 @@ class UsuarioRepository extends MGRepositoryStatic
             ],
             'senha' => [
                 'required_without:codusuario',
-                'confirmed',
+                //'confirmed',
                 'min:6'
             ],
-            'senha_antiga' => [
-                'senhaantiga:' . \Auth::user()->senha,
-                'required_with:senha',
-            ],
-            'senha_confirmation' => [
-                'min:6'
-            ],
+            // 'senha_antiga' => [
+            //     'senhaantiga:' . \Auth::user()->senha,
+            //     'required_with:senha',
+            // ],
+            // 'senha_confirmation' => [
+            //     'min:6'
+            // ],
             'impressoramatricial' => [
                 'required'
             ],
