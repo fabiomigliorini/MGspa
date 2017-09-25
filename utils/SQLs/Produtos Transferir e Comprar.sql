@@ -1,6 +1,6 @@
 ﻿-- alter table tblmarca add controlada boolean not null default false
 
--- update tblmarca set controlada = true where marca ilike 'mielle'
+-- update tblmarca set controlada = true where marca ilike 'adelbras'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
 /*
 select 
@@ -60,6 +60,7 @@ from
         pv.codprodutovariacao as "# Var",
         --p.produto,
         --pv.variacao,
+        --pv.descontinuado,
         p.produto || coalesce(' | ' || pv.variacao, '') as produto,
         coalesce(pv.referencia, p.referencia) as referencia,
         --p.preco,
@@ -82,7 +83,7 @@ from
             , sum(elpv.estoquemaximo) as estoquemaximo
             , sum(es.saldoquantidade) as saldoquantidade
             , sum(es.saldovalor) as saldovalor
-            , sum(case when el.deposito then 0 else elpv.vendadiaquantidadeprevisao end) as vendadiaquantidadeprevisao
+            , sum(case when el.deposito then 0 else coalesce(elpv.vendadiaquantidadeprevisao, 0) end) as vendadiaquantidadeprevisao
         from tblestoquelocalprodutovariacao elpv
         inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
         left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
@@ -91,15 +92,23 @@ from
         --limit 50
         ) sld on (sld.codprodutovariacao = pv.codprodutovariacao)
     where m.controlada = true
-    and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
+    --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
     and m.marca ilike '%acrilex%'
     --and pv.codprodutovariacao = 15218
+    and pv.descontinuado is null
     and p.inativo is null
+    --and pv.codprodutovariacao = 20121
     order by m.marca, p.produto, pv.variacao
 ) x
---where x.dias < 60
+--order by sld nulls first
 
+/*
+update tblprodutovariacao set descontinuado = date_trunc('second', now()) where codprodutovariacao in (
+12240
+
+)
+*/
 
 --update tblestoquelocal set inativo = '2016-12-31' where codestoquelocal in (201001, 301001)
 
