@@ -17,6 +17,8 @@ import store from './store'
 import Toast from 'toast'
 import Loading from 'loading'
 import refresh from 'jwt/Refresh'
+// CSS do select2
+import '../node_modules/select2/dist/css/select2.min.css'
 
 Vue.config.productionTip = false
 Vue.use(Quasar) // Install Quasar Framework
