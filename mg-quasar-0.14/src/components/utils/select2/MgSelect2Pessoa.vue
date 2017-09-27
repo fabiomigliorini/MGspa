@@ -19,7 +19,11 @@ export default {
     $(this.$el)
       .select2({
         ajax: {
-          url: 'https://api.github.com/search/repositories',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Authorization: `Bearer ${localStorage.getItem('auth.token')}`
+          },
+          url: process.env.API_BASE_URL + 'pessoa/select2',
           dataType: 'json',
           delay: 250,
           data: function (params) {
@@ -45,8 +49,8 @@ export default {
           return markup
         }, // let our custom formatter work
         minimumInputLength: 1,
-        templateResult: formatRepo,
-        templateSelection: formatRepoSelection
+        templateResult: formatData,
+        templateSelection: formatDataSelection
       })
       .trigger('change')
         .on('change', function () {
@@ -54,32 +58,33 @@ export default {
           console.log(this.value)
         })
 
-    function formatRepo (repo) {
-      if (repo.loading) {
-        return repo.text
+    function formatData (data) {
+      if (data.loading) {
+        return data.text
       }
 
-      var markup = '<div class="select2-result-repository clearfix">' +
-        '<div class="select2-result-repository__avatar"><img src=' + repo.owner.avatar_url + ' /></div>' +
-        '<div class="select2-result-repository__meta">' +
-        '<div class="select2-result-repository__title">' + repo.full_name + '</div>'
+      var markup = '' +
+        '<div class="q-item-main q-item-section">' +
+          '<div class="q-item-label">' +
+            data.fantasia + '<div class="right q-item-stamp">' + data.id + '</div>' +
+          '</div>' +
+          '<div class="q-item-sublabel">' +
+            data.pessoa + '<div class="right q-item-stamp">' + data.cnpj + '</div>' +
+          '</div>'
 
-      if (repo.description) {
-        markup += '<div class="select2-result-repository__description">' + repo.description + '</div>'
+      if (data.inativo) {
+        markup += '<div class="text-negative">' +
+          'inativo desde ' + data.inativo +
+        '</div>'
       }
 
-      markup += '<div class="select2-result-repository__statistics">' +
-        '<div class="select2-result-repository__forks"><i class="fa fa-flash"></i> ' + repo.forks_count + ' Forks</div>' +
-        '<div class="select2-result-repository__stargazers"><i class="fa fa-star"></i> ' + repo.stargazers_count + ' Stars</div>' +
-        '<div class="select2-result-repository__watchers"><i class="fa fa-eye"></i> ' + repo.watchers_count + ' Watchers</div>' +
-        '</div>' +
-        '</div></div>'
+      markup += '</div>'
 
       return markup
     }
 
-    function formatRepoSelection (repo) {
-      return repo.full_name || repo.text
+    function formatDataSelection (data) {
+      return data.fantasia || data.text
     }
   },
   watch: {

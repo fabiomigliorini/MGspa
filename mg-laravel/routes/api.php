@@ -61,6 +61,7 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     // Pessoa
     Route::get('pessoa/autocomplete', 'PessoaController@autocomplete');
+    Route::get('pessoa/select2', 'PessoaController@select2');
     Route::resource('pessoa', 'PessoaController');
 
     // EstoqueLocalProdutoVariacao

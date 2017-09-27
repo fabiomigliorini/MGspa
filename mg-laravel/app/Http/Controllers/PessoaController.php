@@ -17,4 +17,11 @@ class PessoaController extends ControllerCrud
 
         return response()->json($qry, 206);
     }
+
+    public function select2 (Request $request)
+    {
+        $qry = PessoaRepository::select2($request->all());
+
+        return response()->json($qry, 206);
+    }
 }

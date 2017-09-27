@@ -288,4 +288,42 @@ class PessoaRepository extends MGRepositoryStatic
 
         return $ret;
     }
+
+    /**
+     * Busca Select2
+     */
+    public static function select2 ($params)
+    {
+        $sql = "
+            select
+            codpessoa, fantasia, pessoa, cnpj, inativo
+            FROM tblpessoa
+        ";
+        foreach (explode(' ', trim($params['q'])) as $palavra) {
+            if (!empty($palavra)) {
+                $sql.= "WHERE fantasia ILIKE '%$palavra%' OR pessoa ILIKE '%$palavra%'";
+            }
+        }
+
+        $numero = (int) preg_replace('/[^0-9]/', '', $params['q']);
+		if ($numero > 0) {
+            $sql.= " OR codpessoa = $numero OR cast(Cnpj as char(20)) ILIKE '%$numero%'";
+		}
+
+        $regs = DB::select($sql);
+        $items = [];
+        foreach ($regs as $item) {
+            $items[] = [
+                'id'        => $item->codpessoa,
+                'fantasia'  => $item->fantasia,
+                'pessoa'    => $item->pessoa,
+                'inativo'   => $item->inativo,
+                'cnpj'      => $item->cnpj
+            ];
+        }
+
+        return [
+            'items' => $items
+        ];
+    }
 }

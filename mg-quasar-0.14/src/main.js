@@ -19,6 +19,7 @@ import Loading from 'loading'
 import refresh from 'jwt/Refresh'
 // CSS do select2
 import '../node_modules/select2/dist/css/select2.min.css'
+import 'statics/css/app.css'
 
 Vue.config.productionTip = false
 Vue.use(Quasar) // Install Quasar Framework
