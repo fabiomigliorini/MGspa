@@ -39,7 +39,7 @@
 
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
-              <mg-autocomplete-pessoa placeholder="Pessoa" v-on:seleciona="pessoa" :init="data.codpessoa"></mg-autocomplete-pessoa>
+              <mg-select2-pessoa v-model="data.codpessoa" placeholder="Pessoa"></mg-select2-pessoa>
               <mg-erros-validacao :erros="erros.codpessoa"></mg-erros-validacao>
             </div>
           </div>
@@ -84,7 +84,7 @@ import {
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
-import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
+import MgSelect2Pessoa from '../../utils/select2/MgSelect2Pessoa'
 import MgSelectFilial from '../../utils/select/MgSelectFilial'
 
 export default {
@@ -101,7 +101,7 @@ export default {
     QSideLink,
     MgSelectImpressora,
     MgSelectFilial,
-    MgAutocompletePessoa
+    MgSelect2Pessoa
   },
   data () {
     return {
@@ -110,15 +110,10 @@ export default {
     }
   },
   methods: {
-    pessoa (value) {
-      let vm = this
-      vm.data.codpessoa = value
-    },
-    carregaDados: function (id) {
+    loadData: function (id) {
       let vm = this
       window.axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
-        vm.initSelect(vm.data.codpessoa)
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -149,7 +144,7 @@ export default {
     }
   },
   created () {
-    this.carregaDados(this.$route.params.id)
+    this.loadData(this.$route.params.id)
   }
 }
 </script>

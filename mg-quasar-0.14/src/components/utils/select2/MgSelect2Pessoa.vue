@@ -1,5 +1,7 @@
 <template>
-    <select :placeholder="placeholder" style="width:100%"></select>
+    <select :placeholder="placeholder" style="width:100%">
+      <option value="pessoa.codpessoa" selected="selected" v-if="pessoa">{{ pessoa.pessoa }}</option>
+    </select>
 </template>
 
 <script>
@@ -8,16 +10,39 @@ import 'select2'
 
 export default {
   name: 'mg-select2-pessoa',
+  deep: true,
   props: ['value', 'placeholder'],
   data () {
     return {
-      selected: 2
+      pessoa: false
+    }
+  },
+  watch: {
+    value: function (value) {
+      $(this.$el).val(value).trigger('change')
+      console.log('Mudou o valor')
     }
   },
   mounted: function () {
     let vm = this
+
+    if (vm.value) {
+      let params = {
+        id: vm.value
+      }
+      window.axios.get('pessoa/select2', { params }).then(function (request) {
+        vm.pessoa = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    }
+
     $(this.$el)
       .select2({
+        placeholder: vm.placeholder,
+        language: 'pt-BR',
+        minimumInputLength: 2,
+        allowClear: true,
         ajax: {
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
@@ -44,18 +69,15 @@ export default {
           },
           cache: true
         },
-        placeholder: vm.placeholder,
         escapeMarkup: function (markup) {
           return markup
-        }, // let our custom formatter work
-        minimumInputLength: 1,
+        },
         templateResult: formatData,
         templateSelection: formatDataSelection
       })
       .trigger('change')
         .on('change', function () {
           vm.$emit('input', this.value)
-          console.log(this.value)
         })
 
     function formatData (data) {
@@ -87,21 +109,9 @@ export default {
       return data.fantasia || data.text
     }
   },
-  watch: {
-    value: function (value) {
-      // update value
-      $(this.$el).val(value).trigger('change')
-    }
-    // options: function (options) {
-    //   // update options
-    //   $(this.$el).select2({
-    //     data: options
-    //   })
-    // }
+  destroyed: function () {
+    $(this.$el).off().select2('destroy')
   }
-  // destroyed: function () {
-  //   $(this.$el).off().select2('destroy')
-  // }
 }
 </script>
 
