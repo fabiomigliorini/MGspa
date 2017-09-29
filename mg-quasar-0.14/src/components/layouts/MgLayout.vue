@@ -53,13 +53,10 @@
     <div class="row wrap">
 
       <div class="text-center col-3" v-for="aplicativo in aplicativos">
-        <router-link :to="{ path: aplicativo.path, params: {} }">
-          <q-icon :name="aplicativo.icon" style="font-size:3em" />
-          <br>
-          <small>
-            {{aplicativo.title}}
-          </small>
-        </router-link>
+        <q-side-link :to="aplicativo.path" style="cursor:pointer">
+          <q-icon :name="aplicativo.icon" style="font-size:3em" color="primary" />
+          <small class="text-primary">{{ aplicativo.title }}</small>
+        </q-side-link>
       </div>
 
     </div>
