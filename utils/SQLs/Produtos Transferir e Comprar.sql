@@ -1,6 +1,6 @@
 ﻿-- alter table tblmarca add controlada boolean not null default false
 
--- update tblmarca set controlada = true where marca ilike 'adelbras'
+-- update tblmarca set controlada = true where marca ilike 'off paper'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
 /*
 select 
@@ -38,8 +38,8 @@ inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
 inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codestoquelocal = 101001 and elpv_deposito.codprodutovariacao = elpv.codprodutovariacao)
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
-where elpv.codestoquelocal = 104001
-and m.marca not ilike 'gitex'
+where elpv.codestoquelocal = 102001
+--and m.marca not ilike 'gitex'
 and m.controlada = true
 and coalesce(es.saldoquantidade, 0) <= coalesce(elpv.estoqueminimo, 0)
 and es_deposito.saldoquantidade > 0
@@ -48,7 +48,6 @@ order by m.marca, p.produto, pv.variacao
 */
 
 -- PARA COMPRAR
-
 select 
     * 
     , case when (x.repor > 0) then ceil(x.repor::float / x.lote::float) * x.lote else 0 end as comprar
@@ -94,7 +93,7 @@ from
     where m.controlada = true
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
-    and m.marca ilike '%acrilex%'
+    and m.marca ilike '%acc%'
     --and pv.codprodutovariacao = 15218
     and pv.descontinuado is null
     and p.inativo is null
@@ -103,11 +102,9 @@ from
 ) x
 --order by sld nulls first
 
-/*
-update tblprodutovariacao set descontinuado = date_trunc('second', now()) where codprodutovariacao in (
-12240
 
-)
+/*
+update tblprodutovariacao set descontinuado = date_trunc('second', now()) where codprodutovariacao in (47545)
 */
 
 --update tblestoquelocal set inativo = '2016-12-31' where codestoquelocal in (201001, 301001)
