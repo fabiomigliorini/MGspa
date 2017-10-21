@@ -52,7 +52,9 @@
 
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
+              <!--
               <mg-select2-pessoa v-model="data.codpessoa" placeholder="Pessoa"></mg-select2-pessoa>
+              -->
               <mg-erros-validacao :erros="erros.codpessoa"></mg-erros-validacao>
             </div>
           </div>
@@ -97,7 +99,7 @@ import {
 
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
-import MgSelect2Pessoa from '../../utils/select2/MgSelect2Pessoa'
+// import MgSelect2Pessoa from '../../utils/select2/MgSelect2Pessoa'
 import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
 import MgSelectFilial from '../../utils/select/MgSelectFilial'
 
@@ -111,7 +113,7 @@ export default {
     QBtn,
     QInput,
     QSelect,
-    MgSelect2Pessoa,
+    // MgSelect2Pessoa,
     MgSelectImpressora,
     MgSelectFilial
   },

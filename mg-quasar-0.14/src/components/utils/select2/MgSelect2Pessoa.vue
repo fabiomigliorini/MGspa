@@ -5,6 +5,7 @@
 </template>
 
 <script>
+/*
 import $ from 'jquery'
 import 'select2'
 
@@ -113,6 +114,7 @@ export default {
     $(this.$el).off().select2('destroy')
   }
 }
+*/
 </script>
 
 <style>
