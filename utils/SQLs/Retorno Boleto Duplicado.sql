@@ -3,15 +3,15 @@
 --select * from tblboletoretorno limit 10
 --
 
-delete from tblmovimentotitulo where codboletoretorno in (
+--delete from tblmovimentotitulo where codboletoretorno in (
 delete from tblboletoretorno where codboletoretorno in (
 select codboletoretorno 
 from tblboletoretorno 
-where arquivo = 'CB160700.RET' and dataretorno = '2015-07-17' and codportador = 2222
+where arquivo = 'CB071000.RET' and dataretorno = '2017-10-10' and codportador = 3943
 order by linha
 )
 */
-
+/*
 select 
 	codportador, dataretorno, arquivo, linha
 	, count(*)
@@ -24,3 +24,18 @@ order by
 
 
 
+*/
+
+--select * from tblboletoretorno where nossonumero ilike '%13010003914%' and codportador = 3941
+
+select 
+	codportador, dataretorno, arquivo
+	, count(*)
+from	tblboletoretorno
+where 
+    dataretorno >= '2017-01-01'
+    and codportador = 210
+group by
+	codportador, dataretorno, arquivo
+order by 
+	codportador, dataretorno, arquivo
