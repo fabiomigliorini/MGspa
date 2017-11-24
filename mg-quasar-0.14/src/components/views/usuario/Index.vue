@@ -84,7 +84,9 @@
       <q-modal ref="createModal" :content-css="{ minWidth: '50vw' }">
         <q-card style="box-shadow:none;">
           <q-card-title>
-            Novo Grupo de Usuário
+            Novo
+            <span slot="subtitle">Novo grupos de usuário</span>
+            <q-icon slot="right" name="add" />
           </q-card-title>
           <q-card-main>
             <form @submit.prevent="createGrupoUsuario()">
@@ -108,7 +110,9 @@
       <q-modal ref="updateModal" :content-css="{ minWidth: '50vw' }">
         <q-card style="box-shadow:none;">
           <q-card-title>
-            Editar Grupo
+            Editar
+            <span slot="subtitle">Editar grupo de usuário</span>
+            <q-icon slot="right" name="edit" />
           </q-card-title>
           <q-card-main>
             <form @submit.prevent="updateGrupoUsuario()">

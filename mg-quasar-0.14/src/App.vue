@@ -14,6 +14,10 @@ export default {}
 
 <style>
 
+html {
+    overflow: -moz-scrollbars-vertical;
+    overflow-y: scroll;
+}
 .q-rating i.q-icon:not(.active) {
   color: grey;
   opacity: 0.1;
