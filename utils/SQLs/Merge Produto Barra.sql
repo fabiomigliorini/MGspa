@@ -1,4 +1,4 @@
-﻿update tblnotafiscalprodutobarra    set codprodutobarra = 952062    where codprodutobarra = 952128  ;
-update tblnegocioprodutobarra       set codprodutobarra = 952062    where codprodutobarra = 952128  ;
-update tblcupomfiscalprodutobarra   set codprodutobarra = 952062    where codprodutobarra = 952128  ;
-update tblnfeterceiroitem           set codprodutobarra = 952062    where codprodutobarra = 952128  ;
+﻿update tblnotafiscalprodutobarra    set codprodutobarra = 30022247    where codprodutobarra = 30022012  ;
+update tblnegocioprodutobarra       set codprodutobarra = 30022247    where codprodutobarra = 30022012  ;
+update tblcupomfiscalprodutobarra   set codprodutobarra = 30022247    where codprodutobarra = 30022012  ;
+update tblnfeterceiroitem           set codprodutobarra = 30022247    where codprodutobarra = 30022012  ;
