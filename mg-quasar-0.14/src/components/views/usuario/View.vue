@@ -78,13 +78,15 @@
                 <span slot="subtitle">Permissões do usuário</span>
                 <q-icon slot="right" name="lock_open" />
               </q-card-title>
+              <q-list separator>
                 <template v-for="(permissao, index) in item.permissoes">
-                  <q-collapsible :label="index">
-                    <div v-for="item in permissao">
-                      {{ item }}
-                    </div>
-                  </q-collapsible>
+                    <q-collapsible :label="index">
+                      <div v-for="item in permissao">
+                        {{ item }}
+                      </div>
+                    </q-collapsible>
                 </template>
+              </q-list>
             </q-card>
           </div>
         </div>
@@ -139,6 +141,7 @@ import {
   QTooltip,
   QSideLink,
   QCard,
+  QList,
   QCardMain,
   QCardTitle,
   QCardSeparator,
@@ -161,6 +164,7 @@ export default {
     QTooltip,
     QSideLink,
     QCard,
+    QList,
     QCardMain,
     QCardTitle,
     QCardSeparator,
