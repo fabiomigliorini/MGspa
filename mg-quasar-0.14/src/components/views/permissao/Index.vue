@@ -11,46 +11,61 @@
         <q-item link v-for="(item, index) in dados.Permissoes" :key="item.codpermissao" v-bind:class="{ 'active': tabs == index }">
           <q-item-main>
             <q-item-tile title @click.prevent="tab(index)">
-              {{ index }}
+              <span style="word-wrap: break-word;">{{ index }}</span>
             </q-item-tile>
           </q-item-main>
         </q-item>
-      </q-list highlight>
+      </q-list>
 
     </template>
 
     <div slot="content">
       <div class="layout-padding">
-      <template v-for="(permissao, index) in dados.Permissoes">
+<!--
+        <q-list highlight>
+          <q-item v-for="(permissao, index) in permissoes" :key="permissao">
+            <q-item-main>
+              <q-item-tile>{{ index }}</q-item-tile>
+            </q-item-main>
+            <q-item-main class="col-sm-1" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
+              <q-btn @click.prevent="removePermissao(index, permissao, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="permissao.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
+              <q-btn @click.prevent="adicionaPermissao(index, permissao, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
+            </q-item-main>
+          </q-item>
+        </q-list>
+-->
+
+        <template v-for="(permissao, index) in dados.Permissoes">
           <div v-if="index == tabs" class="permissoes">
             <div class="container-tabela">
-            <table class="q-table striped-odd">
-              <thead>
-                <tr>
-                  <th>&nbsp;</th>
-                  <th v-for="(grupos, index) in dados.Grupos">
-                      <div>{{ grupos.grupousuario }}</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-for="(item, index) in permissao">
+              <table class="q-table striped-odd">
+                <thead>
                   <tr>
-                    <td class="text-left">
-                      <strong>{{ index }}</strong>
-                    </td>
-                    <td class="text-center" v-for="grupo in dados.Grupos">
-                      <q-btn @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="item.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
-                      <q-btn @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
-                    </td>
+                    <th>&nbsp;</th>
+                    <th v-for="(grupos, index) in dados.Grupos">
+                        <div>{{ grupos.grupousuario }}</div>
+                    </th>
                   </tr>
-                </template>
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  <template v-for="(item, index) in permissao">
+                    <tr>
+                      <td class="text-left">
+                        <strong>{{ index }}</strong>
+                      </td>
+                      <td class="text-center" v-for="grupo in dados.Grupos">
+                        <q-btn @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="item.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
+                        <q-btn @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
           </div>
-          </div>
-      </template>
-    </div>
+        </template>
+
+      </div>
     </div>
 
   </mg-layout>
@@ -66,7 +81,8 @@ import {
   QItemSide,
   QItemMain,
   QItemSeparator,
-  QBtn
+  QBtn,
+  QToggle
  } from 'quasar'
 
 export default {
@@ -80,11 +96,13 @@ export default {
     QItemSide,
     QItemMain,
     QItemSeparator,
-    QBtn
+    QBtn,
+    QToggle
   },
   data () {
     return {
       dados: [],
+      permissoes: [],
       tabs: null,
       pagina: 1,
       filtro: {
@@ -103,6 +121,7 @@ export default {
     tab (codpermissao) {
       let vm = this
       vm.tabs = codpermissao
+      vm.permissoes = vm.dados.Permissoes[codpermissao]
     },
     pesquisar () {
       this.pagina = 1

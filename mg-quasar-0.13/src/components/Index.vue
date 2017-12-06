@@ -2,7 +2,7 @@
   <mg-layout>
 
     <template slot="title">
-      Início
+      Iníciossss
     </template>
 
     <div slot="content" class="layout-padding">

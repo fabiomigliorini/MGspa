@@ -9,6 +9,7 @@ use App\Models\Imagem;
 use DB;
 use Storage;
 use Carbon\Carbon;
+use App\Libraries\SlimImageCropper\Slim;
 
 class ImagemRepository extends MGRepositoryStatic
 {
@@ -65,7 +66,9 @@ class ImagemRepository extends MGRepositoryStatic
         $model->observacoes = $model->arquivo;
 
         // Salva o arquivo
-        $data['file']->storeAs('imagens', $model->arquivo);
+        //$data['file']->storeAs('imagens', $model->arquivo);
+
+        Slim::saveFile($data['imagem'], $model->arquivo, $model->directory, false);
 
         if (!$model->save()){
             return false;
