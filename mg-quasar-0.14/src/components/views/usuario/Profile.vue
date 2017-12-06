@@ -5,8 +5,6 @@
       <q-btn flat icon="arrow_back"  />
     </q-side-link>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
-
     <template slot="title">
       {{ data.usuario }}
     </template>

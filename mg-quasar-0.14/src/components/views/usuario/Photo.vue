@@ -8,38 +8,25 @@
     <q-btn flat icon="done" slot="menuRight" @click.prevent="upload()" />
 
     <template slot="title">
-      Foto
+      <span v-if="data.codimagem">Alterar </span>
+      <span v-else="data.codimagem">Cadastrar </span>
+      foto
     </template>
 
     <div slot="content">
       <div class="layout-padding">
-        <form refs="form" @submit.prevent="upload()" enctype="multipart/form-data">
-        <div class="row">
-          <div class="col-md-4">
-            <q-card>
-              <q-card-main>
-                <!-- <q-uploader
-                  v-if="data.imagem"
-                  :url=" endpoint + 'imagem/' + data.codimagem + '?_method=PUT&codusuario=' + data.codusuario"
-                  :headers= "headers"
-                  stack-label="ALTERAR IMAGEM"
-                  :multiple="false"
-                  hide-upload-progress
-                  @finish="uploaded(data.codusuario)" />
 
-                <q-uploader
-                  v-else
-                  :url=" endpoint + 'imagem?codusuario=' + data.codusuario"
-                  :headers= "headers"
-                  stack-label="CADASTRAR IMAGEM"
-                  :multiple="false"
-                  @finish="uploaded(data.codusuario)" /> -->
-                  <slim-cropper v-model="data.imagem" :options="slimOptions"/>
-              </q-card-main>
-            </q-card>
+        <form @submit.prevent="upload()" enctype="multipart/form-data">
+          <div class="row">
+            <div class="col-md-4">
+              <q-card>
+                <q-card-main>
+                    <slim-cropper :options="slimOptions"/>
+                </q-card-main>
+              </q-card>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
       </div>
     </div>
 
@@ -48,8 +35,8 @@
 
 <script>
 import {
-  // Dialog,
-  // Toast,
+  Dialog,
+  Toast,
   QBtn,
   QField,
   QInput,
@@ -102,32 +89,70 @@ export default {
   },
   data () {
     return {
+      data: {},
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         Authorization: `Bearer ${localStorage.getItem('auth.token')}`
       },
-      endpoint: process.env.API_BASE_URL,
-      data: {},
-      impressoras: [],
+      endpoint: process.env.API_BASE_URL + 'imagem?codusuario=',
       erros: false
     }
   },
   methods: {
     slimOptions: {
       ratio: '1:1',
-      // initialImage: require('../assets/test.jpg'),
+      // initialImage: '',
+      // initialImage: `http://127.0.0.1:8000/imagens/13462.jpg`,
       service: slimService,
       didInit: slimInit
     },
-    upload (data) {
+    upload () {
       let vm = this
-      console.log(vm.$refs.form)
-      let imagem = vm.$refs.form.slim
-      console.log(imagem)
+      let form = document.forms[0]
+      let input = form.querySelector('input[name="slim[]"]')
+      let imagem = input.value
+      Dialog.create({
+        title: 'Salvar',
+        message: 'Tem certeza que deseja salvar?',
+        buttons: [
+          {
+            label: 'Cancelar',
+            handler () {}
+          },
+          {
+            label: 'Salvar',
+            handler () {
+              let data = {
+                codusuario: vm.data.codusuario,
+                'slim[]': imagem
+              }
+
+              if (vm.data.imagem) {
+                console.log('ALTERANDO...')
+                window.axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
+                  Toast.create.positive('Sua foto foi alterada')
+                  // vm.$router.push('/usuario/foto')
+                }).catch(function (error) {
+                  vm.erros = error.response.data.erros
+                })
+              }
+              else {
+                console.log('CADASTRANDO...')
+                window.axios.post('imagem', data).then(function (request) {
+                  Toast.create.positive('Sua foto foi cadastrada')
+                  // vm.$router.push('/usuario/foto')
+                }).catch(function (error) {
+                  vm.erros = error.response.data.erros
+                })
+              }
+            }
+          }
+        ]
+      })
     },
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id).then(function (request) {
+      window.axios.get('usuario/' + id + '/details').then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)

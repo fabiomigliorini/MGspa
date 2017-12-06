@@ -1,10 +1,12 @@
 <template>
-    <select :placeholder="placeholder" style="width:100%">
+    <!-- <select :placeholder="placeholder" style="width:100%">
       <option value="pessoa.codpessoa" selected="selected" v-if="pessoa">{{ pessoa.pessoa }}</option>
-    </select>
+    </select> -->
 </template>
-
 <script>
+export default {
+  name: 'mg-select2-pessoa'
+}
 /*
 import $ from 'jquery'
 import 'select2'
