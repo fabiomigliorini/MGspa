@@ -1,6 +1,6 @@
 ﻿-- alter table tblmarca add controlada boolean not null default false
 
--- update tblmarca set controlada = true where marca ilike 'nova geracao'
+-- update tblmarca set controlada = true where marca ilike 'lua de cristal'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
 select 
 	-- m.marca, 
@@ -37,8 +37,8 @@ inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
 inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codestoquelocal = 101001 and elpv_deposito.codprodutovariacao = elpv.codprodutovariacao)
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
-where elpv.codestoquelocal = 104001
---and m.marca not ilike 'gitex'
+where elpv.codestoquelocal = 102001
+and m.marca not ilike 'polycol'
 and m.controlada = true
 and coalesce(es.saldoquantidade, 0) <= coalesce(elpv.estoqueminimo, 0)
 and coalesce(es.saldoquantidade, 0) < coalesce(elpv.estoquemaximo, 0)
@@ -46,6 +46,8 @@ and es_deposito.saldoquantidade > 0
 --and es.saldoquantidade is null
 order by m.marca, p.produto, pv.variacao
 
+
+-- select codmarca, marca from tblmarca where controlada = true order by marca
 
 -- PARA COMPRAR
 /*
@@ -93,7 +95,7 @@ from
         --limit 50
         ) sld on (sld.codprodutovariacao = pv.codprodutovariacao)
     left join (
-        select pb_nti.codprodutovariacao, cast(coalesce(nti.qcom * coalesce(pe_nti.quantidade, 1), 0) as bigint) as quantidade
+        select pb_nti.codprodutovariacao, sum(cast(coalesce(nti.qcom * coalesce(pe_nti.quantidade, 1), 0) as bigint)) as quantidade
         from tblnfeterceiro nt 
         inner join tblnfeterceiroitem nti on (nt.codnfeterceiro = nti.codnfeterceiro)
         inner join tblprodutobarra pb_nti on (pb_nti.codprodutobarra = nti.codprodutobarra)
@@ -101,16 +103,18 @@ from
         where nt.codnotafiscal IS NULL
         AND (nt.indmanifestacao IS NULL OR nt.indmanifestacao NOT IN (210220, 210240))
         AND nt.indsituacao = 1
-        AND nt.ignorada = FALSE     
+        AND nt.ignorada = FALSE
+        --and pb_nti.codproduto = 24312     
+        group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
     where m.controlada = true
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
-    and m.marca ilike 'tekbond'
+    and m.marca ilike 'acrilex'
     --and pv.codprodutovariacao = 15218
     and pv.descontinuado is null
     and p.inativo is null
-    --and pv.codprodutovariacao = 20121
+    --and pv.codproduto = 24312
     order by m.marca, p.produto, pv.variacao
 ) x
 --order by sld nulls first
@@ -118,19 +122,26 @@ from
 
 /*
 update tblprodutovariacao set descontinuado = date_trunc('second', now()) where codprodutovariacao in (
-5107
-, 61576
-, 6656
-, 58428
-, 58429
-, 58421
-, 58422
-, 58423
-, 38625
-, 47911
-, 36126
-, 5106
-, 16053
+62287
+, 25055
+, 75653
+, 58071
+, 62281
+, 46486
+, 50528
+, 46485
+, 48558
+, 70549
+, 18861
+, 23797
+, 23798
+, 46975
+, 23803
+, 23804
+, 23799
+, 23800
+, 23801
+, 23802
 )
 */
 
