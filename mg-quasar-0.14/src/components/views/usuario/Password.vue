@@ -13,9 +13,6 @@
 
     <div slot="content">
       <div class="layout-padding">
-        <p>senha antiga: {{ data.senha_antiga }}</p>
-        <p>senha: {{ data.senha }}</p>
-        <p>confirma: {{ data.senha_confirmation }}</p>
         <div class="row">
           <div class="col-md-4">
             <q-card>
@@ -37,10 +34,10 @@
 
                   <q-input
                     type="password"
-                    v-model="data.senha_confirmation"
+                    v-model="data.senha_confirmacao"
                     float-label="Confirmar senha"
                   />
-                  <mg-erros-validacao :erros="erros.senha_confirmation"></mg-erros-validacao>
+                  <mg-erros-validacao :erros="erros.senha_confirmacao"></mg-erros-validacao>
 
                 </form>
               </q-card-main>
@@ -88,7 +85,7 @@ export default {
       data: {
         senha: null,
         senha_antiga: null,
-        senha_confirmation: null
+        senha_confirmacao: null
       },
       erros: false
     }

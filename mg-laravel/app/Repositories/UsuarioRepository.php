@@ -20,8 +20,15 @@ class UsuarioRepository extends MGRepositoryStatic
 
     public static function validationRules ($model = null)
     {
-        Validator::extendImplicit('senhaantiga', function ($attribute, $value, $parameters) {
-            return Hash::check($value, $parameters[0]);
+        Validator::extend('senhaAntiga', function ($attribute, $value, $parameters, $validator) {
+            return Hash::check($value, \Auth::user()->senha);
+        });
+
+        Validator::extend('senhaConfirmacao', function ($attribute, $value, $parameters, $validator) use ($model) {
+            if ($value == $model->senha_confirmacao) {
+                return true;
+            }
+            return false;
         });
 
         $rules = [
@@ -32,16 +39,13 @@ class UsuarioRepository extends MGRepositoryStatic
             ],
             'senha' => [
                 'required_without:codusuario',
-                //'confirmed',
+                'senha_confirmacao',
                 'min:6'
             ],
-            // 'senha_antiga' => [
-            //     'senhaantiga:' . \Auth::user()->senha,
-            //     'required_with:senha',
-            // ],
-            // 'senha_confirmation' => [
-            //     'min:6'
-            // ],
+            'senha_antiga' => [
+                //'required_with:senha',
+                'senha_antiga'
+            ],
             'impressoramatricial' => [
                 'required'
             ],
@@ -63,12 +67,12 @@ class UsuarioRepository extends MGRepositoryStatic
             'senha.min' => 'O campo Senha deve ter no mínimo 6 caracteres.',
             'senha.required' => 'O campo "Senha" deve ser preenchido!',
             'senha.required_without' => 'O campo "Senha" deve ser preenchido!',
+            'senha.senha_confirmacao' => 'Confirmação de senha não confere',
 
             'impressoratermica.required' => 'O campo "Impressora Termica" deve ser preenchido!',
             'impressoramatricial.required' => 'O campo "Impressora Matricial" deve ser preenchido!',
 
-            'senha_antiga.senhaantiga' => 'Senha antiga não confere',
-            //'senha_antiga.senhaantiga' => 'Senha antiga não confere'
+            'senha_antiga.senha_antiga' => 'Senha antiga não confere',
         ];
 
         return $messages;

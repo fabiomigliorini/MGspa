@@ -115,10 +115,14 @@ class UsuarioController extends ControllerCrud
         $this->authorize();
         $model = UsuarioRepository::findOrFail($id);
         $model = UsuarioRepository::fill($model, $request->all());
+        $model->senha_confirmacao = $request->get('senha_confirmacao');
+        $model->senha_antiga = $request->get('senha_antiga');
         if (is_null($model->senha)) {
             unset($model->senha);
         }
         UsuarioRepository::validate($model);
+        unset($model->senha_confirmacao);
+        unset($model->senha_antiga);
         $model = UsuarioRepository::update($model);
         return response()->json($model, 200);
     }

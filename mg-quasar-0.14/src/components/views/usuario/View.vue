@@ -12,13 +12,7 @@
     <div slot="content">
       <div class="layout-padding">
 
-        <q-card v-if="item.inativo">
-          <q-card-main>
-            <span class="text-red">
-              Inativo desde {{ moment(item.inativo).format('L') }}
-            </span>
-          </q-card-main>
-        </q-card>
+
 
         <div class="row">
           <div class="col-md-4">
@@ -44,8 +38,19 @@
                   <dd>{{ item.impressoratermica }}</dd>
                   <dt>Último acesso</dt>
                   <dd>{{ moment(item.ultimoacesso).format('LLLL') }}</dd>
+                  <dt>Ativo</dt>
+                  <dd>
+                    <span class="text-red" v-if="item.inativo">Inativo desde {{ moment(item.inativo).format('L') }}</span>
+                    <span v-else>Sim</span>
+                  </dd>
                 </dl>
               </q-card-main>
+              <q-card-separator />
+              <q-card-actions>
+                <q-btn color="primary" flat @click.native="activate()" v-if="item.inativo">Ativar</q-btn>
+                <q-btn color="red" flat @click.native="inactivate()" v-else>Inativar</q-btn>
+              </q-card-actions>
+
             </q-card>
           </div>
           <div class="col-md-4">
@@ -261,8 +266,6 @@ export default {
   }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 dl {
   margin: 0;

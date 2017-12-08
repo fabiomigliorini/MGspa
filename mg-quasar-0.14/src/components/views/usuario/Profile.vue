@@ -12,6 +12,32 @@
     <div slot="content">
       <div class="layout-padding">
         <div class="row">
+          <div class="col-xs-6 col-sm-4 col-lg-2">
+            <q-side-link to="impressoras">
+              <q-card class="card text-center text-primary">
+                <q-icon name="print" />
+                <p class="caption">Impressoras</p>
+              </q-card>
+            </q-side-link>
+          </div>
+          <div class="col-xs-6 col-sm-4 col-lg-2">
+            <q-side-link to="senha">
+              <q-card class="card text-center text-primary">
+                <q-icon name="vpn_key" />
+                <p class="caption">Trocar senha</p>
+              </q-card>
+            </q-side-link>
+          </div>
+          <div class="col-xs-6 col-sm-4 col-lg-2">
+            <q-side-link to="foto">
+              <q-card class="card text-center text-primary">
+                <q-icon name="account_box" />
+                <p class="caption">Alterar foto</p>
+              </q-card>
+            </q-side-link>
+          </div>
+        </div>
+<!--
           <div class="col-md-4">
             <q-list multiline link>
               <q-item to="impressoras">
@@ -43,6 +69,7 @@
               </q-item>
             </q-list>
           </div>
+-->
         </div>
       </div>
     </div>
@@ -52,8 +79,8 @@
 
 <script>
 import {
-  Dialog,
-  Toast,
+  // Dialog,
+  // Toast,
   QBtn,
   QField,
   QInput,
@@ -70,7 +97,8 @@ import {
   QItemSeparator,
   QItemSide,
   QItemMain,
-  QItemTile
+  QItemTile,
+  QIcon
 } from 'quasar'
 import MgLayout from '../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
@@ -96,12 +124,12 @@ export default {
     QItemSeparator,
     QItemSide,
     QItemMain,
-    QItemTile
+    QItemTile,
+    QIcon
   },
   data () {
     return {
-      data: {},
-      erros: false
+      data: {}
     }
   },
   methods: {
@@ -109,33 +137,8 @@ export default {
       let vm = this
       window.axios.get('usuario/' + id + '/details').then(function (request) {
         vm.data = request.data
-        vm.data.senha = ''
       }).catch(function (error) {
         console.log(error.response)
-      })
-    },
-    update: function () {
-      var vm = this
-      Dialog.create({
-        title: 'Salvar',
-        message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
-                Toast.create.positive('Registro atualizado')
-                vm.$router.push('/usuario/' + request.data.codusuario)
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
       })
     }
   },
@@ -147,4 +150,35 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.card {
+	cursor: pointer;
+	position: relative;
+	padding: 16px;
+}
+
+.card .q-icon {
+	font-size: 48px;
+}
+
+.card p {
+	color: rgba(0,0,0,0.87);
+	margin: 15px 0 0 0 !important;
+}
+
+.card:before {
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border-radius: 2px;
+	opacity: 0;
+	transition: opacity 0.2s;
+	background: currentColor;
+}
+
+.card:hover:before {
+	opacity: 0.4;
+}
 </style>
