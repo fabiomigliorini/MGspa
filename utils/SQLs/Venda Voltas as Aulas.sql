@@ -1,6 +1,7 @@
 ﻿select 
     p.codproduto,
-    p.produto, 
+    p.produto,
+    p.inativo,
     pv.variacao,
     coalesce(pv.referencia, p.referencia) as referencia,
     pv.dataultimacompra as comprado,
@@ -25,7 +26,7 @@ from
     left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
     where tblnegocio.codnegociostatus = 2 --Fechado
     and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
-    and tblprodutobarra.codproduto in (select tblproduto.codproduto from tblproduto where tblproduto.codmarca = 49) -- CODIGO DA MARCA
+    and tblprodutobarra.codproduto in (select tblproduto.codproduto from tblproduto where tblproduto.codmarca = 00000089) -- CODIGO DA MARCA
     and extract(month from tblnegocio.lancamento) in (1, 2, 3)
     and tblnegocio.lancamento >= ''2015-01-01''
     --and tblprodutobarra.codproduto = 023800
@@ -42,12 +43,14 @@ full join (
     inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
     inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
     inner join tblproduto p on (p.codproduto = pv.codproduto)
-    where p.codmarca = 49 -- CODIGO DA MARCA
+    where p.codmarca = 00000089 -- CODIGO DA MARCA
     group by elpv.codprodutovariacao
     having sum(es.saldoquantidade) != 0
     ) saldo on (saldo.codprodutovariacao = ct_venda.codprodutovariacao)
 left join tblprodutovariacao pv on (pv.codprodutovariacao = coalesce(ct_venda.codprodutovariacao, saldo.codprodutovariacao))
 left join tblproduto p on (p.codproduto = pv.codproduto)
+where p.inativo is null
+--and coalesce(saldo, 0) < coalesce(ct_venda."2017", 0)
 order by 
     p.produto,
     pv.variacao

@@ -2,6 +2,7 @@
 
 -- update tblmarca set controlada = true where marca ilike 'lua de cristal'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
+/*
 select 
 	-- m.marca, 
 	p.codproduto, 
@@ -38,19 +39,19 @@ inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codest
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
 where elpv.codestoquelocal = 102001
-and m.marca not ilike 'polycol'
+--and m.marca not ilike 'polycol'
 and m.controlada = true
 and coalesce(es.saldoquantidade, 0) <= coalesce(elpv.estoqueminimo, 0)
 and coalesce(es.saldoquantidade, 0) < coalesce(elpv.estoquemaximo, 0)
 and es_deposito.saldoquantidade > 0
 --and es.saldoquantidade is null
 order by m.marca, p.produto, pv.variacao
-
+*/
 
 -- select codmarca, marca from tblmarca where controlada = true order by marca
 
 -- PARA COMPRAR
-/*
+
 select 
     * 
     , case when (x.repor > 0) then ceil(x.repor::float / x.lote::float) * x.lote else 0 end as comprar
@@ -110,7 +111,7 @@ from
     where m.controlada = true
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
-    and m.marca ilike 'acrilex'
+    and m.marca ilike 'maxprint'
     --and pv.codprodutovariacao = 15218
     and pv.descontinuado is null
     and p.inativo is null
@@ -118,30 +119,25 @@ from
     order by m.marca, p.produto, pv.variacao
 ) x
 --order by sld nulls first
-*/
+
 
 /*
 update tblprodutovariacao set descontinuado = date_trunc('second', now()) where codprodutovariacao in (
-62287
-, 25055
-, 75653
-, 58071
-, 62281
-, 46486
-, 50528
-, 46485
-, 48558
-, 70549
-, 18861
-, 23797
-, 23798
-, 46975
-, 23803
-, 23804
-, 23799
-, 23800
-, 23801
-, 23802
+48702
+,14499
+,14498
+,45139
+,36859
+,47633
+,74654
+,37250
+,19192
+,53232
+,13767
+,76124
+,72038
+,73333
+
 )
 */
 
