@@ -21,53 +21,25 @@
 
     <div slot="content">
       <div class="layout-padding">
-<!--
-        <q-list highlight>
+        <q-list highlight  v-if="permissoes">
+          <q-item>
+            <q-item-main class="col-xs-4"></q-item-main>
+            <q-item-main class="col-sm-1" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
+              {{ grupo.grupousuario.substr(0, 3) }}
+            </q-item-main>
+          </q-item>
           <q-item v-for="(permissao, index) in permissoes" :key="permissao">
-            <q-item-main>
-              <q-item-tile>{{ index }}</q-item-tile>
+            <q-item-main class="col-xs-4">
+              <q-item-tile class="permissao-item-title">{{ index }}</q-item-tile>
             </q-item-main>
             <q-item-main class="col-sm-1" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
-              <q-btn @click.prevent="removePermissao(index, permissao, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="permissao.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
-              <q-btn @click.prevent="adicionaPermissao(index, permissao, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
+              <q-btn @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="permissao.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
+              <q-btn @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
             </q-item-main>
           </q-item>
         </q-list>
--->
-
-        <template v-for="(permissao, index) in dados.Permissoes">
-          <div v-if="index == tabs" class="permissoes">
-            <div class="container-tabela">
-              <table class="q-table striped-odd">
-                <thead>
-                  <tr>
-                    <th>&nbsp;</th>
-                    <th v-for="(grupos, index) in dados.Grupos">
-                        <div>{{ grupos.grupousuario }}</div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template v-for="(item, index) in permissao">
-                    <tr>
-                      <td class="text-left">
-                        <strong>{{ index }}</strong>
-                      </td>
-                      <td class="text-center" v-for="grupo in dados.Grupos">
-                        <q-btn @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="item.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
-                        <q-btn @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </template>
-
       </div>
     </div>
-
   </mg-layout>
 </template>
 
@@ -102,7 +74,7 @@ export default {
   data () {
     return {
       dados: [],
-      permissoes: [],
+      permissoes: false,
       tabs: null,
       pagina: 1,
       filtro: {
@@ -136,7 +108,6 @@ export default {
         codgrupousuario: codgrupousuario
       }
       window.axios.post('permissao', dados).then(function (request) {
-        console.log(request.data)
         if (request.data === true) {
           vm.dados.Permissoes[index][permissao].codgrupousuario.push(codgrupousuario)
         }
@@ -170,6 +141,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
+.permissao-item-title {
+  word-break: break-all;
+}
 .permissoes {
   position: absolute;
 }

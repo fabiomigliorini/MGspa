@@ -11,9 +11,6 @@
 
     <div slot="content">
       <div class="layout-padding">
-
-
-
         <div class="row">
           <div class="col-md-4">
             <q-card>
@@ -111,12 +108,6 @@
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
             </q-fab-action>
           </router-link>
-          <q-fab-action color="orange" @click.native="activate()" icon="thumb_up" v-if="item.inativo">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
-          </q-fab-action>
-          <q-fab-action color="orange" @click.native="inactivate()" icon="thumb_down" v-else>
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
-          </q-fab-action>
           <q-fab-action color="red" @click.native="destroy()" icon="delete">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>

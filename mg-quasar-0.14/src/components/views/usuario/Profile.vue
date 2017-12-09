@@ -135,7 +135,7 @@ export default {
   methods: {
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      window.axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
