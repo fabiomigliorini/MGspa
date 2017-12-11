@@ -22,7 +22,7 @@
               <q-card-main>
                 <dl>
                   <dt>#</dt>
-                  <dd>{{ item.codusuario }}</dd>
+                  <dd>{{ numeral(item.codusuario).format('00000000') }}</dd>
                   <dt>Usuário</dt>
                   <dd>{{ item.usuario }}</dd>
                   <dt>Filial</dt>
@@ -68,7 +68,7 @@
               <q-card-separator />
               <q-card-actions>
                 <router-link :to="{ path: '/usuario/' + item.codusuario + '/grupos' }">
-                  <q-btn flat><q-icon name="add" />  Grupos</q-btn>
+                  <q-btn flat>Grupos</q-btn>
                 </router-link>
               </q-card-actions>
             </q-card>
@@ -258,18 +258,7 @@ export default {
 }
 </script>
 <style scoped>
-dl {
-  margin: 0;
-}
-dt {
-  color: rgba(0,0,0,0.54);
-}
-dd {
-  margin-bottom: 16px;
-}
-dd:last-child {
-  margin-bottom: 0;
-}
+
 .q-collapsible-sub-item div {
   margin: 5px 0;
 }

@@ -36,34 +36,99 @@
       </q-card>
 
       <div class="row">
-        <q-card inline class="col-md-2">
+        <div class="col-md-4">
+          <q-card>
+            <!-- Imagem -->
+            <q-card-media v-if="item.codimagem">
+              <img :src="item.imagem.url">
+            </q-card-media>
 
-          <!-- Imagem -->
-          <q-card-media v-if="item.imagem">
-            <img :src="item.imagem.url">
-          </q-card-media>
+            <!-- Titulo -->
+            <q-card-title>
+              {{ item.marca }}
+              <span slot="subtitle">#{{ numeral(item.codmarca).format('00000000') }}</span>
+            </q-card-title>
+            <q-card-main>
+              <dl>
+                <dt>Controlada</dt>
+                <dd>
+                  <span v-if="item.controlada">Sim</span>
+                  <span v-else>Não</span>
+                </dd>
+                <!-- <dt>Percentual vendas anual</dt>
+                <dd>{{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%</dd> -->
+                <dt>Venda bimentral</dt>
+                <dd>{{ item.vendabimestrevalor }}</dd>
+                <dt>Vendas semestral</dt>
+                <dd>{{ item.vendasemestrevalor }}</dd>
+                <dt>Vendas anual</dt>
+                <dd>{{ item.vendaanovalor }}</dd>
+                <dt></dt>
+                <dd>
+                  <span v-if="item.inativo">Ativar</span>
+                  <span v-else>Inativar</span>
+                  <q-toggle v-model="ativo" @blur="teste()" class="right"/>
+                </dd>
+              </dl>
+            </q-card-main>
+          </q-card>
+        </div>
 
-          <!-- Titulo -->
-          <q-card-title>
-            {{ item.marca }}
+        <div class="col-md-4" v-if="!item.abcignorar">
+          <q-card>
+            <q-card-title>
+              Curva ABC
+              <span slot="subtitle">Dados da curva ABC</span>
+              <!-- <q-icon slot="right" name="supervisor_account" /> -->
+            </q-card-title>
+            <q-card-main>
+              <h5><q-rating readonly slot="subtitle" v-model="item.abccategoria" :max="3" /></h5>
+              <dl>
+                <dt>Percentual de vendas</dt>
+                <dd>{{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%</dd>
+                <template v-if="item.abcposicao">
+                  <dt>Posição</dt>
+                  <dd>{{ numeral(item.abcposicao).format('0,0') }}&deg; lugar</dd>
+                </template>
+                <template v-if="item.dataultimacompra" class="text-grey">
+                  <dt>Última compra</dt>
+                  <dd>{{ moment(item.dataultimacompra).fromNow() }}</dd>
+                </template>
+                <template v-if="item.itensabaixominimo > 0">
+                  <dt>Itens abaixo do mínimo</dt>
+                  <dd>{{ numeral(item.itensabaixominimo).format('0,0') }}</dd>
+                </template>
+                <template v-if="item.itensacimamaximo > 0">
+                  <dt>Itens acima do máximo</dt>
+                  <dd>{{ numeral(item.itensacimamaximo).format('0,0') }}</dd>
+                </template>
+                <dt>Duração do estoque</dt>
+                <dd>
+                  {{ item.estoqueminimodias }} à
+                  {{ item.estoquemaximodias }} Dias
+                </dd>
+              </dl>
+            </q-card-main>
+          </q-card>
+        </div>
 
-            <!-- Estrelas -->
-            <q-rating readonly slot="subtitle" v-model="item.abccategoria" :max="3" v-if="!item.abcignorar" />
-
-            <!-- Posição ABC -->
-            <span slot="right" class="row items-center">
-              <template v-if="item.abcposicao">
-                {{ numeral(item.abcposicao).format('0,0') }}&deg; lugar,
-                <br />
-              </template>
-              {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}% <br />
-              das vendas!
-            </span>
-
-          </q-card-title>
-
-        </q-card>
-
+        <div class="col-md-4" v-if="item.site">
+          <q-card>
+            <q-card-title>
+              Site
+              <span slot="subtitle">Integração OpenCart</span>
+              <!-- <q-icon slot="right" name="supervisor_account" /> -->
+            </q-card-title>
+            <q-card-main>
+              <dl>
+                <dt>Código OpenCart</dt>
+                <dd>{{ item.codopencart }}</dd>
+                <dt>Descrição</dt>
+                <dd>{{ item.descricaosite }}</dd>
+              </dl>
+            </q-card-main>
+          </q-card>
+        </div>
 
       </div>
 
@@ -80,12 +145,6 @@
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
             </q-fab-action>
           </router-link>
-          <q-fab-action color="orange" @click.native="activate()" icon="thumb_up" v-if="item.inativo">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Ativar</q-tooltip>
-          </q-fab-action>
-          <q-fab-action color="orange" @click.native="inactivate()" icon="thumb_down" v-else>
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Inativar</q-tooltip>
-          </q-fab-action>
           <q-fab-action color="red" @click.native="destroy()" icon="delete">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
@@ -107,7 +166,25 @@
 
 import MgLayout from '../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
-import { QIcon, QCard, QCardMedia, QCardTitle, QRating, debounce, QBtn, QFixedPosition, QFab, QFabAction, QTooltip, Dialog, Toast, QCardMain } from 'quasar'
+import {
+  QIcon,
+  QCard,
+  QCardMedia,
+  QCardTitle,
+  QCardSeparator,
+  QCardActions,
+  QRating,
+  debounce,
+  QBtn,
+  QFixedPosition,
+  QFab,
+  QFabAction,
+  QTooltip,
+  Dialog,
+  Toast,
+  QCardMain,
+  QToggle
+} from 'quasar'
 
 export default {
 
@@ -119,23 +196,34 @@ export default {
     QCardMedia,
     QCardTitle,
     QCardMain,
+    QCardSeparator,
+    QCardActions,
     QRating,
     QBtn,
     QFixedPosition,
     QFabAction,
     QFab,
-    QTooltip
+    QTooltip,
+    QToggle
   },
 
   data () {
     return {
       item: {},
+      ativo: true,
       id: null
     }
   },
 
   methods: {
-
+    teste: function () {
+      if (this.ativo) {
+        this.inactivate()
+      }
+      else {
+        this.activate()
+      }
+    },
     // carrega registros da api
     loadData: debounce(function () {
       // inicializa variaveis
@@ -144,8 +232,14 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('marca/' + this.id, { params }).then(response => {
+      window.axios.get('marca/' + this.id + '/details', { params }).then(response => {
         vm.item = response.data
+        if (vm.item.inativo === null) {
+          vm.ativo = true
+        }
+        else {
+          vm.ativo = false
+        }
         // desmarca flag de carregando
         this.loading = false
       })
@@ -225,4 +319,7 @@ export default {
 </script>
 
 <style>
+.q-card-media {
+  padding: 0 15px
+}
 </style>
