@@ -1,5 +1,5 @@
 <template>
-  <mg-layout back-path="/marca">
+  <mg-layout back-path="/marca/">
 
     <!-- Título da Página -->
     <template slot="title">
@@ -55,8 +55,10 @@
                   <span v-if="item.controlada">Sim</span>
                   <span v-else>Não</span>
                 </dd>
-                <!-- <dt>Percentual vendas anual</dt>
-                <dd>{{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%</dd> -->
+                <!--
+                <dt>Percentual vendas anual</dt>
+                <dd>{{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%</dd>
+                -->
                 <dt>Venda bimentral</dt>
                 <dd>{{ item.vendabimestrevalor }}</dd>
                 <dt>Vendas semestral</dt>
@@ -67,10 +69,18 @@
                 <dd>
                   <span v-if="item.inativo">Ativar</span>
                   <span v-else>Inativar</span>
-                  <q-toggle v-model="ativo" @blur="teste()" class="right"/>
+                  <q-toggle v-model="ativo" @blur="inativo()" class="right"/>
                 </dd>
               </dl>
             </q-card-main>
+            <q-card-separator />
+            <q-card-actions>
+              <q-btn color="primary" flat @click="$router.push('/marca/' + item.codmarca + '/foto/')">
+                <span v-if="item.codimagem">Alterar Imagem</span>
+                <span v-else>Cadastrar Imagem</span>
+              </q-btn>
+              <q-btn color="red" flat @click="deleteImage()" v-if="item.codimagem">Excluir Imagem</q-btn>
+            </q-card-actions>
           </q-card>
         </div>
 
@@ -129,7 +139,6 @@
             </q-card-main>
           </q-card>
         </div>
-
       </div>
 
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
@@ -216,7 +225,7 @@ export default {
   },
 
   methods: {
-    teste: function () {
+    inativo: function () {
       if (this.ativo) {
         this.inactivate()
       }
@@ -286,6 +295,28 @@ export default {
         ]
       })
     },
+    deleteImage: function () {
+      let vm = this
+      // console.log(vm.item.codimagem)
+      Dialog.create({
+        title: 'Excluir',
+        message: 'Tem certeza de deseja excluir a imagem?',
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Excluir',
+            handler () {
+              window.axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
+                vm.loadData(vm.item.codmarca)
+                Toast.create.positive('Imagem excluida')
+              }).catch(function (error) {
+                console.log(error.response)
+              })
+            }
+          }
+        ]
+      })
+    },
     destroy: function () {
       let vm = this
       Dialog.create({
@@ -319,7 +350,4 @@ export default {
 </script>
 
 <style>
-.q-card-media {
-  padding: 0 15px
-}
 </style>

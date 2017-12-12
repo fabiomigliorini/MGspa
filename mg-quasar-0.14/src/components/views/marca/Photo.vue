@@ -1,16 +1,14 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/perfil'" slot="menu">
+    <q-side-link :to="'/marca/' + data.codmarca" slot="menu">
       <q-btn flat icon="arrow_back"  />
     </q-side-link>
 
     <q-btn flat icon="done" slot="menuRight" @click.prevent="upload()" />
 
     <template slot="title">
-      <span v-if="data.codimagem">Alterar </span>
-      <span v-else="data.codimagem">Cadastrar </span>
-      foto
+      Foto
     </template>
 
     <div slot="content">
@@ -55,15 +53,13 @@ function slimInit (data, slim) {
   console.log(slim)
   console.log(data)
 }
-
 function slimService (formdata, progress, success, failure, slim) {
   console.log(slim)
   console.log(formdata)
   console.log(progress, success, failure)
 }
-
 export default {
-  name: 'usuario-photo',
+  name: 'marca-photo',
   components: {
     MgLayout,
     'slim-cropper': Slim,
@@ -81,11 +77,6 @@ export default {
   data () {
     return {
       data: {},
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        Authorization: `Bearer ${localStorage.getItem('auth.token')}`
-      },
-      endpoint: process.env.API_BASE_URL + 'imagem?codusuario=',
       erros: false
     }
   },
@@ -114,14 +105,13 @@ export default {
             label: 'Salvar',
             handler () {
               let data = {
-                codusuario: vm.data.codusuario,
+                codmarca: vm.data.codmarca,
                 'slim[]': imagem
               }
-
               if (vm.data.codimagem === null) {
                 window.axios.post('imagem', data).then(function (request) {
                   Toast.create.positive('Sua foto foi cadastrada')
-                  // vm.$router.push('/usuario/foto')
+                  vm.$router.push('/marca/' + vm.data.codmarca)
                 }).catch(function (error) {
                   vm.erros = error.response.data.erros
                 })
@@ -129,7 +119,7 @@ export default {
               else {
                 window.axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
                   Toast.create.positive('Sua foto foi alterada')
-                  // vm.$router.push('/usuario/foto')
+                  vm.$router.push('/marca/' + vm.data.codmarca)
                 }).catch(function (error) {
                   vm.erros = error.response.data.erros
                 })
@@ -141,7 +131,7 @@ export default {
     },
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      window.axios.get('marca/' + id).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -149,7 +139,7 @@ export default {
     }
   },
   created () {
-    this.loadData(localStorage.getItem('auth.codusuario'))
+    this.loadData(this.$route.params.id)
   }
 }
 </script>

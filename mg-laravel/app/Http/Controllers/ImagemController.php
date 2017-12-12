@@ -37,4 +37,12 @@ class ImagemController extends ControllerCrud
         return response()->json($model, 200);
     }
 
+    public function inactivate(Request $request, $id)
+    {
+        $data = $request->all();
+        $this->authorize();
+        $model = ImagemRepository::findOrFail($id);
+        $model = ImagemRepository::inactivateImagem($model, $data);
+        return response()->json($model, 200);
+    }
 }

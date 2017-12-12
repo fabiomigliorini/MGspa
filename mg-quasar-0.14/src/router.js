@@ -30,6 +30,7 @@ export default new VueRouter({
     { path: '/marca', component: load('views/marca/Index') },
     { path: '/marca/create', component: load('views/marca/Create') },
     { path: '/marca/:id', component: load('views/marca/View') },
+    { path: '/marca/:id/foto', component: load('views/marca/Photo') },
     { path: '/marca/:id/update', component: load('views/marca/Update') },
 
     // Grupo de Usuarios

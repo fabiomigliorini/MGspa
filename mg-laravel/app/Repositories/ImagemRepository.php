@@ -78,42 +78,42 @@ class ImagemRepository extends MGRepositoryStatic
             $repo = new ProdutoImagemRepository();
             $repo->create([
                 'codproduto' => $data['codproduto'],
-                'codimagem' => $this->model->codimagem
+                'codimagem' => $model->codimagem
             ]);
         }
 
         if (!empty($data['codsecaoproduto'])) {
             $codsecaoproduto = SecaoProdutoRepository::findOrFail($data['codsecaoproduto']);
             SecaoProdutoRepository::update($codsecaoproduto, [
-                'codimagem' => $this->model->codimagem
+                'codimagem' => $model->codimagem
             ]);
         }
 
         if (!empty($data['codfamiliaproduto'])) {
             $codfamiliaproduto = FamiliaProdutoRepository::findOrFail($data['codfamiliaproduto']);
             FamiliaProdutoRepository::update($codfamiliaproduto, [
-                'codimagem' => $this->model->codimagem
+                'codimagem' => $model->codimagem
             ]);
         }
 
         if (!empty($data['codgrupoproduto'])) {
             $grupoproduto = GrupoProdutoRepository::findOrFail($data['codgrupoproduto']);
             GrupoProdutoRepository::update($grupoproduto, [
-                'codimagem' => $this->model->codimagem
+                'codimagem' => $model->codimagem
             ]);
         }
 
         if (!empty($data['codsubgrupoproduto'])) {
             $subgrupoproduto = SubGrupoProdutoRepository::findOrFail($data['codsubgrupoproduto']);
             SubGrupoProdutoRepository::update($subgrupoproduto, [
-                'codimagem' => $this->model->codimagem
+                'codimagem' => $model->codimagem
             ]);
         }
 
         if (!empty($data['codmarca'])) {
             $marca = MarcaRepository::findOrFail($data['codmarca']);
             MarcaRepository::update($marca, [
-                'codimagem' => $this->model->codimagem
+                'codimagem' => $model->codimagem
             ]);
         }
 
@@ -129,11 +129,11 @@ class ImagemRepository extends MGRepositoryStatic
 
     public static function update($model, array $data = null)
     {
+        static::inactivateImagem($model, $data);
+
         if (!empty($data)) {
             static::fill($model, $data);
         }
-
-        static::inactivateImagem($model, $data);
 
         if (!$model->save()) {
             return false;
@@ -151,6 +151,14 @@ class ImagemRepository extends MGRepositoryStatic
         foreach ($model->UsuarioS as $row) {
             $usuario = UsuarioRepository::findOrFail($data['codusuario']);
             UsuarioRepository::update($usuario, [
+                'codimagem' => null
+            ]);
+        }
+
+        // Limpa relacionamento com Marca
+        foreach ($model->MarcaS as $row) {
+            $data = MarcaRepository::findOrFail($data['codmarca']);
+            MarcaRepository::update($data, [
                 'codimagem' => null
             ]);
         }
