@@ -313,6 +313,7 @@ class PessoaRepository extends MGRepositoryStatic
             if ($numero > 0) {
                 $sql.= " OR codpessoa = $numero OR cast(Cnpj as char(20)) ILIKE '%$numero%'";
             }
+            $sql.= " LIMIT 20";
 
             $regs = DB::select($sql);
             $items = [];
@@ -325,10 +326,10 @@ class PessoaRepository extends MGRepositoryStatic
                     'cnpj'      => $item->cnpj
                 ];
             }
-
-            return [
-                'items' => $items
-            ];
+            return $items;
+            // return [
+            //     'items' => $items
+            // ];
         }
     }
 }

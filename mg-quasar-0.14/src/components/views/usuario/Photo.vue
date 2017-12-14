@@ -144,7 +144,9 @@ export default {
       window.axios.get('usuario/' + vm.data.codusuario + '/details').then(function (request) {
         vm.data = request.data
         let perfil = {
-          avatar: vm.data.imagem
+          codusuario: vm.data.codusuario,
+          avatar: vm.data.imagem,
+          usuario: vm.data.usuario
         }
         localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
         vm.$store.commit('perfil/usuario', perfil)
