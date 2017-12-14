@@ -81,11 +81,6 @@ export default {
   data () {
     return {
       data: {},
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        Authorization: `Bearer ${localStorage.getItem('auth.token')}`
-      },
-      endpoint: process.env.API_BASE_URL + 'imagem?codusuario=',
       erros: false
     }
   },
@@ -119,7 +114,10 @@ export default {
               }
 
               if (vm.data.codimagem === null) {
-                window.axios.post('imagem', data).then(function (request) {
+                window.axios.post('imagem', data).then(function (response) {
+                  vm.loadData(vm.data.codusuario)
+                  localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
+                  this.$store.commit('perfil/usuario', { avatar: localStorage.getItem('auth.usuario.avatar') })
                   Toast.create.positive('Sua foto foi cadastrada')
                   // vm.$router.push('/usuario/foto')
                 }).catch(function (error) {
@@ -127,16 +125,31 @@ export default {
                 })
               }
               else {
-                window.axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
+                window.axios.put('imagem/' + vm.data.codimagem, data).then(function (response) {
                   Toast.create.positive('Sua foto foi alterada')
+                  vm.avatar()
                   // vm.$router.push('/usuario/foto')
                 }).catch(function (error) {
-                  vm.erros = error.response.data.erros
+                  console.log(error)
+                  // vm.erros = error.response.data.erros
                 })
               }
             }
           }
         ]
+      })
+    },
+    avatar: function () {
+      let vm = this
+      window.axios.get('usuario/' + vm.data.codusuario + '/details').then(function (request) {
+        vm.data = request.data
+        let perfil = {
+          avatar: vm.data.imagem
+        }
+        localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
+        vm.$store.commit('perfil/usuario', perfil)
+      }).catch(function (error) {
+        console.log(error.response)
       })
     },
     loadData: function (id) {
@@ -149,7 +162,7 @@ export default {
     }
   },
   created () {
-    this.loadData(localStorage.getItem('auth.codusuario'))
+    this.loadData(localStorage.getItem('auth.usuario.codusuario'))
   }
 }
 </script>

@@ -143,7 +143,7 @@ export default {
     }
   },
   created () {
-    this.loadData(localStorage.getItem('auth.codusuario'))
+    this.loadData(localStorage.getItem('auth.usuario.codusuario'))
   }
 }
 </script>

@@ -131,8 +131,10 @@
             </q-card-title>
             <q-card-main>
               <dl>
-                <dt>Código OpenCart</dt>
-                <dd>{{ item.codopencart }}</dd>
+                <template v-if="item.codopencart">
+                  <dt>Código OpenCart</dt>
+                  <dd>{{ item.codopencart }}</dd>
+                </template>
                 <dt>Descrição</dt>
                 <dd>{{ item.descricaosite }}</dd>
               </dl>

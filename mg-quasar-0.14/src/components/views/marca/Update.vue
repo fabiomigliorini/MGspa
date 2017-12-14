@@ -19,12 +19,30 @@
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-field>
                 <q-input
-                type="text"
-                v-model="data.marca"
-                float-label="Marca"
+                  type="text"
+                  v-model="data.marca"
+                  float-label="Marca"
                 />
               </q-field>
               <mg-erros-validacao :erros="erros.marca"></mg-erros-validacao>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-field>
+                <q-toggle v-model="data.abcignorar" label="Ignorar curva ABC" />
+              </q-field>
+              <mg-erros-validacao :erros="erros.abcignorar"></mg-erros-validacao>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+              <q-field>
+                <q-toggle v-model="data.controlada" label="Controlada" />
+              </q-field>
+              <mg-erros-validacao :erros="erros.controlada"></mg-erros-validacao>
             </div>
           </div>
 

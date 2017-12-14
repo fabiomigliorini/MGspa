@@ -68,9 +68,14 @@ export default {
 
         window.axios.get('auth/user').then(response => {
           // salva código da imagem avatar do usuário
-          localStorage.setItem('auth.avatar', response.data.user.avatar)
-          localStorage.setItem('auth.usuario', response.data.user.usuario)
-          localStorage.setItem('auth.codusuario', response.data.user.codusuario)
+          localStorage.setItem('auth.usuario.avatar', response.data.user.avatar)
+          localStorage.setItem('auth.usuario.usuario', response.data.user.usuario)
+          localStorage.setItem('auth.usuario.codusuario', response.data.user.codusuario)
+          this.$store.commit('perfil/usuario', {
+            usuario: localStorage.getItem('auth.usuario.usuario'),
+            avatar: localStorage.getItem('auth.usuario.avatar'),
+            codusuario: localStorage.getItem('auth.usuario.codusuario')
+          })
         }).catch(error => {
           console.log(error.response)
         })

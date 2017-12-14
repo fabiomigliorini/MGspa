@@ -25,6 +25,19 @@ class MarcaRepository extends MGRepositoryStatic
                 Rule::unique('tblmarca')->ignore($model->codmarca, 'codmarca'),
                 'min:2'
             ],
+            // 'codopencart' => [
+            //     'nullable',
+            //     'numeric'
+            // ],
+            'controlada' => [
+                'boolean'
+            ],
+            'site' => [
+                'boolean'
+            ],
+            'abcignorar' => [
+                'boolean'
+            ],
         ];
 
         return $rules;
