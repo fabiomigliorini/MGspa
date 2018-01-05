@@ -21,11 +21,15 @@ class UsuarioRepository extends MGRepositoryStatic
     public static function validationRules ($model = null)
     {
         Validator::extend('senhaAntiga', function ($attribute, $value, $parameters, $validator) {
+            if (!$value) {
+                return true;
+            }
+
             return Hash::check($value, \Auth::user()->senha);
         });
 
         Validator::extend('senhaConfirmacao', function ($attribute, $value, $parameters, $validator) use ($model) {
-            if ($value == $model->senha_confirmacao) {
+            if ($value == $model->senha_confirmacao OR $value == $model->senha) {
                 return true;
             }
             return false;
@@ -174,7 +178,9 @@ class UsuarioRepository extends MGRepositoryStatic
             static::fill($model, $data);
         }
 
-        $model->senha = bcrypt($model->senha);
+        if ($model->senha) {
+            $model->senha = bcrypt($model->senha);
+        }
 
         if (!$model->save()) {
             return false;

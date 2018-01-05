@@ -117,7 +117,7 @@ class UsuarioController extends ControllerCrud
         $model = UsuarioRepository::fill($model, $request->all());
         $model->senha_confirmacao = $request->get('senha_confirmacao');
         $model->senha_antiga = $request->get('senha_antiga');
-        if (is_null($model->senha)) {
+        if (!$request->get('senha')) {
             unset($model->senha);
         }
         UsuarioRepository::validate($model);

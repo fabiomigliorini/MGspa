@@ -1,5 +1,9 @@
 <template>
 <mg-select2 :options="options" @select="onOptionSelect" @filter="search">
+  {{ selected }} +++
+  <template v-if="selected">
+    <span>{{ selected.fantasia }}</span>
+  </template>
   <template slot="item" scope="option">
       <p>
         <strong>{{ option.data.fantasia }}</strong>
@@ -19,21 +23,28 @@ export default {
   data () {
     return {
       filter: {},
-      options: []
+      options: [],
+      selected: false
     }
   },
   methods: {
     onOptionSelect (option) {
-      console.log('Selected option:', option)
+      // console.log('Selected option:', option)
+      this.selected = option
     },
     search: debounce(function (pessoa) {
+      console.log(pessoa)
       let vm = this
-      let params = {
-        q: pessoa
+      if (pessoa !== undefined) {
+        let params = {
+          q: pessoa
+        }
+        if (!this.selected) {
+          window.axios.get('pessoa/select2', { params }).then(response => {
+            vm.options = response.data
+          })
+        }
       }
-      window.axios.get('pessoa/select2', { params }).then(response => {
-        vm.options = response.data
-      })
     }, 500)
   },
   created () {

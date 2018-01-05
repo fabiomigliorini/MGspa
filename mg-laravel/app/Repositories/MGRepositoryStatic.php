@@ -21,9 +21,9 @@ class MGRepositoryStatic
         return app(static::$modelClass)::find($id);
     }
 
-    public static function findOrFail(int $id)
+    public static function findOrFail(int $id, array $columns = null)
     {
-        return app(static::$modelClass)::findOrFail($id);
+        return app(static::$modelClass)::findOrFail($id, $columns);
     }
 
     public static function details($model)

@@ -59,13 +59,14 @@
     watch: {
       keyword: {
         handler: function (val, oldVal) {
-          if (val =! 'undefined') {
-            this.$emit('filter', val)
-          }
+          this.$emit('filter', val)
         }
       }
     },
     methods: {
+      keyUp (value) {
+        this.$emit('filter', value)
+      },
       onInput (value) {
         this.highlightedPosition = 0
         this.isOpen = !!value
@@ -89,7 +90,7 @@
         const selectedOption = this.fOptions[this.highlightedPosition]
         this.$emit('select', selectedOption)
         this.isOpen = false
-        this.keyword = selectedOption.title
+        this.keyword = selectedOption.fantasia
       }
     }
   }

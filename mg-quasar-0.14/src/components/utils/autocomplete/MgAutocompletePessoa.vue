@@ -13,16 +13,16 @@
 
 <script>
 import {
-  QSearch,
-  QAutocomplete
+  QAutocomplete,
+  QSearch
 } from 'quasar'
 
 export default {
   name: 'mg-autocomplete-pessoa',
   props: ['init', 'placeholder'],
   components: {
-    QSearch,
-    QAutocomplete
+    QAutocomplete,
+    QSearch
   },
   data () {
     return {

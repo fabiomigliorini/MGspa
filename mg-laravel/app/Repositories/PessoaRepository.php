@@ -258,31 +258,28 @@ class PessoaRepository extends MGRepositoryStatic
      */
     public static function autocomplete ($params)
     {
-        $sql = "
-            select
-            codpessoa, fantasia, pessoa, cnpj, inativo
-            FROM tblpessoa
-        ";
-        foreach (explode(' ', trim($params['pessoa'])) as $palavra) {
+        $qry = Pessoa::query();
+        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica');
+
+        foreach (explode(' ', $params['pessoa']) as $palavra) {
             if (!empty($palavra)) {
-                $sql.= "WHERE fantasia ILIKE '%$palavra%' OR pessoa ILIKE '%$palavra%'";
+                $qry->whereRaw("(tblpessoa.pessoa ilike '%{$palavra}%' or tblpessoa.fantasia ilike '%{$palavra}%')");
             }
         }
 
         $numero = (int) preg_replace('/[^0-9]/', '', $params['pessoa']);
 		if ($numero > 0) {
-            $sql.= " OR codpessoa = $numero OR cast(Cnpj as char(20)) ILIKE '%$numero%'";
+            $qry->orWhere('codpessoa', $numero)->orWhere('cnpj', $numero);
 		}
 
-        $regs = DB::select($sql);
         $ret = [];
-        foreach ($regs as $item) {
+        foreach ($qry->get() as $item) {
             $ret[] = [
                 'label' => $item->fantasia,
                 'value' => $item->fantasia,
                 'id' => $item->codpessoa,
                 'sublabel' => $item->pessoa,
-                'stamp' => $item->cnpj
+                'stamp' => $item->codpessoa . '</br>' . $item->cnpj
             ];
         }
 

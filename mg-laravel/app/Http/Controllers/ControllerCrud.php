@@ -20,7 +20,8 @@ class ControllerCrud extends Controller
     public function show(Request $request, $id)
     {
         $this->authorize();
-        $model = app($this->repositoryName)::findOrFail($id);
+        $fields = $request->get('fields') ?? null;
+        $model = app($this->repositoryName)::findOrFail($id, $fields);
         return response()->json($model, 200);
     }
 
