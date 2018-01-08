@@ -135,6 +135,111 @@
             </q-card-main>
           </q-card>
         </div>
+
+        <div class="col-md-4">
+          <q-card>
+            <q-card-title>
+              Produtos abaixo do mínimo
+              <span slot="subtitle">Produtos abaixo do estoque mínimo</span>
+              <!-- <q-icon slot="right" name="supervisor_account" /> -->
+            </q-card-title>
+            <q-list separator>
+              <template v-for="min in item.produtosAbaixoMinimo">
+                  <q-collapsible :label="min.produto">
+                    <dl>
+                      <dt>Código</dt>
+                      <dd>{{ min.codproduto }}</dd>
+                      <dt>Código variação</dt>
+                      <dd>{{ min.codprodutovariacao }}</dd>
+                      <dt>Variação</dt>
+                      <dd>{{ min.variação }}</dd>
+                      <dt>Produto</dt>
+                      <dd>{{ min.produto }}</dd>
+                      <dt>Preço</dt>
+                      <dd>{{ min.preco }}</dd>
+                      <dt>Unidade medida</dt>
+                      <dd>{{ min.unidademedida }}</dd>
+                      <dt>Referência</dt>
+                      <dd>{{ min.referencia }}</dd>
+                      <dt>Estoque mínimo</dt>
+                      <dd>{{ min.estoqueminimo }}</dd>
+                      <dt>Estoque maximo</dt>
+                      <dd>{{ min.estoquemaximo }}</dd>
+                      <dt>Saldo quantidade</dt>
+                      <dd>{{ min.saldoquantidade }}</dd>
+                      <dt>Previsão de vendas por dia</dt>
+                      <dd>{{ min.vendadiaquantidadeprevisao }}</dd>
+                      <dt>Dias</dt>
+                      <dd>{{ min.dias }}</dd>
+                      <dt>Saldo valor</dt>
+                      <dd>{{ min.saldovalor }}</dd>
+                      <dt>Data última compra</dt>
+                      <dd>{{ min.dataultimacompra }}</dd>
+                      <dt>Custo última compra</dt>
+                      <dd>{{ min.custoultimacompra }}</dd>
+                      <dt>Quantidade última compra</dt>
+                      <dd>{{ min.quantidadeultimacompra }}</dd>
+                      <dt>Imagem</dt>
+                      <dd>{{ min.imagem }}</dd>
+                    </dl>
+                  </q-collapsible>
+              </template>
+            </q-list>
+          </q-card>
+        </div>
+
+        <div class="col-md-4">
+          <q-card>
+            <q-card-title>
+              Produtos acima do máximo
+              <span slot="subtitle">Produtos acima do estoque máximo</span>
+              <!-- <q-icon slot="right" name="supervisor_account" /> -->
+            </q-card-title>
+            <q-list separator>
+              <template v-for="max in item.produtosAcimaMaximo">
+                <q-collapsible :label="max.produto">
+                  <dl>
+                    <dt>Código</dt>
+                    <dd>{{ max.codproduto }}</dd>
+                    <dt>Código variação</dt>
+                    <dd>{{ max.codprodutovariacao }}</dd>
+                    <dt>Variação</dt>
+                    <dd>{{ max.variação }}</dd>
+                    <dt>Produto</dt>
+                    <dd>{{ max.produto }}</dd>
+                    <dt>Preço</dt>
+                    <dd>{{ max.preco }}</dd>
+                    <dt>Unidade medida</dt>
+                    <dd>{{ max.unidademedida }}</dd>
+                    <dt>Referência</dt>
+                    <dd>{{ max.referencia }}</dd>
+                    <dt>Estoque mínimo</dt>
+                    <dd>{{ max.estoqueminimo }}</dd>
+                    <dt>Estoque maximo</dt>
+                    <dd>{{ max.estoquemaximo }}</dd>
+                    <dt>Saldo quantidade</dt>
+                    <dd>{{ max.saldoquantidade }}</dd>
+                    <dt>Previsão de vendas por dia</dt>
+                    <dd>{{ max.vendadiaquantidadeprevisao }}</dd>
+                    <dt>Dias</dt>
+                    <dd>{{ max.dias }}</dd>
+                    <dt>Saldo valor</dt>
+                    <dd>{{ max.saldovalor }}</dd>
+                    <dt>Data última compra</dt>
+                    <dd>{{ max.dataultimacompra }}</dd>
+                    <dt>Custo última compra</dt>
+                    <dd>{{ max.custoultimacompra }}</dd>
+                    <dt>Quantidade última compra</dt>
+                    <dd>{{ max.quantidadeultimacompra }}</dd>
+                    <dt>Imagem</dt>
+                    <dd>{{ max.imagem }}</dd>
+                  </dl>
+                </q-collapsible>
+              </template>
+            </q-list>
+          </q-card>
+        </div>
+
       </div>
 
       <q-fixed-position corner="bottom-right" :offset="[18, 18]">
@@ -188,7 +293,9 @@ import {
   Dialog,
   Toast,
   QCardMain,
-  QToggle
+  QToggle,
+  QCollapsible,
+  QList
 } from 'quasar'
 
 export default {
@@ -209,7 +316,9 @@ export default {
     QFabAction,
     QFab,
     QTooltip,
-    QToggle
+    QToggle,
+    QCollapsible,
+    QList
   },
 
   data () {
