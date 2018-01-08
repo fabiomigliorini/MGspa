@@ -1,15 +1,13 @@
 ﻿-- alter table tblmarca add controlada boolean not null default false
-
--- update tblmarca set controlada = true where marca ilike 'lua de cristal'
+-- update tblmarca set controlada = true where marca ilike 'classe'
 -- PARA SEPARAR DO DEPOSITO PRAS LOJAS
-/*
 select 
 	-- m.marca, 
 	p.codproduto, 
 	-- p.produto, 
 	-- pv.variacao, 
-	p.produto || coalesce(' | ' || pv.variacao, ''),
-	um.sigla,
+	p.produto || coalesce(' | ' || pv.variacao, '') as produto,
+	um.sigla as um,
 	-- p.preco,
 	--coalesce(pv.referencia, p.referencia), 
 	(
@@ -20,16 +18,25 @@ select
 		where pb.codprodutovariacao = pv.codprodutovariacao
 		order by pe.quantidade nulls first, pb.barras
 		limit 1
-	),
+	) as barras,
+	array_to_string(array(
+		select cast(pe.quantidade as bigint)
+		from tblprodutoembalagem pe 
+		left join tblunidademedida pe_um on (pe_um.codunidademedida = pe.codunidademedida)
+		where pe.codproduto = pv.codproduto
+		order by pe.quantidade nulls first
+		--limit 1
+	), '/') AS emb,	
 	-- elpv_deposito.corredor, 
 	-- elpv_deposito.prateleira, 
 	-- elpv_deposito.coluna, 
 	-- elpv_deposito.bloco,
-    cast(es.saldoquantidade as bigint) as loja,
+	cast(es.saldoquantidade as bigint) as loja,
 	elpv.estoqueminimo as min, 
 	elpv.estoquemaximo as max, 
 	cast(es_deposito.saldoquantidade as bigint) as deposito,
-	cast(elpv.estoquemaximo - (case when coalesce(es.saldoquantidade, 0) <= 0 then 0 else es.saldoquantidade end) as bigint) as separar
+	cast((elpv.estoquemaximo) - (case when coalesce(es.saldoquantidade, 0) <= 0 then 0 else es.saldoquantidade end) as bigint) as separar
+	--cast((elpv.estoquemaximo * 2) - (case when coalesce(es.saldoquantidade, 0) <= 0 then 0 else es.saldoquantidade end) as bigint) as separar
 from tblestoquelocalprodutovariacao elpv
 left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
 inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
@@ -38,7 +45,7 @@ inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
 inner join tblestoquelocalprodutovariacao elpv_deposito on (elpv_deposito.codestoquelocal = 101001 and elpv_deposito.codprodutovariacao = elpv.codprodutovariacao)
 inner join tblestoquesaldo es_deposito on (es_deposito.codestoquelocalprodutovariacao = elpv_deposito.codestoquelocalprodutovariacao and es_deposito.fiscal = false)
 inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
-where elpv.codestoquelocal = 102001
+where elpv.codestoquelocal = 104001
 --and m.marca not ilike 'polycol'
 and m.controlada = true
 and coalesce(es.saldoquantidade, 0) <= coalesce(elpv.estoqueminimo, 0)
@@ -46,12 +53,11 @@ and coalesce(es.saldoquantidade, 0) < coalesce(elpv.estoquemaximo, 0)
 and es_deposito.saldoquantidade > 0
 --and es.saldoquantidade is null
 order by m.marca, p.produto, pv.variacao
-*/
 
 -- select codmarca, marca from tblmarca where controlada = true order by marca
 
 -- PARA COMPRAR
-
+/*
 select 
     * 
     , case when (x.repor > 0) then ceil(x.repor::float / x.lote::float) * x.lote else 0 end as comprar
@@ -108,10 +114,10 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where m.controlada = true
+    where m.marca ilike 'stalo'
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
-    and m.marca ilike 'maxprint'
+    --and m.controlada = true
     --and pv.codprodutovariacao = 15218
     and pv.descontinuado is null
     and p.inativo is null
@@ -119,7 +125,7 @@ from
     order by m.marca, p.produto, pv.variacao
 ) x
 --order by sld nulls first
-
+*/
 
 /*
 update tblprodutovariacao set descontinuado = date_trunc('second', now()) where codprodutovariacao in (
@@ -139,6 +145,9 @@ update tblprodutovariacao set descontinuado = date_trunc('second', now()) where 
 ,73333
 
 )
+
+
+update tblprodutovariacao set descontinuado = null where codproduto = 312903
 */
 
 --update tblestoquelocal set inativo = '2016-12-31' where codestoquelocal in (201001, 301001)

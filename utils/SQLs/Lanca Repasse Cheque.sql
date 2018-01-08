@@ -1,18 +1,18 @@
 ﻿select * from tblportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2017-12-06', null, '2017-12-06 11:41', 1)
+values (210, '2018-01-05', null, '2018-01-05 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2135, '2017-12-06 11:41', 1
+select codcheque, 2151, '2018-01-05 11:41', 1
 from tblcheque where cmc7 in (
-'<00142705<0188503415>326004379058:',
-'<74880153<0180017725>400000494765:'
+'<00141027<0188506385>864000800041:',
+'<00148146<0188514545>894002431081:'
 )
 
-update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc where codchequerepasse = 2135)
+update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc where codchequerepasse = 2151)
 
 select crc.codchequerepasse, sum(c.valor), count(crc.codchequerepassecheque)
 from tblchequerepassecheque crc
@@ -21,8 +21,8 @@ where crc.codchequerepasse >= 1900
 group by crc.codchequerepasse
 order by 1 desc
 
-update tblchequerepasse set data = '2017-12-06', criacao = '2017-12-06 11:41' where codchequerepasse = 2100
-update tblchequerepassecheque set criacao = '2017-12-06 11:41' where codchequerepasse = 2100
+update tblchequerepasse set data = '2018-01-05', criacao = '2018-01-05 11:41' where codchequerepasse = 2149
+update tblchequerepassecheque set criacao = '2018-01-05 11:41' where codchequerepasse = 2100
 
 select * from tblchequerepassecheque where codchequerepasse = 2086
 
@@ -47,9 +47,15 @@ update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select 
 
 */
 
+select * 
+from tblcheque c
+inner join tblchequerepassecheque crc  on (crc.codcheque = c.codcheque)
+where crc.codchequerepasse = 2140
 
 
 select cr.*
 from tblchequerepassecheque crc
 inner join tblchequerepasse cr on (cr.codchequerepasse = crc.codchequerepasse)
-where crc.codcheque = 8826
+where crc.codcheque = 8836
+
+
