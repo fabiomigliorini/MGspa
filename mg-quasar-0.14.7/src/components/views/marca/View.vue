@@ -27,13 +27,93 @@
         </li>
       </ul>
 
+
+
+      <div class="row">
+        <div class="col-md-6">
+
+          <q-card inline>
+            <q-card-media overlay-position="top">
+              <img :src="item.imagem.url" v-if="item.codimagem">
+              <img src="/statics/quasar-logo.png" v-else>
+              <q-card-title slot="overlay">
+                {{item.marca}}
+                <div slot="subtitle">
+                  <q-rating readonly v-model="item.abccategoria" :max="3" size="3rem" />
+                  <q-icon name="trending_up" /> {{ numeral(item.abcposicao).format('0,0') }}&deg;
+                </div>
+
+                <div slot="right" class="row items-center">
+                  <q-icon name="more_vert">
+                    <q-popover ref="popover">
+                      <q-list link class="no-border">
+                        <q-item @click="$refs.popover.close()">
+                          <q-item-main label="Remove Card" />
+                        </q-item>
+                        <q-item @click="$refs.popover.close()">
+                          <q-item-main label="Send Feedback" />
+                        </q-item>
+                        <q-item @click="$refs.popover.close()">
+                          <q-item-main label="Share" />
+                        </q-item>
+                      </q-list>
+                    </q-popover>
+                  </q-icon>
+
+                </div>
+              </q-card-title>
+            </q-card-media>
+            <q-card-separator />
+            <q-card-main>
+              <p class="text-faded">
+                Representa {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}% das vendas: <br>
+                R$ {{ numeral(new Intl.NumberFormat().format(item.vendabimestrevalor)).format() }} no Bimestre <br>
+                R$ {{ numeral(new Intl.NumberFormat().format(item.vendasemestrevalor)).format() }} no Semestre <br>
+                R$ {{ numeral(new Intl.NumberFormat().format(item.vendaanovalor)).format() }} no Ano
+              </p>
+
+              <p class="text-faded" v-if="item.itensabaixominimo > 0">
+                Última compra {{moment(item.dataultimacompra).fromNow()}}. <br>
+                <b>{{ numeral(item.itensabaixominimo).format('0,0') }}</b> produtos da marca estão abaixo do estoque mínimo! <br>
+                <b>{{ numeral(item.itensacimamaximo).format('0,0') }}</b> produtos da marca estão acima do estoque máximo!
+              </p>
+
+              <p class="text-faded" v-if="item.itensacimamaximo > 0">
+                Estoque programado para durar entre
+                {{ item.estoqueminimodias }} e
+                {{ item.estoquemaximodias }} dias.
+              </p>
+
+            </q-card-main>
+            <q-card-separator />
+            <q-card-actions>
+              <q-btn flat round small><q-icon name="event" /></q-btn>
+              <q-btn flat>5:30PM</q-btn>
+              <q-btn flat>7:30PM</q-btn>
+              <q-btn flat>9:00PM</q-btn>
+              <q-btn flat color="primary">Reserve</q-btn>
+            </q-card-actions>
+          </q-card>
+        </div>
+      </div>
+
       <div class="row">
         <div class="col-md-4">
+
+
           <q-card>
+
             <!-- Imagem -->
-            <q-card-media v-if="item.codimagem">
+            <q-card-media v-if="item.codimagem" overlay-position="top">
               <img :src="item.imagem.url">
+              <q-card-title slot="overlay">
+                <div slot="subtitle" class="pull-right">
+                  {{ item.marca }}
+
+                </div>
+              </q-card-title>
             </q-card-media>
+
 
             <!-- Titulo -->
             <q-card-title>
@@ -82,12 +162,12 @@
           <q-card>
             <q-card-title>
               Curva ABC
-              <span slot="subtitle">Dados da curva ABC</span>
-              <!-- <q-icon slot="right" name="supervisor_account" /> -->
             </q-card-title>
             <q-card-main>
-              <h5><q-rating readonly slot="subtitle" v-model="item.abccategoria" :max="3" /></h5>
               <dl>
+                <dd>
+                  <q-rating readonly slot="subtitle" v-model="item.abccategoria" :max="3" size="3rem" />
+                </dd>
                 <dt>Percentual de vendas</dt>
                 <dd>{{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%</dd>
                 <template v-if="item.abcposicao">
@@ -96,7 +176,7 @@
                 </template>
                 <template v-if="item.dataultimacompra" class="text-grey">
                   <dt>Última compra</dt>
-                  <dd>{{ moment(item.dataultimacompra).fromNow() }}</dd>
+                  <dd>{{  }}</dd>
                 </template>
                 <template v-if="item.itensabaixominimo > 0">
                   <dt>Itens abaixo do mínimo</dt>
@@ -120,8 +200,6 @@
           <q-card>
             <q-card-title>
               Site
-              <span slot="subtitle">Integração OpenCart</span>
-              <!-- <q-icon slot="right" name="supervisor_account" /> -->
             </q-card-title>
             <q-card-main>
               <dl>
@@ -295,7 +373,10 @@ import {
   QCardMain,
   QToggle,
   QCollapsible,
-  QList
+  QList,
+  QPopover,
+  QItem,
+  QItemMain
 } from 'quasar'
 
 export default {
@@ -318,7 +399,10 @@ export default {
     QTooltip,
     QToggle,
     QCollapsible,
-    QList
+    QList,
+    QPopover,
+    QItem,
+    QItemMain
   },
 
   data () {

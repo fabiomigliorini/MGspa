@@ -146,8 +146,8 @@ class MarcaRepository extends MGRepositoryStatic
             $data['imagem']['url'] = $model->Imagem->url;
         }
 
-        $data['produtosAbaixoMinimo'] = MarcaRepository::produtosAbaixoMinimo($model);
-        $data['produtosAcimaMaximo'] = MarcaRepository::produtosAcimaMaximo($model);
+        $data['produtosAbaixoMinimo'] = []; //MarcaRepository::produtosAbaixoMinimo($model);
+        $data['produtosAcimaMaximo'] = []; //MarcaRepository::produtosAcimaMaximo($model);
 
         return $data;
     }

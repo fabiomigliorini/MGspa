@@ -1,18 +1,28 @@
 ﻿select * from tblportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-01-05', null, '2018-01-05 11:41', 1)
+values (210, '2018-01-11', null, '2018-01-11 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2151, '2018-01-05 11:41', 1
+select codcheque, 2152, '2018-01-11 11:41', 1
 from tblcheque where cmc7 in (
-'<00141027<0188506385>864000800041:',
-'<00148146<0188514545>894002431081:'
+'<23702340<0180085725>323902755067:',
+'<74881011<0180001645>200003094513:',
+'<00142706<0188500355>336005546423:',
+'<00142706<0188503995>347001798173:',
+'<00142700<0188511205>381004278610:',
+'<00142709<0188511215>388004278615:',
+'<00142708<0188511225>368004278617:',
+'<00119179<0188525415>247003296655:',
+'<00142703<0188512425>373010510599:',
+'<23755812<0180000315>280201353994:',
+'<34182186<0480002395>881650026438:',
+'<23755811<0180000085>269500343475:'
 )
 
-update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc where codchequerepasse = 2151)
+update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc where codchequerepasse = 2152)
 
 select crc.codchequerepasse, sum(c.valor), count(crc.codchequerepassecheque)
 from tblchequerepassecheque crc
@@ -21,8 +31,8 @@ where crc.codchequerepasse >= 1900
 group by crc.codchequerepasse
 order by 1 desc
 
-update tblchequerepasse set data = '2018-01-05', criacao = '2018-01-05 11:41' where codchequerepasse = 2149
-update tblchequerepassecheque set criacao = '2018-01-05 11:41' where codchequerepasse = 2100
+update tblchequerepasse set data = '2018-01-11', criacao = '2018-01-11 11:41' where codchequerepasse = 2149
+update tblchequerepassecheque set criacao = '2018-01-11 11:41' where codchequerepasse = 2100
 
 select * from tblchequerepassecheque where codchequerepasse = 2086
 
