@@ -48,6 +48,9 @@ export default new VueRouter({
     // Permissao
     { path: '/permissao', component: load('views/permissao/Index') },
 
+    // Estoque Estatística
+    { path: '/estoque-estatistica/:codproduto', component: load('views/estoque-estatistica/Index') },
+
     // Always leave this last one
     { path: '*', component: load('Error404') } // Not found
   ]

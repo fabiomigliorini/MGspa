@@ -53,6 +53,9 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     // Rotas Dinamicas
 
+    // EstoqueEstatistica
+    Route::resource('estoque-estatistica', 'EstoqueEstatisticaController');
+
     // Imagem
     Route::resource('imagem', 'ImagemController');
 
