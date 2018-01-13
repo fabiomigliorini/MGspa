@@ -239,7 +239,7 @@ export default {
 
         let meses = []
         let quantidades = []
-        vm.item.vendas.forEach(function(value) {
+        vm.item.vendas.forEach(function (value) {
           meses.push(new Date(value.mes))
           quantidades.push(value.quantidade)
         })
