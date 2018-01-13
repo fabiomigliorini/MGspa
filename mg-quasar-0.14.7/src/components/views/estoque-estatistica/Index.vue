@@ -72,12 +72,12 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              <p>Demanda média: {{ item.estatistica.demandamedia }}</p>
-              <p>Desvio padrao: {{ item.estatistica.desviopadrao }}</p>
-              <p>Estoque máximo: {{ item.estatistica.estoquemaximo }}</p>
-              <p>Estoque mínimo:{{ item.estatistica.estoquemaximo }}</p>
-              <p>Estoque de segurança: {{ item.estatistica.estoqueseguranca }}</p>
-              <p>Nível de servico: {{ item.estatistica.nivelservico }}</p>
+              <p>Demanda média: {{ numeral(item.estatistica.demandamedia).format('0,0.0000') }}</p>
+              <p>Desvio padrao: {{ numeral(item.estatistica.desviopadrao).format('0,0.0000') }}</p>
+              <p>Nível de servico: {{ numeral(item.estatistica.nivelservico).format('0%') }}</p>
+              <p>Estoque de segurança: {{ numeral(item.estatistica.estoqueseguranca).format('0,0') }}</p>
+              <p>Estoque mínimo: {{ numeral(item.estatistica.estoqueminimo).format('0,0') }} ({{ numeral(item.estatistica.tempominimo * 30).format('0,0') }} Dias)</p>
+              <p>Estoque máximo: {{ numeral(item.estatistica.estoquemaximo).format('0,0') }} ({{ numeral(item.estatistica.tempomaximo * 30).format('0,0') }} Dias)</p>
             </q-card-main>
           </q-card>
         </div>
