@@ -15,7 +15,7 @@
             <q-item-tile title>{{ variacao.variacao }}</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.a" val="a" />
+            <q-radio v-model="filter.codvariacao" :val="variacao.codvariacao" />
           </q-item-side>
         </q-item>
         <q-item tag="label">
@@ -23,7 +23,7 @@
             <q-item-tile title>Todos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.a" val="a" />
+            <q-radio v-model="filter.codvariacao" val="" />
           </q-item-side>
         </q-item>
         <q-list-header>Local de Estoque</q-list-header>
@@ -32,7 +32,7 @@
             <q-item-tile title>{{ local.estoquelocal }}</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.a" val="a" />
+            <q-radio v-model="filter.codestoquelocal" :val="local.codestoquelocal" />
           </q-item-side>
         </q-item>
         <q-item tag="label">
@@ -40,7 +40,7 @@
             <q-item-tile title>Todos</q-item-tile>
           </q-item-main>
           <q-item-side right>
-            <q-radio v-model="filter.a" val="a" />
+            <q-radio v-model="filter.codestoquelocal" val="" />
           </q-item-side>
         </q-item>
       </q-list>
@@ -48,7 +48,6 @@
 
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
-
       <div class="row">
         <div class="col-md-9">
           <q-card>
@@ -57,7 +56,12 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              <div id="chart1"></div>
+              <mg-grafico-estoque-estatistica
+                :data="data"
+                :options="options"
+                height="150"
+              >
+              </mg-grafico-estoque-estatistica>
             </q-card-main>
           </q-card>
         </div>
@@ -68,12 +72,12 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              <p>Demanda média: {{ item.estatistica.demanda_media }}</p>
-              <p>Desvio padrao: {{ item.estatistica.desvio_padrao }}</p>
-              <p>Estoque máximo: {{ item.estatistica.estoque_maximo }}</p>
-              <p>Estoque seguranca:{{ item.estatistica.estoque_seguranca }}</p>
-              <p>Nível de servico: {{ item.estatistica.nivel_servico }}</p>
-              <p>Ponto de pedido: {{ item.estatistica.ponto_pedido }}</p>
+              <p>Demanda média: {{ item.estatistica.demandamedia }}</p>
+              <p>Desvio padrao: {{ item.estatistica.desviopadrao }}</p>
+              <p>Estoque máximo: {{ item.estatistica.estoquemaximo }}</p>
+              <p>Estoque mínimo:{{ item.estatistica.estoquemaximo }}</p>
+              <p>Estoque de segurança: {{ item.estatistica.estoqueseguranca }}</p>
+              <p>Nível de servico: {{ item.estatistica.nivelservico }}</p>
             </q-card-main>
           </q-card>
         </div>
@@ -108,15 +112,8 @@
 </template>
 
 <script>
-import { GoogleCharts } from 'google-charts'
-
-function drawChart (serie) {
-  const data = GoogleCharts.api.visualization.arrayToDataTable([serie])
-  const pieChart = new GoogleCharts.api.visualization.PieChart(document.getElementById('chart1'))
-  pieChart.draw(data)
-}
-
 import MgLayout from '../../layouts/MgLayout'
+import MgGraficoEstoqueEstatistica from '../../utils/grafico/MgGraficoEstoqueEstatistica'
 import {
   QIcon,
   QCard,
@@ -171,34 +168,84 @@ export default {
     QItemSide,
     QRadio,
     QListHeader,
-    GoogleCharts
+    MgGraficoEstoqueEstatistica
   },
 
   data () {
     return {
       item: false,
-      filter: {},
+      filter: {
+        codvariacao: '',
+        codestoquelocal: ''
+      },
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Vendas',
+            // backgroundColor: '#fff',
+            data: null
+          }
+        ]
+      },
+      options: {
+        scales: {
+          xAxes: [
+            {
+              type: 'time',
+              time: {
+                displayFormats: {
+                  'miliseconds': 'MMM/YYYY',
+                  'second': 'MMM/YYYY',
+                  'minute': 'MMM/YYYY',
+                  'hour': 'MMM/YYYY',
+                  'day': 'MMM/YYYY',
+                  'week': 'MMM/YYYY',
+                  'month': 'MMM/YYYY',
+                  'quarter': 'MMM/YYYY',
+                  'year': 'YYYY',
+                },
+                'tooltipFormat': 'MMMM/YYYY'
+              }
+            }
+          ]
+        }
+      },
       codproduto: null
     }
+  },
+  watch: {
+
+    // observa filtro, sempre que alterado chama a api
+    filter: {
+      handler: function (val, oldVal) {
+        this.loadData()
+      },
+      deep: true
+    }
+
   },
   methods: {
     // carrega registros da api
     loadData: debounce(function () {
       // inicializa variaveis
       let vm = this
-      let params = {
-        codprodutovariacao: null,
-        codestoquelocal: null
-      }
+      let params = vm.filter
       this.loading = true
-      GoogleCharts.load(drawChart)
-
 
       // faz chamada api
       window.axios.get('estoque-estatistica/' + vm.codproduto, { params }).then(response => {
         vm.item = response.data
-        drawChart(vm.item.estatistica.serie)
-        // console.log(grafico)
+
+        let meses = []
+        let quantidades = []
+        vm.item.vendas.forEach(function(value) {
+          meses.push(new Date(value.mes))
+          quantidades.push(value.quantidade)
+        })
+
+        vm.data.datasets[0].data = quantidades
+        vm.data.labels = meses
 
         // desmarca flag de carregando
         this.loading = false

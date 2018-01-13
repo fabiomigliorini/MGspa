@@ -15,7 +15,7 @@ class EstoqueEstatisticaController extends ControllerCrud
         {
             $this->authorize();
 
-            $res = EstoqueEstatisticaRepository::buscaEstatisticaProduto(33);
+            $res = EstoqueEstatisticaRepository::buscaEstatisticaProduto($id);
 
             return response()->json($res, 206);
         }
