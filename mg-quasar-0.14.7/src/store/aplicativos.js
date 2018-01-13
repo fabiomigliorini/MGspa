@@ -23,6 +23,11 @@ export default {
         icon: 'lock_open',
         title: 'Permissões',
         path: '/permissao'
+      },
+      {
+        icon: 'multiline_chart',
+        title: 'Vendas',
+        path: '/estoque-estatistica/100'
       }
     ]
   },
