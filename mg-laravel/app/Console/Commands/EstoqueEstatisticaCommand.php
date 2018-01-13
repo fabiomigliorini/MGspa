@@ -74,7 +74,8 @@ class EstoqueEstatisticaCommand extends Command
         ], 45/30, 90/30, 0.95);
         */
 
-        $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(1);
+        //$ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(1, 12, 1, 101001);
+        $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(33);
         print_r($ret);
 
         //$this->table(['serie'], $ret);

@@ -2,7 +2,11 @@
 
 namespace App\Repositories;
 
+use DB;
 use Carbon\Carbon;
+
+use App\Models\Produto;
+use App\Models\EstoqueLocal;
 /*
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -171,62 +175,112 @@ class EstoqueEstatisticaRepository
         return $ret;
     }
 
+    public static function buscaSerieHistoricaVendasProduto ($codproduto, $meses = 12, $codprodutovariacao = null, $codestoquelocal = null)
+    {
+
+        $mes_final = Carbon::now()->startOfMonth();
+        $mes_inicial = (clone $mes_final)->addMonths(($meses -1) * -1);
+
+        $binds = [
+            'codproduto' => $codproduto,
+            'mes_inicial' => $mes_inicial,
+            'mes_final' => $mes_final,
+        ];
+
+        $sql = '
+            with meses as (
+                SELECT date_trunc(\'month\', dd):: date as mes
+                FROM generate_series
+                       ( :mes_inicial
+                       , :mes_final
+                       , \'1 month\'::interval) dd
+            ),
+            venda_mes as (
+                select elpvv.mes, sum(quantidade) as quantidade
+                from tblprodutovariacao pv
+                inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
+                inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+                where elpvv.mes >= :mes_inicial
+                and pv.codproduto = :codproduto
+        ';
+
+        if (!empty($codprodutovariacao)) {
+            $sql .= ' and pv.codprodutovariacao = :codprodutovariacao ';
+            $binds['codprodutovariacao'] = $codprodutovariacao;
+        }
+
+        if (!empty($codestoquelocal)) {
+            $sql .= ' and elpv.codestoquelocal = :codestoquelocal ';
+            $binds['codestoquelocal'] = $codestoquelocal;
+        }
+
+        $sql .= '
+                group by elpvv.mes
+            )
+            select meses.mes, coalesce(venda_mes.quantidade, 0) as quantidade
+            from meses
+            left join venda_mes on (venda_mes.mes = meses.mes)
+            order by meses.mes asc
+        ';
+
+        $regs = DB::select(DB::raw($sql), $binds);
+
+        return $regs;
+    }
+
     public static function buscaEstatisticaProduto ($codproduto, $meses = 12, $codprodutovariacao = null, $codestoquelocal = null)
     {
 
-      $data = Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00');
-      //dd($data);
-      /*
-        $vendas = [
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 299,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 316,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 362,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 369,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 345,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 304,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 310,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 263,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 241,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 299,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 272,
-            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 277,
-        ];
-        */
-        $vendas = [
-          299,
-          316,
-          362,
-          369,
-          345,
-          304,
-          310,
-          263,
-          241,
-          299,
-          272,
-          277,
-        ];
-        $estatistica = EstoqueEstatisticaRepository::calculaMinimoPeloDesvioPadrao($vendas, 45/30, 90/30, 0.95);
+        // Busca Produto
+        $p = Produto::findOrFail($codproduto);
+
+        // Busca Todas Variações do produto
+        $pvs = $p->ProdutoVariacaoS()->select(['codprodutovariacao', 'variacao'])->get();
+        $variacoes = array_map(function ($item) {
+            $item['variacao'] = $item['variacao']??'{ Sem Variacao }';
+            return $item;
+        },$pvs->toArray());
+
+        // Busca Variação Selecionada
+        $variacao = null;
+        if (!empty($codprodutovariacao)) {
+            if ($pv = $pvs->where('codprodutovariacao', $codprodutovariacao)->first()) {
+                $variacao = $pv->variacao;
+            }
+        }
+
+        // Busca Todos Locais de Estoque
+        $els = EstoqueLocal::ativo()->select(['codestoquelocal', 'estoquelocal', 'sigla'])->get();
+        $locais = $els->toArray();
+
+        // Buscal Local Selecionado
+        $estoquelocal = null;
+        if (!empty($codestoquelocal)) {
+            $el = $els->where('codestoquelocal', $codestoquelocal)->first();
+            $estoquelocal = $el->estoquelocal;
+        }
+
+        // Busca Serie Historica de Vendas
+        $vendas = static::buscaSerieHistoricaVendasProduto($codproduto, $meses, $codprodutovariacao, $codestoquelocal);
+
+        // Calcula Minimo pelo Desvio Padrao
+        $serie = array_column($vendas, 'quantidade');
+        $estatistica = EstoqueEstatisticaRepository::calculaMinimoPeloDesvioPadrao($serie, 45/30, 90/30, 0.95);
 
         $ret = [
-            'codproduto' => 1,
-            'produto' => 'Produto de Teste',
-            'codprodutovariacao' => null,
-            'variacao' => null,
-            'variacoes' => [
-                ['codprodutovariacao' => 1, 'variacao' => 'Branco'],
-                ['codprodutovariacao' => 2, 'variacao' => 'Verde'],
-                ['codprodutovariacao' => 3, 'variacao' => 'Azul'],
-            ],
-            'codestoquelocal' => null,
-            'estoquelocal' => null,
-            'locais' => [
-                ['codestoquelocal' => 1, 'variacao' => 'Local A'],
-                ['codestoquelocal' => 2, 'variacao' => 'Local B'],
-                ['codestoquelocal' => 3, 'variacao' => 'Local C'],
-            ],
-            'estatistica' => $estatistica,
+            'codproduto' => $p->codproduto,
+            'produto' => $p->produto,
+            'codmarca' => $p->codmarca,
+            'marca' => $p->Marca->marca,
+            'codprodutovariacao' => $codprodutovariacao,
+            'variacao' => $variacao,
+            'variacoes' => $variacoes,
+            'codestoquelocal' => $codestoquelocal,
+            'estoquelocal' => $estoquelocal,
+            'locais' => $locais,
+
             'vendas' => $vendas,
+            'estatistica' => $estatistica,
         ];
 
         return $ret;
