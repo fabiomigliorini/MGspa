@@ -39,10 +39,10 @@ from tblprodutovariacao pv
 inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
 inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
 where elpvv.mes >= '2012-01-01'
---and pv.codproduto = 25095
+and pv.codproduto = 17307
 --and pv.codproduto = 3319
 --and pv.codproduto = 317753
-and pv.codproduto = 17307
+--and pv.codproduto = 2241
 --and pv.codprodutovariacao = 26556
 --and elpv.codestoquelocal = 104001
 group by elpvv.mes 
@@ -50,5 +50,5 @@ group by elpvv.mes
 select meses.mes, coalesce(cast(venda_mes.quantidade as bigint), 0) as quantidade
 from meses
 left join venda_mes on (venda_mes.mes = meses.mes)
-order by meses.mes 
-
+order by meses.mes desc
+--limit 12

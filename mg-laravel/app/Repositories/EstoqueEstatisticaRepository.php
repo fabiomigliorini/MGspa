@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use Carbon\Carbon;
 /*
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -165,6 +166,67 @@ class EstoqueEstatisticaRepository
             'estoque_seguranca' => ceil($estoque_seguranca),
             'ponto_pedido' => ceil($ponto_pedido),
             'estoque_maximo' => ceil($estoque_maximo),
+        ];
+
+        return $ret;
+    }
+
+    public static function buscaEstatisticaProduto ($codproduto, $meses = 12, $codprodutovariacao = null, $codestoquelocal = null)
+    {
+
+      $data = Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00');
+      //dd($data);
+      /*
+        $vendas = [
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 299,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 316,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 362,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 369,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 345,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 304,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 310,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 263,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 241,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 299,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 272,
+            Carbon::createFromFormat('Y-m-d h:i:s', '2017-12-01 00:00:00') => 277,
+        ];
+        */
+        $vendas = [
+          299,
+          316,
+          362,
+          369,
+          345,
+          304,
+          310,
+          263,
+          241,
+          299,
+          272,
+          277,
+        ];
+        $estatistica = EstoqueEstatisticaRepository::calculaMinimoPeloDesvioPadrao($vendas, 45/30, 90/30, 0.95);
+
+        $ret = [
+            'codproduto' => 1,
+            'produto' => 'Produto de Teste',
+            'codprodutovariacao' => null,
+            'variacao' => null,
+            'variacoes' => [
+                ['codprodutovariacao' => 1, 'variacao' => 'Branco'],
+                ['codprodutovariacao' => 2, 'variacao' => 'Verde'],
+                ['codprodutovariacao' => 3, 'variacao' => 'Azul'],
+            ],
+            'codestoquelocal' => null,
+            'estoquelocal' => null,
+            'locais' => [
+                ['codestoquelocal' => 1, 'variacao' => 'Local A'],
+                ['codestoquelocal' => 2, 'variacao' => 'Local B'],
+                ['codestoquelocal' => 3, 'variacao' => 'Local C'],
+            ],
+            'estatistica' => $estatistica,
+            'vendas' => $vendas,
         ];
 
         return $ret;

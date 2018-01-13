@@ -57,6 +57,7 @@ class EstoqueEstatisticaCommand extends Command
           200,
         ], 0.7, 2, 0.95);
         */
+        /*
         $ret = EstoqueEstatisticaRepository::calculaMinimoPeloDesvioPadrao([
           299,
           316,
@@ -71,7 +72,9 @@ class EstoqueEstatisticaCommand extends Command
           272,
           277,
         ], 45/30, 90/30, 0.95);
+        */
 
+        $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(1);
         print_r($ret);
 
         //$this->table(['serie'], $ret);
