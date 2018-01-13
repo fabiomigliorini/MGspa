@@ -41,39 +41,6 @@ class EstoqueEstatisticaCommand extends Command
     public function handle()
     {
         $this->info("Building!");
-        /*
-        $ret = EstoqueEstatisticaRepository::calculaMinimoPeloDesvioPadrao([
-          100,
-          150,
-          200,
-          150,
-          100,
-          100,
-          150,
-          200,
-          150,
-          100,
-          100,
-          200,
-        ], 0.7, 2, 0.95);
-        */
-        /*
-        $ret = EstoqueEstatisticaRepository::calculaMinimoPeloDesvioPadrao([
-          299,
-          316,
-          362,
-          369,
-          345,
-          304,
-          310,
-          263,
-          241,
-          299,
-          272,
-          277,
-        ], 45/30, 90/30, 0.95);
-        */
-
         //$ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(1, 12, 1, 101001);
         $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(33);
         print_r($ret);

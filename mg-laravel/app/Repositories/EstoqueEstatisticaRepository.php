@@ -149,27 +149,27 @@ class EstoqueEstatisticaRepository
      * @param  double $nivel_servico Nivel de Servico (95% = 0.95)
      * @return array previsão
      */
-    public static function calculaMinimoPeloDesvioPadrao ($serie, $tempo_reposicao = 0.7, $tempo_maximo = 2.5, $nivel_servico = 0.95)
+    public static function calculaEstoqueMinimoPeloDesvioPadrao ($serie, $tempo_reposicao = 0.7, $tempo_maximo = 2.5, $nivel_servico = 0.95)
     {
 
         $z_ns = static::NormSInv($nivel_servico);
         $demanda_media = array_sum($serie)/count($serie);
         $desvio_padrao = static::standardDeviationSample($serie);
         $estoque_seguranca = $z_ns * sqrt($tempo_reposicao) * $desvio_padrao;
-        $ponto_pedido = ($demanda_media * $tempo_reposicao) + $estoque_seguranca;
+        $estoque_minimo = ($demanda_media * $tempo_reposicao) + $estoque_seguranca;
         $estoque_maximo = ($demanda_media * $tempo_maximo) + $estoque_seguranca;
 
         $ret = [
             'serie' => $serie,
-            'tempo_reposicao' => $tempo_reposicao,
-            'tempo_maximo' => $tempo_maximo,
-            'nivel_servico' => $nivel_servico,
-            'z_ns' => $z_ns,
-            'demanda_media' => $demanda_media,
-            'desvio_padrao' => $desvio_padrao,
-            'estoque_seguranca' => ceil($estoque_seguranca),
-            'ponto_pedido' => ceil($ponto_pedido),
-            'estoque_maximo' => ceil($estoque_maximo),
+            'temporeposicao' => $tempo_reposicao,
+            'tempomaximo' => $tempo_maximo,
+            'nivelservico' => $nivel_servico,
+            'zns' => $z_ns,
+            'demandamedia' => $demanda_media,
+            'desviopadrao' => $desvio_padrao,
+            'estoqueseguranca' => ceil($estoque_seguranca),
+            'estoqueminimo' => ceil($estoque_minimo),
+            'estoquemaximo' => ceil($estoque_maximo),
         ];
 
         return $ret;
@@ -228,11 +228,48 @@ class EstoqueEstatisticaRepository
         return $regs;
     }
 
-    public static function buscaEstatisticaProduto ($codproduto, $meses = 12, $codprodutovariacao = null, $codestoquelocal = null)
+    public static function calculaNivelServicoPelaSerie($serie)
+    {
+        $serie_filtrada = array_filter($serie, function ($item) {
+            return $item > 0;
+        });
+
+        $indice_mes = count($serie_filtrada) / count($serie);
+        $soma = array_sum($serie);
+
+        if ($indice_mes == 1) {
+            if ($soma > 600) {
+                return 0.99;
+            } else {
+                return 0.95;
+            }
+        }
+
+        if ($indice_mes >= 0.9) {
+            return 0.9;
+        }
+
+        if ($indice_mes <= 0.5) {
+            return 0.5;
+        }
+
+        return $indice_mes;
+
+    }
+
+    public static function buscaEstatisticaProduto (
+        $codproduto,
+        $meses = 12,
+        $codprodutovariacao = null,
+        $codestoquelocal = null,
+        $tempo_reposicao = 0.7,
+        $tempo_maximo = 2.5,
+        $nivel_servico = 0.95
+    )
     {
 
         // Busca Produto
-        $p = Produto::findOrFail($codproduto);
+        $p = Produto::with('Marca')->findOrFail($codproduto);
 
         // Busca Todas Variações do produto
         $pvs = $p->ProdutoVariacaoS()->select(['codprodutovariacao', 'variacao'])->get();
@@ -265,8 +302,12 @@ class EstoqueEstatisticaRepository
 
         // Calcula Minimo pelo Desvio Padrao
         $serie = array_column($vendas, 'quantidade');
-        $estatistica = EstoqueEstatisticaRepository::calculaMinimoPeloDesvioPadrao($serie, 45/30, 90/30, 0.95);
+        $tempo_reposicao = ($p->Marca->estoqueminimodias / 30);
+        $tempo_maximo = ($p->Marca->estoquemaximodias / 30);
+        $nivel_servico = static::calculaNivelServicoPelaSerie($serie);
+        $estatistica = EstoqueEstatisticaRepository::calculaEstoqueMinimoPeloDesvioPadrao($serie, $tempo_reposicao, $tempo_maximo, $nivel_servico);
 
+        // Monta Array de Retorno
         $ret = [
             'codproduto' => $p->codproduto,
             'produto' => $p->produto,
@@ -278,7 +319,6 @@ class EstoqueEstatisticaRepository
             'codestoquelocal' => $codestoquelocal,
             'estoquelocal' => $estoquelocal,
             'locais' => $locais,
-
             'vendas' => $vendas,
             'estatistica' => $estatistica,
         ];
