@@ -145,12 +145,12 @@ class EstoqueEstatisticaRepository
     /**
      * Retorna array com calculo do estoque minimo utilizando o desvio padrão
      * @param  array $serie
-     * @param  double $tempo_reposicao Tempo de reposicao em meses (21 dias = 0.7 meses)
+     * @param  double $tempo_minimo Tempo de reposicao em meses (21 dias = 0.7 meses)
      * @param  double $tempo_maximo Tempo de estoque maximo em meses (75 dias = 2.5 meses)
      * @param  double $nivel_servico Nivel de Servico (95% = 0.95)
      * @return array previsão
      */
-    public static function calculaEstoqueMinimoPeloDesvioPadrao ($vendas, $tempo_reposicao = 0.7, $tempo_maximo = 2.5, $nivel_servico = null)
+    public static function calculaEstoqueMinimoPeloDesvioPadrao ($vendas, $tempo_minimo = 0.7, $tempo_maximo = 2.5, $nivel_servico = null)
     {
 
         // se tem mais de 3 registros, ignora mes atual
@@ -176,14 +176,14 @@ class EstoqueEstatisticaRepository
         }
 
         // calcula niveis de estoque
-        $estoque_seguranca = $z_ns * sqrt($tempo_reposicao) * $desvio_padrao;
-        $estoque_minimo = ($demanda_media * $tempo_reposicao) + $estoque_seguranca;
+        $estoque_seguranca = $z_ns * sqrt($tempo_minimo) * $desvio_padrao;
+        $estoque_minimo = ($demanda_media * $tempo_minimo) + $estoque_seguranca;
         $estoque_maximo = ($demanda_media * $tempo_maximo) + $estoque_seguranca;
 
         // retorna array com dados
         $ret = [
             'serie' => $serie,
-            'temporeposicao' => $tempo_reposicao,
+            'tempominimo' => $tempo_minimo,
             'tempomaximo' => $tempo_maximo,
             'nivelservico' => $nivel_servico,
             'zns' => $z_ns,
@@ -304,7 +304,7 @@ class EstoqueEstatisticaRepository
         $meses = 49,
         $codprodutovariacao = null,
         $codestoquelocal = null,
-        $tempo_reposicao = 0.7,
+        $tempo_minimo = 0.7,
         $tempo_maximo = 2.5,
         $nivel_servico = 0.95
     )
@@ -343,9 +343,9 @@ class EstoqueEstatisticaRepository
         $vendas = static::buscaSerieHistoricaVendasProduto($codproduto, $meses, $codprodutovariacao, $codestoquelocal);
 
         // Calcula Minimo pelo Desvio Padrao
-        $tempo_reposicao = ($p->Marca->estoqueminimodias / 30);
+        $tempo_minimo = ($p->Marca->estoqueminimodias / 30);
         $tempo_maximo = ($p->Marca->estoquemaximodias / 30);
-        $estatistica = EstoqueEstatisticaRepository::calculaEstoqueMinimoPeloDesvioPadrao($vendas, $tempo_reposicao, $tempo_maximo);
+        $estatistica = EstoqueEstatisticaRepository::calculaEstoqueMinimoPeloDesvioPadrao($vendas, $tempo_minimo, $tempo_maximo);
 
         // Monta Array de Retorno
         $ret = [
