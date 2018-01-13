@@ -43,7 +43,7 @@ class EstoqueEstatisticaCommand extends Command
         $this->info("Building!");
         //$ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(1, 12, 1, 101001);
         //$ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(33, 73);
-        $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(100);
+        $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(3782, 73);
         print_r($ret);
 
         //$this->table(['serie'], $ret);
