@@ -203,7 +203,7 @@ export default {
                   'week': 'MMM/YYYY',
                   'month': 'MMM/YYYY',
                   'quarter': 'MMM/YYYY',
-                  'year': 'YYYY',
+                  'year': 'YYYY'
                 },
                 'tooltipFormat': 'MMMM/YYYY'
               }
