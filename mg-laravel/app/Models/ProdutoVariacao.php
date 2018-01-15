@@ -6,19 +6,20 @@ namespace App\Models;
  * Campos
  * @property  bigint                         $codprodutovariacao                 NOT NULL DEFAULT nextval('tblprodutovariacao_codprodutovariacao_seq'::regclass)
  * @property  bigint                         $codproduto                         NOT NULL
- * @property  varchar(100)                   $variacao                           
- * @property  varchar(50)                    $referencia                         
- * @property  bigint                         $codmarca                           
- * @property  timestamp                      $alteracao                          
- * @property  bigint                         $codusuarioalteracao                
- * @property  timestamp                      $criacao                            
- * @property  bigint                         $codusuariocriacao                  
- * @property  bigint                         $codopencart                        
- * @property  date                           $dataultimacompra                   
- * @property  numeric(14,6)                  $custoultimacompra                  
- * @property  numeric(14,3)                  $quantidadeultimacompra             
- * @property  timestamp                      $inativo                            
- * @property  bigint                         $codprodutoimagem                   
+ * @property  varchar(100)                   $variacao
+ * @property  varchar(50)                    $referencia
+ * @property  bigint                         $codmarca
+ * @property  timestamp                      $alteracao
+ * @property  bigint                         $codusuarioalteracao
+ * @property  timestamp                      $criacao
+ * @property  bigint                         $codusuariocriacao
+ * @property  bigint                         $codopencart
+ * @property  date                           $dataultimacompra
+ * @property  numeric(14,6)                  $custoultimacompra
+ * @property  numeric(14,3)                  $quantidadeultimacompra
+ * @property  timestamp                      $inativo
+ * @property  bigint                         $codprodutoimagem
+ * @property  date                           $vendainicio
  *
  * Chaves Estrangeiras
  * @property  Marca                          $Marca
@@ -52,6 +53,7 @@ class ProdutoVariacao extends MGModel
         'criacao',
         'dataultimacompra',
         'inativo',
+        'vendainicio',
     ];
 
 

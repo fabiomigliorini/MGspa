@@ -171,6 +171,7 @@ class EstoqueEstatisticaRepository
         // calcula demanda media e desvio padrao
         $demanda_media = $vendas_filtrada->avg('quantidade');
         $serie = $vendas_filtrada->pluck('quantidade')->toArray();
+        $desvio_padrao = 0;
         if ($demanda_media > 0) {
             $desvio_padrao = static::standardDeviationSample($serie);
         }
@@ -299,14 +300,70 @@ class EstoqueEstatisticaRepository
 
     }
 
+    public static function sumarizaVendasVoltaAsAulas ($vendas)
+    {
+        $ret = collect();
+        foreach ($vendas as $venda) {
+            $d = Carbon::createFromFormat('Y-m-d', $venda->mes);
+            if ($d->month > 1) {
+                continue;
+            }
+            $ano = $d->year;
+            if (!isset($ret[$ano])) {
+                $ret[$ano] = (object) [
+                    'ano' => $ano,
+                    'quantidade' => 0
+                ];
+            }
+            $ret[$ano]->quantidade += $venda->quantidade;
+        }
+        return $ret;
+    }
+
+    public static function buscaSaldoEstoqueComparadoVendaAnualPorLocal ($codproduto)
+    {
+        $sql = '
+            with vendas as (
+            	select elpv.codestoquelocal, sum(quantidade) as venda
+            	from tblprodutovariacao pv
+            	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
+            	inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+            	where pv.codproduto = :codproduto
+            	and elpvv.mes >= date_trunc(\'month\', now() - \'1 year\'::interval)
+            	group by elpv.codestoquelocal
+            ),
+            estoque as (
+            	select elpv.codestoquelocal, sum(es.saldoquantidade) as estoque
+            	from tblprodutovariacao pv
+            	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
+            	inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
+            	where pv.codproduto = :codproduto
+            	group by elpv.codestoquelocal
+            )
+            select el.codestoquelocal, el.estoquelocal, el.sigla, e.estoque, v.venda
+            from tblestoquelocal el
+            left join vendas v on (v.codestoquelocal = el.codestoquelocal)
+            left join estoque e on (e.codestoquelocal = el.codestoquelocal)
+            where el.inativo is null
+            or e.estoque is not null
+            or v.venda is not null
+            order by codestoquelocal
+        ';
+
+        $binds = [
+            'codproduto' => $codproduto,
+        ];
+
+        $regs = collect(DB::select(DB::raw($sql), $binds));
+        return $regs;
+
+    }
+
     public static function buscaEstatisticaProduto (
         $codproduto,
-        $meses = 49,
+        $meses = null,
         $codprodutovariacao = null,
-        $codestoquelocal = null,
-        $tempo_minimo = 0.7,
-        $tempo_maximo = 2.5,
-        $nivel_servico = 0.95
+        $codestoquelocal = null
     )
     {
 
@@ -314,7 +371,8 @@ class EstoqueEstatisticaRepository
         $p = Produto::with('Marca')->findOrFail($codproduto);
 
         // Busca Todas Variações do produto
-        $pvs = $p->ProdutoVariacaoS()->select(['codprodutovariacao', 'variacao'])->get();
+        $pvs = $p->ProdutoVariacaoS()->select(['codprodutovariacao', 'variacao', 'vendainicio'])->get();
+        $vendainicio = $pvs->min('vendainicio');
         $variacoes = array_map(function ($item) {
             $item['variacao'] = $item['variacao']??'{ Sem Variacao }';
             return $item;
@@ -325,11 +383,19 @@ class EstoqueEstatisticaRepository
         if (!empty($codprodutovariacao)) {
             if ($pv = $pvs->where('codprodutovariacao', $codprodutovariacao)->first()) {
                 $variacao = $pv->variacao;
+                $vendainicio = $pv->vendainicio;
             }
         }
 
+        // Calcula quantidade de meses de venda para analisar
+        $meses_venda = $vendainicio->startOfMonth()->diffInMonths() +1;
+        if (!empty($meses) && $meses < $meses_venda) {
+            $meses_venda = $meses;
+        }
+
+
         // Busca Todos Locais de Estoque
-        $els = EstoqueLocal::ativo()->select(['codestoquelocal', 'estoquelocal', 'sigla'])->get();
+        $els = static::buscaSaldoEstoqueComparadoVendaAnualPorLocal($codproduto);
         $locais = $els->toArray();
 
         // Buscal Local Selecionado
@@ -340,7 +406,10 @@ class EstoqueEstatisticaRepository
         }
 
         // Busca Serie Historica de Vendas
-        $vendas = static::buscaSerieHistoricaVendasProduto($codproduto, $meses, $codprodutovariacao, $codestoquelocal);
+        $vendas = static::buscaSerieHistoricaVendasProduto($codproduto, $meses_venda, $codprodutovariacao, $codestoquelocal);
+
+        // Agrupa Vendas de Volta As Aulas
+        $vendas_volta_aulas = static::sumarizaVendasVoltaAsAulas($vendas);
 
         // Calcula Minimo pelo Desvio Padrao
         $tempo_minimo = ($p->Marca->estoqueminimodias / 30);
@@ -360,6 +429,7 @@ class EstoqueEstatisticaRepository
             'estoquelocal' => $estoquelocal,
             'locais' => $locais,
             'vendas' => $vendas,
+            'vendas_volta_aulas' => $vendas_volta_aulas,
             'estatistica' => $estatistica,
         ];
 

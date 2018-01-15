@@ -14,7 +14,7 @@ class EstoqueEstatisticaCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'estoque:estatisticas {--codprodutovariacao=} {--codestoquelocal=} {--codproduto=} {--codmarca=}';
+    protected $signature = 'estoque:estatisticas {--codproduto=} {--meses=} {--codprodutovariacao=} {--codestoquelocal=}';
 
     /**
      * The console command description.
@@ -40,14 +40,21 @@ class EstoqueEstatisticaCommand extends Command
      */
     public function handle()
     {
-        $this->info("Building!");
+
+        $codproduto = $this->option('codproduto');
+        $meses = $this->option('meses');
+        $codprodutovariacao = $this->option('codprodutovariacao');
+        $codestoquelocal = $this->option('codestoquelocal');
+        $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto($codproduto, $meses, $codprodutovariacao, $codestoquelocal);
+        print_r($ret);
+        $this->info("fim");
+
+        //$this->info("Building!");
         //$ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(1, 12, 1, 101001);
         //$ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(33, 73);
-        $ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(3782, 73);
-        print_r($ret);
+        //$ret = EstoqueEstatisticaRepository::buscaEstatisticaProduto(3782, 73);
 
         //$this->table(['serie'], $ret);
-        $this->info("fim");
 
         /*
         $codprodutovariacao = $this->option('codprodutovariacao');
