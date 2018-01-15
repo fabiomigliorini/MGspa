@@ -52,14 +52,18 @@
         <div class="col-md-9">
           <q-card>
             <q-card-title>
-              Desde início / 3 anos / 1 ano / 6 meses
+              <a @click="periodoVendas(null)" v-bind:class="{ 'periodo-ativo': (periodo == null)}">Desde Início</a> /
+              <a @click="periodoVendas(36)" v-bind:class="{ 'periodo-ativo': (periodo == 36)}">3 anos</a> /
+              <a @click="periodoVendas(12)" v-bind:class="{ 'periodo-ativo': (periodo == 12)}">1 ano</a> /
+              <a @click="periodoVendas(6)" v-bind:class="{ 'periodo-ativo': (periodo == 6) }">6 meses</a>
             </q-card-title>
             <q-card-separator />
             <q-card-main>
               <mg-grafico-estoque-estatistica
-                :data="data"
+                :chart-data="data"
                 :options="options"
-                height="150"
+                :height="150"
+                :periodo="periodo"
               >
               </mg-grafico-estoque-estatistica>
             </q-card-main>
@@ -82,27 +86,6 @@
           </q-card>
         </div>
       </div>
-
-<!--
-      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
-        <q-fab
-          color="primary"
-          icon="edit"
-          active-icon="edit"
-          direction="up"
-          class="animate-pop"
-        >
-          <router-link :to="{ path: '/marca/' + item.codmarca + '/update' }">
-            <q-fab-action color="primary" icon="edit">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
-            </q-fab-action>
-          </router-link>
-          <q-fab-action color="red" @click.native="destroy()" icon="delete">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
-          </q-fab-action>
-        </q-fab>
-      </q-fixed-position>
- -->
     </div>
 
     <div slot="footer">
@@ -178,13 +161,21 @@ export default {
         codvariacao: '',
         codestoquelocal: ''
       },
+      periodo: null,
       data: {
         labels: [],
         datasets: [
           {
             label: 'Vendas',
             // backgroundColor: '#fff',
-            data: null
+            data: null,
+            type: 'line'
+          },
+          {
+            label: 'Estoque',
+            backgroundColor: '#ff0',
+            data: [null, null, null, null, null, null, null, null, null, null, null, 1000],
+            type: 'bar'
           }
         ]
       },
@@ -223,9 +214,75 @@ export default {
       },
       deep: true
     }
-
   },
   methods: {
+
+    periodoVendas: function (periodo) {
+
+      let vm = this
+      vm.periodo = periodo
+
+      let periodoInicial = null
+
+      periodoInicial = vm.moment()
+      if (periodo != null) {
+          periodo.add(periodo * -1, 'months')
+      }
+      console.log(vm.periodo)
+      console.log(periodoInicial)
+      return
+
+      switch (vm.periodo) {
+        case 1:
+          periodoInicial = new Date(
+            periodoFinal.getFullYear() -1,
+            periodoFinal.getMonth(),
+            periodoFinal.getDate())
+          break
+        case 3:
+          periodoInicial = new Date(
+            periodoFinal.getFullYear() -3,
+            periodoFinal.getMonth(),
+            periodoFinal.getDate())
+          break
+        case 0.5:
+          periodoInicial = new Date(
+            periodoFinal.getFullYear(),
+            periodoFinal.getMonth() -6,
+            periodoFinal.getDate())
+          break
+      }
+
+      let meses = []
+      let vendaquantidade = []
+      let saldoquantidade = []
+
+      vm.item.vendas.forEach(function (a) {
+
+        let mes = vm.moment(a.mes)
+
+        // Se mes anterior cai fora
+        if (mes <= periodoInicial) {
+          return false
+        }
+
+        mes = mes.endOfMonth()
+
+        meses.push(mes)
+        vendaquantidade.push(value.vendaquantidade)
+        saldoquantidade.push(null)
+
+      })
+
+      console.log(vendaquantidade)
+
+      estoque[2] = vm.item.saldoquantidade
+
+
+      vm.data.datasets[0].data = vendaquantidade
+      vm.data.datasets[1].data = saldoquantidade
+      vm.data.labels = meses
+    },
     // carrega registros da api
     loadData: debounce(function () {
       // inicializa variaveis
@@ -236,17 +293,7 @@ export default {
       // faz chamada api
       window.axios.get('estoque-estatistica/' + vm.codproduto, { params }).then(response => {
         vm.item = response.data
-
-        let meses = []
-        let quantidades = []
-        vm.item.vendas.forEach(function (value) {
-          meses.push(new Date(value.mes))
-          quantidades.push(value.quantidade)
-        })
-
-        vm.data.datasets[0].data = quantidades
-        vm.data.labels = meses
-
+        vm.periodoVendas(vm.periodo)
         // desmarca flag de carregando
         this.loading = false
       })
@@ -255,10 +302,15 @@ export default {
   created () {
     this.codproduto = this.$route.params.codproduto
     this.loadData()
+    console.log(this)
   }
 
 }
 </script>
 
 <style>
+.periodo-ativo {
+  color: #444;
+  font-weight: bold;
+}
 </style>

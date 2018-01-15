@@ -1,11 +1,36 @@
 <script>
-import { Line } from 'vue-chartjs'
+import {
+  Bar,
+  mixins
+} from 'vue-chartjs'
+const { reactiveProp } = mixins
+
 export default {
-  extends: Line,
   name: 'mg-grafico-estoque-estatistica',
-  props: ['data', 'options'],
+  extends: Bar,
+  mixins: [reactiveProp],
+  props: ['chartData', 'options', 'periodo'],
+  data () {
+    return {
+      periodo: null
+    }
+  },
+  watch: {
+    periodo: {
+      handler: function (val, oldVal) {
+        this.update()
+      },
+      deep: true
+    }
+  },
   mounted () {
-    this.renderChart(this.data, this.options)
+    this.renderChart(this.chartData, this.options)
+    this.periodo = this.periodo
+  },
+  methods: {
+    update () {
+      this.$data._chart.update()
+    }
   }
 }
 </script>
