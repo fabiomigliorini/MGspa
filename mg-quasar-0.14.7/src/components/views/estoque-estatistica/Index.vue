@@ -52,25 +52,31 @@
         <div class="col-md-6">
           <q-card>
             <q-card-title>
-              <a @click="meses=null" v-bind:class="{ 'periodo-ativo': (meses == null)}">Desde Início</a> /
-              <a @click="meses=36" v-bind:class="{ 'periodo-ativo': (meses == 36)}">3 anos</a> /
-              <a @click="meses=12" v-bind:class="{ 'periodo-ativo': (meses == 12)}">1 ano</a> /
-              <a @click="meses=6" v-bind:class="{ 'periodo-ativo': (meses == 6) }">6 meses</a>
+              Venda Mensal
+              <span slot="subtitle">Quantidade vendida mês à mês, comparada com o saldo atual do estoque.</span>
             </q-card-title>
-            <q-card-separator />
             <q-card-main>
-              <grafico-vendas-geral :height="150" :meses="meses" :vendas="item.vendas" :saldoquantidade="item.saldoquantidade"></grafico-vendas-geral>
+              <grafico-vendas-geral height=350 :meses="meses" :vendas="item.vendas" :saldoquantidade="item.saldoquantidade"></grafico-vendas-geral>
             </q-card-main>
+            <q-card-actions>
+              <span slot="subtitle">
+                <q-btn @click="meses=null" :color="(meses == null)?'primary':''" flat>Desde Início</q-btn>
+                <q-btn @click="meses=36" :color="(meses == 36)?'primary':''" flat>3 Anos</q-btn>
+                <q-btn @click="meses=12" :color="(meses == 12)?'primary':''" flat>1 Ano</q-btn>
+                <q-btn @click="meses=6" :color="(meses == 6)?'primary':''" flat>6 meses</q-btn>
+              </span>
+            </q-card-actions>
           </q-card>
         </div>
         <div class="col-md-4">
           <q-card>
+            <q-card-separator />
             <q-card-title>
               Volta às aulas
+              <span slot="subtitle">Consideradas somente vendas de Janeiro à Março de cada ano.</span>
             </q-card-title>
-            <q-card-separator />
             <q-card-main>
-              <grafico-volta-aulas :height="150" :vendas="item.vendas_volta_aulas" :saldoquantidade="item.saldoquantidade"></grafico-volta-aulas>
+              <grafico-volta-aulas height=350 :vendas="item.vendas_volta_aulas" :saldoquantidade="item.saldoquantidade"></grafico-volta-aulas>
             </q-card-main>
           </q-card>
         </div>
