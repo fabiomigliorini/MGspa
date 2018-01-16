@@ -55,6 +55,7 @@
               Venda Mensal
               <span slot="subtitle">Quantidade vendida mês à mês, comparada com o saldo atual do estoque.</span>
             </q-card-title>
+            <q-card-separator />
             <q-card-main>
               <grafico-vendas-geral :height=350 :meses="meses" :vendas="item.vendas" :saldoquantidade="item.saldoquantidade"></grafico-vendas-geral>
             </q-card-main>
@@ -72,7 +73,7 @@
           <q-card>
             <q-card-title>
               Volta às aulas
-              <span slot="subtitle">Consideradas somente vendas de Janeiro à Março de cada ano.</span>
+              <span slot="subtitle">Vendas entre Janeiro e Março de cada ano, comparadas com o saldo atual do estoque.</span>
             </q-card-title>
             <q-card-separator />
             <q-card-main>
@@ -83,8 +84,8 @@
         <div class="col-md-2">
           <q-card>
             <q-card-title>
-              Vendas ano
-              <span slot="subtitle">Vendas dos últimos 12 meses</span>
+              Ano
+              <span slot="subtitle">Vendas dos últimos 12 meses, comparadas com o saldo atual do estoque.</span>
             </q-card-title>
             <q-card-separator />
             <q-card-main>
@@ -97,8 +98,8 @@
         <div class="col-md-8">
           <q-card>
             <q-card-title>
-              Vendas por filial
-              <span slot="subtitle">Vendas dos últimos 12 meses por filial</span>
+              Filiais
+              <span slot="subtitle">Vendas dos últimos 12 meses de cada filial, comparadas com o saldo atual do estoque.</span>
             </q-card-title>
             <q-card-separator />
             <q-card-main>
