@@ -51,7 +51,12 @@ export default {
                 'tooltipFormat': 'MMMM/YYYY'
               }
             }
-          ]
+          ],
+          yAxes: [{
+            ticks: {
+              beginAtZero: true
+            }
+          }]
         }
       }
     }
