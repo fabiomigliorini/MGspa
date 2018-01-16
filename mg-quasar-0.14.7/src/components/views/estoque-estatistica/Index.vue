@@ -81,7 +81,8 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              ...
+              <!-- <grafico-vendas-ano :vendaquantidade="item.vendaquantidade" :saldoquantidade="item.saldoquantidade"></grafico-vendas-ano> -->
+              <grafico-vendas-ano></grafico-vendas-ano>
             </q-card-main>
           </q-card>
         </div>
@@ -116,6 +117,7 @@ import MgLayout from '../../layouts/MgLayout'
 
 import GraficoVendasGeral from './grafico-vendas-geral'
 import GraficoVoltaAulas from './grafico-volta-aulas'
+import GraficoVendasAno from './grafico-vendas-ano'
 
 import {
   QIcon,
@@ -172,7 +174,8 @@ export default {
     QRadio,
     QListHeader,
     GraficoVendasGeral,
-    GraficoVoltaAulas
+    GraficoVoltaAulas,
+    GraficoVendasAno
   },
 
   data () {
