@@ -6,26 +6,23 @@ import {
 import { debounce } from 'quasar'
 
 export default {
-  name: 'grafico-volta-aulas',
+  name: 'grafico-vendas-ano-filiais',
   extends: Bar,
-  props: ['vendas', 'saldoquantidade'],
+  props: ['locais'],
   data () {
     return {
-      mesInicial: null,
       data: {
-        labels: [],
+        labels: ['Centro', 'Imperial', 'Botanico'],
         datasets: [
-          {
-            label: 'Vendas',
-            backgroundColor: 'rgba(63, 81, 181, 0.7)',
-            data: null,
-            type: 'line'
-          },
           {
             label: 'Estoque',
             backgroundColor: '#f00',
-            data: null,
-            type: 'bar'
+            data: null
+          },
+          {
+            label: 'Vendas',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
+            data: null
           }
         ]
       },
@@ -36,7 +33,7 @@ export default {
     }
   },
   watch: {
-    vendas: {
+    locais: {
       handler: function (val, oldVal) {
         this.atualizaGrafico()
       },
@@ -55,23 +52,20 @@ export default {
       let vm = this
 
       // acumula dados para os datasets
-      let anos = []
+      let locais = []
       let vendaquantidade = []
       let saldoquantidade = []
 
-      Object.entries(this.vendas).forEach(([key, value]) => {
-        anos.push(value.ano)
-        saldoquantidade.push(null)
-        vendaquantidade.push(value.vendaquantidade)
+      this.locais.forEach(function (estoquelocal) {
+        locais.push(estoquelocal.estoquelocal)
+        vendaquantidade.push(estoquelocal.vendaquantidade)
+        saldoquantidade.push(estoquelocal.saldoquantidade)
       })
 
-      // adiciona saldo do estoque na ultima coluna
-      saldoquantidade[saldoquantidade.length - 1] = vm.saldoquantidade
-
       // passa para datasets os valores acumulados
-      vm.data.datasets[0].data = vendaquantidade
-      vm.data.datasets[1].data = saldoquantidade
-      vm.data.labels = anos
+      vm.data.datasets[0].data = saldoquantidade
+      vm.data.datasets[1].data = vendaquantidade
+      vm.data.labels = locais
 
       // atualiza grafico
       vm.update()

@@ -13,12 +13,12 @@ export default {
         datasets: [
           {
             label: 'Vendas',
-            // backgroundColor: '#f87979',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null
           },
           {
             label: 'Estoque',
-            backgroundColor: '#f87979',
+            backgroundColor: '#f00',
             data: null
           }
         ]
@@ -32,7 +32,6 @@ export default {
   watch: {
     saldoquantidade: {
       handler: function (val, oldVal) {
-        console.log('watch ' + val)
         this.atualizaGrafico()
       },
       deep: true

@@ -17,7 +17,7 @@ export default {
         datasets: [
           {
             label: 'Vendas',
-            // backgroundColor: '#ccf',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null,
             type: 'line'
           },
