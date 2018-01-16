@@ -31,28 +31,7 @@ export default {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          xAxes: [
-            {
-              type: 'time',
-              time: {
-                displayFormats: {
-                  'miliseconds': 'MMM/YYYY',
-                  'second': 'MMM/YYYY',
-                  'minute': 'MMM/YYYY',
-                  'hour': 'MMM/YYYY',
-                  'day': 'MMM/YYYY',
-                  'week': 'MMM/YYYY',
-                  'month': 'MMM/YYYY',
-                  'quarter': 'MMM/YYYY',
-                  'year': 'YYYY'
-                },
-                'tooltipFormat': 'MMMM/YYYY'
-              }
-            }
-          ]
-        }
+        maintainAspectRatio: false
       }
     }
   },
@@ -81,13 +60,9 @@ export default {
       let saldoquantidade = []
 
       Object.entries(this.vendas).forEach(([key, value]) => {
-        let ano = vm.moment(key)
-        anos.push(ano)
+        anos.push(value.ano)
         saldoquantidade.push(null)
-
-        Object.entries(value).forEach(function (venda) {
-          vendaquantidade.push(value.vendaquantidade)
-        })
+        vendaquantidade.push(value.vendaquantidade)
       })
 
       // adiciona saldo do estoque na ultima coluna

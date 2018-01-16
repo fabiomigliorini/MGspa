@@ -56,7 +56,7 @@
               <span slot="subtitle">Quantidade vendida mês à mês, comparada com o saldo atual do estoque.</span>
             </q-card-title>
             <q-card-main>
-              <grafico-vendas-geral height=350 :meses="meses" :vendas="item.vendas" :saldoquantidade="item.saldoquantidade"></grafico-vendas-geral>
+              <grafico-vendas-geral :meses="meses" :vendas="item.vendas" :saldoquantidade="item.saldoquantidade"></grafico-vendas-geral>
             </q-card-main>
             <q-card-actions>
               <span slot="subtitle">
@@ -76,7 +76,7 @@
               <span slot="subtitle">Consideradas somente vendas de Janeiro à Março de cada ano.</span>
             </q-card-title>
             <q-card-main>
-              <grafico-volta-aulas height=350 :vendas="item.vendas_volta_aulas" :saldoquantidade="item.saldoquantidade"></grafico-volta-aulas>
+              <grafico-volta-aulas :vendas="item.vendas_volta_aulas" :saldoquantidade="item.saldoquantidade"></grafico-volta-aulas>
             </q-card-main>
           </q-card>
         </div>
