@@ -325,8 +325,13 @@ class EstoqueEstatisticaRepository
         return $ret;
     }
 
-    public static function buscaSaldoEstoqueComparadoVendaAnualPorLocal ($codproduto)
+    public static function buscaSaldoEstoqueComparadoVendaAnualPorLocal ($codproduto, $codprodutovariacao = null)
     {
+
+        $binds = [
+            'codproduto' => $codproduto,
+        ];
+
         $sql = '
             with vendas as (
             	select elpv.codestoquelocal, sum(quantidade) as vendaquantidade, sum(valor) as vendavalor
@@ -335,6 +340,14 @@ class EstoqueEstatisticaRepository
             	inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
             	where pv.codproduto = :codproduto
             	and elpvv.mes >= date_trunc(\'month\', now() - \'11 months\'::interval)
+        ';
+
+        if (!empty($codprodutovariacao)) {
+            $sql .= ' and elpv.codprodutovariacao = :codprodutovariacao ';
+            $binds['codprodutovariacao'] = $codprodutovariacao;
+        }
+
+        $sql .= '
             	group by elpv.codestoquelocal
             ),
             estoque as (
@@ -343,6 +356,13 @@ class EstoqueEstatisticaRepository
             	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
             	inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
             	where pv.codproduto = :codproduto
+        ';
+
+        if (!empty($codprodutovariacao)) {
+            $sql .= ' and elpv.codprodutovariacao = :codprodutovariacao ';
+        }
+
+        $sql .= '
             	group by elpv.codestoquelocal
             )
             select
@@ -363,17 +383,18 @@ class EstoqueEstatisticaRepository
             order by codestoquelocal
         ';
 
-        $binds = [
-            'codproduto' => $codproduto,
-        ];
-
         $regs = collect(DB::select(DB::raw($sql), $binds));
         return $regs;
 
     }
 
-    public static function buscaSaldoEstoqueComparadoVendaAnualPorVariacao ($codproduto)
+    public static function buscaSaldoEstoqueComparadoVendaAnualPorVariacao ($codproduto, $codestoquelocal = null)
     {
+
+        $binds = [
+            'codproduto' => $codproduto,
+        ];
+
         $sql = '
             with vendas as (
             	select elpv.codprodutovariacao, sum(elpvv.quantidade) as vendaquantidade, sum(elpvv.valor) as vendavalor
@@ -382,6 +403,14 @@ class EstoqueEstatisticaRepository
             	inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
             	where pv.codproduto = :codproduto
             	and elpvv.mes >= date_trunc(\'month\', now() - \'11 months\'::interval)
+        ';
+
+        if (!empty($codestoquelocal)) {
+            $sql .= ' and elpv.codestoquelocal = :codestoquelocal ';
+            $binds['codestoquelocal'] = $codestoquelocal;
+        }
+
+        $sql .= '
             	group by elpv.codprodutovariacao
             ),
             estoque as (
@@ -390,6 +419,13 @@ class EstoqueEstatisticaRepository
             	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
             	inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
             	where pv.codproduto = :codproduto
+        ';
+
+        if (!empty($codestoquelocal)) {
+            $sql .= ' and elpv.codestoquelocal = :codestoquelocal ';
+        }
+
+        $sql .= '
             	group by elpv.codprodutovariacao
             )
             select
@@ -414,10 +450,6 @@ class EstoqueEstatisticaRepository
             order by variacao
         ';
 
-        $binds = [
-            'codproduto' => $codproduto,
-        ];
-
         $regs = collect(DB::select(DB::raw($sql), $binds));
         return $regs;
 
@@ -435,7 +467,7 @@ class EstoqueEstatisticaRepository
         $p = Produto::with('Marca')->findOrFail($codproduto);
 
         // Busca Todas Variações do produto
-        $variacoes = static::buscaSaldoEstoqueComparadoVendaAnualPorVariacao($codproduto);
+        $variacoes = static::buscaSaldoEstoqueComparadoVendaAnualPorVariacao($codproduto, $codestoquelocal);
         $vendainicio = Carbon::createFromFormat('Y-m-d', $variacoes->min('vendainicio'));
 
         // Busca Variação Selecionada
@@ -454,11 +486,16 @@ class EstoqueEstatisticaRepository
         }
 
         // Busca Todos Locais de Estoque
-        $locais = static::buscaSaldoEstoqueComparadoVendaAnualPorLocal($codproduto);
+        $locais = static::buscaSaldoEstoqueComparadoVendaAnualPorLocal ($codproduto, $codprodutovariacao);
 
         // TOtaliza venda do ano e saldo do estoque
-        $vendaquantidade = $locais->sum('vendaquantidade');
-        $saldoquantidade = $locais->sum('saldoquantidade');
+        if (empty($codestoquelocal)) {
+            $vendaquantidade = $locais->sum('vendaquantidade');
+            $saldoquantidade = $locais->sum('saldoquantidade');
+        } else {
+            $vendaquantidade = $variacoes->sum('vendaquantidade');
+            $saldoquantidade = $variacoes->sum('saldoquantidade');
+        }
 
         // Buscal Local Selecionado
         $estoquelocal = null;
