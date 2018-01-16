@@ -1,8 +1,5 @@
 <script>
-import {
-  Bar
-} from 'vue-chartjs'
-
+import { Bar } from 'vue-chartjs'
 import { debounce } from 'quasar'
 
 export default {
@@ -11,46 +8,31 @@ export default {
   props: ['vendaquantidade', 'saldoquantidade'],
   data () {
     return {
-      mesInicial: null,
       data: {
-        labels: [],
+        labels: ['Vendas', 'Estoque'],
         datasets: [
           {
             label: 'Vendas',
-            backgroundColor: '#f00',
-            data: null,
-            type: 'bar'
+            // backgroundColor: '#f87979',
+            data: null
+          },
+          {
+            label: 'Estoque',
+            backgroundColor: '#f87979',
+            data: null
           }
         ]
       },
       options: {
-        scales: {
-          xAxes: [
-            {
-              type: 'time',
-              time: {
-                displayFormats: {
-                  'miliseconds': 'MMM/YYYY',
-                  'second': 'MMM/YYYY',
-                  'minute': 'MMM/YYYY',
-                  'hour': 'MMM/YYYY',
-                  'day': 'MMM/YYYY',
-                  'week': 'MMM/YYYY',
-                  'month': 'MMM/YYYY',
-                  'quarter': 'MMM/YYYY',
-                  'year': 'YYYY'
-                },
-                'tooltipFormat': 'MMMM/YYYY'
-              }
-            }
-          ]
-        }
+        responsive: true,
+        maintainAspectRatio: false
       }
     }
   },
   watch: {
-    vendas: {
+    saldoquantidade: {
       handler: function (val, oldVal) {
+        console.log('watch ' + val)
         this.atualizaGrafico()
       },
       deep: true
@@ -66,12 +48,9 @@ export default {
 
     atualizaGrafico: debounce(function () {
       let vm = this
-
-      // passa para datasets os valores acumulados
-      vm.data.datasets[0].data = 30
-      vm.data.datasets[1].data = 40
-      // vm.data.labels = ['Vendas', 'Quantidade']
-      // console.log(vm.data)
+      // passa para datasets os valores
+      vm.data.datasets[0].data = [vm.vendaquantidade]
+      vm.data.datasets[1].data = [vm.saldoquantidade]
 
       // atualiza grafico
       vm.update()
