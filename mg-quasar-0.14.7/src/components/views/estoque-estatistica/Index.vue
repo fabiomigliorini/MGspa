@@ -49,7 +49,7 @@
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
       <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-6">
           <q-card>
             <q-card-title>
               <a @click="meses=null" v-bind:class="{ 'periodo-ativo': (meses == null)}">Desde Início</a> /
@@ -63,23 +63,45 @@
             </q-card-main>
           </q-card>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <q-card>
             <q-card-title>
-              Estatísticas
+              Volta às aulas
             </q-card-title>
             <q-card-separator />
-            <q-card-main v-if="item">
-              <p>Demanda média: {{ numeral(item.estatistica.demandamedia).format('0,0.0000') }}</p>
-              <p>Desvio padrao: {{ numeral(item.estatistica.desviopadrao).format('0,0.0000') }}</p>
-              <p>Nível de servico: {{ numeral(item.estatistica.nivelservico).format('0%') }}</p>
-              <p>Estoque de segurança: {{ numeral(item.estatistica.estoqueseguranca).format('0,0') }}</p>
-              <p>Estoque mínimo: {{ numeral(item.estatistica.estoqueminimo).format('0,0') }} ({{ numeral(item.estatistica.tempominimo * 30).format('0,0') }} Dias)</p>
-              <p>Estoque máximo: {{ numeral(item.estatistica.estoquemaximo).format('0,0') }} ({{ numeral(item.estatistica.tempomaximo * 30).format('0,0') }} Dias)</p>
+            <q-card-main>
+              <grafico-volta-aulas :height="150" :vendas="item.vendas_volta_aulas" :saldoquantidade="item.saldoquantidade"></grafico-volta-aulas>
+            </q-card-main>
+          </q-card>
+        </div>
+        <div class="col-md-2">
+          <q-card>
+            <q-card-title>
+              Vendas ano
+            </q-card-title>
+            <q-card-separator />
+            <q-card-main>
+              ...
             </q-card-main>
           </q-card>
         </div>
       </div>
+
+      <q-card>
+        <q-card-title>
+          Estatísticas
+        </q-card-title>
+        <q-card-separator />
+        <q-card-main v-if="item">
+          <p>Demanda média: {{ numeral(item.estatistica.demandamedia).format('0,0.0000') }}</p>
+          <p>Desvio padrao: {{ numeral(item.estatistica.desviopadrao).format('0,0.0000') }}</p>
+          <p>Nível de servico: {{ numeral(item.estatistica.nivelservico).format('0%') }}</p>
+          <p>Estoque de segurança: {{ numeral(item.estatistica.estoqueseguranca).format('0,0') }}</p>
+          <p>Estoque mínimo: {{ numeral(item.estatistica.estoqueminimo).format('0,0') }} ({{ numeral(item.estatistica.tempominimo * 30).format('0,0') }} Dias)</p>
+          <p>Estoque máximo: {{ numeral(item.estatistica.estoquemaximo).format('0,0') }} ({{ numeral(item.estatistica.tempomaximo * 30).format('0,0') }} Dias)</p>
+        </q-card-main>
+      </q-card>
+
     </div>
 
     <div slot="footer">
@@ -93,6 +115,7 @@
 import MgLayout from '../../layouts/MgLayout'
 
 import GraficoVendasGeral from './grafico-vendas-geral'
+import GraficoVoltaAulas from './grafico-volta-aulas'
 
 import {
   QIcon,
@@ -148,7 +171,8 @@ export default {
     QItemSide,
     QRadio,
     QListHeader,
-    GraficoVendasGeral
+    GraficoVendasGeral,
+    GraficoVoltaAulas
   },
 
   data () {
