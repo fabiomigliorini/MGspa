@@ -463,7 +463,7 @@ class EstoqueEstatisticaRepository
         // Buscal Local Selecionado
         $estoquelocal = null;
         if (!empty($codestoquelocal)) {
-            $el = $els->where('codestoquelocal', $codestoquelocal)->first();
+            $el = $locais->where('codestoquelocal', $codestoquelocal)->first();
             $estoquelocal = $el->estoquelocal;
         }
 
