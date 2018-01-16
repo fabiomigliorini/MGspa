@@ -182,10 +182,6 @@ export default {
       // faz chamada api
       window.axios.get('estoque-estatistica/' + vm.codproduto, { params }).then(response => {
         vm.item = response.data
-<<<<<<< HEAD
-        console.log(vm.item)
-=======
->>>>>>> 3d02150f6581e8944f92ef97655f6b2bd807ea26
         this.loading = false
       })
     }, 500)
