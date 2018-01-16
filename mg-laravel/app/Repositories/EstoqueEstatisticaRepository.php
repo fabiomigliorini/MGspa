@@ -305,12 +305,19 @@ class EstoqueEstatisticaRepository
 
     public static function sumarizaVendasVoltaAsAulas ($vendas)
     {
+        // inicializa retorno
         $ret = collect();
+
+        // Percorre vendas
         foreach ($vendas as $venda) {
+
+            // se posterior à março, ignora
             $d = Carbon::createFromFormat('Y-m-d', $venda->mes);
-            if ($d->month > 1) {
+            if ($d->month > 3) {
                 continue;
             }
+
+            // se não existe acumulador pro ano ainda, cria
             $ano = $d->year;
             if (!isset($ret[$ano])) {
                 $ret[$ano] = (object) [
@@ -319,9 +326,13 @@ class EstoqueEstatisticaRepository
                     'vendavalor' => 0,
                 ];
             }
+
+            // acumula valores
             $ret[$ano]->vendaquantidade += $venda->vendaquantidade;
             $ret[$ano]->vendavalor += $venda->vendavalor;
         }
+
+        // retorna registros acumulados
         return $ret;
     }
 
