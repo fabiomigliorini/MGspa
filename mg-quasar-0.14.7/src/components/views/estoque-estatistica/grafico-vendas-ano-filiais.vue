@@ -15,13 +15,13 @@ export default {
         labels: ['Centro', 'Imperial', 'Botanico'],
         datasets: [
           {
-            label: 'Estoque',
-            backgroundColor: '#f00',
+            label: 'Vendas',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null
           },
           {
-            label: 'Vendas',
-            backgroundColor: 'rgba(63, 81, 181, 0.7)',
+            label: 'Estoque',
+            backgroundColor: '#f00',
             data: null
           }
         ]
@@ -70,8 +70,8 @@ export default {
       })
 
       // passa para datasets os valores acumulados
-      vm.data.datasets[0].data = saldoquantidade
-      vm.data.datasets[1].data = vendaquantidade
+      vm.data.datasets[0].data = vendaquantidade
+      vm.data.datasets[1].data = saldoquantidade
       vm.data.labels = locais
 
       // atualiza grafico
