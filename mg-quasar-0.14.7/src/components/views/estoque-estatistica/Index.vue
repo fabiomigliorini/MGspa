@@ -115,7 +115,7 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              ...
+              <grafico-estoque-vendas-filiais :height="350" :locais="item.locais"></grafico-estoque-vendas-filiais>
             </q-card-main>
           </q-card>
         </div>
@@ -151,6 +151,7 @@ import GraficoVendasGeral from './grafico-vendas-geral'
 import GraficoVoltaAulas from './grafico-volta-aulas'
 import GraficoVendasAno from './grafico-vendas-ano'
 import GraficoVendasAnoFiliais from './grafico-vendas-ano-filiais'
+import GraficoEstoqueVendasFiliais from './grafico-estoque-vendas-filiais'
 
 import {
   QIcon,
@@ -209,7 +210,8 @@ export default {
     GraficoVendasGeral,
     GraficoVoltaAulas,
     GraficoVendasAno,
-    GraficoVendasAnoFiliais
+    GraficoVendasAnoFiliais,
+    GraficoEstoqueVendasFiliais
   },
 
   data () {
