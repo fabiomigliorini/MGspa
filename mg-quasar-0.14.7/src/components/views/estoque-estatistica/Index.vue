@@ -125,8 +125,7 @@
           <q-card>
             <q-card-title>
               Variações
-              <span slot="subtitle">Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque.
-</span>
+              <span slot="subtitle">Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque.</span>
             </q-card-title>
             <q-card-separator />
             <q-card-main>
@@ -142,7 +141,7 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              ...
+              <grafico-vendas-estoque-variacoes-doughnut :height="350" :variacoes="item.variacoes"></grafico-vendas-estoque-variacoes-doughnut>
             </q-card-main>
           </q-card>
         </div>
@@ -181,6 +180,7 @@ import GraficoVendasAno from './grafico-vendas-ano'
 import GraficoVendasAnoFiliais from './grafico-vendas-ano-filiais'
 import GraficoVendasEstoqueFiliais from './grafico-vendas-estoque-filiais'
 import GraficoVendasEstoqueVariacoes from './grafico-vendas-estoque-variacoes'
+import GraficoVendasEstoqueVariacoesDoughnut from './grafico-vendas-estoque-variacoes-doughnut'
 
 import {
   QIcon,
@@ -241,7 +241,8 @@ export default {
     GraficoVendasAno,
     GraficoVendasAnoFiliais,
     GraficoVendasEstoqueFiliais,
-    GraficoVendasEstoqueVariacoes
+    GraficoVendasEstoqueVariacoes,
+    GraficoVendasEstoqueVariacoesDoughnut
   },
 
   data () {
