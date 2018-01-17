@@ -57,14 +57,6 @@ export default {
     update () {
       this.$data._chart.update()
     },
-    geraBackgrounds () {
-      let opcoes = '0123456789ABCDEF'
-      let cor = '#'
-      for (var i = 0; i < 6; i++) {
-        cor += opcoes[Math.floor(Math.random() * 16)]
-      }
-      return cor
-    },
     atualizaGrafico: debounce(function () {
       let vm = this
 
@@ -72,13 +64,17 @@ export default {
       let locais = []
       let vendaquantidade = []
       let saldoquantidade = []
-      let backgrounds = []
+      let backgrounds = [
+        '#9E9E9E',
+        '#FFEB3B',
+        '#F44336',
+        '#2196F3'
+      ]
 
       this.locais.forEach(function (estoquelocal) {
         locais.push(estoquelocal.estoquelocal)
-        vendaquantidade.push(estoquelocal.vendaquantidade)
-        saldoquantidade.push(estoquelocal.saldoquantidade)
-        backgrounds.push(vm.geraBackgrounds())
+        vendaquantidade.push(Math.floor(estoquelocal.vendaquantidade))
+        saldoquantidade.push(Math.floor(estoquelocal.saldoquantidade))
       })
 
       // passa para datasets os valores acumulados

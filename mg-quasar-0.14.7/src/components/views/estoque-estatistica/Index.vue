@@ -111,7 +111,10 @@
           <q-card>
             <q-card-title>
               Estoque por filial
-              <span slot="subtitle">Comparação da distribuição dos estoques com a venda dos últimos 12 meses</span>
+              <span slot="subtitle">
+                Comparação da distribuição dos estoques com a venda dos últimos 12 meses.</br>
+                Externo vendas, interno estoque.
+              </span>
             </q-card-title>
             <q-card-separator />
             <q-card-main>
@@ -137,7 +140,10 @@
           <q-card>
             <q-card-title>
               Estoque por variações
-              <span slot="subtitle">Comparação da distribuição dos estoques das variações com a venda dos últimos 12 meses</span>
+              <span slot="subtitle">
+                Comparação da distribuição dos estoques das variações com a venda dos últimos 12 meses.</br>
+                Externo vendas, interno estoque.
+              </span>
             </q-card-title>
             <q-card-separator />
             <q-card-main>

@@ -76,8 +76,8 @@ export default {
 
       this.variacoes.forEach(function (variacao) {
         variacoes.push(variacao.variacao)
-        vendaquantidade.push(variacao.vendaquantidade)
-        saldoquantidade.push(variacao.saldoquantidade)
+        vendaquantidade.push(Math.floor(variacao.vendaquantidade))
+        saldoquantidade.push(Math.floor(variacao.saldoquantidade))
         backgrounds.push(vm.geraBackgrounds())
       })
 
