@@ -120,6 +120,35 @@
           </q-card>
         </div>
       </div>
+      <div class="row">
+        <div class="col-md-8">
+          <q-card>
+            <q-card-title>
+              Variações
+              <span slot="subtitle">Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque.
+</span>
+            </q-card-title>
+            <q-card-separator />
+            <q-card-main>
+              <grafico-estoque-vendas-variacoes :height="350" :variacoes="item.variacoes"></grafico-estoque-vendas-variacoes>
+            </q-card-main>
+          </q-card>
+        </div>
+        <div class="col-md-4">
+          <q-card>
+            <q-card-title>
+              Estoque por variações
+              <span slot="subtitle">Comparação da distribuição dos estoques das variações com a venda dos últimos 12 meses</span>
+            </q-card-title>
+            <q-card-separator />
+            <q-card-main>
+              ...
+            </q-card-main>
+          </q-card>
+        </div>
+      </div>
+
+
       <q-card>
         <q-card-title>
           Estatísticas
@@ -152,6 +181,7 @@ import GraficoVoltaAulas from './grafico-volta-aulas'
 import GraficoVendasAno from './grafico-vendas-ano'
 import GraficoVendasAnoFiliais from './grafico-vendas-ano-filiais'
 import GraficoEstoqueVendasFiliais from './grafico-estoque-vendas-filiais'
+import GraficoEstoqueVendasVariacoes from './grafico-estoque-vendas-variacoes'
 
 import {
   QIcon,
@@ -211,7 +241,8 @@ export default {
     GraficoVoltaAulas,
     GraficoVendasAno,
     GraficoVendasAnoFiliais,
-    GraficoEstoqueVendasFiliais
+    GraficoEstoqueVendasFiliais,
+    GraficoEstoqueVendasVariacoes
   },
 
   data () {
