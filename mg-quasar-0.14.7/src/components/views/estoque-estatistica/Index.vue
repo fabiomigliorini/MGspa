@@ -115,7 +115,7 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              <grafico-estoque-vendas-filiais :height="350" :locais="item.locais"></grafico-estoque-vendas-filiais>
+              <grafico-vendas-estoque-filiais :height="350" :locais="item.locais"></grafico-vendas-estoque-filiais>
             </q-card-main>
           </q-card>
         </div>
@@ -130,7 +130,7 @@
             </q-card-title>
             <q-card-separator />
             <q-card-main>
-              <grafico-estoque-vendas-variacoes :height="350" :variacoes="item.variacoes"></grafico-estoque-vendas-variacoes>
+              <grafico-vendas-estoque-variacoes :height="350" :variacoes="item.variacoes"></grafico-vendas-estoque-variacoes>
             </q-card-main>
           </q-card>
         </div>
@@ -147,7 +147,6 @@
           </q-card>
         </div>
       </div>
-
 
       <q-card>
         <q-card-title>
@@ -180,8 +179,8 @@ import GraficoVendasGeral from './grafico-vendas-geral'
 import GraficoVoltaAulas from './grafico-volta-aulas'
 import GraficoVendasAno from './grafico-vendas-ano'
 import GraficoVendasAnoFiliais from './grafico-vendas-ano-filiais'
-import GraficoEstoqueVendasFiliais from './grafico-estoque-vendas-filiais'
-import GraficoEstoqueVendasVariacoes from './grafico-estoque-vendas-variacoes'
+import GraficoVendasEstoqueFiliais from './grafico-vendas-estoque-filiais'
+import GraficoVendasEstoqueVariacoes from './grafico-vendas-estoque-variacoes'
 
 import {
   QIcon,
@@ -241,8 +240,8 @@ export default {
     GraficoVoltaAulas,
     GraficoVendasAno,
     GraficoVendasAnoFiliais,
-    GraficoEstoqueVendasFiliais,
-    GraficoEstoqueVendasVariacoes
+    GraficoVendasEstoqueFiliais,
+    GraficoVendasEstoqueVariacoes
   },
 
   data () {

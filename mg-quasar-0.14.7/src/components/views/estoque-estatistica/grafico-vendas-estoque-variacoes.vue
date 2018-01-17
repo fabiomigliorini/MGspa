@@ -1,12 +1,12 @@
 <script>
-import { Doughnut } from 'vue-chartjs'
+import { Bar } from 'vue-chartjs'
 
 import { debounce } from 'quasar'
 
 export default {
-  name: 'grafico-estoque-vendas-filiais',
-  extends: Doughnut,
-  props: ['locais'],
+  name: 'grafico-vendas-estoque-variacoes',
+  extends: Bar,
+  props: ['variacoes'],
   data () {
     return {
       data: {
@@ -14,10 +14,12 @@ export default {
         datasets: [
           {
             label: 'Vendas',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null
           },
           {
             label: 'Estoque',
+            backgroundColor: '#f00',
             data: null
           }
         ]
@@ -26,14 +28,7 @@ export default {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          xAxes: [{
-            display: false,
-            ticks: {
-              beginAtZero: true
-            }
-          }],
           yAxes: [{
-            display: true,
             ticks: {
               beginAtZero: true
             }
@@ -43,7 +38,7 @@ export default {
     }
   },
   watch: {
-    locais: {
+    variacoes: {
       handler: function (val, oldVal) {
         this.atualizaGrafico()
       },
@@ -57,37 +52,25 @@ export default {
     update () {
       this.$data._chart.update()
     },
-    geraBackgrounds () {
-      let opcoes = '0123456789ABCDEF'
-      let cor = '#'
-      for (var i = 0; i < 6; i++) {
-        cor += opcoes[Math.floor(Math.random() * 16)]
-      }
-      return cor
-    },
+
     atualizaGrafico: debounce(function () {
       let vm = this
 
       // acumula dados para os datasets
-      let locais = []
+      let variacoes = []
       let vendaquantidade = []
       let saldoquantidade = []
-      let backgrounds = []
 
-      this.locais.forEach(function (estoquelocal) {
-        locais.push(estoquelocal.estoquelocal)
-        vendaquantidade.push(estoquelocal.vendaquantidade)
-        saldoquantidade.push(estoquelocal.saldoquantidade)
-        backgrounds.push(vm.geraBackgrounds())
+      this.variacoes.forEach(function (variacao) {
+        variacoes.push(variacao.variacao)
+        vendaquantidade.push(variacao.vendaquantidade)
+        saldoquantidade.push(variacao.saldoquantidade)
       })
 
       // passa para datasets os valores acumulados
       vm.data.datasets[0].data = vendaquantidade
-      vm.data.datasets[0].backgroundColor = backgrounds
-
       vm.data.datasets[1].data = saldoquantidade
-      vm.data.datasets[1].backgroundColor = backgrounds
-      vm.data.labels = locais
+      vm.data.labels = variacoes
 
       // atualiza grafico
       vm.update()
