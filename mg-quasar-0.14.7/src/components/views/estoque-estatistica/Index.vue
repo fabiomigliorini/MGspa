@@ -69,7 +69,7 @@
             </q-card-actions>
           </q-card>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <q-card>
             <q-card-title>
               Volta às aulas
@@ -78,6 +78,38 @@
             <q-card-separator />
             <q-card-main>
               <grafico-volta-aulas :height="350" :vendas="item.vendas_volta_aulas" :saldoquantidade="item.saldoquantidade"></grafico-volta-aulas>
+            </q-card-main>
+          </q-card>
+        </div>
+        <div class="col-md-3">
+          <q-card>
+            <q-card-title>
+              Estatísticas
+            </q-card-title>
+            <q-card-separator />
+            <q-card-main v-if="item">
+              <p>Demanda média: {{ numeral(item.estatistica.demandamedia).format('0,0.0000') }}</p>
+              <p>Desvio padrao: {{ numeral(item.estatistica.desviopadrao).format('0,0.0000') }}</p>
+              <p>Nível de servico: {{ numeral(item.estatistica.nivelservico).format('0%') }}</p>
+              <p>Estoque de segurança: {{ numeral(item.estatistica.estoqueseguranca).format('0,0') }}</p>
+              <p>Estoque mínimo: {{ numeral(item.estatistica.estoqueminimo).format('0,0') }} ({{ numeral(item.estatistica.tempominimo * 30).format('0,0') }} Dias)</p>
+              <p>Estoque máximo: {{ numeral(item.estatistica.estoquemaximo).format('0,0') }} ({{ numeral(item.estatistica.tempomaximo * 30).format('0,0') }} Dias)</p>
+              <p>Estoque quantidade: {{ numeral(item.saldoquantidade).format('0,0') }}</p>
+              <p>Sugestão de compra: {{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}</p>
+            </q-card-main>
+          </q-card>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <q-card>
+            <q-card-title>
+              Filiais
+              <span slot="subtitle">Vendas dos últimos 12 meses de cada filial, comparadas com o saldo atual do estoque.</span>
+            </q-card-title>
+            <q-card-separator />
+            <q-card-main>
+              <grafico-vendas-ano-filiais :height="350" :locais="item.locais"></grafico-vendas-ano-filiais>
             </q-card-main>
           </q-card>
         </div>
@@ -90,20 +122,6 @@
             <q-card-separator />
             <q-card-main>
               <grafico-vendas-ano :height="350" :vendaquantidade="item.vendaquantidade" :saldoquantidade="item.saldoquantidade"></grafico-vendas-ano>
-            </q-card-main>
-          </q-card>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-8">
-          <q-card>
-            <q-card-title>
-              Filiais
-              <span slot="subtitle">Vendas dos últimos 12 meses de cada filial, comparadas com o saldo atual do estoque.</span>
-            </q-card-title>
-            <q-card-separator />
-            <q-card-main>
-              <grafico-vendas-ano-filiais :height="350" :locais="item.locais"></grafico-vendas-ano-filiais>
             </q-card-main>
           </q-card>
         </div>
@@ -152,22 +170,6 @@
           </q-card>
         </div>
       </div>
-
-      <q-card>
-        <q-card-title>
-          Estatísticas
-        </q-card-title>
-        <q-card-separator />
-        <q-card-main v-if="item">
-          <p>Demanda média: {{ numeral(item.estatistica.demandamedia).format('0,0.0000') }}</p>
-          <p>Desvio padrao: {{ numeral(item.estatistica.desviopadrao).format('0,0.0000') }}</p>
-          <p>Nível de servico: {{ numeral(item.estatistica.nivelservico).format('0%') }}</p>
-          <p>Estoque de segurança: {{ numeral(item.estatistica.estoqueseguranca).format('0,0') }}</p>
-          <p>Estoque mínimo: {{ numeral(item.estatistica.estoqueminimo).format('0,0') }} ({{ numeral(item.estatistica.tempominimo * 30).format('0,0') }} Dias)</p>
-          <p>Estoque máximo: {{ numeral(item.estatistica.estoquemaximo).format('0,0') }} ({{ numeral(item.estatistica.tempomaximo * 30).format('0,0') }} Dias)</p>
-        </q-card-main>
-      </q-card>
-
     </div>
 
     <div slot="footer">
