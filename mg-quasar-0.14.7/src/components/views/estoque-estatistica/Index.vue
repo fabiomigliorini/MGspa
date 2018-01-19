@@ -141,35 +141,9 @@
           </q-card>
         </div>
       </div>
-      <div class="row">
-        <div class="col-md-8">
-          <q-card>
-            <q-card-title>
-              Variações
-              <span slot="subtitle">Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque.</span>
-            </q-card-title>
-            <q-card-separator />
-            <q-card-main>
-              <grafico-vendas-estoque-variacoes :height="350" :variacoes="item.variacoes"></grafico-vendas-estoque-variacoes>
-            </q-card-main>
-          </q-card>
-        </div>
-        <div class="col-md-4">
-          <q-card>
-            <q-card-title>
-              Estoque por variações
-              <span slot="subtitle">
-                Comparação da distribuição dos estoques das variações com a venda dos últimos 12 meses.</br>
-                Externo vendas, interno estoque.
-              </span>
-            </q-card-title>
-            <q-card-separator />
-            <q-card-main>
-              <grafico-vendas-estoque-variacoes-doughnut :height="350" :variacoes="item.variacoes"></grafico-vendas-estoque-variacoes-doughnut>
-            </q-card-main>
-          </q-card>
-        </div>
-      </div>
+      <template v-if="item && item.variacoes.length > 1">
+        <variacoes :height="350" :variacoes="item.variacoes"></variacoes>
+      </template>
     </div>
 
     <div slot="footer">
@@ -187,8 +161,7 @@ import GraficoVoltaAulas from './grafico-volta-aulas'
 import GraficoVendasAno from './grafico-vendas-ano'
 import GraficoVendasAnoFiliais from './grafico-vendas-ano-filiais'
 import GraficoVendasEstoqueFiliais from './grafico-vendas-estoque-filiais'
-import GraficoVendasEstoqueVariacoes from './grafico-vendas-estoque-variacoes'
-import GraficoVendasEstoqueVariacoesDoughnut from './grafico-vendas-estoque-variacoes-doughnut'
+import Variacoes from './variacoes'
 
 import {
   QIcon,
@@ -249,8 +222,7 @@ export default {
     GraficoVendasAno,
     GraficoVendasAnoFiliais,
     GraficoVendasEstoqueFiliais,
-    GraficoVendasEstoqueVariacoes,
-    GraficoVendasEstoqueVariacoesDoughnut
+    Variacoes
   },
 
   data () {

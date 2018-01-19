@@ -1,8 +1,6 @@
 <script>
 import { Doughnut } from 'vue-chartjs'
 
-import { debounce } from 'quasar'
-
 export default {
   name: 'grafico-vendas-estoque-variacoes-doughnut',
   extends: Doughnut,
@@ -22,6 +20,19 @@ export default {
           }
         ]
       },
+      cores: [
+        '#FFEB3B',
+        '#F44336',
+        '#2196F3',
+        '#4CAF50',
+        '#795548',
+        '#F8BBD0',
+        '#B2DFDB',
+        '#673AB7',
+        '#FF9800',
+        '#9E9E9E'
+      ],
+      iCor: 0,
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -45,6 +56,7 @@ export default {
   watch: {
     variacoes: {
       handler: function (val, oldVal) {
+        console.log('watch')
         this.atualizaGrafico()
       },
       deep: true
@@ -52,21 +64,23 @@ export default {
   },
   mounted () {
     this.renderChart(this.data, this.options)
+    this.atualizaGrafico()
   },
   methods: {
     update () {
       this.$data._chart.update()
     },
-    geraBackgrounds () {
-      let opcoes = '0123456789ABCDEF'
-      let cor = '#'
-      for (var i = 0; i < 6; i++) {
-        cor += opcoes[Math.floor(Math.random() * 16)]
+    escolheCor () {
+      this.iCor++
+      if ((this.iCor - 1) > this.cores.length) {
+        return false
       }
-      return cor
+      return this.cores[this.iCor - 1]
     },
-    atualizaGrafico: debounce(function () {
+    atualizaGrafico () {
       let vm = this
+
+      this.iCor = 0
 
       // acumula dados para os datasets
       let variacoes = []
@@ -75,10 +89,10 @@ export default {
       let backgrounds = []
 
       this.variacoes.forEach(function (variacao) {
-        variacoes.push(variacao.variacao)
+        variacoes.push(variacao.variacao.substr(0, 12))
         vendaquantidade.push(Math.floor(variacao.vendaquantidade))
         saldoquantidade.push(Math.floor(variacao.saldoquantidade))
-        backgrounds.push(vm.geraBackgrounds())
+        backgrounds.push(vm.escolheCor())
       })
 
       // passa para datasets os valores acumulados
@@ -92,7 +106,7 @@ export default {
 
       // atualiza grafico
       vm.update()
-    }, 100)
+    }
   }
 }
 </script>

@@ -60,7 +60,7 @@ export default {
       let saldoquantidade = []
 
       this.variacoes.forEach(function (variacao) {
-        variacoes.push(variacao.variacao)
+        variacoes.push(variacao.variacao.substr(0, 12))
         vendaquantidade.push(variacao.vendaquantidade)
         saldoquantidade.push(variacao.saldoquantidade)
       })
@@ -69,7 +69,7 @@ export default {
       vm.data.datasets[0].data = vendaquantidade
       vm.data.datasets[1].data = saldoquantidade
       vm.data.labels = variacoes
-      console.log(vm.data)
+
       // atualiza grafico
       vm.update()
     }
