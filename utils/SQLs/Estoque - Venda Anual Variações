@@ -1,0 +1,39 @@
+﻿
+
+  with vendas as (
+            	select elpv.codprodutovariacao, sum(elpvv.quantidade) as vendaquantidade, sum(elpvv.valor) as vendavalor
+            	from tblprodutovariacao pv
+            	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
+            	inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+            	where pv.codproduto = 6281
+            	and elpvv.mes >= date_trunc('month', now() - '11 months'::interval)
+            	group by elpv.codprodutovariacao
+            ),
+            estoque as (
+            	select elpv.codprodutovariacao, sum(es.saldoquantidade) as saldoquantidade, sum(es.saldovalor) as saldovalor
+            	from tblprodutovariacao pv
+            	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
+            	inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
+            	where pv.codproduto = 6281
+            	group by elpv.codprodutovariacao
+            )
+            select
+              pv.codprodutovariacao,
+              coalesce(pv.variacao, '{ Sem Variação }') as variacao,
+              pv.descontinuado,
+              pv.inativo,
+              pv.vendainicio,
+              e.saldoquantidade,
+              e.saldovalor,
+              v.vendaquantidade,
+              v.vendavalor
+            from tblprodutovariacao pv
+            left join vendas v on (v.codprodutovariacao = pv.codprodutovariacao)
+            left join estoque e on (e.codprodutovariacao = pv.codprodutovariacao)
+            where pv.codproduto = 6281
+            and (
+            	pv.inativo is null
+            	or e.saldoquantidade is not null
+            	or v.vendaquantidade is not null
+            	)
+            order by variacao

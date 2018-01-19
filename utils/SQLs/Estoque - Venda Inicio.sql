@@ -21,7 +21,7 @@ where tblprodutovariacao.codprodutovariacao = tmpvendainicio.codprodutovariacao
 ;
 
 update tblprodutovariacao 
-set vendainicio = null
+set vendainicio = now()
 where tblprodutovariacao.codprodutovariacao not in (select codprodutovariacao from tmpvendainicio)
 --and tblprodutovariacao = 21
 ;
