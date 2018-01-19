@@ -1,14 +1,12 @@
 <script>
-import {
-  Bar
-} from 'vue-chartjs'
+import { Bar } from 'vue-chartjs'
 
 import { debounce } from 'quasar'
 
 export default {
-  name: 'grafico-vendas-ano-filiais',
+  name: 'grafico-vendas-estoque-variacoes',
   extends: Bar,
-  props: ['locais'],
+  props: ['variacoes'],
   data () {
     return {
       data: {
@@ -40,7 +38,7 @@ export default {
     }
   },
   watch: {
-    locais: {
+    variacoes: {
       handler: function (val, oldVal) {
         this.atualizaGrafico()
       },
@@ -59,20 +57,20 @@ export default {
       let vm = this
 
       // acumula dados para os datasets
-      let locais = []
+      let variacoes = []
       let vendaquantidade = []
       let saldoquantidade = []
 
-      this.locais.forEach(function (estoquelocal) {
-        locais.push(estoquelocal.estoquelocal)
-        vendaquantidade.push(estoquelocal.vendaquantidade)
-        saldoquantidade.push(estoquelocal.saldoquantidade)
+      this.variacoes.forEach(function (variacao) {
+        variacoes.push(variacao.variacao)
+        vendaquantidade.push(variacao.vendaquantidade)
+        saldoquantidade.push(variacao.saldoquantidade)
       })
 
       // passa para datasets os valores acumulados
       vm.data.datasets[0].data = vendaquantidade
       vm.data.datasets[1].data = saldoquantidade
-      vm.data.labels = locais
+      vm.data.labels = variacoes
 
       // atualiza grafico
       vm.update()
