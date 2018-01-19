@@ -1,79 +1,53 @@
+<template>
+  <div>
+    <div v-for="(grupos, index) in data">
+      <grafico-vendas-estoque-variacoes-item :chart-id="'chart' + index" :height="150" :variacoes="grupos"></grafico-vendas-estoque-variacoes-item>
+    </div>
+  </div>
+</template>
+
 <script>
-import { Bar } from 'vue-chartjs'
-
 import { debounce } from 'quasar'
-
+// import { GraficoVendasEstoqueVariacoesItem } from './grafico-vendas-estoque-variacoes-item'
+const GraficoVendasEstoqueVariacoesItem = require('./grafico-vendas-estoque-variacoes-item').default
 export default {
   name: 'grafico-vendas-estoque-variacoes',
-  extends: Bar,
   props: ['variacoes'],
+  components: {
+    GraficoVendasEstoqueVariacoesItem
+  },
   data () {
     return {
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: 'Vendas',
-            backgroundColor: 'rgba(63, 81, 181, 0.7)',
-            data: null
-          },
-          {
-            label: 'Estoque',
-            backgroundColor: '#f00',
-            data: null
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: true
-            }
-          }]
-        }
-      }
+      data: false
     }
   },
   watch: {
     variacoes: {
       handler: function (val, oldVal) {
-        this.atualizaGrafico()
+        this.montaDados()
       },
       deep: true
     }
   },
   mounted () {
-    this.renderChart(this.data, this.options)
+    // console.log(this.$options.components)
+    this.montaDados()
   },
   methods: {
-    update () {
-      this.$data._chart.update()
-    },
-
-    atualizaGrafico: debounce(function () {
+    montaDados: debounce(function () {
       let vm = this
+      let grupos = []
+      let i = 0
+      let tamanho = 10
 
-      // acumula dados para os datasets
-      let variacoes = []
-      let vendaquantidade = []
-      let saldoquantidade = []
-
-      this.variacoes.forEach(function (variacao) {
-        variacoes.push(variacao.variacao)
-        vendaquantidade.push(variacao.vendaquantidade)
-        saldoquantidade.push(variacao.saldoquantidade)
+      vm.variacoes.forEach(function () {
+        i += tamanho
+        grupos.push(vm.variacoes.slice(i, i + tamanho))
       })
 
-      // passa para datasets os valores acumulados
-      vm.data.datasets[0].data = vendaquantidade
-      vm.data.datasets[1].data = saldoquantidade
-      vm.data.labels = variacoes
-
-      // atualiza grafico
-      vm.update()
+      vm.data = grupos.filter(function (grupo) {
+        return grupo.length > 0
+      })
     }, 100)
   }
 }
