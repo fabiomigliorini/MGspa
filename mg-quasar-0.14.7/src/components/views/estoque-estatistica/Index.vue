@@ -9,23 +9,25 @@
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer" width="200" style="width: 200px;">
       <q-list no-border>
-        <q-list-header>Variações</q-list-header>
-        <q-item tag="label" v-for="variacao in item.variacoes" :key="variacao.codprodutovariacao">
-          <q-item-main>
-            <q-item-tile title>{{ variacao.variacao }}</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
-          </q-item-side>
-        </q-item>
-        <q-item tag="label">
-          <q-item-main>
-            <q-item-tile title>Todos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.codprodutovariacao" val="" />
-          </q-item-side>
-        </q-item>
+        <template v-if="item && item.variacoes.length > 1">
+          <q-list-header>Variações</q-list-header>
+          <q-item tag="label" v-for="variacao in item.variacoes" :key="variacao.codprodutovariacao">
+            <q-item-main>
+              <q-item-tile title>{{ variacao.variacao }}</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
+            </q-item-side>
+          </q-item>
+          <q-item tag="label">
+            <q-item-main>
+              <q-item-tile title>Todos</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.codprodutovariacao" val="" />
+            </q-item-side>
+          </q-item>
+        </template>
         <q-list-header>Local de Estoque</q-list-header>
         <q-item tag="label" v-for="local in item.locais" :key="local.codprodutovariacao">
           <q-item-main>
@@ -63,6 +65,7 @@
               <span slot="subtitle">
                 <q-btn @click="meses=null" :color="(meses == null)?'primary':''" flat>Desde Início</q-btn>
                 <q-btn @click="meses=36" :color="(meses == 36)?'primary':''" flat>3 Anos</q-btn>
+                <q-btn @click="meses=24" :color="(meses == 24)?'primary':''" flat>2 Anos</q-btn>
                 <q-btn @click="meses=12" :color="(meses == 12)?'primary':''" flat>1 Ano</q-btn>
                 <q-btn @click="meses=6" :color="(meses == 6)?'primary':''" flat>6 meses</q-btn>
               </span>
@@ -100,47 +103,27 @@
           </q-card>
         </div>
       </div>
-      <div class="row">
-        <div class="col-md-6">
-          <q-card>
-            <q-card-title>
-              Filiais
-              <span slot="subtitle">Vendas dos últimos 12 meses de cada filial, comparadas com o saldo atual do estoque.</span>
-            </q-card-title>
-            <q-card-separator />
-            <q-card-main>
-              <grafico-vendas-ano-filiais :height="350" :locais="item.locais"></grafico-vendas-ano-filiais>
-            </q-card-main>
-          </q-card>
-        </div>
-        <div class="col-md-2">
-          <q-card>
-            <q-card-title>
-              Ano
-              <span slot="subtitle">Vendas dos últimos 12 meses, comparadas com o saldo atual do estoque.</span>
-            </q-card-title>
-            <q-card-separator />
-            <q-card-main>
-              <grafico-vendas-ano :height="350" :vendaquantidade="item.vendaquantidade" :saldoquantidade="item.saldoquantidade"></grafico-vendas-ano>
-            </q-card-main>
-          </q-card>
-        </div>
-        <div class="col-md-4">
-          <q-card>
-            <q-card-title>
-              Estoque por filial
-              <span slot="subtitle">
-                Comparação da distribuição dos estoques com a venda dos últimos 12 meses.</br>
-                Externo vendas, interno estoque.
-              </span>
-            </q-card-title>
-            <q-card-separator />
-            <q-card-main>
-              <grafico-vendas-estoque-filiais :height="350" :locais="item.locais"></grafico-vendas-estoque-filiais>
-            </q-card-main>
-          </q-card>
-        </div>
-      </div>
+
+      <q-card>
+        <q-card-title>
+          Filiais
+          <span slot="subtitle">
+            Vendas dos últimos 12 meses de cada filial, comparadas com o saldo atual dos estoques.
+            O gráfico em formato de anel mostra a distribuição da venda dos últimos 12 meses comparado com os estoques.
+            O anel externo representa as vendas, já o interno representa os saldos atuais de estoque.
+          </span>
+        </q-card-title>
+        <q-card-separator />
+        <q-card-main class="row">
+          <div  class="col-md-8">
+            <grafico-vendas-ano-filiais :height="350" :locais="item.locais" :vendaquantidade="item.vendaquantidade" :saldoquantidade="item.saldoquantidade"></grafico-vendas-ano-filiais>
+          </div>
+          <div  class="col-md-4">
+            <grafico-vendas-estoque-filiais :height="350" :locais="item.locais"></grafico-vendas-estoque-filiais>
+          </div>
+        </q-card-main>
+      </q-card>
+
       <template v-if="item && item.variacoes.length > 1">
         <variacoes :height="350" :variacoes="item.variacoes"></variacoes>
       </template>

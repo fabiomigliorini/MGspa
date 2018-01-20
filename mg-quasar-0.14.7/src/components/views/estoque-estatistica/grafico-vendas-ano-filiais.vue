@@ -8,7 +8,7 @@ import { debounce } from 'quasar'
 export default {
   name: 'grafico-vendas-ano-filiais',
   extends: Bar,
-  props: ['locais'],
+  props: ['locais', 'saldoquantidade', 'vendaquantidade'],
   data () {
     return {
       data: {
@@ -68,6 +68,10 @@ export default {
         vendaquantidade.push(estoquelocal.vendaquantidade)
         saldoquantidade.push(estoquelocal.saldoquantidade)
       })
+
+      locais.push('Total')
+      vendaquantidade.push(vm.vendaquantidade)
+      saldoquantidade.push(vm.saldoquantidade)
 
       // passa para datasets os valores acumulados
       vm.data.datasets[0].data = vendaquantidade
