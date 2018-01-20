@@ -11,6 +11,7 @@ use App\Models\Produto;
 use App\Models\ProdutoVariacao;
 use App\Models\ProdutoBarra;
 use App\Models\EstoqueMovimento;
+use App\Models\EstoqueSaldo;
 use App\Models\EstoqueSaldoConferencia;
 
 
@@ -265,7 +266,7 @@ class ProdutoRepository extends MGRepositoryStatic
               mes.mes
             from tblestoquelocalprodutovariacao elpv
             inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
-            inner join tblestoquemes mes on (mes.codestoquesaldo = es.codestoquesaldo)
+            left join tblestoquemes mes on (mes.codestoquesaldo = es.codestoquesaldo)
             where elpv.codprodutovariacao = :codprodutovariacao
         ';
         $binds = [
@@ -276,41 +277,51 @@ class ProdutoRepository extends MGRepositoryStatic
         // Percorre todos meses, associando ao novo mes
         foreach ($meses as $mes) {
 
-            // calcula novo estoquemes
-            $mes->mes = Carbon::parse($mes->mes);
-            $novo_mes = EstoqueMesRepository::buscaOuCria(
-                $mes->codestoquelocal,
-                $codprodutovariacaodestino,
-                $mes->fiscal,
-                $mes->mes
-            );
+            // se tem mes, unifica a movimentacao do mes
+            if (!empty($mes->codestoquemesorigem)) {
 
-            // Transfere movimento de estoque
-            $mes->codestoquemesdestino = $novo_mes->codestoquemes;
-            $mes->movimentos = EstoqueMovimento::where('codestoquemes', $mes->codestoquemesorigem)->update([
-                'codestoquemes' => $mes->codestoquemesdestino
-            ]);
+                // calcula novo estoquemes
+                $mes->mes = Carbon::parse($mes->mes);
+                $novo_mes = EstoqueMesRepository::buscaOuCria(
+                    $mes->codestoquelocal,
+                    $codprodutovariacaodestino,
+                    $mes->fiscal,
+                    $mes->mes
+                );
 
-            if ($mes->movimentos) {
+                // Transfere movimento de estoque
+                $mes->codestoquemesdestino = $novo_mes->codestoquemes;
+                $mes->movimentos = EstoqueMovimento::where('codestoquemes', $mes->codestoquemesorigem)->update([
+                    'codestoquemes' => $mes->codestoquemesdestino
+                ]);
 
-                // recalcula Custo Médio para origem
-                $url = "http://localhost/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
-                $res = json_decode(file_get_contents($url));
-                if ($res->response != "Agendado") {
-                    dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesorigem}.. $url");
+                if ($mes->movimentos) {
+
+                    // recalcula Custo Médio para origem
+                    $url = "http://localhost/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
+                    $res = json_decode(file_get_contents($url));
+                    if ($res->response != "Agendado") {
+                        dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesorigem}.. $url");
+                    }
+
+                    // recalcula Custo Médio para destino
+                    $url = "http://localhost/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
+                    $res = json_decode(file_get_contents($url));
+                    if ($res->response != "Agendado") {
+                        dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesdestino}.. $url");
+                    }
                 }
-
-                // recalcula Custo Médio para destino
-                $url = "http://localhost/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
-                $res = json_decode(file_get_contents($url));
-                if ($res->response != "Agendado") {
-                    dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesdestino}.. $url");
-                }
-
+                $mes->codestoquesaldodestino = $novo_mes->codestoquesaldo;
+            } else {
+                $novo_saldo = EstoqueSaldoRepository::buscaOuCria(
+                    $mes->codestoquelocal,
+                    $codprodutovariacaodestino,
+                    $mes->fiscal
+                );
+                $mes->codestoquesaldodestino = $novo_saldo->codestoquesaldo;
             }
 
             // transfere conferencias de saldo
-            $mes->codestoquesaldodestino = $novo_mes->codestoquesaldo;
             $mes->conferencias = EstoqueSaldoConferencia::where('codestoquesaldo', $mes->codestoquesaldoorigem)->update([
                 'codestoquesaldo' => $mes->codestoquesaldodestino
             ]);
@@ -332,4 +343,30 @@ class ProdutoRepository extends MGRepositoryStatic
         return true;
     }
 
+    public static function unificaBarras ($codprodutobarraorigem, $codprodutobarradestino)
+    {
+
+        $pb_origem = ProdutoBarra::findOrFail($codprodutobarraorigem);
+        $pb_destino = ProdutoBarra::findOrFail($codprodutobarradestino);
+
+        if ($pb_origem->codprodutovariacao != $pb_destino->codprodutovariacao) {
+            dd('Barras não são da mesma Variacao!');
+        }
+        $regs = $pb_origem->NegocioProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+            'codprodutobarra' => $codprodutobarradestino
+        ]);
+        $regs = $pb_origem->NotaFiscalProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+            'codprodutobarra' => $codprodutobarradestino
+        ]);
+        $regs = $pb_origem->CupomFiscalProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+            'codprodutobarra' => $codprodutobarradestino
+        ]);
+        $regs = $pb_origem->NfeTerceiroItemS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+            'codprodutobarra' => $codprodutobarradestino
+        ]);
+        $pb_origem->delete();
+
+        return true;
+
+    }
 }
