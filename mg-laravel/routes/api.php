@@ -53,6 +53,12 @@ Route::group(['middleware'=>['cors', 'api', 'jwt.auth']], function () {
 
     // Rotas Dinamicas
 
+    // EstoqueMes
+    Route::resource('estoque-mes', 'EstoqueMesController');
+
+    // EstoqueSaldo
+    Route::resource('estoque-saldo', 'EstoqueSaldoController');
+
     // EstoqueEstatistica
     Route::resource('estoque-estatistica', 'EstoqueEstatisticaController');
 
