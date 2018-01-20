@@ -1,13 +1,13 @@
 <script>
 import {
-  Bar
+  Line
 } from 'vue-chartjs'
 
 import { debounce } from 'quasar'
 
 export default {
   name: 'grafico-vendas-geral',
-  extends: Bar,
+  extends: Line,
   props: ['meses', 'vendas', 'saldoquantidade'],
   data () {
     return {
@@ -18,20 +18,32 @@ export default {
           {
             label: 'Vendas',
             backgroundColor: 'rgba(63, 81, 181, 0.7)',
+            borderColor: 'rgba(63, 81, 181, 0.7)',
             data: null,
-            type: 'line'
+            type: 'line',
+            fill: false
           },
           {
             label: 'Estoque',
             backgroundColor: '#f00',
+            borderColor: '#f00',
             data: null,
-            type: 'bar'
+            type: 'line',
+            fill: false
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        tooltips: {
+          mode: 'index',
+          intersect: false
+        },
+        hover: {
+          mode: 'nearest',
+          intersect: true
+        },
         scales: {
           xAxes: [
             {
@@ -110,14 +122,11 @@ export default {
 
         meses.push(mes)
         vendaquantidade.push(venda.vendaquantidade)
-        saldoquantidade.push(null)
+        saldoquantidade.push(venda.saldoquantidade)
       })
 
       // adiciona mais um mes pra barra de saldo do estoque não ficar cortada
       meses.push(vm.moment().add(1, 'months'))
-
-      // adiciona saldo do estoque na ultima coluna
-      saldoquantidade[saldoquantidade.length - 1] = vm.saldoquantidade
 
       // passa para datasets os valores acumulados
       vm.data.datasets[0].data = vendaquantidade
