@@ -239,13 +239,37 @@ class EstoqueEstatisticaRepository
 
         $sql .= '
                 group by elpvv.mes
+            ),
+            saldos_mes as (
+                select em.mes, sum(em.saldoquantidade) as saldoquantidade, sum(em.saldovalor) as saldovalor
+                from tblprodutovariacao pv
+                inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
+                inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
+                inner join tblestoquemes em on (em.codestoquesaldo = es.codestoquesaldo)
+                where em.mes >= :mes_inicial
+                and pv.codproduto = :codproduto
+        ';
+
+        if (!empty($codprodutovariacao)) {
+            $sql .= ' and pv.codprodutovariacao = :codprodutovariacao ';
+        }
+
+        if (!empty($codestoquelocal)) {
+            $sql .= ' and elpv.codestoquelocal = :codestoquelocal ';
+        }
+
+        $sql .= '
+                group by em.mes
             )
             select
               meses.mes,
               coalesce(venda_mes.vendaquantidade, 0) as vendaquantidade,
-              coalesce(venda_mes.vendavalor, 0) as vendavalor
+              coalesce(venda_mes.vendavalor, 0) as vendavalor,
+              coalesce(saldos_mes.saldoquantidade, 0) as saldoquantidade,
+              coalesce(saldos_mes.saldovalor, 0) as saldovalor
             from meses
             left join venda_mes on (venda_mes.mes = meses.mes)
+            left join saldos_mes on (saldos_mes.mes = meses.mes)
             order by meses.mes asc
         ';
 
@@ -482,11 +506,15 @@ class EstoqueEstatisticaRepository
         $vendainicio = Carbon::createFromFormat('Y-m-d', $variacoes->min('vendainicio'));
 
         // Busca Variação Selecionada
+        $vendaquantidade = null;
+        $saldoquantidade = null;
         $variacao = null;
         if (!empty($codprodutovariacao)) {
             if ($pv = $variacoes->where('codprodutovariacao', $codprodutovariacao)->first()) {
                 $variacao = $pv->variacao;
                 $vendainicio = Carbon::createFromFormat('Y-m-d', $pv->vendainicio);
+                $vendaquantidade = $pv->vendaquantidade;
+                $saldoquantidade = $pv->saldoquantidade;
             }
         }
 
@@ -503,7 +531,7 @@ class EstoqueEstatisticaRepository
         if (empty($codestoquelocal)) {
             $vendaquantidade = $locais->sum('vendaquantidade');
             $saldoquantidade = $locais->sum('saldoquantidade');
-        } else {
+        } elseif (empty($codprodutovariacao)) {
             $vendaquantidade = $variacoes->sum('vendaquantidade');
             $saldoquantidade = $variacoes->sum('saldoquantidade');
         }
