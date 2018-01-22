@@ -66,8 +66,8 @@
               <p class="text-faded row">
                 <span class="col-md-6">342 UN</span>
                 <span class="col-md-6">
-                    <q-icon name="arrow_upward" /> 347
-                    <q-icon name="arrow_downward" /> 693
+                    <span class=" text-orange"><q-icon name="arrow_upward" /> 347</span>
+                    <span class=" text-red"><q-icon name="arrow_downward" /> 693</span>
                 </span>
               </p>
               <p class="text-faded row">
@@ -82,7 +82,7 @@
           </q-card>
         </div>
         <div class="col-md-3">
-          <q-card>
+          <q-card class="items-stretch">
             <q-card-title>
               Giro Anual
             </q-card-title>
@@ -136,14 +136,16 @@
               </p>
               <p class="text-faded">
                 Conferido <br />
-                <strong>há 4 meses</strong>
+                <strong>há 4 meses </strong>
               </p>
             </q-card-main>
-            <!-- <q-card-actions>
-              <q-btn flat color="primary">
-                <q-icon name="add" />
-              </q-btn>
-            </q-card-actions> -->
+            <q-card-actions>
+              <router-link :to="{ path: '' }">
+                <q-btn flat color="primary" to="/asdasd">
+                  <q-icon name="add" />
+                </q-btn>
+              </router-link>
+            </q-card-actions>
           </q-card>
         </div>
 
@@ -363,9 +365,5 @@ export default {
 }
 p {
   margin-bottom: 0.5rem;
-}
-.q-card {
-  height: 100%;
-  margin-bottom: 0;
 }
 </style>
