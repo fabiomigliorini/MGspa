@@ -13,11 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \App\Console\Commands\GeradorCodigoCommand::class,
-        \App\Console\Commands\EstoqueCalculaEstatisticasCommand::class,
-        \App\Console\Commands\EstoqueEstatisticaCommand::class,
-        \App\Console\Commands\ProdutoUnificaVariacoesCommand::class,
-        \App\Console\Commands\ProdutoUnificaBarrasCommand::class,
+        //
     ];
 
     /**
@@ -28,17 +24,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
-        // $schedule->command('estoque:calcula-estatisticas')->dailyAt('00:30');
+        // $schedule->command('inspire')
+        //          ->hourly();
     }
 
     /**
-     * Register the Closure based commands for the application.
+     * Register the commands for the application.
      *
      * @return void
      */
     protected function commands()
     {
+        $this->load(__DIR__.'/Commands');
+
         require base_path('routes/console.php');
     }
 }
