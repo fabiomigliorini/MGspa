@@ -16,6 +16,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\GeradorCodigoCommand::class,
         \App\Console\Commands\EstoqueCalculaEstatisticasCommand::class,
         \App\Console\Commands\EstoqueEstatisticaCommand::class,
+        \App\Console\Commands\ProdutoUnificaVariacoesCommand::class,
+        \App\Console\Commands\ProdutoUnificaBarrasCommand::class,
     ];
 
     /**
