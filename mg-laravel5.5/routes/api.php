@@ -14,25 +14,24 @@ use Illuminate\Http\Request;
 */
 
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+Route::group(['prefix' => 'auth'], function () {
+  Route::post('login', 'Auth\LoginController@authenticate');
+  Route::get('logout', 'Auth\LoginController@logout');
+  Route::get('check', 'Auth\LoginController@check');
+  Route::get('refresh', 'Auth\LoginController@refreshToken');
+  Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
 });
 
-Route::group(['middleware' => ['api','cors']], function () {
-    Route::group(['prefix' => 'auth'], function () {
-        Route::post('login', 'Auth\LoginController@authenticate');
-        Route::get('logout', 'Auth\LoginController@logout');
-        Route::get('check', 'Auth\LoginController@check');
-        Route::get('refresh', 'Auth\LoginController@refreshToken');
-        Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
+Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
+
+    Route::get('/teste', function (Request $request) {
+        return ['msg' => 'kajhfksjdhf'];
     });
 
-    Route::group(['middleware' => 'jwt.auth'], function () {
-      Route::get('/user', function (Request $request) {
-        return $request->user();
-      });
+    Route::apiResource('usuario', '\App\Mg\Usuario\Controllers\UsuarioController');
 
-
-
-    });
 });

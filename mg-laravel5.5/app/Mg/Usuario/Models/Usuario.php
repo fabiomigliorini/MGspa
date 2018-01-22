@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Mg\Usuario\Models;
 
 /**
  * Campos
@@ -265,7 +265,7 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
     */
     public function getJWTCustomClaims()
     {
-        return ['user' => ['id' => $this->codusuario]];
+        return ['user' => ['codusuario' => $this->codusuario]];
     }
 /*
     // Chaves Estrangeiras
