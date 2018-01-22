@@ -211,11 +211,10 @@ use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Model;
-
 // use App\Models\MGModel;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-
-class Usuario implements AuthenticatableContract, CanResetPasswordContract
+class Usuario extends Model implements AuthenticatableContract, CanResetPasswordContract, JWTSubject
 {
     use Authenticatable, Authorizable, CanResetPassword;
 
@@ -253,7 +252,22 @@ class Usuario implements AuthenticatableContract, CanResetPasswordContract
     public function getAuthPassword() {
         return $this->senha;
     }
+    /**
+    * @return mixed
+    */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
 
+    /**
+    * @return array
+    */
+    public function getJWTCustomClaims()
+    {
+        return ['user' => ['id' => $this->codusuario]];
+    }
+/*
     // Chaves Estrangeiras
     public function Imagem()
     {
@@ -1143,5 +1157,5 @@ class Usuario implements AuthenticatableContract, CanResetPasswordContract
 
         return $count > 0;
     }
-
+*/
 }

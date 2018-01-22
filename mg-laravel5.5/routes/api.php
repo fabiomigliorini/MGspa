@@ -13,19 +13,24 @@ use Illuminate\Http\Request;
 |
 */
 
+
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
 Route::group(['middleware' => ['api','cors']], function () {
-    Route::post('auth/login', 'Auth\ApiAuthController@login');
-    
+    Route::group(['prefix' => 'auth'], function () {
+        Route::post('login', 'Auth\LoginController@authenticate');
+        Route::get('logout', 'Auth\LoginController@logout');
+        Route::get('check', 'Auth\LoginController@check');
+        Route::get('refresh', 'Auth\LoginController@refreshToken');
+        Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
+    });
+
     Route::group(['middleware' => 'jwt.auth'], function () {
-      // Somente Logado
       Route::get('/user', function (Request $request) {
         return $request->user();
       });
-
 
 
 
