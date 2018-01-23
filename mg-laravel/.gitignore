@@ -11,3 +11,4 @@ npm-debug.log
 .env
 nbproject/
 *.php.old*
+composer.lock

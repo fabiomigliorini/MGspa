@@ -6,3 +6,4 @@ npm-debug.log*
 cordova/platforms
 cordova/plugins
 config/dev.env.js
+package-lock.json
