@@ -32,6 +32,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         return ['msg' => 'kajhfksjdhf'];
     });
 
-    Route::apiResource('usuario', '\App\Mg\Usuario\Controllers\UsuarioController');
+    Route::resource('usuario', '\App\Mg\Usuario\Controllers\UsuarioController');
 
 });
