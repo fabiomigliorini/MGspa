@@ -213,6 +213,7 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Model;
 // use App\Models\MGModel;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Carbon\Carbon;
 
 class Usuario extends Model implements AuthenticatableContract, CanResetPasswordContract, JWTSubject
 {
@@ -267,21 +268,88 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
     {
         return ['user' => ['codusuario' => $this->codusuario]];
     }
-/*
-    // Chaves Estrangeiras
-    public function Imagem()
-    {
-        return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
+
+    public function activate () {
+        $this->inativo = null;
+        $this->update();
+        return $this;
     }
+
+    public function inactivate ($date = null) {
+        if (empty($date)) {
+            $date = Carbon::now();
+        }
+        $this->inativo = $date;
+        $this->update();
+        return $this;
+    }
+
+    public static function query(array $filter = null, array $sort = null, array $fields = null)
+    {
+        $qry = Usuario::query();
+        dd($qry);
+
+        // if (!empty($filter['inativo'])) {
+        //     $qry->AtivoInativo($filter['inativo']);
+        // }
+        //
+        // if (!empty($filter['usuario'])) {
+        //     $qry->palavras('usuario', $filter['usuario']);
+        // }
+
+        if (!empty($filter['grupo'])) {
+            $qry->whereIn("codusuario", function ($qry2) use ($filter) {
+                $qry2->select('codusuario')
+                    ->from('tblgrupousuariousuario')
+                    ->where('codgrupousuario', $filter['grupo']);
+            });
+        }
+
+        $qry = $this->querySort($qry, $sort);
+        $qry = $this->queryFields($qry, $fields);
+        return $qry;
+    }
+
+    public function queryFields($qry, array $fields = null)
+    {
+        if (empty($fields)) {
+            return $qry;
+        }
+        return $qry->select($fields);
+    }
+
+    public function querySort($qry, array $sort = null)
+    {
+        if (empty($sort)) {
+            return $qry;
+        }
+        foreach ($sort as $field) {
+            $dir = 'ASC';
+            if (substr($field, 0, 1) == '-') {
+                $dir = 'DESC';
+                $field = substr($field, 1);
+            }
+            $qry->orderBy($field, $dir);
+        }
+        return $qry;
+    }
+
+
+    // Chaves Estrangeiras
 
     public function Filial()
     {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+        return $this->belongsTo(\App\Mg\Filial\Models\Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function Imagem()
+    {
+        return $this->belongsTo(\App\Mg\Imagem\Models\Imagem::class, 'codimagem', 'codimagem');
     }
 
     public function Pessoa()
     {
-        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+        return $this->belongsTo(\App\Mg\Pessoa\Models\Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
     public function Portador()
@@ -1157,5 +1225,4 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
 
         return $count > 0;
     }
-*/
 }
