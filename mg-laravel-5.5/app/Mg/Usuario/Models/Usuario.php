@@ -283,19 +283,54 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         $this->update();
         return $this;
     }
+    public function scopeAtivo($query)
+    {
+        $query->whereNull("{$this->table}.inativo");
+    }
 
-    public static function query(array $filter = null, array $sort = null, array $fields = null)
+    public function scopeInativo($query)
+    {
+        $query->whereNotNull("{$this->table}.inativo");
+    }
+
+    public function scopeAtivoInativo($query, $valor)
+    {
+        switch ($valor) {
+            case 1:
+                $query->ativo();
+                break;
+
+            case 2:
+                $query->inativo();
+                break;
+
+            default:
+            case 9:
+                break;
+        }
+    }
+
+    public function scopePalavras($query, $campo, $palavras)
+    {
+        foreach (explode(' ', trim($palavras)) as $palavra) {
+            if (!empty($palavra)) {
+                $query->where($campo, 'ilike', "%$palavra%");
+            }
+        }
+    }
+
+
+    public static function search(array $filter = null, array $sort = null, array $fields = null)
     {
         $qry = Usuario::query();
-        dd($qry);
 
-        // if (!empty($filter['inativo'])) {
-        //     $qry->AtivoInativo($filter['inativo']);
-        // }
-        //
-        // if (!empty($filter['usuario'])) {
-        //     $qry->palavras('usuario', $filter['usuario']);
-        // }
+        if (!empty($filter['inativo'])) {
+            $qry->AtivoInativo($filter['inativo']);
+        }
+
+        if (!empty($filter['usuario'])) {
+            $qry->palavras('usuario', $filter['usuario']);
+        }
 
         if (!empty($filter['grupo'])) {
             $qry->whereIn("codusuario", function ($qry2) use ($filter) {
@@ -305,12 +340,12 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
             });
         }
 
-        $qry = $this->querySort($qry, $sort);
-        $qry = $this->queryFields($qry, $fields);
+        $qry = self::querySort($qry, $sort);
+        $qry = self::queryFields($qry, $fields);
         return $qry;
     }
 
-    public function queryFields($qry, array $fields = null)
+    public static function queryFields($qry, array $fields = null)
     {
         if (empty($fields)) {
             return $qry;
@@ -318,7 +353,7 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         return $qry->select($fields);
     }
 
-    public function querySort($qry, array $sort = null)
+    public static function querySort($qry, array $sort = null)
     {
         if (empty($sort)) {
             return $qry;

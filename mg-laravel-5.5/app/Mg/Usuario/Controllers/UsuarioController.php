@@ -17,10 +17,8 @@ class UsuarioController extends Controller
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        // $qry = Usuario::query($filter, $sort, $fields)->with('Imagem');
-        $qry = Usuario::paginate()->appends($request->all());
-        $res = $qry;
-        // $res = $qry->paginate()->appends($request->all());
+        $qry = Usuario::search($filter, $sort, $fields)->with('Imagem');
+        $res = $qry->paginate()->appends($request->all());
 
         foreach ($res as $i => $usuario) {
             if (!empty($usuario->codimagem)) {
