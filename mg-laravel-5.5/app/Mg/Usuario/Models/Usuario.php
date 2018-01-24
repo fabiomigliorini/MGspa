@@ -283,42 +283,6 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         $this->update();
         return $this;
     }
-    public function scopeAtivo($query)
-    {
-        $query->whereNull("{$this->table}.inativo");
-    }
-
-    public function scopeInativo($query)
-    {
-        $query->whereNotNull("{$this->table}.inativo");
-    }
-
-    public function scopeAtivoInativo($query, $valor)
-    {
-        switch ($valor) {
-            case 1:
-                $query->ativo();
-                break;
-
-            case 2:
-                $query->inativo();
-                break;
-
-            default:
-            case 9:
-                break;
-        }
-    }
-
-    public function scopePalavras($query, $campo, $palavras)
-    {
-        foreach (explode(' ', trim($palavras)) as $palavra) {
-            if (!empty($palavra)) {
-                $query->where($campo, 'ilike', "%$palavra%");
-            }
-        }
-    }
-
 
     public static function search(array $filter = null, array $sort = null, array $fields = null)
     {
@@ -343,6 +307,42 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         $qry = self::querySort($qry, $sort);
         $qry = self::queryFields($qry, $fields);
         return $qry;
+    }
+
+    public function scopeAtivo($query)
+    {
+        $query->whereNull("{$this->table}.inativo");
+    }
+
+    public function scopeInativo($query)
+    {
+        $query->whereNotNull("{$this->table}.inativo");
+    }
+
+    public function scopeAtivoInativo($query, $valor)
+    {
+        switch ($valor) {
+            case 1:
+            $query->ativo();
+            break;
+
+            case 2:
+            $query->inativo();
+            break;
+
+            default:
+            case 9:
+            break;
+        }
+    }
+
+    public function scopePalavras($query, $campo, $palavras)
+    {
+        foreach (explode(' ', trim($palavras)) as $palavra) {
+            if (!empty($palavra)) {
+                $query->where($campo, 'ilike', "%$palavra%");
+            }
+        }
     }
 
     public static function queryFields($qry, array $fields = null)

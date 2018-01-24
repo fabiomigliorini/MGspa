@@ -34,6 +34,7 @@ class UsuarioController extends Controller
             }
 
             $res[$i]->grupos = $grupos;
+
         }
 
         return response()->json($res, 206);
