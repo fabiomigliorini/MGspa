@@ -1,27 +1,20 @@
 ﻿select * from tblportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-01-18', null, '2018-01-18 11:41', 1)
+values (210, '2018-01-25', null, '2018-01-25 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2153, '2018-01-18 11:41', 1
+select codcheque, 2155, '2018-01-25 11:41', 1
 from tblcheque where cmc7 in (
-'<23707501<0180014775>856751145352:',
-'<23719244<0180054425>814800583198:',
-'<34113643<0480001585>701640877997:',
-'<34113646<0480005285>751643210654:',
-'<23702349<0180085815>372502755068:',
-'<00142701<0188508165>313011087007:',
-'<10408547<0183037945>000300184470:',
-'<00141371<0188514755>461000514119:',
-'<23706761<0180306335>599800469654:',
-'<00115893<0188500875>988001984983:',
-'<74880039<0180021705>000000549410:'
+'<03341685<0180000205>219130149255:',
+'<74880161<0180001075>200000901660:',
+'<00138632<0188509225>674000570023:'
 )
 
-update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc where codchequerepasse = 2153)
+
+update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc where codchequerepasse = 2155)
 
 select crc.codchequerepasse, sum(c.valor), count(crc.codchequerepassecheque)
 from tblchequerepassecheque crc
@@ -30,8 +23,8 @@ where crc.codchequerepasse >= 1900
 group by crc.codchequerepasse
 order by 1 desc
 
-update tblchequerepasse set data = '2018-01-18', criacao = '2018-01-18 11:41' where codchequerepasse = 2149
-update tblchequerepassecheque set criacao = '2018-01-18 11:41' where codchequerepasse = 2100
+update tblchequerepasse set data = '2018-01-25', criacao = '2018-01-25 11:41' where codchequerepasse = 2149
+update tblchequerepassecheque set criacao = '2018-01-25 11:41' where codchequerepasse = 2100
 
 select * from tblchequerepassecheque where codchequerepasse = 2086
 
@@ -68,3 +61,9 @@ inner join tblchequerepasse cr on (cr.codchequerepasse = crc.codchequerepasse)
 where crc.codcheque = 8836
 
 
+update tblchequerepassecheque set codchequerepasse = 2155
+where codcheque in(select codcheque from tblcheque where cmc7 in (
+'<03341685<0180000205>219130149255:',
+'<74880161<0180001075>200000901660:',
+'<00138632<0188509225>674000570023:'
+))
