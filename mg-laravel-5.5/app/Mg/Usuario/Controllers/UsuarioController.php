@@ -40,6 +40,37 @@ class UsuarioController extends Controller
         return response()->json($res, 206);
 
     }
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function resource(Request $request)
+    {
+
+        list($filter, $sort, $fields) = $this->parseSearchRequest($request);
+        $qry = Usuario::search($filter, $sort, $fields)->with('Imagem');
+        $res = $qry->paginate()->appends($request->all());
+
+        foreach ($res as $i => $usuario) {
+            if (!empty($usuario->codimagem)) {
+                $res[$i]->imagem->url = $usuario->Imagem->url;
+            }
+
+            $grupos = [];
+            foreach ($usuario->GrupoUsuarioUsuarioS as $grupo) {
+                $grupos[] = [
+                    'grupousuario' => $grupo->GrupoUsuario->grupousuario,
+                    'filial' => $grupo->Filial->filial
+                ];
+            }
+
+            $res[$i]->grupos = $grupos;
+
+        }
+
+        return \App\Mg\Usuario\Resources\UsuarioResource::collection($res);
+    }
 
 
     /**
