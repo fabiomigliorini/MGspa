@@ -28,7 +28,7 @@ export default {
     },
     loadData: function () {
       let vm = this
-      window.axios.get('usuario/impressoras').then(function (request) {
+      window.axios.get('impressora').then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)

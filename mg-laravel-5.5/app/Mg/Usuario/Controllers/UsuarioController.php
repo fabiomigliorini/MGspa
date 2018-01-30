@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Mg\Usuario\Models\Usuario;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class UsuarioController extends Controller
 {
@@ -81,12 +82,35 @@ class UsuarioController extends Controller
      */
     public function store(Request $request)
     {
+
         $request->validate([
-            'usuario' => 'required',
+            'usuario' => [
+                'required',
+                'unique:tblusuario',
+                'min:2',
+            ],
+            'senha' => [
+                'required',
+                'min:6'
+            ],
+            'impressoramatricial' => [
+                'required'
+            ],
+            'impressoratermica' => [
+                'required'
+            ]
+        ], [
+            'usuario.required' => 'O campo "Usuario" deve ser preenchido!',
+            'usuario.unique' => 'Este "Usuario" já esta cadastrado',
+            'usuario.min' => 'O campo "Usuario" deve ter no mínimo 2 caracteres.',
+            'senha.min' => 'O campo "Senha" deve ter no mínimo 6 caracteres.',
+            'senha.required' => 'O campo "Senha" deve ser preenchido!',
+            'impressoratermica.required' => 'O campo "Impressora Termica" deve ser preenchido!',
+            'impressoramatricial.required' => 'O campo "Impressora Matricial" deve ser preenchido!',
         ]);
 
         $model = new Usuario($request->all());
-
+        $model->senha = bcrypt($model->senha);
         $model->create();
 
         return response()->json($model, 201);
@@ -98,9 +122,9 @@ class UsuarioController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $model = Usuario::findOrFail($id);
+        $model = Usuario::findOrFail($id, $request->get('fields'));
 
         return response()->json($model, 200);
     }
@@ -167,13 +191,63 @@ class UsuarioController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'usuario' => 'required',
-        ]);
-
         $model = Usuario::findOrFail($id);
 
-        $model->update($request->all());
+        \Validator::extend('senhaAntiga', function ($attribute, $value, $parameters, $validator) {
+            if (!$value) {
+                return true;
+            }
+
+            return \Hash::check($value, \Auth::user()->senha);
+        });
+
+        \Validator::extend('senhaConfirmacao', function ($attribute, $value, $parameters, $validator) {
+
+            if ($value == $parameters[0]) {
+                return true;
+            }
+
+            return false;
+        });
+
+        $request->validate([
+            'usuario' => [
+                'required',
+                Rule::unique('tblusuario')->ignore($model->codusuario, 'codusuario'),
+                'min:2',
+            ],
+            'senha' => [
+                'senha_confirmacao:'.$request->get('senha_confirmacao'),
+                'min:6'
+            ],
+            'senha_antiga' => [
+                'senha_antiga'
+            ],
+            'impressoramatricial' => [
+                'required'
+            ],
+            'impressoratermica' => [
+                'required'
+            ]
+        ], [
+            'usuario.required' => 'O campo "Usuário" deve ser preenchido!',
+            'usuario.unique' => 'Este "Usuário" já esta cadastrado',
+            'usuario.min' => 'O campo "Usuário" deve ter no mínimo 2 caracteres.',
+            'senha.min' => 'O campo "Senha" deve ter no mínimo 6 caracteres.',
+            'senha.required' => 'O campo "Senha" deve ser preenchido!',
+            'senha.senha_confirmacao' => 'Confirmação de senha não confere',
+            'impressoratermica.required' => 'O campo "Impressora Termica" deve ser preenchido!',
+            'impressoramatricial.required' => 'O campo "Impressora Matricial" deve ser preenchido!',
+            'senha_antiga.senha_antiga' => 'Senha antiga não confere',
+        ]);
+
+        $model->fill($request->all());
+
+        if ($request->get('senha')) {
+            $model->senha = bcrypt($model->senha);
+        }
+
+        $model->update();
 
         return response()->json($model, 201);
     }
