@@ -85,12 +85,25 @@ export default {
       data: {
         senha: null,
         senha_antiga: null,
-        senha_confirmacao: null
+        senha_confirmacao: null,
+        usuario: null
       },
       erros: false
     }
   },
   methods: {
+    loadData: function (id) {
+      let vm = this
+      let params = {
+        fields: ['usuario', 'impressoratermica', 'impressoramatricial']
+      }
+      window.axios.get('usuario/' + id, { params }).then(function (request) {
+        vm.data = request.data
+        vm.data.senha = null
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
     update: function () {
       var vm = this
       Dialog.create({
@@ -115,6 +128,9 @@ export default {
         ]
       })
     }
+  },
+  created () {
+    this.loadData(localStorage.getItem('auth.usuario.codusuario'))
   }
 }
 </script>

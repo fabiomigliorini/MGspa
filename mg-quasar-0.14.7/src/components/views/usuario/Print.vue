@@ -97,7 +97,7 @@ export default {
     loadData: function (id) {
       let vm = this
       let params = {
-        fields: ['codusuario', 'impressoratermica', 'impressoramatricial']
+        fields: ['codusuario', 'usuario', 'impressoratermica', 'impressoramatricial']
       }
       window.axios.get('usuario/' + id, { params }).then(function (request) {
         vm.data = request.data

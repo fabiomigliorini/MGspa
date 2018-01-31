@@ -34,6 +34,8 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
     Route::group(['prefix' => 'v1'], function () {
         // Usuários
+        Route::get('usuario/resource', '\App\Mg\Usuario\Controllers\UsuarioController@resource');
+
         Route::get('usuario/{id}/autor', '\App\Mg\Usuario\Controllers\UsuarioController@author');
         Route::get('usuario/{id}/grupos', '\App\Mg\Usuario\Controllers\UsuarioController@groups')->name('usuario.groups');
         Route::post('usuario/{id}/grupos', '\App\Mg\Usuario\Controllers\UsuarioController@groupsCreate')->name('usuario.groups.create');
