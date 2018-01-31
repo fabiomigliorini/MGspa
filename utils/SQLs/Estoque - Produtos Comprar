@@ -26,7 +26,7 @@ from
     from tblproduto p
     inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
     inner join tblmarca m on (m.codmarca = coalesce(pv.codmarca, p.codmarca))
-    inner join (
+    LEFT join (
         select 
             elpv.codprodutovariacao
             , sum(elpv.estoqueminimo) as estoqueminimo
@@ -54,14 +54,15 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'color make')
+    where (m.marca ilike 'hp')
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
     --and m.controlada = true
     --and pv.codprodutovariacao = 15218
-    --and pv.descontinuado is null
+    and pv.descontinuado is null
     and p.inativo is null
     --and pv.codproduto = 24312
     order by m.marca, p.produto, pv.variacao
 ) x
 --order by sld nulls first
+--SELECT * FROM TBLPRODUTOVARIACAO WHERE CODPRODUTO = 29011
