@@ -2,6 +2,15 @@
 	p.codproduto, 
 	p.produto,
 	pv.variacao,
+	(
+		select pb.barras || coalesce(' ' || pe_um.sigla || ' C/' || cast(pe.quantidade as bigint), '')
+		from tblprodutobarra pb
+		left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
+		left join tblunidademedida pe_um on (pe_um.codunidademedida = pe.codunidademedida)
+		where pb.codprodutovariacao = pv.codprodutovariacao
+		order by pe.quantidade nulls first, pb.barras
+		limit 1
+	) as barras,	
 	cast(es_c.saldoquantidade as int) as cen,
 	cast(elpv_c.estoquemaximo as int) as max,
 	cast(es_d.saldoquantidade as int) as dep,
