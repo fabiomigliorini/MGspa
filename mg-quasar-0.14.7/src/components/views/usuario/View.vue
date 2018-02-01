@@ -181,6 +181,7 @@ export default {
       let vm = this
       window.axios.get('usuario/' + id + '/details').then(function (request) {
         vm.item = request.data
+        console.log(vm.item)
       }).catch(function (error) {
         console.log(error.response)
       })
