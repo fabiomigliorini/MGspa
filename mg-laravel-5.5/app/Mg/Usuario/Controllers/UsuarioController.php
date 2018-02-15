@@ -82,7 +82,6 @@ class UsuarioController extends Controller
      */
     public function store(Request $request)
     {
-
         $request->validate([
             'usuario' => [
                 'required',
@@ -137,48 +136,49 @@ class UsuarioController extends Controller
      */
     public function details ($id)
     {
-        $model = Usuario::findOrFail($id);
-        $model['pessoa'] = [
-            'codpessoa' => $model->Pessoa->codpessoa ?? null,
-            'pessoa' => $model->Pessoa->pessoa ?? null
-        ];
-
-        $model['filial'] = [
-            'codfilial' => $model->Filial->codfilial,
-            'filial' => $model->Filial->filial
-        ];
-
-        $grupos = [];
-        $permissoes_array = [];
-        $permissoes = [];
-
-        foreach ($model->GrupoUsuarioUsuarioS as $grupo) {
-
-            $grupos[$grupo->GrupoUsuario->grupousuario]['grupousuario'] = $grupo->GrupoUsuario->grupousuario;
-
-            if (!isset($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'])) {
-                $grupos[$grupo->GrupoUsuario->grupousuario]['filiais'] = [];
-            }
-
-            array_push($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'], $grupo->Filial->filial);
-
-            foreach ($grupo->GrupoUsuario->GrupoUsuarioPermissaoS as $permissao) {
-                $permissoes_array[] = $permissao->Permissao->permissao;
-            }
-        }
-
-        foreach ($permissoes_array as $permissao) {
-            $key = explode('.', $permissao);
-            if (!isset($permissoes[$key[0]])) {
-                $permissoes[$key[0]] = array();
-            }
-            $permissoes[$key[0]][] = $permissao;
-        }
-
-        $details['grupos'] = $grupos;
-        $details['permissoes'] = $permissoes;
-
-        $model['imagem'] = $model->Imagem->url ?? false;
+        $model = \App\Mg\Usuario\Repositories\UsuarioRepository::details($id);
+        // $model = Usuario::findOrFail($id);
+        // $model['pessoa'] = [
+        //     'codpessoa' => $model->Pessoa->codpessoa ?? null,
+        //     'pessoa' => $model->Pessoa->pessoa ?? null
+        // ];
+        //
+        // $model['filial'] = [
+        //     'codfilial' => $model->Filial->codfilial,
+        //     'filial' => $model->Filial->filial
+        // ];
+        //
+        // $grupos = [];
+        // $permissoes_array = [];
+        // $permissoes = [];
+        //
+        // foreach ($model->GrupoUsuarioUsuarioS as $grupo) {
+        //
+        //     $grupos[$grupo->GrupoUsuario->grupousuario]['grupousuario'] = $grupo->GrupoUsuario->grupousuario;
+        //
+        //     if (!isset($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'])) {
+        //         $grupos[$grupo->GrupoUsuario->grupousuario]['filiais'] = [];
+        //     }
+        //
+        //     array_push($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'], $grupo->Filial->filial);
+        //
+        //     foreach ($grupo->GrupoUsuario->GrupoUsuarioPermissaoS as $permissao) {
+        //         $permissoes_array[] = $permissao->Permissao->permissao;
+        //     }
+        // }
+        //
+        // foreach ($permissoes_array as $permissao) {
+        //     $key = explode('.', $permissao);
+        //     if (!isset($permissoes[$key[0]])) {
+        //         $permissoes[$key[0]] = array();
+        //     }
+        //     $permissoes[$key[0]][] = $permissao;
+        // }
+        //
+        // $details['grupos'] = $grupos;
+        // $details['permissoes'] = $permissoes;
+        //
+        // $model['imagem'] = $model->Imagem->url ?? false;
         return response()->json($model, 200);
     }
 
