@@ -503,7 +503,11 @@ class EstoqueEstatisticaRepository
 
         // Busca Todas Variações do produto
         $variacoes = static::buscaSaldoEstoqueComparadoVendaAnualPorVariacao($codproduto, $codestoquelocal);
-        $vendainicio = Carbon::createFromFormat('Y-m-d', $variacoes->min('vendainicio'));
+        $vendainicio = $variacoes->min('vendainicio');
+        if (empty($vendainicio)) {
+            $vendainicio = date('Y-m-d');
+        }
+        $vendainicio = Carbon::createFromFormat('Y-m-d', $vendainicio);
 
         // Busca Variação Selecionada
         $vendaquantidade = null;
