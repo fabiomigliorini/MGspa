@@ -56,6 +56,9 @@ class EstoqueEstatisticaRepository
       $the_mean = 0.0;
       $the_array_sum = array_sum($a); //sum the elements
       $number_elements = count($a); //count the number of elements
+      if ($number_elements <= 1) {
+        return 0;
+      }
 
       //calculate the mean
       $the_mean = $the_array_sum / $number_elements;
