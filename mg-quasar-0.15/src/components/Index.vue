@@ -6,9 +6,7 @@
     </template>
 
     <div slot="content" class="layout-padding">
-
       <div class="row wrap">
-
         <div class="text-center col-md-1 col-xs-3 col-sm-2" v-for="aplicativo in aplicativos">
           <a @click="$router.push(aplicativo.path)">
             <q-icon :name="aplicativo.icon" style="font-size:3em" />
@@ -26,13 +24,13 @@
 </template>
 
 <script>
-import { QIcon } from 'quasar'
+// import { QIcon } from 'quasar'
 import MgLayout from '../layouts/MgLayout'
 
 export default {
   name: 'index',
   components: {
-    QIcon,
+    // QIcon,
     MgLayout
   },
 
@@ -42,10 +40,15 @@ export default {
   },
 
   computed: {
-    aplicativos: function () {
-      const aplicativos = this.$store.getters['aplicativos/listagem']
-      return aplicativos
+    aplicativos: {
+      get () {
+        return this.$store.state.aplicativos.aplicativosState
+      }
     }
+    // aplicativos: function () {
+    //   const aplicativos = this.$store.getters['aplicativos/listagem']
+    //   return aplicativos
+    // }
   },
 
   methods: {

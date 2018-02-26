@@ -4,6 +4,10 @@ export default [
     path: '/',
     component: () => import('components/Index')
   },
+  {
+    path: '/permissao',
+    component: () => import('components/views/permissao/Index')
+  },
 
   { // Always leave this as last one
     path: '*',

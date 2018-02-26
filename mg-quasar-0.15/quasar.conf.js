@@ -25,7 +25,7 @@ module.exports = function (ctx) {
       //   API_BASE_URL: process.env.SOMETHING ? JSON.stringify('....') : JSON.stringify('....')
       // },
       env: {
-        API_BASE_URL: '"http://api2.escmig05.local/api/v1/"'
+        API_BASE_URL: '"http://127.0.0.1:8000/api/"'
       },
       scopeHoisting: true,
       vueRouterMode: 'history',

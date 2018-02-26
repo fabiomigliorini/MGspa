@@ -10,7 +10,7 @@
       <q-list highlight>
         <q-item link v-for="(item, index) in dados.Permissoes" :key="item.codpermissao" v-bind:class="{ 'active': tabs == index }">
           <q-item-main>
-            <q-item-tile title @click.prevent="tab(index)">
+            <q-item-tile title @click="tab(index)">
               <span style="word-wrap: break-word;">{{ index }}</span>
             </q-item-tile>
           </q-item-main>
@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import {
   QList,
   QListHeader,
@@ -86,7 +86,7 @@ export default {
     carregaListagem () {
       var vm = this
       this.carregando = true
-      window.axios.get('permissao').then(response => {
+      vm.$axios.get('permissao').then(response => {
         vm.dados = response.data
       })
     },
@@ -107,7 +107,7 @@ export default {
         permissao: permissao,
         codgrupousuario: codgrupousuario
       }
-      window.axios.post('permissao', dados).then(function (request) {
+      vm.$axios.post('permissao', dados).then(function (request) {
         if (request.data === true) {
           vm.dados.Permissoes[index][permissao].codgrupousuario.push(codgrupousuario)
         }

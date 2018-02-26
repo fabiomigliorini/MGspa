@@ -1,80 +1,51 @@
 <template>
-<q-layout
-  ref="layout"
-  :view="view"
-  :left-breakpoint="leftBreakpoint"
-  :right-breakpoint="rightBreakpoint"
-  :reveal="reveal"
->
-  <q-toolbar slot="header">
-    <slot name="menu">
-      <q-btn flat @click="$refs.layout.toggleLeft()" v-if="drawer">
-        <q-icon name="menu" />
-      </q-btn>
-    </slot>
+  <q-layout :view="view">
+    <q-layout-header>
+      <q-toolbar color="primary">
+        <slot name="menu">
+          <q-btn flat round dense icon="menu" @click="leftSide = !leftSide" v-if="drawer"/>
+        </slot>
 
-    <q-toolbar-title>
-      <slot name="title"></slot>
-    </q-toolbar-title>
+        <q-toolbar-title>
+          <slot name="title"></slot>
+        </q-toolbar-title>
 
-    <q-btn class="within-iframe-hide" v-if="backPath" flat @click="$router.replace(backPath)" style="margin-right: 15px">
-      <q-icon name="arrow_back" />
-    </q-btn>
+        <q-btn class="within-iframe-hide" v-if="backPath" flat @click="$router.replace(backPath)" style="margin-right: 15px">
+          <q-icon name="arrow_back" />
+        </q-btn>
 
-    <slot name="menuRight">
-      <q-btn flat @click="$refs.layout.toggleRight()">
-        <q-icon name="apps" />
-      </q-btn>
-    </slot>
+        <slot name="menuRight">
+          <q-btn flat round dense icon="apps" @click="rightSide = !rightSide" />
+        </slot>
 
-  </q-toolbar>
+      </q-toolbar>
+    </q-layout-header>
 
-  <q-tabs slot="navigation" v-if="navigation">
-    <slot name="navigation"></slot>
-  </q-tabs>
+    <!-- Left Side Panel -->
+    <q-layout-drawer v-model="leftSide" side="left">
+      <slot name="drawer"></slot>
+    </q-layout-drawer>
 
-  <q-scroll-area slot="left" style="width: 100%; height: 100%"  v-if="drawer">
-    <slot name="drawer"></slot>
-  </q-scroll-area>
+    <!-- Right Side Panel -->
+    <q-layout-drawer v-model="rightSide" side="right" overlay>
+      Right Side of Layout
+    </q-layout-drawer>
 
-  <q-scroll-area slot="right" style="width: 100%; height: 100%">
-    <q-list inset-separator>
-      <!--
-      <q-item>
-        <q-item-side :avatar="perfil.avatar" v-if="perfil.avatar.length > 0"/>
-        <q-item-main>
-          <router-link :to="{ path: '/usuario/perfil' }">
-          {{ perfil.usuario }}
-          </router-link>
-        </q-item-main>
-        <q-item-side right icon="exit_to_app" @click="logout" style="cursor:pointer"/>
-      </q-item>
-      -->
-    </q-list>
+    </q-layout-drawer>
 
-    <div class="row wrap">
+    <q-page-container>
+      <slot name="content"></slot>
+    </q-page-container>
 
-      <div class="text-center col-3" v-for="aplicativo in aplicativos">
-        <a @click="$router.push(aplicativo.path)">
-          <q-icon :name="aplicativo.icon" style="font-size:3em" color="primary" />
-          <small class="text-primary">{{ aplicativo.title }}</small>
-        </a>
-      </div>
+    <q-toolbar slot="footer">
+      <q-toolbar-title>
+        <slot name="footer">
+        &copy; MG Papelaria
+        </slot>
+      </q-toolbar-title>
+    </q-toolbar>
 
-    </div>
-  </q-scroll-area>
-
-  <slot name="content"></slot>
-
-  <q-toolbar slot="footer">
-    <q-toolbar-title>
-      <slot name="footer">
-      &copy; MG Papelaria
-      </slot>
-    </q-toolbar-title>
-  </q-toolbar>
-</q-layout>
-
+  </q-layout>
 </template>
 
 <script>
@@ -106,8 +77,9 @@ export default {
       rightScroll: true,
       leftBreakpoint: 996,
       rightBreakpoint: 2000,
-      hideTabs: true
-      // right: false
+      hideTabs: true,
+      leftSide: false,
+      rightSide: false
     }
   },
   components: {
@@ -126,16 +98,16 @@ export default {
     QListHeader,
     QScrollArea
   },
-  computed: {
-    aplicativos: function () {
-      const aplicativos = this.$store.getters['aplicativos/listagem']
-      return aplicativos
-    },
-    perfil: function () {
-      const perfil = this.$store.getters['perfil/usuario']
-      return perfil
-    }
-  },
+  // computed: {
+  //   aplicativos: function () {
+  //     const aplicativos = this.$store.getters['aplicativos/listagem']
+  //     return aplicativos
+  //   },
+  //   perfil: function () {
+  //     const perfil = this.$store.getters['perfil/usuario']
+  //     return perfil
+  //   }
+  // },
   props: {
     navigation: {
       type: Boolean,
