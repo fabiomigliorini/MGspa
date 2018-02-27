@@ -3,7 +3,8 @@
 module.exports = function (ctx) {
   return {
     plugins: [
-      'axios'
+      'axios',
+      'numeral'
     ],
     css: [
       'app.styl'
@@ -64,7 +65,7 @@ module.exports = function (ctx) {
         'QItem',
         'QItemMain',
         'QItemSide',
-        ''
+        'QItemTile'
       ],
       directives: [
         'Ripple'

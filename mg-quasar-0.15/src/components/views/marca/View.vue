@@ -320,7 +320,7 @@
 
       </div>
 
-      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+      <q-page-sticky corner="bottom-right" :offset="[18, 18]">
         <q-fab
           color="primary"
           icon="edit"
@@ -337,7 +337,7 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
-      </q-fixed-position>
+      </q-page-sticky>
 
     </div>
 
@@ -352,7 +352,7 @@
 
 <script>
 
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
 import {
   QIcon,
@@ -364,12 +364,11 @@ import {
   QRating,
   debounce,
   QBtn,
-  QFixedPosition,
+  QPageSticky,
   QFab,
   QFabAction,
   QTooltip,
   Dialog,
-  Toast,
   QCardMain,
   QToggle,
   QCollapsible,
@@ -393,7 +392,7 @@ export default {
     QCardActions,
     QRating,
     QBtn,
-    QFixedPosition,
+    QPageSticky,
     QFabAction,
     QFab,
     QTooltip,
@@ -438,7 +437,7 @@ export default {
             handler () {
               window.axios.delete('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
                 vm.loadData(vm.item.codmarca)
-                Toast.create.positive('Registro ativado')
+                Notify.create.positive('Registro ativado')
               }).catch(function (error) {
                 console.log(error.response)
               })
@@ -459,7 +458,7 @@ export default {
             handler () {
               window.axios.post('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
                 vm.loadData(vm.item.codusuario)
-                Toast.create.positive('Registro inativado')
+                Notify.create.positive('Registro inativado')
               }).catch(function (error) {
                 console.log(error.response)
               })
@@ -481,7 +480,7 @@ export default {
             handler () {
               window.axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
                 vm.loadData(vm.item.codmarca)
-                Toast.create.positive('Imagem excluida')
+                Notify.create.positive('Imagem excluida')
               }).catch(function (error) {
                 console.log(error.response)
               })
@@ -502,7 +501,7 @@ export default {
             handler () {
               window.axios.delete('marca/' + vm.item.codmarca).then(function (request) {
                 vm.$router.push('/marca')
-                Toast.create.positive('Registro excluído')
+                Notify.create.positive('Registro excluído')
               }).catch(function (error) {
                 console.log(error)
               })

@@ -246,7 +246,7 @@
 
 <script>
 
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 
 import GraficoVendasGeral from './grafico-vendas-geral'
 import GraficoVoltaAulas from './grafico-volta-aulas'
@@ -265,7 +265,6 @@ import {
   QRating,
   debounce,
   QBtn,
-  QFixedPosition,
   QFab,
   QFabAction,
   QTooltip,
@@ -295,7 +294,6 @@ export default {
     QCardActions,
     QRating,
     QBtn,
-    QFixedPosition,
     QFabAction,
     QFab,
     QTooltip,

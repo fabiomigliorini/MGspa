@@ -67,13 +67,13 @@ import {
   QSelect,
   QSearch,
   QAutocomplete,
-  QSideLink,
+  
   QList,
   QItem,
   QItemTile,
   QItemMain
 } from 'quasar'
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
@@ -87,7 +87,7 @@ export default {
     QSelect,
     QSearch,
     QAutocomplete,
-    QSideLink,
+    
     QList,
     QItem,
     QItemTile,

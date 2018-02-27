@@ -213,11 +213,11 @@
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
       <router-link :to="{ path: 'marca/create' }">
-        <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+        <q-page-sticky corner="bottom-right" :offset="[18, 18]">
           <q-btn round color="primary">
             <q-icon name="add" />
           </q-btn>
-        </q-fixed-position>
+        </q-page-sticky>
       </router-link>
 
     </div>
@@ -227,9 +227,9 @@
 
 <script>
 
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { QChip, QInput, QSideLink, QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QFixedPosition, QBtn } from 'quasar'
+import { QChip, QInput,  QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QPageSticky, QBtn } from 'quasar'
 
 export default {
 
@@ -238,7 +238,6 @@ export default {
     MgNoData,
     QChip,
     QInput,
-    QSideLink,
     QIcon,
     QField,
     QRadio,
@@ -255,7 +254,7 @@ export default {
     QSpinnerDots,
     QRating,
     QBtn,
-    QFixedPosition
+    QPageSticky
   },
 
   data () {

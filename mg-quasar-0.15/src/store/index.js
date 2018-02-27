@@ -3,13 +3,15 @@ import Vuex from 'vuex'
 
 import example from './module-example'
 import aplicativos from './aplicativos'
+import perfil from './perfil'
 
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
   modules: {
     example,
-    aplicativos
+    aplicativos,
+    perfil
   }
 })
 

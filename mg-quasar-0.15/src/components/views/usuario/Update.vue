@@ -72,7 +72,7 @@
 <script>
 import {
   Dialog,
-  Toast,
+  
   QBtn,
   QField,
   QInput,
@@ -81,7 +81,7 @@ import {
   QAutocomplete,
   QSideLink
 } from 'quasar'
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
 import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
@@ -98,7 +98,7 @@ export default {
     QSelect,
     QSearch,
     QAutocomplete,
-    QSideLink,
+    
     MgAutocompletePessoa,
     MgSelectImpressora,
     MgSelectFilial
@@ -135,7 +135,7 @@ export default {
             label: 'Salvar',
             handler () {
               window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
-                Toast.create.positive('Registro atualizado')
+                Notify.create.positive('Registro atualizado')
                 vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {
                 vm.erros = error.response.data.erros

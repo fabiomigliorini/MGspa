@@ -86,16 +86,16 @@
 
 <script>
 import {
-  QSideLink,
+  
   Dialog,
-  Toast,
+  
   QField,
   QBtn,
   QInput,
   QSelect
 } from 'quasar'
 
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
 import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
@@ -106,7 +106,7 @@ export default {
   components: {
     MgLayout,
     MgErrosValidacao,
-    QSideLink,
+    
     QField,
     QBtn,
     QInput,
@@ -143,7 +143,7 @@ export default {
             label: 'Salvar',
             handler () {
               window.axios.post('usuario', vm.data).then(function (request) {
-                Toast.create.positive('Registro inserido')
+                Notify.create.positive('Registro inserido')
                 vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {
                 vm.erros = error.response.data.erros

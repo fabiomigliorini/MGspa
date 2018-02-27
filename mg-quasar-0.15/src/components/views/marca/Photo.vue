@@ -1,9 +1,9 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/marca/' + data.codmarca" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn round slot="menu" @click="$router.push('/marca')">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
     <q-btn flat icon="done" slot="menuRight" @click.prevent="upload()" />
 
@@ -34,19 +34,18 @@
 <script>
 import {
   Dialog,
-  Toast,
   QBtn,
   QField,
   QInput,
   QSelect,
-  QSideLink,
+
   QUploader,
   QCardMedia,
   QCard,
   QCardMain,
   QCardTitle
 } from 'quasar'
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import Slim from '../../utils/slim/slim.vue'
 
 function slimInit (data, slim) {
@@ -67,7 +66,6 @@ export default {
     QField,
     QInput,
     QSelect,
-    QSideLink,
     QUploader,
     QCardMedia,
     QCard,
@@ -110,7 +108,7 @@ export default {
               }
               if (vm.data.codimagem === null) {
                 window.axios.post('imagem', data).then(function (request) {
-                  Toast.create.positive('Sua foto foi cadastrada')
+                  Notify.create.positive('Sua foto foi cadastrada')
                   vm.$router.push('/marca/' + vm.data.codmarca)
                 }).catch(function (error) {
                   vm.erros = error.response.data.erros
@@ -118,7 +116,7 @@ export default {
               }
               else {
                 window.axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
-                  Toast.create.positive('Sua foto foi alterada')
+                  Notify.create.positive('Sua foto foi alterada')
                   vm.$router.push('/marca/' + vm.data.codmarca)
                 }).catch(function (error) {
                   vm.erros = error.response.data.erros

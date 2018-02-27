@@ -53,12 +53,12 @@
 <script>
 import {
   Dialog,
-  Toast,
+  
   QBtn,
   QField,
   QInput,
   QSelect,
-  QSideLink,
+  
   QUploader,
   QCardMedia,
   QCard,
@@ -66,7 +66,7 @@ import {
   QCardTitle
 
 } from 'quasar'
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgSelectImpressora from '../../utils/select/MgSelectImpressora'
 
@@ -79,7 +79,7 @@ export default {
     QField,
     QInput,
     QSelect,
-    QSideLink,
+    
     QUploader,
     QCardMedia,
     QCard,
@@ -119,7 +119,7 @@ export default {
             label: 'Salvar',
             handler () {
               window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
-                Toast.create.positive('Registro atualizado')
+                Notify.create.positive('Registro atualizado')
                 vm.$router.push('/usuario/perfil')
               }).catch(function (error) {
                 vm.erros = error.response.data.erros

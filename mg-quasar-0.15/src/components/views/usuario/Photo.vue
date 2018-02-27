@@ -36,19 +36,19 @@
 <script>
 import {
   Dialog,
-  Toast,
+  
   QBtn,
   QField,
   QInput,
   QSelect,
-  QSideLink,
+  
   QUploader,
   QCardMedia,
   QCard,
   QCardMain,
   QCardTitle
 } from 'quasar'
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import Slim from '../../utils/slim/slim.vue'
 
 function slimInit (data, slim) {
@@ -71,7 +71,7 @@ export default {
     QField,
     QInput,
     QSelect,
-    QSideLink,
+    
     QUploader,
     QCardMedia,
     QCard,
@@ -118,7 +118,7 @@ export default {
                   vm.loadData(vm.data.codusuario)
                   localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
                   this.$store.commit('perfil/usuario', { avatar: localStorage.getItem('auth.usuario.avatar') })
-                  Toast.create.positive('Sua foto foi cadastrada')
+                  Notify.create.positive('Sua foto foi cadastrada')
                   // vm.$router.push('/usuario/foto')
                 }).catch(function (error) {
                   vm.erros = error.response.data.erros
@@ -126,7 +126,7 @@ export default {
               }
               else {
                 window.axios.put('imagem/' + vm.data.codimagem, data).then(function (response) {
-                  Toast.create.positive('Sua foto foi alterada')
+                  Notify.create.positive('Sua foto foi alterada')
                   vm.avatar()
                   // vm.$router.push('/usuario/foto')
                 }).catch(function (error) {

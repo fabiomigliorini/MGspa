@@ -1,9 +1,9 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/marca/' + data.codmarca" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn round slot="menu" @click="$router.push('/marca')">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
     <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
 
@@ -79,16 +79,15 @@
 
 <script>
 import {
-  QSideLink,
+
   Dialog,
-  Toast,
   QField,
   QBtn,
   QInput,
   QToggle
 } from 'quasar'
 
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
@@ -96,7 +95,6 @@ export default {
   components: {
     MgLayout,
     MgErrosValidacao,
-    QSideLink,
     QField,
     QBtn,
     QInput,
@@ -131,7 +129,7 @@ export default {
             label: 'Salvar',
             handler () {
               window.axios.put('marca/' + vm.data.codmarca, vm.data).then(function (request) {
-                Toast.create.positive('Registro atualizado')
+                Notify.create.positive('Registro atualizado')
                 vm.$router.push('/marca/' + request.data.codmarca)
               }).catch(function (error) {
                 vm.erros = error.response.data.erros

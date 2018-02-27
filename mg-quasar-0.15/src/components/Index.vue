@@ -8,15 +8,12 @@
     <div slot="content" class="layout-padding">
       <div class="row wrap">
         <div class="text-center col-md-1 col-xs-3 col-sm-2" v-for="aplicativo in aplicativos">
-          <a @click="$router.push(aplicativo.path)">
-            <q-icon :name="aplicativo.icon" style="font-size:3em" />
-            <br>
-            <small>
-              {{aplicativo.title}}
-            </small>
-          </a>
+          <q-btn flat color="primary" :icon="aplicativo.icon" @click="$router.push(aplicativo.path)" size="2rem" style="min-height:0"/>
+          <br>
+          <small @click="$router.push(aplicativo.path)" class="text-primary" style="cursor:pointer">
+            {{aplicativo.title}}
+          </small>
         </div>
-
       </div>
     </div>
 
@@ -24,13 +21,11 @@
 </template>
 
 <script>
-// import { QIcon } from 'quasar'
 import MgLayout from '../layouts/MgLayout'
 
 export default {
   name: 'index',
   components: {
-    // QIcon,
     MgLayout
   },
 
@@ -45,10 +40,6 @@ export default {
         return this.$store.state.aplicativos.aplicativosState
       }
     }
-    // aplicativos: function () {
-    //   const aplicativos = this.$store.getters['aplicativos/listagem']
-    //   return aplicativos
-    // }
   },
 
   methods: {

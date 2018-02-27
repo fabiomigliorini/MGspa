@@ -229,14 +229,14 @@
 </template>
 
 <script>
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutor from '../../utils/MgAutor'
 import MgNoData from '../../utils/MgNoData'
 
 import {
   debounce,
-  Toast,
+  
   Dialog,
   QList,
   QListHeader,
@@ -393,7 +393,7 @@ export default {
             label: 'Salvar',
             handler () {
               window.axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
-                Toast.create.positive('Novo grupo inserido')
+                Notify.create.positive('Novo grupo inserido')
                 vm.dataGrupousuario.grupousuario = null
                 vm.erros = false
                 vm.loadDataGrupos()
@@ -421,7 +421,7 @@ export default {
             label: 'Salvar',
             handler () {
               window.axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
-                Toast.create.positive('Grupo atualizado')
+                Notify.create.positive('Grupo atualizado')
                 vm.erros = false
                 vm.loadDataGrupos()
                 vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
@@ -447,7 +447,7 @@ export default {
             handler () {
               window.axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
                 vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                Toast.create.positive('Registro ativado')
+                Notify.create.positive('Registro ativado')
               }).catch(function (error) {
                 console.log(error.response)
               })
@@ -469,7 +469,7 @@ export default {
             handler () {
               window.axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
                 vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                Toast.create.positive('Registro inativado')
+                Notify.create.positive('Registro inativado')
               }).catch(function (error) {
                 console.log(error.response)
               })
@@ -493,7 +493,7 @@ export default {
                 vm.$router.push('/usuario')
                 vm.loadDataGrupos()
                 vm.grupousuario = false
-                Toast.create.positive('Registro excluído')
+                Notify.create.positive('Registro excluído')
               }).catch(function (error) {
                 console.log(error)
               })

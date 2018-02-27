@@ -27,8 +27,47 @@
     </q-layout-drawer>
 
     <!-- Right Side Panel -->
-    <q-layout-drawer v-model="rightSide" side="right" overlay>
-      Right Side of Layout
+    <q-layout-drawer v-model="rightSide" side="right" behavior="mobile">
+
+      <q-list inset-separator>
+
+        <q-item>
+          <q-item-side link to="/inbox/1" v-if="perfil.avatar">
+            <q-item-tile avatar>
+              <img :src="perfil.avatar">
+            </q-item-tile>
+          </q-item-side>
+          <q-item-main link @click="$router.push('/usuario/perfil')">
+            {{ perfil.usuario }}
+          </q-item-main>
+          <q-item-side right>
+            <q-item-tile icon="exit_to_app" @click="$router.push('/usuario/perfil')"/>
+          </q-item-side>
+        </q-item>
+
+      </q-list>
+
+      <!-- <q-list inset-separator>
+        <q-item>
+          <q-item-side :avatar="perfil.avatar" v-if="perfil.avatar.length > 0"/>
+          <q-item-main>
+            <router-link :to="{ path: '/usuario/perfil' }">
+            {{ perfil.usuario }}
+            </router-link>
+          </q-item-main>
+          <q-item-side right icon="exit_to_app" @click="logout" style="cursor:pointer"/>
+        </q-item>
+      </q-list> -->
+
+      <div class="row wrap">
+        <div class="text-center col-3" v-for="aplicativo in aplicativos">
+          <span @click="$router.push(aplicativo.path)" style="cursor:pointer">
+            <q-icon :name="aplicativo.icon" style="font-size:3em" color="primary" />
+            <small class="text-primary">{{ aplicativo.title }}</small>
+          </span>
+        </div>
+
+      </div>
     </q-layout-drawer>
 
     </q-layout-drawer>
@@ -98,16 +137,18 @@ export default {
     QListHeader,
     QScrollArea
   },
-  // computed: {
-  //   aplicativos: function () {
-  //     const aplicativos = this.$store.getters['aplicativos/listagem']
-  //     return aplicativos
-  //   },
-  //   perfil: function () {
-  //     const perfil = this.$store.getters['perfil/usuario']
-  //     return perfil
-  //   }
-  // },
+  computed: {
+    aplicativos: {
+      get () {
+        return this.$store.state.aplicativos.aplicativosState
+      }
+    },
+    perfil: {
+      get () {
+        return this.$store.state.perfil.perfilState
+      }
+    }
+  },
   props: {
     navigation: {
       type: Boolean,

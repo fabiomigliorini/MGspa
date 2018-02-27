@@ -80,12 +80,12 @@
 <script>
 import {
   // Dialog,
-  // Toast,
+  // 
   QBtn,
   QField,
   QInput,
   QSelect,
-  QSideLink,
+  
   QUploader,
   QCardMedia,
   QCard,
@@ -100,7 +100,7 @@ import {
   QItemTile,
   QIcon
 } from 'quasar'
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
@@ -112,7 +112,7 @@ export default {
     QField,
     QInput,
     QSelect,
-    QSideLink,
+    
     QUploader,
     QCardMedia,
     QCard,

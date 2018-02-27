@@ -73,6 +73,7 @@ export default {
   },
   data () {
     return {
+      leftSide: true,
       dados: [],
       permissoes: false,
       tabs: null,

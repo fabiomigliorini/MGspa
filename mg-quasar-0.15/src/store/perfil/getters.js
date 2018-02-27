@@ -1,4 +1,3 @@
-/*
-export const someGetter = (state) => {
+export const perfilGetter = (state) => {
+  return state.usuario
 }
-*/

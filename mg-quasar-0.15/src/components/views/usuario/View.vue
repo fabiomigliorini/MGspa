@@ -125,14 +125,14 @@
 <script>
 import {
   Dialog,
-  Toast,
+  
   QFixedPosition,
   QBtn,
   QIcon,
   QFab,
   QFabAction,
   QTooltip,
-  QSideLink,
+  
   QCard,
   QList,
   QCardMain,
@@ -141,7 +141,7 @@ import {
   QCardActions,
   QCollapsible
 } from 'quasar'
-import MgLayout from '../../layouts/MgLayout'
+import MgLayout from '../../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
 
 export default {
@@ -155,7 +155,7 @@ export default {
     QFab,
     QFabAction,
     QTooltip,
-    QSideLink,
+    
     QCard,
     QList,
     QCardMain,
@@ -198,7 +198,7 @@ export default {
             handler () {
               window.axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
                 vm.carregaDados(vm.item.codusuario)
-                Toast.create.positive('Registro ativado')
+                Notify.create.positive('Registro ativado')
               }).catch(function (error) {
                 console.log(error.response)
               })
@@ -219,7 +219,7 @@ export default {
             handler () {
               window.axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
                 vm.carregaDados(vm.item.codusuario)
-                Toast.create.positive('Registro inativado')
+                Notify.create.positive('Registro inativado')
               }).catch(function (error) {
                 console.log(error.response)
               })
@@ -240,7 +240,7 @@ export default {
             handler () {
               window.axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
                 vm.$router.push('/usuario')
-                Toast.create.positive('Registro excluído')
+                Notify.create.positive('Registro excluído')
               }).catch(function (error) {
                 console.log(error)
               })
