@@ -30,15 +30,14 @@ select queue, count(*) from tbljobs group by queue order by queue
 select * from tbljobs where queue in ('high', 'medium')
 
 
-delete from tbljobs where id in (3577560
-,3577559
-,3577556
-,3281850
-,3281849
-,3281846
-,3281845
-,3281844
-,3281842
+delete from tbljobs where id in (
+4300363
+,4300360
+,4300225
+,4300233
+,4300219
+,4300220
+
 )
 */
 

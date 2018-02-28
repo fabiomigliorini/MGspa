@@ -1,4 +1,14 @@
-﻿select 
+﻿/*
+
+select codmarca, marca from tblmarca where controlada order by marca
+
+
+select * from tblmarca
+
+update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'acrilex'
+*/
+
+select 
     * 
     , case when (x.repor > 0) then ceil(x.repor::float / x.lote::float) * x.lote else 0 end as comprar
 from 
@@ -54,7 +64,8 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'hp')
+    where (m.marca ilike 'acrilex')
+    --and produto ilike 'quadro stalo branco%'
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
     --and m.controlada = true
@@ -66,3 +77,37 @@ from
 ) x
 --order by sld nulls first
 --SELECT * FROM TBLPRODUTOVARIACAO WHERE CODPRODUTO = 29011
+
+--update tblnfeterceiroitem set margem = 60 where codnfeterceiro = 17875
+
+/*
+UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = NOW() WHERE CODPRODUTOVARIACAO IN (
+60804
+
+)
+
+update tblprodutovariacao set descontinuado = null where codprodutovariacao = 1198
+
+-- PEGA REFERENCIA DA NFE DE TERCEIRO
+select cprod, xprod, cean, count(*), min(nti.criacao), max(nti.criacao)
+from tblnfeterceiroitem nti
+inner join tblprodutobarra pb on (pb.codprodutobarra = nti.codprodutobarra)
+--where pb.codproduto = 12752
+where pb.codprodutovariacao = 6727
+group by cprod, xprod, cean
+order by 6 asc
+
+
+-- DEIXA REFERENCIA COMO MAIUSCULA
+
+update tblproduto 
+set referencia = upper(referencia)
+where codmarca in (select m.codmarca from tblmarca m where m.marca ilike 'pilot')
+
+update tblprodutovariacao 
+set referencia = upper(referencia)
+where codmarca in (select m.codmarca from tblmarca m where m.marca ilike 'pilot')
+or codproduto in (select p.codproduto from tblproduto p inner join tblmarca m on (m.codmarca = p.codmarca) where m.marca ilike 'pilot')
+
+
+*/
