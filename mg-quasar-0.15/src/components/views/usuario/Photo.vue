@@ -114,7 +114,7 @@ export default {
               }
 
               if (vm.data.codimagem === null) {
-                window.axios.post('imagem', data).then(function (response) {
+                vm.$axios.post('imagem', data).then(function (response) {
                   vm.loadData(vm.data.codusuario)
                   localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
                   this.$store.commit('perfil/usuario', { avatar: localStorage.getItem('auth.usuario.avatar') })
@@ -125,7 +125,7 @@ export default {
                 })
               }
               else {
-                window.axios.put('imagem/' + vm.data.codimagem, data).then(function (response) {
+                vm.$axios.put('imagem/' + vm.data.codimagem, data).then(function (response) {
                   Notify.create.positive('Sua foto foi alterada')
                   vm.avatar()
                   // vm.$router.push('/usuario/foto')
@@ -141,7 +141,7 @@ export default {
     },
     avatar: function () {
       let vm = this
-      window.axios.get('usuario/' + vm.data.codusuario + '/details').then(function (request) {
+      vm.$axios.get('usuario/' + vm.data.codusuario + '/details').then(function (request) {
         vm.data = request.data
         let perfil = {
           codusuario: vm.data.codusuario,
@@ -156,7 +156,7 @@ export default {
     },
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      vm.$axios.get('usuario/' + id + '/details').then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)

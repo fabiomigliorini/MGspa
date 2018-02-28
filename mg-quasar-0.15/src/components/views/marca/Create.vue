@@ -128,7 +128,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.post('marca', vm.data).then(function (request) {
+              vm.$axios.post('marca', vm.data).then(function (request) {
                 Notify.create.positive('Registro inserido')
                 vm.$router.push('/marca/' + request.data.codmarca)
               }).catch(function (error) {

@@ -344,7 +344,7 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('estoque-estatistica/' + vm.codproduto, { params }).then(response => {
+      vm.$axios.get('estoque-estatistica/' + vm.codproduto, { params }).then(response => {
         vm.item = response.data
         this.loading = false
       })

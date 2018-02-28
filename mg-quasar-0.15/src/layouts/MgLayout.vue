@@ -178,7 +178,7 @@ export default {
           {
             label: 'Sim',
             handler () {
-              window.axios.get('auth/logout').then(response => {
+              vm.$axios.get('auth/logout').then(response => {
                 localStorage.removeItem('auth.token')
                 localStorage.removeItem('auth.usuario.usuario')
                 localStorage.removeItem('auth.usuario.codusuario')

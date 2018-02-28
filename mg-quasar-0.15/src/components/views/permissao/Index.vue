@@ -122,7 +122,7 @@ export default {
         permissao: permissao,
         codgrupousuario: codgrupousuario
       }
-      window.axios.delete('permissao/' + 1, {params: dados}).then(function (request) {
+      vm.$axios.delete('permissao/' + 1, {params: dados}).then(function (request) {
         if (request.status === 204) {
           var rm = vm.dados.Permissoes[index][permissao]['codgrupousuario'].indexOf(codgrupousuario)
           if (rm !== -1) {

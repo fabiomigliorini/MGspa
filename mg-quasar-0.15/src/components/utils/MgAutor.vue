@@ -102,7 +102,7 @@
 
           // TODO: Adicionar cache usando vuex para não chamar API toda hora
           if (this.data.codusuariocriacao != null) {
-            window.axios.get('usuario/' + this.data.codusuariocriacao + '/autor', { params }).then(response => {
+            vm.$axios.get('usuario/' + this.data.codusuariocriacao + '/autor', { params }).then(response => {
               vm.usuariocriacao = response.data.usuario
               vm.pessoacriacao = response.data.pessoa
               vm.imagemusuariocriacao = response.data.imagem
@@ -111,7 +111,7 @@
 
           // TODO: Adicionar cache usando vuex para não chamar API toda hora
           if (this.data.codusuarioalteracao != null) {
-            window.axios.get('usuario/' + this.data.codusuarioalteracao + '/autor', { params }).then(response => {
+            vm.$axios.get('usuario/' + this.data.codusuarioalteracao + '/autor', { params }).then(response => {
               vm.usuarioalteracao = response.data.usuario
               vm.pessoaalteracao = response.data.pessoa
               vm.imagemusuarioalteracao = response.data.imagem

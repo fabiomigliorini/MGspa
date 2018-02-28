@@ -92,7 +92,7 @@
         </div>
       </div>
 
-      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+      <q-page-sticky corner="bottom-right" :offset="[18, 18]">
         <q-fab
           color="primary"
           icon="edit"
@@ -109,7 +109,7 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
-      </q-fixed-position>
+      </q-page-sticky>
 
     </div>
 
@@ -125,14 +125,12 @@
 <script>
 import {
   Dialog,
-  
-  QFixedPosition,
+  QPageSticky,
   QBtn,
   QIcon,
   QFab,
   QFabAction,
   QTooltip,
-  
   QCard,
   QList,
   QCardMain,
@@ -149,13 +147,12 @@ export default {
   components: {
     MgLayout,
     MgAutor,
-    QFixedPosition,
+    QPageSticky,
     QBtn,
     QIcon,
     QFab,
     QFabAction,
     QTooltip,
-    
     QCard,
     QList,
     QCardMain,
@@ -179,7 +176,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      vm.$axios.get('usuario/' + id + '/details').then(function (request) {
         vm.item = request.data
         console.log(vm.item)
       }).catch(function (error) {
@@ -196,7 +193,7 @@ export default {
           {
             label: 'Ativar',
             handler () {
-              window.axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+              vm.$axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
                 vm.carregaDados(vm.item.codusuario)
                 Notify.create.positive('Registro ativado')
               }).catch(function (error) {
@@ -217,7 +214,7 @@ export default {
           {
             label: 'Inativar',
             handler () {
-              window.axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+              vm.$axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
                 vm.carregaDados(vm.item.codusuario)
                 Notify.create.positive('Registro inativado')
               }).catch(function (error) {
@@ -238,7 +235,7 @@ export default {
           {
             label: 'Excluir',
             handler () {
-              window.axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
+              vm.$axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
                 vm.$router.push('/usuario')
                 Notify.create.positive('Registro excluído')
               }).catch(function (error) {

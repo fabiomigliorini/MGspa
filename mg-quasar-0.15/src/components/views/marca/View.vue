@@ -419,7 +419,7 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('marca/' + this.id + '/details', { params }).then(response => {
+      vm.$axios.get('marca/' + this.id + '/details', { params }).then(response => {
         vm.item = response.data
         // desmarca flag de carregando
         this.loading = false
@@ -435,7 +435,7 @@ export default {
           {
             label: 'Ativar',
             handler () {
-              window.axios.delete('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
+              vm.$axios.delete('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
                 vm.loadData(vm.item.codmarca)
                 Notify.create.positive('Registro ativado')
               }).catch(function (error) {
@@ -456,7 +456,7 @@ export default {
           {
             label: 'Inativar',
             handler () {
-              window.axios.post('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
+              vm.$axios.post('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
                 vm.loadData(vm.item.codusuario)
                 Notify.create.positive('Registro inativado')
               }).catch(function (error) {
@@ -478,7 +478,7 @@ export default {
           {
             label: 'Excluir',
             handler () {
-              window.axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
+              vm.$axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
                 vm.loadData(vm.item.codmarca)
                 Notify.create.positive('Imagem excluida')
               }).catch(function (error) {
@@ -499,7 +499,7 @@ export default {
           {
             label: 'Excluir',
             handler () {
-              window.axios.delete('marca/' + vm.item.codmarca).then(function (request) {
+              vm.$axios.delete('marca/' + vm.item.codmarca).then(function (request) {
                 vm.$router.push('/marca')
                 Notify.create.positive('Registro excluído')
               }).catch(function (error) {

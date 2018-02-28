@@ -104,12 +104,12 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id).then(function (request) {
+      vm.$axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
       })
-      window.axios.get('usuario/' + id + '/grupos').then(function (request) {
+      vm.$axios.get('usuario/' + id + '/grupos').then(function (request) {
         vm.grupousuario = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -121,7 +121,7 @@ export default {
         sort: 'filial',
         fields: 'codfilial,filial'
       }
-      window.axios.get('filial', { params }).then(function (request) {
+      vm.$axios.get('filial', { params }).then(function (request) {
         vm.filiais = request.data.data
       }).catch(function (error) {
         console.log(error.response)
@@ -133,7 +133,7 @@ export default {
         sort: 'grupousuario',
         fields: 'grupousuario,codgrupousuario'
       }
-      window.axios.get('grupo-usuario', { params }).then(function (response) {
+      vm.$axios.get('grupo-usuario', { params }).then(function (response) {
         vm.grupos = response.data.data
       }).catch(function (error) {
         console.log(error.response)
@@ -145,7 +145,7 @@ export default {
         codfilial: codfilial,
         codgrupousuario: codgrupousuario
       }
-      window.axios.post('usuario/' + vm.data.codusuario + '/grupos', dados).then(function (request) {
+      vm.$axios.post('usuario/' + vm.data.codusuario + '/grupos', dados).then(function (request) {
         if (request.status === 201) {
           vm.carregaDados(vm.data.codusuario)
         }
@@ -159,7 +159,7 @@ export default {
         codfilial: codfilial,
         codgrupousuario: codgrupousuario
       }
-      window.axios.delete('usuario/' + vm.data.codusuario + '/grupos', { params: dados }).then(function (request) {
+      vm.$axios.delete('usuario/' + vm.data.codusuario + '/grupos', { params: dados }).then(function (request) {
         if (request.status === 204) {
           vm.carregaDados(vm.data.codusuario)
         }

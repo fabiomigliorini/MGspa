@@ -4,7 +4,8 @@ module.exports = function (ctx) {
   return {
     plugins: [
       'axios',
-      'numeral'
+      'numeral',
+      'moment'
     ],
     css: [
       'app.styl'

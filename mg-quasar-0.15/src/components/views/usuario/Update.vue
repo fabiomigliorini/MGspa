@@ -115,7 +115,7 @@ export default {
       let params = {
         fields: ['codusuario', 'usuario', 'codfilial', 'impressoratermica', 'impressoramatricial', 'codpessoa']
       }
-      window.axios.get('usuario/' + id, { params }).then(function (request) {
+      vm.$axios.get('usuario/' + id, { params }).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -134,7 +134,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
+              vm.$axios.put('usuario/' + vm.data.codusuario, vm.data).then(function (request) {
                 Notify.create.positive('Registro atualizado')
                 vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {

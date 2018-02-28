@@ -142,7 +142,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.post('usuario', vm.data).then(function (request) {
+              vm.$axios.post('usuario', vm.data).then(function (request) {
                 Notify.create.positive('Registro inserido')
                 vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {

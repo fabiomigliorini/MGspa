@@ -290,7 +290,7 @@ export default {
     // carrega registros da api
     loadData: debounce(function (concat, done) {
       // salva no Vuex filtro da marca
-      this.$store.commit('filter/marca', this.filter)
+      this.$store.commit('filtroMarca/updateFiltroMarca', this.filter)
 
       // inicializa variaveis
       var vm = this
@@ -299,7 +299,7 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('marca', {
+      vm.$axios.get('marca', {
         params
       }).then(response => {
         // Se for para concatenar, senao inicializa
@@ -334,7 +334,7 @@ export default {
 
   // na criacao, busca filtro do Vuex
   created () {
-    this.filter = this.$store.getters['filter/marca']
+    this.filter = this.$store.state.filtroMarca
   }
 
 }

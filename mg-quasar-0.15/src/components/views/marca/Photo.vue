@@ -107,7 +107,7 @@ export default {
                 'slim[]': imagem
               }
               if (vm.data.codimagem === null) {
-                window.axios.post('imagem', data).then(function (request) {
+                vm.$axios.post('imagem', data).then(function (request) {
                   Notify.create.positive('Sua foto foi cadastrada')
                   vm.$router.push('/marca/' + vm.data.codmarca)
                 }).catch(function (error) {
@@ -115,7 +115,7 @@ export default {
                 })
               }
               else {
-                window.axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
+                vm.$axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
                   Notify.create.positive('Sua foto foi alterada')
                   vm.$router.push('/marca/' + vm.data.codmarca)
                 }).catch(function (error) {
@@ -129,7 +129,7 @@ export default {
     },
     loadData: function (id) {
       let vm = this
-      window.axios.get('marca/' + id).then(function (request) {
+      vm.$axios.get('marca/' + id).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)

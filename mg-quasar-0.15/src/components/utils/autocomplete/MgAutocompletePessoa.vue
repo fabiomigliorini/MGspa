@@ -48,7 +48,7 @@ export default {
   methods: {
     initSelect (codpessoa) {
       let vm = this
-      window.axios.get('pessoa/' + codpessoa).then(response => {
+      vm.$axios.get('pessoa/' + codpessoa).then(response => {
         let pessoa = response.data
         vm.terms = pessoa.pessoa
       }).catch(function (error) {
@@ -63,7 +63,7 @@ export default {
       let params = {}
       params.sort = 'fantasia'
       params.pessoa = terms
-      window.axios.get('pessoa/autocomplete', { params }).then(response => {
+      vm.$axios.get('pessoa/autocomplete', { params }).then(response => {
         let results = response.data
         done(results)
       }).catch(function (error) {

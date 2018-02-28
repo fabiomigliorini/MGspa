@@ -97,7 +97,7 @@ export default {
       let params = {
         fields: ['usuario', 'impressoratermica', 'impressoramatricial']
       }
-      window.axios.get('usuario/' + id, { params }).then(function (request) {
+      vm.$axios.get('usuario/' + id, { params }).then(function (request) {
         vm.data = request.data
         vm.data.senha = null
       }).catch(function (error) {
@@ -117,7 +117,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.put('usuario/' + localStorage.getItem('auth.usuario.codusuario'), vm.data).then(function (request) {
+              vm.$axios.put('usuario/' + localStorage.getItem('auth.usuario.codusuario'), vm.data).then(function (request) {
                 Notify.create.positive('Registro atualizado')
                 vm.$router.push('/usuario/' + request.data.codusuario)
               }).catch(function (error) {

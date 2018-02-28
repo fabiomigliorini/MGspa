@@ -177,7 +177,7 @@
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
-      <q-fixed-position corner="bottom-right" :offset="[90, 18]" v-if="grupousuario">
+      <q-page-sticky corner="bottom-right" :offset="[90, 18]" v-if="grupousuario">
         <q-fab
           color="primary"
           active-icon="edit"
@@ -198,9 +198,9 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
-      </q-fixed-position>
+      </q-page-sticky>
 
-      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+      <q-page-sticky corner="bottom-right" :offset="[18, 18]">
         <q-fab
           color="primary"
           active-icon="add"
@@ -216,7 +216,7 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Grupo</q-tooltip>
           </q-fab-action>
         </q-fab>
-      </q-fixed-position>
+      </q-page-sticky>
     </div>
 
     <div slot="footer" v-if="grupousuario">
@@ -236,7 +236,7 @@ import MgNoData from '../../utils/MgNoData'
 
 import {
   debounce,
-  
+
   Dialog,
   QList,
   QListHeader,
@@ -250,7 +250,7 @@ import {
   QInput,
   QIcon,
   QRadio,
-  QFixedPosition,
+  QPageSticky,
   QBtn,
   QFab,
   QFabAction,
@@ -284,7 +284,7 @@ export default {
     QInput,
     QIcon,
     QRadio,
-    QFixedPosition,
+    QPageSticky,
     QBtn,
     QFab,
     QFabAction,
@@ -348,7 +348,7 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('usuario', {
+      vm.$axios.get('usuario', {
         params
       }).then(response => {
         // Se for para concatenar, senao inicializa
@@ -392,7 +392,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
+              vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
                 Notify.create.positive('Novo grupo inserido')
                 vm.dataGrupousuario.grupousuario = null
                 vm.erros = false
@@ -420,7 +420,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
+              vm.$axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
                 Notify.create.positive('Grupo atualizado')
                 vm.erros = false
                 vm.loadDataGrupos()
@@ -445,7 +445,7 @@ export default {
           {
             label: 'Ativar',
             handler () {
-              window.axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+              vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
                 vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
                 Notify.create.positive('Registro ativado')
               }).catch(function (error) {
@@ -467,7 +467,7 @@ export default {
           {
             label: 'Inativar',
             handler () {
-              window.axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+              vm.$axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
                 vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
                 Notify.create.positive('Registro inativado')
               }).catch(function (error) {
@@ -489,7 +489,7 @@ export default {
           {
             label: 'Excluir',
             handler () {
-              window.axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
+              vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
                 vm.$router.push('/usuario')
                 vm.loadDataGrupos()
                 vm.grupousuario = false
@@ -510,7 +510,7 @@ export default {
 
     loadDataGrupo: function (id) {
       let vm = this
-      window.axios.get('grupo-usuario/' + id + '/details').then(function (request) {
+      vm.$axios.get('grupo-usuario/' + id + '/details').then(function (request) {
         vm.grupousuario = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -522,7 +522,7 @@ export default {
       let params = {
         sort: 'grupousuario'
       }
-      window.axios.get('grupo-usuario', {
+      vm.$axios.get('grupo-usuario', {
         params
       }).then(function (response) {
         vm.grupos = response.data.data
