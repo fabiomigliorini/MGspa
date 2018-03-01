@@ -1,4 +1,3 @@
-/*
-export const someMutation = (state) => {
+export const updatePerfil = (state, payload) => {
+  state = payload
 }
-*/

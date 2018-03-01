@@ -198,24 +198,22 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
+
       </q-page-sticky>
 
       <q-page-sticky corner="bottom-right" :offset="[18, 18]">
-        <q-fab
-          color="primary"
-          active-icon="add"
-          direction="up"
-          class="animate-pop"
-        >
-          <router-link :to="{ path: '/usuario/create'}">
-            <q-fab-action color="primary" icon="account_circle">
-                <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Usuário</q-tooltip>
-            </q-fab-action>
-          </router-link>
-          <q-fab-action color="primary" icon="supervisor_account" @click="$refs.createModal.open()">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Grupo</q-tooltip>
+
+        <q-fab color="primary" icon="add" direction="up">
+          <q-fab-action color="primary" @click="$router.push('/usuario/create')" icon="account_circle">
+            <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Usuário</q-tooltip>
           </q-fab-action>
+
+          <q-fab-action color="primary" @click="$router.push($refs.createModal.open())" icon="supervisor_account">
+            <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Grupo</q-tooltip>
+          </q-fab-action>
+
         </q-fab>
+
       </q-page-sticky>
     </div>
 
@@ -337,7 +335,7 @@ export default {
     // carrega registros da api
     loadData: debounce(function (concat, done) {
       // salva no Vuex filtro da marca
-      this.$store.commit('filter/usuario', this.filter)
+      this.$store.commit('filtroUsuario/updateFiltroUsuario', this.filter)
 
       // inicializa variaveis
       var vm = this
@@ -532,7 +530,7 @@ export default {
     }
   },
   created () {
-    this.filter = this.$store.getters['filter/usuario']
+    this.filter = this.$store.state.filtroUsuario
     this.loadDataGrupos()
   }
 }

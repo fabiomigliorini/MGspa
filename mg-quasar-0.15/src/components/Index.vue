@@ -37,7 +37,7 @@ export default {
   computed: {
     aplicativos: {
       get () {
-        return this.$store.state.aplicativos.aplicativosState
+        return this.$store.state.aplicativos.aplicativos
       }
     }
   },

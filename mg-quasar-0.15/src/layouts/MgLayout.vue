@@ -140,12 +140,12 @@ export default {
   computed: {
     aplicativos: {
       get () {
-        return this.$store.state.aplicativos.aplicativosState
+        return this.$store.state.aplicativos.aplicativos
       }
     },
     perfil: {
       get () {
-        return this.$store.state.perfil.perfilState
+        return this.$store.state.perfil
       }
     }
   },

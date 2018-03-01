@@ -1,4 +1,3 @@
-/*
-export const someMutation = (state) => {
+export const updateFiltroUsuario = (state, payload) => {
+  state = payload
 }
-*/

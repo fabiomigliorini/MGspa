@@ -1,9 +1,9 @@
 <template>
   <mg-layout>
 
-    <q-side-link to="/usuario" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn flat round slot="menu" @click="$router.push('/usuario')">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
     <q-btn flat icon="done" slot="menuRight" @click.prevent="create()" />
 
@@ -86,9 +86,9 @@
 
 <script>
 import {
-  
+
   Dialog,
-  
+
   QField,
   QBtn,
   QInput,
@@ -106,7 +106,7 @@ export default {
   components: {
     MgLayout,
     MgErrosValidacao,
-    
+
     QField,
     QBtn,
     QInput,

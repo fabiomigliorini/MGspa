@@ -1,3 +1,3 @@
-export const updateAplicaticosState = (state, payload) => {
-  state.listagem = payload
+export const updateAplicaticos = (state, payload) => {
+  state.aplicativos = payload
 }
