@@ -1,20 +1,20 @@
-﻿/*
-select m.marca, substr(pb.barras, 1, 8) as barras, count(*)
+﻿select m.marca, substr(pb.barras, 1, 8) as barras, count(*)
 from tblproduto p
 inner join tblprodutobarra pb on (pb.codproduto = p.codproduto)
 left join tblmarca m on (m.codmarca = p.codmarca)
-where p.produto ilike 'cartucho%'
+where p.produto ilike '%colorprint%'
 group by m.marca, substr(pb.barras, 1, 8)
 order by 1, 2
-*/
 
+
+/*
 select m.marca, pb.barras, p.produto, p.codproduto
 from tblproduto p
 inner join tblprodutobarra pb on (pb.codproduto = p.codproduto)
 left join tblmarca m on (m.codmarca = p.codmarca)
-where pb.barras ilike '78989134%'
+where pb.barras ilike '7898178%'
 order by 1, 2
-
+*/
 
 --select criacao, * from tblnfeterceiroitem where cean ilike '%7898476326129%' or cean ilike '%7898506457717%' order by criacao
 
