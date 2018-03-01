@@ -1,6 +1,6 @@
 <template>
   <q-layout :view="view">
-    <q-layout-header>
+    <q-layout-header :reveal="reveal">
       <q-toolbar color="primary">
         <slot name="menu">
           <q-btn flat round dense icon="menu" @click="leftSide = !leftSide" v-if="drawer"/>
@@ -10,7 +10,7 @@
           <slot name="title"></slot>
         </q-toolbar-title>
 
-        <q-btn class="within-iframe-hide" v-if="backPath" flat @click="$router.replace(backPath)" style="margin-right: 15px">
+        <q-btn flat round class="within-iframe-hide" v-if="backPath" @click="$router.replace(backPath)" style="margin-right: 15px">
           <q-icon name="arrow_back" />
         </q-btn>
 
@@ -22,7 +22,7 @@
     </q-layout-header>
 
     <!-- Left Side Panel -->
-    <q-layout-drawer v-model="leftSide" side="left">
+    <q-layout-drawer v-model="leftSide" side="left" :breakpoint="leftBreakpoint">
       <slot name="drawer"></slot>
     </q-layout-drawer>
 

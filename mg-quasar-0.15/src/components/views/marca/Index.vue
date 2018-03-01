@@ -9,129 +9,127 @@
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
 
-      <q-list no-border>
+        <q-list no-border>
 
-        <!-- Filtro de Descricao -->
-        <q-item>
-          <q-item-main>
-            <q-field icon="search">
-              <q-input v-model="filter.marca" float-label="Descrição" />
-            </q-field>
-          </q-item-main>
-        </q-item>
+          <!-- Filtro de Descricao -->
+          <q-item>
+            <q-item-main>
+              <q-field icon="search">
+                <q-input v-model="filter.marca" float-label="Descrição" />
+              </q-field>
+            </q-item-main>
+          </q-item>
 
-        <q-list-header>Ordenar Por</q-list-header>
+          <q-list-header>Ordenar Por</q-list-header>
 
-        <!-- Ordena por Vendas -->
-        <q-item tag="label">
-          <q-item-side icon="trending_up">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Vendas</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.sort" val="abcposicao" />
-          </q-item-side>
-        </q-item>
+          <!-- Ordena por Vendas -->
+          <q-item tag="label">
+            <q-item-side icon="trending_up">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Vendas</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.sort" val="abcposicao" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Ordena Alfabeticamente -->
-        <q-item tag="label">
-          <q-item-side icon="sort_by_alpha">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Descrição</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.sort" val="marca" />
-          </q-item-side>
-        </q-item>
+          <!-- Ordena Alfabeticamente -->
+          <q-item tag="label">
+            <q-item-side icon="sort_by_alpha">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Descrição</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.sort" val="marca" />
+            </q-item-side>
+          </q-item>
 
-        <q-list-header>Estoque</q-list-header>
+          <q-list-header>Estoque</q-list-header>
 
-        <!-- Filtra Estoque Sobrando -->
-        <q-item tag="label">
-          <q-item-side icon="arrow_upward">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Sobrando</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-toggle v-model="filter.sobrando" />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Estoque Sobrando -->
+          <q-item tag="label">
+            <q-item-side icon="arrow_upward">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Sobrando</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-toggle v-model="filter.sobrando" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Estoque Faltando -->
-        <q-item tag="label">
-          <q-item-side icon="arrow_downward">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Faltando</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-toggle v-model="filter.faltando" />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Estoque Faltando -->
+          <q-item tag="label">
+            <q-item-side icon="arrow_downward">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Faltando</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-toggle v-model="filter.faltando" />
+            </q-item-side>
+          </q-item>
 
-        <q-list-header>Curva ABC</q-list-header>
+          <q-list-header>Curva ABC</q-list-header>
 
-        <!-- Filtra Pela Classificação da CURVA ABC -->
-        <q-item tag="label">
-          <q-item-side icon="star">
-          </q-item-side>
-          <q-item-main>
-            <q-range
-              v-model="filter.abccategoria"
-              label
-              markers
-              snap
-              :min="0"
-              :max="3"
-              :step="1"
-            ></q-range>
-          </q-item-main>
-        </q-item>
+          <!-- Filtra Pela Classificação da CURVA ABC -->
+          <q-item tag="label">
+            <q-item-side icon="star">
+            </q-item-side>
+            <q-item-main>
+              <q-range
+                v-model="filter.abccategoria"
+                label
+                markers
+                snap
+                :min="0"
+                :max="3"
+                :step="1"
+              ></q-range>
+            </q-item-main>
+          </q-item>
 
-        <q-list-header>Ativos</q-list-header>
+          <q-list-header>Ativos</q-list-header>
 
-        <!-- Filtra Ativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumb_up">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.inativo" :val='1' />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Ativos -->
+          <q-item tag="label">
+            <q-item-side icon="thumb_up">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Ativos</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.inativo" :val='1' />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Inativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumb_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.inativo" :val="2" />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Inativos -->
+          <q-item tag="label">
+            <q-item-side icon="thumb_down">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Inativos</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.inativo" :val="2" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Ativos e Inativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumbs_up_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos e Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.inativo" :val="9" />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Ativos e Inativos -->
+          <q-item tag="label">
+            <q-item-side icon="thumbs_up_down">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Ativos e Inativos</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.inativo" :val="9" />
+            </q-item-side>
+          </q-item>
 
-
-      </q-list>
-
+        </q-list>
     </template>
 
     <!-- Conteúdo Princial (Meio) -->

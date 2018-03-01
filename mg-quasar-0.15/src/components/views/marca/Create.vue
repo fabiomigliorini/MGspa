@@ -5,7 +5,7 @@
       <q-icon name="arrow_back" />
     </q-btn>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="create()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.prevent="create()" />
 
     <template slot="title">
       Nova marca

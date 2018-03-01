@@ -1,5 +1,5 @@
 <template>
-  <mg-layout drawer>
+  <mg-layout drawer back-path="/">
 
     <template slot="title">
       Permissões – {{ tabs }}

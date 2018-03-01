@@ -1,11 +1,11 @@
 <template>
   <mg-layout>
 
-    <q-btn round slot="menu" @click="$router.push('/marca')">
+    <q-btn flat round slot="menu" @click="$router.push('/marca/' + data.codmarca)">
       <q-icon name="arrow_back" />
     </q-btn>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.prevent="update()" />
 
     <template slot="title">
       {{ data.marca }}
