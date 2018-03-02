@@ -23,7 +23,7 @@
 
     <!-- Left Side Panel -->
     <q-layout-drawer v-model="leftSide" side="left" :breakpoint="leftBreakpoint">
-      <slot name="drawer"></slot>
+        <slot name="drawer"></slot>
     </q-layout-drawer>
 
     <!-- Right Side Panel -->

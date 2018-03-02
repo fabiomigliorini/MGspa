@@ -81,7 +81,7 @@
     </div>
 
     <div slot="content">
-      <q-modal ref="createModal" :content-css="{ minWidth: '50vw' }">
+      <q-modal :content-css="{ minWidth: '50vw' }" v-model="createModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
             Novo
@@ -101,8 +101,8 @@
             </form>
             <br />
             <q-card-actions vertival>
-              <q-btn color="" @click="$refs.createModal.close()">Cancelar</q-btn>
-              <q-btn @click.prevent="createGrupoUsuario()" color="primary">Salvar</q-btn>
+              <q-btn color="" @click="createModal = false">Cancelar</q-btn>
+              <q-btn @click.prevent="openSpecialPosition" color="primary">Salvar</q-btn>
             </q-card-actions>
           </q-card-main>
         </q-card>
@@ -141,7 +141,7 @@
           </span>
         </q-card-main>
       </q-card>
-
+<q-btn @click="openSpecialPosition" color="primary">Salvar</q-btn>
       <!-- Se tiver registros -->
       <q-list v-if="data.length > 0">
 
@@ -208,7 +208,7 @@
             <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Usuário</q-tooltip>
           </q-fab-action>
 
-          <q-fab-action color="primary" @click="$router.push($refs.createModal.open())" icon="supervisor_account">
+          <q-fab-action color="primary" @click="createModal = true" icon="supervisor_account">
             <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Grupo</q-tooltip>
           </q-fab-action>
 
@@ -232,36 +232,7 @@ import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutor from '../../utils/MgAutor'
 import MgNoData from '../../utils/MgNoData'
 
-import {
-  debounce,
-
-  Dialog,
-  QList,
-  QListHeader,
-  QItem,
-  QItemTile,
-  QItemSide,
-  QItemMain,
-  QItemSeparator,
-  QInfiniteScroll,
-  QField,
-  QInput,
-  QIcon,
-  QRadio,
-  QPageSticky,
-  QBtn,
-  QFab,
-  QFabAction,
-  QTooltip,
-  QToggle,
-  QModal,
-  QCard,
-  QCardTitle,
-  QCardMain,
-  QCardSeparator,
-  QCardActions,
-  QChip
-} from 'quasar'
+import { debounce } from 'quasar'
 
 export default {
   name: 'grupo-usuario',
@@ -269,32 +240,7 @@ export default {
     MgLayout,
     MgErrosValidacao,
     MgAutor,
-    MgNoData,
-    QList,
-    QListHeader,
-    QItem,
-    QItemTile,
-    QItemSide,
-    QItemMain,
-    QItemSeparator,
-    QInfiniteScroll,
-    QField,
-    QInput,
-    QIcon,
-    QRadio,
-    QPageSticky,
-    QBtn,
-    QFab,
-    QFabAction,
-    QTooltip,
-    QToggle,
-    QModal,
-    QCard,
-    QCardTitle,
-    QCardMain,
-    QCardSeparator,
-    QCardActions,
-    QChip
+    MgNoData
   },
   data () {
     return {
@@ -307,7 +253,8 @@ export default {
       dataGrupousuario: {
         grupousuario: null
       },
-      erros: false
+      erros: false,
+      createModal: false
     }
   },
   watch: {
@@ -376,33 +323,62 @@ export default {
         }
       })
     }, 500),
-
-    createGrupoUsuario: function () {
-      let vm = this
-      Dialog.create({
-        title: 'Salvar',
-        message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
-                Notify.create.positive('Novo grupo inserido')
-                vm.dataGrupousuario.grupousuario = null
-                vm.erros = false
-                vm.loadDataGrupos()
-                vm.$refs.createModal.close()
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+    handlerTeste () {
+      this.$q.dialog({
+        title: 'Confirm',
+        message: 'Modern HTML5 front-end framework on steroids.',
+        ok: 'Agree',
+        cancel: 'Disagree'
+      }).then(() => {
+        this.$q.notify('Agreed!')
+      }).catch(() => {
+        this.$q.notify('Disagreed...')
       })
+    },
+    openSpecialPosition (position) {
+      // (Promise) this.$q.dialog()
+      this.$q.dialog({
+        title: 'Positioned',
+        message: `This dialog appears from ${position}.`,
+        position
+      })
+    },
+    createGrupoUsuario () {
+      let vm = this
+      Dialog({
+        title: 'Confirm',
+        message: 'Modern HTML5 front-end framework on steroids.',
+        ok: 'Agree',
+        cancel: 'Disagree'
+      }).then(() => {
+        this.$q.notify('Agreed!')
+        Notify.create.positive('Novo grupo inserido')
+        vm.dataGrupousuario.grupousuario = null
+        vm.erros = false
+        vm.loadDataGrupos()
+        vm.createModal = false
+      }).catch(() => {
+        vm.erros = error.response.data.erros
+      })
+
+      // Dialog.create({
+      //   title: 'Salvar',
+      //   message: 'Tem certeza que deseja salvar?',
+      //   buttons: [
+      //     {
+      //       label: 'Cancelar',
+      //       handler () {}
+      //     },
+      //     {
+      //       label: 'Salvar',
+      //       handler () {
+      //         vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
+      //         }).catch(function (error) {
+      //         })
+      //       }
+      //     }
+      //   ]
+      // })
     },
 
     updateGrupoUsuario: function () {

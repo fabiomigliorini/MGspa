@@ -9,7 +9,7 @@
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
 
-      <ul class="breadcrumb">
+      <!-- <ul class="breadcrumb">
         <li>
           <router-link :to="{ path: '/' }">
             <q-icon name="home"/>
@@ -25,8 +25,14 @@
             {{ item.marca }}
           </router-link>
         </li>
-      </ul>
+      </ul> -->
 
+      <q-breadcrumbs separator=">">
+        <!-- <q-icon name="arrow_forward" slot="separator" slot-scope="props" /> -->
+        <q-breadcrumbs-el to="/"><q-icon name="home" size="2rem"/></q-breadcrumbs-el>
+        <q-breadcrumbs-el to="/marca"><q-icon name="label_outline" size="2rem"/></q-breadcrumbs-el>
+        <q-breadcrumbs-el>{{ item.marca }}</q-breadcrumbs-el>
+      </q-breadcrumbs>
 
 
       <div class="row">

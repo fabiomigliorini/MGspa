@@ -59,20 +59,37 @@ module.exports = function (ctx) {
         'QPage',
         'QToolbar',
         'QToolbarTitle',
+        'QPageSticky',
+        'QInfiniteScroll',
         'QBtn',
+        'QFab',
+        'QFabAction',
         'QIcon',
         'QList',
         'QListHeader',
         'QItem',
         'QItemMain',
         'QItemSide',
-        'QItemTile'
+        'QItemTile',
+        'QItemSeparator',
+        'QBreadcrumbs',
+        'QBreadcrumbsEl',
+        'QTooltip',
+        'QInput',
+        'QField',
+        'QRadio',
+        'QModal',
+        'QCard',
+        'QCardMain',
+        'QCardTitle',
+        'QCardActions'
       ],
       directives: [
         'Ripple'
       ],
       plugins: [
         'Notify',
+        'Dialog',
         'Loading'
       ]
     },

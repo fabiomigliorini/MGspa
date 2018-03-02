@@ -8,7 +8,7 @@
 
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
-
+<q-scroll-area class="fit">
         <q-list no-border>
 
           <!-- Filtro de Descricao -->
@@ -130,6 +130,7 @@
           </q-item>
 
         </q-list>
+</q-scroll-area>
     </template>
 
     <!-- Conteúdo Princial (Meio) -->
@@ -227,7 +228,7 @@
 
 import MgLayout from '../../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { QChip, QInput,  QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QPageSticky, QBtn } from 'quasar'
+import { QChip, QInput,  QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QPageSticky, QBtn, QScrollArea } from 'quasar'
 
 export default {
 
@@ -252,7 +253,8 @@ export default {
     QSpinnerDots,
     QRating,
     QBtn,
-    QPageSticky
+    QPageSticky,
+    QScrollArea
   },
 
   data () {
