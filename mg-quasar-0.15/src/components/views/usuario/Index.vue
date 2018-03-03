@@ -102,7 +102,7 @@
             <br />
             <q-card-actions vertival>
               <q-btn color="" @click="createModal = false">Cancelar</q-btn>
-              <q-btn @click.prevent="openSpecialPosition" color="primary">Salvar</q-btn>
+              <q-btn @click.prevent="createGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
           </q-card-main>
         </q-card>
@@ -141,7 +141,7 @@
           </span>
         </q-card-main>
       </q-card>
-<q-btn @click="openSpecialPosition" color="primary">Salvar</q-btn>
+
       <!-- Se tiver registros -->
       <q-list v-if="data.length > 0">
 
@@ -323,62 +323,25 @@ export default {
         }
       })
     }, 500),
-    handlerTeste () {
-      this.$q.dialog({
-        title: 'Confirm',
-        message: 'Modern HTML5 front-end framework on steroids.',
-        ok: 'Agree',
-        cancel: 'Disagree'
-      }).then(() => {
-        this.$q.notify('Agreed!')
-      }).catch(() => {
-        this.$q.notify('Disagreed...')
-      })
-    },
-    openSpecialPosition (position) {
-      // (Promise) this.$q.dialog()
-      this.$q.dialog({
-        title: 'Positioned',
-        message: `This dialog appears from ${position}.`,
-        position
-      })
-    },
-    createGrupoUsuario () {
-      let vm = this
-      Dialog({
-        title: 'Confirm',
-        message: 'Modern HTML5 front-end framework on steroids.',
-        ok: 'Agree',
-        cancel: 'Disagree'
-      }).then(() => {
-        this.$q.notify('Agreed!')
-        Notify.create.positive('Novo grupo inserido')
-        vm.dataGrupousuario.grupousuario = null
-        vm.erros = false
-        vm.loadDataGrupos()
-        vm.createModal = false
-      }).catch(() => {
-        vm.erros = error.response.data.erros
-      })
 
-      // Dialog.create({
-      //   title: 'Salvar',
-      //   message: 'Tem certeza que deseja salvar?',
-      //   buttons: [
-      //     {
-      //       label: 'Cancelar',
-      //       handler () {}
-      //     },
-      //     {
-      //       label: 'Salvar',
-      //       handler () {
-      //         vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
-      //         }).catch(function (error) {
-      //         })
-      //       }
-      //     }
-      //   ]
-      // })
+    createGrupoUsuario: function () {
+      let vm = this
+      vm.$q.dialog({
+        title: 'Salvar',
+        message: 'Tem certeza que deseja salvar?',
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
+          Toast.create.positive('Novo grupo inserido')
+          vm.dataGrupousuario.grupousuario = null
+          vm.erros = false
+          vm.createModal = false
+          vm.loadDataGrupos()
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
+      })
     },
 
     updateGrupoUsuario: function () {
