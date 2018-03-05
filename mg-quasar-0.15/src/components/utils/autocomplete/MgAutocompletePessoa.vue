@@ -60,6 +60,7 @@ export default {
       vm.$emit('input', item.id)
     },
     search (terms, done) {
+      let vm = this
       let params = {}
       params.sort = 'fantasia'
       params.pessoa = terms

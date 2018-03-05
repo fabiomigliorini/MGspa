@@ -82,10 +82,14 @@ module.exports = function (ctx) {
         'QCard',
         'QCardMain',
         'QCardTitle',
-        'QCardActions'
+        'QCardActions',
+        'QCardSeparator',
+        'QCollapsible',
+        'QChip'
       ],
       directives: [
-        'Ripple'
+        'Ripple',
+        'GoBack'
       ],
       plugins: [
         'Notify',

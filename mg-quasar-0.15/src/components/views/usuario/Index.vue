@@ -107,7 +107,7 @@
           </q-card-main>
         </q-card>
       </q-modal>
-      <q-modal ref="updateModal" :content-css="{ minWidth: '50vw' }">
+      <q-modal :content-css="{ minWidth: '50vw' }" v-model="updateModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
             Editar
@@ -127,8 +127,8 @@
             </form>
             <br />
             <q-card-actions vertival>
-              <q-btn color="" @click="$refs.updateModal.close()">Cancelar</q-btn>
-              <q-btn @click.prevent="updateGrupoUsuario()" color="primary">Salvar</q-btn>
+              <q-btn color="" @click="updateModal = false">Cancelar</q-btn>
+              <q-btn @click.prevent="updateGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
           </q-card-main>
         </q-card>
@@ -185,7 +185,7 @@
           direction="up"
           class="animate-pop"
         >
-          <q-fab-action color="primary" icon="edit" @click="$refs.updateModal.open()">
+          <q-fab-action color="primary" icon="edit" @click="updateModal = true">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar Grupo</q-tooltip>
           </q-fab-action>
           <q-fab-action color="orange" icon="thumb_up" @click="activate()" v-if="grupousuario.inativo">
@@ -254,7 +254,8 @@ export default {
         grupousuario: null
       },
       erros: false,
-      createModal: false
+      createModal: false,
+      updateModal: false
     }
   },
   watch: {
@@ -333,7 +334,10 @@ export default {
         cancel: 'Cancelar'
       }).then(() => {
         vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
-          Toast.create.positive('Novo grupo inserido')
+          vm.$q.notify({
+            message: 'Novo grupo inserido',
+            type: 'positive',
+          })
           vm.dataGrupousuario.grupousuario = null
           vm.erros = false
           vm.createModal = false
@@ -346,97 +350,86 @@ export default {
 
     updateGrupoUsuario: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              vm.$axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
-                Notify.create.positive('Grupo atualizado')
-                vm.erros = false
-                vm.loadDataGrupos()
-                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                vm.$refs.updateModal.close()
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
+          vm.$q.notify({
+            message: 'Grupo atualizado',
+            type: 'positive',
+          })
+          vm.dataGrupousuario.grupousuario = null
+          vm.erros = false
+          vm.updateModal = false
+          vm.loadDataGrupos()
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
       })
     },
 
     activate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Ativar',
-        message: 'Tem certeza de deseja ativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Ativar',
-            handler () {
-              vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
-                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                Notify.create.positive('Registro ativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        message: 'Tem certeza que deseja ativar?',
+        ok: 'Ativar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+          vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+          vm.$q.notify({
+            message: 'Grupo ativado',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          console.log(error.response)
+        })
       })
     },
 
     inactivate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Inativar',
         message: 'Tem certeza que deseja inativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Inativar',
-            handler () {
-              vm.$axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
-                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                Notify.create.positive('Registro inativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        ok: 'Inativar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+          vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+          vm.$q.notify({
+            message: 'Grupo inativado',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          console.log(error.response)
+        })
       })
     },
 
     destroy: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza que deseja excluir?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Excluir',
-            handler () {
-              vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
-                vm.$router.push('/usuario')
-                vm.loadDataGrupos()
-                vm.grupousuario = false
-                Notify.create.positive('Registro excluído')
-              }).catch(function (error) {
-                console.log(error)
-              })
-            }
-          }
-        ]
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
+          vm.$q.notify({
+            message: 'Registro excluido',
+            type: 'positive',
+          })
+          vm.filter.grupo = null
+          vm.loadDataGrupos()
+          vm.grupousuario = false
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
     },
 

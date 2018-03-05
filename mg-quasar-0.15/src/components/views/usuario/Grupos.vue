@@ -1,9 +1,9 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/' + data.codusuario" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn flat round slot="menu" @click="$router.push('/usuario' + data.codusuario)">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
     <template slot="title">
       {{ data.usuario }}
@@ -60,19 +60,6 @@
 </template>
 
 <script>
-import {
-  QBtn,
-  QField,
-  QInput,
-  QSelect,
-  QSearch,
-  QAutocomplete,
-  
-  QList,
-  QItem,
-  QItemTile,
-  QItemMain
-} from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
@@ -80,18 +67,7 @@ export default {
   name: 'usuario-grupos',
   components: {
     MgLayout,
-    MgErrosValidacao,
-    QBtn,
-    QField,
-    QInput,
-    QSelect,
-    QSearch,
-    QAutocomplete,
-    
-    QList,
-    QItem,
-    QItemTile,
-    QItemMain
+    MgErrosValidacao
   },
   data () {
     return {

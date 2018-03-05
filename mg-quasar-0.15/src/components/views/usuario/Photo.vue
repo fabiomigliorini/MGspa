@@ -1,11 +1,11 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/perfil'" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn flat round slot="menu" @click="$router.push('/usuario/perfil')">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="upload()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.prevent="upload()" />
 
     <template slot="title">
       <span v-if="data.codimagem">Alterar </span>
@@ -34,20 +34,6 @@
 </template>
 
 <script>
-import {
-  Dialog,
-  
-  QBtn,
-  QField,
-  QInput,
-  QSelect,
-  
-  QUploader,
-  QCardMedia,
-  QCard,
-  QCardMain,
-  QCardTitle
-} from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
 import Slim from '../../utils/slim/slim.vue'
 
@@ -66,17 +52,7 @@ export default {
   name: 'usuario-photo',
   components: {
     MgLayout,
-    'slim-cropper': Slim,
-    QBtn,
-    QField,
-    QInput,
-    QSelect,
-    
-    QUploader,
-    QCardMedia,
-    QCard,
-    QCardMain,
-    QCardTitle
+    'slim-cropper': Slim
   },
   data () {
     return {

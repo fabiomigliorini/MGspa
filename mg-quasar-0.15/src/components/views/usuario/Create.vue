@@ -5,7 +5,7 @@
       <q-icon name="arrow_back" />
     </q-btn>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="create()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.prevent="create()" />
 
     <template slot="title">
       Novo usuário
@@ -85,16 +85,6 @@
 </template>
 
 <script>
-import {
-
-  Dialog,
-
-  QField,
-  QBtn,
-  QInput,
-  QSelect
-} from 'quasar'
-
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
@@ -106,11 +96,6 @@ export default {
   components: {
     MgLayout,
     MgErrosValidacao,
-
-    QField,
-    QBtn,
-    QInput,
-    QSelect,
     MgAutocompletePessoa,
     MgSelectImpressora,
     MgSelectFilial
@@ -130,27 +115,22 @@ export default {
   },
   methods: {
     create: function () {
-      var vm = this
-      Dialog.create({
+      let vm = this
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              vm.$axios.post('usuario', vm.data).then(function (request) {
-                Notify.create.positive('Registro inserido')
-                vm.$router.push('/usuario/' + request.data.codusuario)
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('usuario', vm.data).then(function (request) {
+          vm.$q.notify({
+            message: 'Novo usuário cadastrado',
+            type: 'positive',
+          })
+          vm.$router.push('/usuario/' + request.data.codusuario)
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
       })
     }
   }
