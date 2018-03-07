@@ -1,6 +1,8 @@
 ﻿    select
 	p.codproduto
 	, p.produto
+	, p.inativo
+	, p.preco
 	, coalesce(fiscal.saldoquantidade, 0) - coalesce(fisico.saldoquantidade, 0) as sobra_fiscal
 	, fiscal.saldoquantidade as fiscal_saldoquantidade
 	, fiscal.saldovalor as fiscal_saldovalor
@@ -8,7 +10,6 @@
 	, fisico.saldoquantidade as fisico_saldoquantidade
 	, fisico.saldovalor as fisico_saldovalor
 	, fisico.customedio as fisico_customedio
-	, p.preco
 	, m.codmarca
 	, m.marca
 	, sp.codsecaoproduto
@@ -49,11 +50,12 @@
 	) fiscal on (fiscal.codproduto = p.codproduto)
     left join tblncm n on (n.codncm = p.codncm)
     where p.codtipoproduto = 0
+    --and n.ncm ilike '3901%'
+    and p.produto ilike 'VELA %'
     --and p.inativo is not null
     --AND m.codmarca = {$filtro['codmarca']}
     --AND m.controlada = true
     --AND p.codncm = {$filtro['codncm']}
-    and n.ncm ilike '3213%'
     --AND p.preco >= {$filtro['preco_de']}
     --AND p.preco <= {$filtro['preco_ate']}
     --AND p.produto ilike '%{$palavra}%'
@@ -67,4 +69,4 @@
     AND fiscal.saldoquantidade > 0
     --AND coalesce(fiscal.saldoquantidade, 0) < coalesce(fisico.saldoquantidade, 0)
     --AND coalesce(fiscal.saldoquantidade, 0) > coalesce(fisico.saldoquantidade, 0)
-    order by 3 desc
+    order by p.inativo is null,  6 desc
