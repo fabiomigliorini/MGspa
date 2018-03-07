@@ -1,7 +1,7 @@
 ﻿select 
 	extract('isoyear' from lancamento) as ano
 	, extract('week' from lancamento) as semana
-	  --date_trunc('week', lancamento) as mes
+	--  date_trunc('week', lancamento) as mes
 	--, filial
 	/*
 	, pv.fantasia fantasiavendedor

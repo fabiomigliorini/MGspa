@@ -8,7 +8,7 @@ inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.
 inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
 inner join tblfilial f on (f.codfilial = el.codfilial)
 inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = true)
-where f.codempresa = 2
+where f.codempresa != 1
 and coalesce(es.saldoquantidade, 0) != 0
 group by p.codproduto, p.produto, el.estoquelocal
 having sum(es.saldoquantidade) > 0

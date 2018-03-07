@@ -1,11 +1,11 @@
 ﻿/*
 
 select codmarca, marca from tblmarca where controlada order by marca
-
+update tblmarca set controlada = true where marca ilike 'tres reis'
 
 select * from tblmarca
 
-update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'acrilex'
+update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'adelbras'
 */
 
 select 
@@ -64,7 +64,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'acrilex')
+    where (m.marca ilike 'hp')
     --and produto ilike 'quadro stalo branco%'
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
@@ -82,20 +82,12 @@ from
 
 /*
 UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = NOW() WHERE CODPRODUTOVARIACAO IN (
-60804
-
+67151
+,25765
 )
 
 update tblprodutovariacao set descontinuado = null where codprodutovariacao = 1198
 
--- PEGA REFERENCIA DA NFE DE TERCEIRO
-select cprod, xprod, cean, count(*), min(nti.criacao), max(nti.criacao)
-from tblnfeterceiroitem nti
-inner join tblprodutobarra pb on (pb.codprodutobarra = nti.codprodutobarra)
---where pb.codproduto = 12752
-where pb.codprodutovariacao = 6727
-group by cprod, xprod, cean
-order by 6 asc
 
 
 -- DEIXA REFERENCIA COMO MAIUSCULA
