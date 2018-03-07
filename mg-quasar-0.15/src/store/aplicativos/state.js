@@ -1,5 +1,5 @@
 export default {
-  aplicativosState: [
+  aplicativos: [
     {
       icon: 'home',
       title: 'Início',

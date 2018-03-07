@@ -28,4 +28,7 @@ export default {
 .q-field .q-uploader {
 	margin: 0;
 }
+.q-search {
+  padding-top: 12px;
+}
 </style>

@@ -28,7 +28,7 @@ export default {
     },
     loadData: function () {
       let vm = this
-      window.axios.get('filial', {params: {fields: 'codfilial,filial', sort: 'filial'}}).then(function (request) {
+      vm.$axios.get('filial', {params: {fields: 'codfilial,filial', sort: 'filial'}}).then(function (request) {
         vm.data = request.data.data.map(filial => {
           return {
             value: filial.codfilial,

@@ -8,130 +8,129 @@
 
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
+<q-scroll-area class="fit">
+        <q-list no-border>
 
-      <q-list no-border>
+          <!-- Filtro de Descricao -->
+          <q-item>
+            <q-item-main>
+              <q-field icon="search">
+                <q-input v-model="filter.marca" float-label="Descrição" />
+              </q-field>
+            </q-item-main>
+          </q-item>
 
-        <!-- Filtro de Descricao -->
-        <q-item>
-          <q-item-main>
-            <q-field icon="search">
-              <q-input v-model="filter.marca" float-label="Descrição" />
-            </q-field>
-          </q-item-main>
-        </q-item>
+          <q-list-header>Ordenar Por</q-list-header>
 
-        <q-list-header>Ordenar Por</q-list-header>
+          <!-- Ordena por Vendas -->
+          <q-item tag="label">
+            <q-item-side icon="trending_up">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Vendas</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.sort" val="abcposicao" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Ordena por Vendas -->
-        <q-item tag="label">
-          <q-item-side icon="trending_up">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Vendas</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.sort" val="abcposicao" />
-          </q-item-side>
-        </q-item>
+          <!-- Ordena Alfabeticamente -->
+          <q-item tag="label">
+            <q-item-side icon="sort_by_alpha">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Descrição</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.sort" val="marca" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Ordena Alfabeticamente -->
-        <q-item tag="label">
-          <q-item-side icon="sort_by_alpha">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Descrição</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.sort" val="marca" />
-          </q-item-side>
-        </q-item>
+          <q-list-header>Estoque</q-list-header>
 
-        <q-list-header>Estoque</q-list-header>
+          <!-- Filtra Estoque Sobrando -->
+          <q-item tag="label">
+            <q-item-side icon="arrow_upward">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Sobrando</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-toggle v-model="filter.sobrando" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Estoque Sobrando -->
-        <q-item tag="label">
-          <q-item-side icon="arrow_upward">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Sobrando</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-toggle v-model="filter.sobrando" />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Estoque Faltando -->
+          <q-item tag="label">
+            <q-item-side icon="arrow_downward">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Faltando</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-toggle v-model="filter.faltando" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Estoque Faltando -->
-        <q-item tag="label">
-          <q-item-side icon="arrow_downward">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Faltando</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-toggle v-model="filter.faltando" />
-          </q-item-side>
-        </q-item>
+          <q-list-header>Curva ABC</q-list-header>
 
-        <q-list-header>Curva ABC</q-list-header>
+          <!-- Filtra Pela Classificação da CURVA ABC -->
+          <q-item tag="label">
+            <q-item-side icon="star">
+            </q-item-side>
+            <q-item-main>
+              <q-range
+                v-model="filter.abccategoria"
+                label
+                markers
+                snap
+                :min="0"
+                :max="3"
+                :step="1"
+              ></q-range>
+            </q-item-main>
+          </q-item>
 
-        <!-- Filtra Pela Classificação da CURVA ABC -->
-        <q-item tag="label">
-          <q-item-side icon="star">
-          </q-item-side>
-          <q-item-main>
-            <q-range
-              v-model="filter.abccategoria"
-              label
-              markers
-              snap
-              :min="0"
-              :max="3"
-              :step="1"
-            ></q-range>
-          </q-item-main>
-        </q-item>
+          <q-list-header>Ativos</q-list-header>
 
-        <q-list-header>Ativos</q-list-header>
+          <!-- Filtra Ativos -->
+          <q-item tag="label">
+            <q-item-side icon="thumb_up">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Ativos</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.inativo" :val='1' />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Ativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumb_up">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.inativo" :val='1' />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Inativos -->
+          <q-item tag="label">
+            <q-item-side icon="thumb_down">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Inativos</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.inativo" :val="2" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Inativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumb_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.inativo" :val="2" />
-          </q-item-side>
-        </q-item>
+          <!-- Filtra Ativos e Inativos -->
+          <q-item tag="label">
+            <q-item-side icon="thumbs_up_down">
+            </q-item-side>
+            <q-item-main>
+              <q-item-tile title>Ativos e Inativos</q-item-tile>
+            </q-item-main>
+            <q-item-side right>
+              <q-radio v-model="filter.inativo" :val="9" />
+            </q-item-side>
+          </q-item>
 
-        <!-- Filtra Ativos e Inativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumbs_up_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos e Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.inativo" :val="9" />
-          </q-item-side>
-        </q-item>
-
-
-      </q-list>
-
+        </q-list>
+</q-scroll-area>
     </template>
 
     <!-- Conteúdo Princial (Meio) -->
@@ -229,7 +228,7 @@
 
 import MgLayout from '../../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { QChip, QInput,  QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QPageSticky, QBtn } from 'quasar'
+import { QChip, QInput,  QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QPageSticky, QBtn, QScrollArea } from 'quasar'
 
 export default {
 
@@ -254,7 +253,8 @@ export default {
     QSpinnerDots,
     QRating,
     QBtn,
-    QPageSticky
+    QPageSticky,
+    QScrollArea
   },
 
   data () {
@@ -290,7 +290,7 @@ export default {
     // carrega registros da api
     loadData: debounce(function (concat, done) {
       // salva no Vuex filtro da marca
-      this.$store.commit('filter/marca', this.filter)
+      this.$store.commit('filtroMarca/updateFiltroMarca', this.filter)
 
       // inicializa variaveis
       var vm = this
@@ -299,7 +299,7 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('marca', {
+      vm.$axios.get('marca', {
         params
       }).then(response => {
         // Se for para concatenar, senao inicializa
@@ -334,7 +334,7 @@ export default {
 
   // na criacao, busca filtro do Vuex
   created () {
-    this.filter = this.$store.getters['filter/marca']
+    this.filter = this.$store.state.filtroMarca
   }
 
 }

@@ -1,11 +1,11 @@
 <template>
   <mg-layout>
 
-    <q-btn round slot="menu" @click="$router.push('/marca')">
+    <q-btn flat round slot="menu" @click="$router.push('/marca')">
       <q-icon name="arrow_back" />
     </q-btn>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="create()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.prevent="create()" />
 
     <template slot="title">
       Nova marca
@@ -128,7 +128,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.post('marca', vm.data).then(function (request) {
+              vm.$axios.post('marca', vm.data).then(function (request) {
                 Notify.create.positive('Registro inserido')
                 vm.$router.push('/marca/' + request.data.codmarca)
               }).catch(function (error) {

@@ -1,9 +1,9 @@
 <template>
   <mg-layout>
 
-    <q-side-link to="/usuario" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn flat round slot="menu" @click="$router.push('/usuario')">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
     <template slot="title">
       {{ item.usuario }}
@@ -92,7 +92,7 @@
         </div>
       </div>
 
-      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
+      <q-page-sticky corner="bottom-right" :offset="[18, 18]">
         <q-fab
           color="primary"
           icon="edit"
@@ -109,7 +109,7 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
-      </q-fixed-position>
+      </q-page-sticky>
 
     </div>
 
@@ -123,24 +123,6 @@
 </template>
 
 <script>
-import {
-  Dialog,
-  
-  QFixedPosition,
-  QBtn,
-  QIcon,
-  QFab,
-  QFabAction,
-  QTooltip,
-  
-  QCard,
-  QList,
-  QCardMain,
-  QCardTitle,
-  QCardSeparator,
-  QCardActions,
-  QCollapsible
-} from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
 
@@ -148,21 +130,7 @@ export default {
   name: 'usuario-view',
   components: {
     MgLayout,
-    MgAutor,
-    QFixedPosition,
-    QBtn,
-    QIcon,
-    QFab,
-    QFabAction,
-    QTooltip,
-    
-    QCard,
-    QList,
-    QCardMain,
-    QCardTitle,
-    QCardSeparator,
-    QCardActions,
-    QCollapsible
+    MgAutor
   },
   data () {
     return {
@@ -179,9 +147,8 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      vm.$axios.get('usuario/' + id + '/details').then(function (request) {
         vm.item = request.data
-        console.log(vm.item)
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -196,7 +163,7 @@ export default {
           {
             label: 'Ativar',
             handler () {
-              window.axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+              vm.$axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
                 vm.carregaDados(vm.item.codusuario)
                 Notify.create.positive('Registro ativado')
               }).catch(function (error) {
@@ -217,7 +184,7 @@ export default {
           {
             label: 'Inativar',
             handler () {
-              window.axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+              vm.$axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
                 vm.carregaDados(vm.item.codusuario)
                 Notify.create.positive('Registro inativado')
               }).catch(function (error) {
@@ -238,7 +205,7 @@ export default {
           {
             label: 'Excluir',
             handler () {
-              window.axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
+              vm.$axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
                 vm.$router.push('/usuario')
                 Notify.create.positive('Registro excluído')
               }).catch(function (error) {

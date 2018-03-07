@@ -1,9 +1,7 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/' + data.codusuario" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn flat round v-go-back icon="arrow_back" slot="menu" />
 
     <template slot="title">
       {{ data.usuario }}
@@ -13,63 +11,23 @@
       <div class="layout-padding">
         <div class="row">
           <div class="col-xs-6 col-sm-4 col-lg-2">
-            <q-side-link to="impressoras">
-              <q-card class="card text-center text-primary">
-                <q-icon name="print" />
-                <p class="caption">Impressoras</p>
-              </q-card>
-            </q-side-link>
+            <div class="card text-center category-link text-primary" @click="$router.push('impressoras')">
+              <q-icon name="print" />
+              <p class="caption">Impressoras</p>
+            </div>
           </div>
           <div class="col-xs-6 col-sm-4 col-lg-2">
-            <q-side-link to="senha">
-              <q-card class="card text-center text-primary">
-                <q-icon name="vpn_key" />
-                <p class="caption">Trocar senha</p>
-              </q-card>
-            </q-side-link>
+            <div class="card text-center category-link text-primary" @click="$router.push('senha')">
+              <q-icon name="vpn_key" />
+              <p class="caption">Trocar senha</p>
+            </div>
           </div>
           <div class="col-xs-6 col-sm-4 col-lg-2">
-            <q-side-link to="foto">
-              <q-card class="card text-center text-primary">
-                <q-icon name="account_box" />
-                <p class="caption">Alterar foto</p>
-              </q-card>
-            </q-side-link>
+            <div class="card text-center category-link text-primary" @click="$router.push('foto')">
+              <q-icon name="account_box" />
+              <p class="caption">Alterar foto</p>
+            </div>
           </div>
-        </div>
-<!--
-          <div class="col-md-4">
-            <q-list multiline link>
-              <q-item to="impressoras">
-                <q-item-main>
-                  <q-item-tile label>Impressoras</q-item-tile>
-                  <q-item-tile sublabel>Alterar impressoras</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="print" color="" />
-                </q-item-side>
-              </q-item>
-              <q-item to="senha">
-                <q-item-main>
-                  <q-item-tile label>Senha</q-item-tile>
-                  <q-item-tile sublabel>Trocar senha do sistema</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="vpn_key" color="" />
-                </q-item-side>
-              </q-item>
-              <q-item to="foto">
-                <q-item-main>
-                  <q-item-tile label>Foto</q-item-tile>
-                  <q-item-tile sublabel>Cadastrar/Alterar foto</q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-item-tile icon="account_box" color="" />
-                </q-item-side>
-              </q-item>
-            </q-list>
-          </div>
--->
         </div>
       </div>
     </div>
@@ -78,28 +36,6 @@
 </template>
 
 <script>
-import {
-  // Dialog,
-  // 
-  QBtn,
-  QField,
-  QInput,
-  QSelect,
-  
-  QUploader,
-  QCardMedia,
-  QCard,
-  QCardMain,
-  QCardTitle,
-  QList,
-  QListHeader,
-  QItem,
-  QItemSeparator,
-  QItemSide,
-  QItemMain,
-  QItemTile,
-  QIcon
-} from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
@@ -107,25 +43,7 @@ export default {
   name: 'usuario-profile',
   components: {
     MgLayout,
-    MgErrosValidacao,
-    QBtn,
-    QField,
-    QInput,
-    QSelect,
-    
-    QUploader,
-    QCardMedia,
-    QCard,
-    QCardMain,
-    QCardTitle,
-    QList,
-    QListHeader,
-    QItem,
-    QItemSeparator,
-    QItemSide,
-    QItemMain,
-    QItemTile,
-    QIcon
+    MgErrosValidacao
   },
   data () {
     return {
@@ -135,7 +53,7 @@ export default {
   methods: {
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id).then(function (request) {
+      vm.$axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)

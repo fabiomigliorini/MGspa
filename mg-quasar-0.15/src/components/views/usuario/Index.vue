@@ -81,7 +81,7 @@
     </div>
 
     <div slot="content">
-      <q-modal ref="createModal" :content-css="{ minWidth: '50vw' }">
+      <q-modal :content-css="{ minWidth: '50vw' }" v-model="createModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
             Novo
@@ -101,13 +101,13 @@
             </form>
             <br />
             <q-card-actions vertival>
-              <q-btn color="" @click="$refs.createModal.close()">Cancelar</q-btn>
-              <q-btn @click.prevent="createGrupoUsuario()" color="primary">Salvar</q-btn>
+              <q-btn color="" @click="createModal = false">Cancelar</q-btn>
+              <q-btn @click.prevent="createGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
           </q-card-main>
         </q-card>
       </q-modal>
-      <q-modal ref="updateModal" :content-css="{ minWidth: '50vw' }">
+      <q-modal :content-css="{ minWidth: '50vw' }" v-model="updateModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
             Editar
@@ -127,8 +127,8 @@
             </form>
             <br />
             <q-card-actions vertival>
-              <q-btn color="" @click="$refs.updateModal.close()">Cancelar</q-btn>
-              <q-btn @click.prevent="updateGrupoUsuario()" color="primary">Salvar</q-btn>
+              <q-btn color="" @click="updateModal = false">Cancelar</q-btn>
+              <q-btn @click.prevent="updateGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
           </q-card-main>
         </q-card>
@@ -177,7 +177,7 @@
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
-      <q-fixed-position corner="bottom-right" :offset="[90, 18]" v-if="grupousuario">
+      <q-page-sticky corner="bottom-right" :offset="[90, 18]" v-if="grupousuario">
         <q-fab
           color="primary"
           active-icon="edit"
@@ -185,7 +185,7 @@
           direction="up"
           class="animate-pop"
         >
-          <q-fab-action color="primary" icon="edit" @click="$refs.updateModal.open()">
+          <q-fab-action color="primary" icon="edit" @click="updateModal = true">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar Grupo</q-tooltip>
           </q-fab-action>
           <q-fab-action color="orange" icon="thumb_up" @click="activate()" v-if="grupousuario.inativo">
@@ -198,25 +198,23 @@
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
         </q-fab>
-      </q-fixed-position>
 
-      <q-fixed-position corner="bottom-right" :offset="[18, 18]">
-        <q-fab
-          color="primary"
-          active-icon="add"
-          direction="up"
-          class="animate-pop"
-        >
-          <router-link :to="{ path: '/usuario/create'}">
-            <q-fab-action color="primary" icon="account_circle">
-                <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Usuário</q-tooltip>
-            </q-fab-action>
-          </router-link>
-          <q-fab-action color="primary" icon="supervisor_account" @click="$refs.createModal.open()">
-            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Novo Grupo</q-tooltip>
+      </q-page-sticky>
+
+      <q-page-sticky corner="bottom-right" :offset="[18, 18]">
+
+        <q-fab color="primary" icon="add" direction="up">
+          <q-fab-action color="primary" @click="$router.push('/usuario/create')" icon="account_circle">
+            <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Usuário</q-tooltip>
           </q-fab-action>
+
+          <q-fab-action color="primary" @click="createModal = true" icon="supervisor_account">
+            <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Grupo</q-tooltip>
+          </q-fab-action>
+
         </q-fab>
-      </q-fixed-position>
+
+      </q-page-sticky>
     </div>
 
     <div slot="footer" v-if="grupousuario">
@@ -234,36 +232,7 @@ import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutor from '../../utils/MgAutor'
 import MgNoData from '../../utils/MgNoData'
 
-import {
-  debounce,
-  
-  Dialog,
-  QList,
-  QListHeader,
-  QItem,
-  QItemTile,
-  QItemSide,
-  QItemMain,
-  QItemSeparator,
-  QInfiniteScroll,
-  QField,
-  QInput,
-  QIcon,
-  QRadio,
-  QFixedPosition,
-  QBtn,
-  QFab,
-  QFabAction,
-  QTooltip,
-  QToggle,
-  QModal,
-  QCard,
-  QCardTitle,
-  QCardMain,
-  QCardSeparator,
-  QCardActions,
-  QChip
-} from 'quasar'
+import { debounce } from 'quasar'
 
 export default {
   name: 'grupo-usuario',
@@ -271,32 +240,7 @@ export default {
     MgLayout,
     MgErrosValidacao,
     MgAutor,
-    MgNoData,
-    QList,
-    QListHeader,
-    QItem,
-    QItemTile,
-    QItemSide,
-    QItemMain,
-    QItemSeparator,
-    QInfiniteScroll,
-    QField,
-    QInput,
-    QIcon,
-    QRadio,
-    QFixedPosition,
-    QBtn,
-    QFab,
-    QFabAction,
-    QTooltip,
-    QToggle,
-    QModal,
-    QCard,
-    QCardTitle,
-    QCardMain,
-    QCardSeparator,
-    QCardActions,
-    QChip
+    MgNoData
   },
   data () {
     return {
@@ -309,7 +253,9 @@ export default {
       dataGrupousuario: {
         grupousuario: null
       },
-      erros: false
+      erros: false,
+      createModal: false,
+      updateModal: false
     }
   },
   watch: {
@@ -337,7 +283,7 @@ export default {
     // carrega registros da api
     loadData: debounce(function (concat, done) {
       // salva no Vuex filtro da marca
-      this.$store.commit('filter/usuario', this.filter)
+      this.$store.commit('filtroUsuario/updateFiltroUsuario', this.filter)
 
       // inicializa variaveis
       var vm = this
@@ -348,7 +294,7 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('usuario', {
+      vm.$axios.get('usuario', {
         params
       }).then(response => {
         // Se for para concatenar, senao inicializa
@@ -381,125 +327,109 @@ export default {
 
     createGrupoUsuario: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              window.axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
-                Notify.create.positive('Novo grupo inserido')
-                vm.dataGrupousuario.grupousuario = null
-                vm.erros = false
-                vm.loadDataGrupos()
-                vm.$refs.createModal.close()
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
+          vm.$q.notify({
+            message: 'Novo grupo inserido',
+            type: 'positive',
+          })
+          vm.dataGrupousuario.grupousuario = null
+          vm.erros = false
+          vm.createModal = false
+          vm.loadDataGrupos()
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
       })
     },
 
     updateGrupoUsuario: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              window.axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
-                Notify.create.positive('Grupo atualizado')
-                vm.erros = false
-                vm.loadDataGrupos()
-                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                vm.$refs.updateModal.close()
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
+          vm.$q.notify({
+            message: 'Grupo atualizado',
+            type: 'positive',
+          })
+          vm.dataGrupousuario.grupousuario = null
+          vm.erros = false
+          vm.updateModal = false
+          vm.loadDataGrupos()
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
       })
     },
 
     activate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Ativar',
-        message: 'Tem certeza de deseja ativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Ativar',
-            handler () {
-              window.axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
-                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                Notify.create.positive('Registro ativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        message: 'Tem certeza que deseja ativar?',
+        ok: 'Ativar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+          vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+          vm.$q.notify({
+            message: 'Grupo ativado',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          console.log(error.response)
+        })
       })
     },
 
     inactivate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Inativar',
         message: 'Tem certeza que deseja inativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Inativar',
-            handler () {
-              window.axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
-                vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
-                Notify.create.positive('Registro inativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        ok: 'Inativar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
+          vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+          vm.$q.notify({
+            message: 'Grupo inativado',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          console.log(error.response)
+        })
       })
     },
 
     destroy: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza que deseja excluir?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Excluir',
-            handler () {
-              window.axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
-                vm.$router.push('/usuario')
-                vm.loadDataGrupos()
-                vm.grupousuario = false
-                Notify.create.positive('Registro excluído')
-              }).catch(function (error) {
-                console.log(error)
-              })
-            }
-          }
-        ]
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
+          vm.$q.notify({
+            message: 'Registro excluido',
+            type: 'positive',
+          })
+          vm.filter.grupo = null
+          vm.loadDataGrupos()
+          vm.grupousuario = false
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
     },
 
@@ -510,7 +440,7 @@ export default {
 
     loadDataGrupo: function (id) {
       let vm = this
-      window.axios.get('grupo-usuario/' + id + '/details').then(function (request) {
+      vm.$axios.get('grupo-usuario/' + id + '/details').then(function (request) {
         vm.grupousuario = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -522,7 +452,7 @@ export default {
       let params = {
         sort: 'grupousuario'
       }
-      window.axios.get('grupo-usuario', {
+      vm.$axios.get('grupo-usuario', {
         params
       }).then(function (response) {
         vm.grupos = response.data.data
@@ -532,7 +462,7 @@ export default {
     }
   },
   created () {
-    this.filter = this.$store.getters['filter/usuario']
+    this.filter = this.$store.state.filtroUsuario
     this.loadDataGrupos()
   }
 }

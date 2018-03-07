@@ -1,11 +1,11 @@
 <template>
   <mg-layout>
 
-    <q-side-link :to="'/usuario/perfil'" slot="menu">
-      <q-btn flat icon="arrow_back"  />
-    </q-side-link>
+    <q-btn flat round slot="menu" @click="$router.push('/usuario/perfil')">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.prevent="update()" />
 
     <template slot="title">
       Alterar senha
@@ -51,18 +51,6 @@
 </template>
 
 <script>
-import {
-  Dialog,
-  
-  QBtn,
-  QField,
-  QInput,
-  QSelect,
-  
-  QCard,
-  QCardMain,
-  QCardTitle
-} from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
@@ -70,15 +58,7 @@ export default {
   name: 'usuario-profile',
   components: {
     MgLayout,
-    MgErrosValidacao,
-    QBtn,
-    QField,
-    QInput,
-    QSelect,
-    
-    QCard,
-    QCardMain,
-    QCardTitle
+    MgErrosValidacao
   },
   data () {
     return {
@@ -97,7 +77,7 @@ export default {
       let params = {
         fields: ['usuario', 'impressoratermica', 'impressoramatricial']
       }
-      window.axios.get('usuario/' + id, { params }).then(function (request) {
+      vm.$axios.get('usuario/' + id, { params }).then(function (request) {
         vm.data = request.data
         vm.data.senha = null
       }).catch(function (error) {
@@ -105,27 +85,22 @@ export default {
       })
     },
     update: function () {
-      var vm = this
-      Dialog.create({
+      let vm = this
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              window.axios.put('usuario/' + localStorage.getItem('auth.usuario.codusuario'), vm.data).then(function (request) {
-                Notify.create.positive('Registro atualizado')
-                vm.$router.push('/usuario/' + request.data.codusuario)
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.put('usuario/' + localStorage.getItem('auth.usuario.codusuario'), vm.data).then(function (request) {
+          vm.$q.notify({
+            message: 'Usuário alterado',
+            type: 'positive',
+          })
+          vm.$router.push('/usuario/' + request.data.codusuario)
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
       })
     }
   },

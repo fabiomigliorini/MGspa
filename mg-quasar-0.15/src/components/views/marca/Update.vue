@@ -1,11 +1,11 @@
 <template>
   <mg-layout>
 
-    <q-btn round slot="menu" @click="$router.push('/marca')">
+    <q-btn flat round slot="menu" @click="$router.push('/marca/' + data.codmarca)">
       <q-icon name="arrow_back" />
     </q-btn>
 
-    <q-btn flat icon="done" slot="menuRight" @click.prevent="update()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.prevent="update()" />
 
     <template slot="title">
       {{ data.marca }}
@@ -109,7 +109,7 @@ export default {
   methods: {
     loadData: function (id) {
       let vm = this
-      window.axios.get('marca/' + id).then(function (request) {
+      vm.$axios.get('marca/' + id).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -128,7 +128,7 @@ export default {
           {
             label: 'Salvar',
             handler () {
-              window.axios.put('marca/' + vm.data.codmarca, vm.data).then(function (request) {
+              vm.$axios.put('marca/' + vm.data.codmarca, vm.data).then(function (request) {
                 Notify.create.positive('Registro atualizado')
                 vm.$router.push('/marca/' + request.data.codmarca)
               }).catch(function (error) {
