@@ -420,7 +420,7 @@ export default {
       this.loading = true
 
       // faz chamada api
-      window.axios.get('marca/' + this.id + '/details', { params }).then(response => {
+      window.axios.get('marca/' + this.id + '/detalhes', { params }).then(response => {
         vm.item = response.data
         // desmarca flag de carregando
         this.loading = false

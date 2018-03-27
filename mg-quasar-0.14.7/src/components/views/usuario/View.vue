@@ -179,7 +179,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      window.axios.get('usuario/' + id + '/detalhes').then(function (request) {
         vm.item = request.data
         console.log(vm.item)
       }).catch(function (error) {

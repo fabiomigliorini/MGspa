@@ -141,7 +141,7 @@ export default {
     },
     avatar: function () {
       let vm = this
-      window.axios.get('usuario/' + vm.data.codusuario + '/details').then(function (request) {
+      window.axios.get('usuario/' + vm.data.codusuario + '/detalhes').then(function (request) {
         vm.data = request.data
         let perfil = {
           codusuario: vm.data.codusuario,
@@ -156,7 +156,7 @@ export default {
     },
     loadData: function (id) {
       let vm = this
-      window.axios.get('usuario/' + id + '/details').then(function (request) {
+      window.axios.get('usuario/' + id + '/detalhes').then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)

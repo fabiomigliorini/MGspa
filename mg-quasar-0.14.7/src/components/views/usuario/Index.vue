@@ -510,7 +510,7 @@ export default {
 
     loadDataGrupo: function (id) {
       let vm = this
-      window.axios.get('grupo-usuario/' + id + '/details').then(function (request) {
+      window.axios.get('grupo-usuario/' + id + '/detalhes').then(function (request) {
         vm.grupousuario = request.data
       }).catch(function (error) {
         console.log(error.response)

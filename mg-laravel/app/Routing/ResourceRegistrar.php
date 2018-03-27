@@ -31,7 +31,7 @@ class ResourceRegistrar extends OriginalRegistrar
 
     protected function addResourceDetails($name, $base, $controller, $options)
     {
-        $uri = $this->getResourceUri($name).'/{'.$base.'}/details';
+        $uri = $this->getResourceUri($name).'/{'.$base.'}/detalhes';
         $action = $this->getResourceAction($name, $controller, 'details', $options);
         return $this->router->match(['GET'], $uri, $action);
     }
