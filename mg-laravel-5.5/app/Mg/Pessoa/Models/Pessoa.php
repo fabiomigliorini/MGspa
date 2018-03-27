@@ -170,6 +170,56 @@ class Pessoa extends Model
             return true;
     }
 
+    public static function search(array $filter = null, array $sort = null, array $fields = null)
+    {
+        $qry = Pessoa::query();
+
+        if (!empty($filter['inativo'])) {
+            $qry->AtivoInativo($filter['inativo']);
+        }
+
+        if (!empty($filter['filial'])) {
+            $qry->palavras('filial', $filter['filial']);
+        }
+
+        $qry = self::querySort($qry, $sort);
+        $qry = self::queryFields($qry, $fields);
+        return $qry;
+    }
+
+    public static function queryFields($qry, array $fields = null)
+    {
+        if (empty($fields)) {
+            return $qry;
+        }
+        return $qry->select($fields);
+    }
+
+    public static function querySort($qry, array $sort = null)
+    {
+        if (empty($sort)) {
+            return $qry;
+        }
+        foreach ($sort as $field) {
+            $dir = 'ASC';
+            if (substr($field, 0, 1) == '-') {
+                $dir = 'DESC';
+                $field = substr($field, 1);
+            }
+            $qry->orderBy($field, $dir);
+        }
+        return $qry;
+    }
+
+    public function scopeAtivo($query)
+    {
+        $query->whereNull("{$this->table}.inativo");
+    }
+
+    public function scopeInativo($query)
+    {
+        $query->whereNotNull("{$this->table}.inativo");
+    }
 
 
     public function validate() {
@@ -439,15 +489,6 @@ class Pessoa extends Model
 
     }
 
-    public function scopeInativo($query)
-    {
-        $query->whereNotNull('inativo');
-    }
-
-    public function scopeAtivo($query)
-    {
-        $query->whereNull('inativo');
-    }
 
     public static function vendedoresOrdenadoPorNome()
     {

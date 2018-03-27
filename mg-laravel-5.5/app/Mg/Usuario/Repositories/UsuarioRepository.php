@@ -7,7 +7,7 @@ use App\Mg\Usuario\Models\Usuario;
 class UsuarioRepository
 {
     public static function details ($id) {
-        
+
         $model = Usuario::findOrFail($id);
         $model['pessoa'] = [
             'codpessoa' => $model->Pessoa->codpessoa ?? null,
@@ -37,6 +37,18 @@ class UsuarioRepository
                 $permissoes_array[] = $permissao->Permissao->permissao;
             }
         }
+
+        foreach ($permissoes_array as $permissao) {
+            $key = explode('.', $permissao);
+            if (!isset($permissoes[$key[0]])) {
+                $permissoes[$key[0]] = array();
+            }
+            $permissoes[$key[0]][] = $permissao;
+        }
+
+        $model['grupos'] = $grupos;
+        $model['permissoes'] = $permissoes;
+        $model['imagem'] = $model->Imagem->url ?? false;
 
         return $model;
     }

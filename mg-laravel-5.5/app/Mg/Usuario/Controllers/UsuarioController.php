@@ -108,9 +108,11 @@ class UsuarioController extends Controller
             'impressoramatricial.required' => 'O campo "Impressora Matricial" deve ser preenchido!',
         ]);
 
-        $model = new Usuario($request->all());
+
+        $model = new Usuario();
+        $model->fill($request->all());
         $model->senha = bcrypt($model->senha);
-        $model->create();
+        $model->save();
 
         return response()->json($model, 201);
     }

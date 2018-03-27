@@ -219,6 +219,12 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
 {
     use Authenticatable, Authorizable, CanResetPassword;
 
+    /* Limpar depois que estender de MGModel*/
+    const CREATED_AT = 'criacao';
+    const UPDATED_AT = 'alteracao';
+    public $timestamps = true;
+    /* -- */
+
     protected $table = 'tblusuario';
     protected $primaryKey = 'codusuario';
     protected $fillable = [
@@ -243,11 +249,6 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         'inativo',
     ];
 
-    // Vai vir da classe MGModel
-    const CREATED_AT = 'criacao';
-    const UPDATED_AT = 'alteracao';
-
-    public $timestamps = true;
     // protected $hidden = ['senha', 'remember_token'];
 
     public function getAuthPassword() {

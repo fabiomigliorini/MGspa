@@ -45,7 +45,22 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('usuario/{id}/inativo', '\App\Mg\Usuario\Controllers\UsuarioController@inactivate')->name('usuario.inactivate');
         Route::apiResource('usuario', '\App\Mg\Usuario\Controllers\UsuarioController');
 
+        // Grupos de usuário
+        Route::get('grupo-usuario/{id}/autor', '\App\Mg\Usuario\Controllers\GrupoUsuarioController@author');
+        Route::get('grupo-usuario/{id}/detalhes', '\App\Mg\Usuario\Controllers\GrupoUsuarioController@details')->name('grupo-usuario.details');
+        Route::delete('grupo-usuario/{id}/inativo', '\App\Mg\Usuario\Controllers\GrupoUsuarioController@activate')->name('grupo-usuario.activate');
+        Route::post('grupo-usuario/{id}/inativo', '\App\Mg\Usuario\Controllers\GrupoUsuarioController@inactivate')->name('grupo-usuario.inactivate');
+        Route::apiResource('grupo-usuario', '\App\Mg\Usuario\Controllers\GrupoUsuarioController');
+
+        // Impressoras
         Route::get('impressora', '\App\Mg\Impressora\Controllers\ImpressoraController@index');
+
+        // Filiais
+        Route::apiResource('filial', '\App\Mg\Filial\Controllers\FilialController');
+
+        // Pessoas
+        Route::get('pessoa/autocomplete', '\App\Mg\Pessoa\Controllers\PessoaController@autocomplete');
+        Route::apiResource('pessoa', '\App\Mg\Pessoa\Controllers\PessoaController');
     });
 
 
