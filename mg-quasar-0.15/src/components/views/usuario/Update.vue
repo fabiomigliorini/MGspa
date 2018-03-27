@@ -1,7 +1,7 @@
 <template>
   <mg-layout>
 
-    <q-btn flat round slot="menu" @click="$router.push('/usuario' + data.codusuario)">
+    <q-btn flat round slot="menu" @click="$router.push('/usuario/' + data.codusuario)">
       <q-icon name="arrow_back" />
     </q-btn>
 

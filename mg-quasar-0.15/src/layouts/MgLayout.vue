@@ -1,6 +1,6 @@
 <template>
   <q-layout :view="view">
-    <q-layout-header :reveal="reveal">
+    <q-layout-header v-model="header" :reveal="headerReveal">
       <q-toolbar color="primary">
         <slot name="menu">
           <q-btn flat round dense icon="menu" @click="leftSide = !leftSide" v-if="drawer"/>
@@ -22,8 +22,17 @@
     </q-layout-header>
 
     <!-- Left Side Panel -->
-    <q-layout-drawer v-model="leftSide" side="left" :breakpoint="leftBreakpoint">
+    <q-layout-drawer
+      v-if="drawer"
+      side="left"
+      v-model="left"
+      :overlay="leftOverlay"
+      :behavior="leftBehavior"
+      :breakpoint="leftBreakpoint"
+    >
+      <q-scroll-area class="fit">
         <slot name="drawer"></slot>
+      </q-scroll-area>
     </q-layout-drawer>
 
     <!-- Right Side Panel -->
@@ -76,13 +85,20 @@
       <slot name="content"></slot>
     </q-page-container>
 
-    <q-toolbar slot="footer">
+    <!-- <q-toolbar>
       <q-toolbar-title>
         <slot name="footer">
-        &copy; MG Papelaria
+          &copy; MG Papelaria
         </slot>
       </q-toolbar-title>
-    </q-toolbar>
+    </q-toolbar> -->
+
+    <!-- Footer -->
+    <q-toolbar slot="footer">
+       <q-toolbar-title>
+         Layout Footer
+       </q-toolbar-title>
+     </q-toolbar>
 
   </q-layout>
 </template>
@@ -111,14 +127,42 @@ export default {
   data () {
     return {
       view: 'hHr LpR ffr',
-      reveal: true,
+      header: true,
+      headerReveal: true,
+
+      left: true,
+      leftOverlay: false,
+      leftBreakpoint: 996,
+      leftBehavior: 'default',
+
+      footer: true,
+      footerReveal: true,
+
       leftScroll: false,
       rightScroll: true,
-      leftBreakpoint: 996,
       rightBreakpoint: 2000,
       hideTabs: true,
       leftSide: false,
-      rightSide: false
+      rightSide: false,
+
+      // right: true,
+      //
+      // headerReveal: true,
+      // rightOverlay: false,
+      // rightBehavior: 'default',
+      // leftBreakpoint: 992,
+      // rightBreakpoint: 992,
+      //
+      // topleft: 'h',
+      // topcenter: 'H',
+      // topright: 'h',
+      // middleleft: 'L',
+      // middlecenter: 'p',
+      // middleright: 'r',
+      // bottomleft: 'l',
+      // bottomcenter: 'F',
+      // bottomright: 'f',
+      // scrolling: true
     }
   },
   components: {

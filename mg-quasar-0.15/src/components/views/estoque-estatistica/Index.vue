@@ -246,8 +246,8 @@
 
 <script>
 
+import { debounce } from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
-
 import GraficoVendasGeral from './grafico-vendas-geral'
 import GraficoVoltaAulas from './grafico-volta-aulas'
 import GraficoVendasAno from './grafico-vendas-ano'
@@ -255,58 +255,11 @@ import GraficoVendasAnoFiliais from './grafico-vendas-ano-filiais'
 import GraficoVendasEstoqueFiliais from './grafico-vendas-estoque-filiais'
 import Variacoes from './variacoes'
 
-import {
-  QIcon,
-  QCard,
-  QCardMedia,
-  QCardTitle,
-  QCardSeparator,
-  QCardActions,
-  QRating,
-  debounce,
-  QBtn,
-  QFab,
-  QFabAction,
-  QTooltip,
-  QCardMain,
-  QToggle,
-  QCollapsible,
-  QList,
-  QPopover,
-  QItem,
-  QItemMain,
-  QItemTile,
-  QItemSide,
-  QRadio,
-  QListHeader
-} from 'quasar'
-
 export default {
 
   components: {
+    debounce,
     MgLayout,
-    QIcon,
-    QCard,
-    QCardMedia,
-    QCardTitle,
-    QCardMain,
-    QCardSeparator,
-    QCardActions,
-    QRating,
-    QBtn,
-    QFabAction,
-    QFab,
-    QTooltip,
-    QToggle,
-    QCollapsible,
-    QList,
-    QPopover,
-    QItem,
-    QItemMain,
-    QItemTile,
-    QItemSide,
-    QRadio,
-    QListHeader,
     GraficoVendasGeral,
     GraficoVoltaAulas,
     GraficoVendasAno,

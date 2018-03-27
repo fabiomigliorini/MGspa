@@ -11,7 +11,7 @@
 
     <div slot="content">
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-4 q-pa-sm">
           <q-card>
             <q-card-title>
               Dados
@@ -49,7 +49,7 @@
 
           </q-card>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 q-pa-sm">
           <q-card>
             <q-card-title>
               Grupos
@@ -72,7 +72,7 @@
             </q-card-actions>
           </q-card>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 q-pa-sm">
           <q-card>
             <q-card-title>
               Permissões
@@ -113,11 +113,12 @@
 
     </div>
 
-    <div slot="footer">
-      <mg-autor
-        :data="item"
-        ></mg-autor>
-    </div>
+    <q-toolbar slot="footer">
+      <q-toolbar-title>
+        <mg-autor :data="item">
+      </mg-autor>
+      </q-toolbar-title>
+     </q-toolbar>
 
   </mg-layout>
 </template>
@@ -147,7 +148,7 @@ export default {
   methods: {
     carregaDados: function (id) {
       let vm = this
-      vm.$axios.get('usuario/' + id + '/details').then(function (request) {
+      vm.$axios.get('usuario/' + id + '/detalhes').then(function (request) {
         vm.item = request.data
       }).catch(function (error) {
         console.log(error.response)
@@ -155,65 +156,59 @@ export default {
     },
     activate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Ativar',
-        message: 'Tem certeza de deseja ativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Ativar',
-            handler () {
-              vm.$axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
-                vm.carregaDados(vm.item.codusuario)
-                Notify.create.positive('Registro ativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        message: 'Tem certeza que deseja inativar?',
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+          vm.$q.notify({
+            message: 'Registro ativado',
+            type: 'positive',
+          })
+          vm.carregaDados(vm.item.codusuario)
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
     },
     inactivate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Inativar',
         message: 'Tem certeza que deseja inativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Inativar',
-            handler () {
-              vm.$axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
-                vm.carregaDados(vm.item.codusuario)
-                Notify.create.positive('Registro inativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
+          vm.$q.notify({
+            message: 'Registro inativado',
+            type: 'positive',
+          })
+          vm.carregaDados(vm.item.codusuario)
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
     },
     destroy: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza que deseja excluir?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Excluir',
-            handler () {
-              vm.$axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
-                vm.$router.push('/usuario')
-                Notify.create.positive('Registro excluído')
-              }).catch(function (error) {
-                console.log(error)
-              })
-            }
-          }
-        ]
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
+          vm.$q.notify({
+            message: 'Registro excluido',
+            type: 'positive',
+          })
+          vm.$router.push('/usuario')
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
     }
   },

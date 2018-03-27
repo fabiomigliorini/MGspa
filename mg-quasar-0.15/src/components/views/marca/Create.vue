@@ -79,15 +79,6 @@
 </template>
 
 <script>
-import {
-
-  Dialog,
-  QField,
-  QBtn,
-  QInput,
-  QToggle
-} from 'quasar'
-
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
@@ -95,11 +86,7 @@ export default {
   name: 'usuario-create',
   components: {
     MgLayout,
-    MgErrosValidacao,
-    QField,
-    QBtn,
-    QInput,
-    QToggle
+    MgErrosValidacao
   },
   data () {
     return {

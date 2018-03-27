@@ -102,14 +102,7 @@ export default {
   },
   data () {
     return {
-      data: {
-        usuario: null,
-        senha: null,
-        codfilial: null,
-        codpessoa: null,
-        impressoramatricial: null,
-        impressoratermica: null
-      },
+      data: {},
       erros: false
     }
   },

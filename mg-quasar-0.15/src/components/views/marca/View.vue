@@ -360,54 +360,13 @@
 
 import MgLayout from '../../../layouts/MgLayout'
 import MgAutor from '../../utils/MgAutor'
-import {
-  QIcon,
-  QCard,
-  QCardMedia,
-  QCardTitle,
-  QCardSeparator,
-  QCardActions,
-  QRating,
-  debounce,
-  QBtn,
-  QPageSticky,
-  QFab,
-  QFabAction,
-  QTooltip,
-  Dialog,
-  QCardMain,
-  QToggle,
-  QCollapsible,
-  QList,
-  QPopover,
-  QItem,
-  QItemMain
-} from 'quasar'
+import { debounce } from 'quasar'
 
 export default {
-
   components: {
     MgLayout,
     MgAutor,
-    QIcon,
-    QCard,
-    QCardMedia,
-    QCardTitle,
-    QCardMain,
-    QCardSeparator,
-    QCardActions,
-    QRating,
-    QBtn,
-    QPageSticky,
-    QFabAction,
-    QFab,
-    QTooltip,
-    QToggle,
-    QCollapsible,
-    QList,
-    QPopover,
-    QItem,
-    QItemMain
+    debounce
   },
 
   data () {

@@ -25,14 +25,6 @@
 </template>
 
 <script>
-import {
-  QBtn,
-  QIcon,
-  QInput,
-  QCard,
-  QCardMain
-} from 'quasar'
-
 export default {
   name: 'login',
   data () {
@@ -45,11 +37,6 @@ export default {
   },
 
   components: {
-    QBtn,
-    QIcon,
-    QInput,
-    QCard,
-    QCardMain
   },
   created() {
     //do something after creating vue instance

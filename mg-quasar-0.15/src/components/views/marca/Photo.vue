@@ -32,19 +32,6 @@
 </template>
 
 <script>
-import {
-  Dialog,
-  QBtn,
-  QField,
-  QInput,
-  QSelect,
-
-  QUploader,
-  QCardMedia,
-  QCard,
-  QCardMain,
-  QCardTitle
-} from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
 import Slim from '../../utils/slim/slim.vue'
 
@@ -61,16 +48,7 @@ export default {
   name: 'marca-photo',
   components: {
     MgLayout,
-    'slim-cropper': Slim,
-    QBtn,
-    QField,
-    QInput,
-    QSelect,
-    QUploader,
-    QCardMedia,
-    QCard,
-    QCardMain,
-    QCardTitle
+    'slim-cropper': Slim
   },
   data () {
     return {

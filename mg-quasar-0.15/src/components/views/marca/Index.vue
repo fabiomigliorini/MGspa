@@ -8,7 +8,7 @@
 
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
-<q-scroll-area class="fit">
+      <q-scroll-area class="fit">
         <q-list no-border>
 
           <!-- Filtro de Descricao -->
@@ -130,7 +130,7 @@
           </q-item>
 
         </q-list>
-</q-scroll-area>
+      </q-scroll-area>
     </template>
 
     <!-- Conteúdo Princial (Meio) -->
@@ -211,7 +211,7 @@
 
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
-      <router-link :to="{ path: 'marca/create' }">
+      <router-link :to="{ path: '/marca/create' }">
         <q-page-sticky corner="bottom-right" :offset="[18, 18]">
           <q-btn round color="primary">
             <q-icon name="add" />
@@ -228,33 +228,13 @@
 
 import MgLayout from '../../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
-import { QChip, QInput,  QIcon, QField, QRadio, QList, QListHeader, QItem, QItemSeparator, QItemMain, QItemSide, QItemTile, QToggle, QRange, QInfiniteScroll, QSpinnerDots, QRating, debounce, QPageSticky, QBtn, QScrollArea } from 'quasar'
+import { debounce } from 'quasar'
 
 export default {
 
   components: {
     MgLayout,
-    MgNoData,
-    QChip,
-    QInput,
-    QIcon,
-    QField,
-    QRadio,
-    QList,
-    QListHeader,
-    QItem,
-    QItemSeparator,
-    QItemMain,
-    QItemSide,
-    QItemTile,
-    QToggle,
-    QRange,
-    QInfiniteScroll,
-    QSpinnerDots,
-    QRating,
-    QBtn,
-    QPageSticky,
-    QScrollArea
+    MgNoData
   },
 
   data () {

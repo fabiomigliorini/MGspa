@@ -45,31 +45,11 @@
 
 <script>
 import MgLayout from '../../../layouts/MgLayout'
-import {
-  QList,
-  QListHeader,
-  QItem,
-  QItemTile,
-  QItemSide,
-  QItemMain,
-  QItemSeparator,
-  QBtn,
-  QToggle
-} from 'quasar'
 
 export default {
   name: 'permissao-listagem',
   components: {
-    MgLayout,
-    QList,
-    QListHeader,
-    QItem,
-    QItemTile,
-    QItemSide,
-    QItemMain,
-    QItemSeparator,
-    QBtn,
-    QToggle
+    MgLayout
   },
   data () {
     return {

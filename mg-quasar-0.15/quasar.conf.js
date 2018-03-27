@@ -27,7 +27,7 @@ module.exports = function (ctx) {
       //   API_BASE_URL: process.env.SOMETHING ? JSON.stringify('....') : JSON.stringify('....')
       // },
       env: {
-        API_BASE_URL: '"http://127.0.0.1:8000/api/"'
+        API_BASE_URL: '"http://127.0.0.1:8000/api/v1/"'
       },
       scopeHoisting: true,
       vueRouterMode: 'history',
@@ -84,8 +84,14 @@ module.exports = function (ctx) {
         'QCardTitle',
         'QCardActions',
         'QCardSeparator',
+        'QCardMedia',
         'QCollapsible',
-        'QChip'
+        'QToggle',
+        'QRange',
+        'QScrollArea',
+        'QChip',
+        'QPopover',
+        'QRating'
       ],
       directives: [
         'Ripple',
