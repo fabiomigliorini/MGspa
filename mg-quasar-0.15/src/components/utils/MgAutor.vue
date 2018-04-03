@@ -53,25 +53,10 @@
 </template>
 
 <script>
-  import { QIcon, QBtn, QPopover, QList, QItem, QItemSide, QItemMain, QCard, QCardMedia, QCardTitle, QCardMain, QCardSeparator } from 'quasar'
 
   export default {
-
     name: 'mg-autor',
-
     components: {
-      QIcon,
-      QBtn,
-      QPopover,
-      QList,
-      QItem,
-      QItemSide,
-      QItemMain,
-      QCard,
-      QCardMedia,
-      QCardTitle,
-      QCardMain,
-      QCardSeparator
     },
 
     props: [

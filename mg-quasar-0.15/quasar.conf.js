@@ -61,6 +61,7 @@ module.exports = function (ctx) {
         'QToolbarTitle',
         'QPageSticky',
         'QInfiniteScroll',
+        'QLayoutFooter',
         'QBtn',
         'QFab',
         'QFabAction',

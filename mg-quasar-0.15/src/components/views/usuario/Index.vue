@@ -217,7 +217,7 @@
       </q-page-sticky>
     </div>
 
-    <div slot="footer" v-if="grupousuario">
+    <div slot="mgfooter" v-if="grupousuario">
       <mg-autor
         :data="grupousuario"
         ></mg-autor>

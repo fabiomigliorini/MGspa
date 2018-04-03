@@ -112,14 +112,18 @@
       </q-page-sticky>
 
     </div>
-
-    <q-toolbar slot="footer">
-      <q-toolbar-title>
-        <mg-autor :data="item">
-      </mg-autor>
-      </q-toolbar-title>
-     </q-toolbar>
-
+<!--
+    <q-toolbar slot="teste">
+     <q-toolbar-title>
+       <mg-autor :data="item"></mg-autor>
+     </q-toolbar-title>
+   </q-toolbar>
+ -->
+   <q-layout-footer slot="teste">
+     <q-toolbar-title>
+       <mg-autor :data="item"></mg-autor>
+     </q-toolbar-title>
+   </q-layout-footer>
   </mg-layout>
 </template>
 

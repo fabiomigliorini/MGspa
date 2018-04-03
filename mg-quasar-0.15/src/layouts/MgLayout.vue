@@ -21,6 +21,12 @@
       </q-toolbar>
     </q-layout-header>
 
+    <q-layout-footer v-model="footer" :reveal="footerReveal">
+      <q-toolbar-title>
+        Layout Footer
+      </q-toolbar-title>
+    </q-layout-footer>
+
     <!-- Left Side Panel -->
     <q-layout-drawer
       v-if="drawer"
@@ -79,10 +85,10 @@
       </div>
     </q-layout-drawer>
 
-    </q-layout-drawer>
-
     <q-page-container>
-      <slot name="content"></slot>
+      <slot name="content">
+       <router-view />
+     </slot>
     </q-page-container>
 
     <!-- <q-toolbar>
@@ -94,34 +100,18 @@
     </q-toolbar> -->
 
     <!-- Footer -->
-    <q-toolbar slot="footer">
-       <q-toolbar-title>
-         Layout Footer
-       </q-toolbar-title>
-     </q-toolbar>
+    <!--
+    <q-toolbar>
+    <q-toolbar-title>
+    &copy; MG Papelaria
+  </q-toolbar-title>
+</q-toolbar>
+-->
 
   </q-layout>
 </template>
 
 <script>
-import {
-  QLayout,
-  QToolbar,
-  QToolbarTitle,
-  QSearch,
-  QTabs,
-  QRouteTab,
-  QBtn,
-  QIcon,
-  QList,
-  QItem,
-  QItemSide,
-  QItemMain,
-  QListHeader,
-  QScrollArea,
-  Dialog,
-} from 'quasar'
-
 export default {
   name: 'mg-layout',
   data () {
@@ -160,26 +150,12 @@ export default {
       // middlecenter: 'p',
       // middleright: 'r',
       // bottomleft: 'l',
-      // bottomcenter: 'F',
-      // bottomright: 'f',
-      // scrolling: true
+      bottomcenter: 'F',
+      bottomright: 'f',
+      scrolling: true
     }
   },
   components: {
-    QLayout,
-    QToolbar,
-    QToolbarTitle,
-    QSearch,
-    QTabs,
-    QRouteTab,
-    QBtn,
-    QIcon,
-    QList,
-    QItem,
-    QItemSide,
-    QItemMain,
-    QListHeader,
-    QScrollArea
   },
   computed: {
     aplicativos: {

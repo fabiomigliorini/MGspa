@@ -41,7 +41,7 @@
           <q-card inline>
             <q-card-media overlay-position="top">
               <img :src="item.imagem.url" v-if="item.codimagem">
-              <img src="/statics/quasar-logo.png" v-else>
+              <img src="/statics/logo.png" v-else>
               <q-card-title slot="overlay">
                 {{item.marca}}
                 <div slot="subtitle">
