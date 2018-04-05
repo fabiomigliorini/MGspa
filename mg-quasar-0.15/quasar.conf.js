@@ -1,5 +1,8 @@
 // Configuration for your app
 
+// Get our env variables
+const envparser = require('./config/envparser')
+
 module.exports = function (ctx) {
   return {
     plugins: [
@@ -23,12 +26,7 @@ module.exports = function (ctx) {
       remove: []
     },
     build: {
-      // env: {
-      //   API_BASE_URL: process.env.SOMETHING ? JSON.stringify('....') : JSON.stringify('....')
-      // },
-      env: {
-        API_BASE_URL: '"http://127.0.0.1:8000/api/v1/"'
-      },
+      env: envparser(),
       scopeHoisting: true,
       vueRouterMode: 'history',
       // gzip: true,
