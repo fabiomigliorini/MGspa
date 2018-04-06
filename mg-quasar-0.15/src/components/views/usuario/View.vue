@@ -119,11 +119,11 @@
      </q-toolbar-title>
    </q-toolbar>
  -->
-   <q-layout-footer slot="teste">
-     <q-toolbar-title>
+
+     <q-toolbar-title slot="footer">
        <mg-autor :data="item"></mg-autor>
      </q-toolbar-title>
-   </q-layout-footer>
+
   </mg-layout>
 </template>
 

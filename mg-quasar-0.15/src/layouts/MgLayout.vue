@@ -22,9 +22,13 @@
     </q-layout-header>
 
     <q-layout-footer v-model="footer" :reveal="footerReveal">
-      <q-toolbar-title>
-        Layout Footer
-      </q-toolbar-title>
+      <q-toolbar>
+        <slot name="footer">
+          <q-toolbar-title>
+            © MG Papelaria
+          </q-toolbar-title>
+        </slot>
+      </q-toolbar>
     </q-layout-footer>
 
     <!-- Left Side Panel -->
