@@ -163,7 +163,7 @@ export default {
       vm.$q.dialog({
         title: 'Ativar',
         message: 'Tem certeza que deseja inativar?',
-        ok: 'Excluir',
+        ok: 'Ativar',
         cancel: 'Cancelar'
       }).then(() => {
         vm.$axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
@@ -182,7 +182,7 @@ export default {
       vm.$q.dialog({
         title: 'Inativar',
         message: 'Tem certeza que deseja inativar?',
-        ok: 'Excluir',
+        ok: 'Inativar',
         cancel: 'Cancelar'
       }).then(() => {
         vm.$axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {

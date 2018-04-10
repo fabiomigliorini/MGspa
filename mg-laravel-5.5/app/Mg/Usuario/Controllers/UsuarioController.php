@@ -3,12 +3,13 @@
 namespace App\Mg\Usuario\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Mg\Controllers\MgController;
 use App\Mg\Usuario\Models\Usuario;
+use App\Mg\Usuario\Repositories\UsuarioRepository;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 
-class UsuarioController extends Controller
+class UsuarioController extends MgController
 {
     /**
      * Display a listing of the resource.
@@ -138,49 +139,7 @@ class UsuarioController extends Controller
      */
     public function details ($id)
     {
-        $model = \App\Mg\Usuario\Repositories\UsuarioRepository::details($id);
-        // $model = Usuario::findOrFail($id);
-        // $model['pessoa'] = [
-        //     'codpessoa' => $model->Pessoa->codpessoa ?? null,
-        //     'pessoa' => $model->Pessoa->pessoa ?? null
-        // ];
-        //
-        // $model['filial'] = [
-        //     'codfilial' => $model->Filial->codfilial,
-        //     'filial' => $model->Filial->filial
-        // ];
-        //
-        // $grupos = [];
-        // $permissoes_array = [];
-        // $permissoes = [];
-        //
-        // foreach ($model->GrupoUsuarioUsuarioS as $grupo) {
-        //
-        //     $grupos[$grupo->GrupoUsuario->grupousuario]['grupousuario'] = $grupo->GrupoUsuario->grupousuario;
-        //
-        //     if (!isset($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'])) {
-        //         $grupos[$grupo->GrupoUsuario->grupousuario]['filiais'] = [];
-        //     }
-        //
-        //     array_push($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'], $grupo->Filial->filial);
-        //
-        //     foreach ($grupo->GrupoUsuario->GrupoUsuarioPermissaoS as $permissao) {
-        //         $permissoes_array[] = $permissao->Permissao->permissao;
-        //     }
-        // }
-        //
-        // foreach ($permissoes_array as $permissao) {
-        //     $key = explode('.', $permissao);
-        //     if (!isset($permissoes[$key[0]])) {
-        //         $permissoes[$key[0]] = array();
-        //     }
-        //     $permissoes[$key[0]][] = $permissao;
-        // }
-        //
-        // $details['grupos'] = $grupos;
-        // $details['permissoes'] = $permissoes;
-        //
-        // $model['imagem'] = $model->Imagem->url ?? false;
+        $model = UsuarioRepository::details($id);
         return response()->json($model, 200);
     }
 
@@ -265,6 +224,7 @@ class UsuarioController extends Controller
         $model = Usuario::findOrFail($id);
         $model->delete();
     }
+
     public function author(Request $request, $id) {
         $model = Usuario::findOrFail($id);
         $res = [
@@ -329,33 +289,6 @@ class UsuarioController extends Controller
         $model = Usuario::findOrFail($id);
         $model->GrupoUsuarioUsuarioS()->where('codgrupousuario', $request->get('codgrupousuario'))->where('codfilial', $request->get('codfilial'))->delete();
         return response()->json($model, 204);
-    }
-
-    public function parseSearchRequest(Request $request)
-    {
-        $req = $request->all();
-
-        $sort = $request->sort;
-        if (!empty($sort)) {
-            $sort = explode(',', $sort);
-        }
-
-        $fields = $request->fields;
-        if (!empty($fields)) {
-            $fields = explode(',', $fields);
-        }
-
-        $filter = $request->all();
-
-        unset($filter['fields']);
-        unset($filter['sort']);
-        unset($filter['page']);
-
-        return [
-            $filter,
-            $sort,
-            $fields,
-        ];
     }
 
 }

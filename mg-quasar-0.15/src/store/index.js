@@ -6,6 +6,7 @@ import aplicativos from './aplicativos'
 import perfil from './perfil'
 import filtroMarca from './filtro/marca'
 import filtroUsuario from './filtro/usuario'
+import filtroFilial from './filtro/filial'
 
 Vue.use(Vuex)
 
@@ -15,7 +16,8 @@ const store = new Vuex.Store({
     aplicativos,
     perfil,
     filtroMarca,
-    filtroUsuario
+    filtroUsuario,
+    filtroFilial
   }
 })
 

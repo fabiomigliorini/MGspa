@@ -3,13 +3,13 @@
 namespace App\Mg\Filial\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Mg\Controllers\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 
 use App\Mg\Filial\Models\Filial;
 
-class FilialController extends Controller
+class FilialController extends MgController
 {
     /**
      * Display a listing of the resource.
@@ -39,31 +39,73 @@ class FilialController extends Controller
         return response()->json($model, 200);
     }
 
-    public function parseSearchRequest(Request $request)
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
     {
-        $req = $request->all();
+        $request->validate([
+            'filial' => [
+                'required',
+                'min:3',
+            ],
 
-        $sort = $request->sort;
-        if (!empty($sort)) {
-            $sort = explode(',', $sort);
-        }
+        ], [
+            'filial.required' => 'O campo "Filial" deve ser preenchido!',
+            'filial.min' => 'O campo "Filial" deve ter no mínimo 3 caracteres.',
+        ]);
 
-        $fields = $request->fields;
-        if (!empty($fields)) {
-            $fields = explode(',', $fields);
-        }
+        $model = new Filial();
+        $model->fill($request->all());
+        $model->save();
 
-        $filter = $request->all();
-
-        unset($filter['fields']);
-        unset($filter['sort']);
-        unset($filter['page']);
-
-        return [
-            $filter,
-            $sort,
-            $fields,
-        ];
+        return response()->json($model, 201);
     }
 
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $model = Filial::findOrFail($id);
+
+        $request->validate([
+            'filial' => [
+                'required',
+                'min:3',
+                Rule::unique('tblfilial')->ignore($model->codfilial, 'codfilial'),
+            ],
+
+        ], [
+            'filial.required' => 'O campo "Filial" deve ser preenchido!',
+            'filial.min' => 'O campo "Filial" deve ter no mínimo 3 caracteres.',
+            'filial.unique' => 'Esta "Filial" já esta cadastrada',
+
+        ]);
+
+        $model->fill($request->all());
+
+        $model->update();
+
+        return response()->json($model, 201);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $model = Filial::findOrFail($id);
+        $model->delete();
+    }
 }

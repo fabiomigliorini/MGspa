@@ -7,7 +7,7 @@
         </slot>
 
         <q-toolbar-title>
-          <slot name="title"></slot>
+          <slot name="title">Padrão</slot>
         </q-toolbar-title>
 
         <q-btn flat round class="within-iframe-hide" v-if="backPath" @click="$router.replace(backPath)" style="margin-right: 15px">

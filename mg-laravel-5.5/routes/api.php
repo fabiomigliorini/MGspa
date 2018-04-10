@@ -43,6 +43,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('usuario/{id}/detalhes', '\App\Mg\Usuario\Controllers\UsuarioController@details')->name('usuario.details');
         Route::delete('usuario/{id}/inativo', '\App\Mg\Usuario\Controllers\UsuarioController@activate')->name('usuario.activate');
         Route::post('usuario/{id}/inativo', '\App\Mg\Usuario\Controllers\UsuarioController@inactivate')->name('usuario.inactivate');
+
         Route::apiResource('usuario', '\App\Mg\Usuario\Controllers\UsuarioController');
 
         // Grupos de usuário

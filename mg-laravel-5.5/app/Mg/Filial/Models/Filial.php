@@ -47,16 +47,11 @@ namespace App\Mg\Filial\Models;
  * @property  Usuario[]                      $UsuarioS
  * @property  ValeCompra[]                   $ValeCompraS
  */
-use Illuminate\Database\Eloquent\Model; // <-- Trocar por MGModel
 
-class Filial extends Model
+use App\Mg\Model\MGModel;
+
+class Filial extends MGModel
 {
-    /* Limpar depois que estender de MGModel*/
-    const CREATED_AT = 'criacao';
-    const UPDATED_AT = 'alteracao';
-    public $timestamps = true;
-    /* -- */
-
     const CRT_SIMPLES = 1;
     const CRT_SIMPLES_EXCESSO = 2;
     const CRT_REGIME_NORMAL = 3;
@@ -105,56 +100,10 @@ class Filial extends Model
             $qry->palavras('filial', $filter['filial']);
         }
 
+
         $qry = self::querySort($qry, $sort);
         $qry = self::queryFields($qry, $fields);
         return $qry;
-    }
-
-    public static function queryFields($qry, array $fields = null)
-    {
-        if (empty($fields)) {
-            return $qry;
-        }
-        return $qry->select($fields);
-    }
-
-    public static function querySort($qry, array $sort = null)
-    {
-        if (empty($sort)) {
-            return $qry;
-        }
-        foreach ($sort as $field) {
-            $dir = 'ASC';
-            if (substr($field, 0, 1) == '-') {
-                $dir = 'DESC';
-                $field = substr($field, 1);
-            }
-            $qry->orderBy($field, $dir);
-        }
-        return $qry;
-    }
-
-    public function scopeAtivo($query)
-    {
-        $query->whereNull("{$this->table}.inativo");
-    }
-
-    public function scopeInativo($query)
-    {
-        $query->whereNotNull("{$this->table}.inativo");
-    }
-
-    public function validate() {
-
-        $this->_regrasValidacao = [
-            'filial' => 'required|min:5',
-        ];
-
-        $this->_mensagensErro = [
-            'filial.required' => 'Preencha o campo filial',
-        ];
-
-        return parent::validate();
     }
 
     // Chaves Estrangeiras
@@ -238,13 +187,5 @@ class Filial extends Model
     public function ValeCompraS()
     {
         return $this->hasMany(ValeCompra::class, 'codfilial');
-    }
-
-    public function scopeFilial($query, $filial)
-    {
-        if (trim($filial) != "")
-        {
-            $query->where('filial', "ILIKE", "%$filial%");
-        }
     }
 }

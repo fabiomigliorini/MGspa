@@ -270,6 +270,7 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         return ['user' => ['codusuario' => $this->codusuario]];
     }
 
+
     public function activate () {
         $this->inativo = null;
         $this->update();
@@ -284,6 +285,7 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         $this->update();
         return $this;
     }
+
 
     public static function search(array $filter = null, array $sort = null, array $fields = null)
     {
@@ -307,66 +309,6 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
 
         $qry = self::querySort($qry, $sort);
         $qry = self::queryFields($qry, $fields);
-        return $qry;
-    }
-
-    public function scopeAtivo($query)
-    {
-        $query->whereNull("{$this->table}.inativo");
-    }
-
-    public function scopeInativo($query)
-    {
-        $query->whereNotNull("{$this->table}.inativo");
-    }
-
-    public function scopeAtivoInativo($query, $valor)
-    {
-        switch ($valor) {
-            case 1:
-            $query->ativo();
-            break;
-
-            case 2:
-            $query->inativo();
-            break;
-
-            default:
-            case 9:
-            break;
-        }
-    }
-
-    public function scopePalavras($query, $campo, $palavras)
-    {
-        foreach (explode(' ', trim($palavras)) as $palavra) {
-            if (!empty($palavra)) {
-                $query->where($campo, 'ilike', "%$palavra%");
-            }
-        }
-    }
-
-    public static function queryFields($qry, array $fields = null)
-    {
-        if (empty($fields)) {
-            return $qry;
-        }
-        return $qry->select($fields);
-    }
-
-    public static function querySort($qry, array $sort = null)
-    {
-        if (empty($sort)) {
-            return $qry;
-        }
-        foreach ($sort as $field) {
-            $dir = 'ASC';
-            if (substr($field, 0, 1) == '-') {
-                $dir = 'DESC';
-                $field = substr($field, 1);
-            }
-            $qry->orderBy($field, $dir);
-        }
         return $qry;
     }
 
