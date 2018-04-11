@@ -61,7 +61,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::apiResource('pessoa', '\App\Mg\Pessoa\Controllers\PessoaController');
 
         // Permissões
-        Route::get('permissao', '\App\Mg\Usuario\Controllers\PermissaoController@index');
+        Route::apiResource('permissao', '\App\Mg\Usuario\Controllers\PermissaoController');
 
         // Estoque
         Route::apiResource('estoque-estatistica', '\App\Mg\Estoque\Controllers\EstoqueEstatisticaController');

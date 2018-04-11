@@ -27,16 +27,21 @@ class PermissaoController extends Controller
 
     public function store(Request $request)
     {
-
         if (!$permissao = Permissao::where('permissao', $request->get('permissao'))->first()) {
-            $permissao = Permissao::create(null, ['permissao' => $request->get('permissao')]);
+            $permissao = new Permissao([
+                'permissao' => $request->get('permissao')
+            ]);
+            $permissao->save();
         }
 
         if (!GrupoUsuarioPermissao::where('codgrupousuario', $request->get('codgrupousuario'))->where('codpermissao', $permissao->codpermissao)->first()) {
-            if (!$gup = GrupoUsuarioPermissao::create([
+            $gup = new GrupoUsuarioPermissao();
+            $gup->fill([
                 'codgrupousuario' => $request->get('codgrupousuario'),
                 'codpermissao' => $permissao->codpermissao,
-            ])) {
+            ]);
+
+            if (!$gup->save()) {
                 return false;
             }
         }
