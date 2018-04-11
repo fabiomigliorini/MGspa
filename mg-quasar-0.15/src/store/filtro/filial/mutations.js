@@ -1,3 +1,3 @@
 export const updateFiltroFilial = (state, payload) => {
-  state = payload
+  state.filialState = payload
 }

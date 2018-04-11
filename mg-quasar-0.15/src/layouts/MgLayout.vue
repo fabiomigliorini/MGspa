@@ -3,7 +3,7 @@
     <q-layout-header v-model="header" :reveal="headerReveal">
       <q-toolbar color="primary">
         <slot name="menu">
-          <q-btn flat round dense icon="menu" @click="leftSide = !leftSide" v-if="drawer"/>
+          <q-btn flat round dense icon="menu" @click="left = !left" v-if="drawer"/>
         </slot>
 
         <q-toolbar-title>

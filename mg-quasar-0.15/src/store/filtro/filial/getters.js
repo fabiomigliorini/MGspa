@@ -1,3 +1,4 @@
 export const filialGetter = (state) => {
-  return state
+  console.log(state)
+  return state.filialState
 }

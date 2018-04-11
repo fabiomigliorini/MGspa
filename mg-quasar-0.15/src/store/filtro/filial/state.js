@@ -1,4 +1,6 @@
 export default {
-  filial: null,
-  inativo: 1
+  filialState: {
+    filial: null,
+    inativo: 1
+  }
 }

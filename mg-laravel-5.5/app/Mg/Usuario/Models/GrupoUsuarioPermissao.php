@@ -20,15 +20,9 @@ namespace App\Mg\Usuario\Models;
  *
  * Tabelas Filhas
  */
-use Illuminate\Database\Eloquent\Model; // <-- Trocar por MGModel
-class GrupoUsuarioPermissao extends Model
+use App\Mg\Model\MGModel;
+class GrupoUsuarioPermissao extends MGModel
 {
-    /* Limpar depois que estender de MGModel*/
-    const CREATED_AT = 'criacao';
-    const UPDATED_AT = 'alteracao';
-    public $timestamps = true;
-    /* -- */
-
     protected $table = 'tblgrupousuariopermissao';
     protected $primaryKey = 'codgrupousuariopermissao';
     protected $fillable = [

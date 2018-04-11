@@ -84,7 +84,7 @@ export default {
   },
   data () {
     return {
-      data: [], // Lista de Usuários
+      data: [],
       page: 1,
       filter: {},
       loading: true,
@@ -113,6 +113,7 @@ export default {
 
       // inicializa variaveis
       var vm = this
+
       // salva no Vuex filtro da filial
       vm.$store.commit('filtroFilial/updateFiltroFilial', vm.filter)
       var params = vm.filter
@@ -182,8 +183,15 @@ export default {
     },
 
   },
+  computed: {
+    filialState: {
+      get () {
+        return this.$store.state.filtroFilial.filialState
+      }
+    }
+  },
   created () {
-    //this.filter = this.$store.state.filtroUsuario
+    this.filter = this.filialState
     this.loadData()
   }
 }

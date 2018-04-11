@@ -8,13 +8,13 @@
     <template slot="drawer">
 
       <q-list highlight>
+
         <q-item link v-for="(item, index) in dados.Permissoes" :key="item.codpermissao" v-bind:class="{ 'active': tabs == index }">
-          <q-item-main>
-            <q-item-tile title @click="tab(index)">
-              <span style="word-wrap: break-word;">{{ index }}</span>
-            </q-item-tile>
+          <q-item-main @click.native="tab(index)">
+            <span style="word-wrap: break-word;">{{ index }}</span>
           </q-item-main>
         </q-item>
+
       </q-list>
 
     </template>

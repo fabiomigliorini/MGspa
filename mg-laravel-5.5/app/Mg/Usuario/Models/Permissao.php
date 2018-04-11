@@ -20,16 +20,10 @@ namespace App\Mg\Usuario\Models;
  * @property  GrupoUsuario[]        $GrupoUsuario
  */
 
-use Illuminate\Database\Eloquent\Model; // <-- Trocar por MGModel
+use App\Mg\Model\MGModel;
 
-class Permissao extends Model
+class Permissao extends MGModel
 {
-    /* Limpar depois que estender de MGModel*/
-    const CREATED_AT = 'criacao';
-    const UPDATED_AT = 'alteracao';
-    public $timestamps = true;
-    /* -- */
-
     protected $table = 'tblpermissao';
     protected $primaryKey = 'codpermissao';
     protected $fillable = [
@@ -53,55 +47,6 @@ class Permissao extends Model
     public function GrupoUsuario()
     {
         return $this->belongsToMany(GrupoUsuario::class, 'tblgrupousuariopermissao', 'codpermissao', 'codgrupousuario');
-    }
-
-    public function validate() {
-
-        $unique_codpermissao = "unique:tblpermissao,codpermissao|required|min:4";
-        $unique_permissao = "unique:tblpermissao,permissao|required|min:4";
-
-    	if ($this->exists) {
-            $unique_codpermissao = "unique:tblpermissao,codpermissao,$this->codpermissao,codpermissao|required|min:4";
-            $unique_permissao = "unique:tblpermissao,permissao,$this->codpermissao,codpermissao|required|min:4";
-        }
-
-        $this->_regrasValidacao = [
-
-            'codpermissao' => $unique_codpermissao,
-            'permissao' => $unique_permissao,
-        ];
-
-        $this->_mensagensErro = [
-            'permissao.min' => 'Permissão deve ter no mínimo 4 caracteres',
-        ];
-
-        return parent::validate();
-    }
-
-    public static function search($parametros)
-    {
-        $query = Permissao::query();
-
-        if (!empty($parametros['codpermissao'])) {
-            $query->where('codpermissao', $parametros['codpermissao']);
-        }
-
-        if (!empty($parametros['permissao'])) {
-            $query->permissao($parametros['permissao']);
-        }
-
-        return $query;
-    }
-
-    public function scopePermissao($query, $permissao)
-    {
-        if (trim($permissao) === '')
-            return;
-
-        $permissao = explode(' ', removeAcentos($permissao));
-        foreach ($permissao as $str) {
-            $query->where('permissao', 'ILIKE', "%$str%");
-        }
     }
 
 }
