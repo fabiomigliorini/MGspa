@@ -56,11 +56,11 @@
               <img :src="perfil.avatar">
             </q-item-tile>
           </q-item-side>
-          <q-item-main link @click="$router.push('/usuario/perfil')">
+          <q-item-main link @click.native="$router.push('/usuario/perfil')" style="cursor:pointer">
             {{ perfil.usuario }}
           </q-item-main>
           <q-item-side right>
-            <q-item-tile icon="exit_to_app" @click="$router.push('/usuario/perfil')"/>
+            <q-item-tile link icon="exit_to_app"@click.native="logout" style="cursor:pointer"/>
           </q-item-side>
         </q-item>
 
@@ -190,29 +190,24 @@ export default {
   methods: {
     logout () {
       var vm = this
-      Dialog.create({
+
+      vm.$q.dialog({
         title: 'Sair do sistema',
         message: 'Tem certeza que deseja sair?',
-        buttons: [
-          {
-            label: 'Não',
-            handler () {
-            }
-          },
-          {
-            label: 'Sim',
-            handler () {
-              vm.$axios.get('auth/logout').then(response => {
-                localStorage.removeItem('auth.token')
-                localStorage.removeItem('auth.usuario.usuario')
-                localStorage.removeItem('auth.usuario.codusuario')
-                localStorage.removeItem('auth.usuario.avatar')
-                vm.$router.push('/login')
-                Notify.create('Até mais...')
-              })
-            }
-          }
-        ]
+        ok: 'Sair',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.get('auth/logout').then(response => {
+          localStorage.removeItem('auth.token')
+          localStorage.removeItem('auth.usuario.usuario')
+          localStorage.removeItem('auth.usuario.codusuario')
+          localStorage.removeItem('auth.usuario.avatar')
+          vm.$router.push('/login')
+          vm.$q.notify({
+            message: 'Até mais...',
+            type: 'positive',
+          })
+        })
       })
     }
   }

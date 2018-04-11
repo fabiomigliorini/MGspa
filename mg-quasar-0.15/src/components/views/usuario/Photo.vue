@@ -86,14 +86,11 @@ export default {
 
         if (vm.data.codimagem === null) {
           vm.$axios.post('imagem', data).then(function (response) {
-            vm.loadData(vm.data.codusuario)
-            localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
-            this.$store.commit('perfil/usuario', { avatar: localStorage.getItem('auth.usuario.avatar') })
             vm.$q.notify({
               message: 'Sua foto foi cadastrada',
               type: 'positive',
             })
-            // vm.$router.push('/usuario/foto')
+            vm.avatar()
           }).catch(function (error) {
             vm.erros = error.response.data.erros
           })
@@ -120,10 +117,10 @@ export default {
         vm.data = request.data
         let perfil = {
           codusuario: vm.data.codusuario,
-          avatar: vm.data.imagem.arquivo,
+          avatar: vm.data.avatar,
           usuario: vm.data.usuario
         }
-        localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
+        localStorage.setItem('auth.usuario.avatar', vm.data.avatar)
         vm.$store.commit('perfil/updatePerfil', perfil)
       }).catch(function (error) {
         console.log(error.response)

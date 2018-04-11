@@ -1,7 +1,9 @@
 <template>
   <mg-layout>
 
-    <q-btn flat round v-go-back icon="arrow_back" slot="menu" />
+    <q-btn flat round slot="menu" @click="$router.push('/usuario/' + data.codusuario)">
+      <q-icon name="arrow_back" />
+    </q-btn>
 
     <template slot="title">
       {{ data.usuario }}

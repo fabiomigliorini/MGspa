@@ -48,7 +48,7 @@ class UsuarioRepository
 
         $model['grupos'] = $grupos;
         $model['permissoes'] = $permissoes;
-        $model['imagem'] = $model->Imagem->url ?? false;
+        $model['avatar'] = $model->Imagem->url ?? false;
 
         return $model;
     }
