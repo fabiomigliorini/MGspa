@@ -73,47 +73,46 @@ export default {
       let form = document.forms[0]
       let input = form.querySelector('input[name="slim[]"]')
       let imagem = input.value
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              let data = {
-                codusuario: vm.data.codusuario,
-                'slim[]': imagem
-              }
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        let data = {
+          codusuario: vm.data.codusuario,
+          'slim[]': imagem
+        }
 
-              if (vm.data.codimagem === null) {
-                vm.$axios.post('imagem', data).then(function (response) {
-                  vm.loadData(vm.data.codusuario)
-                  localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
-                  this.$store.commit('perfil/usuario', { avatar: localStorage.getItem('auth.usuario.avatar') })
-                  Notify.create.positive('Sua foto foi cadastrada')
-                  // vm.$router.push('/usuario/foto')
-                }).catch(function (error) {
-                  vm.erros = error.response.data.erros
-                })
-              }
-              else {
-                vm.$axios.put('imagem/' + vm.data.codimagem, data).then(function (response) {
-                  Notify.create.positive('Sua foto foi alterada')
-                  vm.avatar()
-                  // vm.$router.push('/usuario/foto')
-                }).catch(function (error) {
-                  console.log(error)
-                  // vm.erros = error.response.data.erros
-                })
-              }
-            }
-          }
-        ]
+        if (vm.data.codimagem === null) {
+          vm.$axios.post('imagem', data).then(function (response) {
+            vm.loadData(vm.data.codusuario)
+            localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
+            this.$store.commit('perfil/usuario', { avatar: localStorage.getItem('auth.usuario.avatar') })
+            vm.$q.notify({
+              message: 'Sua foto foi cadastrada',
+              type: 'positive',
+            })
+            // vm.$router.push('/usuario/foto')
+          }).catch(function (error) {
+            vm.erros = error.response.data.erros
+          })
+        }
+        else {
+          vm.$axios.put('imagem/' + vm.data.codimagem, data).then(function (response) {
+            vm.$q.notify({
+              message: 'Sua foto foi alterada',
+              type: 'positive',
+            })
+            vm.avatar()
+            // vm.$router.push('/usuario/foto')
+          }).catch(function (error) {
+            console.log(error)
+            // vm.erros = error.response.data.erros
+          })
+        }
       })
+
     },
     avatar: function () {
       let vm = this
@@ -121,11 +120,11 @@ export default {
         vm.data = request.data
         let perfil = {
           codusuario: vm.data.codusuario,
-          avatar: vm.data.imagem,
+          avatar: vm.data.imagem.arquivo,
           usuario: vm.data.usuario
         }
         localStorage.setItem('auth.usuario.avatar', vm.data.imagem)
-        vm.$store.commit('perfil/usuario', perfil)
+        vm.$store.commit('perfil/updatePerfil', perfil)
       }).catch(function (error) {
         console.log(error.response)
       })

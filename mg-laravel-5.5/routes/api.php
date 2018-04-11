@@ -66,6 +66,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         // Estoque
         Route::apiResource('estoque-estatistica', '\App\Mg\Estoque\Controllers\EstoqueEstatisticaController');
 
+        // Imagem
+        Route::apiResource('imagem', '\App\Mg\Imagem\Controllers\ImagemController');
+
     });
 
 });

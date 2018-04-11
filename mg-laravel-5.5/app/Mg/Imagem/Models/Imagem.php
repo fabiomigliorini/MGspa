@@ -32,6 +32,8 @@ namespace App\Mg\Imagem\Models;
  */
 
 use App\Mg\Model\MGModel;
+use App\Mg\Usuario\Models\Usuario;
+use App\Mg\Marca\Models\Marca;
 use Carbon\Carbon;
 
 class Imagem extends MGModel

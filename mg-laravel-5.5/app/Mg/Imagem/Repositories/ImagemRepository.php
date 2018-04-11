@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Mg\Imagem\Repositories;
+
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+
+use App\Models\Imagem;
+use DB;
+use Storage;
+use Carbon\Carbon;
+use App\Libraries\SlimImageCropper\Slim;
+
+use App\Mg\Usuario\Models\Usuario;
+
+class ImagemRepository
+{
+
+    public static function create ($model = null, array $data = null)
+    {
+        // Busca Codigo
+        $seq = DB::select('select nextval(\'tblimagem_codimagem_seq\') as codimagem');
+        $model->codimagem = $seq[0]->codimagem;
+        $model->arquivo = $model->codimagem .'.jpg';
+
+        // TODO: Remover isto depois que desativar o MGLara
+        $model->observacoes = $model->arquivo;
+
+        // Salva o arquivo
+        //$data['file']->storeAs('imagens', $model->arquivo);
+
+        Slim::saveFile($data['imagem'], $model->arquivo, $model->directory, false);
+
+        if (!$model->save()){
+            return false;
+        }
+
+        if (!empty($data['codproduto'])) {
+            $repo = new ProdutoImagemRepository();
+            $repo->create([
+                'codproduto' => $data['codproduto'],
+                'codimagem' => $model->codimagem
+            ]);
+        }
+
+        if (!empty($data['codsecaoproduto'])) {
+            $codsecaoproduto = SecaoProdutoRepository::findOrFail($data['codsecaoproduto']);
+            SecaoProdutoRepository::update($codsecaoproduto, [
+                'codimagem' => $model->codimagem
+            ]);
+        }
+
+        if (!empty($data['codfamiliaproduto'])) {
+            $codfamiliaproduto = FamiliaProdutoRepository::findOrFail($data['codfamiliaproduto']);
+            FamiliaProdutoRepository::update($codfamiliaproduto, [
+                'codimagem' => $model->codimagem
+            ]);
+        }
+
+        if (!empty($data['codgrupoproduto'])) {
+            $grupoproduto = GrupoProdutoRepository::findOrFail($data['codgrupoproduto']);
+            GrupoProdutoRepository::update($grupoproduto, [
+                'codimagem' => $model->codimagem
+            ]);
+        }
+
+        if (!empty($data['codsubgrupoproduto'])) {
+            $subgrupoproduto = SubGrupoProdutoRepository::findOrFail($data['codsubgrupoproduto']);
+            SubGrupoProdutoRepository::update($subgrupoproduto, [
+                'codimagem' => $model->codimagem
+            ]);
+        }
+
+        if (!empty($data['codmarca'])) {
+            $marca = MarcaRepository::findOrFail($data['codmarca']);
+            MarcaRepository::update($marca, [
+                'codimagem' => $model->codimagem
+            ]);
+        }
+
+        if (!empty($data['codusuario'])) {
+            $usuario = Usuario::findOrFail($data['codusuario']);
+            $usuario->codimagem = $model->codimagem;
+            $usuario->save();
+        }
+
+        return $model;
+    }
+
+    public static function update($model, array $data = null)
+    {
+        static::inactivateImagem($model, $data);
+        //
+        // if (!empty($data)) {
+        //     $model->fill($data);
+        // }
+
+        if (!$model->save()) {
+            return false;
+        }
+
+        static::create($model, $data);
+        return $model;
+    }
+
+    public static function inactivateImagem ($model, $data) {
+        $model->inativo = Carbon::now();
+        $model->save();
+
+        // Limpa relacionamento com Usuario
+        foreach ($model->UsuarioS as $row) {
+            $usuario = Usuario::findOrFail($data['codusuario']);
+            $usuario->codimagem = null;
+            $usuario->save();
+
+        }
+
+        // Limpa relacionamento com Marca
+        foreach ($model->MarcaS as $row) {
+            $data = MarcaRepository::findOrFail($data['codmarca']);
+            MarcaRepository::update($data, [
+                'codimagem' => null
+            ]);
+        }
+
+        return $model;
+    }
+}

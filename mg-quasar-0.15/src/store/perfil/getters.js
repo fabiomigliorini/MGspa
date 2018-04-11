@@ -1,3 +1,3 @@
 export const perfilGetter = (state) => {
-  return state
+  return state.perfilState
 }

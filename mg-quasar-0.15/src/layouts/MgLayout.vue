@@ -169,7 +169,7 @@ export default {
     },
     perfil: {
       get () {
-        return this.$store.state.perfil
+        return this.$store.state.perfil.perfilState
       }
     }
   },
