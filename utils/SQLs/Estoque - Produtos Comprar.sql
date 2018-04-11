@@ -1,11 +1,11 @@
 ﻿/*
 
 select codmarca, marca from tblmarca where controlada order by marca
-update tblmarca set controlada = true where marca ilike 'tres reis'
+update tblmarca set controlada = true where marca ilike 'facislito'
 
 select * from tblmarca
 
-update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'adelbras'
+update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'facislito'
 */
 
 select 
@@ -19,7 +19,7 @@ from
         pv.codprodutovariacao as "# Var",
         --p.produto,
         --pv.variacao,
-        --pv.descontinuado,
+        --coalesce(pv.descontinuado, p.inativo) as inat_desc,
         p.produto || coalesce(' | ' || pv.variacao, '') as produto,
         coalesce(pv.referencia, p.referencia) as referencia,
         --p.preco,
@@ -64,14 +64,14 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'frama')
-    --and produto ilike 'quadro stalo branco%'
+    where (m.marca ilike 'brw')
+    and pv.descontinuado is null
+    and p.inativo is null
+    --and p.produto ilike '%tris%'
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
     --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
     --and m.controlada = true
     --and pv.codprodutovariacao = 15218
-    and pv.descontinuado is null
-    and p.inativo is null
     --and pv.codproduto = 24312
     order by m.marca, p.produto, pv.variacao
 ) x
@@ -82,8 +82,16 @@ from
 
 /*
 UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = NOW() WHERE CODPRODUTOVARIACAO IN (
-67151
-,25765
+6441
+,6442
+,55789
+,2139
+,6393
+,6394
+,6402
+,6403
+,6418
+,6422
 )
 
 update tblprodutovariacao set descontinuado = null where codprodutovariacao = 1198

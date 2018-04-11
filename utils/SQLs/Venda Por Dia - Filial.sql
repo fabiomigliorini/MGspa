@@ -1,7 +1,7 @@
 ﻿select 
 	extract('isoyear' from lancamento) as ano
 	, extract('week' from lancamento) as semana
-	--  date_trunc('week', lancamento) as mes
+	--  date_trunc('month', lancamento) as mes
 	--, filial
 	/*
 	, pv.fantasia fantasiavendedor
@@ -27,7 +27,7 @@ and n.codpessoa not in (select tblfilial.codpessoa from tblfilial)
 group by 
 	extract('isoyear' from lancamento) 
 	, extract('week' from lancamento) 
-	--  date_trunc('week', lancamento)
+	--  date_trunc('month', lancamento)
 	--, filial
 	/*
 	, fantasiavendedor

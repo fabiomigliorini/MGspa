@@ -22,6 +22,9 @@ update tbljobs set queue = 'low' where tbljobs.id in (select j2.id from tbljobs 
 
 select queue, count(*) from tbljobs group by queue order by queue
 
+delete from tbljobs where id in (
+7160352
+)
 
 'high';39
 'medium';1538
@@ -31,13 +34,7 @@ select * from tbljobs where queue in ('high', 'medium')
 
 
 delete from tbljobs where id in (
-4300363
-,4300360
-,4300225
-,4300233
-,4300219
-,4300220
-
+7160379
 )
 */
 
