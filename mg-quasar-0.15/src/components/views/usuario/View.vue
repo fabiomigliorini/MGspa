@@ -26,8 +26,10 @@
                 <dd>{{ item.usuario }}</dd>
                 <dt>Filial</dt>
                 <dd>{{ item.filial.filial }}</dd>
-                <dt>Pessoa</dt>
-                <dd>{{ item.pessoa.pessoa }}</dd>
+                <template v-if="item.pessoa">
+                  <dt>Pessoa</dt>
+                  <dd>{{ item.pessoa.pessoa }}</dd>
+                </template>
                 <dt>Impressora Matricial</dt>
                 <dd>{{ item.impressoramatricial }}</dd>
                 <dt>Impressora Térmica</dt>

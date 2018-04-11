@@ -21,16 +21,11 @@ namespace App\Mg\Usuario\Models;
  * @property  GrupoUsuarioPermissao[]        $GrupoUsuarioPermissaoS
  * @property  GrupoUsuarioUsuario[]          $GrupoUsuarioUsuarioS
  */
- use Illuminate\Database\Eloquent\Model; // <-- Trocar por MGModel
+use App\Mg\Model\MGModel;
+use Carbon\Carbon;
 
-class GrupoUsuario extends Model
+class GrupoUsuario extends MGModel
 {
-    /* Limpar depois que estender de MGModel*/
-    const CREATED_AT = 'criacao';
-    const UPDATED_AT = 'alteracao';
-    public $timestamps = true;
-    /* -- */
-
     protected $table = 'tblgrupousuario';
     protected $primaryKey = 'codgrupousuario';
     protected $fillable = [
@@ -43,7 +38,7 @@ class GrupoUsuario extends Model
         'criacao',
         'inativo',
     ];
-    
+
     public function activate () {
         $this->inativo = null;
         $this->update();
@@ -73,66 +68,6 @@ class GrupoUsuario extends Model
 
         $qry = self::querySort($qry, $sort);
         $qry = self::queryFields($qry, $fields);
-        return $qry;
-    }
-
-    public function scopeAtivo($query)
-    {
-        $query->whereNull("{$this->table}.inativo");
-    }
-
-    public function scopeInativo($query)
-    {
-        $query->whereNotNull("{$this->table}.inativo");
-    }
-
-    public function scopeAtivoInativo($query, $valor)
-    {
-        switch ($valor) {
-            case 1:
-            $query->ativo();
-            break;
-
-            case 2:
-            $query->inativo();
-            break;
-
-            default:
-            case 9:
-            break;
-        }
-    }
-
-    public function scopePalavras($query, $campo, $palavras)
-    {
-        foreach (explode(' ', trim($palavras)) as $palavra) {
-            if (!empty($palavra)) {
-                $query->where($campo, 'ilike', "%$palavra%");
-            }
-        }
-    }
-
-    public static function queryFields($qry, array $fields = null)
-    {
-        if (empty($fields)) {
-            return $qry;
-        }
-        return $qry->select($fields);
-    }
-
-    public static function querySort($qry, array $sort = null)
-    {
-        if (empty($sort)) {
-            return $qry;
-        }
-        foreach ($sort as $field) {
-            $dir = 'ASC';
-            if (substr($field, 0, 1) == '-') {
-                $dir = 'DESC';
-                $field = substr($field, 1);
-            }
-            $qry->orderBy($field, $dir);
-        }
         return $qry;
     }
 

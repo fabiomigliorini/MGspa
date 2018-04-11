@@ -49,6 +49,7 @@ namespace App\Mg\Filial\Models;
  */
 
 use App\Mg\Model\MGModel;
+use Carbon\Carbon;
 
 class Filial extends MGModel
 {

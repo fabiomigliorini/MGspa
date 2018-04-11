@@ -39,7 +39,7 @@ class GrupoUsuarioController extends Controller
         $request->validate([
             'grupousuario' => [
                 'required',
-                'unique:tblusuario',
+                'unique:tblgrupousuario',
                 'min:2',
             ],
         ], [

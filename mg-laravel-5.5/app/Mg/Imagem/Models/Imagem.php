@@ -31,9 +31,10 @@ namespace App\Mg\Imagem\Models;
  *
  */
 
-use Illuminate\Database\Eloquent\Model; // <-- Trocar por MGModel
+use App\Mg\Model\MGModel;
+use Carbon\Carbon;
 
-class Imagem extends Model
+class Imagem extends MGModel
 {
     /* Limpar depois que estender de MGModel*/
     const CREATED_AT = 'criacao';

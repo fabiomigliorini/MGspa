@@ -210,20 +210,13 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-use Illuminate\Database\Eloquent\Model;
-// use App\Models\MGModel;
+use App\Mg\Model\MGModel;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Carbon\Carbon;
 
-class Usuario extends Model implements AuthenticatableContract, CanResetPasswordContract, JWTSubject
+class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswordContract, JWTSubject
 {
     use Authenticatable, Authorizable, CanResetPassword;
-
-    /* Limpar depois que estender de MGModel*/
-    const CREATED_AT = 'criacao';
-    const UPDATED_AT = 'alteracao';
-    public $timestamps = true;
-    /* -- */
 
     protected $table = 'tblusuario';
     protected $primaryKey = 'codusuario';
