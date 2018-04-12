@@ -104,26 +104,21 @@ export default {
   methods: {
     create: function () {
       var vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              vm.$axios.post('marca', vm.data).then(function (request) {
-                Notify.create.positive('Registro inserido')
-                vm.$router.push('/marca/' + request.data.codmarca)
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('marca', vm.data).then(function (request) {
+          vm.$q.notify({
+            message:'registro inserido!',
+            type:'positive'
+          })
+          vm.$router.push('/marca/' + request.data.codmarca)
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
       })
     }
   },

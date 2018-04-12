@@ -233,13 +233,14 @@ export default {
       }).then(() => {
         vm.$axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
           vm.loadData(vm.item.codmarca)
-          this.$q.notify('Imagem excluida!')
+          vm.$q.notify({
+            message:'Imagem excluida!',
+            type:'negative'})
         }).catch(function (error) {
           console.log(error.response)
         })
       })
     },
-
     destroy: function () {
       let vm = this
       this.$q.dialog({
@@ -250,7 +251,9 @@ export default {
       }).then(() => {
         vm.$axios.delete('marca/' + vm.item.codmarca).then(function (request) {
           vm.$router.push('/marca')
-          this.$q.notify('Registro excluído!')
+          vm.$q.notify({
+            message:'Registro excluido!',
+            type:'positive'})
         }).catch(function (error) {
           console.log(error)
         })

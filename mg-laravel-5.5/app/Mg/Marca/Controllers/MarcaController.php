@@ -45,18 +45,18 @@ class MarcaController extends MgController
     public function store(Request $request)
     {
         $request->validate([
-            'grupousuario' => [
+            'marca' => [
                 'required',
-                'unique:tblgrupousuario',
+                'unique:tblmarca',
                 'min:2',
             ],
         ], [
-            'grupousuario.required' => 'O campo "Grupo Usuario" deve ser preenchido!',
-            'grupousuario.unique' => 'Este "Grupo Usuario" já esta cadastrado',
-            'grupousuario.min' => 'O campo "Grupo Usuario" deve ter no mínimo 2 caracteres.',
+            'marca.required' => 'O campo "Marca" deve ser preenchido!',
+            'marca.unique' => 'Esta " Marca " já esta cadastrado',
+            'marca.min' => 'O campo " Marca " deve ter no mínimo 2 caracteres.',
         ]);
 
-        $model = new GrupoUsuario();
+        $model = new Marca();
         $model->fill($request->all());
         $model->save();
 

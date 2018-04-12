@@ -11,7 +11,7 @@ use App\Mg\Usuario\Models\GrupoUsuario;
 use App\Mg\Usuario\Models\Usuario;
 use App\Mg\Usuario\Repositories\GrupoUsuarioRepository;
 
-class GrupoUsuarioController extends Controller
+class GrupoUsuarioController extends MgController
 {
     /**
      * Display a listing of the resource.

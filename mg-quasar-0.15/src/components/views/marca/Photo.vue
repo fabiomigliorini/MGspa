@@ -69,40 +69,38 @@ export default {
       let form = document.forms[0]
       let input = form.querySelector('input[name="slim[]"]')
       let imagem = input.value
-      Dialog.create({
+
+      this.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              let data = {
-                codmarca: vm.data.codmarca,
-                'slim[]': imagem
-              }
-              if (vm.data.codimagem === null) {
-                vm.$axios.post('imagem', data).then(function (request) {
-                  Notify.create.positive('Sua foto foi cadastrada')
-                  vm.$router.push('/marca/' + vm.data.codmarca)
-                }).catch(function (error) {
-                  vm.erros = error.response.data.erros
-                })
-              }
-              else {
-                vm.$axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
-                  Notify.create.positive('Sua foto foi alterada')
-                  vm.$router.push('/marca/' + vm.data.codmarca)
-                }).catch(function (error) {
-                  vm.erros = error.response.data.erros
-                })
-              }
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        let data = {
+          codmarca: vm.data.codmarca,
+          'slim[]': imagem
+        }
+        if (vm.data.codimagem === null) {
+          vm.$axios.post('imagem', data).then(function (request) {
+            vm.$q.notify({
+              message:'Sua foto foi cadastrada!',
+              type:'positive'
+            })
+            vm.$router.push('/marca/' + vm.data.codmarca)
+          }).catch(function (error) {
+            vm.erros = error.response.data.erros
+          })
+        }
+        else {
+          vm.$axios.put('imagem/' + vm.data.codimagem, data).then(function (request) {
+            vm.$q.notify({
+              message:'Sua foto foi alterada!',
+              type:'positive'})
+            vm.$router.push('/marca/' + vm.data.codmarca)
+          }).catch(function (error) {
+            vm.erros = error.response.data.erros
+          })
+        }
       })
     },
     loadData: function (id) {

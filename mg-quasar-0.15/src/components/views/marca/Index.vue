@@ -85,7 +85,7 @@
                 markers
                 snap
                 :min="0"
-                :max="3"
+                :max="4"
                 :step="1"
               ></q-range>
             </q-item-main>
