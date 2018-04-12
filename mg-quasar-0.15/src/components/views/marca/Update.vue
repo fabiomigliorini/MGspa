@@ -5,7 +5,7 @@
       <q-icon name="arrow_back" />
     </q-btn>
 
-    <q-btn flat round icon="done" slot="menuRight" @click.prevent="update()" />
+    <q-btn flat round icon="done" slot="menuRight" @click.native="update()" />
 
     <template slot="title">
       {{ data.marca }}
@@ -105,26 +105,21 @@ export default {
     },
     update: function () {
       var vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
-        buttons: [
-          {
-            label: 'Cancelar',
-            handler () {}
-          },
-          {
-            label: 'Salvar',
-            handler () {
-              vm.$axios.put('marca/' + vm.data.codmarca, vm.data).then(function (request) {
-                Notify.create.positive('Registro atualizado')
-                vm.$router.push('/marca/' + request.data.codmarca)
-              }).catch(function (error) {
-                vm.erros = error.response.data.erros
-              })
-            }
-          }
-        ]
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.put('marca/' + vm.data.codmarca, vm.data).then(function (request) {
+          vm.$q.notify({
+            message: 'Marca alterada',
+            type: 'positive',
+          })
+          vm.$router.push('/marca/' + request.data.codmarca)
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
       })
     }
   },

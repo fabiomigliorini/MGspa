@@ -181,90 +181,81 @@ export default {
         this.loading = false
       })
     }, 500),
+
     activate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Ativar',
-        message: 'Tem certeza de deseja ativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Ativar',
-            handler () {
-              vm.$axios.delete('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
-                vm.loadData(vm.item.codmarca)
-                Notify.create.positive('Registro ativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        message: 'Tem certeza que deseja inativar?',
+        ok: 'Ativar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
+          vm.$q.notify({
+            message: 'Registro ativado',
+            type: 'positive',
+          })
+          vm.loadData(vm.item.codmarca)
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
     },
+
     inactivate: function () {
       let vm = this
-      Dialog.create({
+      vm.$q.dialog({
         title: 'Inativar',
         message: 'Tem certeza que deseja inativar?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Inativar',
-            handler () {
-              vm.$axios.post('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
-                vm.loadData(vm.item.codusuario)
-                Notify.create.positive('Registro inativado')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        ok: 'Inativar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
+          vm.$q.notify({
+            message: 'Registro inativado',
+            type: 'positive',
+          })
+          vm.loadData(vm.item.codusuario)
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
     },
+
     deleteImage: function () {
       let vm = this
-      // console.log(vm.item.codimagem)
-      Dialog.create({
+
+      this.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza de deseja excluir a imagem?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Excluir',
-            handler () {
-              vm.$axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
-                vm.loadData(vm.item.codmarca)
-                Notify.create.positive('Imagem excluida')
-              }).catch(function (error) {
-                console.log(error.response)
-              })
-            }
-          }
-        ]
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
+          vm.loadData(vm.item.codmarca)
+          this.$q.notify('Imagem excluida!')
+        }).catch(function (error) {
+          console.log(error.response)
+        })
       })
     },
+
     destroy: function () {
       let vm = this
-      Dialog.create({
+      this.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza que deseja excluir?',
-        buttons: [
-          'Cancelar',
-          {
-            label: 'Excluir',
-            handler () {
-              vm.$axios.delete('marca/' + vm.item.codmarca).then(function (request) {
-                vm.$router.push('/marca')
-                Notify.create.positive('Registro excluído')
-              }).catch(function (error) {
-                console.log(error)
-              })
-            }
-          }
-        ]
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.delete('marca/' + vm.item.codmarca).then(function (request) {
+          vm.$router.push('/marca')
+          this.$q.notify('Registro excluído!')
+        }).catch(function (error) {
+          console.log(error)
+        })
       })
+
     }
   },
   created () {

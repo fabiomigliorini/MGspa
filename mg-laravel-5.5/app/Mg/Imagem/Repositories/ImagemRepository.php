@@ -10,7 +10,7 @@ use DB;
 use Storage;
 use Carbon\Carbon;
 use App\Libraries\SlimImageCropper\Slim;
-
+use App\Mg\Marca\Models\Marca;
 use App\Mg\Usuario\Models\Usuario;
 
 class ImagemRepository
@@ -31,7 +31,7 @@ class ImagemRepository
 
         Slim::saveFile($data['imagem'], $model->arquivo, $model->directory, false);
 
-        if (!$model->save()){
+        if (!$model->save()) {
             return false;
         }
 
@@ -72,10 +72,9 @@ class ImagemRepository
         }
 
         if (!empty($data['codmarca'])) {
-            $marca = MarcaRepository::findOrFail($data['codmarca']);
-            MarcaRepository::update($marca, [
-                'codimagem' => $model->codimagem
-            ]);
+            $marca = Marca::findOrFail($data['codmarca']);
+            $marca->codimagem = $model->codimagem;
+            $marca->save();
         }
 
         if (!empty($data['codusuario'])) {
@@ -90,7 +89,7 @@ class ImagemRepository
     public static function update($model, array $data = null)
     {
         static::inactivateImagem($model, $data);
-        //
+        
         // if (!empty($data)) {
         //     $model->fill($data);
         // }
@@ -112,15 +111,13 @@ class ImagemRepository
             $usuario = Usuario::findOrFail($data['codusuario']);
             $usuario->codimagem = null;
             $usuario->save();
-
         }
 
         // Limpa relacionamento com Marca
         foreach ($model->MarcaS as $row) {
-            $data = MarcaRepository::findOrFail($data['codmarca']);
-            MarcaRepository::update($data, [
-                'codimagem' => null
-            ]);
+            $marca = Marca::findOrFail($data['codmarca']);
+            $marca->codimagem = null;
+            $marca->save();
         }
 
         return $model;

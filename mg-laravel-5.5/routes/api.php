@@ -68,6 +68,14 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Imagem
         Route::apiResource('imagem', '\App\Mg\Imagem\Controllers\ImagemController');
+        Route::delete('imagem/{id}/inativo', '\App\Mg\Imagem\Controllers\ImagemController@activate')->name('imagem.activate');
+        Route::post('imagem/{id}/inativo', '\App\Mg\Imagem\Controllers\ImagemController@inactivate')->name('imagem.inactivate');
+
+        // Marcas
+        Route::get('marca/{id}/detalhes', '\App\Mg\Marca\Controllers\MarcaController@details')->name('marca.details');
+        Route::delete('marca/{id}/inativo', '\App\Mg\Marca\Controllers\MarcaController@activate')->name('marca.activate');
+        Route::post('marca/{id}/inativo', '\App\Mg\Marca\Controllers\MarcaController@inactivate')->name('marca.inactivate');
+        Route::apiResource('marca', '\App\Mg\Marca\Controllers\MarcaController');
 
     });
 

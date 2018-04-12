@@ -8,7 +8,7 @@
 
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
-      <q-scroll-area class="fit">
+      <!-- <q-scroll-area class="fit"> -->
         <q-list no-border>
 
           <!-- Filtro de Descricao -->
@@ -130,7 +130,7 @@
           </q-item>
 
         </q-list>
-      </q-scroll-area>
+      <!-- </q-scroll-area> -->
     </template>
 
     <!-- Conteúdo Princial (Meio) -->

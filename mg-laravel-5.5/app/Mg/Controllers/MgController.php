@@ -34,4 +34,22 @@ class MgController extends Controller
         ];
     }
 
+    public function author(Request $request, $id) {
+        $model = Usuario::findOrFail($id);
+        $res = [
+            'codusuario' => $model->codusuario,
+            'usuario' => $model->usuario,
+            'pessoa' => null,
+            'imagem' => null,
+        ];
+        if (!empty($model->codpessoa)) {
+            $res['pessoa'] = $model->Pessoa->pessoa;
+        }
+        if (!empty($model->codimagem)) {
+            $res['imagem'] = $model->Imagem->url;
+        }
+
+        return response()->json($res, 200);
+    }
+
 }

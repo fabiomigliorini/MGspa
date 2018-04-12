@@ -1,18 +1,19 @@
 <?php
 
-namespace App\Mg\Usuario\Controllers;
+namespace App\Mg\Marca\Controllers;
 
 use Illuminate\Http\Request;
-use App\Mg\Controllers\MgController;
-use Carbon\Carbon;
+
+use App\Http\Requests;
 use Illuminate\Validation\Rule;
+use App\Mg\Marca\Repositories\MarcaRepository;
+use App\Mg\Marca\Models\Marca;
+use App\Mg\Controllers\MgController;
 
-use App\Mg\Usuario\Models\GrupoUsuario;
-use App\Mg\Usuario\Models\Usuario;
-use App\Mg\Usuario\Repositories\GrupoUsuarioRepository;
 
-class GrupoUsuarioController extends Controller
+class MarcaController extends MgController
 {
+
     /**
      * Display a listing of the resource.
      *
@@ -21,11 +22,18 @@ class GrupoUsuarioController extends Controller
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        $qry = GrupoUsuario::search($filter, $sort, $fields);
+        $filter['abccategoria'] = json_decode($filter['abccategoria'], true);
+
+        $qry = Marca::search($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
-        return response()->json($res, 206);
+        foreach ($res as $i => $marca) {
+            if (!empty($marca->codimagem)) {
+                $res[$i]->imagem->url = $marca->Imagem->url;
+            }
+        }
 
+        return response()->json($res, 206);
     }
 
     /**
@@ -63,7 +71,7 @@ class GrupoUsuarioController extends Controller
      */
     public function show(Request $request, $id)
     {
-        $model = GrupoUsuario::findOrFail($id, $request->get('fields'));
+        $model = Marca::findOrFail($id, $request->get('fields'));
 
         return response()->json($model, 200);
     }
@@ -76,7 +84,7 @@ class GrupoUsuarioController extends Controller
      */
     public function details ($id)
     {
-        $model = GrupoUsuarioRepository::details($id);
+        $model = MarcaRepository::details($id);
         return response()->json($model, 200);
     }
 
@@ -89,18 +97,18 @@ class GrupoUsuarioController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $model = GrupoUsuario::findOrFail($id);
+        $model = Marca::findOrFail($id);
 
         $request->validate([
-            'grupousuario' => [
+            'marca' => [
                 'required',
-                Rule::unique('tblgrupousuario')->ignore($model->codgrupousuario, 'codgrupousuario'),
+                Rule::unique('tblmarca')->ignore($model->codmarca, 'codmarca'),
                 'min:2',
             ],
         ], [
-            'grupousuario.required' => 'O campo "Grupo Usuario" deve ser preenchido!',
-            'grupousuario.unique' => 'Este "Grupo Usuario" já esta cadastrado',
-            'grupousuario.min' => 'O campo "Grupo Usuario" deve ter no mínimo 2 caracteres.',
+            'marca.required' => 'O campo "Marca" deve ser preenchido!',
+            'marca.unique' => 'Esta "Marca" já esta cadastrada',
+            'marca.min' => 'O campo "Marca" deve ter no mínimo 2 caracteres.',
         ]);
 
         $model->fill($request->all());
@@ -118,36 +126,18 @@ class GrupoUsuarioController extends Controller
      */
     public function destroy($id)
     {
-        $model = GrupoUsuario::findOrFail($id);
+        $model = Marca::findOrFail($id);
         $model->delete();
     }
 
-    public function author(Request $request, $id) {
-        $model = Usuario::findOrFail($id);
-        $res = [
-            'codusuario' => $model->codusuario,
-            'usuario' => $model->usuario,
-            'pessoa' => null,
-            'imagem' => null,
-        ];
-        if (!empty($model->codpessoa)) {
-            $res['pessoa'] = $model->Pessoa->pessoa;
-        }
-        if (!empty($model->codimagem)) {
-            $res['imagem'] = $model->Imagem->url;
-        }
-
-        return response()->json($res, 200);
-    }
-
     public function activate(Request $request, $id) {
-        $model = GrupoUsuario::findOrFail($id);
+        $model = Marca::findOrFail($id);
         $model->activate();
         return response()->json($model, 200);
     }
 
     public function inactivate(Request $request, $id) {
-        $model = GrupoUsuario::findOrFail($id);
+        $model = Marca::findOrFail($id);
         $model->inactivate();
         return response()->json($model, 200);
     }

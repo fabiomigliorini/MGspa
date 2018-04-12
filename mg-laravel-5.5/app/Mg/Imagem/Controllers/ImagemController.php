@@ -39,8 +39,7 @@ class ImagemController extends MgController
     public function inactivate(Request $request, $id)
     {
         $data = $request->all();
-        $this->authorize();
-        $model = ImagemRepository::findOrFail($id);
+        $model = Imagem::findOrFail($id);
         $model = ImagemRepository::inactivateImagem($model, $data);
         return response()->json($model, 200);
     }
