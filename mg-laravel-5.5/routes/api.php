@@ -31,22 +31,21 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
         // Usuários
-
-        Route::get('usuario/{id}/autor', '\Usuario\UsuarioController@author');
-        Route::get('usuario/{id}/grupos', '\Usuario\UsuarioController@groups')->name('usuario.groups');
-        Route::post('usuario/{id}/grupos', '\Usuario\UsuarioController@groupsCreate')->name('usuario.groups.create');
-        Route::delete('usuario/{id}/grupos', '\Usuario\UsuarioController@groupsDestroy')->name('usuario.groups.destroy');
-        Route::get('usuario/{id}/detalhes', '\Usuario\UsuarioController@details')->name('usuario.details');
-        Route::delete('usuario/{id}/inativo', '\Usuario\UsuarioController@activate')->name('usuario.activate');
-        Route::post('usuario/{id}/inativo', '\Usuario\UsuarioController@inactivate')->name('usuario.inactivate');
+        Route::get('usuario/{id}/autor', '\Usuario\UsuarioController@autor');
+        Route::get('usuario/{id}/grupos', '\Usuario\UsuarioController@grupos')->name('usuario.grupos');
+        Route::post('usuario/{id}/grupos', '\Usuario\UsuarioController@gruposAdicionar')->name('usuario.grupos.adicionar');
+        Route::delete('usuario/{id}/grupos', '\Usuario\UsuarioController@gruposRemover')->name('usuario.grupos.remover');
+        Route::get('usuario/{id}/detalhes', '\Usuario\UsuarioController@detalhes')->name('usuario.detalhes');
+        Route::delete('usuario/{id}/inativo', '\Usuario\UsuarioController@ativar')->name('usuario.ativar');
+        Route::post('usuario/{id}/inativo', '\Usuario\UsuarioController@inativar')->name('usuario.inativar');
 
         Route::apiResource('usuario', '\Usuario\UsuarioController');
 
         // Grupos de usuário
-        Route::get('grupo-usuario/{id}/autor', '\Usuario\GrupoUsuarioController@author');
-        Route::get('grupo-usuario/{id}/detalhes', '\Usuario\GrupoUsuarioController@details')->name('grupo-usuario.details');
-        Route::delete('grupo-usuario/{id}/inativo', '\Usuario\GrupoUsuarioController@activate')->name('grupo-usuario.activate');
-        Route::post('grupo-usuario/{id}/inativo', '\Usuario\GrupoUsuarioController@inactivate')->name('grupo-usuario.inactivate');
+        Route::get('grupo-usuario/{id}/autor', '\Usuario\GrupoUsuarioController@autor');
+        Route::get('grupo-usuario/{id}/detalhes', '\Usuario\GrupoUsuarioController@detalhes')->name('grupo-usuario.detalhes');
+        Route::delete('grupo-usuario/{id}/inativo', '\Usuario\GrupoUsuarioController@ativar')->name('grupo-usuario.ativar');
+        Route::post('grupo-usuario/{id}/inativo', '\Usuario\GrupoUsuarioController@inativar')->name('grupo-usuario.inativar');
         Route::apiResource('grupo-usuario', '\Usuario\GrupoUsuarioController');
 
         // Impressoras
@@ -67,13 +66,13 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Imagem
         Route::apiResource('imagem', '\Imagem\ImagemController');
-        Route::delete('imagem/{id}/inativo', '\Imagem\ImagemController@activate')->name('imagem.activate');
-        Route::post('imagem/{id}/inativo', '\Imagem\ImagemController@inactivate')->name('imagem.inactivate');
+        Route::delete('imagem/{id}/inativo', '\Imagem\ImagemController@ativar')->name('imagem.ativar');
+        Route::post('imagem/{id}/inativo', '\Imagem\ImagemController@inativar')->name('imagem.inativar');
 
         // Marcas
-        Route::get('marca/{id}/detalhes', '\Marca\MarcaController@details')->name('marca.details');
-        Route::delete('marca/{id}/inativo', '\Marca\MarcaController@activate')->name('marca.activate');
-        Route::post('marca/{id}/inativo', '\Marca\MarcaController@inactivate')->name('marca.inactivate');
+        Route::get('marca/{id}/detalhes', '\Marca\MarcaController@detalhes')->name('marca.detalhes');
+        Route::delete('marca/{id}/inativo', '\Marca\MarcaController@ativar')->name('marca.ativar');
+        Route::post('marca/{id}/inativo', '\Marca\MarcaController@inativar')->name('marca.inativar');
         Route::apiResource('marca', '\Marca\MarcaController');
 
     });

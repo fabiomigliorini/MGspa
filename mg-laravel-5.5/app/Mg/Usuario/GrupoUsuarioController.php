@@ -16,8 +16,8 @@ class GrupoUsuarioController extends MgController
      */
     public function index(Request $request)
     {
-        list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        $qry = GrupoUsuarioRepository::search($filter, $sort, $fields);
+        list($filter, $sort, $fields) = $this->filtros($request);
+        $qry = GrupoUsuarioRepository::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
         return response()->json($res, 206);
@@ -70,9 +70,9 @@ class GrupoUsuarioController extends MgController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function details ($id)
+    public function detalhes($id)
     {
-        $model = GrupoUsuarioRepository::details($id);
+        $model = GrupoUsuarioRepository::detalhes($id);
         return response()->json($model, 200);
     }
 
@@ -118,7 +118,7 @@ class GrupoUsuarioController extends MgController
         $model->delete();
     }
 
-    public function author(Request $request, $id) {
+    public function autor(Request $request, $id) {
         $model = Usuario::findOrFail($id);
         $res = [
             'codusuario' => $model->codusuario,
@@ -136,16 +136,16 @@ class GrupoUsuarioController extends MgController
         return response()->json($res, 200);
     }
 
-    public function activate(Request $request, $id) {
+    public function ativar(Request $request, $id) {
         $model = GrupoUsuario::findOrFail($id);
-        $model = GrupoUsuarioRepository::activate($model);
+        $model = GrupoUsuarioRepository::ativar($model);
 
         return response()->json($model, 200);
     }
 
-    public function inactivate(Request $request, $id) {
+    public function inativar(Request $request, $id) {
         $model = GrupoUsuario::findOrFail($id);
-        $model = GrupoUsuarioRepository::inactivate($model);
+        $model = GrupoUsuarioRepository::inativar($model);
 
         return response()->json($model, 200);
     }

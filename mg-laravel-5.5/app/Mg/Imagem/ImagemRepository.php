@@ -16,7 +16,7 @@ use Usuario\Usuario;
 class ImagemRepository
 {
 
-    public static function create ($model = null, array $data = null)
+    public static function criar($model = null, array $data = null)
     {
         // Busca Codigo
         $seq = DB::select('select nextval(\'tblimagem_codimagem_seq\') as codimagem');
@@ -86,9 +86,9 @@ class ImagemRepository
         return $model;
     }
 
-    public static function update($model, array $data = null)
+    public static function atualizar($model, array $data = null)
     {
-        static::inactivateImagem($model, $data);
+        static::inativarImagem($model, $data);
 
         // if (!empty($data)) {
         //     $model->fill($data);
@@ -98,11 +98,11 @@ class ImagemRepository
             return false;
         }
 
-        static::create($model, $data);
+        static::criar($model, $data);
         return $model;
     }
 
-    public static function inactivateImagem ($model, $data) {
+    public static function inativarImagem ($model, $data) {
         $model->inativo = Carbon::now();
         $model->save();
 

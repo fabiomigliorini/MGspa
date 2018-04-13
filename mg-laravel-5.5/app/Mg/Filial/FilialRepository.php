@@ -5,7 +5,7 @@ use App\Mg\MgRepository;
 class FilialRepository extends MgRepository
 {
 
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
+    public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
     {
         $qry = Filial::query();
 
@@ -18,8 +18,8 @@ class FilialRepository extends MgRepository
         }
 
 
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
+        $qry = self::qryOrdem($qry, $sort);
+        $qry = self::qryColunas($qry, $fields);
         return $qry;
     }
 }

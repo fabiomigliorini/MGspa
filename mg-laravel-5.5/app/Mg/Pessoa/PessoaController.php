@@ -16,8 +16,8 @@ class PessoaController extends MgController
      */
     public function index(Request $request)
     {
-        list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        $qry = PessoaRepository::search($filter, $sort, $fields);
+        list($filter, $sort, $fields) = $this->filtros($request);
+        $qry = PessoaRepository::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
         return response()->json($res, 206);

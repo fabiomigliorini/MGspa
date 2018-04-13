@@ -5,7 +5,7 @@ use App\Mg\MgRepository;
 
 class MarcaRepository extends MgRepository
 {
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
+    public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
     {
         $qry = Marca::query();
 
@@ -37,8 +37,8 @@ class MarcaRepository extends MgRepository
             $qry->where('abccategoria', '<=', $filter['abccategoria']['max']);
         }
 
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
+        $qry = self::qryOrdem($qry, $sort);
+        $qry = self::qryColunas($qry, $fields);
         return $qry;
     }
 
@@ -92,7 +92,7 @@ class MarcaRepository extends MgRepository
         return $afetados;
     }
 
-    public static function details ($id)
+    public static function detalhes($id)
     {
         $model = Marca::findOrFail($id);
         if (!empty($model->codimagem)) {

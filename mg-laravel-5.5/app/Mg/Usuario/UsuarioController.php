@@ -17,8 +17,8 @@ class UsuarioController extends MgController
      */
     public function index(Request $request)
     {
-        list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        $qry = UsuarioRepository::search($filter, $sort, $fields)->with('Imagem');
+        list($filter, $sort, $fields) = $this->filtros($request);
+        $qry = UsuarioRepository::pesquisar($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
         foreach ($res as $i => $usuario) {
@@ -105,9 +105,9 @@ class UsuarioController extends MgController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function details ($id)
+    public function detalhes($id)
     {
-        $model = UsuarioRepository::details($id);
+        $model = UsuarioRepository::detalhes($id);
         return response()->json($model, 200);
     }
 
@@ -193,7 +193,7 @@ class UsuarioController extends MgController
         $model->delete();
     }
 
-    public function author(Request $request, $id) {
+    public function autor(Request $request, $id) {
         $model = Usuario::findOrFail($id);
         $res = [
             'codusuario' => $model->codusuario,
@@ -211,21 +211,21 @@ class UsuarioController extends MgController
         return response()->json($res, 200);
     }
 
-    public function activate(Request $request, $id) {
+    public function ativar(Request $request, $id) {
         $model = Usuario::findOrFail($id);
-        $model = UsuarioRepository::activate($model);
+        $model = UsuarioRepository::ativar($model);
 
         return response()->json($model, 200);
     }
 
-    public function inactivate(Request $request, $id) {
+    public function inativar(Request $request, $id) {
         $model = Usuario::findOrFail($id);
-        $model = UsuarioRepository::inactivate($model);
-        
+        $model = UsuarioRepository::inativar($model);
+
         return response()->json($model, 200);
     }
 
-    public function groups(Request $request, $id)
+    public function grupos(Request $request, $id)
     {
         $model = Usuario::findOrFail($id);
 
@@ -237,7 +237,7 @@ class UsuarioController extends MgController
         return response()->json($grupos_usuario, 200);
     }
 
-    public function groupsCreate(Request $request, $id)
+    public function gruposAdicionar(Request $request, $id)
     {
         $model = Usuario::findOrFail($id);
         $grupo_usuario = false;
@@ -254,7 +254,7 @@ class UsuarioController extends MgController
         return response()->json($grupo_usuario, 201);
     }
 
-    public function groupsDestroy(Request $request, $id)
+    public function gruposRemover(Request $request, $id)
     {
         $model = Usuario::findOrFail($id);
         $model->GrupoUsuarioUsuarioS()->where('codgrupousuario', $request->get('codgrupousuario'))->where('codfilial', $request->get('codfilial'))->delete();

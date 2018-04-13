@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class MgController extends Controller
 {
 
-    public function parseSearchRequest(Request $request)
+    public function filtros(Request $request)
     {
         $req = $request->all();
 

@@ -6,13 +6,13 @@ use Carbon\Carbon;
 
 class MgRepository
 {
-    public static function activate ($model) {
+    public static function ativar ($model) {
         $model->inativo = null;
         $model->update();
         return $model;
     }
 
-    public static function inactivate ($model, $date = null) {
+    public static function inativar ($model, $date = null) {
         if (empty($date)) {
             $date = Carbon::now();
         }
@@ -21,7 +21,7 @@ class MgRepository
         return $model;
     }
 
-    public static function queryFields($qry, array $fields = null)
+    public static function qryColunas($qry, array $fields = null)
     {
         if (empty($fields)) {
             return $qry;
@@ -29,7 +29,7 @@ class MgRepository
         return $qry->select($fields);
     }
 
-    public static function querySort($qry, array $sort = null)
+    public static function qryOrdem($qry, array $sort = null)
     {
         if (empty($sort)) {
             return $qry;

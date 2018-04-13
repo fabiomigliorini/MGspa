@@ -20,7 +20,7 @@ class ImagemController extends MgController
         $data['imagem'] = $images[0]['output']['data'];
 
         $model = new Imagem();
-        $model = ImagemRepository::create($model, $data);
+        $model = ImagemRepository::criar($model, $data);
         return response()->json($model, 201);
     }
 
@@ -31,15 +31,15 @@ class ImagemController extends MgController
         $data = $request->all();
         $data['imagem'] = $images[0]['output']['data'];
         $model = Imagem::findOrFail($id);
-        $model = ImagemRepository::update($model, $data);
+        $model = ImagemRepository::atualizar($model, $data);
         return response()->json($model, 200);
     }
 
-    public function inactivate(Request $request, $id)
+    public function inativar(Request $request, $id)
     {
         $data = $request->all();
         $model = Imagem::findOrFail($id);
-        $model = ImagemRepository::inactivateImagem($model, $data);
+        $model = ImagemRepository::inativarImagem($model, $data);
         return response()->json($model, 200);
     }
 }

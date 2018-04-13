@@ -6,7 +6,7 @@ use App\Mg\MgRepository;
 
 class GrupoUsuarioRepository extends MgRepository
 {
-    public static function details ($id) {
+    public static function detalhes($id) {
 
         $model = GrupoUsuario::findOrFail($id);
         $usuarios = [];
@@ -30,7 +30,7 @@ class GrupoUsuarioRepository extends MgRepository
         return $model;
     }
 
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
+    public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
     {
         $qry = GrupoUsuario::query();
 
@@ -42,8 +42,8 @@ class GrupoUsuarioRepository extends MgRepository
             $qry->palavras('usuario', $filter['usuario']);
         }
 
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
+        $qry = self::qryOrdem($qry, $sort);
+        $qry = self::qryColunas($qry, $fields);
         return $qry;
     }
 

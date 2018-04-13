@@ -18,10 +18,10 @@ class MarcaController extends MgController
      */
     public function index(Request $request)
     {
-        list($filter, $sort, $fields) = $this->parseSearchRequest($request);
+        list($filter, $sort, $fields) = $this->filtros($request);
         $filter['abccategoria'] = json_decode($filter['abccategoria'], true);
 
-        $qry = MarcaRepository::search($filter, $sort, $fields)->with('Imagem');
+        $qry = MarcaRepository::pesquisar($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
         foreach ($res as $i => $marca) {
@@ -79,9 +79,9 @@ class MarcaController extends MgController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function details ($id)
+    public function detalhes($id)
     {
-        $model = MarcaRepository::details($id);
+        $model = MarcaRepository::detalhes($id);
         return response()->json($model, 200);
     }
 
@@ -127,21 +127,21 @@ class MarcaController extends MgController
         $model->delete();
     }
 
-    public function activate(Request $request, $id) {
+    public function ativar(Request $request, $id) {
         $model = Marca::findOrFail($id);
-        $model = MarcaRepository::activate($model);
+        $model = MarcaRepository::ativar($model);
 
         return response()->json($model, 200);
     }
 
-    public function inactivate(Request $request, $id) {
+    public function inativar(Request $request, $id) {
         $model = Marca::findOrFail($id);
-        $model = MarcaRepository::inactivate($model);
+        $model = MarcaRepository::inativar($model);
 
         return response()->json($model, 200);
     }
 
-    public function author(Request $request, $id) {
+    public function autor(Request $request, $id) {
         $model = Marca::findOrFail($id);
         $res = [
             'codusuario' => $model->codusuario,
