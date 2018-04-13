@@ -21,8 +21,7 @@ namespace Usuario;
  * @property  GrupoUsuarioPermissao[]        $GrupoUsuarioPermissaoS
  * @property  GrupoUsuarioUsuario[]          $GrupoUsuarioUsuarioS
  */
-use App\Mg\MGModel;
-use Carbon\Carbon;
+use App\Mg\MgModel;
 
 class GrupoUsuario extends MGModel
 {
@@ -38,38 +37,6 @@ class GrupoUsuario extends MGModel
         'criacao',
         'inativo',
     ];
-
-    public function activate () {
-        $this->inativo = null;
-        $this->update();
-        return $this;
-    }
-
-    public function inactivate ($date = null) {
-        if (empty($date)) {
-            $date = Carbon::now();
-        }
-        $this->inativo = $date;
-        $this->update();
-        return $this;
-    }
-
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
-    {
-        $qry = GrupoUsuario::query();
-
-        if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
-        }
-
-        if (!empty($filter['usuario'])) {
-            $qry->palavras('usuario', $filter['usuario']);
-        }
-
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
-        return $qry;
-    }
 
     // Chaves Estrangeiras
     public function UsuarioAlteracao()

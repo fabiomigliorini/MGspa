@@ -17,7 +17,7 @@ class GrupoUsuarioController extends MgController
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        $qry = GrupoUsuario::search($filter, $sort, $fields);
+        $qry = GrupoUsuarioRepository::search($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
         return response()->json($res, 206);
@@ -138,13 +138,15 @@ class GrupoUsuarioController extends MgController
 
     public function activate(Request $request, $id) {
         $model = GrupoUsuario::findOrFail($id);
-        $model->activate();
+        $model = GrupoUsuarioRepository::activate($model);
+
         return response()->json($model, 200);
     }
 
     public function inactivate(Request $request, $id) {
         $model = GrupoUsuario::findOrFail($id);
-        $model->inactivate();
+        $model = GrupoUsuarioRepository::inactivate($model);
+
         return response()->json($model, 200);
     }
 

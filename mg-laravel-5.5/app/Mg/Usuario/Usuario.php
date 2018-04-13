@@ -210,10 +210,9 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-use App\Mg\MGModel;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-use Carbon\Carbon;
 
+use App\Mg\MgModel;
 use Pessoa\Pessoa;
 use Filial\Filial;
 use Imagem\Imagem;
@@ -265,48 +264,6 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     public function getJWTCustomClaims()
     {
         return ['user' => ['codusuario' => $this->codusuario]];
-    }
-
-
-    public function activate () {
-        $this->inativo = null;
-        $this->update();
-        return $this;
-    }
-
-    public function inactivate ($date = null) {
-        if (empty($date)) {
-            $date = Carbon::now();
-        }
-        $this->inativo = $date;
-        $this->update();
-        return $this;
-    }
-
-
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
-    {
-        $qry = Usuario::query();
-
-        if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
-        }
-
-        if (!empty($filter['usuario'])) {
-            $qry->palavras('usuario', $filter['usuario']);
-        }
-
-        if (!empty($filter['grupo'])) {
-            $qry->whereIn("codusuario", function ($qry2) use ($filter) {
-                $qry2->select('codusuario')
-                    ->from('tblgrupousuariousuario')
-                    ->where('codgrupousuario', $filter['grupo']);
-            });
-        }
-
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
-        return $qry;
     }
 
 

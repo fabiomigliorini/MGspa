@@ -20,7 +20,7 @@ namespace Permissao;
  * @property  GrupoUsuario[]        $GrupoUsuario
  */
 
-use App\Mg\MGModel;
+use App\Mg\MgModel;
 use Usuario\Usuario;
 use Usuario\GrupoUsuario;
 

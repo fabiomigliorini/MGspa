@@ -20,7 +20,7 @@ namespace Usuario;
  *
  * Tabelas Filhas
  */
-use App\Mg\MGModel;
+use App\Mg\MgModel;
 use Permissao\Permissao;
 
 class GrupoUsuarioPermissao extends MGModel

@@ -31,7 +31,7 @@ namespace Imagem;
  *
  */
 
-use App\Mg\MGModel;
+use App\Mg\MgModel;
 use Usuario\Usuario;
 use Marca\Marca;
 use Carbon\Carbon;

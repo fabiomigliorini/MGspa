@@ -38,8 +38,7 @@ namespace Marca;
  * @property  ProdutoBarra[]                 $ProdutoBarraS
  * @property  Produto[]                      $ProdutoS
  */
-use App\Mg\MGModel;
-use Carbon\Carbon;
+use App\Mg\MgModel;
 use Produto\Produto;
 use Imagem\Imagem;
 
@@ -72,59 +71,6 @@ class Marca extends MGModel
         'inativo',
         'dataultimacompra',
     ];
-
-    public function activate () {
-        $this->inativo = null;
-        $this->update();
-        return $this;
-    }
-
-    public function inactivate ($date = null) {
-        if (empty($date)) {
-            $date = Carbon::now();
-        }
-        $this->inativo = $date;
-        $this->update();
-        return $this;
-    }
-
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
-    {
-        $qry = Marca::query();
-
-        if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
-        }
-
-        if (!empty($filter['marca'])) {
-            $qry->palavras('marca', $filter['marca']);
-        }
-
-        if (!empty($filter['marca'])) {
-            $qry->palavras('marca', $filter['marca']);
-        }
-
-        if (filter_var($filter['sobrando']??false, FILTER_VALIDATE_BOOLEAN)) {
-            $qry->where('itensacimamaximo', '>', 0);
-        }
-
-        if (filter_var($filter['faltando']??false, FILTER_VALIDATE_BOOLEAN)) {
-            $qry->where('itensabaixominimo', '>', 0);
-        }
-
-        if (!empty($filter['abccategoria']['min'])) {
-            $qry->where('abccategoria', '>=', $filter['abccategoria']['min']);
-        }
-
-        if (!empty($filter['abccategoria']['max'])) {
-            $qry->where('abccategoria', '<=', $filter['abccategoria']['max']);
-        }
-
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
-        return $qry;
-    }
-
 
     // Chaves Estrangeiras
     public function Imagem()

@@ -1,9 +1,47 @@
 <?php
 
 namespace Marca;
+use App\Mg\MgRepository;
 
-class MarcaRepository
+class MarcaRepository extends MgRepository
 {
+    public static function search(array $filter = null, array $sort = null, array $fields = null)
+    {
+        $qry = Marca::query();
+
+        if (!empty($filter['inativo'])) {
+            $qry->AtivoInativo($filter['inativo']);
+        }
+
+        if (!empty($filter['marca'])) {
+            $qry->palavras('marca', $filter['marca']);
+        }
+
+        if (!empty($filter['marca'])) {
+            $qry->palavras('marca', $filter['marca']);
+        }
+
+        if (filter_var($filter['sobrando']??false, FILTER_VALIDATE_BOOLEAN)) {
+            $qry->where('itensacimamaximo', '>', 0);
+        }
+
+        if (filter_var($filter['faltando']??false, FILTER_VALIDATE_BOOLEAN)) {
+            $qry->where('itensabaixominimo', '>', 0);
+        }
+
+        if (!empty($filter['abccategoria']['min'])) {
+            $qry->where('abccategoria', '>=', $filter['abccategoria']['min']);
+        }
+
+        if (!empty($filter['abccategoria']['max'])) {
+            $qry->where('abccategoria', '<=', $filter['abccategoria']['max']);
+        }
+
+        $qry = self::querySort($qry, $sort);
+        $qry = self::queryFields($qry, $fields);
+        return $qry;
+    }
+
     public static function calculaVenda()
     {
         // Limpa dados do ultimo calculo

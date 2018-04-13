@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
  *
  * @author escmig05
  */
-abstract class MGModel extends Model
+abstract class MgModel extends Model
 {
     protected $perPage = 50;
 
@@ -50,30 +50,6 @@ abstract class MGModel extends Model
             }
             return true;
         });
-    }
-
-    public static function queryFields($qry, array $fields = null)
-    {
-        if (empty($fields)) {
-            return $qry;
-        }
-        return $qry->select($fields);
-    }
-
-    public static function querySort($qry, array $sort = null)
-    {
-        if (empty($sort)) {
-            return $qry;
-        }
-        foreach ($sort as $field) {
-            $dir = 'ASC';
-            if (substr($field, 0, 1) == '-') {
-                $dir = 'DESC';
-                $field = substr($field, 1);
-            }
-            $qry->orderBy($field, $dir);
-        }
-        return $qry;
     }
 
     public function scopeAtivo($query)

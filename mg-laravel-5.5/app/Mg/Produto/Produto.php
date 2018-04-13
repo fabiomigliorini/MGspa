@@ -58,7 +58,7 @@ namespace Produto;
  * Relacionamentos N x N
  * @property  Imagem[]                       $ImagemS
  */
-use App\Mg\MGModel;
+use App\Mg\MgModel;
 use Marca\Marca;
 
 class Produto extends MGModel

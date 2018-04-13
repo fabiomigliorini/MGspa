@@ -48,7 +48,7 @@ namespace Filial;
  * @property  ValeCompra[]                   $ValeCompraS
  */
 
-use App\Mg\MGModel;
+use App\Mg\MgModel;
 use Carbon\Carbon;
 Use Usuario\Usuario;
 
@@ -90,23 +90,6 @@ class Filial extends MGModel
         'criacao',
     ];
 
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
-    {
-        $qry = Filial::query();
-
-        if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
-        }
-
-        if (!empty($filter['filial'])) {
-            $qry->palavras('filial', $filter['filial']);
-        }
-
-
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
-        return $qry;
-    }
 
     // Chaves Estrangeiras
     public function Empresa()

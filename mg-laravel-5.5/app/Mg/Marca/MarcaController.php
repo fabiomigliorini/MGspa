@@ -21,7 +21,7 @@ class MarcaController extends MgController
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
         $filter['abccategoria'] = json_decode($filter['abccategoria'], true);
 
-        $qry = Marca::search($filter, $sort, $fields)->with('Imagem');
+        $qry = MarcaRepository::search($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
         foreach ($res as $i => $marca) {
@@ -129,13 +129,15 @@ class MarcaController extends MgController
 
     public function activate(Request $request, $id) {
         $model = Marca::findOrFail($id);
-        $model->activate();
+        $model = MarcaRepository::activate($model);
+
         return response()->json($model, 200);
     }
 
     public function inactivate(Request $request, $id) {
         $model = Marca::findOrFail($id);
-        $model->inactivate();
+        $model = MarcaRepository::inactivate($model);
+
         return response()->json($model, 200);
     }
 

@@ -89,11 +89,6 @@ use Carbon\Carbon;
 
 class Pessoa extends Model
 {
-    /* Limpar depois que estender de MGModel*/
-    const CREATED_AT = 'criacao';
-    const UPDATED_AT = 'alteracao';
-    public $timestamps = true;
-    /* -- */
 
     const NOTAFISCAL_TRATAMENTOPADRAO = 0;
     const NOTAFISCAL_SEMPRE = 1;
@@ -170,107 +165,6 @@ class Pessoa extends Model
             return true;
     }
 
-    public static function search(array $filter = null, array $sort = null, array $fields = null)
-    {
-        $qry = Pessoa::query();
-
-        if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
-        }
-
-        if (!empty($filter['filial'])) {
-            $qry->palavras('filial', $filter['filial']);
-        }
-
-        $qry = self::querySort($qry, $sort);
-        $qry = self::queryFields($qry, $fields);
-        return $qry;
-    }
-
-    public static function queryFields($qry, array $fields = null)
-    {
-        if (empty($fields)) {
-            return $qry;
-        }
-        return $qry->select($fields);
-    }
-
-    public static function querySort($qry, array $sort = null)
-    {
-        if (empty($sort)) {
-            return $qry;
-        }
-        foreach ($sort as $field) {
-            $dir = 'ASC';
-            if (substr($field, 0, 1) == '-') {
-                $dir = 'DESC';
-                $field = substr($field, 1);
-            }
-            $qry->orderBy($field, $dir);
-        }
-        return $qry;
-    }
-
-    public function scopeAtivo($query)
-    {
-        $query->whereNull("{$this->table}.inativo");
-    }
-
-    public function scopeInativo($query)
-    {
-        $query->whereNotNull("{$this->table}.inativo");
-    }
-
-
-    public function validate() {
-        //dd($this);
-        $this->attributes = [
-            'cep' => 'CEP'
-        ];
-        $this->_regrasValidacao = [
-            'pessoa' => 'required|min:5|max:100',
-            'fantasia' => 'required|min:5|max:50',
-            'contato' => 'max:100',
-            'codgrupocliente' => 'required_if:cliente,on',
-            'ie' => 'max:20',
-            'rg' => 'max:30',
-            'conjuge' => 'max:100',
-            'numero' => 'required|max:10',
-            'email' => 'required|email|max:100',
-            'telefone1' => 'required|max:50',
-            'telefone2' => 'max:50',
-            'telefone3' => 'max:50',
-            'codcidade' => 'required',
-            'endereco' => 'required|max:100',
-            'bairro' => 'required|max:50',
-            'cep' => 'required|max:10',
-            'complemento'=> 'max:50',
-            'codcidadecobranca' => 'required',
-            'enderecocobranca' => 'required|max:100',
-            'numerocobranca' => 'required|max:10',
-            'bairrocobranca' => 'required',
-            'complementocobranca'=> 'max:50',
-            'cepcobranca' => 'required|max:10',
-            'emailcobranca' => 'email|max:100',
-            'notafiscal' => 'required|numeric',
-            'emailnfe' => 'email|max:100',
-            'toleranciaatraso' => 'required|numeric',
-            'observacoes' => 'max:10',
-            'mensagemvenda' => 'max:500',
-            'desconto' => 'numeric|max:50',
-            'credito' => 'numeric|max:14',
-        ];
-
-        $this->_mensagensErro = [
-            'fantasia.required' => 'O campo Nome Fantasia é obrigatório.',
-            'pessoa.required' => 'O campo Razão Social é obrigatório.',
-
-
-            'codgrupocliente.required_if' => 'Grupo do Cliente obrigatório',
-        ];
-
-        return parent::validate();
-    }
 
     /*
     public function Usuario()

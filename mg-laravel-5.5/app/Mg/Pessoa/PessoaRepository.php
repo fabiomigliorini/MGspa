@@ -2,7 +2,9 @@
 
 namespace Pessoa;
 
-class PessoaRepository
+use App\Mg\MgRepository;
+
+class PessoaRepository extends MgRepository
 {
     /**
      * Busca Autocomplete Quasar
@@ -36,5 +38,24 @@ class PessoaRepository
 
         return $ret;
     }
+
+
+    public static function search(array $filter = null, array $sort = null, array $fields = null)
+    {
+        $qry = Pessoa::query();
+
+        if (!empty($filter['inativo'])) {
+            $qry->AtivoInativo($filter['inativo']);
+        }
+
+        if (!empty($filter['filial'])) {
+            $qry->palavras('filial', $filter['filial']);
+        }
+
+        $qry = self::querySort($qry, $sort);
+        $qry = self::queryFields($qry, $fields);
+        return $qry;
+    }
+
 
 }

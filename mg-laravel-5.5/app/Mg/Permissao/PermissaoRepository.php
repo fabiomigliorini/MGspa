@@ -2,9 +2,6 @@
 
 namespace Permissao;
 
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-
 use Usuario\GrupoUsuarioPermissao;
 use Usuario\GrupoUsuario;
 use Auth;

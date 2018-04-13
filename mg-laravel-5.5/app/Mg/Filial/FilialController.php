@@ -17,7 +17,7 @@ class FilialController extends MgController
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        $qry = Filial::search($filter, $sort, $fields);
+        $qry = FilialRepository::search($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
         return response()->json($res, 206);

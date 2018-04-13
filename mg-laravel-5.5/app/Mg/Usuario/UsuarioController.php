@@ -18,7 +18,7 @@ class UsuarioController extends MgController
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->parseSearchRequest($request);
-        $qry = Usuario::search($filter, $sort, $fields)->with('Imagem');
+        $qry = UsuarioRepository::search($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
         foreach ($res as $i => $usuario) {
@@ -213,13 +213,15 @@ class UsuarioController extends MgController
 
     public function activate(Request $request, $id) {
         $model = Usuario::findOrFail($id);
-        $model->activate();
+        $model = UsuarioRepository::activate($model);
+
         return response()->json($model, 200);
     }
 
     public function inactivate(Request $request, $id) {
         $model = Usuario::findOrFail($id);
-        $model->inactivate();
+        $model = UsuarioRepository::inactivate($model);
+        
         return response()->json($model, 200);
     }
 

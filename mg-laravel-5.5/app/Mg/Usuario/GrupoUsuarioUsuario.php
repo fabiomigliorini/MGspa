@@ -22,7 +22,7 @@ namespace Usuario;
  *
  * Tabelas Filhas
  */
-use App\Mg\MGModel;
+use App\Mg\MgModel;
 use Filial\Filial;
 
 class GrupoUsuarioUsuario extends MGModel

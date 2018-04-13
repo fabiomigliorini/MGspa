@@ -2,7 +2,9 @@
 
 namespace Usuario;
 
-class UsuarioRepository
+use App\Mg\MgRepository;
+
+class UsuarioRepository extends MgRepository
 {
     public static function details ($id) {
 
@@ -49,6 +51,31 @@ class UsuarioRepository
         $model['avatar'] = $model->Imagem->url ?? false;
 
         return $model;
+    }
+
+    public static function search(array $filter = null, array $sort = null, array $fields = null)
+    {
+        $qry = Usuario::query();
+
+        if (!empty($filter['inativo'])) {
+            $qry->AtivoInativo($filter['inativo']);
+        }
+
+        if (!empty($filter['usuario'])) {
+            $qry->palavras('usuario', $filter['usuario']);
+        }
+
+        if (!empty($filter['grupo'])) {
+            $qry->whereIn("codusuario", function ($qry2) use ($filter) {
+                $qry2->select('codusuario')
+                    ->from('tblgrupousuariousuario')
+                    ->where('codgrupousuario', $filter['grupo']);
+            });
+        }
+
+        $qry = self::querySort($qry, $sort);
+        $qry = self::queryFields($qry, $fields);
+        return $qry;
     }
 
 }
