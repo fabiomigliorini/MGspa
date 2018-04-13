@@ -22,6 +22,7 @@ namespace Usuario;
  * @property  GrupoUsuarioUsuario[]          $GrupoUsuarioUsuarioS
  */
 use App\Mg\MgModel;
+use Permissao\GrupoUsuarioPermissao;
 
 class GrupoUsuario extends MGModel
 {

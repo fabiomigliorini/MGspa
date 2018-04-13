@@ -1,6 +1,6 @@
 <?php
 
-namespace Usuario;
+namespace Permissao;
 
 /**
  * Campos
@@ -21,7 +21,6 @@ namespace Usuario;
  * Tabelas Filhas
  */
 use App\Mg\MgModel;
-use Permissao\Permissao;
 
 class GrupoUsuarioPermissao extends MGModel
 {

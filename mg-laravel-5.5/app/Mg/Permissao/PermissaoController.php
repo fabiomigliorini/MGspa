@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 
 use Usuario\GrupoUsuario;
-use Usuario\GrupoUsuarioPermissao;
 
 class PermissaoController extends Controller
 {

@@ -2,7 +2,6 @@
 
 namespace Permissao;
 
-use Usuario\GrupoUsuarioPermissao;
 use Usuario\GrupoUsuario;
 use Auth;
 use Route;
