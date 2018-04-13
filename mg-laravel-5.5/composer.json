@@ -25,7 +25,15 @@
             "database/factories"
         ],
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Usuario\\":"app/Mg/Usuario",
+            "Pessoa\\":"app/Mg/Pessoa",
+            "Filial\\":"app/Mg/Filial",
+            "Permissao\\":"app/Mg/Permissao",
+            "Estoque\\":"app/Mg/Estoque",
+            "Marca\\":"app/Mg/Marca",
+            "Imagem\\":"app/Mg/Imagem",
+            "Produto\\":"app/Mg/Produto"
         }
     },
     "autoload-dev": {
