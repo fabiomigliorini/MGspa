@@ -74,7 +74,7 @@ and tmpestoquelocalprodutovariacaovenda.codestoquelocal = elpv.codestoquelocal
 and tmpestoquelocalprodutovariacaovenda.codprodutovariacao = elpv.codprodutovariacao;
 
 insert into tblestoquelocalprodutovariacao (codestoquelocal, codprodutovariacao, criacao, alteracao)
-select distinct tmp.codestoquelocal, tmp.codprodutovariacao, '2018-04-09 23:59:59'::timestamp, '2018-04-09 23:59:59'::timestamp
+select distinct tmp.codestoquelocal, tmp.codprodutovariacao, '2018-04-13 23:59:59'::timestamp, '2018-04-13 23:59:59'::timestamp
 from tmpestoquelocalprodutovariacaovenda tmp
 where tmp.codestoquelocalprodutovariacao is null;
 
@@ -91,19 +91,19 @@ and tmpestoquelocalprodutovariacaovenda.codprodutovariacao = elpv.codprodutovari
 update tblestoquelocalprodutovariacaovenda
 set quantidade = tmp.quantidade
 , valor = tmp.valor
-, alteracao = '2018-04-09 23:59:59'::timestamp
+, alteracao = '2018-04-13 23:59:59'::timestamp
 from tmpestoquelocalprodutovariacaovenda tmp
 where tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao
 and tblestoquelocalprodutovariacaovenda.mes = tmp.mes;
 
 insert into tblestoquelocalprodutovariacaovenda (codestoquelocalprodutovariacao, mes, quantidade, valor, criacao, alteracao)
-select tmp.codestoquelocalprodutovariacao, tmp.mes, tmp.quantidade, tmp.valor, '2018-04-09 23:59:59'::timestamp, '2018-04-09 23:59:59'::timestamp
+select tmp.codestoquelocalprodutovariacao, tmp.mes, tmp.quantidade, tmp.valor, '2018-04-13 23:59:59'::timestamp, '2018-04-13 23:59:59'::timestamp
 from tmpestoquelocalprodutovariacaovenda tmp
 left join tblestoquelocalprodutovariacaovenda venda on (venda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao and venda.mes = tmp.mes)
 where venda.codestoquelocalprodutovariacaovenda is null;
 
 delete from tblestoquelocalprodutovariacaovenda
-where coalesce(alteracao, '2000-01-01') < '2018-04-09 23:59:59'::timestamp;
+where coalesce(alteracao, '2000-01-01') < '2018-04-13 23:59:59'::timestamp;
 
 drop table tmpestoquelocalprodutovariacaovenda;
 
@@ -266,7 +266,7 @@ and coalesce(vendadiaquantidade, 0) != coalesce(quantidade, 0) / coalesce(dias, 
 -- Soma vendas do local para a variacao
 update tblestoquelocalprodutovariacao
 set vendadiaquantidadeprevisao = iq.vendadiaquantidadeprevisao,
-	vendaultimocalculo = '2018-04-09',
+	vendaultimocalculo = '2018-04-13',
 	vendabimestrequantidade = iq.vendabimestrequantidade,
 	vendabimestrevalor = iq.vendabimestrevalor,
 	vendasemestrequantidade = iq.vendasemestrequantidade,
@@ -297,14 +297,14 @@ and (
 -- Limpa locais sem vendas no periodo
 update tblestoquelocalprodutovariacao
 set vendadiaquantidadeprevisao = null,
-	vendaultimocalculo = '2018-04-09',
+	vendaultimocalculo = '2018-04-13',
 	vendabimestrequantidade = null,
 	vendabimestrevalor = null,
 	vendasemestrequantidade = null,
 	vendasemestrevalor = null,
 	vendaanoquantidade = null,
 	vendaanovalor = null
-where coalesce(vendaultimocalculo, '2000-01-01') < '2018-04-09';
+where coalesce(vendaultimocalculo, '2000-01-01') < '2018-04-13';
 
 -- Calcula Estoque Minimo e Estoque Maximo Filiais
 update tblestoquelocalprodutovariacao

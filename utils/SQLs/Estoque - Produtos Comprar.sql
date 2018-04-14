@@ -5,7 +5,7 @@ update tblmarca set controlada = true where marca ilike 'facislito'
 
 select * from tblmarca
 
-update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'facislito'
+update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'ggb'
 */
 
 select 
@@ -64,7 +64,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'brw')
+    where (m.marca ilike 'mercur')
     and pv.descontinuado is null
     and p.inativo is null
     --and p.produto ilike '%tris%'
