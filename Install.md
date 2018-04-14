@@ -1,22 +1,27 @@
 # LARAVEL
 
 ## Inicializar Projeto
+
     cd /var/www/MGspa
     composer create-project --prefer-dist "laravel/laravel" mg-laravel-5.5-a "5.5.*"
 
-## Dar permissões nas pastas publicas
+## Dar permissões nas pastas públicas
+
     chmod a+w mg-laravel-5.5-a/storage/ -R
     chmod a+w mg-laravel-5.5-a/bootstrap/cache/ -R
 
-## Criar variaveis de Ambiente
+## Criar variáveis de Ambiente
+
     cp mg-laravel-5.5-a/.env.example mg-laravel-5.5-a/.env
 
 ## Gerar Chave da Aplicação
+
     php artisan key:generate
     vi .env
     Trocar APP_KEY pela chave gerada
 
-## Configuracoes do Ambiente
+## Configurações do Ambiente
+
     APP_NAME=MGspa
     APP_ENV=local
     APP_KEY=base64:JUf4SJL/X2tCHF5G/qkCGILcxEIoYo5PX52aCULvmL8=
@@ -57,13 +62,17 @@
 
     SESSION_DRIVER=memcached
 
-## Congiguar /var/www/MGspa/mg-laravel-5.5-a/config/app.php
+## Configurar /var/www/MGspa/mg-laravel-5.5-a/config/app.php
+
     'timezone' => 'America/Cuiaba',
     'locale' => 'pt_BR',
 
 ## Configurar /var/www/MGspa/mg-laravel-5.5-a/config/database.php
+
+No array 'connections' comentar tudo que não seja a conexão pgsql
+
     'default' => env('DB_CONNECTION', 'pgsql'),
-    No array 'connections' comentar tudo que não seja a conexão pgsql
+
 
     'connections' => [
         'pgsql' => [
@@ -82,6 +91,7 @@
 
 
 ## Configurar DNS e Apache
+
     rm api
     ln -s mg-laravel-5.5-a/public/ api
 
@@ -142,8 +152,6 @@ Publicar JWT
     mv routes/api.php routes/api.php.original
     cp ../mg-laravel-5.5/routes/api.php routes/api.php
 
-
-
 em config/auth.php
 
     'providers' => [
@@ -155,10 +163,10 @@ em config/auth.php
 
     'model' => \Mg\Usuario\Usuario::class,
 
-
 ## Configurar Alias do Psr-4
 
 em /var/www/MGspa/mg-laravel-5.5-a/composer.json
+
     "autoload": {
         ...
         "psr-4": {
@@ -215,23 +223,25 @@ em /var/www/MGspa/mg-laravel-5.5-a/app/Http/Middleware/VerifyCsrfToken.php
 
 
 # QUASAR
-sudo npm i -g npm
-sudo npm install -g vue-cli
-sudo npm install -g quasar-cli
-quasar init mg-quasar-0.15.10
 
-? Project name (internal usage for dev) mg-quasar-0.15.10
-? Project product name (official name) MG Quasar Spa
-? Project description Sistema MG Papelaria
-? Author Fabio Migliorini <fabio@mgpapelaria.com.br>
-? Use ESLint to lint your code? Yes
-? Pick an ESLint preset Standard
-? Cordova id (disregard if not building mobile apps) org.cordova.quasar.app
-? Use Vuex? (recommended for complex apps/websites) Yes
-? Use Axios for Ajax calls? Yes
-? Use Vue-i18n? (recommended if you support multiple languages) No
-? Support IE11? No
-? Should we run `npm install` for you after the project has been created? (recom
-mended) NPM
+    sudo npm i -g npm
+    sudo npm install -g vue-cli
+    sudo npm install -g quasar-cli
+    cd /var/www/MGspa    
+    quasar init mg-quasar-0.15.10
 
-   vue-cli · Generated "mg-quasar-0.15.10".
+    ? Project name (internal usage for dev) mg-quasar-0.15.10
+    ? Project product name (official name) MG Quasar Spa
+    ? Project description Sistema MG Papelaria
+    ? Author Fabio Migliorini <fabio@mgpapelaria.com.br>
+    ? Use ESLint to lint your code? Yes
+    ? Pick an ESLint preset Standard
+    ? Cordova id (disregard if not building mobile apps) org.cordova.quasar.app
+    ? Use Vuex? (recommended for complex apps/websites) Yes
+    ? Use Axios for Ajax calls? Yes
+    ? Use Vue-i18n? (recommended if you support multiple languages) No
+    ? Support IE11? No
+    ? Should we run `npm install` for you after the project has been created? (recom
+    mended) NPM
+
+    vue-cli · Generated "mg-quasar-0.15.10".
