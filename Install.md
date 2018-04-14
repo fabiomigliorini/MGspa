@@ -245,3 +245,116 @@ em /var/www/MGspa/mg-laravel-5.5-a/app/Http/Middleware/VerifyCsrfToken.php
     mended) NPM
 
     vue-cli · Generated "mg-quasar-0.15.10".
+
+    cd mg-quasar-0.15.10
+    npm install autoprefixer
+    npm install
+
+    quasar dev
+
+## Instalando Dependências
+
+    cd /var/www/MGspa/mg-quasar-0.15.10
+
+    npm install moment --save
+    npm install numeral --save
+    npm install vue-chartjs chart.js --save
+    npm install dotenv --save
+
+    cp ../mg-quasar-0.15/src/plugins/axios.js src/plugins/axios.js
+    cp ../mg-quasar-0.15/src/plugins/moment.js src/plugins/moment.js
+    cp ../mg-quasar-0.15/src/plugins/numeral.js src/plugins/numeral.js
+    cp ../mg-quasar-0.15/src/jwt src/jwt -R
+
+
+## Configuração da Aplicação
+
+Copiar pasta config
+
+    cd /var/www/MGspa/mg-quasar-0.15.10
+    cp ../mg-quasar-0.15/config . -R
+
+Em /var/www/MGspa/mg-quasar-0.15.10/quasar.conf.js
+
+    // Busca Variáveis de Ambiente
+    const envparser = require('./config/envparser')
+
+Configurar plugins
+
+    plugins: [
+      'axios',
+      'numeral',
+      'moment'
+    ],
+
+Adicionar Parser das variáveis de Ambiente
+
+    build: {
+      env: envparser(),
+      ...
+    }
+
+Adicionar Componentes do framework
+
+    framework: {
+      components: [
+         ...
+         'QPageSticky',
+         'QInfiniteScroll',
+         'QLayoutFooter',
+         'QFab',
+         'QFabAction',
+         'QItemSide',
+         'QItemTile',
+         'QItemSeparator',
+         'QBreadcrumbs',
+         'QBreadcrumbsEl',
+         'QTooltip',
+         'QInput',
+         'QField',
+         'QRadio',
+         'QModal',
+         'QCard',
+         'QCardMain',
+         'QCardTitle',
+         'QCardActions',
+         'QCardSeparator',
+         'QCardMedia',
+         'QCollapsible',
+         'QToggle',
+         'QRange',
+         'QScrollArea',
+         'QChip',
+         'QPopover',
+         'QRating',
+         'Ripple',
+         'GoBack'
+         ]
+
+
+Adicionar Plugins do framework
+
+    framework: {
+      ...
+      plugins: [
+        'Notify',
+        'Dialog',
+        'Loading'
+      ]
+
+## Copiar Código da Aplicação
+
+    cp ../mg-quasar-0.15/src/components/* src/components/ -R
+    cp ../mg-quasar-0.15/src/assets/images src/assets/images -R
+    cp ../mg-quasar-0.15/src/layouts/MgLayout.vue src/layouts/MgLayout.vue
+    mv src/router/routes.js src/router/routes.js.original
+    cp ../mg-quasar-0.15/src/router/routes.js src/router/routes.js
+    cp ../mg-quasar-0.15/src/statics/* src/statics/ -R
+    cp ../mg-quasar-0.15/src/store/* src/store/ -R
+
+
+## Configurar .env
+
+em /var/www/MGspa/mg-quasar-0.15.10/.env
+
+    API_URL=http://api.escmig98.teste/api/v1/
