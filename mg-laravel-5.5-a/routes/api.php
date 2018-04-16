@@ -61,8 +61,11 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         // Permissões
         Route::apiResource('permissao', '\Mg\Permissao\PermissaoController');
 
-        // Estoque
+        // Estoque Estatística
         Route::apiResource('estoque-estatistica', '\Mg\Estoque\EstoqueEstatisticaController');
+
+        // Estoque Conferência
+        Route::get('estoque-conferencia', '\Mg\Estoque\EstoqueConferenciaController@index');
 
         // Imagem
         Route::apiResource('imagem', '\Mg\Imagem\ImagemController');
@@ -70,6 +73,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('imagem/{id}/inativo', '\Mg\Imagem\ImagemController@inativar')->name('imagem.inativar');
 
         // Marcas
+        Route::get('marca/autocompletar', '\Mg\Marca\MarcaController@autocompletar');
         Route::get('marca/{id}/detalhes', '\Mg\Marca\MarcaController@detalhes')->name('marca.detalhes');
         Route::delete('marca/{id}/inativo', '\Mg\Marca\MarcaController@ativar')->name('marca.ativar');
         Route::post('marca/{id}/inativo', '\Mg\Marca\MarcaController@inativar')->name('marca.inativar');

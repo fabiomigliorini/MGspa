@@ -42,6 +42,27 @@ class MarcaRepository extends MgRepository
         return $qry;
     }
 
+    /**
+     * Busca Autocomplete do Quasar
+     */
+    public static function autocompletar ($params)
+    {
+        $qry = static::pesquisar($params)
+                ->select('codmarca', 'marca')
+                ->take(10);
+
+        $ret = [];
+        foreach ($qry->get() as $item) {
+            $ret[] = [
+                'label' => $item->marca,
+                'value' => $item->marca,
+                'id' => $item->codmarca,
+            ];
+        }
+
+        return $ret;
+    }
+
     public static function calculaVenda()
     {
         // Limpa dados do ultimo calculo
@@ -194,5 +215,41 @@ class MarcaRepository extends MgRepository
         return $prods;
     }
 
+    public static function buscaProdutosParaConferencia (int $codmarca, int $codestoquelocal, bool $fiscal) {
+        $marca = Marca::findOrFail($codmarca);
 
+        $produtos = [];
+        foreach ($marca->ProdutoS()->get() as $produto) {
+            foreach ($produto->ProdutoVariacaoS()->get() as $variacao) {
+                $elpv = $variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->first();
+                //dd(count($elpv));
+                $saldo = $elpv->EstoqueSaldoS()->where('fiscal', $fiscal)->first();
+                $imagem = null;
+                if (!empty($variacao->codprodutoimagem)) {
+                    $imagem = $variacao->ProdutoImagem->Imagem;
+                } elseif (!empty($produto->codprodutoimagem)) {
+                    $imagem = $produto->ProdutoImagem->Imagem;
+                } elseif ($pi = $produto->ProdutoImagemS()->first()) {
+                    $imagem = $pi->Imagem;
+                }
+
+                //dd($imagem);
+                $imagem = $variacao->codprodutoimagem;
+
+                $produtos[] = [
+                  'imagem' => '',
+                  'codproduto' => $variacao->codproduto,
+                  'codprodutovariacao' => $variacao->codprodutovariacao
+                ];
+            }
+        }
+
+        $res = [
+            'produtos' => $produtos,
+            $codestoquelocal,
+            $fiscal
+        ];
+
+        return $res;
+    }
 }

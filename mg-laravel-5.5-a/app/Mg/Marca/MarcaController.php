@@ -159,4 +159,9 @@ class MarcaController extends MgController
         return response()->json($res, 200);
     }
 
+    public function autocompletar (Request $request) {
+        $res = MarcaRepository::autocompletar($request->all());
+
+        return response()->json($res, 206);
+    }
 }
