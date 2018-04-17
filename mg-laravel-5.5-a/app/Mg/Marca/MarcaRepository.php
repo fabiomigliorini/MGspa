@@ -2,6 +2,7 @@
 
 namespace Mg\Marca;
 use Mg\MgRepository;
+use Mg\Estoque\EstoqueLocal;
 
 class MarcaRepository extends MgRepository
 {
@@ -217,39 +218,56 @@ class MarcaRepository extends MgRepository
 
     public static function buscaProdutosParaConferencia (int $codmarca, int $codestoquelocal, bool $fiscal) {
         $marca = Marca::findOrFail($codmarca);
+        $estoquelocal = EstoqueLocal::findOrFail($codestoquelocal);
 
         $produtos = [];
         foreach ($marca->ProdutoS()->get() as $produto) {
             foreach ($produto->ProdutoVariacaoS()->get() as $variacao) {
-                $elpv = $variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->first();
-                //dd(count($elpv));
-                $saldo = $elpv->EstoqueSaldoS()->where('fiscal', $fiscal)->first();
-                $imagem = null;
-                if (!empty($variacao->codprodutoimagem)) {
-                    $imagem = $variacao->ProdutoImagem->Imagem;
-                } elseif (!empty($produto->codprodutoimagem)) {
-                    $imagem = $produto->ProdutoImagem->Imagem;
-                } elseif ($pi = $produto->ProdutoImagemS()->first()) {
-                    $imagem = $pi->Imagem;
+                $saldo = 0;
+                $ultimaconferencia = null;
+                foreach ($variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->get() as $elpv) {
+                    foreach ($elpv->EstoqueSaldoS()->orderBy('ultimaconferencia', 'ASC')->where('fiscal', $fiscal)->get() as $es) {
+                        $saldo += (float)$es->saldoquantidade;
+                        $ultimaconferencia = $es->ultimaconferencia;
+                    }
                 }
 
-                //dd($imagem);
-                $imagem = $variacao->codprodutoimagem;
+                $imagem = null;
+                if (!empty($variacao->codprodutoimagem)) {
+                    $imagem = $variacao->ProdutoImagem->Imagem->url;
+                } elseif (!empty($produto->codprodutoimagem)) {
+                    $imagem = $produto->ProdutoImagem->Imagem->url;
+                } elseif ($pi = $produto->ProdutoImagemS()->first()) {
+                    $imagem = $pi->Imagem->url;
+                }
 
                 $produtos[] = [
-                  'imagem' => '',
-                  'codproduto' => $variacao->codproduto,
-                  'codprodutovariacao' => $variacao->codprodutovariacao
+                    'imagem' => $imagem,
+                    'codproduto' => $variacao->codproduto,
+                    'codprodutovariacao' => $variacao->codprodutovariacao,
+                    'produto' => $variacao->Produto->produto,
+                    'variacao' => $variacao->variacao,
+                    'saldo' => $saldo,
+                    'inativo' => $variacao->inativo,
+                    'descontinuado' => $variacao->descontinuado,
+                    'ultimaconferencia' => $ultimaconferencia
                 ];
             }
         }
 
         $res = [
+            'local' => [
+                'codestoquelocal' => $estoquelocal->codestoquelocal,
+                'estoquelocal' => $estoquelocal->estoquelocal
+            ],
+            'marca' => [
+                'marca' => $marca->marca,
+                'codmarca' => $marca->codmarca
+            ],
             'produtos' => $produtos,
-            $codestoquelocal,
-            $fiscal
         ];
 
         return $res;
     }
+
 }

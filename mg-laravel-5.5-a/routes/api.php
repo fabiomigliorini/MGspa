@@ -66,6 +66,8 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Estoque Conferência
         Route::get('estoque-conferencia', '\Mg\Estoque\EstoqueConferenciaController@index');
+        Route::post('estoque-conferencia', '\Mg\Estoque\EstoqueConferenciaController@store')->name('estoque-conferencia.store');
+        Route::get('estoque-conferencia/busca-produto', '\Mg\Estoque\EstoqueConferenciaController@buscaProduto');
 
         // Imagem
         Route::apiResource('imagem', '\Mg\Imagem\ImagemController');
@@ -78,6 +80,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::delete('marca/{id}/inativo', '\Mg\Marca\MarcaController@ativar')->name('marca.ativar');
         Route::post('marca/{id}/inativo', '\Mg\Marca\MarcaController@inativar')->name('marca.inativar');
         Route::apiResource('marca', '\Mg\Marca\MarcaController');
+
+        Route::get('estoque-local/autocompletar', '\Mg\Estoque\EstoqueLocalController@autocompletar');
+
 
     });
 

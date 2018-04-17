@@ -60,7 +60,6 @@ namespace Mg\Produto;
  */
 use Mg\MgModel;
 use Mg\Marca\Marca;
-use Mg\Imagem\Imagem;
 
 class Produto extends MgModel
 {

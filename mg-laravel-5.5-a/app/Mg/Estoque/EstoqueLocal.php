@@ -24,8 +24,9 @@ namespace Mg\Estoque;
  * @property  Negocio[]                      $NegocioS
  * @property  NotaFiscal[]                   $NotaFiscalS
  */
+ use Mg\MgModel;
 
-class EstoqueLocal extends MGModel
+class EstoqueLocal extends MgModel
 {
     protected $table = 'tblestoquelocal';
     protected $primaryKey = 'codestoquelocal';
