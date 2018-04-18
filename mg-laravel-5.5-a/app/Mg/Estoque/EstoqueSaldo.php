@@ -38,7 +38,7 @@ use Illuminate\Support\Facades\DB;
  * @property  EstoqueSaldoConferencia[]      $EstoqueSaldoConferenciaS
  */
  use Mg\MgModel;
- 
+
 class EstoqueSaldo extends MgModel
 {
     protected $table = 'tblestoquesaldo';

@@ -70,7 +70,7 @@ class EstoqueSaldoConferencia extends MgModel
     public function EstoqueMovimentoS()
     {
         return $this->hasMany(EstoqueMovimento::class, 'codestoquesaldoconferencia', 'codestoquesaldoconferencia');
-    }
+    }    
 
 
 }

@@ -65,9 +65,10 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::apiResource('estoque-estatistica', '\Mg\Estoque\EstoqueEstatisticaController');
 
         // Estoque Conferência
-        Route::get('estoque-conferencia', '\Mg\Estoque\EstoqueConferenciaController@index');
+        Route::get('estoque-conferencia/busca-listagem', '\Mg\Estoque\EstoqueConferenciaController@buscaListagem');
         Route::post('estoque-conferencia', '\Mg\Estoque\EstoqueConferenciaController@store')->name('estoque-conferencia.store');
         Route::get('estoque-conferencia/busca-produto', '\Mg\Estoque\EstoqueConferenciaController@buscaProduto');
+        Route::post('estoque-conferencia/{id}/inativo', '\Mg\Estoque\EstoqueConferenciaController@inativar')->name('estoque-conferencia.inativar');
 
         // Imagem
         Route::apiResource('imagem', '\Mg\Imagem\ImagemController');
