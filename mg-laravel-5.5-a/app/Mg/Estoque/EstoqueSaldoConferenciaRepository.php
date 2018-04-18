@@ -8,47 +8,136 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 {
 
     public static function criaConferencia(
-                $codprodutovariacao,
-                $codestoquelocal,
-                $fiscal,
-                $quantidadeinformada,
-                $customedioinformado,
-                $data,
+                int $codprodutovariacao,
+                int $codestoquelocal,
+                bool $fiscal,
+                float $quantidadeinformada,
+                float $customedioinformado,
+                Carbon $data,
                 $observacoes,
-                $corredor,
-                $prateleira,
-                $coluna,
-                $bloco,
-                $vencimento,
-                $estoquemaximo,
-                $estoqueminimo
+                int $corredor,
+                int $prateleira,
+                int $coluna,
+                int $bloco,
+                Carbon $vencimento
             ) {
 
-        $es = EstoqueSaldoRepository::buscaOuCria($request['codprodutovariacao'], $request['codestoquelocal'], (boolean) $request['fiscal']);
-        $es->EstoqueLocalProdutoVariacao->estoquemaximo = $request['estoquemaximo'];
-        $es->EstoqueLocalProdutoVariacao->estoqueminimo = $request['estoqueminimo'];
-        $es->EstoqueLocalProdutoVariacao->corredor = $request['corredor'];
-        $es->EstoqueLocalProdutoVariacao->prateleira = $request['prateleira'];
-        $es->EstoqueLocalProdutoVariacao->coluna = $request['coluna'];
-        $es->EstoqueLocalProdutoVariacao->bloco = $request['bloco'];
-
+        // Atualiza dados da EstoqueLocalProdutoVariacao
+        $es = EstoqueSaldoRepository::buscaOuCria($codprodutovariacao, $codestoquelocal, $fiscal);
+        $es->EstoqueLocalProdutoVariacao->corredor = $corredor;
+        $es->EstoqueLocalProdutoVariacao->prateleira = $prateleira;
+        $es->EstoqueLocalProdutoVariacao->coluna = $coluna;
+        $es->EstoqueLocalProdutoVariacao->bloco = $bloco;
+        $es->EstoqueLocalProdutoVariacao->vencimento = $vencimento;
         $es->EstoqueLocalProdutoVariacao->save();
 
+        // Cria novo registro de conferência
         $model = new EstoqueSaldoConferencia();
-
         $model->codestoquesaldo = $es->codestoquesaldo;
         $model->quantidadesistema = $es->saldoquantidade;
-        $model->quantidadeinformada = $request['quantidadeinformada'];
+        $model->quantidadeinformada = $quantidadeinformada;
         $model->customediosistema = $es->customedio;
-        $model->customedioinformado = $request['customedioinformado'];
-
-        $model->data = new Carbon($request['data']);
+        $model->customedioinformado = $customedioinformado;
+        $model->data = $data;
         $model->save();
 
+        // Atualiza Informação da última conferência
         $model->EstoqueSaldo->ultimaconferencia = $model->criacao;
         $model->EstoqueSaldo->save();
 
+        // Cria Registro de Movimento de Estoque
+        // $mov = new EstoqueMovimento();
+        // EstoqueGeraMovimentoConferencia --> Este Repositorio
+        $mov = static::estoqueGeraMovimentoConferencia($model);
+
+        // Disparar o Recalculo do Custo Medio
+        // é uma JOB no MG Lara
+        // EstoqueCalculaCustoMedio --> Repositorio de EstoqueSaldo
+        EstoqueSaldoRepository::estoqueCalculaCustoMedio($mov->codestoquemes);
+
         return $model;
+    }
+
+    public static function estoqueGeraMovimentoConferencia($conferencia) {
+
+        $codestoquemesRecalcular = [];
+        $codestoquemovimentoGerado = [];
+
+        $quantidade = $conferencia->quantidadeinformada - $conferencia->quantidadesistema;
+        $valor = $quantidade * $conferencia->customedioinformado;
+
+        if ($quantidade == 0 && $valor == 0) {
+            return;
+        }
+
+        $mov = $conferencia->EstoqueMovimentoS->first();
+
+        if ($mov == false) {
+            $mov = new EstoqueMovimento();
+        }
+
+        $mes = EstoqueMesRepository::buscaOuCria(
+            $conferencia->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
+            $conferencia->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
+            $conferencia->EstoqueSaldo->fiscal,
+            $conferencia->data
+        );
+
+        $codestoquemesRecalcular[] = $mes->codestoquemes;
+
+        if (!empty($mov->codestoquemes) && $mov->codestoquemes != $mes->codestoquemes)
+            $codestoquemesRecalcular[] = $mov->codestoquemes;
+
+        $mov->codestoquemes = $mes->codestoquemes;
+        $mov->codestoquemovimentotipo = EstoqueMovimentoTipo::AJUSTE;
+        $mov->manual = false;
+        $mov->data = $conferencia->data;
+
+        if ($quantidade >= 0) {
+            $mov->entradaquantidade = $quantidade;
+            $mov->saidaquantidade = null;
+        } else {
+            $mov->entradaquantidade = null;
+            $mov->saidaquantidade = abs($quantidade);
+        }
+
+        if ($valor >= 0) {
+            $mov->entradavalor = $valor;
+            $mov->saidavalor = null;
+        } else {
+            $mov->entradavalor = null;
+            $mov->saidavalor = abs($valor);
+        }
+
+        $mov->codestoquesaldoconferencia = $conferencia->codestoquesaldoconferencia;
+
+        $mov->save();
+
+        //armazena estoquemovimento gerado
+        $codestoquemovimentoGerado[] = $mov->codestoquemovimento;
+
+        //Apaga estoquemovimento excedente que existir anexado ao negocioprodutobarra
+        // $movExcedente =
+        //         EstoqueMovimento
+        //         ::whereNotIn('codestoquemovimento', $codestoquemovimentoGerado)
+        //         ->where('codestoquesaldoconferencia', $conferencia->codestoquesaldoconferencia)
+        //         ->get();
+        // foreach ($movExcedente as $mov)
+        // {
+        //     $codestoquemesRecalcular[] = $mov->codestoquemes;
+        //     foreach ($mov->EstoqueMovimentoS as $movDest)
+        //     {
+        //         $movDest->codestoquemovimentoorigem = null;
+        //         $movDest->save();
+        //     }
+        //     $mov->delete();
+        // }
+
+        //Coloca Recalculo Custo Medio na Fila
+        // foreach($codestoquemesRecalcular as $codestoquemes) {
+        //     $this->dispatch((new EstoqueCalculaCustoMedio($codestoquemes))->onQueue('urgent'));
+        // }
+        return $mov;
     }
 
     public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal) {
@@ -138,6 +227,8 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'referencia' => $pv->referencia,
                 'descontinuado' => $pv->descontinuado,
                 'inativo' => $pv->inativo,
+                'estoquemaximo' => $elpv->estoquemaximo,
+                'estoqueminimo' => $elpv->estoquemaximo
             ],
             'localizacao' => [
                 'corredor' => $elpv->corredor,
@@ -155,6 +246,22 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         ];
 
         return $res;
+    }
+
+    public static function inativar ($model, $date = null)
+    {
+        // 1 - excluir o registro de movimento que foi gerado a partir
+        // da conferencia
+        $mov = EstoqueMovimento::findOrFail($model->codestoquesaldoconferencia);
+        $codestoquemes = $mov->codestoquemes;
+        $mov->delete();
+
+        // 2 - Recalcular o Custo Medio
+        EstoqueSaldoRepository::estoqueCalculaCustoMedio($codestoquemes);
+
+        // 3 - Marcar registro como inativo
+        parent::inativar($model, $date);
+
     }
 
 }

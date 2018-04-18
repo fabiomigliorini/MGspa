@@ -8,6 +8,8 @@ use Mg\Marca\MarcaRepository;
 use Mg\Produto\ProdutoRepository;
 use Mg\Estoque\EstoqueSaldoConferencia;
 
+use DB;
+
 class EstoqueConferenciaController extends MgController
 {
     /**
@@ -45,7 +47,11 @@ class EstoqueConferenciaController extends MgController
         return response()->json($res, 206);
     }
 
-
+    /**
+     * Cria o registro de Conferencia do Estoque e faz a movimentação
+     * na tabela de tblestoquemovimento para que o saldo do ssitema seja
+     * ajustado para o saldo informado pelo usuario
+     */
     public function store(Request $request)
     {
 
@@ -56,6 +62,13 @@ class EstoqueConferenciaController extends MgController
             'quantidadeinformada' => 'required|numeric',
             'customedioinformado' => 'required|numeric',
             'data' => 'required|date',
+
+            'corredor' => 'integer',
+            'prateleira' => 'integer',
+            'coluna' => 'integer',
+            'bloco' => 'integer',
+
+            'vencimento' => 'date',
         ]);
 
         $data = new \Carbon\Carbon($request->data);
@@ -64,6 +77,7 @@ class EstoqueConferenciaController extends MgController
         $quantidadeinformada = floatval($request->quantidadeinformada);
         $customedioinformado = floatval($request->customedioinformado);
 
+        DB::beginTransaction();
 
         $model = EstoqueSaldoConferenciaRepository::criaConferencia(
             $request->codprodutovariacao,
@@ -77,19 +91,29 @@ class EstoqueConferenciaController extends MgController
             $request->prateleira,
             $request->coluna,
             $request->bloco,
-            $vencimento,
-            $request->$estoquemaximo,
-            $request->$estoqueminimo
+            $vencimento
         );
 
-        return response()->json($model, 201);
+        DB::commit();
+
+        $res = EstoqueSaldoConferenciaRepository::buscaProduto($request->codprodutovariacao, $request->codestoquelocal, $fiscal);
+
+        return response()->json($res, 201);
     }
 
-    public function inativar(Request $request, $id) {
+    public function inativar(Request $request, $id)
+    {
         $model = EstoqueSaldoConferencia::findOrFail($id);
-        $model = EstoqueSaldoConferenciaRepository::inativar($model);
 
-        return response()->json($model, 200);
+        DB::beginTransaction();
+            EstoqueSaldoConferenciaRepository::inativar($model);
+        DB:: commit();
+
+        $res = EstoqueSaldoConferenciaRepository::buscaProduto(
+            $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
+            $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
+            $model->EstoqueSaldo->fiscal);
+        return response()->json($res, 200);
     }
 
 }
