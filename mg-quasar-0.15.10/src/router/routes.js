@@ -31,5 +31,8 @@ export default [
   { path: '/filial', component: () => import('components/views/filial/Index') },
 
   // Estoque Estatística
-  { path: '/estoque-estatistica/:codproduto', component: () => import('components/views/estoque-estatistica/Index') }
+  { path: '/estoque-estatistica/:codproduto', component: () => import('components/views/estoque-estatistica/Index') },
+
+  // Estoque Conferência
+  { path: '/estoque-conferencia', component: () => import('components/views/estoque-conferencia/Index') }
 ]

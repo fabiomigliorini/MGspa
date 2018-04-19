@@ -49,6 +49,7 @@ module.exports = function (ctx) {
     },
     // framework: 'all' --- includes everything; for dev only!
     framework: {
+      i18n: 'pt-br',
       components: [
         'QLayout',
         'QLayoutHeader',
@@ -94,7 +95,9 @@ module.exports = function (ctx) {
         'QPopover',
         'QRating',
         'Ripple',
-        'GoBack'
+        'GoBack',
+        'QSelect',
+        'QDatetime'
       ],
       directives: [
         'Ripple'

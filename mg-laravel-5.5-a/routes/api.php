@@ -82,7 +82,8 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('marca/{id}/inativo', '\Mg\Marca\MarcaController@inativar')->name('marca.inativar');
         Route::apiResource('marca', '\Mg\Marca\MarcaController');
 
-        Route::get('estoque-local/autocompletar', '\Mg\Estoque\EstoqueLocalController@autocompletar');
+        Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
+        Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
 
     });
