@@ -36,12 +36,11 @@
 
         <div class="row">
           <div class="col-xs-12 col-sm-6 col-md-4">
-            <mg-autocomplete-marca placeholder="Marca" v-model="data.codmarca"></mg-autocomplete-marca>
+            <mg-autocomplete-marca placeholder="Marca" v-model="data.codmarca" :init="data.codmarca"></mg-autocomplete-marca>
             <mg-erros-validacao :erros="erros.codmarca"></mg-erros-validacao>
           </div>
         </div>
 
-        {{data.data}}
         <div class="row">
           <div class="col-xs-12 col-sm-6 col-md-4">
             <q-datetime
@@ -89,54 +88,39 @@ export default {
             value: 1
           }
       ],
-      data:{
-        codestoquelocal: null,
-        fiscal: 0,
-        data: null
-      },
-      erros: {},
-      store: {
-        marca: {
-          marca: null,
-          codmarca: null
-        },
-        estoquelocal: {}
+      erros: {}
+    }
+  },
+  computed: {
+    data: {
+      get () {
+        return this.$store.state.estoqueConferencia.estoqueConferenciaState
       }
     }
   },
   methods: {
     iniciar: function () {
       let vm = this
-      vm.store.data = vm.data.data
-      vm.store.fiscal = vm.data.fiscal
       vm.dadosConferencia(vm.data.codestoquelocal, vm.data.codmarca)
-      console.log(vm.store.marca)
-      // dados.data = vm.data.data
-      // dados.fiscal = vm.data.fiscal
-      vm.$store.commit('estoqueConferencia/updateEstoqueConferencia', {
-        marca: {
-          marca: vm.store.marca.marca,
-          codmarca: vm.store.marca.codmarca
-        }
-      })
-      //vm.$router.push('/estoque-conferencia/conferencia')
+
+      vm.$router.push('/estoque-conferencia/conferencia')
     },
     dadosConferencia: function (codestoquelocal, codmarca) {
       let vm = this
       let params = {
-        fields:['codestoquelocal', 'estoquelocal']
+        fields:['estoquelocal']
       }
       vm.$axios.get('estoque-local/' + codestoquelocal, { params }).then(function (request) {
-        vm.store.estoquelocal = request.data
-      }).catch(function (error) {
-        console.log(error.response)
-      })
-      params = {
-        fields:['codmarca', 'marca']
-      }
-      vm.$axios.get('marca/' + codmarca, { params }).then(function (request) {
-        vm.store.marca.marca = request.data.marca
-        vm.store.marca.codmarca = request.data.codmarca
+        vm.data.estoquelocal = request.data.estoquelocal
+        params = {
+          fields:['marca']
+        }
+        vm.$axios.get('marca/' + codmarca, { params }).then(function (request) {
+          vm.data.marca = request.data.marca
+          vm.$store.commit('estoqueConferencia/updateEstoqueConferencia', vm.data)
+        }).catch(function (error) {
+          console.log(error.response)
+        })
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -144,7 +128,7 @@ export default {
     }
   },
   mounted () {
-    // ...
+    console.log(this.data)
   }
 }
 </script>

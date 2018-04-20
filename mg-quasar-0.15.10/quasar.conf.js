@@ -97,7 +97,18 @@ module.exports = function (ctx) {
         'Ripple',
         'GoBack',
         'QSelect',
-        'QDatetime'
+        'QDatetime',
+        'QTabs',
+        'QTab',
+        'QTabPane',
+        'QRouteTab',
+        'QList',
+        'QListHeader',
+        'QItem',
+        'QItemMain',
+        'QItemSeparator',
+        'QItemSide',
+        'QItemTile'
       ],
       directives: [
         'Ripple'

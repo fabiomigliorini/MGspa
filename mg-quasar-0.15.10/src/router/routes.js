@@ -34,5 +34,7 @@ export default [
   { path: '/estoque-estatistica/:codproduto', component: () => import('components/views/estoque-estatistica/Index') },
 
   // Estoque Conferência
-  { path: '/estoque-conferencia', component: () => import('components/views/estoque-conferencia/Index') }
+  { path: '/estoque-conferencia', component: () => import('components/views/estoque-conferencia/Index') },
+  { path: '/estoque-conferencia/conferencia', component: () => import('components/views/estoque-conferencia/Conferencia') },
+  { path: '/estoque-conferencia/create', component: () => import('components/views/estoque-conferencia/Create') }
 ]

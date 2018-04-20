@@ -23,7 +23,8 @@ class EstoqueConferenciaController extends MgController
         $res = EstoqueSaldoConferenciaRepository::buscaListagem(
             $request->codmarca,
             $request->codestoquelocal,
-            $request->fiscal
+            $request->fiscal,
+            $request->inativo
         );
 
         return response()->json($res, 206);

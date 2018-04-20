@@ -140,14 +140,23 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         return $mov;
     }
 
-    public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal) {
+    public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal, $inativo) {
 
         $marca = \Mg\Marca\Marca::findOrFail($codmarca);
         $estoquelocal = EstoqueLocal::findOrFail($codestoquelocal);
 
         $produtos = [];
         foreach ($marca->ProdutoS()->get() as $produto) {
-            foreach ($produto->ProdutoVariacaoS()->get() as $variacao) {
+
+            if ($inativo == 1) {
+                $produtosVariacao = $produto->ProdutoVariacaoS()->whereNull('inativo')->get();
+            } elseif ($inativo == 2) {
+                $produtosVariacao = $produto->ProdutoVariacaoS()->whereNotNull('inativo')->get();
+            } else {
+                $produtosVariacao = $produto->ProdutoVariacaoS()->get();
+            }
+
+            foreach ($produtosVariacao as $variacao) {
                 $saldo = 0;
                 $ultimaconferencia = null;
                 foreach ($variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->get() as $elpv) {
