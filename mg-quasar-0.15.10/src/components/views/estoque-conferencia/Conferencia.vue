@@ -72,16 +72,13 @@
                     </q-item-tile>
                   </q-item-main>
 
-                  <q-item-main>
-                    <q-item-tile v-if="produto.ultimaconferencia">
-                      Ultima conferência
-                      <q-item-side>{{produto.ultimaconferencia = moment(data).format('DD/MM/YYYY')}}</q-item-side>
-                    </q-item-tile>
-                  </q-item-main>
-
                   <q-item-side>
-                      Saldo
-                      <q-item-side>{{ produto.saldo }}</q-item-side>
+                        Saldo
+                      <q-item-tile>{{ produto.saldo }}</q-item-tile>
+                      <q-item-tile v-if="produto.ultimaconferencia">
+                        Ultima conferência
+                          {{produto.ultimaconferencia = moment(data).format('DD/MM/YYYY')}}
+                      </q-item-tile>
                   </q-item-side>
 
                 </q-item>
@@ -101,20 +98,20 @@
                     <q-item-tile>
                       {{ produto.produto }}
                       <q-chip tag square pointing="left" color="negative" v-if="produto.inativo">Inativo</q-chip>
-                      <q-item-side v-if="produto.variacao">{{ produto.variacao }}</q-item-side>
-                    </q-item-tile>
-                  </q-item-main>
-
-                  <q-item-main>
-                    <q-item-tile v-if="produto.ultimaconferencia">
-                      Ultima conferência
-                      <q-item-side>{{produto.ultimaconferencia = moment(data).format('DD/MM/YYYY')}}</q-item-side>
+                      <q-item-side v-if="produto.variacao">
+                        {{ produto.variacao }}
+                      </q-item-side>
                     </q-item-tile>
                   </q-item-main>
 
                   <q-item-side>
                       Saldo
-                      <q-item-side>{{ produto.saldo }}</q-item-side>
+                      <q-item-tile>{{ produto.saldo }}</q-item-tile>
+                      <q-item-tile v-if="produto.ultimaconferencia">
+                      Ultima conferência
+                      </q-item-tile>
+                      <q-item-tile>{{produto.ultimaconferencia = moment(data).format('DD/MM/YYYY')}}</q-item-tile>
+                      <q-btn round color="primary" icon="history" />
                   </q-item-side>
 
                 </q-item>

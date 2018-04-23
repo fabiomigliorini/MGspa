@@ -20,15 +20,8 @@ class EstoqueSaldoRepository extends MgRepository
         return $es;
     }
 
-    public static function estoqueCalculaCustoMedio($codestoquemes) {
-
-        // if ($this->attempts() > 10) {
-        //     $this->release(rand(30,240));
-        // }
-        //
-        // if ($this->ciclo >= 100) {
-        //     return;
-        // }
+    public static function estoqueCalculaCustoMedio($codestoquemes)
+    {
 
         if (!$mes = EstoqueMes::findOrFail($codestoquemes)) {
             return;
@@ -41,10 +34,10 @@ class EstoqueSaldoRepository extends MgRepository
                 , saidavalor = orig.entradavalor / orig.entradaquantidade * tblestoquemovimento.saidaquantidade
             from tblestoquemovimento orig
             where tblestoquemovimento.codestoquemovimentoorigem = orig.codestoquemovimento
-            and tblestoquemovimento.codestoquemes = {$mes->codestoquemes}
+            and tblestoquemovimento.codestoquemes = :codestoquemes
             ";
 
-        $ret = DB::update($sql);
+        $ret = DB::update($sql, ['codestoquemes' => $codestoquemes]);
 
         //busca totais de registros nao baseados no custo medio
         $sql = "
@@ -55,10 +48,14 @@ class EstoqueSaldoRepository extends MgRepository
                 , sum(saidavalor) as saidavalor
             from tblestoquemovimento mov
             left join tblestoquemovimentotipo tipo on (tipo.codestoquemovimentotipo = mov.codestoquemovimentotipo)
-            where mov.codestoquemes = {$mes->codestoquemes}
-            and tipo.preco in (" . EstoqueMovimentoTipo::PRECO_INFORMADO . ", " . EstoqueMovimentoTipo::PRECO_ORIGEM . ")";
+            where mov.codestoquemes = :codestoquemes
+            and tipo.preco in (:preco_informado, :preco_origem)";
 
-        $mov = DB::select($sql);
+        $mov = DB::select($sql, [
+            'codestoquemes' => $codestoquemes,
+            'preco_informado' => EstoqueMovimentoTipo::PRECO_INFORMADO,
+            'preco_origem' => EstoqueMovimentoTipo::PRECO_ORIGEM,
+        ]);
         $mov = $mov[0];
 
         //busca saldo inicial
@@ -83,11 +80,9 @@ class EstoqueSaldoRepository extends MgRepository
         if ($quantidade != 0) {
             $customedio = abs($valor/$quantidade);
         }
-
         if (empty($customedio) && isset($anterior[0])) {
             $customedio = $anterior[0]->customedio;
-	}
-
+        }
         if ($customedio > 100000) {
             return;
         }
@@ -95,16 +90,20 @@ class EstoqueSaldoRepository extends MgRepository
         //recalcula valor movimentacao com base custo medio
         $sql = "
             update tblestoquemovimento
-            set saidavalor = saidaquantidade * $customedio
-                , entradavalor = entradaquantidade * $customedio
-            where tblestoquemovimento.codestoquemes = {$mes->codestoquemes}
+            set saidavalor = saidaquantidade * :customedio
+                , entradavalor = entradaquantidade * :customedio
+            where tblestoquemovimento.codestoquemes = :codestoquemes
             and tblestoquemovimento.codestoquemovimentotipo in
-                (select t.codestoquemovimentotipo from tblestoquemovimentotipo t where t.preco = " . EstoqueMovimentoTipo::PRECO_MEDIO . ")
+                (select t.codestoquemovimentotipo from tblestoquemovimentotipo t where t.preco = :preco_medio)
             ";
 
-        $ret = DB::update($sql);
+        $ret = DB::update($sql, [
+            'codestoquemes' => $mes->codestoquemes,
+            'customedio' => $customedio,
+            'preco_medio' => EstoqueMovimentoTipo::PRECO_MEDIO,
+        ]);
 
-        //busca totais movimentados do
+        // busca total dos movimentos
         $sql = "
             select
                 sum(entradaquantidade) entradaquantidade
@@ -112,16 +111,16 @@ class EstoqueSaldoRepository extends MgRepository
                 , sum(saidaquantidade) saidaquantidade
                 , sum(saidavalor) saidavalor
             from tblestoquemovimento mov
-            left join tblestoquemovimentotipo tipo on (tipo.codestoquemovimentotipo = mov.codestoquemovimentotipo)
-            where mov.codestoquemes = {$mes->codestoquemes}
+            where mov.codestoquemes = :codestoquemes
             ";
-
-        $mov = DB::select($sql);
+        $mov = DB::select($sql, [
+            'codestoquemes' => $codestoquemes
+        ]);
         $mov = $mov[0];
 
-        //calcula custo medio e totais novamente
+        // grava na tabela de estoquemes os totais calculados
         $mes->inicialquantidade = $inicialquantidade;
-        //$mes->inicialvalor = $mes->inicialquantidade * $customedio;
+        // $mes->inicialvalor = $mes->inicialquantidade * $customedio;
         $mes->inicialvalor = $inicialvalor;
         $mes->entradaquantidade = $mov->entradaquantidade;
         $mes->entradavalor = $mov->entradavalor;
@@ -131,29 +130,33 @@ class EstoqueSaldoRepository extends MgRepository
         $mes->saldovalor = $mes->saldoquantidade * $customedio;
         $customedioanterior = $mes->customedio;
         $mes->customedio = $customedio;
-
         $mes->save();
 
-        $customediodiferenca = abs($customedio - $customedioanterior);
-
+        // verifica quais meses são afetados pelo novo custo medio calculado
         $mesesRecalcular = [];
+        $customediodiferenca = abs($customedio - $customedioanterior);
         if ($customediodiferenca > 0.01)
         {
             $sql = "
                 select distinct dest.codestoquemes
                 from tblestoquemovimento orig
                 inner join tblestoquemovimento dest on (dest.codestoquemovimentoorigem = orig.codestoquemovimento)
-                where orig.codestoquemes = {$mes->codestoquemes}
+                where orig.codestoquemes = :codestoquemes
                 ";
-            $ret = DB::select($sql);
-
-            foreach ($ret as $row)
+            $ret = DB::select($sql, [
+                'codestoquemes' => $mes->codestoquemes
+            ]);
+            foreach ($ret as $row) {
                 $mesesRecalcular[] = $row->codestoquemes;
+            }
         }
 
         $proximo = EstoqueMesRepository::buscaProximos($mes->codestoquesaldo, $mes->mes, 1);
+
+        // empilha mes seguinte na variavel de meses à recalcular
         if (isset($proximo[0])) {
             $mesesRecalcular[] = $proximo[0]->codestoquemes;
+
         } else {
             $mes->EstoqueSaldo->saldoquantidade = $mes->saldoquantidade;
             $mes->EstoqueSaldo->saldovalor = $mes->saldovalor;
@@ -182,19 +185,23 @@ class EstoqueSaldoRepository extends MgRepository
                         order by data DESC
                         limit 1
                 )
-                where tblestoquesaldo.codestoquesaldo = {$mes->codestoquesaldo}
-            "));
+                where tblestoquesaldo.codestoquesaldo = :codestoquesaldo
+            "), [
+                'codestoquesaldo' => $mes->codestoquesaldo
+            ]);
+
         }
 
-	/*
+        /*
         if (!$mes->EstoqueSaldo->fiscal) {
             $this->dispatch((new EstoqueCalculaEstatisticas($mes->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao, $mes->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal))->onQueue('low'));
         }
-	*/
+        */
 
-        // foreach ($mesesRecalcular as $mes) {
-        //     $this->dispatch((new EstoqueCalculaCustoMedio($mes, $this->ciclo +1))->onQueue('urgent'));
-        // }
+        foreach ($mesesRecalcular as $mes) {
+            static::estoqueCalculaCustoMedio($mes);
+            // $this->dispatch((new EstoqueCalculaCustoMedio($mes, $this->ciclo +1))->onQueue('urgent'));
+        }
     }
 
 }

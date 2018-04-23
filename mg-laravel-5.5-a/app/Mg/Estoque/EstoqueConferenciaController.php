@@ -107,7 +107,7 @@ class EstoqueConferenciaController extends MgController
         $model = EstoqueSaldoConferencia::findOrFail($id);
 
         DB::beginTransaction();
-            EstoqueSaldoConferenciaRepository::inativar($model);
+        EstoqueSaldoConferenciaRepository::inativar($model);
         DB:: commit();
 
         $res = EstoqueSaldoConferenciaRepository::buscaProduto(

@@ -39,6 +39,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         $model->customediosistema = $es->customedio;
         $model->customedioinformado = $customedioinformado;
         $model->data = $data;
+        $model->observacoes = $observacoes;
         $model->save();
 
         // Atualiza Informação da última conferência
@@ -50,32 +51,34 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         // EstoqueGeraMovimentoConferencia --> Este Repositorio
         $mov = static::estoqueGeraMovimentoConferencia($model);
 
-        // Disparar o Recalculo do Custo Medio
-        // é uma JOB no MG Lara
-        // EstoqueCalculaCustoMedio --> Repositorio de EstoqueSaldo
-        EstoqueSaldoRepository::estoqueCalculaCustoMedio($mov->codestoquemes);
-
         return $model;
     }
 
-    public static function estoqueGeraMovimentoConferencia($conferencia) {
+    public static function estoqueGeraMovimentoConferencia($conferencia)
+    {
 
+        // Array com movimentos gerados e meses para recalcular
         $codestoquemesRecalcular = [];
         $codestoquemovimentoGerado = [];
 
+        // calcula quantidade e valor do movimento
         $quantidade = $conferencia->quantidadeinformada - $conferencia->quantidadesistema;
         $valor = $quantidade * $conferencia->customedioinformado;
 
+        // se não há quantidade nem valor para movimentar, retorna
         if ($quantidade == 0 && $valor == 0) {
             return;
         }
 
+        // busca primeiro movimento vinculado à conferencia
         $mov = $conferencia->EstoqueMovimentoS->first();
 
+        // se não existe nenhum movimento vinculado cria um novo
         if ($mov == false) {
             $mov = new EstoqueMovimento();
         }
 
+        // descobre qual o EstoqueMes ficará vinculado ao movimento
         $mes = EstoqueMesRepository::buscaOuCria(
             $conferencia->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
             $conferencia->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
@@ -83,16 +86,24 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
             $conferencia->data
         );
 
+        // empilha na lista de meses para recalcular o estoquemes
         $codestoquemesRecalcular[] = $mes->codestoquemes;
 
-        if (!empty($mov->codestoquemes) && $mov->codestoquemes != $mes->codestoquemes)
+        // se o estoquemes calculado é diferente daquele que estava
+        // anteriormente vinculado ao movimento, empilha este também
+        if (!empty($mov->codestoquemes) && $mov->codestoquemes != $mes->codestoquemes) {
             $codestoquemesRecalcular[] = $mov->codestoquemes;
+        }
 
+        // preenche os dados do movimento
+        $mov->codestoquesaldoconferencia = $conferencia->codestoquesaldoconferencia;
         $mov->codestoquemes = $mes->codestoquemes;
         $mov->codestoquemovimentotipo = EstoqueMovimentoTipo::AJUSTE;
         $mov->manual = false;
         $mov->data = $conferencia->data;
 
+        // se quantidade > 0, joga como entrada
+        // senão joga na saída
         if ($quantidade >= 0) {
             $mov->entradaquantidade = $quantidade;
             $mov->saidaquantidade = null;
@@ -101,6 +112,8 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
             $mov->saidaquantidade = abs($quantidade);
         }
 
+        // se valor > 0, joga como entrada
+        // senão joga na saída
         if ($valor >= 0) {
             $mov->entradavalor = $valor;
             $mov->saidavalor = null;
@@ -109,34 +122,43 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
             $mov->saidavalor = abs($valor);
         }
 
-        $mov->codestoquesaldoconferencia = $conferencia->codestoquesaldoconferencia;
-
+        // salva o movimento de estoque
         $mov->save();
 
-        //armazena estoquemovimento gerado
+        // armazena estoquemovimento gerado
         $codestoquemovimentoGerado[] = $mov->codestoquemovimento;
 
-        //Apaga estoquemovimento excedente que existir anexado ao negocioprodutobarra
-        // $movExcedente =
-        //         EstoqueMovimento
-        //         ::whereNotIn('codestoquemovimento', $codestoquemovimentoGerado)
-        //         ->where('codestoquesaldoconferencia', $conferencia->codestoquesaldoconferencia)
-        //         ->get();
-        // foreach ($movExcedente as $mov)
-        // {
-        //     $codestoquemesRecalcular[] = $mov->codestoquemes;
-        //     foreach ($mov->EstoqueMovimentoS as $movDest)
-        //     {
-        //         $movDest->codestoquemovimentoorigem = null;
-        //         $movDest->save();
-        //     }
-        //     $mov->delete();
-        // }
+        // Uma conferência só deve ter um Movimento
+        // Caso exista mais de um movimento vinculado à conferência
+        // Percorre os movimentos excedentes e apaga
+        $movExcedente =
+             EstoqueMovimento
+             ::whereNotIn('codestoquemovimento', $codestoquemovimentoGerado)
+             ->where('codestoquesaldoconferencia', $conferencia->codestoquesaldoconferencia)
+             ->get();
 
-        //Coloca Recalculo Custo Medio na Fila
-        // foreach($codestoquemesRecalcular as $codestoquemes) {
-        //     $this->dispatch((new EstoqueCalculaCustoMedio($codestoquemes))->onQueue('urgent'));
-        // }
+        foreach ($movExcedente as $excluir) {
+
+            // Guarda o código do estoquemes vinculado para recalcular
+            $codestoquemesRecalcular[] = $excluir->codestoquemes;
+
+            // se por ventura existir movimento vinculado apaga o movimento
+            // antes para não ocorrer falha de Foreign Key
+            foreach ($excluir->EstoqueMovimentoS as $excluirDest) {
+                $excluirDest->codestoquemovimentoorigem = null;
+                $excluirDest->save();
+            }
+
+            // apaga registro
+            $excluir->delete();
+
+        }
+
+        // Recalcula custo Médio de todos Meses Afetados
+        foreach($codestoquemesRecalcular as $codestoquemes) {
+            EstoqueSaldoRepository::estoqueCalculaCustoMedio($codestoquemes);
+        }
+
         return $mov;
     }
 
@@ -213,6 +235,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         $conferencias = [];
         foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'DESC')->whereNull('inativo')->get() as $esc) {
             $conferencias[] = [
+                'codestoquesaldoconferencia' => $esc->codestoquesaldoconferencia,
                 'data' => $esc->data->toW3cString(),
                 'usuario' => $esc->UsuarioCriacao->usuario,
                 'quantidadesistema' => $esc->quantidadesistema,
@@ -261,12 +284,17 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
     {
         // 1 - excluir o registro de movimento que foi gerado a partir
         // da conferencia
-        $mov = EstoqueMovimento::findOrFail($model->codestoquesaldoconferencia);
-        $codestoquemes = $mov->codestoquemes;
-        $mov->delete();
+        $movs = EstoqueMovimento::where('codestoquesaldoconferencia', $model->codestoquesaldoconferencia)->get();
+        $codestoquemes = [];
+        foreach ($movs as $mov) {
+            $codestoquemes[] = $mov->codestoquemes;
+            $mov->delete();
+        }
 
         // 2 - Recalcular o Custo Medio
-        EstoqueSaldoRepository::estoqueCalculaCustoMedio($codestoquemes);
+        foreach ($codestoquemes as $cod) {
+            EstoqueSaldoRepository::estoqueCalculaCustoMedio($cod);
+        }
 
         // 3 - Marcar registro como inativo
         parent::inativar($model, $date);
