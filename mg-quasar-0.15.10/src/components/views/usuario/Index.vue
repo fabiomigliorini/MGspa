@@ -40,6 +40,7 @@
           </q-item>
         </template>
         <q-list-header>Ativos</q-list-header>
+
         <!-- Filtra Ativos -->
         <q-item tag="label">
           <q-item-side icon="thumb_up">
@@ -174,6 +175,7 @@
           </template>
         </q-infinite-scroll>
       </q-list>
+
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 

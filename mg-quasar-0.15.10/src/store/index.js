@@ -7,7 +7,7 @@ import perfil from './perfil'
 import filtroMarca from './filtro/marca'
 import filtroUsuario from './filtro/usuario'
 import filtroFilial from './filtro/filial'
-import estoqueConferencia from './estoque-conferencia'
+import estoqueSaldoConferencia from './estoque-saldo-conferencia'
 
 Vue.use(Vuex)
 
@@ -19,7 +19,7 @@ const store = new Vuex.Store({
     filtroMarca,
     filtroUsuario,
     filtroFilial,
-    estoqueConferencia
+    estoqueSaldoConferencia
   }
 })
 

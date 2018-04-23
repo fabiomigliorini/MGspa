@@ -69,7 +69,7 @@ import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompleteMarca from '../../utils/autocomplete/MgAutocompleteMarca'
 
 export default {
-  name: 'estoque-conferencia-index',
+  name: 'estoque-saldo-conferencia-index',
   components: {
     MgLayout,
     MgSelectEstoqueLocal,
@@ -94,7 +94,7 @@ export default {
   computed: {
     data: {
       get () {
-        return this.$store.state.estoqueConferencia.estoqueConferenciaState
+        return this.$store.state.estoqueSaldoConferencia.estoqueSaldoConferenciaState
       }
     }
   },
@@ -103,7 +103,7 @@ export default {
       let vm = this
       vm.dadosConferencia(vm.data.codestoquelocal, vm.data.codmarca)
 
-      vm.$router.push('/estoque-conferencia/conferencia')
+      vm.$router.push('/estoque-saldo-conferencia/conferencia')
     },
     dadosConferencia: function (codestoquelocal, codmarca) {
       let vm = this
@@ -117,7 +117,7 @@ export default {
         }
         vm.$axios.get('marca/' + codmarca, { params }).then(function (request) {
           vm.data.marca = request.data.marca
-          vm.$store.commit('estoqueConferencia/updateEstoqueConferencia', vm.data)
+          vm.$store.commit('estoqueSaldoConferencia/updateestoqueSaldoConferencia', vm.data)
         }).catch(function (error) {
           console.log(error.response)
         })

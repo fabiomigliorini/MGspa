@@ -34,7 +34,8 @@ export default [
   { path: '/estoque-estatistica/:codproduto', component: () => import('components/views/estoque-estatistica/Index') },
 
   // Estoque Conferência
-  { path: '/estoque-conferencia', component: () => import('components/views/estoque-conferencia/Index') },
-  { path: '/estoque-conferencia/conferencia', component: () => import('components/views/estoque-conferencia/Conferencia') },
-  { path: '/estoque-conferencia/create', component: () => import('components/views/estoque-conferencia/Create') }
+  { path: '/estoque-saldo-conferencia', component: () => import('components/views/estoque-saldo-conferencia/Index') },
+  { path: '/estoque-saldo-conferencia/conferencia', component: () => import('components/views/estoque-saldo-conferencia/Conferencia') },
+  { path: '/estoque-saldo-conferencia/create', component: () => import('components/views/estoque-saldo-conferencia/Create') },
+  { path: '/estoque-saldo-conferencia/historicoconferencia', component: () => import('components/views/estoque-saldo-conferencia/HistoricoConferencia') }
 ]

@@ -1,7 +1,7 @@
 <template>
   <mg-layout drawer>
 
-    <q-btn flat round slot="menuRight" @click="$router.push('/estoque-conferencia')">
+    <q-btn flat round slot="menuRight" @click="$router.push('/estoque-saldo-conferencia')">
       <q-icon name="arrow_back" />
     </q-btn>
 
@@ -64,7 +64,7 @@
                 <q-item>
                   <q-item-side :image="produto.imagem" v-if="produto.imagem" />
 
-                  <q-item-main>
+                  <q-item-main >
                     <q-item-tile>
                       {{ produto.produto }}
                       <q-chip tag square pointing="left" color="negative" v-if="produto.inativo">Inativo</q-chip>
@@ -111,8 +111,8 @@
                       Ultima conferência
                       </q-item-tile>
                       <q-item-tile>{{produto.ultimaconferencia = moment(data).format('DD/MM/YYYY')}}</q-item-tile>
-                      <q-btn round color="primary" icon="history" />
                   </q-item-side>
+                  <q-item-side><q-btn round color="primary" icon="history" @click="$router.push('/estoque-saldo-conferencia/HistoricoConferencia')"/></q-item-side>
 
                 </q-item>
                 <q-item-separator />
@@ -121,7 +121,7 @@
           </q-tab-pane>
         </q-tabs>
 
-        <router-link :to="{ path: '/estoque-conferencia/create' }">
+        <router-link :to="{ path: '/estoque-saldo-conferencia/create' }">
           <q-page-sticky corner="bottom-right" :offset="[32, 32]">
             <q-btn round color="primary">
               <q-icon name="add" />
@@ -140,7 +140,7 @@ import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompleteMarca from '../../utils/autocomplete/MgAutocompleteMarca'
 
 export default {
-  name: 'estoque-conferencia-index',
+  name: 'estoque-saldo-conferencia-index',
   components: {
     MgLayout,
     MgSelectEstoqueLocal,
@@ -183,11 +183,23 @@ export default {
     },
     header: {
       get () {
-        return this.$store.state.estoqueConferencia.estoqueConferenciaState
+        return this.$store.state.estoqueSaldoConferencia.estoqueSaldoConferenciaState
       }
     }
   },
   methods: {
+
+    loadData: function (codmarca) {
+      let vm = this
+      let params = {
+        codmarca: vm.codmarca
+      }
+      vm.$axios.get('estoque-saldo-conferencia/busca-listagem/' + codmarca, { params }).then(function (request) {
+        vm.data = request.data
+      }).catch(function (error) {
+        console.log(error.response)
+      })
+    },
 
     buscaListagem: function () {
       let vm = this
@@ -197,7 +209,7 @@ export default {
         fiscal: vm.header.fiscal,
         inativo: vm.filter.inativo
       }
-      vm.$axios.get('estoque-conferencia/busca-listagem', { params }).then(function (request) {
+      vm.$axios.get('estoque-saldo-conferencia/busca-listagem', { params }).then(function (request) {
         vm.data = request.data
         vm.carregado = true
       }).catch(function (error) {
@@ -208,6 +220,9 @@ export default {
   },
   mounted () {
     this.buscaListagem()
+  },
+  created () {
+    this.loadData(this.$route.params.codmarca)
   }
 }
 </script>

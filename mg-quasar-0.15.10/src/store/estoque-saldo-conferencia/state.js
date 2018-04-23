@@ -1,5 +1,5 @@
 export default {
-  estoqueConferenciaState: {
+  estoqueSaldoConferenciaState: {
     codmarca: null,
     marca: null,
     codestoquelocal: null,

@@ -10,7 +10,7 @@ use Mg\Estoque\EstoqueSaldoConferencia;
 
 use DB;
 
-class EstoqueConferenciaController extends MgController
+class EstoqueSaldoConferenciaController extends MgController
 {
     /**
      * Traz a Listagem dos Produtos com os detalhes das conferências

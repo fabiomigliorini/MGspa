@@ -23,7 +23,7 @@ export default {
     {
       icon: 'assignment',
       title: 'Conferência de estoque',
-      path: '/estoque-conferencia'
+      path: '/estoque-saldo-conferencia'
     },
     {
       icon: 'multiline_chart',

@@ -7,6 +7,10 @@ use Carbon\Carbon;
 class EstoqueSaldoConferenciaRepository extends MgRepository
 {
 
+    public static function BuscaHistoricoConferencia(){
+
+    }
+
     public static function criaConferencia(
                 int $codprodutovariacao,
                 int $codestoquelocal,
@@ -263,12 +267,14 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'estoqueminimo' => $elpv->estoquemaximo
             ],
             'localizacao' => [
+                'codestoquelocal' => $elpv->codestoquelocal,
+                'estoquelocal' => $elpv->EstoqueLocal->estoquelocal,
                 'corredor' => $elpv->corredor,
                 'prateleira' => $elpv->prateleira,
                 'coluna' => $elpv->coluna,
                 'bloco' => $elpv->bloco,
+                'vencimento' => $elpv->vencimento->toW3cString(),
             ],
-            'vencimento' => $elpv->vencimento,
             'saldoatual' => [
                 'quantidade' => $es->saldoquantidade,
                 'custo' => $es->customedio
