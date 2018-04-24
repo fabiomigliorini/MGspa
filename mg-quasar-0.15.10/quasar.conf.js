@@ -108,7 +108,8 @@ module.exports = function (ctx) {
         'QItemMain',
         'QItemSeparator',
         'QItemSide',
-        'QItemTile'
+        'QItemTile',
+        'QDatetimePicker'
       ],
       directives: [
         'Ripple'

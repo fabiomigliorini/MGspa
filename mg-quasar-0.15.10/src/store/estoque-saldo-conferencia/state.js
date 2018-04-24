@@ -5,6 +5,6 @@ export default {
     codestoquelocal: null,
     estoquelocal: null,
     fiscal: 0,
-    data: null
+    data: Date.now()
   }
 }

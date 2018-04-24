@@ -8,7 +8,7 @@
     <q-btn flat round icon="done" slot="menuRight" @click.prevent="create()" />
 
     <template slot="title">
-      Nova conferência
+      Conferência/Marca
     </template>
 
     <div slot="content">

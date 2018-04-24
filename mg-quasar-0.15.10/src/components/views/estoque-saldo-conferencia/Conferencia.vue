@@ -189,12 +189,14 @@ export default {
   },
   methods: {
 
-    loadData: function (codmarca) {
+    loadData: function (codmarca, codestoquelocal, fiscal) {
       let vm = this
       let params = {
-        codmarca: vm.codmarca
+        codestoquelocal: vm.codestoquelocal,
+        codmarca: vm.codmarca,
+        fiscal: vm.fiscal
       }
-      vm.$axios.get('estoque-saldo-conferencia/busca-listagem/' + codmarca, { params }).then(function (request) {
+      vm.$axios.get('estoque-saldo-conferencia/busca-listagem/', { params }).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)

@@ -202,13 +202,6 @@ export default {
     MgErrosValidacao,
     MgAutocompleteMarca
   },
-  computed: {
-    data: {
-      get () {
-        return this.$store.state.estoqueSaldoConferencia.estoqueSaldoConferenciaState
-      }
-    }
-  },
   methods: {
     iniciar: function () {
       let vm = this

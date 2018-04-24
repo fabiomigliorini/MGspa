@@ -20,11 +20,24 @@ class EstoqueSaldoConferenciaController extends MgController
      */
     public function buscaListagem(Request $request)
     {
+
+        $request->validate([
+            'codmarca' => 'required|integer',
+            'codestoquelocal' => 'required|integer',
+            'fiscal' => 'required|boolean',
+            'inativo' => 'required|integer',
+        ]);
+
+        $codmarca =intval($request->codmarca);
+        $codestoquelocal =intval($request->codestoquelocal);
+        $fiscal = boolval($request->fiscal);
+        $inativo = intval($request->inativo);
+
         $res = EstoqueSaldoConferenciaRepository::buscaListagem(
-            $request->codmarca,
-            $request->codestoquelocal,
-            $request->fiscal,
-            $request->inativo
+            $codmarca,
+            $codestoquelocal,
+            $fiscal,
+            $inativo
         );
 
         return response()->json($res, 206);

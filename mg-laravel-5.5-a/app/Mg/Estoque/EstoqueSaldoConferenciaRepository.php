@@ -7,10 +7,6 @@ use Carbon\Carbon;
 class EstoqueSaldoConferenciaRepository extends MgRepository
 {
 
-    public static function BuscaHistoricoConferencia(){
-
-    }
-
     public static function criaConferencia(
                 int $codprodutovariacao,
                 int $codestoquelocal,
@@ -166,8 +162,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         return $mov;
     }
 
-    public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal, $inativo) {
-
+    public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal, int $inativo) {
         $marca = \Mg\Marca\Marca::findOrFail($codmarca);
         $estoquelocal = EstoqueLocal::findOrFail($codestoquelocal);
 
@@ -248,6 +243,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'customedioinformado' => $esc->customedioinformado,
                 'observacoes' => $esc->observacoes,
                 'criacao' => $esc->criacao->toW3cString()
+                //'vencimento' => $esc->vencimento->toW3toW3cString()
             ];
         }
         $res = [
@@ -273,7 +269,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'prateleira' => $elpv->prateleira,
                 'coluna' => $elpv->coluna,
                 'bloco' => $elpv->bloco,
-                'vencimento' => $elpv->vencimento->toW3cString(),
+                //'vencimento' => $elpv->vencimento->toW3cString(),
             ],
             'saldoatual' => [
                 'quantidade' => $es->saldoquantidade,
