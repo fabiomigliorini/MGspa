@@ -98,11 +98,11 @@ export default {
       tipos: [
           {
             label: 'Fisico',
-            value: 0
+            value: 1
           },
           {
             label: 'Fiscal',
-            value: 1
+            value: 0
           }
       ],
       erros: {
@@ -156,7 +156,6 @@ export default {
       if (this.validaCampos() == false) {
         return
       }
-      console.log ('passou')
 
       let params = [
         this.data.codestoquelocal,
@@ -165,7 +164,7 @@ export default {
         this.data.data
       ]
 
-      this.$router.push('/estoque-saldo-conferencia/conferencia/'
+      this.$router.push('/estoque-saldo-conferencia/listagem/'
         + this.data.codestoquelocal + '/'
         + this.data.codmarca + '/'
         + this.data.fiscal + '/'

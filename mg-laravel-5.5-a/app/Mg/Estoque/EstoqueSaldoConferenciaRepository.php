@@ -183,7 +183,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 foreach ($variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->get() as $elpv) {
                     foreach ($elpv->EstoqueSaldoS()->orderBy('ultimaconferencia', 'ASC')->where('fiscal', $fiscal)->get() as $es) {
                         $saldo += (float)$es->saldoquantidade;
-                        $ultimaconferencia = $es->ultimaconferencia;
+                        $ultimaconferencia = (!empty($es->ultimaconferencia))?$es->ultimaconferencia->toW3cString():null;
                     }
                 }
 
