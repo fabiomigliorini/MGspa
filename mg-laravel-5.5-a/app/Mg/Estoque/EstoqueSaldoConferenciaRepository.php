@@ -229,22 +229,25 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
     {
 
         $pv  = \Mg\Produto\ProdutoVariacao::findOrFail($codprodutovariacao);
-        $elpv = $pv->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->first();
-        $es = $elpv->EstoqueSaldoS()->where('fiscal', $fiscal)->first();
         $conferencias = [];
-        foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'DESC')->whereNull('inativo')->get() as $esc) {
-            $conferencias[] = [
-                'codestoquesaldoconferencia' => $esc->codestoquesaldoconferencia,
-                'data' => $esc->data->toW3cString(),
-                'usuario' => $esc->UsuarioCriacao->usuario,
-                'quantidadesistema' => $esc->quantidadesistema,
-                'quantidadeinformada' => $esc->quantidadeinformada,
-                'customediosistema' => $esc->customediosistema,
-                'customedioinformado' => $esc->customedioinformado,
-                'observacoes' => $esc->observacoes,
-                'criacao' => $esc->criacao->toW3cString()
-                //'vencimento' => $esc->vencimento->toW3toW3cString()
-            ];
+
+        if ($elpv = $pv->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->first()) {
+            if ($es = $elpv->EstoqueSaldoS()->where('fiscal', $fiscal)->first()) {
+                foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'DESC')->whereNull('inativo')->get() as $esc) {
+                    $conferencias[] = [
+                        'codestoquesaldoconferencia' => $esc->codestoquesaldoconferencia,
+                        'data' => $esc->data->toW3cString(),
+                        'usuario' => $esc->UsuarioCriacao->usuario,
+                        'quantidadesistema' => $esc->quantidadesistema,
+                        'quantidadeinformada' => $esc->quantidadeinformada,
+                        'customediosistema' => $esc->customediosistema,
+                        'customedioinformado' => $esc->customedioinformado,
+                        'observacoes' => $esc->observacoes,
+                        'criacao' => $esc->criacao->toW3cString()
+                        //'vencimento' => $esc->vencimento->toW3toW3cString()
+                    ];
+                }
+            }
         }
         $res = [
             'produto' => [
@@ -259,21 +262,21 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'referencia' => $pv->referencia,
                 'descontinuado' => $pv->descontinuado,
                 'inativo' => $pv->inativo,
-                'estoquemaximo' => $elpv->estoquemaximo,
-                'estoqueminimo' => $elpv->estoquemaximo
+                'estoquemaximo' => $elpv->estoquemaximo??null,
+                'estoqueminimo' => $elpv->estoquemaximo??null
             ],
             'localizacao' => [
-                'codestoquelocal' => $elpv->codestoquelocal,
-                'estoquelocal' => $elpv->EstoqueLocal->estoquelocal,
-                'corredor' => $elpv->corredor,
-                'prateleira' => $elpv->prateleira,
-                'coluna' => $elpv->coluna,
-                'bloco' => $elpv->bloco,
+                'codestoquelocal' => $elpv->codestoquelocal??null,
+                'estoquelocal' => $elpv->EstoqueLocal->estoquelocal??null,
+                'corredor' => $elpv->corredor??null,
+                'prateleira' => $elpv->prateleira??null,
+                'coluna' => $elpv->coluna??null,
+                'bloco' => $elpv->bloco??null,
                 //'vencimento' => $elpv->vencimento->toW3cString(),
             ],
             'saldoatual' => [
-                'quantidade' => $es->saldoquantidade,
-                'custo' => $es->customedio
+                'quantidade' => $es->saldoquantidade??null,
+                'custo' => $es->customedio??null
             ],
             'conferencias' => $conferencias,
 

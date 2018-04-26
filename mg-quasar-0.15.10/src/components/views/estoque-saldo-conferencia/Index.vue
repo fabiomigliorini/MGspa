@@ -98,11 +98,11 @@ export default {
       tipos: [
           {
             label: 'Fisico',
-            value: 1
+            value: 0
           },
           {
             label: 'Fiscal',
-            value: 0
+            value: 1
           }
       ],
       erros: {

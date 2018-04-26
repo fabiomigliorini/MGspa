@@ -5,78 +5,71 @@
       <q-icon name="arrow_back" />
     </q-btn>
 
-
-      <template slot="title">
-        {{data.produto.codproduto}} / {{data.produto.produto}}
-      </template>
       <div slot="content">
         <div class="layout-padding">
 
-          <template v-for="produto in historico">
-          <q-card>
-            <q-card-title>
-              {{produto.codproduto}}
-              produto.produto
-              <!--
-              se for inativo colocar uma classe de erro
-              -->
-              variacao.inativo
-              produto.inativo
-              <!--
-              se for descontinuado uma classe de warning
-              -->
-              variacao.descontinuado
-              <span slot="subtitle">
-                variacao.variacao
-                <!-- se a referencia da variacao for em branco mostrar a referencia do produto
-                -->
-                variacao.referencia
-                produto.referencia
-                localizacao.estoquelocal
-              </span>
-            </q-card-title>
+            <q-card>
+              <template v-if="BuscaHistorico">
+              <q-card-title>
+                #{{result.produto.codproduto}}<br/>
+                {{result.produto.produto}}
+                <!-- se for inativo colocar uma classe de erro -->
+                <!-- se for descontinuado uma classe de warning -->
+                <q-chip tag square pointing="left" color="negative" v-if="result.produto.inativo">Inativo</q-chip>
+                <q-chip tag square pointing="left" color="negative" v-if="result.variacao.inativo">Inativo</q-chip>
+                <q-chip tag square pointing="left" color="warning" v-if="result.variacao.descontinuado">Descontinuado</q-chip>
 
-            <q-card-main>
-              Estoque: saldoatual.quantidade - R$ saldoatual.custo <br />
-              Mínimo: localizacao.estoqueminimo <br />
-              Mínimo: localizacao.estoquemaximo <br />
-              Vencimento: localizacao.vencimento <br />
-              localizacao.corredor": 2, <br />
-              localizacao.prateleira": 2, <br />
-              localizacao.coluna": 2, <br />
-              localizacao.bloco": 2, <br />
+                <span slot="subtitle">
+                  {{result.variacao.variacao}}
+                  <!-- se a referencia da variacao for em branco mostrar a referencia do produto  -->
+                  #{{ result.variacao.referencia}}
+                  <template v-if="result.variacao.referencia == null">{{result.produto.referencia}}</template>
+                  Local: {{result.localizacao.estoquelocal}}
+                </span>
+              </q-card-title>
 
-            </q-card-main>
+              <q-card-main>
+                Saldo: {{result.saldoatual.quantidade}} <br />
+                Custo: R$ {{result.saldoatual.custo}} <br />
+                Mínimo: {{result.localizacao.estoqueminimo}} <br />
+                Máximo: {{result.localizacao.estoquemaximo}} <br />
+                Vencimento: {{result.localizacao.vencimento}} <br />
+                Corredor: {{result.localizacao.corredor}} <br />
+                Prateleira: {{result.localizacao.prateleira}} <br />
+                Coluna: {{result.localizacao.coluna}}<br />
+                Bloco: {{result.localizacao.bloco}}<br />
+              </q-card-main>
+            </template>
 
-            <q-card-separator />
-            <!-- LOOP NAS CONFERENCIAS -->
-            <q-list>
-              <!-- UM Q-ITEM para cada conferencia -->
-              <q-item>
-                <q-item-side avatar="statics/boy-avatar.png" />
-                <q-item-main>
-                  <q-item-tile label>
-                    conferencia.criacao
-                    conferencia.quantidadeinformada
-                    conferencia.quantidadesistema
-                    conferencia.customedioinformado
-                    conferencia.custosistema
-                  </q-item-tile>
-                  <q-item-tile sublabel>
-                    conferencia.usuario
-                    conferencia.observacoes
-                    conferencia.data
-                  </q-item-tile>
-                </q-item-main>
-                <q-item-side right>
-                  <q-btn flat round color="negative" icon="thumb_down">
-                  </q-btn>
-                </q-item-side>
-              </q-item>
+              <q-card-separator />
+              <!-- LOOP NAS CONFERENCIAS -->
+                <template v-for="conferido in buscaConferencias">
+                  <q-list>
+                    <!-- UM Q-ITEM para cada conferencia -->
+                    <q-item>
+                      <q-item-side avatar="statics/boy-avatar.png" />
+                      <q-item-main>
+                        <q-item-tile label>
+                          Criado em: {{conferido.criacao}} <br />
+                          Quantidade informada: {{conferido.quantidadeinformada}} <br />
+                          Quantidade sistema: {{conferido.quantidadesistema}} <br />
+                          conferencia.customedioinformado <br />
+                          conferencia.custosistema <br />
+                        </q-item-tile>
+                        <q-item-tile sublabel>
+                          conferencia.usuario
+                          conferencia.observacoes
+                          conferencia.data
+                        </q-item-tile>
+                      </q-item-main>
+                    <q-item-side right>
+                      <q-btn flat round color="negative" icon="thumb_down"></q-btn>
+                    </q-item-side>
+                  </q-item>
+              </q-list>
+            </template>
 
-            </q-list>
           </q-card>
-        </template>
 
       </div>
     </div>
@@ -97,16 +90,15 @@ export default {
     MgErrosValidacao,
     MgAutocompleteMarca
   },
+  data: {
+    result: [],
+  },
   data () {
     return {
-      data: {},
       filter: {
+        codprodutovariacao: null,
         codestoquelocal: null,
-        codmarca: null,
         fiscal: 1,
-        data: null,
-        inativo: 1,
-        dataCorte: null
       },
       carregado: false
     }
@@ -120,10 +112,16 @@ export default {
     }
   },
   computed: {
-    historico: function() {
+    BuscaHistorico: function() {
       let vm = this
       if (vm.carregado) {
-        return vm.data.produtos
+        return vm.result
+      }
+    },
+    buscaConferencias: function() {
+      let vm = this
+      if (vm.carregado) {
+        return vm.result.conferencias
       }
     },
     header: {
@@ -142,8 +140,10 @@ export default {
         fiscal: 1
       }
       vm.$axios.get('estoque-saldo-conferencia/busca-produto', { params }).then(function (request) {
-        vm.data = request.data
+        vm.result = request.data
         vm.carregado = true
+        console.log(vm.result)
+        console.log('aqui o get')
       }).catch(function (error) {
         console.log(error.response)
       })
@@ -157,7 +157,8 @@ export default {
     this.filter.codprodutovariacao = this.$route.params.codprodutovariacao
     this.filter.codestoquelocal = this.$route.params.codestoquelocal
     this.filter.fiscal = this.$route.params.fiscal
-    console.log(this.filter.data)
+    console.log('Fiscal:')
+    console.log(this.filter.fiscal)
   }
 }
 </script>
