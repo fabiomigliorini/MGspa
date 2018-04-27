@@ -162,22 +162,58 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         return $mov;
     }
 
-    public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal, int $inativo) {
+    public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal, int $inativo)
+    {
+
         $marca = \Mg\Marca\Marca::findOrFail($codmarca);
         $estoquelocal = EstoqueLocal::findOrFail($codestoquelocal);
 
         $produtos = [];
-        foreach ($marca->ProdutoS()->get() as $produto) {
 
-            if ($inativo == 1) {
-                $produtosVariacao = $produto->ProdutoVariacaoS()->whereNull('inativo')->get();
-            } elseif ($inativo == 2) {
-                $produtosVariacao = $produto->ProdutoVariacaoS()->whereNotNull('inativo')->get();
-            } else {
-                $produtosVariacao = $produto->ProdutoVariacaoS()->get();
+        $qProduto = $marca->ProdutoS();
+        // Filtra produtos inativos
+        switch ($inativo) {
+            // Inativos
+            case 1:
+                $qProduto = $qProduto->whereNotNull('inativo');
+                break;
+
+            // Todos
+            case 9:
+                break;
+
+            // Ativos
+            default:
+                $qProduto = $qProduto->whereNull('inativo');
+                break;
+        }
+        $prods = $qProduto->get();
+
+        foreach ($prods as $produto) {
+
+            $qVariacoes = $produto->ProdutoVariacaoS();
+            // Filtra variacoes inativas
+            switch ($inativo) {
+                // Inativos
+                case 1:
+                    if (empty($produto->inativo)) {
+                        $qVariacoes = $qVariacoes->whereNotNull('inativo');
+                    }
+                    break;
+
+                // Todos
+                case 9:
+                    break;
+
+                // Ativos
+                default:
+                    $qVariacoes = $qVariacoes->whereNull('inativo');
+                    break;
             }
+            $produtoVariacoes = $qVariacoes->get();
 
-            foreach ($produtosVariacao as $variacao) {
+            foreach ($produtoVariacoes as $variacao) {
+
                 $saldo = 0;
                 $ultimaconferencia = null;
                 foreach ($variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->get() as $elpv) {
@@ -196,6 +232,11 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                     $imagem = $pi->Imagem->url;
                 }
 
+                $i = $produto->inativo??$variacao->inativo;
+                if (!empty($i)) {
+                    $i = $i->toW3CString();
+                }
+
                 $produtos[] = [
                     'imagem' => $imagem,
                     'codproduto' => $variacao->codproduto,
@@ -203,7 +244,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                     'produto' => $variacao->Produto->produto,
                     'variacao' => $variacao->variacao,
                     'saldo' => $saldo,
-                    'inativo' => $variacao->inativo,
+                    'inativo' => $i,
                     'descontinuado' => $variacao->descontinuado,
                     'ultimaconferencia' => $ultimaconferencia
                 ];
