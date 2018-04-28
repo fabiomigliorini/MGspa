@@ -2,6 +2,9 @@
 
 namespace Mg\Produto;
 
+use Mg\MgModel;
+use Mg\Marca\Marca;
+
 /**
  * Campos
  * @property  bigint                         $codproduto                         NOT NULL DEFAULT nextval('tblproduto_codproduto_seq'::regclass)
@@ -58,9 +61,6 @@ namespace Mg\Produto;
  * Relacionamentos N x N
  * @property  Imagem[]                       $ImagemS
  */
-use Mg\MgModel;
-use Mg\Marca\Marca;
-
 class Produto extends MgModel
 {
     protected $table = 'tblproduto';

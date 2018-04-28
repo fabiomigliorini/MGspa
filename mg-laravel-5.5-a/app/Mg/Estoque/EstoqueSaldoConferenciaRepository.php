@@ -290,12 +290,32 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 }
             }
         }
+
+        $barras = [];
+        foreach ($pv->ProdutoBarraS as $pb) {
+            if (!empty($pb->codprodutoembalagem)) {
+                $siglaunidademedida = $pb->ProdutoEmbalagem->UnidadeMedida->sigla;
+                $quantidade = $pb->ProdutoEmbalagem->quantidade;
+            } else {
+                $siglaunidademedida = $pv->Produto->UnidadeMedida->sigla;
+                $quantidade = 1;
+            }
+            $barras[] = [
+                'barras' => $pb->barras,
+                'siglaunidademedida' => $siglaunidademedida,
+                'quantidade' => $quantidade,
+            ];
+        }
+
         $res = [
             'produto' => [
                 'codproduto' => $pv->Produto->codproduto,
                 'produto' => $pv->Produto->produto,
                 'referencia' => $pv->Produto->referencia,
                 'inativo' => $pv->Produto->inativo,
+                'preco' => $pv->Produto->preco,
+                'siglaunidademedida' => $pv->Produto->UnidadeMedida->sigla,
+                'unidademedida' => $pv->Produto->UnidadeMedida->unidademedida,
             ],
             'variacao' => [
                 'codprodutovariacao' => $pv->codprodutovariacao,
@@ -303,9 +323,10 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'referencia' => $pv->referencia,
                 'descontinuado' => $pv->descontinuado,
                 'inativo' => $pv->inativo,
-                'estoquemaximo' => $elpv->estoquemaximo??null,
-                'estoqueminimo' => $elpv->estoquemaximo??null
+                'estoqueminimo' => $elpv->estoqueminimo??null,
+                'estoquemaximo' => $elpv->estoquemaximo??null
             ],
+            'barras' => $barras,
             'localizacao' => [
                 'codestoquelocal' => $elpv->codestoquelocal??null,
                 'estoquelocal' => $elpv->EstoqueLocal->estoquelocal??null,
@@ -313,7 +334,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'prateleira' => $elpv->prateleira??null,
                 'coluna' => $elpv->coluna??null,
                 'bloco' => $elpv->bloco??null,
-                //'vencimento' => $elpv->vencimento->toW3cString(),
+                'vencimento' => (!empty($elpv->vencimento))?$elpv->vencimento->toW3cString():null,
             ],
             'saldoatual' => [
                 'quantidade' => $es->saldoquantidade??null,
