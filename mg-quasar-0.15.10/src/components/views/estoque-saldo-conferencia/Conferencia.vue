@@ -1,7 +1,7 @@
 <template>
   <mg-layout>
 
-    <q-btn flat round slot="menu" @click="$router.push('/estoque-saldo-conferencia/conferencia')">
+    <q-btn flat round slot="menu" @click="$router.push('/estoque-saldo-conferencia/listagem')">
       <q-icon name="arrow_back" />
     </q-btn>
 
@@ -17,11 +17,7 @@
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-field>
-                <q-input
-                  type="text"
-                  v-model="codigoproduto"
-                  float-label="Código"
-                />
+                <q-input autofocus  type="text" v-model="codigoproduto" float-label="Código"   />
               </q-field>
             </div>
           </div>

@@ -45,7 +45,7 @@
     <!-- Filtra por data de corte -->
     <q-list-header>Data de Corte Conferência</q-list-header>
     <q-item tag="label">
-      <q-item-main v-if="">
+      <q-item-main>
         <q-datetime v-model="filter.dataCorte" type="date" format="DD/MMM/YYYY" />
       </q-item-main>
     </q-item>
@@ -140,17 +140,15 @@
               ・Referência
               <br />
             </span>
-
             <q-chip square color="negative" v-if="produto.produto.inativo">
-              Produto Inativo há tantos dias
+              Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
             </q-chip>
             <q-chip square color="negative" v-if="produto.variacao.inativo">
-              Variação Inativa há tantos tempo
+              Variação Inativa {{ moment(produto.variacao.inativo).fromNow() }}
             </q-chip>
             <q-chip square color="negative" v-if="produto.variacao.descontinuado">
-              descontinuado há tantos tempo
+              Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
             </q-chip>
-
           </p>
         </q-card-main>
         <q-card-separator />
@@ -181,7 +179,7 @@
             <q-item-main>
               <q-item-tile label>
                 R$
-                <b>{{ numeral(parseFloat(produto.saldoatual.custo)).format('0,0.000000') }}</b>
+                <b>{{ numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00') }}</b>
               </q-item-tile>
               <q-item-tile sublabel>Custo de cada {{ produto.produto.unidademedida }}.</q-item-tile>
             </q-item-main>
@@ -204,7 +202,7 @@
           </q-item>
           <q-item>
             <q-item-side>
-              <q-item-tile color="amber" icon="fingerprint" />
+              <q-item-tile color="black" icon="view column" />
             </q-item-side>
             <q-item-main>
               <q-item-tile label>
@@ -224,181 +222,165 @@
         </q-list>
         <q-scroll-area style="height: 400px;">
           <q-timeline color="secondary" style="padding: 0 24px;">
-            <q-timeline-entry heading>Conferências Efetuadas</q-timeline-entry>
+            <q-timeline-entry heading >Conferências Efetuadas</q-timeline-entry>
 
-            <q-timeline-entry title="Event Title" subtitle="February 22, 1986" side="right">
+            <q-timeline-entry v-for="conferencia in produto.conferencias"
+              :title="conferencia.usuario"
+              :subtitle="moment(conferencia.criacao).fromNow()+', COD: '+ conferencia.codestoquesaldoconferencia"
+              side="right" icon="delete">
               <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </div>
-            </q-timeline-entry>
-
-            <q-timeline-entry title="Event Title" subtitle="February 21, 1986" side="right" icon="delete">
-              <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </div>
-            </q-timeline-entry>
-
-            <q-timeline-entry heading>November, 2017</q-timeline-entry>
-
-            <q-timeline-entry title="Event Title" subtitle="February 22, 1986" side="right">
-              <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </div>
-            </q-timeline-entry>
-
-            <q-timeline-entry title="Event Title" subtitle="February 22, 1986" side="right">
-              <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </div>
-            </q-timeline-entry>
-
-            <q-timeline-entry title="Event Title" subtitle="February 22, 1986" side="left" color="orange" icon="done_all">
-              <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </div>
-            </q-timeline-entry>
-
-            <q-timeline-entry title="Event Title" subtitle="February 22, 1986" side="right">
-              <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </div>
-            </q-timeline-entry>
-
-            <q-timeline-entry title="Event Title" subtitle="February 22, 1986" side="left">
-              <div>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                <p>Quantidade informada
+                  <q-item-tile sublabel>
+                    {{ numeral(parseFloat(conferencia.quantidadeinformada)).format('0,0') }}
+                  </q-item-tile>
+                </p>
+                <p>Quantidade do sistema
+                  <q-item-tile sublabel>
+                    {{ numeral(parseFloat(conferencia.quantidadesistema)).format('0,0') }}
+                  </q-item-tile>
+                </p>
+                <p>Custo médio informado
+                  <q-item-tile sublabel>
+                    {{numeral(parseFloat(conferencia.customedioinformado)).format('0,0.00')}}
+                  </q-item-tile>
+                </p>
+                <p>Custo médio do sistema
+                  <q-item-tile sublabel>
+                    {{numeral(parseFloat(conferencia.customediosistema)).format('0,0.00')}}
+                  </q-item-tile>
+                </p>
+                <p v-if="conferencia.observacoes">Observações
+                  <q-item-tile sublabel>
+                    {{conferencia.observacoes}}
+                  </q-item-tile>
+                </p>
               </div>
             </q-timeline-entry>
           </q-timeline>
         </q-scroll-area>
-        <q-card-actions>
-          <q-btn flat color="primary" label="Fazer Nova Conferência"/>
-          <q-btn flat @click="modalProduto = false" label="Fechar"/>
-        </q-card-actions>
+
       </q-card>
-
-
-
-      <q-card-title class="relative-position">
-        <q-chip style="top: 0; transform: translateY(-100%);" square color="negative" v-if="produto.produto.inativo">Inativo</q-chip>
-        <q-chip style="top: 0; transform: translateY(-100%);" square color="negative" v-if="produto.variacao.inativo">Variação Inativa</q-chip>
-        <q-chip style="top: 0; transform: translateY(-100%);" color="warning" v-if="produto.variacao.descontinuado">Variação descontinuada</q-chip>
-
-        <div class="ellipsis">
-          <q-chip dense detail square icon="vpn_key">
-            {{ numeral(produto.produto.codproduto).format('000000') }}
-          </q-chip>
-          {{produto.produto.produto}} <template v-if="produto.variacao.variacao">- {{produto.variacao.variacao}}</template>
-        </div>
-
-        <q-chip detail square icon="vpn_key" v-if="produto.variacao.referencia">
-          var.ref - {{ numeral(produto.variacao.referencia).format('000000') }}
-        </q-chip>
-
-      </q-card-title>
-      <q-card-separator />
-      <q-card-actions>
-
-        <q-chip dense detail square icon="vpn_key" v-if="produto.variacao.referencia == null">
-          {{ numeral(produto.produto.referencia).format('000000') }}
-        </q-chip>
-
-
-      </q-card-actions>
-      <q-card-actions>
-
-        <q-chip dense detail square icon="store">
-          {{produto.localizacao.estoquelocal}}
-        </q-chip>
-
-        <q-chip dense detail square icon="monetization_on">
-          {{ numeral(parseFloat(produto.saldoatual.custo)).format('0,0.000000') }}
-        </q-chip>
-        <q-chip dense detail square style="" icon="widgets" :color="(produto.saldoatual.quantidade>0)?'green':(produto.saldoatual.quantidade<0)?'red':'grey'">
-          {{ numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0') }}
-        </q-chip>
-
-        <q-chip dense detail square icon="arrow_downward">
-          {{produto.localizacao.estoqueminimo}}10
-        </q-chip>
-
-        <q-chip dense detail square icon="arrow_upward">
-          {{produto.localizacao.estoquemaximo}}20
-        </q-chip>
-
-      </q-card-actions>
-      <q-card-actions vertical>
-
-        <q-chip dense detail square>
-          Vencimento: {{produto.localizacao.vencimento}}
-        </q-chip>
-
-        <q-chip dense detail square>
-          Corredor: {{produto.localizacao.corredor}}
-        </q-chip>
-
-        <q-chip dense detail square>
-          Prateleira: {{produto.localizacao.prateleira}}
-        </q-chip>
-
-        <q-chip dense detail square>
-          Coluna: {{produto.localizacao.coluna}}
-        </q-chip>
-
-        <q-chip dense detail square>
-          Bloco: {{produto.localizacao.bloco}}
-        </q-chip>
-
-      </q-card-actions>
-      <q-card-separator />
-
-      <q-card-main>
-        <q-scroll-area style="height: 50vh;">
-          <template v-for="conferencia in produto.conferencias">
-              <q-list style="padding-top:20px">
-                <q-item>
-                  <q-btn class="absolute" style="top: 0; right: 0px; transform: translateY(-70%);" flat round color="negative" icon="thumb_down"></q-btn>
-
-                  <q-item-main>
-
-                    <q-item-tile label>
-                      <q-chip small detail square  icon="date_range">
-                        {{ moment(conferencia.criacao).fromNow() }}
-                      </q-chip><br />
-                      Informado: {{conferencia.quantidadeinformada}} <br />
-                      Sistema: {{conferencia.quantidadesistema}} <br />
-                      Custo medio:{{conferencia.customedioinformado}} <br />
-                      Custo do sistema: {{conferencia.custosistema}} <br />
-                    </q-item-tile>
-
-                    <q-item-tile sublabel>
-
-                      <q-chip small detail square  icon="account_box">
-                        {{conferencia.usuario}}
-                      </q-chip>
-
-                      <q-chip small detail square  icon="date_range">
-                        {{ moment(conferencia.data).fromNow() }}
-                      </q-chip><br />
-
-                      Obs: {{conferencia.observacoes}}<br/>
-                    </q-item-tile>
-                  </q-item-main>
-
-                </q-item>
-              </q-list>
-            </template>
-        </q-scroll-area>
-      </q-card-main>
-
+      <footer class="fixed-bottom" style="background-color: white">
+        <q-btn @click.native="editaConferencia()" flat color="primary" label="Fazer Nova Conferência"/>
+        <q-btn flat @click="modalProduto = false" label="Fechar"/>
+      </footer>
     </q-modal>
+
+    <!-- Modal de conferência do produto -->
+
+    <template>
+      <q-modal v-model="modalConferencia" v-if="produtoCarregado">
+
+        <q-list>
+          <form @submit.prevent="salvaConferencia()">
+            <p class="caption">{{produto.produto.produto}}<template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template></p>
+
+            <q-item dense>
+              <q-item-side align="center">
+                <q-item-tile sublabel>
+                  Quantidade atual
+                </q-item-tile>
+                {{numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')}}
+              </q-item-side>
+              <q-item-main>
+                <q-input type="number" float-label="Inserir nova quantidade"/>
+              </q-item-main>
+            </q-item>
+            <q-item-separator />
+
+            <q-item dense>
+              <q-item-side align="center">
+                <q-item-tile sublabel>
+                  Custo atual
+                </q-item-tile>
+                {{numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')}}
+              </q-item-side>
+              <q-item-main>
+                <q-input type="number" float-label="inserir novo custo" prefix="$"/>
+              </q-item-main>
+            </q-item>
+            <q-item-separator />
+
+            <q-item dense>
+              <q-item-main>
+                <q-datetime v-model="filter.data" type="date" format="DD/MMM/YYYY HH:MM:ss" float-label="Data da conferência" />
+              </q-item-main>
+            </q-item>
+            <q-item-separator />
+
+            <q-item dense>
+              <q-item-main>
+                <q-input type="text"  float-label="Observações" />
+              </q-item-main>
+            </q-item>
+            <q-item-separator />
+
+            <q-item dense>
+              <q-item-main>
+                <q-datetime v-model="model" type="datetime" float-label="Vencimento" />
+              </q-item-main>
+            </q-item>
+            <q-item-separator />
+
+            <q-item dense>
+              <q-item-side align="center">
+                <q-item-tile sublabel>
+                  Corredor atual
+                </q-item-tile>
+                {{produto.localizacao.corredor}}
+              </q-item-side>
+              <q-item-main>
+                <q-input type="number" float-label="Novo corredor" />
+              </q-item-main>
+            </q-item>
+
+            <q-item dense>
+              <q-item-side align="center">
+                <q-item-tile sublabel>
+                  Prateleira atual
+                </q-item-tile>
+                {{produto.localizacao.corredor}}
+              </q-item-side>
+              <q-item-main>
+                <q-input type="number" float-label="Nova prateleira" />
+              </q-item-main>
+            </q-item>
+
+            <q-item dense>
+              <q-item-side align="center">
+                <q-item-tile sublabel>
+                  Coluna atual
+                </q-item-tile>
+                {{produto.localizacao.corredor}}
+              </q-item-side>
+              <q-item-main>
+                <q-input type="number" float-label="Nova Coluna" />
+              </q-item-main>
+            </q-item>
+
+            <q-item dense>
+              <q-item-side align="center">
+                <q-item-tile sublabel>
+                  Bloco atual
+                </q-item-tile>
+                {{produto.localizacao.corredor}}
+              </q-item-side>
+              <q-item-main>
+                <q-input type="number" float-label="Novo Bloco" />
+              </q-item-main>
+            </q-item ><br />
+
+        </form>
+      </q-list >
+
+        <footer class="fixed-bottom" style="background-color: white" >
+          <q-btn @click.prevent="salvaConferencia(), modalProduto = false" flat color="primary" label="Salvar Conferencia"/>
+          <q-btn flat @click="modalConferencia = false" label="Fechar"/>
+        </footer>
+      </q-modal>
+    </template>
+
+
   </div>
 </mg-layout>
 </template>
@@ -429,12 +411,14 @@ export default {
         dataCorte: null
       },
       carregado: false,
-
+      codigoproduto: null,
+      erros: false,
       tabAberta: 'tabAConferir',
-
       produto: {},
+      conferencia: {},
       produtoImagem: null,
       modalProduto: false,
+      modalConferencia: false,
       produtoCarregado: false
     }
   },
@@ -477,6 +461,25 @@ export default {
   },
   methods: {
 
+    salvaConferencia: function () {
+      let vm = this
+      vm.$q.dialog({
+        title: 'Salvar',
+        message: 'Tem certeza que deseja salvar?',
+        ok: 'Salvar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.post('estoque-saldo-conferencia', vm.data).then(function (request) {
+          vm.$q.notify({
+            message: 'Conferência realizada',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
+      })
+    },
+
     buscaListagem: function() {
       let vm = this
       let params = {
@@ -494,6 +497,12 @@ export default {
         console.log(error.response)
       })
     },
+
+    editaConferencia: function() {
+      let vm = this
+        vm.modalConferencia = true,
+        vm.modalProduto = false
+      },
 
     buscaProdutoPorCodvariacao: function(produto) {
       let vm = this
