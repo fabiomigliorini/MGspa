@@ -171,25 +171,6 @@ export default {
         + this.data.data
       )
     },
-    dadosConferencia: function (codestoquelocal, codmarca, fiscal) {
-      /*
-      let params = {
-        fields:[
-          'estoquelocal',
-          'marca',
-          'fiscal'
-        ]
-      }
-      this.$axios.get('estoque-local/' + codestoquelocal, { params }).then(function (request) {
-        this.data.estoquelocal = request.data.estoquelocal
-        params = {
-          fields:['marca']
-        }
-      }).catch(function (error) {
-        console.log(error.response)
-      })
-      */
-    }
   },
   mounted () {
     /*console.log(this.data)*/

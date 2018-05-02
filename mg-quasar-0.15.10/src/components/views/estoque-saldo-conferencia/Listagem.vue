@@ -113,14 +113,12 @@
           </center>
         </q-card-media>
         <q-card-title class="relative-position">
-          <!-- <q-btn fab color="primary" icon="place" class="absolute" style="top: 0; right: 8px; transform: translateY(-50%);" /> -->
           <div>
             {{produto.produto.produto}}
           </div>
           <div slot="subtitle">
             {{produto.variacao.variacao}}
           </div>
-          <!-- <q-rating slot="subtitle" v-model="stars" :max="5" /> -->
           <div slot="right" class="row items-center">
             <q-icon name="vpn key" />&nbsp;
             {{ numeral(produto.produto.codproduto).format('000000') }}
@@ -223,11 +221,10 @@
         <q-scroll-area style="height: 400px;">
           <q-timeline color="secondary" style="padding: 0 24px;">
             <q-timeline-entry heading >Conferências Efetuadas</q-timeline-entry>
-
             <q-timeline-entry v-for="conferencia in produto.conferencias"
               :title="conferencia.usuario"
               :subtitle="moment(conferencia.criacao).fromNow()+', COD: '+ conferencia.codestoquesaldoconferencia"
-              side="right" icon="delete">
+              side="right" icon="delete" @click.native="excluirConferencia(conferencia.codestoquesaldoconferencia)">
               <div>
                 <p>Quantidade informada
                   <q-item-tile sublabel>
@@ -249,7 +246,8 @@
                     {{numeral(parseFloat(conferencia.customediosistema)).format('0,0.00')}}
                   </q-item-tile>
                 </p>
-                <p v-if="conferencia.observacoes">Observações
+                <p v-if="conferencia.observacoes">
+                  Observações
                   <q-item-tile sublabel>
                     {{conferencia.observacoes}}
                   </q-item-tile>
@@ -266,8 +264,7 @@
       </footer>
     </q-modal>
 
-    <!-- Modal de conferência do produto -->
-
+    <!-- MODAL DE CONFERÊNCIA DO PRODUTO -->
     <template>
       <q-modal v-model="modalConferencia" v-if="produtoCarregado">
 
@@ -283,7 +280,7 @@
                 {{numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')}}
               </q-item-side>
               <q-item-main>
-                <q-input type="number" float-label="Inserir nova quantidade"/>
+                <q-input type="number" float-label="Inserir nova quantidade" v-model="conferencia.quantidadeinformada"/>
               </q-item-main>
             </q-item>
             <q-item-separator />
@@ -296,28 +293,28 @@
                 {{numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')}}
               </q-item-side>
               <q-item-main>
-                <q-input type="number" float-label="inserir novo custo" prefix="$"/>
+                <q-input type="number" float-label="inserir novo custo" prefix="$" v-model="conferencia.customedioinformado"/>
               </q-item-main>
             </q-item>
             <q-item-separator />
 
             <q-item dense>
               <q-item-main>
-                <q-datetime v-model="filter.data" type="date" format="DD/MMM/YYYY HH:MM:ss" float-label="Data da conferência" />
+                <q-datetime v-model="conferencia.data" type="date" format="DD/MMM/YYYY HH:MM:ss" float-label="Data da conferência" />
               </q-item-main>
             </q-item>
             <q-item-separator />
 
             <q-item dense>
               <q-item-main>
-                <q-input type="text"  float-label="Observações" />
+                <q-input type="text"  float-label="Observações" v-model="conferencia.observacoes"/>
               </q-item-main>
             </q-item>
             <q-item-separator />
 
             <q-item dense>
               <q-item-main>
-                <q-datetime v-model="model" type="datetime" float-label="Vencimento" />
+                <q-datetime type="datetime" float-label="Vencimento" v-model="conferencia.vencimento"/>
               </q-item-main>
             </q-item>
             <q-item-separator />
@@ -330,7 +327,7 @@
                 {{produto.localizacao.corredor}}
               </q-item-side>
               <q-item-main>
-                <q-input type="number" float-label="Novo corredor" />
+                <q-input type="number" float-label="Novo corredor" v-model="conferencia.corredor"/>
               </q-item-main>
             </q-item>
 
@@ -339,10 +336,10 @@
                 <q-item-tile sublabel>
                   Prateleira atual
                 </q-item-tile>
-                {{produto.localizacao.corredor}}
+                {{produto.localizacao.prateleira}}
               </q-item-side>
               <q-item-main>
-                <q-input type="number" float-label="Nova prateleira" />
+                <q-input type="number" float-label="Nova prateleira" v-model="conferencia.prateleira" />
               </q-item-main>
             </q-item>
 
@@ -351,10 +348,10 @@
                 <q-item-tile sublabel>
                   Coluna atual
                 </q-item-tile>
-                {{produto.localizacao.corredor}}
+                {{produto.localizacao.coluna}}
               </q-item-side>
               <q-item-main>
-                <q-input type="number" float-label="Nova Coluna" />
+                <q-input type="number" float-label="Nova Coluna" v-model="conferencia.coluna"/>
               </q-item-main>
             </q-item>
 
@@ -363,10 +360,10 @@
                 <q-item-tile sublabel>
                   Bloco atual
                 </q-item-tile>
-                {{produto.localizacao.corredor}}
+                {{produto.localizacao.bloco}}
               </q-item-side>
               <q-item-main>
-                <q-input type="number" float-label="Novo Bloco" />
+                <q-input type="number" float-label="Novo Bloco" v-model="conferencia.bloco"/>
               </q-item-main>
             </q-item ><br />
 
@@ -374,7 +371,10 @@
       </q-list >
 
         <footer class="fixed-bottom" style="background-color: white" >
-          <q-btn @click.prevent="salvaConferencia(), modalProduto = false" flat color="primary" label="Salvar Conferencia"/>
+          <q-btn @click.prevent="salvaConferencia(
+            produto.variacao.codprodutovariacao,
+            produto.localizacao.codestoquelocal
+            ), modalProduto = false" flat color="primary" label="Salvar Conferencia"/>
           <q-btn flat @click="modalConferencia = false" label="Fechar"/>
         </footer>
       </q-modal>
@@ -399,9 +399,10 @@ export default {
     MgErrosValidacao,
     MgAutocompleteMarca
   },
+  props: {
+  },
   data() {
     return {
-      data: {},
       filter: {
         codestoquelocal: null,
         codmarca: null,
@@ -410,16 +411,17 @@ export default {
         inativo: 0,
         dataCorte: null
       },
+      produto: {},
+      data: {},
+      conferencia: {},
       carregado: false,
       codigoproduto: null,
       erros: false,
       tabAberta: 'tabAConferir',
-      produto: {},
-      conferencia: {},
       produtoImagem: null,
       modalProduto: false,
       modalConferencia: false,
-      produtoCarregado: false
+      produtoCarregado: false,
     }
   },
   watch: {
@@ -461,15 +463,31 @@ export default {
   },
   methods: {
 
-    salvaConferencia: function () {
+    salvaConferencia: function (codprodutovariacao, codestoquelocal) {
       let vm = this
+      let params = {
+        codprodutovariacao: codprodutovariacao,
+        codestoquelocal: codestoquelocal,
+        fiscal: parseInt(vm.filter.fiscal),
+        quantidadeinformada: vm.conferencia.quantidadeinformada,
+        customedioinformado: vm.conferencia.customedioinformado,
+        data: vm.moment(vm.conferencia.data).format('YYYY-MM-DD HH:MM:ss'),
+        observacoes: vm.conferencia.observacoes,
+        vencimento: vm.moment(vm.conferencia.vencimento).format('YYYY-MM-DD HH:MM:ss'),
+        corredor: vm.conferencia.corredor,
+        prateleira: vm.conferencia.prateleira,
+        coluna: vm.conferencia.coluna,
+        bloco: vm.conferencia.bloco
+      }
       vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
         ok: 'Salvar',
         cancel: 'Cancelar'
       }).then(() => {
-        vm.$axios.post('estoque-saldo-conferencia', vm.data).then(function (request) {
+        console.log(vm.conferencia)
+        console.log(params)
+        vm.$axios.post('estoque-saldo-conferencia', { params }).then(function (request) {
           vm.$q.notify({
             message: 'Conferência realizada',
             type: 'positive',
@@ -479,7 +497,25 @@ export default {
         })
       })
     },
-
+    excluirConferencia: function (codestoquesaldoconferencia) {
+      let vm = this
+      vm.$q.dialog({
+        title: 'Excluir',
+        message: 'Tem certeza que deseja excluir?',
+        ok: 'Excluir',
+        cancel: 'Cancelar'
+      }).then(() => {
+        console.log(codestoquesaldoconferencia)
+        vm.$axios.post('estoque-saldo-conferencia/' + codestoquesaldoconferencia + '/inativo').then(function (request) {
+          vm.$q.notify({
+            message: 'Excluido com sucesso',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          vm.erros = error.response.data.erros
+        })
+      })
+    },
     buscaListagem: function() {
       let vm = this
       let params = {
