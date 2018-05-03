@@ -69,6 +69,8 @@ class EstoqueSaldoConferenciaController extends MgController
     public function store(Request $request)
     {
 
+        //dd($request->all());
+
         $request->validate([
             'codprodutovariacao' => 'required|numeric',
             'codestoquelocal' => 'required|numeric',
@@ -77,12 +79,12 @@ class EstoqueSaldoConferenciaController extends MgController
             'customedioinformado' => 'required|numeric',
             'data' => 'required|date',
 
-            'corredor' => 'integer',
-            'prateleira' => 'integer',
-            'coluna' => 'integer',
-            'bloco' => 'integer',
+            'corredor' => 'nullable|integer',
+            'prateleira' => 'nullable|integer',
+            'coluna' => 'nullable|integer',
+            'bloco' => 'nullable|integer',
 
-            'vencimento' => 'date',
+            'vencimento' => 'nullable|date',
         ]);
 
         $data = new \Carbon\Carbon($request->data);
@@ -90,6 +92,8 @@ class EstoqueSaldoConferenciaController extends MgController
         $fiscal = boolval($request->fiscal);
         $quantidadeinformada = floatval($request->quantidadeinformada);
         $customedioinformado = floatval($request->customedioinformado);
+
+        //dd($)
 
         DB::beginTransaction();
 

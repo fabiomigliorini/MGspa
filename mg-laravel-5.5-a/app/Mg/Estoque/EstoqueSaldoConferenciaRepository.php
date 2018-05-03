@@ -15,10 +15,10 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 float $customedioinformado,
                 Carbon $data,
                 $observacoes,
-                int $corredor,
-                int $prateleira,
-                int $coluna,
-                int $bloco,
+                $corredor,
+                $prateleira,
+                $coluna,
+                $bloco,
                 Carbon $vencimento
             ) {
 

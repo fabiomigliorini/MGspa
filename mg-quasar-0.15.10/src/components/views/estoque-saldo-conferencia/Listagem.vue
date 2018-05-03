@@ -95,13 +95,9 @@
       </template>
     </q-list>
 
-    <router-link :to="{ path: '/estoque-saldo-conferencia/conferencia' }">
       <q-page-sticky corner="bottom-right" :offset="[32, 32]">
-        <q-btn round color="primary">
-          <q-icon name="add" />
-        </q-btn>
+        <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true"/>
       </q-page-sticky>
-    </router-link>
 
     <!-- MODAL DE DETALHES DO PRODUTO -->
     <q-modal v-model="modalProduto" v-if="produtoCarregado">
@@ -109,7 +105,7 @@
       <q-card class="bigger">
         <q-card-media>
           <center>
-            <img :src="produtoImagem" style="max-width:300px; height: auto">
+            <img :src="produtoImagem" style="max-width:40vh; height: auto">
           </center>
         </q-card-media>
         <q-card-title class="relative-position">
@@ -150,6 +146,7 @@
           </p>
         </q-card-main>
         <q-card-separator />
+        <q-scroll-area style="height: 100px;">
         <q-list>
           <q-item>
             <q-item-side>
@@ -217,9 +214,8 @@
               </q-item-tile>
             </q-item-main>
           </q-item>
-        </q-list>
-        <q-scroll-area style="height: 400px;">
-          <q-timeline color="secondary" style="padding: 0 24px;">
+        </q-list><br />
+          <q-timeline color="secondary" style="padding: 0 24px;" v-if="produto.conferencias.length > 0">
             <q-timeline-entry heading >Conferências Efetuadas</q-timeline-entry>
             <q-timeline-entry v-for="conferencia in produto.conferencias"
               :title="conferencia.usuario"
@@ -257,21 +253,23 @@
           </q-timeline>
         </q-scroll-area>
 
+        <div>
+          <q-btn @click.native="editaConferencia()" flat color="primary" label="Fazer Nova Conferência"/>
+          <q-btn flat @click="modalProduto = false" label="Fechar"/>
+        </div>
       </q-card>
-      <footer class="fixed-bottom" style="background-color: white">
-        <q-btn @click.native="editaConferencia()" flat color="primary" label="Fazer Nova Conferência"/>
-        <q-btn flat @click="modalProduto = false" label="Fechar"/>
-      </footer>
     </q-modal>
 
     <!-- MODAL DE CONFERÊNCIA DO PRODUTO -->
     <template>
-      <q-modal v-model="modalConferencia" v-if="produtoCarregado">
+      <q-modal v-model="modalConferencia" v-if="produtoCarregado" @hide="focoCampoBarras()" @show="focoCampoQuantidadeInformada()">
 
-        <q-list>
-          <form @submit.prevent="salvaConferencia()">
-            <p class="caption">{{produto.produto.produto}}<template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template></p>
-
+        <form @submit.prevent="salvaConferencia()">
+          <q-list>
+            <p class="caption" align="center">
+              {{produto.produto.produto}}<template v-if="produto.produto.variacao">-
+              {{produto.produto.variacao}}</template>
+            </p>
             <q-item dense>
               <q-item-side align="center">
                 <q-item-tile sublabel>
@@ -280,7 +278,8 @@
                 {{numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')}}
               </q-item-side>
               <q-item-main>
-                <q-input type="number" float-label="Inserir nova quantidade" v-model="conferencia.quantidadeinformada"/>
+                <q-input type="number" float-label="Inserir nova quantidade" v-model="conferencia.quantidadeinformada" ref="campoQuantidadeInformada"/>
+                <!-- <mg-erros-validacao :erros="erros.quantidadeinformada"/> -->
               </q-item-main>
             </q-item>
             <q-item-separator />
@@ -294,13 +293,7 @@
               </q-item-side>
               <q-item-main>
                 <q-input type="number" float-label="inserir novo custo" prefix="$" v-model="conferencia.customedioinformado"/>
-              </q-item-main>
-            </q-item>
-            <q-item-separator />
-
-            <q-item dense>
-              <q-item-main>
-                <q-datetime v-model="conferencia.data" type="date" format="DD/MMM/YYYY HH:MM:ss" float-label="Data da conferência" />
+                <!-- <mg-erros-validacao :erros="erros.customedioinformado"/> -->
               </q-item-main>
             </q-item>
             <q-item-separator />
@@ -367,15 +360,27 @@
               </q-item-main>
             </q-item ><br />
 
+          </q-list >
+          <footer class="fixed-bottom" style="background-color: white">
+            <q-btn flat color="primary" type="submit" label="Salvar Conferencia"/>
+            <q-btn flat @click="modalConferencia = false" label="Fechar"/>
+          </footer>
         </form>
-      </q-list >
 
-        <footer class="fixed-bottom" style="background-color: white" >
-          <q-btn @click.prevent="salvaConferencia(
-            produto.variacao.codprodutovariacao,
-            produto.localizacao.codestoquelocal
-            ), modalProduto = false" flat color="primary" label="Salvar Conferencia"/>
-          <q-btn flat @click="modalConferencia = false" label="Fechar"/>
+      </q-modal>
+    </template>
+
+    <!-- MODAL DE BUSCA POR BARRAS -->
+    <template>
+      <q-modal v-model="modalBuscaPorBarras" @show="focoCampoBarras()">
+        <div style="height:20vh; padding:10px" align="center">
+          <form @submit.prevent="buscaProdutoPorBarras()">
+            <q-input v-model="buscaPorBarras.barras" float-label="Código" ref="campoBarras"/>
+          </form>
+        </div>
+        <footer class="fixed-bottom" style="background-color: white">
+          <q-btn flat @click="modalBuscaPorBarras = false" label="Fechar"/>
+          <q-btn flat @click="buscaProdutoPorBarras()" label="buscar"/>
         </footer>
       </q-modal>
     </template>
@@ -411,6 +416,8 @@ export default {
         inativo: 0,
         dataCorte: null
       },
+      buscaPorBarras: {},
+      erros: {},
       produto: {},
       data: {},
       conferencia: {},
@@ -421,6 +428,7 @@ export default {
       produtoImagem: null,
       modalProduto: false,
       modalConferencia: false,
+      modalBuscaPorBarras: false,
       produtoCarregado: false,
     }
   },
@@ -455,39 +463,61 @@ export default {
           })
       }
     },
-    header: {
-      get() {
-        return this.$store.state.estoqueSaldoConferencia.estoqueSaldoConferenciaState
-      }
-    }
   },
   methods: {
-
-    salvaConferencia: function (codprodutovariacao, codestoquelocal) {
+    validaCampos: function () {
       let vm = this
-      let params = {
-        codprodutovariacao: codprodutovariacao,
-        codestoquelocal: codestoquelocal,
-        fiscal: parseInt(vm.filter.fiscal),
-        quantidadeinformada: vm.conferencia.quantidadeinformada,
-        customedioinformado: vm.conferencia.customedioinformado,
-        data: vm.moment(vm.conferencia.data).format('YYYY-MM-DD HH:MM:ss'),
-        observacoes: vm.conferencia.observacoes,
-        vencimento: vm.moment(vm.conferencia.vencimento).format('YYYY-MM-DD HH:MM:ss'),
-        corredor: vm.conferencia.corredor,
-        prateleira: vm.conferencia.prateleira,
-        coluna: vm.conferencia.coluna,
-        bloco: vm.conferencia.bloco
+      let ret = true
+
+      if (vm.conferencia.quantidadeinformada == null) {
+        vm.erros.quantidadeinformada = ['Informe a quantidade']
+        ret = false
+      } else {
+        vm.erros.quantidadeinformada = []
       }
+
+      if (vm.conferencia.customedioinformado == null) {
+        vm.erros.customedioinformado = ['Informe o custo']
+        ret = false
+      } else {
+        vm.erros.customedioinformado = []
+      }
+      return ret
+    },
+    salvaConferencia: function () {
+      // if (vm.validaCampos() == false) {
+      //   return
+      // }
+      let vm = this
       vm.$q.dialog({
         title: 'Salvar',
         message: 'Tem certeza que deseja salvar?',
+        /*
         ok: 'Salvar',
-        cancel: 'Cancelar'
+        cancel: 'Cancelar',
+        */
+        ok: true,
+        cancel: true,
+        preventClose: true
       }).then(() => {
-        console.log(vm.conferencia)
+        let params = {
+          codprodutovariacao: vm.produto.variacao.codprodutovariacao,
+          codestoquelocal: vm.produto.localizacao.codestoquelocal,
+          fiscal: parseInt(vm.filter.fiscal),
+          quantidadeinformada: vm.conferencia.quantidadeinformada,
+          customedioinformado: vm.conferencia.customedioinformado,
+          data: vm.filter.data,
+          observacoes: vm.conferencia.observacoes,
+          vencimento: new Date(parseInt(vm.conferencia.vencimento)),
+          //vm.moment(vm.conferencia.vencimento).format('YYYY-MM-DD HH:MM:ss'),
+          corredor: vm.conferencia.corredor,
+          prateleira: vm.conferencia.prateleira,
+          coluna: vm.conferencia.coluna,
+          bloco: vm.conferencia.bloco
+        }
         console.log(params)
-        vm.$axios.post('estoque-saldo-conferencia', { params }).then(function (request) {
+        vm.$axios.post('estoque-saldo-conferencia', params).then(function (request) {
+          vm.modalConferencia = false
           vm.$q.notify({
             message: 'Conferência realizada',
             type: 'positive',
@@ -537,13 +567,14 @@ export default {
     editaConferencia: function() {
       let vm = this
         vm.modalConferencia = true,
-        vm.modalProduto = false
+        vm.modalProduto = false,
+        vm.modalBuscaPorBarras = false
       },
-
     buscaProdutoPorCodvariacao: function(produto) {
       let vm = this
       this.produtoImagem = produto.imagem
       let params = {
+        barras: vm.buscaPorBarras,
         codprodutovariacao: produto.codprodutovariacao,
         codestoquelocal: vm.filter.codestoquelocal,
         fiscal: vm.filter.fiscal
@@ -551,12 +582,44 @@ export default {
       vm.$axios.get('estoque-saldo-conferencia/busca-produto', {
         params
       }).then(function(request) {
-        //console.log(vm.produto)
         vm.produto = request.data
         vm.modalProduto = true
         vm.produtoCarregado = true
       }).catch(function(error) {
         vm.modalProduto = false
+        vm.produtoCarregado = false
+        console.log(error.response)
+      })
+    },
+    focoCampoBarras: function () {
+      console.log('abriu modal')
+      this.$nextTick(() => this.$refs.campoBarras.focus())
+    },
+    focoCampoQuantidadeInformada: function () {
+      console.log('abriu modal')
+      this.$nextTick(() => this.$refs.campoQuantidadeInformada.focus())
+    },
+    buscaProdutoPorBarras: function() {
+      /*
+      console.log('entrou')
+      return
+      */
+      let vm = this
+      let params = {
+        barras: vm.buscaPorBarras.barras,
+        codestoquelocal: vm.filter.codestoquelocal,
+        fiscal: vm.filter.fiscal
+      }
+      vm.$axios.get('estoque-saldo-conferencia/busca-produto', {
+        params
+      }).then(function(request) {
+        console.log(vm.buscaPorBarras)
+        vm.produto = request.data
+        vm.buscaPorBarras.barras = null
+        vm.modalConferencia = true
+        vm.produtoCarregado = true
+      }).catch(function(error) {
+        vm.modalConferencia = false
         vm.produtoCarregado = false
         console.log(error.response)
       })

@@ -63,13 +63,10 @@
             <div class="row">
               <div class="col">
                 <q-datetime-picker v-model="data.data" type="datetime" stack-label="Ajustar estoquem em"/>
-
-                <!--
-                <q-input v-model="data.data" stack-label="Ajustar estoquem em" type="datetime-local"/>
-                -->
                 <mg-erros-validacao :erros="erros.data"></mg-erros-validacao>
               </div>
             </div>
+
           </div>
         </div>
 
