@@ -274,7 +274,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 
         if ($elpv = $pv->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->first()) {
             if ($es = $elpv->EstoqueSaldoS()->where('fiscal', $fiscal)->first()) {
-                foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'DESC')->whereNull('inativo')->get() as $esc) {
+                foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'ASC')->whereNull('inativo')->get() as $esc) {
                     $conferencias[] = [
                         'codestoquesaldoconferencia' => $esc->codestoquesaldoconferencia,
                         'data' => $esc->data->toW3cString(),
@@ -312,7 +312,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'codproduto' => $pv->Produto->codproduto,
                 'produto' => $pv->Produto->produto,
                 'referencia' => $pv->Produto->referencia,
-                'inativo' => $pv->Produto->inativo,
+                'inativo' => ($pv->Produto->inativo)?$pv->Produto->inativo->toW3cString():null,
                 'preco' => $pv->Produto->preco,
                 'siglaunidademedida' => $pv->Produto->UnidadeMedida->sigla,
                 'unidademedida' => $pv->Produto->UnidadeMedida->unidademedida,
@@ -322,7 +322,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'variacao' => $pv->variacao,
                 'referencia' => $pv->referencia,
                 'descontinuado' => $pv->descontinuado,
-                'inativo' => $pv->inativo,
+                'inativo' => ($pv->inativo)?$pv->inativo->toW3cString():null,
                 'estoqueminimo' => $elpv->estoqueminimo??null,
                 'estoquemaximo' => $elpv->estoquemaximo??null
             ],

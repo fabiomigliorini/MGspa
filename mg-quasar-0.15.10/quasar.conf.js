@@ -112,7 +112,10 @@ module.exports = function (ctx) {
         'QDatetimePicker',
         'QTimeline',
         'QTimelineEntry',
-        'QSearch'
+        'QSearch',
+        'QStepper',
+        'QStep',
+        'QStepperNavigation'
       ],
       directives: [
         'Ripple'
