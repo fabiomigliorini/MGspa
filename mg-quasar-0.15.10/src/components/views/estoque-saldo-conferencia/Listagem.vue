@@ -299,11 +299,6 @@
             <div>
               Content
             </div>
-          </q-collapsible>
-          <q-collapsible icon="shopping_cart" label="Third">
-            <div>
-              Content
-            </div>
           </q-collapsible> -->
 
         <form @submit.prevent="salvaConferencia()">
@@ -316,7 +311,7 @@
             <q-item dense>
               <q-item-side align="center">
                 <q-item-tile icon="widgets" :color="(produto.saldoatual.quantidade>0)?'green':(produto.saldoatual.quantidade<0)?'red':'grey'"/>
-                {{numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')}}
+                  {{numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')}}
               </q-item-side>
               <q-item-main>
                 <q-input type="number" float-label="Inserir nova quantidade" v-model="conferencia.quantidadeinformada" ref="campoQuantidadeInformada"/>
@@ -362,25 +357,25 @@
               <div>
                 <q-item dense>
                   <q-item-main>
-                    <q-input :value="produto.localizacao.corredor" type="number" float-label="Corredor" v-model="conferencia.corredor"/>
+                    <q-input type="number" float-label="Corredor" v-model="conferencia.corredor"/>
                   </q-item-main>
                 </q-item>
 
                 <q-item dense>
                   <q-item-main>
-                    <q-input :value="produto.localizacao.prateleira" type="number" float-label="Prateleira" v-model="conferencia.prateleira" />
+                    <q-input type="number" float-label="Prateleira" v-model="conferencia.prateleira" />
                   </q-item-main>
                 </q-item>
 
                 <q-item dense>
                   <q-item-main>
-                    <q-input :value="produto.localizacao.coluna" type="number" float-label="Coluna" v-model="conferencia.coluna"/>
+                    <q-input type="number" float-label="Coluna" v-model="conferencia.coluna"/>
                   </q-item-main>
                 </q-item>
 
                 <q-item dense>
                   <q-item-main>
-                    <q-input :value="produto.localizacao.bloco" type="number" float-label="Bloco" v-model="conferencia.bloco"/>
+                    <q-input type="number" float-label="Bloco" v-model="conferencia.bloco"/>
                   </q-item-main>
                 </q-item ><br />
 
@@ -455,6 +450,8 @@ export default {
       modalConferencia: false,
       modalBuscaPorBarras: false,
       produtoCarregado: false,
+      conferenciaExcluida: false,
+      conferenciaSalva: false
     }
   },
   watch: {
@@ -466,14 +463,14 @@ export default {
     }
   },
   computed: {
+
     produtosMostrar: function() {
       if (!this.carregado) {
         return
       }
+
       let vm = this
-
       switch (vm.tabAberta) {
-
         case 'tabAConferir':
           return vm.data.produtos.filter(function(produto) {
             return (produto.ultimaconferencia == null) ||
@@ -537,12 +534,15 @@ export default {
         console.log(params)
         vm.$axios.post('estoque-saldo-conferencia', params).then(function (request) {
           vm.modalConferencia = false
+          vm.conferenciaSalva = true
           vm.$q.notify({
             message: 'Conferência realizada',
             type: 'positive',
           })
         }).catch(function (error) {
           vm.erros = error.response.data.erros
+        }).finally(function (request){
+          vm.buscaListagem()
         })
       })
     },
@@ -560,8 +560,12 @@ export default {
             message: 'Excluido com sucesso',
             type: 'positive',
           })
+          vm.conferenciaExcluida = true
         }).catch(function (error) {
           vm.erros = error.response.data.erros
+        }).finally(function (request){
+          vm.buscaListagem()
+          vm.modalProduto = false
         })
       })
     },
@@ -591,9 +595,8 @@ export default {
       },
     buscaProdutoPorCodvariacao: function(produto) {
       let vm = this
-      this.produtoImagem = produto.imagem
+      vm.produtoImagem = produto.imagem
       let params = {
-        barras: vm.buscaPorBarras,
         codprodutovariacao: produto.codprodutovariacao,
         codestoquelocal: vm.filter.codestoquelocal,
         fiscal: vm.filter.fiscal
