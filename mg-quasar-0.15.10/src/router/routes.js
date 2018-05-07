@@ -35,5 +35,5 @@ export default [
 
   // Estoque Conferência
   { path: '/estoque-saldo-conferencia', component: () => import('components/views/estoque-saldo-conferencia/Index') },
-  { path: '/estoque-saldo-conferencia/listagem/:codestoquelocal/:codmarca/:fiscal/:data', component: () => import('components/views/estoque-saldo-conferencia/Listagem/') },
+  { path: '/estoque-saldo-conferencia/listagem/:codestoquelocal/:codmarca/:fiscal/:data', component: () => import('components/views/estoque-saldo-conferencia/Listagem/') }
 ]
