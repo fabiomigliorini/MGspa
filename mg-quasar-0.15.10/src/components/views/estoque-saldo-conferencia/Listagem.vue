@@ -94,28 +94,29 @@
         </q-item>
       </template>
     </q-list>
-
     <q-page-sticky corner="bottom-right" :offset="[32, 32]">
       <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true"/>
     </q-page-sticky>
 
     <!-- MODAL DE DETALHES DO PRODUTO -->
     <div class="col-md-12 col-lg-12">
-    <q-modal v-model="modalProduto" v-if="produtoCarregado">
-      <div  style="width:100vw; height:auto">
-        <div>
-          <q-card>
-            <div class="row justify-center">
+    <q-modal v-model="modalProduto" v-if="produtoCarregado" maximized>
 
-              <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3 " align="center">
+
+
+      <div>
+        <div>
+            <div class="row">
+
+              <!-- COLUNA 1 -->
+              <div class="col-sm-12 col-md-5 col-lg-5">
                 <q-card-media>
                   <center>
-                    <img :src="produtoImagem" style="max-width:25vh; height: auto">
+                    <img :src="produtoImagem" style="max-width:95vw; max-height:80vh; height: auto">
                   </center>
                 </q-card-media>
 
-                <q-card-title class="relative-position">
-                  <div>
+                <q-card-title>
                     <q-item-tile>
                       <q-chip square color="negative" v-if="produto.produto.inativo">
                         Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
@@ -128,164 +129,178 @@
                       </q-chip>
                     </q-item-tile>
                     <q-item-tile>
-                      <small>
-                        <q-icon name="vpn key" />&nbsp;
-                        {{ numeral(produto.produto.codproduto).format('000000') }}
-                      </small>
                       {{produto.produto.produto}}
+                      {{produto.variacao.variacao}}
                     </q-item-tile>
-                  </div>
-                  <div>
-                    {{produto.variacao.variacao}}
-                  </div>
                 </q-card-title>
-
-                <q-card-main>
-                  <p class="text-faded">
-
-                    <template v-if="produto.variacao.referencia">
-                      {{ produto.variacao.referencia }}
-                      ・Referência
-                    </template>
-                    <template v-else-if="produto.produto.referencia">
-                      {{ produto.produto.referencia }}
-                      ・Referência
-                    </template><br />
-                    R$ {{ numeral(parseFloat(produto.produto.preco)).format('0,0.00') }}・Preço de Venda <br />
-                    <template v-if="produto.localizacao.vencimento">
-                      Valido até
-                      {{moment(produto.localizacao.vencimento).format('DD/MMM/YYYY')}}
-                    </template>
-
-                  </p>
-
-                </q-card-main>
-              </div>
-              <q-card-separator />
-              <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
-                <q-list no-border>
-
-                  <q-item>
-                    <q-item-side>
-                      <q-item-tile color="primary" icon="widgets" />
-                    </q-item-side>
-                    <q-item-main>
-                      <q-item-tile label>
-                        <b>
-                          {{ numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0') }}
-                        </b>
-                        {{ produto.produto.siglaunidademedida }}
-                        em estoque
-                      </q-item-tile>
-                      <q-item-tile sublabel>
-                        Suegerido entre {{ numeral(parseFloat(produto.variacao.estoqueminimo)).format('0,0') }} e
-                        {{ numeral(parseFloat(produto.variacao.estoquemaximo)).format('0,0') }}
-                        {{ produto.produto.siglaunidademedida }}.
-                      </q-item-tile>
-                    </q-item-main>
-                  </q-item>
-                  <q-item>
-                    <q-item-side>
-                      <q-item-tile color="primary" icon="attach_money" />
-                    </q-item-side>
-                    <q-item-main>
-                      <q-item-tile label>
-                        R$
-                        <b>{{ numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00') }}</b>
-                      </q-item-tile>
-                      <q-item-tile sublabel>Custo de cada {{ produto.produto.unidademedida }}.</q-item-tile>
-                    </q-item-main>
-                  </q-item>
-                  <q-item>
-                    <q-item-side>
-                      <q-item-tile color="red" icon="place" />
-                    </q-item-side>
-                    <q-item-main>
-                      <q-item-tile label>
-                        {{ produto.localizacao.estoquelocal }}
-                      </q-item-tile>
-                      <q-item-tile sublabel v-if="produto.localizacao.corredor">
-                        Corredor&nbsp{{ numeral(produto.localizacao.corredor).format('00') }}
-                        Prateleira&nbsp{{ numeral(produto.localizacao.prateleira).format('00') }}
-                        Coluna&nbsp{{ numeral(produto.localizacao.coluna).format('00') }}
-                        Bloco&nbsp{{ numeral(produto.localizacao.bloco).format('00') }}
-                      </q-item-tile>
-                    </q-item-main>
-                  </q-item>
-                  <q-item>
-                    <q-item-side>
-                      <q-item-tile color="black" icon="view column" />
-                    </q-item-side>
-                    <q-item-main>
-                      <q-item-tile label>
-                        Códigos de Barras
-                      </q-item-tile>
-                      <q-item-tile sublabel>
-                        <template v-for="barra in produto.barras">
-                          {{ barra.barras }} {{ barra.siglaunidademedida }}
-                          <template v-if="barra.quantidade > 1">
-                            C/{{ parseInt(barra.quantidade) }}
-                          </template>
-                          <br />
-                        </template>
-                      </q-item-tile>
-                    </q-item-main>
-                  </q-item>
-
-                </q-list>
               </div>
 
-              <div class="col-sm-12 col-xs-12 col-lg-4 col-md-4 " v-if="produto.conferencias.length > 0">
-                <q-scroll-area style="height: 300px;">
-                  <q-timeline color="secondary" style="padding: 0 24px;">
-                    <h5 align="center"><strong>Conferências Efetuadas</strong></h5>
-                    <q-timeline-entry v-for="conferencia in produto.conferencias"
-                    :subtitle="moment(conferencia.criacao).fromNow()+', COD: '+ conferencia.codestoquesaldoconferencia"
-                    side="right">
-                      <div>
-                        <q-item-tile>
-                          <p><strong>{{conferencia.usuario}}</strong>
-                            <q-btn flat icon="thumb_down" color="red"  @click.native="excluirConferencia(conferencia.codestoquesaldoconferencia)"/>
-                          </p>
-                        </q-item-tile>
-                        <p>Quantidade informada
-                          <q-item-tile sublabel>
-                            {{ numeral(parseFloat(conferencia.quantidadeinformada)).format('0,0') }}
+              <!-- COLUNA 2 -->
+              <div class="col-sm-12 col-md-7 col-lg-7">
+                <div class="row">
+
+                  <div class="col-sm-12 col-md-4">
+                    <q-list no-border>
+                      <q-item>
+                        <q-item-side>
+                          <q-item-tile color="primary" icon="widgets" />
+                        </q-item-side>
+                        <q-item-main>
+                          <q-item-tile label>
+                            <b>
+                              {{ numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0') }}
+                            </b>
+                            {{ produto.produto.siglaunidademedida }}
+                            em estoque
                           </q-item-tile>
-                        </p>
-                        <p>Quantidade do sistema
                           <q-item-tile sublabel>
-                            {{ numeral(parseFloat(conferencia.quantidadesistema)).format('0,0') }}
+                            Suegerido entre {{ numeral(parseFloat(produto.variacao.estoqueminimo)).format('0,0') }} e
+                            {{ numeral(parseFloat(produto.variacao.estoquemaximo)).format('0,0') }}
+                            {{ produto.produto.siglaunidademedida }}.
                           </q-item-tile>
-                        </p>
-                        <p>Custo informado
+                        </q-item-main>
+                      </q-item>
+                      <q-item>
+                        <q-item-side>
+                          <q-item-tile color="primary" icon="attach_money" />
+                        </q-item-side>
+                        <q-item-main>
+                          <q-item-tile label>
+                            Vendido à R$
+                            <b>
+                              {{ numeral(parseFloat(produto.produto.preco)).format('0,0.00') }}
+                            </b>
+                          </q-item-tile>
                           <q-item-tile sublabel>
-                            {{numeral(parseFloat(conferencia.customedioinformado)).format('0,0.00')}}
+                            Cada {{ produto.produto.unidademedida }} custa R$
+                            <b>
+                              {{ numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00') }}
+                            </b>.
                           </q-item-tile>
-                        </p>
-                        <p>Custo do sistema
+                        </q-item-main>
+                      </q-item>
+                    </q-list>
+                  </div>
+
+                  <div class="col-sm-12 col-md-4">
+                    <q-list no-border>
+                      <q-item>
+                        <q-item-side>
+                          <q-item-tile color="red" icon="place" />
+                        </q-item-side>
+                        <q-item-main>
+                          <q-item-tile label>
+                            {{ produto.localizacao.estoquelocal }}
+                          </q-item-tile>
+                          <q-item-tile sublabel v-if="produto.localizacao.corredor">
+                            Corredor&nbsp{{ numeral(produto.localizacao.corredor).format('00') }}
+                            Prateleira&nbsp{{ numeral(produto.localizacao.prateleira).format('00') }}
+                            Coluna&nbsp{{ numeral(produto.localizacao.coluna).format('00') }}
+                            Bloco&nbsp{{ numeral(produto.localizacao.bloco).format('00') }}
+                          </q-item-tile>
+                        </q-item-main>
+                      </q-item>
+                      <q-item v-if="produto.localizacao.vencimento">
+                        <q-item-side>
+                          <q-item-tile color="red" icon="access alarm" />
+                        </q-item-side>
+                        <q-item-main>
+                          <q-item-tile label>
+                            Vence
+                            {{ moment(produto.localizacao.vencimento).toNow() }}
+                          </q-item-tile>
+                        </q-item-main>
+                      </q-item>
+                    </q-list>
+                  </div>
+
+                  <div class="col-sm-12 col-md-4">
+                    <q-list no-border>
+
+                      <q-item>
+                        <q-item-side>
+                          <q-item-tile color="black" icon="vpn key" />
+                        </q-item-side>
+                        <q-item-main>
+                          <q-item-tile label>
+                            {{ numeral(produto.produto.codproduto).format('000000') }}
+                          </q-item-tile>
+                        </q-item-main>
+                      </q-item>
+
+                      <q-item>
+                        <q-item-side>
+                          <q-item-tile color="black" icon="local offer" />
+                        </q-item-side>
+                        <q-item-main>
+                          <q-item-tile label>
+                            <template v-if="produto.variacao.referencia">
+                              {{ produto.variacao.referencia }}
+                            </template>
+                            <template v-else-if="produto.produto.referencia">
+                              {{ produto.produto.referencia }}
+                            </template>
+                          </q-item-tile>
+                        </q-item-main>
+                      </q-item>
+
+                      <q-item>
+                        <q-item-side>
+                          <q-item-tile color="black" icon="view column" />
+                        </q-item-side>
+                        <q-item-main>
                           <q-item-tile sublabel>
-                            {{numeral(parseFloat(conferencia.customediosistema)).format('0,0.00')}}
+                            <small>
+                              <template v-for="barra in produto.barras">
+                                {{ barra.barras }} {{ barra.siglaunidademedida }}
+                                <template v-if="barra.quantidade > 1">
+                                  C/{{ parseInt(barra.quantidade) }}
+                                </template>
+                                <br />
+                              </template>
+                            </small>
                           </q-item-tile>
-                        </p>
-                        <p v-if="conferencia.observacoes">
-                          Observações
-                          <q-item-tile sublabel>
-                            {{conferencia.observacoes}}
-                          </q-item-tile>
-                        </p>
-                      </div>
-                    </q-timeline-entry>
-                  </q-timeline>
-                </q-scroll-area>
+                        </q-item-main>
+                      </q-item>
+                    </q-list>
+                  </div>
+
+                </div>
+
+
+                <q-timeline color="secondary" style="padding: 0 24px;" v-if="produto.conferencias.length > 0">
+                  <q-timeline-entry
+                    subtitle="Últimas conferências"
+                    side="left"
+                  >
+                  </q-timeline-entry>
+                  <q-timeline-entry
+                    v-for="(conferencia, iConferencia) in produto.conferencias"
+                    :title="numeral(parseFloat(conferencia.quantidadeinformada)).format('0,0') + ' ' + produto.produto.siglaunidademedida + ' custando R$ ' + numeral(parseFloat(conferencia.customedioinformado)).format('0,0.00') + ' cada ' + produto.produto.unidademedida"
+                    :subtitle="conferencia.usuario + ' ' + moment(conferencia.criacao).fromNow()"
+                    :side="((iConferencia%2)==0)?'right':'left'"
+                  >
+                    <small class="text-faded">
+                      O saldo do sistema no momento da conferência era de <b>{{ numeral(parseFloat(conferencia.quantidadesistema)).format('0,0') }}</b> {{produto.produto.siglaunidademedida}}
+                      custando R$ <b>{{numeral(parseFloat(conferencia.customediosistema)).format('0,0.00')}}</b> cada {{ produto.produto.unidademedida }}.
+                    </small>
+                    <small class="text-faded" v-if="conferencia.observacoes">
+                      <br />
+                      {{conferencia.observacoes}}
+                    </small>
+                    <q-btn round flat dense icon="thumb_down" color="red"  @click.native="excluirConferencia(conferencia.codestoquesaldoconferencia)"/>
+                  </q-timeline-entry>
+                </q-timeline>
               </div>
             </div>
 
-            <div>
-              <q-btn @click.native="editaConferencia()" flat color="primary" label="Fazer Nova Conferência"/>
-              <q-btn flat @click="modalProduto = false" label="Fechar"/>
-            </div>
-          </q-card>
+          <q-page-sticky position="bottom-right" :offset="[32, -18]">
+            <q-btn round color="primary" icon="create" @click.native="editaConferencia()" />
+          </q-page-sticky>
+
+          <q-page-sticky position="top-right" :offset="[32, -18]">
+            <q-btn round color="faded" icon="close" @click="modalProduto = false" />
+          </q-page-sticky>
 
         </div>
       </div>
@@ -295,9 +310,9 @@
     <!-- MODAL DE CONFERÊNCIA DO PRODUTO -->
     <template>
       <q-modal v-model="modalConferencia" v-if="produtoCarregado" @hide="focoCampoBarras()" @show="focoCampoQuantidadeInformada()">
-
         <form @submit.prevent="salvaConferencia()">
           <q-list>
+
             <p class="caption" align="center">
               <b>
                 {{produto.produto.produto}}<template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
@@ -461,7 +476,6 @@ export default {
       if (!this.carregado) {
         return
       }
-
       let vm = this
       switch (vm.tabAberta) {
         case 'tabAConferir':
@@ -534,12 +548,19 @@ export default {
           })
         }).catch(function (error) {
           vm.erros = error.response.data.erros
-        }).finally(function (request){
+        }).then(function (request){
           vm.buscaListagem()
           vm.conferencia = []
         })
       })
     },
+    editaConferencia: function() {
+      let vm = this
+        vm.modalConferencia = true,
+        vm.modalProduto = false,
+        vm.modalBuscaPorBarras = false,
+        vm. conferencia = []
+      },
     excluirConferencia: function (codestoquesaldoconferencia) {
       let vm = this
       vm.$q.dialog({
@@ -580,14 +601,6 @@ export default {
         console.log(error.response)
       })
     },
-
-    editaConferencia: function() {
-      let vm = this
-        vm.modalConferencia = true,
-        vm.modalProduto = false,
-        vm.modalBuscaPorBarras = false,
-        vm. conferencia = []
-      },
     buscaProdutoPorCodvariacao: function(produto) {
       let vm = this
       vm.produtoImagem = produto.imagem
