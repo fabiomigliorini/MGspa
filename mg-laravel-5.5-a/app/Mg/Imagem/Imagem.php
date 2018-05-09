@@ -36,7 +36,7 @@ use Mg\Usuario\Usuario;
 use Mg\Marca\Marca;
 use Carbon\Carbon;
 
-class Imagem extends MGModel
+class Imagem extends MgModel
 {
 
     protected $table = 'tblimagem';

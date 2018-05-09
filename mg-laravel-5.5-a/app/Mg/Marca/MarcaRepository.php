@@ -2,6 +2,7 @@
 
 namespace Mg\Marca;
 use Mg\MgRepository;
+use Mg\Estoque\EstoqueLocal;
 
 class MarcaRepository extends MgRepository
 {
@@ -40,6 +41,27 @@ class MarcaRepository extends MgRepository
         $qry = self::qryOrdem($qry, $sort);
         $qry = self::qryColunas($qry, $fields);
         return $qry;
+    }
+
+    /**
+     * Busca Autocomplete do Quasar
+     */
+    public static function autocompletar ($params)
+    {
+        $qry = static::pesquisar($params)
+                ->select('codmarca', 'marca')
+                ->take(10);
+
+        $ret = [];
+        foreach ($qry->get() as $item) {
+            $ret[] = [
+                'label' => $item->marca,
+                'value' => $item->marca,
+                'id' => $item->codmarca,
+            ];
+        }
+
+        return $ret;
     }
 
     public static function calculaVenda()

@@ -18,11 +18,7 @@
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-4">
               <q-field>
-                <q-input
-                  type="text"
-                  v-model="data.marca"
-                  float-label="Marca"
-                />
+                <q-input type="text" v-model="data.marca" float-label="Marca"/>
               </q-field>
               <mg-erros-validacao :erros="erros.marca"></mg-erros-validacao>
             </div>

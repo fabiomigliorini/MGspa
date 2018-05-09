@@ -21,6 +21,11 @@ export default {
       path: '/permissao'
     },
     {
+      icon: 'assignment',
+      title: 'Conferência de estoque',
+      path: '/estoque-saldo-conferencia'
+    },
+    {
       icon: 'multiline_chart',
       title: 'Vendas',
       path: '/estoque-estatistica/100'

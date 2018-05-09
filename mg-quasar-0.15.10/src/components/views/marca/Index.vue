@@ -1,6 +1,5 @@
 <template>
   <mg-layout drawer back-path="/">
-
     <!-- Título da Página -->
     <template slot="title">
       Marcas
@@ -9,45 +8,39 @@
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
       <!-- <q-scroll-area class="fit"> -->
-        <q-list no-border>
-
-          <!-- Filtro de Descricao -->
-          <q-item>
-            <q-item-main>
-              <q-field icon="search">
-                <q-input v-model="filter.marca" float-label="Descrição" />
-              </q-field>
-            </q-item-main>
-          </q-item>
-
-          <q-list-header>Ordenar Por</q-list-header>
-
+      <q-list no-border>
+      <!-- Filtro de Descricao -->
+        <q-item>
+          <q-item-main>
+            <q-field icon="search">
+              <q-input v-model="filter.marca" float-label="Descrição" />
+            </q-field>
+          </q-item-main>
+        </q-item>
+        <q-list-header>Ordenar Por</q-list-header>
           <!-- Ordena por Vendas -->
-          <q-item tag="label">
-            <q-item-side icon="trending_up">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>Vendas</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
-              <q-radio v-model="filter.sort" val="abcposicao" />
-            </q-item-side>
-          </q-item>
-
-          <!-- Ordena Alfabeticamente -->
-          <q-item tag="label">
-            <q-item-side icon="sort_by_alpha">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>Descrição</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
-              <q-radio v-model="filter.sort" val="marca" />
-            </q-item-side>
-          </q-item>
-
-          <q-list-header>Estoque</q-list-header>
-
+        <q-item tag="label">
+          <q-item-side icon="trending_up">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Vendas</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.sort" val="abcposicao" />
+          </q-item-side>
+        </q-item>
+        <!-- Ordena Alfabeticamente -->
+        <q-item tag="label">
+          <q-item-side icon="sort_by_alpha">
+          </q-item-side>
+          <q-item-main>
+            <q-item-tile title>Descrição</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.sort" val="marca" />
+          </q-item-side>
+        </q-item>
+        <q-list-header>Estoque</q-list-header>
           <!-- Filtra Estoque Sobrando -->
           <q-item tag="label">
             <q-item-side icon="arrow_upward">
@@ -59,7 +52,6 @@
               <q-toggle v-model="filter.sobrando" />
             </q-item-side>
           </q-item>
-
           <!-- Filtra Estoque Faltando -->
           <q-item tag="label">
             <q-item-side icon="arrow_downward">
