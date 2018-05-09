@@ -1,21 +1,18 @@
 ﻿select * from tblportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-04-11', null, '2018-04-11 11:41', 1)
+values (210, '2018-05-09', null, '2018-05-09 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2180, '2018-04-11 11:41', 1
+select codcheque, 2192, '2018-05-09 11:41', 1
 from tblcheque where cmc7 in (
-'<34113648<0480000135>781031251937:',
-'<34113645<0480001315>761440814798:',
-'<00111803<0188503195>735011334543:',
-'<74881011<0180010305>200002298305:',
-'<00111805<0188522225>714004503323:',
-'<00141373<0188500045>460001301500:',
-'<23755811<0180004615>255700791464:',
-'<00141373<0188500615>494000691595:'
+'<00142700<0188503385>352005218921:',
+'<74881010<0180006115>200009840513:',
+'<00159114<0188502015>134000569011:',
+'<00142709<0188516265>360010510240:',
+'<00142700<0188516255>369010510241:'
 )
 
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc)
@@ -27,14 +24,30 @@ where crc.codchequerepasse >= 1900
 group by crc.codchequerepasse
 order by 1 desc
 
-update tblchequerepasse set data = '2018-04-11', criacao = '2018-04-11 11:41' where codchequerepasse = 2166
-update tblchequerepassecheque set criacao = '2018-04-11 11:41' where codchequerepasse = 2100
+
+
+update tblchequerepasse set data = '2018-05-09', criacao = '2018-05-09 11:41' where codchequerepasse = 2187
+update tblchequerepassecheque set criacao = '2018-05-09 11:41' where codchequerepasse = 2187
 
 select * from tblchequerepassecheque where codchequerepasse = 2086
 
 delete from tblchequerepassecheque where codchequerepassecheque between 15837 and 15847
 
-update tblchequerepassecheque set codchequerepasse = 2049 where codchequerepassecheque = 15793
+update tblchequerepassecheque set codchequerepasse = 2187 where codchequerepassecheque in (16531
+,16530
+,16529
+,16528
+,16527
+,16526
+,16525
+,16524
+,16523
+,16522
+,16521
+,16520
+,16519
+,16518
+)
 delete from tblchequerepassecheque where codchequerepassecheque in (15693, 15692)
 
 
@@ -56,7 +69,7 @@ update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select 
 select * 
 from tblcheque c
 inner join tblchequerepassecheque crc  on (crc.codcheque = c.codcheque)
-where crc.codchequerepasse = 2140
+where crc.codchequerepasse = 2186
 
 
 select cr.*
