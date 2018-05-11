@@ -1,8 +1,12 @@
 ﻿select 
+	/*
+	-- POR SEMANA
 	extract('isoyear' from lancamento) as ano
 	, extract('week' from lancamento) as semana
-	--  date_trunc('month', lancamento) as mes
-	--, filial
+	*/
+	-- POR MES
+	 date_trunc('month', lancamento) as mes
+	, filial
 	/*
 	, pv.fantasia fantasiavendedor
 	, p.fantasia
@@ -25,10 +29,14 @@ and n.codnaturezaoperacao in (1, 2, 5) -- venda, devolucao, cupom
 --and n.codfilial in (201, 104, 202) -- Imperial
 and n.codpessoa not in (select tblfilial.codpessoa from tblfilial)
 group by 
+	/*
+	-- POR SEMANA
 	extract('isoyear' from lancamento) 
 	, extract('week' from lancamento) 
-	--  date_trunc('month', lancamento)
-	--, filial
+	*/
+	-- POR MES
+	  date_trunc('month', lancamento)
+	, filial
 	/*
 	, fantasiavendedor
 	, p.fantasia
