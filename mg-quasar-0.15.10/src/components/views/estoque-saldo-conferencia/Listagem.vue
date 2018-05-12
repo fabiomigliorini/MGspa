@@ -293,6 +293,7 @@
                         {{produto.produto.produto}}<template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
                       </b>
                     </p>
+                    <q-item-separator />
                     <!-- ADICIONAR QUANTIDADE -->
                     <q-item dense>
                       <q-item-main>
@@ -369,7 +370,6 @@
                           </q-item-tile>
                         </q-item-main>
                       </q-item>
-
                       <q-item dense>
                         <q-item-main>
                           <q-item-tile v-if="produto.localizacao.prateleira">
@@ -383,7 +383,6 @@
                           </q-item-tile>
                         </q-item-main>
                       </q-item>
-
                       <q-item dense>
                         <q-item-main>
                           <q-item-tile v-if="produto.localizacao.coluna">
@@ -397,7 +396,6 @@
                           </q-item-tile>
                         </q-item-main>
                       </q-item>
-
                       <q-item dense>
                         <q-item-main>
                           <q-item-tile v-if="produto.localizacao.bloco">
