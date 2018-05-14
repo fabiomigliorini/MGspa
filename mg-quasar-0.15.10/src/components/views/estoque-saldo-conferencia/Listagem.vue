@@ -290,7 +290,8 @@
                   <q-list>
                     <p class="caption" align="center">
                       <b>
-                        {{produto.produto.produto}}<template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
+                        {{produto.produto.produto}}
+                        <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
                       </b>
                     </p>
                     <q-item-separator />
@@ -429,15 +430,17 @@
       <!-- MODAL DE BUSCA POR BARRAS -->
       <template>
         <q-modal maximized v-model="modalBuscaPorBarras" @show="focoCampoBarras()">
-          <div style="padding-top: 20px">
+          <div style="padding-top: 80px">
             <div class="row justify-center ">
-              <div class="col-sm-12 col-lg-4 ">
+              <div class="col-sm-12 col-lg-4 " style="padding:10px">
                 <q-list style="padding:10px" align="center">
                   <form @submit.prevent="buscaProdutoPorBarras()">
                     <q-input v-model="buscaPorBarras.barras" float-label="Código" ref="campoBarras"/>
                   </form>
                   <div align="end">
-                    <q-btn flat @click="modalBuscaPorBarras = false" label="Fechar"/>
+                    <q-page-sticky position="top-right" :offset="[32, -18]">
+                      <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false"/>
+                    </q-page-sticky>
                   </div>
                 </q-list>
               </div>
@@ -502,7 +505,6 @@ export default {
     }
   },
   computed: {
-
     produtosMostrar: function() {
       if (!this.carregado) {
         return
@@ -544,7 +546,10 @@ export default {
       if(vm.conferencia.customedioinformado == null){
         vm.conferencia.customedioinformado = vm.produto.saldoatual.custo
       }
-      if(vm.conferencia.corredor == null && vm.conferencia.prateleira == null && vm.conferencia.coluna == null && vm.conferencia.bloco == null)
+      if(vm.conferencia.corredor == null &&
+        vm.conferencia.prateleira == null &&
+        vm.conferencia.coluna == null &&
+        vm.conferencia.bloco == null)
       {
         vm.conferencia.corredor = vm.produto.localizacao.corredor
         vm.conferencia.prateleira = vm.produto.localizacao.prateleira
@@ -661,10 +666,6 @@ export default {
       this.$nextTick(() => this.$refs.campoQuantidadeInformada.focus())
     },
     buscaProdutoPorBarras: function() {
-      /*
-      console.log('entrou')
-      return
-      */
       let vm = this
       let params = {
         barras: vm.buscaPorBarras.barras,

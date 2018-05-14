@@ -1,10 +1,8 @@
 <template>
   <mg-layout>
-
     <q-btn flat round slot="menu" @click="$router.push('/')">
       <q-icon name="arrow_back" />
     </q-btn>
-
     <q-btn flat round icon="done" slot="menuRight" @click.prevent="iniciarConferencia()" />
 
     <template slot="title">
@@ -12,14 +10,11 @@
     </template>
     <div slot="content">
       <div class="layout-padding">
-
         <div class="row gutter-x-sm gutter-y-lg">
           <div class="col-12 col-md-4">
-
             <div class="row">
               <div class="q-caption">Conferir Produtos de</div>
             </div>
-
             <!-- Codestoquelocal -->
             <div class="row">
               <div class="col">
@@ -31,19 +26,13 @@
                 <mg-erros-validacao :erros="erros.codestoquelocal"></mg-erros-validacao>
               </div>
             </div>
-
             <!-- Tipo - Fisico/Fiscal -->
             <div class="row">
               <div class="col">
-                <q-select
-                float-label="Tipo"
-                v-model="data.fiscal"
-                :options="tipos"
-                />
+                <q-select float-label="Tipo" v-model="data.fiscal" :options="tipos"/>
                 <mg-erros-validacao :erros="erros.fiscal"></mg-erros-validacao>
               </div>
             </div>
-
             <!-- Codigo da Marca -->
             <div class="row">
               <div class="col">
@@ -51,25 +40,20 @@
                 <mg-erros-validacao :erros="erros.codmarca"></mg-erros-validacao>
               </div>
             </div>
-
           </div>
           <div class="col-12 col-md-6">
-
             <div class="row">
               <div class="q-caption">Jogar alteraçao de Estoque em</div>
               <br />
             </div>
-
             <div class="row">
               <div class="col">
                 <q-datetime-picker v-model="data.data" type="datetime" stack-label="Ajustar estoquem em"/>
                 <mg-erros-validacao :erros="erros.data"></mg-erros-validacao>
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   </mg-layout>
