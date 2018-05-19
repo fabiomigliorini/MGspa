@@ -93,8 +93,6 @@ class EstoqueSaldoConferenciaController extends MgController
         $quantidadeinformada = floatval($request->quantidadeinformada);
         $customedioinformado = floatval($request->customedioinformado);
 
-        //dd($)
-
         DB::beginTransaction();
 
         $model = EstoqueSaldoConferenciaRepository::criaConferencia(
@@ -131,6 +129,7 @@ class EstoqueSaldoConferenciaController extends MgController
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
             $model->EstoqueSaldo->fiscal);
+        
         return response()->json($res, 200);
     }
 

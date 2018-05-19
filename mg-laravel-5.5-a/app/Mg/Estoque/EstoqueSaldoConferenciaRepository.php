@@ -324,7 +324,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'descontinuado' => $pv->descontinuado,
                 'inativo' => ($pv->inativo)?$pv->inativo->toW3cString():null,
                 'estoqueminimo' => $elpv->estoqueminimo??null,
-                'estoquemaximo' => $elpv->estoquemaximo??null
+                'estoquemaximo' => $elpv->estoquemaximo??null,
             ],
             'barras' => $barras,
             'localizacao' => [
@@ -337,6 +337,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 'vencimento' => (!empty($elpv->vencimento))?$elpv->vencimento->toW3cString():null,
             ],
             'saldoatual' => [
+                'ultimaconferencia' => (!empty($es->ultimaconferencia))?$es->ultimaconferencia->toW3cString():null,
                 'quantidade' => $es->saldoquantidade??null,
                 'custo' => $es->customedio??null
             ],
@@ -365,6 +366,15 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 
         // 3 - Marcar registro como inativo
         parent::inativar($model, $date);
+
+        // 4 - Recalcular data da ultima conferencia
+        $ultimaconferencia = null;
+        if ($conf = $model->EstoqueSaldo->EstoqueSaldoConferenciaS()->where('codestoquesaldoconferencia', '!=', $model->codestoquesaldoconferencia)->ativo()->orderBy('criacao', 'desc')->first()) {
+          $ultimaconferencia = $conf->criacao;
+        }
+
+        $model->EstoqueSaldo->ultimaconferencia = $ultimaconferencia;
+        $model->EstoqueSaldo->save();
 
     }
 
