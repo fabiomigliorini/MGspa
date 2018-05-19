@@ -1,11 +1,11 @@
 ﻿/*
 
 select codmarca, marca from tblmarca where controlada order by marca
-update tblmarca set controlada = true where marca ilike 'helomax'
+update tblmarca set controlada = true where marca ilike 'opa'
 
 select * from tblmarca
 
-update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'banderart'
+update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'gitex'
 */
 
 select 
@@ -64,7 +64,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'hp')
+    where (m.marca ilike 'casio')
     and pv.descontinuado is null
     and p.inativo is null
     --and p.produto ilike '%tris%'
@@ -81,29 +81,12 @@ from
 --update tblnfeterceiroitem set margem = 60 where codnfeterceiro = 17875
 
 /*
-UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = NOW() WHERE CODPRODUTOVARIACAO IN (
-68942
-,82504
-,70124
-,68949
-,68950
-,67462
-,83800
-,79879
-,70125
-,68931
-,54400
-,68934
-,68539
-,68535
-,68537
-,68935
-,77030
-,68937
-
+UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = NOW() WHERE CODPRODUTOVARIACAO IN ( NULL
+,73229
+,73225
 )
 
-update tblprodutovariacao set descontinuado = null where codprodutovariacao = 1740
+update tblprodutovariacao set descontinuado = null where descontinuado is not null and codprodutovariacao = 84313
 
 
 
