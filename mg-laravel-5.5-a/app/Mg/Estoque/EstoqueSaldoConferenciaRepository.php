@@ -217,7 +217,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 $saldo = 0;
                 $ultimaconferencia = null;
                 foreach ($variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->get() as $elpv) {
-                    foreach ($elpv->EstoqueSaldoS()->orderBy('ultimaconferencia', 'ASC')->where('fiscal', $fiscal)->get() as $es) {
+                    foreach ($elpv->EstoqueSaldoS()->orderBy('ultimaconferencia', 'DESC')->where('fiscal', $fiscal)->get() as $es) {
                         $saldo += (float)$es->saldoquantidade;
                         $ultimaconferencia = (!empty($es->ultimaconferencia))?$es->ultimaconferencia->toW3cString():null;
                     }
@@ -274,7 +274,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 
         if ($elpv = $pv->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->first()) {
             if ($es = $elpv->EstoqueSaldoS()->where('fiscal', $fiscal)->first()) {
-                foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'ASC')->whereNull('inativo')->get() as $esc) {
+                foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'DESC')->whereNull('inativo')->get() as $esc) {
                     $conferencias[] = [
                         'codestoquesaldoconferencia' => $esc->codestoquesaldoconferencia,
                         'data' => $esc->data->toW3cString(),
