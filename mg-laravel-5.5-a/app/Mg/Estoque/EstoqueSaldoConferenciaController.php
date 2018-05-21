@@ -52,7 +52,13 @@ class EstoqueSaldoConferenciaController extends MgController
     {
         $codprodutovariacao = $request->codprodutovariacao;
         if (empty($codprodutovariacao)) {
-            $pb  = \Mg\Produto\ProdutoRepository::buscaPorBarras($request->barras);
+            if (!$pb  = \Mg\Produto\ProdutoRepository::buscaPorBarras($request->barras)) {
+                return response()->json([
+                    'erro' => true,
+                    'mensagem' => 'Código de Barras não localizado!'
+                ], 206);
+                abort(404);
+            }
             $codprodutovariacao = $pb->codprodutovariacao;
         }
 
@@ -129,7 +135,7 @@ class EstoqueSaldoConferenciaController extends MgController
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
             $model->EstoqueSaldo->fiscal);
-        
+
         return response()->json($res, 200);
     }
 
