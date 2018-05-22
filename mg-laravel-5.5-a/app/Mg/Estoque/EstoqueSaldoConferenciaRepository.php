@@ -175,7 +175,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         switch ($inativo) {
             // Inativos
             case 1:
-                $qProduto = $qProduto->whereNotNull('inativo');
+                $qProduto = $qProduto->whereNotNull('inativo')->orderBy('produto');
                 break;
 
             // Todos
@@ -184,7 +184,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 
             // Ativos
             default:
-                $qProduto = $qProduto->whereNull('inativo');
+                $qProduto = $qProduto->whereNull('inativo')->orderBy('produto');
                 break;
         }
         $prods = $qProduto->get();
