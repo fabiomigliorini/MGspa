@@ -60,38 +60,41 @@
           <q-icon name="assignment_turned_in" style="font-size: 30px" />
         </q-tab>
       </q-tabs>
-      <q-list highlight separator>
-        <template v-for="produto in produtosMostrar">
-          <q-item multiline @click.native="buscaProduto(produto)">
-            <q-item-side v-if="produto.imagem">
-              <img :src="produto.imagem" style="width: 55px; height: 55px" />
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile label lines="3">
-                {{ produto.produto }}
-                <template v-if="produto.variacao">- {{produto.variacao}}</template>
-              </q-item-tile>
-              <q-item-tile sublabel lines="2">
-                <q-chip detail square dense icon="vpn_key">
-                  {{ numeral(produto.codproduto).format('000000') }}
-                </q-chip>
-                <q-chip detail square dense icon="widgets" :color="(produto.saldo>0)?'green':(produto.saldo<0)?'red':'grey'">
-                  {{ numeral(produto.saldo).format('0,0') }}
-                </q-chip>
-                <q-chip detail square dense icon="thumb_down" v-if="produto.inativo" color="red">
-                  {{ moment(produto.inativo).fromNow() }}
-                </q-chip>
-              </q-item-tile>
-            </q-item-main>
-            <q-item-side right v-if="produto.ultimaconferencia">
-              <q-item-tile stamp>
-                {{ moment(produto.ultimaconferencia).fromNow() }}
-              </q-item-tile>
-            <q-item-tile icon="assignment_turned_in" />
-          </q-item-side>
-        </q-item>
-      </template>
-    </q-list>
+      <!-- Infinit scroll -->
+      <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
+        <q-list highlight separator>
+          <template v-for="produto in produtosMostrar">
+            <q-item multiline @click.native="buscaProduto(produto)">
+              <q-item-side v-if="produto.imagem">
+                <img :src="produto.imagem" style="width: 55px; height: 55px" />
+              </q-item-side>
+              <q-item-main>
+                <q-item-tile label lines="3">
+                  {{ produto.produto }}
+                  <template v-if="produto.variacao">- {{produto.variacao}}</template>
+                </q-item-tile>
+                <q-item-tile sublabel lines="2">
+                  <q-chip detail square dense icon="vpn_key">
+                    {{ numeral(produto.codproduto).format('000000') }}
+                  </q-chip>
+                  <q-chip detail square dense icon="widgets" :color="(produto.saldo>0)?'green':(produto.saldo<0)?'red':'grey'">
+                    {{ numeral(produto.saldo).format('0,0') }}
+                  </q-chip>
+                  <q-chip detail square dense icon="thumb_down" v-if="produto.inativo" color="red">
+                    {{ moment(produto.inativo).fromNow() }}
+                  </q-chip>
+                </q-item-tile>
+              </q-item-main>
+              <q-item-side right v-if="produto.ultimaconferencia">
+                <q-item-tile stamp>
+                  {{ moment(produto.ultimaconferencia).fromNow() }}
+                </q-item-tile>
+                <q-item-tile icon="assignment_turned_in" />
+              </q-item-side>
+            </q-item>
+          </template>
+        </q-list>
+      </q-infinite-scroll>
     <q-page-sticky corner="bottom-right" :offset="[32, 32]">
       <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true" />
     </q-page-sticky>
@@ -109,13 +112,13 @@
             </q-card-media>
             <q-card-title>
               <q-item-tile>
-                <q-chip square color="negative" v-if="produto.produto.inativo">
+                <q-chip small square color="negative" v-if="produto.produto.inativo">
                   Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
                 </q-chip>
-                <q-chip square color="negative" v-if="produto.variacao.inativo">
+                <q-chip small square color="negative" v-if="produto.variacao.inativo">
                   Variação Inativa {{ moment(produto.variacao.inativo).fromNow() }}
                 </q-chip>
-                <q-chip square color="negative" v-if="produto.variacao.descontinuado">
+                <q-chip small square color="negative" v-if="produto.variacao.descontinuado">
                   Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
                 </q-chip>
               </q-item-tile>
@@ -272,6 +275,17 @@
         <div class="row justify-center">
           <q-card class="col-xs-12 col-sm-6 col-md-5 col-lg-4 ">
             <q-card-title>
+              <q-item-tile>
+                <q-chip small square color="negative" v-if="produto.produto.inativo">
+                  Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
+                </q-chip>
+                <q-chip small square color="negative" v-if="produto.variacao.inativo">
+                  Variação Inativa {{ moment(produto.variacao.inativo).fromNow() }}
+                </q-chip>
+                <q-chip small square color="negative" v-if="produto.variacao.descontinuado">
+                  Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
+                </q-chip>
+              </q-item-tile>
               {{produto.produto.produto}}
               <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
               <q-chip detail square dense icon="vpn_key">
@@ -398,7 +412,7 @@ export default {
   },
   data() {
     return {
-      teste: "teste",
+      page: 1,
       filter: {
         codestoquelocal: null,
         codmarca: null,
@@ -439,6 +453,7 @@ export default {
   watch: {
     filter: {
       handler: function(val, oldVal) {
+        this.page = 1
         this.buscaListagem(false, null)
       },
       deep: true
@@ -467,6 +482,11 @@ export default {
     },
   },
   methods: {
+    // scroll infinito - carregar mais registros
+    loadMore (index, done) {
+      this.page++
+      this.buscaListagem(true, done)
+    },
     salvaConferencia: function() {
       let vm = this
       let params = {
@@ -517,6 +537,7 @@ export default {
       })
     },
     buscaListagem: function() {
+      // inicializa variaveis
       let vm = this
       let params = {
         codestoquelocal: vm.filter.codestoquelocal,
@@ -524,11 +545,32 @@ export default {
         fiscal: vm.filter.fiscal,
         inativo: vm.filter.inativo
       }
+      params.page = this.page
+      this.loading = true
       vm.$axios.get('estoque-saldo-conferencia/busca-listagem', {
         params
       }).then(function(request) {
         vm.data = request.data
         vm.carregado = true
+
+        // Desativa Scroll Infinito se chegou no fim
+        if (vm.$refs.infiniteScroll) {
+          if (vm.data.length === 0) {
+            vm.$refs.infiniteScroll.stop()
+          }
+          else {
+            vm.$refs.infiniteScroll.resume()
+          }
+        }
+
+        // desmarca flag de carregando
+        this.loading = false
+
+        // Executa done do scroll infinito
+        if (done) {
+          done()
+        }
+
       }).catch(function(error) {
         console.log(error.response)
       })
