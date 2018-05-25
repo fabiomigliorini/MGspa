@@ -38,7 +38,17 @@ select * from tbljobs where queue in ('high', 'medium')
 
 
 delete from tbljobs where id in (
-7160379
+9816668
+,9816714
+,9816672
+,9816655
+,9816657
+,9816677
+,9816664
+,9816695
+,9816715
+,9816730
+,9816721
 )
 */
 

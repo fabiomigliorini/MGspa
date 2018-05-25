@@ -64,7 +64,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'casio')
+    where (m.marca ilike 'banderart')
     and pv.descontinuado is null
     and p.inativo is null
     --and p.produto ilike '%tris%'
@@ -82,8 +82,8 @@ from
 
 /*
 UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = NOW() WHERE CODPRODUTOVARIACAO IN ( NULL
-,73229
-,73225
+,53220
+
 )
 
 update tblprodutovariacao set descontinuado = null where descontinuado is not null and codprodutovariacao = 84313

@@ -4,7 +4,24 @@ from tblnfeterceiroitem nti
 inner join tblprodutobarra pb on (pb.codprodutobarra = nti.codprodutobarra)
 --where pb.codproduto = 12752
 -- where pb.codprodutovariacao between 13276 and 13277
-where pb.codprodutovariacao = 14092
+where pb.codprodutovariacao = 80785
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
