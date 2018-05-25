@@ -1,20 +1,16 @@
 <template>
-  <mg-layout>
-    <q-btn flat round slot="menu" @click="$router.push('/')">
-      <q-icon name="arrow_back" />
-    </q-btn>
-    <q-btn flat round icon="done" slot="menuRight" @click.prevent="iniciarConferencia()" />
-
+  <mg-layout  back-path="/">
     <template slot="title">
       Conferência de estoque
     </template>
     <div slot="content">
       <div class="layout-padding">
-        <div class="row gutter-x-sm gutter-y-lg">
-          <div class="col-12 col-md-4">
+        <div class="row">
+          <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="row">
               <div class="q-caption">Conferir Produtos de</div>
             </div>
+
             <!-- Codestoquelocal -->
             <div class="row">
               <div class="col">
@@ -26,6 +22,7 @@
                 <mg-erros-validacao :erros="erros.codestoquelocal"></mg-erros-validacao>
               </div>
             </div>
+
             <!-- Tipo - Fisico/Fiscal -->
             <div class="row">
               <div class="col">
@@ -33,6 +30,7 @@
                 <mg-erros-validacao :erros="erros.fiscal"></mg-erros-validacao>
               </div>
             </div>
+
             <!-- Codigo da Marca -->
             <div class="row">
               <div class="col">
@@ -40,19 +38,19 @@
                 <mg-erros-validacao :erros="erros.codmarca"></mg-erros-validacao>
               </div>
             </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="row">
-              <div class="q-caption">Jogar alteraçao de Estoque em</div>
-              <br />
-            </div>
+
+            <!-- Data para jogar o movimento do estoque -->
             <div class="row">
               <div class="col">
-                <q-datetime-picker v-model="data.data" type="datetime" stack-label="Ajustar estoquem em"/>
+                <q-input type="datetime-local" v-model="data.data" stack-label="Ajustar Estoque em" align="center" clearable />
                 <mg-erros-validacao :erros="erros.data"></mg-erros-validacao>
               </div>
             </div>
+
           </div>
+          <q-page-sticky corner="bottom-right" :offset="[32, 32]">
+            <q-btn round color="primary" icon="done" @click.prevent="iniciarConferencia()" />
+          </q-page-sticky>
         </div>
       </div>
     </div>
@@ -138,13 +136,6 @@ export default {
         return
       }
 
-      let params = [
-        this.data.codestoquelocal,
-        this.data.codmarca,
-        this.data.fiscal,
-        this.data.data
-      ]
-
       this.$router.push('/estoque-saldo-conferencia/listagem/'
         + this.data.codestoquelocal + '/'
         + this.data.codmarca + '/'
@@ -153,8 +144,10 @@ export default {
       )
     },
   },
-  mounted () {
-    console.log(this.data)
+  created () {
+    if (this.data.data == null) {
+      this.data.data = this.moment().format('YYYY-MM-DDTHH:mm')
+    }
   }
 }
 </script>

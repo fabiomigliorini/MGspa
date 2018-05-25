@@ -19,7 +19,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
                 $prateleira,
                 $coluna,
                 $bloco,
-                Carbon $vencimento
+                Carbon $vencimento = null
             ) {
 
         // Atualiza dados da EstoqueLocalProdutoVariacao
@@ -162,20 +162,47 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         return $mov;
     }
 
-    public static function buscaListagem (int $codmarca, int $codestoquelocal, bool $fiscal, int $inativo)
+    public static function buscaListagem (
+        int $codmarca,
+        int $codestoquelocal,
+        bool $fiscal,
+        int $inativo,
+        Carbon $dataCorte,
+        bool $conferidos,
+        int $page
+      )
     {
 
         $marca = \Mg\Marca\Marca::findOrFail($codmarca);
         $estoquelocal = EstoqueLocal::findOrFail($codestoquelocal);
 
-        $produtos = [];
+        // Monta query para buscar produtos
+        $sql = '
+            select
+            	p.codproduto,
+            	pv.codprodutovariacao,
+            	p.produto,
+            	pv.variacao,
+            	es.saldoquantidade,
+            	coalesce(p.inativo, pv.inativo) as inativo,
+            	pv.descontinuado,
+            	es.ultimaconferencia,
+              p.codprodutoimagem,
+              pv.codprodutoimagem as codprodutoimagemvariacao
+            from tblproduto p
+            inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
+            left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = :codestoquelocal and elpv.codprodutovariacao = pv.codprodutovariacao)
+            left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = :fiscal)
+            where p.codmarca = :codmarca
+        ';
 
-        $qProduto = $marca->ProdutoS();
-        // Filtra produtos inativos
+        // filtra ativos / inativos
         switch ($inativo) {
             // Inativos
             case 1:
-                $qProduto = $qProduto->whereNotNull('inativo')->orderBy('produto');
+                $sql .= '
+                  and (p.inativo is not null or pv.inativo is not null)
+                ';
                 break;
 
             // Todos
@@ -184,70 +211,67 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 
             // Ativos
             default:
-                $qProduto = $qProduto->whereNull('inativo')->orderBy('produto');
+                $sql .= '
+                  and p.inativo is null
+                  and pv.inativo is null
+                ';
                 break;
         }
-        $prods = $qProduto->get();
 
-        foreach ($prods as $produto) {
+        // filtra conferidos
+        if ($conferidos) {
+            $sql .= '
+                and es.ultimaconferencia >= :dataCorte
+            ';
+        } else {
+            $sql .= '
+                and (es.ultimaconferencia < :dataCorte or es.ultimaconferencia is null)
+            ';
+        }
 
-            $qVariacoes = $produto->ProdutoVariacaoS();
-            // Filtra variacoes inativas
-            switch ($inativo) {
-                // Inativos
-                case 1:
-                    if (empty($produto->inativo)) {
-                        $qVariacoes = $qVariacoes->whereNotNull('inativo');
-                    }
-                    break;
+        // ordena
+        if ($conferidos) {
+            $sql .= '
+                order by es.ultimaconferencia DESC, p.produto, pv.variacao ASC nulls first
+            ';
+        } else {
+            $sql .= '
+                order by p.produto ASC, pv.variacao ASC nulls first
+            ';
+        }
 
-                // Todos
-                case 9:
-                    break;
+        // paginacao
+        $sql .= '
+            limit :limit offset :offset
+        ';
 
-                // Ativos
-                default:
-                    $qVariacoes = $qVariacoes->whereNull('inativo');
-                    break;
+        $limit = 50;
+        $offset = ($page -1) * $limit;
+
+        $produtos = DB::select($sql, [
+          'codmarca' => $codmarca,
+          'codestoquelocal' => $codestoquelocal,
+          'fiscal' => $fiscal,
+          'dataCorte' => $dataCorte,
+          'limit' => $limit,
+          'offset' => $offset,
+        ]);
+
+        foreach ($produtos as $i => $produto) {
+
+            $produtos[$i]->saldoquantidade = (double)$produtos[$i]->saldoquantidade;
+
+            // Busca Imagem Pincipal da Variacao ou do Produto
+            if ($codprodutoimagem = ($produto->codprodutoimagemvariacao??$produto->codprodutoimagem)) {
+                $pi = \Mg\Produto\ProdutoImagem::where('codprodutoimagem', $codprodutoimagem)->first();
+                $produtos[$i]->imagem = $pi->Imagem->url;
+                continue;
             }
-            $produtoVariacoes = $qVariacoes->get();
 
-            foreach ($produtoVariacoes as $variacao) {
-
-                $saldo = 0;
-                $ultimaconferencia = null;
-                foreach ($variacao->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->get() as $elpv) {
-                    foreach ($elpv->EstoqueSaldoS()->orderBy('ultimaconferencia', 'DESC')->where('fiscal', $fiscal)->get() as $es) {
-                        $saldo += (float)$es->saldoquantidade;
-                        $ultimaconferencia = (!empty($es->ultimaconferencia))?$es->ultimaconferencia->toW3cString():null;
-                    }
-                }
-
-                $imagem = null;
-                if (!empty($variacao->codprodutoimagem)) {
-                    $imagem = $variacao->ProdutoImagem->Imagem->url;
-                } elseif (!empty($produto->codprodutoimagem)) {
-                    $imagem = $produto->ProdutoImagem->Imagem->url;
-                } elseif ($pi = $produto->ProdutoImagemS()->first()) {
-                    $imagem = $pi->Imagem->url;
-                }
-
-                $i = $produto->inativo??$variacao->inativo;
-                if (!empty($i)) {
-                    $i = $i->toW3CString();
-                }
-
-                $produtos[] = [
-                    'imagem' => $imagem,
-                    'codproduto' => $variacao->codproduto,
-                    'codprodutovariacao' => $variacao->codprodutovariacao,
-                    'produto' => $variacao->Produto->produto,
-                    'variacao' => $variacao->variacao,
-                    'saldo' => $saldo,
-                    'inativo' => $i,
-                    'descontinuado' => $variacao->descontinuado,
-                    'ultimaconferencia' => $ultimaconferencia
-                ];
+            // Se nao busca primeira imagem relacionada ao produto
+            if ($pi = \Mg\Produto\ProdutoImagem::where('codproduto', $produto->codproduto)->first()) {
+                $produtos[$i]->imagem = $pi->Imagem->url;
+                continue;
             }
         }
 

@@ -268,6 +268,7 @@ export default {
       var vm = this
       var params = this.filter
       params.page = this.page
+      console.log(this.page)
       this.loading = true
 
       // faz chamada api

@@ -26,18 +26,25 @@ class EstoqueSaldoConferenciaController extends MgController
             'codestoquelocal' => 'required|integer',
             'fiscal' => 'required|boolean',
             'inativo' => 'required|integer',
+            'conferidos' => 'required|boolean',
+            'dataCorte' => 'required|date',
         ]);
 
         $codmarca =intval($request->codmarca);
         $codestoquelocal =intval($request->codestoquelocal);
         $fiscal = boolval($request->fiscal);
         $inativo = intval($request->inativo);
+        $conferidos = boolval($request->conferidos);
+        $dataCorte = new \Carbon\Carbon($request->dataCorte);
 
         $res = EstoqueSaldoConferenciaRepository::buscaListagem(
             $codmarca,
             $codestoquelocal,
             $fiscal,
-            $inativo
+            $inativo,
+            $dataCorte,
+            $conferidos,
+            $request->page??1
         );
 
         return response()->json($res, 206);
@@ -94,7 +101,11 @@ class EstoqueSaldoConferenciaController extends MgController
         ]);
 
         $data = new \Carbon\Carbon($request->data);
-        $vencimento = new \Carbon\Carbon($request->data);
+        $vencimento = null;
+        if (!empty($request->vencimento)) {
+            $vencimento = new \Carbon\Carbon($request->vencimento);
+        }
+
         $fiscal = boolval($request->fiscal);
         $quantidadeinformada = floatval($request->quantidadeinformada);
         $customedioinformado = floatval($request->customedioinformado);
