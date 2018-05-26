@@ -101,7 +101,7 @@
         </q-list>
       </template>
     <q-page-sticky corner="bottom-right" :offset="[32, 32]">
-      <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true" />
+      <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true; buscaPorBarras.barras ='' " />
     </q-page-sticky>
 
     <!-- MODAL DE DETALHES DO PRODUTO -->
@@ -282,10 +282,10 @@
     <template>
       <q-modal maximized v-model="modalConferencia" v-if="produtoCarregado" @hide="focoCampoBarras()" @show="focoCampoQuantidadeInformada()">
         <div class="row justify-center">
-          <q-card class="col-xs-12 col-sm-6 col-md-5 col-lg-4 ">
+          <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
             <q-card-title>
               <q-item-tile>
-              {{produto.produto.produto}}
+                {{produto.produto.produto}} {{produto.variacao.variacao}}
               <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
               <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.produto.inativo">
                 Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
@@ -364,14 +364,14 @@
                 </form>
                 <!-- BOTAO FECHAR -->
                 <q-page-sticky position="top-right" :offset="[32, -18]">
-                  <q-btn round color="faded" icon="close" @click="modalConferencia = false" />
+                  <q-btn round color="faded" icon="close" @click="modalConferencia = false; buscaPorBarras.barras ='' " />
                 </q-page-sticky>
                 <!-- BOTAO CONFIRMAR -->
                 <q-page-sticky position="bottom-right" :offset="[32, -18]">
                   <q-btn round color="primary" icon="done" @click="salvaConferencia()" />
                 </q-page-sticky>
               </q-card-main>
-            </q-card>
+            </div>
           </div>
         </q-modal>
       </template>
@@ -392,7 +392,7 @@
                 </q-item>
               </form>
               <q-page-sticky position="top-right" :offset="[32, -30]">
-                <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false" />
+                <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false, buscaPorBarras.barras = null" />
               </q-page-sticky>
               <q-page-sticky position="bottom-right" :offset="[32, -30]">
                 <q-btn round color="primary" icon="done" @click="buscaProduto()" />
@@ -547,7 +547,6 @@ export default {
         params
       }).then(function(request) {
 
-
         // Se for para concatenar, senao inicializa
         if (vm.page == 1) {
           vm.data = request.data
@@ -600,10 +599,41 @@ export default {
       this.conferencia.observacoes = null
 
       // procura registro na listagem de produtos
+      console.log('antes teste se esta no array')
       var cod = this.produto.variacao.codprodutovariacao
       var i = this.data.produtos.findIndex(k => k.codprodutovariacao==cod)
+
+      console.log(this.data.produtos[0])
+      console.log(this.produto)
+
+      // se nao estiver no array
       if (i == -1) {
-        return
+
+        // se for um novo item conferido adiciona
+        if (this.filter.conferidos == 'conferidos' && this.moment(this.produto.saldoatual.ultimaconferencia).isAfter(this.filter.dataCorte)) {
+
+          let novoproduto = {
+            codproduto: this.produto.produto.codproduto,
+            codprodutoimagem: null,
+            codprodutoimagemvariacao: null,
+            codprodutovariacao: this.produto.variacao.codprodutovariacao,
+            descontinuado: this.produto.variacao.descontinuado,
+            imagem: null,
+            inativo: (this.produto.produto.inativo != null)?this.produto.produto.inativo:this.produto.variacao.inativo,
+            produto: this.produto.produto.produto,
+            saldoquantidade: this.produto.saldoatual.quantidade,
+            ultimaconferencia: this.produto.saldoatual.ultimaconferencia,
+            variacao: this.produto.variacao.variacao
+          }
+
+          console.log(novoproduto)
+
+          this.data.produtos.unshift(novoproduto)
+
+        // se nao nao faz nada
+        } else {
+          return
+        }
       }
 
       // remove registro da listagem se está na aba de *conferidos*
@@ -646,6 +676,7 @@ export default {
       }
 
       vm.buscaPorBarras.barras = null
+
       vm.$axios.get('estoque-saldo-conferencia/busca-produto', {
         params
       }).then(function(request) {
