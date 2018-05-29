@@ -116,7 +116,7 @@
 
       </template>
       <q-page-sticky corner="bottom-right" :offset="[32, 32]">
-        <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true; buscaPorBarras.barras ='' " />
+        <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true" />
       </q-page-sticky>
 
     <!-- MODAL DE DETALHES DO PRODUTO -->
@@ -392,7 +392,7 @@
 
                 <!-- BOTAO FECHAR -->
                 <q-page-sticky position="top-right" :offset="[32, -18]">
-                  <q-btn round color="faded" icon="close" @click="modalConferencia = false; buscaPorBarras.barras ='' " />
+                  <q-btn round color="faded" icon="close" @click="modalConferencia = false" />
                 </q-page-sticky>
                 <!-- BOTAO CONFIRMAR -->
                 <q-page-sticky position="bottom-right" :offset="[32, -18]">
@@ -416,13 +416,13 @@
                   <q-item-side icon="view column" color="black"/>
                   <q-item-main>
                     <q-field >
-                      <q-input clearable v-model="buscaPorBarras.barras" float-label="Informe o código de barras" ref="campoBarras" align="center" />
+                      <q-input clearable v-model="buscaPorBarras" float-label="Informe o código de barras" ref="campoBarras" align="center" />
                     </q-field>
                   </q-item-main>
                 </q-item>
               </form>
               <q-page-sticky position="top-right" :offset="[32, -30]">
-                <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false, buscaPorBarras.barras = null" />
+                <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false" />
               </q-page-sticky>
               <q-page-sticky position="bottom-right" :offset="[32, -30]">
                 <q-btn round color="primary" icon="done" @click="buscaProduto()" />
@@ -465,7 +465,7 @@ export default {
         quantidade: null,
         customedio: null
       },
-      buscaPorBarras: {},
+      buscaPorBarras: null,
       produto: {},
       data: {},
       conferencia: {
@@ -548,7 +548,6 @@ export default {
       vm.$axios.post('estoque-saldo-conferencia', params).then(function(request) {
         vm.modalConferencia = false
         vm.conferenciaSalva = true
-        vm.buscaPorBarras.barras = null
         vm.parseProduto(request.data)
         vm.$q.notify({
           message: 'Conferência realizada',
@@ -556,12 +555,6 @@ export default {
         })
       }).catch(function(error) {
         console.log(error)
-        if (vm.erros){
-          vm.$q.notify({
-            message: 'Campo custo e quantidade deve ser preenchido!',
-            type: 'negative',
-          })
-        }
       })
     },
 
@@ -656,12 +649,8 @@ export default {
       this.conferencia.observacoes = null
 
       // procura registro na listagem de produtos
-      console.log('antes teste se esta no array')
       var cod = this.produto.variacao.codprodutovariacao
       var i = this.data.produtos.findIndex(k => k.codprodutovariacao==cod)
-
-      console.log(this.data.produtos[0])
-      console.log(this.produto)
 
       // se nao estiver no array
       if (i == -1) {
@@ -682,8 +671,6 @@ export default {
             ultimaconferencia: this.produto.saldoatual.ultimaconferencia,
             variacao: this.produto.variacao.variacao
           }
-
-          console.log(novoproduto)
 
           this.data.produtos.unshift(novoproduto)
 
@@ -723,16 +710,15 @@ export default {
         fiscal: this.filter.fiscal
       }
       if (produto == null) {
-        if (vm.buscaPorBarras.barras == null) {
+        if (vm.buscaPorBarras == null) {
           return
         }
-        params.barras = vm.buscaPorBarras.barras
+        params.barras = vm.buscaPorBarras
       } else {
         this.produtoImagem = produto.imagem
         params.codprodutovariacao = produto.codprodutovariacao
       }
-
-      vm.buscaPorBarras.barras = null
+      this.buscaPorBarras = null
 
       vm.$axios.get('estoque-saldo-conferencia/busca-produto', { params }).then(function(request){
         if (request.data.erro == true) {
@@ -744,7 +730,6 @@ export default {
         }
         vm.parseProduto(request.data)
         vm.produtoCarregado = true
-        vm.buscaPorBarras.barras = null
         if (produto == null) {
           vm.modalConferencia = true
         } else {
