@@ -49,19 +49,23 @@
       </q-item>
     </div>
 
-    <div slot="content">
+    <template slot="tabHeader">
       <q-tabs v-model="filter.conferidos">
-        <q-tab slot="title" name="conferir" default>
-          <q-icon name="assignment_late" style="font-size: 30px" />
+        <q-tab slot="title" name="conferir" icon="close" label="Por fazer" default>
+          <!-- <q-icon name="assignment_late" style="font-size: 30px" /> -->
         </q-tab>
-        <q-tab slot="title" name="conferidos">
-          <q-icon name="assignment_turned_in" style="font-size: 30px" />
+        <q-tab slot="title" name="conferidos" icon="check" label="Conferidos">
+          <!-- <q-icon name="assignment_turned_in" style="font-size: 30px" /> -->
         </q-tab>
       </q-tabs>
-      <!-- Infinit scroll -->
-      <template v-if="data.produtos">
-        <q-list highlight separator v-if="data.produtos.length > 0">
+    </template>
 
+    <div slot="content">
+
+      <!-- Infinite scroll -->
+      <template v-if="carregado">
+
+        <q-list highlight separator v-if="data.produtos.length > 0">
           <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
             <template v-for="produto in data.produtos">
               <q-item multiline @click.native="buscaProduto(produto)">
@@ -98,17 +102,16 @@
 
           </q-infinite-scroll>
         </q-list>
-
         <template v-else>
           <q-item>
             <q-item-main>
               <h3 v-if="filter.conferidos =='conferidos'" class="text-red text-center">
-                Nenhum produto conferido! <br /> <br />
-                <q-icon name="thumb down" size="30vh"/>
+                Nenhum produto conferido! <br />
+                <q-icon name="thumb down" size="25vh"/>
               </h3>
               <h3 v-else class="text-green text-center">
-                Nenhum produto para conferir! <br /> <br />
-                <q-icon name="thumb up" size="30vh"/>
+                Nenhum produto para conferir! <br />
+                <q-icon name="thumb up" size="25vh"/>
               </h3>
             </q-item-main>
           </q-item>
@@ -580,8 +583,11 @@ export default {
     },
 
     buscaListagem: function(concat, done) {
+
       // inicializa variaveis
       let vm = this
+      vm.carregado = false
+      
       let params = {
         codestoquelocal: vm.filter.codestoquelocal,
         codmarca: vm.filter.codmarca,

@@ -17,8 +17,11 @@
         <slot name="menuRight">
           <q-btn flat round dense icon="apps" @click="rightSide = !rightSide" />
         </slot>
-
       </q-toolbar>
+
+      <slot name="tabHeader">
+      </slot>
+
     </q-layout-header>
 
     <q-layout-footer v-model="footer" :reveal="footerReveal">
