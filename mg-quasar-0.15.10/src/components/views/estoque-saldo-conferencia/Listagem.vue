@@ -1,10 +1,6 @@
 <template>
   <mg-layout drawer back-path="/estoque-saldo-conferencia/">
-    <!--
-    <q-btn flat round slot="menuRight" @click="$router.push('/estoque-saldo-conferencia')">
-      <q-icon name="arrow_back" />
-    </q-btn>
-    -->
+
     <template slot="title" v-if="carregado">
       {{data.local.estoquelocal }} / {{ data.marca.marca }}
     </template>
@@ -525,7 +521,7 @@ export default {
         return
       }
 
-      if (vm.conferencia.custo == null) {
+      if (vm.conferencia.customedio == null) {
         vm.$q.notify({
           message: 'Custo deve ser preenchido!',
           type: 'negative',
@@ -552,6 +548,7 @@ export default {
       vm.$axios.post('estoque-saldo-conferencia', params).then(function(request) {
         vm.modalConferencia = false
         vm.conferenciaSalva = true
+        vm.buscaPorBarras.barras = null
         vm.parseProduto(request.data)
         vm.$q.notify({
           message: 'Conferência realizada',
@@ -561,7 +558,7 @@ export default {
         console.log(error)
         if (vm.erros){
           vm.$q.notify({
-            message: 'Custo ou a Quantidade estão em branco',
+            message: 'Campo custo e quantidade deve ser preenchido!',
             type: 'negative',
           })
         }
