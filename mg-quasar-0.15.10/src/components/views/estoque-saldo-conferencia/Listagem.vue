@@ -103,36 +103,25 @@
           </q-infinite-scroll>
         </q-list>
 
-        <!-- <template v-else-if=" data.produtos.length < 1 && filter.conferidos == 'conferidos' ">
-          <q-item>
-            <q-item-main>
-              <q-item-tile align="center" sublabel>
-                <h4>Não há produtos condeferidos</h4>
-              </q-item-tile>
-              <q-item-tile align="center">
-                <img src="statics/hand-not-ok.png" style="max-width:200px; max-height:200px"/>
-              </q-item-tile>
-            </q-item-main>
-          </q-item>
-        </template> -->
-
         <template v-else>
           <q-item>
             <q-item-main>
-              <q-item-tile align="center" sublabel>
-                <h3>Não há produtos para mostrar</h3>
-              </q-item-tile>
-              <!-- <q-item-tile align="center">
-                <img src="statics/hand-ok.png" style="max-width:200px; max-height:200px"/>
-              </q-item-tile> -->
+              <h3 v-if="filter.conferidos =='conferidos'" class="text-red text-center">
+                Nenhum produto conferido! <br /> <br />
+                <q-icon name="thumb down" size="30vh"/>
+              </h3>
+              <h3 v-else class="text-green text-center">
+                Nenhum produto para conferir! <br /> <br />
+                <q-icon name="thumb up" size="30vh"/>
+              </h3>
             </q-item-main>
           </q-item>
         </template>
 
       </template>
-    <q-page-sticky corner="bottom-right" :offset="[32, 32]">
-      <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true; buscaPorBarras.barras ='' " />
-    </q-page-sticky>
+      <q-page-sticky corner="bottom-right" :offset="[32, 32]">
+        <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true; buscaPorBarras.barras ='' " />
+      </q-page-sticky>
 
     <!-- MODAL DE DETALHES DO PRODUTO -->
     <div class="col-md-12 col-lg-12">
@@ -314,25 +303,33 @@
         <div class="row justify-center">
           <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
             <q-card-title>
+
+              <!-- Nome do Produto e Variação -->
               <q-item-tile>
                 {{produto.produto.produto}} {{produto.variacao.variacao}}
-              <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
-              <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.produto.inativo">
-                Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
-              </q-chip>
-              <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.inativo">
-                Variação Inativa {{ moment(produto.variacao.inativo).fromNow() }}
-              </q-chip>
-              <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.descontinuado">
-                Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
-              </q-chip>
-            </q-item-tile>
+                <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
+
+                <!-- Ativo / Inativo / Descontinuado -->
+                <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.produto.inativo">
+                  Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
+                </q-chip>
+                <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.inativo">
+                  Variação Inativa {{ moment(produto.variacao.inativo).fromNow() }}
+                </q-chip>
+                <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.descontinuado">
+                  Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
+                </q-chip>
+              </q-item-tile>
+
+              <!-- Código do Produto -->
               <q-chip detail square dense icon="vpn_key">
                 {{ numeral(produto.produto.codproduto).format('000000') }}
               </q-chip>
             </q-card-title>
-              <q-card-main>
-                <form>
+
+            <q-card-main>
+              <form>
+
                   <!-- QUANTIDADE -->
                   <q-item dense>
                     <q-item-side icon="widgets" color="blue"/>
@@ -342,15 +339,17 @@
                       </q-field>
                     </q-item-main>
                   </q-item>
+
                   <!-- CUSTO -->
                   <q-item dense>
                     <q-item-side icon="attach_money" color="blue"/>
                     <q-item-main>
                       <q-field :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
-                        <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"/>
+                        <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
                       </q-field>
                     </q-item-main>
                   </q-item>
+
                   <!-- VENCIMENTO -->
                   <q-item dense>
                     <q-item-side icon="access alarm" color="red"/>
@@ -360,6 +359,7 @@
                       </q-field>
                     </q-item-main>
                   </q-item>
+
                   <!-- BOTAO LOCALIZACAO -->
                   <q-item dense>
                     <q-item-side icon="place" color="green"/>
@@ -382,6 +382,7 @@
                       </q-field>
                     </q-item-main>
                   </q-item>
+
                   <!-- OBSERVACOES -->
                   <q-item dense>
                     <q-item-side icon="description" color="black"/>
@@ -392,6 +393,7 @@
                     </q-item-main>
                   </q-item>
                 </form>
+
                 <!-- BOTAO FECHAR -->
                 <q-page-sticky position="top-right" :offset="[32, -18]">
                   <q-btn round color="faded" icon="close" @click="modalConferencia = false; buscaPorBarras.barras ='' " />
@@ -400,7 +402,9 @@
                 <q-page-sticky position="bottom-right" :offset="[32, -18]">
                   <q-btn round color="primary" icon="done" @click="salvaConferencia()" />
                 </q-page-sticky>
+
               </q-card-main>
+
             </div>
           </div>
         </q-modal>
@@ -510,6 +514,27 @@ export default {
 
     salvaConferencia: function() {
       let vm = this
+
+      if (vm.conferencia.quantidade == null) {
+        vm.$q.notify({
+          message: 'Quantidade deve ser preenchida!',
+          type: 'negative',
+        })
+        // jogar foco na quantidade
+        vm.focoCampoQuantidadeInformada()
+        return
+      }
+
+      if (vm.conferencia.custo == null) {
+        vm.$q.notify({
+          message: 'Custo deve ser preenchido!',
+          type: 'negative',
+        })
+        // jogar foco na quantidade
+        vm.focoCampoCustoMedioInformado()
+        return
+      }
+
       let params = {
         codprodutovariacao: vm.produto.variacao.codprodutovariacao,
         codestoquelocal: vm.filter.codestoquelocal,
@@ -744,6 +769,9 @@ export default {
     },
     focoCampoQuantidadeInformada: function() {
       this.$nextTick(() => this.$refs.campoQuantidadeInformada.focus())
+    },
+    focoCampoCustoMedioInformado: function() {
+      this.$nextTick(() => this.$refs.campoCustoMedioInformado.focus())
     }
 
   },
