@@ -2,7 +2,7 @@
   "name": "mg-quasar-0.15.10",
   "version": "1.0.0",
   "description": "Sistema MG Papelaria",
-  "productName": "MG Quasar Spa",
+  "productName": "MG Quasar SPA",
   "cordovaId": "org.cordova.quasar.app",
   "author": "Fabio Migliorini <fabio@mgpapelaria.com.br>",
   "private": true,

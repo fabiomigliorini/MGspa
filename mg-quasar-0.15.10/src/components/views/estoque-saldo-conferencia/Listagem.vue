@@ -10,48 +10,48 @@
     </template>
 
     <div slot="drawer">
-    <!-- Filtra Ativos -->
-    <q-list-header>Filtros</q-list-header>
-    <q-item tag="label">
-      <q-item-side icon="thumb_up"></q-item-side>
-      <q-item-main>
-        <q-item-tile title>Ativos</q-item-tile>
-      </q-item-main>
-      <q-item-side right>
-        <q-radio v-model="filter.inativo" :val="0" />
-      </q-item-side>
-    </q-item>
-    <!-- Filtra Inativos -->
-    <q-item tag="label">
-      <q-item-side icon="thumb_down">
-      </q-item-side>
-      <q-item-main>
-        <q-item-tile title>Inativos</q-item-tile>
-      </q-item-main>
-      <q-item-side right>
-        <q-radio v-model="filter.inativo" :val="1" />
-      </q-item-side>
-    </q-item>
-    <!-- Filtra Ativos e Inativos -->
-    <q-item tag="label">
-      <q-item-side icon="thumbs_up_down">
-      </q-item-side>
-      <q-item-main>
-        <q-item-tile title>Todos</q-item-tile>
-      </q-item-main>
-      <q-item-side right>
-        <q-radio v-model="filter.inativo" :val="9" />
-      </q-item-side>
-    </q-item>
-    <q-item-separator />
-    <!-- Filtra por data de corte -->
-    <q-list-header>Data de Corte Conferência</q-list-header>
-    <q-item tag="label">
-      <q-item-main>
-        <q-input type="date" v-model="filter.dataCorte" align="center" clearable />
-      </q-item-main>
-    </q-item>
-  </div>
+      <!-- Filtra Ativos -->
+      <q-list-header>Filtros</q-list-header>
+      <q-item tag="label">
+        <q-item-side icon="thumb_up"></q-item-side>
+        <q-item-main>
+          <q-item-tile title>Ativos</q-item-tile>
+        </q-item-main>
+        <q-item-side right>
+          <q-radio v-model="filter.inativo" :val="0" />
+        </q-item-side>
+      </q-item>
+      <!-- Filtra Inativos -->
+      <q-item tag="label">
+        <q-item-side icon="thumb_down">
+        </q-item-side>
+        <q-item-main>
+          <q-item-tile title>Inativos</q-item-tile>
+        </q-item-main>
+        <q-item-side right>
+          <q-radio v-model="filter.inativo" :val="1" />
+        </q-item-side>
+      </q-item>
+      <!-- Filtra Ativos e Inativos -->
+      <q-item tag="label">
+        <q-item-side icon="thumbs_up_down">
+        </q-item-side>
+        <q-item-main>
+          <q-item-tile title>Todos</q-item-tile>
+        </q-item-main>
+        <q-item-side right>
+          <q-radio v-model="filter.inativo" :val="9" />
+        </q-item-side>
+      </q-item>
+      <q-item-separator />
+      <!-- Filtra por data de corte -->
+      <q-list-header>Data de Corte Conferência</q-list-header>
+      <q-item tag="label">
+        <q-item-main>
+          <q-input type="date" v-model="filter.dataCorte" align="center" clearable />
+        </q-item-main>
+      </q-item>
+    </div>
 
     <div slot="content">
       <q-tabs v-model="filter.conferidos">
@@ -65,6 +65,7 @@
       <!-- Infinit scroll -->
       <template v-if="data.produtos">
         <q-list highlight separator v-if="data.produtos.length > 0">
+
           <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
             <template v-for="produto in data.produtos">
               <q-item multiline @click.native="buscaProduto(produto)">
@@ -95,10 +96,39 @@
                   <q-item-tile icon="assignment_turned_in" />
                 </q-item-side>
               </q-item>
+
               <q-item-separator />
             </template>
+
           </q-infinite-scroll>
         </q-list>
+
+        <!-- <template v-else-if=" data.produtos.length < 1 && filter.conferidos == 'conferidos' ">
+          <q-item>
+            <q-item-main>
+              <q-item-tile align="center" sublabel>
+                <h4>Não há produtos condeferidos</h4>
+              </q-item-tile>
+              <q-item-tile align="center">
+                <img src="statics/hand-not-ok.png" style="max-width:200px; max-height:200px"/>
+              </q-item-tile>
+            </q-item-main>
+          </q-item>
+        </template> -->
+
+        <template v-else>
+          <q-item>
+            <q-item-main>
+              <q-item-tile align="center" sublabel>
+                <h3>Não há produtos para mostrar</h3>
+              </q-item-tile>
+              <!-- <q-item-tile align="center">
+                <img src="statics/hand-ok.png" style="max-width:200px; max-height:200px"/>
+              </q-item-tile> -->
+            </q-item-main>
+          </q-item>
+        </template>
+
       </template>
     <q-page-sticky corner="bottom-right" :offset="[32, 32]">
       <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true; buscaPorBarras.barras ='' " />
@@ -317,7 +347,7 @@
                     <q-item-side icon="attach_money" color="blue"/>
                     <q-item-main>
                       <q-field :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
-                        <q-input type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable required @keydown.enter="salvaConferencia()"/>
+                        <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"/>
                       </q-field>
                     </q-item-main>
                   </q-item>
@@ -504,7 +534,12 @@ export default {
         })
       }).catch(function(error) {
         console.log(error)
-        vm.erros = error.response.data.erros
+        if (vm.erros){
+          vm.$q.notify({
+            message: 'Custo ou a Quantidade estão em branco',
+            type: 'negative',
+          })
+        }
       })
     },
 
@@ -677,9 +712,7 @@ export default {
 
       vm.buscaPorBarras.barras = null
 
-      vm.$axios.get('estoque-saldo-conferencia/busca-produto', {
-        params
-      }).then(function(request) {
+      vm.$axios.get('estoque-saldo-conferencia/busca-produto', { params }).then(function(request){
         if (request.data.erro == true) {
           vm.$q.notify({
             message: request.data.mensagem,
