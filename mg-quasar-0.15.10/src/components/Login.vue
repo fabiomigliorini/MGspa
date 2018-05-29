@@ -82,7 +82,7 @@ export default {
 </script>
 <style>
 #row-login {
-  background-image: url("/assets/images/fundo-login.jpg");
+  background-image: url("/statics/fundo-login.jpg");
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
