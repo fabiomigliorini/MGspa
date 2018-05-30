@@ -61,6 +61,8 @@
     </template>
 
     <div slot="content">
+
+      <!-- Listagem de Produtos -->
       <template v-if="carregado">
         <q-list highlight separator v-if="data.produtos.length > 0">
 
@@ -117,7 +119,6 @@
             </q-item-main>
           </q-item>
         </template>
-
       </template>
       <q-page-sticky corner="bottom-right" :offset="[32, 32]">
         <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true" />
@@ -269,27 +270,35 @@
             </div>
             <q-timeline color="secondary" style="padding: 0 24px;" v-if="produto.conferencias.length > 0">
               <q-timeline-entry subtitle="Últimas conferências" side="left" />
-              <q-timeline-entry v-for="(conf, iconf) in produto.conferencias" :key="iconf" :title="numeral(parseFloat(conf.quantidadeinformada)).format('0,0') + ' '
-                + produto.produto.siglaunidademedida + ' custando R$ '
-                + numeral(parseFloat(conf.customedioinformado)).format('0,0.00')
-                + ' cada ' + produto.produto.unidademedida" :subtitle="conf.usuario + ' ' + moment(conf.criacao).fromNow()" :side="((iconf%2)==0)?'right':'left'">
-                <small class="text-faded">
-                  O saldo do sistema no momento da conferência era de
-                  <b>{{ numeral(parseFloat(conf.quantidadesistema)).format('0,0') }}</b> {{produto.produto.siglaunidademedida}}
-                  custando R$ <b>{{numeral(parseFloat(conf.customediosistema)).format('0,0.00')}}</b>
-                  cada {{ produto.produto.unidademedida }}.
-                </small>
-                <small class="text-faded" v-if="conf.observacoes">
-                  <br />
-                  {{conf.observacoes}}
-                </small>
-                <q-btn round flat dense icon="thumb_down" color="red" @click.native="inativarConferencia(conf.codestoquesaldoconferencia)" />
-              </q-timeline-entry>
+              <transition-group enter-active-class="animated fadeInDown" leave-active-class="animated fadeOutUp">
+                <q-timeline-entry v-for="(conf, iconf) in produto.conferencias"
+                    :key="conf.codestoquesaldoconferencia"
+                    :title="numeral(parseFloat(conf.quantidadeinformada)).format('0,0') + ' '
+                    + produto.produto.siglaunidademedida + ' custando R$ '
+                    + numeral(parseFloat(conf.customedioinformado)).format('0,0.00')
+                    + ' cada ' + produto.produto.unidademedida"
+                    :subtitle="conf.usuario + ' ' + moment(conf.criacao).fromNow()"
+                    side="left">
+                  <template>
+                    <small class="text-faded">
+                      O saldo do sistema no momento da conferência era de
+                      <b>{{ numeral(parseFloat(conf.quantidadesistema)).format('0,0') }}</b> {{produto.produto.siglaunidademedida}}
+                      custando R$ <b>{{numeral(parseFloat(conf.customediosistema)).format('0,0.00')}}</b>
+                      cada {{ produto.produto.unidademedida }}.
+                    </small>
+                    <small class="text-faded" v-if="conf.observacoes">
+                      <br />
+                      {{conf.observacoes}}
+                    </small>
+                    <q-btn round flat dense icon="thumb_down" color="red" @click.native="inativarConferencia(conf.codestoquesaldoconferencia)" />
+                  </template>
+                </q-timeline-entry>
+              </transition-group>
             </q-timeline>
           </div>
         </div>
         <q-page-sticky position="top-right" :offset="[20, -100]">
-          <q-btn round color="faded" icon="close" @click="modalProduto = false" />
+          <q-btn round color="red" icon="arrow_back" @click="modalProduto = false" />
         </q-page-sticky>
         <q-page-sticky position="bottom-right" :offset="[20, -30]">
           <q-btn round color="primary" icon="add" @click="modalConferencia = true" />
@@ -396,7 +405,7 @@
 
                 <!-- BOTAO FECHAR -->
                 <q-page-sticky position="top-right" :offset="[20, -100]">
-                  <q-btn round color="faded" icon="close" @click="modalConferencia = false" />
+                  <q-btn round color="red" icon="arrow_back" @click="modalConferencia = false" />
                 </q-page-sticky>
                 <!-- BOTAO CONFIRMAR -->
                 <q-page-sticky position="bottom-right" :offset="[20, -30]">
@@ -426,7 +435,7 @@
                 </q-item>
               </form>
               <q-page-sticky position="top-right" :offset="[20, -100]">
-                <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false" />
+                <q-btn round color="red" icon="arrow_back" @click="modalBuscaPorBarras = false" />
               </q-page-sticky>
               <q-page-sticky position="bottom-right" :offset="[20, -30]">
                 <q-btn round color="primary" icon="done" @click="buscaProduto()" />
