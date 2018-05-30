@@ -61,12 +61,12 @@
     </template>
 
     <div slot="content">
-
-      <!-- Infinite scroll -->
       <template v-if="carregado">
-
         <q-list highlight separator v-if="data.produtos.length > 0">
+
+          <!-- Infinite scroll -->
           <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
+
             <template v-for="produto in data.produtos">
               <q-item multiline @click.native="buscaProduto(produto)">
                 <q-item-side v-if="produto.imagem">
@@ -96,16 +96,17 @@
                   <q-item-tile icon="assignment_turned_in" />
                 </q-item-side>
               </q-item>
-
               <q-item-separator />
-            </template>
 
+            </template>
           </q-infinite-scroll>
         </q-list>
+
+        <!-- se não houver produtos para mostrar -->
         <template v-else>
           <q-item>
             <q-item-main>
-              <h3 v-if="filter.conferidos =='conferidos'" class="text-red text-center">
+              <h3 v-if="filter.conferidos == 'conferidos' " class="text-red text-center">
                 Nenhum produto conferido! <br />
                 <q-icon name="thumb down" size="25vh"/>
               </h3>
@@ -287,11 +288,11 @@
             </q-timeline>
           </div>
         </div>
-        <q-page-sticky position="bottom-right" :offset="[32, -18]">
-          <q-btn round color="primary" icon="add" @click="modalConferencia = true" />
-        </q-page-sticky>
-        <q-page-sticky position="top-right" :offset="[32, -18]">
+        <q-page-sticky position="top-right" :offset="[32, -110]">
           <q-btn round color="faded" icon="close" @click="modalProduto = false" />
+        </q-page-sticky>
+        <q-page-sticky position="bottom-right" :offset="[32, -40]">
+          <q-btn round color="primary" icon="add" @click="modalConferencia = true" />
         </q-page-sticky>
       </q-modal>
     </div>
@@ -394,11 +395,11 @@
                 </form>
 
                 <!-- BOTAO FECHAR -->
-                <q-page-sticky position="top-right" :offset="[32, -18]">
+                <q-page-sticky position="top-right" :offset="[32, -110]">
                   <q-btn round color="faded" icon="close" @click="modalConferencia = false" />
                 </q-page-sticky>
                 <!-- BOTAO CONFIRMAR -->
-                <q-page-sticky position="bottom-right" :offset="[32, -18]">
+                <q-page-sticky position="bottom-right" :offset="[32, -40]">
                   <q-btn round color="primary" icon="done" @click="salvaConferencia()" />
                 </q-page-sticky>
 
@@ -424,10 +425,10 @@
                   </q-item-main>
                 </q-item>
               </form>
-              <q-page-sticky position="top-right" :offset="[32, -30]">
+              <q-page-sticky position="top-right" :offset="[32, -110]">
                 <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false" />
               </q-page-sticky>
-              <q-page-sticky position="bottom-right" :offset="[32, -30]">
+              <q-page-sticky position="bottom-right" :offset="[32, -40]">
                 <q-btn round color="primary" icon="done" @click="buscaProduto()" />
               </q-page-sticky>
             </div>
@@ -586,8 +587,9 @@ export default {
 
       // inicializa variaveis
       let vm = this
-      vm.carregado = false
-      
+
+      // vm.carregado = false
+
       let params = {
         codestoquelocal: vm.filter.codestoquelocal,
         codmarca: vm.filter.codmarca,
@@ -622,6 +624,7 @@ export default {
             vm.$refs.infiniteScroll.resume()
           }
         }
+
 
         // desmarca flag de carregando
         vm.loading = false
