@@ -123,7 +123,7 @@ export default {
   name: 'mg-layout',
   data () {
     return {
-      view: 'hHr LpR ffr',
+      view: 'lHr LpR lFr',
       header: true,
       headerReveal: true,
 
