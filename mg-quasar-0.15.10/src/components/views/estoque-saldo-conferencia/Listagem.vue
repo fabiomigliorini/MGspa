@@ -288,10 +288,10 @@
             </q-timeline>
           </div>
         </div>
-        <q-page-sticky position="top-right" :offset="[32, -110]">
+        <q-page-sticky position="top-right" :offset="[20, -100]">
           <q-btn round color="faded" icon="close" @click="modalProduto = false" />
         </q-page-sticky>
-        <q-page-sticky position="bottom-right" :offset="[32, -40]">
+        <q-page-sticky position="bottom-right" :offset="[20, -30]">
           <q-btn round color="primary" icon="add" @click="modalConferencia = true" />
         </q-page-sticky>
       </q-modal>
@@ -340,16 +340,6 @@
                     </q-item-main>
                   </q-item>
 
-                  <!-- CUSTO -->
-                  <q-item dense>
-                    <q-item-side icon="attach_money" color="blue"/>
-                    <q-item-main>
-                      <q-field :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
-                        <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
-                      </q-field>
-                    </q-item-main>
-                  </q-item>
-
                   <!-- VENCIMENTO -->
                   <q-item dense>
                     <q-item-side icon="access alarm" color="red"/>
@@ -383,6 +373,16 @@
                     </q-item-main>
                   </q-item>
 
+                  <!-- CUSTO -->
+                  <q-item dense>
+                    <q-item-side icon="attach_money" color="blue"/>
+                    <q-item-main>
+                      <q-field :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
+                        <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
+                      </q-field>
+                    </q-item-main>
+                  </q-item>
+
                   <!-- OBSERVACOES -->
                   <q-item dense>
                     <q-item-side icon="description" color="black"/>
@@ -395,11 +395,11 @@
                 </form>
 
                 <!-- BOTAO FECHAR -->
-                <q-page-sticky position="top-right" :offset="[32, -110]">
+                <q-page-sticky position="top-right" :offset="[20, -100]">
                   <q-btn round color="faded" icon="close" @click="modalConferencia = false" />
                 </q-page-sticky>
                 <!-- BOTAO CONFIRMAR -->
-                <q-page-sticky position="bottom-right" :offset="[32, -40]">
+                <q-page-sticky position="bottom-right" :offset="[20, -30]">
                   <q-btn round color="primary" icon="done" @click="salvaConferencia()" />
                 </q-page-sticky>
 
@@ -425,10 +425,10 @@
                   </q-item-main>
                 </q-item>
               </form>
-              <q-page-sticky position="top-right" :offset="[32, -110]">
+              <q-page-sticky position="top-right" :offset="[20, -100]">
                 <q-btn round color="faded" icon="close" @click="modalBuscaPorBarras = false" />
               </q-page-sticky>
-              <q-page-sticky position="bottom-right" :offset="[32, -40]">
+              <q-page-sticky position="bottom-right" :offset="[20, -30]">
                 <q-btn round color="primary" icon="done" @click="buscaProduto()" />
               </q-page-sticky>
             </div>
@@ -584,12 +584,15 @@ export default {
     },
 
     buscaListagem: function(concat, done) {
-
       // inicializa variaveis
       let vm = this
 
-      // vm.carregado = false
+      // se for primeira pagina, marca como dados nao carregados ainda
+      if (this.page == 1) {
+        vm.carregado = false
+      }
 
+      // Monta Parametros da API
       let params = {
         codestoquelocal: vm.filter.codestoquelocal,
         codmarca: vm.filter.codmarca,
@@ -597,9 +600,8 @@ export default {
         inativo: vm.filter.inativo,
         dataCorte: vm.filter.dataCorte,
         conferidos: (vm.filter.conferidos=='conferidos')?1:0,
+        page: vm.page
       }
-      params.page = this.page
-      this.loading = true
 
       vm.$axios.get('estoque-saldo-conferencia/busca-listagem', {
         params
@@ -612,7 +614,6 @@ export default {
         else {
           vm.data.produtos = vm.data.produtos.concat(request.data.produtos)
         }
-
         vm.carregado = true
 
         // Desativa Scroll Infinito se chegou no fim
@@ -624,10 +625,6 @@ export default {
             vm.$refs.infiniteScroll.resume()
           }
         }
-
-
-        // desmarca flag de carregando
-        vm.loading = false
 
         // Executa done do scroll infinito
         if (done) {
