@@ -1,7 +1,7 @@
 ﻿/*
 
 select codmarca, marca from tblmarca where controlada order by marca
-update tblmarca set controlada = true where marca ilike 'opa'
+update tblmarca set controlada = true where marca ilike 'pentel'
 
 select * from tblmarca
 
@@ -17,8 +17,8 @@ from
         --m.marca,
         p.codproduto as "#",
         pv.codprodutovariacao as "# Var",
-        --p.produto,
-        --pv.variacao,
+        p.produto,
+        pv.variacao,
         --coalesce(pv.descontinuado, p.inativo) as inat_desc,
         p.produto || coalesce(' | ' || pv.variacao, '') as produto,
         coalesce(pv.referencia, p.referencia) as referencia,
@@ -64,7 +64,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'banderart')
+    where (m.marca ilike 'gitex')
     and pv.descontinuado is null
     and p.inativo is null
     --and p.produto ilike '%tris%'
