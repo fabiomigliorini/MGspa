@@ -21,10 +21,12 @@ module.exports = function (ctx) {
       // 'fontawesome'
     ],
     supportIE: false,
+    /*
     vendor: {
       add: [],
       remove: []
     },
+    */
     build: {
       env: envparser(),
       scopeHoisting: true,
@@ -65,15 +67,15 @@ module.exports = function (ctx) {
         'QItem',
         'QItemMain',
         'QItemSide',
+        'QItemTile',
+        'QItemSeparator',
+
         // Adicionamos
         'QPageSticky',
         'QInfiniteScroll',
         'QLayoutFooter',
         'QFab',
         'QFabAction',
-        'QItemSide',
-        'QItemTile',
-        'QItemSeparator',
         'QBreadcrumbs',
         'QBreadcrumbsEl',
         'QTooltip',
@@ -94,7 +96,6 @@ module.exports = function (ctx) {
         'QChip',
         'QPopover',
         'QRating',
-        'Ripple',
         'GoBack',
         'QSelect',
         'QDatetime',
@@ -102,13 +103,6 @@ module.exports = function (ctx) {
         'QTab',
         'QTabPane',
         'QRouteTab',
-        'QList',
-        'QListHeader',
-        'QItem',
-        'QItemMain',
-        'QItemSeparator',
-        'QItemSide',
-        'QItemTile',
         'QDatetimePicker',
         'QTimeline',
         'QTimelineEntry',
