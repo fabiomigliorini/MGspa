@@ -120,12 +120,13 @@
           </q-item>
         </template>
       </template>
+
+      <!-- BOTAO PARA PROCURAR PRODUTO POR CODIGO DE BARRAS -->
       <q-page-sticky corner="bottom-right" :offset="[32, 32]">
         <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true" />
       </q-page-sticky>
 
-    <!-- MODAL DE DETALHES DO PRODUTO -->
-    <div class="col-md-12 col-lg-12">
+      <!-- MODAL DE DETALHES DO PRODUTO -->
       <q-modal v-model="modalProduto" v-if="produtoCarregado" maximized>
         <div class="row">
           <!-- COLUNA 1 -->
@@ -300,150 +301,146 @@
         <q-page-sticky position="top-right" :offset="[20, -100]">
           <q-btn round color="red" icon="arrow_back" @click="modalProduto = false" />
         </q-page-sticky>
-        <q-page-sticky position="bottom-right" :offset="[20, -30]">
+        <q-page-sticky position="bottom-right" :offset="[20, 0]">
           <q-btn round color="primary" icon="add" @click="modalConferencia = true" />
         </q-page-sticky>
       </q-modal>
-    </div>
 
-    <!-- MODAL DE CONFERÊNCIA DO PRODUTO -->
-    <template>
+      <!-- MODAL DE CONFERÊNCIA DO PRODUTO -->
       <q-modal maximized v-model="modalConferencia" v-if="produtoCarregado" @hide="focoCampoBarras()" @show="focoCampoQuantidadeInformada()">
-        <div class="row justify-center">
-          <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
-            <q-card-title>
+          <div class="row justify-center">
+            <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
+              <q-card-title>
 
-              <!-- Nome do Produto e Variação -->
-              <q-item-tile>
-                {{produto.produto.produto}} {{produto.variacao.variacao}}
-                <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
+                <!-- Nome do Produto e Variação -->
+                <q-item-tile>
+                  {{produto.produto.produto}} {{produto.variacao.variacao}}
+                  <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
 
-                <!-- Ativo / Inativo / Descontinuado -->
-                <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.produto.inativo">
-                  Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
+                  <!-- Ativo / Inativo / Descontinuado -->
+                  <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.produto.inativo">
+                    Produto Inativo {{ moment(produto.produto.inativo).fromNow() }}
+                  </q-chip>
+                  <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.inativo">
+                    Variação Inativa {{ moment(produto.variacao.inativo).fromNow() }}
+                  </q-chip>
+                  <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.descontinuado">
+                    Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
+                  </q-chip>
+                </q-item-tile>
+
+                <!-- Código do Produto -->
+                <q-chip detail square dense icon="vpn_key">
+                  {{ numeral(produto.produto.codproduto).format('000000') }}
                 </q-chip>
-                <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.inativo">
-                  Variação Inativa {{ moment(produto.variacao.inativo).fromNow() }}
-                </q-chip>
-                <q-chip detail square dense icon="thumb_down"  square color="red" v-if="produto.variacao.descontinuado">
-                  Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
-                </q-chip>
-              </q-item-tile>
+              </q-card-title>
 
-              <!-- Código do Produto -->
-              <q-chip detail square dense icon="vpn_key">
-                {{ numeral(produto.produto.codproduto).format('000000') }}
-              </q-chip>
-            </q-card-title>
+              <q-card-main>
+                <form>
 
-            <q-card-main>
-              <form>
+                    <!-- QUANTIDADE -->
+                    <q-item dense>
+                      <q-item-side icon="widgets" color="blue"/>
+                      <q-item-main>
+                        <q-field :helper="'Quantidade Atual: ' + numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')">
+                          <q-input required type="number" v-model="conferencia.quantidade" float-label="Quantidade" :decimals="3" autofocus align="right" ref="campoQuantidadeInformada" clearable @keydown.enter="salvaConferencia()"/>
+                        </q-field>
+                      </q-item-main>
+                    </q-item>
 
-                  <!-- QUANTIDADE -->
-                  <q-item dense>
-                    <q-item-side icon="widgets" color="blue"/>
-                    <q-item-main>
-                      <q-field :helper="'Quantidade Atual: ' + numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')">
-                        <q-input required type="number" v-model="conferencia.quantidade" float-label="Quantidade" :decimals="3" autofocus align="right" ref="campoQuantidadeInformada" clearable @keydown.enter="salvaConferencia()"/>
-                      </q-field>
-                    </q-item-main>
-                  </q-item>
+                    <!-- VENCIMENTO -->
+                    <q-item dense>
+                      <q-item-side icon="access alarm" color="red"/>
+                      <q-item-main>
+                        <q-field >
+                          <q-input type="date" v-model="conferencia.vencimento" stack-label="Vencimento" align="center" clearable />
+                        </q-field>
+                      </q-item-main>
+                    </q-item>
 
-                  <!-- VENCIMENTO -->
-                  <q-item dense>
-                    <q-item-side icon="access alarm" color="red"/>
-                    <q-item-main>
-                      <q-field >
-                        <q-input type="date" v-model="conferencia.vencimento" stack-label="Vencimento" align="center" clearable />
-                      </q-field>
-                    </q-item-main>
-                  </q-item>
-
-                  <!-- BOTAO LOCALIZACAO -->
-                  <q-item dense>
-                    <q-item-side icon="place" color="green"/>
-                    <q-item-main>
-                      <q-field>
-                        <div class="row gutter-xs">
-                          <div class="col">
-                            <q-input v-model="conferencia.corredor" float-label="Corredor" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                    <!-- BOTAO LOCALIZACAO -->
+                    <q-item dense>
+                      <q-item-side icon="place" color="green"/>
+                      <q-item-main>
+                        <q-field>
+                          <div class="row gutter-xs">
+                            <div class="col">
+                              <q-input v-model="conferencia.corredor" float-label="Corredor" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                            </div>
+                            <div class="col">
+                              <q-input v-model="conferencia.prateleira" float-label="Prateleira" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                            </div>
+                            <div class="col">
+                              <q-input v-model="conferencia.coluna" float-label="Coluna" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                            </div>
+                            <div class="col">
+                              <q-input v-model="conferencia.bloco" float-label="Bloco" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                            </div>
                           </div>
-                          <div class="col">
-                            <q-input v-model="conferencia.prateleira" float-label="Prateleira" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
-                          </div>
-                          <div class="col">
-                            <q-input v-model="conferencia.coluna" float-label="Coluna" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
-                          </div>
-                          <div class="col">
-                            <q-input v-model="conferencia.bloco" float-label="Bloco" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
-                          </div>
-                        </div>
-                      </q-field>
-                    </q-item-main>
-                  </q-item>
+                        </q-field>
+                      </q-item-main>
+                    </q-item>
 
-                  <!-- CUSTO -->
-                  <q-item dense>
-                    <q-item-side icon="attach_money" color="blue"/>
-                    <q-item-main>
-                      <q-field :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
-                        <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
-                      </q-field>
-                    </q-item-main>
-                  </q-item>
+                    <!-- CUSTO -->
+                    <q-item dense>
+                      <q-item-side icon="attach_money" color="blue"/>
+                      <q-item-main>
+                        <q-field :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
+                          <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
+                        </q-field>
+                      </q-item-main>
+                    </q-item>
 
-                  <!-- OBSERVACOES -->
-                  <q-item dense>
-                    <q-item-side icon="description" color="black"/>
-                    <q-item-main>
-                      <q-field >
-                        <q-input type="textarea" v-model="conferencia.observacoes" float-label="Observações" clearable />
-                      </q-field>
-                    </q-item-main>
-                  </q-item>
-                </form>
+                    <!-- OBSERVACOES -->
+                    <q-item dense>
+                      <q-item-side icon="description" color="black"/>
+                      <q-item-main>
+                        <q-field >
+                          <q-input type="textarea" v-model="conferencia.observacoes" float-label="Observações" clearable />
+                        </q-field>
+                      </q-item-main>
+                    </q-item>
+                  </form>
 
-                <!-- BOTAO FECHAR -->
-                <q-page-sticky position="top-right" :offset="[20, -100]">
-                  <q-btn round color="red" icon="arrow_back" @click="modalConferencia = false" />
-                </q-page-sticky>
-                <!-- BOTAO CONFIRMAR -->
-                <q-page-sticky position="bottom-right" :offset="[20, -30]">
-                  <q-btn round color="primary" icon="done" @click="salvaConferencia()" />
-                </q-page-sticky>
+                  <!-- BOTAO FECHAR -->
+                  <q-page-sticky position="top-right" :offset="[20, -100]">
+                    <q-btn round color="red" icon="arrow_back" @click="modalConferencia = false" />
+                  </q-page-sticky>
+                  <!-- BOTAO CONFIRMAR -->
+                  <q-page-sticky position="bottom-right" :offset="[20, -30]">
+                    <q-btn round color="primary" icon="done" @click="salvaConferencia()" />
+                  </q-page-sticky>
 
-              </q-card-main>
+                </q-card-main>
 
+              </div>
             </div>
-          </div>
-        </q-modal>
-      </template>
+      </q-modal>
 
       <!-- MODAL DE BUSCA POR BARRAS -->
-      <template>
-        <q-modal maximized v-model="modalBuscaPorBarras" @show="focoCampoBarras()">
-          <div class="row justify-center " style="padding-top: 20vh">
-            <div class="col-xs-10 col-sm-6 col-md-5 col-lg-4 col-xl-3 gutter-sx">
-              <form @submit.prevent="buscaProduto()">
-                <q-item>
-                  <q-item-side icon="view column" color="black"/>
-                  <q-item-main>
-                    <q-field >
-                      <q-input clearable v-model="buscaPorBarras" float-label="Informe o código de barras" ref="campoBarras" align="center" />
-                    </q-field>
-                  </q-item-main>
-                </q-item>
-              </form>
-              <q-page-sticky position="top-right" :offset="[20, -100]">
-                <q-btn round color="red" icon="arrow_back" @click="modalBuscaPorBarras = false" />
-              </q-page-sticky>
-              <q-page-sticky position="bottom-right" :offset="[20, -30]">
-                <q-btn round color="primary" icon="done" @click="buscaProduto()" />
-              </q-page-sticky>
-            </div>
+      <q-modal maximized v-model="modalBuscaPorBarras" @show="focoCampoBarras()">
+        <div class="row justify-center " style="padding-top: 20vh">
+          <div class="col-xs-10 col-sm-6 col-md-5 col-lg-4 col-xl-3 gutter-sx">
+            <form @submit.prevent="buscaProduto()">
+              <q-item>
+                <q-item-side icon="view column" color="black"/>
+                <q-item-main>
+                  <q-field >
+                    <q-input clearable v-model="buscaPorBarras" float-label="Informe o código de barras" ref="campoBarras" align="center" />
+                  </q-field>
+                </q-item-main>
+              </q-item>
+            </form>
+            <q-page-sticky position="top-right" :offset="[20, -100]">
+              <q-btn round color="red" icon="arrow_back" @click="modalBuscaPorBarras = false" />
+            </q-page-sticky>
+            <q-page-sticky position="bottom-right" :offset="[20, -30]">
+              <q-btn round color="primary" icon="done" @click="buscaProduto()" />
+            </q-page-sticky>
           </div>
-        </q-modal>
-      </template>
+        </div>
+      </q-modal>
+
     </div>
   </mg-layout>
 </template>
