@@ -126,7 +126,7 @@ export default {
 
       view: 'lHr LpR lFr',
       header: true,
-      headerReveal: false,
+      headerReveal: true,
 
       footer: false,
       footerReveal: false,
