@@ -298,7 +298,7 @@
           </div>
         </div>
 
-        <q-page-sticky position="bottom-right" :offset="[80, 25]">
+        <q-page-sticky position="bottom-right" :offset="[25, 80]">
           <q-btn round color="red" icon="arrow_back" @click="modalProduto = false" />
         </q-page-sticky>
 
@@ -316,6 +316,11 @@
 
                 <!-- Nome do Produto e Variação -->
                 <q-item-tile>
+                  <!-- Código do Produto -->
+                  <q-chip detail square dense icon="vpn_key">
+                    {{ numeral(produto.produto.codproduto).format('000000') }}
+                  </q-chip>
+
                   {{produto.produto.produto}} {{produto.variacao.variacao}}
                   <template v-if="produto.produto.variacao">- {{produto.produto.variacao}}</template>
 
@@ -330,22 +335,17 @@
                     Descontinuado {{ moment(produto.variacao.descontinuado).fromNow() }}
                   </q-chip>
                 </q-item-tile>
-
-                <!-- Código do Produto -->
-                <q-chip detail square dense icon="vpn_key">
-                  {{ numeral(produto.produto.codproduto).format('000000') }}
-                </q-chip>
               </q-card-title>
 
-              <q-card-main>
+              <q-card-main style="max-width: 85vw">
                 <form>
 
                     <!-- QUANTIDADE -->
                     <q-item dense>
                       <q-item-side icon="widgets" color="blue"/>
                       <q-item-main>
-                        <q-field :helper="'Quantidade Atual: ' + numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')">
-                          <q-input required type="number" v-model="conferencia.quantidade" float-label="Quantidade" :decimals="3" autofocus align="right" ref="campoQuantidadeInformada" clearable @keydown.enter="salvaConferencia()"/>
+                        <q-field label="Quantidade" :helper="'Quantidade Atual: ' + numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')">
+                          <q-input required type="number" v-model="conferencia.quantidade" :decimals="3" autofocus align="right" ref="campoQuantidadeInformada" clearable @keydown.enter="salvaConferencia()"/>
                         </q-field>
                       </q-item-main>
                     </q-item>
@@ -354,8 +354,8 @@
                     <q-item dense>
                       <q-item-side icon="access alarm" color="red"/>
                       <q-item-main>
-                        <q-field >
-                          <q-input type="date" v-model="conferencia.vencimento" stack-label="Vencimento" align="center" clearable />
+                        <q-field label="Vencimento">
+                          <q-input type="date" v-model="conferencia.vencimento" align="center" clearable />
                         </q-field>
                       </q-item-main>
                     </q-item>
@@ -364,19 +364,19 @@
                     <q-item dense>
                       <q-item-side icon="place" color="green"/>
                       <q-item-main>
-                        <q-field>
+                        <q-field label="Corr/Prat/Col/Bloco">
                           <div class="row gutter-xs">
                             <div class="col">
-                              <q-input v-model="conferencia.corredor" float-label="Corredor" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                              <q-input v-model="conferencia.corredor" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
                             </div>
                             <div class="col">
-                              <q-input v-model="conferencia.prateleira" float-label="Prateleira" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                              <q-input v-model="conferencia.prateleira" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
                             </div>
                             <div class="col">
-                              <q-input v-model="conferencia.coluna" float-label="Coluna" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                              <q-input v-model="conferencia.coluna" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
                             </div>
                             <div class="col">
-                              <q-input v-model="conferencia.bloco" float-label="Bloco" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
+                              <q-input v-model="conferencia.bloco" type="number" :decimals="0" min="0" max="99" align="center" clearable @keydown.enter="salvaConferencia()"/>
                             </div>
                           </div>
                         </q-field>
@@ -387,8 +387,8 @@
                     <q-item dense>
                       <q-item-side icon="attach_money" color="blue"/>
                       <q-item-main>
-                        <q-field :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
-                          <q-input required type="number" v-model="conferencia.customedio" float-label="Custo" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
+                        <q-field label="Custo" :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
+                          <q-input required type="number" v-model="conferencia.customedio" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
                         </q-field>
                       </q-item-main>
                     </q-item>
@@ -397,15 +397,15 @@
                     <q-item dense>
                       <q-item-side icon="description" color="black"/>
                       <q-item-main>
-                        <q-field >
-                          <q-input type="textarea" v-model="conferencia.observacoes" float-label="Observações" clearable />
+                        <q-field label="Observações">
+                          <q-input type="textarea" v-model="conferencia.observacoes" clearable />
                         </q-field>
                       </q-item-main>
                     </q-item>
                   </form>
 
                   <!-- BOTAO FECHAR -->
-                  <q-page-sticky position="bottom-right" :offset="[80, 25]">
+                  <q-page-sticky position="bottom-right" :offset="[25, 80]">
                     <q-btn round color="red" icon="arrow_back" @click="modalConferencia = false" />
                   </q-page-sticky>
                   <!-- BOTAO CONFIRMAR -->
@@ -433,7 +433,7 @@
                 </q-item-main>
               </q-item>
             </form>
-            <q-page-sticky position="bottom-right" :offset="[80, 25]">
+            <q-page-sticky position="bottom-right" :offset="[25, 80]">
               <q-btn round color="red" icon="arrow_back" @click="modalBuscaPorBarras = false" />
             </q-page-sticky>
             <q-page-sticky position="bottom-right" :offset="[25, 25]">
