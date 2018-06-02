@@ -51,11 +51,9 @@
 
     <template slot="tabHeader">
       <q-tabs v-model="filter.conferidos">
-        <q-tab slot="title" name="conferir" icon="close" label="Por fazer" default>
-          <!-- <q-icon name="assignment_late" style="font-size: 30px" /> -->
+        <q-tab slot="title" name="conferir" icon="close" label="Para Conferir" default>
         </q-tab>
-        <q-tab slot="title" name="conferidos" icon="check" label="Conferidos">
-          <!-- <q-icon name="assignment_turned_in" style="font-size: 30px" /> -->
+        <q-tab slot="title" name="conferidos" icon="check" label="Já Conferido">
         </q-tab>
       </q-tabs>
     </template>
@@ -122,12 +120,13 @@
       </template>
 
       <!-- BOTAO PARA PROCURAR PRODUTO POR CODIGO DE BARRAS -->
-      <q-page-sticky corner="bottom-right" :offset="[32, 32]">
+      <q-page-sticky corner="bottom-right" :offset="[25, 25]">
         <q-btn round color="primary" icon="add" @click.native="modalBuscaPorBarras = true" />
       </q-page-sticky>
 
       <!-- MODAL DE DETALHES DO PRODUTO -->
       <q-modal v-model="modalProduto" v-if="produtoCarregado" maximized>
+
         <div class="row">
           <!-- COLUNA 1 -->
           <div class="col-sm-12 col-md-5 col-lg-5">
@@ -269,7 +268,7 @@
                 </q-list>
               </div>
             </div>
-            <q-timeline color="secondary" style="padding: 0 24px;" v-if="produto.conferencias.length > 0">
+            <q-timeline style="padding: 0 24px; padding-bottom: 30px" v-if="produto.conferencias.length > 0">
               <q-timeline-entry subtitle="Últimas conferências" side="left" />
               <transition-group enter-active-class="animated fadeInDown" leave-active-class="animated fadeOutUp">
                 <q-timeline-entry v-for="(conf, iconf) in produto.conferencias"
@@ -298,12 +297,15 @@
             </q-timeline>
           </div>
         </div>
-        <q-page-sticky position="top-right" :offset="[20, -100]">
+
+        <q-page-sticky position="bottom-right" :offset="[80, 25]">
           <q-btn round color="red" icon="arrow_back" @click="modalProduto = false" />
         </q-page-sticky>
-        <q-page-sticky position="bottom-right" :offset="[20, 0]">
+
+        <q-page-sticky position="bottom-right" :offset="[25, 25]">
           <q-btn round color="primary" icon="add" @click="modalConferencia = true" />
         </q-page-sticky>
+
       </q-modal>
 
       <!-- MODAL DE CONFERÊNCIA DO PRODUTO -->
@@ -403,11 +405,11 @@
                   </form>
 
                   <!-- BOTAO FECHAR -->
-                  <q-page-sticky position="top-right" :offset="[20, -100]">
+                  <q-page-sticky position="bottom-right" :offset="[80, 25]">
                     <q-btn round color="red" icon="arrow_back" @click="modalConferencia = false" />
                   </q-page-sticky>
                   <!-- BOTAO CONFIRMAR -->
-                  <q-page-sticky position="bottom-right" :offset="[20, -30]">
+                  <q-page-sticky position="bottom-right" :offset="[25, 25]">
                     <q-btn round color="primary" icon="done" @click="salvaConferencia()" />
                   </q-page-sticky>
 
@@ -431,10 +433,10 @@
                 </q-item-main>
               </q-item>
             </form>
-            <q-page-sticky position="top-right" :offset="[20, -100]">
+            <q-page-sticky position="bottom-right" :offset="[80, 25]">
               <q-btn round color="red" icon="arrow_back" @click="modalBuscaPorBarras = false" />
             </q-page-sticky>
-            <q-page-sticky position="bottom-right" :offset="[20, -30]">
+            <q-page-sticky position="bottom-right" :offset="[25, 25]">
               <q-btn round color="primary" icon="done" @click="buscaProduto()" />
             </q-page-sticky>
           </div>

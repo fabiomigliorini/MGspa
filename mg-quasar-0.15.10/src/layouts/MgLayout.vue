@@ -24,7 +24,7 @@
 
     </q-layout-header>
 
-    <q-layout-footer v-model="footer" :reveal="footerReveal">
+    <!-- <q-layout-footer v-model="footer" :reveal="footerReveal">
       <q-toolbar>
         <slot name="footer">
           <q-toolbar-title>
@@ -32,7 +32,7 @@
           </q-toolbar-title>
         </slot>
       </q-toolbar>
-    </q-layout-footer>
+    </q-layout-footer> -->
 
     <!-- Left Side Panel -->
     <q-layout-drawer
@@ -123,17 +123,18 @@ export default {
   name: 'mg-layout',
   data () {
     return {
+
       view: 'lHr LpR lFr',
       header: true,
-      headerReveal: true,
+      headerReveal: false,
+
+      footer: false,
+      footerReveal: false,
 
       left: true,
       leftOverlay: false,
       leftBreakpoint: 996,
       leftBehavior: 'default',
-
-      footer: true,
-      footerReveal: true,
 
       leftScroll: false,
       rightScroll: true,
