@@ -733,7 +733,10 @@ export default {
         this.produtoImagem = produto.imagem
         params.codprodutovariacao = produto.codprodutovariacao
       }
-      this.buscaPorBarras = null
+
+      // precisa de um tempo (0.3 segundos) para limpar o cambo de codigo de barras em tela
+      // se nao no leitor das lojas que e mais lento a dom nao atualiza apesar da variavel estar vazia
+      setTimeout(function(){ vm.buscaPorBarras = null }, 300);
 
       vm.$axios.get('estoque-saldo-conferencia/busca-produto', { params }).then(function(request){
         if (request.data.erro == true) {
