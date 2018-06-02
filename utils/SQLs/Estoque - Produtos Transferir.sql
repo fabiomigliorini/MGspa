@@ -47,7 +47,7 @@ where coalesce(es_deposito.saldoquantidade, 0) > 0
 and coalesce(es.saldoquantidade, 0) <= coalesce(elpv.estoqueminimo, 1)
 and coalesce(es.saldoquantidade, 0) < coalesce(elpv.estoquemaximo, 1)
 and m.controlada = true
---and m.marca ilike 'gv brasil'
+and m.marca ilike '%guedes%'
 --and m.marca not ilike 'acrilex'
 --and m.marca not ilike 'delta'
 --and m.marca not ilike 'henkel'
