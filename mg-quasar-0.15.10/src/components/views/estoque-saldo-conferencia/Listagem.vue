@@ -166,7 +166,7 @@
                         <b>{{ numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0') }}</b> {{ produto.produto.siglaunidademedida }} em estoque
                       </q-item-tile>
                       <q-item-tile sublabel>
-                        Suegerido entre {{ numeral(parseFloat(produto.variacao.estoqueminimo)).format('0,0') }} e {{ numeral(parseFloat(produto.variacao.estoquemaximo)).format('0,0') }} {{ produto.produto.siglaunidademedida }}.
+                        Sugerido entre {{ numeral(parseFloat(produto.variacao.estoqueminimo)).format('0,0') }} e {{ numeral(parseFloat(produto.variacao.estoquemaximo)).format('0,0') }} {{ produto.produto.siglaunidademedida }}.
                       </q-item-tile>
                     </q-item-main>
                   </q-item>
