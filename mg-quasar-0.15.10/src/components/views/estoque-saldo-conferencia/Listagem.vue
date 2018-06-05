@@ -67,35 +67,43 @@
           <!-- Infinite scroll -->
           <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
 
+            <!-- <div v-touch-swipe.right="swipeToRight">
+              <div style="width:100%; height:100px; background-color:cyan" align="center">
+                <h3>Deslizar somente para a direita</h3>
+              </div>
+            </div> -->
+
             <template v-for="produto in data.produtos">
-              <q-item multiline @click.native="buscaProduto(produto)">
-                <q-item-side v-if="produto.imagem">
-                  <img :src="produto.imagem" style="width: 55px; height: 55px" />
-                </q-item-side>
-                <q-item-main>
-                  <q-item-tile label lines="3">
-                    {{ produto.produto }}
-                    <template v-if="produto.variacao">- {{produto.variacao}}</template>
-                  </q-item-tile>
-                  <q-item-tile sublabel lines="2">
-                    <q-chip detail square dense icon="vpn_key">
-                      {{ numeral(produto.codproduto).format('000000') }}
-                    </q-chip>
-                    <q-chip detail square dense icon="widgets" :color="(produto.saldoquantidade>0)?'green':(produto.saldoquantidade<0)?'red':'grey'">
-                      {{ numeral(produto.saldoquantidade).format('0,0') }}
-                    </q-chip>
-                    <q-chip detail square dense icon="thumb_down" v-if="produto.inativo" color="red">
-                      {{ moment(produto.inativo).fromNow() }}
-                    </q-chip>
-                  </q-item-tile>
-                </q-item-main>
-                <q-item-side right v-if="produto.ultimaconferencia">
-                  <q-item-tile stamp>
-                    {{ moment(produto.ultimaconferencia).fromNow() }}
-                  </q-item-tile>
-                  <q-item-tile icon="assignment_turned_in" />
-                </q-item-side>
-              </q-item>
+              <div v-touch-swipe.right="swipeToRight">
+                <q-item multiline @click.native="buscaProduto(produto)">
+                  <q-item-side v-if="produto.imagem">
+                    <img :src="produto.imagem" style="width: 55px; height: 55px" />
+                  </q-item-side>
+                  <q-item-main>
+                    <q-item-tile label lines="3">
+                      {{ produto.produto }}
+                      <template v-if="produto.variacao">- {{produto.variacao}}</template>
+                    </q-item-tile>
+                    <q-item-tile sublabel lines="2">
+                      <q-chip detail square dense icon="vpn_key">
+                        {{ numeral(produto.codproduto).format('000000') }}
+                      </q-chip>
+                      <q-chip detail square dense icon="widgets" :color="(produto.saldoquantidade>0)?'green':(produto.saldoquantidade<0)?'red':'grey'">
+                        {{ numeral(produto.saldoquantidade).format('0,0') }}
+                      </q-chip>
+                      <q-chip detail square dense icon="thumb_down" v-if="produto.inativo" color="red">
+                        {{ moment(produto.inativo).fromNow() }}
+                      </q-chip>
+                    </q-item-tile>
+                  </q-item-main>
+                  <q-item-side right v-if="produto.ultimaconferencia">
+                    <q-item-tile stamp>
+                      {{ moment(produto.ultimaconferencia).fromNow() }}
+                    </q-item-tile>
+                    <q-item-tile icon="assignment_turned_in" />
+                  </q-item-side>
+                </q-item>
+              </div>
               <q-item-separator />
 
             </template>
@@ -514,6 +522,28 @@ export default {
 
   },
   methods: {
+
+    // metodo para deslizar para a direita e zerar o estoque
+    swipeToRight ({ direction, duration, distance }) {
+      this.infoRight = { direction, duration, distance }
+
+      this.$q.dialog({
+        title: 'Zerar o estoque',
+        message: 'Deseja Zerar este produto?',
+        ok: 'Zerar',
+        cancel: 'Cancelar'
+      }).then(() => {
+          this.$q.notify({
+            message: 'Produto zerado',
+            type: 'positive',
+          })
+        }).catch(function(error) {
+          console.log(error)
+          vm.erros = error.response.data.erros
+        })
+
+    },
+
     // scroll infinito - carregar mais registros
     loadMore (index, done) {
       this.page++

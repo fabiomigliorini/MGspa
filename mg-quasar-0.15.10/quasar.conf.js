@@ -112,7 +112,8 @@ module.exports = function (ctx) {
         'QStepperNavigation'
       ],
       directives: [
-        'Ripple'
+        'Ripple',
+        'TouchSwipe'
       ],
       // Quasar plugins
       plugins: [
