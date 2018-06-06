@@ -67,14 +67,11 @@
           <!-- Infinite scroll -->
           <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
 
-            <!-- <div v-touch-swipe.right="swipeToRight">
-              <div style="width:100%; height:100px; background-color:cyan" align="center">
-                <h3>Deslizar somente para a direita</h3>
-              </div>
-            </div> -->
-
             <template v-for="produto in data.produtos">
+
+              <!-- Funcao swipe para zerar o produto -->
               <div v-touch-swipe.right="swipeToRight">
+
                 <q-item multiline @click.native="buscaProduto(produto)">
                   <q-item-side v-if="produto.imagem">
                     <img :src="produto.imagem" style="width: 55px; height: 55px" />
