@@ -134,6 +134,38 @@ class EstoqueSaldoConferenciaController extends MgController
         return response()->json($res, 201);
     }
 
+    public function zerarProduto(Request $request)
+    {
+
+        $request->validate([
+            'codprodutovariacao' => 'required|numeric',
+            'codestoquelocal' => 'required|numeric',
+            'fiscal' => 'required|boolean',
+            'data' => 'required|date',
+        ]);
+
+        $data = new \Carbon\Carbon($request->data);
+
+        $fiscal = boolval($request->fiscal);
+        $quantidadeinformada = floatval($request->quantidadeinformada);
+        $customedioinformado = floatval($request->customedioinformado);
+
+        DB::beginTransaction();
+
+        $model = EstoqueSaldoConferenciaRepository::zerarProduto(
+            $request->codprodutovariacao,
+            $request->codestoquelocal,
+            $fiscal,
+            $data
+        );
+
+        DB::commit();
+
+        $res = EstoqueSaldoConferenciaRepository::buscaProduto($request->codprodutovariacao, $request->codestoquelocal, $fiscal);
+
+        return response()->json($res, 201);
+    }
+
     public function inativar(Request $request, $id)
     {
         $model = EstoqueSaldoConferencia::findOrFail($id);

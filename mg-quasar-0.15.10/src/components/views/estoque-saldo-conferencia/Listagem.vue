@@ -70,37 +70,37 @@
             <template v-for="produto in data.produtos">
 
               <!-- Funcao swipe para zerar o produto -->
-              <div v-touch-swipe.right="swipeToRight">
+              <div v-touch-swipe.horizontal="swipeProduto(produto)" >
 
-                <q-item multiline @click.native="buscaProduto(produto)">
-                  <q-item-side v-if="produto.imagem">
-                    <img :src="produto.imagem" style="width: 55px; height: 55px" />
-                  </q-item-side>
-                  <q-item-main>
-                    <q-item-tile label lines="3">
-                      {{ produto.produto }}
-                      <template v-if="produto.variacao">- {{produto.variacao}}</template>
-                    </q-item-tile>
-                    <q-item-tile sublabel lines="2">
-                      <q-chip detail square dense icon="vpn_key">
-                        {{ numeral(produto.codproduto).format('000000') }}
-                      </q-chip>
-                      <q-chip detail square dense icon="widgets" :color="(produto.saldoquantidade>0)?'green':(produto.saldoquantidade<0)?'red':'grey'">
-                        {{ numeral(produto.saldoquantidade).format('0,0') }}
-                      </q-chip>
-                      <q-chip detail square dense icon="thumb_down" v-if="produto.inativo" color="red">
-                        {{ moment(produto.inativo).fromNow() }}
-                      </q-chip>
-                    </q-item-tile>
-                  </q-item-main>
-                  <q-item-side right v-if="produto.ultimaconferencia">
-                    <q-item-tile stamp>
-                      {{ moment(produto.ultimaconferencia).fromNow() }}
-                    </q-item-tile>
-                    <q-item-tile icon="assignment_turned_in" />
-                  </q-item-side>
-                </q-item>
-              </div>
+                  <q-item multiline @click.native="buscaProduto(produto)">
+                    <q-item-side v-if="produto.imagem">
+                      <img :src="produto.imagem" style="width: 55px; height: 55px" />
+                    </q-item-side>
+                    <q-item-main>
+                      <q-item-tile label lines="3">
+                        {{ produto.produto }}
+                        <template v-if="produto.variacao">| {{produto.variacao}}</template>
+                      </q-item-tile>
+                      <q-item-tile sublabel lines="2">
+                        <q-chip detail square dense icon="vpn_key">
+                          {{ numeral(produto.codproduto).format('000000') }}
+                        </q-chip>
+                        <q-chip detail square dense icon="widgets" :color="(produto.saldoquantidade>0)?'green':(produto.saldoquantidade<0)?'red':'grey'">
+                          {{ numeral(produto.saldoquantidade).format('0,0') }}
+                        </q-chip>
+                        <q-chip detail square dense icon="thumb_down" v-if="produto.inativo" color="red">
+                          {{ moment(produto.inativo).fromNow() }}
+                        </q-chip>
+                      </q-item-tile>
+                    </q-item-main>
+                    <q-item-side right v-if="produto.ultimaconferencia">
+                      <q-item-tile stamp>
+                        {{ moment(produto.ultimaconferencia).fromNow() }}
+                      </q-item-tile>
+                      <q-item-tile icon="assignment_turned_in" />
+                    </q-item-side>
+                  </q-item>
+                </div>
               <q-item-separator />
 
             </template>
@@ -468,6 +468,7 @@ export default {
   },
   data() {
     return {
+      swipe: false,
       page: 1,
       filter: {
         codestoquelocal: null,
@@ -520,24 +521,68 @@ export default {
   },
   methods: {
 
-    // metodo para deslizar para a direita e zerar o estoque
-    swipeToRight ({ direction, duration, distance }) {
-      this.infoRight = { direction, duration, distance }
 
-      this.$q.dialog({
-        title: 'Zerar o estoque',
-        message: 'Deseja Zerar este produto?',
-        ok: 'Zerar',
-        cancel: 'Cancelar'
-      }).then(() => {
-          this.$q.notify({
-            message: 'Produto zerado',
-            type: 'positive',
-          })
-        }).catch(function(error) {
-          console.log(error)
-          vm.erros = error.response.data.erros
+    // Chama API para zerar saldo do estoque do produto
+    zerarProduto (produto) {
+
+      let vm = this
+
+      let params = {
+        codprodutovariacao: produto.codprodutovariacao,
+        codestoquelocal: vm.filter.codestoquelocal,
+        fiscal: parseInt(vm.filter.fiscal),
+        data: vm.filter.data
+      }
+
+      vm.$axios.post('estoque-saldo-conferencia/zerar-produto', params).then(function(request) {
+        vm.parseProduto(request.data)
+        vm.$q.notify({
+          message: 'Saldo do estoque zerado!',
+          type: 'positive',
         })
+        vm.swipe = false
+      }).catch(function(error) {
+        console.log(error)
+        vm.swipe = false
+      })
+
+    },
+
+    // confirma se tem certeza que eh pra zerar saldo do estoque do produto
+    swipeProduto (produto) {
+
+      let vm = this
+
+      return function (props) {
+
+        // se nao estiver na aba de itens pra conferir, cai fora
+        if (vm.filter.conferidos != 'conferir') {
+          return
+        }
+
+        // variavel de controle pra saber se esta deslizando pra direita
+        // que eh verificada no click pra nao abrir o modalProduto
+        vm.swipe = true
+
+        let message = 'Deseja zerar estoque do produto ' + produto.produto
+
+        if (produto.variacao) {
+          message += ' | ' + produto.variacao
+        }
+
+        message += '?'
+
+        vm.$q.dialog({
+          title: 'Zerar o estoque',
+          message: message,
+          ok: 'Zerar',
+          cancel: 'Cancelar'
+        }).then(() => {
+          vm.zerarProduto(produto)
+        }).catch(function(error) {
+          vm.swipe = false
+        })
+      }
 
     },
 
@@ -743,6 +788,9 @@ export default {
     },
 
     buscaProduto: function(produto) {
+      if (this.swipe) {
+        return
+      }
       let vm = this
       var params = {
         barras: null,

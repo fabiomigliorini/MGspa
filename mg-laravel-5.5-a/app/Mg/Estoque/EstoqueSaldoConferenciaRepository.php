@@ -54,6 +54,38 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         return $model;
     }
 
+    public static function zerarProduto(
+                int $codprodutovariacao,
+                int $codestoquelocal,
+                bool $fiscal,
+                Carbon $data
+            ) {
+
+        // Atualiza dados da EstoqueLocalProdutoVariacao
+        $es = EstoqueSaldoRepository::buscaOuCria($codprodutovariacao, $codestoquelocal, $fiscal);
+
+        // Cria novo registro de conferência
+        $model = new EstoqueSaldoConferencia();
+        $model->codestoquesaldo = $es->codestoquesaldo;
+        $model->quantidadesistema = $es->saldoquantidade;
+        $model->quantidadeinformada = 0;
+        $model->customediosistema = $es->customedio;
+        $model->customedioinformado = $es->customedio;
+        $model->data = $data;
+        $model->save();
+
+        // Atualiza Informação da última conferência
+        $model->EstoqueSaldo->ultimaconferencia = $model->criacao;
+        $model->EstoqueSaldo->save();
+
+        // Cria Registro de Movimento de Estoque
+        // $mov = new EstoqueMovimento();
+        // EstoqueGeraMovimentoConferencia --> Este Repositorio
+        $mov = static::estoqueGeraMovimentoConferencia($model);
+
+        return $model;
+    }
+
     public static function estoqueGeraMovimentoConferencia($conferencia)
     {
 
