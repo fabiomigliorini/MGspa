@@ -6,22 +6,28 @@ import {
 import { debounce } from 'quasar'
 
 export default {
-  name: 'grafico-vendas-ano-filiais',
+  name: 'grafico-estatistica',
   extends: Bar,
-  props: ['locais', 'saldoquantidade', 'vendaquantidade'],
+  // props: ['locais', 'saldoquantidade', 'vendaquantidade'],
+  props: ['seguranca', 'minimo', 'maximo'],
   data () {
     return {
       data: {
-        labels: [],
+        labels: ['Estatistica'],
         datasets: [
           {
-            label: 'Vendas',
-            backgroundColor: 'rgba(63, 81, 181, 0.7)',
+            label: 'Máximo',
+            backgroundColor: 'rgba(0,128,0, 0.7)',
+            data: null,
+          },
+          {
+            label: 'Minimo',
+            backgroundColor: 'rgba(255,165,0, 0.7)',
             data: null
           },
           {
-            label: 'Estoque',
-            backgroundColor: '#f00',
+            label: 'Segurança',
+            backgroundColor: 'rgba(255,0,0, 0.7)',
             data: null
           }
         ]
@@ -31,9 +37,13 @@ export default {
         maintainAspectRatio: false,
         scales: {
           yAxes: [{
+            stacked: true,
             ticks: {
               beginAtZero: true
             }
+          }],
+          yAxes: [{
+             stacked: true // this also..
           }]
         }
       }
@@ -51,6 +61,8 @@ export default {
     this.renderChart(this.data, this.options)
   },
   methods: {
+
+
     update () {
       this.$data._chart.update()
     },
@@ -59,9 +71,12 @@ export default {
       let vm = this
 
       // acumula dados para os datasets
-      let locais = []
-      let vendaquantidade = []
-      let saldoquantidade = []
+      let maximo = []
+      let minimo = []
+      let seguranca = []
+      // let locais = []
+      // let vendaquantidade = []
+      // let saldoquantidade = []
 
       this.locais.forEach(function (estoquelocal) {
         locais.push(estoquelocal.estoquelocal.substr(0, 3))
@@ -74,9 +89,10 @@ export default {
       saldoquantidade.push(vm.saldoquantidade)
 
       // passa para datasets os valores acumulados
-      vm.data.datasets[0].data = vendaquantidade
-      vm.data.datasets[1].data = saldoquantidade
-      vm.data.labels = locais
+      vm.data.datasets[0].data = maximo
+      vm.data.datasets[1].data = minimo
+      vm.data.datasets[2].data = seguranca
+      vm.data.labels = estatistica
 
       // atualiza grafico
       vm.update()
