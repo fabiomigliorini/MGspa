@@ -70,7 +70,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
         $model->quantidadesistema = $es->saldoquantidade;
         $model->quantidadeinformada = 0;
         $model->customediosistema = $es->customedio;
-        $model->customedioinformado = $es->customedio;
+        $model->customedioinformado = $es->customedio??0;
         $model->data = $data;
         $model->save();
 
