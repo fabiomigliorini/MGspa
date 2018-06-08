@@ -31,6 +31,9 @@ export default {
       },
       options: {
         responsive: true,
+        legend: {
+						display: false
+				},
         maintainAspectRatio: false,
         tooltips: {
           mode: 'index',
@@ -41,7 +44,11 @@ export default {
           intersect: true
         },
         scales: {
+          xAxes: [{
+            display: false,
+          }],
           yAxes: [{
+            display: false,
             ticks: {
               beginAtZero: true
             }

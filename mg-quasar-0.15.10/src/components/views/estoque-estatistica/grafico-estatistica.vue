@@ -8,49 +8,73 @@ import { debounce } from 'quasar'
 export default {
   name: 'grafico-estatistica',
   extends: Bar,
-  // props: ['locais', 'saldoquantidade', 'vendaquantidade'],
-  props: ['seguranca', 'minimo', 'maximo'],
+  props: ['estatistica', 'saldoquantidade', 'vendaquantidade'],
   data () {
     return {
       data: {
-        labels: ['Estatistica'],
+        labels: [
+          'Venda Anual',
+          'Média Venda Mensal',
+          'Saldo do Estoque',
+          'Recomendado',
+        ],
         datasets: [
           {
-            label: 'Máximo',
-            backgroundColor: 'rgba(0,128,0, 0.7)',
-            data: null,
-          },
-          {
-            label: 'Minimo',
-            backgroundColor: 'rgba(255,165,0, 0.7)',
+            label: 'Venda Anual',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null
           },
           {
-            label: 'Segurança',
-            backgroundColor: 'rgba(255,0,0, 0.7)',
+            label: 'Média Venda Mensal',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null
-          }
+          },
+          {
+            label: 'Saldo do Estoque',
+            backgroundColor: '#f00',
+            data: null
+          },
+          {
+            label: 'Estoque de Segurança',
+            backgroundColor: '#f00',
+            data: null
+          },
+          {
+            label: 'Estoque Mínimo',
+            backgroundColor: '#FFEB3B',
+            data: null
+          },
+          {
+            label: 'Estoque Máximo',
+            backgroundColor: 'rgba(63, 81, 181, 0.7)',
+            data: null
+          },
         ]
       },
       options: {
-        responsive: true,
         maintainAspectRatio: false,
-        scales: {
-          yAxes: [{
-            stacked: true,
+				responsive: true,
+        legend: {
+						display: false
+				},
+				scales: {
+					xAxes: [{
+            display: false,
+						stacked: true,
+					}],
+					yAxes: [{
+            display: false,
+						stacked: true,
             ticks: {
               beginAtZero: true
             }
-          }],
-          yAxes: [{
-             stacked: true // this also..
-          }]
-        }
-      }
+					}]
+				}
+			}
     }
   },
   watch: {
-    locais: {
+    estatistica: {
       handler: function (val, oldVal) {
         this.atualizaGrafico()
       },
@@ -59,43 +83,57 @@ export default {
   },
   mounted () {
     this.renderChart(this.data, this.options)
+    this.atualizaGrafico()
   },
   methods: {
-
-
     update () {
       this.$data._chart.update()
     },
-
     atualizaGrafico: debounce(function () {
-      let vm = this
 
-      // acumula dados para os datasets
-      let maximo = []
-      let minimo = []
-      let seguranca = []
-      // let locais = []
-      // let vendaquantidade = []
-      // let saldoquantidade = []
+      if (!this.estatistica) {
+        return
+      }
 
-      this.locais.forEach(function (estoquelocal) {
-        locais.push(estoquelocal.estoquelocal.substr(0, 3))
-        vendaquantidade.push(estoquelocal.vendaquantidade)
-        saldoquantidade.push(estoquelocal.saldoquantidade)
-      })
-
-      locais.push('Total')
-      vendaquantidade.push(vm.vendaquantidade)
-      saldoquantidade.push(vm.saldoquantidade)
-
-      // passa para datasets os valores acumulados
-      vm.data.datasets[0].data = maximo
-      vm.data.datasets[1].data = minimo
-      vm.data.datasets[2].data = seguranca
-      vm.data.labels = estatistica
+      this.data.datasets[0].data = [
+        this.vendaquantidade,
+        0,
+        0,
+        0
+      ]
+      this.data.datasets[1].data = [
+        0,
+        Math.floor(this.estatistica.demandamedia),
+        0,
+        0
+      ]
+      this.data.datasets[2].data = [
+        0,
+        0,
+        this.saldoquantidade,
+        0
+      ]
+      this.data.datasets[3].data = [
+        0,
+        0,
+        0,
+        this.estatistica.estoqueseguranca
+      ]
+      this.data.datasets[4].data = [
+        0,
+        0,
+        0,
+        this.estatistica.estoqueminimo - this.estatistica.estoqueseguranca
+      ]
+      this.data.datasets[5].data = [
+        0,
+        0,
+        0,
+        this.estatistica.estoquemaximo - this.estatistica.estoqueminimo
+      ]
 
       // atualiza grafico
-      vm.update()
+      this.update()
     }, 100)
   }
 }

@@ -35,6 +35,11 @@ export default {
       },
       options: {
         responsive: true,
+        /*
+        legend: {
+						display: false
+				},
+        */
         maintainAspectRatio: false,
         tooltips: {
           mode: 'index',
@@ -48,16 +53,17 @@ export default {
           xAxes: [
             {
               type: 'time',
+              display: false,
               time: {
                 displayFormats: {
-                  'miliseconds': 'MMM/YYYY',
-                  'second': 'MMM/YYYY',
-                  'minute': 'MMM/YYYY',
-                  'hour': 'MMM/YYYY',
-                  'day': 'MMM/YYYY',
-                  'week': 'MMM/YYYY',
-                  'month': 'MMM/YYYY',
-                  'quarter': 'MMM/YYYY',
+                  'miliseconds': 'MMM/YY',
+                  'second': 'MMM/YY',
+                  'minute': 'MMM/YY',
+                  'hour': 'MMM/YY',
+                  'day': 'MMM/YY',
+                  'week': 'MMM/YY',
+                  'month': 'MMM/YY',
+                  'quarter': 'MMM/YY',
                   'year': 'YYYY'
                 },
                 'tooltipFormat': 'MMMM/YYYY'
@@ -65,6 +71,7 @@ export default {
             }
           ],
           yAxes: [{
+            display: false,
             ticks: {
               beginAtZero: true
             }
