@@ -9,16 +9,73 @@
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer" width="200" style="width: 200px;">
       <q-list no-border>
+
+        <!-- FILTRO DE LOCAIS DE ESTOQUE -->
+        <q-list-header>Local de Estoque</q-list-header>
+
+        <!-- LOCAIS -->
+        <q-item tag="label" v-for="local in item.locais" :key="local.codprodutovariacao">
+          <q-item-main>
+            <q-item-tile title>{{ local.estoquelocal }}</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.codestoquelocal" :val="local.codestoquelocal" />
+          </q-item-side>
+        </q-item>
+
+        <!-- TODOS LOCAIS -->
+        <q-item tag="label">
+          <q-item-main>
+            <q-item-tile title>Todos</q-item-tile>
+          </q-item-main>
+          <q-item-side right>
+            <q-radio v-model="filter.codestoquelocal" val="" />
+          </q-item-side>
+        </q-item>
+
+        <!-- FILTRO DE VARIACOES -->
         <template v-if="item && item.variacoes.length > 1">
-          <q-list-header>Variações</q-list-header>
-          <q-item tag="label" v-for="variacao in item.variacoes" :key="variacao.codprodutovariacao">
-            <q-item-main>
-              <q-item-tile title>{{ variacao.variacao }}</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
-              <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
-            </q-item-side>
-          </q-item>
+
+          <!-- VARIACOES ATIVAS -->
+          <template v-if="variacoesAtivas.length > 0">
+            <q-list-header>Variações Ativas</q-list-header>
+            <q-item tag="label" v-for="variacao in variacoesAtivas" :key="variacao.codprodutovariacao">
+              <q-item-main>
+                <q-item-tile title>{{ variacao.variacao }}</q-item-tile>
+              </q-item-main>
+              <q-item-side right>
+                <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
+              </q-item-side>
+            </q-item>
+          </template>
+
+          <!-- VARIACOES DESCONTINUADAS -->
+          <template v-if="variacoesDescontinuadas.length > 0">
+            <q-list-header>Variações Descontinuadas</q-list-header>
+            <q-item tag="label" v-for="variacao in variacoesDescontinuadas" :key="variacao.codprodutovariacao">
+              <q-item-main>
+                <q-item-tile title>{{ variacao.variacao }}</q-item-tile>
+              </q-item-main>
+              <q-item-side right>
+                <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
+              </q-item-side>
+            </q-item>
+          </template>
+
+          <!-- VARIACOES INATIVAS -->
+          <template v-if="variacoesInativas.length > 0">
+            <q-list-header>Variações Inativas</q-list-header>
+            <q-item tag="label" v-for="variacao in variacoesInativas" :key="variacao.codprodutovariacao">
+              <q-item-main>
+                <q-item-tile title>{{ variacao.variacao }}</q-item-tile>
+              </q-item-main>
+              <q-item-side right>
+                <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
+              </q-item-side>
+            </q-item>
+          </template>
+
+          <!-- TODAS VARIACOES -->
           <q-item tag="label">
             <q-item-main>
               <q-item-tile title>Todos</q-item-tile>
@@ -28,23 +85,6 @@
             </q-item-side>
           </q-item>
         </template>
-        <q-list-header>Local de Estoque</q-list-header>
-        <q-item tag="label" v-for="local in item.locais" :key="local.codprodutovariacao">
-          <q-item-main>
-            <q-item-tile title>{{ local.estoquelocal }}</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.codestoquelocal" :val="local.codestoquelocal" />
-          </q-item-side>
-        </q-item>
-        <q-item tag="label">
-          <q-item-main>
-            <q-item-tile title>Todos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.codestoquelocal" val="" />
-          </q-item-side>
-        </q-item>
       </q-list>
     </template>
 
@@ -249,6 +289,25 @@ export default {
       deep: true
     }
   },
+
+  computed: {
+    variacoesAtivas: function() {
+      return this.item.variacoes.filter(function(variacao) {
+        return (variacao.inativo == null) && (variacao.descontinuado == null)
+      })
+    },
+    variacoesDescontinuadas: function() {
+      return this.item.variacoes.filter(function(variacao) {
+        return (variacao.inativo == null) && (variacao.descontinuado != null)
+      })
+    },
+    variacoesInativas: function() {
+      return this.item.variacoes.filter(function(variacao) {
+        return (variacao.inativo != null)
+      })
+    }
+  },
+
   methods: {
     // carrega registros da api
     loadData: debounce(function () {
@@ -260,8 +319,6 @@ export default {
       // faz chamada api
       vm.$axios.get('estoque-estatistica/' + vm.codproduto, { params }).then(response => {
         vm.item = response.data
-        console.log(vm.item)
-        console.log(vm.item.estatistica.estoqueminimo)
         this.loading = false
       })
     }, 500)
