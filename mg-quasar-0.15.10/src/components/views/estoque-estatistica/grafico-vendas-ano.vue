@@ -28,6 +28,7 @@ export default {
         maintainAspectRatio: false,
         scales: {
           yAxes: [{
+            display: false,
             ticks: {
               beginAtZero: true
             }

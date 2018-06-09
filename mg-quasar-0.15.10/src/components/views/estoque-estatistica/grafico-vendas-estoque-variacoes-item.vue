@@ -23,13 +23,20 @@ export default {
         ]
       },
       options: {
+        legend: {
+						display: false
+				},
         responsive: true,
         maintainAspectRatio: false,
         scales: {
           yAxes: [{
+            display: false,
             ticks: {
               beginAtZero: true
             }
+          }],
+          xAxes: [{
+            display: false,
           }]
         }
       }

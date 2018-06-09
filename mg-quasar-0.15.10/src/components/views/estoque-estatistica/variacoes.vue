@@ -1,25 +1,27 @@
 <template>
-  <div class="row">
+  <div class="row q-ma-sm">
     <div class="col-md-12">
       <q-card>
+
         <q-card-title>
           Variações
-          <span slot="subtitle">
-            Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque. Circulo interno representa o estoque, já o externo represeta as vendas.
-          </span>
+          <q-tooltip>
+            Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque.<br />
+            Circulo interno representa o estoque, já o externo represeta as vendas.
+          </q-tooltip>
         </q-card-title>
-        <q-card-separator />
+
         <q-card-main v-for="grupo in grupos" :key="grupo.id">
           <div class="row">
             <div class="col-md-8">
-              <grafico-vendas-estoque-variacoes-item :height="350" :variacoes="grupo.variacoes"></grafico-vendas-estoque-variacoes-item>
+              <grafico-vendas-estoque-variacoes-item :height="200" :variacoes="grupo.variacoes"></grafico-vendas-estoque-variacoes-item>
             </div>
             <div class="col-md-4">
-              <grafico-vendas-estoque-variacoes-doughnut :height="350" :variacoes="grupo.variacoes"></grafico-vendas-estoque-variacoes-doughnut>
+              <grafico-vendas-estoque-variacoes-doughnut :height="200" :variacoes="grupo.variacoes"></grafico-vendas-estoque-variacoes-doughnut>
             </div>
           </div>
-
         </q-card-main>
+
       </q-card>
     </div>
   </div>

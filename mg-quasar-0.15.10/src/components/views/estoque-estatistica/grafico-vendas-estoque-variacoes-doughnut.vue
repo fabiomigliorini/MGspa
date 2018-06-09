@@ -34,6 +34,9 @@ export default {
       ],
       iCor: 0,
       options: {
+        legend: {
+						display: false
+				},
         responsive: true,
         maintainAspectRatio: false,
         scales: {
@@ -44,7 +47,7 @@ export default {
             }
           }],
           yAxes: [{
-            display: true,
+            display: false,
             ticks: {
               beginAtZero: true
             }

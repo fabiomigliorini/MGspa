@@ -52,10 +52,10 @@
     <div slot="content">
 
 
-      <div class="row">
+      <div class="row q-pa-sm gutter-xs">
 
         <div class="col-md-6">
-          <q-card class="q-ma-sm">
+          <q-card>
             <q-card-title>
               Venda Mensal
               <q-tooltip>
@@ -76,25 +76,81 @@
           </q-card>
         </div>
 
+        <!-- grafico recomendado -->
         <div class="col-md-3">
-          <q-card class="q-ma-sm">
+          <q-card>
             <q-card-title>
               Recomendado
-              <small class="text-grey">
-                (60-90 DD)
+              <small class="text-grey" v-if="item">
+                ({{ numeral(item.estatistica.tempominimo * 30).format('0,0') }} -
+                {{ numeral(item.estatistica.tempomaximo * 30).format('0,0') }} Dias)
               </small>
               <q-tooltip>
                 Estoque recomendado calculado com base no volume de vendas.
+                <div class="row" v-if="item">
+                  <div class="col-md-5">
+                    <q-list dense no-border>
+                      <q-item>
+                        <q-item-main >
+                          Média: {{ numeral(item.estatistica.demandamedia).format('0,0.0000') }}
+                        </q-item-main>
+                      </q-item>
+
+                      <q-item>
+                        <q-item-main >
+                          Desvio: {{ numeral(item.estatistica.desviopadrao).format('0,0.0000') }}
+                        </q-item-main>
+                      </q-item>
+
+                      <q-item>
+                        <q-item-main >
+                          Servico: {{ numeral(item.estatistica.nivelservico).format('0%') }}
+                        </q-item-main>
+                      </q-item>
+
+                      <q-item>
+                        <q-item-main class="text-green" v-if="item.saldoquantidade > item.estatistica.estoqueminimo">
+                          Saldo: {{ numeral(item.saldoquantidade).format('0,0') }}
+                        </q-item-main>
+                        <q-item-main class="text-orange" v-else-if="item.saldoquantidade < item.estatistica.estoqueminimo && item.saldoquantidade > item.estatistica.estoqueseguranca">
+                          Saldo: {{ numeral(item.saldoquantidade).format('0,0') }}
+                        </q-item-main>
+                        <q-item-main class="text-red" v-else-if="item.saldoquantidade < item.estatistica.estoqueseguranca">
+                          Saldo: {{ numeral(item.saldoquantidade).format('0,0') }}
+                        </q-item-main>
+                      </q-item>
+                    </q-list>
+                  </div>
+                </div>
               </q-tooltip>
             </q-card-title>
+
             <q-card-main>
-              <grafico-estatistica :height="200" :estatistica="item.estatistica" :saldoquantidade="item.saldoquantidade" :vendaquantidade="item.vendaquantidade"/>
+              <grafico-estatistica :height="125" :estatistica="item.estatistica" :saldoquantidade="item.saldoquantidade" :vendaquantidade="item.vendaquantidade"/>
             </q-card-main>
+
+              <q-card-main v-if="item" dense>
+                <q-list dense no-border>
+                  <q-item>
+                    <q-item-side >
+                      Comprar:
+                    </q-item-side>
+                    <q-item-main align="end" class="text-green" v-if="item.estatistica.estoquemaximo - item.saldoquantidade > 0">
+                      {{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}
+                    </q-item-main>
+                    <q-item-main align="end" class="text-red" v-else-if="item.estatistica.estoquemaximo - item.saldoquantidade < 0">
+                      {{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}
+                    </q-item-main>
+                  </q-item>
+                </q-list>
+              </q-card-main>
+
           </q-card>
         </div>
 
+        <!-- Grafico votas as aulas -->
         <div class="col-md-3">
-          <q-card class="q-ma-sm">
+          <q-card>
             <q-card-title>
               Venda Volta às Aulas
               <q-tooltip>
@@ -108,31 +164,34 @@
           </q-card>
         </div>
 
+        <!-- fim da primeira row -->
       </div>
 
+      <!-- Grafico vendas das Filiais -->
       <div class="row q-pa-sm gutter-xs">
         <div class="col-md-6">
           <q-card>
-            <div style="padding-left:10px; padding-top:10px">
-              <q-card-title>
-                Vendas das Filiais
-                <q-tooltip anchor="bottom left" self="top right">
-                  Vendas dos últimos 12 meses de cada filial, comparadas com o saldo atual dos estoques.<br />
-                  O gráfico em formato de anel mostra a distribuição da venda dos últimos 12 meses comparado com os estoques.<br />
-                  O anel externo representa as vendas, já o interno representa os saldos atuais de estoque.
-                </q-tooltip>
-              </q-card-title>
-            </div>
+            <q-card-title>
+              Vendas das Filiais
+              <q-tooltip>
+                Vendas dos últimos 12 meses de cada filial, comparadas com o saldo atual dos estoques.
+              </q-tooltip>
+            </q-card-title>
             <q-card-main>
               <grafico-vendas-ano-filiais :height="200" :locais="item.locais" :vendaquantidade="item.vendaquantidade" :saldoquantidade="item.saldoquantidade"/>
             </q-card-main>
           </q-card>
         </div>
 
+        <!-- Grafico da distribuicao do estoque -->
         <div class="col-md-3">
           <q-card>
             <q-card-title>
               Distribuição do Estoque
+              <q-tooltip>
+                Distribuição da venda dos últimos 12 meses comparado com os estoques.<br />
+                O anel externo representa as vendas, já o interno representa os saldos atuais de estoque.
+              </q-tooltip>
             </q-card-title>
             <q-card-main>
               <grafico-vendas-estoque-filiais :height="200" :locais="item.locais"></grafico-vendas-estoque-filiais>
@@ -140,149 +199,13 @@
           </q-card>
         </div>
       </div>
+
+      <template v-if="item && item.variacoes.length > 1">
+        <variacoes :variacoes="item.variacoes"/>
+      </template>
+
+      <!-- termina o div slot -->
     </div>
-
-    <div class="row q-pa-sm gutter-xs">
-      <div class="col-md-3">
-        <q-card >
-          <div style="padding-left:10px; padding-top:10px">
-            <strong>
-              Estatísticas
-              <!-- <q-tooltip anchor="bottom left" self="top right"></q-tooltip> -->
-            </strong>
-          </div>
-          <q-card-separator />
-          <q-card-main>
-            <template v-if="item">
-              <q-list dense no-border>
-                <q-item>
-                  <q-item-side >
-                    Média:
-                  </q-item-side>
-                  <q-item-main align="end">
-                    {{ numeral(item.estatistica.demandamedia).format('0,0.0000') }}
-                  </q-item-main>
-                </q-item>
-
-                <q-item>
-                  <q-item-side>
-                    Desvio:
-                  </q-item-side>
-                  <q-item-main align="end">
-                    {{ numeral(item.estatistica.desviopadrao).format('0,0.0000') }}
-                  </q-item-main>
-                </q-item>
-
-                <q-item>
-                  <q-item-side>
-                    Servico:
-                  </q-item-side>
-                  <q-item-main align="end">
-                    {{ numeral(item.estatistica.nivelservico).format('0%') }}
-                  </q-item-main>
-                </q-item>
-
-                <q-item>
-                  <q-item-side>
-                    Segurança:
-                  </q-item-side>
-                  <q-item-main align="end">
-                    {{ numeral(item.estatistica.estoqueseguranca).format('0,0') }}
-                  </q-item-main>
-                </q-item>
-
-                <q-item>
-                  <q-item-side>
-                    Mínimo:
-                  </q-item-side>
-                  <q-item-main align="end">
-                    {{ numeral(item.estatistica.estoqueminimo).format('0,0') }} ({{ numeral(item.estatistica.tempominimo * 30).format('0,0') }} Dias)
-                  </q-item-main>
-                </q-item>
-
-                <q-item>
-                  <q-item-side>
-                    Máximo:
-                  </q-item-side>
-                  <q-item-main align="end">
-                    {{ numeral(item.estatistica.estoquemaximo).format('0,0') }} ({{ numeral(item.estatistica.tempomaximo * 30).format('0,0') }} Dias)
-                  </q-item-main>
-                </q-item>
-
-                <q-item>
-                  <q-item-side>
-                    Saldo:
-                  </q-item-side>
-                  <q-item-main align="end" class="text-green" v-if="item.saldoquantidade > item.estatistica.estoqueminimo">
-                    {{ numeral(item.saldoquantidade).format('0,0') }}
-                  </q-item-main>
-                  <q-item-main align="end" class="text-orange" v-else-if="item.saldoquantidade < item.estatistica.estoqueminimo && item.saldoquantidade > item.estatistica.estoqueseguranca">
-                    {{ numeral(item.saldoquantidade).format('0,0') }}
-                  </q-item-main>
-                  <q-item-main align="end" class="text-red" v-else-if="item.saldoquantidade < item.estatistica.estoqueseguranca">
-                    {{ numeral(item.saldoquantidade).format('0,0') }}
-                  </q-item-main>
-                </q-item>
-
-                <q-item>
-                  <q-item-side >
-                    Comprar:
-                  </q-item-side>
-                  <q-item-main align="end" class="text-green" v-if="item.estatistica.estoquemaximo - item.saldoquantidade > 0">
-                    {{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}
-                  </q-item-main>
-                  <q-item-main align="end" class="text-red" v-else-if="item.estatistica.estoquemaximo - item.saldoquantidade < 0">
-                    {{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}
-                  </q-item-main>
-                </q-item>
-
-              </q-list>
-            </template>
-          </q-card-main>
-        </q-card>
-      </div>
-    </div>
-
-    <template v-if="item && item.variacoes.length > 1">
-      <div class="row q-pa-sm gutter-xs">
-        <div class="col-md-12">
-          <q-card>
-            <div style="padding-left:10px; padding-top:10px">
-              <strong>
-                Variações
-                <!-- <q-tooltip anchor="bottom left" self="top right"></q-tooltip> -->
-              </strong>
-            </div>
-            <q-card-separator />
-            <q-card-main>
-              <variacoes :variacoes="item.variacoes"></variacoes>
-            </q-card-main>
-          </q-card>
-        </div>
-      </div>
-    </template>
-
-    <!-- <div class="col-md-3">
-    <q-card>
-    <q-card-title>
-    Volta às aulas
-    <span slot="subtitle"></span>
-    </q-card-title>
-    <q-card-separator />
-    <q-card-main>
-    </q-card-main>
-    </q-card>
-    </div>
-    <div class="col-md-3">
-    <q-card>
-    <q-card-title>
-    Estatísticas
-    </q-card-title>
-    <q-card-separator />
-    </q-card>
-    </div>
-    </div> -->
-
   </mg-layout>
 </template>
 
