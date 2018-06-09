@@ -34,9 +34,6 @@ export default {
             ticks: {
               beginAtZero: true
             }
-          }],
-          xAxes: [{
-            display: false,
           }]
         }
       }
@@ -67,7 +64,7 @@ export default {
       let saldoquantidade = []
 
       this.variacoes.forEach(function (variacao) {
-        variacoes.push(variacao.variacao.substr(0, 12))
+        variacoes.push(variacao.variacao.substr(0, 10))
         vendaquantidade.push(variacao.vendaquantidade)
         saldoquantidade.push(variacao.saldoquantidade)
       })

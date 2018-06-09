@@ -1,30 +1,38 @@
-<template>
-  <div class="row q-ma-sm">
-    <div class="col-md-12">
-      <q-card>
+<template >
 
-        <q-card-title>
-          Variações
-          <q-tooltip>
-            Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque.<br />
-            Circulo interno representa o estoque, já o externo represeta as vendas.
-          </q-tooltip>
-        </q-card-title>
+  <q-card no-border >
+    <q-card-main v-for="grupo in grupos" :key="grupo.id" class="q-pa-sm">
+      <div class="row  gutter-xs" >
+        <div class="col-md-8" >
+          <q-card>
+            <q-card-title>
+              Vendas das Variações
+              <q-tooltip>
+                Vendas dos últimos 12 meses de cada variação, comparadas com o saldo atual do estoque.
+              </q-tooltip>
+            </q-card-title>
+            <q-card-main >
+              <grafico-vendas-estoque-variacoes-item :height="200" :variacoes="grupo.variacoes"/>
+            </q-card-main>
+          </q-card>
+        </div>
 
-        <q-card-main v-for="grupo in grupos" :key="grupo.id">
-          <div class="row">
-            <div class="col-md-8">
-              <grafico-vendas-estoque-variacoes-item :height="200" :variacoes="grupo.variacoes"></grafico-vendas-estoque-variacoes-item>
-            </div>
-            <div class="col-md-4">
-              <grafico-vendas-estoque-variacoes-doughnut :height="200" :variacoes="grupo.variacoes"></grafico-vendas-estoque-variacoes-doughnut>
-            </div>
-          </div>
-        </q-card-main>
-
-      </q-card>
-    </div>
-  </div>
+        <div class="col-md-4">
+          <q-card>
+            <q-card-title>
+              Distribuição das Variações
+              <q-tooltip>
+                Circulo interno representa o estoque, já o externo represeta as vendas.
+              </q-tooltip>
+            </q-card-title>
+            <q-card-main >
+              <grafico-vendas-estoque-variacoes-doughnut :height="200" :variacoes="grupo.variacoes"/>
+            </q-card-main>
+          </q-card>
+        </div>
+      </div>
+    </q-card-main>
+  </q-card>
 </template>
 
 <script>

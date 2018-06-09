@@ -126,24 +126,18 @@
             </q-card-title>
 
             <q-card-main>
-              <grafico-estatistica :height="125" :estatistica="item.estatistica" :saldoquantidade="item.saldoquantidade" :vendaquantidade="item.vendaquantidade"/>
+              <grafico-estatistica :height="150" :estatistica="item.estatistica" :saldoquantidade="item.saldoquantidade" :vendaquantidade="item.vendaquantidade"/>
             </q-card-main>
 
-              <q-card-main v-if="item" dense>
-                <q-list dense no-border>
-                  <q-item>
-                    <q-item-side >
-                      Comprar:
-                    </q-item-side>
-                    <q-item-main align="end" class="text-green" v-if="item.estatistica.estoquemaximo - item.saldoquantidade > 0">
-                      {{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}
-                    </q-item-main>
-                    <q-item-main align="end" class="text-red" v-else-if="item.estatistica.estoquemaximo - item.saldoquantidade < 0">
-                      {{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}
-                    </q-item-main>
-                  </q-item>
-                </q-list>
-              </q-card-main>
+            <q-card-main v-if="item" class="text-center">
+              <span class="text-green" v-if="item.estatistica.estoquemaximo - item.saldoquantidade > 0">
+                Comprar <b>{{ numeral(item.estatistica.estoquemaximo - item.saldoquantidade).format('0,0') }}</b> unidade(s)
+              </span>
+              <span class="text-red" v-else-if="item.estatistica.estoquemaximo - item.saldoquantidade < 0">
+                <b>{{ numeral(item.saldoquantidade - item.estatistica.estoquemaximo).format('0,0') }}</b> unidade(s) excedente(s)
+              </span>
+              &nbsp
+            </q-card-main>
 
           </q-card>
         </div>
@@ -169,7 +163,7 @@
 
       <!-- Grafico vendas das Filiais -->
       <div class="row q-pa-sm gutter-xs">
-        <div class="col-md-6">
+        <div class="col-md-8">
           <q-card>
             <q-card-title>
               Vendas das Filiais
@@ -184,10 +178,10 @@
         </div>
 
         <!-- Grafico da distribuicao do estoque -->
-        <div class="col-md-3">
+        <div class="col-md-4">
           <q-card>
             <q-card-title>
-              Distribuição do Estoque
+              Distribuição das Filiais
               <q-tooltip>
                 Distribuição da venda dos últimos 12 meses comparado com os estoques.<br />
                 O anel externo representa as vendas, já o interno representa os saldos atuais de estoque.
