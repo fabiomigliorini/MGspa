@@ -205,13 +205,23 @@ class EstoqueEstatisticaRepository
                 group by elpvv.mes
             ),
             saldos_mes as (
-                select em.mes, sum(em.saldoquantidade) as saldoquantidade, sum(em.saldovalor) as saldovalor
-                from tblprodutovariacao pv
-                inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
-                inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
-                inner join tblestoquemes em on (em.codestoquesaldo = es.codestoquesaldo)
-                where em.mes >= :mes_inicial
-                and pv.codproduto = :codproduto
+                select
+                  	m.mes
+                  	, sum(em.saldoquantidade) as saldoquantidade
+                  	, sum(em.saldovalor) as saldovalor
+                from meses m, tblestoquelocal el
+                inner join tblprodutovariacao pv on (pv.codproduto = :codproduto)
+                left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = el.codestoquelocal and elpv.codprodutovariacao = pv.codprodutovariacao)
+                left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+                left join lateral (
+                  	select iq.*
+                  	from tblestoquemes iq
+                  	where iq.codestoquesaldo = es.codestoquesaldo
+                  	and iq.mes <= m.mes
+                  	order by iq.mes desc
+                  	limit 1
+                    ) em on (em.codestoquesaldo = es.codestoquesaldo)
+                where es.fiscal = false
         ';
 
         if (!empty($codprodutovariacao)) {
@@ -219,11 +229,11 @@ class EstoqueEstatisticaRepository
         }
 
         if (!empty($codestoquelocal)) {
-            $sql .= ' and elpv.codestoquelocal = :codestoquelocal ';
+            $sql .= ' and el.codestoquelocal = :codestoquelocal ';
         }
 
         $sql .= '
-                group by em.mes
+                group by m.mes
             )
             select
               meses.mes,
