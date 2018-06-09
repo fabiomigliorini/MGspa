@@ -119,8 +119,8 @@ class EstoqueEstatisticaRepository
 
         $vendas_filtradas = $vendas;
 
-        // ignora mes atual quando ja tem mais de 2 meses de vendas
-        if ($vendas_filtradas->count() >= 2) {
+        // ignora mes atual quando ja tem mais de 3 meses de vendas
+        if ($vendas_filtradas->count() >= 3) {
             $vendas_filtradas = $vendas_filtradas->whereNotIn('mes', [date('Y-m-01')]);
         }
 
