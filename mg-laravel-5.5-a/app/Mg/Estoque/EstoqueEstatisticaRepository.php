@@ -117,24 +117,28 @@ class EstoqueEstatisticaRepository
     public static function calculaEstoqueMinimoPeloDesvioPadrao ($vendas, $tempo_minimo = 0.7, $tempo_maximo = 2.5, $nivel_servico = null)
     {
 
-        // se tem mais de 3 registros, ignora mes atual
-        $vendas_filtrada = $vendas;
-        if ($vendas_filtrada->count() >= 3) {
-            $vendas_filtrada = $vendas_filtrada->whereNotIn('mes', [date('Y-m-01')]);
+        $vendas_filtradas = $vendas;
+
+        // ignora mes atual quando ja tem mais de 3 meses de vendas
+        if ($vendas_filtradas->count() >= 3) {
+            $vendas_filtradas = $vendas_filtradas->whereNotIn('mes', [date('Y-m-01')]);
         }
 
-        // ignora de dois anos pra tras
-        if ($vendas_filtrada->count() > 24) {
-            $vendas_filtrada = $vendas_filtrada->sortByDesc('mes')->take(24);
-        }
+        // Ignora Meses que nao teve vendas nem estoque
+        $vendas_filtradas = $vendas_filtradas->filter(function ($mes, $key) {
+            return (($mes->saldoquantidade > 0) || ($mes->vendaquantidade != 0));
+        });
+
+        // Considera somente ultimos 24 meses
+        $vendas_filtradas = $vendas_filtradas->sortByDesc('mes')->take(24);
 
         // calcula nivel de servico e Z pelo historico das vendas
-        $nivel_servico = static::calculaNivelServicoPelasVendas($vendas_filtrada);
+        $nivel_servico = static::calculaNivelServicoPelasVendas($vendas_filtradas);
         $z_ns = static::NormSInv($nivel_servico);
 
         // calcula demanda media e desvio padrao
-        $demanda_media = $vendas_filtrada->avg('vendaquantidade');
-        $serie = $vendas_filtrada->pluck('vendaquantidade')->toArray();
+        $demanda_media = $vendas_filtradas->avg('vendaquantidade');
+        $serie = $vendas_filtradas->pluck('vendaquantidade')->toArray();
         $desvio_padrao = 0;
         if ($demanda_media > 0) {
             $desvio_padrao = static::standardDeviationSample($serie);
@@ -205,13 +209,23 @@ class EstoqueEstatisticaRepository
                 group by elpvv.mes
             ),
             saldos_mes as (
-                select em.mes, sum(em.saldoquantidade) as saldoquantidade, sum(em.saldovalor) as saldovalor
-                from tblprodutovariacao pv
-                inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
-                inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
-                inner join tblestoquemes em on (em.codestoquesaldo = es.codestoquesaldo)
-                where em.mes >= :mes_inicial
-                and pv.codproduto = :codproduto
+                select
+                  	m.mes
+                  	, sum(em.saldoquantidade) as saldoquantidade
+                  	, sum(em.saldovalor) as saldovalor
+                from meses m, tblestoquelocal el
+                inner join tblprodutovariacao pv on (pv.codproduto = :codproduto)
+                left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = el.codestoquelocal and elpv.codprodutovariacao = pv.codprodutovariacao)
+                left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+                left join lateral (
+                  	select iq.*
+                  	from tblestoquemes iq
+                  	where iq.codestoquesaldo = es.codestoquesaldo
+                  	and iq.mes <= m.mes
+                  	order by iq.mes desc
+                  	limit 1
+                    ) em on (em.codestoquesaldo = es.codestoquesaldo)
+                where es.fiscal = false
         ';
 
         if (!empty($codprodutovariacao)) {
@@ -219,11 +233,11 @@ class EstoqueEstatisticaRepository
         }
 
         if (!empty($codestoquelocal)) {
-            $sql .= ' and elpv.codestoquelocal = :codestoquelocal ';
+            $sql .= ' and el.codestoquelocal = :codestoquelocal ';
         }
 
         $sql .= '
-                group by em.mes
+                group by m.mes
             )
             select
               meses.mes,
@@ -254,13 +268,13 @@ class EstoqueEstatisticaRepository
     {
 
         // filtra meses com venda
-        $vendas_filtrada = $vendas->filter(function ($value, $key) {
+        $vendas_filtradas = $vendas->filter(function ($value, $key) {
             return $value->vendaquantidade > 0;
         });
 
         // Total de Meses
         $meses_total = $vendas->count();
-        $meses_com_venda = $vendas_filtrada->count();
+        $meses_com_venda = $vendas_filtradas->count();
 
         // se não teve venda em nenhum mes
         if ($meses_total <= 0) {
@@ -274,7 +288,7 @@ class EstoqueEstatisticaRepository
         if ($indice_mes == 1) {
 
             // se vendeu mais de 50 unidades por mes
-            $soma_venda = $vendas_filtrada->sum('vendaquantidade');
+            $soma_venda = $vendas_filtradas->sum('vendaquantidade');
             if ($soma_venda > (50 * $meses_total)) {
                 return 0.99;
             }
