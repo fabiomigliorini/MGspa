@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-require_once "vendor/autoload.php";
 
 class NfeController extends Controller
 {
 
-  public function show(){
+  public function show($xml){
+    require_once "vendor/autoload.php";
 
     $nfe = new NFePHP\NFe\Make();
 
@@ -180,7 +180,7 @@ class NfeController extends Controller
 
     $xml = $nfe->getXML(); // O conteúdo do XML fica armazenado na variável $xml
 
-    return view('nfe.show', array('xml' => $xml));
+    return view('nfe.show', $xml);
    }
 
 
