@@ -1,19 +1,32 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Mg\Nfephp;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use NfePhp;
+
+
+// use NFePHP\NFe\Tools;
+// use NFePHP\Common\Certificate;
+// use NFePHP\Common\Soap\SoapCurl;
+
+
 
 class NfeController extends Controller
 {
 
-  public function show($xml){
-    require_once "vendor/autoload.php";
+  public function show(){
 
-    $nfe = new NFePHP\NFe\Make();
+    // require_once "vendor/autoload.php";
+    // $nfe = new NFePHP\NFe\Make();
+    // $nfe = new vendor\nfephp-org\sped-nfe\src\Make();
+
+    $nfe = new Make();
+
 
     $std = new \stdClass();
-    $std->versao = '3.10';
+    $std->versao = '4.0';
     $nfe->taginfNFe($std);
 
     $std = new \stdClass();
@@ -52,9 +65,9 @@ class NfeController extends Controller
     $std->nro = '203';
     $std->xBairro = 'Centro';
     $std->cMun = '4317608';
-    $std->xMun = 'Porto Alegre';
-    $std->UF = 'RS';
-    $std->CEP = '955500-000';
+    $std->xMun = 'Sinop';
+    $std->UF = 'MT';
+    $std->CEP = '78555-000';
     $std->cPais = '1058';
     $std->xPais = 'BRASIL';
     $nfe->tagenderEmit($std);
@@ -71,9 +84,9 @@ class NfeController extends Controller
     $std->nro = '203';
     $std->xBairro = 'Centro';
     $std->cMun = '4317608';
-    $std->xMun = 'Porto Alegre';
-    $std->UF = 'RS';
-    $std->CEP = '955500-000';
+    $std->xMun = 'Sinop';
+    $std->UF = 'MT';
+    $std->CEP = '78555-000';
     $std->cPais = '1058';
     $std->xPais = 'BRASIL';
     $nfe->tagenderDest($std);
@@ -180,7 +193,7 @@ class NfeController extends Controller
 
     $xml = $nfe->getXML(); // O conteúdo do XML fica armazenado na variável $xml
 
-    return view('nfe.show', $xml);
+    return $xml;
    }
 
 
