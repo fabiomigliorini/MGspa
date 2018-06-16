@@ -1,4 +1,5 @@
 .env
+.envExample
 .quasar
 .DS_Store
 .thumbs.db

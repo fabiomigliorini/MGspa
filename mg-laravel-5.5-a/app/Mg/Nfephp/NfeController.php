@@ -4,7 +4,8 @@ namespace Mg\Nfephp;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use NfePhp;
+//use NfePhp;
+use NFePHP\NFe\Make;
 
 
 // use NFePHP\NFe\Tools;
@@ -17,6 +18,7 @@ class NfeController extends Controller
 {
 
   public function show(){
+
 
     // require_once "vendor/autoload.php";
     // $nfe = new NFePHP\NFe\Make();

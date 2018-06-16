@@ -28,8 +28,7 @@
         ],
         "psr-4": {
             "App\\": "app/",
-            "Mg\\": "app/Mg",
-            "NfePhp\\": "vendor/nfephp-org/sped-nfe/src/"
+            "Mg\\": "app/Mg"
         }
     },
     "autoload-dev": {
