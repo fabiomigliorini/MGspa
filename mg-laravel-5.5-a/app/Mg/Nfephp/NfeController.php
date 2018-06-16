@@ -4,25 +4,12 @@ namespace Mg\Nfephp;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-//use NfePhp;
 use NFePHP\NFe\Make;
-
-
-// use NFePHP\NFe\Tools;
-// use NFePHP\Common\Certificate;
-// use NFePHP\Common\Soap\SoapCurl;
-
-
 
 class NfeController extends Controller
 {
 
   public function show(){
-
-
-    // require_once "vendor/autoload.php";
-    // $nfe = new NFePHP\NFe\Make();
-    // $nfe = new vendor\nfephp-org\sped-nfe\src\Make();
 
     $nfe = new Make();
 
