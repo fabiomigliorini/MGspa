@@ -1,23 +1,15 @@
 <?php
-
 namespace Mg\Nfephp;
-
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use NFePHP\NFe\Make;
-
 class NfeController extends Controller
 {
-
   public function show(){
-
     $nfe = new Make();
-
-
     $std = new \stdClass();
     $std->versao = '4.0';
     $nfe->taginfNFe($std);
-
     $std = new \stdClass();
     $std->cUF = 35;
     $std->cNF = '80070008';
@@ -41,14 +33,12 @@ class NfeController extends Controller
     $std->procEmi = '3.10.31';
     $std->verProc = 1;
     $nfe->tagide($std);
-
     $std = new \stdClass();
     $std->xNome = 'Empresa teste';
     $std->IE = '6564344535';
     $std->CRT = 3;
     $std->CNPJ = '78767865000156';
     $nfe->tagemit($std);
-
     $std = new \stdClass();
     $std->xLgr = "Rua Teste";
     $std->nro = '203';
@@ -60,14 +50,12 @@ class NfeController extends Controller
     $std->cPais = '1058';
     $std->xPais = 'BRASIL';
     $nfe->tagenderEmit($std);
-
     $std = new \stdClass();
     $std->xNome = 'Empresa destinatário teste';
     $std->indIEDest = 1;
     $std->IE = '6564344535';
     $std->CNPJ = '78767865000156';
     $nfe->tagdest($std);
-
     $std = new \stdClass();
     $std->xLgr = "Rua Teste";
     $std->nro = '203';
@@ -79,7 +67,6 @@ class NfeController extends Controller
     $std->cPais = '1058';
     $std->xPais = 'BRASIL';
     $nfe->tagenderDest($std);
-
     $std = new \stdClass();
     $std->item = 1;
     $std->cProd = '0001';
@@ -95,12 +82,10 @@ class NfeController extends Controller
     $std->vUnTrib = '10.99';
     $std->indTot = 1;
     $nfe->tagprod($std);
-
     $std = new \stdClass();
     $std->item = 1;
     $std->vTotTrib = 10.99;
     $nfe->tagimposto($std);
-
     $std = new \stdClass();
     $std->item = 1;
     $std->orig = 0;
@@ -110,7 +95,6 @@ class NfeController extends Controller
     $std->pICMS = '18.0000';
     $std->vICMS ='0.04';
     $nfe->tagICMS($std);
-
     $std = new \stdClass();
     $std->item = 1;
     $std->cEnq = '999';
@@ -119,7 +103,6 @@ class NfeController extends Controller
     $std->vBC = 0;
     $std->pIPI = 0;
     $nfe->tagIPI($std);
-
     $std = new \stdClass();
     $std->item = 1;
     $std->CST = '07';
@@ -127,14 +110,12 @@ class NfeController extends Controller
     $std->pPIS = 0;
     $std->vPIS = 0;
     $nfe->tagPIS($std);
-
     $std = new \stdClass();
     $std->item = 1;
     $std->vCOFINS = 0;
     $std->vBC = 0;
     $std->pCOFINS = 0;
     $nfe->tagCOFINSST($std);
-
     $std = new \stdClass();
     $std->vBC = 0.20;
     $std->vICMS = 0.04;
@@ -153,11 +134,9 @@ class NfeController extends Controller
     $std->vNF = 11.03;
     $std->vTotTrib = 0.00;
     $nfe->tagICMSTot($std);
-
     $std = new \stdClass();
     $std->modFrete = 1;
     $nfe->tagtransp($std);
-
     $std = new \stdClass();
     $std->item = 1;
     $std->qVol = 2;
@@ -167,25 +146,17 @@ class NfeController extends Controller
     $std->pesoL = 10.00;
     $std->pesoB = 11.00;
     $nfe->tagvol($std);
-
     $std = new \stdClass();
     $std->nFat = '100';
     $std->vOrig = 100;
     $std->vLiq = 100;
     $nfe->tagfat($std);
-
     $std = new \stdClass();
     $std->nDup = '100';
     $std->dVenc = '2017-08-22';
     $std->vDup = 11.03;
     $nfe->tagdup($std);
-
     $xml = $nfe->getXML(); // O conteúdo do XML fica armazenado na variável $xml
-
     return $xml;
    }
-
-
-
-
 }
