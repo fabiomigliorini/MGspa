@@ -51,6 +51,7 @@ namespace Mg\Filial;
 use Mg\MgModel;
 use Carbon\Carbon;
 use Mg\Usuario\Usuario;
+use Mg\Pessoa\Pessoa;
 
 class Filial extends MGModel
 {

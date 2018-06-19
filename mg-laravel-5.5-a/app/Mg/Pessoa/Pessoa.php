@@ -2,92 +2,14 @@
 
 namespace Mg\Pessoa;
 
+use Mg\MgModel;
+use Mg\Cidade\Cidade;
 
 use DB;
 use Carbon\Carbon;
 
-/**
- * Campos
- * @property  bigint                         $codpessoa                          NOT NULL DEFAULT nextval('tblpessoa_codpessoa_seq'::regclass)
- * @property  varchar(100)                   $pessoa                             NOT NULL
- * @property  varchar(50)                    $fantasia                           NOT NULL
- * @property  date                           $inativo
- * @property  boolean                        $cliente                            NOT NULL DEFAULT false
- * @property  boolean                        $fornecedor                         NOT NULL DEFAULT false
- * @property  boolean                        $fisica                             NOT NULL DEFAULT false
- * @property  bigint                         $codsexo
- * @property  numeric(14,0)                  $cnpj
- * @property  varchar(20)                    $ie
- * @property  boolean                        $consumidor                         NOT NULL DEFAULT true
- * @property  varchar(100)                   $contato
- * @property  bigint                         $codestadocivil
- * @property  varchar(100)                   $conjuge
- * @property  varchar(100)                   $endereco
- * @property  varchar(10)                    $numero
- * @property  varchar(50)                    $complemento
- * @property  bigint                         $codcidade
- * @property  varchar(50)                    $bairro
- * @property  varchar(8)                     $cep
- * @property  varchar(100)                   $enderecocobranca
- * @property  varchar(10)                    $numerocobranca
- * @property  varchar(50)                    $complementocobranca
- * @property  bigint                         $codcidadecobranca
- * @property  varchar(50)                    $bairrocobranca
- * @property  varchar(8)                     $cepcobranca
- * @property  varchar(50)                    $telefone1
- * @property  varchar(50)                    $telefone2
- * @property  varchar(50)                    $telefone3
- * @property  varchar(100)                   $email
- * @property  varchar(100)                   $emailnfe
- * @property  varchar(100)                   $emailcobranca
- * @property  bigint                         $codformapagamento
- * @property  numeric(14,2)                  $credito
- * @property  boolean                        $creditobloqueado                   NOT NULL DEFAULT true
- * @property  varchar(255)                   $observacoes
- * @property  varchar(500)                   $mensagemvenda
- * @property  boolean                        $vendedor                           NOT NULL DEFAULT false
- * @property  varchar(30)                    $rg
- * @property  numeric(4,2)                   $desconto
- * @property  smallint                       $notafiscal                         NOT NULL
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  integer                        $toleranciaatraso                   NOT NULL DEFAULT 7
- * @property  bigint                         $codgrupocliente
- *
- * Chaves Estrangeiras
- * @property  Cidade                         $Cidade
- * @property  Cidade                         $CidadeCobranca
- * @property  EstadoCivil                    $EstadoCivil
- * @property  FormaPagamento                 $FormaPagamento
- * @property  GrupoCliente                   $GrupoCliente
- * @property  Sexo                           $Sexo
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  ValeCompraModelo[]             $ValeCompraModeloFavorecidoS
- * @property  ValeCompra[]                   $ValeCompraS
- * @property  ValeCompra[]                   $ValeCompraFavorecidoS
- * @property  CobrancaHistorico[]            $CobrancaHistoricoS
- * @property  CupomFiscal[]                  $CupomFiscalS
- * @property  MetaFilialPessoa[]             $MetaFilialPessoaS
- * @property  Filial[]                       $FilialS
- * @property  LiquidacaoTitulo[]             $LiquidacaoTituloS
- * @property  Negocio[]                      $NegocioPessoaS
- * @property  Negocio[]                      $NegocioVendedorS
- * @property  NfeTerceiro[]                  $NfeTerceiroS
- * @property  NotaFiscal[]                   $NotaFiscalS
- * @property  RegistroSpc[]                  $RegistroSpcS
- * @property  TituloAgrupamento[]            $TituloAgrupamentoS
- * @property  Titulo[]                       $TituloS
- * @property  Usuario[]                      $UsuarioS
- * @property  Cheque[]                       $ChequeS
- */
- use Illuminate\Database\Eloquent\Model; // <-- Trocar por MGModel
 
-class Pessoa extends Model
+class Pessoa extends MGModel
 {
 
     const NOTAFISCAL_TRATAMENTOPADRAO = 0;
