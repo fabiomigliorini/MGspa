@@ -166,40 +166,62 @@ class NfePhpRepository extends MgRepository
         $nfe->tagenderEmit($std);
 
         // Destinatario
-        $std = new \stdClass();
-        $std->xNome = 'Empresa destinatário teste';
-        $std->indIEDest = 1;
-        $std->IE = '6564344535';
-        $std->CNPJ = '78767865000156';
-        $nfe->tagdest($std);
+        //if ($nf->codpessoa != Pessoa::CONSUMIDOR) {
+            $std = new \stdClass();
+            $std->xNome = substr(utf8_encode($nf->Pessoa->pessoa), 0, 60);
 
-        // Endereco Destinatario
-        $std = new \stdClass();
-        $std->xLgr = "Rua Teste";
-        $std->nro = '203';
-        $std->xBairro = 'Centro';
-        $std->cMun = '4317608';
-        $std->xMun = 'Sinop';
-        $std->UF = 'MT';
-        $std->CEP = '78555-000';
-        $std->cPais = '1058';
-        $std->xPais = 'BRASIL';
-        $nfe->tagenderDest($std);
+            if ($nf->Pessoa->Cidade->Estado->sigla != 'MT') {
+                $std->indIEDest = (empty($IE)) ? '9' : '1';
+            } else {
+                $std->indIEDest = (empty($IE)) ? '2' : '1';
+            }
+            // $std->indIEDest = 1;
+            $std->IE = $nf->Pessoa->ie;
+
+            if ($nf->Pessoa->fisica) {
+                $std->CNPJ = '';
+                $std->CPF = str_pad($nf->Pessoa->cnpj, 11, '0', STR_PAD_LEFT); //'58716523000119';
+            } else {
+                $std->CNPJ = str_pad($nf->Pessoa->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
+                $std->CPF = '';
+            }
+            // $std->CNPJ = '78767865000156';
+            $nfe->tagdest($std);
+
+            // Endereco Destinatario
+            $std = new \stdClass();
+            $std->xLgr = utf8_encode($nf->Pessoa->endereco);
+            $std->nro = utf8_encode($nf->Pessoa->numero);
+            $std->xCpl = utf8_encode($nf->Pessoa->complemento);
+            if (empty($std->xCpl))
+            $std->xCpl = '-';
+            $std->xBairro = utf8_encode($nf->Pessoa->bairro);
+            $std->cMun = $nf->Pessoa->Cidade->codigooficial;
+            $std->xMun = utf8_encode($nf->Pessoa->Cidade->cidade);
+            $std->UF = utf8_encode($nf->Pessoa->Cidade->Estado->sigla);
+            $std->CEP = $nf->Pessoa->cep;
+            $std->cPais = $nf->Pessoa->Cidade->Estado->Pais->codigooficial;
+            $std->xPais = utf8_encode($nf->Pessoa->Cidade->Estado->Pais->pais);
+            $nfe->tagenderDest($std);
+        //}
+
 
         // Produtos
         $std = new \stdClass();
         $std->item = 1;
-        $std->cProd = '0001';
-        $std->xProd = "Produto teste";
-        $std->NCM = '66554433';
-        $std->CFOP = '5102';
-        $std->uCom = 'PÇ';
-        $std->qCom = '1.0000';
-        $std->vUnCom = '10.99';
-        $std->vProd = '10.99';
-        $std->uTrib = 'PÇ';
-        $std->qTrib = '1.0000';
-        $std->vUnTrib = '10.99';
+        $std->cEAN = utf8_encode($nf->ProdutoBarra? $nf->ProdutoBarra->barras : null);
+        $std->cProd = utf8_encode($nf->ProdutoBarra->codproduto);
+        $std->xProd = utf8_encode((empty($nf->descricaoalternativa)) ? $nf->ProdutoBarra->descricao : $nf->descricaoalternativa);
+        $std->NCM = utf8_encode($nf->ProdutoBarra->Produto->Ncm->ncm);
+        $std->CFOP = $nf->codcfop;
+        $std->uCom = utf8_encode($nf->ProdutoBarra->UnidadeMedida->sigla);
+        $std->qCom = number_format($nf->quantidade, 3, '.', '');
+        $std->vUnCom = number_format($nf->valorunitario, 10, '.', '');
+        $std->vProd = number_format($nf->valortotal, 2, '.', '');
+        $std->cEANTrib = utf8_encode($nf->ProdutoBarra->barrasValido() ? $nf->ProdutoBarra->barras : "");
+        $std->uTrib = utf8_encode($nf->ProdutoBarra->UnidadeMedida->sigla); //number_format($nf->valorunitario, 3, '.', '');
+        $std->qTrib = number_format($nf->quantidade, 3, '.', '');
+        $std->vUnTrib = number_format($nf->valorunitario, 10, '.', '');
         $std->indTot = 1;
         $nfe->tagprod($std);
 
