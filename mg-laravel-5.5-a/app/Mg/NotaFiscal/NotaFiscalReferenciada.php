@@ -4,18 +4,15 @@ namespace Mg\NotaFiscal;
 
 use Mg\MgModel;
 
-class NotaFiscalDuplicatas extends MGModel
+class NotaFiscalReferenciada extends MGModel
 {
-    protected $table = 'tblnotafiscalduplicatas';
-    protected $primaryKey = 'codnotafiscalduplicatas';
+    protected $table = 'tblnotafiscalreferenciada';
+    protected $primaryKey = 'codnotafiscalreferenciada';
     protected $fillable = [
         'codnotafiscal',
-        'fatura',
-        'vencimento',
-        'valor',
+        'nfechave',
     ];
     protected $dates = [
-        'vencimento',
         'alteracao',
         'criacao',
     ];

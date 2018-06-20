@@ -10,31 +10,24 @@ use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
 
-/*
-use Mg\Produto\Produto;
-use Mg\Imagem\Imagem;
-*/
 class NotaFiscal extends MGModel
 {
-
     const MODELO_NFE              = 55;
     const MODELO_NFCE             = 65;
 
     const FRETE_EMITENTE          = 0;
-	const FRETE_DESTINATARIO      = 1;
-	const FRETE_TERCEIROS         = 2;
-	const FRETE_SEM               = 9;
+    const FRETE_DESTINATARIO      = 1;
+    const FRETE_TERCEIROS         = 2;
+    const FRETE_SEM               = 9;
 
-	const TPEMIS_NORMAL           = 1; // Emissão normal (não em contingência);
-	const TPEMIS_FS_IA            = 2; // Contingência FS-IA, com impressão do DANFE em formulário de segurança;
-	const TPEMIS_SCAN             = 3; // Contingência SCAN (Sistema de Contingência do Ambiente Nacional) Desativação prevista para 30/06/2014;
-	const TPEMIS_DPEC             = 4; // Contingência DPEC (Declaração Prévia da Emissão em Contingência);
-	const TPEMIS_FS_DA            = 5; // Contingência FS-DA, com impressão do DANFE em formulário de segurança;
-	const TPEMIS_SVC_AN           = 6; // Contingência SVC-AN (SEFAZ Virtual de Contingência do AN);
-	const TPEMIS_SVC_RS           = 7; // Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
-	const TPEMIS_OFFLINE          = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
-
-
+    const TPEMIS_NORMAL           = 1; // Emissão normal (não em contingência);
+    const TPEMIS_FS_IA            = 2; // Contingência FS-IA, com impressão do DANFE em formulário de segurança;
+    const TPEMIS_SCAN             = 3; // Contingência SCAN (Sistema de Contingência do Ambiente Nacional) Desativação prevista para 30/06/2014;
+    const TPEMIS_DPEC             = 4; // Contingência DPEC (Declaração Prévia da Emissão em Contingência);
+    const TPEMIS_FS_DA            = 5; // Contingência FS-DA, com impressão do DANFE em formulário de segurança;
+    const TPEMIS_SVC_AN           = 6; // Contingência SVC-AN (SEFAZ Virtual de Contingência do AN);
+    const TPEMIS_SVC_RS           = 7; // Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
+    const TPEMIS_OFFLINE          = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
 
     protected $table = 'tblnotafiscal';
     protected $primaryKey = 'codnotafiscal';
@@ -145,7 +138,4 @@ class NotaFiscal extends MGModel
     {
         return $this->hasMany(NotaFiscalReferenciada::class, 'codnotafiscal', 'codnotafiscal');
     }
-
-
-
 }

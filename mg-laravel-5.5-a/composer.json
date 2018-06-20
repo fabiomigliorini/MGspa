@@ -12,6 +12,7 @@
         "laravel/tinker": "~1.0",
         "nfephp-org/sped-common": "^5.0",
         "nfephp-org/sped-nfe": "^5.0",
+        "nfephp-org/sped-ibpt": "^1.0",
         "tymon/jwt-auth": "dev-develop"
     },
     "require-dev": {
@@ -22,6 +23,9 @@
         "symfony/thanks": "^1.0"
     },
     "autoload": {
+        "files": [
+            "app/Mg/Helpers/MgHelpers.php"
+        ],
         "classmap": [
             "database/seeds",
             "database/factories"
@@ -48,10 +52,6 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate"
-        ],
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover"
         ]
     },
     "config": {

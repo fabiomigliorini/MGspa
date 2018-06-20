@@ -1,29 +1,28 @@
 <?php
 
-namespace Mg\NotaFiscal;
+namespace Mg\NaturezaOperacao;
 
 use Mg\MgModel;
 
-class NotaFiscalDuplicatas extends MGModel
+class Cest extends MGModel
 {
-    protected $table = 'tblnotafiscalduplicatas';
-    protected $primaryKey = 'codnotafiscalduplicatas';
+
+    protected $table = 'tblcest';
+    protected $primaryKey = 'codcest';
     protected $fillable = [
-        'codnotafiscal',
-        'fatura',
-        'vencimento',
-        'valor',
+        'cest',
+        'ncm',
+        'descricao',
+        'codncm',
     ];
     protected $dates = [
-        'vencimento',
         'alteracao',
         'criacao',
     ];
 
-    // Chaves Estrangeiras
-    public function NotaFiscal()
+    public function Ncm()
     {
-        return $this->belongsTo(NotaFiscal::class, 'codnotafiscal', 'codnotafiscal');
+        return $this->belongsTo(Ncm::class, 'codncm', 'codncm');
     }
 
     public function UsuarioAlteracao()
@@ -37,5 +36,9 @@ class NotaFiscalDuplicatas extends MGModel
     }
 
     // Tabelas Filhas
+    public function ProdutoS()
+    {
+        return $this->hasMany(Produto::class, 'codcest', 'codcest');
+    }
 
 }

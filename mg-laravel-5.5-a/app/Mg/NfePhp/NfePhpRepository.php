@@ -6,15 +6,20 @@ use Mg\MgRepository;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Filial\Empresa;
+use Mg\Filial\Filial;
+use Mg\Produto\Barras;
+use Mg\Pessoa\Pessoa;
 
 
 use NFePHP\NFe\Make;
+/*
 use NFePHP\NFe\Tools;
 use NFePHP\NFe\Complements;
 use NFePHP\NFe\Convert;
 use NFePHP\Common\Certificate;
 use NFePHP\Common\Validator;
-
+*/
+use NFePHP\Ibpt\Ibpt;
 
 
 class NfePhpRepository extends MgRepository
@@ -96,7 +101,7 @@ class NfePhpRepository extends MgRepository
         } else {
 
             if (!empty($std->Pessoa->ie)) {
-                throw new Exception("Não é permitida emissão de NFCe para Pessoas com Inscrição Estadual!");
+                abort(409, 'Não é permitida emissão de NFCe para Pessoas com Inscrição Estadual!');
             }
 
             $std->tpImp = 4; // Danfe NFC-e
@@ -116,17 +121,16 @@ class NfePhpRepository extends MgRepository
                 $std->xJust = $nf->Filial->Empresa->contingenciajustificativa; //Justificativa da entrada em contingência
 
                 if ($std->finNFe != 1) {
-                    throw new Exception("Finalidade de emissão ($finNFe) da Natureza de Operação não permite emissão OFFLINE!");
+                    abort(409, "Finalidade de emissão ({$std->finNFe}) da Natureza de Operação não permite emissão OFFLINE!");
                 }
 
                 if ($std->indFinal != 1) {
-                    throw new Exception("Não é permitida emissão OFFLINE para Pessoas que não sejam Consumidor Final!");
+                    abort(409, 'Não é permitida emissão OFFLINE para Pessoas que não sejam Consumidor Final!');
                 }
 
                 if ($std->idDest != 1) {
-                    throw new Exception("Não é permitida emissão OFFLINE para Pessoas de fora do Estado de {$nf->Filial->Pessoa->Cidade->Estado->estado}!");
+                    abort(409, "Não é permitida emissão OFFLINE para Pessoas de fora do Estado de {$nf->Filial->Pessoa->Cidade->Estado->estado}!");
                 }
-
 
             }
 
@@ -135,10 +139,20 @@ class NfePhpRepository extends MgRepository
         // Cria Tag Ide
         $nfe->tagide($std);
 
+        // NFe's referenciadas
+        $anoICMSInterPart = $nf->emissao->year;
+        foreach ($nf->NotaFiscalReferenciadaS()->orderBy('nfechave')->get() as $nfr) {
+            //dd($nfr->nfechave);
+            $anoICMSInterPart = 2000 + substr($nfr->nfechave, 2, 2);
+            $std = new \stdClass();
+            $std->refNFe = $nfr->nfechave;
+            $elem = $nfe->tagrefNFe($std);
+        }
+
         // Emitente
         $std->xNome = utf8_encode($nf->Filial->Pessoa->pessoa);
         $std->xFant = utf8_encode($nf->Filial->Pessoa->fantasia);
-        $std->IE = $nf->Filial->Pessoa->ie;
+        $std->IE = numeroLimpo($nf->Filial->Pessoa->ie);
         $std->CRT = $nf->Filial->crt;
         $std->CNPJ = str_pad($nf->Filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
         $nfe->tagemit($std);
@@ -155,28 +169,21 @@ class NfePhpRepository extends MgRepository
         $std->CEP = $nf->Filial->Pessoa->cep;
         $std->cPais = $nf->Filial->Pessoa->Cidade->Estado->Pais->codigooficial;
         $std->xPais = utf8_encode($nf->Filial->Pessoa->Cidade->Estado->Pais->pais);
-        $std->fone = $nf->Filial->Pessoa->telefone1;
-        if (empty($std->fone)) {
-            $std->fone = $nf->Filial->Pessoa->telefone2;
-        }
-        if (empty($std->fone)) {
-            $std->fone = $nf->Filial->Pessoa->telefone3;
-        }
-        $std->fone = utf8_encode($std->fone);
+        $std->fone = numeroLimpo(($nf->Filial->Pessoa->telefone1??$nf->Filial->Pessoa->telefone2)??$nf->Filial->Pessoa->telefone3);
         $nfe->tagenderEmit($std);
 
         // Destinatario
-        //if ($nf->codpessoa != Pessoa::CONSUMIDOR) {
+        if ($nf->codpessoa != Pessoa::CONSUMIDOR) {
+
             $std = new \stdClass();
             $std->xNome = substr(utf8_encode($nf->Pessoa->pessoa), 0, 60);
 
+            $std->IE = numeroLimpo($nf->Pessoa->ie);
             if ($nf->Pessoa->Cidade->Estado->sigla != 'MT') {
-                $std->indIEDest = (empty($IE)) ? '9' : '1';
+                $std->indIEDest = (empty($std->IE)) ? '9' : '1';
             } else {
-                $std->indIEDest = (empty($IE)) ? '2' : '1';
+                $std->indIEDest = (empty($std->IE)) ? '2' : '1';
             }
-            // $std->indIEDest = 1;
-            $std->IE = $nf->Pessoa->ie;
 
             if ($nf->Pessoa->fisica) {
                 $std->CNPJ = '';
@@ -185,16 +192,16 @@ class NfePhpRepository extends MgRepository
                 $std->CNPJ = str_pad($nf->Pessoa->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
                 $std->CPF = '';
             }
-            // $std->CNPJ = '78767865000156';
+            $std->email = ($nf->Pessoa->emailnfe??$nf->Pessoa->email)??$nf->Pessoa->emailcobranca;
             $nfe->tagdest($std);
 
             // Endereco Destinatario
             $std = new \stdClass();
             $std->xLgr = utf8_encode($nf->Pessoa->endereco);
             $std->nro = utf8_encode($nf->Pessoa->numero);
-            $std->xCpl = utf8_encode($nf->Pessoa->complemento);
-            if (empty($std->xCpl))
-            $std->xCpl = '-';
+            if (!empty($nf->Pessoa->complemento)) {
+                $std->xCpl = utf8_encode($nf->Pessoa->complemento);
+            }
             $std->xBairro = utf8_encode($nf->Pessoa->bairro);
             $std->cMun = $nf->Pessoa->Cidade->codigooficial;
             $std->xMun = utf8_encode($nf->Pessoa->Cidade->cidade);
@@ -202,122 +209,410 @@ class NfePhpRepository extends MgRepository
             $std->CEP = $nf->Pessoa->cep;
             $std->cPais = $nf->Pessoa->Cidade->Estado->Pais->codigooficial;
             $std->xPais = utf8_encode($nf->Pessoa->Cidade->Estado->Pais->pais);
+            $std->fone = numeroLimpo(($nf->Pessoa->telefone1??$nf->Pessoa->telefone2)??$nf->Pessoa->telefone3);
             $nfe->tagenderDest($std);
-        //}
 
+        // Se for consumidor não identificado numa NFe
+        } elseif ($nf->modelo != NotaFiscal::MODELO_NFCE) {
+            abort(409, 'Consumidor não identificado é permitido somente em NFCe!');
+        }
+
+        $nItem = 0;
+        $totalPis = 0;
+        $totalCofins = 0;
+        $totalTrib = 0;
+        $totalTribFederal = 0;
+        $totalTribEstadual = 0;
+        $totalTribMunicipal = 0;
+        $ibptFonte = '';
+
+        //instancia a classe Ibpt
+        $ibpt = new Ibpt(mascarar($nf->Filial->Pessoa->cnpj, '##############'), $nf->Filial->tokenibpt);
 
         // Produtos
-        $std = new \stdClass();
-        $std->item = 1;
-        $std->cEAN = utf8_encode($nf->ProdutoBarra? $nf->ProdutoBarra->barras : null);
-        $std->cProd = utf8_encode($nf->ProdutoBarra->codproduto);
-        $std->xProd = utf8_encode((empty($nf->descricaoalternativa)) ? $nf->ProdutoBarra->descricao : $nf->descricaoalternativa);
-        $std->NCM = utf8_encode($nf->ProdutoBarra->Produto->Ncm->ncm);
-        $std->CFOP = $nf->codcfop;
-        $std->uCom = utf8_encode($nf->ProdutoBarra->UnidadeMedida->sigla);
-        $std->qCom = number_format($nf->quantidade, 3, '.', '');
-        $std->vUnCom = number_format($nf->valorunitario, 10, '.', '');
-        $std->vProd = number_format($nf->valortotal, 2, '.', '');
-        $std->cEANTrib = utf8_encode($nf->ProdutoBarra->barrasValido() ? $nf->ProdutoBarra->barras : "");
-        $std->uTrib = utf8_encode($nf->ProdutoBarra->UnidadeMedida->sigla); //number_format($nf->valorunitario, 3, '.', '');
-        $std->qTrib = number_format($nf->quantidade, 3, '.', '');
-        $std->vUnTrib = number_format($nf->valorunitario, 10, '.', '');
-        $std->indTot = 1;
-        $nfe->tagprod($std);
+        foreach ($nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get() as $nfpb) {
+          $nItem++;
 
-        // Impostos Produto
-        $std = new \stdClass();
-        $std->item = 1;
-        $std->vTotTrib = 10.99;
-        $nfe->tagimposto($std);
+          // Item
+          $std = new \stdClass();
+          $std->item = $nItem;
+          $std->cProd = mascarar($nfpb->ProdutoBarra->codproduto, "######");
+          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)){
+              $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
+          }
+          $std->cEAN = utf8_encode(Barras::validar($nfpb->ProdutoBarra->barras)?$nfpb->ProdutoBarra->barras:'');
+          $std->xProd = utf8_encode($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
+          $std->NCM = utf8_encode($nfpb->ProdutoBarra->Produto->Ncm->ncm);
+          $std->CFOP = $nfpb->codcfop;
+          $std->uCom = utf8_encode($nfpb->ProdutoBarra->UnidadeMedida->sigla);
+          $std->qCom = number_format($nfpb->quantidade, 3, '.', '');
+          $std->vUnCom = number_format($nfpb->valorunitario, 10, '.', '');
+          $std->vProd = number_format($nfpb->valortotal, 2, '.', '');
+          $std->cEANTrib = $std->cEAN;
+          $std->uTrib = utf8_encode($nfpb->ProdutoBarra->UnidadeMedida->sigla); //number_format($nf->valorunitario, 3, '.', '');
+          $std->qTrib = number_format($nfpb->quantidade, 3, '.', '');
+          $std->vUnTrib = number_format($nfpb->valorunitario, 10, '.', '');
+          if (!empty($nf->valorfrete)) {
+              $std->vFrete = round(($nf->valorfrete / $nf->valorprodutos) * $nfpb->valortotal, 2);
+          }
+          if (!empty($nf->valorseguro)) {
+              $std->vSeg = round(($nf->valorseguro / $nf->valorprodutos) * $nfpb->valortotal, 2);
+          }
+          if (!empty($nf->valordesconto)) {
+              $std->vDesc = round(($nf->valordesconto / $nf->valorprodutos) * $nfpb->valortotal, 2);
+          }
+          if (!empty($nf->valoroutras)) {
+              $std->vOutro = round(($nf->valoroutras / $nf->valorprodutos) * $nfpb->valortotal, 2);
+          }
+          $std->indTot = 1;
+          $nfe->tagprod($std);
 
-        // ICMS Produto
-        $std = new \stdClass();
-        $std->item = 1;
-        $std->orig = 0;
-        $std->CST = '00';
-        $std->modBC = 0;
-        $std->vBC = 0.20;
-        $std->pICMS = '18.0000';
-        $std->vICMS ='0.04';
-        $nfe->tagICMS($std);
+          // Cest
+          if (isset($nfpb->ProdutoBarra->Produto->Cest)) {
+              $std = new \stdClass();
+              $std->item = $nItem;
+              $std->CEST = $nfpb->ProdutoBarra->Produto->Cest->cest;
+              $cest = $nfe->tagCEST($std);
+          }
 
-        // IPI Produto
-        $std = new \stdClass();
-        $std->item = 1;
-        $std->cEnq = '999';
-        $std->CST = '50';
-        $std->vIPI = 0;
-        $std->vBC = 0;
-        $std->pIPI = 0;
-        $nfe->tagIPI($std);
+          // Se natureza de operacao esta marcada para destacar IBPT
+          $vTotTrib = 0;
+          if ($nf->NaturezaOperacao->ibpt) {
 
-        // PIS Produto
-        $std = new \stdClass();
-        $std->item = 1;
-        $std->CST = '07';
-        $std->vBC = 0;
-        $std->pPIS = 0;
-        $std->vPIS = 0;
-        $nfe->tagPIS($std);
+              // Faz consulta ao WebService do IBPT
+              $tax = $ibpt->productTaxes(
+                  $nf->Filial->Pessoa->Cidade->Estado->sigla,
+                  $nfpb->ProdutoBarra->Produto->Ncm->ncm,
+                  0
+              );
 
-        // Cofins Produto
-        $std = new \stdClass();
-        $std->item = 1;
-        $std->vCOFINS = 0;
-        $std->vBC = 0;
-        $std->pCOFINS = 0;
-        $nfe->tagCOFINSST($std);
+              // Se nao houve erro ao consultar
+              if (!isset($tax->error)) {
+
+                  // monta string com fonte do IBPT para utilizar nos Dados Adicionais
+                  $ibptFonte = "{$tax->Fonte} {$tax->Chave} {$tax->Versao}";
+
+                  // Valcula valor dos tributos
+                  $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado)?$tax->Importado:$tax->Nacional)) / 100;
+                  $vTotTribEstadual = ($nfpb->valortotal * $tax->Estadual) / 100;
+                  $vTotTribMunicipal = ($nfpb->valortotal * $tax->Municipal) / 100;
+                  $vTotTrib = round($vTotTribFederal + $vTotTribEstadual + $vTotTribMunicipal, 2);
+
+                  // Acumula totais dos tributos da nota
+                  $totalTribFederal += $vTotTribFederal;
+                  $totalTribEstadual += $vTotTribEstadual;
+                  $totalTribMunicipal += $vTotTribMunicipal;
+                  $totalTrib += $vTotTrib;
+
+
+              }
+
+          }
+
+          // Gera TAG Imposto
+          $std = new \stdClass();
+          $std->item = $nItem;
+          $std->vTotTrib = number_format($vTotTrib, 2, '.', '');
+          $nfe->tagimposto($std);
+
+          // Verifica Codigo do Regime Tributario
+          switch ($nf->Filial->crt) {
+
+              // Lucro Presumido
+              case Filial::CRT_REGIME_NORMAL:
+
+                  // ICMS
+                  $std = new \stdClass();
+                  $std->item = $nItem;
+                  $std->orig = ($nfpb->ProdutoBarra->Produto->importado)?2:0;
+                  $std->CST = mascarar($nfpb->icmscst, '##');
+                  $std->modBC = 3; // 3 - Valor da Operacao
+                  $std->vBC = number_format($nfpb->icmsbase, 2, '.', '');
+                  $std->pICMS = number_format($nfpb->icmspercentual, 2, '.', '');
+                  $std->vICMS = number_format($nfpb->icmsvalor, 2, '.', '');
+                  if (!empty($nfpb->icmsbase) && ($nfpb->icmsbase < $nfpb->valortotal) && $nfpb->icmscst == 20) {
+                      $std->pRedBC = number_format((1 - round($nfpb->icmsbase / $nfpb->valortotal, 2)) * 100, 2, '.', '');
+                  }
+                  if ($nfpb->icmsstvalor > 0) {
+                      $std->modBCST = 4; // 4 - Margem de Valor Agregado (%)
+                      $std->vBCST = number_format($nfpb->icmsstbase, 2, '.', '');
+                      $std->pICMSST = number_format($nfpb->icmsstpercentual, 2, '.', '');
+                      $std->vICMSST = number_format($nfpb->icmsstvalor, 2, '.', '');
+                  }
+                  $nfe->tagICMS($std);
+
+                  // Partilha ICMS
+                  if ($nf->Filial->Pessoa->Cidade->codestado != $nf->Pessoa->Cidade->codestado) {
+
+                      $std = new \stdClass();
+                      $std->item = $nItem; //item da NFe
+                      $std->vBCUFDest = number_format($nfpb->icmsbase, 2, '.', '');
+                      // $std->vBCFCPUFDest = ;
+                      // $std->pFCPUFDest = 0;
+                      // $std->pICMSUFDest = 0;
+                      $std->pICMSInter = number_format(($nfpb->ProdutoBarra->Produto->importado)?4:12, 2, '.', '');
+                      switch ($anoICMSInterPart) {
+                        case '2016':
+                          $std->pICMSInterPart = number_format(40, 2, '.', '');
+                          break;
+                        case '2017':
+                          $std->pICMSInterPart = number_format(60, 2, '.', '');
+                          break;
+                        case '2018':
+                          $std->pICMSInterPart = number_format(80, 2, '.', '');
+                          break;
+                        default:
+                          $std->pICMSInterPart = number_format(100, 2, '.', '');
+                          break;
+                      }
+                      // $std->vFCPUFDest = 0;
+                      // $std->vICMSUFDest = 0;
+                      // $std->vICMSUFRemet = 0;
+                      $elem = $nfe->tagICMSUFDest($std);
+                  }
+
+                  // PIS Produto
+                  $std = new \stdClass();
+                  $std->item = $nItem;
+                  $std->CST = mascarar($nfpb->piscst, '##');
+                  $std->vBC = number_format($nfpb->pisbase, 2, '.', '');
+                  $std->pPIS = number_format($nfpb->pispercentual, 2, '.', '');
+                  $std->vPIS = number_format($nfpb->pisvalor, 2, '.', '');
+                  // if (!in_array($nfpb->piscst, ['49', '99', '70'])) {
+                  //     $std->qBCProd = number_format(0, 2, '.', '');
+                  //     $std->vAliqProd = number_format(0, 2, '.', '');
+                  // }
+                  $nfe->tagPIS($std);
+
+                  // PISST
+                  // $resp = $make->tagPISST($nItem, $vBC, $pPIS, $qBCProd, $vAliqProd, $vPIS);
+
+                  // COFINS Produto
+                  $std = new \stdClass();
+                  $std->item = $nItem;
+                  $std->CST = mascarar($nfpb->cofinscst, '##');
+                  $std->vBC = number_format($nfpb->cofinsbase, 2, '.', '');
+                  $std->pCOFINS = number_format($nfpb->cofinspercentual, 2, '.', '');
+                  $std->vCOFINS = number_format($nfpb->cofinsvalor, 2, '.', '');
+                  // if (!in_array($nfpb->cofinscst, ['49', '99', '70'])) {
+                  //     $std->qBCProd = number_format(0, 2, '.', '');
+                  //     $std->vAliqProd = number_format(0, 2, '.', '');
+                  // }
+                  $nfe->tagCOFINS($std);
+
+                  // COFINSST
+                  // $resp = $make->tagCOFINSST($nItem, $vBC, $pCOFINS, $qBCProd, $vAliqProd, $vCOFINS);
+
+                  // IPI Produto
+                  if (!empty($nfpb->ipivalor)) {
+                      $std = new \stdClass();
+                      $std->item = $nItem;
+                      // TODO: Jogar logica cEnq para modelagem do banco de dados
+                      if ($nfpb->ipicst == 4 || $nfpb->ipicst == 54) {
+                          $std->cEnq = '001'; // Livros, jornais, periódicos e o papel destinado à sua impressão – Art. 18 Inciso I do Decreto 7.212/2010
+                      } else {
+                          $std->cEnq = '999'; // Tributação normal IPI; Outros;
+                      }
+                      $std->CST = str_pad($nfpb->ipicst, 2, '0', STR_PAD_LEFT);
+                      $std->vIPI = number_format($nfpb->ipivalor, 2, '.', '');
+                      $std->vBC = number_format($nfpb->ipibase, 2, '.', '');
+                      $std->pIPI = number_format($nfpb->ipipercentual, 2, '.', '');
+                      $nfe->tagIPI($std);
+                  }
+
+                  break;
+
+              // SIMPLES
+              default:
+
+                  // ICMS
+                  $std = new \stdClass();
+                  $std->item = $nItem; //item da NFe
+                  $std->orig = ($nfpb->ProdutoBarra->Produto->importado)?2:0;
+                  $std->CSOSN = $nfpb->csosn;
+                  // $std->pCredSN = number_format($nfpb->icmspercentual, 2, '.', '');
+                  // $std->vCredICMSSN = number_format($nfpb->icmsvalor, 2, '.', '');
+                  // $std->modBCST = '';
+                  // $std->pMVAST = '';
+                  // $std->pRedBCST = '';
+                  // $std->vBCST = '';
+                  // $std->pICMSST = '';
+                  // $std->vICMSST = '';
+                  // $std->vBCFCPST = null; //incluso no layout 4.00
+                  // $std->pFCPST = null; //incluso no layout 4.00
+                  // $std->vFCPST = null; //incluso no layout 4.00
+                  // $std->vBCSTRet = '';
+                  // $std->pST = null;
+                  // $std->vICMSSTRet = '';
+                  // $std->vBCFCPSTRet = null; //incluso no layout 4.00
+                  // $std->pFCPSTRet = null; //incluso no layout 4.00
+                  // $std->vFCPSTRet = null; //incluso no layout 4.00
+                  // $std->modBC = '';
+                  // $std->vBC = '';
+                  // $std->pRedBC = '';
+                  // $std->pICMS = '';
+                  // $std->vICMS = '';
+                  $elem = $nfe->tagICMSSN($std);
+
+                  // PIS Produto
+                  $std = new \stdClass();
+                  $std->item = $nItem;
+                  $std->CST = '01';
+                  $std->vBC = 0;
+                  $std->pPIS = 0;
+                  $std->vPIS = 0;
+                  $nfe->tagPIS($std);
+
+                  // COFINS Produto
+                  $std = new \stdClass();
+                  $std->item = $nItem;
+                  $std->CST = '01';
+                  $std->vBC = 0;
+                  $std->pCOFINS = 0;
+                  $std->vCOFINS = 0;
+                  $nfe->tagCOFINS($std);
+
+                  break;
+          }
+
+          $totalPis += $nfpb->pisvalor;
+          $totalCofins += $nfpb->cofinsvalor;
+
+        }
 
         // Total ICMS da Nota
         $std = new \stdClass();
-        $std->vBC = 0.20;
-        $std->vICMS = 0.04;
-        $std->vICMSDeson = 0.00;
-        $std->vBCST = 0.00;
-        $std->vST = 0.00;
-        $std->vProd = 10.99;
-        $std->vFrete = 0.00;
-        $std->vSeg = 0.00;
-        $std->vDesc = 0.00;
-        $std->vII = 0.00;
-        $std->vIPI = 0.00;
-        $std->vPIS = 0.00;
-        $std->vCOFINS = 0.00;
-        $std->vOutro = 0.00;
-        $std->vNF = 11.03;
-        $std->vTotTrib = 0.00;
+        if ($nf->Filial->crt == Filial::CRT_REGIME_NORMAL) {
+          $std->vBC = number_format($nf->icmsbase, 2, '.', '');
+          $std->vICMS = number_format($nf->icmsvalor, 2, '.', '');
+        }
+        // $std->vICMSDeson = 0.00;
+        $std->vBCST = number_format($nf->icmsstbase, 2, '.', '');
+        $std->vST = number_format($nf->icmsstvalor, 2, '.', '');
+        $std->vProd = number_format($nf->valorprodutos, 2, '.', '');
+        $std->vFrete = number_format($nf->valorfrete, 2, '.', '');
+        $std->vSeg = number_format($nf->valorseguro, 2, '.', '');
+        $std->vDesc = number_format($nf->valordesconto, 2, '.', '');
+        // $std->vII = 0.00;
+        $std->vIPI = number_format($nf->ipivalor, 2, '.', '');
+        $std->vPIS = number_format($totalPis, 2, '.', '');
+        $std->vCOFINS = number_format($totalCofins, 2, '.', '');
+        $std->vOutro = number_format($nf->valoroutras, 2, '.', '');
+        $std->vNF = number_format($nf->valortotal, 2, '.', '');
+        $std->vTotTrib = number_format($totalTrib, 2, '.', '');
         $nfe->tagICMSTot($std);
 
         // Modalidade de Frete
         $std = new \stdClass();
-        $std->modFrete = 1;
+        $std->modFrete = $nf->frete;
         $nfe->tagtransp($std);
 
         // Volumes
-        $std = new \stdClass();
-        $std->item = 1;
-        $std->qVol = 2;
-        $std->esp = 'caixa';
-        $std->marca = 'OLX';
-        $std->nVol = '11111';
-        $std->pesoL = 10.00;
-        $std->pesoB = 11.00;
-        $nfe->tagvol($std);
+        // $std = new \stdClass();
+        // $std->item = 1;
+        // $std->qVol = 2;
+        // $std->esp = 'caixa';
+        // $std->marca = 'OLX';
+        // $std->nVol = '11111';
+        // $std->pesoL = 10.00;
+        // $std->pesoB = 11.00;
+        // $nfe->tagvol($std);
 
         // Faturas
-        $std = new \stdClass();
-        $std->nFat = '100';
-        $std->vOrig = 100;
-        $std->vLiq = 100;
-        $nfe->tagfat($std);
+        // $std = new \stdClass();
+        // $std->nFat = '100';
+        // $std->vOrig = 100;
+        // $std->vLiq = 100;
+        // $nfe->tagfat($std);
 
-        // Duplicatas
+        $totalPrazo = 0;
+
+        // Duplicatas - Somente quando NFE
+        if ($nf->modelo == NotaFiscal::MODELO_NFE) {
+            foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
+                // Duplicatas
+                $std = new \stdClass();
+                $std->nDup = utf8_encode($nfd->fatura);
+                $std->dVenc = $nfd->vencimento->format('Y-m-d');
+                $std->vDup = number_format($nfd->valor, 2, '.', '');
+                $totalPrazo += $nfd->valor;
+                $nfe->tagdup($std);
+            }
+        }
+
         $std = new \stdClass();
-        $std->nDup = '100';
-        $std->dVenc = '2017-08-22';
-        $std->vDup = 11.03;
-        $nfe->tagdup($std);
+        $std->vTroco = null; //incluso no layout 4.00, obrigatório informar para NFCe (65)
+        $elem = $nfe->tagpag($std);
+
+        // Pagamento a Vista
+        if ($nf->valortotal > $totalPrazo) {
+            // TODO: Trazer informação do tipo de pagamento do negocio
+            $std = new \stdClass();
+            // 01=Dinheiro
+            // 02=Cheque
+            // 03=Cartão de Crédito
+            // 04=Cartão de Débito
+            // 05=Crédito Loja
+            // 10=Vale Alimentação
+            // 11=Vale Refeição
+            // 12=Vale Presente
+            // 13=Vale Combustível
+            // 15=Boleto Bancário
+            // 90=Sem Pagamento;
+            // 99=Outros.
+            $std->tPag = '01';
+            $std->vPag = number_format($nf->valortotal - $totalPrazo, 2, '.', '');
+            // $std->CNPJ = '12345678901234';
+            // $std->tBand = '01';
+            // $std->cAut = '3333333';
+            // $std->tpIntegra = 1; //incluso na NT 2015/002
+            $std->indPag = ($totalPrazo > 0)?1:0; //0= Pagamento à Vista 1= Pagamento à Prazo
+            $elem = $nfe->tagdetPag($std);
+        }
+
+        // Pagamento a Prazo
+        if ($totalPrazo > 0) {
+          $std = new \stdClass();
+          $std->tPag = '05';
+          $std->vPag = number_format($totalPrazo, 2, '.', '');
+          $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
+          $elem = $nfe->tagdetPag($std);
+        }
+
+
+        $infCpl = '';
+
+        // Mensagem IBPT - Valor dos Tributos
+        if ($totalTrib > 0) {
+            $infCpl = "Voce pagou aproximadamente:";
+            if ($totalTribFederal > 0) {
+                $infCpl .= " R$ " . formataNumero($totalTribFederal) . " de tributos federais,";
+            }
+            if ($totalTribEstadual > 0) {
+                $infCpl .= " R$ " . formataNumero($totalTribEstadual) . " de tributos estaduais,";
+            }
+            if ($totalTribMunicipal > 0) {
+                $infCpl .= " R$ " . formataNumero($totalTribMunicipal) . " de tributos municipais";
+            }
+            $infCpl .= ". Fonte: {$ibptFonte}. ";
+        }
+        $infCpl .= $nf->observacoes;
+        $infCpl = preg_replace('/\s+/', ' ', $infCpl);
+
+        // MENSAGEM Aproveitamento ICMS - Simples
+        $infCpl = str_replace("#ICMSVALOR#", formataNumero($nf->icmsvalor), $infCpl);
+        if ($nf->icmsbase > 0 && $nf->icmsvalor > 0) {
+            $perc = ($nf->icmsvalor / $nf->icmsbase) * 100;
+        } else {
+            $perc = 0;
+        }
+        $infCpl = str_replace("#ICMSPERCENTUAL#", formataNumero($perc), $infCpl);
+
+        // Informacoes Adicionais
+        $std = new \stdClass();
+        // $std->infAdFisco = null;
+        $std->infCpl = $infCpl;
+        $nfe->taginfAdic($std);
 
         // Gera o XML
         $xml = $nfe->getXML(); // O conteúdo do XML fica armazenado na variável $xml
