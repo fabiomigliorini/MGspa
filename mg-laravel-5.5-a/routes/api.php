@@ -87,9 +87,16 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
         // NFePHP
+        Route::get('nfe-php/sefaz-status/{id}', '\Mg\NfePhp\NfePhpController@sefazStatus');
         Route::get('nfe-php/criar-xml/{id}', '\Mg\NfePhp\NfePhpController@criarXml');
         Route::get('nfe-php/assinar-xml/{id}', '\Mg\NfePhp\NfePhpController@assinarXml');
         Route::get('nfe-php/enviar-xml/{id}', '\Mg\NfePhp\NfePhpController@enviarXml');
+        Route::get('nfe-php/enviar-xml-sincrono/{id}', '\Mg\NfePhp\NfePhpController@enviarXmlSincrono');
+        Route::get('nfe-php/consultar-recibo-envio/{id}', '\Mg\NfePhp\NfePhpController@consultarReciboEnvio');
+        Route::get('nfe-php/cancelar/{id}', '\Mg\NfePhp\NfePhpController@cancelar');
+        Route::get('nfe-php/inutilizar/{id}', '\Mg\NfePhp\NfePhpController@inutilizar');
+        Route::get('nfe-php/consultar/{id}', '\Mg\NfePhp\NfePhpController@consultar');
+        Route::get('nfe-php/danfe/{id}', '\Mg\NfePhp\NfePhpController@danfe');
 
     });
 
