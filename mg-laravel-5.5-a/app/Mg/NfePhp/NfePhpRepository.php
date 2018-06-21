@@ -13,16 +13,11 @@ use Mg\Pessoa\Pessoa;
 use NFePHP\NFe\Make;
 use NFePHP\NFe\Tools;
 use NFePHP\Common\Certificate;
+use NFePHP\Common\Strings;
 use NFePHP\NFe\Common\Standardize;
-/*
-use NFePHP\Common\Signer;
-use NFePHP\Common\Validator;
-use NFePHP\NFe\Tools;
-use NFePHP\NFe\Complements;
-use NFePHP\NFe\Convert;
-*/
 use NFePHP\Ibpt\Ibpt;
 
+use Carbon\Carbon;
 
 class NfePhpRepository extends MgRepository
 {
@@ -86,12 +81,11 @@ class NfePhpRepository extends MgRepository
         //$std->indPag = ($nf->NotaFiscalDuplicatasS()->count() > 0) ? 1 : 0; //0=Pagamento à vista; 1=Pagamento a prazo; 2=Outros
         $std->serie = $nf->serie;
         $std->nNF = $nf->numero;
-        $std->dhEmi = $nf->emissao->format('Y-m-d\TH:i:sP');
-        $std->dhSaiEnt = $nf->saida->format('Y-m-d\TH:i:sP');
+        $std->dhEmi = $nf->emissao->toW3cString();
+        $std->dhSaiEnt = $nf->saida->toW3cString();
         $std->tpNF = ($nf->codoperacao == Operacao::ENTRADA)?0:1; //0=Entrada; 1=Saída
         $std->idDest = ($nf->Pessoa->Cidade->codestado == $nf->Filial->Pessoa->Cidade->codestado)?1:2; //1=Operação interna; 2=Operação interestadual; 3=Operação com exterior.
         $std->cMunFG = $nf->Filial->Pessoa->Cidade->codigooficial;
-
 
         $std->tpAmb = $nf->Filial->nfeambiente; // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
         $std->finNFe = $nf->NaturezaOperacao->finnfe; //1=NF-e normal; 2=NF-e complementar; 3=NF-e de ajuste; 4=Devolução/Retorno.
@@ -157,7 +151,7 @@ class NfePhpRepository extends MgRepository
                 // $aRetorno['tpEmis'] = $nf->tpemis;
 
                 // Data, Hora e Justificativa da contingencia
-                $std->dhCont = $nf->Filial->Empresa->contingenciadata->format('Y-m-d\TH:i:sP');
+                $std->dhCont = $nf->Filial->Empresa->contingenciadata->toW3cString();
                 $std->xJust = $nf->Filial->Empresa->contingenciajustificativa; //Justificativa da entrada em contingência
 
                 if ($std->finNFe != 1) {
@@ -190,8 +184,8 @@ class NfePhpRepository extends MgRepository
         }
 
         // Emitente
-        $std->xNome = utf8_encode($nf->Filial->Pessoa->pessoa);
-        $std->xFant = utf8_encode($nf->Filial->Pessoa->fantasia);
+        $std->xNome = Strings::replaceSpecialsChars($nf->Filial->Pessoa->pessoa);
+        $std->xFant = Strings::replaceSpecialsChars($nf->Filial->Pessoa->fantasia);
         $std->IE = numeroLimpo($nf->Filial->Pessoa->ie);
         $std->CRT = $nf->Filial->crt;
         $std->CNPJ = str_pad($nf->Filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
@@ -199,16 +193,16 @@ class NfePhpRepository extends MgRepository
 
         // Endereço Emitente
         $std = new \stdClass();
-        $std->xLgr = utf8_encode($nf->Filial->Pessoa->endereco);
-        $std->nro = utf8_encode($nf->Filial->Pessoa->numero);
-        $std->xCpl = utf8_encode($nf->Filial->Pessoa->complemento);
-        $std->xBairro = utf8_encode($nf->Filial->Pessoa->bairro);
+        $std->xLgr = Strings::replaceSpecialsChars($nf->Filial->Pessoa->endereco);
+        $std->nro = Strings::replaceSpecialsChars($nf->Filial->Pessoa->numero);
+        $std->xCpl = Strings::replaceSpecialsChars($nf->Filial->Pessoa->complemento);
+        $std->xBairro = Strings::replaceSpecialsChars($nf->Filial->Pessoa->bairro);
         $std->cMun = $nf->Filial->Pessoa->Cidade->codigooficial;
-        $std->xMun = utf8_encode($nf->Filial->Pessoa->Cidade->cidade);
-        $std->UF = utf8_encode($nf->Filial->Pessoa->Cidade->Estado->sigla);
+        $std->xMun = Strings::replaceSpecialsChars($nf->Filial->Pessoa->Cidade->cidade);
+        $std->UF = Strings::replaceSpecialsChars($nf->Filial->Pessoa->Cidade->Estado->sigla);
         $std->CEP = $nf->Filial->Pessoa->cep;
         $std->cPais = $nf->Filial->Pessoa->Cidade->Estado->Pais->codigooficial;
-        $std->xPais = utf8_encode($nf->Filial->Pessoa->Cidade->Estado->Pais->pais);
+        $std->xPais = Strings::replaceSpecialsChars($nf->Filial->Pessoa->Cidade->Estado->Pais->pais);
         $std->fone = numeroLimpo(($nf->Filial->Pessoa->telefone1??$nf->Filial->Pessoa->telefone2)??$nf->Filial->Pessoa->telefone3);
         $nfe->tagenderEmit($std);
 
@@ -216,7 +210,7 @@ class NfePhpRepository extends MgRepository
         if ($nf->codpessoa != Pessoa::CONSUMIDOR) {
 
             $std = new \stdClass();
-            $std->xNome = substr(utf8_encode($nf->Pessoa->pessoa), 0, 60);
+            $std->xNome = substr(Strings::replaceSpecialsChars($nf->Pessoa->pessoa), 0, 60);
 
             $std->IE = numeroLimpo($nf->Pessoa->ie);
             if ($nf->Pessoa->Cidade->Estado->sigla != 'MT') {
@@ -237,18 +231,18 @@ class NfePhpRepository extends MgRepository
 
             // Endereco Destinatario
             $std = new \stdClass();
-            $std->xLgr = utf8_encode($nf->Pessoa->endereco);
-            $std->nro = utf8_encode($nf->Pessoa->numero);
+            $std->xLgr = Strings::replaceSpecialsChars($nf->Pessoa->endereco);
+            $std->nro = Strings::replaceSpecialsChars($nf->Pessoa->numero);
             if (!empty($nf->Pessoa->complemento)) {
-                $std->xCpl = utf8_encode($nf->Pessoa->complemento);
+                $std->xCpl = Strings::replaceSpecialsChars($nf->Pessoa->complemento);
             }
-            $std->xBairro = utf8_encode($nf->Pessoa->bairro);
+            $std->xBairro = Strings::replaceSpecialsChars($nf->Pessoa->bairro);
             $std->cMun = $nf->Pessoa->Cidade->codigooficial;
-            $std->xMun = utf8_encode($nf->Pessoa->Cidade->cidade);
-            $std->UF = utf8_encode($nf->Pessoa->Cidade->Estado->sigla);
+            $std->xMun = Strings::replaceSpecialsChars($nf->Pessoa->Cidade->cidade);
+            $std->UF = Strings::replaceSpecialsChars($nf->Pessoa->Cidade->Estado->sigla);
             $std->CEP = $nf->Pessoa->cep;
             $std->cPais = $nf->Pessoa->Cidade->Estado->Pais->codigooficial;
-            $std->xPais = utf8_encode($nf->Pessoa->Cidade->Estado->Pais->pais);
+            $std->xPais = Strings::replaceSpecialsChars($nf->Pessoa->Cidade->Estado->Pais->pais);
             $std->fone = numeroLimpo(($nf->Pessoa->telefone1??$nf->Pessoa->telefone2)??$nf->Pessoa->telefone3);
             $nfe->tagenderDest($std);
 
@@ -280,16 +274,16 @@ class NfePhpRepository extends MgRepository
           if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)){
               $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
           }
-          $std->cEAN = utf8_encode(Barras::validar($nfpb->ProdutoBarra->barras)?$nfpb->ProdutoBarra->barras:'');
-          $std->xProd = utf8_encode($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
-          $std->NCM = utf8_encode($nfpb->ProdutoBarra->Produto->Ncm->ncm);
+          $std->cEAN = Strings::replaceSpecialsChars(Barras::validar($nfpb->ProdutoBarra->barras)?$nfpb->ProdutoBarra->barras:'');
+          $std->xProd = Strings::replaceSpecialsChars($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
+          $std->NCM = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->Ncm->ncm);
           $std->CFOP = $nfpb->codcfop;
-          $std->uCom = utf8_encode($nfpb->ProdutoBarra->UnidadeMedida->sigla);
+          $std->uCom = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->UnidadeMedida->sigla);
           $std->qCom = number_format($nfpb->quantidade, 3, '.', '');
           $std->vUnCom = number_format($nfpb->valorunitario, 10, '.', '');
           $std->vProd = number_format($nfpb->valortotal, 2, '.', '');
           $std->cEANTrib = $std->cEAN;
-          $std->uTrib = utf8_encode($nfpb->ProdutoBarra->UnidadeMedida->sigla); //number_format($nf->valorunitario, 3, '.', '');
+          $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->UnidadeMedida->sigla); //number_format($nf->valorunitario, 3, '.', '');
           $std->qTrib = number_format($nfpb->quantidade, 3, '.', '');
           $std->vUnTrib = number_format($nfpb->valorunitario, 10, '.', '');
           if (!empty($nf->valorfrete)) {
@@ -572,7 +566,7 @@ class NfePhpRepository extends MgRepository
             foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
                 // Duplicatas
                 $std = new \stdClass();
-                $std->nDup = utf8_encode($nfd->fatura);
+                $std->nDup = Strings::replaceSpecialsChars($nfd->fatura);
                 $std->dVenc = $nfd->vencimento->format('Y-m-d');
                 $std->vDup = number_format($nfd->valor, 2, '.', '');
                 $totalPrazo += $nfd->valor;
@@ -626,13 +620,13 @@ class NfePhpRepository extends MgRepository
         if ($totalTrib > 0) {
             $infCpl = "Voce pagou aproximadamente:";
             if ($totalTribFederal > 0) {
-                $infCpl .= " R$ " . formataNumero($totalTribFederal) . " de tributos federais,";
+                $infCpl .= " " . formataNumero($totalTribFederal) . " de tributos federais,";
             }
             if ($totalTribEstadual > 0) {
-                $infCpl .= " R$ " . formataNumero($totalTribEstadual) . " de tributos estaduais,";
+                $infCpl .= " " . formataNumero($totalTribEstadual) . " de tributos estaduais,";
             }
             if ($totalTribMunicipal > 0) {
-                $infCpl .= " R$ " . formataNumero($totalTribMunicipal) . " de tributos municipais";
+                $infCpl .= " " . formataNumero($totalTribMunicipal) . " de tributos municipais";
             }
             $infCpl .= ". Fonte: {$ibptFonte}. ";
         }
@@ -651,7 +645,7 @@ class NfePhpRepository extends MgRepository
         // Informacoes Adicionais
         $std = new \stdClass();
         // $std->infAdFisco = null;
-        $std->infCpl = $infCpl;
+        $std->infCpl = Strings::replaceSpecialsChars($infCpl);
         $nfe->taginfAdic($std);
 
         // Gera o XML
@@ -687,6 +681,7 @@ class NfePhpRepository extends MgRepository
 
     public static function enviarXml($codnotafiscal)
     {
+
         // Busca Nota Fsical no Banco de Dados
         $nf = NotaFIscal::findOrFail($codnotafiscal);
 
@@ -703,17 +698,34 @@ class NfePhpRepository extends MgRepository
         // Envia Lote para Sefaz
         $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
         $st = new Standardize();
-        $std = $st->toStd($resp);
+        $r = $st->toStd($resp);
 
-        return $resp;
+        $sucesso = false;
+        $cStat = null;
+        $xMotivo = 'Falha Comunicação SEFAZ!';
+        if (isset($r->cStat)) {
+            // Lote Recebido Com Sucesso
+            if ($r->cStat == 103) {
+                NotaFiscal::where('codnotafiscal', $codnotafiscal)->update([
+                    'nfereciboenvio' => $r->infRec->nRec,
+                    'nfedataenvio' => Carbon::parse($r->dhRecbto)
+                ]);
+                $nf = $nf->fresh();
+                $sucesso = true;
+            }
 
-        dd($xmlAssinado);
+            $cStat = $r->cStat;
+            $xMotivo = $r->xMotivo;
 
-
-        if ($std->cStat != 103) {
-            //erro registrar e voltar
-            exit("[$std->cStat] $std->xMotivo");
         }
-        $recibo = $std->infRec->nRec; // Vamos usar a variável $recibo para consultar o status da nota
+
+        return [
+            'sucesso' => $sucesso,
+            'cStat' => $cStat,
+            'xMotivo' => $xMotivo,
+            'nfereciboenvio' => $nf->nfereciboenvio,
+            'nfedataenvio' => $nf->nfedataenvio->toW3cString(),
+        ];
+
     }
 }
