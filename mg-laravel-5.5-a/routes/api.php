@@ -86,9 +86,10 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
-        //Route::get('nfephp', '\Mg\Nfephp\NfeController@show');
-        Route::get('nfe-php/cria-xml/{id}', '\Mg\NfePhp\NfePhpController@criaXml');
-
+        // NFePHP
+        Route::get('nfe-php/criar-xml/{id}', '\Mg\NfePhp\NfePhpController@criarXml');
+        Route::get('nfe-php/assinar-xml/{id}', '\Mg\NfePhp\NfePhpController@assinarXml');
+        Route::get('nfe-php/enviar-xml/{id}', '\Mg\NfePhp\NfePhpController@enviarXml');
 
     });
 

@@ -17,18 +17,22 @@ class NfePhpController extends MgController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function criaXml(Request $request, $id)
+    public function criarXml(Request $request, $id)
     {
-
-        $ret = NfePhpRepository::criaXml($id);
-
+        $ret = NfePhpRepository::criarXml($id);
         return $ret;
+    }
 
-        /*
-        $model = NfePhp::findOrFail($id, $request->get('fields'));
+    public function assinarXml(Request $request, $id)
+    {
+        $ret = NfePhpRepository::assinarXml($id);
+        return $ret;
+    }
 
-        return response()->json($model, 200);
-        */
+    public function enviarXml(Request $request, $id)
+    {
+        $ret = NfePhpRepository::enviarXml($id);
+        return $ret;
     }
 
 }

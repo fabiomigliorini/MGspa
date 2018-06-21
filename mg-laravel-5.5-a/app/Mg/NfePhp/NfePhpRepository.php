@@ -10,14 +10,16 @@ use Mg\Filial\Filial;
 use Mg\Produto\Barras;
 use Mg\Pessoa\Pessoa;
 
-
 use NFePHP\NFe\Make;
+use NFePHP\NFe\Tools;
+use NFePHP\Common\Certificate;
+use NFePHP\NFe\Common\Standardize;
 /*
+use NFePHP\Common\Signer;
+use NFePHP\Common\Validator;
 use NFePHP\NFe\Tools;
 use NFePHP\NFe\Complements;
 use NFePHP\NFe\Convert;
-use NFePHP\Common\Certificate;
-use NFePHP\Common\Validator;
 */
 use NFePHP\Ibpt\Ibpt;
 
@@ -25,7 +27,45 @@ use NFePHP\Ibpt\Ibpt;
 class NfePhpRepository extends MgRepository
 {
 
-    public static function criaXml($codnotafiscal)
+    public static function config (Filial $filial)
+    {
+        $config = [
+           "atualizacao" => "2018-02-06 06:01:21",
+           "tpAmb" => $filial->nfeambiente, // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
+           "razaosocial" => $filial->Pessoa->pessoa,
+           "siglaUF" => $filial->Pessoa->Cidade->Estado->sigla,
+           "cnpj" => str_pad($filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT),
+           "schemes" => "PL_009_V4",
+           "versao" => "4.00",
+           "tokenIBPT" => $filial->tokenibpt
+        ];
+        return json_encode($config);
+    }
+
+    public static function instanciaTools (Filial $filial)
+    {
+        // Monta Configuracao da Filial
+        $config = static::config($filial);
+
+        // Le Certificado Digital
+        $pfx = file_get_contents(env('NFE_PHP_PATH') . "/Certs/{$filial->codfilial}.pfx");
+
+        // retorna Instancia Tools para a configuracao e certificado
+        return new Tools($config, Certificate::readPfx($pfx, $filial->senhacertificado));
+    }
+
+    public static function pathNFeAssinada (NotaFiscal $nf, bool $criar = false)
+    {
+        $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/assinadas/";
+        $path .= $nf->emissao->format('Ym');
+        if ($criar) {
+            @mkdir($path, 0775, true);
+        }
+        $path .= "/{$nf->nfechave}-NFe.xml";
+        return $path;
+    }
+
+    public static function criarXml ($codnotafiscal)
     {
 
         $nf = NotaFiscal::findOrFail($codnotafiscal);
@@ -34,7 +74,7 @@ class NfePhpRepository extends MgRepository
 
         // Infomacao Nfe
         $std = new \stdClass();
-        $std->versao = '4.0';
+        $std->versao = '4.00';
         $nfe->taginfNFe($std);
 
         // Identificacao Nfe
@@ -622,4 +662,58 @@ class NfePhpRepository extends MgRepository
 
     }
 
+    public static function assinarXml($codnotafiscal)
+    {
+
+        // Busca Nota Fsical no Banco de Dados
+        $nf = NotaFIscal::findOrFail($codnotafiscal);
+
+        // Instancia Tools para a configuracao e certificado
+        $tools = static::instanciaTools($nf->Filial);
+
+        // Cria Arquivo XML
+        $xml = static::criarXml($codnotafiscal);
+
+        // Assina XML
+        $xmlAssinado = $tools->signNFe($xml);
+
+        // Grava arquivo XML Assinado na pasta de "assinadas"
+        $path = static::pathNFeAssinada($nf, true);
+        file_put_contents($path, $xmlAssinado);
+
+        // Retorna XML Assinado
+        return $xmlAssinado;
+    }
+
+    public static function enviarXml($codnotafiscal)
+    {
+        // Busca Nota Fsical no Banco de Dados
+        $nf = NotaFIscal::findOrFail($codnotafiscal);
+
+        // Instancia Tools para a configuracao e certificado
+        $tools = static::instanciaTools($nf->Filial);
+
+        // Carrega Arquivo XML Assinado
+        $path = static::pathNFeAssinada($nf);
+        $xmlAssinado = file_get_contents($path);
+
+        // Monta Configuracao do Lote
+        $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
+
+        // Envia Lote para Sefaz
+        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
+        $st = new Standardize();
+        $std = $st->toStd($resp);
+
+        return $resp;
+
+        dd($xmlAssinado);
+
+
+        if ($std->cStat != 103) {
+            //erro registrar e voltar
+            exit("[$std->cStat] $std->xMotivo");
+        }
+        $recibo = $std->infRec->nRec; // Vamos usar a variável $recibo para consultar o status da nota
+    }
 }
