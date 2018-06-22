@@ -97,6 +97,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('nfe-php/inutilizar/{id}', '\Mg\NfePhp\NfePhpController@inutilizar');
         Route::get('nfe-php/consultar/{id}', '\Mg\NfePhp\NfePhpController@consultar');
         Route::get('nfe-php/danfe/{id}', '\Mg\NfePhp\NfePhpController@danfe');
+        Route::get('nfe-php/csc-consulta/{id}', '\Mg\NfePhp\NfePhpController@cscConsulta');
 
     });
 

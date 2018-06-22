@@ -74,7 +74,13 @@ class NfePhpController extends MgController
     public function danfe(Request $request, $id)
     {
         $res = NfePhpRepository::danfe($id);
-        return response()->file($res, 200);
+        return response()->file($res);
+    }
+
+    public function cscConsulta(Request $request, $id)
+    {
+        $res = NfePhpRepository::cscConsulta($id);
+        return response()->json($res, 200);
     }
 
 }

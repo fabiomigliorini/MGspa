@@ -38,6 +38,8 @@ class NfePhpRepository extends MgRepository
            "cnpj" => str_pad($filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT),
            "schemes" => "PL_009_V4",
            "versao" => "4.00",
+           "CSC" => $filial->nfcetoken,
+           "CSCid" => $filial->nfcetokenid,
            "tokenIBPT" => $filial->tokenibpt
         ];
         return json_encode($config);
@@ -88,6 +90,17 @@ class NfePhpRepository extends MgRepository
         return $path;
     }
 
+    public static function pathDanfe (NotaFiscal $nf, bool $criar = false)
+    {
+        $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/pdf/";
+        $path .= $nf->emissao->format('Ym');
+        if ($criar) {
+            @mkdir($path, 0775, true);
+        }
+        $path .= "/{$nf->nfechave}-NFe.pdf";
+        return $path;
+    }
+
     public static function pathNFeCancelada (NotaFiscal $nf, bool $criar = false)
     {
         $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/canceladas/";
@@ -131,6 +144,17 @@ class NfePhpRepository extends MgRepository
         $filial = Filial::findOrFail($codfilial);
         $tools = static::instanciaTools($filial);
         $resp = $tools->sefazStatus();
+        $st = new Standardize();
+        $r = $st->toStd($resp);
+        return $r;
+    }
+
+    public static function cscConsulta ($codfilial)
+    {
+        $filial = Filial::findOrFail($codfilial);
+        $tools = static::instanciaTools($filial);
+        $tools->model('65');
+        $resp = $tools->sefazCsc(1);
         $st = new Standardize();
         $r = $st->toStd($resp);
         return $r;
@@ -712,7 +736,7 @@ class NfePhpRepository extends MgRepository
             if ($totalTribMunicipal > 0) {
                 $infCpl .= " " . formataNumero($totalTribMunicipal) . " de tributos municipais";
             }
-            $infCpl .= ". Fonte: {$ibptFonte}. ";
+            $infCpl .= ". Fonte: {$ibptFonte}.;";
         }
         $infCpl .= $nf->observacoes;
         $infCpl = preg_replace('/\s+/', ' ', $infCpl);
@@ -756,6 +780,7 @@ class NfePhpRepository extends MgRepository
 
         // Instancia Tools para a configuracao e certificado
         $tools = static::instanciaTools($nf->Filial);
+        $tools->model($nf->modelo);
 
         // Cria Arquivo XML
         $xml = static::criarXml($codnotafiscal);
@@ -780,6 +805,7 @@ class NfePhpRepository extends MgRepository
 
         // Instancia Tools para a configuracao e certificado
         $tools = static::instanciaTools($nf->Filial);
+        $tools->model($nf->modelo);
 
         // Carrega Arquivo XML Assinado
         $path = static::pathNFeAssinada($nf);
@@ -941,6 +967,7 @@ class NfePhpRepository extends MgRepository
 
       // Instancia Tools para a configuracao e certificado
       $tools = static::instanciaTools($nf->Filial);
+      $tools->model($nf->modelo);
 
       // Carrega Arquivo XML Assinado
       $path = static::pathNFeAssinada($nf);
@@ -1009,6 +1036,7 @@ class NfePhpRepository extends MgRepository
 
         // Instancia Tools para a configuracao e certificado
         $tools = static::instanciaTools($nf->Filial);
+        $tools->model($nf->modelo);
 
         // Busca na sefaz status do recibo
         $resp = $tools->sefazConsultaRecibo($nf->nfereciboenvio);
@@ -1066,9 +1094,9 @@ class NfePhpRepository extends MgRepository
 
         // Instancia Tools para a configuracao e certificado
         $tools = static::instanciaTools($nf->Filial);
+        $tools->model($nf->modelo);
 
         // solicita a sefaz cancelamento
-        $tools->model('55');
         $resp = $tools->sefazCancela($nf->nfechave, $justificativa, $nf->nfeautorizacao);
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -1117,9 +1145,9 @@ class NfePhpRepository extends MgRepository
 
         // Instancia Tools para a configuracao e certificado
         $tools = static::instanciaTools($nf->Filial);
+        $tools->model($nf->modelo);
 
         // solicita a sefaz cancelamento
-        $tools->model('55');
         $resp = $tools->sefazInutiliza($nf->serie, $nf->numero, $nf->numero, $justificativa, $nf->Filial->nfeambiente);
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -1168,13 +1196,17 @@ class NfePhpRepository extends MgRepository
 
         // Instancia Tools para a configuracao e certificado
         $tools = static::instanciaTools($nf->Filial);
+        $tools->model($nf->modelo);
+        //$tools->model(65);
 
         // solicita a sefaz cancelamento
-        $tools->model('55');
-        $chave = '52170522555994000145550010000009651275106690';
+        //$chave = '52170522555994000145550010000009651275106690';
         //$chave = '51180604576775000322550010000187011000187012';
-        $resp = $tools->sefazConsultaChave($chave, $nf->Filial->nfeambiente);
-        //$resp = $tools->sefazConsultaChave($nf->nfechave, $nf->Filial->nfeambiente);
+        //$chave = '51180604576775000322550010000187201000187204';
+        //$chave = '51180604576775000241650010002485319002485312';
+        //$chave = $nf->nfechave;
+        //$resp = $tools->sefazConsultaChave($chave, 1);
+        $resp = $tools->sefazConsultaChave($nf->nfechave, $nf->Filial->nfeambiente);
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -1222,14 +1254,45 @@ class NfePhpRepository extends MgRepository
         // Busca Nota Fsical no Banco de Dados
         $nf = NotaFiscal::findOrFail($codnotafiscal);
 
-        // busca XML autorizado
-        $pathNFeAutorizada = static::pathNFeAutorizada($nf);
-        $xml = file_get_contents($pathNFeAutorizada);
+        if ($nf->modelo == NotaFiscal::MODELO_NFE) {
 
-        $danfe = new Danfe($xml, 'P', 'A4', 'images/logo.jpg', 'I', '');
-        $id = $danfe->montaDANFE();
-        dd($id);
-        $pdf = $danfe->render();
+            $pathLogo = public_path('MGPapelariaLogo.jpeg');
+
+            // busca XML autorizado
+            $pathNFeAutorizada = static::pathNFeAutorizada($nf);
+            $xml = file_get_contents($pathNFeAutorizada);
+
+            $danfe = new Danfe($xml, 'P', 'A4', $pathLogo, 'I', '', 'helvetica');
+            $id = $danfe->montaDANFE('P', 'A4', 'C', Danfe::SIT_NONE, false, '', 5, 5, 5);
+            $pdf = $danfe->render();
+
+            $pathDanfe = static::pathDanfe($nf, true);
+            file_put_contents($pathDanfe, $pdf);
+
+        } else {
+
+            $pathLogo = public_path('MGPapelariaLogoSeloPretoBranco.jpeg');
+
+            // busca XML autorizado
+            $pathNFeAutorizada = static::pathNFeAutorizada($nf);
+            $pathNFeAutorizada = '/home/usuario/Downloads/NFCe.xml';
+            $pathNFeAutorizada = '/home/usuario/Downloads/NFCe-grande.xml';
+            $xml = file_get_contents($pathNFeAutorizada);
+
+            $danfce = new DanfceMg($xml, $pathLogo);
+            // $danfce->fontePadrao = 'Arial';
+            $id = $danfce->monta();
+            $pdf = $danfce->render();
+
+            $pathDanfe = static::pathDanfe($nf, true);
+            file_put_contents($pathDanfe, $pdf);
+
+            // Para Imprimir
+            // lpr 51180604576775000241650010002481709002481704-NFe.pdf -P BEMATECH-MP-2500TH -o fit-to-page
+
+        }
+
+        return $pathDanfe;
 
     }
 
