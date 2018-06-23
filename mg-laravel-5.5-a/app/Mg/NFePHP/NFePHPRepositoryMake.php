@@ -1,118 +1,26 @@
 <?php
 
-namespace Mg\NfePhp;
+namespace Mg\NFePHP;
 
-use Carbon\Carbon;
 use DB;
+use Carbon\Carbon;
 
-use Mg\MgRepository;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NaturezaOperacao\Operacao;
-use Mg\Filial\Empresa;
-use Mg\Filial\Filial;
-use Mg\Produto\Barras;
 use Mg\Pessoa\Pessoa;
+use Mg\Produto\Barras;
+use Mg\Filial\Filial;
+use Mg\Filial\Empresa;
 
 use NFePHP\NFe\Make;
-use NFePHP\NFe\Tools;
-use NFePHP\NFe\Complements;
-use NFePHP\NFe\Common\Standardize;
-use NFePHP\NFe\Factories\Protocol;
-use NFePHP\Common\Certificate;
 use NFePHP\Common\Strings;
 use NFePHP\Ibpt\Ibpt;
-use NFePHP\DA\NFe\Danfe;
-use NFePHP\DA\Legacy\FilesFolders;
 
-
-class NfePhpRepository extends MgRepository
+class NFePHPRepositoryMake
 {
 
-    public static function config (Filial $filial)
+    public static function gerarNumeroNotaFiscal(NotaFiscal $nf)
     {
-        $config = [
-           "atualizacao" => "2018-02-06 06:01:21",
-           "tpAmb" => $filial->nfeambiente, // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
-           "razaosocial" => $filial->Pessoa->pessoa,
-           "siglaUF" => $filial->Pessoa->Cidade->Estado->sigla,
-           "cnpj" => str_pad($filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT),
-           "schemes" => "PL_009_V4",
-           "versao" => "4.00",
-           "CSC" => $filial->nfcetoken,
-           "CSCid" => $filial->nfcetokenid,
-           "tokenIBPT" => $filial->tokenibpt
-        ];
-        return json_encode($config);
-    }
-
-    public static function instanciaTools (Filial $filial)
-    {
-        // Monta Configuracao da Filial
-        $config = static::config($filial);
-
-        // Le Certificado Digital
-        $pfx = file_get_contents(env('NFE_PHP_PATH') . "/Certs/{$filial->codfilial}.pfx");
-
-        // retorna Instancia Tools para a configuracao e certificado
-        return new Tools($config, Certificate::readPfx($pfx, $filial->senhacertificado));
-    }
-
-    public static function pathNFeAssinada (NotaFiscal $nf, bool $criar = false)
-    {
-        $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/assinadas/";
-        $path .= $nf->emissao->format('Ym');
-        if ($criar) {
-            @mkdir($path, 0775, true);
-        }
-        $path .= "/{$nf->nfechave}-NFe.xml";
-        return $path;
-    }
-
-    public static function pathNFeAutorizada (NotaFiscal $nf, bool $criar = false)
-    {
-        $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/enviadas/aprovadas/";
-        $path .= $nf->emissao->format('Ym');
-        if ($criar) {
-            @mkdir($path, 0775, true);
-        }
-        $path .= "/{$nf->nfechave}-NFe.xml";
-        return $path;
-    }
-
-    public static function pathNFeDenegada (NotaFiscal $nf, bool $criar = false)
-    {
-        $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/enviadas/denegadas/";
-        $path .= $nf->emissao->format('Ym');
-        if ($criar) {
-            @mkdir($path, 0775, true);
-        }
-        $path .= "/{$nf->nfechave}-NFe.xml";
-        return $path;
-    }
-
-    public static function pathDanfe (NotaFiscal $nf, bool $criar = false)
-    {
-        $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/pdf/";
-        $path .= $nf->emissao->format('Ym');
-        if ($criar) {
-            @mkdir($path, 0775, true);
-        }
-        $path .= "/{$nf->nfechave}-NFe.pdf";
-        return $path;
-    }
-
-    public static function pathNFeCancelada (NotaFiscal $nf, bool $criar = false)
-    {
-        $path = env('NFE_PHP_PATH') . "/NFe/{$nf->codfilial}/homologacao/canceladas/";
-        $path .= $nf->emissao->format('Ym');
-        if ($criar) {
-            @mkdir($path, 0775, true);
-        }
-        $path .= "/{$nf->nfechave}-NFe.xml";
-        return $path;
-    }
-
-    public static function gerarNumeroNotaFiscal(NotaFiscal $nf) {
 
         // Se Nota Fiscal já tem número já está tudo OK
         If (!empty($nf->numero)) {
@@ -139,39 +47,19 @@ class NfePhpRepository extends MgRepository
         return true;
     }
 
-    public static function sefazStatus ($codfilial)
-    {
-        $filial = Filial::findOrFail($codfilial);
-        $tools = static::instanciaTools($filial);
-        $resp = $tools->sefazStatus();
-        $st = new Standardize();
-        $r = $st->toStd($resp);
-        return $r;
-    }
-
-    public static function cscConsulta ($codfilial)
-    {
-        $filial = Filial::findOrFail($codfilial);
-        $tools = static::instanciaTools($filial);
-        $tools->model('65');
-        $resp = $tools->sefazCsc(1);
-        $st = new Standardize();
-        $r = $st->toStd($resp);
-        return $r;
-    }
-
-    public static function criarXml ($codnotafiscal)
+    public static function criar ($codnotafiscal)
     {
 
         $nf = NotaFiscal::findOrFail($codnotafiscal);
 
+        // Valida se o preenchimento da NFe está correto
+        NFePHPRepositoryValidacao::validar($nf);
+
         // Confere se nota Fiscal tem Número
-        if (empty($nf->numero)) {
-            if (!static::gerarNumeroNotaFiscal($nf)) {
-                abort(500, 'Erro ao Gerar Número da Nota Fiscal!');
-            }
-            $nf = $nf->fresh();
+        if (!static::gerarNumeroNotaFiscal($nf)) {
+            throw new \Exception('Erro ao Gerar Número da Nota Fiscal!');
         }
+        $nf = $nf->fresh();
 
         $nfe = new Make();
 
@@ -242,10 +130,6 @@ class NfePhpRepository extends MgRepository
         // DANFE NFCe
         } else {
 
-            if (!empty($std->Pessoa->ie)) {
-                abort(409, 'Não é permitida emissão de NFCe para Pessoas com Inscrição Estadual!');
-            }
-
             $std->tpImp = 4; // Danfe NFC-e
             $std->tpEmis = $nf->Filial->Empresa->modoemissaonfce;
 
@@ -261,18 +145,6 @@ class NfePhpRepository extends MgRepository
                 // Data, Hora e Justificativa da contingencia
                 $std->dhCont = $nf->Filial->Empresa->contingenciadata->toW3cString();
                 $std->xJust = $nf->Filial->Empresa->contingenciajustificativa; //Justificativa da entrada em contingência
-
-                if ($std->finNFe != 1) {
-                    abort(409, "Finalidade de emissão ({$std->finNFe}) da Natureza de Operação não permite emissão OFFLINE!");
-                }
-
-                if ($std->indFinal != 1) {
-                    abort(409, 'Não é permitida emissão OFFLINE para Pessoas que não sejam Consumidor Final!');
-                }
-
-                if ($std->idDest != 1) {
-                    abort(409, "Não é permitida emissão OFFLINE para Pessoas de fora do Estado de {$nf->Filial->Pessoa->Cidade->Estado->estado}!");
-                }
 
             }
 
@@ -355,8 +227,6 @@ class NfePhpRepository extends MgRepository
             $nfe->tagenderDest($std);
 
         // Se for consumidor não identificado numa NFe
-        } elseif ($nf->modelo != NotaFiscal::MODELO_NFCE) {
-            abort(409, 'Consumidor não identificado é permitido somente em NFCe!');
         }
 
         $nItem = 0;
@@ -422,6 +292,7 @@ class NfePhpRepository extends MgRepository
           if ($nf->NaturezaOperacao->ibpt) {
 
               // Faz consulta ao WebService do IBPT
+              // TODO: Descobrir se e pra passar estado da filial ou do Cliente
               $tax = $ibpt->productTaxes(
                   $nf->Filial->Pessoa->Cidade->Estado->sigla,
                   $nfpb->ProdutoBarra->Produto->Ncm->ncm,
@@ -772,528 +643,5 @@ class NfePhpRepository extends MgRepository
 
     }
 
-    public static function assinarXml($codnotafiscal)
-    {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFIscal::findOrFail($codnotafiscal);
-
-        // Instancia Tools para a configuracao e certificado
-        $tools = static::instanciaTools($nf->Filial);
-        $tools->model($nf->modelo);
-
-        // Cria Arquivo XML
-        $xml = static::criarXml($codnotafiscal);
-
-        // Assina XML
-        $xmlAssinado = $tools->signNFe($xml);
-
-        // Grava arquivo XML Assinado na pasta de "assinadas"
-        $nf = $nf->fresh();
-        $path = static::pathNFeAssinada($nf, true);
-        file_put_contents($path, $xmlAssinado);
-
-        // Retorna XML Assinado
-        return $xmlAssinado;
-    }
-
-    public static function enviarXml($codnotafiscal)
-    {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFIscal::findOrFail($codnotafiscal);
-
-        // Instancia Tools para a configuracao e certificado
-        $tools = static::instanciaTools($nf->Filial);
-        $tools->model($nf->modelo);
-
-        // Carrega Arquivo XML Assinado
-        $path = static::pathNFeAssinada($nf);
-        $xmlAssinado = file_get_contents($path);
-
-        // Monta Configuracao do Lote
-        $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
-
-        // Envia Lote para Sefaz
-        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
-        $st = new Standardize();
-        $respStd = $st->toStd($resp);
-
-        // inicializa variaveis para retorno
-        $sucesso = false;
-        $cStat = null;
-        $xMotivo = 'Falha Comunicação SEFAZ!';
-
-        // Se veio cStat
-        if (isset($respStd->cStat)) {
-
-            // Se Lote Recebido Com Sucesso
-            if ($respStd->cStat == 103) {
-
-                // Salva Numero do Protocolo na tabela de Nota Fiscal
-                NotaFiscal::where('codnotafiscal', $codnotafiscal)->update([
-                    'nfereciboenvio' => $respStd->infRec->nRec,
-                    'nfedataenvio' => Carbon::parse($respStd->dhRecbto)
-                ]);
-                $nf = $nf->fresh();
-                $sucesso = true;
-            }
-
-            // joga mensagem recebida da Sefaz para Variaveis de Retorno
-            $cStat = $respStd->cStat;
-            $xMotivo = $respStd->xMotivo;
-
-        }
-
-        // Retorna Resultado do processo
-        return [
-            'sucesso' => $sucesso,
-            'cStat' => $cStat,
-            'xMotivo' => $xMotivo,
-            'nfereciboenvio' => $nf->nfereciboenvio,
-            'nfedataenvio' => ($nf->nfedataenvio)?$nf->nfedataenvio->toW3cString():null,
-            'resp' => $resp,
-        ];
-
-    }
-
-    public static function vincularProtocoloAutorizacao (NotaFiscal $nf, $resp, $respStd)
-    {
-        // Verifica se tem o infProt
-        if (!isset($respStd->protNFe->infProt)) {
-          return false;
-        }
-        $infProt = $respStd->protNFe->infProt;
-
-        // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'nfeautorizacao' => $infProt->nProt,
-          'nfedataautorizacao' => Carbon::parse($infProt->dhRecbto)
-        ]);
-
-        // Carrega o Arquivo com o XML Assinado
-        $pathAssinada = static::pathNFeAssinada($nf);
-        $xmlAssinado = file_get_contents($pathAssinada);
-
-        // Vincula o Protocolo no XML Assinado
-        $prot = new Protocol();
-        $xmlProtocolado = $prot->add($xmlAssinado, $resp);
-
-        // Salva o Arquivo com a NFe Aprovada
-        $pathAprovada = static::pathNFeAutorizada($nf, true);
-        file_put_contents($pathAprovada, $xmlProtocolado);
-
-        return true;
-    }
-
-    public static function vincularProtocoloDenegacao (NotaFiscal $nf, $resp, $respStd)
-    {
-        // Verifica se tem o infProt
-        if (!isset($respStd->protNFe->infProt)) {
-          return false;
-        }
-        $infProt = $respStd->protNFe->infProt;
-
-        // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'nfeinutilizacao' => $infProt->nProt,
-          'justificativa' => $infProt->xMotivo,
-          'nfedatainutilizacao' => Carbon::parse($infProt->dhRecbto)
-        ]);
-
-        // Carrega o Arquivo com o XML Assinado
-        $pathAssinada = static::pathNFeAssinada($nf);
-        $xmlAssinado = file_get_contents($pathAssinada);
-
-        // Vincula o Protocolo no XML Assinado
-        $prot = new Protocol();
-        $xmlProtocolado = $prot->add($xmlAssinado, $resp);
-
-        // Salva o Arquivo com a NFe Aprovada
-        $pathNFeDenegada = static::pathNFeDenegada($nf, true);
-        file_put_contents($pathNFeDenegada, $xmlProtocolado);
-
-        return true;
-    }
-
-    public static function vincularProtocoloCancelamento (NotaFiscal $nf, $resp, $respStd, $justificativa, $tools)
-    {
-        // Verifica se tem o infEvento
-        if (!isset($respStd->retEvento->infEvento)) {
-          return false;
-        }
-        $infEvento = $respStd->retEvento->infEvento;
-
-        // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'justificativa' => $justificativa,
-          'nfecancelamento' => $infEvento->nProt,
-          'nfedatacancelamento' => Carbon::parse($infEvento->dhRegEvento)
-        ]);
-
-        // Pega XML do Cancelamento
-        $xmlProtocolado = Complements::toAuthorize($tools->lastRequest, $resp);
-
-        // Salva o Arquivo com a NFe Aprovada
-        $pathNFeCancelada = static::pathNFeCancelada($nf, true);
-        file_put_contents($pathNFeCancelada, $xmlProtocolado);
-
-        return true;
-    }
-
-    public static function vincularProtocoloInutilizacao (NotaFiscal $nf, $resp, $respStd, $justificativa)
-    {
-        // Verifica se tem o infInut
-        if (!isset($respStd->infInut)) {
-            return false;
-        }
-        $infInut = $respStd->infInut;
-
-        // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'justificativa' => $justificativa,
-          'nfeinutilizacao' => $infInut->nProt,
-          'nfedatainutilizacao' => Carbon::parse($infInut->dhRecbto)
-        ]);
-
-        return true;
-    }
-
-    public static function enviarXmlSincrono($codnotafiscal)
-    {
-
-      // Busca Nota Fsical no Banco de Dados
-      $nf = NotaFIscal::findOrFail($codnotafiscal);
-
-      // Instancia Tools para a configuracao e certificado
-      $tools = static::instanciaTools($nf->Filial);
-      $tools->model($nf->modelo);
-
-      // Carrega Arquivo XML Assinado
-      $path = static::pathNFeAssinada($nf);
-      $xmlAssinado = file_get_contents($path);
-
-      // Monta Configuracao do Lote
-      $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
-
-      // Envia Lote para Sefaz
-      $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1);
-      $st = new Standardize();
-      $respStd = $st->toStd($resp);
-
-      // inicializa variaveis para retorno
-      $sucesso = false;
-      $cStat = null;
-      $xMotivo = 'Falha Comunicação SEFAZ!';
-
-      // Se veio cStat do Protocolo
-      if (isset($respStd->protNFe->infProt->cStat)) {
-
-          // Se Autorizado
-          // 100 - Autorizado o uso da NF-e
-          // 150 - Autorizado o uso da NF-e, autorizacao fora de prazo
-          if (in_array($respStd->protNFe->infProt->cStat, [100, 150])) {
-              static::vincularProtocoloAutorizacao($nf, $resp, $respStd);
-              $nf = $nf->fresh();
-              $sucesso = true;
-          }
-
-          // Se Denegada
-          // 301 Uso Denegado: Irregularidade fiscal do emitente
-          // 302 Uso Denegado: Irregularidade fiscal do destinatário
-          if (in_array($respStd->protNFe->infProt->cStat, [301, 302])) {
-              static::vincularProtocoloDenegacao($nf, $resp, $respStd);
-              $nf = $nf->fresh();
-          }
-
-          // joga mensagem recebida da Sefaz para Variaveis de Retorno
-          $cStat = $respStd->protNFe->infProt->cStat;
-          $xMotivo = $respStd->protNFe->infProt->xMotivo;
-
-      // Se veio cStat na Raiz
-      } elseif (isset($respStd->cStat)) {
-          $cStat = $respStd->cStat;
-          $xMotivo = $respStd->xMotivo;
-      }
-
-      // Retorna Resultado do processo
-      return [
-        'sucesso' => $sucesso,
-        'cStat' => $cStat,
-        'xMotivo' => $xMotivo,
-        'nfeautorizacao' => $nf->nfeautorizacao,
-        'nfedataautorizacao' => ($nf->nfedataautorizacao)?$nf->nfedataautorizacao->toW3cString():null,
-        'resp' => $resp
-        ];
-
-    }
-
-    public static function consultarReciboEnvio($codnotafiscal)
-    {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFIscal::findOrFail($codnotafiscal);
-
-        // Instancia Tools para a configuracao e certificado
-        $tools = static::instanciaTools($nf->Filial);
-        $tools->model($nf->modelo);
-
-        // Busca na sefaz status do recibo
-        $resp = $tools->sefazConsultaRecibo($nf->nfereciboenvio);
-        $st = new Standardize();
-        $respStd = $st->toStd($resp);
-
-        // inicializa variaveis para retorno
-        $sucesso = false;
-        $cStat = null;
-        $xMotivo = 'Falha Comunicação SEFAZ!';
-
-        // Se veio cStat do Protocolo
-        if (isset($respStd->protNFe->infProt->cStat)) {
-
-            // Se Autorizado
-            // 100 - Autorizado o uso da NF-e
-            // 150 - Autorizado o uso da NF-e, autorizacao fora de prazo
-            if (in_array($respStd->protNFe->infProt->cStat, [100, 150])) {
-                static::vincularProtocoloAutorizacao($nf, $resp, $respStd);
-                $nf = $nf->fresh();
-                $sucesso = true;
-            }
-
-            // Se Denegada
-            // 301 Uso Denegado: Irregularidade fiscal do emitente
-            // 302 Uso Denegado: Irregularidade fiscal do destinatário
-            if (in_array($respStd->protNFe->infProt->cStat, [301, 302])) {
-                static::vincularProtocoloDenegacao($nf, $resp, $respStd);
-                $nf = $nf->fresh();
-            }
-
-            // joga mensagem recebida da Sefaz para Variaveis de Retorno
-            $cStat = $respStd->protNFe->infProt->cStat;
-            $xMotivo = $respStd->protNFe->infProt->xMotivo;
-
-        }
-
-        // Retorna Resultado do processo
-        return [
-            'sucesso' => $sucesso,
-            'cStat' => $cStat,
-            'xMotivo' => $xMotivo,
-            'nfeautorizacao' => $nf->nfeautorizacao,
-            'nfedataautorizacao' => ($nf->nfedataautorizacao)?$nf->nfedataautorizacao->toW3cString():null,
-            'resp' => $resp
-        ];
-
-    }
-
-    public static function cancelar($codnotafiscal, $justificativa)
-    {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
-        // Instancia Tools para a configuracao e certificado
-        $tools = static::instanciaTools($nf->Filial);
-        $tools->model($nf->modelo);
-
-        // solicita a sefaz cancelamento
-        $resp = $tools->sefazCancela($nf->nfechave, $justificativa, $nf->nfeautorizacao);
-        $st = new Standardize();
-        $respStd = $st->toStd($resp);
-
-        // inicializa variaveis para retorno
-        $sucesso = false;
-        $cStat = null;
-        $xMotivo = 'Falha Comunicação SEFAZ!';
-
-        // Se veio cStat do Protocolo
-        if (isset($respStd->retEvento->infEvento->cStat)) {
-
-            // Se Autorizado
-            // 101 - Cancelamento de NFe Homologado
-            // 135 - Evento registrado e vinculado A NFe
-            // 155 - Cancelamento Homologado Fora de Prazo
-            if (in_array($respStd->retEvento->infEvento->cStat, [101, 135, 155])) {
-                static::vincularProtocoloCancelamento ($nf, $resp, $respStd, $justificativa, $tools);
-                $nf = $nf->fresh();
-                $sucesso = true;
-            }
-
-            // joga mensagem recebida da Sefaz para Variaveis de Retorno
-            $cStat = $respStd->retEvento->infEvento->cStat;
-            $xMotivo = $respStd->retEvento->infEvento->xMotivo;
-
-        }
-
-        // Retorna Resultado do processo
-        return [
-            'sucesso' => $sucesso,
-            'cStat' => $cStat,
-            'xMotivo' => $xMotivo,
-            'nfecancelamento' => $nf->nfecancelamento,
-            'nfedatanfecancelamento' => ($nf->nfedatanfecancelamento)?$nf->nfedatanfecancelamento->toW3cString():null,
-            'resp' => $resp
-        ];
-
-    }
-
-    public static function inutilizar($codnotafiscal, $justificativa)
-    {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
-        // Instancia Tools para a configuracao e certificado
-        $tools = static::instanciaTools($nf->Filial);
-        $tools->model($nf->modelo);
-
-        // solicita a sefaz cancelamento
-        $resp = $tools->sefazInutiliza($nf->serie, $nf->numero, $nf->numero, $justificativa, $nf->Filial->nfeambiente);
-        $st = new Standardize();
-        $respStd = $st->toStd($resp);
-
-        //return $respStd;
-
-        // inicializa variaveis para retorno
-        $sucesso = false;
-        $cStat = null;
-        $xMotivo = 'Falha Comunicação SEFAZ!';
-
-        // Se veio cStat do Protocolo
-        if (isset($respStd->infInut->cStat)) {
-
-            // Se Inutilizacao Homologada
-            // 102 - Inutilizacao de Numero Homologado
-            if (in_array($respStd->infInut->cStat, [102])) {
-                static::vincularProtocoloInutilizacao ($nf, $resp, $respStd, $justificativa);
-                $nf = $nf->fresh();
-                $sucesso = true;
-            }
-
-            // joga mensagem recebida da Sefaz para Variaveis de Retorno
-            $cStat = $respStd->infInut->cStat;
-            $xMotivo = $respStd->infInut->xMotivo;
-
-        }
-
-        // Retorna Resultado do processo
-        return [
-            'sucesso' => $sucesso,
-            'cStat' => $cStat,
-            'xMotivo' => $xMotivo,
-            'nfeinutilizacao' => $nf->nfeinutilizacao,
-            'nfedatainutilizacao' => ($nf->nfedatainutilizacao)?$nf->nfedatainutilizacao->toW3cString():null,
-            'resp' => $resp
-        ];
-
-    }
-
-    public static function consultar($codnotafiscal)
-    {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
-        // Instancia Tools para a configuracao e certificado
-        $tools = static::instanciaTools($nf->Filial);
-        $tools->model($nf->modelo);
-        //$tools->model(65);
-
-        // solicita a sefaz cancelamento
-        //$chave = '52170522555994000145550010000009651275106690';
-        //$chave = '51180604576775000322550010000187011000187012';
-        //$chave = '51180604576775000322550010000187201000187204';
-        //$chave = '51180604576775000241650010002485319002485312';
-        //$chave = $nf->nfechave;
-        //$resp = $tools->sefazConsultaChave($chave, 1);
-        $resp = $tools->sefazConsultaChave($nf->nfechave, $nf->Filial->nfeambiente);
-        $st = new Standardize();
-        $respStd = $st->toStd($resp);
-
-        return $respStd;
-
-        //return $respStd;
-
-        // inicializa variaveis para retorno
-        $sucesso = false;
-        $cStat = null;
-        $xMotivo = 'Falha Comunicação SEFAZ!';
-
-        // Se veio cStat do Protocolo
-        if (isset($respStd->infInut->cStat)) {
-
-            // Se Inutilizacao Homologada
-            // 102 - Inutilizacao de Numero Homologado
-            if (in_array($respStd->infInut->cStat, [102])) {
-                static::vincularProtocoloInutilizacao ($nf, $resp, $respStd, $justificativa);
-                $nf = $nf->fresh();
-                $sucesso = true;
-            }
-
-            // joga mensagem recebida da Sefaz para Variaveis de Retorno
-            $cStat = $respStd->infInut->cStat;
-            $xMotivo = $respStd->infInut->xMotivo;
-
-        }
-
-        // Retorna Resultado do processo
-        return [
-            'sucesso' => $sucesso,
-            'cStat' => $cStat,
-            'xMotivo' => $xMotivo,
-            'nfeinutilizacao' => $nf->nfeinutilizacao,
-            'nfedatainutilizacao' => ($nf->nfedatainutilizacao)?$nf->nfedatainutilizacao->toW3cString():null,
-            'resp' => $resp
-        ];
-
-    }
-
-    public static function danfe($codnotafiscal)
-    {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
-        if ($nf->modelo == NotaFiscal::MODELO_NFE) {
-
-            $pathLogo = public_path('MGPapelariaLogo.jpeg');
-
-            // busca XML autorizado
-            $pathNFeAutorizada = static::pathNFeAutorizada($nf);
-            $xml = file_get_contents($pathNFeAutorizada);
-
-            $danfe = new Danfe($xml, 'P', 'A4', $pathLogo, 'I', '', 'helvetica');
-            $id = $danfe->montaDANFE('P', 'A4', 'C', Danfe::SIT_NONE, false, '', 5, 5, 5);
-            $pdf = $danfe->render();
-
-            $pathDanfe = static::pathDanfe($nf, true);
-            file_put_contents($pathDanfe, $pdf);
-
-        } else {
-
-            $pathLogo = public_path('MGPapelariaLogoSeloPretoBranco.jpeg');
-
-            // busca XML autorizado
-            $pathNFeAutorizada = static::pathNFeAutorizada($nf);
-            $pathNFeAutorizada = '/home/usuario/Downloads/NFCe.xml';
-            $pathNFeAutorizada = '/home/usuario/Downloads/NFCe-grande.xml';
-            $xml = file_get_contents($pathNFeAutorizada);
-
-            $danfce = new DanfceMg($xml, $pathLogo);
-            // $danfce->fontePadrao = 'Arial';
-            $id = $danfce->monta();
-            $pdf = $danfce->render();
-
-            $pathDanfe = static::pathDanfe($nf, true);
-            file_put_contents($pathDanfe, $pdf);
-
-            // Para Imprimir
-            // lpr 51180604576775000241650010002481709002481704-NFe.pdf -P BEMATECH-MP-2500TH -o fit-to-page
-
-        }
-
-        return $pathDanfe;
-
-    }
 
 }

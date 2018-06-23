@@ -87,17 +87,19 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
         // NFePHP
-        Route::get('nfe-php/sefaz-status/{id}', '\Mg\NfePhp\NfePhpController@sefazStatus');
-        Route::get('nfe-php/criar-xml/{id}', '\Mg\NfePhp\NfePhpController@criarXml');
-        Route::get('nfe-php/assinar-xml/{id}', '\Mg\NfePhp\NfePhpController@assinarXml');
-        Route::get('nfe-php/enviar-xml/{id}', '\Mg\NfePhp\NfePhpController@enviarXml');
-        Route::get('nfe-php/enviar-xml-sincrono/{id}', '\Mg\NfePhp\NfePhpController@enviarXmlSincrono');
-        Route::get('nfe-php/consultar-recibo-envio/{id}', '\Mg\NfePhp\NfePhpController@consultarReciboEnvio');
-        Route::get('nfe-php/cancelar/{id}', '\Mg\NfePhp\NfePhpController@cancelar');
-        Route::get('nfe-php/inutilizar/{id}', '\Mg\NfePhp\NfePhpController@inutilizar');
-        Route::get('nfe-php/consultar/{id}', '\Mg\NfePhp\NfePhpController@consultar');
-        Route::get('nfe-php/danfe/{id}', '\Mg\NfePhp\NfePhpController@danfe');
-        Route::get('nfe-php/csc-consulta/{id}', '\Mg\NfePhp\NfePhpController@cscConsulta');
+        Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
+        Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
+        Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
+        Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
+        Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
+        Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
+        Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
+        Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
+        Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
+
+        Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
+        Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
+
 
     });
 

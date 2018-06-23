@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\NfePhp;
+namespace Mg\NFePHP;
 
 use NFePHP\DA\NFe\Danfce;
 use NFePHP\DA\Legacy\Pdf;
