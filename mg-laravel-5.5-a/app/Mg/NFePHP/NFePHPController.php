@@ -3,10 +3,9 @@
 namespace Mg\NFePHP;
 
 use Illuminate\Http\Request;
-use Mg\MgController;
 
-use App\Http\Requests;
-use Illuminate\Validation\Rule;
+use Mg\MgController;
+use Mg\NotaFiscal\NotaFiscal;
 
 class NFePHPController extends MgController
 {
@@ -77,10 +76,31 @@ class NFePHPController extends MgController
         return response()->file($res);
     }
 
+    public function mail(Request $request, $id)
+    {
+        $nf = NotaFiscal::findOrFail($id);
+        $res = NFePHPRepositoryMail::mail($nf, $request->destinatario);
+        return $res;
+        return response()->json($res, 200);
+    }
+
+    public function mailCancelamento(Request $request, $id)
+    {
+        $res = NFePHPRepositoryMail::mailCancelamento($id);
+        return response()->json($res, 200);
+    }
+
     public function cscConsulta(Request $request, $id)
     {
         $res = NFePHPRepository::cscConsulta($id);
         return response()->json($res, 200);
+    }
+
+    public function xml(Request $request, $id)
+    {
+        $nf = NotaFiscal::findOrFail($id);
+        $xml = NFePHPRepository::xml($nf);
+        return response($xml, 200)->header('Content-Type', 'text/xml');
     }
 
 }

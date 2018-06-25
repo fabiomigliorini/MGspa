@@ -8,6 +8,7 @@ use Mg\MgRepository;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalCartaCorrecao;
 use Mg\Filial\Filial;
+use Mg\Filial\Empresa;
 
 use NFePHP\NFe\Complements;
 use NFePHP\NFe\Common\Standardize;
@@ -201,6 +202,7 @@ class NFePHPRepository extends MgRepository
 
     public static function vincularProtocoloAutorizacao (NotaFiscal $nf, $protNFe, $resp)
     {
+
         // Verifica se tem o infProt
         if (!isset($protNFe->infProt)) {
             return false;
@@ -208,7 +210,7 @@ class NFePHPRepository extends MgRepository
         $infProt = $protNFe->infProt;
 
         // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
+        $ret = NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
           'nfeautorizacao' => $infProt->nProt,
           'nfedataautorizacao' => Carbon::parse($infProt->dhRecbto)
         ]);
@@ -596,92 +598,6 @@ class NFePHPRepository extends MgRepository
             'resp' => $resp
         ];
 
-        /*
-
-        $nf = $this->loadModelNotaFiscal($codnotafiscal);
-        $config = $this->montarConfiguracao($nf->codfilial, $nf->modelo, $codnotafiscal);
-
-        $tools = new ToolsNFe($config);
-
-        $tools->setModelo($nf->modelo);
-
-        $lote = 0;
-        $sequencia = 0;
-
-        foreach ($nf->NotaFiscalCartaCorrecaos as $cc) {
-            if ($cc->lote > $lote)
-                $lote = $cc->lote;
-            if ($cc->sequencia > $sequencia)
-                $sequencia = $cc->sequencia;
-        }
-        $lote++;
-        $sequencia++;
-
-
-        $aResposta = array();
-        $chNFe = $nf->nfechave;
-        $tpAmb = $nf->Filial->nfeambiente;
-        $xCorrecao = $texto;
-        $nSeqEvento = $sequencia;
-
-        $aRetorno['retorno'] = false;
-        $aRetorno['ex'] = null;
-
-        try {
-
-            if (!$nf->emitida)
-                throw new Exception('Nota fiscal não é de nossa emissão!');
-
-            if ($nf->modelo != NotaFiscal::MODELO_NFE)
-                throw new Exception('Modelo da Nota Fiscal não permite carta de correção!');
-
-            switch ($nf->codstatus) {
-                case NotaFiscal::CODSTATUS_AUTORIZADA:
-                case NotaFiscal::CODSTATUS_NOSSA_EMISSAO:
-                    break;
-
-                case NotaFiscal::CODSTATUS_LANCADA:
-                case NotaFiscal::CODSTATUS_INUTILIZADA:
-                case NotaFiscal::CODSTATUS_CANCELADA:
-                case NotaFiscal::CODSTATUS_DIGITACAO:
-                case NotaFiscal::CODSTATUS_NAOAUTORIZADA:
-                case NotaFiscal::CODSTATUS_NOVA:
-                    throw new Exception('Status da Nota Fiscal não permite esta ação!');
-                    break;
-            }
-
-            $retorno = $tools->sefazCCe($chNFe, $tpAmb, $xCorrecao, $nSeqEvento, $aResposta);
-
-            if (!$aResposta['bStat'])
-                throw new Exception('Erro na comunicacao!');
-
-            if ($aResposta['evento'][0]['cStat'] == 135) {
-                $nfcc = new NotaFiscalCartaCorrecao();
-                $nfcc->codnotafiscal = $nf->codnotafiscal;
-                $nfcc->texto = $texto;
-                $nfcc->protocolo = $aResposta['evento'][0]['nProt'];
-                $dh = DateTime::createFromFormat('Y-m-d\TH:i:sP', $aResposta['evento'][0]['dhRegEvento']);
-                $nfcc->protocolodata = $dh->format('d/m/Y H:i:s');
-                $nfcc->sequencia = $sequencia;
-                $nfcc->lote = $lote;
-                $nfcc->data = $nfcc->protocolodata;
-                $nfcc->save();
-
-                $aRetorno['retorno'] = true;
-            }
-        } catch (Exception $ex) {
-            $aRetorno['ex'] = $ex->getMessage();
-        }
-
-        $aRetorno['cStat'] = isset($aResposta['evento'][0]['cStat']) ? $aResposta['evento'][0]['cStat'] : null;
-        $aRetorno['xMotivo'] = isset($aResposta['evento'][0]['xMotivo']) ? $aResposta['evento'][0]['xMotivo'] : null;
-        $aRetorno['aResposta'] = $aResposta;
-
-        header('Content-type: text/json; charset=UTF-8');
-        echo json_encode($aRetorno);
-
-        */
-
     }
 
     public static function processarProtocolo (NotaFiscal $nf, $protNFe, $resp)
@@ -766,34 +682,37 @@ class NFePHPRepository extends MgRepository
             $xMotivo = $respStd->protNFe->infProt->xMotivo;
         }
 
-        // Se veio somente um evento, forca array de eventos
-        if (!is_array($respStd->procEventoNFe)) {
-            $respStd->procEventoNFe = [$respStd->procEventoNFe];
-        }
+        // se veio evento vinculado
+        if (isset($respStd->procEventoNFe)) {
 
-        foreach ($respStd->procEventoNFe as $procEventoNFe) {
-
-            // Cancelamento
-            if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
-            $procEventoNFe->evento->infEvento->tpEvento == 110111) {
-
-              // Processa Protocolo para saber se foi autorizada
-              $sucesso = static::processarEventoCancelamento($nf, $procEventoNFe, $resp);
-              $nf = $nf->fresh();
-
-              // joga mensagem recebida da Sefaz para Variaveis de Retorno
-              $tpEvento = $procEventoNFe->evento->infEvento->tpEvento;
-              $cStat = $procEventoNFe->retEvento->infEvento->cStat;
-              $xMotivo = $procEventoNFe->retEvento->infEvento->xMotivo;
+            // Se veio somente um evento, forca array de eventos
+            if (!is_array($respStd->procEventoNFe)) {
+              $respStd->procEventoNFe = [$respStd->procEventoNFe];
             }
 
-            // Carta de Correcao
-            if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
-            $procEventoNFe->evento->infEvento->tpEvento == 110110) {
+            foreach ($respStd->procEventoNFe as $procEventoNFe) {
+
+              // Cancelamento
+              if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
+              $procEventoNFe->evento->infEvento->tpEvento == 110111) {
+
+                // Processa Protocolo para saber se foi autorizada
+                $sucesso = static::processarEventoCancelamento($nf, $procEventoNFe, $resp);
+                $nf = $nf->fresh();
+
+                // joga mensagem recebida da Sefaz para Variaveis de Retorno
+                $tpEvento = $procEventoNFe->evento->infEvento->tpEvento;
+                $cStat = $procEventoNFe->retEvento->infEvento->cStat;
+                $xMotivo = $procEventoNFe->retEvento->infEvento->xMotivo;
+              }
+
+              // Carta de Correcao
+              if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
+              $procEventoNFe->evento->infEvento->tpEvento == 110110) {
 
                 $nfcc = NotaFiscalCartaCorrecao::firstOrNew([
-                    'codnotafiscal' => $nf->codnotafiscal,
-                    'sequencia' => $procEventoNFe->evento->infEvento->nSeqEvento
+                  'codnotafiscal' => $nf->codnotafiscal,
+                  'sequencia' => $procEventoNFe->evento->infEvento->nSeqEvento
                 ]);
                 $nfcc->lote = $procEventoNFe->evento->infEvento->nSeqEvento;
                 $nfcc->data = Carbon::parse($procEventoNFe->retEvento->infEvento->dhRegEvento);
@@ -802,7 +721,9 @@ class NFePHPRepository extends MgRepository
                 $nfcc->protocolodata = Carbon::parse($procEventoNFe->retEvento->infEvento->dhRegEvento);
                 $nfcc->save();
 
+              }
             }
+
         }
 
         return [
@@ -829,11 +750,33 @@ class NFePHPRepository extends MgRepository
         $nf = NotaFiscal::findOrFail($codnotafiscal);
 
         // busca XML autorizado
-        $pathNFeAutorizada = NFePHPRepositoryPath::pathNFeAutorizada($nf);
-        if (!file_exists($pathNFeAutorizada)) {
-            throw new \Exception("Não foi Localizado o arquivo da NFe ($pathNFeAutorizada)");
+        $path = NFePHPRepositoryPath::pathNFeAutorizada($nf);
+        if (!file_exists($path)) {
+
+            // busca XML Assinado
+            $path = NFePHPRepositoryPath::pathNFeAssinada($nf);
+            if (!file_exists($path)) {
+                throw new \Exception("Não foi Localizado o arquivo da NFe ($path)");
+            }
+
+            // Carrega XML Assinado
+            $xml = file_get_contents($path);
+            $st = new Standardize();
+            $r = $st->toStd($xml);
+
+            // Só deixa passar se for modo OffLine
+            if (isset($r->infNFe->ide->tpEmis) && $r->infNFe->ide->tpEmis != Empresa::MODOEMISSAONFCE_OFFLINE) {
+                throw new \Exception("Nota Fiscal ainda não está autorizada!");
+            }
+
+        // Se arquivo XML Autorizado nao existir
+        } elseif (!file_exists($path)) {
+            throw new \Exception("Não foi Localizado o arquivo da NFe ($path)");
+
+        // Carrega XML Autorizado
+        } else {
+            $xml = file_get_contents($path);
         }
-        $xml = file_get_contents($pathNFeAutorizada);
 
         if ($nf->modelo == NotaFiscal::MODELO_NFE) {
 
@@ -861,6 +804,18 @@ class NFePHPRepository extends MgRepository
 
         return $pathDanfe;
 
+    }
+
+    public static function xml (NotaFiscal $nf)
+    {
+        $path = NFePHPRepositoryPath::pathNFeAutorizada($nf);
+        if (!file_exists($path)) {
+            $path = NFePHPRepositoryPath::pathNFeAssinada($nf);
+        }
+        if (!file_exists($path)) {
+            throw new \Exception("Não existe arquivo XML para esta Nota Fiscal!", 1);
+        }
+        return file_get_contents($path);
     }
 
 }

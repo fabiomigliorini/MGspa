@@ -14,7 +14,6 @@ use Mg\Filial\Empresa;
 
 use NFePHP\NFe\Make;
 use NFePHP\Common\Strings;
-use NFePHP\Ibpt\Ibpt;
 
 class NFePHPRepositoryMake
 {
@@ -226,7 +225,6 @@ class NFePHPRepositoryMake
             $std->fone = numeroLimpo(($nf->Pessoa->telefone1??$nf->Pessoa->telefone2)??$nf->Pessoa->telefone3);
             $nfe->tagenderDest($std);
 
-        // Se for consumidor não identificado numa NFe
         }
 
         $nItem = 0;
@@ -239,7 +237,7 @@ class NFePHPRepositoryMake
         $ibptFonte = '';
 
         //instancia a classe Ibpt
-        $ibpt = new Ibpt(mascarar($nf->Filial->Pessoa->cnpj, '##############'), $nf->Filial->tokenibpt);
+        $ibpt = new MgIbpt($nf->Filial);
 
         // Produtos
         foreach ($nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get() as $nfpb) {
@@ -292,23 +290,18 @@ class NFePHPRepositoryMake
           if ($nf->NaturezaOperacao->ibpt) {
 
               // Faz consulta ao WebService do IBPT
-              // TODO: Descobrir se e pra passar estado da filial ou do Cliente
-              $tax = $ibpt->productTaxes(
-                  $nf->Filial->Pessoa->Cidade->Estado->sigla,
-                  $nfpb->ProdutoBarra->Produto->Ncm->ncm,
-                  0
-              );
+              $tax = $ibpt->pesquisar($nfpb);
 
               // Se nao houve erro ao consultar
               if (!isset($tax->error)) {
 
                   // monta string com fonte do IBPT para utilizar nos Dados Adicionais
-                  $ibptFonte = "{$tax->Fonte} {$tax->Chave} {$tax->Versao}";
+                  $ibptFonte = "{$tax->fonte} {$tax->chave} {$tax->versao}";
 
                   // Valcula valor dos tributos
-                  $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado)?$tax->Importado:$tax->Nacional)) / 100;
-                  $vTotTribEstadual = ($nfpb->valortotal * $tax->Estadual) / 100;
-                  $vTotTribMunicipal = ($nfpb->valortotal * $tax->Municipal) / 100;
+                  $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado)?$tax->importado:$tax->nacional)) / 100;
+                  $vTotTribEstadual = ($nfpb->valortotal * $tax->estadual) / 100;
+                  $vTotTribMunicipal = ($nfpb->valortotal * $tax->municipal) / 100;
                   $vTotTrib = round($vTotTribFederal + $vTotTribEstadual + $vTotTribMunicipal, 2);
 
                   // Acumula totais dos tributos da nota

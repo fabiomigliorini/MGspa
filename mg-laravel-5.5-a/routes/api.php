@@ -26,6 +26,29 @@ Route::group(['prefix' => 'v1/auth'], function () {
     Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
 });
 
+Route::group(['prefix' => 'v1'], function () {
+
+  // NFePHP
+  Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
+  Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
+  Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
+  Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
+  Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
+  Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
+  Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
+  Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
+  Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
+
+  Route::get('nfe-php/{id}/mail', '\Mg\NFePHP\NFePHPController@mail');
+  Route::get('nfe-php/{id}/mail-cancelamento', '\Mg\NFePHP\NFePHPController@mailCancelamento');
+
+  Route::get('nfe-php/{id}/xml', '\Mg\NFePHP\NFePHPController@xml');
+
+  Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
+  Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
+
+});
+
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
     Route::group(['prefix' => 'v1'], function () {
@@ -86,19 +109,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
-        // NFePHP
-        Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
-        Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
-        Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
-        Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
-        Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
-        Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
-        Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
-        Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
-        Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
-
-        Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
-        Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
 
 
     });
