@@ -1830,39 +1830,6 @@
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
 		</table>
-		<table name="tblibpt" >
-			<column name="codibpt" type="bigserial" jt="-5" mandatory="y" />
-			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
-			<column name="codestado" type="bigint" jt="-5" mandatory="y" />
-			<column name="ncm" type="varchar" length="20" jt="12" mandatory="y" />
-			<column name="extarif" type="smallint" jt="5" mandatory="y" />
-			<column name="descricao" type="varchar" length="200" jt="12" />
-			<column name="nacional" type="numeric" length="5" decimal="3" jt="2" />
-			<column name="estadual" type="numeric" length="5" decimal="3" jt="2" />
-			<column name="importado" type="numeric" length="5" decimal="3" jt="2" />
-			<column name="municipal" type="numeric" length="5" decimal="3" jt="2" />
-			<column name="tipo" type="smallint" jt="5" />
-			<column name="vigenciainicio" type="date" jt="91" />
-			<column name="vigenciafim" type="date" jt="91" />
-			<column name="chave" type="varchar" length="20" jt="12" />
-			<column name="versao" type="varchar" length="20" jt="12" />
-			<column name="fonte" type="varchar" length="50" jt="12" />
-			<index name="pk_tblibpt_codibpt" unique="PRIMARY_KEY" >
-				<column name="codibpt" />
-			</index>
-			<index name="idx_tblibpt_codestado" unique="NORMAL" >
-				<column name="codestado" />
-			</index>
-			<index name="idx_tblibpt_codfilial" unique="NORMAL" >
-				<column name="codfilial" />
-			</index>
-			<fk name="fk_tblibpt_tblestado" to_schema="mgsis" to_table="tblestado" >
-				<fk_column name="codestado" pk="codestado" />
-			</fk>
-			<fk name="fk_tblibpt_tblfilial" to_schema="mgsis" to_table="tblfilial" >
-				<fk_column name="codfilial" pk="codfilial" />
-			</fk>
-		</table>
 		<table name="tblibptax" >
 			<column name="codibptax" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codncm" type="bigint" jt="-5" />
@@ -1914,6 +1881,61 @@
 			</fk>
 			<fk name="fk_tblibptax" to_schema="mgsis" to_table="tblncm" >
 				<fk_column name="codncm" pk="codncm" />
+			</fk>
+		</table>
+		<table name="tblibptcache" >
+			<column name="codibptcache" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
+			<column name="codestado" type="bigint" jt="-5" mandatory="y" />
+			<column name="ncm" type="varchar" length="20" jt="12" mandatory="y" />
+			<column name="extarif" type="smallint" jt="5" mandatory="y" />
+			<column name="descricao" type="varchar" length="200" jt="12" />
+			<column name="nacional" type="numeric" length="5" decimal="3" jt="2" />
+			<column name="estadual" type="numeric" length="5" decimal="3" jt="2" />
+			<column name="importado" type="numeric" length="5" decimal="3" jt="2" />
+			<column name="municipal" type="numeric" length="5" decimal="3" jt="2" />
+			<column name="tipo" type="smallint" jt="5" />
+			<column name="vigenciainicio" type="date" jt="91" />
+			<column name="vigenciafim" type="date" jt="91" />
+			<column name="chave" type="varchar" length="20" jt="12" />
+			<column name="versao" type="varchar" length="20" jt="12" />
+			<column name="fonte" type="varchar" length="50" jt="12" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblibpt_codibpt" unique="PRIMARY_KEY" >
+				<column name="codibptcache" />
+			</index>
+			<index name="idx_tblibpt_codestado" unique="NORMAL" >
+				<column name="codestado" />
+			</index>
+			<index name="idx_tblibpt_codfilial" unique="NORMAL" >
+				<column name="codfilial" />
+			</index>
+			<index name="tblibptcache_uk" unique="UNIQUE" >
+				<column name="codfilial" />
+				<column name="codestado" />
+				<column name="ncm" />
+				<column name="extarif" />
+			</index>
+			<index name="idx_tblibptcache_codusuariocriacao" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_tblibptcache_codusuarioalteracao" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<fk name="fk_tblibpt_tblestado" to_schema="mgsis" to_table="tblestado" >
+				<fk_column name="codestado" pk="codestado" />
+			</fk>
+			<fk name="fk_tblibpt_tblfilial" to_schema="mgsis" to_table="tblfilial" >
+				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tblibptcache_tblusuario" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblibptcache_tblusuario_0" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblimagem" >
@@ -5529,6 +5551,7 @@
 		<sequence name="tblgrupousuariopermissao_codgrupousuariopermissao_seq" start="1" />
 		<sequence name="tblgrupousuariousuario_codgrupousuariousuario_seq" start="1" />
 		<sequence name="tblibptax_codibptax_seq" start="1" />
+		<sequence name="tblibptcache_codibptcache_seq" start="1" />
 		<sequence name="tblimagem_codimagem_seq" start="1" />
 		<sequence name="tbljobs_id_seq" start="1" />
 		<sequence name="tbljobsfailed_id_seq" start="1" />
@@ -6730,31 +6753,31 @@ AS '$libdir/tablefunc', $function$normal_rand$function$
 			<result_param name="returnValue" jt="8" type="float8" />
 		</procedure>
 		<trigger name="tblmovimentotituloaiauad" table="tblmovimentotitulo" id="Trigger4846959" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblmovimentotituloaiauad AFTER INSERT OR DELETE OR UPDATE ON tblmovimentotitulo FOR EACH ROW EXECUTE PROCEDURE fntblmovimentotituloaiauad()]]></string>
+			<string><![CDATA[CREATE TRIGGER tblmovimentotituloaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblmovimentotitulo FOR EACH ROW EXECUTE PROCEDURE fntblmovimentotituloaiauad()]]></string>
 		</trigger>
 		<trigger name="tblnegocioaiau_valorprodutos_valoraprazo_valordesconto" table="tblnegocio" id="Trigger4846960" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnegocioaiau_valorprodutos_valoraprazo_valordesconto AFTER INSERT OR UPDATE OF valorprodutos, valoraprazo, valordesconto ON tblnegocio FOR EACH ROW EXECUTE PROCEDURE fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto()]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnegocioaiau_valorprodutos_valoraprazo_valordesconto AFTER INSERT OR UPDATE OF valorprodutos, valoraprazo, valordesconto ON mgsis.tblnegocio FOR EACH ROW EXECUTE PROCEDURE fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto()]]></string>
 		</trigger>
 		<trigger name="tblnegocioformapagamentoaiauad" table="tblnegocioformapagamento" id="Trigger4846961" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnegocioformapagamentoaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnegocioformapagamento FOR EACH ROW EXECUTE PROCEDURE fntblnegocioformapagamentoaiauad()]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnegocioformapagamentoaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblnegocioformapagamento FOR EACH ROW EXECUTE PROCEDURE fntblnegocioformapagamentoaiauad()]]></string>
 		</trigger>
 		<trigger name="tblnegocioprodutobarraaiauad" table="tblnegocioprodutobarra" id="Trigger4846961" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnegocioprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnegocioprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnegocioprodutobarraaiauad()]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnegocioprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblnegocioprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnegocioprodutobarraaiauad()]]></string>
 		</trigger>
 		<trigger name="tblnotafiscalaiau_valorprodutos" table="tblnotafiscal" id="Trigger4846962" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnotafiscalaiau_valorprodutos AFTER INSERT OR UPDATE OF valorprodutos, valorfrete, valorseguro, valordesconto, valoroutras, icmsstvalor, ipivalor ON tblnotafiscal FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalaiau_valorprodutos()]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnotafiscalaiau_valorprodutos AFTER INSERT OR UPDATE OF valorprodutos, valorfrete, valorseguro, valordesconto, valoroutras, icmsstvalor, ipivalor ON mgsis.tblnotafiscal FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalaiau_valorprodutos()]]></string>
 		</trigger>
 		<trigger name="tblnotafiscalprodutobarraaiauad" table="tblnotafiscalprodutobarra" id="Trigger4846963" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnotafiscalprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON tblnotafiscalprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalprodutobarraaiauad()]]></string>
+			<string><![CDATA[CREATE TRIGGER tblnotafiscalprodutobarraaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblnotafiscalprodutobarra FOR EACH ROW EXECUTE PROCEDURE fntblnotafiscalprodutobarraaiauad()]]></string>
 		</trigger>
 		<trigger name="tbltituloai" table="tbltitulo" id="Trigger4846967" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tbltituloai AFTER INSERT ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloai()]]></string>
+			<string><![CDATA[CREATE TRIGGER tbltituloai AFTER INSERT ON mgsis.tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloai()]]></string>
 		</trigger>
 		<trigger name="tbltituloaiauad" table="tbltitulo" id="Trigger4846967" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tbltituloaiauad AFTER INSERT OR DELETE OR UPDATE ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloaiauad()]]></string>
+			<string><![CDATA[CREATE TRIGGER tbltituloaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloaiauad()]]></string>
 		</trigger>
 		<trigger name="tbltituloau" table="tbltitulo" id="Trigger4846967" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tbltituloau AFTER UPDATE ON tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloau()]]></string>
+			<string><![CDATA[CREATE TRIGGER tbltituloau AFTER UPDATE ON mgsis.tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloau()]]></string>
 		</trigger>
 		<function name="criatriggers_geraauditoria" id="Function4846928" isSystem="false" params_known="n" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.criatriggers_geraauditoria(brecria boolean DEFAULT false)
@@ -8105,7 +8128,6 @@ FROM
 		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="c1d8ee" x="45" y="240" />
 		<entity schema="mgsis" name="tbloperacao" color="c1d8ee" x="75" y="510" />
 		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="c1d8ee" x="75" y="690" />
-		<entity schema="mgsis" name="tblfilial" color="c1d8ee" x="1125" y="45" />
 		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="c1d8ee" x="540" y="105" />
 		<entity schema="mgsis" name="tblpessoa" color="c1d8ee" x="825" y="60" />
 		<entity schema="mgsis" name="tblnaturezaoperacao" color="c1d8ee" x="60" y="900" />
@@ -8117,7 +8139,8 @@ FROM
 		<entity schema="mgsis" name="tblestado" color="c1d8ee" x="1155" y="960" />
 		<entity schema="mgsis" name="tblcidade" color="c1d8ee" x="1155" y="705" />
 		<entity schema="mgsis" name="tblempresa" color="c1d8ee" x="1125" y="495" />
-		<entity schema="mgsis" name="tblibpt" color="c1d8ee" x="1365" y="60" />
+		<entity schema="mgsis" name="tblfilial" color="c1d8ee" x="1125" y="45" />
+		<entity schema="mgsis" name="tblibptcache" color="c1d8ee" x="1365" y="60" />
 	</layout>
 	<layout name="Layout_Prancheta" id="Layout_2e976812" show_relation="columns" >
 		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="315" y="105" />
