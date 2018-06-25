@@ -13,7 +13,6 @@
         "nfephp-org/sped-common": "^5.0",
         "nfephp-org/sped-da": "^0.1",
         "nfephp-org/sped-ibpt": "^1.0",
-        "nfephp-org/sped-mail": "^0.1.3",
         "nfephp-org/sped-nfe": "^5.0",
         "tymon/jwt-auth": "dev-develop"
     },
