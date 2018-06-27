@@ -819,9 +819,10 @@ class NFePHPRepository extends MgRepository
         return file_get_contents($path);
     }
 
-    public static function pendentes ()
+    public static function pendentes ($ordemReversa = false)
     {
-        $sql = '
+        $ordemReversa = ($ordemReversa)?'DESC':'ASC';
+        $sql = "
             select
             	nf.codnotafiscal,
             	nf.modelo,
@@ -845,9 +846,9 @@ class NFePHPRepository extends MgRepository
             and nf.nfecancelamento is null
             and nf.nfeinutilizacao is null
             and nf.numero != 0
-            order by emissao asc, codnotafiscal asc
+            order by emissao $ordemReversa, codnotafiscal $ordemReversa
             limit 100
-        ';
+        ";
         return DB::select($sql);
     }
 

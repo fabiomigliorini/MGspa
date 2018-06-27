@@ -12,6 +12,9 @@
           <q-field>
             <q-toggle label="Rodar modoAutomatico" v-model="modoAutomatico"/>
           </q-field>
+          <q-field>
+            <q-toggle label="Ordem Reversa" v-model="ordemReversa"/>
+          </q-field>
         </div>
         <div class="col-md-4 q-pa-sm">
           Notas: {{ iPendente }} / {{ pendentes.length }}
@@ -371,6 +374,7 @@ export default {
       codnotafiscal: null,
       iPendente: null,
       modoAutomatico: false,
+      ordemReversa: false,
       justificativa: '',
       pendentes: [],
       retornoConsultar: [],
@@ -394,6 +398,10 @@ export default {
         this.iPendente = -1
         this.percorrer()
       }
+    },
+    ordemReversa: function (val) {
+      this.modoAutomatico = false
+      this.carregarPendentes()
     }
   },
   methods: {
@@ -426,7 +434,9 @@ export default {
     carregarPendentes: function() {
       let vm = this
       // busca api Nfes pendentes
-      vm.$axios.get('nfe-php/pendentes').then(function(request) {
+      vm.$axios.get('nfe-php/pendentes', {params: {
+        ordemReversa: (this.ordemReversa)?1:0
+      }}).then(function(request) {
         vm.pendentes = request.data
         if (vm.modoAutomatico) {
           vm.percorrer()

@@ -3354,6 +3354,38 @@
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
 		</table>
+		<table name="tblprefixogs1" >
+			<column name="codprefixogs1" type="bigserial" jt="-5" mandatory="y" />
+			<column name="inicial" type="varchar" length="3" jt="12" mandatory="y" />
+			<column name="final" type="varchar" length="3" jt="12" mandatory="y" />
+			<column name="especial" type="bool" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="descricao" type="varchar" length="200" jt="12" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblprefixogs1_codprefixogs1" unique="PRIMARY_KEY" >
+				<column name="codprefixogs1" />
+			</index>
+			<index name="idx_tblprefixogs1_codusuariocriacao" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_tblprefixogs1_codusuarioalteracao" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblprefixogs1_inicial_final" unique="UNIQUE" >
+				<column name="inicial" />
+				<column name="final" />
+			</index>
+			<fk name="fk_tblprefixogs1_tblusuario" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblprefixogs1_tblusuario_0" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
 		<table name="tblproduto" >
 			<column name="codproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="produto" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
@@ -5599,6 +5631,7 @@
 		<sequence name="tblportador_codportador_seq" start="1" />
 		<sequence name="tblprancheta_codprancheta_seq" start="1" />
 		<sequence name="tblpranchetaproduto_codpranchetaproduto_seq" start="1" />
+		<sequence name="tblprefixogs1_codprefixogs1_seq" start="1" />
 		<sequence name="tblproduto_codproduto_seq" start="1" />
 		<sequence name="tblprodutobarra_codprodutobarra_seq" start="1" />
 		<sequence name="tblprodutoembalagem_codprodutoembalagem_seq" start="1" />
@@ -8138,9 +8171,10 @@ FROM
 		<entity schema="mgsis" name="tblpais" color="c1d8ee" x="1155" y="1185" />
 		<entity schema="mgsis" name="tblestado" color="c1d8ee" x="1155" y="960" />
 		<entity schema="mgsis" name="tblcidade" color="c1d8ee" x="1155" y="705" />
-		<entity schema="mgsis" name="tblempresa" color="c1d8ee" x="1125" y="495" />
 		<entity schema="mgsis" name="tblfilial" color="c1d8ee" x="1125" y="45" />
 		<entity schema="mgsis" name="tblibptcache" color="c1d8ee" x="1365" y="60" />
+		<entity schema="mgsis" name="tblempresa" color="c1d8ee" x="1125" y="495" />
+		<entity schema="mgsis" name="tblprefixogs1" color="c1d8ee" x="1365" y="525" />
 	</layout>
 	<layout name="Layout_Prancheta" id="Layout_2e976812" show_relation="columns" >
 		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="315" y="105" />

@@ -105,7 +105,8 @@ class NFePHPController extends MgController
 
     public function pendentes(Request $request)
     {
-        $res = NFePHPRepository::pendentes();
+        $ordemReversa = boolval($request->ordemReversa);
+        $res = NFePHPRepository::pendentes($ordemReversa);
         return response()->json($res, 200);
     }
 

@@ -8,6 +8,12 @@ use Mg\NotaFiscal\NotaFiscal;
 
 class NaturezaOperacao extends MGModel
 {
+
+    const FINNFE_NORMAL = 1;
+    const FINNFE_COMPLEMENTAR = 2;
+    const FINNFE_AJUSTE = 3;
+    const FINNFE_DEVOLUCAO_RETORNO = 4;
+
     protected $table = 'tblnaturezaoperacao';
     protected $primaryKey = 'codnaturezaoperacao';
     protected $fillable = [

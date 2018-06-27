@@ -98,9 +98,8 @@ class Barras
         }
     }
 
-    public static function validar($barras)
+    public static function validar($barras, $validarPrefixoGS1 = false)
     {
-
         //calcula comprimento string
         $compr = strlen($barras);
 
@@ -117,6 +116,17 @@ class Barras
             return false;
         }
 
+        if ($validarPrefixoGS1) {
+            // valida prefixo de acordo com tabela receita
+            if (!static::validarPrefixoGS1($barras)) {
+                return false;
+            }
+            // Segundo documentacao Receita, so podem tamanhos 8/12/13/14
+            if ($compr == 18) {
+                return false;
+            }
+        }
+
         //calcula digito e verifica se bate com o digitado
         $digito = static::calculaDigitoGtin($barras);
         if ($digito == substr($barras, -1)) {
@@ -125,4 +135,22 @@ class Barras
             return false;
         }
     }
+
+    /**
+     * Valida prefixos do GS1 Conforme tabela receita federal
+     */
+    public static function validarPrefixoGS1 ($barras)
+    {
+        $barras = str_pad($barras, 14, '0', STR_PAD_LEFT);
+        $inicio = substr($barras, 0, 6);
+        if ($inicio == 0) {
+            $prefixo = substr($barras, 6, 3);
+        } else {
+            $prefixo = substr($barras, 1, 3);
+        }
+        // Busca na tabela da Receita Federal
+        $count = PrefixoGS1::whereRaw("'$prefixo' between inicial and final")->count();
+        return ($count > 0);
+    }
+
 }

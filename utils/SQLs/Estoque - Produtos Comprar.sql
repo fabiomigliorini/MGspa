@@ -1,7 +1,7 @@
 ﻿/*
 
 select marca, codmarca from tblmarca where controlada order by marca
-update tblmarca set controlada = true where marca ilike 'lantecores'
+update tblmarca set controlada = true where marca ilike 'artlux'
 
 select * from tblmarca
 

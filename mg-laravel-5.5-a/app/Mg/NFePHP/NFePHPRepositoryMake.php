@@ -7,6 +7,7 @@ use Carbon\Carbon;
 
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NaturezaOperacao\Operacao;
+use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Produto\Barras;
 use Mg\Filial\Filial;
@@ -239,6 +240,8 @@ class NFePHPRepositoryMake
         //instancia a classe Ibpt
         $ibpt = new MgIbpt($nf->Filial);
 
+        $rateio = static::rateiaDescontoSeguroFreteOutras($nf);
+
         // Produtos
         foreach ($nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get() as $nfpb) {
           $nItem++;
@@ -250,7 +253,7 @@ class NFePHPRepositoryMake
           if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)){
               $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
           }
-          $std->cEAN = Strings::replaceSpecialsChars(Barras::validar($nfpb->ProdutoBarra->barras)?$nfpb->ProdutoBarra->barras:'');
+          $std->cEAN = Barras::validar($nfpb->ProdutoBarra->barras, true)?$nfpb->ProdutoBarra->barras:null;
           $std->xProd = Strings::replaceSpecialsChars($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
           $std->NCM = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->Ncm->ncm);
           $std->CFOP = $nfpb->codcfop;
@@ -258,21 +261,38 @@ class NFePHPRepositoryMake
           $std->qCom = number_format($nfpb->quantidade, 3, '.', '');
           $std->vUnCom = number_format($nfpb->valorunitario, 10, '.', '');
           $std->vProd = number_format($nfpb->valortotal, 2, '.', '');
+
           $std->cEANTrib = $std->cEAN;
-          $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->UnidadeMedida->sigla); //number_format($nf->valorunitario, 3, '.', '');
-          $std->qTrib = number_format($nfpb->quantidade, 3, '.', '');
-          $std->vUnTrib = number_format($nfpb->valorunitario, 10, '.', '');
-          if (!empty($nf->valorfrete)) {
-              $std->vFrete = number_format(round(($nf->valorfrete / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
+          $std->uTrib = $std->uCom;
+          $std->qTrib = $std->qCom;
+
+          // SE FOR EMBALAGEM, PEGA PRIMEIRO CODIGO DE BARRAS DE UNIDADE POSSIVEL
+          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)) {
+             foreach ($nfpb->ProdutoBarra->ProdutoVariacao->ProdutoBarraS()->whereNull('codprodutoembalagem')->get() as $pbUnidade) {
+                if (Barras::validar($pbUnidade->barras, true)) {
+                    $std->cEANTrib = $pbUnidade->barras;
+                    if (empty($pbUnidade->codprodutoembalagem)) {
+                        $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->UnidadeMedida->sigla);
+                    }
+                    $std->qTrib = number_format($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade * $nfpb->quantidade, 3, '.', '');
+                    break;
+                }
+             }
           }
-          if (!empty($nf->valorseguro)) {
-              $std->vSeg = number_format(round(($nf->valorseguro / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
+
+          // SE NAO ACHOU NENHUM CODIGO DE BARRAS DE UNIDADE, USA MESMO CODIGO DE BARRAS DA EMBALAGEM
+          $std->vUnTrib = number_format($std->vProd / $std->qTrib, 10, '.', '');
+          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vFrete)) {
+              $std->vFrete = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vFrete, 2, '.', '');
           }
-          if (!empty($nf->valordesconto)) {
-              $std->vDesc = number_format(round(($nf->valordesconto / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
+          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vSeg)) {
+              $std->vSeg = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vSeg, 2, '.', '');
           }
-          if (!empty($nf->valoroutras)) {
-              $std->vOutro = number_format(round(($nf->valoroutras / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
+          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vDesc)) {
+              $std->vDesc = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vDesc, 2, '.', '');
+          }
+          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vOutro)) {
+              $std->vOutro = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vOutro, 2, '.', '');
           }
           $std->indTot = 1;
           $nfe->tagprod($std);
@@ -353,9 +373,10 @@ class NFePHPRepositoryMake
                       $std = new \stdClass();
                       $std->item = $nItem; //item da NFe
                       $std->vBCUFDest = number_format($nfpb->icmsbase, 2, '.', '');
-                      // $std->vBCFCPUFDest = ;
-                      // $std->pFCPUFDest = 0;
-                      // $std->pICMSUFDest = 0;
+                      $std->vBCFCPUFDest = 0;
+                      $std->pFCPUFDest = 0;
+                      $std->pICMSUFDest = 0;
+
                       $std->pICMSInter = number_format(($nfpb->ProdutoBarra->Produto->importado)?4:12, 2, '.', '');
                       switch ($anoICMSInterPart) {
                         case '2016':
@@ -371,9 +392,9 @@ class NFePHPRepositoryMake
                           $std->pICMSInterPart = number_format(100, 2, '.', '');
                           break;
                       }
-                      // $std->vFCPUFDest = 0;
-                      // $std->vICMSUFDest = 0;
-                      // $std->vICMSUFRemet = 0;
+                      $std->vFCPUFDest = 0;
+                      $std->vICMSUFDest = 0;
+                      $std->vICMSUFRemet = 0;
                       $elem = $nfe->tagICMSUFDest($std);
                   }
 
@@ -533,9 +554,41 @@ class NFePHPRepositoryMake
 
         $totalPrazo = 0;
 
-        // Duplicatas - Somente quando NFE
+        $std = new \stdClass();
+        $std->vTroco = null;
+
+        // caso total das parcelas seja maior que o total da nota, calcula vTroco
+        // para casos de dizima como por exemplo NF #00830316
         if ($nf->modelo == NotaFiscal::MODELO_NFE) {
-            foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
+          $prazo = $nf->NotaFiscalDuplicatass()->where('vencimento', '>', Carbon::today())->sum('valor');
+          if ($prazo > $nf->valortotal) {
+              $std->vTroco = number_format($prazo - $nf->valortotal, 2, '.', '');
+          }
+        }
+        $elem = $nfe->tagpag($std);
+
+        // Informacoes de pagamento somente devem ser enviadas quando nao
+        // for ajuste ou devolucao para evitar a Rejeicao:
+        // 871 - Rejeicao: O campo Forma de Pagamento deve ser preenchido com a opcao Sem Pagamento
+        if (in_array($nf->NaturezaOperacao->finnfe, [NaturezaOperacao::FINNFE_AJUSTE, NaturezaOperacao::FINNFE_DEVOLUCAO_RETORNO])) {
+
+          $std = new \stdClass();
+          $std->tPag = '90';
+          $std->vPag = number_format($nf->valortotal, 2, '.', '');
+          $elem = $nfe->tagdetPag($std);
+
+        } else{
+
+            // Duplicatas - Somente quando NFE
+            if ($nf->modelo == NotaFiscal::MODELO_NFE) {
+              foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
+
+                // Se duplicata tiver vencimento <= hoje ocorre Rejeicao
+                // 898 - Rejeicao: Data de vencimento da parcela nao informada ou menor que Data de Autorizacao
+                if ($nfd->vencimento->isPast()) {
+                    continue;
+                }
+
                 // Duplicatas
                 $std = new \stdClass();
                 $std->nDup = Strings::replaceSpecialsChars($nfd->fatura);
@@ -543,48 +596,44 @@ class NFePHPRepositoryMake
                 $std->vDup = number_format($nfd->valor, 2, '.', '');
                 $totalPrazo += $nfd->valor;
                 $nfe->tagdup($std);
+              }
+            }
+
+            // Pagamento a Vista
+            if ($nf->valortotal > $totalPrazo) {
+              // TODO: Trazer informação do tipo de pagamento do negocio
+              $std = new \stdClass();
+              // 01=Dinheiro
+              // 02=Cheque
+              // 03=Cartão de Crédito
+              // 04=Cartão de Débito
+              // 05=Crédito Loja
+              // 10=Vale Alimentação
+              // 11=Vale Refeição
+              // 12=Vale Presente
+              // 13=Vale Combustível
+              // 15=Boleto Bancário
+              // 90=Sem Pagamento;
+              // 99=Outros.
+              $std->tPag = '01';
+              $std->vPag = number_format($nf->valortotal - $totalPrazo, 2, '.', '');
+              // $std->CNPJ = '12345678901234';
+              // $std->tBand = '01';
+              // $std->cAut = '3333333';
+              // $std->tpIntegra = 1; //incluso na NT 2015/002
+              $std->indPag = ($totalPrazo > 0)?1:0; //0= Pagamento à Vista 1= Pagamento à Prazo
+              $elem = $nfe->tagdetPag($std);
+            }
+
+            // Pagamento a Prazo
+            if ($totalPrazo > 0) {
+              $std = new \stdClass();
+              $std->tPag = '05';
+              $std->vPag = number_format($totalPrazo, 2, '.', '');
+              $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
+              $elem = $nfe->tagdetPag($std);
             }
         }
-
-        $std = new \stdClass();
-        $std->vTroco = null; //incluso no layout 4.00, obrigatório informar para NFCe (65)
-        $elem = $nfe->tagpag($std);
-
-        // Pagamento a Vista
-        if ($nf->valortotal > $totalPrazo) {
-            // TODO: Trazer informação do tipo de pagamento do negocio
-            $std = new \stdClass();
-            // 01=Dinheiro
-            // 02=Cheque
-            // 03=Cartão de Crédito
-            // 04=Cartão de Débito
-            // 05=Crédito Loja
-            // 10=Vale Alimentação
-            // 11=Vale Refeição
-            // 12=Vale Presente
-            // 13=Vale Combustível
-            // 15=Boleto Bancário
-            // 90=Sem Pagamento;
-            // 99=Outros.
-            $std->tPag = '01';
-            $std->vPag = number_format($nf->valortotal - $totalPrazo, 2, '.', '');
-            // $std->CNPJ = '12345678901234';
-            // $std->tBand = '01';
-            // $std->cAut = '3333333';
-            // $std->tpIntegra = 1; //incluso na NT 2015/002
-            $std->indPag = ($totalPrazo > 0)?1:0; //0= Pagamento à Vista 1= Pagamento à Prazo
-            $elem = $nfe->tagdetPag($std);
-        }
-
-        // Pagamento a Prazo
-        if ($totalPrazo > 0) {
-          $std = new \stdClass();
-          $std->tPag = '05';
-          $std->vPag = number_format($totalPrazo, 2, '.', '');
-          $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
-          $elem = $nfe->tagdetPag($std);
-        }
-
 
         $infCpl = '';
 
@@ -632,7 +681,62 @@ class NFePHPRepositoryMake
         }
 
         // Retorna o XML
+        $path = NFePHPRepositoryPath::pathNFeAssinada($nf, true);
+        file_put_contents($path, $xml);
         return $xml;
+
+    }
+
+    public static function rateiaDescontoSeguroFreteOutras($nf) {
+
+        // Inicializa totalizadores
+        $vFreteTotal = 0;
+        $vSegTotal = 0;
+        $vDescTotal = 0;
+        $vOutroTotal = 0;
+
+        // busca itens da nota
+        $nfpbs = $nf->NotaFiscalProdutoBarraS()->orderBy('valortotal')->orderBy('codnotafiscalprodutobarra')->get();
+
+        // Calcula quantidade de registros
+        $quantidade = $nfpbs->count();
+        $i = 0;
+
+        // Percorre itens da nota
+        foreach ($nfpbs as $nfpb)
+        {
+            $i++;
+
+            // se estiver no ultimo registro, faz o valor pela diferenca
+            if ($i == $quantidade) {
+                $vFrete = $nf->valorfrete - $vFreteTotal;
+                $vSeg = $nf->valorseguro - $vSegTotal;
+                $vDesc = $nf->valordesconto - $vDescTotal;
+                $vOutro = $nf->valoroutras - $vOutroTotal;
+
+            // Senao faz pela media ponderada
+            } else {
+                $vFrete = round(($nf->valorfrete / $nf->valorprodutos) * $nfpb->valortotal, 2);
+                $vSeg = round(($nf->valorseguro / $nf->valorprodutos) * $nfpb->valortotal, 2);
+                $vDesc = round(($nf->valordesconto / $nf->valorprodutos) * $nfpb->valortotal, 2);
+                $vOutro = round(($nf->valoroutras / $nf->valorprodutos) * $nfpb->valortotal, 2);
+            }
+
+            // Busca
+            $vFreteTotal += $vFrete;
+            $vSegTotal += $vSeg;
+            $vDescTotal += $vDesc;
+            $vOutroTotal += $vOutro;
+
+            $ret[$nfpb->codnotafiscalprodutobarra] = (object) [
+              'vFrete' => $vFrete,
+              'vSeg' => $vSeg,
+              'vDesc' => $vDesc,
+              'vOutro' => $vOutro,
+            ];
+        }
+
+        return $ret;
 
     }
 

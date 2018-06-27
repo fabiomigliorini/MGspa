@@ -55,18 +55,26 @@ class MgIbpt extends Ibpt
                 0
               );
 
-            // Salva na Tabela de cache
-            $reg->descricao = $consulta->Descricao;
-            $reg->nacional = $consulta->Nacional;
-            $reg->estadual = $consulta->Estadual;
-            $reg->importado = $consulta->Importado;
-            $reg->municipal = $consulta->Municipal;
-            $reg->tipo = $consulta->Tipo;
-            $reg->vigenciainicio = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaInicio);
-            $reg->vigenciafim = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaFim);
-            $reg->chave = $consulta->Chave;
-            $reg->versao = $consulta->Versao;
-            $reg->fonte = $consulta->Fonte;
+            if (isset($consulta->httpcode) && $consulta->httpcode == 404) {
+                // throw new \Exception("Produto não localizado na consulta IBPT (Produto #{$nfpb->ProdutoBarra->codproduto} - '{$nfpb->ProdutoBarra->Produto->produto}' - NCM {$nfpb->ProdutoBarra->Produto->Ncm->ncm}).", 1);
+                $reg->descricao = 'Nao Localizado';
+                $reg->vigenciainicio = Carbon::today();
+                $reg->vigenciafim = Carbon::today();
+            } else {
+                // Salva na Tabela de cache
+                $reg->descricao = $consulta->Descricao;
+                $reg->nacional = $consulta->Nacional;
+                $reg->estadual = $consulta->Estadual;
+                $reg->importado = $consulta->Importado;
+                $reg->municipal = $consulta->Municipal;
+                $reg->tipo = $consulta->Tipo;
+                $reg->vigenciainicio = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaInicio);
+                $reg->vigenciafim = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaFim);
+                $reg->chave = $consulta->Chave;
+                $reg->versao = $consulta->Versao;
+                $reg->fonte = $consulta->Fonte;
+            }
+
             $reg->save();
         }
 
