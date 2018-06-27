@@ -103,4 +103,10 @@ class NFePHPController extends MgController
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
 
+    public function pendentes(Request $request)
+    {
+        $res = NFePHPRepository::pendentes();
+        return response()->json($res, 200);
+    }
+
 }

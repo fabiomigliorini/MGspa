@@ -109,6 +109,8 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
+        // NFePHP
+        Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
 
 
     });

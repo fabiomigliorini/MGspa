@@ -263,16 +263,16 @@ class NFePHPRepositoryMake
           $std->qTrib = number_format($nfpb->quantidade, 3, '.', '');
           $std->vUnTrib = number_format($nfpb->valorunitario, 10, '.', '');
           if (!empty($nf->valorfrete)) {
-              $std->vFrete = round(($nf->valorfrete / $nf->valorprodutos) * $nfpb->valortotal, 2);
+              $std->vFrete = number_format(round(($nf->valorfrete / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
           }
           if (!empty($nf->valorseguro)) {
-              $std->vSeg = round(($nf->valorseguro / $nf->valorprodutos) * $nfpb->valortotal, 2);
+              $std->vSeg = number_format(round(($nf->valorseguro / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
           }
           if (!empty($nf->valordesconto)) {
-              $std->vDesc = round(($nf->valordesconto / $nf->valorprodutos) * $nfpb->valortotal, 2);
+              $std->vDesc = number_format(round(($nf->valordesconto / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
           }
           if (!empty($nf->valoroutras)) {
-              $std->vOutro = round(($nf->valoroutras / $nf->valorprodutos) * $nfpb->valortotal, 2);
+              $std->vOutro = number_format(round(($nf->valoroutras / $nf->valorprodutos) * $nfpb->valortotal, 2), 2, '.', '');
           }
           $std->indTot = 1;
           $nfe->tagprod($std);

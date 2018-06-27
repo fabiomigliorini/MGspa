@@ -3,6 +3,7 @@
 namespace Mg\NFePHP;
 
 use Carbon\Carbon;
+use DB;
 
 use Mg\MgRepository;
 use Mg\NotaFiscal\NotaFiscal;
@@ -816,6 +817,38 @@ class NFePHPRepository extends MgRepository
             throw new \Exception("Não existe arquivo XML para esta Nota Fiscal!", 1);
         }
         return file_get_contents($path);
+    }
+
+    public static function pendentes ()
+    {
+        $sql = '
+            select
+            	nf.codnotafiscal,
+            	nf.modelo,
+            	nf.serie,
+            	nf.numero,
+            	f.filial,
+            	p.fantasia,
+            	no.naturezaoperacao,
+            	nf.emissao,
+            	nf.valortotal,
+            	nf.nfechave,
+            	nf.nfeautorizacao,
+            	nf.nfecancelamento,
+            	nf.nfeinutilizacao
+            from tblnotafiscal nf
+            inner join tblfilial f on (f.codfilial = nf.codfilial)
+            inner join tblpessoa p on (p.codpessoa = nf.codpessoa)
+            inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = nf.codnaturezaoperacao)
+            where nf.emitida = true
+            and nf.nfeautorizacao is null
+            and nf.nfecancelamento is null
+            and nf.nfeinutilizacao is null
+            and nf.numero != 0
+            order by emissao asc, codnotafiscal asc
+            limit 100
+        ';
+        return DB::select($sql);
     }
 
 }
