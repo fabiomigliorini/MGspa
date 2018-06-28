@@ -390,11 +390,13 @@ class NFePHPRepository extends MgRepository
         }
 
         // Instancia Tools para a configuracao e certificado
-        if ($nf->modelo == 65) {
-            $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial, '3.10');
-        } else {
-            $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
-        }
+        // if ($nf->modelo == 65) {
+        //     $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial, '3.10');
+        // } else {
+        //     $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
+        // }
+        $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
+
         $tools->model($nf->modelo);
 
         // solicita a sefaz cancelamento
@@ -651,7 +653,8 @@ class NFePHPRepository extends MgRepository
         }
 
         // Instancia Tools para a configuracao e certificado
-        $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial, '3.10');
+        // $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial, '3.10');
+        $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
         $tools->model($nf->modelo);
 
         // consulta chave da NFe na sefaz
