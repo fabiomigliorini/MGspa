@@ -132,7 +132,6 @@
   </UF>
   <UF>
     <sigla>MT</sigla>
-
     <homologacao>
        <NfeAutorizacao method="nfeAutorizacaoLote" operation="NFeAutorizacao4" version="4.00">https://homologacao.sefaz.mt.gov.br/nfcews/services/NfeAutorizacao4</NfeAutorizacao>
        <NfeRetAutorizacao method="nfeRetAutorizacaoLote" operation="NFeRetAutorizacao4" version="4.00">https://homologacao.sefaz.mt.gov.br/nfcews/services/NfeRetAutorizacao4</NfeRetAutorizacao>
@@ -142,7 +141,6 @@
        <RecepcaoEvento  method="nfeRecepcaoEvento" operation="NFeRecepcaoEvento4" version="1.00">https://homologacao.sefaz.mt.gov.br/nfcews/services/RecepcaoEvento4</RecepcaoEvento>
        <NfeConsultaQR method="QR-CODE" operation="NfeConsultaQR" version="100">http://homologacao.sefaz.mt.gov.br/nfce/consultanfce</NfeConsultaQR>
     </homologacao>
-
     <producao>
        <NfeAutorizacao method="nfeAutorizacaoLote" operation="NFeAutorizacao4" version="4.00">https://nfce.sefaz.mt.gov.br/nfcews/v2/services/NfeAutorizacao4</NfeAutorizacao>
        <NfeRetAutorizacao method="nfeRetAutorizacaoLote" operation="NFeRetAutorizacao4" version="4.00">https://nfce.sefaz.mt.gov.br/nfcews/v2/services/NfeRetAutorizacao4</NfeRetAutorizacao>
