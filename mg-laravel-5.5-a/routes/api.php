@@ -44,6 +44,9 @@ Route::group(['prefix' => 'v1'], function () {
 
   Route::get('nfe-php/{id}/xml', '\Mg\NFePHP\NFePHPController@xml');
 
+  Route::get('nfe-php/{id}/resolver', '\Mg\NFePHP\NFePHPController@resolver');
+  Route::get('nfe-php/resolver-pendentes', '\Mg\NFePHP\NFePHPController@resolverPendentes');
+
   Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
   Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
 
@@ -111,7 +114,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // NFePHP
         Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
-
 
     });
 

@@ -2,38 +2,72 @@
 
 namespace Mg\NFePHP;
 
-use NFePHP\NFe\Tools;
-use NFePHP\Common\Certificate;
-
-use Mg\Filial\Filial;
+use Mg\NotaFiscal\NotaFiscal;
 
 class NFePHPRepositoryRobo
 {
 
-    public static function modoAutomatico() {
-
+    public static function resolverPendentes()
+    {
         // carrega notas pendentes
         $pendentes = NFePHPRepository::pendentes();
 
-        // percorre as pendentes e envia sincrono
-        foreach ($pendentes->codnotafiscal as $codnotafiscal) {
-
-            $res = NFePHPRepository::enviarSincrono($codnotafiscal);
-
-            // se o resultado for duplicidade 204 ou ja cancelada 218 faz uma consulta
-            if ($res->cStat == 204 || $res->cStat == 218 ) {
-                $consulta = NFePHPRepository::consulta($codnotafiscal);
-                
-                // se a consulta rtornar false cria o xml
-                if ($consulta->sucesso == false){
-                    $criar = NFePHPRepository::criar($codnotafiscal);
-                    $res = NFePHPRepository::enviarSincrono($codnotafiscal);
-                }else {
-                    dd('aqui');
-                }
-            }
-
+        // percorre as pendentes e chama metodo para resolver cada uma das notas
+        foreach ($pendentes as $pendente) {
+            $nf = NotaFiscal::findOrFail($pendente->codnotafiscal)
+            static::resolver($nf);
         }
+
+    }
+
+    public static function resolvido (NotaFiscal $nf)
+    {
+        if (!empty($nf->nfeautorizacao)) {
+            return true;
+        }
+        if (!empty($nf->nfeinutilizacao)) {
+          return true;
+        }
+        if (!empty($nf->nfecancelamento)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function resolver(NotaFiscal $nf)
+    {
+        if (static::resolvido($nf)) {
+            return true;
+        }
+
+        $resEnvioSincrono = NFePHPRepository::enviarSincrono($nf);
+        $nf = $nf->fresh();
+
+        if (static::resolvido($nf)) {
+            NFePHPRepositoryMail::mail($nf);
+            return true;
+        }
+
+        // 204 - duplicidade
+        // 218 - ja cancelada
+        if (in_array($resEnvioSincrono->cStat, [204, 218])) {
+            $resConsulta = NFePHPRepository::consultar($nf);
+            $nf = $nf->fresh();
+            if (static::resolvido($nf)) {
+                if (empty($nf->nfecancelamento)) {
+                    NFePHPRepositoryMail::mail($nf);
+                }
+                return true;
+            }
+        } else {
+            NFePHPRepository::criar($nf);
+            $resEnvioSincrono = NFePHPRepository::enviarSincrono($nf);
+            if (static::resolvido($nf)) {
+                NFePHPRepositoryMail::mail($nf);
+                return true;
+            }
+        }
+        return false;
 
     }
 
