@@ -2,21 +2,61 @@
 
 namespace Mg\NFePHP;
 
+use DB;
+
 use Mg\NotaFiscal\NotaFiscal;
 
 class NFePHPRepositoryRobo
 {
 
-    public static function resolverPendentes()
+    public static function pendentes ($per_page = 50, $current_page = 1, $desc = false)
+    {
+        $desc = ($desc)?'DESC':'ASC';
+        $offset = ($per_page * ($current_page - 1));
+        $sql = "
+            select
+            	nf.codnotafiscal,
+            	nf.modelo,
+            	nf.serie,
+            	nf.numero,
+            	f.filial,
+            	p.fantasia,
+            	no.naturezaoperacao,
+            	nf.emissao,
+            	nf.valortotal,
+            	nf.nfechave,
+            	nf.nfeautorizacao,
+            	nf.nfecancelamento,
+            	nf.nfeinutilizacao
+            from tblnotafiscal nf
+            inner join tblfilial f on (f.codfilial = nf.codfilial)
+            inner join tblpessoa p on (p.codpessoa = nf.codpessoa)
+            inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = nf.codnaturezaoperacao)
+            where nf.emitida = true
+            and nf.nfeautorizacao is null
+            and nf.nfecancelamento is null
+            and nf.nfeinutilizacao is null
+            and nf.numero != 0
+            order by emissao $desc, codnotafiscal $desc
+            limit $per_page offset $offset
+        ";
+        return DB::select($sql);
+    }
+
+    public static function resolverPendentes($per_page = 10, $current_page = 1, $desc = false)
     {
         // carrega notas pendentes
-        $pendentes = NFePHPRepository::pendentes();
+        $pendentes = NFePHPRepositoryRobo::pendentes($per_page, $current_page, $desc);
+        $ret = [];
 
         // percorre as pendentes e chama metodo para resolver cada uma das notas
         foreach ($pendentes as $pendente) {
-            $nf = NotaFiscal::findOrFail($pendente->codnotafiscal)
-            static::resolver($nf);
+            $nf = NotaFiscal::findOrFail($pendente->codnotafiscal);
+            $ret[$nf->codnotafiscal] = (object) $pendente;
+            $ret[$nf->codnotafiscal]->resultado = static::resolver($nf);
         }
+
+        return $ret;
 
     }
 
@@ -37,52 +77,123 @@ class NFePHPRepositoryRobo
     public static function resolver(NotaFiscal $nf)
     {
         if (static::resolvido($nf)) {
-            return true;
+            return (object) ['resolvido' => true];
+        }
+        // Tenta Enviar
+        try {
+          $resEnvioSincrono = NFePHPRepository::enviarSincrono($nf);
+          $nf = $nf->fresh();
+
+        // Se excecao no envio, provavelmente por problema na geracao do XML
+        } catch (\Exception $e) {
+
+          // tenta criar o XML e enviar novamente
+          try {
+              $resCriar = NFePHPRepository::criar($nf);
+              $nf = $nf->fresh();
+              $resEnvioSincrono = NFePHPRepository::enviarSincrono($nf);
+              $nf = $nf->fresh();
+
+          // se ainda assim der excecao, retorna erro
+          } catch (\Exception $e2) {
+              return (object) [
+                'resolvido' => false,
+                'erro' => $e2->getMessage()
+              ];
+          }
+
         }
 
-        $resEnvioSincrono = NFePHPRepository::enviarSincrono($nf);
-        $nf = $nf->fresh();
-
+        // se resolveu com procedimento acima, manda o email e retorna sucesso
         if (static::resolvido($nf)) {
-            NFePHPRepositoryMail::mail($nf);
-            return true;
+            try {
+                $resMail = NFePHPRepositoryMail::mail($nf);
+            } catch (\Exception $e) {
+                $resMail = $e->getMessage();
+            }
+            return (object) [
+              'resolvido' => true,
+              'resEnvioSincrono' => $resEnvioSincrono,
+              'resMail' => $resMail??null
+            ];
         }
 
-        // 204 - duplicidade
-        // 218 - ja cancelada
-        if (in_array($resEnvioSincrono->cStat, [204, 218])) {
+        // tenta consultar
+        try {
             $resConsulta = NFePHPRepository::consultar($nf);
             $nf = $nf->fresh();
-            if (static::resolvido($nf)) {
-                if (empty($nf->nfecancelamento)) {
-                    NFePHPRepositoryMail::mail($nf);
-                }
-                return true;
-            }
-        } else {
-            NFePHPRepository::criar($nf);
-            $resEnvioSincrono = NFePHPRepository::enviarSincrono($nf);
-            if (static::resolvido($nf)) {
-                NFePHPRepositoryMail::mail($nf);
-                return true;
-            }
+
+        // se excecao ao consultar, retorna mensagem
+        } catch (\Exception $e) {
+            return (object) [
+              'resolvido' => false,
+              'resEnvioSincrono' => $resEnvioSincrono,
+              'resConsulta' => $e->getMessage()
+            ];
         }
-        return false;
+
+        // se resolveu com procedimento acima, manda o email e retorna sucesso
+        if (static::resolvido($nf)) {
+            if (empty($nf->nfecancelamento)) {
+                try {
+                  $resMail =  NFePHPRepositoryMail::mail($nf);
+                } catch (\Exception $e) {
+                  $resMail = $e->getMessage();
+                }
+            }
+            return (object) [
+              'resolvido' => true,
+              'resEnvioSincrono' => $resEnvioSincrono,
+              'resConsulta' => $resConsulta,
+              'resMail' => $resMail??null
+            ];
+        }
+
+        // se ainda nao tinha criado o arquivo XML novo, tenta enviar criando
+        if (empty($$resCriar)) {
+
+            // tenta recriar o arquivo xml e enviar novamente
+            try {
+                $resCriar = NFePHPRepository::criar($nf);
+                $nf = $nf->fresh();
+                $resEnvioSincrono = NFePHPRepository::enviarSincrono($nf);
+                $nf = $nf->fresh();
+
+            // caso execao, retorna mensagem
+            } catch (\Exception $e) {
+                return (object) [
+                  'resolvido' => false,
+                  'resEnvioSincrono' => $resEnvioSincrono??$e->getMessage(),
+                  'resConsulta' => $resConsulta??null,
+                  'resCriar' => $resCriar??$e->getMessage(),
+                ];
+            }
+
+            // se resolveu, retorna sucesso
+            if (static::resolvido($nf)) {
+                try {
+                    $resMail = NFePHPRepositoryMail::mail($nf);
+                } catch (\Exception $e) {
+                    $resMail = $e->getMessage();
+                }
+                return (object) [
+                  'resolvido' => true,
+                  'resEnvioSincrono' => $resEnvioSincrono,
+                  'resCriar' => $resCriar,
+                  'resMail' => $resMail??null
+                ];
+            }
+
+        }
+
+        // se nao conseguiu resolver, retorna resultados das tentativas
+        return (object) [
+          'resolvido' => false,
+          'resEnvioSincrono' => $resEnvioSincrono??null,
+          'resConsulta' => $resConsulta??null,
+          'resCriar' => $resCriar??null
+        ];
 
     }
-
-
-    public static function consulta() {
-
-    }
-
-    public static function criaXml() {
-
-    }
-
-    public static function percorrer() {
-
-    }
-
 
 }

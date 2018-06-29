@@ -53,7 +53,11 @@ body {
           <p>
             Atenciosamente,
           </p>
-            <strong>{{ $nf->UsuarioCriacao->Pessoa->pessoa }}</strong>
+            @if (!empty($nf->codusuariocriacao))
+              @if (!empty($nf->UsuarioCriacao->codpessoa))
+                <strong>{{ $nf->UsuarioCriacao->Pessoa->pessoa }}</strong>
+              @endif
+            @endif
             <br />
             <small>
               <a href="tel:{{ $nf->Filial->Pessoa->telefone1 }}">{{ $nf->Filial->Pessoa->telefone1 }}</a>

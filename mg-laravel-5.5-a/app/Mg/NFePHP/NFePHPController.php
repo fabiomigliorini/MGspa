@@ -117,8 +117,10 @@ class NFePHPController extends MgController
 
     public function pendentes(Request $request)
     {
-        $ordemReversa = boolval($request->ordemReversa);
-        $res = NFePHPRepository::pendentes($ordemReversa);
+        $per_page = $request->per_page??50;
+        $current_page = $request->current_page??1;
+        $desc = boolval($request->desc);
+        $res = NFePHPRepositoryRobo::pendentes($per_page, $current_page, $desc);
         return response()->json($res, 200);
     }
 
@@ -131,7 +133,10 @@ class NFePHPController extends MgController
 
     public function resolverPendentes(Request $request)
     {
-        $res = NFePHPRepositoryRobo::resolverPendentes();
+        $per_page = $request->per_page??10;
+        $current_page = $request->current_page??1;
+        $desc = boolval($request->desc);
+        $res = NFePHPRepositoryRobo::resolverPendentes($per_page, $current_page, $desc);
         return response()->json($res, 200);
     }
 

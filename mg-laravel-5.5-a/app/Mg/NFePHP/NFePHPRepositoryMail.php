@@ -13,6 +13,14 @@ class NFePHPRepositoryMail
     public static function mail(NotaFiscal $nf, $destinatario = null)
     {
 
+        if ($nf->Filial->nfeambiente == 2) {
+            return [
+              'sucesso' => true,
+              'mensagem' => 'Ignorado envio - BASE HOMOLOGACAO',
+              'destinatario' => $destinatario,
+            ];
+        }
+
         if (empty($destinatario)) {
             $destinatario = $nf->Pessoa->emailnfe??$nf->Pessoa->email??$nf->Pessoa->emailcobranca;
         }

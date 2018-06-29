@@ -42,7 +42,7 @@ class NFeAutorizadaMail extends Mailable
 
         $pathDanfe = NFePHPRepositoryPath::pathDanfe($this->nf);
         if (!file_exists($pathDanfe)) {
-            NFePHPRepository::danfe($this->nf->codnotafiscal);
+            NFePHPRepository::danfe($this->nf);
             if (!file_exists($pathDanfe)) {
                 throw new \Exception("Erro ao gerar arquivo PDF ($pathDanfe)!");
             }

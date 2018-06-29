@@ -3,7 +3,6 @@
 namespace Mg\NFePHP;
 
 use Carbon\Carbon;
-use DB;
 
 use Mg\MgRepository;
 use Mg\NotaFiscal\NotaFiscal;
@@ -19,6 +18,9 @@ use NFePHP\DA\NFe\Danfe;
 
 class NFePHPRepository extends MgRepository
 {
+
+    const EXCEPTION_CHAVE_NFE_AUSENTE = 999;
+    const EXCEPTION_XML_ASSINADO_INEXISTENTE = 998;
 
     public static function sefazStatus (Filial $filial)
     {
@@ -70,13 +72,13 @@ class NFePHPRepository extends MgRepository
 
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
-            throw new \Exception ('Chave da NFe ausente!');
+            throw new \Exception ('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
         }
 
         // Carrega Arquivo XML Assinado
         $path = NFePHPRepositoryPath::pathNFeAssinada($nf);
         if (!file_exists($path)) {
-            throw new \Exception("Arquivo da NFe não localizado ($path)!");
+            throw new \Exception("Arquivo da NFe não localizado ($path)!", static::EXCEPTION_XML_ASSINADO_INEXISTENTE);
         }
         $xmlAssinado = file_get_contents($path);
 
@@ -135,13 +137,13 @@ class NFePHPRepository extends MgRepository
 
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
-            throw new \Exception ('Chave da NFe ausente!');
+            throw new \Exception ('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
         }
 
         // Carrega Arquivo XML Assinado
         $path = NFePHPRepositoryPath::pathNFeAssinada($nf);
         if (!file_exists($path)) {
-            throw new \Exception("Arquivo da NFe não localizado ($path)!");
+            throw new \Exception("Arquivo da NFe não localizado ($path)!", static::EXCEPTION_XML_ASSINADO_INEXISTENTE);
         }
         $xmlAssinado = file_get_contents($path);
 
@@ -616,7 +618,7 @@ class NFePHPRepository extends MgRepository
     {
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
-            throw new \Exception ('Chave da NFe ausente!');
+            throw new \Exception ('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
         }
 
         // Instancia Tools para a configuracao e certificado
@@ -783,39 +785,6 @@ class NFePHPRepository extends MgRepository
             throw new \Exception("Não existe arquivo XML para esta Nota Fiscal!", 1);
         }
         return file_get_contents($path);
-    }
-
-    public static function pendentes ($ordemReversa = false)
-    {
-        $ordemReversa = ($ordemReversa)?'DESC':'ASC';
-        $sql = "
-            select
-            	nf.codnotafiscal,
-            	nf.modelo,
-            	nf.serie,
-            	nf.numero,
-            	f.filial,
-            	p.fantasia,
-            	no.naturezaoperacao,
-            	nf.emissao,
-            	nf.valortotal,
-            	nf.nfechave,
-            	nf.nfeautorizacao,
-            	nf.nfecancelamento,
-            	nf.nfeinutilizacao
-            from tblnotafiscal nf
-            inner join tblfilial f on (f.codfilial = nf.codfilial)
-            inner join tblpessoa p on (p.codpessoa = nf.codpessoa)
-            inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = nf.codnaturezaoperacao)
-            where nf.emitida = true
-            and nf.nfeautorizacao is null
-            and nf.nfecancelamento is null
-            and nf.nfeinutilizacao is null
-            and nf.numero != 0
-            order by emissao $ordemReversa, codnotafiscal $ordemReversa
-            limit 100
-        ";
-        return DB::select($sql);
     }
 
 }
