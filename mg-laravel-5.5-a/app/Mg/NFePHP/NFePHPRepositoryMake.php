@@ -47,11 +47,8 @@ class NFePHPRepositoryMake
         return true;
     }
 
-    public static function criar ($codnotafiscal)
+    public static function montarXml (NotaFiscal $nf)
     {
-
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
         // Valida se o preenchimento da NFe está correto
         NFePHPRepositoryValidacao::validar($nf);
 

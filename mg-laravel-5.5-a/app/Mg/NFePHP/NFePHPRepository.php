@@ -20,9 +20,8 @@ use NFePHP\DA\NFe\Danfe;
 class NFePHPRepository extends MgRepository
 {
 
-    public static function sefazStatus ($codfilial)
+    public static function sefazStatus (Filial $filial)
     {
-        $filial = Filial::findOrFail($codfilial);
         $tools = NFePHPRepositoryConfig::instanciaTools($filial);
         $resp = $tools->sefazStatus();
         $st = new Standardize();
@@ -30,9 +29,8 @@ class NFePHPRepository extends MgRepository
         return $r;
     }
 
-    public static function cscConsulta ($codfilial)
+    public static function cscConsulta (Filial $filial)
     {
-        $filial = Filial::findOrFail($codfilial);
         $tools = NFePHPRepositoryConfig::instanciaTools($filial);
         $tools->model('65');
         $resp = $tools->sefazCsc(1);
@@ -41,18 +39,14 @@ class NFePHPRepository extends MgRepository
         return $r;
     }
 
-    public static function criar($codnotafiscal)
+    public static function criar(NotaFiscal $nf)
     {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
         $tools->model($nf->modelo);
 
         // Cria Arquivo XML
-        $xml = NFePHPRepositoryMake::criar($codnotafiscal);
+        $xml = NFePHPRepositoryMake::montarXml($nf);
 
         // Assina XML
         $xmlAssinado = $tools->signNFe($xml);
@@ -67,11 +61,8 @@ class NFePHPRepository extends MgRepository
 
     }
 
-    public static function enviar($codnotafiscal)
+    public static function enviar(NotaFiscal $nf)
     {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFIscal::findOrFail($codnotafiscal);
 
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
@@ -109,7 +100,7 @@ class NFePHPRepository extends MgRepository
             if ($respStd->cStat == 103) {
 
                 // Salva Numero do Protocolo na tabela de Nota Fiscal
-                NotaFiscal::where('codnotafiscal', $codnotafiscal)->update([
+                NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
                     'nfereciboenvio' => $respStd->infRec->nRec,
                     'nfedataenvio' => Carbon::parse($respStd->dhRecbto)
                 ]);
@@ -124,7 +115,7 @@ class NFePHPRepository extends MgRepository
         }
 
         // Retorna Resultado do processo
-        return [
+        return (object) [
             'sucesso' => $sucesso,
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
@@ -136,12 +127,8 @@ class NFePHPRepository extends MgRepository
     }
 
 
-    public static function enviarSincrono($codnotafiscal)
+    public static function enviarSincrono(NotaFiscal $nf)
     {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFIscal::findOrFail($codnotafiscal);
-
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
         $tools->model($nf->modelo);
@@ -189,7 +176,7 @@ class NFePHPRepository extends MgRepository
         }
 
         // Retorna Resultado do processo
-        return [
+        return (object) [
           'sucesso' => $sucesso,
           'cStat' => $cStat,
           'xMotivo' => $xMotivo,
@@ -312,12 +299,8 @@ class NFePHPRepository extends MgRepository
         return true;
     }
 
-    public static function consultarRecibo($codnotafiscal)
+    public static function consultarRecibo(NotaFiscal $nf)
     {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFIscal::findOrFail($codnotafiscal);
-
         // valida se existe Chave da NFe
         if (empty($nf->nfereciboenvio)) {
             throw new \Exception ('Esta NFe não possui número de Recibo para ser consultado!');
@@ -351,7 +334,7 @@ class NFePHPRepository extends MgRepository
         }
 
         // Retorna Resultado do processo
-        return [
+        return (object) [
             'sucesso' => $sucesso,
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
@@ -362,17 +345,13 @@ class NFePHPRepository extends MgRepository
 
     }
 
-    public static function cancelar ($codnotafiscal, $justificativa)
+    public static function cancelar (NotaFiscal $nf, $justificativa)
     {
-
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
         if (strlen($justificativa) < 15) {
           throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
         }
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
 
         // Valida Autorização
         if (empty($nf->nfeautorizacao)) {
@@ -423,7 +402,7 @@ class NFePHPRepository extends MgRepository
         }
 
         // Retorna Resultado do processo
-        return [
+        return (object) [
             'sucesso' => $sucesso,
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
@@ -434,7 +413,7 @@ class NFePHPRepository extends MgRepository
 
     }
 
-    public static function inutilizar($codnotafiscal, $justificativa)
+    public static function inutilizar(NotaFiscal $nf, $justificativa)
     {
 
         // Valida Justificativa
@@ -442,9 +421,6 @@ class NFePHPRepository extends MgRepository
         if (strlen($justificativa) < 15) {
           throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
         }
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
 
         // Valida Autorização
         if (!empty($nf->nfeautorizacao)) {
@@ -493,7 +469,7 @@ class NFePHPRepository extends MgRepository
         }
 
         // Retorna Resultado do processo
-        return [
+        return (object) [
             'sucesso' => $sucesso,
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
@@ -504,17 +480,13 @@ class NFePHPRepository extends MgRepository
 
     }
 
-    public static function cartaCorrecao($codnotafiscal, $texto)
+    public static function cartaCorrecao(NotaFiscal $nf, $texto)
     {
-
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($texto));
         if (strlen($justificativa) < 15) {
           throw new \Exception('O Texto deve ter pelo menos 15 caracteres!');
         }
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
 
         // Valida Inutilizacao
         if ($nf->modelo == NotaFiscal::MODELO_NFCE) {
@@ -592,7 +564,7 @@ class NFePHPRepository extends MgRepository
         }
 
         // Retorna Resultado do processo
-        return [
+        return (object) [
             'sucesso' => $sucesso,
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
@@ -600,7 +572,6 @@ class NFePHPRepository extends MgRepository
             'protocolodata' => $protocolodata,
             'resp' => $resp
         ];
-
     }
 
     public static function processarProtocolo (NotaFiscal $nf, $protNFe, $resp)
@@ -641,12 +612,8 @@ class NFePHPRepository extends MgRepository
 
     }
 
-    public static function consultar($codnotafiscal)
+    public static function consultar(NotaFiscal $nf)
     {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
             throw new \Exception ('Chave da NFe ausente!');
@@ -730,7 +697,7 @@ class NFePHPRepository extends MgRepository
 
         }
 
-        return [
+        return (object) [
             'sucesso' => $sucesso,
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
@@ -747,12 +714,8 @@ class NFePHPRepository extends MgRepository
 
     }
 
-    public static function danfe($codnotafiscal)
+    public static function danfe(NotaFiscal $nf)
     {
-
-        // Busca Nota Fsical no Banco de Dados
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
         // busca XML autorizado
         $path = NFePHPRepositoryPath::pathNFeAutorizada($nf);
         if (!file_exists($path)) {
