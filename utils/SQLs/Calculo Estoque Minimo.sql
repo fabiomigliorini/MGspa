@@ -74,7 +74,7 @@ and tmpestoquelocalprodutovariacaovenda.codestoquelocal = elpv.codestoquelocal
 and tmpestoquelocalprodutovariacaovenda.codprodutovariacao = elpv.codprodutovariacao;
 
 insert into tblestoquelocalprodutovariacao (codestoquelocal, codprodutovariacao, criacao, alteracao)
-select distinct tmp.codestoquelocal, tmp.codprodutovariacao, '2018-06-29 23:59:59'::timestamp, '2018-06-29 23:59:59'::timestamp
+select distinct tmp.codestoquelocal, tmp.codprodutovariacao, '2018-07-02 23:59:59'::timestamp, '2018-07-02 23:59:59'::timestamp
 from tmpestoquelocalprodutovariacaovenda tmp
 where tmp.codestoquelocalprodutovariacao is null;
 
@@ -91,19 +91,19 @@ and tmpestoquelocalprodutovariacaovenda.codprodutovariacao = elpv.codprodutovari
 update tblestoquelocalprodutovariacaovenda
 set quantidade = tmp.quantidade
 , valor = tmp.valor
-, alteracao = '2018-06-29 23:59:59'::timestamp
+, alteracao = '2018-07-02 23:59:59'::timestamp
 from tmpestoquelocalprodutovariacaovenda tmp
 where tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao
 and tblestoquelocalprodutovariacaovenda.mes = tmp.mes;
 
 insert into tblestoquelocalprodutovariacaovenda (codestoquelocalprodutovariacao, mes, quantidade, valor, criacao, alteracao)
-select tmp.codestoquelocalprodutovariacao, tmp.mes, tmp.quantidade, tmp.valor, '2018-06-29 23:59:59'::timestamp, '2018-06-29 23:59:59'::timestamp
+select tmp.codestoquelocalprodutovariacao, tmp.mes, tmp.quantidade, tmp.valor, '2018-07-02 23:59:59'::timestamp, '2018-07-02 23:59:59'::timestamp
 from tmpestoquelocalprodutovariacaovenda tmp
 left join tblestoquelocalprodutovariacaovenda venda on (venda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao and venda.mes = tmp.mes)
 where venda.codestoquelocalprodutovariacaovenda is null;
 
 delete from tblestoquelocalprodutovariacaovenda
-where coalesce(alteracao, '2000-01-01') < '2018-06-29 23:59:59'::timestamp;
+where coalesce(alteracao, '2000-01-01') < '2018-07-02 23:59:59'::timestamp;
 
 drop table tmpestoquelocalprodutovariacaovenda;
 
@@ -131,7 +131,7 @@ BEGIN
                 select v.codestoquelocalprodutovariacaovenda
                 from tblestoquelocalprodutovariacaovenda v
                 where v.codestoquelocalprodutovariacao = tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao
-                and v.mes >= '2017-06-01'
+                and v.mes >= '2017-07-01'
                 order by v.mes desc
                 limit 12
             )
@@ -144,7 +144,7 @@ BEGIN
         set ignorar = true
         where tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao = v_registro.codestoquelocalprodutovariacao
         and ignorar = false
-        and mes < coalesce(v_alterado.mes, '2017-06-01'::date);
+        and mes < coalesce(v_alterado.mes, '2017-07-01'::date);
 
         --RAISE NOTICE '% % %', v_registro.codestoquelocalprodutovariacao, v_alterado.mes, v_alterado.quantidade;
 
@@ -278,14 +278,14 @@ from (
 		v.codestoquelocalprodutovariacao,
 		avg(case when not v.ignorar then vendadiaquantidade else null end) as vendadiaquantidadeprevisao,
 		--min(v.alteracao) as vendaultimocalculo,
-		sum(case when v.mes >= '2017-06-01' then v.quantidade else null end) as vendaanoquantidade,
-		sum(case when v.mes >= '2017-06-01' then v.valor else null end) as vendaanovalor,
-		sum(case when v.mes >= '2017-12-01' then v.quantidade else null end) as vendasemestrequantidade,
-		sum(case when v.mes >= '2017-12-01' then v.valor else null end) as vendasemestrevalor,
-		sum(case when v.mes >= '2018-04-01' then v.quantidade else null end) as vendabimestrequantidade,
-		sum(case when v.mes >= '2018-04-01' then v.valor else null end) as vendabimestrevalor
+		sum(case when v.mes >= '2017-07-01' then v.quantidade else null end) as vendaanoquantidade,
+		sum(case when v.mes >= '2017-07-01' then v.valor else null end) as vendaanovalor,
+		sum(case when v.mes >= '2018-01-01' then v.quantidade else null end) as vendasemestrequantidade,
+		sum(case when v.mes >= '2018-01-01' then v.valor else null end) as vendasemestrevalor,
+		sum(case when v.mes >= '2018-05-01' then v.quantidade else null end) as vendabimestrequantidade,
+		sum(case when v.mes >= '2018-05-01' then v.valor else null end) as vendabimestrevalor
 	from tblestoquelocalprodutovariacaovenda v 
-	where (coalesce(v.ignorar, false) = false or v.mes >= '2017-06-01')
+	where (coalesce(v.ignorar, false) = false or v.mes >= '2017-07-01')
 	group by v.codestoquelocalprodutovariacao
 	) iq
 where tblestoquelocalprodutovariacao.codestoquelocalprodutovariacao = iq.codestoquelocalprodutovariacao
