@@ -2,14 +2,22 @@
 -- delete from tbljobs where queue ilike '%parado_cm%';
 
 select queue, count(*) from tbljobs group by queue order by queue
+
 --
 
 /*
 
-update tbljobs set queue = 'low' where queue = 'parado_cm_2'
-
 -- apaga jobs duplicadas
 delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup group by dup.payload)
+
+update tbljobs set queue = 'parado_cm_2' where payload ilike '%EstoqueCalculaCustoMedio%' and queue != 'parado_cm_2'
+
+select * from tbljobs limit 500
+
+update tbljobs set queue = 'low' where queue = 'medium' and payload ilike '%EstoqueGeraMovimentoNotaFiscal%'
+
+update tbljobs set queue = 'low' where queue = 'parado_cm_2'
+
 
 
 select * from tbljobs where queue = 'high' limit 100 
@@ -19,7 +27,6 @@ select * from tbljobs
 delete from tbljobs where id = 10241019
 
 
-update tbljobs set queue = 'parado_cm_2' where payload ilike '%EstoqueCalculaCustoMedio%'
 
 update tbljobs set queue = 'parado_nfpb' where payload ilike '%EstoqueGeraMovimentoNotaFiscalProdutoBarra%'
 
