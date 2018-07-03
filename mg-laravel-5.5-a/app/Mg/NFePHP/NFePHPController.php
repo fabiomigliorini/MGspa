@@ -87,6 +87,13 @@ class NFePHPController extends MgController
         return response()->file($res);
     }
 
+    public function imprimir(Request $request, $id)
+    {
+        $nf = NotaFiscal::findOrFail($id);
+        $res = NFePHPRepository::imprimir($nf, $request->impressora);
+        return response()->json($res, 200);
+    }
+
     public function mail(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);

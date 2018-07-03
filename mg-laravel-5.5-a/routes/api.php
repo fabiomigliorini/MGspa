@@ -35,6 +35,7 @@ Route::group(['prefix' => 'v1'], function () {
   Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
   Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
   Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
+  Route::get('nfe-php/{id}/imprimir', '\Mg\NFePHP\NFePHPController@imprimir');
   Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
   Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
   Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');

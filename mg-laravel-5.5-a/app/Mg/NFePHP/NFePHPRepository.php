@@ -775,6 +775,37 @@ class NFePHPRepository extends MgRepository
 
     }
 
+    public static function imprimir(NotaFiscal $nf, $impressora = null)
+    {
+        // Valida se o PDF existe
+        $pathDanfe = NFePHPRepositoryPath::pathDanfe($nf, true);
+        if (!file_exists($pathDanfe)) {
+            static::danfe($nf);
+        }
+        if (!file_exists($pathDanfe)) {
+            throw new \Exception("Impossível localizar arquivo PDF da DANFe!", 1);
+        }
+
+        // Valida se informado nome da Impressora
+        if (empty($impressora) && !empty($nf->codusuariocriacao)) {
+            $impressora = $nf->UsuarioCriacao->impressoratermica;
+        }
+        if (empty($impressora)) {
+          throw new \Exception("Impressora não informada!", 1);
+        }
+
+        // Executa comando de impressao
+        $cmd = "lpr \"$pathDanfe\" -P \"$impressora\" -o fit-to-page";
+        exec($cmd);
+
+        // retorna
+        return [
+          "sucesso" => true,
+          "mensagem" => "Danfe enviada para '$impressora'!",
+          "commando" => $cmd
+        ];
+    }
+
     public static function xml (NotaFiscal $nf)
     {
         $path = NFePHPRepositoryPath::pathNFeAutorizada($nf);
