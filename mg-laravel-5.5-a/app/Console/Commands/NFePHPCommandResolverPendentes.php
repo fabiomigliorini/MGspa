@@ -14,7 +14,7 @@ class NFePHPCommandResolverPendentes extends Command
      *
      * @var string
      */
-    protected $signature = 'NFePHP:resolver-pendentes {--quantidade=}';
+    protected $signature = 'nfe-php:resolver-pendentes {--quantidade=}';
 
     /**
      * The console command description.
@@ -40,7 +40,7 @@ class NFePHPCommandResolverPendentes extends Command
      */
     public function handle()
     {
-        $quantidade = $this->option('quantidade')??200;
+        $quantidade = $this->option('quantidade')??1000;
         $pendentes = NFePHPRepositoryRobo::pendentes($quantidade);
         foreach ($pendentes as $pendente) {
             $this->info("Agendando Job para #$pendente->codnotafiscal");
