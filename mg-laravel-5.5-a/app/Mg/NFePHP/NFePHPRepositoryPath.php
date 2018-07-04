@@ -32,7 +32,7 @@ class NFePHPRepositoryPath
         if ($criar) {
             @mkdir($path, 0775, true);
         }
-        $path .= "/{$nf->nfechave}-NFe.xml";
+        $path .= "/{$nf->nfechave}-protNFe.xml";
         return $path;
     }
 

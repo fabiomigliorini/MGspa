@@ -768,9 +768,6 @@ class NFePHPRepository extends MgRepository
         $pathDanfe = NFePHPRepositoryPath::pathDanfe($nf, true);
         file_put_contents($pathDanfe, $pdf);
 
-        // Para Imprimir
-        // lpr 51180604576775000241650010002481709002481704-NFe.pdf -P BEMATECH-MP-2500TH -o fit-to-page
-
         return $pathDanfe;
 
     }
@@ -795,7 +792,8 @@ class NFePHPRepository extends MgRepository
         }
 
         // Executa comando de impressao
-        $cmd = "lpr \"$pathDanfe\" -P \"$impressora\" -o fit-to-page";
+        #$cmd = "lpr \"$pathDanfe\" -P \"$impressora\" -o fit-to-page";
+        $cmd = "lpr \"$pathDanfe\" -P \"$impressora\"";
         exec($cmd);
 
         // retorna
