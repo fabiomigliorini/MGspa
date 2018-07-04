@@ -26,7 +26,11 @@ class NFePHPRepositoryMail
         }
 
         if (empty($destinatario)) {
-            throw new \Exception('Nenhum endereço de e-mail informado!');
+            return [
+              'sucesso' => true,
+              'mensagem' => 'Nenhum endereço de E-mail informado!',
+              'destinatario' => $destinatario,
+            ];
         }
 
         if (empty($nf->nfeautorizacao)) {
