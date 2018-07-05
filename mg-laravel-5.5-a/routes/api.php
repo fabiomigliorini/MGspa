@@ -83,8 +83,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::apiResource('filial', '\Mg\Filial\FilialController');
 
         // Pessoas
-        Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
         Route::apiResource('pessoa', '\Mg\Pessoa\PessoaController');
+        Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
+        Route::post('pessoa/novapessoa', '\Mg\Pessoa\PessoaController@novaPessoa');
 
         // Permissões
         Route::apiResource('permissao', '\Mg\Permissao\PermissaoController');
