@@ -44,4 +44,10 @@ class PessoaController extends MgController
         return response()->json($qry, 206);
     }
 
+    public function novaPessoa (Request $request)
+    {
+        return PessoaRepository::novaPessoa();
+        //return response()->json($qry, 206);
+    }
+
 }
