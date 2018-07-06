@@ -251,6 +251,9 @@ class NFePHPRepositoryMake
               $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
           }
           $std->cEAN = Barras::validar($nfpb->ProdutoBarra->barras, true)?$nfpb->ProdutoBarra->barras:null;
+          if (substr($std->cEAN, 0, 3) == '234') {
+              $std->cEAN = null;
+          }
           $std->xProd = Strings::replaceSpecialsChars($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
           $std->NCM = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->Ncm->ncm);
           $std->CFOP = $nfpb->codcfop;
@@ -264,7 +267,7 @@ class NFePHPRepositoryMake
           $std->qTrib = $std->qCom;
 
           // SE FOR EMBALAGEM, PEGA PRIMEIRO CODIGO DE BARRAS DE UNIDADE POSSIVEL
-          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)) {
+          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem) && !empty($std->cEAN)) {
              foreach ($nfpb->ProdutoBarra->ProdutoVariacao->ProdutoBarraS()->whereNull('codprodutoembalagem')->get() as $pbUnidade) {
                 if (Barras::validar($pbUnidade->barras, true)) {
                     $std->cEANTrib = $pbUnidade->barras;
