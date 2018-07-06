@@ -26,6 +26,11 @@ Route::group(['prefix' => 'v1/auth'], function () {
     Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
 });
 
+// NFeTerceiro
+Route::get('nfe-terceiro/lista', '\Mg\NFeTerceiro\NFeTerceiroController@listaNfeTerceiro');
+Route::get('nfe-terceiro/pesquisar-sefaz', '\Mg\NFeTerceiro\NFeTerceiroController@pesquisarSefaz');
+Route::get('nfe-terceiro/detalhes-nfeterceiro', '\Mg\NFeTerceiro\NFeTerceiroController@detalhesNfeTerceiro');
+
 Route::group(['prefix' => 'v1'], function () {
 
   // NFePHP
