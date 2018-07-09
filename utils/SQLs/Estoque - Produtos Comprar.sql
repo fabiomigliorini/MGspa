@@ -1,16 +1,16 @@
 ﻿/*
 
 select marca, codmarca from tblmarca where controlada order by marca
-update tblmarca set controlada = true where marca ilike 'artlux'
+update tblmarca set controlada = true where marca ilike 'escurra'
 
 select * from tblmarca
 
-update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'gitex'
+update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'compactor'
 */
 
 select 
     * 
-    , case when (x.repor > 0) then ceil(x.repor::float / x.lote::float) * x.lote else 0 end as comprar
+    --, case when (x.repor > 0) then ceil(x.repor::float / x.lote::float) * x.lote else 0 end as comprar
 from 
 (
     select 
@@ -64,7 +64,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'report')
+    where (m.marca ilike 'compactor')
     and pv.descontinuado is null
     and p.inativo is null
     --and p.produto ilike '%tris%'

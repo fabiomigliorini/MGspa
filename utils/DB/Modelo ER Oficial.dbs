@@ -375,17 +375,17 @@
 			<fk name="tblcheque_codbanco_fkey" to_schema="mgsis" to_table="tblbanco" >
 				<fk_column name="codbanco" pk="codbanco" />
 			</fk>
-			<fk name="tblcheque_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="tblcheque_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblcheque" to_schema="mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
 			<fk name="fk_tblcheque_0" to_schema="mgsis" to_table="tbltitulo" >
 				<fk_column name="codtitulo" pk="codtitulo" />
+			</fk>
+			<fk name="tblcheque_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="tblcheque_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblchequedevolucao" >
@@ -506,14 +506,14 @@
 			<index name="idx_tblchequerepasse_1" unique="NORMAL" >
 				<column name="codportador" />
 			</index>
+			<fk name="fk_tblchequerepasse_1" to_schema="mgsis" to_table="tblportador" >
+				<fk_column name="codportador" pk="codportador" />
+			</fk>
 			<fk name="fk_tblchequerepasse" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 			<fk name="fk_tblchequerepasse_0" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblchequerepasse_1" to_schema="mgsis" to_table="tblportador" >
-				<fk_column name="codportador" pk="codportador" />
 			</fk>
 		</table>
 		<table name="tblchequerepassecheque" >
@@ -790,6 +790,38 @@
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
+		<table name="tbldistribuicaodfe" >
+			<column name="coddistribuicaodfe" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="nsu" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="schema" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tbldistribuicaodfe_coddistribuicaodfe" unique="PRIMARY_KEY" >
+				<column name="coddistribuicaodfe" />
+			</index>
+			<index name="tbldistribuicaodfe_codfilial_nsu_idx" unique="UNIQUE" >
+				<column name="codfilial" />
+				<column name="nsu" />
+			</index>
+			<index name="idx_tbldistribuicaodfe_codfilial" unique="NORMAL" >
+				<column name="codfilial" />
+			</index>
+			<index name="idx_tbldistribuicaodfe_codusuarioalteracao" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbldistribuicaodfe_codusuariocriacao" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="tbldistribuicaodfe_schema_idx" unique="NORMAL" >
+				<column name="schema" />
+			</index>
+			<fk name="fk_tbldistribuicaodfe_tblfilial" to_schema="mgsis" to_table="tblfilial" >
+				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+		</table>
 		<table name="tblecf" >
 			<column name="codecf" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="ecf" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
@@ -1005,17 +1037,17 @@
 				<column name="codestoquelocal" />
 				<column name="codprodutovariacao" />
 			</index>
-			<fk name="fk_tblestoquelocalproduto" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblestoquelocalproduto_0" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblestoquelocalproduto_1" to_schema="mgsis" to_table="tblestoquelocal" >
 				<fk_column name="codestoquelocal" pk="codestoquelocal" />
 			</fk>
 			<fk name="fk_tblestoquelocalproduto_3" to_schema="mgsis" to_table="tblprodutovariacao" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
+			</fk>
+			<fk name="fk_tblestoquelocalproduto" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblestoquelocalproduto_0" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblestoquelocalprodutovariacao_backup" >
@@ -1210,17 +1242,17 @@
 			<fk name="fk_tblestoquemovimento" to_schema="mgsis" to_table="tblestoquemes" >
 				<fk_column name="codestoquemes" pk="codestoquemes" />
 			</fk>
-			<fk name="fk_tblestoquemovimento_0" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblestoquemovimento_1" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblestoquemovimento_2" to_schema="mgsis" to_table="tblestoquemovimento" >
 				<fk_column name="codestoquemovimentoorigem" pk="codestoquemovimento" />
 			</fk>
 			<fk name="fk_tblestoquemovimento_3" to_schema="mgsis" to_table="tblestoquesaldoconferencia" >
 				<fk_column name="codestoquesaldoconferencia" pk="codestoquesaldoconferencia" />
+			</fk>
+			<fk name="fk_tblestoquemovimento_0" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblestoquemovimento_1" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblestoquemovimento_2012" >
@@ -1345,14 +1377,14 @@
 			<index name="idx_tblestoquemovimentotipo" unique="NORMAL" >
 				<column name="codestoquemovimentotipoorigem" />
 			</index>
+			<fk name="fk_tblestoquemovimentotipo" to_schema="mgsis" to_table="tblestoquemovimentotipo" >
+				<fk_column name="codestoquemovimentotipoorigem" pk="codestoquemovimentotipo" />
+			</fk>
 			<fk name="tblestoquemovimentotipo_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblestoquemovimentotipo_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblestoquemovimentotipo" to_schema="mgsis" to_table="tblestoquemovimentotipo" >
-				<fk_column name="codestoquemovimentotipoorigem" pk="codestoquemovimentotipo" />
 			</fk>
 		</table>
 		<table name="tblestoquesaldo" >
@@ -1384,14 +1416,14 @@
 				<column name="codestoquelocalprodutovariacao" />
 				<column name="fiscal" />
 			</index>
+			<fk name="fk_tblestoquesaldo" to_schema="mgsis" to_table="tblestoquelocalprodutovariacao" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codestoquelocalprodutovariacao" pk="codestoquelocalprodutovariacao" />
+			</fk>
 			<fk name="tblestoquesaldo_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblestoquesaldo_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblestoquesaldo" to_schema="mgsis" to_table="tblestoquelocalprodutovariacao" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codestoquelocalprodutovariacao" pk="codestoquelocalprodutovariacao" />
 			</fk>
 		</table>
 		<table name="tblestoquesaldo_2012_2013" >
@@ -1701,17 +1733,17 @@
 			<index name="idx_tblgrupoproduto_0" unique="NORMAL" >
 				<column name="codfamiliaproduto" />
 			</index>
-			<fk name="tblgrupoproduto_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="tblgrupoproduto_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblgrupoproduto" to_schema="mgsis" to_table="tblimagem" >
 				<fk_column name="codimagem" pk="codimagem" />
 			</fk>
 			<fk name="fk_tblgrupoproduto_0" to_schema="mgsis" to_table="tblfamiliaproduto" update_action="cascade" >
 				<fk_column name="codfamiliaproduto" pk="codfamiliaproduto" />
+			</fk>
+			<fk name="tblgrupoproduto_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="tblgrupoproduto_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblgrupousuario" >
@@ -1817,6 +1849,9 @@
 			<fk name="fk_tblgrupousuariousuario" to_schema="mgsis" to_table="tblgrupousuario" delete_action="cascade" >
 				<fk_column name="codgrupousuario" pk="codgrupousuario" />
 			</fk>
+			<fk name="fk_tblgrupousuariousuario_3" to_schema="mgsis" to_table="tblfilial" >
+				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
 			<fk name="fk_tblgrupousuariousuario_0" to_schema="mgsis" to_table="tblusuario" delete_action="cascade" >
 				<fk_column name="codusuario" pk="codusuario" />
 			</fk>
@@ -1825,9 +1860,6 @@
 			</fk>
 			<fk name="fk_tblgrupousuariousuario_2" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblgrupousuariousuario_3" to_schema="mgsis" to_table="tblfilial" >
-				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
 		</table>
 		<table name="tblibptax" >
@@ -1873,14 +1905,14 @@
 			<index name="idx_tblibptax" unique="NORMAL" >
 				<column name="codncm" />
 			</index>
+			<fk name="fk_tblibptax" to_schema="mgsis" to_table="tblncm" >
+				<fk_column name="codncm" pk="codncm" />
+			</fk>
 			<fk name="tblibptax_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblibptax_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblibptax" to_schema="mgsis" to_table="tblncm" >
-				<fk_column name="codncm" pk="codncm" />
 			</fk>
 		</table>
 		<table name="tblibptcache" >
@@ -2013,7 +2045,7 @@
 			<column name="id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="queue" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="payload" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
-			<column name="attempts" type="smallint" length="5" decimal="0" jt="5" mandatory="y" />
+			<column name="attempts" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
 			<column name="reserved_at" type="integer" length="10" decimal="0" jt="4" />
 			<column name="available_at" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
 			<column name="created_at" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
@@ -2114,14 +2146,14 @@
 			<index name="idx_tblmarca" unique="NORMAL" >
 				<column name="codimagem" />
 			</index>
+			<fk name="fk_tblmarca" to_schema="mgsis" to_table="tblimagem" >
+				<fk_column name="codimagem" pk="codimagem" />
+			</fk>
 			<fk name="tblmarca_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblmarca_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblmarca" to_schema="mgsis" to_table="tblimagem" >
-				<fk_column name="codimagem" pk="codimagem" />
 			</fk>
 		</table>
 		<table name="tblmenu" >
@@ -2384,12 +2416,6 @@
 			<index name="idx_tblnaturezaoperacao_2" unique="NORMAL" >
 				<column name="codestoquemovimentotipo" />
 			</index>
-			<fk name="tblnaturezaoperacao_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="tblnaturezaoperacao_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblnaturezaoperacao" to_schema="mgsis" to_table="tblnaturezaoperacao" >
 				<fk_column name="codnaturezaoperacaodevolucao" pk="codnaturezaoperacao" />
 			</fk>
@@ -2401,6 +2427,12 @@
 			</fk>
 			<fk name="fk_tblnaturezaoperacao_2" to_schema="mgsis" to_table="tblestoquemovimentotipo" >
 				<fk_column name="codestoquemovimentotipo" pk="codestoquemovimentotipo" />
+			</fk>
+			<fk name="tblnaturezaoperacao_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="tblnaturezaoperacao_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblncm" >
@@ -2422,14 +2454,14 @@
 			<index name="idx_tblncm" unique="NORMAL" >
 				<column name="codncmpai" />
 			</index>
+			<fk name="fk_tblncm_tblncm" to_schema="mgsis" to_table="tblncm" >
+				<fk_column name="codncmpai" pk="codncm" />
+			</fk>
 			<fk name="tblncm_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblncm_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblncm_tblncm" to_schema="mgsis" to_table="tblncm" >
-				<fk_column name="codncmpai" pk="codncm" />
 			</fk>
 		</table>
 		<table name="tblncmtributacao" generator_rows="100" >
@@ -2546,6 +2578,9 @@
 			<fk name="tblnegocio_codpessoavendedor_fkey" to_schema="mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoavendedor" pk="codpessoa" />
 			</fk>
+			<fk name="fk_tblnegocio" to_schema="mgsis" to_table="tblestoquelocal" >
+				<fk_column name="codestoquelocal" pk="codestoquelocal" />
+			</fk>
 			<fk name="tblnegocio_codusuario_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuario" pk="codusuario" />
 			</fk>
@@ -2557,9 +2592,6 @@
 			</fk>
 			<fk name="tblnegocio_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblnegocio" to_schema="mgsis" to_table="tblestoquelocal" >
-				<fk_column name="codestoquelocal" pk="codestoquelocal" />
 			</fk>
 		</table>
 		<table name="tblnegocio_backup" >
@@ -2648,14 +2680,14 @@
 			<fk name="tblnegocioprodutobarra_codprodutobarra_fkey" to_schema="mgsis" to_table="tblprodutobarra" >
 				<fk_column name="codprodutobarra" pk="codprodutobarra" />
 			</fk>
+			<fk name="fk_tblnegocioprodutobarra" to_schema="mgsis" to_table="tblnegocioprodutobarra" >
+				<fk_column name="codnegocioprodutobarradevolucao" pk="codnegocioprodutobarra" />
+			</fk>
 			<fk name="tblnegocioprodutobarra_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblnegocioprodutobarra_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblnegocioprodutobarra" to_schema="mgsis" to_table="tblnegocioprodutobarra" >
-				<fk_column name="codnegocioprodutobarradevolucao" pk="codnegocioprodutobarra" />
 			</fk>
 		</table>
 		<table name="tblnegociostatus" >
@@ -2735,14 +2767,14 @@
 			<fk name="tblnfeterceiro_codpessoa_fkey" to_schema="mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
+			<fk name="fk_tblnfeterceiro" to_schema="mgsis" to_table="tblnegocio" >
+				<fk_column name="codnegocio" pk="codnegocio" />
+			</fk>
 			<fk name="tblnfeterceiro_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblnfeterceiro_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblnfeterceiro" to_schema="mgsis" to_table="tblnegocio" >
-				<fk_column name="codnegocio" pk="codnegocio" />
 			</fk>
 		</table>
 		<table name="tblnfeterceiroduplicata" >
@@ -2912,14 +2944,14 @@
 			<fk name="tblnotafiscal_codpessoa_fkey" to_schema="mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
+			<fk name="fk_tblnotafiscal" to_schema="mgsis" to_table="tblestoquelocal" >
+				<fk_column name="codestoquelocal" pk="codestoquelocal" />
+			</fk>
 			<fk name="tblnotafiscal_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblnotafiscal_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblnotafiscal" to_schema="mgsis" to_table="tblestoquelocal" >
-				<fk_column name="codestoquelocal" pk="codestoquelocal" />
 			</fk>
 		</table>
 		<table name="tblnotafiscalcartacorrecao" >
@@ -3047,14 +3079,14 @@
 			<fk name="tblnotafiscalprodutobarra_codprodutobarra_fkey" to_schema="mgsis" to_table="tblprodutobarra" >
 				<fk_column name="codprodutobarra" pk="codprodutobarra" />
 			</fk>
+			<fk name="fk_tblnotafiscalprodutobarra" to_schema="mgsis" to_table="tblnotafiscalprodutobarra" >
+				<fk_column name="codnotafiscalprodutobarraorigem" pk="codnotafiscalprodutobarra" />
+			</fk>
 			<fk name="tblnotafiscalprodutobarra_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblnotafiscalprodutobarra_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblnotafiscalprodutobarra" to_schema="mgsis" to_table="tblnotafiscalprodutobarra" >
-				<fk_column name="codnotafiscalprodutobarraorigem" pk="codnotafiscalprodutobarra" />
 			</fk>
 		</table>
 		<table name="tblnotafiscalreferenciada" >
@@ -3076,6 +3108,257 @@
 			</fk>
 			<fk name="tblnotafiscalreferenciada_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblnotafiscalterceiro" >
+			<column name="codnotafiscalterceiro" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="coddistribuicaodfe" type="bigint" jt="-5" />
+			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codnegocio" type="bigint" jt="-5" />
+			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codpessoa" type="bigint" jt="-5" mandatory="y" />
+			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
+			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
+			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
+			<column name="emissao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="ignorada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" />
+			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
+			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" />
+			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="modelo" type="bigint" jt="-5" mandatory="y" />
+			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
+			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
+			<column name="entrada" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsbase" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsvalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsstbase" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsstvalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="ipivalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valorprodutos" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valorfrete" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblnotafiscalterceiro_codnotafiscalterceiro" unique="PRIMARY_KEY" >
+				<column name="codnotafiscalterceiro" />
+			</index>
+			<index name="idx_tblnotafiscalterceiro_coddistribuicaodfe" unique="NORMAL" >
+				<column name="coddistribuicaodfe" />
+			</index>
+			<index name="idx_tblnotafiscalterceiro_codpessoa" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
+			<index name="idx_tblnotafiscalterceiro_codfilial" unique="NORMAL" >
+				<column name="codfilial" />
+			</index>
+			<index name="idx_tblnotafiscalterceiro_codnaturezaoperacao" unique="NORMAL" >
+				<column name="codnaturezaoperacao" />
+			</index>
+			<index name="idx_tblnotafiscalterceiro_codnotafiscal" unique="NORMAL" >
+				<column name="codnotafiscal" />
+			</index>
+			<index name="idx_tblnotafiscalterceiro_codnegocio" unique="NORMAL" >
+				<column name="codnegocio" />
+			</index>
+			<fk name="fk_tblnotafiscalterceiro_tbldistribuicaodfe" to_schema="mgsis" to_table="tbldistribuicaodfe" >
+				<fk_column name="coddistribuicaodfe" pk="coddistribuicaodfe" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceiro_tblpessoa" to_schema="mgsis" to_table="tblpessoa" >
+				<fk_column name="codpessoa" pk="codpessoa" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceiro_tblfilial" to_schema="mgsis" to_table="tblfilial" >
+				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceiro_tblnaturezaoperacao" to_schema="mgsis" to_table="tblnaturezaoperacao" >
+				<fk_column name="codnaturezaoperacao" pk="codnaturezaoperacao" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceiro_tblnotafiscal" to_schema="mgsis" to_table="tblnotafiscal" >
+				<fk_column name="codnotafiscal" pk="codnotafiscal" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceiro_tblnegocio" to_schema="mgsis" to_table="tblnegocio" >
+				<fk_column name="codnegocio" pk="codnegocio" />
+			</fk>
+		</table>
+		<table name="tblnotafiscalterceiroduplicata" >
+			<column name="codnotafiscalterceiroduplicata" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codnotafiscalterceiro" type="bigint" jt="-5" mandatory="y" />
+			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="ndup" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="dvenc" type="date" length="13" decimal="0" jt="91" />
+			<column name="vdup" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblnotafiscalterceiroduplicata_codnotafiscalterceiroduplicat" unique="PRIMARY_KEY" >
+				<column name="codnotafiscalterceiroduplicata" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroduplicata_codnotafiscalterceiro" unique="NORMAL" >
+				<column name="codnotafiscalterceiro" />
+			</index>
+			<fk name="fk_tblnotafiscalterceiroduplicata_tblnotafiscalterceiro" to_schema="mgsis" to_table="tblnotafiscalterceiro" >
+				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
+			</fk>
+		</table>
+		<table name="tblnotafiscalterceirogrupo" >
+			<column name="codnotafiscalterceirogrupo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codnotafiscalterceiro" type="bigint" jt="-5" mandatory="y" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblnotafiscalterceiroitem_codnotafiscalterceiroitem" unique="PRIMARY_KEY" >
+				<column name="codnotafiscalterceirogrupo" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroitem_codnotafiscalterceiro" unique="NORMAL" >
+				<column name="codnotafiscalterceiro" />
+			</index>
+			<fk name="fk_tblnotafiscalterceiroitem_tblnotafiscalterceiro" to_schema="mgsis" to_table="tblnotafiscalterceiro" >
+				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
+			</fk>
+		</table>
+		<table name="tblnotafiscalterceiroitem" >
+			<column name="codnotafiscalterceiroitem" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codnotafiscalterceirogrupo" type="bigint" jt="-5" mandatory="y" />
+			<column name="numero" type="smallint" jt="5" mandatory="y" />
+			<column name="referencia" type="varchar" length="30" jt="12" />
+			<column name="produto" type="varchar" length="200" jt="12" mandatory="y" />
+			<column name="ncm" type="varchar" length="10" jt="12" />
+			<column name="cfop" type="smallint" jt="5" mandatory="y" />
+			<column name="barrastributavel" type="varchar" length="50" jt="12" />
+			<column name="unidademedidatributavel" type="varchar" length="6" jt="12" />
+			<column name="quantidadetributavel" type="numeric" length="15" decimal="4" jt="2" />
+			<column name="valorunitariotributavel" type="numeric" length="21" decimal="10" jt="2" />
+			<column name="barras" type="varchar" length="50" jt="12" />
+			<column name="unidademedida" type="varchar" length="6" decimal="3" jt="12" mandatory="y" />
+			<column name="quantidade" type="numeric" length="15" decimal="4" jt="2" mandatory="y" />
+			<column name="valorunitario" type="numeric" length="21" decimal="10" jt="2" mandatory="y" />
+			<column name="valorproduto" type="numeric" length="15" decimal="2" jt="2" mandatory="y" />
+			<column name="valorfrete" type="numeric" length="15" decimal="2" jt="2" />
+			<column name="valorseguro" type="numeric" length="15" decimal="2" jt="2" />
+			<column name="valordesconto" type="numeric" length="15" decimal="2" jt="2" />
+			<column name="valoroutras" type="numeric" length="15" decimal="2" jt="2" />
+			<column name="valortotal" type="numeric" length="15" decimal="2" jt="2" />
+			<column name="compoetotal" type="bool" jt="-7" mandatory="y" >
+				<defo>true</defo>
+			</column>
+			<column name="csosn" type="smallint" jt="5" />
+			<column name="origem" type="smallint" jt="5" />
+			<column name="icmscst" type="smallint" jt="5" >
+				<comment><![CDATA[CST]]></comment>
+			</column>
+			<column name="icmsbasemodalidade" type="smallint" jt="5" >
+				<comment><![CDATA[modBC]]></comment>
+			</column>
+			<column name="icmsbase" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vBC]]></comment>
+			</column>
+			<column name="icmspercentual" type="numeric" length="7" decimal="4" jt="2" >
+				<comment><![CDATA[pICMS]]></comment>
+			</column>
+			<column name="icmsvalor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vICMS]]></comment>
+			</column>
+			<column name="icmsstbasemodalidade" type="smallint" jt="5" >
+				<comment><![CDATA[modBCST]]></comment>
+			</column>
+			<column name="icmsstbase" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vBCST]]></comment>
+			</column>
+			<column name="icmsstpercentual" type="numeric" length="7" decimal="4" jt="2" >
+				<comment><![CDATA[pICMSST]]></comment>
+			</column>
+			<column name="icmsstvalor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vICMSST]]></comment>
+			</column>
+			<column name="ipicst" type="smallint" length="2" jt="5" >
+				<comment><![CDATA[CST]]></comment>
+			</column>
+			<column name="ipibase" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vBC]]></comment>
+			</column>
+			<column name="ipipercentual" type="numeric" length="7" decimal="4" jt="2" mandatory="y" >
+				<comment><![CDATA[pIPI]]></comment>
+			</column>
+			<column name="ipivalor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vIPI]]></comment>
+			</column>
+			<column name="piscst" type="smallint" jt="5" >
+				<comment><![CDATA[CST]]></comment>
+			</column>
+			<column name="pisbase" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vBC]]></comment>
+			</column>
+			<column name="pispercentual" type="numeric" length="7" decimal="4" jt="2" >
+				<comment><![CDATA[pPIS]]></comment>
+			</column>
+			<column name="pisvalor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vPIS]]></comment>
+			</column>
+			<column name="cofinscst" type="smallint" jt="5" >
+				<comment><![CDATA[CST]]></comment>
+			</column>
+			<column name="cofinsbase" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vBC]]></comment>
+			</column>
+			<column name="cofinspercentual" type="numeric" length="7" decimal="4" jt="2" >
+				<comment><![CDATA[pCOFINS]]></comment>
+			</column>
+			<column name="cofinsvalor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vCOFINS]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblnotafiscalterceiroitemoriginal_codnotafiscalterceiroitemo" unique="PRIMARY_KEY" >
+				<column name="codnotafiscalterceiroitem" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroitemoriginal_codnotafiscalterceiroitem" unique="NORMAL" >
+				<column name="codnotafiscalterceirogrupo" />
+			</index>
+			<fk name="fk_tblnotafiscalterceiroitemoriginal_tblnotafiscalterceiroitem" to_schema="mgsis" to_table="tblnotafiscalterceirogrupo" >
+				<fk_column name="codnotafiscalterceirogrupo" pk="codnotafiscalterceirogrupo" />
+			</fk>
+		</table>
+		<table name="tblnotafiscalterceiroprodutobarra" >
+			<column name="codnotafiscalterceiroprodutobarra" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codnotafiscalterceirogrupo" type="bigint" jt="-5" mandatory="y" />
+			<column name="codprodutobarra" type="bigint" jt="-5" />
+			<column name="margem" type="numeric" length="6" decimal="2" jt="2" />
+			<column name="complemento" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
+			<column name="valorproduto" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
+				<comment><![CDATA[vProd - Proporcional Rateado Por ProdutoBarra]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblnotafiscalterceiroitemprodutobarra_codnotafiscalterceiroi" unique="PRIMARY_KEY" >
+				<column name="codnotafiscalterceiroprodutobarra" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroitemprodutobarra_codnotafiscalterceiro" unique="NORMAL" >
+				<column name="codnotafiscalterceirogrupo" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroitemprodutobarra_codprodutobarra" unique="NORMAL" >
+				<column name="codprodutobarra" />
+			</index>
+			<fk name="fk_tblnotafiscalterceiroitemprodutobarra_tblnotafiscalterceiroi" to_schema="mgsis" to_table="tblnotafiscalterceirogrupo" >
+				<fk_column name="codnotafiscalterceirogrupo" pk="codnotafiscalterceirogrupo" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceiroitemprodutobarra_tblprodutobarra" to_schema="mgsis" to_table="tblprodutobarra" >
+				<fk_column name="codprodutobarra" pk="codprodutobarra" />
 			</fk>
 		</table>
 		<table name="tbloperacao" >
@@ -3372,17 +3655,17 @@
 				<column name="codprancheta" />
 				<column name="codproduto" />
 			</index>
-			<fk name="fk_tblpranchetaproduto" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblpranchetaproduto_0" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblpranchetaproduto_1" to_schema="mgsis" to_table="tblprancheta" >
 				<fk_column name="codprancheta" pk="codprancheta" />
 			</fk>
 			<fk name="fk_tblpranchetaproduto_2" to_schema="mgsis" to_table="tblproduto" >
 				<fk_column name="codproduto" pk="codproduto" />
+			</fk>
+			<fk name="fk_tblpranchetaproduto" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblpranchetaproduto_0" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblprefixogs1" >
@@ -3508,12 +3791,6 @@
 			<fk name="tblproduto_codunidademedida_fkey" to_schema="mgsis" to_table="tblunidademedida" >
 				<fk_column name="codunidademedida" pk="codunidademedida" />
 			</fk>
-			<fk name="tblproduto_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="tblproduto_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblproduto_codncm" to_schema="mgsis" to_table="tblncm" >
 				<fk_column name="codncm" pk="codncm" />
 			</fk>
@@ -3522,6 +3799,12 @@
 			</fk>
 			<fk name="fk_tblproduto_produto_imagem" to_schema="mgsis" to_table="tblprodutoimagem" delete_action="setNull" >
 				<fk_column name="codprodutoimagem" pk="codprodutoimagem" />
+			</fk>
+			<fk name="tblproduto_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="tblproduto_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblprodutobarra" >
@@ -3561,14 +3844,14 @@
 			<fk name="tblprodutobarra_codprodutoembalagem_fkey" to_schema="mgsis" to_table="tblprodutoembalagem" >
 				<fk_column name="codprodutoembalagem" pk="codprodutoembalagem" />
 			</fk>
+			<fk name="fk_tblprodutobarra" to_schema="mgsis" to_table="tblprodutovariacao" >
+				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
+			</fk>
 			<fk name="tblprodutobarra_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblprodutobarra_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblprodutobarra" to_schema="mgsis" to_table="tblprodutovariacao" >
-				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
 			</fk>
 		</table>
 		<table name="tblprodutoembalagem" >
@@ -3609,14 +3892,14 @@
 			<fk name="tblprodutoembalagem_codunidademedida_fkey" to_schema="mgsis" to_table="tblunidademedida" >
 				<fk_column name="codunidademedida" pk="codunidademedida" />
 			</fk>
+			<fk name="fk_tblprodutoembalagem" to_schema="mgsis" to_table="tblprodutoimagem" delete_action="setNull" >
+				<fk_column name="codprodutoimagem" pk="codprodutoimagem" />
+			</fk>
 			<fk name="tblprodutoembalagem_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblprodutoembalagem_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblprodutoembalagem" to_schema="mgsis" to_table="tblprodutoimagem" delete_action="setNull" >
-				<fk_column name="codprodutoimagem" pk="codprodutoimagem" />
 			</fk>
 		</table>
 		<table name="tblprodutohistoricopreco" >
@@ -3738,17 +4021,17 @@
 			<fk name="fk_tblprodutovariacao" to_schema="mgsis" to_table="tblmarca" >
 				<fk_column name="codmarca" pk="codmarca" />
 			</fk>
-			<fk name="fk_tblprodutovariacao_0" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblprodutovariacao_1" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblprodutovariacao_2" to_schema="mgsis" to_table="tblproduto" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
 			<fk name="fk_tblprodutovariacao_3" to_schema="mgsis" to_table="tblprodutoimagem" delete_action="setNull" >
 				<fk_column name="codprodutoimagem" pk="codprodutoimagem" />
+			</fk>
+			<fk name="fk_tblprodutovariacao_0" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblprodutovariacao_1" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblregistrospc" >
@@ -3803,14 +4086,14 @@
 			<index name="idx_tblregulamentoicmsstmt_1" unique="NORMAL" >
 				<column name="codncm" />
 			</index>
+			<fk name="fk_tblregulamentoicmsstmt_codncm" to_schema="mgsis" to_table="tblncm" >
+				<fk_column name="codncm" pk="codncm" />
+			</fk>
 			<fk name="fk_tblregulamentoicmsstmt" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="fk_tblregulamentoicmsstmt_0" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblregulamentoicmsstmt_codncm" to_schema="mgsis" to_table="tblncm" >
-				<fk_column name="codncm" pk="codncm" />
 			</fk>
 		</table>
 		<table name="tblsecaoproduto" >
@@ -3885,14 +4168,14 @@
 			<fk name="tblsubgrupoproduto_codgrupoproduto_fkey" to_schema="mgsis" to_table="tblgrupoproduto" update_action="cascade" >
 				<fk_column name="codgrupoproduto" pk="codgrupoproduto" />
 			</fk>
+			<fk name="fk_tblsubgrupoproduto" to_schema="mgsis" to_table="tblimagem" >
+				<fk_column name="codimagem" pk="codimagem" />
+			</fk>
 			<fk name="tblsubgrupoproduto_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblsubgrupoproduto_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblsubgrupoproduto" to_schema="mgsis" to_table="tblimagem" >
-				<fk_column name="codimagem" pk="codimagem" />
 			</fk>
 		</table>
 		<table name="tbltipomovimentotitulo" >
@@ -4082,14 +4365,14 @@
 			<fk name="tbltitulo_codtituloagrupamento_fkey" to_schema="mgsis" to_table="tbltituloagrupamento" >
 				<fk_column name="codtituloagrupamento" pk="codtituloagrupamento" />
 			</fk>
+			<fk name="fk_tbltitulo" to_schema="mgsis" to_table="tblvalecompraformapagamento" >
+				<fk_column name="codvalecompraformapagamento" pk="codvalecompraformapagamento" />
+			</fk>
 			<fk name="tbltitulo_codusuarioalteracao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tbltitulo_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tbltitulo" to_schema="mgsis" to_table="tblvalecompraformapagamento" >
-				<fk_column name="codvalecompraformapagamento" pk="codvalecompraformapagamento" />
 			</fk>
 		</table>
 		<table name="tbltituloagrupamento" >
@@ -4241,7 +4524,7 @@
 			<column name="senha" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="codecf" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codoperacao" type="bigint" jt="-5" />
+			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="impressoratelanegocio" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" />
@@ -4253,10 +4536,13 @@
 			<column name="ultimoacesso" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="inativo" type="date" length="13" decimal="0" jt="91" />
 			<column name="impressoramatricial" type="varchar" length="50" decimal="0" jt="12" />
-			<column name="remember_token" type="varchar" length="100" jt="12" />
-			<column name="codimagem" type="bigint" jt="-5" />
+			<column name="remember_token" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="codimagem" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblusuario_pkey" unique="PRIMARY_KEY" >
 				<column name="codusuario" />
+			</index>
+			<index name="idx_tblusuario_usuario" unique="UNIQUE" >
+				<column name="usuario" />
 			</index>
 			<index name="tblusuario_codecf_idx" unique="NORMAL" >
 				<column name="codecf" />
@@ -4270,14 +4556,14 @@
 			<index name="tblusuario_codpessoa_idx" unique="NORMAL" >
 				<column name="codpessoa" />
 			</index>
-			<index name="idx_tblusuario_usuario" unique="UNIQUE" >
-				<column name="usuario" />
-			</index>
 			<fk name="tblusuario_codecf_fkey" to_schema="mgsis" to_table="tblecf" >
 				<fk_column name="codecf" pk="codecf" />
 			</fk>
 			<fk name="tblusuario_codfilial_fkey" to_schema="mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="tblusuario_codimagem_fkey" to_schema="mgsis" to_table="tblimagem" >
+				<fk_column name="codimagem" pk="codimagem" />
 			</fk>
 			<fk name="tblusuario_codoperacao_fkey" to_schema="mgsis" to_table="tbloperacao" >
 				<fk_column name="codoperacao" pk="codoperacao" />
@@ -4293,9 +4579,6 @@
 			</fk>
 			<fk name="tblusuario_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="tblusuario_codimagem_fkey" to_schema="mgsis" to_table="tblimagem" >
-				<fk_column name="codimagem" pk="codimagem" />
 			</fk>
 		</table>
 		<table name="tblvalecompra" >
@@ -4340,12 +4623,6 @@
 			<index name="idx_tblvalecompra_8" unique="NORMAL" >
 				<column name="codfilial" />
 			</index>
-			<fk name="fk_tblvalecompra_tblusuario_criacao" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuariocriacao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblvalecompra_tblusuario_alteracao" to_schema="mgsis" to_table="tblusuario" >
-				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
 			<fk name="fk_tblvalecompra_tblpessoa_favorecido" to_schema="mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoafavorecido" pk="codpessoa" />
 			</fk>
@@ -4360,6 +4637,12 @@
 			</fk>
 			<fk name="fk_tblvalecompra_tblfilial" to_schema="mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tblvalecompra_tblusuario_alteracao" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblvalecompra_tblusuario_criacao" to_schema="mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblvalecompraformapagamento" >
@@ -4426,14 +4709,14 @@
 			<index name="idx_tblvalecompra_5" unique="NORMAL" >
 				<column name="codpessoafavorecido" />
 			</index>
+			<fk name="fk_tblvalecompramodelo_1" to_schema="mgsis" to_table="tblpessoa" >
+				<fk_column name="codpessoafavorecido" pk="codpessoa" />
+			</fk>
 			<fk name="fk_tblvalecompramodelo" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 			<fk name="fk_tblvalecompramodelo_0" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
-			</fk>
-			<fk name="fk_tblvalecompramodelo_1" to_schema="mgsis" to_table="tblpessoa" >
-				<fk_column name="codpessoafavorecido" pk="codpessoa" />
 			</fk>
 		</table>
 		<table name="tblvalecompramodeloprodutobarra" >
@@ -5591,6 +5874,7 @@
 		<sequence name="tblcontacontabil_codcontacontabil_seq" start="1" />
 		<sequence name="tblcupomfiscal_codcupomfiscal_seq" start="1" />
 		<sequence name="tblcupomfiscalprodutobarra_codcupomfiscalprodutobarra_seq" start="1" />
+		<sequence name="tbldistribuicaodfe_coddistribuicaodfe_seq" start="1" />
 		<sequence name="tblecf_codecf_seq" start="1" />
 		<sequence name="tblecfreducaoz_codecfreducaoz_seq" start="1" />
 		<sequence name="tblempresa_codempresa_seq" start="1" />
@@ -5656,6 +5940,11 @@
 		<sequence name="tblnotafiscalduplicatas_codnotafiscalduplicatas_seq" start="1" />
 		<sequence name="tblnotafiscalprodutobarra_codnotafiscalprodutobarra_seq" start="1" />
 		<sequence name="tblnotafiscalreferenciada_codnotafiscalreferenciada_seq" start="1" />
+		<sequence name="tblnotafiscalterceiro_codnotafiscalterceiro_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroduplicat_codnotafiscalterceiroduplicat_seq" start="1" />
+		<sequence name="tblnotafiscalterceirogrupo_codnotafiscalterceirogrupo_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroitem_codnotafiscalterceiroitem_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroprodutob_codnotafiscalterceiroprodutob_seq" start="1" />
 		<sequence name="tbloperacao_codoperacao_seq" start="1" />
 		<sequence name="tblpais_codpais_seq" start="1" />
 		<sequence name="tblparametrosgerais_codparametrosgerais_seq" start="1" />
@@ -5872,6 +6161,349 @@ AS '$libdir/tablefunc', $function$crosstab$function$
 			<input_param name="category_3" jt="12" type="text" />
 			<input_param name="category_4" jt="12" type="text" />
 			<input_param name="$1" jt="12" type="text" />
+		</procedure>
+		<procedure name="fnatualizaestoqueminimomaximo" id="Procedure_4bb0e4c" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnatualizaestoqueminimomaximo()
+ RETURNS TABLE(atualizados bigint)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    v_data_atualizacao timestamp := date_trunc('second', now());
+    v_corte_ano timestamp := date_trunc('month', now()) - interval '12 months';
+    v_corte_semestre timestamp := date_trunc('month', now()) - interval '6 months';
+    v_corte_bimestre timestamp := date_trunc('month', now()) - interval '2 month';
+    v_registro record;
+    v_alterado record;
+    v_meses_ignorar int[];
+    v_quantidade_ignorar int;
+BEGIN  
+	raise notice 'Atualização %s, Ano %s, Semestre %s, Bimestre %s', v_data_atualizacao, v_corte_ano, v_corte_semestre, v_corte_bimestre;
+	
+	-- CRIA COMBINACOES DE ELPV QUE AINDA NAO FORAM CRIADAS
+	raise notice 'Criando Combinacoes ELPV';
+	insert into tblestoquelocalprodutovariacao (codestoquelocal, codprodutovariacao) 
+	select el.codestoquelocal, pv.codprodutovariacao
+	from tblproduto p
+	inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
+	inner join tblestoquelocal el on (el.inativo is null)
+	left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = el.codestoquelocal and elpv.codprodutovariacao = pv.codprodutovariacao)
+	where p.inativo is null
+	and elpv.codestoquelocalprodutovariacao is null;
+	-- CALCULA DATA INICIAL DAS VENDAS DE CADA PRODUTO
+	raise notice 'Atualizando Data Inicial de Venda dos Produtos';
+	create temporary table tmpvendainicio as 
+	select pb.codprodutovariacao, min(n.lancamento) as vendainicio
+	from tblnegocio n
+	inner join tblnegocioprodutobarra npb on (npb.codnegocio = n.codnegocio)
+	inner join tblprodutobarra pb on (pb.codprodutobarra = npb.codprodutobarra)
+	where n.codnegociostatus = 2
+	--and pb.codproduto = 21
+	group by pb.codprodutovariacao;
+	update tmpvendainicio
+	set vendainicio = '2012-01-01'::date
+	where vendainicio < '2012-01-01'::date;
+	update tblprodutovariacao 
+	set vendainicio = tmpvendainicio.vendainicio
+	from tmpvendainicio
+	where tblprodutovariacao.codprodutovariacao = tmpvendainicio.codprodutovariacao
+	--and tblprodutovariacao = 21
+	;
+	update tblprodutovariacao 
+	set vendainicio = now()
+	where tblprodutovariacao.codprodutovariacao not in (select codprodutovariacao from tmpvendainicio)
+	--and tblprodutovariacao = 21
+	;
+	drop table if exists tmpvendainicio;
+	-- SUMARIZA VENDA MENSAL
+	raise notice 'Sumarizando Venda Mensal';
+	drop table if exists tmpestoquelocalprodutovariacaovenda ;
+	create temporary table tmpestoquelocalprodutovariacaovenda as
+	select
+	    tblprodutobarra.codprodutovariacao
+	    , tblnegocio.codestoquelocal
+	    , date_trunc('month', tblnegocio.lancamento) as mes
+	    , sum(tblnegocioprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1) * (case when tblnaturezaoperacao.codoperacao = 1 then -1 else 1 end)) as quantidade
+	    , sum(tblnegocioprodutobarra.valortotal * (case when tblnaturezaoperacao.codoperacao = 1 then -1 else 1 end)) as valor
+	    , cast(null as bigint) as codestoquelocalprodutovariacao
+	from tblnegocio
+	inner join tblnaturezaoperacao on (tblnaturezaoperacao.codnaturezaoperacao = tblnegocio.codnaturezaoperacao)
+	inner join tblnegocioprodutobarra on (tblnegocioprodutobarra.codnegocio = tblnegocio.codnegocio)
+	inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnegocioprodutobarra.codprodutobarra)
+	left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
+	where tblnegocio.codnegociostatus = 2 --Fechado
+	and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
+	--and tblprodutobarra.codproduto in (select tblproduto.codproduto from tblproduto where tblproduto.codmarca = 29) -- ACRILEX
+	--and tblprodutobarra.codproduto = 555
+	group by
+	     tblprodutobarra.codprodutovariacao
+	    , tblnegocio.codestoquelocal
+	    , date_trunc('month', tblnegocio.lancamento);
+	-- Atualiza codestoquelocalprodutovariacao
+	raise notice 'Gravando Venda Mensal';
+	update tmpestoquelocalprodutovariacaovenda
+	set codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao
+	from tblestoquelocalprodutovariacao elpv
+	where tmpestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao is null
+	and tmpestoquelocalprodutovariacaovenda.codestoquelocal = elpv.codestoquelocal
+	and tmpestoquelocalprodutovariacaovenda.codprodutovariacao = elpv.codprodutovariacao;
+	insert into tblestoquelocalprodutovariacao (codestoquelocal, codprodutovariacao, criacao, alteracao)
+	select distinct tmp.codestoquelocal, tmp.codprodutovariacao, v_data_atualizacao, v_data_atualizacao
+	from tmpestoquelocalprodutovariacaovenda tmp
+	where tmp.codestoquelocalprodutovariacao is null;
+	-- rodar novamente 0 -- Atualiza codestoquelocalprodutovariacao
+	-- Atualiza codestoquelocalprodutovariacao
+	-- DUPLICADO DE PROPOSITO
+	update tmpestoquelocalprodutovariacaovenda
+	set codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao
+	from tblestoquelocalprodutovariacao elpv
+	where tmpestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao is null
+	and tmpestoquelocalprodutovariacaovenda.codestoquelocal = elpv.codestoquelocal
+	and tmpestoquelocalprodutovariacaovenda.codprodutovariacao = elpv.codprodutovariacao;
+	update tblestoquelocalprodutovariacaovenda
+	set quantidade = tmp.quantidade
+	, valor = tmp.valor
+	, alteracao = v_data_atualizacao
+	from tmpestoquelocalprodutovariacaovenda tmp
+	where tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao
+	and tblestoquelocalprodutovariacaovenda.mes = tmp.mes;
+	insert into tblestoquelocalprodutovariacaovenda (codestoquelocalprodutovariacao, mes, quantidade, valor, criacao, alteracao)
+	select tmp.codestoquelocalprodutovariacao, tmp.mes, tmp.quantidade, tmp.valor, v_data_atualizacao, v_data_atualizacao
+	from tmpestoquelocalprodutovariacaovenda tmp
+	left join tblestoquelocalprodutovariacaovenda venda on (venda.codestoquelocalprodutovariacao = tmp.codestoquelocalprodutovariacao and venda.mes = tmp.mes)
+	where venda.codestoquelocalprodutovariacaovenda is null;
+	delete from tblestoquelocalprodutovariacaovenda
+	where coalesce(alteracao, '2000-01-01') < v_data_atualizacao;
+	drop table tmpestoquelocalprodutovariacaovenda;
+	-- SELECIONA PARA CADA ELPV QUAIS MESES VAI CONSIDERAR NO CALCULO DA MEDIA DE VENDAS
+	raise notice 'Percorrendo Combinacoes de EstoqueLocalProdutoVariacao Para decidir quais meses ficam no calculo';
+	FOR v_registro IN (select codestoquelocalprodutovariacao from tblestoquelocalprodutovariacao) -- where codestoquelocalprodutovariacao < 10000) -- where codestoquelocalprodutovariacao = 71182)
+	LOOP
+		-- CONSIDERA 12 ULTIMOS MESES
+		with alterados as (
+		    update tblestoquelocalprodutovariacaovenda
+		    set ignorar = false
+		    where tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao = v_registro.codestoquelocalprodutovariacao
+		    and tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacaovenda in (
+			select v.codestoquelocalprodutovariacaovenda
+			from tblestoquelocalprodutovariacaovenda v
+			where v.codestoquelocalprodutovariacao = tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao
+			and v.mes >= v_corte_ano
+			order by v.mes desc
+			limit 12
+		    )
+		    RETURNING tblestoquelocalprodutovariacaovenda.mes 
+		) select min(mes) as mes, count(*) as quantidade into v_alterado from alterados
+		;
+		-- DESCONSIDERA PRA TRAS DOS 12 MESES
+		update tblestoquelocalprodutovariacaovenda
+		set ignorar = true
+		where tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao = v_registro.codestoquelocalprodutovariacao
+		and ignorar = false
+		and mes < coalesce(v_alterado.mes, v_corte_ano::date);
+		--RAISE NOTICE '% % %', v_registro.codestoquelocalprodutovariacao, v_alterado.mes, v_alterado.quantidade;
+		-- IGNORA MES COM MENOS VENDAS
+		IF (v_alterado.quantidade > 5) THEN
+		    -- IGNORA DOIS MESES
+		    IF (v_alterado.quantidade > 5) THEN
+			v_quantidade_ignorar := 2;
+		    ELSE
+			v_quantidade_ignorar := 1;
+		    END IF;
+		    UPDATE tblestoquelocalprodutovariacaovenda
+		    SET ignorar = TRUE
+		    WHERE tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacaovenda IN (
+			SELECT v2.codestoquelocalprodutovariacaovenda 
+			FROM tblestoquelocalprodutovariacaovenda v2
+			WHERE v2.codestoquelocalprodutovariacao = v_registro.codestoquelocalprodutovariacao
+			AND coalesce(v2.ignorar, false) = FALSE
+			ORDER BY v2.quantidade ASC NULLS FIRST, mes ASC
+			LIMIT v_quantidade_ignorar
+		    );
+		    v_alterado.quantidade := v_alterado.quantidade - v_quantidade_ignorar;
+		    --RAISE NOTICE 'Ignorando pouca venda, nova quantidade = %', v_alterado.quantidade;
+		    
+		END IF;
+		-- IGNORA MESES COM MAIS VENDAS
+		IF (v_alterado.quantidade > 5) THEN
+		    -- IGNORA JANEIRO E FEVEREIRO
+		    IF (v_alterado.quantidade > 5) THEN
+			v_meses_ignorar := ARRAY [1, 2];
+			v_quantidade_ignorar := 2;
+		    -- IGNORA JANEIRO 
+		    ELSE
+			v_meses_ignorar := ARRAY [2];
+			v_quantidade_ignorar := 1;
+		    END IF;
+		    UPDATE tblestoquelocalprodutovariacaovenda
+		    SET ignorar = TRUE
+		    WHERE tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacaovenda IN (
+			SELECT v2.codestoquelocalprodutovariacaovenda 
+			FROM tblestoquelocalprodutovariacaovenda v2
+			WHERE v2.codestoquelocalprodutovariacao = v_registro.codestoquelocalprodutovariacao
+			AND coalesce(v2.ignorar, false) = FALSE
+			AND date_part('month', v2.mes) = ANY(v_meses_ignorar)
+			ORDER BY v2.quantidade DESC NULLS FIRST, mes ASC
+			LIMIT v_quantidade_ignorar
+		    );
+		    
+		    v_alterado.quantidade := v_alterado.quantidade - v_quantidade_ignorar;
+		    
+		    --RAISE NOTICE 'Ignorando jan/fev (%), nova quantidade = %', v_quantidade_ignorar, v_alterado.quantidade;
+		    
+		END IF;
+		-- IGNORA MES ATUAL
+		IF (v_alterado.quantidade > 5) THEN
+		    UPDATE tblestoquelocalprodutovariacaovenda
+		    SET ignorar = TRUE
+		    WHERE tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacaovenda IN (
+			SELECT v2.codestoquelocalprodutovariacaovenda 
+			FROM tblestoquelocalprodutovariacaovenda v2
+			WHERE v2.codestoquelocalprodutovariacao = v_registro.codestoquelocalprodutovariacao
+			AND coalesce(v2.ignorar, false) = FALSE
+			AND v2.mes = DATE_TRUNC('month', now())
+		    );
+		END IF;
+	END LOOP;
+	-- cria tabela temporaria com numero de dias dos meses
+	raise notice 'Calculando numero de dias de cada mes';
+	drop table if exists tmpdiasmes;
+	create temporary table tmpdiasmes as 
+	select distinct mes, cast(null as smallint) as dias
+	from tblestoquelocalprodutovariacaovenda;
+	create index idx_tmpdiasmes_mes on tmpdiasmes (mes);
+	update tmpdiasmes
+	set dias = DATE_PART('days', DATE_TRUNC('month', mes) + '1 MONTH'::INTERVAL - '1 DAY'::INTERVAL)
+	--where mes != date_trunc('month', now())
+	;
+	--update tmpdiasmes 
+	--set dias = DATE_PART('days', now())
+	--where mes = date_trunc('month', now());
+	-- atualiza quantidade vendida por dia 
+	raise notice 'Atualizando media de venda diaria';
+	update tblestoquelocalprodutovariacaovenda
+	set vendadiaquantidade = coalesce(quantidade, 0) / coalesce(dias, 30)
+	from tmpdiasmes
+	where tblestoquelocalprodutovariacaovenda.mes = tmpdiasmes.mes
+	and coalesce(vendadiaquantidade, 0) != coalesce(quantidade, 0) / coalesce(dias, 30);
+	-- Soma vendas do local para a variacao
+	raise notice 'Somando Vendas de cada ELPV';
+	update tblestoquelocalprodutovariacao
+	set vendadiaquantidadeprevisao = iq.vendadiaquantidadeprevisao,
+		vendaultimocalculo = v_data_atualizacao,
+		vendabimestrequantidade = iq.vendabimestrequantidade,
+		vendabimestrevalor = iq.vendabimestrevalor,
+		vendasemestrequantidade = iq.vendasemestrequantidade,
+		vendasemestrevalor = iq.vendasemestrevalor,
+		vendaanoquantidade = iq.vendaanoquantidade,
+		vendaanovalor = iq.vendaanovalor
+	from (
+		select 
+			v.codestoquelocalprodutovariacao,
+			avg(case when not v.ignorar then vendadiaquantidade else null end) as vendadiaquantidadeprevisao,
+			--min(v.alteracao) as vendaultimocalculo,
+			sum(case when v.mes >= v_corte_ano then v.quantidade else null end) as vendaanoquantidade,
+			sum(case when v.mes >= v_corte_ano then v.valor else null end) as vendaanovalor,
+			sum(case when v.mes >= v_corte_semestre then v.quantidade else null end) as vendasemestrequantidade,
+			sum(case when v.mes >= v_corte_semestre then v.valor else null end) as vendasemestrevalor,
+			sum(case when v.mes >= v_corte_bimestre then v.quantidade else null end) as vendabimestrequantidade,
+			sum(case when v.mes >= v_corte_bimestre then v.valor else null end) as vendabimestrevalor
+		from tblestoquelocalprodutovariacaovenda v 
+		where (coalesce(v.ignorar, false) = false or v.mes >= v_corte_ano)
+		group by v.codestoquelocalprodutovariacao
+		) iq
+	where tblestoquelocalprodutovariacao.codestoquelocalprodutovariacao = iq.codestoquelocalprodutovariacao
+	and (
+	    coalesce(tblestoquelocalprodutovariacao.vendaanovalor, 0) != coalesce(iq.vendaanovalor, 0)
+	    OR coalesce(tblestoquelocalprodutovariacao.vendadiaquantidadeprevisao, 0) != coalesce(iq.vendadiaquantidadeprevisao, 0)
+	);
+	-- Limpa locais sem vendas no periodo
+	update tblestoquelocalprodutovariacao
+	set vendadiaquantidadeprevisao = null,
+		vendaultimocalculo = v_data_atualizacao,
+		vendabimestrequantidade = null,
+		vendabimestrevalor = null,
+		vendasemestrequantidade = null,
+		vendasemestrevalor = null,
+		vendaanoquantidade = null,
+		vendaanovalor = null
+	where coalesce(vendaultimocalculo, '2000-01-01') < v_data_atualizacao;
+	-- Calcula Estoque Minimo e Estoque Maximo Filiais
+	raise notice 'Calculando Estoque Minimo e Maximo das Filiais';
+	update tblestoquelocalprodutovariacao
+	set estoqueminimo = ceil(coalesce(tblestoquelocalprodutovariacao.vendadiaquantidadeprevisao, 0) * 20) --coalesce(m.estoqueminimodias, 0))
+	, estoquemaximo = ceil(coalesce(tblestoquelocalprodutovariacao.vendadiaquantidadeprevisao, 0) * 40) --coalesce(m.estoquemaximodias, 0))
+	from tblestoquelocal el, tblprodutovariacao pv
+	inner join tblproduto p on (p.codproduto = pv.codproduto)
+	--inner join tblmarca m on (m.codmarca = p.codmarca)
+	where tblestoquelocalprodutovariacao.codestoquelocal = el.codestoquelocal
+	and coalesce(el.deposito, false) = false
+	and tblestoquelocalprodutovariacao.codprodutovariacao = pv.codprodutovariacao
+	and coalesce(tblestoquelocalprodutovariacao.estoquemaximo, 0) != ceil(coalesce(tblestoquelocalprodutovariacao.vendadiaquantidadeprevisao, 0) * 40)-- * coalesce(m.estoquemaximodias, 0));
+	and tblestoquelocalprodutovariacao.codestoquelocal in (102001, 103001, 104001);
+	-- Calcula Estoque Minimo e Maximo Deposito
+	raise notice 'Calculando Estoque Minimo e Maximo do Deposito';
+	update tblestoquelocalprodutovariacao
+	set estoqueminimo = ceil(coalesce(iq.vendadiaquantidadeprevisao, 0) * 20) --coalesce(m.estoqueminimodias, 0))
+	, estoquemaximo = ceil(coalesce(iq.vendadiaquantidadeprevisao, 0) * 40) --coalesce(m.estoquemaximodias, 0))
+	from (
+			select 
+				codprodutovariacao,
+				sum(vendadiaquantidadeprevisao) as vendadiaquantidadeprevisao
+			from tblestoquelocalprodutovariacao elpv
+			inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
+			where coalesce(el.deposito, false) = false
+			and el.inativo is null
+			group by codprodutovariacao
+		) iq,
+		tblestoquelocal el,	
+		tblprodutovariacao pv,
+		tblproduto p --,
+		--tblmarca m
+	where tblestoquelocalprodutovariacao.codprodutovariacao = iq.codprodutovariacao
+	and tblestoquelocalprodutovariacao.codestoquelocal = el.codestoquelocal
+	and coalesce(el.deposito, false) = true
+	and tblestoquelocalprodutovariacao.codprodutovariacao = pv.codprodutovariacao
+	and pv.codproduto = p.codproduto
+	and coalesce(tblestoquelocalprodutovariacao.estoquemaximo, 0) != ceil(coalesce(iq.vendadiaquantidadeprevisao, 0) * 40) --* coalesce(m.estoquemaximodias, 0));
+	and tblestoquelocalprodutovariacao.codestoquelocal in (101001);
+	-- Coloca minimo como 1 quando for 0
+	raise notice 'Usando Minimo de 1 quando for 0';
+	update tblestoquelocalprodutovariacao
+	set estoqueminimo = 1
+	from tblestoquelocal el, tblprodutovariacao pv, tblproduto p
+	where coalesce(tblestoquelocalprodutovariacao.estoqueminimo, 0) <= 0
+	and tblestoquelocalprodutovariacao.codestoquelocal = el.codestoquelocal
+	and el.inativo is null
+	and tblestoquelocalprodutovariacao.codprodutovariacao = pv.codprodutovariacao
+	and pv.codproduto = p.codproduto
+	and p.inativo is null
+	and tblestoquelocalprodutovariacao.codestoquelocal in (101001, 102001, 103001, 104001);
+	-- Adiciona +1 no maximo quando for igual ou inferior ao minimo
+	raise notice 'Quando Maximo for menor que Minimo, Maximo = Minimo';
+	update tblestoquelocalprodutovariacao
+	set estoquemaximo = tblestoquelocalprodutovariacao.estoqueminimo -- + 1
+	from tblestoquelocal el, tblprodutovariacao pv, tblproduto p
+	where coalesce(tblestoquelocalprodutovariacao.estoquemaximo, 0) < coalesce(tblestoquelocalprodutovariacao.estoqueminimo, 0)
+	and tblestoquelocalprodutovariacao.codestoquelocal = el.codestoquelocal
+	and el.inativo is null
+	and tblestoquelocalprodutovariacao.codprodutovariacao = pv.codprodutovariacao
+	and pv.codproduto = p.codproduto
+	and p.inativo is null
+	and tblestoquelocalprodutovariacao.codestoquelocal in (101001, 102001, 103001, 104001);
+	update tblestoquelocalprodutovariacao
+	set estoqueminimo = 0
+	, estoquemaximo = 0
+	where tblestoquelocalprodutovariacao.codestoquelocal not in (101001, 102001, 103001, 104001);
+	drop table if exists tmpdiasmes;
+	
+	raise notice 'FIM';
+	
+	RETURN QUERY select count(*) as atualizados from tblestoquelocalprodutovariacaovenda where alteracao = v_data_atualizacao;
+END;
+$function$
+]]></string>
+			<result_param name="returnValue" jt="-5" type="int8" />
+			<result_param name="atualizados" jt="-5" type="int8" />
 		</procedure>
 		<procedure name="fncalculaestoque" id="Procedure_57afa02" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fncalculaestoque(pcodproduto bigint)
@@ -7701,13 +8333,12 @@ $function$
 	<connector name="MGsis_Desenv" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.4.jar" driver_desc="Standard" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.1.4.jar" driver_desc="Standard" host="192.168.2.205" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblfilial" color="b7c8e3" x="780" y="60" />
-		<entity schema="mgsis" name="tblpermissao" color="b7c8e3" x="60" y="585" />
-		<entity schema="mgsis" name="tblgrupousuariousuario" color="b7c8e3" x="450" y="45" />
-		<entity schema="mgsis" name="tblgrupousuario" color="b7c8e3" x="465" y="375" />
-		<entity schema="mgsis" name="tblgrupousuariopermissao" color="b7c8e3" x="480" y="630" />
-		<entity schema="mgsis" name="tblimagem" color="c1d8ee" x="240" y="450" />
-		<entity schema="mgsis" name="tblusuario" color="b7c8e3" x="45" y="60" />
+		<entity schema="mgsis" name="tblfilial" color="b7c8e3" x="765" y="60" />
+		<entity schema="mgsis" name="tblpermissao" color="b7c8e3" x="45" y="585" />
+		<entity schema="mgsis" name="tblgrupousuariousuario" color="b7c8e3" x="435" y="45" />
+		<entity schema="mgsis" name="tblgrupousuario" color="b7c8e3" x="450" y="375" />
+		<entity schema="mgsis" name="tblgrupousuariopermissao" color="b7c8e3" x="465" y="630" />
+		<entity schema="mgsis" name="tblimagem" color="c1d8ee" x="225" y="450" />
 		<browser id="Browse_260dba35" name="tblgrupousuario" confirm_updates="y" confirmed="y" >
 			<browse_table schema="mgsis" entity="tblgrupousuario" x="10" y="10" width="453" height="349" />
 		</browser>
@@ -7751,6 +8382,80 @@ $function$
 		</entity>
 		<entity schema="mgsis" name="tblcheque" color="c1d8ee" x="300" y="45" />
 		<entity schema="mgsis" name="tblchequemotivodevolucao" color="c1d8ee" x="915" y="615" />
+	</layout>
+	<layout name="Layout_DFe_Terceiros" id="Layout_4f5c1dd" show_relation="columns" >
+		<entity schema="mgsis" name="tbldistribuicaodfe" color="c1d8ee" x="315" y="75" />
+		<entity schema="mgsis" name="tblfilial" color="c1d8ee" x="60" y="75" >
+			<column name="codfilial" />
+			<column name="codempresa" />
+			<column name="codpessoa" />
+			<column name="acbrnfemonitorcodusuario" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+		</entity>
+		<entity schema="mgsis" name="tblnaturezaoperacao" color="c1d8ee" x="45" y="225" >
+			<column name="codnaturezaoperacao" />
+			<column name="codestoquemovimentotipo" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codnaturezaoperacaodevolucao" />
+			<column name="codtipotitulo" />
+			<column name="codcontacontabil" />
+		</entity>
+		<entity schema="mgsis" name="tblpessoa" color="c1d8ee" x="300" y="270" >
+			<column name="codpessoa" />
+			<column name="codsexo" />
+			<column name="codestadocivil" />
+			<column name="codcidade" />
+			<column name="codcidadecobranca" />
+			<column name="codformapagamento" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codgrupocliente" />
+		</entity>
+		<entity schema="mgsis" name="tblnotafiscalterceiroduplicata" color="c1d8ee" x="810" y="45" />
+		<entity schema="mgsis" name="tblnotafiscalterceiro" color="c1d8ee" x="555" y="45" />
+		<entity schema="mgsis" name="tblnotafiscalterceiroprodutobarra" color="c1d8ee" x="780" y="420" />
+		<entity schema="mgsis" name="tblnotafiscalterceirogrupo" color="c1d8ee" x="795" y="255" />
+		<entity schema="mgsis" name="tblnotafiscalterceiroitem" color="c1d8ee" x="1065" y="60" />
+		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="375" y="495" >
+			<column name="codprodutovariacao" />
+			<column name="codproduto" />
+			<column name="codmarca" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+		</entity>
+		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="75" y="585" >
+			<column name="codproduto" />
+			<column name="codncm" />
+			<column name="codcest" />
+			<column name="codunidademedida" />
+			<column name="codsubgrupoproduto" />
+			<column name="codmarca" />
+			<column name="codtributacao" />
+			<column name="codtipoproduto" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+		</entity>
+		<entity schema="mgsis" name="tblprodutobarra" color="c1d8ee" x="840" y="660" >
+			<column name="codprodutobarra" />
+			<column name="codprodutovariacao" />
+			<column name="codproduto" />
+			<column name="codmarca" />
+			<column name="codprodutoembalagem" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+		</entity>
+		<entity schema="mgsis" name="tblprodutoembalagem" color="c1d8ee" x="285" y="645" >
+			<column name="codprodutoembalagem" />
+			<column name="codproduto" />
+			<column name="codunidademedida" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+		</entity>
 	</layout>
 	<layout name="Layout_Devolucao" id="Layout7285461" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblnotafiscal" color="b2cdf7" x="1230" y="45" />
@@ -7800,8 +8505,7 @@ $function$
 		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="b3cef5" x="390" y="480" />
 	</layout>
 	<layout name="Layout_Feriados" id="Layout_1d848eea" show_relation="columns" >
-		<entity schema="mgsis" name="tblusuario" color="c1d8ee" x="45" y="45" />
-		<entity schema="mgsis" name="tblferiado" color="c1d8ee" x="450" y="105" />
+		<entity schema="mgsis" name="tblferiado" color="c1d8ee" x="45" y="45" />
 	</layout>
 	<layout name="Layout_Fiscal" id="Layout4922365" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tbltributacao" color="b2cdf7" x="555" y="315" />
@@ -7888,7 +8592,6 @@ $function$
 		<entity schema="mgsis" name="tbltributacao" color="cab3f5" x="315" y="1020" />
 		<entity schema="mgsis" name="tbltributacaonaturezaoperacao" color="cab3f5" x="45" y="1245" />
 		<entity schema="mgsis" name="tblunidademedida" color="cab3f5" x="540" y="1245" />
-		<entity schema="mgsis" name="tblusuario" color="b3b3f5" x="525" y="2385" />
 		<entity schema="mgsis" name="vwcupomfiscalprodutobarratotais" color="b3b3f5" x="1935" y="780" />
 		<entity schema="mgsis" name="vwnegocioprodutobarratotais" color="f5d8b3" x="3525" y="3150" />
 		<entity schema="mgsis" name="tbltitulo" color="f5d8b3" x="2310" y="2955" />
@@ -8015,7 +8718,6 @@ $function$
 			<entity schema="mgsis" name="tblmenu" />
 			<entity schema="mgsis" name="tblibptax" />
 			<entity schema="mgsis" name="tblcodigo" />
-			<entity schema="mgsis" name="tblusuario" />
 			<callout x="105" y="1875" pointer="SV" />
 		</group>
 		<group name="tblprodutobarra" color="efeaf7" >
