@@ -18,8 +18,8 @@ class DanfceMg extends Danfce
     ) {
         parent::__construct($docXML, $sPathLogo, $mododebug, $idToken, $emitToken, $urlQR);
         $this->fontePadrao = 'helvetica';
-        // $this->hLinha = 50;
-        $this->hMaxLinha = 12;
+        // $this->hLinha = 5;
+        $this->hMaxLinha = 10;
     }
 
     public function montaDANFE(
