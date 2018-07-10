@@ -5,14 +5,18 @@ namespace Mg\NFeTerceiro;
 use Illuminate\Http\Request;
 
 use Mg\MgController;
+use Mg\Filial\Filial;
+
+
 
 class NFeTerceiroController extends MgController
 {
 
-    public function pesquisarSefaz()
+    public function consultaDfe(Request $request, $id)
     {
-        return NFeTerceiroRepository::pesquisarSefaz();
-        // return response()->json($res, 200);
+        $filial = Filial::findOrFail($id);
+        $res = NFeTerceiroRepository::consultaDfe($filial);
+        return response()->json($res, 200);
     }
 
     public function listaNfeTerceiro()
