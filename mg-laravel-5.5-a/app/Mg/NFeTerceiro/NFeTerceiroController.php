@@ -19,10 +19,20 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
+    public function downloadNFeTerceiro(Request $request, $filial, $chave )
+    {
+        // $chave = NFeTerceiroDistribuicaoDfe::findOrFail($id);
+        // $res = NFeTerceiroRepository::downloadNFeTerceiro($chave);
+        $filial = Filial::findOrFail($filial);
+        $res = NFeTerceiroRepository::downloadNFeTerceiro($filial, $chave);
+        return response()->json($res, 200);
+    }
+
     public function listaNfeTerceiro()
     {
-        return NFeTerceiroRepository::listaNfeTerceiro();
-        // return response()->json($res, 200);
+        $filial = Filial::findOrFail($id);
+        $res = NFeTerceiroRepository::consultaDfe($filial);
+        return response()->json($res, 200);
     }
 
     public function detalhesNfeTerceiro()

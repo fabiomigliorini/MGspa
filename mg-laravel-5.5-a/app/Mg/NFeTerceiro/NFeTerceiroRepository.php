@@ -13,33 +13,36 @@ use NFePHP\NFe\Common\Complements;
 class NFeTerceiroRepository
 {
 
-    public static function consultaDfe (Filial $filial)
-    {
-        // $tools = new Tools($configJson, Certificate::readPfx($pfxcontent, $password));
-        $tools = NFePHPRepositoryConfig::instanciaTools($filial);
+    public static function consultaDfe (Filial $filial){
 
+        $tools = NFePHPRepositoryConfig::instanciaTools($filial);
         //só funciona para o modelo 55
         $tools->model('55');
         //este serviço somente opera em ambiente de produção
         $tools->setEnvironment(1);
 
+        $ultimoNsu = NFeTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
+        $last = end($ultimoNsu);
+        $last2 = end($last);
+
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
-        $ultNSU = 0;
+        // $ultNSU = 0;
+        $ultNSU = $last2->nsu;
         $maxNSU = $ultNSU;
         $loopLimit = 50;
         $iCount = 0;
 
-        //executa a busca de DFe em loop
+        // executa a busca de DFe em loop
         while ($ultNSU <= $maxNSU) {
             $iCount++;
             if ($iCount >= $loopLimit) {
                 break;
             }
+
             try {
                 //executa a busca pelos documentos
                 $resp = $tools->sefazDistDFe($ultNSU);
-                dd($resp);
             } catch (\Exception $e) {
                 echo $e->getMessage();
                 //tratar o erro
@@ -61,6 +64,7 @@ class NFeTerceiroRepository
                 //lote vazio
                 continue;
             }
+
             //essas tags irão conter os documentos zipados
             $docs = $lote->getElementsByTagName('docZip');
             foreach ($docs as $doc) {
@@ -73,19 +77,70 @@ class NFeTerceiroRepository
                 //processar o conteudo do NSU, da forma que melhor lhe interessar
                 //esse processamento depende do seu aplicativo
 
+                // SALVA NA BASE DE DADOS O RESULTADO DA CONSULTA DFE
+                $dfe = NFeTerceiroDistribuicaoDfe::firstOrNew([
+                  'codfilial' => $filial->codfilial,
+                  'nsu' => $numnsu,
+                  'schema' => $schema
+                ]);
+                $dfe->codfilial = $filial->codfilial;
+                $dfe->nsu = $numnsu;
+                $dfe->schema = $schema;
+                $dfe->save();
+
+                // CONVERTE O XML EM UM OBJETO
+                $st = new Standardize();
+                $res = $st->toStd($content);
+                $chave = $res->chNFe??null;
+
+                if($chave == null){
+                    echo 'nao ha chave';
+                }else{
+                    // Salva o Arquivo DFE da consulta
+                    $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
+                    file_put_contents($pathNFeTerceiro, $content);
+                }
+
             }
             sleep(2);
-        }
+        }  // FIM DO LOOP
     }
 
-    // public static function sefazStatus (Filial $filial)
-    // {
-    //     $tools = NFePHPRepositoryConfig::instanciaTools($filial);
-    //     $resp = $tools->sefazStatus();
-    //     $st = new Standardize();
-    //     $r = $st->toStd($resp);
-    //     return $r;
-    // }
+    public static function downloadNFeTerceiro (Filial $filial, $chave){
+
+        try {
+            $tools = NFePHPRepositoryConfig::instanciaTools($filial);
+            //só funciona para o modelo 55
+            $tools->model('55');
+            //este serviço somente opera em ambiente de produção
+            $tools->setEnvironment(1);
+            $key = $chave;
+            $response = $tools->sefazDownload($key);
+            // header('Content-type: text/xml; charset=UTF-8');
+            // echo $response;
+
+        // } catch (\Exception $e) {
+        //     echo str_replace("\n", "<br/>", $e->getMessage());
+        // }
+        //
+        // try {
+            $stz = new Standardize($response);
+            $std = $stz->toStd();
+            if ($std->cStat != 138) {
+                echo "Documento não retornado. [$std->cStat] $std->xMotivo";
+                die;
+            }
+            $zip = $std->loteDistDFeInt->docZip;
+            $xml = gzdecode(base64_decode($zip));
+
+            header('Content-type: text/xml; charset=UTF-8');
+            echo $xml;
+
+        } catch (\Exception $e) {
+            echo str_replace("\n", "<br/>", $e->getMessage());
+        }
+
+    }
 
     public static function listaNfeTerceiro ()
     {
