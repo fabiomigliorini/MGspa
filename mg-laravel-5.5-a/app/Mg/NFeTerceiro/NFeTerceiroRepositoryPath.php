@@ -10,18 +10,30 @@ class NFeTerceiroRepositoryPath
 
     /**
      * Diretorio Raiz das NFes da Filial
+     * DFE_PATH=/var/www/NFePHP/Arquivos/DistDFe/
+     * NFE_TERCEIRO_PATH=/var/www/NFePHP/Arquivos/NFeTerceiro/
      */
     public static function pathNFe(Filial $filial) {
-      return env('NFE_TERCEIRO_PATH') . "{$filial->codfilial}/";
+      return env('NFE_PHP_PATH') . "DistDFe/{$filial->codfilial}/";
     }
 
-    public static function pathNFeTerceiro ( $filial, $chave, bool $criar = false)
+    public static function pathDFe ( $filial, $chave, bool $criar = false)
     {
-        $path = static::pathNFe($filial) ;
+        $path = static::pathNFe($filial) . "DFe/" ;
         if ($criar) {
             @mkdir($path, 0775, true);
         }
         $path .= "{$chave}-distDfe.xml";
+        return $path;
+    }
+
+    public static function pathNFeTerceiro ( $filial, $chave, bool $criar = false)
+    {
+        $path = static::pathNFe($filial) . "NFeTerceiro/";
+        if ($criar) {
+            @mkdir($path, 0775, true);
+        }
+        $path .= "{$chave}-NFE.xml";
         return $path;
     }
 

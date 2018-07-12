@@ -9,6 +9,7 @@ use NFePHP\NFe\Tools;
 use NFePHP\Common\Certificate;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Common\Complements;
+use Carbon\Carbon;
 
 class NFeTerceiroRepository
 {
@@ -21,14 +22,15 @@ class NFeTerceiroRepository
         //este serviço somente opera em ambiente de produção
         $tools->setEnvironment(1);
 
+        // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA
         $ultimoNsu = NFeTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
-        $last = end($ultimoNsu);
-        $last2 = end($last);
+        $ultimoNsu = end($ultimoNsu);
+        $ultimoNsu = end($ultimoNsu);
 
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         // $ultNSU = 0;
-        $ultNSU = $last2->nsu;
+        $ultNSU = $ultimoNsu->nsu;
         $maxNSU = $ultNSU;
         $loopLimit = 50;
         $iCount = 0;
@@ -93,11 +95,9 @@ class NFeTerceiroRepository
                 $res = $st->toStd($content);
                 $chave = $res->chNFe??null;
 
-                if($chave == null){
-                    echo 'nao ha chave';
-                }else{
-                    // Salva o Arquivo DFE da consulta
-                    $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
+                // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
+                if(!empty($chave)){
+                    $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathDFe($filial, $chave, true);
                     file_put_contents($pathNFeTerceiro, $content);
                 }
 
@@ -108,6 +108,7 @@ class NFeTerceiroRepository
 
     public static function downloadNFeTerceiro (Filial $filial, $chave){
 
+        // FAZ A CONSULTA NO WEBSERVICE E TRAZ O XML
         try {
             $tools = NFePHPRepositoryConfig::instanciaTools($filial);
             //só funciona para o modelo 55
@@ -116,14 +117,7 @@ class NFeTerceiroRepository
             $tools->setEnvironment(1);
             $key = $chave;
             $response = $tools->sefazDownload($key);
-            // header('Content-type: text/xml; charset=UTF-8');
-            // echo $response;
 
-        // } catch (\Exception $e) {
-        //     echo str_replace("\n", "<br/>", $e->getMessage());
-        // }
-        //
-        // try {
             $stz = new Standardize($response);
             $std = $stz->toStd();
             if ($std->cStat != 138) {
@@ -132,13 +126,118 @@ class NFeTerceiroRepository
             }
             $zip = $std->loteDistDFeInt->docZip;
             $xml = gzdecode(base64_decode($zip));
-
-            header('Content-type: text/xml; charset=UTF-8');
-            echo $xml;
+            // header('Content-type: text/xml; charset=UTF-8');
+            // echo $xml;
 
         } catch (\Exception $e) {
             echo str_replace("\n", "<br/>", $e->getMessage());
         }
+
+        // CONVERTE O XML EM UM OBJETO
+        $st = new Standardize();
+        $res = $st->toStd($xml);
+        $chave = $res->protNFe->infProt->chNFe;
+
+        // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
+        if(!empty($chave)){
+            $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
+            file_put_contents($pathNFeTerceiro, $xml);
+        }
+
+        // dd($res->NFe->infNFe->det);
+
+
+        foreach ($res->NFe->infNFe->det as $key => $item) {
+            dd($item->prod->xProd);
+            $NFeItem = new NFeTerceiroItem();
+            $NFeItem->codnotafiscalterceirogrupo = null;
+            $NFeItem->numero = null;
+            $NFeItem->referencia = $item->prod->cProd;
+            $NFeItem->produto = $item->prod->xProd;
+            $NFeItem->ncm = $item->prod->NCM;
+            $NFeItem->cfop = $item->prod->CFOP;
+            $NFeItem->barrastributavel = null;
+            $NFeItem->unidademedidatributavel = $item->prod->uTrib;
+            $NFeItem->quantidadetributavel = $item->prod->qTrib;
+            $NFeItem->valorunitariotributavel =$item->prod->vUnTrib;
+            $NFeItem->barras = null;
+            $NFeItem->unidademedida = $item->prod->uCom
+            $NFeItem->quantidade = $item->prod->qCom;
+            $NFeItem->valorunitario = $item->prod->vUnCom;
+            $NFeItem->valorproduto = $item->prod->vProd;
+            $NFeItem->valorfrete =
+            $NFeItem->valorseguro =
+            $NFeItem->valordesconto =
+            $NFeItem->valoroutras =
+            $NFeItem->valortotal =
+            $NFeItem->compoetotal =
+            $NFeItem->csosn =
+            $NFeItem->origem =
+            $NFeItem->icmsbasemodalidade =
+            $NFeItem->icmsbase =
+            $NFeItem->icmspercentual =
+            $NFeItem->icmsvalor =
+            $NFeItem->icmsst =
+            $NFeItem->icmsstbasemodalidade =
+            $NFeItem->icmsstbase =
+            $NFeItem->icmsstpercentual =
+            $NFeItem->icmsstvalor =
+            $NFeItem->ipicst =
+            $NFeItem->ipibase =
+            $NFeItem->ipipercentual =
+            $NFeItem->ipivalor =
+            $NFeItem->piscst =
+            $NFeItem->pisbase =
+            $NFeItem->pispercentual =
+            $NFeItem->pisvalor =
+            $NFeItem->cofinscst =
+            $NFeItem->cofinsbase =
+            $NFeItem->cofinspercentual =
+            $NFeItem->cofinsvalor =
+            dd($NFeItem);
+        // $NFe->save();
+            // dd($item);
+        }
+
+
+
+        // SALVA NA BASE DE DADOS O RESULTADO DA CONSULTA NFeTerceiro
+        $NFe = new NFeTerceiro();
+            $NFe->coddidtribuicaodfe = null;
+            $NFe->codnotafiscal = $res->NFe->infNFe->ide->cNF;
+            $NFe->codnegocio = null;
+            $NFe->codfilial = $filial->codfilial;
+            $NFe->codoperacao = $res->NFe->infNFe->ide->tpNF;
+            $NFe->codnaturezaoperacao = null; //id tblnaturezaoperacao?
+            $NFe->codpessoa = null; //id do fornecedor na tblpessoa?
+            $NFe->emitente = $res->NFe->infNFe->emit->xNome;
+            $NFe->cnpj = $res->NFe->infNFe->emit->CNPJ;
+            $NFe->ie = $res->NFe->infNFe->emit->IE;
+            $NFe->emissao = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
+            $NFe->ignorada = false;
+            $NFe->indsituacao = null;
+            $NFe->justificativa = $res->protNFe->infProt->xMotivo;
+            $NFe->indmanifestacao = null;
+            $NFe->nfechave = $res->protNFe->infProt->chNFe;
+            $NFe->modelo = $res->NFe->infNFe->ide->mod;
+            $NFe->serie = $res->NFe->infNFe->ide->serie;
+            $NFe->numero = $res->NFe->infNFe->ide->nNF;
+            $NFe->entrada = null;  //perguntar para o ususario a data?
+            $NFe->valortotal = $res->NFe->infNFe->total->ICMSTot->vNF;
+            $NFe->icmsbase = $res->NFe->infNFe->total->ICMSTot->vBC;
+            $NFe->icmsvalor = $res->NFe->infNFe->total->ICMSTot->vICMS;
+            $NFe->icmsstbase = $res->NFe->infNFe->total->ICMSTot->vBCST;
+            $NFe->icmsstvalor = $res->NFe->infNFe->total->ICMSTot->vST;
+            $NFe->ipivalor = $res->NFe->infNFe->total->ICMSTot->vProd;
+            $NFe->valorprodutos = $res->NFe->infNFe->total->ICMSTot->vProd;
+            $NFe->valorfrete = $res->NFe->infNFe->total->ICMSTot->vFrete;
+            $NFe->valorseguro = $res->NFe->infNFe->total->ICMSTot->vSeg;
+            $NFe->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
+            $NFe->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
+            dd($NFe);
+            //$NFe->save();
+
+
 
     }
 
