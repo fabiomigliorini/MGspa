@@ -3250,7 +3250,7 @@
 			<column name="valoroutras" type="numeric" length="15" decimal="2" jt="2" />
 			<column name="valortotal" type="numeric" length="15" decimal="2" jt="2" />
 			<column name="compoetotal" type="bool" jt="-7" mandatory="y" >
-				<defo>TRUE</defo>
+				<defo>true</defo>
 			</column>
 			<column name="csosn" type="smallint" jt="5" />
 			<column name="origem" type="smallint" jt="5" />
@@ -3321,7 +3321,7 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<index name="pk_tblnotafiscalterceiroitemoriginal_codnotafiscalterceiroitemoriginal" unique="PRIMARY_KEY" >
+			<index name="pk_tblnotafiscalterceiroitemoriginal_codnotafiscalterceiroitemo" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiroitem" />
 			</index>
 			<index name="idx_tblnotafiscalterceiroitemoriginal_codnotafiscalterceiroitem" unique="NORMAL" >
@@ -3338,23 +3338,23 @@
 			<column name="margem" type="numeric" length="6" decimal="2" jt="2" />
 			<column name="complemento" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
-			<column name="valorproduto" type="numeric" jt="2" mandatory="y" >
+			<column name="valorproduto" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
 				<comment><![CDATA[vProd - Proporcional Rateado Por ProdutoBarra]]></comment>
 			</column>
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<index name="pk_tblnotafiscalterceiroitemprodutobarra_codnotafiscalterceiroitemprodutobarra" unique="PRIMARY_KEY" >
+			<index name="pk_tblnotafiscalterceiroitemprodutobarra_codnotafiscalterceiroi" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiroprodutobarra" />
 			</index>
-			<index name="idx_tblnotafiscalterceiroitemprodutobarra_codnotafiscalterceiroitem" unique="NORMAL" >
+			<index name="idx_tblnotafiscalterceiroitemprodutobarra_codnotafiscalterceiro" unique="NORMAL" >
 				<column name="codnotafiscalterceirogrupo" />
 			</index>
 			<index name="idx_tblnotafiscalterceiroitemprodutobarra_codprodutobarra" unique="NORMAL" >
 				<column name="codprodutobarra" />
 			</index>
-			<fk name="fk_tblnotafiscalterceiroitemprodutobarra_tblnotafiscalterceiroitem" to_schema="mgsis" to_table="tblnotafiscalterceirogrupo" >
+			<fk name="fk_tblnotafiscalterceiroitemprodutobarra_tblnotafiscalterceiroi" to_schema="mgsis" to_table="tblnotafiscalterceirogrupo" >
 				<fk_column name="codnotafiscalterceirogrupo" pk="codnotafiscalterceirogrupo" />
 			</fk>
 			<fk name="fk_tblnotafiscalterceiroitemprodutobarra_tblprodutobarra" to_schema="mgsis" to_table="tblprodutobarra" >
@@ -5942,7 +5942,9 @@
 		<sequence name="tblnotafiscalreferenciada_codnotafiscalreferenciada_seq" start="1" />
 		<sequence name="tblnotafiscalterceiro_codnotafiscalterceiro_seq" start="1" />
 		<sequence name="tblnotafiscalterceiroduplicat_codnotafiscalterceiroduplicat_seq" start="1" />
+		<sequence name="tblnotafiscalterceirogrupo_codnotafiscalterceirogrupo_seq" start="1" />
 		<sequence name="tblnotafiscalterceiroitem_codnotafiscalterceiroitem_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroprodutob_codnotafiscalterceiroprodutob_seq" start="1" />
 		<sequence name="tbloperacao_codoperacao_seq" start="1" />
 		<sequence name="tblpais_codpais_seq" start="1" />
 		<sequence name="tblparametrosgerais_codparametrosgerais_seq" start="1" />
