@@ -17,13 +17,13 @@ class NFeTerceiroRepositoryPath
       return env('NFE_PHP_PATH') . "DistDFe/{$filial->codfilial}/";
     }
 
-    public static function pathDFe ( $filial, $chave, bool $criar = false)
+    public static function pathDFe ( $filial, $numnsu, bool $criar = false)
     {
         $path = static::pathNFe($filial) . "DFe/" ;
         if ($criar) {
             @mkdir($path, 0775, true);
         }
-        $path .= "{$chave}-distDfe.xml";
+        $path .= "{$numnsu}-distDfe.xml";
         return $path;
     }
 

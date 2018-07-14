@@ -28,6 +28,13 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
+    public function detalhesNfeTerceiro(Request $request, $filial, $chave )
+    {
+        $filial = Filial::findOrFail($filial);
+        $res = NFeTerceiroRepository::detalhesNfeTerceiro($filial, $chave);
+        return response()->json($res, 200);
+    }
+
     public function listaNfeTerceiro()
     {
         $filial = Filial::findOrFail($id);
@@ -35,11 +42,6 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
-    public function detalhesNfeTerceiro()
-    {
-        return NFeTerceiroRepository::detalhesNfeTerceiro();
-        // return response()->json($res, 200);
-    }
 
     // public function sefazStatus(Request $request, $id)
     // {
