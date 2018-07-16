@@ -5,12 +5,16 @@ namespace Mg\NFeTerceiro;
 use Mg\NFePHP\NFePHPRepositoryConfig;
 use Mg\Filial\Filial;
 use Mg\Pessoa\Pessoa;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\Estoque\EstoqueLocal;
 
 use NFePHP\NFe\Tools;
 use NFePHP\Common\Certificate;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Common\Complements;
+
 use Carbon\Carbon;
+use DB;
 
 class NFeTerceiroRepository
 {
@@ -129,24 +133,28 @@ class NFeTerceiroRepository
             // header('Content-type: text/xml; charset=UTF-8');
             // echo $xml;
 
+            if ($xml == null) {
+                throw new \Exception('Não foi possível fazer o download');
+            }else{
+                // CONVERTE O XML EM UM OBJETO
+                $st = new Standardize();
+                $res = $st->toStd($xml);
+                $chave = $res->protNFe->infProt->chNFe;
+            }
+
+            // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
+            if(!empty($chave)){
+                $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
+                file_put_contents($pathNFeTerceiro, $xml);
+            }
         } catch (\Exception $e) {
             echo str_replace("\n", "<br/>", $e->getMessage());
         }
 
-        // CONVERTE O XML EM UM OBJETO
-        $st = new Standardize();
-        $res = $st->toStd($xml);
-        $chave = $res->protNFe->infProt->chNFe;
-
-        // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
-        if(!empty($chave)){
-            $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
-            file_put_contents($pathNFeTerceiro, $xml);
-        }
 
     }
 
-    public static function detalhesNfeTerceiro (Filial $filial, $chave)
+    public static function carregarXml (Filial $filial, $chave)
     {
 
         // TRAZ O CAMNHO DO XML SE EXISTIR
@@ -154,7 +162,7 @@ class NFeTerceiroRepository
 
         // VERIFICA SE O AQRQUIVO EXISTE
         if (!file_exists($path)) {
-            throw new \Exception('Nota Fiscal não é de nossa emissão!');
+            throw new \Exception('Nota Fiscal TErceiro não encontrada.');
         }else{
             // BUSCA XML NA PASTA  SE JA ESTIVER BAIXADO e CONVERTE EM UM OBJETO
             $xml = file_get_contents($path);
@@ -177,70 +185,148 @@ class NFeTerceiroRepository
         $coddistribuicaodfe = end($coddistribuicaodfe);
         $coddistribuicaodfe = end($coddistribuicaodfe);
 
-        // dd($coddistribuicaodfe->coddistribuicaodfe);
+        // BUSCA NA BASE DE DADOS O cod estoquelocal
+        $codestoquelocal = EstoqueLocal::select('codestoquelocal')->where('codfilial', $filial->codfilial)->get();
+        $codestoquelocal = end($codestoquelocal);
+        $codestoquelocal = end($codestoquelocal);
 
-        // SALVA NA BASE DE DADOS O RESULTADO DA CONSULTA NFeTerceiro
-        $NFe = new NFeTerceiro();
-        $NFe->coddistribuicaodfe = $coddistribuicaodfe->coddistribuicaodfe;
-        $NFe->codnotafiscal = $res->NFe->infNFe->ide->cNF;
-        $NFe->codnegocio = null; // como gerar um negocio?
-        $NFe->codfilial = $filial->codfilial;
-        $NFe->codoperacao = $res->NFe->infNFe->ide->tpNF;
-        $NFe->codnaturezaoperacao = null; //usuario deve informar a natureza de operacao!
-        $NFe->codpessoa = $codpessoa->codpessoa;
-        $NFe->emitente = $res->NFe->infNFe->emit->xNome;
-        $NFe->cnpj = $res->NFe->infNFe->emit->CNPJ;
-        $NFe->ie = $res->NFe->infNFe->emit->IE;
-        $NFe->emissao = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
-        $NFe->ignorada = false; // onde esta buscar essa informacao?
-        $NFe->indsituacao = $res->NFe->infNFe->ide->cSitNFe??null;
-        $NFe->justificativa = $res->protNFe->infProt->xMotivo;
-        $NFe->indmanifestacao = null; // perguntar para o usuario a manifestacao?
-        $NFe->nfechave = $res->protNFe->infProt->chNFe;
-        $NFe->modelo = $res->NFe->infNFe->ide->mod;
-        $NFe->serie = $res->NFe->infNFe->ide->serie;
-        $NFe->numero = $res->NFe->infNFe->ide->nNF;
-        $NFe->entrada = null;  //perguntar para o ususario a data!
-        $NFe->valortotal = $res->NFe->infNFe->total->ICMSTot->vNF;
-        $NFe->icmsbase = $res->NFe->infNFe->total->ICMSTot->vBC;
-        $NFe->icmsvalor = $res->NFe->infNFe->total->ICMSTot->vICMS;
-        $NFe->icmsstbase = $res->NFe->infNFe->total->ICMSTot->vBCST;
-        $NFe->icmsstvalor = $res->NFe->infNFe->total->ICMSTot->vST;
-        $NFe->ipivalor = $res->NFe->infNFe->total->ICMSTot->vProd;
-        $NFe->valorprodutos = $res->NFe->infNFe->total->ICMSTot->vProd;
-        $NFe->valorfrete = $res->NFe->infNFe->total->ICMSTot->vFrete;
-        $NFe->valorseguro = $res->NFe->infNFe->total->ICMSTot->vSeg;
-        $NFe->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
-        $NFe->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
-        // dd($NFe);
-        printf(json_encode($NFe));
-        $NFe->save();
+        DB::beginTransaction();
 
-        //SALVA NA TABELA GRUPO O CODIGO DA NOTA E GERA UM CODIGO DO GRUPO
-        $grupo = new NFeTerceiroGrupo();
-        $grupo->codnotafiscalterceiro = $res->NFe->infNFe->ide->cNF;
+        $NF = new NotaFiscal();
+        $NF->codnaturezaoperacao = 1;
+        $NF->emitida = false; // rever este campo
+        $NF->nfechave = $res->protNFe->infProt->chNFe;
+        $NF->nfeimpressa = $res->NFe->infNFe->ide->tpImp;
+        $NF->serie = $res->NFe->infNFe->ide->serie;
+        $NF->numero = $res->NFe->infNFe->ide->nNF;
+        $NF->emissao = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
+        $NF->saida = Carbon::now(); // rever este campo
+        $NF->codfilial = $filial->codfilial;
+        $NF->codpessoa = $codpessoa->codpessoa;
+        $NF->observacoes = $res->NFe->infNFe->infAdic->infCpl??null;
+        $NF->volumes = $res->NFe->infNFe->transp->vol->qVol;
+        $NF->codoperacao = $res->NFe->infNFe->ide->tpNF;
+        $NF->nfereciboenvio = Carbon::parse($res->protNFe->infProt->dhRecbto);
+        $NF->nfedataenvio = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
+        $NF->nfeautorizacao = $res->protNFe->infProt->xMotivo;
+        $NF->nfedataautorizacao = Carbon::parse($res->protNFe->infProt->dhRecbto);
+        $NF->valorfrete = $res->NFe->infNFe->total->ICMSTot->vFrete;
+        $NF->valorseguro = $res->NFe->infNFe->total->ICMSTot->vSeg;
+        $NF->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
+        $NF->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
+        $NF->nfecancelamento = null;
+        $NF->nfedatacancelamento = null;
+        $NF->nfeinutilizacao = null;
+        $NF->nfedatainutilizacao = null;
+        $NF->justificativa = $res->NFe->infNFe->ide->xJust??null;
+        $NF->modelo = $res->NFe->infNFe->ide->mod;
+        $NF->valorprodutos = $res->NFe->infNFe->total->ICMSTot->vProd;
+        $NF->valortotal = $res->NFe->infNFe->total->ICMSTot->vNF;
+        $NF->icmsbase = $res->NFe->infNFe->total->ICMSTot->vBC;
+        $NF->icmsvalor = $res->NFe->infNFe->total->ICMSTot->vICMS;
+        $NF->icmsstbase = $res->NFe->infNFe->total->ICMSTot->vBCST;
+        $NF->icmsstvalor = $res->NFe->infNFe->total->ICMSTot->vST;
+        $NF->ipibase = $res->NFe->infNFe->total->ICMSTot->vBC;
+        $NF->ipivalor = $res->NFe->infNFe->total->ICMSTot->vIPI;
+        $NF->frete = $res->NFe->infNFe->transp->modFrete;
+        $NF->tpemis = $res->NFe->infNFe->ide->tpEmis;
+        $NF->codestoquelocal = $codestoquelocal->codestoquelocal;
+        $NF->save();
+
+        // BUSCA NA tblnotafiscal O codnotafiscal
+        $codnotafiscal = NotaFiscal::select('codnotafiscal')->where('nfechave', $res->protNFe->infProt->chNFe)->get();
+        $codnotafiscal = end($codnotafiscal);
+        $codnotafiscal = end($codnotafiscal);
+
+        // SALVA NA tblnotafiscalterceiro OS DADOS DA NOTA
+        $NFeTerceiro = NFeTerceiro::firstOrNew([
+            'nfechave' => $res->protNFe->infProt->chNFe,
+            'numero' => $res->NFe->infNFe->ide->nNF
+        ]);
+        $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe->coddistribuicaodfe;
+        $NFeTerceiro->codnotafiscal = $codnotafiscal->codnotafiscal;
+        $NFeTerceiro->codnegocio = null; // rever este campo, como gerar um negocio?
+        $NFeTerceiro->codfilial = $filial->codfilial;
+        $NFeTerceiro->codoperacao = $res->NFe->infNFe->ide->tpNF;
+        $NFeTerceiro->codnaturezaoperacao = null; //usuario deve informar a natureza de operacao!
+        $NFeTerceiro->codpessoa = $codpessoa->codpessoa;
+        $NFeTerceiro->emitente = $res->NFe->infNFe->emit->xNome;
+        $NFeTerceiro->cnpj = $res->NFe->infNFe->emit->CNPJ;
+        $NFeTerceiro->ie = $res->NFe->infNFe->emit->IE;
+        $NFeTerceiro->emissao = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
+        $NFeTerceiro->ignorada = false; // onde esta buscar essa informacao?
+        $NFeTerceiro->indsituacao = $res->NFe->infNFe->ide->cSitNFe??null;
+        $NFeTerceiro->justificativa = $res->protNFe->infProt->xMotivo;
+        $NFeTerceiro->indmanifestacao = null; // perguntar para o usuario a manifestacao?
+        $NFeTerceiro->nfechave = $res->protNFe->infProt->chNFe;
+        $NFeTerceiro->modelo = $res->NFe->infNFe->ide->mod;
+        $NFeTerceiro->serie = $res->NFe->infNFe->ide->serie;
+        $NFeTerceiro->numero = $res->NFe->infNFe->ide->nNF;
+        $NFeTerceiro->entrada = null;  //perguntar para o ususario a data!
+        $NFeTerceiro->valortotal = $res->NFe->infNFe->total->ICMSTot->vNF;
+        $NFeTerceiro->icmsbase = $res->NFe->infNFe->total->ICMSTot->vBC;
+        $NFeTerceiro->icmsvalor = $res->NFe->infNFe->total->ICMSTot->vICMS;
+        $NFeTerceiro->icmsstbase = $res->NFe->infNFe->total->ICMSTot->vBCST;
+        $NFeTerceiro->icmsstvalor = $res->NFe->infNFe->total->ICMSTot->vST;
+        $NFeTerceiro->ipivalor = $res->NFe->infNFe->total->ICMSTot->vIPI;
+        $NFeTerceiro->valorprodutos = $res->NFe->infNFe->total->ICMSTot->vProd;
+        $NFeTerceiro->valorfrete = $res->NFe->infNFe->total->ICMSTot->vFrete;
+        $NFeTerceiro->valorseguro = $res->NFe->infNFe->total->ICMSTot->vSeg;
+        $NFeTerceiro->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
+        $NFeTerceiro->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
+        // dd($NFeTerceiro);
+        $NFeTerceiro->save();
+
+        // BUSCA NA tblnotafiscalterceiro o codnotafiscalterceiro
+        $codnotafiscalterceiro = NFeTerceiro::select('codnotafiscalterceiro')->where('codnotafiscal', $codnotafiscal->codnotafiscal)->get();
+        $codnotafiscalterceiro = end($codnotafiscalterceiro);
+        $codnotafiscalterceiro = end($codnotafiscalterceiro);
+
+        //SALVA NA TABELA GRUPO
+        $grupo = NFeTerceiroGrupo::firstOrNew([
+            'codnotafiscalterceiro' => $codnotafiscalterceiro->codnotafiscalterceiro
+        ]);
+        $grupo->codnotafiscalterceiro = $codnotafiscalterceiro->codnotafiscalterceiro;
         $grupo->save();
 
-        // BUSCA NA BASE DE DADOS A codnotafiscalterceirogrupo DA DFE CONSULTADA
-        $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('nfechave', $res->NFe->infNFe->ide->cNF)->get();
+        // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
+        $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('codnotafiscalterceiro', $codnotafiscalterceiro->codnotafiscalterceiro)->get();
         $codGrupo = end($codGrupo);
         $codGrupo = end($codGrupo);
-        
+
         // PARA CADA PRODUTO DA NOTA FAZ UM INSERT NO BANCO
         foreach ($res->NFe->infNFe->det as $key => $item) {
-
-            $NFeItem = new NFeTerceiroItem();
-            $NFeItem->codnotafiscalterceirogrupo = null;
+            $NFeItem = NFeTerceiroItem::firstOrNew([
+                'codnotafiscalterceirogrupo' => $codGrupo->codnotafiscalterceirogrupo
+            ]);
+            $NFeItem->codnotafiscalterceirogrupo = $codGrupo->codnotafiscalterceirogrupo;
             $NFeItem->numero = $item->attributes->nItem;
             $NFeItem->referencia = $item->prod->cProd;
             $NFeItem->produto = $item->prod->xProd;
             $NFeItem->ncm = $item->prod->NCM;
             $NFeItem->cfop = $item->prod->CFOP;
-            $NFeItem->barrastributavel = $item->prod->cEANTrib;
+
+            // VERIFICA SE EXISTE UM CODIGO DE BARRAS
+            $barras = null;
+            if (!is_string($item->prod->cEAN)){
+                $barras = null;
+            }else{
+                $barras = $item->prod->cEAN;
+            }
+            $NFeItem->barras = $barras;
+
+            // VERIFICA SE EXISTE UM CODIGO DE BARRAS TRIBUTAVEL
+            $barrasTrib = null;
+            if (!is_string($item->prod->cEANTrib)){
+                $barrasTrib = null;
+            }else{
+                $barrasTrib = $item->prod->cEANTrib;
+            }
+            $NFeItem->barrastributavel =  $barrasTrib;
+
             $NFeItem->unidademedidatributavel = $item->prod->uTrib;
             $NFeItem->quantidadetributavel = $item->prod->qTrib;
             $NFeItem->valorunitariotributavel = $item->prod->vUnTrib;
-            $NFeItem->barras = $item->prod->cEAN;
             $NFeItem->unidademedida = $item->prod->uCom;
             $NFeItem->quantidade = $item->prod->qCom;
             $NFeItem->valorunitario = $item->prod->vUnCom;
@@ -250,14 +336,14 @@ class NFeTerceiroRepository
             $NFeItem->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
             $NFeItem->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
             $NFeItem->valortotal = $res->NFe->infNFe->total->ICMSTot->vNF;
-            $NFeItem->compoetotal = $item->prod->indTot;
-            $NFeItem->csosn = null;
+            $NFeItem->compoetotal = $item->prod->indTot; // rever este campo
+            $NFeItem->csosn = null; // rever este campo
             $NFeItem->origem = $item->imposto->ICMS->ICMS00->orig??null;
             $NFeItem->icmsbasemodalidade = $item->imposto->ICMS->ICMS00->modBC??null;
             $NFeItem->icmsbase = $item->imposto->ICMS->ICMS00->vBC??0;
             $NFeItem->icmspercentual = $item->imposto->ICMS->ICMS00->pICMS??0;
             $NFeItem->icmsvalor = $item->imposto->ICMS->ICMS00->vICMS??0;
-            $NFeItem->icmsst = $item->imposto->ICMS->ICMS00->CST??0;
+            $NFeItem->icmscst = $item->imposto->ICMS->ICMS00->CST??0;
             $NFeItem->icmsstbasemodalidade = $item->imposto->ICMS->ICMS90->modBCST??null;
             $NFeItem->icmsstbase = $item->imposto->ICMS->ICMS90->vBCST??0;
             $NFeItem->icmsstpercentual = $item->imposto->ICMS->ICMS90->pICMSST??0;
@@ -274,16 +360,49 @@ class NFeTerceiroRepository
             $NFeItem->cofinsbase = $item->imposto->COFINS->COFINSAliq->vBC??0;
             $NFeItem->cofinspercentual = $item->imposto->COFINS->COFINSAliq->pCOFINS??0;
             $NFeItem->cofinsvalor = $item->imposto->COFINS->COFINSAliq->vCOFINS??0;
-            printf(json_encode($NFeItem));
             $NFeItem->save();
-            // dd($item);
         }
+
+        if (sizeof($res->NFe->infNFe->cobr->dup) > 0){
+            foreach ($res->NFe->infNFe->cobr->dup as $key => $duplicata) {
+                $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
+                    'codnotafiscalterceiro' => $codnotafiscalterceiro->codnotafiscalterceiro
+                ]);
+                $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro->codnotafiscalterceiro;
+                $NFeDuplicata->codtitulo = null; // rever este campo
+                $NFeDuplicata->duplicata = $duplicata->nDup;
+                $NFeDuplicata->vencimento = Carbon::parse($duplicata->dVenc);
+                $NFeDuplicata->valor = $duplicata->vDup;
+                $NFeDuplicata->ndup = $duplicata->nDup;
+                $NFeDuplicata->dvenc = Carbon::parse($duplicata->dVenc);
+                $NFeDuplicata->vdup = $duplicata->vDup;
+                $NFeDuplicata->save();
+
+            }
+        }
+
+        // $produtobarra = new NFeTerceiroProdutoBarra();
+        // $produtobarra->codnotafiscalterceirogrupo = null;
+        // $produtobarra->codprodutobarra = null;
+        // $produtobarra->margem = null;
+        // $produtobarra->complemento = null;
+        // $produtobarra->quantidade = null;
+        // $produtobarra->valorproduto = null;
+        // $produtobarra->codusuariocriacao = null;
+        // $produtobarra->codusuarioalteracao = null;
+
+        DB::commit();
 
     }
 
     public static function listaNfeTerceiro ()
     {
-        dd('aqui');
+        // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
+        $lista = NFeTerceiroDistribuicaoDfe::select('*')->where([ ['schema', 'like', 'procNFe' . '%'] ] )->get();
+        $lista = end($lista);
+        $res = $lista;
+        return $res;
+        // dd ($res);
 
     }
 

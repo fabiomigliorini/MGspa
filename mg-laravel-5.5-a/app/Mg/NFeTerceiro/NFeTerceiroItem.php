@@ -36,7 +36,7 @@ class NFeTerceiroItem extends MGModel
         'icmsbase',
         'icmspercentual',
         'icmsvalor',
-        'icmsst',
+        'icmscst',
         'icmsstbasemodalidade',
         'icmsstbase',
         'icmsstpercentual',
@@ -52,7 +52,8 @@ class NFeTerceiroItem extends MGModel
         'cofinscst',
         'cofinsbase',
         'cofinspercentual',
-        'cofinsvalor'
+        'cofinsvalor'  
+
     ];
     protected $dates = [
         'criacao',

@@ -4,7 +4,7 @@ namespace Mg\NFeTerceiro;
 
 use Mg\MgModel;
 
-class NotaFiscalTerceiroDistribuicao extends MGModel
+class NFeTerceiroDuplicata extends MGModel
 {
     protected $table = 'tblnotafiscalterceiroduplicata';
     protected $primaryKey = 'codnotafiscalterceiroduplicata';
@@ -13,9 +13,13 @@ class NotaFiscalTerceiroDistribuicao extends MGModel
         'codtitulo',
         'duplicata',
         'vencimento',
-        'valor'
+        'valor',
+        'ndup',
+        'dvenc',
+        'vdup'
     ];
     protected $dates = [
+        'dvenc',
         'vencimento',
         'criacao',
         'codusuariocriacao',
