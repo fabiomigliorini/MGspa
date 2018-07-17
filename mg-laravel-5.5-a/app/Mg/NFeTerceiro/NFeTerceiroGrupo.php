@@ -9,13 +9,13 @@ class NFeTerceiroGrupo extends MGModel
     protected $table = 'tblnotafiscalterceirogrupo';
     protected $primaryKey = 'codnotafiscalterceirogrupo';
     protected $fillable = [
-        'codnotafiscalterceiro'
+        'codnotafiscalterceiro',
+        'codusuariocriacao',
+        'codusuarioalteracao'
     ];
     protected $dates = [
         'criacao',
-        'codusuariocriacao',
         'alteracao',
-        'codusuarioalteracao',
     ];
 
     // Chaves Estrangeiras

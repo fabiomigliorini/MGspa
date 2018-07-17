@@ -16,15 +16,16 @@ class NFeTerceiroDuplicata extends MGModel
         'valor',
         'ndup',
         'dvenc',
-        'vdup'
+        'vdup',
+        'codusuariocriacao',
+        'codusuarioalteracao'
+        
     ];
     protected $dates = [
         'dvenc',
         'vencimento',
         'criacao',
-        'codusuariocriacao',
-        'alteracao',
-        'codusuarioalteracao'
+        'alteracao'
     ];
 
     // Chaves Estrangeiras

@@ -11,13 +11,14 @@ class NFeTerceiroDistribuicaoDfe extends MGModel
     protected $fillable = [
         'codfilial',
         'nsu',
-        'schema'
+        'schema',
+        'codusuariocriacao',
+        'codusuarioalteracao'
+
     ];
     protected $dates = [
         'criacao',
-        'codusuariocriacao',
-        'alteracao',
-        'codusuarioalteracao'
+        'alteracao'
     ];
 
     // Chaves Estrangeiras

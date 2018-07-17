@@ -52,14 +52,14 @@ class NFeTerceiroItem extends MGModel
         'cofinscst',
         'cofinsbase',
         'cofinspercentual',
-        'cofinsvalor'  
+        'cofinsvalor',
+        'codusuariocriacao',
+        'codusuarioalteracao'
 
     ];
     protected $dates = [
         'criacao',
-        'codusuariocriacao',
         'alteracao',
-        'codusuarioalteracao'
     ];
 
     // Chaves Estrangeiras

@@ -39,14 +39,15 @@ class NFeTerceiro extends MGModel
         'valorfrete',
         'valorseguro',
         'valordesconto',
-        'valoroutras'
+        'valoroutras',
+        'codusuariocriacao',
+        'codusuarioalteracao'        
+
     ];
     protected $dates = [
         'emissao',
         'criacao',
-        'codusuariocriacao',
-        'alteracao',
-        'codusuarioalteracao'
+        'alteracao'
     ];
 
     // Chaves Estrangeiras

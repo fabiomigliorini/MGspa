@@ -100,10 +100,13 @@ class NFeTerceiroRepository
                 $dfe->nsu = $numnsu;
                 $dfe->schema = $schema;
                 $dfe->save();
-
                 // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
                 $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathDFe($filial, $numnsu, true);
                 file_put_contents($pathNFeTerceiro, $content);
+
+                if($schema == '"resNFe_v1.01.xsd"'){
+                    static::armazenaDadosDFe($res, $filial);
+                }
 
             }
             sleep(2);
@@ -175,20 +178,14 @@ class NFeTerceiroRepository
         ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
         // ->where([ [ 'ie', 'like', $res->NFe->infNFe->emit->IE ],
         //           [ 'cnpj', $res->NFe->infNFe->emit->CNPJ ] ])->get();
-        $codpessoa = end($codpessoa);
-        $codpessoa = end($codpessoa);
 
         // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
         $coddistribuicaodfe = NFeTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
         ->where([ ['nfechave', $res->protNFe->infProt->chNFe],
                   ['schema', 'like', 'procNFe' . '%'] ])->get();
-        $coddistribuicaodfe = end($coddistribuicaodfe);
-        $coddistribuicaodfe = end($coddistribuicaodfe);
 
         // BUSCA NA BASE DE DADOS O cod estoquelocal
         $codestoquelocal = EstoqueLocal::select('codestoquelocal')->where('codfilial', $filial->codfilial)->get();
-        $codestoquelocal = end($codestoquelocal);
-        $codestoquelocal = end($codestoquelocal);
 
         DB::beginTransaction();
 
@@ -202,7 +199,7 @@ class NFeTerceiroRepository
         $NF->emissao = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
         $NF->saida = Carbon::now(); // rever este campo
         $NF->codfilial = $filial->codfilial;
-        $NF->codpessoa = $codpessoa->codpessoa;
+        $NF->codpessoa = $codpessoa[0]->codpessoa;
         $NF->observacoes = $res->NFe->infNFe->infAdic->infCpl??null;
         $NF->volumes = $res->NFe->infNFe->transp->vol->qVol;
         $NF->codoperacao = $res->NFe->infNFe->ide->tpNF;
@@ -230,26 +227,24 @@ class NFeTerceiroRepository
         $NF->ipivalor = $res->NFe->infNFe->total->ICMSTot->vIPI;
         $NF->frete = $res->NFe->infNFe->transp->modFrete;
         $NF->tpemis = $res->NFe->infNFe->ide->tpEmis;
-        $NF->codestoquelocal = $codestoquelocal->codestoquelocal;
+        $NF->codestoquelocal = $codestoquelocal[0]->codestoquelocal;
         $NF->save();
 
         // BUSCA NA tblnotafiscal O codnotafiscal
         $codnotafiscal = NotaFiscal::select('codnotafiscal')->where('nfechave', $res->protNFe->infProt->chNFe)->get();
-        $codnotafiscal = end($codnotafiscal);
-        $codnotafiscal = end($codnotafiscal);
 
         // SALVA NA tblnotafiscalterceiro OS DADOS DA NOTA
         $NFeTerceiro = NFeTerceiro::firstOrNew([
             'nfechave' => $res->protNFe->infProt->chNFe,
             'numero' => $res->NFe->infNFe->ide->nNF
         ]);
-        $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe->coddistribuicaodfe;
-        $NFeTerceiro->codnotafiscal = $codnotafiscal->codnotafiscal;
+        $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe[0]->coddistribuicaodfe;
+        $NFeTerceiro->codnotafiscal = $codnotafiscal[0]->codnotafiscal;
         $NFeTerceiro->codnegocio = null; // rever este campo, como gerar um negocio?
         $NFeTerceiro->codfilial = $filial->codfilial;
         $NFeTerceiro->codoperacao = $res->NFe->infNFe->ide->tpNF;
         $NFeTerceiro->codnaturezaoperacao = null; //usuario deve informar a natureza de operacao!
-        $NFeTerceiro->codpessoa = $codpessoa->codpessoa;
+        $NFeTerceiro->codpessoa = $codpessoa[0]->codpessoa;
         $NFeTerceiro->emitente = $res->NFe->infNFe->emit->xNome;
         $NFeTerceiro->cnpj = $res->NFe->infNFe->emit->CNPJ;
         $NFeTerceiro->ie = $res->NFe->infNFe->emit->IE;
@@ -278,28 +273,22 @@ class NFeTerceiroRepository
         $NFeTerceiro->save();
 
         // BUSCA NA tblnotafiscalterceiro o codnotafiscalterceiro
-        $codnotafiscalterceiro = NFeTerceiro::select('codnotafiscalterceiro')->where('codnotafiscal', $codnotafiscal->codnotafiscal)->get();
-        $codnotafiscalterceiro = end($codnotafiscalterceiro);
-        $codnotafiscalterceiro = end($codnotafiscalterceiro);
+        $codnotafiscalterceiro = NFeTerceiro::select('codnotafiscalterceiro')->where('codnotafiscal', $codnotafiscal[0]->codnotafiscal)->get();
 
         //SALVA NA TABELA GRUPO
         $grupo = NFeTerceiroGrupo::firstOrNew([
-            'codnotafiscalterceiro' => $codnotafiscalterceiro->codnotafiscalterceiro
+            'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro
         ]);
-        $grupo->codnotafiscalterceiro = $codnotafiscalterceiro->codnotafiscalterceiro;
+        $grupo->codnotafiscalterceiro = $codnotafiscalterceiro[0]->codnotafiscalterceiro;
         $grupo->save();
 
         // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
-        $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('codnotafiscalterceiro', $codnotafiscalterceiro->codnotafiscalterceiro)->get();
-        $codGrupo = end($codGrupo);
-        $codGrupo = end($codGrupo);
+        $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('codnotafiscalterceiro', $codnotafiscalterceiro[0]->codnotafiscalterceiro)->get();
 
         // PARA CADA PRODUTO DA NOTA FAZ UM INSERT NO BANCO
         foreach ($res->NFe->infNFe->det as $key => $item) {
-            $NFeItem = NFeTerceiroItem::firstOrNew([
-                'codnotafiscalterceirogrupo' => $codGrupo->codnotafiscalterceirogrupo
-            ]);
-            $NFeItem->codnotafiscalterceirogrupo = $codGrupo->codnotafiscalterceirogrupo;
+            $NFeItem = new NFeTerceiroItem();
+            $NFeItem->codnotafiscalterceirogrupo = $codGrupo[0]->codnotafiscalterceirogrupo;
             $NFeItem->numero = $item->attributes->nItem;
             $NFeItem->referencia = $item->prod->cProd;
             $NFeItem->produto = $item->prod->xProd;
@@ -363,12 +352,12 @@ class NFeTerceiroRepository
             $NFeItem->save();
         }
 
-        if (sizeof($res->NFe->infNFe->cobr->dup) > 0){
+        if ( isset($res->NFe->infNFe->cobr)){
             foreach ($res->NFe->infNFe->cobr->dup as $key => $duplicata) {
                 $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
-                    'codnotafiscalterceiro' => $codnotafiscalterceiro->codnotafiscalterceiro
+                    'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro
                 ]);
-                $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro->codnotafiscalterceiro;
+                $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro[0]->codnotafiscalterceiro;
                 $NFeDuplicata->codtitulo = null; // rever este campo
                 $NFeDuplicata->duplicata = $duplicata->nDup;
                 $NFeDuplicata->vencimento = Carbon::parse($duplicata->dVenc);
@@ -395,14 +384,32 @@ class NFeTerceiroRepository
 
     }
 
-    public static function listaNfeTerceiro ()
-    {
-        // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
-        $lista = NFeTerceiroDistribuicaoDfe::select('*')->where([ ['schema', 'like', 'procNFe' . '%'] ] )->get();
-        $lista = end($lista);
-        $res = $lista;
-        return $res;
-        // dd ($res);
+    public static function armazenaDadosDFe ($xml, $filail) {
+
+            $dfe = new NFeTerceiroDfe();
+            $dfe->nfechave = $xml->chNFe;
+            $dfe->cnpj = $xml->CNPJ;
+            $dfe->emitente = $xml->xNome;
+            $dfe->ie = $xml->IE;
+            $dfe->emissao = Carbon::parse($xml->dhEmi);
+            $dfe->valortotal = $xml->vNF;
+            $dfe->recebimento = Carbon::parse($xml->dhRecbto);
+            $dfe->digito = $xml->digVal;
+            $dfe->protocolo = $xml->nProt;
+            $dfe->tipo = $xml->tpNF;
+            $dfe->csitnfe = $xml->cSitNFe;
+            $dfe->codusuariocriacao = 2;
+            $dfe->codusuarioalteracao = 2;
+            $dfe->codfilial = $filial->codfilial;
+            $dfe->save();
+
+    }
+
+    public static function listaNfeTerceiro () {
+
+        $qry = NFeTerceiroDfe::select('*')->paginate(100);
+
+        return ($qry);
 
     }
 
