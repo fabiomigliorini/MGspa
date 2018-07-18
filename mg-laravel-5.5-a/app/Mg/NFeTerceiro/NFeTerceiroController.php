@@ -35,9 +35,21 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
-    public function listaNfeTerceiro()
+    public function listaNFeTerceiro()
     {
         $res = NFeTerceiroRepository::listaNfeTerceiro();
+        return response()->json($res, 200);
+    }
+
+    public function listaDFe()
+    {
+        $res = NFeTerceiroRepository::listaDFe();
+        return response()->json($res, 200);
+    }
+
+    public function listaItem(Request $request, $codgrupo)
+    {
+        $res = NFeTerceiroRepository::listaItem($codgrupo);
         return response()->json($res, 200);
     }
 

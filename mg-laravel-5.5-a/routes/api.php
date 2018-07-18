@@ -34,6 +34,8 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('nfe-terceiro/{id}/consulta-dfe', '\Mg\NFeTerceiro\NFeTerceiroController@consultaDfe');
         Route::get('nfe-terceiro/{filial}/{chave}/download-dfe', '\Mg\NFeTerceiro\NFeTerceiroController@downloadNFeTerceiro');
         Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
+        Route::get('nfe-terceiro/lista-dfe', '\Mg\NFeTerceiro\NFeTerceiroController@listaDFe');
+        Route::get('nfe-terceiro/{grupo}/lista-item', '\Mg\NFeTerceiro\NFeTerceiroController@listaItem');
         Route::get('nfe-terceiro/lista-nfeterceiro', '\Mg\NFeTerceiro\NFeTerceiroController@listaNfeTerceiro');
 
         // NFePHP

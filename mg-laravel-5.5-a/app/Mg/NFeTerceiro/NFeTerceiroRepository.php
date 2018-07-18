@@ -405,9 +405,25 @@ class NFeTerceiroRepository
 
     }
 
-    public static function listaNfeTerceiro () {
+    public static function listaNFeTerceiro () {
 
-        $qry = NFeTerceiroDfe::select('*')->paginate(100);
+        $qry = NFeTerceiro::select('*')->paginate(100);
+
+        return ($qry);
+
+    }
+
+    public static function listaDFe () {
+
+        $qry = NFeTerceiroDfe::select('*')->orderBy('emissao', 'DESC')->paginate(100);
+
+        return ($qry);
+
+    }
+
+    public static function listaItem ($codgrupo) {
+
+        $qry = NFeTerceiroItem::select('*')->where('codnotafiscalterceirogrupo', $codgrupo)->paginate(100);
 
         return ($qry);
 
