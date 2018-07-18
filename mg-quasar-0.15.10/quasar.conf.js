@@ -72,6 +72,7 @@ module.exports = function (ctx) {
 
         // Adicionamos
         'QPageSticky',
+        'QBtnDropdown',
         'QInfiniteScroll',
         'QLayoutFooter',
         'QFab',

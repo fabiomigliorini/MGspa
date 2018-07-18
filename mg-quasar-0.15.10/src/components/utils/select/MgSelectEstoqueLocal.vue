@@ -4,6 +4,7 @@
     :options="data"
     :float-label="label"
     @change="handleChange"
+    clearable
   />
 </template>
 

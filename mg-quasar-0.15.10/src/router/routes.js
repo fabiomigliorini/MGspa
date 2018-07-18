@@ -38,5 +38,8 @@ export default [
   { path: '/estoque-saldo-conferencia/listagem/:codestoquelocal/:codmarca/:fiscal/:data', component: () => import('components/views/estoque-saldo-conferencia/Listagem/') },
 
   // NFe
-  { path: '/nfe', component: () => import('components/views/nfe/Index') }
+  { path: '/nfe', component: () => import('components/views/nfe/Index') },
+
+  // NFeTerceiro
+  { path: '/nfe-terceiro', component: () => import('components/views/nfe-tercerio/Index') }
 ]
