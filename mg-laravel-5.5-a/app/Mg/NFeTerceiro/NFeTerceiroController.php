@@ -12,32 +12,17 @@ use Mg\Filial\Filial;
 class NFeTerceiroController extends MgController
 {
 
-    public function consultaDfe(Request $request, $id)
+    public function consultaSefaz(Request $request, $id)
     {
         $filial = Filial::findOrFail($id);
-        $res = NFeTerceiroRepository::consultaDfe($filial);
+        $res = NFeTerceiroRepository::consultaSefaz($filial);
         return response()->json($res, 200);
     }
 
-    public function downloadNFeTerceiro(Request $request, $filial, $chave )
+    public function downloadNFeTerceiro(Request $request)
     {
-        // $chave = NFeTerceiroDistribuicaoDfe::findOrFail($id);
-        // $res = NFeTerceiroRepository::downloadNFeTerceiro($chave);
-        $filial = Filial::findOrFail($filial);
-        $res = NFeTerceiroRepository::downloadNFeTerceiro($filial, $chave);
-        return response()->json($res, 200);
-    }
-
-    public function carregarXml(Request $request, $filial, $chave )
-    {
-        $filial = Filial::findOrFail($filial);
-        $res = NFeTerceiroRepository::carregarXml($filial, $chave);
-        return response()->json($res, 200);
-    }
-
-    public function listaNFeTerceiro()
-    {
-        $res = NFeTerceiroRepository::listaNfeTerceiro();
+        $filial = Filial::findOrFail($request->filial);
+        $res = NFeTerceiroRepository::downloadNFeTerceiro($filial, $request->chave);
         return response()->json($res, 200);
     }
 
@@ -47,12 +32,24 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
-    public function listaItem(Request $request, $codgrupo)
+    public function buscaNFeTerceiro(Request $request)
     {
-        $res = NFeTerceiroRepository::listaItem($codgrupo);
+        $res = NFeTerceiroRepository::buscaNfeTerceiro($request->chave);
         return response()->json($res, 200);
     }
 
+    public function listaItem(Request $request)
+    {
+        $res = NFeTerceiroRepository::listaItem($request->codgrupo);
+        return response()->json($res, 200);
+    }
+
+    // public function carregarXml(Request $request, $filial, $chave)
+    // {
+    //     $filial = Filial::findOrFail($filial);
+    //     $res = NFeTerceiroRepository::carregarXml($filial, $chave);
+    //     return response()->json($res, 200);
+    // }
 
     // public function sefazStatus(Request $request, $id)
     // {

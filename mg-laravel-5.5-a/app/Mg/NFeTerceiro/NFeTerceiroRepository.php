@@ -19,7 +19,7 @@ use DB;
 class NFeTerceiroRepository
 {
 
-    public static function consultaDfe (Filial $filial){
+    public static function consultaSefaz (Filial $filial){
 
         $tools = NFePHPRepositoryConfig::instanciaTools($filial);
         //só funciona para o modelo 55
@@ -94,12 +94,15 @@ class NFeTerceiroRepository
                 $chave = $res->chNFe??$res->protNFe->infProt->chNFe??$res->retEvento->infEvento->chNFe;
 
                 // SALVA NA BASE DE DADOS O RESULTADO DA CONSULTA DFE
-                $dfe = new NFeTerceiroDistribuicaoDfe();
-                $dfe->nfechave = $chave??null;
+                $dfe = NFeTerceiroDistribuicaoDfe::firstOrNew([
+                    'nsu' => $numnsu
+                ]);
+                $dfe->nfechave = $chave;
                 $dfe->codfilial = $filial->codfilial;
                 $dfe->nsu = $numnsu;
                 $dfe->schema = $schema;
                 $dfe->save();
+
                 // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
                 $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathDFe($filial, $numnsu, true);
                 file_put_contents($pathNFeTerceiro, $content);
@@ -111,6 +114,28 @@ class NFeTerceiroRepository
             }
             sleep(2);
         }  // FIM DO LOOP
+        return;
+    }
+
+    public static function armazenaDadosDFe ($xml, $filail) {
+
+            $dfe = new NFeTerceiroDfe();
+            $dfe->nfechave = $xml->chNFe;
+            $dfe->cnpj = $xml->CNPJ;
+            $dfe->emitente = $xml->xNome;
+            $dfe->ie = $xml->IE;
+            $dfe->emissao = Carbon::parse($xml->dhEmi);
+            $dfe->valortotal = $xml->vNF;
+            $dfe->recebimento = Carbon::parse($xml->dhRecbto);
+            $dfe->digito = $xml->digVal;
+            $dfe->protocolo = $xml->nProt;
+            $dfe->tipo = $xml->tpNF;
+            $dfe->csitnfe = $xml->cSitNFe;
+            $dfe->codusuariocriacao = 2;
+            $dfe->codusuarioalteracao = 2;
+            $dfe->codfilial = $filial->codfilial;
+            $dfe->save();
+
     }
 
     public static function downloadNFeTerceiro (Filial $filial, $chave){
@@ -122,14 +147,12 @@ class NFeTerceiroRepository
             $tools->model('55');
             //este serviço somente opera em ambiente de produção
             $tools->setEnvironment(1);
-            $key = str_replace(' ', '', $chave);
-            $response = $tools->sefazDownload($key);
+            $response = $tools->sefazDownload($chave);
 
             $stz = new Standardize($response);
             $std = $stz->toStd();
             if ($std->cStat != 138) {
-                echo "Documento não retornado. [$std->cStat] $std->xMotivo";
-                die;
+                throw new \Exception("Documento não retornado. [$std->cStat] $std->xMotivo");
             }
             $zip = $std->loteDistDFeInt->docZip;
             $xml = gzdecode(base64_decode($zip));
@@ -149,9 +172,12 @@ class NFeTerceiroRepository
             if(!empty($chave)){
                 $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
                 file_put_contents($pathNFeTerceiro, $xml);
+                static::carregarXml($filial, $chave);
+                return true;
             }
         } catch (\Exception $e) {
             echo str_replace("\n", "<br/>", $e->getMessage());
+            return $e;
         }
 
 
@@ -384,35 +410,6 @@ class NFeTerceiroRepository
 
     }
 
-    public static function armazenaDadosDFe ($xml, $filail) {
-
-            $dfe = new NFeTerceiroDfe();
-            $dfe->nfechave = $xml->chNFe;
-            $dfe->cnpj = $xml->CNPJ;
-            $dfe->emitente = $xml->xNome;
-            $dfe->ie = $xml->IE;
-            $dfe->emissao = Carbon::parse($xml->dhEmi);
-            $dfe->valortotal = $xml->vNF;
-            $dfe->recebimento = Carbon::parse($xml->dhRecbto);
-            $dfe->digito = $xml->digVal;
-            $dfe->protocolo = $xml->nProt;
-            $dfe->tipo = $xml->tpNF;
-            $dfe->csitnfe = $xml->cSitNFe;
-            $dfe->codusuariocriacao = 2;
-            $dfe->codusuarioalteracao = 2;
-            $dfe->codfilial = $filial->codfilial;
-            $dfe->save();
-
-    }
-
-    public static function listaNFeTerceiro () {
-
-        $qry = NFeTerceiro::select('*')->paginate(100);
-
-        return ($qry);
-
-    }
-
     public static function listaDFe () {
 
         $qry = NFeTerceiroDfe::select('*')->orderBy('emissao', 'DESC')->paginate(100);
@@ -421,9 +418,17 @@ class NFeTerceiroRepository
 
     }
 
+    public static function buscaNFeTerceiro ($chave) {
+
+        $qry = NFeTerceiro::select('*')->where('nfechave', $chave)->get();
+
+        return ($qry);
+
+    }
+
     public static function listaItem ($codgrupo) {
 
-        $qry = NFeTerceiroItem::select('*')->where('codnotafiscalterceirogrupo', $codgrupo)->paginate(100);
+        $qry = NFeTerceiroItem::select('*')->where('codnotafiscalterceirogrupo', $codgrupo)->get();
 
         return ($qry);
 
