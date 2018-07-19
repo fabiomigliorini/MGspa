@@ -41,5 +41,6 @@ export default [
   { path: '/nfe', component: () => import('components/views/nfe/Index') },
 
   // NFeTerceiro
-  { path: '/nfe-terceiro', component: () => import('components/views/nfe-tercerio/Index') }
+  { path: '/nfe-terceiro', component: () => import('components/views/nfe-tercerio/Index') },
+  { path: '/nfe-terceiro/detalhes-nfe/:chave', component: () => import('components/views/nfe-tercerio/Detalhes-nfe') }
 ]
