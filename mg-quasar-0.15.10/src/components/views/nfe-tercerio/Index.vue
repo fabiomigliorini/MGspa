@@ -124,7 +124,7 @@
 
       <q-item>
         <q-item-main>
-          <q-btn class="full-width" outline color="primary" label="Consultar Sefaz" />
+          <q-btn class="full-width" outline color="primary" @click="modalConsultaSefaz = true" label="Consultar Sefaz" />
         </q-item-main>
       </q-item>
     </div>
@@ -143,7 +143,7 @@
         <!-- Infinite scroll -->
         <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
 
-          <q-list highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
+          <q-list multiline highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
             <q-item >
 
               <q-item-side>
@@ -157,7 +157,12 @@
 
               <q-item-main>
                 <q-item-tile>
-                  <small>{{nota.nfechave}}</small>
+                  <q-btn dense flat icon="vpn_key" @click="buscaNFeTerceiro(nota.nfechave)" >
+                    <small>{{nota.nfechave}}</small>
+                  </q-btn>
+                  <q-tooltip>
+                    Detalhes da nota
+                  </q-tooltip>
                 </q-item-tile>
               </q-item-main>
 
@@ -172,15 +177,22 @@
 
               <q-item-main>
                 <q-item-tile>
-                  R${{nota.valortotal}}
+                  R$ {{nota.valortotal}}
                 </q-item-tile>
                 <q-item-tile sublabel>
                   {{nota.tipo}}
                 </q-item-tile>
               </q-item-main>
 
+              <q-item-main>
+                <q-item-tile sublabel>Emissão: {{moment(nota.emissao).format("DD MMM YYYY")}}</q-item-tile>
+              </q-item-main>
+
               <q-item-side right>
-                <q-item-tile>Emitida: {{moment(nota.emissao).format("DD MMM YYYY")}}</q-item-tile>
+                <q-btn dense @click="downloadNFe(nota.codfilial, nota.nfechave)" round color="primary" icon="cloud_download"/>
+                <q-tooltip>
+                  Baixar XML
+                </q-tooltip>
               </q-item-side>
 
             </q-item>
@@ -188,6 +200,21 @@
           </q-list>
 
         </q-infinite-scroll>
+      </template>
+
+      <!-- modal de consulta sefaz -->
+      <template>
+        <q-modal v-model="modalConsultaSefaz" maximized>
+          <h4>Basic Modal</h4>
+
+          <q-page-sticky position="bottom-right" :offset="[25, 80]">
+            <q-btn round color="red" icon="arrow_back" @click="modalConsultaSefaz = false" />
+          </q-page-sticky>
+
+          <q-page-sticky position="bottom-right" :offset="[25, 25]">
+            <q-btn round color="primary" icon="done" @click="consultarSefaz()" />
+          </q-page-sticky>
+        </q-modal>
       </template>
 
     </div>
@@ -201,7 +228,7 @@ import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompleteMarca from '../../utils/autocomplete/MgAutocompleteMarca'
 
 export default {
-  name: 'nfe-terceiro',
+  name: 'nfe-terceiro-lista-dfe',
   components: {
     MgLayout,
     MgSelectEstoqueLocal,
@@ -219,6 +246,7 @@ export default {
       },
       data: {},
       carregado: false,
+      modalConsultaSefaz: false,
     }
   },
   watch: {
@@ -242,7 +270,6 @@ export default {
     },
 
     buscaListagem: function(concat, done) {
-      console.log(this.data.codestoquelocal)
 
       // inicializa variaveis
       let vm = this
@@ -288,6 +315,35 @@ export default {
       })
     },
 
+    buscaNFeTerceiro: function (chave) {
+      this.$router.push('nfe-terceiro/detalhes-nfe/' + chave)
+    },
+
+    downloadNFe: function(filial, chave) {
+      let vm = this
+      // Monta Parametros da API
+      let params = {
+        filial: filial,
+        chave: chave
+      }
+      vm.$axios.get('nfe-terceiro/download-nfe',{params}).then(function(request){
+        console.log(request.data)
+        if (request.data !== true) {
+          vm.$q.notify({
+            message: request.data,
+            type: 'negative',
+          })
+          return
+        }else{
+          vm.$q.notify({
+            message: 'Download concluído',
+            type: 'positive',
+          })
+        }
+      }).catch(function(error) {
+        console.log(error)
+      })
+    },
   },
   created() {
     this.buscaListagem();
