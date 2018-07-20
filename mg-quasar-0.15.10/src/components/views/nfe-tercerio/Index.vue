@@ -1,5 +1,5 @@
 <template>
-  <mg-layout drawer back-path="/estoque-saldo-conferencia/">
+  <mg-layout drawer back-path="/">
 
     <template slot="title">
       Notas Fiscais de Terceiro

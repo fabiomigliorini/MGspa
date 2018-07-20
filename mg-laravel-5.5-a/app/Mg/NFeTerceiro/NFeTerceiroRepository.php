@@ -215,7 +215,9 @@ class NFeTerceiroRepository
 
         DB::beginTransaction();
 
-        $NF = new NotaFiscal();
+        $NF = NotaFiscal::firstOrNew([
+            'nfechave' => $res->protNFe->infProt->chNFe
+        ]);
         $NF->codnaturezaoperacao = 1;
         $NF->emitida = false; // rever este campo
         $NF->nfechave = $res->protNFe->infProt->chNFe;
@@ -313,7 +315,9 @@ class NFeTerceiroRepository
 
         // PARA CADA PRODUTO DA NOTA FAZ UM INSERT NO BANCO
         foreach ($res->NFe->infNFe->det as $key => $item) {
-            $NFeItem = new NFeTerceiroItem();
+            $NFeItem = NFeTerceiroItem::firstOrNew([
+                'codnotafiscalterceirogrupo' => $codGrupo[0]->codnotafiscalterceirogrupo
+            ]);
             $NFeItem->codnotafiscalterceirogrupo = $codGrupo[0]->codnotafiscalterceirogrupo;
             $NFeItem->numero = $item->attributes->nItem;
             $NFeItem->referencia = $item->prod->cProd;
@@ -426,11 +430,15 @@ class NFeTerceiroRepository
 
     }
 
-    public static function listaItem ($codgrupo) {
+    public static function listaItem ($codnotafiscalterceiro) {
 
-        $qry = NFeTerceiroItem::select('*')->where('codnotafiscalterceirogrupo', $codgrupo)->get();
+        // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
+        $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('codnotafiscalterceiro', $codnotafiscalterceiro)->get();
 
-        return ($qry);
+        // BUSCA NA tblnotafiscalterceiroitem TODOS OS ITENS VINCULADOS A NOTA
+        $itens = NFeTerceiroItem::select('*')->where('codnotafiscalterceirogrupo', $codGrupo[0]->codnotafiscalterceirogrupo)->get();
+
+        return ($itens);
 
     }
 

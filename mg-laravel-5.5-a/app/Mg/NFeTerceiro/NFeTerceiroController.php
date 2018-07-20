@@ -40,16 +40,16 @@ class NFeTerceiroController extends MgController
 
     public function listaItem(Request $request)
     {
-        $res = NFeTerceiroRepository::listaItem($request->codgrupo);
+        $res = NFeTerceiroRepository::listaItem($request->codnotafiscalterceiro);
         return response()->json($res, 200);
     }
 
-    // public function carregarXml(Request $request, $filial, $chave)
-    // {
-    //     $filial = Filial::findOrFail($filial);
-    //     $res = NFeTerceiroRepository::carregarXml($filial, $chave);
-    //     return response()->json($res, 200);
-    // }
+    public function carregarXml(Request $request, $filial, $chave)
+    {
+        $filial = Filial::findOrFail($filial);
+        $res = NFeTerceiroRepository::carregarXml($filial, $chave);
+        return response()->json($res, 200);
+    }
 
     // public function sefazStatus(Request $request, $id)
     // {
