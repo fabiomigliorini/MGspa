@@ -171,7 +171,7 @@
                   {{nota.emitente.substr(0, 25)}}
                 </q-item-tile>
                 <q-item-tile sublabel>
-                  {{nota.cnpj}} | {{nota.ie}}
+                  {{nota.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} | {{nota.ie}}
                 </q-item-tile>
               </q-item-main>
 
@@ -185,7 +185,8 @@
               </q-item-main>
 
               <q-item-main>
-                <q-item-tile sublabel>Emissão: {{moment(nota.emissao).format("DD MMM YYYY")}}</q-item-tile>
+                <q-item-tile sublabel>Emissão </q-item-tile>
+                <q-item-tile>{{moment(nota.emissao).format("DD MMM YYYY")}}</q-item-tile>
               </q-item-main>
 
               <q-item-side right>
@@ -205,7 +206,52 @@
       <!-- modal de consulta sefaz -->
       <template>
         <q-modal v-model="modalConsultaSefaz" maximized>
-          <h4>Basic Modal</h4>
+          <q-page padding>
+
+            <div class="row q-pa-sm">
+              <div class="col-xs-12 col-sm-6 col-md-5 col-lg-3">
+
+                <q-card>
+                  <q-card-title>Consultar Notas</q-card-title>
+                  <q-card-separator />
+                  <q-card-main>
+                    <mg-select-estoque-local label="Local" v-model="data.filial" ></mg-select-estoque-local>
+                    <p class="text-faded">Última NSU consultada:</p>
+                  </q-card-main>
+                </q-card>
+
+              </div>
+            </div>
+
+            <q-list  highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
+              <q-item>
+                <q-item-main>
+                  <div class="row">
+                    <div class="col-sm-12 col-md-6 col-lg-4" style="overflow: hidden">
+                      <small>{{nota.nfechave}}</small>
+                    </div>
+
+                    <div class="col-sm-12 col-md-6 col-lg-4">
+                      <small>{{nota.emitente}}</small>
+                    </div>
+
+                    <div class="col-sm-3 col-md-4 col-lg-2">
+                      <small>Natureza da operação</small>
+                    </div>
+
+                    <div class="col-sm-2 col-md-4 col-lg-1">
+                      <small>R$ {{nota.valortotal}}</small>
+                    </div>
+
+                    <div class="col-sm-2 col-md-4 col-lg-1">
+                      <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
+                    </div>
+                  </div>
+                </q-item-main>
+              </q-item>
+
+            </q-list>
+          </q-page>
 
           <q-page-sticky position="bottom-right" :offset="[25, 80]">
             <q-btn round color="red" icon="arrow_back" @click="modalConsultaSefaz = false" />

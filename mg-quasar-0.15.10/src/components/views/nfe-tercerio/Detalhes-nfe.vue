@@ -61,8 +61,7 @@
 
               <!-- ver detalhes da nota -->
               <q-item-tile >
-                <q-icon name="playlist_add" size="25px"/>
-                <q-btn  @click="detalhesNF = true" flat>detalhes da nota</q-btn>
+                <q-btn color="primary" icon="playlist_add" class="full-width" outline  @click="detalhesNF = true" label="detalhes da nota"/>
               </q-item-tile>
 
             </q-item-main>
@@ -74,7 +73,12 @@
           <q-list multiline highlight v-for="produto in itens.data" :key="produto.codnotafiscalterceiro">
             <q-item>
               <q-item-main dense>
-                {{produto.produto}}
+                <q-item-tile sublabel>
+                  <small>{{produto.produto}}</small>
+                </q-item-tile>
+                <q-item-tile>
+                  <template v-if="produto.barras">{{produto.barras}} /</template> {{produto.referencia}}
+                </q-item-tile>
               </q-item-main>
             </q-item>
           </q-list>
@@ -91,32 +95,33 @@
       <template v-if="detalhesNF">
 
         <div class="row gutter-sm">
-          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="col-12">
 
             <q-card>
               <q-card-title>
-                <div class="row gutter-sm">
-                  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                    {{nf.emitente}}
-                  </div>
-                  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                    <small>
-                      {{nf.cnpj}} / {{nf.ie}}
-                    </small>
-                  </div>
-                </div>
-                <div class="row">
-                  <small>
-                    <q-icon name="vpn_key"/>
-                    {{nf.nfechave}}
-                  </small>
-                </div>
-                <div class="row">
-                  <small>
-                    <q-icon name="local_offer"/>
-                    {{nf.codnotafiscal}}
-                  </small>
-                </div>
+
+                <q-item>
+                  <q-item-main>
+
+                    <q-item-tile>
+                      {{nf.emitente}}
+                    </q-item-tile>
+
+                    <q-item-tile sublabel>
+                      <small>{{nf.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} / {{nf.ie}}</small>
+                    </q-item-tile>
+
+                    <q-item-tile sublabel>
+                      <small><q-icon name="vpn_key"/>{{nf.nfechave}}</small>
+                    </q-item-tile>
+
+                    <q-item-tile sublabel>
+                      <small><q-icon name="local_offer"/> {{nf.codnotafiscal}}</small>
+                    </q-item-tile>
+
+                  </q-item-main>
+                </q-item>
+
               </q-card-title>
               <q-card-separator />
               <q-card-main>
@@ -173,7 +178,7 @@
 
                         <q-item>
                           <q-item-side>Base:</q-item-side>
-                          <q-item-main align="end">R$: {{nf.icmsbase}}</q-item-main>
+                          <q-item-main align="end">R$ {{nf.icmsbase}}</q-item-main>
                         </q-item>
 
                         <q-item>
@@ -196,7 +201,7 @@
 
                         <q-item>
                           <q-item-side>Base:</q-item-side>
-                          <q-item-main align="end">R$: {{nf.icmsstbase}}</q-item-main>
+                          <q-item-main align="end">R$ {{nf.icmsstbase}}</q-item-main>
                         </q-item>
 
                         <q-item>
@@ -235,6 +240,10 @@
       </template>
       <!-- </template> -->
 
+      <q-page-sticky position="bottom-right" :offset="[25, 25]">
+        <q-btn round color="primary" icon="done" @click="atualizaNota()" />
+      </q-page-sticky>
+
     </div>
   </mg-layout>
 </template>
@@ -259,7 +268,7 @@ export default {
       data: {},
       carregado: false,
       itemcarregado: false,
-      detalhesNF: false,
+      detalhesNF: true,
     }
   },
   watch: {

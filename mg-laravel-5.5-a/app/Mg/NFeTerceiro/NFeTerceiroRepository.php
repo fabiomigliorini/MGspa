@@ -107,7 +107,7 @@ class NFeTerceiroRepository
                 $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathDFe($filial, $numnsu, true);
                 file_put_contents($pathNFeTerceiro, $content);
 
-                if($schema == '"resNFe_v1.01.xsd"'){
+                if($schema == "resNFe_v1.01.xsd"){
                     static::armazenaDadosDFe($res, $filial);
                 }
 
@@ -117,7 +117,7 @@ class NFeTerceiroRepository
         return;
     }
 
-    public static function armazenaDadosDFe ($xml, $filail) {
+    public static function armazenaDadosDFe ($xml, $filial) {
 
             $dfe = new NFeTerceiroDfe();
             $dfe->nfechave = $xml->chNFe;
@@ -191,7 +191,7 @@ class NFeTerceiroRepository
 
         // VERIFICA SE O AQRQUIVO EXISTE
         if (!file_exists($path)) {
-            throw new \Exception('Nota Fiscal TErceiro não encontrada.');
+            throw new \Exception('Nota Fiscal Terceiro não encontrada.');
         }else{
             // BUSCA XML NA PASTA  SE JA ESTIVER BAIXADO e CONVERTE EM UM OBJETO
             $xml = file_get_contents($path);
