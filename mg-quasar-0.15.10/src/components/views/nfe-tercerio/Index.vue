@@ -13,7 +13,7 @@
       <q-item dense>
         <q-item-side icon="store"/>
         <q-item-main>
-          <mg-select-estoque-local label="Local" v-model="data.codestoquelocal" ></mg-select-estoque-local>
+          <mg-select-filial label="Local" v-model="filter.filtroFilial" />
         </q-item-main>
       </q-item>
 
@@ -22,7 +22,7 @@
         <q-item-side icon="account_circle"/>
         <q-item-main>
           <q-field >
-            <q-input float-label="Fornecedor" v-model="filter.filtro" />
+            <q-input float-label="Fornecedor" v-model="filter.filtroPessoa" />
           </q-field>
         </q-item-main>
       </q-item>
@@ -32,7 +32,7 @@
         <q-item-side icon="vpn_key"/>
         <q-item-main>
           <q-field >
-            <q-input float-label="Chave" v-model="filter.filtro" />
+            <q-input float-label="Chave" v-model="filter.filtroChave" />
           </q-field>
         </q-item-main>
       </q-item>
@@ -144,49 +144,58 @@
         <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
 
           <q-list multiline highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
-            <q-item >
 
-              <q-item-side>
-                <q-item-tile v-if="nota.codfilial">
-                  {{nota.codfilial}}
-                </q-item-tile>
-                <q-item-tile>
-                  {{nota.codnotafiscalterceirodfe}}
-                </q-item-tile>
-              </q-item-side>
-
+            <q-item>
               <q-item-main>
-                <q-item-tile>
-                  <q-btn dense flat icon="vpn_key" @click="buscaNFeTerceiro(nota.nfechave)" >
+                <div class="row">
+
+                  <div class="col-sm-2 col-md-1 col-lg-1">
+                    <div class="row">
+                      <small class="text-faded">Filial</small>
+                    </div>
+                    <div class="row">
+                      <small>{{nota.codfilial}}</small>
+                    </div>
+                  </div>
+
+                  <div @click="buscaNFeTerceiro(nota.nfechave)" class="col-sm-10 col-md-7 col-lg-5 cursor-pointer" style="overflow: hidden">
+                    <q-icon name="vpn_key"/>
                     <small>{{nota.nfechave}}</small>
-                  </q-btn>
-                  <q-tooltip>
-                    Detalhes da nota
-                  </q-tooltip>
-                </q-item-tile>
-              </q-item-main>
+                    <q-tooltip>
+                      Detalhes da nota
+                    </q-tooltip>
+                  </div>
 
-              <q-item-main>
-                <q-item-tile>
-                  {{nota.emitente.substr(0, 25)}}
-                </q-item-tile>
-                <q-item-tile sublabel>
-                  {{nota.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} | {{nota.ie}}
-                </q-item-tile>
-              </q-item-main>
+                  <div class="col-sm-6 col-md-6 col-lg-4">
+                    <div class="row">
+                      <small>{{nota.emitente.substr(0,30)}}</small>
+                    </div>
+                    <div class="row">
+                      <small class="text-faded">
+                        {{nota.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} | {{nota.ie}}
+                      </small>
+                    </div>
+                  </div>
 
-              <q-item-main>
-                <q-item-tile>
-                  R$ {{nota.valortotal}}
-                </q-item-tile>
-                <q-item-tile sublabel>
-                  {{nota.tipo}}
-                </q-item-tile>
-              </q-item-main>
+                  <div class="col-sm-3 col-md-3 col-lg-1">
+                    <div class="row">
+                      <small class="text-faded">Total</small>
+                    </div>
+                    <div class="row">
+                      <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
+                    </div>
+                  </div>
 
-              <q-item-main>
-                <q-item-tile sublabel>Emissão </q-item-tile>
-                <q-item-tile>{{moment(nota.emissao).format("DD MMM YYYY")}}</q-item-tile>
+                  <div class="col-sm-3 col-md-3 col-lg-1">
+                    <div class="row">
+                      <small class="text-faded">Emissão</small>
+                    </div>
+                    <div class="row">
+                      <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
+                    </div>
+                  </div>
+
+                </div>
               </q-item-main>
 
               <q-item-side right>
@@ -197,6 +206,7 @@
               </q-item-side>
 
             </q-item>
+
             <q-item-separator />
           </q-list>
 
@@ -204,7 +214,7 @@
       </template>
 
       <!-- modal de consulta sefaz -->
-      <template>
+      <template v-if="carregado">
         <q-modal v-model="modalConsultaSefaz" maximized>
           <q-page padding>
 
@@ -212,22 +222,27 @@
               <div class="col-xs-12 col-sm-6 col-md-5 col-lg-3">
 
                 <q-card>
-                  <q-card-title>Consultar Notas</q-card-title>
+                  <q-card-title>Consulta Sefaz</q-card-title>
                   <q-card-separator />
                   <q-card-main>
-                    <mg-select-estoque-local label="Local" v-model="data.filial" ></mg-select-estoque-local>
+                    <mg-select-filial label="Local" v-model="data.consultaSefaz" />
                     <p class="text-faded">Última NSU consultada:</p>
+                    <p>
+                      <q-btn label="progresso" @click="modalProgresso = true"/>
+                    </p>
                   </q-card-main>
                 </q-card>
 
               </div>
             </div>
 
-            <q-list  highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
+            <q-list no-border highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
               <q-item>
                 <q-item-main>
                   <div class="row">
+
                     <div class="col-sm-12 col-md-6 col-lg-4" style="overflow: hidden">
+                      <q-icon name="vpn_key"/>
                       <small>{{nota.nfechave}}</small>
                     </div>
 
@@ -240,16 +255,16 @@
                     </div>
 
                     <div class="col-sm-2 col-md-4 col-lg-1">
-                      <small>R$ {{nota.valortotal}}</small>
+                      <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
                     </div>
 
                     <div class="col-sm-2 col-md-4 col-lg-1">
                       <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
                     </div>
+
                   </div>
                 </q-item-main>
               </q-item>
-
             </q-list>
           </q-page>
 
@@ -263,12 +278,35 @@
         </q-modal>
       </template>
 
+      <!-- Modal de progresso da consulta -->
+      <template>
+        <q-modal v-model="modalProgresso" maximized>
+          <q-page padding >
+            <center>
+              <div style="max-width:50vw">
+                <q-card>
+                  <q-card-title>
+                    Consultando Sefaz <span class="text-green">25</span> / <strong>50</strong>
+                  </q-card-title>
+                  <q-card-separator />
+                  <q-card-main>
+                    <q-progress :percentage="progresso" stripe animate style="height: 45px" />
+                  </q-card-main>
+                </q-card>
+                <q-btn color="primary" @click="modalProgresso = false" label="Close"/>
+              </div>
+            </center>
+          </q-page>
+        </q-modal>
+      </template>
+
     </div>
   </mg-layout>
 </template>
 
 <script>
 import MgSelectEstoqueLocal from '../../utils/select/MgSelectEstoqueLocal'
+import MgSelectFilial from '../../utils/select/MgSelectFilial'
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompleteMarca from '../../utils/autocomplete/MgAutocompleteMarca'
@@ -277,6 +315,7 @@ export default {
   name: 'nfe-terceiro-lista-dfe',
   components: {
     MgLayout,
+    MgSelectFilial,
     MgSelectEstoqueLocal,
     MgErrosValidacao,
     MgAutocompleteMarca
@@ -287,25 +326,29 @@ export default {
       filter: {
         tabs: 'pendente',
         filtro: null,
+        filtroFilial: null,
+        filtroPessoa: null,
+        filtroChave: null,
         datainicial: null,
-        datafinal:null,
+        datafinal: null,
       },
       data: {},
       carregado: false,
       modalConsultaSefaz: false,
+      modalProgresso: false,
+      progresso: 75,
+      consultaSefaz: null
     }
   },
   watch: {
-
     // observa filtro, sempre que alterado chama a api
     filter: {
       handler: function (val, oldVal) {
-        this.page = 1
         this.buscaListagem(false, null)
+        this.page = 1
       },
-      deep: true
+      deep: true,
     }
-
   },
   methods: {
 
@@ -365,6 +408,57 @@ export default {
       this.$router.push('nfe-terceiro/detalhes-nfe/' + chave)
     },
 
+    ultimaNSU: function (filial) {
+      let vm = this
+      // Monta Parametros da API
+      let params = {
+        filial: filial
+      }
+      console.log(params)
+    //   vm.$axios.get('nfe-terceiro/consulta-sefaz',{params}).then(function(request){
+    //     if (request.data !== true) {
+    //       vm.$q.notify({
+    //         message: request.data,
+    //         type: 'negative',
+    //       })
+    //       return
+    //     }else{
+    //       vm.$q.notify({
+    //         message: 'Consulta concluída',
+    //         type: 'positive',
+    //       })
+    //     }
+    //   }).catch(function(error) {
+    //     console.log(error)
+    //   })
+    // },
+    },
+
+    consultarSefaz: function () {
+      let vm = this
+      // Monta Parametros da API
+      let params = {
+        filial: this.data.consultaSefaz
+      }
+
+      vm.$axios.get('nfe-terceiro/consulta-sefaz',{params}).then(function(request){
+        if (request.data !== true) {
+          vm.$q.notify({
+            message: request.data,
+            type: 'negative',
+          })
+          return
+        }else{
+          vm.$q.notify({
+            message: 'Consulta concluída',
+            type: 'positive',
+          })
+        }
+      }).catch(function(error) {
+        console.log(error)
+      })
+    },
+
     downloadNFe: function(filial, chave) {
       let vm = this
       // Monta Parametros da API
@@ -373,7 +467,6 @@ export default {
         chave: chave
       }
       vm.$axios.get('nfe-terceiro/download-nfe',{params}).then(function(request){
-        console.log(request.data)
         if (request.data !== true) {
           vm.$q.notify({
             message: request.data,

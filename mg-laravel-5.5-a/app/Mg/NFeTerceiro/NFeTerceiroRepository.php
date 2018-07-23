@@ -27,7 +27,7 @@ class NFeTerceiroRepository
         //este serviço somente opera em ambiente de produção
         $tools->setEnvironment(1);
 
-        // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA
+        // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
         $ultimoNsu = NFeTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
         $ultimoNsu = end($ultimoNsu);
         $ultimoNsu = end($ultimoNsu);
@@ -53,7 +53,7 @@ class NFeTerceiroRepository
                 //executa a busca pelos documentos
                 $resp = $tools->sefazDistDFe($ultNSU);
             } catch (\Exception $e) {
-                echo $e->getMessage();
+                return $e->getMessage();
                 //tratar o erro
             }
 
@@ -107,6 +107,7 @@ class NFeTerceiroRepository
                 $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathDFe($filial, $numnsu, true);
                 file_put_contents($pathNFeTerceiro, $content);
 
+                // SALVA NA BASE OS DADOS DO XML
                 if($schema == "resNFe_v1.01.xsd"){
                     static::armazenaDadosDFe($res, $filial);
                 }
@@ -114,7 +115,7 @@ class NFeTerceiroRepository
             }
             sleep(2);
         }  // FIM DO LOOP
-        return;
+        return true;
     }
 
     public static function armazenaDadosDFe ($xml, $filial) {
@@ -415,19 +416,23 @@ class NFeTerceiroRepository
     }
 
     public static function listaDFe () {
-
+        // TRAZ DA BASE TODAS AS DFEs
         $qry = NFeTerceiroDfe::select('*')->orderBy('emissao', 'DESC')->paginate(100);
-
         return ($qry);
-
     }
 
     public static function buscaNFeTerceiro ($chave) {
-
+        // BUSCA NA BASE A NFETERCEIRO REQUISITADA
         $qry = NFeTerceiro::select('*')->where('nfechave', $chave)->get();
-
         return ($qry);
+    }
 
+    public static function ultimaNSU ($filal) {
+        // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
+        $ultimoNsu = NFeTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
+        $ultimoNsu = end($ultimoNsu);
+        $ultimoNsu = end($ultimoNsu);
+        return $ultimoNsu;
     }
 
     public static function listaItem ($codnotafiscalterceiro) {
