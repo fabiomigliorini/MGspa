@@ -26,16 +26,16 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
-    public function listaDFe()
+    public function listaDFe(Request $request)
     {
-        $res = NFeTerceiroRepository::listaDFe();
+        $res = NFeTerceiroRepository::listaDFe($request);
         return response()->json($res, 200);
     }
 
     public function ultimaNSU(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);
-        $res = NFeTerceiroRepository::ultimaNSU($filal);
+        $res = NFeTerceiroRepository::ultimaNSU($filial);
         return response()->json($res, 200);
     }
 

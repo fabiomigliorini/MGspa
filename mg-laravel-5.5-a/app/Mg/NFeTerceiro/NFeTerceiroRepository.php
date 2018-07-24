@@ -159,7 +159,6 @@ class NFeTerceiroRepository
             $xml = gzdecode(base64_decode($zip));
             // header('Content-type: text/xml; charset=UTF-8');
             // echo $xml;
-
             if ($xml == null) {
                 throw new \Exception('Não foi possível fazer o download');
             }else{
@@ -186,7 +185,6 @@ class NFeTerceiroRepository
 
     public static function carregarXml (Filial $filial, $chave)
     {
-
         // TRAZ O CAMNHO DO XML SE EXISTIR
         $path = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
 
@@ -230,7 +228,7 @@ class NFeTerceiroRepository
         $NF->codfilial = $filial->codfilial;
         $NF->codpessoa = $codpessoa[0]->codpessoa;
         $NF->observacoes = $res->NFe->infNFe->infAdic->infCpl??null;
-        $NF->volumes = $res->NFe->infNFe->transp->vol->qVol;
+        $NF->volumes = $res->NFe->infNFe->transp->vol->qVol??0;
         $NF->codoperacao = $res->NFe->infNFe->ide->tpNF;
         $NF->nfereciboenvio = Carbon::parse($res->protNFe->infProt->dhRecbto);
         $NF->nfedataenvio = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
@@ -415,20 +413,28 @@ class NFeTerceiroRepository
 
     }
 
-    public static function listaDFe () {
-        // TRAZ DA BASE TODAS AS DFEs
+    // TRAZ DA BASE TODAS AS DFEs
+    public static function listaDFe ($request) {
+        if($request->filial !== null){
+            $qry = NFeTerceiroDfe::select('*')->where('codfilial', $request->filial)->orderBy('emissao', 'DESC')->paginate(100);
+            return ($qry);
+        }
+        if(!$request->chave == null){
+            $qry = NFeTerceiroDfe::select('*')->where('nfechave', $request->chave)->orderBy('emissao', 'DESC')->paginate(100);
+            return ($qry);
+        }
         $qry = NFeTerceiroDfe::select('*')->orderBy('emissao', 'DESC')->paginate(100);
         return ($qry);
     }
 
+    // BUSCA NA BASE A NFETERCEIRO REQUISITADA
     public static function buscaNFeTerceiro ($chave) {
-        // BUSCA NA BASE A NFETERCEIRO REQUISITADA
         $qry = NFeTerceiro::select('*')->where('nfechave', $chave)->get();
         return ($qry);
     }
 
-    public static function ultimaNSU ($filal) {
-        // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
+    // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
+    public static function ultimaNSU ($filial) {
         $ultimoNsu = NFeTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
         $ultimoNsu = end($ultimoNsu);
         $ultimoNsu = end($ultimoNsu);

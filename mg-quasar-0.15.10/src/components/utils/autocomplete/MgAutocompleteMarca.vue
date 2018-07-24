@@ -1,5 +1,5 @@
 <template>
-  <q-search v-model="terms"  :init="init" :placeholder="placeholder">
+  <q-search clearable v-model="terms"  :init="init" :placeholder="placeholder">
     <q-autocomplete
       @search="search"
       @selected="selected"

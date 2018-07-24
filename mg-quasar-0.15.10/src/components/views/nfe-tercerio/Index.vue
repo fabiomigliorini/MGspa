@@ -13,7 +13,7 @@
       <q-item dense>
         <q-item-side icon="store"/>
         <q-item-main>
-          <mg-select-filial label="Local" v-model="filter.filtroFilial" />
+          <mg-select-filial label="Local" v-model="filtroFilial" />
         </q-item-main>
       </q-item>
 
@@ -21,9 +21,7 @@
       <q-item dense>
         <q-item-side icon="account_circle"/>
         <q-item-main>
-          <q-field >
-            <q-input float-label="Fornecedor" v-model="filter.filtroPessoa" />
-          </q-field>
+          <mg-autocomplete-pessoa placeholder="Pessoa" v-model="filtroPessoa" :init="filtroPessoa"/>
         </q-item-main>
       </q-item>
 
@@ -32,7 +30,7 @@
         <q-item-side icon="vpn_key"/>
         <q-item-main>
           <q-field >
-            <q-input float-label="Chave" v-model="filter.filtroChave" />
+            <q-input clearable float-label="Chave" v-model="filtroChave" />
           </q-field>
         </q-item-main>
       </q-item>
@@ -43,90 +41,90 @@
       <q-list-header>Filtrar por data</q-list-header>
       <q-item tag="label" dense>
         <q-item-main>
-          <q-input stack-label="De" type="date" v-model="filter.datainicial" align="center" clearable />
-          <q-input stack-label="Até" type="date" v-model="filter.datafinal" align="center" clearable />
+          <q-input stack-label="De" type="date" v-model="datainicial" align="center" clearable />
+          <q-input stack-label="Até" type="date" v-model="datafinal" align="center" clearable />
         </q-item-main>
       </q-item>
 
       <q-item-separator />
 
-      <!-- filtar por manifestacao -->
-      <q-item tag="label" dense>
-        <q-item-main>
+      <div class="q-pa-lg gutter-y-sm">
+        <!-- filtar por manifestacao -->
+        <div class="row">
+          <q-btn-dropdown @click="filtroManifestacaoSituacao = null" split outline color="primary" label="Manifestação">
 
-          <!-- filtar por manifestacao -->
-          <q-btn-dropdown class="full-width" outline color="primary" label="Manifestação">
-            <q-list link>
-              <q-item>
-                <q-item-side icon="lens"/>
-                <q-item-main>
-                  <q-item-tile label>Sem manifestação</q-item-tile>
-                </q-item-main>
-              </q-item>
-              <q-item>
-                <q-item-side icon="lens" color="orange"/>
-                <q-item-main>
-                  <q-item-tile label>Ciência da operação</q-item-tile>
-                </q-item-main>
-              </q-item>
-              <q-item>
-                <q-item-side icon="lens" color="green"/>
-                <q-item-main>
-                  <q-item-tile label>Operação realizada</q-item-tile>
-                </q-item-main>
-              </q-item>
-              <q-item>
-                <q-item-side icon="lens" color="red"/>
-                <q-item-main>
-                  <q-item-tile label>Operação desconhecida</q-item-tile>
-                </q-item-main>
-              </q-item>
-              <q-item>
-                <q-item-side icon="lens" color="red"/>
-                <q-item-main>
-                  <q-item-tile label>Operação não realizada</q-item-tile>
-                </q-item-main>
-              </q-item>
-            </q-list>
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="1" label="Sem Manifestacão" color="grey"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="2" label="Ciência da operação" color="orange"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="3" label="operação realizada" color="green"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="4" label="operação desconhecida" color="red"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="5" label="operação não realizada" color="red"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
           </q-btn-dropdown>
-        </q-item-main>
-      </q-item>
+        </div>
 
-      <q-item>
-        <q-item-main>
-          <!-- filtar por situacao -->
-          <q-btn-dropdown class="full-width" color="primary" label="Situação" outline>
-            <q-list link>
-              <q-item>
-                <q-item-side icon="lens" color="green"/>
-                <q-item-main>
-                  <q-item-tile label>Autorizada</q-item-tile>
-                </q-item-main>
-              </q-item>
-              <q-item>
-                <q-item-side icon="lens" color="red"/>
-                <q-item-main>
-                  <q-item-tile label>Cancelada</q-item-tile>
-                </q-item-main>
-              </q-item>
-              <q-item>
-                <q-item-side icon="lens" color="red"/>
-                <q-item-main>
-                  <q-item-tile label>Denegada</q-item-tile>
-                </q-item-main>
-              </q-item>
-            </q-list>
+        <!-- filtar por situacao -->
+        <div class="row">
+          <q-btn-dropdown @click="filtroManifestacaoSituacao = null" split outline color="primary" label="Situação">
+
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="6" label="Autorizada" color="green"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="7" label="Cancelada" color="red"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
+            <q-item>
+              <q-item-main>
+                <q-radio v-model="filtroManifestacaoSituacao" val="8" label="Denegada" color="red"/>
+              </q-item-main>
+              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
+            </q-item>
+
           </q-btn-dropdown>
-        </q-item-main>
-      </q-item>
-      </q-item-main>
-      </q-item>
+        </div>
 
-      <q-item>
-        <q-item-main>
-          <q-btn class="full-width" outline color="primary" @click="modalConsultaSefaz = true" label="Consultar Sefaz" />
-        </q-item-main>
-      </q-item>
+        <div class="row">
+          <q-btn outline color="primary" @click="modalConsultaSefaz = true" label="Consultar Sefaz" />
+        </div>
+
+      </div>
+      <!-- fim do drawer -->
     </div>
 
     <template slot="tabHeader">
@@ -225,11 +223,11 @@
                   <q-card-title>Consulta Sefaz</q-card-title>
                   <q-card-separator />
                   <q-card-main>
-                    <mg-select-filial label="Local" v-model="data.consultaSefaz" />
-                    <p class="text-faded">Última NSU consultada:</p>
-                    <p>
-                      <q-btn label="progresso" @click="modalProgresso = true"/>
-                    </p>
+                    <mg-select-filial label="Local" v-model="filial" />
+                    <template v-if="nsu">
+                      <p  class="text-faded">Última NSU consulta: {{nsu.replace(/^(0+)(\d)/g,"$2")}}</p>
+                    </template>
+                    <p><q-btn label="progresso" @click="modalProgresso = true"/></p>
                   </q-card-main>
                 </q-card>
 
@@ -293,9 +291,11 @@
                     <q-progress :percentage="progresso" stripe animate style="height: 45px" />
                   </q-card-main>
                 </q-card>
-                <q-btn color="primary" @click="modalProgresso = false" label="Close"/>
               </div>
             </center>
+            <q-page-sticky position="bottom-right" :offset="[25, 80]">
+              <q-btn round color="red" icon="arrow_back" @click="modalProgresso = false" />
+            </q-page-sticky>
           </q-page>
         </q-modal>
       </template>
@@ -309,7 +309,7 @@ import MgSelectEstoqueLocal from '../../utils/select/MgSelectEstoqueLocal'
 import MgSelectFilial from '../../utils/select/MgSelectFilial'
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
-import MgAutocompleteMarca from '../../utils/autocomplete/MgAutocompleteMarca'
+import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
 
 export default {
   name: 'nfe-terceiro-lista-dfe',
@@ -318,29 +318,49 @@ export default {
     MgSelectFilial,
     MgSelectEstoqueLocal,
     MgErrosValidacao,
-    MgAutocompleteMarca
+    MgAutocompletePessoa
   },
   data() {
     return {
       page: 1,
       filter: {
-        tabs: 'pendente',
-        filtro: null,
-        filtroFilial: null,
-        filtroPessoa: null,
-        filtroChave: null,
-        datainicial: null,
-        datafinal: null,
       },
       data: {},
       carregado: false,
       modalConsultaSefaz: false,
       modalProgresso: false,
-      progresso: 75,
-      consultaSefaz: null
+      progresso: 50,
+      filial: null,
+      nsu: null,
+      xml: null,
+      filtroManifestacaoSituacao: null,
+      datafinal: null,
+      datainicial: null,
+      filtroChave: null,
+      filtroPessoa: null,
+      filtroFilial: null,
+      tabs: 'pendente',
     }
   },
   watch: {
+    filial: function(query){
+      this.ultimaNSU(query)
+    },
+    filtroManifestacaoSituacao: function(manifest){
+      console.log(manifest)
+    },
+    filtroChave: function(chave){
+      this.page = 1
+      this.buscaListagem()
+    },
+    filtroPessoa: function(pessoa){
+      console.log(pessoa)
+    },
+    filtroFilial: function(filial){
+      this.page = 1
+      this.buscaListagem()
+      // console.log(filial)
+    },
     // observa filtro, sempre que alterado chama a api
     filter: {
       handler: function (val, oldVal) {
@@ -370,11 +390,18 @@ export default {
 
       // Monta Parametros da API
       let params = {
-        page: vm.page
+        page: vm.page,
+        filial: vm.filtroFilial,
+        pessoa: vm.filtroPessoa,
+        chave: vm.filtroChave,
+        datainicial: vm.datainicial,
+        datafinal: vm.datafinal,
+        manifestacao: vm.filtroManifestacao,
+        situacao: vm.filtroSituacao
       }
 
       vm.$axios.get('nfe-terceiro/lista-dfe',{params}).then(function(request) {
-
+        console.log(params)
         // Se for para concatenar, senao inicializa
         if (vm.page == 1) {
           vm.xml = request.data
@@ -414,31 +441,21 @@ export default {
       let params = {
         filial: filial
       }
-      console.log(params)
-    //   vm.$axios.get('nfe-terceiro/consulta-sefaz',{params}).then(function(request){
-    //     if (request.data !== true) {
-    //       vm.$q.notify({
-    //         message: request.data,
-    //         type: 'negative',
-    //       })
-    //       return
-    //     }else{
-    //       vm.$q.notify({
-    //         message: 'Consulta concluída',
-    //         type: 'positive',
-    //       })
-    //     }
-    //   }).catch(function(error) {
-    //     console.log(error)
-    //   })
-    // },
+      if(this.filial !== null){
+        vm.$axios.get('nfe-terceiro/ultima-nsu',{params}).then(function(request){
+          vm.nsu = request.data.nsu
+          console.log(vm.nsu)
+        }).catch(function(error) {
+          console.log(error)
+        })
+      }
     },
 
     consultarSefaz: function () {
       let vm = this
       // Monta Parametros da API
       let params = {
-        filial: this.data.consultaSefaz
+        filial: this.filial
       }
 
       vm.$axios.get('nfe-terceiro/consulta-sefaz',{params}).then(function(request){
@@ -449,6 +466,7 @@ export default {
           })
           return
         }else{
+          vm.buscaListagem()
           vm.$q.notify({
             message: 'Consulta concluída',
             type: 'positive',
