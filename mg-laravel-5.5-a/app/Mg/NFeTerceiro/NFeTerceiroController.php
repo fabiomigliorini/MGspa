@@ -51,11 +51,18 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
-    // public function carregarXml(Request $request, $filial, $chave)
+    // public function armazenaDadosDFe(Request $request)
     // {
-    //     $filial = Filial::findOrFail($filial);
-    //     $res = NFeTerceiroRepository::carregarXml($filial, $chave);
+    //     $filial = Filial::findOrFail($request->filial);
+    //     $res = NFeTerceiroRepository::armazenaDadosDFe($filial);
     //     return response()->json($res, 200);
     // }
+
+    public function carregarXml(Request $request, $filial, $chave)
+    {
+        $filial = Filial::findOrFail($filial);
+        $res = NFeTerceiroRepository::carregarXml($filial, $chave);
+        return response()->json($res, 200);
+    }
 
 }

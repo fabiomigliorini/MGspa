@@ -141,8 +141,8 @@
         <!-- Infinite scroll -->
         <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
 
-          <q-list multiline highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
-
+          <q-list no-border multiline highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
+            <q-item-separator/>
             <q-item>
               <q-item-main>
                 <div class="row">
@@ -177,6 +177,12 @@
 
                   <div class="col-sm-3 col-md-3 col-lg-1">
                     <div class="row">
+                      <small class="text-faded">Emissão</small>
+                    </div>
+                    <div class="row">
+                      <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
+                    </div>
+                    <div class="row">
                       <small class="text-faded">Total</small>
                     </div>
                     <div class="row">
@@ -186,10 +192,40 @@
 
                   <div class="col-sm-3 col-md-3 col-lg-1">
                     <div class="row">
-                      <small class="text-faded">Emissão</small>
-                    </div>
-                    <div class="row">
-                      <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
+                      <q-btn-dropdown
+                        :color=" (manifestacao == 1)?'orange':(manifestacao == 2)?'green':(manifestacao == 3)?'red':(manifestacao == 4)?'red':'grey' "
+                        icon="add"
+                        rounded
+                        dense>
+
+                        <q-item>
+                          <q-item-main>
+                            <q-radio v-model="manifestacao" val="1" label="Ciência da operação" color="orange"/>
+                          </q-item-main>
+                        </q-item>
+
+                        <q-item>
+                          <q-item-main>
+                            <q-radio v-model="manifestacao" val="2" label="operação realizada" color="green"/>
+                          </q-item-main>
+                        </q-item>
+
+                        <q-item>
+                          <q-item-main>
+                            <q-radio v-model="manifestacao" val="3" label="operação desconhecida" color="red"/>
+                          </q-item-main>
+                        </q-item>
+
+                        <q-item>
+                          <q-item-main>
+                            <q-radio v-model="manifestacao" val="4" label="operação não realizada" color="red"/>
+                          </q-item-main>
+                        </q-item>
+
+                      </q-btn-dropdown>
+                      <q-tooltip>
+                        Manifestação
+                      </q-tooltip>
                     </div>
                   </div>
 
@@ -203,9 +239,9 @@
                 </q-tooltip>
               </q-item-side>
 
+              <q-item-separator inset/>
             </q-item>
 
-            <q-item-separator />
           </q-list>
 
         </q-infinite-scroll>
@@ -235,6 +271,7 @@
             </div>
 
             <q-list no-border highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
+              <q-item-separator/>
               <q-item>
                 <q-item-main>
                   <div class="row">
@@ -284,7 +321,7 @@
               <div style="max-width:50vw">
                 <q-card>
                   <q-card-title>
-                    Consultando Sefaz <span class="text-green">25</span> / <strong>50</strong>
+                    Consultando Sefaz <strong> <span class="text-green">25</span> / 50</strong>
                   </q-card-title>
                   <q-card-separator />
                   <q-card-main>
@@ -326,23 +363,27 @@ export default {
       filter: {
       },
       data: {},
+      tabs: 'pendente',
       carregado: false,
-      modalConsultaSefaz: false,
-      modalProgresso: false,
-      progresso: 50,
       filial: null,
       nsu: null,
       xml: null,
+      progresso: 50,
+      manifestacao: null,
+      modalConsultaSefaz: false,
+      modalProgresso: false,
       filtroManifestacaoSituacao: null,
       datafinal: null,
       datainicial: null,
       filtroChave: null,
       filtroPessoa: null,
       filtroFilial: null,
-      tabs: 'pendente',
     }
   },
   watch: {
+    manifestacao: function(manifest){
+      console.log(manifest)
+    },
     filial: function(query){
       this.ultimaNSU(query)
     },

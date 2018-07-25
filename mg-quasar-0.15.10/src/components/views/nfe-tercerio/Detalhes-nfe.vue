@@ -8,73 +8,75 @@
     <div slot="drawer">
 
       <template v-if="carregado">
-        <template v-if="nf">
-          <q-list>
-            <q-list-header>{{nf.emitente}}</q-list-header>
+        <q-list>
+          <q-list-header>{{nf.emitente}}</q-list-header>
 
-            <q-item dense>
-              <q-item-side>
-                <q-icon name="date_range" size="25px"/>
-                Emissão:
-              </q-item-side>
-              <q-item-main align="end">{{moment(nf.emissao).format("DD MMM YYYY")}}</q-item-main>
-            </q-item>
+          <q-item dense>
+            <q-item-side>
+              <q-icon name="date_range" size="25px"/>
+              Emissão:
+            </q-item-side>
+            <q-item-main align="end">{{moment(nf.emissao).format("DD MMM YYYY")}}</q-item-main>
+          </q-item>
 
-            <q-item dense>
-              <q-item-side>
-                <q-icon name="attach_money" size="25px"/>
-                Total da nota:
-              </q-item-side>
-              <q-item-main align="end">R$ {{nf.valortotal}}</q-item-main>
-            </q-item>
+          <q-item dense>
+            <q-item-side>
+              <q-icon name="attach_money" size="25px"/>
+              Total da nota:
+            </q-item-side>
+            <q-item-main align="end">R$ {{nf.valortotal}}</q-item-main>
+          </q-item>
 
-            <q-item dense>
-              <q-item-side>
-                <q-icon name="attach_money" size="25px"/>
-                Total Complemento:
-              </q-item-side>
-              <q-item-main align="end">R$ 0000,00</q-item-main>
-            </q-item>
+          <q-item dense>
+            <q-item-side>
+              <q-icon name="attach_money" size="25px"/>
+              Total Complemento:
+            </q-item-side>
+            <q-item-main align="end">R$ 0000,00</q-item-main>
+          </q-item>
 
-            <q-item dense>
-              <q-item-side>
-                <q-icon name="attach_money" size="25px"/>
-                Total Geral:
-              </q-item-side>
-              <q-item-main align="end">R$ 0000,00</q-item-main>
-            </q-item>
+          <q-item dense>
+            <q-item-side>
+              <q-icon name="attach_money" size="25px"/>
+              Total Geral:
+            </q-item-side>
+            <q-item-main align="end">R$ 0000,00</q-item-main>
+          </q-item>
 
-            <q-item dense>
-              <q-item-main>
-                <!--informar natureza da operacao -->
-                <q-item-tile>
-                  <q-field icon="arrow_drop_down_circle">
-                    <q-input  float-label="Natureza da oprecação" clearable v-model="filter.filtro" />
-                  </q-field>
-                </q-item-tile>
+          <q-item dense>
+            <q-item-main>
+              <!--informar natureza da operacao -->
+              <q-item-tile>
+                <q-field icon="arrow_drop_down_circle">
+                  <q-input  float-label="Natureza da oprecação" clearable v-model="filter.filtro" />
+                </q-field>
+              </q-item-tile>
 
-                <!-- informa data de entrada da nota -->
-                <q-item-tile>
-                  <q-field icon="date_range">
-                    <q-input stack-label="Entrada" type="date" v-model="filter.datainicial" align="center" clearable />
-                  </q-field>
-                </q-item-tile>
+              <!-- informa data de entrada da nota -->
+              <q-item-tile>
+                <q-field icon="date_range">
+                  <q-input stack-label="Entrada" type="date" v-model="filter.datainicial" align="center" clearable />
+                </q-field>
+              </q-item-tile>
 
-                <!-- ver detalhes da nota -->
-                <q-item-tile >
-                  <q-btn color="primary" icon="playlist_add" class="full-width" outline  @click="detalhesNF = true" label="detalhes da nota"/>
-                </q-item-tile>
+              <!-- ver detalhes da nota -->
+              <q-item-tile >
+                <q-btn color="primary" icon="playlist_add" class="full-width" outline  @click="detalhesNF = true" label="detalhes da nota"/>
+              </q-item-tile>
 
-              </q-item-main>
-            </q-item>
-            <q-item-separator />
-          </q-list>
-        </template>
+            </q-item-main>
+          </q-item>
+          <q-item-separator />
+        </q-list>
 
         <template v-if="itemcarregado">
-          <q-list multiline highlight v-for="produto in itens.data" :key="produto.codnotafiscalterceiro">
+          <q-list no-border multiline highlight v-for="produto in itens.data" :key="produto.codnotafiscalterceiro">
+            <q-item-separator />
             <q-item>
               <q-item-main dense>
+                <q-item-tile sublabel>
+                  <small>index: {{itens.data.indexOf(produto)}}</small>
+                </q-item-tile>
                 <q-item-tile sublabel>
                   <small>{{produto.produto}}</small>
                 </q-item-tile>
@@ -93,9 +95,9 @@
 
     <div slot="content">
 
-      <template v-if="nf">
-        <template v-if="detalhesNF">
+      <template v-if="detalhesNF">
 
+        <template v-if="carregado">
           <div class="row gutter-sm">
             <div class="col-12">
 
@@ -239,10 +241,10 @@
 
             </div>
           </div>
+          <q-page-sticky position="bottom-right" :offset="[25, 25]">
+            <q-btn round color="primary" icon="done" @click="atualizaNota()" />
+          </q-page-sticky>
         </template>
-        <q-page-sticky position="bottom-right" :offset="[25, 25]">
-          <q-btn round color="primary" icon="done" @click="atualizaNota()" />
-        </q-page-sticky>
       </template>
       <template v-else>
         <q-page padding>
@@ -301,9 +303,9 @@ export default {
       }
       vm.$axios.get('nfe-terceiro/busca-nfeterceiro',{params}).then(function(request){
         vm.nf = request.data[0]
+        console.log(vm.nf)
+        vm.carregaItens(vm.nf.codnotafiscalterceiro)
         vm.carregado = true
-        vm.carregaItens(vm.nf.codnotafiscalterceiro);
-
       }).catch(function(error) {
         console.log(error)
       })
@@ -314,18 +316,18 @@ export default {
       let params= {
         codnotafiscalterceiro: codnotafiscalterceiro
       }
-      console.log(params)
+      // console.log(params)
       vm.$axios.get('nfe-terceiro/lista-item',{params}).then(function(request){
         vm.itens = request
+        // console.log(request)
         vm.itemcarregado = true
-        console.log(vm.itens)
       }).catch(function(error) {
         console.log(error)
       })
     },
 
   },
-  created() {
+  mounted() {
     this.filter.chave = this.$route.params.chave
     this.carregaNota();
 
