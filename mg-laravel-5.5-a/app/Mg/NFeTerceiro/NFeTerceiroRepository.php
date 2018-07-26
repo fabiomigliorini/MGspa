@@ -387,7 +387,7 @@ class NFeTerceiroRepository
             $NFeItem->valorseguro = $res->NFe->infNFe->total->ICMSTot->vSeg;
             $NFeItem->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
             $NFeItem->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
-            $NFeItem->valortotal = $res->NFe->infNFe->total->ICMSTot->vNF;
+            $NFeItem->valortotal = null; // rever este campo
             $NFeItem->compoetotal = $item->prod->indTot; // rever este campo
             $NFeItem->csosn = null; // rever este campo
             $NFeItem->origem = $item->imposto->ICMS->ICMS00->orig??null;
@@ -482,6 +482,18 @@ class NFeTerceiroRepository
         $itens = NFeTerceiroItem::select('*')->where('codnotafiscalterceirogrupo', $codGrupo[0]->codnotafiscalterceirogrupo)->get();
         // dd($itens);
         return ($itens);
+
+    }
+
+    public static function atualizaItem ($request) {
+        dd('aqui');
+        return;
+
+    }
+
+    public static function atualizaNFe ($request) {
+        dd('aqui');        
+        return;
 
     }
 

@@ -51,6 +51,18 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
+    public function atualizaItem(Request $request)
+    {
+        $res = NFeTerceiroRepository::atualizaItem($request);
+        return response()->json($res, 200);
+    }
+
+    public function atualizaNFe(Request $request)
+    {
+        $res = NFeTerceiroRepository::atualizaNFe($request);
+        return response()->json($res, 200);
+    }
+
     // public function armazenaDadosDFe(Request $request)
     // {
     //     $filial = Filial::findOrFail($request->filial);

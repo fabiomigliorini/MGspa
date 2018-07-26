@@ -51,10 +51,8 @@
 
     <template slot="tabHeader">
       <q-tabs v-model="filter.conferidos">
-        <q-tab slot="title" name="conferir" icon="close" label="Para Conferir" default>
-        </q-tab>
-        <q-tab slot="title" name="conferidos" icon="check" label="Já Conferido">
-        </q-tab>
+        <q-tab slot="title" name="conferir" icon="close" label="Para Conferir" default></q-tab>
+        <q-tab slot="title" name="conferidos" icon="check" label="Já Conferido"></q-tab>
       </q-tabs>
     </template>
 

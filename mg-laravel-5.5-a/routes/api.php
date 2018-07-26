@@ -37,6 +37,8 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('nfe-terceiro/lista-item', '\Mg\NFeTerceiro\NFeTerceiroController@listaItem');
         Route::get('nfe-terceiro/ultima-nsu', '\Mg\NFeTerceiro\NFeTerceiroController@ultimaNSU');
         Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NFeTerceiro\NFeTerceiroController@buscaNfeTerceiro');
+        Route::get('nfe-terceiro/atualiza-item', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaItem');
+        Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaNFe');
         // Route::get('nfe-terceiro/armazena-dados', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosDFe');
         Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
 
