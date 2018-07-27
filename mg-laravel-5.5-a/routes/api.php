@@ -30,6 +30,9 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+        // NATUREZA DA OPERACAO
+        Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
+
         // NFeTerceiro
         Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NFeTerceiro\NFeTerceiroController@consultaSefaz');
         Route::get('nfe-terceiro/download-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@downloadNFeTerceiro');
