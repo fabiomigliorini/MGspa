@@ -41,8 +41,8 @@
       <q-list-header>Filtrar por data</q-list-header>
       <q-item tag="label" dense>
         <q-item-main>
-          <q-input stack-label="De" type="date" v-model="datainicial" align="center" clearable />
-          <q-input stack-label="Até" type="date" v-model="datafinal" align="center" clearable />
+          <q-input stack-label="De" type="date" v-model="filter.datainicial" align="center" clearable />
+          <q-input stack-label="Até" type="date" v-model="filter.datafinal" align="center" clearable />
         </q-item-main>
       </q-item>
 
@@ -175,17 +175,14 @@
                     </div>
                   </div>
 
-                  <div class="col-sm-3 col-md-3 col-lg-1">
+                  <div class="col-sm-3 col-md-3 col-lg-1 gutter-y-xs">
                     <div class="row">
                       <small class="text-faded">Emissão</small>
-                    </div>
-                    <div class="row">
                       <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
                     </div>
+
                     <div class="row">
                       <small class="text-faded">Total</small>
-                    </div>
-                    <div class="row">
                       <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
                     </div>
                   </div>
@@ -361,6 +358,8 @@ export default {
     return {
       page: 1,
       filter: {
+        datainicial: null,
+        datafinal: null,
       },
       data: {},
       tabs: 'pendente',
@@ -373,8 +372,6 @@ export default {
       modalConsultaSefaz: false,
       modalProgresso: false,
       filtroManifestacaoSituacao: null,
-      datafinal: null,
-      datainicial: null,
       filtroChave: null,
       filtroPessoa: null,
       filtroFilial: null,
@@ -435,8 +432,8 @@ export default {
         filial: vm.filtroFilial,
         pessoa: vm.filtroPessoa,
         chave: vm.filtroChave,
-        datainicial: vm.datainicial,
-        datafinal: vm.datafinal,
+        datainicial: vm.filter.datainicial,
+        datafinal: vm.filter.datafinal,
         manifestacao: vm.filtroManifestacao,
         situacao: vm.filtroSituacao
       }

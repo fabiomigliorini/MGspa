@@ -1,6 +1,7 @@
 <?php
 
 namespace Mg\NFeTerceiro;
+use Mg\MgRepository;
 
 use Mg\NFePHP\NFePHPRepositoryConfig;
 use Mg\Filial\Filial;
@@ -16,7 +17,7 @@ use NFePHP\NFe\Common\Complements;
 use Carbon\Carbon;
 use DB;
 
-class NFeTerceiroRepository
+class NFeTerceiroRepository extends MgRepository
 {
 
     public static function consultaSefaz (Filial $filial){
@@ -349,7 +350,8 @@ class NFeTerceiroRepository
         // PARA CADA PRODUTO DA NOTA FAZ UM INSERT NO BANCO
         foreach ($res->NFe->infNFe->det as $key => $item) {
             $NFeItem = NFeTerceiroItem::firstOrNew([
-            'referencia' => $item->prod->cProd
+            'referencia' => $item->prod->cProd,
+            'codnotafiscalterceirogrupo' => $codGrupo[0]->codnotafiscalterceirogrupo
             ]);
             $NFeItem->codnotafiscalterceirogrupo = $codGrupo[0]->codnotafiscalterceirogrupo;
             $NFeItem->numero = $item->attributes->nItem;
@@ -492,7 +494,7 @@ class NFeTerceiroRepository
     }
 
     public static function atualizaNFe ($request) {
-        dd('aqui');        
+        dd('aqui');
         return;
 
     }
