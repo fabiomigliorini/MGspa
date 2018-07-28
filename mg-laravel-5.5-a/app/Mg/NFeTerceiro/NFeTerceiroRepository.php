@@ -20,11 +20,54 @@ use DB;
 class NFeTerceiroRepository extends MgRepository
 {
 
+    public static function manifestacao ($request){
+
+        try {
+            $filial = Filial::findOrFail($request->filial);
+
+            $tools = NFePHPRepositoryConfig::instanciaTools($filial);
+
+            //só funciona para o modelo 55
+            $tools->model('55');
+
+            //este serviço somente opera em ambiente de produção
+            $tools->setEnvironment(1);
+
+            $chNFe = $request->nfechave; //chave de 44 digitos da nota do fornecedor
+            $tpEvento =  $request->manifestacao; //'210210'; //ciencia da operação
+            $xJust = $request->justificativa??''; //a ciencia não requer justificativa
+            $nSeqEvento = 1; //a ciencia em geral será numero inicial de uma sequencia para essa nota e evento
+
+            $response = $tools->sefazManifesta($chNFe,$tpEvento,$xJust = '',$nSeqEvento = 1);
+
+            //você pode padronizar os dados de retorno atraves da classe abaixo
+            //de forma a facilitar a extração dos dados do XML
+            //NOTA: mas lembre-se que esse XML muitas vezes será necessário,
+            //quando houver a necessidade de protocolos
+            $st = new Standardize($response);
+
+            //nesse caso $std irá conter uma representação em stdClass do XML
+            $stdRes = $st->toStd();
+
+            //nesse caso o $arr irá conter uma representação em array do XML
+            $arr = $st->toArray();
+
+            //nesse caso o $json irá conter uma representação em JSON do XML
+            $json = $st->toJson();
+
+            return true;
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
     public static function consultaSefaz (Filial $filial){
 
         $tools = NFePHPRepositoryConfig::instanciaTools($filial);
+
         //só funciona para o modelo 55
         $tools->model('55');
+
         //este serviço somente opera em ambiente de produção
         $tools->setEnvironment(1);
 

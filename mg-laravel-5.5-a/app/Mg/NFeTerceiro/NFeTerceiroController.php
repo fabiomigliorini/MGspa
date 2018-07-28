@@ -12,6 +12,12 @@ use Mg\Filial\Filial;
 class NFeTerceiroController extends MgController
 {
 
+    public function manifestacao(Request $request)
+    {
+        $res = NFeTerceiroRepository::manifestacao($request);
+        return response()->json($res, 200);
+    }
+
     public function consultaSefaz(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);

@@ -35,6 +35,7 @@ Route::group(['prefix' => 'v1'], function () {
 
         // NFeTerceiro
         Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NFeTerceiro\NFeTerceiroController@consultaSefaz');
+        Route::get('nfe-terceiro/manifestacao', '\Mg\NFeTerceiro\NFeTerceiroController@manifestacao');
         Route::get('nfe-terceiro/download-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@downloadNFeTerceiro');
         Route::get('nfe-terceiro/lista-dfe', '\Mg\NFeTerceiro\NFeTerceiroController@listaDFe');
         Route::get('nfe-terceiro/lista-item', '\Mg\NFeTerceiro\NFeTerceiroController@listaItem');
@@ -43,7 +44,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('nfe-terceiro/atualiza-item', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaItem');
         Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaNFe');
         // Route::get('nfe-terceiro/armazena-dados', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosDFe');
-        Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
+        // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
 
         // NFePHP
         Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
