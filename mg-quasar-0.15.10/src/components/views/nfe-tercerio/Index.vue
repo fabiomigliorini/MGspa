@@ -141,7 +141,7 @@
         <!-- Infinite scroll -->
         <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
 
-          <q-list no-border multiline highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
+          <q-list no-border multiline highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe" class="gutter-y-none q-pa-none">
             <q-item-separator/>
             <q-item>
               <q-item-main>
@@ -175,20 +175,21 @@
                     </div>
                   </div>
 
-                  <div class="col-sm-3 col-md-3 col-lg-1 gutter-y-xs">
+                  <div class="col-sm-6 col-md-6 col-lg-2 gutter-y-xs">
                     <div class="row">
-                      <small class="text-faded">Emissão</small>
+                      <small class="text-faded">Emissão &nbsp</small>
                       <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
                     </div>
 
                     <div class="row">
-                      <small class="text-faded">Total</small>
+                      <small class="text-faded">Total &nbsp</small>
                       <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
                     </div>
                   </div>
 
-                  <div class="col-sm-3 col-md-3 col-lg-1">
+                  <!-- <div class="col-sm-3 col-md-3 col-lg-1">
                     <div class="row">
+
                       <q-btn-dropdown
                         :color=" (manifestacao == 1)?'orange':(manifestacao == 2)?'green':(manifestacao == 3)?'red':(manifestacao == 4)?'red':'grey' "
                         icon="add"
@@ -220,20 +221,29 @@
                         </q-item>
 
                       </q-btn-dropdown>
-                      <q-tooltip>
-                        Manifestação
-                      </q-tooltip>
+
                     </div>
-                  </div>
+                  </div> -->
 
                 </div>
               </q-item-main>
 
-              <q-item-side right>
-                <q-btn dense @click="downloadNFe(nota.codfilial, nota.nfechave)" round color="primary" icon="cloud_download"/>
-                <q-tooltip>
-                  Baixar XML
-                </q-tooltip>
+              <q-item-side right class="gutter-y-xs">
+                <q-item-tile>
+                  <q-btn color="primary" @click.native="modalManifestacao = true" round dense>
+                    <q-icon name="arrow_drop_down_circle" size="25px"/>
+                  </q-btn>
+                  <q-tooltip anchor="center left" self="center middle">
+                    Manifestação
+                  </q-tooltip>
+                </q-item-tile>
+
+                <q-item-tile>
+                  <q-btn dense @click="downloadNFe(nota.codfilial, nota.nfechave)" round color="primary" icon="cloud_download"/>
+                  <q-tooltip anchor="center left" self="center middle">
+                    Baixar XML
+                  </q-tooltip>
+                </q-item-tile>
               </q-item-side>
 
               <q-item-separator inset/>
@@ -334,6 +344,55 @@
         </q-modal>
       </template>
 
+      <template>
+        <q-modal v-model="modalManifestacao">
+          <q-page padding>
+
+            <q-stepper v-model="currentStep">
+              <q-step name="first" title="Manifestacão">
+
+                <div class="gutter-y-xs">
+                  <div class="row">
+                    <q-radio v-model="manifestacao" val="210210" label="Ciência da operação" color="orange"/>
+                  </div>
+
+                  <div class="row">
+                    <q-radio v-model="manifestacao" val="210200" label="operação realizada" color="green"/>
+                  </div>
+
+                  <div class="row">
+                    <q-radio v-model="manifestacao" val="210220" label="operação desconhecida" color="red"/>
+                  </div>
+
+                  <div class="row">
+                    <q-radio v-model="manifestacao" val="210240" label="operação não realizada" color="red"/>
+                  </div>
+                </div>
+
+                <q-stepper-navigation>
+                  <div class="q-px-sm">
+                    <q-btn color="red" @click="modalManifestacao = false" icon="arrow_back" round dense />
+                  </div>
+                  <q-btn color="primary" @click="currentStep = 'second' " icon="done" round dense />
+                </q-stepper-navigation>
+              </q-step>
+
+              <q-step name="second" title="Justificativa" v-if="manifestacao == '210220' || manifestacao == '210240'">
+                <q-input v-model="justificativa" float-label="Justificativa"/>
+                <q-stepper-navigation>
+                  <div class="q-px-sm">
+                    <q-btn color="red" @click="currentStep = 'first'" icon="arrow_back" round dense />
+                  </div>
+                  <q-btn color="primary" @click="enviarManifestacao()" icon="done" round dense />
+                </q-stepper-navigation>
+              </q-step>
+
+            </q-stepper>
+          </q-page>
+        </q-modal>
+      </template>
+
+
     </div>
   </mg-layout>
 </template>
@@ -367,10 +426,13 @@ export default {
       filial: null,
       nsu: null,
       xml: null,
+      currentStep: 'first',
       progresso: 50,
       manifestacao: null,
+      justificativa: null,
       modalConsultaSefaz: false,
       modalProgresso: false,
+      modalManifestacao: false,
       filtroManifestacaoSituacao: null,
       filtroChave: null,
       filtroPessoa: null,
@@ -414,6 +476,11 @@ export default {
     loadMore (index, done) {
       this.page++
       this.buscaListagem(true, done)
+    },
+
+    enviarManifestacao: function(){
+      console.log('aqui')
+      console.log(this.manifestacao)
     },
 
     buscaListagem: function(concat, done) {

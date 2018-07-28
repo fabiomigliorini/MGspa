@@ -56,7 +56,7 @@
               <!-- informa data de entrada da nota -->
               <q-item-tile>
                 <q-field icon="date_range">
-                  <q-input stack-label="Entrada" type="date" v-model="dataEntrada" align="center" clearable />
+                  <q-input stack-label="Entrada" type="datetime-local" v-model="dataEntrada" align="center" clearable />
                 </q-field>
               </q-item-tile>
 
@@ -413,7 +413,7 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS ST Modalidade:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmsstbasemodalidade)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">{{ produtoSelecionado.icmsstbasemodalidade }}</q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
