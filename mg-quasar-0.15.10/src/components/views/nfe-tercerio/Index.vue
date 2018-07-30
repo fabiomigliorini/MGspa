@@ -9,36 +9,53 @@
 
       <q-list-header>Filtros</q-list-header>
 
-      <!-- Filtra por filial -->
-      <q-item dense>
-        <q-item-side icon="store"/>
-        <q-item-main>
-          <mg-select-filial label="Local" v-model="filtroFilial" />
-        </q-item-main>
-      </q-item>
+      <div class="gutter-y-none">
+        <!-- Filtra por filial -->
+        <q-item dense>
+          <q-item-side icon="store"/>
+          <q-item-main>
+            <mg-select-filial label="Local" v-model="filtroFilial" />
+          </q-item-main>
+        </q-item>
 
-      <!-- Filtra por pessoa -->
-      <q-item dense>
-        <q-item-side icon="account_circle"/>
-        <q-item-main>
-          <mg-autocomplete-pessoa placeholder="Pessoa" v-model="filtroPessoa" :init="filtroPessoa"/>
-        </q-item-main>
-      </q-item>
+        <!-- Filtra por pessoa -->
+        <q-item dense>
+          <q-item-side icon="account_circle"/>
+          <q-item-main>
+            <mg-autocomplete-pessoa placeholder="Pessoa" v-model="filtroPessoa" :init="filtroPessoa"/>
+          </q-item-main>
+        </q-item>
 
-      <!-- Buscar por chave -->
-      <q-item dense>
-        <q-item-side icon="vpn_key"/>
-        <q-item-main>
-          <q-field >
-            <q-input clearable float-label="Chave" v-model="filtroChave" />
-          </q-field>
-        </q-item-main>
-      </q-item>
+        <!-- Buscar por chave -->
+        <q-item dense>
+          <q-item-side icon="vpn_key"/>
+          <q-item-main>
+            <q-field >
+              <q-input clearable float-label="Chave" v-model="filtroChave" />
+            </q-field>
+          </q-item-main>
+        </q-item>
+
+        <!-- Filtra por natureza-operacao -->
+        <q-item dense>
+          <q-item-side icon="arrow_drop_down_circle"/>
+          <q-item-main>
+            <mg-select-natureza-operacao label="Natureza da operação" v-model="natop" />
+          </q-item-main>
+        </q-item>
+
+        <!-- Filtra por situacao -->
+        <q-item dense>
+          <q-item-side icon="arrow_drop_down_circle"/>
+          <q-item-main>
+            <q-select v-model="filtroSituacao" :options="selectOptions" float-label="Situação"/>
+          </q-item-main>
+        </q-item>
+      </div>
 
       <q-item-separator />
 
       <!-- Filtra por data de corte -->
-      <q-list-header>Filtrar por data</q-list-header>
       <q-item tag="label" dense>
         <q-item-main>
           <q-input stack-label="De" type="date" v-model="filter.datainicial" align="center" clearable />
@@ -48,82 +65,10 @@
 
       <q-item-separator />
 
-      <div class="q-pa-lg gutter-y-sm">
-        <!-- filtar por manifestacao -->
-        <div class="row">
-          <q-btn-dropdown @click="filtroManifestacaoSituacao = null" split outline color="primary" label="Manifestação">
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="1" label="Sem Manifestacão" color="grey"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="2" label="Ciência da operação" color="orange"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="3" label="operação realizada" color="green"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="4" label="operação desconhecida" color="red"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="5" label="operação não realizada" color="red"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-          </q-btn-dropdown>
+        <div class="row q-pa-sm">
+          <q-btn class="full-width" outline color="primary" @click="modalConsultaSefaz = true" label="Consultar Sefaz" />
         </div>
 
-        <!-- filtar por situacao -->
-        <div class="row">
-          <q-btn-dropdown @click="filtroManifestacaoSituacao = null" split outline color="primary" label="Situação">
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="6" label="Autorizada" color="green"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="7" label="Cancelada" color="red"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-            <q-item>
-              <q-item-main>
-                <q-radio v-model="filtroManifestacaoSituacao" val="8" label="Denegada" color="red"/>
-              </q-item-main>
-              <q-item-side><q-btn flat icon="close" @click="filtroManifestacaoSituacao = null"/></q-item-side>
-            </q-item>
-
-          </q-btn-dropdown>
-        </div>
-
-        <div class="row">
-          <q-btn outline color="primary" @click="modalConsultaSefaz = true" label="Consultar Sefaz" />
-        </div>
-
-      </div>
       <!-- fim do drawer -->
     </div>
 
@@ -149,15 +94,13 @@
 
                   <div class="col-sm-2 col-md-1 col-lg-1">
                     <div class="row">
-                      <small class="text-faded">Filial</small>
-                    </div>
-                    <div class="row">
+                      <q-icon name="store" color="grey"/>&nbsp
                       <small>{{nota.codfilial}}</small>
                     </div>
                   </div>
 
                   <div @click="buscaNFeTerceiro(nota.nfechave)" class="col-sm-10 col-md-7 col-lg-5 cursor-pointer" style="overflow: hidden">
-                    <q-icon name="vpn_key"/>
+                    <q-icon name="vpn_key" color="grey"/>&nbsp
                     <small>{{nota.nfechave}}</small>
                     <q-tooltip>
                       Detalhes da nota
@@ -166,6 +109,7 @@
 
                   <div class="col-sm-6 col-md-6 col-lg-4">
                     <div class="row">
+                      <q-icon name="account_circle" color="grey"/>&nbsp
                       <small>{{nota.emitente.substr(0,30)}}</small>
                     </div>
                     <div class="row">
@@ -187,60 +131,22 @@
                     </div>
                   </div>
 
-                  <!-- <div class="col-sm-3 col-md-3 col-lg-1">
-                    <div class="row">
-
-                      <q-btn-dropdown
-                        :color=" (manifestacao == 1)?'orange':(manifestacao == 2)?'green':(manifestacao == 3)?'red':(manifestacao == 4)?'red':'grey' "
-                        icon="add"
-                        rounded
-                        dense>
-
-                        <q-item>
-                          <q-item-main>
-                            <q-radio v-model="manifestacao" val="1" label="Ciência da operação" color="orange"/>
-                          </q-item-main>
-                        </q-item>
-
-                        <q-item>
-                          <q-item-main>
-                            <q-radio v-model="manifestacao" val="2" label="operação realizada" color="green"/>
-                          </q-item-main>
-                        </q-item>
-
-                        <q-item>
-                          <q-item-main>
-                            <q-radio v-model="manifestacao" val="3" label="operação desconhecida" color="red"/>
-                          </q-item-main>
-                        </q-item>
-
-                        <q-item>
-                          <q-item-main>
-                            <q-radio v-model="manifestacao" val="4" label="operação não realizada" color="red"/>
-                          </q-item-main>
-                        </q-item>
-
-                      </q-btn-dropdown>
-
-                    </div>
-                  </div> -->
-
                 </div>
               </q-item-main>
 
               <q-item-side right class="gutter-y-xs">
                 <q-item-tile>
-                  <q-btn color="primary" @click.native="modalManifestacao = true" round dense>
+                  <q-btn color="primary" @click.native="modalManifestacao = true, chaveManifestacao = nota.nfechave, filialManifestacao = nota.codfilial" round dense>
                     <q-icon name="arrow_drop_down_circle" size="25px"/>
                   </q-btn>
-                  <q-tooltip anchor="center left" self="center middle">
+                  <q-tooltip anchor="top left" self="bottom middle">
                     Manifestação
                   </q-tooltip>
                 </q-item-tile>
 
                 <q-item-tile>
                   <q-btn dense @click="downloadNFe(nota.codfilial, nota.nfechave)" round color="primary" icon="cloud_download"/>
-                  <q-tooltip anchor="center left" self="center middle">
+                  <q-tooltip anchor="top left" self="bottom middle">
                     Baixar XML
                   </q-tooltip>
                 </q-item-tile>
@@ -263,7 +169,7 @@
               <div class="col-xs-12 col-sm-6 col-md-5 col-lg-3">
 
                 <q-card>
-                  <q-card-title>Consulta Sefaz</q-card-title>
+                  <q-card-title align="center">Consulta Sefaz</q-card-title>
                   <q-card-separator />
                   <q-card-main>
                     <mg-select-filial label="Local" v-model="filial" />
@@ -344,51 +250,56 @@
         </q-modal>
       </template>
 
+      <!-- MODAL DE MANIFESTACAO -->
       <template>
         <q-modal v-model="modalManifestacao">
-          <q-page padding>
 
-            <q-stepper v-model="currentStep">
-              <q-step name="first" title="Manifestacão">
+          <q-card>
+            <q-card-title align="center">
+              Manifestacão
+            </q-card-title>
+            <q-card-separator />
+            <q-card-main>
 
-                <div class="gutter-y-xs">
-                  <div class="row">
-                    <q-radio v-model="manifestacao" val="210210" label="Ciência da operação" color="orange"/>
+              <q-item>
+                <q-item-main>
+                  <div class=" gutter-y-sm">
+                    <div class="row">
+                      <q-radio v-model="codmanifestacao" val="210210" label="Ciência da operação" color="orange"/>
+                    </div>
+
+                    <div class="row">
+                      <q-radio v-model="codmanifestacao" val="210200" label="operação realizada" color="green"/>
+                    </div>
+
+                    <div class="row">
+                      <q-radio v-model="codmanifestacao" val="210220" label="operação desconhecida" color="red"/>
+                    </div>
+
+                    <div class="row">
+                      <q-radio v-model="codmanifestacao" val="210240" label="operação não realizada" color="red"/>
+                    </div>
                   </div>
+                </q-item-main>
+              </q-item>
+              <q-item-separator/>
+              <q-item v-if="codmanifestacao == 210240 || codmanifestacao == 210220">
+                <q-item-main>
+                  <q-field :count="15">
+                    <q-input clearable min-length="15" type="textarea" inverted-light color="warning" v-model="justificativa" float-label="Justificativa"/>
+                  </q-field>
+                </q-item-main>
+              </q-item>
 
-                  <div class="row">
-                    <q-radio v-model="manifestacao" val="210200" label="operação realizada" color="green"/>
-                  </div>
+            </q-card-main>
+            <q-card-separator/>
 
-                  <div class="row">
-                    <q-radio v-model="manifestacao" val="210220" label="operação desconhecida" color="red"/>
-                  </div>
+            <q-card-actions align="end">
+              <q-btn color="red" @click="modalManifestacao = false" icon="arrow_back" round dense />
+              <q-btn color="primary" @click="enviarManifestacao()" icon="done" round dense />
+            </q-card-actions>
 
-                  <div class="row">
-                    <q-radio v-model="manifestacao" val="210240" label="operação não realizada" color="red"/>
-                  </div>
-                </div>
-
-                <q-stepper-navigation>
-                  <div class="q-px-sm">
-                    <q-btn color="red" @click="modalManifestacao = false" icon="arrow_back" round dense />
-                  </div>
-                  <q-btn color="primary" @click="currentStep = 'second' " icon="done" round dense />
-                </q-stepper-navigation>
-              </q-step>
-
-              <q-step name="second" title="Justificativa" v-if="manifestacao == '210220' || manifestacao == '210240'">
-                <q-input v-model="justificativa" float-label="Justificativa"/>
-                <q-stepper-navigation>
-                  <div class="q-px-sm">
-                    <q-btn color="red" @click="currentStep = 'first'" icon="arrow_back" round dense />
-                  </div>
-                  <q-btn color="primary" @click="enviarManifestacao()" icon="done" round dense />
-                </q-stepper-navigation>
-              </q-step>
-
-            </q-stepper>
-          </q-page>
+          </q-card>
         </q-modal>
       </template>
 
@@ -400,6 +311,7 @@
 <script>
 import MgSelectEstoqueLocal from '../../utils/select/MgSelectEstoqueLocal'
 import MgSelectFilial from '../../utils/select/MgSelectFilial'
+import MgSelectNaturezaOperacao from '../../utils/select/MgSelectNaturezaOperacao'
 import MgLayout from '../../../layouts/MgLayout'
 import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompletePessoa from '../../utils/autocomplete/MgAutocompletePessoa'
@@ -409,6 +321,7 @@ export default {
   components: {
     MgLayout,
     MgSelectFilial,
+    MgSelectNaturezaOperacao,
     MgSelectEstoqueLocal,
     MgErrosValidacao,
     MgAutocompletePessoa
@@ -420,34 +333,51 @@ export default {
         datainicial: null,
         datafinal: null,
       },
+      selectOptions: [
+        {
+          label: 'Autorizada',
+          value: 'autorizada'
+        },
+        {
+          label: 'Cancelada',
+          value: 'cancelada'
+        },
+        {
+          label: 'Danegada',
+          value: 'Danegada'
+        }
+      ],
       data: {},
       tabs: 'pendente',
       carregado: false,
       filial: null,
       nsu: null,
       xml: null,
+      natop: null,
       currentStep: 'first',
       progresso: 50,
-      manifestacao: null,
+      codmanifestacao: null,
+      chaveManifestacao: null,
+      filialManifestacao: null,
       justificativa: null,
       modalConsultaSefaz: false,
       modalProgresso: false,
       modalManifestacao: false,
-      filtroManifestacaoSituacao: null,
+      filtroSituacao: null,
       filtroChave: null,
       filtroPessoa: null,
       filtroFilial: null,
     }
   },
   watch: {
-    manifestacao: function(manifest){
+    natop: function(manifest){
       console.log(manifest)
     },
     filial: function(query){
       this.ultimaNSU(query)
     },
-    filtroManifestacaoSituacao: function(manifest){
-      console.log(manifest)
+    filtroSituacao: function(sit){
+      console.log(sit)
     },
     filtroChave: function(chave){
       this.page = 1
@@ -478,9 +408,44 @@ export default {
       this.buscaListagem(true, done)
     },
 
-    enviarManifestacao: function(){
-      console.log('aqui')
-      console.log(this.manifestacao)
+    enviarManifestacao: function(chave, filial){
+      let vm = this
+
+      if (vm.codmanifestacao == 210240 || vm.codmanifestacao == 210220){
+        if(vm.justificativa == null || vm.justificativa.length < 15){
+          vm.$q.notify({
+            message: 'Justificativa deve conter no mínimo 15 caracteres',
+            type: 'negative',
+          })
+          return
+        }
+      }
+      // Monta Parametros da API
+      let params = {
+        justificativa: vm.justificativa,
+        manifestacao: vm.codmanifestacao,
+        nfechave: vm.chaveManifestacao,
+        filial: vm.filialManifestacao
+      }
+      console.log(params)
+      vm.$axios.get('nfe-terceiro/manifestacao',{params}).then(function(request){
+        if (request.data !== true) {
+          vm.$q.notify({
+            message: request.data,
+            type: 'negative',
+          })
+          return
+        }else{
+          vm.buscaListagem()
+          vm.$q.notify({
+            message: 'Manifestacão enviada com sucesso',
+            type: 'positive',
+          })
+        }
+      }).catch(function(error) {
+        console.log(error)
+      })
+
     },
 
     buscaListagem: function(concat, done) {
@@ -501,7 +466,7 @@ export default {
         chave: vm.filtroChave,
         datainicial: vm.filter.datainicial,
         datafinal: vm.filter.datafinal,
-        manifestacao: vm.filtroManifestacao,
+        manifestacao: vm.natop,
         situacao: vm.filtroSituacao
       }
 

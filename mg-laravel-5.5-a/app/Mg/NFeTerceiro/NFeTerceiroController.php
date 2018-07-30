@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Mg\Filial\Filial;
 
-
-
 class NFeTerceiroController extends MgController
 {
 

@@ -33,10 +33,20 @@ class NFeTerceiroRepository extends MgRepository
             //este serviço somente opera em ambiente de produção
             $tools->setEnvironment(1);
 
-            $chNFe = $request->nfechave; //chave de 44 digitos da nota do fornecedor
-            $tpEvento =  $request->manifestacao; //'210210'; //ciencia da operação
-            $xJust = $request->justificativa??''; //a ciencia não requer justificativa
-            $nSeqEvento = 1; //a ciencia em geral será numero inicial de uma sequencia para essa nota e evento
+            //chave de 44 digitos da nota do fornecedor
+            $chNFe = $request->nfechave;
+
+            // 210200 OPERACAO REALIZADA
+            // 210210 CIENCIA DA OPERACAO
+            // 210220 OPERACAO DESOCNHECIDA
+            // 210240 OPERACAO NAO REALIZADA
+            $tpEvento =  $request->manifestacao;
+
+            //a ciencia não requer justificativa
+            $xJust = $request->justificativa??null;
+
+             //a ciencia em geral será numero inicial de uma sequencia para essa nota e evento
+            $nSeqEvento = 1;
 
             $response = $tools->sefazManifesta($chNFe,$tpEvento,$xJust = '',$nSeqEvento = 1);
 

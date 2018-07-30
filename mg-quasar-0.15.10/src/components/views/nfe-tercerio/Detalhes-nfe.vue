@@ -56,7 +56,7 @@
               <!-- informa data de entrada da nota -->
               <q-item-tile>
                 <q-field icon="date_range">
-                  <q-input stack-label="Entrada" type="datetime-local" v-model="dataEntrada" align="center" clearable />
+                  <q-input stack-label="Entrada" type="date" v-model="dataEntrada" align="center" clearable />
                 </q-field>
               </q-item-tile>
 
@@ -521,9 +521,130 @@
         <br />
       </q-tabs>
 
+      <template>
+        <q-modal v-model="modalDividirProduto" maximized>
+          <q-page padding>
+
+            <q-list v-if="produtoSelecionado" no-border>
+              <q-list-header>{{produtoSelecionado.produto}}</q-list-header>
+              <q-item>
+                <q-item-main>
+
+                  <div class="row">
+                    <div class="col-2">
+                      <div class="row">
+                        Quantidade
+                      </div>
+                      <div class="row">
+                        {{parseFloat(produtoSelecionado.quantidade)}} {{produtoSelecionado.unidademedida}}
+                      </div>
+                    </div>
+                    <div class="col-2">
+                      <div class="row">
+                        valor unitário
+                      </div>
+                      <div class="row">
+                        {{produtoSelecionado.valorunitario}}
+                      </div>
+                    </div>
+                    <div class="col-2">
+                      <div class="row">
+                        Total do produto
+                      </div>
+                      <div class="row">
+                        {{produtoSelecionado.valorproduto}}
+                      </div>
+                    </div>
+                  </div>
+
+                </q-item-main>
+                <q-item-side class="gutter-y-xs">
+                  <q-item-tile>
+                    <q-btn-dropdown label="Dividir Item" color="primary">
+                      <q-list link highlight>
+
+                        <q-item>
+                          <q-item-main>
+                            <q-radio v-model="tipoDivisao" val="1" label="Quantidade" />
+                          </q-item-main>
+                        </q-item>
+
+                        <q-item>
+                          <q-item-main>
+                            <q-radio v-model="tipoDivisao" val="2" label="Valor" />
+                          </q-item-main>
+                        </q-item>
+
+                      </q-list>
+                    </q-btn-dropdown>
+                  </q-item-tile>
+
+                  <q-item-tile>
+                    <q-btn label="Agrupar item" color="primary"/>
+                  </q-item-tile>
+
+                </q-item-side>
+              </q-item>
+            </q-list>
+
+            <template>
+              <q-list v-for="item in quantidadeDivisao" no-border>
+                <q-item >
+                  <q-item-main>
+                    <div class="row gutter-xs">
+                      <div class="col-12">
+
+                        <q-card>
+                          <q-card-main>
+                            {{item}}
+                            Card Content
+                          </q-card-main>
+                        </q-card>
+
+                      </div>
+                    </div>
+                  </q-item-main>
+                </q-item>
+              </q-list>
+            </template>
+
+            <q-page-sticky position="bottom-right" :offset="[25, 80]">
+              <q-btn round color="red" icon="arrow_back" @click="modalDividirProduto = false" />
+            </q-page-sticky>
+          </q-page>
+        </q-modal>
+      </template>
+
+      <template>
+        <q-modal v-model="modalTipoDivisao">
+          <q-card>
+
+            <q-card-title>
+              Informe a quantidade que deseja dividir
+            </q-card-title>
+            <q-card-separator />
+
+            <q-card-main>
+              <q-input clearable type="number" float-label="Quantidade" v-model="quantidadeDivisao"/>
+            </q-card-main>
+            <q-card-separator/>
+
+            <q-card-actions align="end">
+              <q-btn dense round icon="arrow_back" color="red" @click="modalTipoDivisao = false"/>
+              <q-btn dense round icon="done" color="primary" @click.native="dividirItem()"/>
+            </q-card-actions>
+
+          </q-card>
+        </q-modal>
+      </template>
+
       <q-page-sticky position="bottom-right" :offset="[25, 25]">
-        <q-btn round color="primary" icon="done" @click="atualizaNota()" />
+        <q-fab icon="add" direction="up" color="primary" dense>
+          <q-fab-action color="primary" icon="done" @click="atualizaNota()" />
+          <q-fab-action v-if="produtoSelecionado" @click="modalDividirProduto = true" color="primary" icon="edit" />
+        </q-fab>
       </q-page-sticky>
+
 
     </div>
   </mg-layout>
@@ -557,9 +678,16 @@ export default {
       produtoCarregado: false,
       natop: null,
       dataEntrada: null,
+      modalDividirProduto: false,
+      modalTipoDivisao: null,
+      tipoDivisao: null,
+      quantidadeDivisao: null,
     }
   },
   watch: {
+    tipoDivisao: function(tipo){
+      this.modalTipoDivisao = true
+    },
     dataEntrada: function(data){
       console.log(data)
     },
@@ -574,6 +702,18 @@ export default {
 
   },
   methods: {
+
+    dividirItem: function(){
+      let vm = this
+
+      if(vm.quantidadeDivisao > vm.produtoSelecionado.quantidade){
+        vm.$q.notify({
+          message: 'A quantidade desejada é maior que a diponível',
+          type: 'negative',
+        })
+        return
+      }
+    },
     carregaNota: function() {
       let vm = this
       let params= {
