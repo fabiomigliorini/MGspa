@@ -588,7 +588,7 @@
             </q-list>
 
             <template>
-              <q-list v-for="item in quantidadeDivisao" no-border>
+              <q-list v-for="item in quantidadeDivisao" :key="item" no-border>
                 <q-item >
                   <q-item-main>
                     <div class="row gutter-xs">
@@ -596,8 +596,10 @@
 
                         <q-card>
                           <q-card-main>
-                            {{item}}
-                            Card Content
+                            <div class="col-2">
+                              <q-input v-model="itemDividido.data[item]" float-label="Nome" clearable/>
+                              <!-- <q-input v-model="itemDividido.data.valor[item]" float-label="valor" clearable/> -->
+                            </div>
                           </q-card-main>
                         </q-card>
 
@@ -610,6 +612,9 @@
 
             <q-page-sticky position="bottom-right" :offset="[25, 80]">
               <q-btn round color="red" icon="arrow_back" @click="modalDividirProduto = false" />
+            </q-page-sticky>
+            <q-page-sticky position="bottom-right" :offset="[25, 25]">
+              <q-btn round color="primary" icon="done" @click="dividirItem()" />
             </q-page-sticky>
           </q-page>
         </q-modal>
@@ -672,6 +677,9 @@ export default {
         tabsModel: 'detalhes',
       },
       data: {},
+      itemDividido: {
+        data:[]
+      },
       carregado: false,
       itensCarregado: false,
       produtoSelecionado: null,
@@ -705,7 +713,7 @@ export default {
 
     dividirItem: function(){
       let vm = this
-
+      console.log(this.itemDividido)
       if(vm.quantidadeDivisao > vm.produtoSelecionado.quantidade){
         vm.$q.notify({
           message: 'A quantidade desejada é maior que a diponível',
