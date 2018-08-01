@@ -29,12 +29,12 @@ class NFeTerceiroProdutoBarra extends MGModel
         return $this->belongsTo(NFeTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
     }
 
-    // Tabelas Filhas
-    public function ProdutoBarraS()
+    public function ProdutoBarra()
     {
-        return $this->hasMany(ProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
+        return $this->belongsTo(ProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
+    // Tabelas Filhas
 
 
 }

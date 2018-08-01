@@ -19,20 +19,21 @@ class NFeTerceiroGrupo extends MGModel
     ];
 
     // Chaves Estrangeiras
-    public function NotaFiscalTerceiroItem()
+    public function NotaFiscalTerceiro()
     {
-        return $this->belongsTo(NotaFiscalTerceiroItem::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
-    }
-
-    public function NotaFiscalTerceiroProdutoBarra()
-    {
-        return $this->belongsTo(NotaFiscalTerceiroProdutoBarra::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
+        return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
     // Tabelas Filhas
-    public function NotaFiscalTerceiroS()
+    public function NotaFiscalTerceiroItemS()
     {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+        return $this->hasMany(NotaFiscalTerceiroItem::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
     }
+
+    public function NotaFiscalTerceiroProdutoBarraS()
+    {
+        return $this->hasMany(NotaFiscalTerceiroProdutoBarra::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
+    }
+
 
 }

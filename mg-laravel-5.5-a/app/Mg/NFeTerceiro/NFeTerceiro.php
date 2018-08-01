@@ -41,7 +41,7 @@ class NFeTerceiro extends MGModel
         'valordesconto',
         'valoroutras',
         'codusuariocriacao',
-        'codusuarioalteracao'        
+        'codusuarioalteracao'
 
     ];
     protected $dates = [
@@ -51,36 +51,35 @@ class NFeTerceiro extends MGModel
     ];
 
     // Chaves Estrangeiras
-    public function NotaFiscalTerceiroDuplicata()
+    public function Filial()
     {
-        return $this->belongsTo(NotaFiscalTerceiroDuplicata::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
-    public function NotaFiscalTerceiroGrupo()
+    public function NaturezaOperacao()
     {
-        return $this->belongsTo(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+        return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function NFeTerceiroDistribuicaoDfe()
+    {
+        return $this->belongsTo(NFeTerceiroDistribuicaoDfe::class, 'coddidtribuicaodfe', 'coddidtribuicaodfe');
     }
 
     // Tabelas Filhas
-    public function NotaFiscalTerceiroDistribuicaoDfeS()
+    public function NotaFiscalTerceiroGrupoS()
     {
-        return $this->hasMany(NotaFiscalTerceiroDistribuicaoDfe::class, 'coddidtribuicaodfe', 'coddidtribuicaodfe');
+        return $this->hasMany(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
-    public function FilialS()
+    public function NotaFiscalTerceiroDuplicataS()
     {
-        return $this->hasMany(Filial::class, 'codfilial', 'codfilial');
+        return $this->hasMany(NotaFiscalTerceiroDuplicata::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
-
-    public function PessoaS()
-    {
-        return $this->hasMany(Pessoa::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function NaturezaOperacaoS()
-    {
-        return $this->hasMany(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
-    }
-
 
 }

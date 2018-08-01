@@ -21,6 +21,9 @@ class NFeTerceiroDfe extends MGModel
         'recebimento',
         'protocolo',
         'csitnfe',
+        'download',
+        'indmanifestacao',
+        'justificativa',
         'codusuariocriacao',
         'codusuarioalteracao'
 
@@ -33,16 +36,12 @@ class NFeTerceiroDfe extends MGModel
     ];
 
     // Chaves Estrangeiras
-    // public function NotaFiscalTerceiro()
-    // {
-    //     return $this->belongsTo(NotaFiscalTerceiroNotafiscal::class, 'coddistribuicaodfe', 'coddistribuicaodfe');
-    // }
-
-    // Tabelas Filhas
-    public function FilialS()
+    public function Filial()
     {
-        return $this->hasMany(Filial::class, 'codfilial', 'codfilial');
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
+
+    // Tabelas Filhas    
 
 
 }

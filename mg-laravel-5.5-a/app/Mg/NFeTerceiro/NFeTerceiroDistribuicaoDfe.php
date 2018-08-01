@@ -22,15 +22,15 @@ class NFeTerceiroDistribuicaoDfe extends MGModel
     ];
 
     // Chaves Estrangeiras
-    public function NotaFiscalTerceiro()
+    public function Filial()
     {
-        return $this->belongsTo(NotaFiscalTerceiroNotafiscal::class, 'coddistribuicaodfe', 'coddistribuicaodfe');
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
     // Tabelas Filhas
-    public function FilialS()
+    public function NotaFiscalTerceiroS()
     {
-        return $this->hasMany(Filial::class, 'codfilial', 'codfilial');
+        return $this->hasMany(NotaFiscalTerceiroNotafiscal::class, 'coddistribuicaodfe', 'coddistribuicaodfe');
     }
 
 

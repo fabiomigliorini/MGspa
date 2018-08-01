@@ -19,7 +19,7 @@ class NFeTerceiroDuplicata extends MGModel
         'vdup',
         'codusuariocriacao',
         'codusuarioalteracao'
-        
+
     ];
     protected $dates = [
         'dvenc',
@@ -29,11 +29,10 @@ class NFeTerceiroDuplicata extends MGModel
     ];
 
     // Chaves Estrangeiras
-
-    // Tabelas Filhas
-    public function NotaFiscalTerceiroS()
+    public function NotaFiscalTerceiro()
     {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+        return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
+    // Tabelas Filhas
 }

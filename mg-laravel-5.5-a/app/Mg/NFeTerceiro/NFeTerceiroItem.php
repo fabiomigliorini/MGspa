@@ -62,12 +62,12 @@ class NFeTerceiroItem extends MGModel
         'alteracao',
     ];
 
-    // Chaves Estrangeiras
 
-    // Tabelas Filhas
-    public function NotaFiscalTerceiroGrupoS()
+    // Chaves Estrangeiras
+    public function NotaFiscalTerceiroGrupo()
     {
-        return $this->hasMany(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
+        return $this->belongsTo(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
     }
 
+    // Tabelas Filhas
 }
