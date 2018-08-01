@@ -531,7 +531,7 @@
                 <q-item-main>
 
                   <div class="row">
-                    <div class="col-2">
+                    <div class="col-xs-12">
                       <div class="row">
                         Quantidade
                       </div>
@@ -539,7 +539,7 @@
                         {{parseFloat(produtoSelecionado.quantidade)}} {{produtoSelecionado.unidademedida}}
                       </div>
                     </div>
-                    <div class="col-2">
+                    <div class="col-xs-12">
                       <div class="row">
                         valor unitário
                       </div>
@@ -547,7 +547,7 @@
                         {{produtoSelecionado.valorunitario}}
                       </div>
                     </div>
-                    <div class="col-2">
+                    <div class="col-xs-12">
                       <div class="row">
                         Total do produto
                       </div>
@@ -556,8 +556,8 @@
                       </div>
                     </div>
                   </div>
-
                 </q-item-main>
+
                 <q-item-side class="gutter-y-xs">
                   <q-item-tile>
                     <q-btn-dropdown label="Dividir Item" color="primary">
@@ -596,9 +596,9 @@
 
                         <q-card>
                           <q-card-main>
-                            <div class="col-2">
-                              <q-input v-model="itemDividido.data[item]" float-label="Nome" clearable/>
-                              <!-- <q-input v-model="itemDividido.data.valor[item]" float-label="valor" clearable/> -->
+                            <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2">
+                              <q-input v-model="itemDividido.prod[item]" float-label="Nome" clearable/>
+                              <q-input v-model="itemDividido.val[item]" float-label="valor" clearable/>
                             </div>
                           </q-card-main>
                         </q-card>
@@ -678,8 +678,10 @@ export default {
       },
       data: {},
       itemDividido: {
-        data:[]
+        prod:{},
+        val:{}
       },
+      prod: null,
       carregado: false,
       itensCarregado: false,
       produtoSelecionado: null,

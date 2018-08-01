@@ -6,15 +6,13 @@
     </template>
 
     <div slot="drawer">
-
-      <q-list-header>Filtros</q-list-header>
-
       <div class="gutter-y-none">
+
         <!-- Filtra por filial -->
         <q-item dense>
           <q-item-side icon="store"/>
           <q-item-main>
-            <mg-select-filial label="Local" v-model="filtroFilial" />
+            <mg-select-filial label="Local" v-model="filter.filtroFilial" />
           </q-item-main>
         </q-item>
 
@@ -22,7 +20,7 @@
         <q-item dense>
           <q-item-side icon="account_circle"/>
           <q-item-main>
-            <mg-autocomplete-pessoa placeholder="Pessoa" v-model="filtroPessoa" :init="filtroPessoa"/>
+            <mg-autocomplete-pessoa placeholder="Pessoa" v-model="filter.filtroPessoa" :init="filtroPessoa"/>
           </q-item-main>
         </q-item>
 
@@ -31,7 +29,7 @@
           <q-item-side icon="vpn_key"/>
           <q-item-main>
             <q-field >
-              <q-input clearable float-label="Chave" v-model="filtroChave" />
+              <q-input clearable float-label="Chave" v-model="filter.filtroChave" />
             </q-field>
           </q-item-main>
         </q-item>
@@ -48,11 +46,19 @@
         <q-item dense>
           <q-item-side icon="arrow_drop_down_circle"/>
           <q-item-main>
-            <q-select v-model="filtroSituacao" :options="selectOptions" float-label="Situação"/>
+            <q-select radio v-model="filter.filtroSituacao" :options="selectSituacao" float-label="Situação" clearable/>
           </q-item-main>
         </q-item>
-      </div>
 
+        <!-- Filtra por manifestacao -->
+        <q-item dense>
+          <q-item-side icon="arrow_drop_down_circle"/>
+          <q-item-main>
+            <q-select radio v-model="filter.filtroManifestacao" :options="selectManifestacao" float-label="Manifestacão" clearable/>
+          </q-item-main>
+        </q-item>
+
+      </div>
       <q-item-separator />
 
       <!-- Filtra por data de corte -->
@@ -144,7 +150,13 @@
                   </q-tooltip>
                 </q-item-tile>
 
-                <q-item-tile>
+                <q-item-tile v-if="nota.download">
+                  <q-btn dense round color="green" icon="cloud_download"/>
+                  <q-tooltip anchor="top left" self="bottom middle">
+                    O XML já está baixado
+                  </q-tooltip>
+                </q-item-tile>
+                <q-item-tile v-else="!nota.download">
                   <q-btn dense @click="downloadNFe(nota.codfilial, nota.nfechave)" round color="primary" icon="cloud_download"/>
                   <q-tooltip anchor="top left" self="bottom middle">
                     Baixar XML
@@ -328,25 +340,59 @@ export default {
   },
   data() {
     return {
+      selectSituacao: [
+        {
+          label: 'Autorizada',
+          value: '1',
+          color: 'green'
+        },
+        {
+          label: 'Cancelada',
+          value: '3',
+          color: 'red'
+        },
+        {
+          label: 'Danegada',
+          value: '2',
+          color: 'red'
+        }
+      ],
+      selectManifestacao: [
+        {
+          label: 'Sem manifestação',
+          value: '0',
+        },
+        {
+          label: 'Ciência da operação',
+          value: '210210',
+          color: 'orange'
+        },
+        {
+          label: 'Opereção realizada',
+          value: '210200',
+          color: 'green'
+        },
+        {
+          label: 'Operação não realizada',
+          value: '210240',
+          color: 'red'
+        },
+        {
+          label: 'Operação desconhecida',
+          value: '210220',
+          color: 'red'
+        }
+      ],
       page: 1,
       filter: {
         datainicial: null,
         datafinal: null,
+        filtroSituacao: null,
+        filtroManifestacao: null,
+        filtroChave: null,
+        filtroPessoa: null,
+        filtroFilial: null,
       },
-      selectOptions: [
-        {
-          label: 'Autorizada',
-          value: 'autorizada'
-        },
-        {
-          label: 'Cancelada',
-          value: 'cancelada'
-        },
-        {
-          label: 'Danegada',
-          value: 'Danegada'
-        }
-      ],
       data: {},
       tabs: 'pendente',
       carregado: false,
@@ -363,21 +409,20 @@ export default {
       modalConsultaSefaz: false,
       modalProgresso: false,
       modalManifestacao: false,
-      filtroSituacao: null,
-      filtroChave: null,
-      filtroPessoa: null,
-      filtroFilial: null,
     }
   },
   watch: {
-    natop: function(manifest){
-      console.log(manifest)
+    natop: function(op){
+      console.log(op)
     },
     filial: function(query){
       this.ultimaNSU(query)
     },
     filtroSituacao: function(sit){
       console.log(sit)
+    },
+    filtroManifestacao: function(manifest){
+      console.log(manifest)
     },
     filtroChave: function(chave){
       this.page = 1
@@ -427,7 +472,6 @@ export default {
         nfechave: vm.chaveManifestacao,
         filial: vm.filialManifestacao
       }
-      console.log(params)
       vm.$axios.get('nfe-terceiro/manifestacao',{params}).then(function(request){
         if (request.data !== true) {
           vm.$q.notify({
@@ -461,20 +505,20 @@ export default {
       // Monta Parametros da API
       let params = {
         page: vm.page,
-        filial: vm.filtroFilial,
-        pessoa: vm.filtroPessoa,
-        chave: vm.filtroChave,
+        filial: vm.filtro.filtroFilial,
+        pessoa: vm.filtro.filtroPessoa,
+        chave: vm.filtro.filtroChave,
         datainicial: vm.filter.datainicial,
         datafinal: vm.filter.datafinal,
-        manifestacao: vm.natop,
-        situacao: vm.filtroSituacao
+        manifestacao: vm.filtro.filtroManifestacao,
+        situacao: vm.filtro.filtroSituacao
       }
 
       vm.$axios.get('nfe-terceiro/lista-dfe',{params}).then(function(request) {
-        console.log(params)
         // Se for para concatenar, senao inicializa
         if (vm.page == 1) {
           vm.xml = request.data
+          console.log(params)
         }
         else {
           vm.xml.data = vm.xml.data.concat(request.data.data)
