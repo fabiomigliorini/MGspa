@@ -21,60 +21,58 @@ class NFeTerceiroRepository extends MgRepository
 {
 
     public static function manifestacao ($request){
-        return "rever esta classe";
 
-        // try {
-        //     $filial = Filial::findOrFail($request->filial);
-        //
-        //     $tools = NFePHPRepositoryConfig::instanciaTools($filial);
-        //
-        //     //só funciona para o modelo 55
-        //     $tools->model('55');
-        //
-        //     //este serviço somente opera em ambiente de produção
-        //     $tools->setEnvironment(1);
-        //
-        //     //chave de 44 digitos da nota do fornecedor
-        //     $chNFe = $request->nfechave;
-        //
-        //     // 210200 OPERACAO REALIZADA
-        //     // 210210 CIENCIA DA OPERACAO
-        //     // 210220 OPERACAO DESOCNHECIDA
-        //     // 210240 OPERACAO NAO REALIZADA
-        //     $tpEvento =  $request->manifestacao;
-        //
-        //     //a ciencia não requer justificativa
-        //     $xJust = $request->justificativa??null;
-        //
-        //      //a ciencia em geral será numero inicial de uma sequencia para essa nota e evento
-        //     $nSeqEvento = 1;
-        //
-        //     $response = $tools->sefazManifesta($chNFe,$tpEvento,$xJust = '',$nSeqEvento = 1);
-        //
-        //     //você pode padronizar os dados de retorno atraves da classe abaixo
-        //     //de forma a facilitar a extração dos dados do XML
-        //     //NOTA: mas lembre-se que esse XML muitas vezes será necessário,
-        //     //quando houver a necessidade de protocolos
-        //     $st = new Standardize($response);
-        //
-        //     //nesse caso $std irá conter uma representação em stdClass do XML
-        //     $stdRes = $st->toStd();
-        //
-        //     //nesse caso o $arr irá conter uma representação em array do XML
-        //     $arr = $st->toArray();
-        //
-        //     //nesse caso o $json irá conter uma representação em JSON do XML
-        //     $json = $st->toJson();
-        //
-        //     // ATUALIZA MANIFESTACAO NA BASE
-        //     $manifest = NFeTerceiroDfe::where('nfechave', $request->nfechave;)->first();
-        //     $manifest->indmanifestacao = $stdRes;
-        //     $manifest->save();
-        //
-        //     return true;
-        // } catch (\Exception $e) {
-        //     return $e->getMessage();
-        // }
+        try {
+            $filial = Filial::findOrFail($request->filial);
+
+            $tools = NFePHPRepositoryConfig::instanciaTools($filial);
+
+            //só funciona para o modelo 55
+            $tools->model('55');
+
+            //este serviço somente opera em ambiente de produção
+            $tools->setEnvironment(1);
+
+            //chave de 44 digitos da nota do fornecedor
+            $chNFe = $request->nfechave;
+
+            // 210200 OPERACAO REALIZADA
+            // 210210 CIENCIA DA OPERACAO
+            // 210220 OPERACAO DESOCNHECIDA
+            // 210240 OPERACAO NAO REALIZADA
+            $tpEvento =  $request->manifestacao;
+
+            //a ciencia não requer justificativa
+            $xJust = $request->justificativa??null;
+
+             //a ciencia em geral será numero inicial de uma sequencia para essa nota e evento
+            $nSeqEvento = 1;
+
+            $response = $tools->sefazManifesta($chNFe,$tpEvento,$xJust = '',$nSeqEvento = 1);
+
+            //você pode padronizar os dados de retorno atraves da classe abaixo
+            //de forma a facilitar a extração dos dados do XML
+            //NOTA: mas lembre-se que esse XML muitas vezes será necessário,
+            //quando houver a necessidade de protocolos
+            $st = new Standardize($response);
+
+            //nesse caso $std irá conter uma representação em stdClass do XML
+            $stdRes = $st->toStd();
+
+            // //nesse caso o $arr irá conter uma representação em array do XML
+            // $arr = $st->toArray();
+            // //nesse caso o $json irá conter uma representação em JSON do XML
+            // $json = $st->toJson();
+
+            // ATUALIZA MANIFESTACAO NA BASE
+            $manifest = NFeTerceiroDfe::where('nfechave', $request->nfechave)->first();
+            $manifest->indmanifestacao = $stdRes->retEvento->infEvento->tpEvento;
+            $manifest->save();
+
+            return true;
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
 
     public static function consultaSefaz (Filial $filial){
@@ -155,7 +153,8 @@ class NFeTerceiroRepository extends MgRepository
 
                 // SALVA NA BASE DE DADOS O RESULTADO DA CONSULTA DFE
                 $dfe = NFeTerceiroDistribuicaoDfe::firstOrNew([
-                    'nsu' => $numnsu
+                    'nsu' => $numnsu,
+                    'nfechave' => $chave
                 ]);
                 $dfe->nfechave = $chave;
                 $dfe->codfilial = $filial->codfilial;
@@ -252,23 +251,21 @@ class NFeTerceiroRepository extends MgRepository
             if ($std->cStat != 138) {
                 throw new \Exception("Documento não retornado. [$std->cStat] $std->xMotivo");
             }
+
             $zip = $std->loteDistDFeInt->docZip;
             $xml = gzdecode(base64_decode($zip));
             // header('Content-type: text/xml; charset=UTF-8');
             // echo $xml;
-            if ($xml == null) {
-                throw new \Exception('Não foi possível fazer o download');
-            }else{
+
+            if (!$xml == null) {
                 // CONVERTE O XML EM UM OBJETO
                 $st = new Standardize();
                 $res = $st->toStd($xml);
                 $chave = $res->protNFe->infProt->chNFe;
             }
-
             if(!empty($chave)){
                 // SALVA NA BASE AS INFORMAÇOES DA NOTA
                 $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
-
                 // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
                 file_put_contents($pathNFeTerceiro, $xml);
                 static::carregarXml($filial, $chave);
@@ -302,7 +299,7 @@ class NFeTerceiroRepository extends MgRepository
         // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
         $coddistribuicaodfe = NFeTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
         ->where([ ['nfechave', $res->protNFe->infProt->chNFe],
-        ['schema', 'like', 'procNFe' . '%'] ])->get();
+        ['schema', 'like', 'resNFe' . '%'] ])->get();
 
         // BUSCA NA BASE DE DADOS O cod estoquelocal
         $codestoquelocal = EstoqueLocal::select('codestoquelocal')->where('codfilial', $filial->codfilial)->get();
@@ -540,14 +537,14 @@ class NFeTerceiroRepository extends MgRepository
             $query->where('csitnfe', $situacao);
         })
         ->when($datainicial, function($query, $datainicial){
-            $query->where('emissao', '>', $datainicial);
+            $query->where('emissao', '>=', $datainicial);
         })
         ->when($datafinal, function($query, $datafinal){
-            $query->where('emissao', '<', $datafinal);
+            $query->where('emissao', '<=', $datafinal);
         })
         ->when($pessoa, function($query, $pessoa){
             $query->where('emitente', 'like', $pessoa . '%'); // rever este campo
-        })->paginate(100);
+        })->orderBy('emissao', 'DESC')->paginate(100);
 
         return $qry;
     }

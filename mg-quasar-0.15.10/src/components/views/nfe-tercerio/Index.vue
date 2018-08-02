@@ -20,7 +20,7 @@
         <q-item dense>
           <q-item-side icon="account_circle"/>
           <q-item-main>
-            <mg-autocomplete-pessoa placeholder="Pessoa" v-model="filter.filtroPessoa" :init="filtroPessoa"/>
+            <mg-autocomplete-pessoa placeholder="Pessoa" v-model="filter.filtroPessoa" :init="filter.filtroPessoa"/>
           </q-item-main>
         </q-item>
 
@@ -38,7 +38,7 @@
         <q-item dense>
           <q-item-side icon="arrow_drop_down_circle"/>
           <q-item-main>
-            <mg-select-natureza-operacao label="Natureza da operação" v-model="natop" />
+            <mg-select-natureza-operacao label="Natureza da operação" v-model="filter.filtroNatOp" />
           </q-item-main>
         </q-item>
 
@@ -105,9 +105,15 @@
                     </div>
                   </div>
 
-                  <div @click="buscaNFeTerceiro(nota.nfechave)" class="col-sm-10 col-md-7 col-lg-5 cursor-pointer" style="overflow: hidden">
-                    <q-icon name="vpn_key" color="grey"/>&nbsp
-                    <small>{{nota.nfechave}}</small>
+                  <div  class="col-sm-10 col-md-7 col-lg-5 cursor-pointer" style="overflow: hidden">
+                    <q-btn color="red" v-if="nota.csitnfe == 3 || nota.csitnfe == 2">
+                      <q-icon name="vpn_key"/>&nbsp
+                      <small>{{nota.nfechave}}</small>
+                    </q-btn>
+                    <q-btn v-else @click="buscaNFeTerceiro(nota.nfechave)" :color="(nota.download)?'primary':'grey'">
+                      <q-icon name="vpn_key"/>&nbsp
+                      <small>{{nota.nfechave}}</small>
+                    </q-btn>
                     <q-tooltip>
                       Detalhes da nota
                     </q-tooltip>
@@ -128,7 +134,7 @@
                   <div class="col-sm-6 col-md-6 col-lg-2 gutter-y-xs">
                     <div class="row">
                       <small class="text-faded">Emissão &nbsp</small>
-                      <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
+                      <small>{{moment(nota.emissao).format("DD MMM YYYY HH:mm:ss")}}</small>
                     </div>
 
                     <div class="row">
@@ -156,7 +162,7 @@
                     O XML já está baixado
                   </q-tooltip>
                 </q-item-tile>
-                <q-item-tile v-else="!nota.download">
+                <q-item-tile v-else>
                   <q-btn dense @click="downloadNFe(nota.codfilial, nota.nfechave)" round color="primary" icon="cloud_download"/>
                   <q-tooltip anchor="top left" self="bottom middle">
                     Baixar XML
@@ -184,7 +190,7 @@
                   <q-card-title align="center">Consulta Sefaz</q-card-title>
                   <q-card-separator />
                   <q-card-main>
-                    <mg-select-filial label="Local" v-model="filial" />
+                    <mg-select-filial label="Local" v-model="SelectFilial" />
                     <template v-if="nsu">
                       <p  class="text-faded">Última NSU consulta: {{nsu.replace(/^(0+)(\d)/g,"$2")}}</p>
                     </template>
@@ -396,7 +402,7 @@ export default {
       data: {},
       tabs: 'pendente',
       carregado: false,
-      filial: null,
+      SelectFilial: null,
       nsu: null,
       xml: null,
       natop: null,
@@ -412,29 +418,10 @@ export default {
     }
   },
   watch: {
-    natop: function(op){
-      console.log(op)
-    },
-    filial: function(query){
-      this.ultimaNSU(query)
-    },
-    filtroSituacao: function(sit){
-      console.log(sit)
-    },
-    filtroManifestacao: function(manifest){
-      console.log(manifest)
-    },
-    filtroChave: function(chave){
-      this.page = 1
-      this.buscaListagem()
-    },
-    filtroPessoa: function(pessoa){
-      console.log(pessoa)
-    },
-    filtroFilial: function(filial){
-      this.page = 1
-      this.buscaListagem()
-      // console.log(filial)
+    SelectFilial: function(filial){
+      if (filial){
+        this.ultimaNSU(filial)
+      }
     },
     // observa filtro, sempre que alterado chama a api
     filter: {
@@ -505,13 +492,14 @@ export default {
       // Monta Parametros da API
       let params = {
         page: vm.page,
-        filial: vm.filtro.filtroFilial,
-        pessoa: vm.filtro.filtroPessoa,
-        chave: vm.filtro.filtroChave,
+        filial: vm.filter.filtroFilial,
+        pessoa: vm.filter.filtroPessoa,
+        chave: vm.filter.filtroChave,
         datainicial: vm.filter.datainicial,
         datafinal: vm.filter.datafinal,
-        manifestacao: vm.filtro.filtroManifestacao,
-        situacao: vm.filtro.filtroSituacao
+        manifestacao: vm.filter.filtroManifestacao,
+        situacao: vm.filter.filtroSituacao,
+        natop: vm.filter.filtroNatOp
       }
 
       vm.$axios.get('nfe-terceiro/lista-dfe',{params}).then(function(request) {
@@ -569,7 +557,7 @@ export default {
       let vm = this
       // Monta Parametros da API
       let params = {
-        filial: this.filial
+        filial: this.SelectFilial
       }
 
       vm.$axios.get('nfe-terceiro/consulta-sefaz',{params}).then(function(request){

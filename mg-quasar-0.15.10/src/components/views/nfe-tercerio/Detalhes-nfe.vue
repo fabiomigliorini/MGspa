@@ -247,13 +247,51 @@
 
           <template v-else>
             <q-page padding>
-              <center>
-                <div style="max-width:50vw" class="text-center">
-                  <q-card color="orange">
-                    <q-card-title>Primeiro baixe a nota para ver os detalhes</q-card-title>
-                  </q-card>
-                </div>
-              </center>
+              <div>
+                <q-card v-if="dfecarregada">
+
+                  <q-card-title>
+                    <div class="row">
+                      {{dfe.emitente}}
+                    </div>
+                    <div class="row">
+                      <small class="text-faded">{{dfe.cnpj}} / {{dfe.ie}}</small>
+                    </div>
+                  </q-card-title>
+                  <q-card-separator />
+                  <q-card-main>
+
+                    <div class="row">
+                      <div class="col-12">
+                        <q-icon name="vpn_key" color="grey"/>
+                        {{dfe.nfechave}}
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-12">
+                        <q-icon name="date_range" color="grey"/>
+                        {{dfe.emissao}}
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-12">
+                        <q-icon name="attach_money" color="grey"/>
+                        {{dfe.valortotal}}
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-12">
+                        <q-icon name="lens" color="green"/>
+                        {{dfe.csitnfe}}
+                      </div>
+                    </div>
+
+                  </q-card-main>
+                </q-card>
+              </div>
             </q-page>
           </template>
 
@@ -683,6 +721,7 @@ export default {
       },
       prod: null,
       carregado: false,
+      dfecarregada: false,
       itensCarregado: false,
       produtoSelecionado: null,
       produtoCarregado: false,
@@ -730,13 +769,18 @@ export default {
         chave: this.filter.chave
       }
       vm.$axios.get('nfe-terceiro/busca-nfeterceiro',{params}).then(function(request){
-        if (request !== null){
+        if (request.data[0]){
           vm.nf = request.data[0]
-          console.log(vm.nf)
           vm.carregaItens(vm.nf.codnotafiscalterceiro)
           vm.carregado = true
         }else{
           vm.carregado = false
+          vm.$axios.get('nfe-terceiro/lista-dfe',{params}).then(function(request) {
+            vm.dfe = request.data.data[0]
+            vm.dfecarregada = true
+          }).catch(function(error) {
+            console.log(error)
+          })
         }
       }).catch(function(error) {
         console.log(error)
