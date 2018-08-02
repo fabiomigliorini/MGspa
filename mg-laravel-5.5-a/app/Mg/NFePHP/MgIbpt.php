@@ -55,7 +55,7 @@ class MgIbpt extends Ibpt
                 0
               );
 
-            if (isset($consulta->httpcode) && $consulta->httpcode == 404) {
+            if (isset($consulta->httpcode) && ($consulta->httpcode == 404 || $consulta->httpcode == 403)) {
                 // throw new \Exception("Produto não localizado na consulta IBPT (Produto #{$nfpb->ProdutoBarra->codproduto} - '{$nfpb->ProdutoBarra->Produto->produto}' - NCM {$nfpb->ProdutoBarra->Produto->Ncm->ncm}).", 1);
                 $reg->descricao = 'Nao Localizado';
                 $reg->vigenciainicio = Carbon::today();
