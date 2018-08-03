@@ -10,6 +10,7 @@ class NFeTerceiroDfe extends MGModel
     protected $primaryKey = 'codnotafiscalterceirodfe';
     protected $fillable = [
         'codfilial',
+        'codpessoa',
         'nfechave',
         'cnpj',
         'emitente',
@@ -41,7 +42,7 @@ class NFeTerceiroDfe extends MGModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
-    // Tabelas Filhas    
+    // Tabelas Filhas
 
 
 }

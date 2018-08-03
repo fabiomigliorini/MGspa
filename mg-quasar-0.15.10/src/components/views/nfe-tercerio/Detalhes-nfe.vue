@@ -255,37 +255,101 @@
                       {{dfe.emitente}}
                     </div>
                     <div class="row">
-                      <small class="text-faded">{{dfe.cnpj}} / {{dfe.ie}}</small>
+                      <small class="text-faded">
+                        {{dfe.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} / {{dfe.ie}}
+                      </small>
                     </div>
                   </q-card-title>
                   <q-card-separator />
                   <q-card-main>
 
                     <div class="row">
-                      <div class="col-12">
-                        <q-icon name="vpn_key" color="grey"/>
-                        {{dfe.nfechave}}
+                      <div class="col-12" style="overflow:hidden">
+                        <q-item>
+                          <q-item-side icon="vpn_key"/>
+                          <q-item-main>
+                            {{dfe.nfechave}}
+                            <q-chip square dense v-if="dfe.csitnfe == 1" color="green">Autorizada</q-chip>
+                            <q-chip square dense v-if="dfe.csitnfe == 3" color="red">Cancelada</q-chip>
+                            <q-chip square dense v-if="dfe.csitnfe == 2" color="red">Denegada</q-chip>
+                          </q-item-main>
+                        </q-item>
                       </div>
                     </div>
 
                     <div class="row">
                       <div class="col-12">
-                        <q-icon name="date_range" color="grey"/>
-                        {{dfe.emissao}}
+                        <q-item>
+                          <q-item-side icon="offline_pin"/>
+                          <q-item-main>
+                            {{dfe.protocolo}}
+                          </q-item-main>
+                        </q-item>
                       </div>
                     </div>
 
                     <div class="row">
                       <div class="col-12">
-                        <q-icon name="attach_money" color="grey"/>
-                        {{dfe.valortotal}}
+                        <q-item>
+                          <q-item-side icon="swap_horizontal_circle"/>
+                          <q-item-main>
+                            <template v-if="dfe.tipo == 1">Saída</template>
+                            <template v-if="dfe.tipo == 0">Entrada</template>
+                          </q-item-main>
+                        </q-item>
                       </div>
                     </div>
 
                     <div class="row">
                       <div class="col-12">
-                        <q-icon name="lens" color="green"/>
-                        {{dfe.csitnfe}}
+                        <q-item>
+                          <q-item-side icon="date_range"/>
+                          <q-item-main>
+                            {{moment(dfe.emissao).format("DD MMM YYYY HH:mm:ss")}}
+                          </q-item-main>
+                        </q-item>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-12">
+                        <q-item>
+                          <q-item-side icon="attach_money"/>
+                          <q-item-main>
+                            R$ {{numeral(parseFloat(dfe.valortotal)).format('0,0.00')}}
+                          </q-item-main>
+                        </q-item>
+                      </div>
+                    </div>
+
+                  </q-card-main>
+                  <q-card-separator/>
+                  <q-card-main>
+
+                    <div class="row items-center">
+                      <div class="col-1">
+                        <q-btn color="primary" @click.native="modalManifestacao = true, chaveManifestacao = dfe.nfechave, filialManifestacao = dfe.codfilial" round dense>
+                          <q-icon name="arrow_drop_down_circle" size="25px"/>
+                        </q-btn>
+                        <q-tooltip anchor="top left" self="bottom middle">
+                          Manifestação
+                        </q-tooltip>
+                      </div>
+
+                      <div class="col-1">
+                        <q-btn dense @click="downloadNFe(dfe.codfilial, dfe.nfechave)" round color="primary" icon="cloud_download"/>
+                        <q-tooltip anchor="top left" self="bottom middle">
+                          Baixar XML
+                        </q-tooltip>
+                      </div>
+
+                      <div class="col-3">
+                        <q-field >
+                          <q-uploader inverted :url="url" stack-label="localizar XML"/>
+                        </q-field>
+                        <q-tooltip anchor="top left" self="bottom middle">
+                          Localizar XML
+                        </q-tooltip>
                       </div>
                     </div>
 
@@ -293,6 +357,60 @@
                 </q-card>
               </div>
             </q-page>
+          </template>
+
+          <!-- MODAL DE MANIFESTACAO -->
+          <template>
+            <q-modal v-model="modalManifestacao">
+
+              <q-card>
+                <q-card-title align="center">
+                  Manifestacão
+                </q-card-title>
+                <q-card-separator />
+                <q-card-main>
+
+                  <q-item>
+                    <q-item-main>
+                      <div class=" gutter-y-sm">
+                        <div class="row">
+                          <q-radio v-model="codmanifestacao" val="210210" label="Ciência da operação" color="orange"/>
+                        </div>
+
+                        <div class="row">
+                          <q-radio v-model="codmanifestacao" val="210200" label="operação realizada" color="green"/>
+                        </div>
+
+                        <div class="row">
+                          <q-radio v-model="codmanifestacao" val="210220" label="operação desconhecida" color="red"/>
+                        </div>
+
+                        <div class="row">
+                          <q-radio v-model="codmanifestacao" val="210240" label="operação não realizada" color="red"/>
+                        </div>
+                      </div>
+                    </q-item-main>
+                  </q-item>
+                  <q-item-separator/>
+
+                  <q-item v-if="codmanifestacao == 210240 || codmanifestacao == 210220">
+                    <q-item-main>
+                      <q-field :count="15">
+                        <q-input clearable min-length="15" type="textarea" inverted-light color="warning" v-model="justificativa" float-label="Justificativa"/>
+                      </q-field>
+                    </q-item-main>
+                  </q-item>
+
+                </q-card-main>
+                <q-card-separator/>
+
+                <q-card-actions align="end">
+                  <q-btn color="red" @click="modalManifestacao = false" icon="arrow_back" round dense />
+                  <q-btn color="primary" @click="enviarManifestacao()" icon="done" round dense />
+                </q-card-actions>
+
+              </q-card>
+            </q-modal>
           </template>
 
           <!-- fim do detalhes da nota -->
@@ -681,7 +799,7 @@
         </q-modal>
       </template>
 
-      <q-page-sticky position="bottom-right" :offset="[25, 25]">
+      <q-page-sticky position="bottom-right" :offset="[25, 25]" v-if="carregado">
         <q-fab icon="add" direction="up" color="primary" dense>
           <q-fab-action color="primary" icon="done" @click="atualizaNota()" />
           <q-fab-action v-if="produtoSelecionado" @click="modalDividirProduto = true" color="primary" icon="edit" />
@@ -719,6 +837,7 @@ export default {
         prod:{},
         val:{}
       },
+      url: '192.168.1.185/upload.php',
       prod: null,
       carregado: false,
       dfecarregada: false,
@@ -729,8 +848,13 @@ export default {
       dataEntrada: null,
       modalDividirProduto: false,
       modalTipoDivisao: null,
+      modalManifestacao: false,
       tipoDivisao: null,
       quantidadeDivisao: null,
+      justificativa: null,
+      codmanifestacao: null,
+      chaveManifestacao: null,
+      filialManifestacao: null,
     }
   },
   watch: {
@@ -762,6 +886,68 @@ export default {
         })
         return
       }
+    },
+    enviarManifestacao: function(chave, filial){
+      let vm = this
+
+      if (vm.codmanifestacao == 210240 || vm.codmanifestacao == 210220){
+        if(vm.justificativa == null || vm.justificativa.length < 15){
+          vm.$q.notify({
+            message: 'Justificativa deve conter no mínimo 15 caracteres',
+            type: 'negative',
+          })
+          return
+        }
+      }
+      // Monta Parametros da API
+      let params = {
+        justificativa: vm.justificativa,
+        manifestacao: vm.codmanifestacao,
+        nfechave: vm.chaveManifestacao,
+        filial: vm.filialManifestacao
+      }
+      vm.$axios.get('nfe-terceiro/manifestacao',{params}).then(function(request){
+        if (request.data !== true) {
+          vm.$q.notify({
+            message: request.data,
+            type: 'negative',
+          })
+          return
+        }else{
+          vm.buscaListagem()
+          vm.$q.notify({
+            message: 'Manifestacão enviada com sucesso',
+            type: 'positive',
+          })
+        }
+      }).catch(function(error) {
+        console.log(error)
+      })
+
+    },
+    downloadNFe: function(filial, chave) {
+      let vm = this
+      // Monta Parametros da API
+      let params = {
+        filial: filial,
+        chave: chave
+      }
+      vm.$axios.get('nfe-terceiro/download-nfe',{params}).then(function(request){
+        if (request.data !== true) {
+          vm.$q.notify({
+            message: request.data,
+            type: 'negative',
+          })
+          return
+        }else{
+          vm.$q.notify({
+            message: 'Download concluído',
+            type: 'positive',
+          })
+        }
+      }).catch(function(error) {
+        console.log(error)
+      })
     },
     carregaNota: function() {
       let vm = this

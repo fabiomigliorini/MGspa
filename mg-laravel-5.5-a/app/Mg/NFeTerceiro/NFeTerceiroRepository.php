@@ -180,13 +180,19 @@ class NFeTerceiroRepository extends MgRepository
     public static function armazenaDadosDFe ($xml, $filial) {
     // public static function armazenaDadosDFe (Filial $filial) {
 
+        // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
+        $codpessoa = Pessoa::select('codpessoa')
+        ->where( 'ie', $xml->IE )->orWhere( 'cnpj', $xml->CNPJ )->get();
+
         $dfe = NFeTerceiroDfe::firstOrNew([
             'nfechave' => $xml->chNFe
         ]);
-        $dfe->nfechave = $xml->chNFe;
-        $dfe->cnpj = $xml->CNPJ;
+        $dfe->codpessoa = $codpessoa[0]->codpessoa??null;
+        $dfe->codfilial = $filial->codfilial;
         $dfe->emitente = $xml->xNome;
+        $dfe->cnpj = $xml->CNPJ;
         $dfe->ie = $xml->IE;
+        $dfe->nfechave = $xml->chNFe;
         $dfe->emissao = Carbon::parse($xml->dhEmi);
         $dfe->valortotal = $xml->vNF;
         $dfe->recebimento = Carbon::parse($xml->dhRecbto);
@@ -196,13 +202,13 @@ class NFeTerceiroRepository extends MgRepository
         $dfe->csitnfe = $xml->cSitNFe;
         $dfe->codusuariocriacao = 2;
         $dfe->codusuarioalteracao = 2;
-        $dfe->codfilial = $filial->codfilial;
         $dfe->save();
 
         // $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('schema', 'resNFe_v1.01.xsd')->get();
         // $qry = end($qry);
         //
         // foreach ($qry as $key => $file) {
+        //
         //     $path = NFeTerceiroRepositoryPath::pathDFe($filial, $file->nsu);
         //
         //     if(file_exists($path)){
@@ -210,9 +216,15 @@ class NFeTerceiroRepository extends MgRepository
         //         $st = new Standardize();
         //         $xml = $st->toStd($xmlData);
         //
+        //         // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
+        //         $codpessoa = Pessoa::select('codpessoa')
+        //         ->where( 'ie', $xml->IE )->orWhere( 'cnpj', $xml->CNPJ )->get();
+        //
         //         $dfe = NFeTerceiroDfe::firstOrNew([
         //             'nfechave' => $xml->chNFe
         //         ]);
+        //         $dfe->codfilial = $filial->codfilial;
+        //         $dfe->codpessoa = $codpessoa[0]->codpessoa??null;
         //         $dfe->nfechave = $xml->chNFe;
         //         $dfe->cnpj = $xml->CNPJ;
         //         $dfe->emitente = $xml->xNome;
@@ -226,12 +238,12 @@ class NFeTerceiroRepository extends MgRepository
         //         $dfe->csitnfe = $xml->cSitNFe;
         //         $dfe->codusuariocriacao = 2;
         //         $dfe->codusuarioalteracao = 2;
-        //         $dfe->codfilial = $filial->codfilial;
         //         // dd($dfe);
         //         $dfe->save();
         //     }
         // }
-        // return true;
+
+        return true;
 
     } // FIM DO ARMAZENA DADOS
 
@@ -293,8 +305,7 @@ class NFeTerceiroRepository extends MgRepository
         // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
         $codpessoa = Pessoa::select('codpessoa')
         ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
-        // ->where([ [ 'ie', 'like', $res->NFe->infNFe->emit->IE ],
-        //           [ 'cnpj', $res->NFe->infNFe->emit->CNPJ ] ])->get();
+
 
         // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
         $coddistribuicaodfe = NFeTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
@@ -516,14 +527,16 @@ class NFeTerceiroRepository extends MgRepository
     // TRAZ DA BASE TODAS AS DFEs
     public static function listaDFe ($request) {
 
+        // PREPARA OS PARAMETROS PARA A CODITIONAL QUERY
         $filial = $request->filial;
-        $pessoa = $request->pessoa;
+        $codpessoa = $request->pessoa;
         $chave = $request->chave;
         $datainicial = $request->datainicial;
         $datafinal = $request->datafinal;
         $manifestacao = $request->manifestacao;
         $situacao = $request->situacao;
 
+        // EXECUTA A CONDITIONAL QUERY CONFORME FILTRO REQUISITADO
         $qry = NFeTerceiroDfe::when($filial, function($query, $filial){
             $query->where('codfilial', $filial);
         })
@@ -542,8 +555,8 @@ class NFeTerceiroRepository extends MgRepository
         ->when($datafinal, function($query, $datafinal){
             $query->where('emissao', '<=', $datafinal);
         })
-        ->when($pessoa, function($query, $pessoa){
-            $query->where('emitente', 'like', $pessoa . '%'); // rever este campo
+        ->when($codpessoa, function($query, $codpessoa){
+            $query->where('codpessoa', $codpessoa );
         })->orderBy('emissao', 'DESC')->paginate(100);
 
         return $qry;

@@ -111,7 +111,8 @@ module.exports = function (ctx) {
         'QStepper',
         'QStep',
         'QStepperNavigation',
-        'QProgress'
+        'QProgress',
+        'QUploader'
       ],
       directives: [
         'Ripple',

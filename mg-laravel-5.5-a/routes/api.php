@@ -33,6 +33,9 @@ Route::group(['prefix' => 'v1'], function () {
         // NATUREZA DA OPERACAO
         Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
 
+        Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
+
+
         // NFeTerceiro
         Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NFeTerceiro\NFeTerceiroController@consultaSefaz');
         Route::get('nfe-terceiro/manifestacao', '\Mg\NFeTerceiro\NFeTerceiroController@manifestacao');
@@ -43,8 +46,8 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NFeTerceiro\NFeTerceiroController@buscaNfeTerceiro');
         Route::get('nfe-terceiro/atualiza-item', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaItem');
         Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaNFe');
-        // Route::get('nfe-terceiro/armazena-dados', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosDFe');
-        Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
+        Route::get('nfe-terceiro/armazena-dados', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosDFe');
+        // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
 
         // NFePHP
         Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
@@ -102,7 +105,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Pessoas
         Route::apiResource('pessoa', '\Mg\Pessoa\PessoaController');
-        Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
         Route::post('pessoa/novapessoa', '\Mg\Pessoa\PessoaController@novaPessoa');
 
         // Permissões

@@ -53,6 +53,7 @@ class NFeTerceiroItem extends MGModel
         'cofinsbase',
         'cofinspercentual',
         'cofinsvalor',
+        'conferido',
         'codusuariocriacao',
         'codusuarioalteracao'
 

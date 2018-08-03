@@ -106,17 +106,20 @@
                   </div>
 
                   <div  class="col-sm-10 col-md-7 col-lg-5 cursor-pointer" style="overflow: hidden">
-                    <q-btn color="red" v-if="nota.csitnfe == 3 || nota.csitnfe == 2">
+                    <q-btn @click="buscaNFeTerceiro(nota.nfechave)"
+                      :color="(nota.indmanifestacao == 210210)?'orange'
+                      :(nota.indmanifestacao == 210200)?'green'
+                      :(nota.indmanifestacao == 210220 || nota.indmanifestacao == 210240)?'red':'primary'">
+
                       <q-icon name="vpn_key"/>&nbsp
                       <small>{{nota.nfechave}}</small>
-                    </q-btn>
-                    <q-btn v-else @click="buscaNFeTerceiro(nota.nfechave)" :color="(nota.download)?'primary':'grey'">
-                      <q-icon name="vpn_key"/>&nbsp
-                      <small>{{nota.nfechave}}</small>
-                    </q-btn>
+                    </q-btn>&nbsp
                     <q-tooltip>
                       Detalhes da nota
                     </q-tooltip>
+                    <q-chip square dense v-if="nota.csitnfe == 1" color="green">Autorizada</q-chip>
+                    <q-chip square dense v-if="nota.csitnfe == 3" color="red">Cancelada</q-chip>
+                    <q-chip square dense v-if="nota.csitnfe == 2" color="red">Denegada</q-chip>
                   </div>
 
                   <div class="col-sm-6 col-md-6 col-lg-4">
@@ -133,44 +136,18 @@
 
                   <div class="col-sm-6 col-md-6 col-lg-2 gutter-y-xs">
                     <div class="row">
-                      <small class="text-faded">Emissão &nbsp</small>
+                      <q-icon name="date_range" color="grey"/>&nbsp
                       <small>{{moment(nota.emissao).format("DD MMM YYYY HH:mm:ss")}}</small>
                     </div>
 
                     <div class="row">
-                      <small class="text-faded">Total &nbsp</small>
+                      <q-icon name="attach_money" color="grey"/>&nbsp
                       <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
                     </div>
                   </div>
 
                 </div>
               </q-item-main>
-
-              <q-item-side right class="gutter-y-xs">
-                <q-item-tile>
-                  <q-btn color="primary" @click.native="modalManifestacao = true, chaveManifestacao = nota.nfechave, filialManifestacao = nota.codfilial" round dense>
-                    <q-icon name="arrow_drop_down_circle" size="25px"/>
-                  </q-btn>
-                  <q-tooltip anchor="top left" self="bottom middle">
-                    Manifestação
-                  </q-tooltip>
-                </q-item-tile>
-
-                <q-item-tile v-if="nota.download">
-                  <q-btn dense round color="green" icon="cloud_download"/>
-                  <q-tooltip anchor="top left" self="bottom middle">
-                    O XML já está baixado
-                  </q-tooltip>
-                </q-item-tile>
-                <q-item-tile v-else>
-                  <q-btn dense @click="downloadNFe(nota.codfilial, nota.nfechave)" round color="primary" icon="cloud_download"/>
-                  <q-tooltip anchor="top left" self="bottom middle">
-                    Baixar XML
-                  </q-tooltip>
-                </q-item-tile>
-              </q-item-side>
-
-              <q-item-separator inset/>
             </q-item>
 
           </q-list>
@@ -268,60 +245,6 @@
         </q-modal>
       </template>
 
-      <!-- MODAL DE MANIFESTACAO -->
-      <template>
-        <q-modal v-model="modalManifestacao">
-
-          <q-card>
-            <q-card-title align="center">
-              Manifestacão
-            </q-card-title>
-            <q-card-separator />
-            <q-card-main>
-
-              <q-item>
-                <q-item-main>
-                  <div class=" gutter-y-sm">
-                    <div class="row">
-                      <q-radio v-model="codmanifestacao" val="210210" label="Ciência da operação" color="orange"/>
-                    </div>
-
-                    <div class="row">
-                      <q-radio v-model="codmanifestacao" val="210200" label="operação realizada" color="green"/>
-                    </div>
-
-                    <div class="row">
-                      <q-radio v-model="codmanifestacao" val="210220" label="operação desconhecida" color="red"/>
-                    </div>
-
-                    <div class="row">
-                      <q-radio v-model="codmanifestacao" val="210240" label="operação não realizada" color="red"/>
-                    </div>
-                  </div>
-                </q-item-main>
-              </q-item>
-              <q-item-separator/>
-              <q-item v-if="codmanifestacao == 210240 || codmanifestacao == 210220">
-                <q-item-main>
-                  <q-field :count="15">
-                    <q-input clearable min-length="15" type="textarea" inverted-light color="warning" v-model="justificativa" float-label="Justificativa"/>
-                  </q-field>
-                </q-item-main>
-              </q-item>
-
-            </q-card-main>
-            <q-card-separator/>
-
-            <q-card-actions align="end">
-              <q-btn color="red" @click="modalManifestacao = false" icon="arrow_back" round dense />
-              <q-btn color="primary" @click="enviarManifestacao()" icon="done" round dense />
-            </q-card-actions>
-
-          </q-card>
-        </q-modal>
-      </template>
-
-
     </div>
   </mg-layout>
 </template>
@@ -389,7 +312,6 @@ export default {
           color: 'red'
         }
       ],
-      page: 1,
       filter: {
         datainicial: null,
         datafinal: null,
@@ -400,21 +322,17 @@ export default {
         filtroFilial: null,
       },
       data: {},
+      page: 1,
       tabs: 'pendente',
       carregado: false,
       SelectFilial: null,
       nsu: null,
-      xml: null,
       natop: null,
       currentStep: 'first',
       progresso: 50,
-      codmanifestacao: null,
-      chaveManifestacao: null,
-      filialManifestacao: null,
-      justificativa: null,
       modalConsultaSefaz: false,
       modalProgresso: false,
-      modalManifestacao: false,
+      pessoa: null,
     }
   },
   watch: {
@@ -426,8 +344,8 @@ export default {
     // observa filtro, sempre que alterado chama a api
     filter: {
       handler: function (val, oldVal) {
-        this.buscaListagem(false, null)
         this.page = 1
+        this.buscaListagem(false, null)
       },
       deep: true,
     }
@@ -439,46 +357,6 @@ export default {
       this.page++
       this.buscaListagem(true, done)
     },
-
-    enviarManifestacao: function(chave, filial){
-      let vm = this
-
-      if (vm.codmanifestacao == 210240 || vm.codmanifestacao == 210220){
-        if(vm.justificativa == null || vm.justificativa.length < 15){
-          vm.$q.notify({
-            message: 'Justificativa deve conter no mínimo 15 caracteres',
-            type: 'negative',
-          })
-          return
-        }
-      }
-      // Monta Parametros da API
-      let params = {
-        justificativa: vm.justificativa,
-        manifestacao: vm.codmanifestacao,
-        nfechave: vm.chaveManifestacao,
-        filial: vm.filialManifestacao
-      }
-      vm.$axios.get('nfe-terceiro/manifestacao',{params}).then(function(request){
-        if (request.data !== true) {
-          vm.$q.notify({
-            message: request.data,
-            type: 'negative',
-          })
-          return
-        }else{
-          vm.buscaListagem()
-          vm.$q.notify({
-            message: 'Manifestacão enviada com sucesso',
-            type: 'positive',
-          })
-        }
-      }).catch(function(error) {
-        console.log(error)
-      })
-
-    },
-
     buscaListagem: function(concat, done) {
 
       // inicializa variaveis
@@ -579,30 +457,6 @@ export default {
       })
     },
 
-    downloadNFe: function(filial, chave) {
-      let vm = this
-      // Monta Parametros da API
-      let params = {
-        filial: filial,
-        chave: chave
-      }
-      vm.$axios.get('nfe-terceiro/download-nfe',{params}).then(function(request){
-        if (request.data !== true) {
-          vm.$q.notify({
-            message: request.data,
-            type: 'negative',
-          })
-          return
-        }else{
-          vm.$q.notify({
-            message: 'Download concluído',
-            type: 'positive',
-          })
-        }
-      }).catch(function(error) {
-        console.log(error)
-      })
-    },
   },
   created() {
     this.buscaListagem();
