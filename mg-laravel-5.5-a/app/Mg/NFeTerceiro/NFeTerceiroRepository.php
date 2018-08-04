@@ -200,8 +200,8 @@ class NFeTerceiroRepository extends MgRepository
         $dfe->protocolo = $xml->nProt;
         $dfe->tipo = $xml->tpNF;
         $dfe->csitnfe = $xml->cSitNFe;
-        $dfe->codusuariocriacao = 2;
-        $dfe->codusuarioalteracao = 2;
+        // $dfe->codusuariocriacao = 2;
+        // $dfe->codusuarioalteracao = 2;
         $dfe->save();
 
         // $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('schema', 'resNFe_v1.01.xsd')->get();
@@ -236,8 +236,8 @@ class NFeTerceiroRepository extends MgRepository
         //         $dfe->protocolo = $xml->nProt;
         //         $dfe->tipo = $xml->tpNF;
         //         $dfe->csitnfe = $xml->cSitNFe;
-        //         $dfe->codusuariocriacao = 2;
-        //         $dfe->codusuarioalteracao = 2;
+        //         // $dfe->codusuariocriacao = 2;
+        //         // $dfe->codusuarioalteracao = 2;
         //         // dd($dfe);
         //         $dfe->save();
         //     }

@@ -180,30 +180,42 @@
 
             <q-list no-border highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
               <q-item-separator/>
-              <q-item>
+              <q-item class="q-py-none">
                 <q-item-main>
                   <div class="row">
 
+                    <div class="col-sm-3 col-md-4 col-lg-1">
+                      <q-icon name="store" color="grey"/>&nbsp
+                      <small>{{nota.codfilial}}</small>
+                    </div>
+
                     <div class="col-sm-12 col-md-6 col-lg-4" style="overflow: hidden">
-                      <q-icon name="vpn_key"/>
+                      <q-icon name="vpn_key" color="grey"/>&nbsp
                       <small>{{nota.nfechave}}</small>
                     </div>
 
                     <div class="col-sm-12 col-md-6 col-lg-4">
+                      <q-icon name="account_circle" color="grey"/>&nbsp
                       <small>{{nota.emitente}}</small>
                     </div>
 
-                    <div class="col-sm-3 col-md-4 col-lg-2">
-                      <small>Natureza da operação</small>
+                    <div class="col-sm-2 col-md-4 col-lg-1">
+                      <q-icon name="swap_horizontal_circle" color="grey"/>&nbsp
+                      <template v-if="nota.tipo == 1">Saída</template>
+                      <template v-if="nota.tipo == 0">Entrada</template>
                     </div>
 
-                    <div class="col-sm-2 col-md-4 col-lg-1">
-                      <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
+                    <div class="col-sm-2 col-md-4 col-lg-2 items-center">
+                      <div class="row">
+                        <q-icon name="date_range" color="grey"/>&nbsp
+                        <small>{{moment(nota.emissao).format("DD MMM YYYY HH:MM:ss")}}</small>
+                      </div>
+                      <div class="row">
+                        <q-icon name="attach_money" color="grey"/>&nbsp
+                        <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
+                      </div>
                     </div>
 
-                    <div class="col-sm-2 col-md-4 col-lg-1">
-                      <small>{{moment(nota.emissao).format("DD MMM YYYY")}}</small>
-                    </div>
 
                   </div>
                 </q-item-main>
@@ -446,6 +458,7 @@ export default {
           })
           return
         }else{
+          vm.ultimaNSU()
           vm.buscaListagem()
           vm.$q.notify({
             message: 'Consulta concluída',
