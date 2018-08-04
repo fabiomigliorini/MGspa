@@ -27,6 +27,11 @@ class NFeTerceiroDistribuicaoDfe extends MGModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
+    public function Usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+    }
+
     // Tabelas Filhas
     public function NotaFiscalTerceiroS()
     {

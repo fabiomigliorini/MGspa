@@ -34,6 +34,11 @@ class NFeTerceiroProdutoBarra extends MGModel
         return $this->belongsTo(ProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
+    public function Usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+    }
+
     // Tabelas Filhas
 
 

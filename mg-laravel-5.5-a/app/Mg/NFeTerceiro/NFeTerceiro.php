@@ -56,6 +56,11 @@ class NFeTerceiro extends MGModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
+    public function Usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+    }
+
     public function NaturezaOperacao()
     {
         return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');

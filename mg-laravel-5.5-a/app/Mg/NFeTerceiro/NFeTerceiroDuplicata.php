@@ -34,5 +34,10 @@ class NFeTerceiroDuplicata extends MGModel
         return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
+    public function Usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+    }
+
     // Tabelas Filhas
 }

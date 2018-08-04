@@ -3193,6 +3193,7 @@
 		<table name="tblnotafiscalterceirodfe" >
 			<column name="codnotafiscalterceirodfe" type="bigserial" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codpessoa" type="bigint" jt="-5" />
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
@@ -3206,10 +3207,6 @@
 			<column name="recebimento" type="timestamp" jt="93" />
 			<column name="protocolo" type="bigserial" jt="-5" />
 			<column name="csitnfe" type="smallint" jt="5" />
-			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" >
 				<defo>0</defo>
 			</column>
@@ -3217,14 +3214,24 @@
 			<column name="download" type="bool" length="1" decimal="0" jt="-7" >
 				<defo>false</defo>
 			</column>
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<index name="pk_tblnotafiscalterceirodfe_codnotafiscalterceirodfe" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceirodfe" />
 			</index>
 			<index name="idx_tblnotafiscalterceirodfe_codfilial" unique="NORMAL" >
 				<column name="codfilial" />
 			</index>
+			<index name="idx_tblnotafiscalterceirodfe_codpessoa" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
 			<fk name="fk_tblnotafiscalterceirodfe_tblfilial" to_schema="mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceirodfe_tblpessoa" to_schema="mgsis" to_table="tblpessoa" >
+				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceiroduplicata" >
@@ -3365,6 +3372,9 @@
 				<comment><![CDATA[vCOFINS]]></comment>
 			</column>
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="conferido" type="bool" jt="-7" >
+				<defo>false</defo>
+			</column>
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -8493,7 +8503,6 @@ $function$
 			<column name="codusuariocriacao" />
 			<column name="codprodutoimagem" />
 		</entity>
-		<entity schema="mgsis" name="tblnotafiscalterceiroitem" color="c1d8ee" x="1290" y="60" />
 		<entity schema="mgsis" name="tblfilial" color="c1d8ee" x="285" y="75" >
 			<column name="codfilial" />
 			<column name="codempresa" />
@@ -8503,6 +8512,7 @@ $function$
 			<column name="codusuariocriacao" />
 		</entity>
 		<entity schema="mgsis" name="tblnotafiscalterceiro" color="c1d8ee" x="780" y="45" />
+		<entity schema="mgsis" name="tblnotafiscalterceiroitem" color="c1d8ee" x="1290" y="60" />
 		<entity schema="mgsis" name="tbldistribuicaodfe" color="c1d8ee" x="540" y="75" />
 		<entity schema="mgsis" name="tblnotafiscalterceirodfe" color="c1d8ee" x="45" y="75" />
 	</layout>
