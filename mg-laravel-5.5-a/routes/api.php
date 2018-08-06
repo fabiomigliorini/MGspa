@@ -36,6 +36,20 @@ Route::group(['prefix' => 'v1'], function () {
         // Pessoa autocomplete
         Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
 
+        // NFeTerceiro
+        Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NFeTerceiro\NFeTerceiroController@consultaSefaz');
+        Route::get('nfe-terceiro/manifestacao', '\Mg\NFeTerceiro\NFeTerceiroController@manifestacao');
+        Route::get('nfe-terceiro/download-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@downloadNFeTerceiro');
+        Route::get('nfe-terceiro/lista-dfe', '\Mg\NFeTerceiro\NFeTerceiroController@listaDFe');
+        Route::get('nfe-terceiro/lista-item', '\Mg\NFeTerceiro\NFeTerceiroController@listaItem');
+        Route::get('nfe-terceiro/ultima-nsu', '\Mg\NFeTerceiro\NFeTerceiroController@ultimaNSU');
+        Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NFeTerceiro\NFeTerceiroController@buscaNfeTerceiro');
+        Route::get('nfe-terceiro/atualiza-item', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaItem');
+        Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaNFe');
+        Route::get('nfe-terceiro/armazena-evento', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosEvento');
+        // Route::get('nfe-terceiro/armazena-dados', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosDFe');
+        // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
+
         // NFePHP
         Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
         Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
@@ -65,19 +79,6 @@ Route::group(['prefix' => 'v1'], function () {
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
     Route::group(['prefix' => 'v1'], function () {
-
-        // NFeTerceiro
-        Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NFeTerceiro\NFeTerceiroController@consultaSefaz');
-        Route::get('nfe-terceiro/manifestacao', '\Mg\NFeTerceiro\NFeTerceiroController@manifestacao');
-        Route::get('nfe-terceiro/download-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@downloadNFeTerceiro');
-        Route::get('nfe-terceiro/lista-dfe', '\Mg\NFeTerceiro\NFeTerceiroController@listaDFe');
-        Route::get('nfe-terceiro/lista-item', '\Mg\NFeTerceiro\NFeTerceiroController@listaItem');
-        Route::get('nfe-terceiro/ultima-nsu', '\Mg\NFeTerceiro\NFeTerceiroController@ultimaNSU');
-        Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NFeTerceiro\NFeTerceiroController@buscaNfeTerceiro');
-        Route::get('nfe-terceiro/atualiza-item', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaItem');
-        Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NFeTerceiro\NFeTerceiroController@atualizaNFe');
-        // Route::get('nfe-terceiro/armazena-dados', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosDFe');
-        // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NFeTerceiro\NFeTerceiroController@carregarXml');
 
         // Usuários
         Route::get('usuario/{id}/autor', '\Mg\Usuario\UsuarioController@autor');

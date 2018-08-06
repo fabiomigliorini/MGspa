@@ -247,6 +247,46 @@ class NFeTerceiroRepository extends MgRepository
 
     } // FIM DO ARMAZENA DADOS
 
+    public static function armazenaDadosEvento ($filial) {
+
+        $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('schema', 'resEvento_v1.01.xsd')->orderBy('nsu', 'DESC')->get();
+        $qry = end($qry);
+
+        foreach ($qry as $key => $file) {
+
+            $path = NFeTerceiroRepositoryPath::pathDFe($filial, $file->nsu);
+
+            if(file_exists($path)){
+                $xmlData = file_get_contents($path);
+                $st = new Standardize();
+                $xml = $st->toStd($xmlData);
+
+                $coddistribuicaodfe = NFeTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
+                ->where( 'nsu', $file->nsu )->get();
+
+                $resEvento = NFeTerceiroEvento::firstOrNew([
+                    'coddistribuicaodfe' => $coddistribuicaodfe[0]->coddistribuicaodfe
+                ]);
+                $resEvento->coddistribuicaodfe = $coddistribuicaodfe[0]->coddistribuicaodfe;
+                $resEvento->nsu = $file->nsu;
+                $resEvento->codorgao = $xml->cOrgao;
+                $resEvento->cnpj = $xml->CNPJ;
+                $resEvento->nfechave = $xml->chNFe;
+                $resEvento->dhevento = Carbon::parse($xml->dhEvento);
+                $resEvento->tpevento = $xml->tpEvento;
+                $resEvento->nseqevento = $xml->nSeqEvento;
+                $resEvento->evento = $xml->xEvento;
+                $resEvento->dhrecebimento = Carbon::parse($xml->dhRecbto);
+                $resEvento->protocolo = $xml->nProt;
+                // dd($resEvento);
+                $resEvento->save();
+            }
+        }
+
+        return true;
+
+    } // FIM DO ARMAZENA DADOS
+
     public static function downloadNFeTerceiro (Filial $filial, $chave){
 
         // FAZ A CONSULTA NO WEBSERVICE E TRAZ O XML
@@ -302,9 +342,66 @@ class NFeTerceiroRepository extends MgRepository
             $res = $st->toStd($xml);
         }
 
-        // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
+        // BUSCA NA BASE DE DADOS O codpessoa
         $codpessoa = Pessoa::select('codpessoa')
         ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
+
+        // SE O FRONECEDOR NAO TIVER CADASTRO CRIA UM
+        if ($codpessoa[0]->codpessoa == null){
+
+            $pessoa = Pessoa::firstOrNew([
+                'cnpj' => $res->NFe->infNFe->emit->CNPJ,
+                'ie' => $res->NFe->infNFe->emit->IE ]);
+
+            $pessoa->pessoa = $res->NFe->infNFe->emit->xNome;
+            $pessoa->fantasia = $res->NFe->infNFe->emit->xFant;
+            $pessoa->inativo = null;
+            $pessoa->cliente = false;
+            $pessoa->fornecedor = true;
+            $pessoa->fisica = false;
+            $pessoa->codsexo = null;
+            $pessoa->cnpj = $res->NFe->infNFe->emit->CNPJ;
+            $pessoa->ie = $res->NFe->infNFe->emit->IE;
+            $pessoa->consumidor = false;
+            $pessoa->contato = null;
+            $pessoa->codestadocivil = null;
+            $pessoa->conjuge = null;
+            $pessoa->endereco = $res->NFe->infNFe->emit->enderEmit->xLgr;
+            $pessoa->numero = $res->NFe->infNFe->emit->enderEmit->nro;
+            $pessoa->complemento = null;
+            $pessoa->codcidade = $res->NFe->infNFe->emit->enderEmit->cMun;
+            $pessoa->bairro = $res->NFe->infNFe->emit->enderEmit->xBairro;
+            $pessoa->cep = $res->NFe->infNFe->emit->enderEmit->CEP1;
+            $pessoa->enderecocobranca = null;
+            $pessoa->numerocobranca = null;
+            $pessoa->complementocobranca = null;
+            $pessoa->codcidadecobranca = null;
+            $pessoa->bairrocobranca = null;
+            $pessoa->cepcobranca = null;
+            $pessoa->telefone1 = $res->NFe->infNFe->emit->enderEmit->fone;
+            $pessoa->telefone2 = null;
+            $pessoa->telefone3 = null;
+            $pessoa->email = null;
+            $pessoa->emailnfe = null;
+            $pessoa->emailcobranca = null;
+            $pessoa->codformapagamento = null;
+            $pessoa->credito = null;
+            $pessoa->creditobloqueado = null;
+            $pessoa->observacoes = null;
+            $pessoa->mensagemvenda = null;
+            $pessoa->vendedor = false;
+            $pessoa->rg = null;
+            $pessoa->desconto = null;
+            $pessoa->notafiscal = null;
+            $pessoa->toleranciaatraso = null;
+            $pessoa->codgrupocliente = null;
+            // dd($pessoa);
+            $pessoa->save();
+
+            // BUSCA NA BASE DE DADOS O codpessoa
+            $codpessoa = Pessoa::select('codpessoa')
+            ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
+        }
 
 
         // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
@@ -312,16 +409,17 @@ class NFeTerceiroRepository extends MgRepository
         ->where([ ['nfechave', $res->protNFe->infProt->chNFe],
         ['schema', 'like', 'resNFe' . '%'] ])->get();
 
-        // BUSCA NA BASE DE DADOS O cod estoquelocal
+        // BUSCA NA BASE DE DADOS O codestoquelocal
         $codestoquelocal = EstoqueLocal::select('codestoquelocal')->where('codfilial', $filial->codfilial)->get();
 
         DB::beginTransaction();
 
         // INSERE NA tblnotafiscal
         $NF = NotaFiscal::firstOrNew([
-            'nfechave' => $res->protNFe->infProt->chNFe
+            'nfechave' => $res->protNFe->infProt->chNFe,
+            'numero' => $res->NFe->infNFe->ide->nNF
         ]);
-        $NF->codnaturezaoperacao = 1;
+        $NF->codnaturezaoperacao = 1; // rever este campo
         $NF->emitida = false; // rever este campo
         $NF->nfechave = $res->protNFe->infProt->chNFe;
         $NF->nfeimpressa = 0; //$res->NFe->infNFe->ide->tpImp; rever este campo
@@ -368,7 +466,7 @@ class NFeTerceiroRepository extends MgRepository
         // SALVA NA tblnotafiscalterceiro OS DADOS DA NOTA
         $NFeTerceiro = NFeTerceiro::firstOrNew([
         'nfechave' => $res->protNFe->infProt->chNFe,
-        'numero' => $res->NFe->infNFe->ide->nNF
+        'coddistribuicaodfe' => $coddistribuicaodfe[0]->coddistribuicaodfe
         ]);
         $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe[0]->coddistribuicaodfe;
         $NFeTerceiro->codnotafiscal = $codnotafiscal[0]->codnotafiscal;
@@ -527,7 +625,7 @@ class NFeTerceiroRepository extends MgRepository
     // TRAZ DA BASE TODAS AS DFEs
     public static function listaDFe ($request) {
 
-        // PREPARA OS PARAMETROS PARA A CODITIONAL QUERY
+        // PREPARA OS PARAMETROS PARA A CONDITIONAL QUERY
         $filial = $request->filial;
         $codpessoa = $request->pessoa;
         $chave = $request->chave;
@@ -557,7 +655,8 @@ class NFeTerceiroRepository extends MgRepository
         })
         ->when($codpessoa, function($query, $codpessoa){
             $query->where('codpessoa', $codpessoa );
-        })->orderBy('emissao', 'DESC')->paginate(100);
+        })
+        ->orderBy('emissao', 'DESC')->paginate(100);
 
         return $qry;
     }
@@ -579,8 +678,10 @@ class NFeTerceiroRepository extends MgRepository
     public static function listaItem ($codnotafiscalterceiro) {
         // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
         $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('codnotafiscalterceiro', $codnotafiscalterceiro)->get();
+
         // BUSCA NA tblnotafiscalterceiroitem TODOS OS ITENS VINCULADOS A NOTA
         $itens = NFeTerceiroItem::select('*')->where('codnotafiscalterceirogrupo', $codGrupo[0]->codnotafiscalterceirogrupo)->get();
+
         // dd($itens);
         return ($itens);
 

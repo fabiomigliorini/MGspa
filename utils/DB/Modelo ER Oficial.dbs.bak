@@ -819,6 +819,9 @@
 			<index name="tbldistribuicaodfe_schema_idx" unique="NORMAL" >
 				<column name="schema" />
 			</index>
+			<index name="unq_tbldistribuicaodfe_nsu" unique="UNIQUE" >
+				<column name="nsu" />
+			</index>
 			<fk name="fk_tbldistribuicaodfe_tblfilial" to_schema="mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -3224,8 +3227,14 @@
 			<index name="idx_tblnotafiscalterceirodfe_codfilial" unique="NORMAL" >
 				<column name="codfilial" />
 			</index>
+			<index name="idx_tblnotafiscalterceirodfe_codpessoa" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
 			<fk name="fk_tblnotafiscalterceirodfe_tblfilial" to_schema="mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceirodfe_tblpessoa" to_schema="mgsis" to_table="tblpessoa" >
+				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceiroduplicata" >
@@ -3256,6 +3265,37 @@
 			</index>
 			<fk name="fk_tblnotafiscalterceiroduplicata_tblnotafiscalterceiro" to_schema="mgsis" to_table="tblnotafiscalterceiro" >
 				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
+			</fk>
+		</table>
+		<table name="tblnotafiscalterceiroevento" >
+			<column name="codnotafiscalterceiroevento" type="integer" jt="4" mandatory="y" />
+			<column name="coddistribuicaodfe" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
+			<column name="codorgao" type="smallint" jt="5" >
+				<comment><![CDATA[cOrgao]]></comment>
+			</column>
+			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
+			<column name="nfechave" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="dhenvento" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="tpevento" type="bigserial" jt="-5" mandatory="y" />
+			<column name="nseqevento" type="smallint" jt="5" mandatory="y" />
+			<column name="evento" type="varchar" length="60" jt="12" mandatory="y" />
+			<column name="dhrecebimento" type="timestamp" jt="93" />
+			<column name="protocolo" type="bigserial" jt="-5" mandatory="y" />
+			<index name="pk_tblnotafiscalterceiroevento_codnotafiscalterceiroevento" unique="PRIMARY_KEY" >
+				<column name="codnotafiscalterceiroevento" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroevento_nsu" unique="NORMAL" >
+				<column name="nsu" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroevento_coddistribuicaodfe" unique="NORMAL" >
+				<column name="coddistribuicaodfe" />
+			</index>
+			<fk name="fk_tblnotafiscalterceiroevento_tbldistribuicaodfe" to_schema="mgsis" to_table="tbldistribuicaodfe" >
+				<fk_column name="nsu" pk="nsu" />
+			</fk>
+			<fk name="fk_tblnotafiscalterceiroevento_tbldistribuicaodfe_0" to_schema="mgsis" to_table="tbldistribuicaodfe" >
+				<fk_column name="coddistribuicaodfe" pk="coddistribuicaodfe" />
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceirogrupo" >
@@ -8505,10 +8545,11 @@ $function$
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
-		<entity schema="mgsis" name="tbldistribuicaodfe" color="c1d8ee" x="540" y="75" />
 		<entity schema="mgsis" name="tblnotafiscalterceiro" color="c1d8ee" x="780" y="45" />
-		<entity schema="mgsis" name="tblnotafiscalterceirodfe" color="c1d8ee" x="45" y="75" />
 		<entity schema="mgsis" name="tblnotafiscalterceiroitem" color="c1d8ee" x="1290" y="60" />
+		<entity schema="mgsis" name="tblnotafiscalterceirodfe" color="c1d8ee" x="45" y="75" />
+		<entity schema="mgsis" name="tbldistribuicaodfe" color="c1d8ee" x="540" y="75" />
+		<entity schema="mgsis" name="tblnotafiscalterceiroevento" color="c1d8ee" x="45" y="450" />
 	</layout>
 	<layout name="Layout_Devolucao" id="Layout7285461" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblnotafiscal" color="b2cdf7" x="1230" y="45" />
