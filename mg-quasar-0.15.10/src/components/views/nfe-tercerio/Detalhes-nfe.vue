@@ -24,7 +24,7 @@
               <q-icon name="attach_money" size="25px"/>
               Total da nota:
             </q-item-side>
-            <q-item-main align="end">R$ {{nf.valortotal}}</q-item-main>
+            <q-item-main align="end">R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}</q-item-main>
           </q-item>
 
           <q-item dense>
@@ -109,7 +109,6 @@
 
                 <q-card >
                   <q-card-title class="q-py-none">
-
                     <q-item>
                       <q-item-main>
 
@@ -125,7 +124,15 @@
                           <small><q-icon name="local_offer"/> {{nf.codnotafiscal}}</small>
                         </q-item-tile>
 
+                        <q-item-tile sublabel>
+                          <small><q-icon name="business_center"/> {{nf.natop}}</small>
+                        </q-item-tile>
+
                       </q-item-main>
+
+                      <q-item-side icon="location_on" color="red">
+                        {{nf.filial}}
+                      </q-item-side>
                     </q-item>
 
                   </q-card-title>
@@ -143,32 +150,32 @@
 
                             <q-item>
                               <q-item-side>Produtos:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.valorprodutos}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valorprodutos)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Frete:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.valorfrete}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valorfrete)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Seguro:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.valorseguro}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valorseguro)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Desconto:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.valordesconto}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valordesconto)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Outros:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.valoroutras}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valoroutras)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.valortotal}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -184,12 +191,12 @@
 
                             <q-item>
                               <q-item-side>Base:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.icmsbase}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsbase)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.icmsvalor}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsvalor)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -207,12 +214,12 @@
 
                             <q-item>
                               <q-item-side>Base:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.icmsstbase}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsstbase)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.icmsstvalor}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsstvalor)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -230,7 +237,7 @@
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{nf.ipivalor}}</q-item-main>
+                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.ipivalor)).format('0,0.00')}}</q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -251,14 +258,21 @@
                 <q-card v-if="dfecarregada">
 
                   <q-card-title>
-                    <div class="row">
-                      {{dfe.emitente}}
-                    </div>
-                    <div class="row">
-                      <small class="text-faded">
-                        {{dfe.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} / {{dfe.ie}}
-                      </small>
-                    </div>
+                    <q-item>
+                      <q-item-main>
+                        <div class="row">
+                          {{dfe.emitente}}
+                        </div>
+                        <div class="row">
+                          <small class="text-faded">
+                            {{dfe.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} / {{dfe.ie}}
+                          </small>
+                        </div>
+                      </q-item-main>
+                      <q-item-side icon="location_on" color="red">
+                        {{dfe.filial}}
+                      </q-item-side>
+                    </q-item>
                   </q-card-title>
                   <q-card-separator />
                   <q-card-main>

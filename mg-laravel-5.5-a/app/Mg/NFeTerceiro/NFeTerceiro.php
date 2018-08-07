@@ -16,6 +16,7 @@ class NFeTerceiro extends MGModel
         'codoperacao',
         'codnaturezaoperacao',
         'codpessoa',
+        'natop',
         'emitente',
         'cnpj',
         'ie',

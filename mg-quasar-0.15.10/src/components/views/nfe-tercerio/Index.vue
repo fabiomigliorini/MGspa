@@ -10,7 +10,7 @@
 
         <!-- Filtra por filial -->
         <q-item dense>
-          <q-item-side icon="store"/>
+          <q-item-side icon="location_on"/>
           <q-item-main>
             <mg-select-filial label="Local" v-model="filter.filtroFilial" />
           </q-item-main>
@@ -99,9 +99,9 @@
                 <div class="row">
 
                   <div class="col-sm-2 col-md-1 col-lg-1">
-                    <div class="row">
-                      <q-icon name="store" color="grey"/>&nbsp
-                      <small>{{nota.codfilial}}</small>
+                    <div class="row items-center">
+                      <q-icon name="location_on" color="grey"/>&nbsp
+                      <small>{{nota.filial}}</small>
                     </div>
                   </div>
 
@@ -123,7 +123,7 @@
                   </div>
 
                   <div class="col-sm-6 col-md-6 col-lg-4">
-                    <div class="row">
+                    <div class="row items-center">
                       <q-icon name="account_circle" color="grey"/>&nbsp
                       <small>{{nota.emitente.substr(0,30)}}</small>
                     </div>
@@ -135,12 +135,12 @@
                   </div>
 
                   <div class="col-sm-6 col-md-6 col-lg-2 gutter-y-xs">
-                    <div class="row">
+                    <div class="row items-center">
                       <q-icon name="date_range" color="grey"/>&nbsp
                       <small>{{moment(nota.emissao).format("DD MMM YYYY HH:mm:ss")}}</small>
                     </div>
 
-                    <div class="row">
+                    <div class="row items-center">
                       <q-icon name="attach_money" color="grey"/>&nbsp
                       <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
                     </div>
@@ -178,39 +178,40 @@
               </div>
             </div>
 
+            <!--
             <q-list no-border highlight v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">
               <q-item-separator/>
               <q-item class="q-py-none">
                 <q-item-main>
                   <div class="row">
 
-                    <div class="col-sm-3 col-md-4 col-lg-1">
-                      <q-icon name="store" color="grey"/>&nbsp
-                      <small>{{nota.codfilial}}</small>
+                    <div class="col-sm-3 col-md-4 col-lg-1 items-center">
+                      <q-icon name="location_on" color="grey"/>&nbsp
+                      <small>{{nota.filial}}</small>
                     </div>
 
-                    <div class="col-sm-12 col-md-6 col-lg-4" style="overflow: hidden">
+                    <div class="col-sm-12 col-md-6 col-lg-4 items-center" style="overflow: hidden">
                       <q-icon name="vpn_key" color="grey"/>&nbsp
                       <small>{{nota.nfechave}}</small>
                     </div>
 
-                    <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="col-sm-12 col-md-6 col-lg-4 items-center">
                       <q-icon name="account_circle" color="grey"/>&nbsp
                       <small>{{nota.emitente}}</small>
                     </div>
 
-                    <div class="col-sm-2 col-md-4 col-lg-1">
+                    <div class="col-sm-2 col-md-4 col-lg-1 items-center">
                       <q-icon name="swap_horizontal_circle" color="grey"/>&nbsp
                       <template v-if="nota.tipo == 1">Saída</template>
                       <template v-if="nota.tipo == 0">Entrada</template>
                     </div>
 
                     <div class="col-sm-2 col-md-4 col-lg-2 items-center">
-                      <div class="row">
+                      <div class="row items-center">
                         <q-icon name="date_range" color="grey"/>&nbsp
                         <small>{{moment(nota.emissao).format("DD MMM YYYY HH:MM:ss")}}</small>
                       </div>
-                      <div class="row">
+                      <div class="row items-center">
                         <q-icon name="attach_money" color="grey"/>&nbsp
                         <small>R$ {{numeral(parseFloat(nota.valortotal)).format('0,0.00')}}</small>
                       </div>
@@ -221,6 +222,7 @@
                 </q-item-main>
               </q-item>
             </q-list>
+            -->
           </q-page>
 
           <q-page-sticky position="bottom-right" :offset="[25, 80]">
@@ -345,6 +347,9 @@ export default {
       modalConsultaSefaz: false,
       modalProgresso: false,
       pessoa: null,
+      xml: {
+        data: []
+      }
     }
   },
   watch: {
@@ -353,6 +358,7 @@ export default {
         this.ultimaNSU(filial)
       }
     },
+
     // observa filtro, sempre que alterado chama a api
     filter: {
       handler: function (val, oldVal) {
@@ -367,9 +373,12 @@ export default {
     // scroll infinito - carregar mais registros
     loadMore (index, done) {
       this.page++
+      console.log('passou por aqui')
       this.buscaListagem(true, done)
     },
+
     buscaListagem: function(concat, done) {
+      console.log(this.page + ' pagina')
 
       // inicializa variaveis
       let vm = this
@@ -396,10 +405,14 @@ export default {
         // Se for para concatenar, senao inicializa
         if (vm.page == 1) {
           vm.xml = request.data
-          console.log(params)
         }
         else {
+          console.log('entrou no else')
+          console.log(request.data.data)
           vm.xml.data = vm.xml.data.concat(request.data.data)
+
+          console.log('depois de concatenar')
+          console.log(vm.xml.data)
         }
         vm.carregado = true
 
@@ -415,6 +428,8 @@ export default {
 
         // Executa done do scroll infinito
         if (done) {
+          console.log('entrou no done')
+          console.log(done)
           done()
         }
 
@@ -472,7 +487,7 @@ export default {
 
   },
   created() {
-    this.buscaListagem();
+    this.buscaListagem(false, null)
   }
 }
 </script>

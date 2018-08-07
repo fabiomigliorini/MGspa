@@ -475,6 +475,7 @@ class NFeTerceiroRepository extends MgRepository
         $NFeTerceiro->codoperacao = $res->NFe->infNFe->ide->tpNF;
         $NFeTerceiro->codnaturezaoperacao = null; //usuario deve informar a natureza de operacao!
         $NFeTerceiro->codpessoa = $codpessoa[0]->codpessoa;
+        $NFeTerceiro->natop = $res->NFe->infNFe->ide->natOp??null;
         $NFeTerceiro->emitente = $res->NFe->infNFe->emit->xNome;
         $NFeTerceiro->cnpj = $res->NFe->infNFe->emit->CNPJ;
         $NFeTerceiro->ie = $res->NFe->infNFe->emit->IE;
@@ -636,7 +637,7 @@ class NFeTerceiroRepository extends MgRepository
 
         // EXECUTA A CONDITIONAL QUERY CONFORME FILTRO REQUISITADO
         $qry = NFeTerceiroDfe::when($filial, function($query, $filial){
-            $query->where('codfilial', $filial);
+            $query->where('tblnotafiscalterceirodfe.codfilial', $filial);
         })
         ->when($chave, function($query, $chave){
             $query->where('nfechave', $chave);
@@ -654,16 +655,22 @@ class NFeTerceiroRepository extends MgRepository
             $query->where('emissao', '<=', $datafinal);
         })
         ->when($codpessoa, function($query, $codpessoa){
-            $query->where('codpessoa', $codpessoa );
+            $query->where('tblnotafiscalterceirodfe.codpessoa', $codpessoa );
         })
-        ->orderBy('emissao', 'DESC')->paginate(100);
+        ->join('tblfilial', 'tblnotafiscalterceirodfe.codfilial', '=', 'tblfilial.codfilial')
+        ->select('tblnotafiscalterceirodfe.*', 'tblfilial.filial')
+        ->orderBy('emissao', 'DESC')
+        ->paginate(100);
 
         return $qry;
     }
 
     // BUSCA NA BASE A NFETERCEIRO REQUISITADA
     public static function buscaNFeTerceiro ($chave) {
-        $qry = NFeTerceiro::select('*')->where('nfechave', $chave)->get();
+        $qry = NFeTerceiro::select('*')
+        ->where('nfechave', $chave)
+        ->join('tblfilial', 'tblnotafiscalterceiro.codfilial', '=', 'tblfilial.codfilial')
+        ->select('tblnotafiscalterceiro.*', 'tblfilial.filial')->get();
         return ($qry);
     }
 
