@@ -73,7 +73,7 @@ class NFeTerceiroRepository extends MgRepository
         } catch (\Exception $e) {
             return $e->getMessage();
         }
-    }
+    } // FIM MANIFETACAO
 
     public static function consultaSefaz (Filial $filial){
 
@@ -166,86 +166,17 @@ class NFeTerceiroRepository extends MgRepository
                 $pathNFeTerceiro = NFeTerceiroRepositoryPath::pathDFe($filial, $numnsu, true);
                 file_put_contents($pathNFeTerceiro, $content);
 
-                // SALVA NA BASE OS DADOS DO XML
+                // SALVA NA BASE OS DADOS DO XML TODO ajustar essa classe
                 if($schema == "resNFe_v1.01.xsd"){
-                    static::armazenaDadosDFe($res, $filial);
+                    static::armazenaDadosConsulta($res, $filial);
                 }
 
             }
             sleep(2);
         }  // FIM DO LOOP
         return true;
+
     } // FIM CONSULTA SEFAZ
-
-    public static function armazenaDadosDFe ($xml, $filial) {
-    // public static function armazenaDadosDFe (Filial $filial) {
-
-        // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
-        $codpessoa = Pessoa::select('codpessoa')
-        ->where( 'ie', $xml->IE )->orWhere( 'cnpj', $xml->CNPJ )->get();
-
-        $dfe = NFeTerceiroDfe::firstOrNew([
-            'nfechave' => $xml->chNFe
-        ]);
-        $dfe->codpessoa = $codpessoa[0]->codpessoa??null;
-        $dfe->codfilial = $filial->codfilial;
-        $dfe->emitente = $xml->xNome;
-        $dfe->cnpj = $xml->CNPJ;
-        $dfe->ie = $xml->IE;
-        $dfe->nfechave = $xml->chNFe;
-        $dfe->emissao = Carbon::parse($xml->dhEmi);
-        $dfe->valortotal = $xml->vNF;
-        $dfe->recebimento = Carbon::parse($xml->dhRecbto);
-        $dfe->digito = $xml->digVal;
-        $dfe->protocolo = $xml->nProt;
-        $dfe->tipo = $xml->tpNF;
-        $dfe->csitnfe = $xml->cSitNFe;
-        // $dfe->codusuariocriacao = 2;
-        // $dfe->codusuarioalteracao = 2;
-        $dfe->save();
-
-        // $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('schema', 'resNFe_v1.01.xsd')->get();
-        // $qry = end($qry);
-        //
-        // foreach ($qry as $key => $file) {
-        //
-        //     $path = NFeTerceiroRepositoryPath::pathDFe($filial, $file->nsu);
-        //
-        //     if(file_exists($path)){
-        //         $xmlData = file_get_contents($path);
-        //         $st = new Standardize();
-        //         $xml = $st->toStd($xmlData);
-        //
-        //         // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
-        //         $codpessoa = Pessoa::select('codpessoa')
-        //         ->where( 'ie', $xml->IE )->orWhere( 'cnpj', $xml->CNPJ )->get();
-        //
-        //         $dfe = NFeTerceiroDfe::firstOrNew([
-        //             'nfechave' => $xml->chNFe
-        //         ]);
-        //         $dfe->codfilial = $filial->codfilial;
-        //         $dfe->codpessoa = $codpessoa[0]->codpessoa??null;
-        //         $dfe->nfechave = $xml->chNFe;
-        //         $dfe->cnpj = $xml->CNPJ;
-        //         $dfe->emitente = $xml->xNome;
-        //         $dfe->ie = $xml->IE;
-        //         $dfe->emissao = Carbon::parse($xml->dhEmi);
-        //         $dfe->valortotal = $xml->vNF;
-        //         $dfe->recebimento = Carbon::parse($xml->dhRecbto);
-        //         $dfe->digito = $xml->digVal;
-        //         $dfe->protocolo = $xml->nProt;
-        //         $dfe->tipo = $xml->tpNF;
-        //         $dfe->csitnfe = $xml->cSitNFe;
-        //         // $dfe->codusuariocriacao = 2;
-        //         // $dfe->codusuarioalteracao = 2;
-        //         // dd($dfe);
-        //         $dfe->save();
-        //     }
-        // }
-
-        return true;
-
-    } // FIM DO ARMAZENA DADOS
 
     public static function armazenaDadosEvento ($filial) {
 
@@ -285,7 +216,7 @@ class NFeTerceiroRepository extends MgRepository
 
         return true;
 
-    } // FIM DO ARMAZENA DADOS
+    } // FIM DO ARMAZENA EVENTO
 
     public static function downloadNFeTerceiro (Filial $filial, $chave){
 
@@ -329,24 +260,112 @@ class NFeTerceiroRepository extends MgRepository
         }
     } // FIM DO DOWNLOAD NFeTerceiro
 
-    public static function carregarXml (Filial $filial, $chave){
+    public static function carregarXml(Filial $filial, $chave){
         // TRAZ O CAMNHO DO XML SE EXISTIR
         $path = NFeTerceiroRepositoryPath::pathNFeTerceiro($filial, $chave, true);
         // VERIFICA SE O AQRQUIVO EXISTE
         if (!file_exists($path)) {
-            throw new \Exception('Nota Fiscal Terceiro não encontrada.');
+            return 'Nota Fiscal Terceiro não encontrada.';
         }else{
             // BUSCA XML NA PASTA  SE JA ESTIVER BAIXADO e CONVERTE EM UM OBJETO
             $xml = file_get_contents($path);
             $st = new Standardize();
             $res = $st->toStd($xml);
+
+            static::armazenaDadosNFe($filial, $res);
+
+            return true;
         }
+    }
+
+    // public static function armazenaDadosDFe ($xml, $filial) {
+    public static function armazenaDadosConsulta (Filial $filial) {
+
+        // // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
+        // $codpessoa = Pessoa::select('codpessoa')
+        // ->where( 'ie', $xml->IE )->orWhere( 'cnpj', $xml->CNPJ )->get();
+        //
+        // $NFe = NFeTerceiro::firstOrNew([
+        //     'nfechave' => $xml->chNFe
+        // ]);
+        // $NFe->codpessoa = $codpessoa[0]->codpessoa??null;
+        // $NFe->codfilial = $filial->codfilial;
+        // $NFe->emitente = $xml->xNome;
+        // $NFe->cnpj = $xml->CNPJ;
+        // $NFe->ie = $xml->IE;
+        // $NFe->nfechave = $xml->chNFe;
+        // $NFe->emissao = Carbon::parse($xml->dhEmi);
+        // $NFe->valortotal = $xml->vNF;
+        // $NFe->recebimento = Carbon::parse($xml->dhRecbto);
+        // $NFe->digito = $xml->digVal;
+        // $NFe->protocolo = $xml->nProt;
+        // $NFe->tipo = $xml->tpNF;
+        // $NFe->csitnfe = $xml->cSitNFe;
+        // // dd($NFe);
+        // $NFe->save();
+
+        $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('nsu', '000000000021252')->get();
+        $qry = end($qry);
+        // $qry = NFeTerceiroDistribuicaoDfe::select('*')->get();
+        // $qry = end($qry);
+
+        foreach ($qry as $key => $file) {
+
+            $path = NFeTerceiroRepositoryPath::pathDFe($filial, $file->nsu);
+
+            if(file_exists($path)){
+                $xmlData = file_get_contents($path);
+                $st = new Standardize();
+                $xml = $st->toStd($xmlData);
+
+
+                if($file->schema == 'resNFe_v1.01.xsd'){
+
+                    // BUSCA NA BASE DE DADOS O codpessoa, TODO 'SE NAO TIVER CRIAR UM CADASTRO'
+                    $codpessoa = Pessoa::select('codpessoa')
+                    ->where( 'ie', $xml->IE )->orWhere( 'cnpj', $xml->CNPJ )->get();
+
+                    $NFe = NFeTerceiro::firstOrNew([
+                        'nfechave' => $xml->chNFe,
+                        'protocolo' => $xml->nProt
+                    ]);
+                    $NFe->codfilial = $filial->codfilial;
+                    $NFe->codpessoa = $codpessoa[0]->codpessoa??null;
+                    $NFe->nfechave = $xml->chNFe;
+                    $NFe->cnpj = $xml->CNPJ;
+                    $NFe->emitente = $xml->xNome;
+                    $NFe->ie = $xml->IE;
+                    $NFe->emissao = Carbon::parse($xml->dhEmi);
+                    $NFe->valortotal = $xml->vNF;
+                    $NFe->recebimento = Carbon::parse($xml->dhRecbto);
+                    $NFe->digito = $xml->digVal;
+                    $NFe->protocolo = $xml->nProt;
+                    $NFe->tipo = $xml->tpNF;
+                    $NFe->indmanifestacao = $xml->cSitNFe;
+                    // dd($NFe);
+                    $NFe->save();
+
+                }
+
+                // SE HOUVER  A NOTA COMPLETA JA ARMAZENA OS DADOS || $file->schema =='procNFe_v3.10.xsd'
+                if($file->schema == 'procNFe_v4.00.xsd' ){
+                    static::armazenaDadosNFe($filial, $xml);
+                }
+
+            }
+        }
+
+        return true;
+
+    } // FIM DO ARMAZENA CONSULTA
+
+    public static function armazenaDadosNFe ($filial, $res){
 
         // BUSCA NA BASE DE DADOS O codpessoa
         $codpessoa = Pessoa::select('codpessoa')
         ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
 
-        // SE O FRONECEDOR NAO TIVER CADASTRO CRIA UM
+        // SE O FRONECEDOR NAO TIVER CADASTRO CRIAR UM
         if ($codpessoa[0]->codpessoa == null){
 
             $pessoa = Pessoa::firstOrNew([
@@ -401,7 +420,7 @@ class NFeTerceiroRepository extends MgRepository
             // BUSCA NA BASE DE DADOS O codpessoa
             $codpessoa = Pessoa::select('codpessoa')
             ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
-        }
+        } // FIM DO CRIA CADASTRO
 
 
         // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
@@ -458,7 +477,7 @@ class NFeTerceiroRepository extends MgRepository
         $NF->tpemis = $res->NFe->infNFe->ide->tpEmis;
         $NF->codestoquelocal = $codestoquelocal[0]->codestoquelocal;
         // dd($NF);
-        $NF->save();
+        $NF->save();// FIM DO CRIA NOTAFISCAL
 
         // BUSCA NA tblnotafiscal O codnotafiscal
         $codnotafiscal = NotaFiscal::select('codnotafiscal')->where('nfechave', $res->protNFe->infProt->chNFe)->get();
@@ -470,7 +489,7 @@ class NFeTerceiroRepository extends MgRepository
         ]);
         $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe[0]->coddistribuicaodfe;
         $NFeTerceiro->codnotafiscal = $codnotafiscal[0]->codnotafiscal;
-        $NFeTerceiro->codnegocio = null; // rever este campo, como gerar um negocio?
+        $NFeTerceiro->codnegocio = null; // rever este campo, como gerar um negocio??
         $NFeTerceiro->codfilial = $filial->codfilial;
         $NFeTerceiro->codoperacao = $res->NFe->infNFe->ide->tpNF;
         $NFeTerceiro->codnaturezaoperacao = null; //usuario deve informar a natureza de operacao!
@@ -480,10 +499,10 @@ class NFeTerceiroRepository extends MgRepository
         $NFeTerceiro->cnpj = $res->NFe->infNFe->emit->CNPJ;
         $NFeTerceiro->ie = $res->NFe->infNFe->emit->IE;
         $NFeTerceiro->emissao = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
-        $NFeTerceiro->ignorada = false; // onde esta buscar essa informacao?
+        $NFeTerceiro->ignorada = false; // onde esta buscar essa informacao??
         $NFeTerceiro->indsituacao = $res->NFe->infNFe->ide->cSitNFe??null;
         $NFeTerceiro->justificativa = $res->protNFe->infProt->xMotivo;
-        $NFeTerceiro->indmanifestacao = null; // perguntar para o usuario a manifestacao?
+        $NFeTerceiro->indmanifestacao = null; // perguntar para o usuario a manifestacao??
         $NFeTerceiro->nfechave = $res->protNFe->infProt->chNFe;
         $NFeTerceiro->modelo = $res->NFe->infNFe->ide->mod;
         $NFeTerceiro->serie = $res->NFe->infNFe->ide->serie;
@@ -500,8 +519,9 @@ class NFeTerceiroRepository extends MgRepository
         $NFeTerceiro->valorseguro = $res->NFe->infNFe->total->ICMSTot->vSeg;
         $NFeTerceiro->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
         $NFeTerceiro->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
+        $NFeTerceiro->download = true;
         // dd($NFeTerceiro);
-        $NFeTerceiro->save();
+        $NFeTerceiro->save(); // FIM DO CRIA NOTA FISCAL TERCEIRO
 
         // BUSCA NA tblnotafiscalterceiro o codnotafiscalterceiro
         $codnotafiscalterceiro = NFeTerceiro::select('codnotafiscalterceiro')->where('codnotafiscal', $codnotafiscal[0]->codnotafiscal)->get();
@@ -516,8 +536,15 @@ class NFeTerceiroRepository extends MgRepository
         // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
         $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('codnotafiscalterceiro', $codnotafiscalterceiro[0]->codnotafiscalterceiro)->get();
 
-        // PARA CADA PRODUTO DA NOTA FAZ UM INSERT NO BANCO
+        // ARMAZENA OS DADOS DOS ITENS DA NOTA
+        $loop = 0;
         foreach ($res->NFe->infNFe->det as $key => $item) {
+
+            $loop++;
+            // echo "<script>console.log( 'Debug Objects:".$loop." " . $NFeItem . "' );</script>";
+            // echo "<script>console.log( 'Debug Objects:".$loop." " . $res->protNFe->infProt->chNFe . "' );</script>";
+            // echo "<script>console.log( 'Debug Objects:".$loop." " . $res->NFe->infNFe->det[1] . "' );</script>";
+
             $NFeItem = NFeTerceiroItem::firstOrNew([
             'referencia' => $item->prod->cProd,
             'codnotafiscalterceirogrupo' => $codGrupo[0]->codnotafiscalterceirogrupo
@@ -528,6 +555,7 @@ class NFeTerceiroRepository extends MgRepository
             $NFeItem->produto = $item->prod->xProd;
             $NFeItem->ncm = $item->prod->NCM;
             $NFeItem->cfop = $item->prod->CFOP;
+            $NFeItem->barras = $item->prod->cEAN??null;
 
             // VERIFICA SE EXISTE UM CODIGO DE BARRAS
             $barras = null;
@@ -537,7 +565,6 @@ class NFeTerceiroRepository extends MgRepository
                 $barras = $item->prod->cEAN;
             }
             $NFeItem->barras = $barras;
-
             // VERIFICA SE EXISTE UM CODIGO DE BARRAS TRIBUTAVEL
             $barrasTrib = null;
             if (!is_string($item->prod->cEANTrib)){
@@ -547,8 +574,7 @@ class NFeTerceiroRepository extends MgRepository
             }
             $NFeItem->barrastributavel =  $barrasTrib;
 
-            $NFeItem->unidademedidatributavel = $item->prod->uTrib;
-            $NFeItem->quantidadetributavel = $item->prod->qTrib;
+            $NFeItem->quantidadetributavel = $item->prod->qTrib??null;
             $NFeItem->valorunitariotributavel = $item->prod->vUnTrib;
             $NFeItem->unidademedida = $item->prod->uCom;
             $NFeItem->quantidade = $item->prod->qCom;
@@ -583,45 +609,60 @@ class NFeTerceiroRepository extends MgRepository
             $NFeItem->cofinsbase = $item->imposto->COFINS->COFINSAliq->vBC??0;
             $NFeItem->cofinspercentual = $item->imposto->COFINS->COFINSAliq->pCOFINS??0;
             $NFeItem->cofinsvalor = $item->imposto->COFINS->COFINSAliq->vCOFINS??0;
-            // dd($NFeItem);
             $NFeItem->save();
-        }
 
-        if ( isset($res->NFe->infNFe->cobr)){
-            foreach ($res->NFe->infNFe->cobr->dup as $key => $duplicata) {
+            // SALVA OS DADOS NA tblnotafiscalterceiroprodutobarra
+            $produtobarra = NFeTerceiroProdutoBarra::firstOrNew([
+            'codnotafiscalterceirogrupo' => $codGrupo[0]->codnotafiscalterceirogrupo
+            ]);
+            $produtobarra->codnotafiscalterceirogrupo = $codGrupo[0]->codnotafiscalterceirogrupo;;
+            $produtobarra->codprodutobarra = null;
+            $produtobarra->margem = null; // rever este campo
+            $produtobarra->complemento = null; // rever este campo
+            $produtobarra->quantidade = $item->prod->qTrib;
+            $produtobarra->valorproduto = $item->prod->vProd;
+            // dd($produtobarra);
+            $produtobarra->save();
+        } // FIM DO ARMAZENA ITENS
+
+        //SE HOUVER DUPLICATA ARMAZENA OS DADOS
+        if (!$res->NFe->infNFe->cobr == null){
+
+            if(count($res->NFe->infNFe->cobr->dup) > 1){
+                foreach ($res->NFe->infNFe->cobr->dup as $key => $duplicata) {
+                    $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
+                        'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro,
+                        'duplicata' => $duplicata->nDup??$duplicata
+                    ]);
+                    $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro[0]->codnotafiscalterceiro;
+                    $NFeDuplicata->codtitulo = null; // rever este campo
+                    $NFeDuplicata->duplicata = $duplicata->nDup;
+                    $NFeDuplicata->vencimento = Carbon::parse($duplicata->dVenc);
+                    $NFeDuplicata->valor = $duplicata->vDup;
+                    $NFeDuplicata->ndup = $duplicata->nDup??1;
+                    $NFeDuplicata->dvenc = Carbon::parse($duplicata->dVenc);
+                    $NFeDuplicata->vdup = $duplicata->vDup;
+                    $NFeDuplicata->save();
+                }
+            }
+            else{
                 $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
-                'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro
+                    'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro,
+                    'duplicata' => $res->NFe->infNFe->cobr->dup->nDup
                 ]);
                 $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro[0]->codnotafiscalterceiro;
                 $NFeDuplicata->codtitulo = null; // rever este campo
-                $NFeDuplicata->duplicata = $duplicata->nDup;
-                $NFeDuplicata->vencimento = Carbon::parse($duplicata->dVenc);
-                $NFeDuplicata->valor = $duplicata->vDup;
-                $NFeDuplicata->ndup = $duplicata->nDup;
-                $NFeDuplicata->dvenc = Carbon::parse($duplicata->dVenc);
-                $NFeDuplicata->vdup = $duplicata->vDup;
+                $NFeDuplicata->duplicata = $res->NFe->infNFe->cobr->dup->nDup;
+                $NFeDuplicata->vencimento = Carbon::parse($res->NFe->infNFe->cobr->dup->dVenc);
+                $NFeDuplicata->valor = $res->NFe->infNFe->cobr->dup->vDup;
+                $NFeDuplicata->ndup = $res->NFe->infNFe->cobr->dup->nDup;
+                $NFeDuplicata->dvenc = Carbon::parse($res->NFe->infNFe->cobr->dup->dVenc);
+                $NFeDuplicata->vdup = $res->NFe->infNFe->cobr->dup->vDup;
                 $NFeDuplicata->save();
-
             }
         }
-
-        // MARCA DOWNLOAD COMO TRUE PARA QUE A NOTA NAO SEJA BAIXADA NOVAMENTE
-        $download = NFeTerceiroDfe::where('nfechave',$chave)->first();
-        $download->download = true;
-        $download->save();
-
-        // $produtobarra = new NFeTerceiroProdutoBarra();
-        // $produtobarra->codnotafiscalterceirogrupo = null;
-        // $produtobarra->codprodutobarra = null;
-        // $produtobarra->margem = null;
-        // $produtobarra->complemento = null;
-        // $produtobarra->quantidade = null;
-        // $produtobarra->valorproduto = null;
-        // $produtobarra->codusuariocriacao = null;
-        // $produtobarra->codusuarioalteracao = null;
-
         DB::commit();
-    } // FIM DO CARREGA XML
+    } // FIM DO armazenaDadosNFe
 
     // TRAZ DA BASE TODAS AS DFEs
     public static function listaDFe ($request) {
@@ -637,7 +678,7 @@ class NFeTerceiroRepository extends MgRepository
 
         // EXECUTA A CONDITIONAL QUERY CONFORME FILTRO REQUISITADO
         $qry = NFeTerceiroDfe::when($filial, function($query, $filial){
-            $query->where('tblnotafiscalterceirodfe.codfilial', $filial);
+            $query->where('tblnotafiscalterceiro.codfilial', $filial);
         })
         ->when($chave, function($query, $chave){
             $query->where('nfechave', $chave);
@@ -655,10 +696,10 @@ class NFeTerceiroRepository extends MgRepository
             $query->where('emissao', '<=', $datafinal);
         })
         ->when($codpessoa, function($query, $codpessoa){
-            $query->where('tblnotafiscalterceirodfe.codpessoa', $codpessoa );
+            $query->where('tblnotafiscalterceiro.codpessoa', $codpessoa );
         })
-        ->join('tblfilial', 'tblnotafiscalterceirodfe.codfilial', '=', 'tblfilial.codfilial')
-        ->select('tblnotafiscalterceirodfe.*', 'tblfilial.filial')
+        ->join('tblfilial', 'tblnotafiscalterceiro.codfilial', '=', 'tblfilial.codfilial')
+        ->select('tblnotafiscalterceiro.*', 'tblfilial.filial')
         ->orderBy('emissao', 'DESC')
         ->paginate(100);
 

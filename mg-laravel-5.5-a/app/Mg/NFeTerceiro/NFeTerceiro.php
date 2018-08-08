@@ -41,6 +41,11 @@ class NFeTerceiro extends MGModel
         'valorseguro',
         'valordesconto',
         'valoroutras',
+        'download',
+        'protocolo',
+        'tipo', // tpNF
+        'recebimento',
+        'digito',
         'codusuariocriacao',
         'codusuarioalteracao'
 
