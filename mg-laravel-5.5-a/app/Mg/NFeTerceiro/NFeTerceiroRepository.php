@@ -304,7 +304,8 @@ class NFeTerceiroRepository extends MgRepository
         // // dd($NFe);
         // $NFe->save();
 
-        $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('nsu', '000000000021252')->get();
+        // $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('nsu', '000000000023032')->get();
+        $qry = NFeTerceiroDistribuicaoDfe::select('*')->get();
         $qry = end($qry);
         // $qry = NFeTerceiroDistribuicaoDfe::select('*')->get();
         // $qry = end($qry);
@@ -348,7 +349,10 @@ class NFeTerceiroRepository extends MgRepository
                 }
 
                 // SE HOUVER  A NOTA COMPLETA JA ARMAZENA OS DADOS || $file->schema =='procNFe_v3.10.xsd'
-                if($file->schema == 'procNFe_v4.00.xsd' ){
+                if($file->schema == 'procNFe_v4.00.xsd'){
+                    static::armazenaDadosNFe($filial, $xml);
+                }
+                if($file->schema == 'procNFe_v3.10.xsd'){
                     static::armazenaDadosNFe($filial, $xml);
                 }
 
@@ -359,79 +363,77 @@ class NFeTerceiroRepository extends MgRepository
 
     } // FIM DO ARMAZENA CONSULTA
 
+    // SE O FRONECEDOR NAO TIVER CADASTRO CRIAR UM
+    public static function novaPessoa($res){
+
+        $pessoa = Pessoa::firstOrNew([
+            'cnpj' => $res->NFe->infNFe->emit->CNPJ,
+            'ie' => $res->NFe->infNFe->emit->IE ]);
+
+        $pessoa->pessoa = $res->NFe->infNFe->emit->xNome;
+        $pessoa->fantasia = $res->NFe->infNFe->emit->xFant;
+        $pessoa->inativo = null;
+        $pessoa->cliente = false;
+        $pessoa->fornecedor = true;
+        $pessoa->fisica = false;
+        $pessoa->codsexo = null;
+        $pessoa->cnpj = $res->NFe->infNFe->emit->CNPJ;
+        $pessoa->ie = $res->NFe->infNFe->emit->IE;
+        $pessoa->consumidor = false;
+        $pessoa->contato = null;
+        $pessoa->codestadocivil = null;
+        $pessoa->conjuge = null;
+        $pessoa->endereco = $res->NFe->infNFe->emit->enderEmit->xLgr;
+        $pessoa->numero = $res->NFe->infNFe->emit->enderEmit->nro;
+        $pessoa->complemento = null;
+        $pessoa->codcidade = $res->NFe->infNFe->emit->enderEmit->cMun;
+        $pessoa->bairro = $res->NFe->infNFe->emit->enderEmit->xBairro;
+        $pessoa->cep = $res->NFe->infNFe->emit->enderEmit->CEP1;
+        $pessoa->enderecocobranca = null;
+        $pessoa->numerocobranca = null;
+        $pessoa->complementocobranca = null;
+        $pessoa->codcidadecobranca = null;
+        $pessoa->bairrocobranca = null;
+        $pessoa->cepcobranca = null;
+        $pessoa->telefone1 = $res->NFe->infNFe->emit->enderEmit->fone;
+        $pessoa->telefone2 = null;
+        $pessoa->telefone3 = null;
+        $pessoa->email = null;
+        $pessoa->emailnfe = null;
+        $pessoa->emailcobranca = null;
+        $pessoa->codformapagamento = null;
+        $pessoa->credito = null;
+        $pessoa->creditobloqueado = null;
+        $pessoa->observacoes = null;
+        $pessoa->mensagemvenda = null;
+        $pessoa->vendedor = false;
+        $pessoa->rg = null;
+        $pessoa->desconto = null;
+        $pessoa->notafiscal = null;
+        $pessoa->toleranciaatraso = null;
+        $pessoa->codgrupocliente = null;
+        // dd($pessoa);
+        $pessoa->save();
+                    
+    }// FIM DO CRIA CADASTRO
+
     public static function armazenaDadosNFe ($filial, $res){
 
         // BUSCA NA BASE DE DADOS O codpessoa
         $codpessoa = Pessoa::select('codpessoa')
         ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
 
-        // SE O FRONECEDOR NAO TIVER CADASTRO CRIAR UM
-        if ($codpessoa[0]->codpessoa == null){
-
-            $pessoa = Pessoa::firstOrNew([
-                'cnpj' => $res->NFe->infNFe->emit->CNPJ,
-                'ie' => $res->NFe->infNFe->emit->IE ]);
-
-            $pessoa->pessoa = $res->NFe->infNFe->emit->xNome;
-            $pessoa->fantasia = $res->NFe->infNFe->emit->xFant;
-            $pessoa->inativo = null;
-            $pessoa->cliente = false;
-            $pessoa->fornecedor = true;
-            $pessoa->fisica = false;
-            $pessoa->codsexo = null;
-            $pessoa->cnpj = $res->NFe->infNFe->emit->CNPJ;
-            $pessoa->ie = $res->NFe->infNFe->emit->IE;
-            $pessoa->consumidor = false;
-            $pessoa->contato = null;
-            $pessoa->codestadocivil = null;
-            $pessoa->conjuge = null;
-            $pessoa->endereco = $res->NFe->infNFe->emit->enderEmit->xLgr;
-            $pessoa->numero = $res->NFe->infNFe->emit->enderEmit->nro;
-            $pessoa->complemento = null;
-            $pessoa->codcidade = $res->NFe->infNFe->emit->enderEmit->cMun;
-            $pessoa->bairro = $res->NFe->infNFe->emit->enderEmit->xBairro;
-            $pessoa->cep = $res->NFe->infNFe->emit->enderEmit->CEP1;
-            $pessoa->enderecocobranca = null;
-            $pessoa->numerocobranca = null;
-            $pessoa->complementocobranca = null;
-            $pessoa->codcidadecobranca = null;
-            $pessoa->bairrocobranca = null;
-            $pessoa->cepcobranca = null;
-            $pessoa->telefone1 = $res->NFe->infNFe->emit->enderEmit->fone;
-            $pessoa->telefone2 = null;
-            $pessoa->telefone3 = null;
-            $pessoa->email = null;
-            $pessoa->emailnfe = null;
-            $pessoa->emailcobranca = null;
-            $pessoa->codformapagamento = null;
-            $pessoa->credito = null;
-            $pessoa->creditobloqueado = null;
-            $pessoa->observacoes = null;
-            $pessoa->mensagemvenda = null;
-            $pessoa->vendedor = false;
-            $pessoa->rg = null;
-            $pessoa->desconto = null;
-            $pessoa->notafiscal = null;
-            $pessoa->toleranciaatraso = null;
-            $pessoa->codgrupocliente = null;
-            // dd($pessoa);
-            $pessoa->save();
-
-            // BUSCA NA BASE DE DADOS O codpessoa
-            $codpessoa = Pessoa::select('codpessoa')
-            ->where( 'ie', $res->NFe->infNFe->emit->IE )->orWhere( 'cnpj', $res->NFe->infNFe->emit->CNPJ )->get();
-        } // FIM DO CRIA CADASTRO
-
-
         // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
         $coddistribuicaodfe = NFeTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
-        ->where([ ['nfechave', $res->protNFe->infProt->chNFe],
-        ['schema', 'like', 'resNFe' . '%'] ])->get();
+        ->where([ ['nfechave', $res->protNFe->infProt->chNFe],['schema', 'like', 'resNFe' . '%'] ])
+        ->orWhere([ ['nfechave', $res->protNFe->infProt->chNFe],['schema', 'like', 'procNFe' . '%'] ])->get();
 
         // BUSCA NA BASE DE DADOS O codestoquelocal
         $codestoquelocal = EstoqueLocal::select('codestoquelocal')->where('codfilial', $filial->codfilial)->get();
 
         DB::beginTransaction();
+
+        echo "<script>console.log( 'Debug Objects:" . $res->protNFe->infProt->chNFe . "' );</script>";
 
         // INSERE NA tblnotafiscal
         $NF = NotaFiscal::firstOrNew([
@@ -448,9 +450,29 @@ class NFeTerceiroRepository extends MgRepository
         $NF->saida = Carbon::now(); // rever este campo
         $NF->codfilial = $filial->codfilial;
         $NF->codpessoa = $codpessoa[0]->codpessoa;
-        $NF->observacoes = $res->NFe->infNFe->infAdic->infCpl??null;
+
+        // houve uma nota em que as observaçoes, o comprimento da string é maior que 1500, na tabaela o limite
+        // é 1500 esta validacao resolve este problema, mas rever este trecho
+        //35180659400853000759550010000028241524108507
+        $NFeObservacoes = null;
+        if(isset($res->NFe->infNFe->infAdic->infCpl) && strlen($res->NFe->infNFe->infAdic->infCpl) > 1500){
+            $NFeObservacoes = substr($res->NFe->infNFe->infAdic->infCpl,0,1500);
+        }else{
+            if(isset($res->NFe->infNFe->infAdic->infCpl)){
+                $NFeObservacoes = $res->NFe->infNFe->infAdic->infCpl;
+            }
+        }
+        $NF->observacoes = $NFeObservacoes;
         $NF->volumes = $res->NFe->infNFe->transp->vol->qVol??0;
-        $NF->codoperacao = $res->NFe->infNFe->ide->tpNF;
+
+        // houve uma nota em que o codoperacao é 0'saida', mas atualmente na base é 1'entrada'  ou 2'saida'
+        //rever este trecho
+        // 51180605372531000129550010010254021111025063
+        $NFeCodOperacao = $res->NFe->infNFe->ide->tpNF;
+        if($NFeCodOperacao == 0){
+            $NFeCodOperacao = 2;
+        }
+        $NF->codoperacao = $NFeCodOperacao;
         $NF->nfereciboenvio = Carbon::parse($res->protNFe->infProt->dhRecbto);
         $NF->nfedataenvio = Carbon::parse($res->NFe->infNFe->ide->dhEmi);
         $NF->nfeautorizacao = $res->protNFe->infProt->xMotivo;
@@ -482,10 +504,11 @@ class NFeTerceiroRepository extends MgRepository
         // BUSCA NA tblnotafiscal O codnotafiscal
         $codnotafiscal = NotaFiscal::select('codnotafiscal')->where('nfechave', $res->protNFe->infProt->chNFe)->get();
 
+
         // SALVA NA tblnotafiscalterceiro OS DADOS DA NOTA
         $NFeTerceiro = NFeTerceiro::firstOrNew([
         'nfechave' => $res->protNFe->infProt->chNFe,
-        'coddistribuicaodfe' => $coddistribuicaodfe[0]->coddistribuicaodfe
+        'numero' => $res->NFe->infNFe->ide->nNF
         ]);
         $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe[0]->coddistribuicaodfe;
         $NFeTerceiro->codnotafiscal = $codnotafiscal[0]->codnotafiscal;
@@ -537,57 +560,86 @@ class NFeTerceiroRepository extends MgRepository
         $codGrupo = NFeTerceiroGrupo::select('codnotafiscalterceirogrupo')->where('codnotafiscalterceiro', $codnotafiscalterceiro[0]->codnotafiscalterceiro)->get();
 
         // ARMAZENA OS DADOS DOS ITENS DA NOTA
-        $loop = 0;
+        // $loop = 0;
         foreach ($res->NFe->infNFe->det as $key => $item) {
-
-            $loop++;
-            // echo "<script>console.log( 'Debug Objects:".$loop." " . $NFeItem . "' );</script>";
+            // $loop++;
             // echo "<script>console.log( 'Debug Objects:".$loop." " . $res->protNFe->infProt->chNFe . "' );</script>";
             // echo "<script>console.log( 'Debug Objects:".$loop." " . $res->NFe->infNFe->det[1] . "' );</script>";
 
             $NFeItem = NFeTerceiroItem::firstOrNew([
-            'referencia' => $item->prod->cProd,
+            'referencia' => $item->prod->cProd??$res->NFe->infNFe->det->prod->cProd,
             'codnotafiscalterceirogrupo' => $codGrupo[0]->codnotafiscalterceirogrupo
             ]);
             $NFeItem->codnotafiscalterceirogrupo = $codGrupo[0]->codnotafiscalterceirogrupo;
-            $NFeItem->numero = $item->attributes->nItem;
-            $NFeItem->referencia = $item->prod->cProd;
-            $NFeItem->produto = $item->prod->xProd;
-            $NFeItem->ncm = $item->prod->NCM;
-            $NFeItem->cfop = $item->prod->CFOP;
-            $NFeItem->barras = $item->prod->cEAN??null;
+            $NFeItem->numero = $item->attributes->nItem??$res->NFe->infNFe->det->attributes->nItem;
+            $NFeItem->referencia = $item->prod->cProd??$res->NFe->infNFe->det->prod->cProd;
+            $NFeItem->produto = $item->prod->xProd??$res->NFe->infNFe->det->prod->xProd;
+            $NFeItem->ncm = $item->prod->NCM??$res->NFe->infNFe->det->prod->NCM;
+            $NFeItem->cfop = $item->prod->CFOP??$res->NFe->infNFe->det->prod->CFOP;
 
             // VERIFICA SE EXISTE UM CODIGO DE BARRAS
             $barras = null;
-            if (!is_string($item->prod->cEAN)){
-                $barras = null;
-            }else{
+            if (isset($item->prod->cEAN) && is_string($item->prod->cEAN)){
                 $barras = $item->prod->cEAN;
+            }else{
+                if(isset($res->NFe->infNFe->det->prod->cEAN) && is_string($res->NFe->infNFe->det->prod->cEAN)){
+                    $barras = $res->NFe->infNFe->det->prod->cEAN;
+                }
             }
             $NFeItem->barras = $barras;
+
             // VERIFICA SE EXISTE UM CODIGO DE BARRAS TRIBUTAVEL
             $barrasTrib = null;
-            if (!is_string($item->prod->cEANTrib)){
-                $barrasTrib = null;
-            }else{
+            if (isset($item->prod->cEANTrib) && is_string($item->prod->cEANTrib)){
                 $barrasTrib = $item->prod->cEANTrib;
+            }else{
+                if(isset($res->NFe->infNFe->det->prod->cEANTrib) && is_string($res->NFe->infNFe->det->prod->cEANTrib)){
+                    $barrasTrib = $res->NFe->infNFe->det->prod->cEANTrib;
+                }
             }
             $NFeItem->barrastributavel =  $barrasTrib;
 
-            $NFeItem->quantidadetributavel = $item->prod->qTrib??null;
-            $NFeItem->valorunitariotributavel = $item->prod->vUnTrib;
-            $NFeItem->unidademedida = $item->prod->uCom;
-            $NFeItem->quantidade = $item->prod->qCom;
-            $NFeItem->valorunitario = $item->prod->vUnCom;
-            $NFeItem->valorproduto = $item->prod->vProd;
+            $NFeItem->quantidadetributavel = $item->prod->qTrib??$res->NFe->infNFe->det->prod->qTrib??null;
+            $NFeItem->valorunitariotributavel = $item->prod->vUnTrib??$res->NFe->infNFe->det->prod->vUnTrib;
+            $NFeItem->unidademedida = $item->prod->uCom??$res->NFe->infNFe->det->prod->uCom;
+            $NFeItem->quantidade = $item->prod->qCom??$res->NFe->infNFe->det->prod->qCom;
+            $NFeItem->valorunitario = $item->prod->vUnCom??$res->NFe->infNFe->det->prod->vUnCom;
+            $NFeItem->valorproduto = $item->prod->vProd??$res->NFe->infNFe->det->prod->vProd;
             $NFeItem->valorfrete = $res->NFe->infNFe->total->ICMSTot->vFrete;
             $NFeItem->valorseguro = $res->NFe->infNFe->total->ICMSTot->vSeg;
             $NFeItem->valordesconto = $res->NFe->infNFe->total->ICMSTot->vDesc;
             $NFeItem->valoroutras = $res->NFe->infNFe->total->ICMSTot->vOutro;
-            $NFeItem->valortotal = null; // rever este campo
-            $NFeItem->compoetotal = $item->prod->indTot; // rever este campo
-            $NFeItem->csosn = null; // rever este campo
-            $NFeItem->origem = $item->imposto->ICMS->ICMS00->orig??null;
+            $NFeItem->valortotal = $res->NFe->infNFe->total->ICMSTot->vNF;
+            $NFeItem->compoetotal = $item->prod->indTot??$res->NFe->infNFe->det->prod->indTot;
+            $NFeItem->csosn = $item->imposto->ICMS->ICMSSN102->CSOSN??$res->NFe->infNFe->det->imposto->ICMS->ICMSSN102->CSOSN??null; // rever este campo
+
+            // VALIDA QUAL O TIPO DE ICMS QUE ESTA NA NOTA ICMS00, ICMS10, ICMSSN102
+            $icmsOrigem = null;
+            if(isset($item->imposto->ICMS->ICMS00->orig)){
+                $icmsOrigem = $item->imposto->ICMS->ICMS00->orig;
+            }else{
+                if(isset($res->NFe->infNFe->det->ICMS->ICMS00->orig)){
+                    $icmsOrigem = $res->NFe->infNFe->det->imposto->ICMS->ICMS00->orig;
+                }
+            }
+
+            if(isset($item->imposto->ICMS->ICMSSN102->orig)){
+                $icmsOrigem = $item->imposto->ICMS->ICMSSN102->orig;
+            }else{
+                if(isset($res->NFe->infNFe->det->imposto->ICMS->ICMSSN102->orig)){
+                    $icmsOrigem = $res->NFe->infNFe->det->imposto->ICMS->ICMSSN102->orig;
+                }
+            }
+
+            if(isset($item->imposto->ICMS->ICMS10->orig)){
+                $icmsOrigem = $item->imposto->ICMS->ICMS10->orig;
+            }else{
+                if(isset($res->NFe->infNFe->det->ICMS->ICMS10->orig)){
+                    $icmsOrigem = $res->NFe->infNFe->det->imposto->ICMS->ICMS10->orig;
+                }
+            }
+
+            $NFeItem->origem = $icmsOrigem;
             $NFeItem->icmsbasemodalidade = $item->imposto->ICMS->ICMS00->modBC??null;
             $NFeItem->icmsbase = $item->imposto->ICMS->ICMS00->vBC??0;
             $NFeItem->icmspercentual = $item->imposto->ICMS->ICMS00->pICMS??0;
@@ -609,6 +661,7 @@ class NFeTerceiroRepository extends MgRepository
             $NFeItem->cofinsbase = $item->imposto->COFINS->COFINSAliq->vBC??0;
             $NFeItem->cofinspercentual = $item->imposto->COFINS->COFINSAliq->pCOFINS??0;
             $NFeItem->cofinsvalor = $item->imposto->COFINS->COFINSAliq->vCOFINS??0;
+            // dd($NFeItem);
             $NFeItem->save();
 
             // SALVA OS DADOS NA tblnotafiscalterceiroprodutobarra
@@ -619,24 +672,24 @@ class NFeTerceiroRepository extends MgRepository
             $produtobarra->codprodutobarra = null;
             $produtobarra->margem = null; // rever este campo
             $produtobarra->complemento = null; // rever este campo
-            $produtobarra->quantidade = $item->prod->qTrib;
-            $produtobarra->valorproduto = $item->prod->vProd;
+            $produtobarra->quantidade = $item->prod->qTrib??$res->NFe->infNFe->det->prod->qTrib;
+            $produtobarra->valorproduto = $item->prod->vProd??$res->NFe->infNFe->det->prod->vProd;
             // dd($produtobarra);
             $produtobarra->save();
         } // FIM DO ARMAZENA ITENS
 
         //SE HOUVER DUPLICATA ARMAZENA OS DADOS
-        if (!$res->NFe->infNFe->cobr == null){
+        if (isset($res->NFe->infNFe->cobr)){
 
-            if(count($res->NFe->infNFe->cobr->dup) > 1){
+            if(isset($res->NFe->infNFe->cobr->dup) && count($res->NFe->infNFe->cobr->dup) > 1){
                 foreach ($res->NFe->infNFe->cobr->dup as $key => $duplicata) {
                     $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
                         'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro,
-                        'duplicata' => $duplicata->nDup??$duplicata
+                        'duplicata' => $duplicata->nDup??1
                     ]);
                     $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro[0]->codnotafiscalterceiro;
                     $NFeDuplicata->codtitulo = null; // rever este campo
-                    $NFeDuplicata->duplicata = $duplicata->nDup;
+                    $NFeDuplicata->duplicata = $duplicata->nDup??1;
                     $NFeDuplicata->vencimento = Carbon::parse($duplicata->dVenc);
                     $NFeDuplicata->valor = $duplicata->vDup;
                     $NFeDuplicata->ndup = $duplicata->nDup??1;
@@ -646,19 +699,21 @@ class NFeTerceiroRepository extends MgRepository
                 }
             }
             else{
-                $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
-                    'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro,
-                    'duplicata' => $res->NFe->infNFe->cobr->dup->nDup
-                ]);
-                $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro[0]->codnotafiscalterceiro;
-                $NFeDuplicata->codtitulo = null; // rever este campo
-                $NFeDuplicata->duplicata = $res->NFe->infNFe->cobr->dup->nDup;
-                $NFeDuplicata->vencimento = Carbon::parse($res->NFe->infNFe->cobr->dup->dVenc);
-                $NFeDuplicata->valor = $res->NFe->infNFe->cobr->dup->vDup;
-                $NFeDuplicata->ndup = $res->NFe->infNFe->cobr->dup->nDup;
-                $NFeDuplicata->dvenc = Carbon::parse($res->NFe->infNFe->cobr->dup->dVenc);
-                $NFeDuplicata->vdup = $res->NFe->infNFe->cobr->dup->vDup;
-                $NFeDuplicata->save();
+                if(isset($res->NFe->infNFe->cobr->dup)){
+                    $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
+                        'codnotafiscalterceiro' => $codnotafiscalterceiro[0]->codnotafiscalterceiro,
+                        'duplicata' => $res->NFe->infNFe->cobr->dup->nDup??1
+                    ]);
+                    $NFeDuplicata->codnotafiscalterceiro = $codnotafiscalterceiro[0]->codnotafiscalterceiro;
+                    $NFeDuplicata->codtitulo = null; // rever este campo
+                    $NFeDuplicata->duplicata = $res->NFe->infNFe->cobr->dup->nDup??1;
+                    $NFeDuplicata->vencimento = Carbon::parse($res->NFe->infNFe->cobr->dup->dVenc);
+                    $NFeDuplicata->valor = $res->NFe->infNFe->cobr->dup->vDup;
+                    $NFeDuplicata->ndup = $res->NFe->infNFe->cobr->dup->nDup??1;
+                    $NFeDuplicata->dvenc = Carbon::parse($res->NFe->infNFe->cobr->dup->dVenc);
+                    $NFeDuplicata->vdup = $res->NFe->infNFe->cobr->dup->vDup;
+                    $NFeDuplicata->save();
+                }
             }
         }
         DB::commit();
