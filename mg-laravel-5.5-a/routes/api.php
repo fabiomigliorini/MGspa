@@ -37,7 +37,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
 
         // NFeTerceiro
-        Route::get('nfe-terceiro/lista-dfe', '\Mg\NFeTerceiro\NFeTerceiroController@listaDFe');
+        Route::get('nfe-terceiro/lista-notas', '\Mg\NFeTerceiro\NFeTerceiroController@listaNotas');
         Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NFeTerceiro\NFeTerceiroController@consultaSefaz');
         Route::get('nfe-terceiro/ultima-nsu', '\Mg\NFeTerceiro\NFeTerceiroController@ultimaNSU');
         Route::get('nfe-terceiro/armazena-dados', '\Mg\NFeTerceiro\NFeTerceiroController@armazenaDadosConsulta');
