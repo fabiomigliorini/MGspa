@@ -3122,7 +3122,7 @@
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codpessoa" type="bigint" jt="-5" mandatory="y" />
+			<column name="codpessoa" type="bigint" jt="-5" />
 			<column name="natop" type="varchar" length="40" jt="12" >
 				<comment><![CDATA[natOp]]></comment>
 			</column>
@@ -8520,8 +8520,8 @@ $function$
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
-		<entity schema="mgsis" name="tblnotafiscalterceiro" color="c1d8ee" x="780" y="60" />
 		<entity schema="mgsis" name="tblnotafiscalterceiroevento" color="c1d8ee" x="45" y="180" />
+		<entity schema="mgsis" name="tblnotafiscalterceiro" color="c1d8ee" x="780" y="60" />
 	</layout>
 	<layout name="Layout_Devolucao" id="Layout7285461" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblnotafiscal" color="b2cdf7" x="1230" y="45" />

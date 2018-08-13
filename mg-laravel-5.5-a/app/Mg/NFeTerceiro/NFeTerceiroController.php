@@ -23,10 +23,10 @@ class NFeTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
-    public function downloadNFeTerceiro(Request $request)
+    public function downloadNotaFiscalTerceiro(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);
-        $res = NFeTerceiroRepository::downloadNFeTerceiro($filial, $request->chave);
+        $res = NFeTerceiroRepository::downloadNotaFiscalTerceiro($filial, $request->chave);
         return response()->json($res, 200);
     }
 

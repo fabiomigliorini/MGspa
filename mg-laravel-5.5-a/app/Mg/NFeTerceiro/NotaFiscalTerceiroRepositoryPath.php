@@ -5,7 +5,7 @@ namespace Mg\NFeTerceiro;
 use Mg\NFeTerceiro\NotaFiscalTerceiroDistribuicaoDfe;
 use Mg\Filial\Filial;
 
-class NFeTerceiroRepositoryPath
+class NotaFiscalTerceiroRepositoryPath
 {
 
     /**
