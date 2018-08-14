@@ -1,10 +1,10 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
 
-class NFeTerceiroProdutoBarra extends MGModel
+class NotaFiscalTerceiroProdutoBarra extends MGModel
 {
     protected $table = 'tblnotafiscalterceiroprodutobarra';
     protected $primaryKey = 'codnotafiscalterceiroprodutobarra';
@@ -26,7 +26,7 @@ class NFeTerceiroProdutoBarra extends MGModel
     // Chaves Estrangeiras
     public function NotaFiscalTerceiroGrupo()
     {
-        return $this->belongsTo(NFeTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
+        return $this->belongsTo(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
     }
 
     public function ProdutoBarra()

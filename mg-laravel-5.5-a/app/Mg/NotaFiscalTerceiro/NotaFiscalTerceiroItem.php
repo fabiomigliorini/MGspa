@@ -1,10 +1,10 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
 
-class NFeTerceiroItem extends MGModel
+class NotaFiscalTerceiroItem extends MGModel
 {
     protected $table = 'tblnotafiscalterceiroitem';
     protected $primaryKey = 'codnotafiscalterceiroitem';

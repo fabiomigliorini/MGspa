@@ -1,90 +1,90 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 
 use Illuminate\Http\Request;
 
 use Mg\MgController;
 use Mg\Filial\Filial;
 
-class NFeTerceiroController extends MgController
+class NotaFiscalTerceiroController extends MgController
 {
 
     public function manifestacao(Request $request)
     {
-        $res = NFeTerceiroRepository::manifestacao($request);
+        $res = NotaFiscalTerceiroRepository::manifestacao($request);
         return response()->json($res, 200);
     }
 
     public function consultaSefaz(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);
-        $res = NFeTerceiroRepository::consultaSefaz($filial);
+        $res = NotaFiscalTerceiroRepository::consultaSefaz($filial);
         return response()->json($res, 200);
     }
 
     public function downloadNotaFiscalTerceiro(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);
-        $res = NFeTerceiroRepository::downloadNotaFiscalTerceiro($filial, $request->chave);
+        $res = NotaFiscalTerceiroRepository::downloadNotaFiscalTerceiro($filial, $request->chave);
         return response()->json($res, 200);
     }
 
     public function listaNotas(Request $request)
     {
-        $res = NFeTerceiroRepository::listaNotas($request);
+        $res = NotaFiscalTerceiroRepository::listaNotas($request);
         return response()->json($res, 200);
     }
 
     public function ultimaNSU(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);
-        $res = NFeTerceiroRepository::ultimaNSU($filial);
+        $res = NotaFiscalTerceiroRepository::ultimaNSU($filial);
         return response()->json($res, 200);
     }
 
     public function buscaNFeTerceiro(Request $request)
     {
-        $res = NFeTerceiroRepository::buscaNfeTerceiro($request->chave);
+        $res = NotaFiscalTerceiroRepository::buscaNfeTerceiro($request->chave);
         return response()->json($res, 200);
     }
 
     public function listaItem(Request $request)
     {
-        $res = NFeTerceiroRepository::listaItem($request->codnotafiscalterceiro);
+        $res = NotaFiscalTerceiroRepository::listaItem($request->codnotafiscalterceiro);
         return response()->json($res, 200);
     }
 
     public function atualizaItem(Request $request)
     {
-        $res = NFeTerceiroRepository::atualizaItem($request);
+        $res = NotaFiscalTerceiroRepository::atualizaItem($request);
         return response()->json($res, 200);
     }
 
     public function atualizaNFe(Request $request)
     {
-        $res = NFeTerceiroRepository::atualizaNFe($request);
+        $res = NotaFiscalTerceiroRepository::atualizaNFe($request);
         return response()->json($res, 200);
     }
 
     public function armazenaDadosConsulta(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);
-        $res = NFeTerceiroRepository::armazenaDadosConsulta($filial);
+        $res = NotaFiscalTerceiroRepository::armazenaDadosConsulta($filial);
         return response()->json($res, 200);
     }
 
     public function armazenaDadosEvento(Request $request)
     {
         $filial = Filial::findOrFail($request->filial);
-        $res = NFeTerceiroRepository::armazenaDadosEvento($filial);
+        $res = NotaFiscalTerceiroRepository::armazenaDadosEvento($filial);
         return response()->json($res, 200);
     }
 
     public function carregarXml(Request $request, $filial, $chave)
     {
         $filial = Filial::findOrFail($filial);
-        $res = NFeTerceiroRepository::carregarXml($filial, $chave);
+        $res = NotaFiscalTerceiroRepository::carregarXml($filial, $chave);
         return response()->json($res, 200);
     }
 

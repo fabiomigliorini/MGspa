@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
 
@@ -79,7 +79,7 @@ class NotaFiscalTerceiro extends MGModel
 
     public function NFeTerceiroDistribuicaoDfe()
     {
-        return $this->belongsTo(NFeTerceiroDistribuicaoDfe::class, 'coddidtribuicaodfe', 'coddidtribuicaodfe');
+        return $this->belongsTo(NotaFiscalTerceiroDistribuicaoDfe::class, 'coddidtribuicaodfe', 'coddidtribuicaodfe');
     }
 
     // Tabelas Filhas

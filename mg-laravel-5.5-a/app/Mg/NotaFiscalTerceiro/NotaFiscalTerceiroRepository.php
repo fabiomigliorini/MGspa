@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 use Mg\MgRepository;
 
 use Mg\Filial\Filial;
@@ -22,7 +22,7 @@ use NFePHP\NFe\Common\Complements;
 use Carbon\Carbon;
 use DB;
 
-class NFeTerceiroRepository extends MgRepository
+class NotaFiscalTerceiroRepository extends MgRepository
 {
 
     public static function atualizaItem($request) {
@@ -40,7 +40,7 @@ class NFeTerceiroRepository extends MgRepository
     public static function consultaSefaz(Filial $filial){
 
         // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
-        $ultimoNsu = NFeTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
+        $ultimoNsu = NotaFiscalTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
         $ultimoNsu = end($ultimoNsu);
         $ultimoNsu = end($ultimoNsu);
 
@@ -67,7 +67,7 @@ class NFeTerceiroRepository extends MgRepository
             $chave = $res->chNFe??$res->protNFe->infProt->chNFe??$res->retEvento->infEvento->chNFe;
 
             // SALVA NA BASE DE DADOS O RESULTADO DA CONSULTA DFE
-            $dfe = NFeTerceiroDistribuicaoDfe::firstOrNew([
+            $dfe = NotaFiscalTerceiroDistribuicaoDfe::firstOrNew([
                 'nsu' => $numnsu,
                 'nfechave' => $chave
             ]);
@@ -94,7 +94,7 @@ class NFeTerceiroRepository extends MgRepository
 
     public static function armazenaDadosEvento ($filial) {
 
-        $qry = NFeTerceiroDistribuicaoDfe::select('*')->where('schema', 'resEvento_v1.01.xsd')->orderBy('nsu', 'DESC')->get();
+        $qry = NotaFiscalTerceiroDistribuicaoDfe::select('*')->where('schema', 'resEvento_v1.01.xsd')->orderBy('nsu', 'DESC')->get();
         $qry = end($qry);
 
         foreach ($qry as $key => $file) {
@@ -106,10 +106,10 @@ class NFeTerceiroRepository extends MgRepository
                 $st = new Standardize();
                 $xml = $st->toStd($xmlData);
 
-                $coddistribuicaodfe = NFeTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
+                $coddistribuicaodfe = NotaFiscalTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
                 ->where( 'nsu', $file->nsu )->get();
 
-                $resEvento = NFeTerceiroEvento::firstOrNew([
+                $resEvento = NotaFiscaleTerceiroEvento::firstOrNew([
                     'coddistribuicaodfe' => $coddistribuicaodfe[0]->coddistribuicaodfe
                 ]);
                 $resEvento->coddistribuicaodfe = $coddistribuicaodfe[0]->coddistribuicaodfe;
@@ -145,8 +145,8 @@ class NFeTerceiroRepository extends MgRepository
     public static function armazenaDadosConsulta ($res, Filial $filial) {
         // $filial = Filial::findOrFail($filial);
 
-        // $qry = NFeTerceiroDistribuicaoDfe::where('nsu', '000000000023538')->get();
-        $qry = NFeTerceiroDistribuicaoDfe::select('*')->get();
+        // $qry = NotaFiscalTerceiroDistribuicaoDfe::where('nsu', '000000000023538')->get();
+        $qry = NotaFiscalTerceiroDistribuicaoDfe::select('*')->get();
         $qry = end($qry);
 
         foreach ($qry as $key => $file) {
@@ -334,7 +334,7 @@ class NFeTerceiroRepository extends MgRepository
 
     // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
     public static function ultimaNSU ($filial) {
-        $ultimoNsu = NFeTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
+        $ultimoNsu = NotaFiscalTerceiroDistribuicaoDfe::select('nsu')->where('codfilial', $filial->codfilial)->get();
         $ultimoNsu = end($ultimoNsu);
         $ultimoNsu = end($ultimoNsu);
         return $ultimoNsu;
@@ -342,10 +342,10 @@ class NFeTerceiroRepository extends MgRepository
 
     public static function listaItem ($codnotafiscalterceiro) {
         // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
-        $codGrupo = NFeTerceiroGrupo::where('codnotafiscalterceiro', $codnotafiscalterceiro)->first();
+        $codGrupo = NotaFiscalTerceiroGrupo::where('codnotafiscalterceiro', $codnotafiscalterceiro)->first();
 
         // BUSCA NA tblnotafiscalterceiroitem TODOS OS ITENS VINCULADOS A NOTA
-        $itens = NFeTerceiroItem::where('codnotafiscalterceirogrupo', $codGrupo->codnotafiscalterceirogrupo)->orderBy('numero', 'ASC')->get();
+        $itens = NotaFiscalTerceiroItem::where('codnotafiscalterceirogrupo', $codGrupo->codnotafiscalterceirogrupo)->orderBy('numero', 'ASC')->get();
 
         // dd($itens);
         return $itens;

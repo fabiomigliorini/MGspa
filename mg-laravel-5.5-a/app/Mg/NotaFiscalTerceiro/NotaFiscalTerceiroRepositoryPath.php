@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 
 use Mg\NFeTerceiro\NotaFiscalTerceiroDistribuicaoDfe;
 use Mg\Filial\Filial;

@@ -1,10 +1,10 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
 
-class NFeTerceiroEvento extends MGModel
+class NotaFiscaleTerceiroEvento extends MGModel
 {
     protected $table = 'tblnotafiscalterceiroevento';
     protected $primaryKey = 'codnotafiscalterceiroevento';
@@ -31,7 +31,7 @@ class NFeTerceiroEvento extends MGModel
     // Chaves Estrangeiras
     public function NFeTerceiroDistribuicaoDfe()
     {
-        return $this->belongsTo(NFeTerceiroDistribuicaoDfe::class, 'coddistribuicaodfe', 'nsu');
+        return $this->belongsTo(NotaFiscalTerceiroDistribuicaoDfe::class, 'coddistribuicaodfe', 'nsu');
     }
 
 

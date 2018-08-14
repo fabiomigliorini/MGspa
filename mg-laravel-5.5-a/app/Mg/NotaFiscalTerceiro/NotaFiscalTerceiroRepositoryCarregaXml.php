@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\NFeTerceiro;
+namespace Mg\NotaFiscalTerceiro;
 use Mg\MgRepository;
 
 use Mg\Filial\Filial;
@@ -20,7 +20,7 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
       $codpessoa = Pessoa::where([['ie', $res->NFe->infNFe->emit->IE],['cnpj', $res->NFe->infNFe->emit->CNPJ]])->first();
 
       // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
-      $coddistribuicaodfe = NFeTerceiroDistribuicaoDfe::
+      $coddistribuicaodfe = NotaFiscalTerceiroDistribuicaoDfe::
       where([['nfechave', $res->protNFe->infProt->chNFe],['schema', 'like', 'procNFe' . '%']])
       ->orWhere([['nfechave', $res->protNFe->infProt->chNFe],['schema', 'like', 'resNFe' . '%']])->first();
 
@@ -101,7 +101,7 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
 
 
       // SALVA NA tblnotafiscalterceiro OS DADOS DA NOTA
-      $NFeTerceiro = NFeTerceiro::firstOrNew([
+      $NFeTerceiro = NotaFiscalTerceiro::firstOrNew([
       'nfechave' => $res->protNFe->infProt->chNFe,
       'numero' => $res->NFe->infNFe->ide->nNF
       ]);
@@ -142,17 +142,17 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
       $NFeTerceiro->save(); // FIM DO CRIA NOTA FISCAL TERCEIRO
 
       // BUSCA NA tblnotafiscalterceiro o codnotafiscalterceiro
-      $codnotafiscalterceiro = NFeTerceiro::where('coddistribuicaodfe', $coddistribuicaodfe->coddistribuicaodfe)->first();
+      $codnotafiscalterceiro = NotaFiscalTerceiro::where('coddistribuicaodfe', $coddistribuicaodfe->coddistribuicaodfe)->first();
 
       //SALVA NA TABELA GRUPO
-      $grupo = NFeTerceiroGrupo::firstOrNew([
+      $grupo = NotaFiscalTerceiroGrupo::firstOrNew([
       'codnotafiscalterceiro' => $codnotafiscalterceiro->codnotafiscalterceiro
       ]);
       $grupo->codnotafiscalterceiro = $codnotafiscalterceiro->codnotafiscalterceiro;
       $grupo->save();
 
       // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
-      $codGrupo = NFeTerceiroGrupo::where('codnotafiscalterceiro', $codnotafiscalterceiro->codnotafiscalterceiro)->first();
+      $codGrupo = NotaFiscalTerceiroGrupo::where('codnotafiscalterceiro', $codnotafiscalterceiro->codnotafiscalterceiro)->first();
 
       // ARMAZENA OS DADOS DOS ITENS DA NOTA
       // $loop = 0;
@@ -161,7 +161,7 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
           // echo "<script>console.log( 'Debug Objects:".$loop." " . $res->protNFe->infProt->chNFe . "' );</script>";
           // echo "<script>console.log( 'Debug Objects:".$loop." " . $res->NFe->infNFe->det[1] . "' );</script>";
 
-          $NFeItem = NFeTerceiroItem::firstOrNew([
+          $NFeItem = NotaFiscalTerceiroItem::firstOrNew([
           'referencia' => $item->prod->cProd??$res->NFe->infNFe->det->prod->cProd,
           'codnotafiscalterceirogrupo' => $codGrupo->codnotafiscalterceirogrupo
           ]);
@@ -260,7 +260,7 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
           $NFeItem->save();
 
           // SALVA OS DADOS NA tblnotafiscalterceiroprodutobarra
-          $produtobarra = NFeTerceiroProdutoBarra::firstOrNew([
+          $produtobarra = NotaFiscalTerceiroProdutoBarra::firstOrNew([
           'codnotafiscalterceirogrupo' => $codGrupo->codnotafiscalterceirogrupo
           ]);
           $produtobarra->codnotafiscalterceirogrupo = $codGrupo->codnotafiscalterceirogrupo;;
@@ -278,7 +278,7 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
 
           if(isset($res->NFe->infNFe->cobr->dup) && count($res->NFe->infNFe->cobr->dup) > 1){
               foreach ($res->NFe->infNFe->cobr->dup as $key => $duplicata) {
-                  $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
+                  $NFeDuplicata = NotaFiscalTerceiroDuplicata::firstOrNew([
                       'codnotafiscalterceiro' => $codnotafiscalterceiro->codnotafiscalterceiro,
                       'duplicata' => $duplicata->nDup??1
                   ]);
@@ -295,7 +295,7 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
           }
           else{
               if(isset($res->NFe->infNFe->cobr->dup)){
-                  $NFeDuplicata = NFeTerceiroDuplicata::firstOrNew([
+                  $NFeDuplicata = NotaFiscalTerceiroDuplicata::firstOrNew([
                       'codnotafiscalterceiro' => $codnotafiscalterceiro->codnotafiscalterceiro,
                       'duplicata' => $res->NFe->infNFe->cobr->dup->nDup??1
                   ]);
