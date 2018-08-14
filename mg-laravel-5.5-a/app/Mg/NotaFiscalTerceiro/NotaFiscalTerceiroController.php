@@ -74,18 +74,18 @@ class NotaFiscalTerceiroController extends MgController
         return response()->json($res, 200);
     }
 
-    public function armazenaDadosEvento(Request $request)
-    {
-        $filial = Filial::findOrFail($request->filial);
-        $res = NotaFiscalTerceiroRepository::armazenaDadosEvento($filial);
-        return response()->json($res, 200);
-    }
+    // public function armazenaDadosEvento(Request $request)
+    // {
+    //     $filial = Filial::findOrFail($request->filial);
+    //     $res = NotaFiscalTerceiroRepositoryRegPassagem::armazenaDadosEvento($filial);
+    //     return response()->json($res, 200);
+    // }
 
-    public function carregarXml(Request $request, $filial, $chave)
-    {
-        $filial = Filial::findOrFail($filial);
-        $res = NotaFiscalTerceiroRepository::carregarXml($filial, $chave);
-        return response()->json($res, 200);
-    }
+    // public function carregarXml(Request $request, $filial, $chave)
+    // {
+    //     $filial = Filial::findOrFail($filial);
+    //     $res = NotaFiscalTerceiroRepository::carregarXml($filial, $chave);
+    //     return response()->json($res, 200);
+    // }
 
 }

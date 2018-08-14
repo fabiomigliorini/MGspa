@@ -373,12 +373,10 @@ export default {
     // scroll infinito - carregar mais registros
     loadMore (index, done) {
       this.page++
-      console.log('passou por aqui')
       this.buscaListagem(true, done)
     },
 
     buscaListagem: function(concat, done) {
-      console.log(this.page + ' pagina')
 
       // inicializa variaveis
       let vm = this
@@ -401,18 +399,13 @@ export default {
         natop: vm.filter.filtroNatOp
       }
 
-      vm.$axios.get('nfe-terceiro/lista-dfe',{params}).then(function(request) {
+      vm.$axios.get('nfe-terceiro/lista-notas',{params}).then(function(request) {
         // Se for para concatenar, senao inicializa
         if (vm.page == 1) {
           vm.xml = request.data
         }
         else {
-          console.log('entrou no else')
-          console.log(request.data.data)
           vm.xml.data = vm.xml.data.concat(request.data.data)
-
-          console.log('depois de concatenar')
-          console.log(vm.xml.data)
         }
         vm.carregado = true
 
@@ -428,8 +421,6 @@ export default {
 
         // Executa done do scroll infinito
         if (done) {
-          console.log('entrou no done')
-          console.log(done)
           done()
         }
 
@@ -450,8 +441,7 @@ export default {
       }
       if(this.filial !== null){
         vm.$axios.get('nfe-terceiro/ultima-nsu',{params}).then(function(request){
-          vm.nsu = request.data.nsu
-          console.log(vm.nsu)
+          vm.nsu = request.data
         }).catch(function(error) {
           console.log(error)
         })

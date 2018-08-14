@@ -103,7 +103,8 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
       // SALVA NA tblnotafiscalterceiro OS DADOS DA NOTA
       $NFeTerceiro = NotaFiscalTerceiro::firstOrNew([
       'nfechave' => $res->protNFe->infProt->chNFe,
-      'numero' => $res->NFe->infNFe->ide->nNF
+      'ie' => $res->NFe->infNFe->emit->IE,
+      'cnpj' => $res->NFe->infNFe->emit->CNPJ
       ]);
       $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe->coddistribuicaodfe;
       $NFeTerceiro->codnotafiscal = $codnotafiscal[0]->codnotafiscal??null;

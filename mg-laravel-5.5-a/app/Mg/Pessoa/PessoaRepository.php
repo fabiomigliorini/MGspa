@@ -152,5 +152,32 @@ class PessoaRepository extends MgRepository
         return $model;
     }
 
+    public static function novoFornecedor($request){
+
+        $pessoa = Pessoa::firstOrNew([
+          'cnpj' => $res->NFe->infNFe->emit->CNPJ,
+          'ie' => $res->NFe->infNFe->emit->IE
+        ]);
+        $pessoa->pessoa = $res->NFe->infNFe->emit->xNome;
+        $pessoa->fantasia = $res->NFe->infNFe->emit->xFant;
+        $pessoa->cliente = false;
+        $pessoa->fornecedor = true;
+        $pessoa->fisica = false;
+        $pessoa->cnpj = $res->NFe->infNFe->emit->CNPJ;
+        $pessoa->ie = $res->NFe->infNFe->emit->IE;
+        $pessoa->endereco = $res->NFe->infNFe->emit->enderEmit->xLgr;
+        $pessoa->numero = $res->NFe->infNFe->emit->enderEmit->nro;
+        $pessoa->complemento = $res->NFe->infNFe->emit->enderEmit->xCpl??null;
+        $pessoa->codcidade = $res->NFe->infNFe->emit->enderEmit->cMun;
+        $pessoa->bairro = $res->NFe->infNFe->emit->enderEmit->xBairro;
+        $pessoa->cep = $res->NFe->infNFe->emit->enderEmit->CEP1;
+        $pessoa->telefone1 = $res->NFe->infNFe->emit->enderEmit->fone;
+        $pessoa->telefone2 = null;
+        $pessoa->email = null;
+        dd($pessoa);
+        // $pessoa->save();
+
+    }
+
 
 }

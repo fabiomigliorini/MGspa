@@ -44,7 +44,6 @@ class NotaFiscalTerceiro extends MGModel
         'download',
         'protocolo',
         'tipo', // tpNF
-        'recebimento',
         'digito',
         'codusuariocriacao',
         'codusuarioalteracao'
