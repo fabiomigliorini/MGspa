@@ -5,10 +5,12 @@ namespace Mg\NFePHP;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Filial\Filial;
 
+use NFePHP\NFe\Common\Standardize;
+
 class NFePHPRepositoryConsultaCad
 {
 
-    public static function consultaCadastro($uf, $cnpj, $iest, $cpf){
+    public static function consultaCadastro($uf, $cnpj, $iest, $cpf, $filial){
 
         try {
 
@@ -29,13 +31,12 @@ class NFePHPRepositoryConsultaCad
 
           //nesse caso $std irá conter uma representação em stdClass do XML
           $std = $stdCl->toStd();
-          dd($std);
 
           return $std;
         } catch (\Exception $e) {
             //dd($tools);
-          // dd($e);
-          return $e->getMessage();
+          dd($e);
+          // return $e->getMessage();
         }
 
     }

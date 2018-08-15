@@ -117,9 +117,13 @@
                     <q-tooltip>
                       Detalhes da nota
                     </q-tooltip>
-                    <q-chip square dense v-if="nota.csitnfe == 1" color="green">Autorizada</q-chip>
-                    <q-chip square dense v-if="nota.csitnfe == 3" color="red">Cancelada</q-chip>
-                    <q-chip square dense v-if="nota.csitnfe == 2" color="red">Denegada</q-chip>
+                    <q-chip square dense v-if="nota.indsituacao == 3
+                      || nota.indsituacao == 101 || nota.indsituacao == 151"color="red">
+                      Cancelada
+                    </q-chip>
+                    <q-chip square dense v-if="nota.indsituacao == 2 || nota.indsituacao == 110" color="red">
+                      Denegada
+                    </q-chip>
                   </div>
 
                   <div class="col-sm-6 col-md-6 col-lg-4">

@@ -24,7 +24,9 @@
               <q-icon name="attach_money" size="25px"/>
               Total da nota:
             </q-item-side>
-            <q-item-main align="end">R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}</q-item-main>
+            <q-item-main align="end">
+              R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}
+            </q-item-main>
           </q-item>
 
           <q-item dense>
@@ -113,7 +115,10 @@
                       <q-item-main>
 
                         <q-item-tile>
-                          {{nf.emitente}} <small class="text-faded">{{nf.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} / {{nf.ie}}</small>
+                          {{nf.emitente}}
+                          <small class="text-faded">
+                            {{nf.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} / {{nf.ie}}
+                          </small>
                         </q-item-tile>
 
                         <q-item-tile sublabel style="overflow: hidden" class="text-no-wrap">
@@ -150,32 +155,44 @@
 
                             <q-item>
                               <q-item-side>Produtos:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valorprodutos)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.valorprodutos)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Frete:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valorfrete)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.valorfrete)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Seguro:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valorseguro)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.valorseguro)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Desconto:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valordesconto)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.valordesconto)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Outros:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valoroutras)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.valoroutras)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -191,12 +208,16 @@
 
                             <q-item>
                               <q-item-side>Base:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsbase)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.icmsbase)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsvalor)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.icmsvalor)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -214,12 +235,16 @@
 
                             <q-item>
                               <q-item-side>Base:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsstbase)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.icmsstbase)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.icmsstvalor)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.icmsstvalor)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -237,7 +262,9 @@
 
                             <q-item>
                               <q-item-side>Total:</q-item-side>
-                              <q-item-main align="end">R$ {{numeral(parseFloat(nf.ipivalor)).format('0,0.00')}}</q-item-main>
+                              <q-item-main align="end">
+                                R$ {{numeral(parseFloat(nf.ipivalor)).format('0,0.00')}}
+                              </q-item-main>
                             </q-item>
 
                           </q-card-main>
@@ -283,9 +310,13 @@
                           <q-item-side icon="vpn_key"/>
                           <q-item-main>
                             {{dfe.nfechave}}
-                            <q-chip square dense v-if="dfe.csitnfe == 1" color="green">Autorizada</q-chip>
-                            <q-chip square dense v-if="dfe.csitnfe == 3" color="red">Cancelada</q-chip>
-                            <q-chip square dense v-if="dfe.csitnfe == 2" color="red">Denegada</q-chip>
+                            <q-chip square dense v-if="dfe.indsituacao == 3
+                              || dfe.indsituacao == 101 || dfe.indsituacao == 151" color="red">
+                              Cancelada
+                            </q-chip>
+                            <q-chip square dense v-if="dfe.indsituacao == 2 || dfe.indsituacao == 110" color="red">
+                              Denegada
+                            </q-chip>
                           </q-item-main>
                         </q-item>
                       </div>
@@ -342,7 +373,11 @@
 
                     <div class="row items-center">
                       <div class="col-1">
-                        <q-btn color="primary" @click.native="modalManifestacao = true, chaveManifestacao = dfe.nfechave, filialManifestacao = dfe.codfilial" round dense>
+                        <q-btn color="primary" @click.native="modalManifestacao = true,
+                          chaveManifestacao = dfe.nfechave,
+                          filialManifestacao = dfe.codfilial,
+                          codNotaManifestacao = dfe.codnotafiscalterceiro"
+                         round dense>
                           <q-icon name="arrow_drop_down_circle" size="25px"/>
                         </q-btn>
                         <q-tooltip anchor="top left" self="bottom middle">
@@ -351,7 +386,8 @@
                       </div>
 
                       <div class="col-1">
-                        <q-btn dense @click="downloadNFe(dfe.codfilial, dfe.nfechave)" round color="primary" icon="cloud_download"/>
+                        <q-btn dense @click="downloadNFe(dfe.codfilial, dfe.nfechave)"
+                        round color="primary" icon="cloud_download"/>
                         <q-tooltip anchor="top left" self="bottom middle">
                           Baixar XML
                         </q-tooltip>
@@ -410,7 +446,8 @@
                   <q-item v-if="codmanifestacao == 210240 || codmanifestacao == 210220">
                     <q-item-main>
                       <q-field :count="15">
-                        <q-input clearable min-length="15" type="textarea" inverted-light color="warning" v-model="justificativa" float-label="Justificativa"/>
+                        <q-input clearable min-length="15" type="textarea" inverted-light color="warning"
+                        v-model="justificativa" float-label="Justificativa"/>
                       </q-field>
                     </q-item-main>
                   </q-item>
@@ -451,7 +488,9 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>Quantidade:</q-item-side>
-                          <q-item-main align="end">{{ parseFloat(produtoSelecionado.quantidade) }} - {{produtoSelecionado.unidademedida}}</q-item-main>
+                          <q-item-main align="end">
+                            {{ parseFloat(produtoSelecionado.quantidade) }} - {{produtoSelecionado.unidademedida}}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
@@ -466,7 +505,9 @@
 
                         <q-item class="q-body-1" v-if="produtoSelecionado.barrastributavel">
                           <q-item-side>CEAN Trib:</q-item-side>
-                          <q-item-main align="end"></q-item-main>{{ produtoSelecionado.barrastributavel }}</q-item-main>
+                          <q-item-main align="end">
+                            {{ produtoSelecionado.barrastributavel }}
+                          </q-item-main>
                         </q-item>
 
                       </q-list>
@@ -487,32 +528,44 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>Valor unidade:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.valorunitario)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.valorunitario)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>Total produto:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.valorproduto)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.valorproduto)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>Frete:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.valorfrete)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.valorfrete)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>Seguro:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.valorseguro)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.valorseguro)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>Desconto:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.valordesconto)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.valordesconto)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>Outras:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.valoroutras)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.valoroutras)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
@@ -537,7 +590,9 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>Total:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.valortotal)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.valortotal)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                       </q-list>
@@ -563,22 +618,30 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS CST:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmscst)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.icmscst)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS Base:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmsbase)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.icmsbase)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS%:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmspercentual)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.icmspercentual)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS Valor:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmsvalor)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.icmsvalor)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
@@ -588,17 +651,23 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS ST Base:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmsstbase)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.icmsstbase)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS ST%:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmsstpercentual)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.icmsstpercentual)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>ICMS ST Valor:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.icmsstvalor)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.icmsstvalor)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                       </q-list>
@@ -624,17 +693,23 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>IPI Base:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.ipibase)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.ipibase)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>IPI%:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.ipipercentual)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.ipipercentual)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>IPI Valor :</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.ipivalor)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.ipivalor)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
@@ -644,17 +719,23 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>PIS Base:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.pisbase)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.pisbase)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>PIS%:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.pispercentual)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.pispercentual)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>PIS Valor:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.pisvalor)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.pisvalor)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
@@ -664,17 +745,23 @@
 
                         <q-item class="q-body-1">
                           <q-item-side>COFINS Base:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.cofinsbase)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.cofinsbase)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>COFINS%:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.cofinspercentual)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.cofinspercentual)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                         <q-item class="q-body-1">
                           <q-item-side>COFINS Valor:</q-item-side>
-                          <q-item-main align="end">R$ {{ numeral(parseFloat(produtoSelecionado.cofinsvalor)).format('0,0.00') }}</q-item-main>
+                          <q-item-main align="end">
+                            R$ {{ numeral(parseFloat(produtoSelecionado.cofinsvalor)).format('0,0.00') }}
+                          </q-item-main>
                         </q-item>
 
                       </q-list>
@@ -868,6 +955,7 @@ export default {
       justificativa: null,
       codmanifestacao: null,
       chaveManifestacao: null,
+      codNotaManifestacao: null,
       filialManifestacao: null,
     }
   },
@@ -918,7 +1006,8 @@ export default {
         justificativa: vm.justificativa,
         manifestacao: vm.codmanifestacao,
         nfechave: vm.chaveManifestacao,
-        filial: vm.filialManifestacao
+        filial: vm.filialManifestacao,
+        codnotafiscalterceiro: vm.codNotaManifestacao
       }
       vm.$axios.get('nfe-terceiro/manifestacao',{params}).then(function(request){
         if (request.data !== true) {

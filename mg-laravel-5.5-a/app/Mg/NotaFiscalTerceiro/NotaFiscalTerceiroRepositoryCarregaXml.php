@@ -16,8 +16,10 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
 
     public static function armazenaDadosNFe (Filial $filial, $res){
 
-      // BUSCA NA BASE DE DADOS O codpessoa
+      // // BUSCA NA BASE DE DADOS O codpessoa
       $codpessoa = Pessoa::where([['ie', $res->NFe->infNFe->emit->IE],['cnpj', $res->NFe->infNFe->emit->CNPJ]])->first();
+
+      // $codpessoa = NotaFiscalTerceiroRepository::novaPessoa($res->NFe->infNFe->emit->CNPJ, $res->NFe->infNFe->emit->IE, $filial);
 
       // BUSCA NA BASE DE DADOS O coddistribuicaodfe DA DFE CONSULTADA
       $coddistribuicaodfe = NotaFiscalTerceiroDistribuicaoDfe::
@@ -103,8 +105,7 @@ class NotaFiscalTerceiroRepositoryCarregaXml extends MgRepository
       // SALVA NA tblnotafiscalterceiro OS DADOS DA NOTA
       $NFeTerceiro = NotaFiscalTerceiro::firstOrNew([
       'nfechave' => $res->protNFe->infProt->chNFe,
-      'ie' => $res->NFe->infNFe->emit->IE,
-      'cnpj' => $res->NFe->infNFe->emit->CNPJ
+      'numero' => $res->NFe->infNFe->ide->nNF
       ]);
       $NFeTerceiro->coddistribuicaodfe = $coddistribuicaodfe->coddistribuicaodfe;
       $NFeTerceiro->codnotafiscal = $codnotafiscal[0]->codnotafiscal??null;
