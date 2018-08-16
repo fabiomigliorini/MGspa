@@ -778,71 +778,76 @@
         <br />
       </q-tabs>
 
+      <!-- Modal dividir Item -->
       <template>
         <q-modal v-model="modalDividirProduto" maximized>
           <q-page padding>
 
-            <q-list v-if="produtoSelecionado" no-border>
-              <q-list-header>{{produtoSelecionado.produto}}</q-list-header>
-              <q-item>
-                <q-item-main>
+            <div v-if="produtoSelecionado">
+              <q-card>
+                <q-card-title>{{produtoSelecionado.produto}}</q-card-title>
+                <q-card-separator/>
+                <q-card-main>
+                  <div class="row gutter-xs">
 
-                  <div class="row">
-                    <div class="col-xs-12">
-                      <div class="row">
-                        Quantidade
-                      </div>
-                      <div class="row">
-                        {{parseFloat(produtoSelecionado.quantidade)}} {{produtoSelecionado.unidademedida}}
-                      </div>
+                    <div>
+                      <q-card>
+                        <q-card-title>Quantidade</q-card-title>
+                        <q-card-separator/>
+                        <q-card-main align="center">
+                          {{parseFloat(produtoSelecionado.quantidade)}} {{produtoSelecionado.unidademedida}}
+                        </q-card-main>
+                      </q-card>
                     </div>
-                    <div class="col-xs-12">
-                      <div class="row">
-                        valor unitário
-                      </div>
-                      <div class="row">
-                        {{produtoSelecionado.valorunitario}}
-                      </div>
+
+                    <div>
+                      <q-card>
+                        <q-card-title>Unitário</q-card-title>
+                        <q-card-separator/>
+                        <q-card-main align="center">
+                          {{numeral(parseFloat(produtoSelecionado.valorunitario)).format('0,0.00')}}
+                        </q-card-main>
+                      </q-card>
                     </div>
-                    <div class="col-xs-12">
-                      <div class="row">
-                        Total do produto
-                      </div>
-                      <div class="row">
-                        {{produtoSelecionado.valorproduto}}
-                      </div>
+
+                    <div>
+                      <q-card>
+                        <q-card-title>Total</q-card-title>
+                        <q-card-separator/>
+                        <q-card-main align="center">
+                          {{numeral(parseFloat(produtoSelecionado.valorproduto)).format('0,0.00')}}
+                        </q-card-main>
+                      </q-card>
                     </div>
+
                   </div>
-                </q-item-main>
+                </q-card-main>
+                <q-card-separator/>
+                <q-card-actions align="end">
 
-                <q-item-side class="gutter-y-xs">
-                  <q-item-tile>
-                    <q-btn-dropdown label="Dividir Item" color="primary">
-                      <q-list link highlight>
+                  <q-btn-dropdown label="Dividir Item" color="primary">
+                    <q-list link highlight>
 
-                        <q-item>
-                          <q-item-main>
-                            <q-radio v-model="tipoDivisao" val="1" label="Quantidade" />
-                          </q-item-main>
-                        </q-item>
+                      <q-item>
+                        <q-item-main>
+                          <q-radio v-model="tipoDivisao" val="1" label="Quantidade" />
+                        </q-item-main>
+                      </q-item>
 
-                        <q-item>
-                          <q-item-main>
-                            <q-radio v-model="tipoDivisao" val="2" label="Valor" />
-                          </q-item-main>
-                        </q-item>
+                      <q-item>
+                        <q-item-main>
+                          <q-radio v-model="tipoDivisao" val="2" label="Valor" />
+                        </q-item-main>
+                      </q-item>
 
-                      </q-list>
-                    </q-btn-dropdown>
-                  </q-item-tile>
+                    </q-list>
+                  </q-btn-dropdown>
 
-                  <q-item-tile>
-                    <q-btn label="Agrupar item" color="primary"/>
-                  </q-item-tile>
+                  <q-btn label="Agrupar item" color="primary"/>
 
-                </q-item-side>
-              </q-item>
-            </q-list>
+                </q-card-actions>
+              </q-card>
+            </div>
 
             <template>
               <q-list v-for="item in quantidadeDivisao" :key="item" no-border>
@@ -854,7 +859,7 @@
                         <q-card>
                           <q-card-main>
                             <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2">
-                              <q-input v-model="itemDividido.prod[item]" float-label="Nome" clearable/>
+                              <q-input v-model="itemDividido.item[item][item]" float-label="Nome" clearable/>
                               <q-input v-model="itemDividido.val[item]" float-label="valor" clearable/>
                             </div>
                           </q-card-main>
@@ -876,6 +881,7 @@
           </q-page>
         </q-modal>
       </template>
+      <!-- fim modal dividir item -->
 
       <template>
         <q-modal v-model="modalTipoDivisao">
@@ -935,7 +941,10 @@ export default {
       },
       data: {},
       itemDividido: {
-        prod:{},
+        item:{
+          prod: null,
+          val: null,
+        },
         val:{}
       },
       url: '192.168.1.185/upload.php',

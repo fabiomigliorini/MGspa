@@ -5,19 +5,12 @@ use Mg\MgRepository;
 
 use Mg\Filial\Filial;
 use Mg\Pessoa\Pessoa;
-use Mg\NotaFiscal\NotaFiscal;
-use Mg\Estoque\EstoqueLocal;
 
-use Mg\NFePHP\NFePHPRepositoryConfig;
-use Mg\NFePHP\NFePHPRepositoryConsultaCad;
 use Mg\NFePHP\NFePHPRepositoryConsultaSefaz;
 use Mg\NFePHP\NFePHPRepositoryDownload;
 use Mg\NFePHP\NFePHPRepositoryManifestacao;
 
-use NFePHP\NFe\Tools;
-use NFePHP\Common\Certificate;
 use NFePHP\NFe\Common\Standardize;
-use NFePHP\NFe\Common\Complements;
 
 use Carbon\Carbon;
 use DB;
@@ -76,13 +69,22 @@ class NotaFiscalTerceiroRepository extends MgRepository
             $dfe->schema = $schema;
             $dfe->save();
 
+            // BUSCA O coddistribuicaodfe  DA ULTIMA DFE ARMAZENADA
+            $distribuicaodfe = NotaFiscalTerceiroDistribuicaoDfe::where([['nsu',$numnsu],['nfechave',$chave]])->first();
+
             // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
             $pathNFeTerceiro = NotaFiscalTerceiroRepositoryPath::pathDFe($filial, $numnsu, true);
             file_put_contents($pathNFeTerceiro, $content);
 
-            // SALVA NA BASE OS DADOS DO XML TODO ajustar essa classe
-            if($schema == "resNFe_v1.01.xsd"){
-                static::armazenaResNFe($filial, $res);
+            // ARMAZENA PARCIALMENTE OS DADOS DA NOTA
+            if($schema == 'resNFe_v1.01.xsd'){
+                // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
+                static::armazenaResNFe($filial, $res, $distribuicaodfe->coddistribuicaodfe);
+            }
+            // SE HOUVER  A NOTA COMPLETA JA ARMAZENA OS DADOS
+            if($schema == 'procNFe_v4.00.xsd' || $schema == 'procNFe_v3.10.xsd'){
+                // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
+                NotaFiscalTerceiroRepositoryCarregaXml::armazenaDadosNFe($filial, $xml);
             }
 
         }
@@ -93,7 +95,7 @@ class NotaFiscalTerceiroRepository extends MgRepository
 
 
         public static function armazenaResNFe($filial, $xml, $coddistribuicaodfe){
-            
+
             $pessoa = Pessoa::where([['ie', $xml->IE],['cnpj', $xml->CNPJ]])->first();
 
             $NFe = NotaFiscalTerceiro::firstOrNew([
@@ -122,11 +124,13 @@ class NotaFiscalTerceiroRepository extends MgRepository
     // public static function armazenaDadosConsulta ($filial, $res) {
         // $filial = Filial::findOrFail($filial);
 
-        $qry = NotaFiscalTerceiroDistribuicaoDfe::where('nsu', '000000000020854')->get();
-        // $qry = NotaFiscalTerceiroDistribuicaoDfe::where('codfilial', $filial->codfilial)->get();
+        // 000000000023238
+        // $qry = NotaFiscalTerceiroDistribuicaoDfe::where('nsu', '000000000023238')->get();
+        $qry = NotaFiscalTerceiroDistribuicaoDfe::where('codfilial', $filial->codfilial)->get();
         $qry = end($qry);
-        foreach ($qry as $key => $file) {
 
+        $loop = 1;
+        foreach ($qry as $key => $file) {
             $path = NotaFiscalTerceiroRepositoryPath::pathDFe($filial, $file->nsu);
 
             if(file_exists($path)){
@@ -139,41 +143,20 @@ class NotaFiscalTerceiroRepository extends MgRepository
                     // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
                     static::armazenaResNFe($filial, $xml, $file->coddistribuicaodfe);
                 }
+
                 // SE HOUVER  A NOTA COMPLETA JA ARMAZENA OS DADOS
-                if($file->schema == 'procNFe_v4.00.xsd'){
-                    // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
-                    NotaFiscalTerceiroRepositoryCarregaXml::armazenaDadosNFe($filial, $xml);
-                }
-                if($file->schema == 'procNFe_v3.10.xsd'){
-                    // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
+                if($file->schema == 'procNFe_v3.10.xsd' || $file->schema == 'procNFe_v4.00.xsd'){
+                    echo "<script>console.log( 'Debug:".$loop."====" . $file->nfechave . "' );</script>";
                     NotaFiscalTerceiroRepositoryCarregaXml::armazenaDadosNFe($filial, $xml);
                 }
 
+                $loop++;
             }
         }
 
         return true;
 
     } // FIM DO armazenaDadosConsulta
-
-    // SE O FRONECEDOR NAO TIVER CADASTRO CRIA UM
-    public static function novaPessoa($cnpj, $iest, $filial){
-      // BUSCA NA BASE DE DADOS O codpessoa
-     // return $pessoa = Pessoa::where([['ie', $xml->IE],['cnpj', $xml->CNPJ]])->first();
-     $pessoa = Pessoa::where([['ie', $iest],['cnpj', $cnpj]])->first();
-
-      if($pessoa == null){
-
-          $cpf = null;
-          $uf = null;
-          // $uf = substr($xml->chNFe, 0,2);
-
-          $novaPessoa = NFePHPRepositoryConsultaCad::consultaCadastro('PR', $cnpj, $iest, $cpf, $filial);
-
-          dd ($novaPessoa);
-      }
-
-    }// FIM DO novaPessoa
 
     // TRAZ DA BASE TODAS AS DFEs
     public static function listaNotas ($request) {
@@ -199,7 +182,7 @@ class NotaFiscalTerceiroRepository extends MgRepository
             case 2:
                 $filtroSituacao[0] = 2; // resNFe denegada
                 $filtroSituacao[1] = 110; // procNFe denegada
-                $filtroSituacao[2] = null; // duplicado para o array conter 3 posicoes e nao dar erro
+                $filtroSituacao[2] = null; // adicionado para o array conter 3 posicoes e nao dar erro
                 break;
 
             case 3:
@@ -227,10 +210,10 @@ class NotaFiscalTerceiroRepository extends MgRepository
             $query->whereIn('indsituacao', [$filtroSituacao[0],$filtroSituacao[1],$filtroSituacao[2]]);
         })
         ->when($datainicial, function($query, $datainicial){
-            $query->where('emissao', '>=', $datainicial);
+            $query->whereDate('emissao', '>=', $datainicial);
         })
         ->when($datafinal, function($query, $datafinal){
-            $query->where('emissao', '<=', $datafinal);
+            $query->whereDate('emissao', '<=', $datafinal);
         })
         ->when($codpessoa, function($query, $codpessoa){
             $query->where('tblnotafiscalterceiro.codpessoa', $codpessoa );
