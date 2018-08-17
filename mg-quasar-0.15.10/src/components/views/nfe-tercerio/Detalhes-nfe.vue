@@ -790,35 +790,37 @@
                 <q-card-main>
                   <div class="row gutter-xs">
 
-                    <div>
-                      <q-card>
-                        <q-card-title>Quantidade</q-card-title>
-                        <q-card-separator/>
-                        <q-card-main align="center">
-                          {{parseFloat(produtoSelecionado.quantidade)}} {{produtoSelecionado.unidademedida}}
-                        </q-card-main>
-                      </q-card>
-                    </div>
+                    <q-list highlight>
 
-                    <div>
-                      <q-card>
-                        <q-card-title>Unitário</q-card-title>
-                        <q-card-separator/>
-                        <q-card-main align="center">
+                      <q-item class="q-body-1">
+                        <q-item-side>NCM:</q-item-side>
+                        <q-item-main align="end">
+                          {{ produtoSelecionado.ncm}}
+                        </q-item-main>
+                      </q-item>
+
+                      <q-item class="q-body-1">
+                        <q-item-side>Quantidade:</q-item-side>
+                        <q-item-main align="end">
+                          {{ parseFloat(produtoSelecionado.quantidade) }} - {{produtoSelecionado.unidademedida}}
+                        </q-item-main>
+                      </q-item>
+
+                      <q-item class="q-body-1" v-if="produtoSelecionado.barras">
+                        <q-item-side>Unitário:</q-item-side>
+                        <q-item-main align="end">
                           {{numeral(parseFloat(produtoSelecionado.valorunitario)).format('0,0.00')}}
-                        </q-card-main>
-                      </q-card>
-                    </div>
+                        </q-item-main>
+                      </q-item>
 
-                    <div>
-                      <q-card>
-                        <q-card-title>Total</q-card-title>
-                        <q-card-separator/>
-                        <q-card-main align="center">
+                      <q-item class="q-body-1" v-if="produtoSelecionado.barrastributavel">
+                        <q-item-side>Total:</q-item-side>
+                        <q-item-main align="end">
                           {{numeral(parseFloat(produtoSelecionado.valorproduto)).format('0,0.00')}}
-                        </q-card-main>
-                      </q-card>
-                    </div>
+                        </q-item-main>
+                      </q-item>
+
+                    </q-list>
 
                   </div>
                 </q-card-main>
@@ -850,26 +852,95 @@
             </div>
 
             <template>
-              <q-list v-for="item in quantidadeDivisao" :key="item" no-border>
-                <q-item >
-                  <q-item-main>
-                    <div class="row gutter-xs">
-                      <div class="col-12">
+              <div class="row gutter-xs q-py-sm">
 
-                        <q-card>
-                          <q-card-main>
-                            <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2">
-                              <q-input v-model="itemDividido.item[item][item]" float-label="Nome" clearable/>
-                              <q-input v-model="itemDividido.val[item]" float-label="valor" clearable/>
-                            </div>
-                          </q-card-main>
-                        </q-card>
+                  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                    <q-card>
+                      <q-card-title>Dividor por variação e valor</q-card-title>
+                      <q-card-main>
+                        <q-field icon="font_download">
+                          <q-input v-model="variacao.produto" float-label="Nome" clearable/>
+                        </q-field>
+                        <q-field icon="attach_money">
+                          <q-input type="number" v-model="variacao.valor" float-label="Valor" clearable/>
+                        </q-field>
+                        <q-field icon="view_column">
+                          <q-input v-model="variacao.barras" float-label="Barras" clearable/>
+                        </q-field>
+                        <q-field icon="widgets">
+                          <q-input v-model="variacao.quantidade" float-label="Quantidade" clearable/>
+                        </q-field>
+                      </q-card-main>
+                      <q-card-separator/>
+                      <q-card-actions align="end">
+                        <q-btn @click.native="dividirPorVariacao()" icon="add" color="primary" round dense/>
+                      </q-card-actions>
+                    </q-card>
+                  </div>
 
-                      </div>
-                    </div>
-                  </q-item-main>
-                </q-item>
-              </q-list>
+                  <div class="col-12" v-if="itemDividido">
+                    <q-list no-border v-for="item in itemDividido" :key="item.produto">
+                      <q-item>
+                        <q-item-main>
+                          <q-card>
+                            <q-card-title>{{item.produto}}</q-card-title>
+                            <q-card-separator/>
+                            <q-card-main>
+
+                              <div class="row">
+                                <q-list highlight>
+
+                                  <q-item class="q-body-1 gutter-y-none q-py-none">
+                                    <q-item-side>Barras:</q-item-side>
+                                    <q-item-main align="end">
+                                      {{item.barras}}
+                                    </q-item-main>
+                                  </q-item>
+
+                                  <q-item class="q-body-1">
+                                    <q-item-side>NCM:</q-item-side>
+                                    <q-item-main align="end">
+                                      {{ item.ncm}}
+                                    </q-item-main>
+                                  </q-item>
+
+                                  <q-item class="q-body-1">
+                                    <q-item-side>Quantidade:</q-item-side>
+                                    <q-item-main align="end">
+                                      {{item.quantidade}}
+                                    </q-item-main>
+                                  </q-item>
+
+                                  <q-item class="q-body-1">
+                                    <q-item-side>Unitário:</q-item-side>
+                                    <q-item-main align="end">
+                                      {{numeral(parseFloat(item.valor)).format('0,0.00')}}
+                                    </q-item-main>
+                                  </q-item>
+
+                                  <q-item class="q-body-1">
+                                    <q-item-side>Total:</q-item-side>
+                                    <q-item-main align="end">
+                                      {{item.quantidade * item.valor}}
+                                    </q-item-main>
+                                  </q-item>
+
+                                </q-list>
+                              </div>
+                            </q-card-main>
+                            <q-card-separator/>
+
+                            <q-card-actions align="end">
+                              <q-btn @click.native="removerVariacao(itemDividido.indexOf(item.produto))" icon="clear" color="red" round dense/>
+                            </q-card-actions>
+
+                          </q-card>
+                        </q-item-main>
+                      </q-item>
+                    </q-list>
+                  </div>
+
+              </div>
             </template>
 
             <q-page-sticky position="bottom-right" :offset="[25, 80]">
@@ -940,15 +1011,14 @@ export default {
         tabsModel: 'detalhes',
       },
       data: {},
-      itemDividido: {
-        item:{
-          prod: null,
-          val: null,
-        },
-        val:{}
+      variacao: {
+        produto: null,
+        valor: null,
+        barras: null,
+        quantidade: null,
       },
+      itemDividido:[],
       url: '192.168.1.185/upload.php',
-      prod: null,
       carregado: false,
       dfecarregada: false,
       itensCarregado: false,
@@ -986,7 +1056,25 @@ export default {
 
   },
   methods: {
+    dividirPorValor: function(){
+      let vm = this
 
+    },
+    dividirPorVariacao: function(){
+      let vm = this
+
+      vm.itemDividido.push({
+        produto:vm.variacao.produto,
+        valor:vm.variacao.valor,
+        barras:vm.variacao.barras,
+        quantidade:vm.variacao.quantidade
+      })
+      console.log(vm.itemDividido)
+    },
+    removerVariacao: function(indice){
+      let vm = this
+      vm.itemDividido.splice(indice)
+    },
     dividirItem: function(){
       let vm = this
       console.log(this.itemDividido)
