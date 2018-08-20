@@ -827,49 +827,75 @@
                 <q-card-separator/>
                 <q-card-actions align="end">
 
-                  <q-btn-dropdown label="Dividir Item" color="primary">
+                  <q-btn-dropdown label="Dividir" color="primary">
                     <q-list link highlight>
 
                       <q-item>
                         <q-item-main>
-                          <q-radio v-model="tipoDivisao" val="1" label="Quantidade" />
+                          <q-radio v-model="tipoDivisao" val="1" label="Variacão e valor" />
                         </q-item-main>
                       </q-item>
 
                       <q-item>
                         <q-item-main>
-                          <q-radio v-model="tipoDivisao" val="2" label="Valor" />
+                          <q-radio v-model="tipoDivisao" val="2" label="Quantidade e valor" />
                         </q-item-main>
                       </q-item>
 
                     </q-list>
                   </q-btn-dropdown>
 
-                  <q-btn label="Agrupar item" color="primary"/>
+                  <q-btn label="Agrupar" color="primary"/>
 
                 </q-card-actions>
               </q-card>
             </div>
 
-            <template>
+            <template >
               <div class="row gutter-xs q-py-sm">
 
-                  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6" v-if="tipoDivisao == 1">
                     <q-card>
                       <q-card-title>Dividor por variação e valor</q-card-title>
+                      <q-card-separator/>
                       <q-card-main>
-                        <q-field icon="font_download">
-                          <q-input v-model="variacao.produto" float-label="Nome" clearable/>
-                        </q-field>
-                        <q-field icon="attach_money">
-                          <q-input type="number" v-model="variacao.valor" float-label="Valor" clearable/>
-                        </q-field>
-                        <q-field icon="view_column">
-                          <q-input v-model="variacao.barras" float-label="Barras" clearable/>
-                        </q-field>
-                        <q-field icon="widgets">
-                          <q-input v-model="variacao.quantidade" float-label="Quantidade" clearable/>
-                        </q-field>
+
+                        <div class="row">
+                          <div class="col-12">
+                            <q-field icon="font_download">
+                              <q-input v-model="variacao.produto" float-label="Nome" clearable/>
+                            </q-field>
+                          </div>
+                        </div>
+
+                        <div class="row gutter-sm">
+                          <div class="col-6">
+                            <q-field icon="attach_money">
+                              <q-input type="number" v-model="variacao.valor" float-label="Valor" clearable/>
+                            </q-field>
+                          </div>
+
+                          <div class="col-6">
+                            <q-field icon="widgets">
+                              <q-input v-model="variacao.quantidade" float-label="Quantidade" clearable/>
+                            </q-field>
+                          </div>
+                        </div>
+
+                        <div class="row gutter-sm">
+                          <div class="col-6">
+                            <q-field icon="view_column">
+                              <q-input v-model="variacao.barras" float-label="Barras" clearable/>
+                            </q-field>
+                          </div>
+
+                          <div class="col-6">
+                            <q-field icon="nature">
+                              <q-input v-model="variacao.ncm" float-label="NCM" clearable/>
+                            </q-field>
+                          </div>
+                        </div>
+
                       </q-card-main>
                       <q-card-separator/>
                       <q-card-actions align="end">
@@ -914,7 +940,7 @@
                                   <q-item class="q-body-1">
                                     <q-item-side>Unitário:</q-item-side>
                                     <q-item-main align="end">
-                                      {{numeral(parseFloat(item.valor)).format('0,0.00')}}
+                                      {{numeral(parseFloat(item.valorunitario)).format('0,0.00')}}
                                     </q-item-main>
                                   </q-item>
 
@@ -954,28 +980,6 @@
       </template>
       <!-- fim modal dividir item -->
 
-      <template>
-        <q-modal v-model="modalTipoDivisao">
-          <q-card>
-
-            <q-card-title>
-              Informe a quantidade que deseja dividir
-            </q-card-title>
-            <q-card-separator />
-
-            <q-card-main>
-              <q-input clearable type="number" float-label="Quantidade" v-model="quantidadeDivisao"/>
-            </q-card-main>
-            <q-card-separator/>
-
-            <q-card-actions align="end">
-              <q-btn dense round icon="arrow_back" color="red" @click="modalTipoDivisao = false"/>
-              <q-btn dense round icon="done" color="primary" @click.native="dividirItem()"/>
-            </q-card-actions>
-
-          </q-card>
-        </q-modal>
-      </template>
 
       <q-page-sticky position="bottom-right" :offset="[25, 25]" v-if="carregado">
         <q-fab icon="add" direction="up" color="primary" dense>
@@ -1012,18 +1016,56 @@ export default {
       },
       data: {},
       variacao: {
+        codnotafiscalterceiroitem: null,
+        codnotafiscalterceirogrupo: null,
+        referencia: null,
         produto: null,
-        valor: null,
+        ncm: null,
+        cfop: null,
         barras: null,
+        unidademedida: null,
         quantidade: null,
+        valorunitario: null,
+        valorproduto: null,
+        valorfrete: null,
+        valorseguro: null,
+        valordesocnto: null,
+        valoroutras: null,
+        valortotal: null,
+        compoetotal: true,
+        csosn: null,
+        origem: null,
+        icmscst: null,
+        icmsbasemodalidade: null,
+        icmsbase: 0,
+        icmspercentual: 0,
+        icmsvalor: 0,
+        icmsstbasemodalidade: null,
+        icmsstbase: 0,
+        icmsstpercentual: 0,
+        icmsstvalor: 0,
+        ipicst: null,
+        ipibase: 0,
+        ipipercentual: 0,
+        ipivalor: 0,
+        piscst: null,
+        pisbase: 0,
+        pispercentual: 0,
+        pisvalor: 0,
+        cofinscst: null,
+        cofinsbase: 0,
+        cofinspercentual: 0,
+        cofinsvalor: 0,
+        conferido: true,
+
       },
       itemDividido:[],
       url: '192.168.1.185/upload.php',
       carregado: false,
       dfecarregada: false,
       itensCarregado: false,
-      produtoSelecionado: null,
       produtoCarregado: false,
+      produtoSelecionado: null,
       natop: null,
       dataEntrada: null,
       modalDividirProduto: false,
@@ -1040,7 +1082,8 @@ export default {
   },
   watch: {
     tipoDivisao: function(tipo){
-      this.modalTipoDivisao = true
+      this.carregaItemDivisao()
+      console.log(this.variacao)
     },
     dataEntrada: function(data){
       console.log(data)
@@ -1085,6 +1128,49 @@ export default {
         })
         return
       }
+    },
+    carregaItemDivisao: function(){
+      this.variacao.codnotafiscalterceiroitem = this.produtoSelecionado.codnotafiscalterceiroitem,
+      this.variacao.codnotafiscalterceirogrupo = this.produtoSelecionado.codnotafiscalterceirogrupo,
+      this.variacao.referencia = this.produtoSelecionado.referencia,
+      this.variacao.produto = this.produtoSelecionado.produto,
+      this.variacao.ncm = this.produtoSelecionado.ncm,
+      this.variacao.cfop = this.produtoSelecionado.cfop,
+      this.variacao.barras = this.produtoSelecionado.barras,
+      this.variacao.unidademedida = this.produtoSelecionado.unidademedida,
+      this.variacao.quantidade = this.produtoSelecionado.quantidade,
+      this.variacao.valorunitario = this.produtoSelecionado.valorunitario,
+      this.variacao.valorproduto = this.produtoSelecionado.valorproduto,
+      this.variacao.valorfrete = this.produtoSelecionado.valorfrete,
+      this.variacao.valorseguro = this.produtoSelecionado.valorseguro,
+      this.variacao.valordesocnto = this.produtoSelecionado.valordesconto,
+      this.variacao.valoroutras = this.produtoSelecionado.valoroutras,
+      this.variacao.valortotal = this.produtoSelecionado.valortotal,
+      this.variacao.compoetotal = this.produtoSelecionado.compoetotal,
+      this.variacao.csosn = this.produtoSelecionado.csosn,
+      this.variacao.origem = this.produtoSelecionado.origem,
+      this.variacao.icmscst = this.produtoSelecionado.icmscst,
+      this.variacao.icmsbasemodalidade = this.produtoSelecionado.icmsbasemodalidade,
+      this.variacao.icmsbase = this.produtoSelecionado.icmsbase,
+      this.variacao.icmspercentual = this.produtoSelecionado.icmspercentual,
+      this.variacao.icmsvalor = this.produtoSelecionado.icmsvalor,
+      this.variacao.icmsstbasemodalidade = this.produtoSelecionado.icmsstbasemodalidade,
+      this.variacao.icmsstbase = this.produtoSelecionado.icmsstbase,
+      this.variacao.icmsstpercentual = this.produtoSelecionado.icmsstpercentual,
+      this.variacao.icmsstvalor = this.produtoSelecionado.icmsstvalor,
+      this.variacao.ipicst = this.produtoSelecionado.ipicst,
+      this.variacao.ipibase = this.produtoSelecionado.ipibase,
+      this.variacao.ipipercentual = this.produtoSelecionado.ipipercentual,
+      this.variacao.ipivalor = this.produtoSelecionado.ipivalor,
+      this.variacao.piscst = this.produtoSelecionado.piscst,
+      this.variacao.pisbase = this.produtoSelecionado.pisbase,
+      this.variacao.pispercentual = this.produtoSelecionado.pispercentual,
+      this.variacao.pisvalor = this.produtoSelecionado.pisvalor,
+      this.variacao.cofinscst = this.produtoSelecionado.cofinscst,
+      this.variacao.cofinsbase = this.produtoSelecionado.cofinsbase,
+      this.variacao.cofinspercentual = this.produtoSelecionado.cofinspercentual,
+      this.variacao.cofinsvalor = this.produtoSelecionado.cofinsvalor,
+      this.variacao.conferido = true
     },
     enviarManifestacao: function(chave, filial){
       let vm = this
