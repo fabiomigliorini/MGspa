@@ -851,10 +851,10 @@
               </q-card>
             </div>
 
-            <template >
+            <template v-if="tipoDivisao == 1">
               <div class="row gutter-xs q-py-sm">
 
-                  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6" v-if="tipoDivisao == 1">
+                  <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6" >
                     <q-card>
                       <q-card-title>Dividor por variação e valor</q-card-title>
                       <q-card-separator/>
@@ -863,7 +863,7 @@
                         <div class="row">
                           <div class="col-12">
                             <q-field icon="font_download">
-                              <q-input v-model="variacao.produto" float-label="Nome" clearable/>
+                              <q-input v-model="itemNota.produto" float-label="Nome" clearable/>
                             </q-field>
                           </div>
                         </div>
@@ -871,13 +871,13 @@
                         <div class="row gutter-sm">
                           <div class="col-6">
                             <q-field icon="attach_money">
-                              <q-input type="number" v-model="variacao.valor" float-label="Valor" clearable/>
+                              <q-input type="number" v-model="itemNota.valorunitario" float-label="Valor" clearable/>
                             </q-field>
                           </div>
 
                           <div class="col-6">
                             <q-field icon="widgets">
-                              <q-input v-model="variacao.quantidade" float-label="Quantidade" clearable/>
+                              <q-input v-model="itemNota.quantidade" float-label="Quantidade" clearable/>
                             </q-field>
                           </div>
                         </div>
@@ -885,13 +885,13 @@
                         <div class="row gutter-sm">
                           <div class="col-6">
                             <q-field icon="view_column">
-                              <q-input v-model="variacao.barras" float-label="Barras" clearable/>
+                              <q-input v-model="itemNota.barras" float-label="Barras" clearable/>
                             </q-field>
                           </div>
 
                           <div class="col-6">
                             <q-field icon="nature">
-                              <q-input v-model="variacao.ncm" float-label="NCM" clearable/>
+                              <q-input v-model="itemNota.ncm" float-label="NCM" clearable/>
                             </q-field>
                           </div>
                         </div>
@@ -899,7 +899,7 @@
                       </q-card-main>
                       <q-card-separator/>
                       <q-card-actions align="end">
-                        <q-btn @click.native="dividirPorVariacao()" icon="add" color="primary" round dense/>
+                        <q-btn @click.native="adicionarItem()" icon="add" color="primary" round dense/>
                       </q-card-actions>
                     </q-card>
                   </div>
@@ -908,7 +908,7 @@
                     <q-list no-border v-for="item in itemDividido" :key="item.produto">
                       <q-item>
                         <q-item-main>
-                          <q-card>
+                          <q-card class="bg-green-13">
                             <q-card-title>{{item.produto}}</q-card-title>
                             <q-card-separator/>
                             <q-card-main>
@@ -947,7 +947,7 @@
                                   <q-item class="q-body-1">
                                     <q-item-side>Total:</q-item-side>
                                     <q-item-main align="end">
-                                      {{item.quantidade * item.valor}}
+                                      {{item.quantidade * item.valorunitario}}
                                     </q-item-main>
                                   </q-item>
 
@@ -957,7 +957,7 @@
                             <q-card-separator/>
 
                             <q-card-actions align="end">
-                              <q-btn @click.native="removerVariacao(itemDividido.indexOf(item.produto))" icon="clear" color="red" round dense/>
+                              <q-btn @click.native="removerItem(itemDividido.indexOf(item.produto))" icon="clear" color="red" round dense/>
                             </q-card-actions>
 
                           </q-card>
@@ -966,6 +966,62 @@
                     </q-list>
                   </div>
 
+              </div>
+            </template>
+
+            <template v-if="tipoDivisao == 2">
+              <div class="row gutter-xs q-py-sm">
+                <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6" >
+
+                  <q-card>
+                    <q-card-title>Dividor por quantidade e valor</q-card-title>
+                    <q-card-separator/>
+                    <q-card-main>
+
+                      <div class="row">
+                        <div class="col-12">
+                          <q-field icon="font_download">
+                            <q-input v-model="itemNota.produto" float-label="Nome" clearable/>
+                          </q-field>
+                        </div>
+                      </div>
+
+                      <div class="row gutter-sm">
+                        <div class="col-6">
+                          <q-field icon="attach_money">
+                            <q-input type="number" v-model="itemNota.valorunitario" float-label="Valor" clearable/>
+                          </q-field>
+                        </div>
+
+                        <div class="col-6">
+                          <q-field icon="widgets">
+                            <q-input type="number" v-model="itemNota.quantidade" float-label="Quantidade" clearable/>
+                          </q-field>
+                        </div>
+                      </div>
+
+                      <div class="row gutter-sm">
+                        <div class="col-6">
+                          <q-field icon="view_column">
+                            <q-input v-model="itemNota.barras" float-label="Barras" clearable/>
+                          </q-field>
+                        </div>
+
+                        <div class="col-6">
+                          <q-field icon="nature">
+                            <q-input v-model="itemNota.ncm" float-label="NCM" clearable/>
+                          </q-field>
+                        </div>
+                      </div>
+
+                    </q-card-main>
+                    <q-card-separator/>
+                    <q-card-actions align="end">
+                      <q-btn @click.native="adicionarItem()" icon="add" color="primary" round dense/>
+                    </q-card-actions>
+                  </q-card>
+
+                </div>
               </div>
             </template>
 
@@ -1015,9 +1071,10 @@ export default {
         tabsModel: 'detalhes',
       },
       data: {},
-      variacao: {
-        codnotafiscalterceiroitem: null,
+
+      itemNota: {
         codnotafiscalterceirogrupo: null,
+        numero: null,
         referencia: null,
         produto: null,
         ncm: null,
@@ -1029,7 +1086,7 @@ export default {
         valorproduto: null,
         valorfrete: null,
         valorseguro: null,
-        valordesocnto: null,
+        valordesconto: null,
         valoroutras: null,
         valortotal: null,
         compoetotal: true,
@@ -1078,18 +1135,16 @@ export default {
       chaveManifestacao: null,
       codNotaManifestacao: null,
       filialManifestacao: null,
+
+      validaQuantidade: null,
+      tamanhoArray: null,
     }
   },
   watch: {
     tipoDivisao: function(tipo){
-      this.carregaItemDivisao()
-      console.log(this.variacao)
-    },
-    dataEntrada: function(data){
-      console.log(data)
-    },
-    natop: function(operacao){
-      console.log(operacao)
+      if(tipo == 1){
+        this.carregaItemDivisao()
+      }
     },
     // observa filtro, sempre que alterado chama a api
     filter: {
@@ -1099,28 +1154,90 @@ export default {
 
   },
   methods: {
-    dividirPorValor: function(){
+    adicionarItem: function(){
       let vm = this
+      let validacao = true
+
+      if(vm.tipoDivisao == 1){
+
+        if(vm.validaQuantidade == null){
+          vm.validaQuantidade = parseInt(vm.itemNota.quantidade)
+        }
+
+        if(vm.itemDividido.length > vm.tamanhoArray){
+          vm.itemDividido.forEach(
+            function validaDivisao(item){
+              vm.validaQuantidade = vm.validaQuantidade + parseInt(vm.itemNota.quantidade)
+              console.log(vm.validaQuantidade)
+            })
+            vm.tamanhoArray = vm.itemDividido.length
+            console.log(vm.tamanhoArray)
+        }
+
+        if(vm.validaQuantidade > vm.produtoSelecionado.quantidade){
+          vm.$q.notify({
+            message: 'A quantidade desejada é maior que a diponível',
+            type: 'negative',
+          })
+          validacao = false
+        }
+
+      }
+
+      if(validacao == true){
+        vm.itemDividido.push({
+          codnotafiscalterceirogrupo: vm.itemNota.codnotafiscalterceirogrupo,
+          numero: vm.itemNota.numero,
+          referencia: vm.itemNota.referencia,
+          produto: vm.itemNota.produto,
+          ncm: vm.itemNota.ncm,
+          cfop: vm.itemNota.cfop,
+          barras: vm.itemNota.barras,
+          unidademedida: vm.itemNota.unidademedida,
+          quantidade: vm.itemNota.quantidade,
+          valorunitario: vm.itemNota.valorunitario,
+          valorproduto: vm.itemNota.valorproduto,
+          valorfrete: vm.itemNota.valorfrete,
+          valorseguro: vm.itemNota.valorseguro,
+          valordesconto: vm.itemNota.valordesconto,
+          valoroutras: vm.itemNota.valoroutras,
+          valortotal: vm.itemNota.valortotal,
+          compoetotal: vm.itemNota.compoetotal,
+          csosn: vm.itemNota.csosn,
+          origem: vm.itemNota.origem,
+          icmscst: vm.itemNota.icmscst,
+          icmsbasemodalidade: vm.itemNota.icmsbasemodalidade,
+          icmsbase: vm.itemNota.icmsbase,
+          icmspercentual: vm.itemNota.icmspercentual,
+          icmsvalor: vm.itemNota.icmsvalor,
+          icmsstbasemodalidade: vm.itemNota.icmsstbasemodalidade,
+          icmsstbase: vm.itemNota.icmsstbase,
+          icmsstpercentual: vm.itemNota.icmspercentual,
+          icmsstvalor: vm.itemNota.icmsstvalor,
+          ipicst: vm.itemNota.ipicst,
+          ipibase: vm.itemNota.ipibase,
+          ipipercentual: vm.itemNota.ipipercentual,
+          ipivalor: vm.itemNota.ipivalor,
+          piscst: vm.itemNota.piscst,
+          pisbase: vm.itemNota.pisbase,
+          pispercentual: vm.itemNota.pispercentual,
+          pisvalor: vm.itemNota.pisvalor,
+          cofinscst: vm.itemNota.cofinscst,
+          cofinsbase: vm.itemNota.cofinsbase,
+          cofinspercentual: vm.itemNota.cofinspercentual,
+          cofinsvalor: vm.itemNota.cofinsvalor,
+          conferido: true,
+        })
+      }
 
     },
-    dividirPorVariacao: function(){
-      let vm = this
-
-      vm.itemDividido.push({
-        produto:vm.variacao.produto,
-        valor:vm.variacao.valor,
-        barras:vm.variacao.barras,
-        quantidade:vm.variacao.quantidade
-      })
-      console.log(vm.itemDividido)
-    },
-    removerVariacao: function(indice){
+    removerItem: function(indice){
       let vm = this
       vm.itemDividido.splice(indice)
     },
     dividirItem: function(){
       let vm = this
-      console.log(this.itemDividido)
+      console.table(this.itemDividido)
       if(vm.quantidadeDivisao > vm.produtoSelecionado.quantidade){
         vm.$q.notify({
           message: 'A quantidade desejada é maior que a diponível',
@@ -1130,47 +1247,46 @@ export default {
       }
     },
     carregaItemDivisao: function(){
-      this.variacao.codnotafiscalterceiroitem = this.produtoSelecionado.codnotafiscalterceiroitem,
-      this.variacao.codnotafiscalterceirogrupo = this.produtoSelecionado.codnotafiscalterceirogrupo,
-      this.variacao.referencia = this.produtoSelecionado.referencia,
-      this.variacao.produto = this.produtoSelecionado.produto,
-      this.variacao.ncm = this.produtoSelecionado.ncm,
-      this.variacao.cfop = this.produtoSelecionado.cfop,
-      this.variacao.barras = this.produtoSelecionado.barras,
-      this.variacao.unidademedida = this.produtoSelecionado.unidademedida,
-      this.variacao.quantidade = this.produtoSelecionado.quantidade,
-      this.variacao.valorunitario = this.produtoSelecionado.valorunitario,
-      this.variacao.valorproduto = this.produtoSelecionado.valorproduto,
-      this.variacao.valorfrete = this.produtoSelecionado.valorfrete,
-      this.variacao.valorseguro = this.produtoSelecionado.valorseguro,
-      this.variacao.valordesocnto = this.produtoSelecionado.valordesconto,
-      this.variacao.valoroutras = this.produtoSelecionado.valoroutras,
-      this.variacao.valortotal = this.produtoSelecionado.valortotal,
-      this.variacao.compoetotal = this.produtoSelecionado.compoetotal,
-      this.variacao.csosn = this.produtoSelecionado.csosn,
-      this.variacao.origem = this.produtoSelecionado.origem,
-      this.variacao.icmscst = this.produtoSelecionado.icmscst,
-      this.variacao.icmsbasemodalidade = this.produtoSelecionado.icmsbasemodalidade,
-      this.variacao.icmsbase = this.produtoSelecionado.icmsbase,
-      this.variacao.icmspercentual = this.produtoSelecionado.icmspercentual,
-      this.variacao.icmsvalor = this.produtoSelecionado.icmsvalor,
-      this.variacao.icmsstbasemodalidade = this.produtoSelecionado.icmsstbasemodalidade,
-      this.variacao.icmsstbase = this.produtoSelecionado.icmsstbase,
-      this.variacao.icmsstpercentual = this.produtoSelecionado.icmsstpercentual,
-      this.variacao.icmsstvalor = this.produtoSelecionado.icmsstvalor,
-      this.variacao.ipicst = this.produtoSelecionado.ipicst,
-      this.variacao.ipibase = this.produtoSelecionado.ipibase,
-      this.variacao.ipipercentual = this.produtoSelecionado.ipipercentual,
-      this.variacao.ipivalor = this.produtoSelecionado.ipivalor,
-      this.variacao.piscst = this.produtoSelecionado.piscst,
-      this.variacao.pisbase = this.produtoSelecionado.pisbase,
-      this.variacao.pispercentual = this.produtoSelecionado.pispercentual,
-      this.variacao.pisvalor = this.produtoSelecionado.pisvalor,
-      this.variacao.cofinscst = this.produtoSelecionado.cofinscst,
-      this.variacao.cofinsbase = this.produtoSelecionado.cofinsbase,
-      this.variacao.cofinspercentual = this.produtoSelecionado.cofinspercentual,
-      this.variacao.cofinsvalor = this.produtoSelecionado.cofinsvalor,
-      this.variacao.conferido = true
+      this.itemNota.codnotafiscalterceirogrupo = this.produtoSelecionado.codnotafiscalterceirogrupo,
+      this.itemNota.numero = this.produtoSelecionado.numero,
+      this.itemNota.referencia = this.produtoSelecionado.referencia,
+      this.itemNota.produto = this.produtoSelecionado.produto,
+      this.itemNota.ncm = this.produtoSelecionado.ncm,
+      this.itemNota.cfop = this.produtoSelecionado.cfop,
+      this.itemNota.barras = this.produtoSelecionado.barras,
+      this.itemNota.unidademedida = this.produtoSelecionado.unidademedida,
+      this.itemNota.quantidade = parseFloat(this.produtoSelecionado.quantidade),
+      this.itemNota.valorunitario = parseFloat(this.produtoSelecionado.valorunitario),
+      this.itemNota.valorfrete = parseFloat(this.produtoSelecionado.valorfrete),
+      this.itemNota.valorseguro = parseFloat(this.produtoSelecionado.valorseguro),
+      this.itemNota.valordesconto = parseFloat(this.produtoSelecionado.valordesconto),
+      this.itemNota.valoroutras = parseFloat(this.produtoSelecionado.valoroutras),
+      this.itemNota.valortotal = parseFloat(this.produtoSelecionado.valortotal),
+      this.itemNota.compoetotal = this.produtoSelecionado.compoetotal,
+      this.itemNota.csosn = this.produtoSelecionado.csosn,
+      this.itemNota.origem = this.produtoSelecionado.origem,
+      this.itemNota.icmscst = this.produtoSelecionado.icmscst,
+      this.itemNota.icmsbasemodalidade = this.produtoSelecionado.icmsbasemodalidade,
+      this.itemNota.icmsbase = parseFloat(this.produtoSelecionado.icmsbase),
+      this.itemNota.icmspercentual = this.produtoSelecionado.icmspercentual,
+      this.itemNota.icmsvalor = parseFloat(this.produtoSelecionado.icmsvalor),
+      this.itemNota.icmsstbasemodalidade = this.produtoSelecionado.icmsstbasemodalidade,
+      this.itemNota.icmsstbase = parseFloat(this.produtoSelecionado.icmsstbase),
+      this.itemNota.icmsstpercentual = this.produtoSelecionado.icmsstpercentual,
+      this.itemNota.icmsstvalor = parseFloat(this.produtoSelecionado.icmsstvalor),
+      this.itemNota.ipicst = this.produtoSelecionado.ipicst,
+      this.itemNota.ipibase = parseFloat(this.produtoSelecionado.ipibase),
+      this.itemNota.ipipercentual = this.produtoSelecionado.ipipercentual,
+      this.itemNota.ipivalor = parseFloat(this.produtoSelecionado.ipivalor),
+      this.itemNota.piscst = this.produtoSelecionado.piscst,
+      this.itemNota.pisbase = parseFloat(this.produtoSelecionado.pisbase),
+      this.itemNota.pispercentual = this.produtoSelecionado.pispercentual,
+      this.itemNota.pisvalor = parseFloat(this.produtoSelecionado.pisvalor),
+      this.itemNota.cofinscst = this.produtoSelecionado.cofinscst,
+      this.itemNota.cofinsbase = parseFloat(this.produtoSelecionado.cofinsbase),
+      this.itemNota.cofinspercentual = this.produtoSelecionado.cofinspercentual,
+      this.itemNota.cofinsvalor = parseFloat(this.produtoSelecionado.cofinsvalor),
+      this.itemNota.conferido = true
     },
     enviarManifestacao: function(chave, filial){
       let vm = this
