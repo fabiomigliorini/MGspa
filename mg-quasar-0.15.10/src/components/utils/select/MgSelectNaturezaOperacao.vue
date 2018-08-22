@@ -13,7 +13,7 @@
 import { QSelect } from 'quasar'
 
 export default {
-  name: 'mg-select-filial',
+  name: 'mg-select-natureza-operacao',
   props: ['value', 'label'],
   components: {
     QSelect
@@ -29,11 +29,15 @@ export default {
     },
     loadData: function () {
       let vm = this
-      vm.$axios.get('filial', {params: {fields: 'codfilial,filial', sort: 'filial'}}).then(function (request) {
-        vm.data = request.data.data.map(filial => {
+      let params= {
+        fields: 'naturezaoperacao,codnaturezaoperacao',
+        sort: 'naturezaoperacao'
+      }
+      vm.$axios.get('natureza-operacao/autocompletar', {params}).then(function (request) {
+        vm.data = request.data.data.map(natop => {
           return {
-            value: filial.codfilial,
-            label: filial.filial
+            value: natop.codnaturezaoperacao,
+            label: natop.naturezaoperacao
           }
         })
       }).catch(function (error) {

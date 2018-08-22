@@ -792,8 +792,9 @@
 		</table>
 		<table name="tbldistribuicaodfe" >
 			<column name="coddistribuicaodfe" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="nfechave" type="varchar" decimal="0" jt="12" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="nsu" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="schema" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -817,6 +818,9 @@
 			</index>
 			<index name="tbldistribuicaodfe_schema_idx" unique="NORMAL" >
 				<column name="schema" />
+			</index>
+			<index name="unq_tbldistribuicaodfe_nsu" unique="UNIQUE" >
+				<column name="nsu" />
 			</index>
 			<fk name="fk_tbldistribuicaodfe_tblfilial" to_schema="mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
@@ -3118,7 +3122,10 @@
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codpessoa" type="bigint" jt="-5" mandatory="y" />
+			<column name="codpessoa" type="bigint" jt="-5" />
+			<column name="natop" type="varchar" length="60" decimal="0" jt="12" >
+				<comment><![CDATA[natOp]]></comment>
+			</column>
 			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
@@ -3130,7 +3137,7 @@
 			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
 			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" />
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="modelo" type="bigint" jt="-5" mandatory="y" />
+			<column name="modelo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
 			<column name="entrada" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3145,10 +3152,19 @@
 			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="download" type="bool" length="1" decimal="0" jt="-7" >
+				<defo>false</defo>
+			</column>
+			<column name="protocolo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="tipo" type="smallint" jt="5" >
+				<comment><![CDATA[tpNF]]></comment>
+			</column>
+			<column name="digito" type="varchar" length="50" jt="12" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="recebimento" type="timestamp" length="29" decimal="6" jt="93" />
 			<index name="pk_tblnotafiscalterceiro_codnotafiscalterceiro" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiro" />
 			</index>
@@ -3206,6 +3222,15 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="duplicata" type="varchar" length="50" decimal="0" jt="12" >
+				<comment><![CDATA[nDup]]></comment>
+			</column>
+			<column name="vencimento" type="date" length="13" decimal="0" jt="91" >
+				<comment><![CDATA[dvenc]]></comment>
+			</column>
+			<column name="valor" type="numeric" length="14" decimal="2" jt="2" >
+				<comment><![CDATA[vdup]]></comment>
+			</column>
 			<index name="pk_tblnotafiscalterceiroduplicata_codnotafiscalterceiroduplicat" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiroduplicata" />
 			</index>
@@ -3214,6 +3239,38 @@
 			</index>
 			<fk name="fk_tblnotafiscalterceiroduplicata_tblnotafiscalterceiro" to_schema="mgsis" to_table="tblnotafiscalterceiro" >
 				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
+			</fk>
+		</table>
+		<table name="tblnotafiscalterceiroevento" >
+			<column name="codnotafiscalterceiroevento" type="bigserial" jt="-5" mandatory="y" />
+			<column name="coddistribuicaodfe" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
+			<column name="codorgao" type="smallint" jt="5" >
+				<comment><![CDATA[cOrgao]]></comment>
+			</column>
+			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
+			<column name="nfechave" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="dhevento" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="tpevento" type="bigserial" jt="-5" mandatory="y" />
+			<column name="nseqevento" type="smallint" jt="5" mandatory="y" />
+			<column name="evento" type="varchar" length="60" jt="12" mandatory="y" />
+			<column name="dhrecebimento" type="timestamp" jt="93" />
+			<column name="protocolo" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<index name="idx_tblnotafiscalterceiroevento_nsu" unique="NORMAL" >
+				<column name="nsu" />
+			</index>
+			<index name="idx_tblnotafiscalterceiroevento_coddistribuicaodfe" unique="NORMAL" >
+				<column name="coddistribuicaodfe" />
+			</index>
+			<index name="pk_tblnotafiscalterceiroevento_codnotafiscalterceiroevento" unique="PRIMARY_KEY" >
+				<column name="codnotafiscalterceiroevento" />
+			</index>
+			<fk name="fk_tblnotafiscalterceiroevento_tbldistribuicaodfe_0" to_schema="mgsis" to_table="tbldistribuicaodfe" >
+				<fk_column name="coddistribuicaodfe" pk="coddistribuicaodfe" />
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceirogrupo" >
@@ -3324,6 +3381,9 @@
 				<comment><![CDATA[vCOFINS]]></comment>
 			</column>
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="conferido" type="bool" jt="-7" >
+				<defo>false</defo>
+			</column>
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -5947,7 +6007,14 @@
 		<sequence name="tblnotafiscalprodutobarra_codnotafiscalprodutobarra_seq" start="1" />
 		<sequence name="tblnotafiscalreferenciada_codnotafiscalreferenciada_seq" start="1" />
 		<sequence name="tblnotafiscalterceiro_codnotafiscalterceiro_seq" start="1" />
+		<sequence name="tblnotafiscalterceiro_protocolo_seq" start="1" />
+		<sequence name="tblnotafiscalterceirodfe_codnotafiscalterceirodfe_seq" start="1" />
+		<sequence name="tblnotafiscalterceirodfe_protocolo_seq" start="1" />
 		<sequence name="tblnotafiscalterceiroduplicat_codnotafiscalterceiroduplicat_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroevento_coddistribuicaodfe_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroevento_codnotafiscalterceiroevento_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroevento_protocolo_seq" start="1" />
+		<sequence name="tblnotafiscalterceiroevento_tpevento_seq" start="1" />
 		<sequence name="tblnotafiscalterceirogrupo_codnotafiscalterceirogrupo_seq" start="1" />
 		<sequence name="tblnotafiscalterceiroitem_codnotafiscalterceiroitem_seq" start="1" />
 		<sequence name="tblnotafiscalterceiroprodutob_codnotafiscalterceiroprodutob_seq" start="1" />
@@ -8390,8 +8457,20 @@ $function$
 		<entity schema="mgsis" name="tblchequemotivodevolucao" color="c1d8ee" x="915" y="615" />
 	</layout>
 	<layout name="Layout_DFe_Terceiros" id="Layout_4f5c1dd" show_relation="columns" >
-		<entity schema="mgsis" name="tbldistribuicaodfe" color="c1d8ee" x="315" y="75" />
-		<entity schema="mgsis" name="tblfilial" color="c1d8ee" x="60" y="75" >
+		<entity schema="mgsis" name="tblpessoa" color="c1d8ee" x="525" y="285" >
+			<column name="codpessoa" />
+			<column name="codsexo" />
+			<column name="codestadocivil" />
+			<column name="codcidade" />
+			<column name="codcidadecobranca" />
+			<column name="codformapagamento" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codgrupocliente" />
+		</entity>
+		<entity schema="mgsis" name="tblnotafiscalterceiroitem" color="c1d8ee" x="1290" y="75" />
+		<entity schema="mgsis" name="tbldistribuicaodfe" color="c1d8ee" x="540" y="90" />
+		<entity schema="mgsis" name="tblfilial" color="c1d8ee" x="285" y="90" >
 			<column name="codfilial" />
 			<column name="codempresa" />
 			<column name="codpessoa" />
@@ -8399,7 +8478,7 @@ $function$
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
-		<entity schema="mgsis" name="tblnaturezaoperacao" color="c1d8ee" x="45" y="225" >
+		<entity schema="mgsis" name="tblnaturezaoperacao" color="c1d8ee" x="270" y="240" >
 			<column name="codnaturezaoperacao" />
 			<column name="codestoquemovimentotipo" />
 			<column name="codusuarioalteracao" />
@@ -8408,6 +8487,7 @@ $function$
 			<column name="codtipotitulo" />
 			<column name="codcontacontabil" />
 		</entity>
+<<<<<<< HEAD
 		<entity schema="mgsis" name="tblpessoa" color="c1d8ee" x="300" y="270" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
@@ -8431,6 +8511,10 @@ $function$
 			<column name="codprodutoimagem" />
 		</entity>
 		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="75" y="585" >
+=======
+		<entity schema="mgsis" name="tblnotafiscalterceiroduplicata" color="c1d8ee" x="1035" y="45" />
+		<entity schema="mgsis" name="tblproduto" color="c1d8ee" x="240" y="495" >
+>>>>>>> 210867c67a9e3f7aff1923f3ae5681c8c730a700
 			<column name="codproduto" />
 			<column name="codncm" />
 			<column name="codcest" />
@@ -8443,7 +8527,25 @@ $function$
 			<column name="codusuariocriacao" />
 			<column name="codprodutoimagem" />
 		</entity>
-		<entity schema="mgsis" name="tblprodutobarra" color="c1d8ee" x="840" y="660" >
+		<entity schema="mgsis" name="tblprodutoembalagem" color="c1d8ee" x="525" y="495" >
+			<column name="codprodutoembalagem" />
+			<column name="codproduto" />
+			<column name="codunidademedida" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+		</entity>
+		<entity schema="mgsis" name="tblprodutovariacao" color="c1d8ee" x="480" y="645" >
+			<column name="codprodutovariacao" />
+			<column name="codproduto" />
+			<column name="codmarca" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+		</entity>
+		<entity schema="mgsis" name="tblnotafiscalterceiroprodutobarra" color="c1d8ee" x="1050" y="630" />
+		<entity schema="mgsis" name="tblnotafiscalterceirogrupo" color="c1d8ee" x="1035" y="345" />
+		<entity schema="mgsis" name="tblprodutobarra" color="c1d8ee" x="780" y="750" >
 			<column name="codprodutobarra" />
 			<column name="codprodutovariacao" />
 			<column name="codproduto" />
@@ -8452,16 +8554,13 @@ $function$
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
-		<entity schema="mgsis" name="tblprodutoembalagem" color="c1d8ee" x="285" y="645" >
-			<column name="codprodutoembalagem" />
-			<column name="codproduto" />
-			<column name="codunidademedida" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codprodutoimagem" />
-		</entity>
+<<<<<<< HEAD
 		<entity schema="mgsis" name="tblnotafiscalterceiroduplicata" color="c1d8ee" x="810" y="45" />
 		<entity schema="mgsis" name="tblnotafiscalterceiro" color="c1d8ee" x="555" y="45" />
+=======
+		<entity schema="mgsis" name="tblnotafiscalterceiroevento" color="c1d8ee" x="45" y="180" />
+		<entity schema="mgsis" name="tblnotafiscalterceiro" color="c1d8ee" x="780" y="60" />
+>>>>>>> 210867c67a9e3f7aff1923f3ae5681c8c730a700
 	</layout>
 	<layout name="Layout_Devolucao" id="Layout7285461" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblnotafiscal" color="b2cdf7" x="1230" y="45" />
@@ -8865,21 +8964,21 @@ FROM
 		<entity schema="mgsis" name="tblproduto" color="b2cdf7" x="540" y="315" />
 	</layout>
 	<layout name="Layout_Negocio" id="Layout2983189" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblpessoa" color="b2cdf7" x="465" y="1020" />
-		<entity schema="mgsis" name="tblnegocioformapagamento" color="b2cdf7" x="75" y="2145" />
-		<entity schema="mgsis" name="tblnegocioprodutobarra" color="b2cdf7" x="45" y="630" />
-		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="b2cdf7" x="465" y="45" />
-		<entity schema="mgsis" name="tblproduto" color="b2cdf7" x="1170" y="405" />
-		<entity schema="mgsis" name="tblmarca" color="b2cdf7" x="1170" y="1665" />
-		<entity schema="mgsis" name="tblsubgrupoproduto" color="b2cdf7" x="795" y="1665" />
-		<entity schema="mgsis" name="tblgrupoproduto" color="b2cdf7" x="1185" y="2145" />
-		<entity schema="mgsis" name="tblnegocio" color="b2cdf7" x="795" y="1020" />
-		<entity schema="mgsis" name="tbloperacao" color="b2cdf7" x="1185" y="2805" />
-		<entity schema="mgsis" name="tblestoquelocal" color="b2cdf7" x="465" y="2145" />
-		<entity schema="mgsis" name="tblnegociostatus" color="b2cdf7" x="795" y="2805" />
-		<entity schema="mgsis" name="tblfilial" color="b2cdf7" x="795" y="2145" />
-		<entity schema="mgsis" name="tblformapagamento" color="b2cdf7" x="150" y="1020" />
-		<entity schema="mgsis" name="tblprodutobarra" color="b2cdf7" x="1170" y="1020" />
+		<entity schema="mgsis" name="tblsubgrupoproduto" color="b2cdf7" x="465" y="1155" />
+		<entity schema="mgsis" name="tblprodutobarra" color="b2cdf7" x="45" y="1380" />
+		<entity schema="mgsis" name="tblestoquelocal" color="b2cdf7" x="45" y="1170" />
+		<entity schema="mgsis" name="tblnegocioformapagamento" color="b2cdf7" x="45" y="990" />
+		<entity schema="mgsis" name="tbloperacao" color="b2cdf7" x="255" y="1020" />
+		<entity schema="mgsis" name="tblgrupoproduto" color="b2cdf7" x="480" y="1440" />
+		<entity schema="mgsis" name="tblfilial" color="b2cdf7" x="720" y="990" />
+		<entity schema="mgsis" name="tblnegociostatus" color="b2cdf7" x="255" y="855" />
+		<entity schema="mgsis" name="tblformapagamento" color="b2cdf7" x="60" y="600" />
+		<entity schema="mgsis" name="tblnegocioprodutobarra" color="b2cdf7" x="60" y="315" />
+		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="b2cdf7" x="360" y="120" />
+		<entity schema="mgsis" name="tblproduto" color="b2cdf7" x="825" y="120" />
+		<entity schema="mgsis" name="tblnegocio" color="b2cdf7" x="615" y="120" />
+		<entity schema="mgsis" name="tblmarca" color="b2cdf7" x="1035" y="1230" />
+		<entity schema="mgsis" name="tblpessoa" color="b2cdf7" x="1005" y="45" />
 	</layout>
 	<layout name="Layout_Nfe_Terceiro" id="Layout462291" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblnfeterceiroitem" color="b2cdf7" x="60" y="690" />

@@ -29,6 +29,11 @@ export default {
       icon: 'multiline_chart',
       title: 'Vendas',
       path: '/estoque-estatistica/100'
+    },
+    {
+      icon: 'description',
+      title: 'NFe Terceiro',
+      path: '/nfe-terceiro'
     }
   ]
 }
