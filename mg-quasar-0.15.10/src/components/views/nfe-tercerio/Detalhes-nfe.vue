@@ -7,43 +7,62 @@
 
     <div slot="drawer">
 
-      <template v-if="carregado">
+      <template v-if="carregado" >
         <q-list>
           <q-list-header>{{nf.emitente}}</q-list-header>
 
-          <q-item dense>
-            <q-item-side>
-              <q-icon name="date_range" size="25px"/>
-              Emissão:
-            </q-item-side>
-            <q-item-main align="end">{{moment(nf.emissao).format("DD MMM YYYY")}}</q-item-main>
-          </q-item>
+          <div class="row q-pa-sm">
+            <div class="col-1">
+              <q-icon name="date_range" size="25px" color="grey"/>
+            </div>
+            <div class="col-11">
+              <div class="row">
+                <div class="col-6">
+                  Emissão:
+                </div>
+                <div class="col-6" align="end">
+                  {{moment(nf.emissao).format("DD MMM YYYY")}}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row q-pa-sm">
 
-          <q-item dense>
-            <q-item-side>
-              <q-icon name="attach_money" size="25px"/>
-              Total da nota:
-            </q-item-side>
-            <q-item-main align="end">
-              R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}
-            </q-item-main>
-          </q-item>
+            <div class="col-1 self-center">
+              <q-icon name="attach_money" size="25px" color="grey"/>
+            </div>
 
-          <q-item dense>
-            <q-item-side>
-              <q-icon name="attach_money" size="25px"/>
-              Total Complemento:
-            </q-item-side>
-            <q-item-main align="end">R$ 0000,00</q-item-main>
-          </q-item>
+            <div class="col-11">
 
-          <q-item dense>
-            <q-item-side>
-              <q-icon name="attach_money" size="25px"/>
-              Total Geral:
-            </q-item-side>
-            <q-item-main align="end">R$ 0000,00</q-item-main>
-          </q-item>
+              <div class="row">
+                <div class="col-6 text-faded">
+                  Total da nota:
+                </div>
+                <div class="col-6" align="end">
+                  R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 text-faded">
+                  Complemento:
+                </div>
+                <div class="col-6" align="end">
+                  R$ 0000,00
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 text-faded">
+                  Geral:
+                </div>
+                <div class="col-6" align="end">
+                  R$ 0000,00
+                </div>
+              </div>
+
+            </div>
+          </div>
 
           <q-item dense>
             <q-item-main>
@@ -107,9 +126,9 @@
 
           <template v-if="carregado">
             <div class="row gutter-sm">
-              <div class="col-12">
+              <div class="col-12" >
 
-                <q-card >
+                <q-card>
                   <q-card-title class="q-py-none">
                     <q-item>
                       <q-item-main>
@@ -123,13 +142,20 @@
 
                         <q-item-tile sublabel style="overflow: hidden" class="text-no-wrap">
                           <small><q-icon name="vpn_key"/>{{nf.nfechave}}</small>
+                          <q-chip square dense v-if="nf.indsituacao == 3
+                            || nf.indsituacao == 101 || nf.indsituacao == 151" color="red">
+                            Cancelada
+                          </q-chip>
+                          <q-chip square dense v-if="nf.indsituacao == 2 || nf.indsituacao == 110" color="red">
+                            Denegada
+                          </q-chip>
                         </q-item-tile>
 
-                        <q-item-tile sublabel>
+                        <q-item-tile sublabel v-if="nf.codnotafiscal">
                           <small><q-icon name="local_offer"/> {{nf.codnotafiscal}}</small>
                         </q-item-tile>
 
-                        <q-item-tile sublabel>
+                        <q-item-tile sublabel v-if="nf.natop">
                           <small><q-icon name="business_center"/> {{nf.natop}}</small>
                         </q-item-tile>
 
@@ -144,51 +170,49 @@
                   <q-card-separator />
                   <q-card-main>
 
-                    <div class="row gutter-xs">
+                    <div class="row gutter-sm">
 
                       <!-- Valores -->
                       <div class="col-xs-12 col-sm-6 col-md-3 ">
-                        <q-card >
-                          <q-card-title align="center">Valores</q-card-title>
-                          <q-card-separator />
-                          <q-card-main class="q-py-none">
+                        <q-card class="shadow-6">
+                          <q-card-main class="q-py-none gutter-y-none">
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Produtos:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.valorprodutos)).format('0,0.00')}}
                               </q-item-main>
                             </q-item>
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Frete:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.valorfrete)).format('0,0.00')}}
                               </q-item-main>
                             </q-item>
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Seguro:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.valorseguro)).format('0,0.00')}}
                               </q-item-main>
                             </q-item>
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Desconto:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.valordesconto)).format('0,0.00')}}
                               </q-item-main>
                             </q-item>
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Outros:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.valoroutras)).format('0,0.00')}}
                               </q-item-main>
                             </q-item>
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Total:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}
@@ -201,19 +225,19 @@
 
                       <!-- ICMS -->
                       <div class="col-xs-12 col-sm-6 col-md-3">
-                        <q-card>
+                        <q-card class="shadow-6">
                           <q-card-title align="center">ICMS</q-card-title>
                           <q-card-separator />
                           <q-card-main class="q-py-none">
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Base:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.icmsbase)).format('0,0.00')}}
                               </q-item-main>
                             </q-item>
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Total:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.icmsvalor)).format('0,0.00')}}
@@ -226,21 +250,19 @@
 
                       <!-- ICMSST -->
                       <div class="col-xs-12 col-sm-6 col-md-3">
-                        <q-card>
-                          <q-card-title align="center">
-                            ICMSST
-                          </q-card-title>
+                        <q-card class="shadow-6">
+                          <q-card-title align="center">ICMSST</q-card-title>
                           <q-card-separator />
                           <q-card-main class="q-py-none">
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Base:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.icmsstbase)).format('0,0.00')}}
                               </q-item-main>
                             </q-item>
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Total:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.icmsstvalor)).format('0,0.00')}}
@@ -253,14 +275,12 @@
 
                       <!-- IPI -->
                       <div class="col-xs-12 col-sm-6 col-md-3">
-                        <q-card>
-                          <q-card-title align="center">
-                            IPI
-                          </q-card-title>
+                        <q-card class="shadow-6">
+                          <q-card-title align="center">IPI</q-card-title>
                           <q-card-separator />
                           <q-card-main  class="q-py-none">
 
-                            <q-item>
+                            <q-item class="q-body-1">
                               <q-item-side>Total:</q-item-side>
                               <q-item-main align="end">
                                 R$ {{numeral(parseFloat(nf.ipivalor)).format('0,0.00')}}
@@ -272,7 +292,28 @@
                       </div>
 
                     </div>
+                    <q-card-separator/>
+
+                    <q-btn color="primary" @click.native="modalManifestacao = true,
+                    chaveManifestacao = nf.nfechave,
+                    filialManifestacao = nf.codfilial,
+                    codNotaManifestacao = nf.codnotafiscalterceiro"
+                    round dense>
+                    <q-icon name="arrow_drop_down_circle" size="25px"/>
+                    </q-btn>
+
                   </q-card-main>
+
+                  <q-card-actions>
+
+
+                    <q-btn dense @click="downloadNFe(nf.codfilial, nf.nfechave)" round color="primary" icon="cloud_download"/>
+
+                    <q-field>
+                      <q-uploader inverted :url="url" stack-label="localizar XML"/>
+                    </q-field>
+
+                  </q-card-actions>
                 </q-card>
 
               </div>
@@ -284,124 +325,9 @@
               <div>
                 <q-card v-if="dfecarregada">
 
-                  <q-card-title>
-                    <q-item>
-                      <q-item-main>
-                        <div class="row">
-                          {{dfe.emitente}}
-                        </div>
-                        <div class="row">
-                          <small class="text-faded">
-                            {{dfe.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} / {{dfe.ie}}
-                          </small>
-                        </div>
-                      </q-item-main>
-                      <q-item-side icon="location_on" color="red">
-                        {{dfe.filial}}
-                      </q-item-side>
-                    </q-item>
-                  </q-card-title>
-                  <q-card-separator />
                   <q-card-main>
 
-                    <div class="row">
-                      <div class="col-12" style="overflow:hidden">
-                        <q-item>
-                          <q-item-side icon="vpn_key"/>
-                          <q-item-main>
-                            {{dfe.nfechave}}
-                            <q-chip square dense v-if="dfe.indsituacao == 3
-                              || dfe.indsituacao == 101 || dfe.indsituacao == 151" color="red">
-                              Cancelada
-                            </q-chip>
-                            <q-chip square dense v-if="dfe.indsituacao == 2 || dfe.indsituacao == 110" color="red">
-                              Denegada
-                            </q-chip>
-                          </q-item-main>
-                        </q-item>
-                      </div>
-                    </div>
 
-                    <div class="row">
-                      <div class="col-12">
-                        <q-item>
-                          <q-item-side icon="offline_pin"/>
-                          <q-item-main>
-                            {{dfe.protocolo}}
-                          </q-item-main>
-                        </q-item>
-                      </div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-12">
-                        <q-item>
-                          <q-item-side icon="swap_horizontal_circle"/>
-                          <q-item-main>
-                            <template v-if="dfe.tipo == 1">Saída</template>
-                            <template v-if="dfe.tipo == 0">Entrada</template>
-                          </q-item-main>
-                        </q-item>
-                      </div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-12">
-                        <q-item>
-                          <q-item-side icon="date_range"/>
-                          <q-item-main>
-                            {{moment(dfe.emissao).format("DD MMM YYYY HH:mm:ss")}}
-                          </q-item-main>
-                        </q-item>
-                      </div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-12">
-                        <q-item>
-                          <q-item-side icon="attach_money"/>
-                          <q-item-main>
-                            R$ {{numeral(parseFloat(dfe.valortotal)).format('0,0.00')}}
-                          </q-item-main>
-                        </q-item>
-                      </div>
-                    </div>
-
-                  </q-card-main>
-                  <q-card-separator/>
-                  <q-card-main>
-
-                    <div class="row items-center">
-                      <div class="col-1">
-                        <q-btn color="primary" @click.native="modalManifestacao = true,
-                          chaveManifestacao = dfe.nfechave,
-                          filialManifestacao = dfe.codfilial,
-                          codNotaManifestacao = dfe.codnotafiscalterceiro"
-                         round dense>
-                          <q-icon name="arrow_drop_down_circle" size="25px"/>
-                        </q-btn>
-                        <q-tooltip anchor="top left" self="bottom middle">
-                          Manifestação
-                        </q-tooltip>
-                      </div>
-
-                      <div class="col-1">
-                        <q-btn dense @click="downloadNFe(dfe.codfilial, dfe.nfechave)"
-                        round color="primary" icon="cloud_download"/>
-                        <q-tooltip anchor="top left" self="bottom middle">
-                          Baixar XML
-                        </q-tooltip>
-                      </div>
-
-                      <div class="col-3">
-                        <q-field >
-                          <q-uploader inverted :url="url" stack-label="localizar XML"/>
-                        </q-field>
-                        <q-tooltip anchor="top left" self="bottom middle">
-                          Localizar XML
-                        </q-tooltip>
-                      </div>
-                    </div>
 
                   </q-card-main>
                 </q-card>
@@ -904,52 +830,52 @@
                     </q-card>
                   </div>
 
-                  <div class="col-12" v-if="itemDividido">
-                    <q-list no-border v-for="item in itemDividido" :key="item.produto">
+                  <div class="col-10" v-if="itemDividido">
+                    <q-list no-border v-for="variacao in itemDividido" :key="variacao.produto">
                       <q-item>
                         <q-item-main>
                           <q-card class="bg-green-13">
-                            <q-card-title>{{item.produto}}</q-card-title>
+                            <q-card-title>{{variacao.produto}}&nbsp{{itemDividido.indexOf(variacao)}}</q-card-title>
                             <q-card-separator/>
                             <q-card-main>
 
                               <div class="row">
                                 <q-list highlight>
 
-                                  <q-item class="q-body-1 gutter-y-none q-py-none">
+                                  <!-- <q-item class="q-body-1 gutter-y-none q-py-none">
                                     <q-item-side>Barras:</q-item-side>
                                     <q-item-main align="end">
-                                      {{item.barras}}
+                                      {{variacao.barras}}
                                     </q-item-main>
                                   </q-item>
 
                                   <q-item class="q-body-1">
                                     <q-item-side>NCM:</q-item-side>
                                     <q-item-main align="end">
-                                      {{ item.ncm}}
+                                      {{ variacao.ncm}}
                                     </q-item-main>
-                                  </q-item>
+                                  </q-item> -->
 
                                   <q-item class="q-body-1">
                                     <q-item-side>Quantidade:</q-item-side>
                                     <q-item-main align="end">
-                                      {{item.quantidade}}
+                                      {{variacao.quantidade}}
                                     </q-item-main>
                                   </q-item>
 
-                                  <q-item class="q-body-1">
+                                  <!-- <q-item class="q-body-1">
                                     <q-item-side>Unitário:</q-item-side>
                                     <q-item-main align="end">
-                                      {{numeral(parseFloat(item.valorunitario)).format('0,0.00')}}
+                                      {{numeral(parseFloat(variacao.valorunitario)).format('0,0.00')}}
                                     </q-item-main>
                                   </q-item>
 
                                   <q-item class="q-body-1">
                                     <q-item-side>Total:</q-item-side>
                                     <q-item-main align="end">
-                                      {{item.quantidade * item.valorunitario}}
+                                      {{variacao.quantidade * variacao.valorunitario}}
                                     </q-item-main>
-                                  </q-item>
+                                  </q-item> -->
 
                                 </q-list>
                               </div>
@@ -957,7 +883,7 @@
                             <q-card-separator/>
 
                             <q-card-actions align="end">
-                              <q-btn @click.native="removerItem(itemDividido.indexOf(item.produto))" icon="clear" color="red" round dense/>
+                              <q-btn @click.native="removerItem(itemDividido.indexOf(variacao))" icon="clear" color="red" round dense/>
                             </q-card-actions>
 
                           </q-card>
@@ -1156,35 +1082,7 @@ export default {
   methods: {
     adicionarItem: function(){
       let vm = this
-      let validacao = true
 
-      if(vm.tipoDivisao == 1){
-
-        if(vm.validaQuantidade == null){
-          vm.validaQuantidade = parseInt(vm.itemNota.quantidade)
-        }
-
-        if(vm.itemDividido.length > vm.tamanhoArray){
-          vm.itemDividido.forEach(
-            function validaDivisao(item){
-              vm.validaQuantidade = vm.validaQuantidade + parseInt(vm.itemNota.quantidade)
-              console.log(vm.validaQuantidade)
-            })
-            vm.tamanhoArray = vm.itemDividido.length
-            console.log(vm.tamanhoArray)
-        }
-
-        if(vm.validaQuantidade > vm.produtoSelecionado.quantidade){
-          vm.$q.notify({
-            message: 'A quantidade desejada é maior que a diponível',
-            type: 'negative',
-          })
-          validacao = false
-        }
-
-      }
-
-      if(validacao == true){
         vm.itemDividido.push({
           codnotafiscalterceirogrupo: vm.itemNota.codnotafiscalterceirogrupo,
           numero: vm.itemNota.numero,
@@ -1228,12 +1126,39 @@ export default {
           cofinsvalor: vm.itemNota.cofinsvalor,
           conferido: true,
         })
+
+      let validaNome = 0
+      if(vm.tipoDivisao == 1){
+        vm.itemDividido.forEach(
+          function validaDivisao(item){
+            vm.validaQuantidade = (parseInt(item.quantidade) + vm.validaQuantidade)
+            if(vm.itemNota.produto == item.produto){
+              validaNome++
+            }
+            if(validaNome > 1){
+              vm.itemDividido.pop()
+              vm.$q.notify({
+                message: 'Já existe uma variação com este nome',
+                type: 'negative',
+              })
+            }
+          }
+        )
+        if(vm.validaQuantidade > vm.produtoSelecionado.quantidade){
+          vm.$q.notify({
+            message: 'A quantidade desejada é maior que a diponível',
+            type: 'negative',
+          })
+          vm.itemDividido.pop()
+        }
+        vm.validaQuantidade = 0
       }
 
     },
     removerItem: function(indice){
+      console.log(indice)
       let vm = this
-      vm.itemDividido.splice(indice)
+      vm.itemDividido.splice(indice, 1)
     },
     dividirItem: function(){
       let vm = this
@@ -1359,16 +1284,10 @@ export default {
       vm.$axios.get('nfe-terceiro/busca-nfeterceiro',{params}).then(function(request){
         if (request.data[0]){
           vm.nf = request.data[0]
-          vm.carregaItens(vm.nf.codnotafiscalterceiro)
           vm.carregado = true
-        }else{
-          vm.carregado = false
-          vm.$axios.get('nfe-terceiro/lista-dfe',{params}).then(function(request) {
-            vm.dfe = request.data.data[0]
-            vm.dfecarregada = true
-          }).catch(function(error) {
-            console.log(error)
-          })
+          if(vm.nf.download == true){
+            vm.carregaItens(vm.nf.codnotafiscalterceiro)
+          }
         }
       }).catch(function(error) {
         console.log(error)
