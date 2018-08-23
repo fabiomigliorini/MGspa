@@ -1,11 +1,13 @@
 ﻿/*
 
 select marca, codmarca from tblmarca where controlada order by marca
-update tblmarca set controlada = true where marca ilike 'escurra'
+update tblmarca set controlada = true where marca ilike 'make+'
+update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where controlada and estoquemaximodias < 90
 
 select * from tblmarca
 
-update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where marca ilike 'compactor'
+update tblmarca set estoqueminimodias = 60, estoquemaximodias = 150 where marca ilike 'Colorprint'
+
 */
 
 select 
@@ -64,31 +66,29 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca ilike 'compactor')
+    where (m.marca in ('Brw'))
     and pv.descontinuado is null
     and p.inativo is null
-    --and p.produto ilike '%tris%'
+    --and p.produto ilike '%pasta%'
     --and coalesce(sld.saldoquantidade, 0) < sld.estoqueminimo
-    --and coalesce(sld.saldoquantidade, 0) < sld.estoquemaximo
+    --and coalesce(sld.saldoquantidade, 0) < sld.esto quemaximo
     --and m.controlada = true
     --and pv.codprodutovariacao = 15218
     --and pv.codproduto = 24312
     order by m.marca, p.produto, pv.variacao
 ) x
---order by sld nulls first
+--order by data nulls first
 --SELECT * FROM TBLPRODUTOVARIACAO WHERE CODPRODUTO = 29011
 
 --update tblnfeterceiroitem set margem = 60 where codnfeterceiro = 17875
 
 /*
-UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = NOW() WHERE CODPRODUTOVARIACAO IN (
-73002
-,33423
-,62362
-,46966
-,62353
-,62354
-,62352
+UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = date_trunc('seconds', NOW()) WHERE CODPRODUTOVARIACAO IN (
+85382
+,85380
+,85385
+,85381
+,85384
 )
 
 update tblprodutovariacao set descontinuado = null where descontinuado is not null and codprodutovariacao = 84313
