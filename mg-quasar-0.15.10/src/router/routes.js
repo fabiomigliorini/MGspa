@@ -42,5 +42,8 @@ export default [
 
   // NFeTerceiro
   { path: '/nfe-terceiro', component: () => import('components/views/nfe-tercerio/Index') },
-  { path: '/nfe-terceiro/detalhes-nfe/:chave', component: () => import('components/views/nfe-tercerio/Detalhes-nfe') }
+  { path: '/nfe-terceiro/detalhes-nfe/:chave', component: () => import('components/views/nfe-tercerio/Detalhes-nfe') },
+
+  { path: '/transferencia/requisicao', component: () => import('components/views/transferencia/requisicao/Index') },
+  { path: '/transferencia/requisicao/nova', component: () => import('components/views/transferencia/requisicao/Nova') }
 ]

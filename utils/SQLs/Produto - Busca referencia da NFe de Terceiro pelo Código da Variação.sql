@@ -1,8 +1,7 @@
 ﻿/*
--- update tblnfeterceiroitem set codprodutobarra = 10010173 where cean = '20070330413980'
-
- select codprodutobarra, * from tblnfeterceiroitem where cean ilike '7896644703932'
-select codprodutobarra, * from tblnfeterceiroitem where cprod ilike '983%' order by xprod
+update tblnfeterceiroitem set codprodutobarra = 30008100 where cean = '9556089002608'
+select codprodutobarra, * from tblnfeterceiroitem where cean ilike '7896644703932'
+select codprodutobarra, * from tblnfeterceiroitem where cprod ilike 'MSLEEBF' and xprod ilike 'BOR%' order by criacao desc
 
 select * from tblnegocioprodutobarra where codprodutobarra = 952785
  
@@ -25,9 +24,17 @@ select
 from tblnfeterceiroitem nti
 inner join tblprodutobarra pb on (pb.codprodutobarra = nti.codprodutobarra)
 inner join tblnfeterceiro nt on (nt.codnfeterceiro = nti.codnfeterceiro)
-where pb.codproduto = 106109
+where pb.codproduto = 17526
 --where pb.codprodutovariacao between 13276 and 13277
---where pb.codprodutovariacao = 483
+--where pb.codprodutovariacao = 17526
+
+
+
+
+
+
+
+
 group by 
 	pb.codproduto
 	, pb.codprodutovariacao

@@ -81,6 +81,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
     Route::group(['prefix' => 'v1'], function () {
 
+        Route::get('transferencia/produtos-faltando-sem-requisicao', '\Mg\Transferencia\TransferenciaController@produtosFaltandoSemRequisicao');
+        Route::post('transferencia/requisicao', '\Mg\Transferencia\TransferenciaController@criarRequisicoes');
+
         // Usuários
         Route::get('usuario/{id}/autor', '\Mg\Usuario\UsuarioController@autor');
         Route::get('usuario/{id}/grupos', '\Mg\Usuario\UsuarioController@grupos')->name('usuario.grupos');
