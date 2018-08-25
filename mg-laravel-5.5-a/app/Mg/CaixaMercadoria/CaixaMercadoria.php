@@ -4,7 +4,7 @@ namespace Mg\CaixaMercadoria;
 
 use Mg\MgModel;
 
-class CaixaMercadoriaModelo extends MGModel
+class CaixaMercadoria extends MGModel
 {
     protected $table = 'tblcaixamercadoria';
     protected $primaryKey = 'codcaixamercadoria';

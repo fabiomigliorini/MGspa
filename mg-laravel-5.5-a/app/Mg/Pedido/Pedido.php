@@ -4,21 +4,24 @@ namespace Mg\Pedido;
 
 use Mg\MgModel;
 
-const PEDIDO_PENDENTE         = 10;
-const PEDIDO_ATENDIDO         = 20;
-const PEDIDO_CANCELADO        = 90;
-
-
 class Pedido extends MGModel
 {
+    const STATUS_PENDENTE         = 10;
+    const STATUS_ATENDIDO         = 20;
+    const STATUS_CANCELADO        = 90;
+
+    const TIPO_COMPRA             = 10;
+    const TIPO_TRANSFERENCIA      = 20;
+    const TIPO_VENDA              = 90;
+
     protected $table = 'tblpedido';
     protected $primaryKey = 'codpedido';
     protected $fillable = [
         'indtipo',
-        'indstatus',
         'observacoes',
         'codestoquelocal',
-        'codestoquelocalorigem'
+        'codestoquelocalorigem',
+        'codgrupoeconomico'
     ];
     protected $dates = [
         'alteracao',

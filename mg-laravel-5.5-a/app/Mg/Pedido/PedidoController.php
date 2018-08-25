@@ -9,20 +9,39 @@ use Illuminate\Validation\Rule;
 
 class PedidoController extends MgController
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
 
+    public function index (Request $request)
+    {
+        $model = Pedido::all();
+        return response()->json($model, 206);
+    }
 
+    public function show (Request $request, $id)
+    {
+        $model = Pedido::findOrFail($id);
+        return response()->json($model, 200);
+    }
 
-    // public function index(Request $request)
-    // {
-    //     list($filter, $sort, $fields) = $this->filtros($request);
-    //     $qry = PessoaRepository::pesquisar($filter, $sort, $fields);
-    //     $res = $qry->paginate()->appends($request->all());
-    //     return response()->json($res, 206);
-    // }
+    public function store (Request $request)
+    {
+        $data = $request->all();
+        $model = PedidoRepository::insert($data);
+        return response()->json($model, 201);
+    }
+
+    public function update (Request $request, $id)
+    {
+        $data = $request->all();
+        $model = Pedido::findOrFail($id);
+        $model = PedidoRepository::update($model, $data);
+        return response()->json($model, 201);
+    }
+
+    public function destroy (Request $request, $id)
+    {
+        $model = Pedido::findOrFail($id);
+        $model = PedidoRepository::delete($model);
+        return response()->json($request->all(), 204);
+    }
 
 }

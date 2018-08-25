@@ -30,9 +30,9 @@ class CaixaMercadoriaModelo extends MGModel
     }
 
     // Tabelas Filhas
-    public function CaixaMercadoriaModeloS()
+    public function CaixaMercadoriaS()
     {
-        return $this->hasMany(CaixaMercadoriaModelo::class, 'codcaixamercadoriamodelo', 'codcaixamercadoriamodelo');
+        return $this->hasMany(CaixaMercadoria::class, 'codcaixamercadoriamodelo', 'codcaixamercadoriamodelo');
     }
 
 

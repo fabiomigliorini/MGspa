@@ -30,59 +30,67 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
-        // NATUREZA DA OPERACAO
-        Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
+    // NATUREZA DA OPERACAO
+    Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
 
-        // Pessoa autocomplete
-        Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
+    // Pessoa autocomplete
+    Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
 
-        // NotaFiscalTerceiro
-        Route::get('nfe-terceiro/ultima-nsu', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@ultimaNSU');
-        Route::get('nfe-terceiro/manifestacao', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@manifestacao');
-        Route::get('nfe-terceiro/atualiza-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaItem');
-        Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaNFe');
+    // NotaFiscalTerceiro
+    Route::get('nfe-terceiro/ultima-nsu', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@ultimaNSU');
+    Route::get('nfe-terceiro/manifestacao', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@manifestacao');
+    Route::get('nfe-terceiro/atualiza-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaItem');
+    Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaNFe');
 
-        Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@consultaSefaz');
-        Route::get('nfe-terceiro/armazena-dados', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosConsulta');
-        Route::get('nfe-terceiro/lista-notas', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaNotas');
-        Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@buscaNfeTerceiro');
-        Route::get('nfe-terceiro/lista-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaItem');
-        Route::get('nfe-terceiro/download-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@downloadNotaFiscalTerceiro');
-        // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@carregarXml');
-        // Route::get('nfe-terceiro/armazena-evento', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosEvento');
+    Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@consultaSefaz');
+    Route::get('nfe-terceiro/armazena-dados', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosConsulta');
+    Route::get('nfe-terceiro/lista-notas', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaNotas');
+    Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@buscaNfeTerceiro');
+    Route::get('nfe-terceiro/lista-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaItem');
+    Route::get('nfe-terceiro/download-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@downloadNotaFiscalTerceiro');
+    // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@carregarXml');
+    // Route::get('nfe-terceiro/armazena-evento', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosEvento');
 
-        // NFePHP
-        Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
-        Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
-        Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
-        Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
-        Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
-        Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
-        Route::get('nfe-php/{id}/imprimir', '\Mg\NFePHP\NFePHPController@imprimir');
-        Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
-        Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
-        Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
+    // NFePHP
+    Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
+    Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
+    Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
+    Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
+    Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
+    Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
+    Route::get('nfe-php/{id}/imprimir', '\Mg\NFePHP\NFePHPController@imprimir');
+    Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
+    Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
+    Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
 
-        Route::get('nfe-php/{id}/mail', '\Mg\NFePHP\NFePHPController@mail');
-        Route::get('nfe-php/{id}/mail-cancelamento', '\Mg\NFePHP\NFePHPController@mailCancelamento');
+    Route::get('nfe-php/{id}/mail', '\Mg\NFePHP\NFePHPController@mail');
+    Route::get('nfe-php/{id}/mail-cancelamento', '\Mg\NFePHP\NFePHPController@mailCancelamento');
 
-        Route::get('nfe-php/{id}/xml', '\Mg\NFePHP\NFePHPController@xml');
+    Route::get('nfe-php/{id}/xml', '\Mg\NFePHP\NFePHPController@xml');
 
-        Route::get('nfe-php/{id}/resolver', '\Mg\NFePHP\NFePHPController@resolver');
-        Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
-        Route::get('nfe-php/resolver-pendentes', '\Mg\NFePHP\NFePHPController@resolverPendentes');
+    Route::get('nfe-php/{id}/resolver', '\Mg\NFePHP\NFePHPController@resolver');
+    Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
+    Route::get('nfe-php/resolver-pendentes', '\Mg\NFePHP\NFePHPController@resolverPendentes');
 
-        Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
-        Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
+    Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
+    Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
+});
 
+Route::group(['prefix' => 'v1'], function () {
+  Route::apiResource('pedido', '\Mg\Pedido\PedidoController');
 });
 
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
-
     Route::group(['prefix' => 'v1'], function () {
 
-        Route::get('transferencia/produtos-faltando-sem-requisicao', '\Mg\Transferencia\TransferenciaController@produtosFaltandoSemRequisicao');
-        Route::post('transferencia/requisicao', '\Mg\Transferencia\TransferenciaController@criarRequisicoes');
+        // Pedidos
+        //Route::put('pedido/{id}', '\Mg\Pedido\PedidoController@update');
+
+        // Caixa Mercadoria
+        Route::apiResource('caixa-mercadoria', '\Mg\CaixaMercadoria\CaixaMercadoriaController');
+
+        // Negocio
+        Route::apiResource('negocio', '\Mg\Negocio\NegocioController');
 
         // Usuários
         Route::get('usuario/{id}/autor', '\Mg\Usuario\UsuarioController@autor');
@@ -139,7 +147,5 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
-
     });
-
 });
