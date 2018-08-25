@@ -4,13 +4,12 @@ namespace Mg\Pedido;
 
 use Mg\MgModel;
 
-const PEDIDO_PENDENTE         = 10;
-const PEDIDO_ATENDIDO         = 20;
-const PEDIDO_CANCELADO        = 90;
-
-
 class PedidoItem extends MGModel
 {
+    const STATUS_PENDENTE         = 10;
+    const STATUS_ATENDIDO         = 20;
+    const STATUS_CANCELADO        = 90;
+
     protected $table = 'tblpedidoitem';
     protected $primaryKey = 'codpedidoitem';
     protected $fillable = [

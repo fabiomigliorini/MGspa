@@ -76,15 +76,17 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
 });
 
-Route::group(['prefix' => 'v1'], function () {
-  Route::apiResource('pedido', '\Mg\Pedido\PedidoController');
-});
-
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
         // Pedidos
-        //Route::put('pedido/{id}', '\Mg\Pedido\PedidoController@update');
+        Route::apiResource('pedido', '\Mg\Pedido\PedidoController');
+        Route::get('pedido/produtos-para-transferir/{codestoquelocalorigem}/{codestoquelocaldestino}', '\Mg\Pedido\PedidoController@produtosParaTransferir');
+        Route::get('pedido/{id}/item', '\Mg\Pedido\PedidoController@indexItem');
+        Route::get('pedido/{id}/item/{iditem}', '\Mg\Pedido\PedidoController@showItem');
+        Route::post('pedido/{id}/item', '\Mg\Pedido\PedidoController@storeItem');
+        Route::put('pedido/{id}/item/{iditem}', '\Mg\Pedido\PedidoController@updateItem');
+        Route::delete('pedido/{id}/item/{iditem}', '\Mg\Pedido\PedidoController@destroyItem');
 
         // Caixa Mercadoria
         Route::apiResource('caixa-mercadoria', '\Mg\CaixaMercadoria\CaixaMercadoriaController');

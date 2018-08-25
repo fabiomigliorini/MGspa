@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\PedidoItem;
+namespace Mg\Pedido;
 
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
@@ -50,16 +50,15 @@ class PedidoItemRepository extends MgRepository
     public static function delete (PedidoItem $model)
     {
         $sql = "
-          SELECT COUNT(npbpi.codnegocioprodutobarraPedidoItemitem) AS count
-          FROM tblPedidoItem p
-          INNER JOIN tblPedidoItemitem pi ON (pi.codPedidoItem = p.codPedidoItem)
-          INNER JOIN tblnegocioprodutobarraPedidoItemitem npbpi ON (npbpi.codPedidoItemitem = pi.codPedidoItemitem)
-          WHERE p.codPedidoItem = :codPedidoItem
+          SELECT COUNT(npbpi.codnegocioprodutobarrapedidoitem) AS count
+          FROM tblpedidoitem pi
+          INNER JOIN tblnegocioprodutobarrapedidoitem npbpi ON (npbpi.codpedidoitem = pi.codpedidoitem)
+          WHERE pi.codpedidoitem = :codpedidoitem
         ";
-        $res = DB::select($sql, ['codPedidoItem' => $model->codPedidoItem]);
+        $res = DB::select($sql, ['codpedidoitem' => $model->codpedidoitem]);
         if ($res[0]->count > 0) {
             $validator = Validator::make([], []);
-            $validator->errors()->add('codPedidoItem', 'PedidoItem já vinculado à um Negócio!');
+            $validator->errors()->add('codpedidoitem', 'Item já vinculado à um Negócio!');
             throw new ValidationException($validator);
         }
         $model->delete();
