@@ -1,17 +1,7 @@
 <template>
-  <mg-layout drawer back-path="/">
+  <mg-layout drawer back-path="/pedido">
     <template slot="title">
-      Pedidos
-    </template>
-
-    <template slot="tabHeader">
-
-      <q-tabs v-model="filter.indstatus">
-        <q-tab slot="title" name="10" label="Pendentes" />
-        <q-tab slot="title" name="20" label="Atendidos" />
-        <q-tab slot="title" name="30" label="Cancelados" />
-      </q-tabs>
-
+      Detalhes do Pedido #{{ numeral(id).format("00000000") }}
     </template>
 
     <!-- Menu Drawer (Esquerda) -->
@@ -73,49 +63,55 @@
           </q-item-main>
         </q-item>
 
+        <!-- Destino -->
+        <!-- <q-item tag="label">
+          <q-item-main>
+            <mg-select-estoque-local
+            label="Destino"
+            v-model="filter.codestoquelocaldestino"
+            required>
+          </mg-select-estoque-local>
+          </q-item-main>
+        </q-item> -->
+
       </q-list>
     </template>
 
     <div slot="content" >
 
-      <div v-if="data.length > 0">
+      <div v-if="pedidos.length > 0">
 
-      <q-infinite-scroll :handler="loadData" ref="infiniteScroll">
+      <q-infinite-scroll :handler="buscaListagem" ref="infiniteScroll">
 
-      <q-list highlight separator>
+      <q-list highlight inset-separator>
 
-        <q-item multiline v-for="row in data" :key="row.codpedido" >
+        <q-item multiline v-for="pedido in pedidos" :key="pedido.codpedido" @click.native="abrirPedido(pedido.codpedido)">
           <q-item-main>
-            <q-item-tile label lines="1" >
-              <router-link :to="'/pedido/' + row.codpedido" style="text-decoration: none; color: blue">
-                {{ row.tipo }}
-                <template v-if="row.estoquelocalorigem">
-                  de
-                  {{ row.estoquelocalorigem }}
-                  para
-                </template>
-                {{ row.estoquelocal }}
-                <template v-if="row.grupoeconomico">
-                  de {{ row.grupoeconomico }}
-                </template>
-              </router-link>
+            <q-item-tile label lines="1">
+              {{ pedido.tipo }}
+              {{ pedido.estoquelocalorigem }}
+              {{ pedido.estoquelocal }}
+              {{ pedido.grupoeconomico }}
             </q-item-tile>
             <q-item-tile sublabel lines="1">
-              {{ numeral(row.itens).format('0,0') }} Itens
-              <template v-if="row.observacoes">
-                <br /> {{ row.observacoes }}
+              {{ numeral(pedido.itens).format('0,0') }} Itens
+              <template v-if="pedido.observacoes">
+                <br /> {{ pedido.observacoes }}
               </template>
+              <!-- {{ pedido.variacao }} -->
             </q-item-tile>
           </q-item-main>
 
           <q-item-side right>
             <q-tooltip>
               Criado
-              {{ moment(row.criacao).format('LLLL') }}
-              por {{ row.usuariocriacao }}.
+              {{ moment(pedido.criacao).format('LLLL') }}
+              por {{ pedido.usuariocriacao }}.
             </q-tooltip>
             <q-item-tile stamp>
-              {{ moment(row.criacao).fromNow() }}
+              {{ moment(pedido.criacao).fromNow() }}
+              <!-- {{ numeral(parseFloat(pedido.saldoquantidade)).format('0,0') }} -->
+              <!-- {{ pedido.um }} -->
             </q-item-tile>
 
 
@@ -127,12 +123,10 @@
       </q-list>
       </q-infinite-scroll>
       </div>
-      <br />
-      <br />
-      <br />
-      <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn round color="primary" @click="create()" icon="add" />
-      </q-page-sticky>
+
+      <!-- <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn round color="primary" @click="confirmarRequisicoes()" icon="done" />
+      </q-page-sticky> -->
     </div>
   </mg-layout>
 </template>
@@ -150,7 +144,8 @@ export default {
   },
   data () {
     return {
-      data: [],
+      id: null,
+      pedidos: [],
       filter: {
         indstatus: "10",
         indtipo: [],
@@ -165,7 +160,7 @@ export default {
     // observa filter, sempre que alterado chama a api
     filter: {
       handler: function (val, oldVal) {
-        this.loadData(0, null)
+        this.buscaListagem(0, null)
       },
       deep: true
     }
@@ -173,20 +168,12 @@ export default {
 
   methods: {
 
-    create: function () {
-      this.$router.push('/pedido/create')
-    },
-
-    view: function (id) {
-      this.$router.push('/pedido/' + id)
-    },
-
-    loadData: function (index, done) {
+    buscaListagem: function (index, done) {
 
       // se primeiro registro scroll infinito
-      // limpa array de data
+      // limpa array de pedidos
       if (index == 0) {
-        this.data = []
+        this.pedidos = []
       }
 
       // monta parametros de busca
@@ -203,8 +190,8 @@ export default {
       let vm = this
       vm.$axios.get('pedido', { params }).then(function(request){
 
-        // concatena no array de data os registros retornados pela api
-        vm.data = vm.data.concat(request.data)
+        // concatena no array de pedidos os registros retornados pela api
+        vm.pedidos = vm.pedidos.concat(request.data)
 
         // se foi chamado pelo scroll infinito
         if (done) {
@@ -242,8 +229,9 @@ export default {
     },
 
   },
-  created () {
-    this.loadData(0, null)
+  mounted() {
+    this.id = this.$route.params.id
+    console.log(this.$route.params)
   }
 }
 </script>
