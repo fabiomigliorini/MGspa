@@ -2649,7 +2649,7 @@
 			<fk name="fk_tblnegocioprodutobarrapedidoitem_tblpedidoitem" to_schema="mgsis" to_table="tblpedidoitem" >
 				<fk_column name="codpedidoitem" pk="codpedidoitem" />
 			</fk>
-			<fk name="fk_tblnegocioprodutobarrapedidoitem_tblnegocioprodutobarra" to_schema="mgsis" to_table="tblnegocioprodutobarra" >
+			<fk name="fk_tblnegocioprodutobarrapedidoitem_tblnegocioprodutobarra" to_schema="mgsis" to_table="tblnegocioprodutobarra" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codnegocioprodutobarra" pk="codnegocioprodutobarra" />
 			</fk>
 		</table>
@@ -3445,7 +3445,7 @@
 			</column>
 			<column name="codgrupoeconomico" type="bigint" jt="-5" />
 			<column name="codestoquelocal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="codestoquelocalorigem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codestoquelocalorigem" type="bigint" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3521,7 +3521,7 @@
 			<fk name="fk_tblpedidoitem_tblusuario_0" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
-			<fk name="fk_tblpedidoitem_tblpedido" to_schema="mgsis" to_table="tblpedido" >
+			<fk name="fk_tblpedidoitem_tblpedido" to_schema="mgsis" to_table="tblpedido" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codpedido" pk="codpedido" />
 			</fk>
 		</table>
@@ -9118,9 +9118,7 @@ FROM
 			<column name="codusuariocriacao" />
 			<column name="codprodutoimagem" />
 		</entity>
-		<entity schema="mgsis" name="tblpedidoitem" color="ccffcc" x="810" y="300" />
 		<entity schema="mgsis" name="tblcaixamercadoriamodelo" color="ffccff" x="315" y="735" />
-		<entity schema="mgsis" name="tblpedido" color="ccffcc" x="810" y="60" />
 		<entity schema="mgsis" name="tblpessoa" color="c1d8ee" x="1035" y="45" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
@@ -9141,6 +9139,8 @@ FROM
 			<column name="codusuariocriacao" />
 			<column name="codgrupoeconomico" />
 		</entity>
+		<entity schema="mgsis" name="tblpedidoitem" color="ccffcc" x="810" y="300" />
+		<entity schema="mgsis" name="tblpedido" color="ccffcc" x="810" y="60" />
 	</layout>
 	<layout name="Layout_Vales_Escolares" id="Layout_f43af46" confirmed="y" joined_routing="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblvalecompraprodutobarra" color="c1d8ee" x="750" y="405" />
