@@ -12,7 +12,6 @@ use Mg\Produto\ProdutoBarra;
 
 class PedidoRepository extends MgRepository
 {
-
     public static function validate ($data)
     {
 

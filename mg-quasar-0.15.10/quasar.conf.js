@@ -84,6 +84,7 @@ module.exports = function (ctx) {
         'QCheckbox',
         'QField',
         'QRadio',
+        'QOptionGroup',
         'QModal',
         'QCard',
         'QCardMain',

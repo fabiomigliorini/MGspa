@@ -12,8 +12,85 @@ class PedidoController extends MgController
 
     public function index (Request $request)
     {
-        $model = Pedido::all();
-        return response()->json($model, 206);
+        $filter = $request->all();
+
+        $sql = '
+          SELECT
+            p.codpedido
+            , p.indtipo
+            , p.indstatus
+            , p.codestoquelocal
+            , el.estoquelocal
+            , p.codestoquelocalorigem
+            , el_o.estoquelocal as estoquelocalorigem
+            , p.observacoes
+            , p.codgrupoeconomico
+            , ge.grupoeconomico
+            , p.criacao
+            , p.codusuariocriacao
+            , u_c.usuario as usuariocriacao
+            , p.alteracao
+            , p.codusuarioalteracao
+            , (SELECT COUNT(pi.codpedidoitem) FROM tblpedidoitem pi WHERE pi.codpedido = p.codpedido) as itens
+          FROM tblpedido p
+          LEFT JOIN tblestoquelocal el ON (el.codestoquelocal = p.codestoquelocal)
+          LEFT JOIN tblestoquelocal el_o ON (el_o.codestoquelocal = p.codestoquelocalorigem)
+          LEFT JOIN tblgrupoeconomico ge ON (ge.codgrupoeconomico = p.codgrupoeconomico)
+          LEFT JOIN tblusuario u_c ON (u_c.codusuario = p.codusuariocriacao)
+        ';
+
+        $params = [];
+        if (!empty($filter['indstatus'])) {
+          $sql .= (empty($params)?'WHERE':'AND') . ' p.indstatus = :indstatus ';
+          $params['indstatus'] = $filter['indstatus'];
+        }
+
+        if (!empty($filter['indtipo'])) {
+          $sql .= (empty($params)?'WHERE':'AND') . ' p.indtipo IN (:indtipo) ';
+          $params['indtipo'] = $filter['indtipo'];
+        }
+
+        if (!empty($filter['codestoquelocal'])) {
+          $sql .= (empty($params)?'WHERE':'AND') . ' p.codestoquelocal = :codestoquelocal ';
+          $params['codestoquelocal'] = $filter['codestoquelocal'];
+        }
+
+        if (!empty($filter['codestoquelocalorigem'])) {
+          $sql .= (empty($params)?'WHERE':'AND') . ' p.codestoquelocalorigem = :codestoquelocalorigem ';
+          $params['codestoquelocalorigem'] = $filter['codestoquelocalorigem'];
+        }
+
+        if (!empty($filter['codgrupoeconomico'])) {
+          $sql .= (empty($params)?'WHERE':'AND') . ' p.codgrupoeconomico = :codgrupoeconomico ';
+          $params['codgrupoeconomico'] = $filter['codgrupoeconomico'];
+        }
+
+        switch ($filter['indstatus']??null) {
+          case Pedido::STATUS_PENDENTE:
+            $sql .= ' ORDER BY p.criacao ASC, p.codpedido ASC ';
+            break;
+
+          default:
+            $sql .= ' ORDER BY p.alteracao DESC, p.codpedido DESC ';
+            break;
+        }
+
+        $params['limit'] = 50;
+        $params['offset'] = (($filter['page']??1)-1) * $params['limit'];
+        $sql .= '
+          LIMIT :limit OFFSET :offset
+        ';
+
+        $res = DB::select($sql, $params);
+
+        $tipos = Pedido::TIPO;
+        $status = Pedido::STATUS;
+        foreach ($res as $pedido) {
+          $pedido->tipo = $tipos[$pedido->indtipo];
+          $pedido->status = $status[$pedido->indstatus];
+        }
+
+        return response()->json($res, 206);
     }
 
     public function show (Request $request, $id)

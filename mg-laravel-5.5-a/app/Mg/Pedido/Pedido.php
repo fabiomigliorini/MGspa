@@ -10,9 +10,21 @@ class Pedido extends MGModel
     const STATUS_ATENDIDO         = 20;
     const STATUS_CANCELADO        = 90;
 
+    const STATUS = [
+      self::STATUS_PENDENTE => 'Pendente',
+      self::STATUS_ATENDIDO => 'Atendido',
+      self::STATUS_CANCELADO => 'Cancelado',
+    ];
+
     const TIPO_COMPRA             = 10;
     const TIPO_TRANSFERENCIA      = 20;
     const TIPO_VENDA              = 90;
+
+    const TIPO = [
+      self::TIPO_COMPRA => 'Compra',
+      self::TIPO_TRANSFERENCIA => 'Transferência',
+      self::TIPO_VENDA => 'Venda',
+    ];
 
     protected $table = 'tblpedido';
     protected $primaryKey = 'codpedido';
