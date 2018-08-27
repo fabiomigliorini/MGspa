@@ -34,6 +34,11 @@ export default {
       icon: 'description',
       title: 'Nota Fiscal Terceiro',
       path: '/notafiscal-terceiro'
+    },
+    {
+      icon: 'add_shopping_cart',
+      title: 'Pedidos e Transferências',
+      path: '/pedido'
     }
   ]
 }
