@@ -32,8 +32,8 @@ export default {
     },
     {
       icon: 'description',
-      title: 'NFe Terceiro',
-      path: '/nfe-terceiro'
+      title: 'Nota Fiscal Terceiro',
+      path: '/notafiscal-terceiro'
     }
   ]
 }

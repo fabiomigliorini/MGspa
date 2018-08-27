@@ -40,7 +40,7 @@ export default [
   // NFe
   { path: '/nfe', component: () => import('components/views/nfe/Index') },
 
-  // NFeTerceiro
-  { path: '/nfe-terceiro', component: () => import('components/views/nfe-tercerio/Index') },
-  { path: '/nfe-terceiro/detalhes-nfe/:chave', component: () => import('components/views/nfe-tercerio/Detalhes-nfe') }
+  // NotaFiscalTerceiro
+  { path: '/notafiscal-terceiro', component: () => import('components/views/notafiscal-tercerio/Index') },
+  { path: '/notafiscal-terceiro/detalhes-nfe/:chave', component: () => import('components/views/notafiscal-tercerio/Detalhes-nfe') }
 ]

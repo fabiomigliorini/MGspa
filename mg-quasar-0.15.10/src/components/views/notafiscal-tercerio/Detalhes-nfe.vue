@@ -11,6 +11,12 @@
         <q-list>
           <q-list-header>{{nf.emitente}}</q-list-header>
 
+          <q-item>
+            <q-item-side icon="date_range" size="25px"/>
+            <q-item-main>
+            </q-item-main>
+          </q-item>
+
           <div class="row q-pa-sm">
             <div class="col-1">
               <q-icon name="date_range" size="25px" color="grey"/>
@@ -26,14 +32,12 @@
               </div>
             </div>
           </div>
-          <div class="row q-pa-sm">
 
+          <div class="row q-pa-sm">
             <div class="col-1 self-center">
               <q-icon name="attach_money" size="25px" color="grey"/>
             </div>
-
             <div class="col-11">
-
               <div class="row">
                 <div class="col-6 text-faded">
                   Total da nota:
