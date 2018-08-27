@@ -53,9 +53,7 @@ class NotaFiscalTerceiroItem extends MGModel
         'cofinsbase',
         'cofinspercentual',
         'cofinsvalor',
-        'conferido',
-        'codusuariocriacao',
-        'codusuarioalteracao'
+        'conferido'
 
     ];
     protected $dates = [
@@ -70,9 +68,14 @@ class NotaFiscalTerceiroItem extends MGModel
         return $this->belongsTo(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
     }
 
-    public function Usuario()
+    public function UsuarioAlteracao()
     {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     // Tabelas Filhas

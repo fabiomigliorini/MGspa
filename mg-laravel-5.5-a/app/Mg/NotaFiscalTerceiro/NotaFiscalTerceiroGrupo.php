@@ -9,9 +9,7 @@ class NotaFiscalTerceiroGrupo extends MGModel
     protected $table = 'tblnotafiscalterceirogrupo';
     protected $primaryKey = 'codnotafiscalterceirogrupo';
     protected $fillable = [
-        'codnotafiscalterceiro',
-        'codusuariocriacao',
-        'codusuarioalteracao'
+        'codnotafiscalterceiro'
     ];
     protected $dates = [
         'criacao',
@@ -24,9 +22,14 @@ class NotaFiscalTerceiroGrupo extends MGModel
         return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
-    public function Usuario()
+    public function UsuarioAlteracao()
     {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     // Tabelas Filhas

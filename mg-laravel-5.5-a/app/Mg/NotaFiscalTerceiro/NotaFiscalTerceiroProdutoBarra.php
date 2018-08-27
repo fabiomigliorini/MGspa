@@ -14,9 +14,7 @@ class NotaFiscalTerceiroProdutoBarra extends MGModel
         'margem',
         'complemento',
         'quantidade',
-        'valorproduto',
-        'codusuariocriacao',
-        'codusuarioalteracao'
+        'valorproduto'
     ];
     protected $dates = [
         'criacao',
@@ -34,9 +32,14 @@ class NotaFiscalTerceiroProdutoBarra extends MGModel
         return $this->belongsTo(ProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
-    public function Usuario()
+    public function UsuarioAlteracao()
     {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     // Tabelas Filhas

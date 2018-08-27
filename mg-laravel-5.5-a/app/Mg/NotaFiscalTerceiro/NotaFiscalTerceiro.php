@@ -45,8 +45,6 @@ class NotaFiscalTerceiro extends MGModel
         'protocolo',
         'tipo', // tpNF
         'digito',
-        'codusuariocriacao',
-        'codusuarioalteracao'
 
     ];
     protected $dates = [
@@ -60,10 +58,15 @@ class NotaFiscalTerceiro extends MGModel
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
-
-    public function Usuario()
+    
+    public function UsuarioAlteracao()
     {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     public function NaturezaOperacao()

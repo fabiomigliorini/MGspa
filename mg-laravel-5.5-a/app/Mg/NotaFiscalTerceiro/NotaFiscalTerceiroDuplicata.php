@@ -16,9 +16,7 @@ class NotaFiscalTerceiroDuplicata extends MGModel
         'valor',
         'ndup',
         'dvenc',
-        'vdup',
-        'codusuariocriacao',
-        'codusuarioalteracao'
+        'vdup'
 
     ];
     protected $dates = [
@@ -34,9 +32,14 @@ class NotaFiscalTerceiroDuplicata extends MGModel
         return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
-    public function Usuario()
+    public function UsuarioAlteracao()
     {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     // Tabelas Filhas

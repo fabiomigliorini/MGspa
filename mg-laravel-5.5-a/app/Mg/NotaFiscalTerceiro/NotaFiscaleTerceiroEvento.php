@@ -29,7 +29,7 @@ class NotaFiscaleTerceiroEvento extends MGModel
     ];
 
     // Chaves Estrangeiras
-    public function NFeTerceiroDistribuicaoDfe()
+    public function NotaFiscalTerceiroDistribuicaoDfe()
     {
         return $this->belongsTo(NotaFiscalTerceiroDistribuicaoDfe::class, 'coddistribuicaodfe', 'nsu');
     }
