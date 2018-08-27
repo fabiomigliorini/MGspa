@@ -101,12 +101,19 @@
                   <small>index: {{itens.data.indexOf(produto)}}</small>
                 </q-item-tile> -->
 
-                <q-item-tile sublabel>
+                <q-item-tile >
                   {{produto.produto}}
                 </q-item-tile>
 
-                <q-item-tile class="text-weight-medium">
-                  <template v-if="produto.barras">{{produto.barras}} /</template> {{produto.referencia}}
+                <q-item-tile>
+                  <template v-if="produto.barras">
+                    <q-chip dense square icon="view_column">
+                      {{produto.barras}}
+                    </q-chip>
+                  </template>&nbsp
+                  <q-chip dense square icon="local_offer">
+                    {{produto.referencia}}
+                  </q-chip>
                 </q-item-tile>
 
               </q-item-main>
