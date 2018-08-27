@@ -40,14 +40,10 @@ export default [
   // NFe
   { path: '/nfe', component: () => import('components/views/nfe/Index') },
 
-<<<<<<< HEAD
   // NotaFiscalTerceiro
   { path: '/notafiscal-terceiro', component: () => import('components/views/notafiscal-tercerio/Index') },
   { path: '/notafiscal-terceiro/detalhes-nfe/:chave', component: () => import('components/views/notafiscal-tercerio/Detalhes-nfe') }
-=======
-  // NFeTerceiro
-  { path: '/nfe-terceiro', component: () => import('components/views/nfe-tercerio/Index') },
-  { path: '/nfe-terceiro/detalhes-nfe/:chave', component: () => import('components/views/nfe-tercerio/Detalhes-nfe') },
+
 
   { path: '/transferencia/requisicao', component: () => import('components/views/transferencia/requisicao/Index') },
   { path: '/transferencia/requisicao/nova', component: () => import('components/views/transferencia/requisicao/Nova') },
@@ -56,5 +52,4 @@ export default [
   { path: '/pedido/', component: () => import('components/views/pedido/Index') },
   { path: '/pedido/:id', component: () => import('components/views/pedido/View') },
 
->>>>>>> 158342554831a0d46f30a9a7f6536dd1a2e303dd
 ]
