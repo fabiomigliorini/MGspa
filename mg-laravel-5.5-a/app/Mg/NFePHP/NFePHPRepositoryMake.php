@@ -583,6 +583,7 @@ class NFePHPRepositoryMake
             if ($nf->modelo == NotaFiscal::MODELO_NFE) {
 
               $dups = [];
+              $nDup = 0;
               foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
 
                 // Se duplicata tiver vencimento <= hoje ocorre Rejeicao
@@ -593,8 +594,11 @@ class NFePHPRepositoryMake
 
                 // Duplicatas
                 $std = new \stdClass();
-                $std->nDup = Strings::replaceSpecialsChars($nfd->fatura);
-                $nFat = $std->nDup;
+                $nDup++;
+                //$std->nDup = Strings::replaceSpecialsChars($nfd->fatura);
+                $std->nDup = mascarar($nDup, '###');
+                #$nFat = $std->nDup;
+                $nFat = Strings::replaceSpecialsChars($nfd->fatura);
                 $std->dVenc = $nfd->vencimento->format('Y-m-d');
                 $std->vDup = number_format($nfd->valor, 2, '.', '');
                 $totalPrazo += $nfd->valor;
