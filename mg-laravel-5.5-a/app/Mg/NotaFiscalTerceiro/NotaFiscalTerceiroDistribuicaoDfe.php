@@ -11,9 +11,7 @@ class NotaFiscalTerceiroDistribuicaoDfe extends MGModel
     protected $fillable = [
         'codfilial',
         'nsu',
-        'schema',
-        'codusuariocriacao',
-        'codusuarioalteracao'
+        'schema'
 
     ];
     protected $dates = [
@@ -26,10 +24,15 @@ class NotaFiscalTerceiroDistribuicaoDfe extends MGModel
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
-
-    public function Usuario()
+    
+    public function UsuarioAlteracao()
     {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuarioalteracao');
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     // Tabelas Filhas

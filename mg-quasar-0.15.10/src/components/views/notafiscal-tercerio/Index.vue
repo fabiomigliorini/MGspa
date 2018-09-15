@@ -133,7 +133,7 @@
                     </div>
                     <div class="row">
                       <small class="text-faded">
-                        {{nota.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} | {{nota.ie}}
+                        {{ numeral(nota.cnpj).format('00000000000000').replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")}} | {{nota.ie}}
                       </small>
                     </div>
                   </div>
@@ -434,7 +434,7 @@ export default {
     },
 
     buscaNFeTerceiro: function (chave) {
-      this.$router.push('nfe-terceiro/detalhes-nfe/' + chave)
+      this.$router.push('notafiscal-terceiro/detalhes-nfe/' + chave)
     },
 
     ultimaNSU: function (filial) {

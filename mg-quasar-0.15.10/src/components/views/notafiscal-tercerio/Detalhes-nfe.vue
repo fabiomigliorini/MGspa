@@ -11,60 +11,34 @@
         <q-list>
           <q-list-header>{{nf.emitente}}</q-list-header>
 
-          <div class="row q-pa-sm">
-            <div class="col-1">
-              <q-icon name="date_range" size="25px" color="grey"/>
-            </div>
-            <div class="col-11">
-              <div class="row">
-                <div class="col-6">
-                  Emissão:
-                </div>
-                <div class="col-6" align="end">
-                  {{moment(nf.emissao).format("DD MMM YYYY")}}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row q-pa-sm">
+          <q-item>
+            <q-item-side icon="date_range" size="25px"/>
+            <q-item-main>
+              Emissão:
+            </q-item-main>
+            <q-item-side>
+              {{moment(nf.emissao).format("DD MMM YYYY")}}
+            </q-item-side>
+          </q-item>
 
-            <div class="col-1 self-center">
-              <q-icon name="attach_money" size="25px" color="grey"/>
-            </div>
+          <q-item>
+            <q-item-side icon="attach_money" size="25px"/>
 
-            <div class="col-11">
+            <q-item-main>
+              <q-item-tile>Total da nota:</q-item-tile>
+              <q-item-tile>Complemento:</q-item-tile>
+              <q-item-tile>Geral:</q-item-tile>
+            </q-item-main>
 
-              <div class="row">
-                <div class="col-6 text-faded">
-                  Total da nota:
-                </div>
-                <div class="col-6" align="end">
-                  R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}
-                </div>
-              </div>
+            <q-item-side>
+              <q-item-tile>R$ {{numeral(parseFloat(nf.valortotal)).format('0,0.00')}}</q-item-tile>
+              <q-item-tile>R$ 0000,00</q-item-tile>
+              <q-item-tile>R$ 0000,00</q-item-tile>
+            </q-item-side>
+          </q-item>
 
-              <div class="row">
-                <div class="col-6 text-faded">
-                  Complemento:
-                </div>
-                <div class="col-6" align="end">
-                  R$ 0000,00
-                </div>
-              </div>
 
-              <div class="row">
-                <div class="col-6 text-faded">
-                  Geral:
-                </div>
-                <div class="col-6" align="end">
-                  R$ 0000,00
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <q-item dense>
+          <q-item>
             <q-item-main>
 
               <!--informar natureza da operacao -->
@@ -97,12 +71,19 @@
                   <small>index: {{itens.data.indexOf(produto)}}</small>
                 </q-item-tile> -->
 
-                <q-item-tile sublabel>
+                <q-item-tile >
                   {{produto.produto}}
                 </q-item-tile>
 
-                <q-item-tile class="text-weight-medium">
-                  <template v-if="produto.barras">{{produto.barras}} /</template> {{produto.referencia}}
+                <q-item-tile>
+                  <template v-if="produto.barras">
+                    <q-chip dense square icon="view_column">
+                      {{produto.barras}}
+                    </q-chip>
+                  </template>&nbsp
+                  <q-chip dense square icon="local_offer">
+                    {{produto.referencia}}
+                  </q-chip>
                 </q-item-tile>
 
               </q-item-main>
@@ -292,26 +273,24 @@
                       </div>
 
                     </div>
-                    <q-card-separator/>
+                  </q-card-main>
+                  <q-card-separator/>
 
-                    <q-btn color="primary" @click.native="modalManifestacao = true,
+
+                  <q-card-actions align="end">
+
+                    <q-btn color="primary" icon="arrow_drop_down_circle" label="Manifestação" dense
+                    @click.native="modalManifestacao = true,
                     chaveManifestacao = nf.nfechave,
                     filialManifestacao = nf.codfilial,
-                    codNotaManifestacao = nf.codnotafiscalterceiro"
-                    round dense>
-                    <q-icon name="arrow_drop_down_circle" size="25px"/>
+                    codNotaManifestacao = nf.codnotafiscalterceiro">
                     </q-btn>
 
-                  </q-card-main>
+                    <q-btn label="download" dense @click="downloadNFe(nf.codfilial, nf.nfechave)" color="primary" icon="cloud_download"/>
 
-                  <q-card-actions>
-
-
-                    <q-btn dense @click="downloadNFe(nf.codfilial, nf.nfechave)" round color="primary" icon="cloud_download"/>
-
-                    <q-field>
+                    <!-- <div class="col-lg-2">
                       <q-uploader inverted :url="url" stack-label="localizar XML"/>
-                    </q-field>
+                    </div> -->
 
                   </q-card-actions>
                 </q-card>
