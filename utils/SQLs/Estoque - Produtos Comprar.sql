@@ -1,12 +1,12 @@
 ﻿/*
 
 select marca, codmarca from tblmarca where controlada order by marca
-update tblmarca set controlada = true where marca ilike 'make+'
+update tblmarca set controlada = true where marca ilike 'Diverplas'
 update tblmarca set estoqueminimodias = 45, estoquemaximodias = 90 where controlada and estoquemaximodias < 90
 
 select * from tblmarca
 
-update tblmarca set estoqueminimodias = 60, estoquemaximodias = 150 where marca ilike 'Colorprint'
+update tblmarca set estoqueminimodias = 60, estoquemaximodias = 120 where marca ilike 'Facislito'
 
 */
 
@@ -66,7 +66,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca in ('Acrimet'))
+    where (m.marca in ('Leonora'))
     and pv.descontinuado is null
     and p.inativo is null
     --and p.produto ilike '%pasta%'
@@ -84,11 +84,10 @@ from
 
 /*
 UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = date_trunc('seconds', NOW()) WHERE CODPRODUTOVARIACAO IN (
-85382
-,85380
-,85385
-,85381
-,85384
+12205
+,12211
+,6970
+,2660
 )
 
 update tblprodutovariacao set descontinuado = null where descontinuado is not null and codprodutovariacao = 84313

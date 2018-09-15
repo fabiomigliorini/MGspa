@@ -26,7 +26,8 @@ select * from tbljobs where queue = 'high' limit 100
 
 select * from tbljobs 
 
-delete from tbljobs where id = 10241019
+delete from tbljobs where id = 15486067
+
 
 update tbljobs set queue = 'parado_nfpb' where payload ilike '%EstoqueGeraMovimentoNotaFiscalProdutoBarra%'
 
@@ -41,7 +42,13 @@ update tbljobs set queue = 'low' where tbljobs.id in (select j2.id from tbljobs 
 select queue, count(*) from tbljobs group by queue order by queue
 
 delete from tbljobs where id in (
-7160352
+15473757
+,15473469
+,15473758
+,15479263
+,15480714
+,15485234
+,15485235
 )
 
 'high';39

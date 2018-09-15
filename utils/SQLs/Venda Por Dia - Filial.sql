@@ -17,7 +17,7 @@ inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoper
 where codnegociostatus = 2
 --and lancamento <= '2018-01-25 23:59:59.9'
 and lancamento >= '2012-01-01 00:00:00.0'
-and lancamento <= '2018-07-31 23:59:59.9'
+and lancamento <= '2018-08-31 23:59:59.9'
 and n.codnaturezaoperacao in (1, 2, 5) -- venda, devolucao, cupom
 --and n.codnaturezaoperacao in (2) -- venda, devolucao, cupom
 --and n.codfilial in (101, 102) -- Botanico
@@ -55,7 +55,7 @@ inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoper
 where codnegociostatus = 2
 --and lancamento <= '2018-01-25 23:59:59.9'
 and lancamento >= '2012-01-01 00:00:00.0'
-and lancamento <= '2018-06-09 23:59:59.9'
+and lancamento <= '2018-09-01 23:59:59.9'
 and n.codnaturezaoperacao in (1, 2, 5) -- venda, devolucao, cupom
 --and n.codnaturezaoperacao in (2) -- venda, devolucao, cupom
 --and n.codfilial in (101, 102) -- Botanico

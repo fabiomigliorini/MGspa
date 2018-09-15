@@ -88,6 +88,7 @@
           <q-item-main>
             <q-item-tile label lines="1" >
               <router-link :to="'/pedido/' + row.codpedido" style="text-decoration: none; color: blue">
+              <!-- <a :href="'/pedido/'+row.codpedido"> -->
                 {{ row.tipo }}
                 <template v-if="row.estoquelocalorigem">
                   de
@@ -98,6 +99,7 @@
                 <template v-if="row.grupoeconomico">
                   de {{ row.grupoeconomico }}
                 </template>
+              <!-- </a> -->
               </router-link>
             </q-item-tile>
             <q-item-tile sublabel lines="1">
