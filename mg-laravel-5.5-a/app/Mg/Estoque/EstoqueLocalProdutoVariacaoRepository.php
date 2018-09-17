@@ -5,7 +5,7 @@ use Mg\MgRepository;
 class EstoqueLocalProdutoVariacaoRepository extends MgRepository
 {
 
-    public static function buscaOuCria($codprodutovariacao, $codestoquelocal)
+    public static function buscaOuCria($codestoquelocal, $codprodutovariacao)
         {
             $elpv = EstoqueLocalProdutoVariacao::where('codprodutovariacao', $codprodutovariacao)->where('codestoquelocal', $codestoquelocal)->first();
             if ($elpv == false)

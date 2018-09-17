@@ -23,7 +23,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
             ) {
 
         // Atualiza dados da EstoqueLocalProdutoVariacao
-        $es = EstoqueSaldoRepository::buscaOuCria($codprodutovariacao, $codestoquelocal, $fiscal);
+        $es = EstoqueSaldoRepository::buscaOuCria($codestoquelocal, $codprodutovariacao, $fiscal);
         $es->EstoqueLocalProdutoVariacao->corredor = $corredor;
         $es->EstoqueLocalProdutoVariacao->prateleira = $prateleira;
         $es->EstoqueLocalProdutoVariacao->coluna = $coluna;
@@ -62,7 +62,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
             ) {
 
         // Atualiza dados da EstoqueLocalProdutoVariacao
-        $es = EstoqueSaldoRepository::buscaOuCria($codprodutovariacao, $codestoquelocal, $fiscal);
+        $es = EstoqueSaldoRepository::buscaOuCria($codestoquelocal, $codprodutovariacao, $fiscal);
 
         // Cria novo registro de conferência
         $model = new EstoqueSaldoConferencia();
@@ -112,8 +112,8 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 
         // descobre qual o EstoqueMes ficará vinculado ao movimento
         $mes = EstoqueMesRepository::buscaOuCria(
-            $conferencia->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
             $conferencia->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
+            $conferencia->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
             $conferencia->EstoqueSaldo->fiscal,
             $conferencia->data
         );

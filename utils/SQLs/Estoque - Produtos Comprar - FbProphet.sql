@@ -42,15 +42,17 @@ select
 	, estoque.saldoquantidade as estoque
 	, chegando.quantidade as chegando
         , coalesce((select min(pe.quantidade) from tblprodutoembalagem pe where pe.codproduto = pv.codproduto)::int, 1) as lote	
-        , cast(previsao.previsao as bigint) as previsao
+        , previsao.previsao as previsao
+        , aulas.previsao  as aulas
 from tblproduto p
 inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
 left join estoque on (estoque.codprodutovariacao = pv.codprodutovariacao)
 left join chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
 left join previsao on (previsao.codprodutovariacao = pv.codprodutovariacao)
+left join aulas on (aulas.codprodutovariacao = pv.codprodutovariacao)
 where p.inativo is null
 and pv.descontinuado is null
-and p.codmarca = 10000047
+and p.codmarca = 197
 order by p.produto, pv.variacao, p.codproduto, pv.codprodutovariacao
 --where p.codproduto = 103047
 

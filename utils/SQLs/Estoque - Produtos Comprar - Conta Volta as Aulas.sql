@@ -4,6 +4,12 @@
 	inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
 	where elpvv.mes >= '2017-10-01'
 	group by elpv.codprodutovariacao
+), trim as (
+	select elpv.codprodutovariacao, sum(elpvv.quantidade) as quantidade
+	from tblestoquelocalprodutovariacao elpv
+	inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+	where elpvv.mes >= '2018-06-01'
+	group by elpv.codprodutovariacao
 ), aulas_2018 as (
 	select elpv.codprodutovariacao, sum(elpvv.quantidade) as quantidade
 	from tblestoquelocalprodutovariacao elpv
@@ -48,6 +54,7 @@ select
         , pv.quantidadeultimacompra as compra
         , pv.vendainicio
 	, ano.quantidade as ano
+	, trim.quantidade as trim
 	, aulas_2018.quantidade as aulas_2018
 	, aulas_2017.quantidade as aulas_2017
 	, estoque.saldoquantidade as estoque
@@ -56,6 +63,7 @@ select
 from tblproduto p
 inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
 left join ano on (pv.codprodutovariacao = ano.codprodutovariacao)
+left join trim on (pv.codprodutovariacao = trim.codprodutovariacao)
 left join aulas_2018 on (pv.codprodutovariacao = aulas_2018.codprodutovariacao)
 left join aulas_2017 on (pv.codprodutovariacao = aulas_2017.codprodutovariacao)
 left join estoque on (estoque.codprodutovariacao = pv.codprodutovariacao)
