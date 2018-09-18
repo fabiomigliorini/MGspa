@@ -50,6 +50,9 @@ class ProdutoVariacao extends MgModel
         'quantidadeultimacompra',
         'codprodutoimagem',
         'vendainicio',
+        'estoqueminimo',
+        'estoquemaximo',
+        'lotecompra',
     ];
     protected $dates = [
         'alteracao',

@@ -66,7 +66,7 @@ from
         --and pb_nti.codproduto = 24312     
         group by pb_nti.codprodutovariacao --, nt.codnfeterceiro
     ) chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
-    where (m.marca in ('Leonora'))
+    where (m.marca in ('Lassane'))
     and pv.descontinuado is null
     and p.inativo is null
     --and p.produto ilike '%pasta%'

@@ -59,7 +59,7 @@ select
 	, aulas_2017.quantidade as aulas_2017
 	, estoque.saldoquantidade as estoque
 	, chegando.quantidade as chegando
-        , coalesce((select min(pe.quantidade) from tblprodutoembalagem pe where pe.codproduto = pv.codproduto)::int, 1) as lote	
+        , coalesce((select max(pe.quantidade) from tblprodutoembalagem pe where pe.codproduto = pv.codproduto)::int, 1) as lote	
 from tblproduto p
 inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
 left join ano on (pv.codprodutovariacao = ano.codprodutovariacao)
@@ -70,7 +70,7 @@ left join estoque on (estoque.codprodutovariacao = pv.codprodutovariacao)
 left join chegando on (chegando.codprodutovariacao = pv.codprodutovariacao)
 where p.inativo is null
 and pv.descontinuado is null
-and p.codmarca = 10000002
+and p.codmarca = 138
 order by p.produto, pv.variacao, p.codproduto, pv.codprodutovariacao
 --where p.codproduto = 103047
 
