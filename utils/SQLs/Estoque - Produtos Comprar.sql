@@ -84,10 +84,11 @@ from
 
 /*
 UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = date_trunc('seconds', NOW()) WHERE CODPRODUTOVARIACAO IN (
-12205
-,12211
-,6970
-,2660
+86247
+,86250
+,86248
+,86249
+,86251
 )
 
 update tblprodutovariacao set descontinuado = null where descontinuado is not null and codprodutovariacao = 84313

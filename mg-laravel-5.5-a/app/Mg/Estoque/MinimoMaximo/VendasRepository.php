@@ -158,7 +158,7 @@ class VendasRepository
     public static function calcularMinimoMaximoGlobal(ProdutoVariacao $pv)
     {
 
-        if (!empty($pv->descontinuado) || !empty($pv->inativo) || !empty($pv->Produto->inativo)) {
+        if (!empty($pv->inativo) || !empty($pv->Produto->inativo)) {
             return $pv->update([
               'estoqueminimo' => 0,
               'estoquemaximo' => 0,
