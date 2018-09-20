@@ -28,8 +28,8 @@ class ComprasRepository
                   group by elpv.codprodutovariacao
           ), chegando as (
                   select
-          		pb_nti.codprodutovariacao
-          		, sum(cast(coalesce(nti.qcom * coalesce(pe_nti.quantidade, 1), 0) as bigint)) as chegando
+                  		pb_nti.codprodutovariacao
+                  		, sum(cast(coalesce(nti.qcom * coalesce(pe_nti.quantidade, 1), 0) as bigint)) as chegando
                   from tblnfeterceiro nt
                   inner join tblnfeterceiroitem nti on (nt.codnfeterceiro = nti.codnfeterceiro)
                   inner join tblprodutobarra pb_nti on (pb_nti.codprodutobarra = nti.codprodutobarra)
