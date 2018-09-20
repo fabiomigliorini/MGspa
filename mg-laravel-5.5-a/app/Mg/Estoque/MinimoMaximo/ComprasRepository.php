@@ -360,6 +360,7 @@ class ComprasRepository
           $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - {$marca->marca} - v{$v}.xlsx";
         }
         $writer->save($arquivo);
+	chmod ($arquivo, 0666);
     }
 
 }
