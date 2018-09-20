@@ -3,6 +3,7 @@
 namespace Mg\Pessoa;
 
 use Mg\MgRepository;
+use Mg\Cidade\Cidade;
 
 class PessoaRepository extends MgRepository
 {
@@ -150,6 +151,34 @@ class PessoaRepository extends MgRepository
 
         //$model->save();
         return $model;
+    }
+
+    public static function novoFornecedor($emit){
+
+        $codcidade = Cidade::where('codigooficial', $emit->enderEmit->cMun)->first();
+
+        $fornecedor = new Pessoa();
+        $fornecedor->pessoa = $emit->xNome;
+        $fornecedor->fantasia = $emit->xFant??$emit->xNome;
+        $fornecedor->cliente = false;
+        $fornecedor->fornecedor = true;
+        $fornecedor->fisica = false;
+        $fornecedor->cnpj = $emit->CNPJ;
+        $fornecedor->ie = $emit->IE;
+        $fornecedor->endereco = $emit->enderEmit->xLgr;
+        $fornecedor->numero = $emit->enderEmit->nro;
+        $fornecedor->complemento = $emit->enderEmit->xCpl??null;
+        $fornecedor->codcidade = $codcidade->codcidade;
+        $fornecedor->bairro = $emit->enderEmit->xBairro;
+        $fornecedor->cep = $emit->enderEmit->CEP;
+        $fornecedor->telefone1 = $emit->enderEmit->fone??null;
+        $fornecedor->emailnfe = 'nfe@mgpapelaria.com.br';
+        $fornecedor->notafiscal = 0;
+        // dd($pessoa);
+        $fornecedor->save();
+
+        $novoForncedor = Pessoa::orderBy('criacao', 'DESC')->first();
+        return $novoForncedor;
     }
 
 

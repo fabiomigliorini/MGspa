@@ -29,6 +29,16 @@ export default {
       icon: 'multiline_chart',
       title: 'Vendas',
       path: '/estoque-estatistica/100'
+    },
+    {
+      icon: 'description',
+      title: 'Nota Fiscal Terceiro',
+      path: '/notafiscal-terceiro'
+    },
+    {
+      icon: 'add_shopping_cart',
+      title: 'Pedidos e Transferências',
+      path: '/pedido'
     }
   ]
 }

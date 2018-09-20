@@ -38,5 +38,18 @@ export default [
   { path: '/estoque-saldo-conferencia/listagem/:codestoquelocal/:codmarca/:fiscal/:data', component: () => import('components/views/estoque-saldo-conferencia/Listagem/') },
 
   // NFe
-  { path: '/nfe', component: () => import('components/views/nfe/Index') }
+  { path: '/nfe', component: () => import('components/views/nfe/Index') },
+
+  // NotaFiscalTerceiro
+  { path: '/notafiscal-terceiro', component: () => import('components/views/notafiscal-tercerio/Index') },
+  { path: '/notafiscal-terceiro/detalhes-nfe/:chave', component: () => import('components/views/notafiscal-tercerio/Detalhes-nfe') },
+
+
+  { path: '/transferencia/requisicao', component: () => import('components/views/transferencia/requisicao/Index') },
+  { path: '/transferencia/requisicao/nova', component: () => import('components/views/transferencia/requisicao/Nova') },
+
+  // Pedidos
+  { path: '/pedido/', component: () => import('components/views/pedido/Index') },
+  { path: '/pedido/:id', component: () => import('components/views/pedido/View') },
+
 ]

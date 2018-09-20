@@ -5,9 +5,9 @@ use Carbon\Carbon;
 
 class EstoqueMesRepository extends MgRepository
 {
-    public static function buscaOuCria($codprodutovariacao, $codestoquelocal, $fiscal, $data)
+    public static function buscaOuCria($codestoquelocal, $codprodutovariacao, $fiscal, $data)
     {
-        $es = EstoqueSaldoRepository::buscaOuCria($codprodutovariacao, $codestoquelocal, $fiscal);
+        $es = EstoqueSaldoRepository::buscaOuCria($codestoquelocal, $codprodutovariacao, $fiscal);
         $mes = Carbon::today();
         $mes->day = 1;
         $mes->month = $data->month;

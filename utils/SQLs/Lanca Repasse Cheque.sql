@@ -1,19 +1,14 @@
-﻿select * from tblportador
+﻿select * from tblportador order by codportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-07-06', null, '2018-07-06 11:41', 1)
+values (210, '2018-09-19', null, '2018-09-19 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2219, '2018-07-06 11:41', 1
+select codcheque, 2252, '2018-09-19 10:00', 1
 from tblcheque where cmc7 in (
-'<00111803<0188501115>768004326523:',
-'<00142700<0188502055>350010631542:',
-'<00142708<0188502235>306004376544:',
-'<00142707<0188503315>373011187140:',
-'<23755811<0180001725>293600667104:',
-'<10408549<0189001345>000100379098:'
+'<75645982<0180004785>600000000190:'
 )
 
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc)
@@ -25,15 +20,16 @@ where crc.codchequerepasse >= 1900
 group by crc.codchequerepasse
 order by 1 desc
 
-update tblcheque set valor = 172.32 where cmc7 = '<34113644<0480001325>711720814794:'
+--update tblcheque set valor = 172.32 where cmc7 = '<34113644<0480001325>711720814794:'
 
-update tblchequerepasse set data = '2018-07-06', criacao = '2018-07-06 11:41' where codchequerepasse = 2187
-update tblchequerepassecheque set criacao = '2018-07-06 11:41' where codchequerepasse = 2187
+--update tblchequerepasse set data = '2018-07-06', criacao = '2018-07-06 11:41' where codchequerepasse = 2187
+--update tblchequerepassecheque set criacao = '2018-07-06 11:41' where codchequerepasse = 2187
 
-select * from tblchequerepassecheque where codchequerepasse = 2086
+--select * from tblchequerepassecheque where codchequerepasse = 2086
 
-delete from tblchequerepassecheque where codchequerepassecheque between 15837 and 15847
+--delete from tblchequerepassecheque where codchequerepassecheque between 15837 and 15847
 
+/*
 delete from tblchequerepassecheque  where codcheque in (
 	select codcheque
 	from tblcheque where cmc7 in (
@@ -58,7 +54,7 @@ update tblchequerepassecheque set codchequerepasse = 2187 where codchequerepasse
 )
 delete from tblchequerepassecheque where codchequerepassecheque in (15693, 15692)
 
-
+*/
 /*
 -- INSERE CHEQUE COMO DEVOLVIDO
 insert into tblchequedevolucao (codchequerepassecheque, codchequemotivodevolucao, data, observacoes, criacao, alteracao, codusuariocriacao, codusuarioalteracao)

@@ -5,9 +5,9 @@ use DB;
 
 class EstoqueSaldoRepository extends MgRepository
 {
-    public static function buscaOuCria($codprodutovariacao, $codestoquelocal, $fiscal)
+    public static function buscaOuCria($codestoquelocal, $codprodutovariacao, $fiscal)
     {
-        $elpv = EstoqueLocalProdutoVariacaoRepository::buscaOuCria($codprodutovariacao, $codestoquelocal);
+        $elpv = EstoqueLocalProdutoVariacaoRepository::buscaOuCria($codestoquelocal, $codprodutovariacao);
 
         $es = EstoqueSaldo::where('codestoquelocalprodutovariacao', $elpv->codestoquelocalprodutovariacao)->where('fiscal', $fiscal)->first();
         if ($es == false)

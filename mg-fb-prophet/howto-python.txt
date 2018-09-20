@@ -1,0 +1,24 @@
+sudo apt-get install python3-pip
+sudo apt-get install python3-tk
+sudo apt-get install python3-matplotlib*
+sudo apt-get install python3-pandas*
+sudo apt-get install python3-psycopg2
+
+
+
+pip3 install fbprophet
+pip3 install matplotlib
+
+
+import pandas as pd
+from fbprophet import Prophet
+df = pd.read_csv('example_wp_log_peyton_manning.csv')
+df.head()
+m = Prophet()
+m.fit(df)
+future = m.make_future_dataframe(periods=365)
+future.tail()
+forecast = m.predict(future)
+forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
+fig1 = m.plot(forecast)
+fig2 = m.plot_components(forecast)

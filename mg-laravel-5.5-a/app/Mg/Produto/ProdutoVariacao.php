@@ -34,7 +34,7 @@ namespace Mg\Produto;
  */
  use Mg\MgModel;
  use Mg\Estoque\EstoqueLocalProdutoVariacao;
- 
+
 class ProdutoVariacao extends MgModel
 {
     protected $table = 'tblprodutovariacao';
@@ -49,6 +49,10 @@ class ProdutoVariacao extends MgModel
         'custoultimacompra',
         'quantidadeultimacompra',
         'codprodutoimagem',
+        'vendainicio',
+        'estoqueminimo',
+        'estoquemaximo',
+        'lotecompra',
     ];
     protected $dates = [
         'alteracao',

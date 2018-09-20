@@ -15,9 +15,6 @@ Route::get('/', function () {
     return view('nfe');
 });
 
-Route::resource('nfe', 'NfeController');
-
-
 // Auth::routes();
 //
 // Route::get('/home', 'HomeController@index')->name('home');

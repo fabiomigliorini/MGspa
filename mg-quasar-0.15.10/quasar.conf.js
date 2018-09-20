@@ -72,6 +72,7 @@ module.exports = function (ctx) {
 
         // Adicionamos
         'QPageSticky',
+        'QBtnDropdown',
         'QInfiniteScroll',
         'QLayoutFooter',
         'QFab',
@@ -80,8 +81,10 @@ module.exports = function (ctx) {
         'QBreadcrumbsEl',
         'QTooltip',
         'QInput',
+        'QCheckbox',
         'QField',
         'QRadio',
+        'QOptionGroup',
         'QModal',
         'QCard',
         'QCardMain',
@@ -110,7 +113,8 @@ module.exports = function (ctx) {
         'QStepper',
         'QStep',
         'QStepperNavigation',
-        'QProgress'
+        'QProgress',
+        'QUploader'
       ],
       directives: [
         'Ripple',
