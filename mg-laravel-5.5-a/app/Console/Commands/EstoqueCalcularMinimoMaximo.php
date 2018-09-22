@@ -13,14 +13,14 @@ use Mg\Estoque\MinimoMaximo\VendaMensalRepository;
 use Mg\Estoque\MinimoMaximo\ComprasRepository;
 use Mg\Estoque\MinimoMaximo\FaltandoMail;
 
-class EstoqueSumarizarVendaMensal extends Command
+class EstoqueCalcularMinimoMaximo extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'estoque:sumarizar-venda-mensal {--codprodutovariacao=} {--codproduto=} {--codmarca=} {--gerar-pedido} {--enviar-mail-faltando} {--nao-recalcular}';
+    protected $signature = 'estoque:calcular-minimo-maximo {--codprodutovariacao=} {--codproduto=} {--codmarca=} {--gerar-pedido} {--enviar-mail-faltando} {--nao-recalcular}';
 
     /**
      * The console command description.

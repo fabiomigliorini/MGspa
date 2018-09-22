@@ -25,8 +25,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('nfe-php:resolver-pendente')->everyFiveMinutes();
-        //$schedule->command('estoque:calcula-minimo-maximo')->twiceDaily(1, 13);
-        $schedule->command('estoque:calcula-minimo-maximo')->dailyAt("00:01");
+        $schedule->command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt("00:01");
     }
 
     /**

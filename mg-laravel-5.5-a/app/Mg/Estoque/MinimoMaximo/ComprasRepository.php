@@ -136,7 +136,7 @@ class ComprasRepository
     public static function gerarPlanilhaPedido (Marca $marca)
     {
 
-        $produtos = satic::buscarProdutos($marca);
+        $produtos = static::buscarProdutos($marca);
 
         $ret = \PhpOffice\PhpSpreadsheet\Settings::setLocale('pt_br');
 
