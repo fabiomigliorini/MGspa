@@ -2,6 +2,7 @@
 
 namespace Mg\Estoque\MinimoMaximo;
 
+use Illuminate\Support\Facades\Log;
 use DB;
 use Carbon\Carbon;
 
@@ -11,8 +12,13 @@ use Mg\Produto\ProdutoVariacao;
 use Mg\Estoque\EstoqueLocalProdutoVariacaoRepository;
 use Mg\Estoque\EstoqueLocalProdutoVariacaoVenda;
 
-class VendasRepository
+class VendaMensalRepository
 {
+
+    /**
+     * Sumariza venda mensal de cada variacao em
+     * cada local na tabela tblestoquelocalprodutovariacaovenda
+     */
     public static function sumarizarVendaMensal(ProdutoVariacao $pv)
     {
         // Busca Totais de Vendas Agrupados Por Mês e Local
@@ -75,6 +81,9 @@ class VendasRepository
         return true;
     }
 
+    /**
+     * Atualiza tblprodutovariacao.vendainicio
+     */
     public static function atualizarPrimeiraVenda(ProdutoVariacao $pv)
     {
         // Busca Primeira Venda da Variacao
@@ -99,6 +108,13 @@ class VendasRepository
         ]);
     }
 
+    /**
+     * atualiza na tblprodutovariacao os campos
+     * - dataultimacompra
+     * - quantidadeultimacompra
+     * - custoultimacompra
+     * - lotecompra
+     */
     public static function atualizarUltimaCompra(ProdutoVariacao $pv)
     {
         // Busca Ultima Compra da Variacao
@@ -130,22 +146,23 @@ class VendasRepository
         $custoultimacompra = null;
         $lotecompra = 1;
         if (isset($compra[0])) {
-            $dataultimacompra = $compra[0]->emissao;
-            $quantidadeultimacompra = $compra[0]->quantidade;
-            if (!empty($quantidadeultimacompra)) {
-                $custoultimacompra = $compra[0]->valortotal / $quantidadeultimacompra;
-            }
+          $dataultimacompra = $compra[0]->emissao;
+          $quantidadeultimacompra = $compra[0]->quantidade;
+          if ($quantidadeultimacompra > 0) {
+            $custoultimacompra = $compra[0]->valortotal / $quantidadeultimacompra;
             $lotecompra = $compra[0]->lotecompra;
             if (empty($lotecompra)) {
-              $embs = $pv->Produto->ProdutoEmbalagemS()->orderBy('quantidade', 'desc')->get();
               $lotecompra = 1;
+              $embs = $pv->Produto->ProdutoEmbalagemS()->orderBy('quantidade', 'desc')->get();
               foreach ($embs as $emb) {
-                if (($quantidadeultimacompra % $emb->quantidade) == 0) {
+                $v = $quantidadeultimacompra / $emb->quantidade;
+                if (ceil($v) == $v) {
                   $lotecompra = $emb->quantidade;
                   break;
                 }
               }
             }
+          }
         }
         return $pv->update([
           'dataultimacompra' => $dataultimacompra,
@@ -155,6 +172,10 @@ class VendasRepository
         ]);
     }
 
+    /**
+     * Calcula o Estoquem Minimo e Maximo da Variacao para toda empresa,
+     * independente das filiais
+     */
     public static function calcularMinimoMaximoGlobal(ProdutoVariacao $pv)
     {
 
@@ -227,6 +248,7 @@ class VendasRepository
         // Soma outros dois meses da série
         $maximo += $vendas->firstWhere('mes', $mesesVendas[1])->quantidade??0;
         $maximo += $vendas->firstWhere('mes', $mesesVendas[2])->quantidade??0;
+        $minimo = ceil($maximo / 2);
 
         // Faz Calculo do Volta As Aulas Caso seja no inicio ou final do ano
         if (in_array($mesCorrente->month, [1, 2, 3, 9, 10, 11, 12])) {
@@ -277,8 +299,6 @@ class VendasRepository
         }
 
         $maximo = ceil($maximo);
-        $minimo = ceil($maximo / 2);
-        //dd($maximo);
 
         return $pv->update([
           'estoqueminimo' => $minimo,
@@ -287,11 +307,58 @@ class VendasRepository
 
     }
 
-    public static function atualizar(ProdutoVariacao $pv)
+    /**
+     * Atualiza todos os dados de estatistica de estoque da Variacao
+     */
+    public static function atualizarVariacao(ProdutoVariacao $pv)
     {
         static::sumarizarVendaMensal($pv);
         static::atualizarPrimeiraVenda($pv);
         static::atualizarUltimaCompra($pv);
         static::calcularMinimoMaximoGlobal($pv);
+        return true;
+    }
+
+    /**
+     * Atualiza todos os dados de estatistica de estoque do produto
+     */
+    public static function atualizarProduto (Produto $p)
+    {
+        foreach ($p->ProdutoVariacaoS()->orderBy('codprodutovariacao')->get() as $pv) {
+          static::atualizarVariacao($pv);
+        }
+        return true;
+    }
+
+    /**
+     * Atualiza todos os dados de estatistica de estoque da marca
+     */
+    public static function atualizarMarca (Marca $m)
+    {
+        $prods = $m->ProdutoS()->orderBy('codproduto')->get();
+        $total = $prods->count();
+        $i = 1;
+        foreach ($prods as $p) {
+          Log::info("Min/Max {$m->marca} - #{$p->codproduto} ($i/$total)");
+          static::atualizarProduto ($p);
+          $i++;
+        }
+        return true;
+    }
+
+    /**
+     * Atualiza todos os dados de estatistica de estoque de todos os produtos
+     */
+    public static function atualizar ()
+    {
+        $marcas = Marca::orderBy('codmarca')->get();
+        $total = $marcas->count();
+        $i = 1;
+        foreach ($marcas as $m) {
+          Log::info("Min/Max {$m->marca} ($i/$total)");
+          static::atualizarMarca ($m);
+          $i++;
+        }
+        return true;
     }
 }

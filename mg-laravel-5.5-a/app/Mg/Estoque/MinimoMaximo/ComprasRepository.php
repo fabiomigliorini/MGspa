@@ -13,7 +13,7 @@ use Mg\Marca\Marca;
 class ComprasRepository
 {
 
-    public static function gerarPlanilhaPedido (Marca $marca)
+    public static function buscarProdutos (Marca $marca = null)
     {
 
         $sql = "
@@ -41,7 +41,9 @@ class ComprasRepository
                   group by pb_nti.codprodutovariacao
           )
           select
-          	p.codproduto
+            m.codmarca
+            , m.marca
+          	, p.codproduto
           	, pv.codprodutovariacao
           	, p.produto || coalesce(' | ' || pv.variacao, '') as produto
             , coalesce(pv.referencia, p.referencia) as referencia
@@ -55,63 +57,87 @@ class ComprasRepository
           	, pv.lotecompra
             , pv.descontinuado
           from tblproduto p
+          inner join tblmarca m on (m.codmarca = p.codmarca)
           inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
           left join estoque e on (e.codprodutovariacao = pv.codprodutovariacao)
           left join chegando c on (c.codprodutovariacao = pv.codprodutovariacao)
-          where p.codmarca = :codmarca
-          and p.inativo is null
+          where p.inativo is null
           and pv.inativo is null
-          order by p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
         ";
-        $produtos = DB::select($sql, [
-          'codmarca' => $marca->codmarca,
-        ]);
-        foreach ($produtos as $prod) {
-          $prod->comprar = null;
-          if (!empty($prod->descontinuado)) {
-            continue;
-          }
-          $est = $prod->estoque + $prod->chegando;
-          $repor = $prod->estoquemaximo - $est;
-          if ($repor <= 0) {
-            continue;
-          }
-          $lote = $prod->lotecompra??1;
-          $lotes = $repor / $lote;
-          if ($est < $prod->estoqueminimo) {
-            $lotes = ceil($lotes);
-          } else {
-            $lotes = round($lotes, 0);
-          }
-          $prod->comprar = empty($lotes)?null:$lotes * $lote;
+
+        $params = [];
+        if (!empty($marca)) {
+          $sql .="
+            and p.codmarca = :codmarca
+          ";
+          $params['codmarca'] = $marca->codmarca;
+        } else {
+          $sql .="
+            and m.controlada = true
+          ";
         }
 
-        static::salvarPlanilhaPedido($marca, $produtos);
-
-        $str = "#,#PV,Produto,Ref,Data,Custo,Quant,Min,Max,Est,Cheg,Lote,Comprar\n";
+        $sql .="
+          order by m.marca, p.codmarca, p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
+        ";
+        $produtos = DB::select($sql, $params);
         foreach ($produtos as $prod) {
-          $str .= implode(",", [
-            $prod->codproduto,
-            $prod->codprodutovariacao,
-            '"' . $prod->produto . '"',
-            $prod->referencia,
-            $prod->dataultimacompra,
-            $prod->custoultimacompra,
-            $prod->quantidadeultimacompra,
-            $prod->estoqueminimo,
-            $prod->estoquemaximo,
-            $prod->estoque,
-            $prod->chegando,
-            $prod->lotecompra,
-            $prod->comprar,
-          ]) . "\n";
+          $prod->comprar = static::decideQuantidadeComprar(
+            $prod->estoque??0 + $prod->chegando??0,
+            $prod->estoqueminimo??0,
+            $prod->estoquemaximo??0,
+            $prod->lotecompra??1,
+            !empty($prod->descontinuado)
+          );
+          $prod->critico = static::decideEstoqueCritico(
+            $prod->estoque??0 + $prod->chegando??0,
+            $prod->estoqueminimo??0
+          );
+
         }
 
-        return file_put_contents("/tmp/saida.csv", $str);
+        return collect($produtos);
+
     }
 
-    public static function salvarPlanilhaPedido (Marca $marca, $produtos)
+    public static function decideEstoqueCritico ($estoque, $min)
     {
+      if (empty($min)) {
+        return false;
+      }
+      if ((($estoque) / $min) <= 0.4) {
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * Decide a Quantidade a Ser Comprada do Item, com base no tamanho do lote,
+     * Estoque Minimo e Estoque Maximo
+     */
+    public static function decideQuantidadeComprar ($estoque, $min, $max, $lote = 1, $descontinuado = false)
+    {
+      if (!empty($descontinuado)) {
+        return null;
+      }
+      $repor = $max - $estoque;
+      if ($repor <= 0) {
+        return null;
+      }
+      $lotes = $repor / $lote;
+      if ($estoque < $min) {
+        $lotes = ceil($lotes);
+      } else {
+        $lotes = round($lotes, 0);
+      }
+      return empty($lotes)?null:$lotes * $lote;
+    }
+
+    public static function gerarPlanilhaPedido (Marca $marca)
+    {
+
+        $produtos = satic::buscarProdutos($marca);
+
         $ret = \PhpOffice\PhpSpreadsheet\Settings::setLocale('pt_br');
 
         $spreadsheet = new Spreadsheet();
@@ -360,7 +386,7 @@ class ComprasRepository
           $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - {$marca->marca} - v{$v}.xlsx";
         }
         $writer->save($arquivo);
-	chmod ($arquivo, 0666);
+        chmod ($arquivo, 0666);
     }
 
 }

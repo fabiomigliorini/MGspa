@@ -3,10 +3,15 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
 use Mg\Produto\ProdutoVariacao;
-use Mg\Estoque\MinimoMaximo\VendasRepository;
+use Mg\Produto\Produto;
+use Mg\Marca\Marca;
+
+use Mg\Estoque\MinimoMaximo\VendaMensalRepository;
 use Mg\Estoque\MinimoMaximo\ComprasRepository;
+use Mg\Estoque\MinimoMaximo\FaltandoMail;
 
 class EstoqueSumarizarVendaMensal extends Command
 {
@@ -15,7 +20,7 @@ class EstoqueSumarizarVendaMensal extends Command
      *
      * @var string
      */
-    protected $signature = 'estoque:sumarizar-venda-mensal {--codprodutovariacao=}  {--codmarca=}';
+    protected $signature = 'estoque:sumarizar-venda-mensal {--codprodutovariacao=} {--codproduto=} {--codmarca=} {--gerar-pedido} {--enviar-mail-faltando} {--nao-recalcular}';
 
     /**
      * The console command description.
@@ -41,33 +46,43 @@ class EstoqueSumarizarVendaMensal extends Command
      */
     public function handle()
     {
-        $codprodutovariacao = $this->option('codprodutovariacao');
-        $codmarca = $this->option('codmarca');
 
-        $ret = [];
-        if (!empty($codprodutovariacao)) {
-            $var = ProdutoVariacao::findOrFail($codprodutovariacao);
-            $ret[$var->codprodutovariacao] = VendasRepository::atualizar($var);
-        } else if (!empty($codmarca)) {
-          $marca = \Mg\Marca\Marca::findOrFail($codmarca);
-          foreach ($marca->ProdutoS as $prod) {
-            foreach ($prod->ProdutoVariacaoS as $var) {
-              $ret[$var->codprodutovariacao] = VendasRepository::atualizar($var);
-            }
-          }
-          ComprasRepository::gerarPlanilhaPedido($marca);
-        } else {
-          $vars = \Mg\Produto\ProdutoVariacao::all();
-          foreach ($vars as $var) {
-            $ret[$var->codprodutovariacao] = VendasRepository::atualizar($var);
-          }
+        $ret = false;
+        $recalcular = !$this->option('nao-recalcular');
+
+        // se for somente uma variacao
+        if ($cod = $this->option('codprodutovariacao')) {
+          $m = ProdutoVariacao::findOrFail($cod);
+          return VendaMensalRepository::atualizarVariacao($m);
         }
 
-        dd($ret);
-        return $ret;
+        // se for somente um produto
+        if ($cod = $this->option('codproduto')) {
+          $m = Produto::findOrFail($cod);
+          return VendaMensalRepository::atualizarProduto($m);
+        }
 
-        // return VendasRepository::atualizarUltimaCompra($pv);
-        // return VendasRepository::atualizarPrimeiraVenda($pv);
-        // return VendasRepository::sumarizarVendaMensal($pv);
+        // se for somente uma marca
+        if ($cod = $this->option('codmarca')) {
+          $m = Marca::findOrFail($cod);
+          if ($recalcular) {
+            $ret = VendaMensalRepository::atualizarMarca($m);
+          }
+          // se for pra gerar o pedido de compra
+          if ($this->option('gerar-pedido')) {
+            $ret = ComprasRepository::gerarPlanilhaPedido($m);
+          }
+          return $ret;
+        }
+
+        // se for geral
+        if ($recalcular) {
+          $ret = VendaMensalRepository::atualizar();
+        }
+        if ($this->option('enviar-mail-faltando')) {
+          $destinatario = env('MAIL_ADDRES_ESTOQUE_FALTANDO', null);
+          $ret = Mail::to($destinatario)->queue(new FaltandoMail());
+        }
+        return $ret;
     }
 }

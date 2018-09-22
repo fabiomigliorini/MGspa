@@ -34,68 +34,47 @@ class FaltandoMail extends Mailable
      */
     public function build()
     {
-      $sql = "
-        with estoque as (
-            select
-                elpv.codprodutovariacao
-                , sum(es.saldoquantidade) as estoque
-            from tblestoquelocalprodutovariacao elpv
-            inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
-            left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
-            where el.inativo is null
-            group by elpv.codprodutovariacao
-        ), chegando as (
-            select
-                pb_nti.codprodutovariacao
-                , sum(cast(coalesce(nti.qcom * coalesce(pe_nti.quantidade, 1), 0) as bigint)) as chegando
-            from tblnfeterceiro nt
-            inner join tblnfeterceiroitem nti on (nt.codnfeterceiro = nti.codnfeterceiro)
-            inner join tblprodutobarra pb_nti on (pb_nti.codprodutobarra = nti.codprodutobarra)
-            left join tblprodutoembalagem pe_nti on (pe_nti.codprodutoembalagem = pb_nti.codprodutoembalagem)
-            where nt.codnotafiscal IS NULL
-            AND (nt.indmanifestacao IS NULL OR nt.indmanifestacao NOT IN (210220, 210240))
-            AND nt.indsituacao = 1
-            AND nt.ignorada = FALSE
-            group by pb_nti.codprodutovariacao
-        )
-        select
-          m.codmarca
-          , m.marca
-          , p.codproduto
-          , pv.codprodutovariacao
-          , p.produto || coalesce(' | ' || pv.variacao, '') as produto
-          , coalesce(pv.referencia, p.referencia) as referencia
-          , pv.dataultimacompra
-          , pv.custoultimacompra
-          , pv.quantidadeultimacompra
-          , pv.estoqueminimo
-          , pv.estoquemaximo
-          , e.estoque
-          , c.chegando
-          , pv.lotecompra
-          , pv.descontinuado
-        from tblproduto p
-        inner join tblmarca m on (m.codmarca = p.codmarca)
-        inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
-        left join estoque e on (e.codprodutovariacao = pv.codprodutovariacao)
-        left join chegando c on (c.codprodutovariacao = pv.codprodutovariacao)
-        where m.controlada = true
-        and p.inativo is null
-        and pv.inativo is null
-        and pv.descontinuado is null
-        and pv.estoqueminimo > 0
-        and pv.estoqueminimo > (coalesce(c.chegando, 0) + coalesce(e.estoque, 0))
-        order by m.marca, m.codmarca, p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
-      ";
-      $params = [];
-      if (!empty($this->marca)) {
-        $params['codmarca'] = $this->marca->codmarca;
+
+
+      // $marca = Marca::findOrFail(10000064);
+
+      // $produtos = ComprasRepository::buscarProdutos($marca);
+      $produtos = ComprasRepository::buscarProdutos();
+      $marcas = collect();
+      foreach ($produtos as $key => $prod) {
+        if (empty($prod->comprar)) {
+          continue;
+        }
+        if (!isset($marcas[$prod->codmarca])) {
+          $marcas[$prod->codmarca] = (object) [
+            'codmarca' => $prod->codmarca,
+            'marca' => $prod->marca,
+            'total' => 0,
+            'comprar' => 0,
+            'critico' => 0,
+            'abaixominimo' => 0,
+            'produtos' => collect()
+          ];
+        }
+        $marcas[$prod->codmarca]->total += ($prod->comprar * $prod->custoultimacompra);
+        $marcas[$prod->codmarca]->comprar++;
+        if ((($prod->estoque + $prod->chegando) > $prod->estoqueminimo) && ($prod->estoqueminimo > 0)) {
+          continue;
+        }
+        $marcas[$prod->codmarca]->abaixominimo++;
+        if ($prod->critico) {
+          $marcas[$prod->codmarca]->critico++;
+        }
+        $marcas[$prod->codmarca]->produtos[] = $prod;
       }
-      $produtos = collect(DB::select($sql, $params));
-      $marcas = $produtos->groupBy('marca');
+
+      $marcas = $marcas->sortByDesc('total');
+      // dd($marcas);
+      //$marcas = $produtos->groupBy('marca');
+      // dd($marcas);
 
       return $this
-        ->subject("Produtos Abaixo do Minimo")
+        ->subject("Produtos Faltando")
         ->view('faltando-mail.faltando')
         ->with(['marcas' => $marcas]);
 
