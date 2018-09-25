@@ -11,6 +11,7 @@ use Mg\Produto\Produto;
 use Mg\Produto\ProdutoVariacao;
 use Mg\Estoque\EstoqueLocalProdutoVariacaoRepository;
 use Mg\Estoque\EstoqueLocalProdutoVariacaoVenda;
+use Mg\Estoque\EstoqueLocalProdutoVariacao;
 
 class VendaMensalRepository
 {
@@ -308,6 +309,203 @@ class VendaMensalRepository
     }
 
     /**
+     * Calcula o Estoquem Minimo e Maximo da Variacao para cada EstoqueLocal
+     */
+    public static function calcularMinimoMaximoEstoqueLocal(ProdutoVariacao $pv)
+    {
+
+      // atualiza produtovariacao
+      $pv = $pv->fresh();
+
+      // onde e deposito
+      $codestoquelocal_deposito = 101001;
+
+      // quais sao percentuais padrao das filiais
+      $percentuais = collect(static::determinaPercentualEstoqueLocal($pv));
+
+      // inicializa variaveis de controle pra iteracao
+      $saldo_maximo = $pv->estoquemaximo;
+      $saldo_minimo = $pv->estoqueminimo;
+      $locais = $percentuais->count();
+      $i = 1;
+
+      // percorre todos os locais
+      foreach ($percentuais as $codestoquelocal => $percentual) {
+
+        // calcula maximo
+        $max = round(($percentual * $pv->estoquemaximo) / 100, 0);
+        if (($max > $saldo_maximo) || ($i == $locais)) {
+          $max = $saldo_maximo;
+        }
+        $saldo_maximo -= $max;
+        $maximo[$codestoquelocal] = $max;
+
+        // calcula minimo
+        $min = round(($percentual * $pv->estoqueminimo) / 100, 0);
+        if (($min > $saldo_minimo) || ($i == $locais)) {
+          $min = $saldo_minimo;
+        }
+        $saldo_minimo -= $min;
+        $minimo[$codestoquelocal] = $min;
+
+        $i++;
+      }
+
+      // atualiza registros no Banco de Dados
+      foreach ($percentuais as $codestoquelocal => $percentual) {
+        EstoqueLocalProdutoVariacao::where([
+            'codestoquelocal' => $codestoquelocal,
+            'codprodutovariacao' => $pv->codprodutovariacao,
+          ])->update([
+            'estoquemaximo' => $maximo[$codestoquelocal],
+            'estoqueminimo' => $minimo[$codestoquelocal],
+          ]);
+      }
+
+      // Limpa Minimo e Maximo de locais inativos
+      $ret = EstoqueLocalProdutoVariacao::where([
+          'codprodutovariacao' => $pv->codprodutovariacao,
+        ])->whereNotIn('codestoquelocal', $percentuais->keys())->update([
+          'estoqueminimo' => null,
+          'estoquemaximo' => null,
+        ]);
+
+      return true;
+
+    }
+
+    public static function determinaPercentualEstoqueDeposito ($quantidade)
+    {
+      if ($quantidade >= 200) {
+        return 70;
+      }
+      if ($quantidade >= 100) {
+        return 50;
+      }
+      if ($quantidade > 30) {
+        return 20;
+      }
+      return 0;
+    }
+
+    public static function determinaPercentualEstoqueLocal (ProdutoVariacao $pv, $quantidade = null)
+    {
+
+      if (empty($quantidade)) {
+        $quantidade = $pv->estoquemaximo;
+      }
+
+      switch ($quantidade) {
+        case 1:
+          return [
+            101001 => 0,
+            102001 => 0,
+            103001 => 100,
+            104001 => 0
+          ];
+
+        case 2:
+          return [
+            101001 => 0,
+            102001 => 50,
+            103001 => 50,
+            104001 => 0
+          ];
+
+        case 3:
+          return [
+            101001 => 0,
+            102001 => 33.3,
+            103001 => 33.4,
+            104001 => 33.3
+          ];
+
+        case 4:
+          return [
+            101001 => 0,
+            102001 => 25,
+            103001 => 50,
+            104001 => 25
+          ];
+
+        case 5:
+          return [
+            101001 => 0,
+            102001 => 40,
+            103001 => 40,
+            104001 => 20
+          ];
+
+        default:
+
+          // determina quanto do estoque deve estar no deposito
+          $codestoquelocal_deposito = 101001;
+          $deposito = static::determinaPercentualEstoqueDeposito($quantidade);
+
+          // determina quanto do estoque deve estar nas lojas
+          $lojas = 100 - $deposito;
+
+          // determina um padrao de distribuicao de acordo com faturamento
+          $ret = [
+            $codestoquelocal_deposito => $deposito,
+            102001 => ($lojas * 38)/100,
+            103001 => ($lojas * 50)/100,
+            104001 => ($lojas * 12)/100
+          ];
+
+          // busca vendas das lojas
+          $sql = "
+            select elpv.codestoquelocal, es.saldoquantidade, sum(vda.quantidade) as quantidade
+            from tblestoquelocal el
+            left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = el.codestoquelocal and elpv.codprodutovariacao = :codprodutovariacao)
+            left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
+            left join tblestoquelocalprodutovariacaovenda vda on (vda.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and vda.mes >= date_trunc('month', current_date - '3 months'::interval))
+            where el.inativo is null
+            --and el.codestoquelocal not in (101001, 102001, 103001, 104001)
+            --and el.codestoquelocal not in (104001)
+            group by elpv.codestoquelocal, es.saldoquantidade
+            order by elpv.codestoquelocal asc
+          ";
+          $params = [
+            'codprodutovariacao' => $pv->codprodutovariacao,
+          ];
+          $vendas = collect(DB::select($sql, $params));
+
+          // calcula venda total
+          $venda_total = $vendas->sum('quantidade');
+
+          // calcula percentual de acordo com venda da filial
+          foreach ($ret as $codestoquelocal => $perc) {
+            if ($codestoquelocal == $codestoquelocal_deposito) {
+              continue;
+            }
+            if (!$venda_filial = $vendas->firstWhere('codestoquelocal', $codestoquelocal)) {
+              continue;
+            }
+            if ($venda_filial->quantidade <= 0) {
+              continue;
+            }
+            $ret[$codestoquelocal] = (($venda_filial->quantidade / $venda_total) * $lojas);
+          }
+
+          // Caso percentual distribuicao seja diferente de 100% recalcula proporcionalmente
+          $total = array_sum($ret);
+          if ($total != 100) {
+            $total_lojas = $total - $deposito;
+            foreach ($ret as $codestoquelocal => $perc) {
+              if ($codestoquelocal == $codestoquelocal_deposito) {
+                continue;
+              }
+              $ret[$codestoquelocal] = ($ret[$codestoquelocal] / $total_lojas) * $lojas;
+            }
+          }
+
+          return $ret;
+      }
+
+    }
+
+    /**
      * Atualiza todos os dados de estatistica de estoque da Variacao
      */
     public static function atualizarVariacao(ProdutoVariacao $pv)
@@ -316,6 +514,7 @@ class VendaMensalRepository
         static::atualizarPrimeiraVenda($pv);
         static::atualizarUltimaCompra($pv);
         static::calcularMinimoMaximoGlobal($pv);
+        static::calcularMinimoMaximoEstoqueLocal($pv);
         return true;
     }
 
@@ -325,6 +524,7 @@ class VendaMensalRepository
     public static function atualizarProduto (Produto $p)
     {
         foreach ($p->ProdutoVariacaoS()->orderBy('codprodutovariacao')->get() as $pv) {
+          // Log::info("Min/Max PV - #{$pv->codprodutovariacao}");
           static::atualizarVariacao($pv);
         }
         return true;

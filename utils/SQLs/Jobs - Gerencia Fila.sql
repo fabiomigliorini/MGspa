@@ -9,6 +9,7 @@ select queue, count(*) from tbljobs group by queue order by queue
 delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup group by dup.payload)
 
 update tbljobs set queue = 'parado_cm' where payload ilike '%EstoqueCalculaCustoMedio%' and queue != 'parado_cm'
+delete from tbljobs where queue = 'parado_cm'
 
 select * from tbljobs limit 500
 
@@ -28,6 +29,7 @@ select * from tbljobs
 
 delete from tbljobs where id = 15486067
 
+update tbljobs set queue = 'parado_cm' where payload ilike '%EstoqueCalculaCustoMedio%'
 
 update tbljobs set queue = 'parado_nfpb' where payload ilike '%EstoqueGeraMovimentoNotaFiscalProdutoBarra%'
 

@@ -1,14 +1,14 @@
 ﻿select * from tblportador order by codportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-09-21', null, '2018-09-21 11:41', 1)
+values (210, '2018-09-25', null, '2018-09-25 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2254, '2018-09-21 10:00', 1
+select codcheque, 2256, '2018-09-25 10:00', 1
 from tblcheque where cmc7 in (
-'<00142706<0188507205>322010526675:'
+'<00115894<0188500035>912002830706:'
 )
 
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc)
@@ -62,11 +62,15 @@ select crc.codchequerepassecheque, cmd.codchequemotivodevolucao, '2017-08-15', '
 from tblchequerepassecheque crc
 inner join tblcheque c on (c.codcheque = crc.codcheque)
 inner join tblchequemotivodevolucao cmd on (cmd.numero = 12)
-where c.cmc7 = '<34182182<0480000685>871591656302:'
+where c.cmc7 = '<34182182<0480001185>801421544691:'
 
 -- MARCA INDSTATUS - EM COBRANCA
-update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select codcheque from tblcheque where cmc7 = '<34182182<0480000685>871591656302:')
+update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select codcheque from tblcheque where cmc7 = '<34182182<0480001185>801421544691:')
 
+
+select * from tblchequedevolucao order by codchequedevolucao desc
+
+update tblchequedevolucao set data = '2018-08-30', criacao = date_trunc('second', now()), alteracao = date_trunc('second', now())where codchequedevolucao = 312
 
 */
 
