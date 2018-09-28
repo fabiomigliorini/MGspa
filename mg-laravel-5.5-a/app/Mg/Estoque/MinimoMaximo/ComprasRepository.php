@@ -12,10 +12,8 @@ use Mg\Marca\Marca;
 
 class ComprasRepository
 {
-
-    public static function buscarProdutos (Marca $marca = null)
+    public static function buscarProdutos(Marca $marca = null)
     {
-
         $sql = "
           with estoque as (
                   select
@@ -67,12 +65,12 @@ class ComprasRepository
 
         $params = [];
         if (!empty($marca)) {
-          $sql .="
+            $sql .="
             and p.codmarca = :codmarca
           ";
-          $params['codmarca'] = $marca->codmarca;
+            $params['codmarca'] = $marca->codmarca;
         } else {
-          $sql .="
+            $sql .="
             and m.controlada = true
           ";
         }
@@ -82,60 +80,57 @@ class ComprasRepository
         ";
         $produtos = DB::select($sql, $params);
         foreach ($produtos as $prod) {
-          $prod->comprar = static::decideQuantidadeComprar(
+            $prod->comprar = static::decideQuantidadeComprar(
             $prod->estoque??0 + $prod->chegando??0,
             $prod->estoqueminimo??0,
             $prod->estoquemaximo??0,
             $prod->lotecompra??1,
             !empty($prod->descontinuado)
           );
-          $prod->critico = static::decideEstoqueCritico(
+            $prod->critico = static::decideEstoqueCritico(
             $prod->estoque??0 + $prod->chegando??0,
             $prod->estoqueminimo??0
           );
-
         }
 
         return collect($produtos);
-
     }
 
-    public static function decideEstoqueCritico ($estoque, $min)
+    public static function decideEstoqueCritico($estoque, $min)
     {
-      if (empty($min)) {
+        if (empty($min)) {
+            return false;
+        }
+        if ((($estoque) / $min) <= 0.4) {
+            return true;
+        }
         return false;
-      }
-      if ((($estoque) / $min) <= 0.4) {
-        return true;
-      }
-      return false;
     }
 
     /**
      * Decide a Quantidade a Ser Comprada do Item, com base no tamanho do lote,
      * Estoque Minimo e Estoque Maximo
      */
-    public static function decideQuantidadeComprar ($estoque, $min, $max, $lote = 1, $descontinuado = false)
+    public static function decideQuantidadeComprar($estoque, $min, $max, $lote = 1, $descontinuado = false)
     {
-      if (!empty($descontinuado)) {
-        return null;
-      }
-      $repor = $max - $estoque;
-      if ($repor <= 0) {
-        return null;
-      }
-      $lotes = $repor / $lote;
-      if ($estoque < $min) {
-        $lotes = ceil($lotes);
-      } else {
-        $lotes = round($lotes, 0);
-      }
-      return empty($lotes)?null:$lotes * $lote;
+        if (!empty($descontinuado)) {
+            return null;
+        }
+        $repor = $max - $estoque;
+        if ($repor <= 0) {
+            return null;
+        }
+        $lotes = $repor / $lote;
+        if ($estoque < $min) {
+            $lotes = ceil($lotes);
+        } else {
+            $lotes = round($lotes, 0);
+        }
+        return empty($lotes)?null:$lotes * $lote;
     }
 
-    public static function gerarPlanilhaPedido (Marca $marca)
+    public static function gerarPlanilhaPedido(Marca $marca)
     {
-
         $produtos = static::buscarProdutos($marca);
 
         $ret = \PhpOffice\PhpSpreadsheet\Settings::setLocale('pt_br');
@@ -231,64 +226,64 @@ class ComprasRepository
 
         $linhaInicial = $linha;
         foreach ($produtos as $prod) {
-          $sheet->setCellValue("A{$linha}", $prod->codproduto);
-          $sheet->getCell("A{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
-          $sheet->setCellValue("B{$linha}", $prod->codprodutovariacao);
-          $sheet->getCell("B{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
+            $sheet->setCellValue("A{$linha}", $prod->codproduto);
+            $sheet->getCell("A{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
+            $sheet->setCellValue("B{$linha}", $prod->codprodutovariacao);
+            $sheet->getCell("B{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
 
-          $sheet->setCellValue("C{$linha}", $prod->produto);
-          if (!empty($prod->descontinuado)) {
-            $desc = Carbon::parse($prod->descontinuado)->format('d/m/Y H:i');
-            $sheet->getComment("C{$linha}")->getText()->createTextRun("Produto descontinuado em {$desc}");
-            $sheet->getStyle("A{$linha}:N{$linha}")->getFont()->getColor()->setARGB('FF808080');
-          }
+            $sheet->setCellValue("C{$linha}", $prod->produto);
+            if (!empty($prod->descontinuado)) {
+                $desc = Carbon::parse($prod->descontinuado)->format('d/m/Y H:i');
+                $sheet->getComment("C{$linha}")->getText()->createTextRun("Produto descontinuado em {$desc}");
+                $sheet->getStyle("A{$linha}:N{$linha}")->getFont()->getColor()->setARGB('FF808080');
+            }
 
 
-          $sheet->setCellValueExplicit("D{$linha}", $prod->referencia, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-          $sheet->setCellValue("E{$linha}", \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($prod->dataultimacompra));
-          $sheet->setCellValue("F{$linha}", $prod->custoultimacompra);
-          $sheet->setCellValue("G{$linha}", $prod->quantidadeultimacompra);
-          $sheet->setCellValue("H{$linha}", $prod->estoqueminimo);
-          $sheet->setCellValue("I{$linha}", $prod->estoquemaximo);
+            $sheet->setCellValueExplicit("D{$linha}", $prod->referencia, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue("E{$linha}", \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($prod->dataultimacompra));
+            $sheet->setCellValue("F{$linha}", $prod->custoultimacompra);
+            $sheet->setCellValue("G{$linha}", $prod->quantidadeultimacompra);
+            $sheet->setCellValue("H{$linha}", $prod->estoqueminimo);
+            $sheet->setCellValue("I{$linha}", $prod->estoquemaximo);
 
-          $sheet->setCellValue("J{$linha}", $prod->estoque);
-          $sheet->setCellValue("K{$linha}", $prod->chegando);
+            $sheet->setCellValue("J{$linha}", $prod->estoque);
+            $sheet->setCellValue("K{$linha}", $prod->chegando);
 
-          // Cores do Saldo do Estoque
+            // Cores do Saldo do Estoque
           $cor = 'FF99FF66'; // Verde
           if (($prod->estoque + $prod->chegando) < $prod->estoqueminimo) {
-            $cor = 'FFFF6666'; // Vermelho
-          } else if (($prod->estoque + $prod->chegando) > $prod->estoquemaximo) {
-            $cor = 'FFFFFF99'; // Amarelo
+              $cor = 'FFFF6666'; // Vermelho
+          } elseif (($prod->estoque + $prod->chegando) > $prod->estoquemaximo) {
+              $cor = 'FFFFFF99'; // Amarelo
           }
-          $sheet->getStyle("J{$linha}:K{$linha}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-          $sheet->getStyle("J{$linha}:K{$linha}")->getFill()->getStartColor()->setARGB($cor);
+            $sheet->getStyle("J{$linha}:K{$linha}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+            $sheet->getStyle("J{$linha}:K{$linha}")->getFill()->getStartColor()->setARGB($cor);
 
 
-          $sheet->setCellValue("L{$linha}", $prod->lotecompra);
-          $sheet->setCellValue("M{$linha}", $prod->comprar);
-          $sheet->setCellValue("N{$linha}", "=IF(ISNUMBER(M{$linha}),M{$linha}*F{$linha},\"\")");
-          $linha++;
+            $sheet->setCellValue("L{$linha}", $prod->lotecompra);
+            $sheet->setCellValue("M{$linha}", $prod->comprar);
+            $sheet->setCellValue("N{$linha}", "=IF(ISNUMBER(M{$linha}),M{$linha}*F{$linha},\"\")");
+            $linha++;
         }
 
         for ($i = 1; $i <= 10; $i++) {
-          $sheet->setCellValue("A{$linha}", '');
-          $sheet->setCellValue("B{$linha}", '');
-          $sheet->setCellValue("C{$linha}", '');
-          $sheet->setCellValueExplicit("D{$linha}", '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue("A{$linha}", '');
+            $sheet->setCellValue("B{$linha}", '');
+            $sheet->setCellValue("C{$linha}", '');
+            $sheet->setCellValueExplicit("D{$linha}", '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
 
-          $sheet->setCellValue("E{$linha}", '');
+            $sheet->setCellValue("E{$linha}", '');
 
-          $sheet->setCellValue("F{$linha}", null);
-          $sheet->setCellValue("G{$linha}", '');
-          $sheet->setCellValue("H{$linha}", '');
-          $sheet->setCellValue("I{$linha}", '');
-          $sheet->setCellValue("J{$linha}", '');
-          $sheet->setCellValue("K{$linha}", '');
-          $sheet->setCellValue("L{$linha}", '');
-          $sheet->setCellValue("M{$linha}", null);
-          $sheet->setCellValue("N{$linha}", "=M{$linha}*F{$linha}");
-          $linha++;
+            $sheet->setCellValue("F{$linha}", null);
+            $sheet->setCellValue("G{$linha}", '');
+            $sheet->setCellValue("H{$linha}", '');
+            $sheet->setCellValue("I{$linha}", '');
+            $sheet->setCellValue("J{$linha}", '');
+            $sheet->setCellValue("K{$linha}", '');
+            $sheet->setCellValue("L{$linha}", '');
+            $sheet->setCellValue("M{$linha}", null);
+            $sheet->setCellValue("N{$linha}", "=M{$linha}*F{$linha}");
+            $linha++;
         }
 
         $linhaFinal = $linha-1;
@@ -382,11 +377,10 @@ class ComprasRepository
         $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - {$marca->marca}.xlsx";
         $v = 0;
         while (file_exists($arquivo)) {
-          $v++;
-          $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - {$marca->marca} - v{$v}.xlsx";
+            $v++;
+            $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - {$marca->marca} - v{$v}.xlsx";
         }
         $writer->save($arquivo);
-        chmod ($arquivo, 0666);
+        chmod($arquivo, 0666);
     }
-
 }

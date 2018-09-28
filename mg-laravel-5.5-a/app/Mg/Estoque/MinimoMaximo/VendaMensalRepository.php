@@ -147,23 +147,23 @@ class VendaMensalRepository
         $custoultimacompra = null;
         $lotecompra = 1;
         if (isset($compra[0])) {
-          $dataultimacompra = $compra[0]->emissao;
-          $quantidadeultimacompra = $compra[0]->quantidade;
-          if ($quantidadeultimacompra > 0) {
-            $custoultimacompra = $compra[0]->valortotal / $quantidadeultimacompra;
-            $lotecompra = $compra[0]->lotecompra;
-            if (empty($lotecompra)) {
-              $lotecompra = 1;
-              $embs = $pv->Produto->ProdutoEmbalagemS()->orderBy('quantidade', 'desc')->get();
-              foreach ($embs as $emb) {
-                $v = $quantidadeultimacompra / $emb->quantidade;
-                if (ceil($v) == $v) {
-                  $lotecompra = $emb->quantidade;
-                  break;
+            $dataultimacompra = $compra[0]->emissao;
+            $quantidadeultimacompra = $compra[0]->quantidade;
+            if ($quantidadeultimacompra > 0) {
+                $custoultimacompra = $compra[0]->valortotal / $quantidadeultimacompra;
+                $lotecompra = $compra[0]->lotecompra;
+                if (empty($lotecompra)) {
+                    $lotecompra = 1;
+                    $embs = $pv->Produto->ProdutoEmbalagemS()->orderBy('quantidade', 'desc')->get();
+                    foreach ($embs as $emb) {
+                        $v = $quantidadeultimacompra / $emb->quantidade;
+                        if (ceil($v) == $v) {
+                            $lotecompra = $emb->quantidade;
+                            break;
+                        }
+                    }
                 }
-              }
             }
-          }
         }
         return $pv->update([
           'dataultimacompra' => $dataultimacompra,
@@ -179,7 +179,6 @@ class VendaMensalRepository
      */
     public static function calcularMinimoMaximoGlobal(ProdutoVariacao $pv)
     {
-
         if (!empty($pv->inativo) || !empty($pv->Produto->inativo)) {
             return $pv->update([
               'estoqueminimo' => 0,
@@ -237,8 +236,8 @@ class VendaMensalRepository
 
         // transforma coluna mes em instancia do Carbon
         foreach ($vendas as $key => $venda) {
-          $venda->mes = Carbon::parse($venda->mes);
-          $venda->quantidade = (double) $venda->quantidade;
+            $venda->mes = Carbon::parse($venda->mes);
+            $venda->quantidade = (double) $venda->quantidade;
         }
 
         // Se mes Corrente vendeu mais que primeiro mês da Série, utiliza corrente
@@ -286,17 +285,16 @@ class VendaMensalRepository
             // Soma Vendas Volta as Aulas
             $maximoAulas = 0;
             foreach ($mesesAulas as $mes) {
-              $maximoAulas += $vendas->firstWhere('mes', $mes)->quantidade??0;
+                $maximoAulas += $vendas->firstWhere('mes', $mes)->quantidade??0;
             }
 
             // Desconta Venda do ano atual
             foreach ($mesesAulasDescontar as $mes) {
-              $maximoAulas -= $vendas->firstWhere('mes', $mes)->quantidade??0;
+                $maximoAulas -= $vendas->firstWhere('mes', $mes)->quantidade??0;
             }
 
             // Maximo é o maior entre normal e volta as aulas
             $maximo = max($maximo, $maximoAulas);
-
         }
 
         $maximo = ceil($maximo);
@@ -305,7 +303,6 @@ class VendaMensalRepository
           'estoqueminimo' => $minimo,
           'estoquemaximo' => $maximo,
         ]);
-
     }
 
     /**
@@ -315,87 +312,86 @@ class VendaMensalRepository
     {
 
       // atualiza produtovariacao
-      $pv = $pv->fresh();
+        $pv = $pv->fresh();
 
-      // onde e deposito
-      $codestoquelocal_deposito = 101001;
+        // onde e deposito
+        $codestoquelocal_deposito = 101001;
 
-      // quais sao percentuais padrao das filiais
-      $percentuais = collect(static::determinaPercentualEstoqueLocal($pv));
+        // quais sao percentuais padrao das filiais
+        $percentuais = collect(static::determinaPercentualEstoqueLocal($pv));
 
-      // inicializa variaveis de controle pra iteracao
-      $saldo_maximo = $pv->estoquemaximo;
-      $saldo_minimo = $pv->estoqueminimo;
-      $locais = $percentuais->count();
-      $i = 1;
+        // inicializa variaveis de controle pra iteracao
+        $minimo = static::ratearQuantidadePelosPercentuais($pv->estoqueminimo, $percentuais);
+        $maximo = static::ratearQuantidadePelosPercentuais($pv->estoquemaximo, $percentuais);
 
-      // percorre todos os locais
-      foreach ($percentuais as $codestoquelocal => $percentual) {
-
-        // calcula maximo
-        $max = round(($percentual * $pv->estoquemaximo) / 100, 0);
-        if (($max > $saldo_maximo) || ($i == $locais)) {
-          $max = $saldo_maximo;
-        }
-        $saldo_maximo -= $max;
-        $maximo[$codestoquelocal] = $max;
-
-        // calcula minimo
-        $min = round(($percentual * $pv->estoqueminimo) / 100, 0);
-        if (($min > $saldo_minimo) || ($i == $locais)) {
-          $min = $saldo_minimo;
-        }
-        $saldo_minimo -= $min;
-        $minimo[$codestoquelocal] = $min;
-
-        $i++;
-      }
-
-      // atualiza registros no Banco de Dados
-      foreach ($percentuais as $codestoquelocal => $percentual) {
-        EstoqueLocalProdutoVariacao::where([
+        // atualiza registros no Banco de Dados
+        foreach ($percentuais as $codestoquelocal => $percentual) {
+            EstoqueLocalProdutoVariacao::where([
             'codestoquelocal' => $codestoquelocal,
             'codprodutovariacao' => $pv->codprodutovariacao,
           ])->update([
             'estoquemaximo' => $maximo[$codestoquelocal],
             'estoqueminimo' => $minimo[$codestoquelocal],
           ]);
-      }
+        }
 
-      // Limpa Minimo e Maximo de locais inativos
-      $ret = EstoqueLocalProdutoVariacao::where([
+        // Limpa Minimo e Maximo de locais inativos
+        $ret = EstoqueLocalProdutoVariacao::where([
           'codprodutovariacao' => $pv->codprodutovariacao,
         ])->whereNotIn('codestoquelocal', $percentuais->keys())->update([
           'estoqueminimo' => null,
           'estoquemaximo' => null,
         ]);
 
-      return true;
-
+        return true;
     }
 
-    public static function determinaPercentualEstoqueDeposito ($quantidade)
+    public static function ratearQuantidadePelosPercentuais($quantidade, $percentuais)
     {
-      if ($quantidade >= 200) {
-        return 70;
-      }
-      if ($quantidade >= 100) {
-        return 50;
-      }
-      if ($quantidade > 30) {
-        return 20;
-      }
-      return 0;
+        $saldo = $quantidade;
+        if (is_array($percentuais)) {
+            $percentuais = collect($percentuais);
+        }
+        $locais = $percentuais->count();
+        $i = 1;
+
+        // percorre todos os locais
+        foreach ($percentuais->sort() as $codestoquelocal => $percentual) {
+
+            // calcula maximo
+            $qtd = round(($percentual * $quantidade) / 100, 0);
+            if (($qtd > $saldo) || ($i == $locais)) {
+                $qtd = $saldo;
+            }
+            $saldo -= $qtd;
+            $ret[$codestoquelocal] = $qtd;
+
+            $i++;
+        }
+        return $ret;
     }
 
-    public static function determinaPercentualEstoqueLocal (ProdutoVariacao $pv, $quantidade = null)
+    public static function determinaPercentualEstoqueDeposito($quantidade)
     {
+        if ($quantidade >= 200) {
+            return 70;
+        }
+        if ($quantidade >= 100) {
+            return 50;
+        }
+        if ($quantidade > 30) {
+            return 20;
+        }
+        return 0;
+    }
 
-      if (empty($quantidade)) {
-        $quantidade = $pv->estoquemaximo;
-      }
+    public static function determinaPercentualEstoqueLocal(ProdutoVariacao $pv, $quantidade = null)
+    {
+        if (empty($quantidade)) {
+            $quantidade = $pv->estoquemaximo;
+        }
 
-      switch ($quantidade) {
+        switch ($quantidade) {
         case 1:
           return [
             101001 => 0,
@@ -476,33 +472,32 @@ class VendaMensalRepository
 
           // calcula percentual de acordo com venda da filial
           foreach ($ret as $codestoquelocal => $perc) {
-            if ($codestoquelocal == $codestoquelocal_deposito) {
-              continue;
-            }
-            if (!$venda_filial = $vendas->firstWhere('codestoquelocal', $codestoquelocal)) {
-              continue;
-            }
-            if ($venda_filial->quantidade <= 0) {
-              continue;
-            }
-            $ret[$codestoquelocal] = (($venda_filial->quantidade / $venda_total) * $lojas);
+              if ($codestoquelocal == $codestoquelocal_deposito) {
+                  continue;
+              }
+              if (!$venda_filial = $vendas->firstWhere('codestoquelocal', $codestoquelocal)) {
+                  continue;
+              }
+              if ($venda_filial->quantidade <= 0) {
+                  continue;
+              }
+              $ret[$codestoquelocal] = (($venda_filial->quantidade / $venda_total) * $lojas);
           }
 
           // Caso percentual distribuicao seja diferente de 100% recalcula proporcionalmente
           $total = array_sum($ret);
           if ($total != 100) {
-            $total_lojas = $total - $deposito;
-            foreach ($ret as $codestoquelocal => $perc) {
-              if ($codestoquelocal == $codestoquelocal_deposito) {
-                continue;
+              $total_lojas = $total - $deposito;
+              foreach ($ret as $codestoquelocal => $perc) {
+                  if ($codestoquelocal == $codestoquelocal_deposito) {
+                      continue;
+                  }
+                  $ret[$codestoquelocal] = ($ret[$codestoquelocal] / $total_lojas) * $lojas;
               }
-              $ret[$codestoquelocal] = ($ret[$codestoquelocal] / $total_lojas) * $lojas;
-            }
           }
 
           return $ret;
       }
-
     }
 
     /**
@@ -521,11 +516,11 @@ class VendaMensalRepository
     /**
      * Atualiza todos os dados de estatistica de estoque do produto
      */
-    public static function atualizarProduto (Produto $p)
+    public static function atualizarProduto(Produto $p)
     {
         foreach ($p->ProdutoVariacaoS()->orderBy('codprodutovariacao')->get() as $pv) {
-          // Log::info("Min/Max PV - #{$pv->codprodutovariacao}");
-          static::atualizarVariacao($pv);
+            // Log::info("Min/Max PV - #{$pv->codprodutovariacao}");
+            static::atualizarVariacao($pv);
         }
         return true;
     }
@@ -533,15 +528,15 @@ class VendaMensalRepository
     /**
      * Atualiza todos os dados de estatistica de estoque da marca
      */
-    public static function atualizarMarca (Marca $m)
+    public static function atualizarMarca(Marca $m)
     {
         $prods = $m->ProdutoS()->orderBy('codproduto')->get();
         $total = $prods->count();
         $i = 1;
         foreach ($prods as $p) {
-          Log::info("Min/Max {$m->marca} - #{$p->codproduto} ($i/$total)");
-          static::atualizarProduto ($p);
-          $i++;
+            Log::info("Min/Max {$m->marca} - #{$p->codproduto} ($i/$total)");
+            static::atualizarProduto($p);
+            $i++;
         }
         return true;
     }
@@ -549,15 +544,15 @@ class VendaMensalRepository
     /**
      * Atualiza todos os dados de estatistica de estoque de todos os produtos
      */
-    public static function atualizar ()
+    public static function atualizar()
     {
         $marcas = Marca::orderBy('codmarca')->get();
         $total = $marcas->count();
         $i = 1;
         foreach ($marcas as $m) {
-          Log::info("Min/Max {$m->marca} ($i/$total)");
-          static::atualizarMarca ($m);
-          $i++;
+            Log::info("Min/Max {$m->marca} ($i/$total)");
+            static::atualizarMarca($m);
+            $i++;
         }
         return true;
     }

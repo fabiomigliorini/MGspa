@@ -38,15 +38,15 @@ class FaltandoMail extends Mailable
 
       // $marca = Marca::findOrFail(10000064);
 
-      // $produtos = ComprasRepository::buscarProdutos($marca);
-      $produtos = ComprasRepository::buscarProdutos();
-      $marcas = collect();
-      foreach ($produtos as $key => $prod) {
-        if (empty($prod->comprar)) {
-          continue;
-        }
-        if (!isset($marcas[$prod->codmarca])) {
-          $marcas[$prod->codmarca] = (object) [
+        // $produtos = ComprasRepository::buscarProdutos($marca);
+        $produtos = ComprasRepository::buscarProdutos();
+        $marcas = collect();
+        foreach ($produtos as $key => $prod) {
+            if (empty($prod->comprar)) {
+                continue;
+            }
+            if (!isset($marcas[$prod->codmarca])) {
+                $marcas[$prod->codmarca] = (object) [
             'codmarca' => $prod->codmarca,
             'marca' => $prod->marca,
             'total' => 0,
@@ -55,43 +55,43 @@ class FaltandoMail extends Mailable
             'abaixominimo' => 0,
             'produtos' => collect()
           ];
+            }
+            $marcas[$prod->codmarca]->total += ($prod->comprar * $prod->custoultimacompra);
+            $marcas[$prod->codmarca]->comprar++;
+            if ((($prod->estoque + $prod->chegando) > $prod->estoqueminimo) && ($prod->estoqueminimo > 0)) {
+                continue;
+            }
+            $marcas[$prod->codmarca]->abaixominimo++;
+            if ($prod->critico) {
+                $marcas[$prod->codmarca]->critico++;
+            }
+            $marcas[$prod->codmarca]->produtos[] = $prod;
         }
-        $marcas[$prod->codmarca]->total += ($prod->comprar * $prod->custoultimacompra);
-        $marcas[$prod->codmarca]->comprar++;
-        if ((($prod->estoque + $prod->chegando) > $prod->estoqueminimo) && ($prod->estoqueminimo > 0)) {
-          continue;
-        }
-        $marcas[$prod->codmarca]->abaixominimo++;
-        if ($prod->critico) {
-          $marcas[$prod->codmarca]->critico++;
-        }
-        $marcas[$prod->codmarca]->produtos[] = $prod;
-      }
 
-      $marcas = $marcas->sortByDesc('total');
-      // dd($marcas);
-      //$marcas = $produtos->groupBy('marca');
-      // dd($marcas);
+        $marcas = $marcas->sortByDesc('total');
+        // dd($marcas);
+        //$marcas = $produtos->groupBy('marca');
+        // dd($marcas);
 
-      return $this
+        return $this
         ->subject("Produtos Faltando")
         ->view('faltando-mail.faltando')
         ->with(['marcas' => $marcas]);
 
-      /*
-        $pathNFeAutorizada = NFePHPRepositoryPath::pathNFeAutorizada($this->marca);
-        if (!file_exists($pathNFeAutorizada)) {
-            throw new \Exception("Arquivo XML não localizado ($pathNFeAutorizada)!");
-        }
+        /*
+          $pathNFeAutorizada = NFePHPRepositoryPath::pathNFeAutorizada($this->marca);
+          if (!file_exists($pathNFeAutorizada)) {
+              throw new \Exception("Arquivo XML não localizado ($pathNFeAutorizada)!");
+          }
 
-        $pathDanfe = NFePHPRepositoryPath::pathDanfe($this->marca);
-        if (!file_exists($pathDanfe)) {
-            NFePHPRepository::danfe($this->marca);
-            if (!file_exists($pathDanfe)) {
-                throw new \Exception("Erro ao gerar arquivo PDF ($pathDanfe)!");
-            }
-        }
+          $pathDanfe = NFePHPRepositoryPath::pathDanfe($this->marca);
+          if (!file_exists($pathDanfe)) {
+              NFePHPRepository::danfe($this->marca);
+              if (!file_exists($pathDanfe)) {
+                  throw new \Exception("Erro ao gerar arquivo PDF ($pathDanfe)!");
+              }
+          }
 
-          */
+            */
     }
 }

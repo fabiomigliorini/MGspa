@@ -46,42 +46,41 @@ class EstoqueCalcularMinimoMaximo extends Command
      */
     public function handle()
     {
-
         $ret = false;
         $recalcular = !$this->option('nao-recalcular');
 
         // se for somente uma variacao
         if ($cod = $this->option('codprodutovariacao')) {
-          $m = ProdutoVariacao::findOrFail($cod);
-          return VendaMensalRepository::atualizarVariacao($m);
+            $m = ProdutoVariacao::findOrFail($cod);
+            return VendaMensalRepository::atualizarVariacao($m);
         }
 
         // se for somente um produto
         if ($cod = $this->option('codproduto')) {
-          $m = Produto::findOrFail($cod);
-          return VendaMensalRepository::atualizarProduto($m);
+            $m = Produto::findOrFail($cod);
+            return VendaMensalRepository::atualizarProduto($m);
         }
 
         // se for somente uma marca
         if ($cod = $this->option('codmarca')) {
-          $m = Marca::findOrFail($cod);
-          if ($recalcular) {
-            $ret = VendaMensalRepository::atualizarMarca($m);
-          }
-          // se for pra gerar o pedido de compra
-          if ($this->option('gerar-pedido')) {
-            $ret = ComprasRepository::gerarPlanilhaPedido($m);
-          }
-          return $ret;
+            $m = Marca::findOrFail($cod);
+            if ($recalcular) {
+                $ret = VendaMensalRepository::atualizarMarca($m);
+            }
+            // se for pra gerar o pedido de compra
+            if ($this->option('gerar-pedido')) {
+                $ret = ComprasRepository::gerarPlanilhaPedido($m);
+            }
+            return $ret;
         }
 
         // se for geral
         if ($recalcular) {
-          $ret = VendaMensalRepository::atualizar();
+            $ret = VendaMensalRepository::atualizar();
         }
         if ($this->option('enviar-mail-faltando')) {
-          $destinatario = env('MAIL_ADDRES_ESTOQUE_FALTANDO', null);
-          $ret = Mail::to($destinatario)->queue(new FaltandoMail());
+            $destinatario = env('MAIL_ADDRES_ESTOQUE_FALTANDO', null);
+            $ret = Mail::to($destinatario)->queue(new FaltandoMail());
         }
         return $ret;
     }
