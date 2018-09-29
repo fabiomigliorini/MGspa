@@ -30,7 +30,7 @@ class DistribuicaoRepository
             left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = :codestoquelocal_deposito and elpv.codprodutovariacao = pv.codprodutovariacao)
             left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
             where p.codmarca = :codmarca
-            --and p.codproduto = 313196
+            --and p.codproduto = 17307
             --and p.codproduto = 24
             --and pv.codprodutovariacao = 81372
             and es.saldoquantidade > 0
@@ -180,19 +180,24 @@ class DistribuicaoRepository
             $dest->lotetransferencia = 1;
             foreach ($embalagens as $emb) {
 
+                // se nao tem nada pra transferir, vai pra proxima
                 if (empty($dest->transferir)) {
                     continue;
                 }
 
+                // calcula tamanho lote
                 $lote = $emb->quantidade;
                 $lotes = $dest->transferir / $lote;
                 $lotes_max = $dest->estoquemaximocalculado / $lote;
 
                 // se lote muito grande para movimento da filial, desconsidera
-                if (($lotes_max * 1.3) < 1) {
-                    continue;
+                if ($lotes_max < 1) {
+                    if ($embalagens->where('quantidade', '<', $lote)->count() > 0) {
+                        continue;
+                    }
                 }
 
+                // decide se vai fragmentar embalagem
                 $fragmento = 1;
                 if ($lotes_max < 2) {
                     if ($lotes <= 0.5) {
@@ -209,20 +214,24 @@ class DistribuicaoRepository
                     $lotes = max(round($lotes, 0), 1);
                 }
 
+                // calcula quantidade pelo tamanho dos lotes
                 $transferir = $lotes * $lote;
-                $saldo = $transferir + $dest->saldoquantidade;
 
+                // se quantidade da filial ficar abaixo do minimo, aumenta um fragmento
+                $saldo = $transferir + $dest->saldoquantidade;
                 if ($saldo <= $dest->estoqueminimo) {
                     $lotes += $fragmento;
                     $transferir = $lotes * $lote;
                 }
 
+                // verifica se tem saldo suficiente no deposito para a transferencia
                 $transferir_total = $destinos->sum('transferir');
                 $transferir_total += $transferir - $dest->transferir;
                 if ($transferir_total > $disponivel) {
                     continue;
                 }
 
+                // usa o que foi calculado
                 $dest->lotetransferencia = $lote * $fragmento;
                 $dest->transferir = $transferir;
 
