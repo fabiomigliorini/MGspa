@@ -31,7 +31,7 @@ class DistribuicaoRepository
             left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
             where p.codmarca = :codmarca
             --and p.codproduto = 313196
-            --and p.codproduto = 14595
+            and p.codproduto = 24
             --and pv.codprodutovariacao = 81372
             and es.saldoquantidade > 0
             order by p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
@@ -186,9 +186,15 @@ class DistribuicaoRepository
 
                 $lote = $emb->quantidade;
                 $lotes = $dest->transferir / $lote;
+                $lotes_max = $dest->estoquemaximocalculado / $lote;
+
+                // se lote muito grande para movimento da filial, desconsidera
+                if (($lotes_max * 1.3) < 1) {
+                    continue;
+                }
 
                 $fragmento = 1;
-                if ($lotes < 1) {
+                if ($lotes_max < 2) {
                     if ($lotes <= 0.5) {
                         if ($lote % 10 == 0) {
                             $fragmento = 0.2;
@@ -200,7 +206,7 @@ class DistribuicaoRepository
                     }
                     $lotes = ceil($lotes/$fragmento) * $fragmento;
                 } else {
-                    $lotes = round($lotes, 0);
+                    $lotes = max(round($lotes, 0), 1);
                 }
 
                 $transferir = $lotes * $lote;
@@ -276,7 +282,7 @@ class DistribuicaoRepository
             */
         }
 
-        // dd($destinos);
+        dd($destinos);
         return $destinos;
     }
 
