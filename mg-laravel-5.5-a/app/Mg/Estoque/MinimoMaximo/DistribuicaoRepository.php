@@ -282,7 +282,7 @@ class DistribuicaoRepository
             */
         }
 
-        dd($destinos);
+        // dd($destinos);
         return $destinos;
     }
 
