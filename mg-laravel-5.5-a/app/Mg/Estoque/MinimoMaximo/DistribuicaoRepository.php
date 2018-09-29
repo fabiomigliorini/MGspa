@@ -31,7 +31,7 @@ class DistribuicaoRepository
             left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
             where p.codmarca = :codmarca
             --and p.codproduto = 313196
-            and p.codproduto = 24
+            --and p.codproduto = 24
             --and pv.codprodutovariacao = 81372
             and es.saldoquantidade > 0
             order by p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
