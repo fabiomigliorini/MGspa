@@ -183,12 +183,18 @@ class DistribuicaoRepository
                     continue;
                 }
 
+
                 // verifica lotes disponiveis no deposito
                 $transferir_total = $destinos->sum('transferir');
                 $lotes_disponiveis = ($disponivel - $transferir_total) / $emb->quantidade;
 
                 // calcula quantidade de lotes
                 $lotes = $dest->transferir / $emb->quantidade;
+
+                // Descarta se lote muito grande pra quantidade da filial
+                if ($dest->saldoquantidade > $dest->estoqueminimo && $lotes < 0.3) {
+                    continue;
+                }
 
                 // desconsidera se menos de meio lote, e quantidade de lotes no deposito menor que 3
                 if ($lotes < 0.5 && $lotes_disponiveis <= 2) {
