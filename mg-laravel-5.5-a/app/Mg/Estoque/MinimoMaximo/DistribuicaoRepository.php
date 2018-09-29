@@ -30,9 +30,10 @@ class DistribuicaoRepository
             left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = :codestoquelocal_deposito and elpv.codprodutovariacao = pv.codprodutovariacao)
             left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
             where p.codmarca = :codmarca
-            --and p.codproduto = 24811
-            --and pv.codprodutovariacao = 30812
+            --and p.codproduto = 313196
+            --and pv.codprodutovariacao = 81372
             and es.saldoquantidade > 0
+            order by p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
         ";
         $prods = collect(DB::select($sql, [
             'codmarca' => $marca->codmarca,
@@ -168,34 +169,37 @@ class DistribuicaoRepository
 
     public static function definirLoteTransferencia($embalagens, $disponivel, $destinos)
     {
+        $max = $destinos->sum('estoquemaximocalculado');
+        if ($menor_embalagem = $embalagens->sortBy('quantidade')->first()) {
+            $lotes_max = $max / $menor_embalagem->quantidade;
+        }
         $embalagens = $embalagens->sortByDesc('quantidade');
         $destinos = $destinos->sortByDesc('estoquemaximocalculado');
         foreach ($destinos as $dest) {
             $dest->lotetransferencia = 1;
             foreach ($embalagens as $emb) {
 
+                if (empty($dest->transferir)) {
+                    continue;
+                }
+
                 // verifica lotes disponiveis no deposito
-                $lotes_disponiveis = floor($disponivel / $emb->quantidade);
+                $transferir_total = $destinos->sum('transferir');
+                $lotes_disponiveis = ($disponivel - $transferir_total) / $emb->quantidade;
 
                 // calcula quantidade de lotes
                 $lotes = $dest->transferir / $emb->quantidade;
 
                 // desconsidera se menos de meio lote, e quantidade de lotes no deposito menor que 3
-                if ($lotes < 0.5 && $lotes_disponiveis <= 3) {
-                    // dd($dest->codestoquelocal);
+                if ($lotes < 0.5 && $lotes_disponiveis <= 2) {
                     continue;
                 }
 
                 // arredonda lotes e calcula nova quantidade a transferir
-                $lotes = round($lotes, 0);
-                $transferir_total = $destinos->sum('transferir');
+                // $lotes = round($lotes, 0);
+                $lotes = max(1, round($lotes, 0));
                 $transferir = $lotes * $emb->quantidade;
                 $transferir_total += $transferir - $dest->transferir;
-
-                // desconsidera se nao tem quantidade suficiente
-                if ($transferir_total > $disponivel) {
-                    continue;
-                }
 
                 // calcula novo saldo filial
                 $saldo = $transferir + $dest->saldoquantidade;
@@ -206,19 +210,25 @@ class DistribuicaoRepository
                     $transferir_total = $destinos->sum('transferir');
                     $transferir = $lotes * $emb->quantidade;
                     $transferir_total += $transferir - $dest->transferir;
+                }
 
-                    // desconsidera se nao tem quantidade suficiente
-                    if ($transferir_total > $disponivel) {
-                        continue;
-                    }
+                // desconsidera se nao tem quantidade suficiente
+                if ($transferir_total > $disponivel) {
+                    continue;
                 }
 
                 // ajusta nova quantidade transferir pelo lote calculado
                 $dest->lotetransferencia = $emb->quantidade;
                 $dest->transferir = $transferir;
             }
+
+            if ($menor_embalagem) {
+                if ($dest->lotetransferencia == 1 && $lotes_max >= 5 &&  $dest->saldoquantidade > $dest->estoqueminimo) {
+                    $dest->transferir = 0;
+                }
+            }
         }
-        // dd($destinos);
+
         return $destinos;
     }
 
