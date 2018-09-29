@@ -31,6 +31,7 @@ class DistribuicaoRepository
             left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
             where p.codmarca = :codmarca
             --and p.codproduto = 313196
+            --and p.codproduto = 14595
             --and pv.codprodutovariacao = 81372
             and es.saldoquantidade > 0
             order by p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
@@ -183,13 +184,50 @@ class DistribuicaoRepository
                     continue;
                 }
 
+                $lote = $emb->quantidade;
+                $lotes = $dest->transferir / $lote;
 
+                $fragmento = 1;
+                if ($lotes < 1) {
+                    if ($lotes <= 0.5) {
+                        if ($lote % 10 == 0) {
+                            $fragmento = 0.2;
+                        } elseif ($lote % 12 == 0) {
+                            $fragmento = 0.25;
+                        } elseif ($lote % 6 == 0) {
+                            $fragmento = 1/3;
+                        }
+                    }
+                    $lotes = ceil($lotes/$fragmento) * $fragmento;
+                } else {
+                    $lotes = round($lotes, 0);
+                }
+
+                $transferir = $lotes * $lote;
+                $saldo = $transferir + $dest->saldoquantidade;
+
+                if ($saldo <= $dest->estoqueminimo) {
+                    $lotes += $fragmento;
+                    $transferir = $lotes * $lote;
+                }
+
+                $transferir_total = $destinos->sum('transferir');
+                $transferir_total += $transferir - $dest->transferir;
+                if ($transferir_total > $disponivel) {
+                    continue;
+                }
+
+                $dest->lotetransferencia = $lote * $fragmento;
+                $dest->transferir = $transferir;
+
+                /*
                 // verifica lotes disponiveis no deposito
                 $transferir_total = $destinos->sum('transferir');
                 $lotes_disponiveis = ($disponivel - $transferir_total) / $emb->quantidade;
 
                 // calcula quantidade de lotes
                 $lotes = $dest->transferir / $emb->quantidade;
+                $lotes = round($lotes / 0.2, 0) * 0.2;
 
                 // Descarta se lote muito grande pra quantidade da filial
                 if ($dest->saldoquantidade > $dest->estoqueminimo && $lotes < 0.3) {
@@ -203,8 +241,8 @@ class DistribuicaoRepository
 
                 // arredonda lotes e calcula nova quantidade a transferir
                 // $lotes = round($lotes, 0);
-                $lotes = max(1, round($lotes, 0));
-                $transferir = $lotes * $emb->quantidade;
+                // $lotes = max(1, round($lotes, 0));
+                $transferir = round($lotes * $emb->quantidade, 0);
                 $transferir_total += $transferir - $dest->transferir;
 
                 // calcula novo saldo filial
@@ -212,9 +250,9 @@ class DistribuicaoRepository
 
                 // se quantidade a transferir menor que estoque minimo, aumenta um lote e recalcula
                 if ($saldo <= $dest->estoqueminimo) {
-                    $lotes++;
+                    $lotes += 0.2;
                     $transferir_total = $destinos->sum('transferir');
-                    $transferir = $lotes * $emb->quantidade;
+                    $transferir = round($lotes * $emb->quantidade, 0);
                     $transferir_total += $transferir - $dest->transferir;
                 }
 
@@ -226,15 +264,19 @@ class DistribuicaoRepository
                 // ajusta nova quantidade transferir pelo lote calculado
                 $dest->lotetransferencia = $emb->quantidade;
                 $dest->transferir = $transferir;
+                */
             }
 
+            /*
             if ($menor_embalagem) {
                 if ($dest->lotetransferencia == 1 && $lotes_max >= 5 &&  $dest->saldoquantidade > $dest->estoqueminimo) {
                     $dest->transferir = 0;
                 }
             }
+            */
         }
 
+        // dd($destinos);
         return $destinos;
     }
 
