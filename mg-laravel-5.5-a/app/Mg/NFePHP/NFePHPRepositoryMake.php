@@ -15,6 +15,7 @@ use Mg\Filial\Empresa;
 
 use NFePHP\NFe\Make;
 use NFePHP\Common\Strings;
+use NFePHP\Gtin\Gtin;
 
 class NFePHPRepositoryMake
 {
@@ -250,9 +251,13 @@ class NFePHPRepositoryMake
           if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)){
               $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
           }
-          $std->cEAN = Barras::validar($nfpb->ProdutoBarra->barras, true)?$nfpb->ProdutoBarra->barras:null;
-          if (substr($std->cEAN, 0, 3) == '234') {
-              $std->cEAN = null;
+          $std->cEAN = null;
+          try {
+              $gtin = new Gtin($nfpb->ProdutoBarra->barras);
+              if ($gtin->isValid()) {
+                  $std->cEAN = $nfpb->ProdutoBarra->barras;
+              }
+          } catch (\Exception $e) {
           }
           $std->xProd = Strings::replaceSpecialsChars($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
           $std->NCM = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->Ncm->ncm);
@@ -269,14 +274,18 @@ class NFePHPRepositoryMake
           // SE FOR EMBALAGEM, PEGA PRIMEIRO CODIGO DE BARRAS DE UNIDADE POSSIVEL
           if (!empty($nfpb->ProdutoBarra->codprodutoembalagem) && !empty($std->cEAN)) {
              foreach ($nfpb->ProdutoBarra->ProdutoVariacao->ProdutoBarraS()->whereNull('codprodutoembalagem')->get() as $pbUnidade) {
-                if (Barras::validar($pbUnidade->barras, true)) {
-                    $std->cEANTrib = $pbUnidade->barras;
-                    if (empty($pbUnidade->codprodutoembalagem)) {
-                        $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->UnidadeMedida->sigla);
-                    }
-                    $std->qTrib = number_format($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade * $nfpb->quantidade, 3, '.', '');
-                    break;
-                }
+                 try {
+                     $gtin = new Gtin($pbUnidade->barras);
+                     if ($gtin->isValid()) {
+                         $std->cEANTrib = $pbUnidade->barras;
+                         if (empty($pbUnidade->codprodutoembalagem)) {
+                             $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->UnidadeMedida->sigla);
+                         }
+                         $std->qTrib = number_format($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade * $nfpb->quantidade, 3, '.', '');
+                         break;
+                     }
+                 } catch (\Exception $e) {
+                 }
              }
           }
 
@@ -606,7 +615,7 @@ class NFePHPRepositoryMake
               }
 
               if (!empty($totalPrazo)) {
-      
+
                 $std = new \stdClass();
                 $std->nFat = $nFat;
                 $std->vOrig = number_format($totalPrazo, 2, '.', '');
