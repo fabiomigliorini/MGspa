@@ -5,6 +5,8 @@ select queue, count(*) from tbljobs group by queue order by queue
 
 /*
 
+select * from tbljobs where payload ilike '%codnotafiscal%codnotafiscal%'
+
 -- apaga jobs duplicadas
 delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup group by dup.payload)
 
@@ -44,13 +46,16 @@ update tbljobs set queue = 'low' where tbljobs.id in (select j2.id from tbljobs 
 select queue, count(*) from tbljobs group by queue order by queue
 
 delete from tbljobs where id in (
-15473757
-,15473469
-,15473758
-,15479263
-,15480714
-,15485234
-,15485235
+18966745
+,18966849
+,18966742
+,18966783
+,18966799
+,18966801
+,18964532
+,18964803
+,18960238
+,18960237
 )
 
 'high';39

@@ -29,7 +29,7 @@ from
     left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
     where tblnegocio.codnegociostatus = 2 --Fechado
     and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
-    and tblprodutobarra.codproduto in (select tblproduto.codproduto from tblproduto where tblproduto.codmarca in (129)) -- CODIGO DA MARCA
+    and tblprodutobarra.codproduto in (select tblproduto.codproduto from tblproduto where tblproduto.codmarca in (2)) -- CODIGO DA MARCA
     -- and tblprodutobarra.codproduto in (28580) -- CODIGO DO PRODUTO
     and extract(month from tblnegocio.lancamento) in (1, 2, 3)
     and tblnegocio.lancamento >= ''2015-01-01''
@@ -47,7 +47,7 @@ full join (
     inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
     inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
     inner join tblproduto p on (p.codproduto = pv.codproduto)
-    where p.codmarca in (129) -- CODIGO DA MARCA
+    where p.codmarca in (2) -- CODIGO DA MARCA
 --	p.codproduto in (28580)
     group by elpv.codprodutovariacao
     having sum(es.saldoquantidade) != 0

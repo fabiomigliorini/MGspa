@@ -25,7 +25,7 @@ class VendaMensalRepository
         // Busca Totais de Vendas Agrupados Por Mês e Local
         $sql = "
           select
-        	      tblnegocio.codestoquelocal
+                tblnegocio.codestoquelocal
         	    , date_trunc('month', tblnegocio.lancamento) as mes
         	    , sum(tblnegocioprodutobarra.quantidade * coalesce(tblprodutoembalagem.quantidade, 1) * (case when tblnaturezaoperacao.codoperacao = 1 then -1 else 1 end)) as quantidade
         	    , sum(tblnegocioprodutobarra.valortotal * (case when tblnaturezaoperacao.codoperacao = 1 then -1 else 1 end)) as valor
@@ -40,7 +40,7 @@ class VendaMensalRepository
         	and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
           and tblpessoa.codpessoa not in (select tblfilial.codpessoa from tblfilial)
         	group by
-        	      tblnegocio.codestoquelocal
+                tblnegocio.codestoquelocal
         	    , date_trunc('month', tblnegocio.lancamento);
         ";
 
@@ -89,17 +89,17 @@ class VendaMensalRepository
     {
         // Busca Primeira Venda da Variacao
         $sql = "
-          select
+            select
                 min(tblnegocio.lancamento) as vendainicio
-          from tblnegocio
-          inner join tblnaturezaoperacao on (tblnaturezaoperacao.codnaturezaoperacao = tblnegocio.codnaturezaoperacao)
-          inner join tblnegocioprodutobarra on (tblnegocioprodutobarra.codnegocio = tblnegocio.codnegocio)
-          inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnegocioprodutobarra.codprodutobarra)
-          inner join tblpessoa on (tblpessoa.codpessoa = tblnegocio.codpessoa)
-          where tblprodutobarra.codprodutovariacao = :codprodutovariacao
-          and tblnegocio.codnegociostatus = 2 --Fechado
-          and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
-          and tblpessoa.codpessoa not in (select tblfilial.codpessoa from tblfilial)
+            from tblnegocio
+            inner join tblnaturezaoperacao on (tblnaturezaoperacao.codnaturezaoperacao = tblnegocio.codnaturezaoperacao)
+            inner join tblnegocioprodutobarra on (tblnegocioprodutobarra.codnegocio = tblnegocio.codnegocio)
+            inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnegocioprodutobarra.codprodutobarra)
+            inner join tblpessoa on (tblpessoa.codpessoa = tblnegocio.codpessoa)
+            where tblprodutobarra.codprodutovariacao = :codprodutovariacao
+            and tblnegocio.codnegociostatus = 2 --Fechado
+            and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
+            and tblpessoa.codpessoa not in (select tblfilial.codpessoa from tblfilial)
         ";
         $venda = DB::select($sql, [
           'codprodutovariacao' => $pv->codprodutovariacao
@@ -193,7 +193,8 @@ class VendaMensalRepository
         $sql = "
             select mes, sum(quantidade) as quantidade
             from tblestoquelocalprodutovariacao elpv
-            inner join tblestoquelocalprodutovariacaovenda elpvv on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+            inner join tblestoquelocalprodutovariacaovenda elpvv
+                on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
             where elpv.codprodutovariacao = :codprodutovariacao
             and mes >= current_date - '2 years'::interval
             --and mes = '2017-05-01'
@@ -449,55 +450,201 @@ class VendaMensalRepository
             104001 => ($lojas * 12)/100
           ];
 
-          // busca vendas das lojas
-          $sql = "
-            select elpv.codestoquelocal, es.saldoquantidade, sum(vda.quantidade) as quantidade
-            from tblestoquelocal el
-            left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = el.codestoquelocal and elpv.codprodutovariacao = :codprodutovariacao)
-            left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
-            left join tblestoquelocalprodutovariacaovenda vda on (vda.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and vda.mes >= date_trunc('month', current_date - '3 months'::interval))
-            where el.inativo is null
-            --and el.codestoquelocal not in (101001, 102001, 103001, 104001)
-            --and el.codestoquelocal not in (104001)
-            group by elpv.codestoquelocal, es.saldoquantidade
-            order by elpv.codestoquelocal asc
-          ";
-          $params = [
-            'codprodutovariacao' => $pv->codprodutovariacao,
-          ];
-          $vendas = collect(DB::select($sql, $params));
+            // busca vendas das lojas
+            $sql = "
+                select elpv.codestoquelocal, es.saldoquantidade, sum(vda.quantidade) as quantidade
+                from tblestoquelocal el
+                left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = el.codestoquelocal and elpv.codprodutovariacao = :codprodutovariacao)
+                left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
+                left join tblestoquelocalprodutovariacaovenda vda on (vda.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and vda.mes >= date_trunc('month', current_date - '3 months'::interval))
+                where el.inativo is null
+                --and el.codestoquelocal not in (101001, 102001, 103001, 104001)
+                --and el.codestoquelocal not in (104001)
+                group by elpv.codestoquelocal, es.saldoquantidade
+                order by elpv.codestoquelocal asc
+            ";
+            $params = [
+                'codprodutovariacao' => $pv->codprodutovariacao,
+            ];
+            $vendas = collect(DB::select($sql, $params));
 
-          // calcula venda total
-          $venda_total = $vendas->sum('quantidade');
+            // calcula venda total
+            $venda_total = $vendas->sum('quantidade');
 
-          // calcula percentual de acordo com venda da filial
-          foreach ($ret as $codestoquelocal => $perc) {
-              if ($codestoquelocal == $codestoquelocal_deposito) {
-                  continue;
-              }
-              if (!$venda_filial = $vendas->firstWhere('codestoquelocal', $codestoquelocal)) {
-                  continue;
-              }
-              if ($venda_filial->quantidade <= 0) {
-                  continue;
-              }
-              $ret[$codestoquelocal] = (($venda_filial->quantidade / $venda_total) * $lojas);
-          }
+            // calcula percentual de acordo com venda da filial
+            foreach ($ret as $codestoquelocal => $perc) {
+                if ($codestoquelocal == $codestoquelocal_deposito) {
+                    continue;
+                }
+                if (!$venda_filial = $vendas->firstWhere('codestoquelocal', $codestoquelocal)) {
+                    continue;
+                }
+                if ($venda_filial->quantidade <= 0) {
+                    continue;
+                }
+                $ret[$codestoquelocal] = (($venda_filial->quantidade / $venda_total) * $lojas);
+            }
 
-          // Caso percentual distribuicao seja diferente de 100% recalcula proporcionalmente
-          $total = array_sum($ret);
-          if ($total != 100) {
-              $total_lojas = $total - $deposito;
-              foreach ($ret as $codestoquelocal => $perc) {
-                  if ($codestoquelocal == $codestoquelocal_deposito) {
-                      continue;
-                  }
-                  $ret[$codestoquelocal] = ($ret[$codestoquelocal] / $total_lojas) * $lojas;
-              }
-          }
+            // Caso percentual distribuicao seja diferente de 100% recalcula proporcionalmente
+            $total = array_sum($ret);
+            if ($total != 100) {
+                $total_lojas = $total - $deposito;
+                foreach ($ret as $codestoquelocal => $perc) {
+                    if ($codestoquelocal == $codestoquelocal_deposito) {
+                        continue;
+                    }
+                    $ret[$codestoquelocal] = ($ret[$codestoquelocal] / $total_lojas) * $lojas;
+                }
+            }
 
-          return $ret;
-      }
+            return $ret;
+
+        }
+    }
+
+    public static function determinarMesesVendas (Carbon $data)
+    {
+        $ret = [];
+        switch ($data->month) {
+            case 1:
+            case 2:
+            case 3:
+            case 4: // até abril = Outubro/Novembro/Dezembro do ano anterior
+                $ret[] = Carbon::create($data->year - 1, 10, 1, 0, 0, 0);
+                $ret[] = Carbon::create($data->year - 1, 11, 1, 0, 0, 0);
+                $ret[] = Carbon::create($data->year - 1, 12, 1, 0, 0, 0);
+            break;
+
+            case 5: // Maio = Novembro/Dezembro/Abril
+                $ret[] = Carbon::create($data->year - 1, 11, 1, 0, 0, 0);
+                $ret[] = Carbon::create($data->year - 1, 12, 1, 0, 0, 0);
+                $ret[] = (clone $data)->subMonth(1);
+            break;
+
+            case 6: // Junho = Dezembro/Abril/Maio
+                $ret[] = Carbon::create($data->year - 1, 12, 1, 0, 0, 0);
+                $ret[] = (clone $data)->subMonth(2);
+                $ret[] = (clone $data)->subMonth(1);
+            break;
+
+            default: // ultimos dois meses
+                $ret[] = (clone $data)->subMonth(3);
+                $ret[] = (clone $data)->subMonth(2);
+                $ret[] = (clone $data)->subMonth(1);
+            break;
+        }
+        return $ret;
+    }
+
+    public static function calcularMinimoMaximo(ProdutoVariacao $pv)
+    {
+        if (!empty($pv->inativo) || !empty($pv->Produto->inativo)) {
+            return $pv->update([
+              'estoqueminimo' => 0,
+              'estoquemaximo' => 0,
+            ]);
+        }
+
+
+        $mesCorrente = Carbon::today()->startOfMonth();
+        //$mesCorrente = Carbon::parse('2017-05-01');
+
+        // Busca ultimos 2 anos de vendas
+        $sql = "
+            select
+                elpv.codestoquelocal,
+                elpvv.mes,
+                sum(elpvv.quantidade) as quantidade
+            from tblestoquelocalprodutovariacao elpv
+            inner join tblestoquelocalprodutovariacaovenda elpvv
+                on (elpvv.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
+            where elpv.codprodutovariacao = :codprodutovariacao
+            and mes >= current_date - '2 years'::interval
+            group by elpv.codestoquelocal, elpvv.mes
+        ";
+        $vendas = collect(DB::select($sql, [
+          'codprodutovariacao' => $pv->codprodutovariacao,
+        ]));
+
+        // transforma coluna mes em instancia do Carbon
+        foreach ($vendas as $key => $venda) {
+            $venda->mes = Carbon::parse($venda->mes);
+            $venda->quantidade = (double) $venda->quantidade;
+        }
+
+
+        // Decide quais os utilmos tres meses de vendas considerar
+        static $mesesVendas = [];
+        if (empty($mesesVendas)) {
+            $mesesVendas = static::determinarMesesVendas($mesCorrente);
+        }
+        dd($vendas);
+
+        // Se mes Corrente vendeu mais que primeiro mês da Série, utiliza corrente
+        $vendaMesCorrente = $vendas->firstWhere('mes', $mesCorrente)->quantidade??0;
+        $vendaPrimeiroMes = $vendas->firstWhere('mes', $mesesVendas[0])->quantidade??0;
+        $maximo = max($vendaMesCorrente, $vendaPrimeiroMes);
+
+        // Soma outros dois meses da série
+        $maximo += $vendas->firstWhere('mes', $mesesVendas[1])->quantidade??0;
+        $maximo += $vendas->firstWhere('mes', $mesesVendas[2])->quantidade??0;
+        $minimo = ceil($maximo / 2);
+
+        // Faz Calculo do Volta As Aulas Caso seja no inicio ou final do ano
+        if (in_array($mesCorrente->month, [1, 2, 3, 9, 10, 11, 12])) {
+
+            // Decide quais os meses de volta as aulas
+            $mesesAulas = [];
+            $mesesAulasDescontar = [];
+            switch ($mesCorrente->month) {
+              case 1:
+                $mesesAulas[] = Carbon::create($mesCorrente->year - 1, 1, 1, 0, 0, 0);
+                $mesesAulas[] = Carbon::create($mesCorrente->year - 1, 2, 1, 0, 0, 0);
+                $mesesAulas[] = Carbon::create($mesCorrente->year - 1, 3, 1, 0, 0, 0);
+                $mesesAulasDescontar[] = Carbon::create($mesCorrente->year, 1, 1, 0, 0, 0);
+                break;
+
+              case 2:
+                $mesesAulas[] = Carbon::create($mesCorrente->year - 1, 2, 1, 0, 0, 0);
+                $mesesAulas[] = Carbon::create($mesCorrente->year - 1, 3, 1, 0, 0, 0);
+                $mesesAulasDescontar[] = Carbon::create($mesCorrente->year, 2, 1, 0, 0, 0);
+                break;
+
+              case 3:
+                $mesesAulas[] = Carbon::create($mesCorrente->year - 1, 3, 1, 0, 0, 0);
+                $mesesAulasDescontar[] = Carbon::create($mesCorrente->year, 3, 1, 0, 0, 0);
+                break;
+
+              default:
+                $mesesAulas[] = Carbon::create($mesCorrente->year, 1, 1, 0, 0, 0);
+                $mesesAulas[] = Carbon::create($mesCorrente->year, 2, 1, 0, 0, 0);
+                $mesesAulas[] = Carbon::create($mesCorrente->year, 3, 1, 0, 0, 0);
+                break;
+            }
+
+            // Soma Vendas Volta as Aulas
+            $maximoAulas = 0;
+            foreach ($mesesAulas as $mes) {
+                $maximoAulas += $vendas->firstWhere('mes', $mes)->quantidade??0;
+            }
+
+            // Desconta Venda do ano atual
+            foreach ($mesesAulasDescontar as $mes) {
+                $maximoAulas -= $vendas->firstWhere('mes', $mes)->quantidade??0;
+            }
+
+            // Maximo é o maior entre normal e volta as aulas
+            $maximo = max($maximo, $maximoAulas);
+        }
+
+        $maximo = ceil($maximo);
+
+        return $pv->update([
+          'estoqueminimo' => $minimo,
+          'estoquemaximo' => $maximo,
+        ]);
+
+        dd('aqui');
     }
 
     /**
@@ -505,11 +652,17 @@ class VendaMensalRepository
      */
     public static function atualizarVariacao(ProdutoVariacao $pv)
     {
-        static::sumarizarVendaMensal($pv);
-        static::atualizarPrimeiraVenda($pv);
-        static::atualizarUltimaCompra($pv);
-        static::calcularMinimoMaximoGlobal($pv);
-        static::calcularMinimoMaximoEstoqueLocal($pv);
+        // static::sumarizarVendaMensal($pv);
+        // static::atualizarPrimeiraVenda($pv);
+        // static::atualizarUltimaCompra($pv);
+
+        // Substituir
+        // static::calcularMinimoMaximoGlobal($pv);
+        // static::calcularMinimoMaximoEstoqueLocal($pv);
+
+        static::calcularMinimoMaximo($pv);
+        static::calcularMinimoMaximo($pv);
+
         return true;
     }
 
