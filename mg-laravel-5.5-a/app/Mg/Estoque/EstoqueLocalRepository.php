@@ -1,4 +1,5 @@
 <?php
+
 namespace Mg\Estoque;
 use Mg\MgRepository;
 
@@ -37,5 +38,17 @@ class EstoquelocalRepository extends MgRepository
         }
 
         return $ret;
+    }
+
+    public static function lojas ()
+    {
+        $ret = EstoqueLocal::ativo()->where('codfilial', '!=', 199)->where('deposito', false)->orderBy('codestoquelocal')->get();
+        return $ret;
+    }
+
+    public static function deposito ()
+    {
+        $ret = EstoqueLocal::ativo()->where('deposito', true)->orderBy('codestoquelocal')->limit(1)->get();
+        return $ret[0];
     }
 }

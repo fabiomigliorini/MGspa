@@ -372,8 +372,7 @@ class ComprasRepository
 
         // Gera Arquivo XLSX
         $writer = new Xlsx($spreadsheet);
-        // $dir = '/tmp/ped/';
-        $dir = "/media/publico/Documentos/Estoque/Compras/Pedidos/";
+        $dir = env('PEDIDO_PATH', '/tmp/');
         $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - {$marca->marca}.xlsx";
         $v = 0;
         while (file_exists($arquivo)) {

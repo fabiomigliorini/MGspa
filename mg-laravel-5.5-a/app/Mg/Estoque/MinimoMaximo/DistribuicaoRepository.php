@@ -98,7 +98,7 @@ class DistribuicaoRepository
             if ($saldo_total > $maximo_total) {
 
                 // Calcula Maximo baseado na quantidade em estoque
-                $percentuais = VendaMensalRepository::determinaPercentualEstoqueLocal($pv, $saldo_total);
+                $percentuais = VendaMensalRepository::determinarPercentualEstoqueLocal($saldo_total);
                 $maximos = VendaMensalRepository::ratearQuantidadePelosPercentuais($saldo_total, $percentuais);
 
                 // associa novos maximos aos produtos
@@ -525,7 +525,7 @@ class DistribuicaoRepository
 
         // Gera Arquivo XLSX
         $writer = new Xlsx($spreadsheet);
-        $dir = "/media/publico/Documentos/Estoque/Transferencias/";
+        $dir = env('TRANSFERENCIA_PATH', '/tmp/');
         $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - Deposito - Filiais - {$marca->marca}.xlsx";
         $v = 0;
         while (file_exists($arquivo)) {
