@@ -79,18 +79,23 @@ class ComprasRepository
           order by m.marca, p.codmarca, p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
         ";
         $produtos = DB::select($sql, $params);
-        foreach ($produtos as $prod) {
-            $prod->comprar = static::decideQuantidadeComprar(
-            $prod->estoque??0 + $prod->chegando??0,
-            $prod->estoqueminimo??0,
-            $prod->estoquemaximo??0,
-            $prod->lotecompra??1,
-            !empty($prod->descontinuado)
-          );
-            $prod->critico = static::decideEstoqueCritico(
-            $prod->estoque??0 + $prod->chegando??0,
-            $prod->estoqueminimo??0
-          );
+        	foreach ($produtos as $prod) {
+		$prod->comprar = static::decideQuantidadeComprar(
+            		($prod->estoque??0) + ($prod->chegando??0),
+			$prod->estoqueminimo??0,
+			$prod->estoquemaximo??0,
+			$prod->lotecompra??1,
+			!empty($prod->descontinuado)
+		);
+		$prod->critico = static::decideEstoqueCritico(
+	            	($prod->estoque??0) + ($prod->chegando??0),
+			$prod->estoqueminimo??0
+		);
+                //if ($prod->codprodutovariacao == 6451) {
+                        //dd($prod);
+                        //dd(($prod->estoque??0) + ($prod->chegando??0));
+                //}
+
         }
 
         return collect($produtos);
