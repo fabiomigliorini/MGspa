@@ -15,87 +15,82 @@ class ComprasRepository
     public static function buscarProdutos(Marca $marca = null)
     {
         $sql = "
-          with estoque as (
-                  select
-                      elpv.codprodutovariacao
-                      , sum(es.saldoquantidade) as estoque
-                  from tblestoquelocalprodutovariacao elpv
-                  inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
-                  left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
-                  where el.inativo is null
-                  group by elpv.codprodutovariacao
-          ), chegando as (
-                  select
-                  		pb_nti.codprodutovariacao
-                  		, sum(cast(coalesce(nti.qcom * coalesce(pe_nti.quantidade, 1), 0) as bigint)) as chegando
-                  from tblnfeterceiro nt
-                  inner join tblnfeterceiroitem nti on (nt.codnfeterceiro = nti.codnfeterceiro)
-                  inner join tblprodutobarra pb_nti on (pb_nti.codprodutobarra = nti.codprodutobarra)
-                  left join tblprodutoembalagem pe_nti on (pe_nti.codprodutoembalagem = pb_nti.codprodutoembalagem)
-                  where nt.codnotafiscal IS NULL
-                  AND (nt.indmanifestacao IS NULL OR nt.indmanifestacao NOT IN (210220, 210240))
-                  AND nt.indsituacao = 1
-                  AND nt.ignorada = FALSE
-                  group by pb_nti.codprodutovariacao
-          )
-          select
-            m.codmarca
-            , m.marca
-          	, p.codproduto
-          	, pv.codprodutovariacao
-          	, p.produto || coalesce(' | ' || pv.variacao, '') as produto
-            , coalesce(pv.referencia, p.referencia) as referencia
-            , pv.dataultimacompra
-            , pv.custoultimacompra
-            , pv.quantidadeultimacompra
-          	, pv.estoqueminimo
-          	, pv.estoquemaximo
-          	, e.estoque
-          	, c.chegando
-          	, pv.lotecompra
-            , pv.descontinuado
-          from tblproduto p
-          inner join tblmarca m on (m.codmarca = p.codmarca)
-          inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
-          left join estoque e on (e.codprodutovariacao = pv.codprodutovariacao)
-          left join chegando c on (c.codprodutovariacao = pv.codprodutovariacao)
-          where p.inativo is null
-          and pv.inativo is null
+            with estoque as (
+                select
+                    elpv.codprodutovariacao
+                    , sum(es.saldoquantidade) as estoque
+                from tblestoquelocalprodutovariacao elpv
+                inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
+                left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
+                where el.inativo is null
+                group by elpv.codprodutovariacao
+            ), chegando as (
+                select
+                    pb_nti.codprodutovariacao
+                    , sum(cast(coalesce(nti.qcom * coalesce(pe_nti.quantidade, 1), 0) as bigint)) as chegando
+                from tblnfeterceiro nt
+                inner join tblnfeterceiroitem nti on (nt.codnfeterceiro = nti.codnfeterceiro)
+                inner join tblprodutobarra pb_nti on (pb_nti.codprodutobarra = nti.codprodutobarra)
+                left join tblprodutoembalagem pe_nti on (pe_nti.codprodutoembalagem = pb_nti.codprodutoembalagem)
+                where nt.codnotafiscal IS NULL
+                AND (nt.indmanifestacao IS NULL OR nt.indmanifestacao NOT IN (210220, 210240))
+                AND nt.indsituacao = 1
+                AND nt.ignorada = FALSE
+                group by pb_nti.codprodutovariacao
+            )
+            select
+                m.codmarca
+                , m.marca
+                , p.codproduto
+                , pv.codprodutovariacao
+                , p.produto || coalesce(' | ' || pv.variacao, '') as produto
+                , coalesce(pv.referencia, p.referencia) as referencia
+                , pv.dataultimacompra
+                , pv.custoultimacompra
+                , pv.quantidadeultimacompra
+                , pv.estoqueminimo
+                , pv.estoquemaximo
+                , e.estoque
+                , c.chegando
+                , pv.lotecompra
+                , pv.descontinuado
+            from tblproduto p
+            inner join tblmarca m on (m.codmarca = p.codmarca)
+            inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
+            left join estoque e on (e.codprodutovariacao = pv.codprodutovariacao)
+            left join chegando c on (c.codprodutovariacao = pv.codprodutovariacao)
+            where p.inativo is null
+            and pv.inativo is null
         ";
 
         $params = [];
         if (!empty($marca)) {
             $sql .="
-            and p.codmarca = :codmarca
-          ";
+                and p.codmarca = :codmarca
+            ";
             $params['codmarca'] = $marca->codmarca;
         } else {
             $sql .="
-            and m.controlada = true
-          ";
+                and m.controlada = true
+            ";
         }
 
         $sql .="
-          order by m.marca, p.codmarca, p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
+            order by m.marca, p.codmarca, p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
         ";
         $produtos = DB::select($sql, $params);
-        	foreach ($produtos as $prod) {
-		$prod->comprar = static::decideQuantidadeComprar(
-            		($prod->estoque??0) + ($prod->chegando??0),
-			$prod->estoqueminimo??0,
-			$prod->estoquemaximo??0,
-			$prod->lotecompra??1,
-			!empty($prod->descontinuado)
-		);
-		$prod->critico = static::decideEstoqueCritico(
-	            	($prod->estoque??0) + ($prod->chegando??0),
-			$prod->estoqueminimo??0
-		);
-                //if ($prod->codprodutovariacao == 6451) {
-                        //dd($prod);
-                        //dd(($prod->estoque??0) + ($prod->chegando??0));
-                //}
-
+        foreach ($produtos as $prod) {
+            $prod->comprar = static::decideQuantidadeComprar(
+                ($prod->estoque??0) + ($prod->chegando??0),
+                $prod->estoqueminimo??0,
+                $prod->estoquemaximo??0,
+                $prod->lotecompra??1,
+                !empty($prod->descontinuado)
+            );
+            $prod->critico = static::decideEstoqueCritico(
+                ($prod->estoque??0) + ($prod->chegando??0),
+                $prod->estoqueminimo??0
+            );
         }
 
         return collect($produtos);
@@ -255,15 +250,14 @@ class ComprasRepository
             $sheet->setCellValue("K{$linha}", $prod->chegando);
 
             // Cores do Saldo do Estoque
-          $cor = 'FF99FF66'; // Verde
-          if (($prod->estoque + $prod->chegando) < $prod->estoqueminimo) {
-              $cor = 'FFFF6666'; // Vermelho
-          } elseif (($prod->estoque + $prod->chegando) > $prod->estoquemaximo) {
-              $cor = 'FFFFFF99'; // Amarelo
-          }
+            $cor = 'FF99FF66'; // Verde
+            if (($prod->estoque + $prod->chegando) < $prod->estoqueminimo) {
+                $cor = 'FFFF6666'; // Vermelho
+            } elseif (($prod->estoque + $prod->chegando) > $prod->estoquemaximo) {
+                $cor = 'FFFFFF99'; // Amarelo
+            }
             $sheet->getStyle("J{$linha}:K{$linha}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
             $sheet->getStyle("J{$linha}:K{$linha}")->getFill()->getStartColor()->setARGB($cor);
-
 
             $sheet->setCellValue("L{$linha}", $prod->lotecompra);
             $sheet->setCellValue("M{$linha}", $prod->comprar);
@@ -272,6 +266,7 @@ class ComprasRepository
         }
 
         for ($i = 1; $i <= 10; $i++) {
+
             $sheet->setCellValue("A{$linha}", '');
             $sheet->setCellValue("B{$linha}", '');
             $sheet->setCellValue("C{$linha}", '');
@@ -308,7 +303,6 @@ class ComprasRepository
         $sheet->setCellValue("M{$linhaTotal}", "=subtotal(9,N{$linhaInicial}:N{$linhaFinal})");
         $sheet->getStyle("M{$linhaTotal}")->getNumberFormat()->setFormatCode('#,##0.00;-#,##0.00;;@');
         $sheet->getStyle("A{$linhaTotal}:M{$linhaTotal}")->getFont()->setBold(true);
-
 
         // Fundo Azul na Quantidade do Pedido e Valor Total
         $sheet->getStyle("M{$linhaInicial}:N{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);

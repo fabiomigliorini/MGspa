@@ -593,8 +593,8 @@ class VendaMensalRepository
      */
     public static function atualizarProduto(Produto $p)
     {
-        foreach ($p->ProdutoVariacaoS()->orderBy('codprodutovariacao')->get() as $pv) {
-            Log::info("Min/Max PV - #{$pv->codprodutovariacao}");
+        foreach ($p->ProdutoVariacaoS()->orderBy('variacao')->get() as $pv) {
+            // Log::info("Min/Max PV - #{$pv->codprodutovariacao}");
             static::atualizarVariacao($pv);
         }
         return true;
@@ -605,7 +605,7 @@ class VendaMensalRepository
      */
     public static function atualizarMarca(Marca $m)
     {
-        $prods = $m->ProdutoS()->orderBy('codproduto')->get();
+        $prods = $m->ProdutoS()->orderBy('produto')->get();
         $total = $prods->count();
         $i = 1;
         foreach ($prods as $p) {
@@ -621,7 +621,7 @@ class VendaMensalRepository
      */
     public static function atualizar()
     {
-        $marcas = Marca::orderBy('codmarca')->get();
+        $marcas = Marca::orderBy('marca')->get();
         $total = $marcas->count();
         $i = 1;
         foreach ($marcas as $m) {
