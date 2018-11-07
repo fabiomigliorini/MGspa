@@ -10,8 +10,8 @@ class NotaFiscalTerceiroRepositoryPath
 
     /**
      * Diretorio Raiz das NFes da Filial
-     * DFE_PATH=/var/www/NFePHP/Arquivos/DistDFe/
-     * NFE_TERCEIRO_PATH=/var/www/NFePHP/Arquivos/NFeTerceiro/
+     * DFE_PATH=/opt/www/NFePHP/Arquivos/DistDFe/
+     * NFE_TERCEIRO_PATH=/opt/www/NFePHP/Arquivos/NFeTerceiro/
      */
     public static function pathNFe(Filial $filial) {
       return env('NFE_PHP_PATH') . "DistDFe/{$filial->codfilial}/";

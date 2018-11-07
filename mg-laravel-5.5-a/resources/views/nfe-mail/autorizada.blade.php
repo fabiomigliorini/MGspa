@@ -14,7 +14,7 @@ body {
       <tr>
         <td>
           <!-- <img src="{{ asset('MailNfeCabecalho.jpeg') }}" style="max-width:100%"> -->
-          <img src="{{ $message->embed('/var/www/MGspa/mg-laravel-5.5-a/public/MailNfeCabecalho.jpeg') }}" style="max-width:100%" alt="{{ $nf->Filial->Pessoa->fantasia }}"> <br />
+          <img src="{{ $message->embed('/opt/www/MGspa/mg-laravel-5.5-a/public/MailNfeCabecalho.jpeg') }}" style="max-width:100%" alt="{{ $nf->Filial->Pessoa->fantasia }}"> <br />
         </td>
       </tr>
       <tr>
