@@ -14,7 +14,7 @@ body {
       <tr>
         <td>
           <!-- <img src="{{ asset('MailNfeCabecalho.jpeg') }}" style="max-width:100%"> -->
-          <img src="{{ $message->embed('/opt/www/MGspa/mg-laravel-5.5-a/public/MailNfeCabecalho.jpeg') }}" style="max-width:100%" alt="{{ $nf->Filial->Pessoa->fantasia }}"> <br />
+          <img src="{{ $message->embed('/opt/www/MGspa/laravel/public/MailNfeCabecalho.jpeg') }}" style="max-width:100%" alt="{{ $nf->Filial->Pessoa->fantasia }}"> <br />
         </td>
       </tr>
       <tr>
@@ -53,33 +53,31 @@ body {
           <p>
             Atenciosamente,
           </p>
-            @if (!empty($nf->codusuariocriacao))
-              @if (!empty($nf->UsuarioCriacao->codpessoa))
-                <strong>{{ $nf->UsuarioCriacao->Pessoa->pessoa }}</strong>
-              @endif
+          @if (!empty($nf->codusuariocriacao))
+            @if (!empty($nf->UsuarioCriacao->codpessoa))
+              <div><b><font face="arial, helvetica, sans-serif">
+                {{ $nf->UsuarioCriacao->Pessoa->pessoa }}
+              </b></font></div>
             @endif
-            <br />
-            <small>
-              <a href="tel:{{ $nf->Filial->Pessoa->telefone1 }}">{{ $nf->Filial->Pessoa->telefone1 }}</a>
-              <br />
-              <a href="mailto:{{ $nf->Filial->Pessoa->email }}">{{ $nf->Filial->Pessoa->email }}</a>
-              <br />
-              <a href="http://www.mgpapelaria.com.br">
-                www.mgpapelaria.com.br
-              </a>
-              <br />
-              <a href="https://www.facebook.com/MGPapelaria/">facebook.com/MGPapelaria</a>
-              <br />
+          @endif
+	  <div><font face="arial, helvetica, sans-serif" style="background-color:rgb(255,255,0)"><b><font color="#ff0000">&nbsp;MG</font>&nbsp;<font color="#0000ff">Papelaria&nbsp;</font></b><br></font></div>
+	  <div><font face="arial, helvetica, sans-serif"><a href="mailto:{{ $nf->Filial->Pessoa->email }}" target="_blank">{{ $nf->Filial->Pessoa->email }}</a></font></div>
+	  <div><font face="arial, helvetica, sans-serif"><a href="tel:{{ $nf->Filial->Pessoa->telefone1 }}" target="_blank">{{ $nf->Filial->Pessoa->telefone1 }}</a></font></div>
+	  <div><font face="arial, helvetica, sans-serif"><a href="http://www.mgpapelaria.com.br/" target="_blank">www.mgpapelaria.com.br</a></font></div>
+          <div><font face="arial, helvetica, sans-serif"><a href="https://facebook.com/MGPapelaria" target="_blank">facebook.com/MGPapelaria</a></font></div>
+          <div><font face="arial, helvetica, sans-serif"><a href="https://instagram.com/MGPapelaria" target="_blank">instagram.com/MGPapelaria</a></font></div>
+          <div>
+            <font face="arial, helvetica, sans-serif">
               <a href="https://maps.google.com/?q={{$nf->Filial->Pessoa->endereco }} {{$nf->Filial->Pessoa->numero }} {{$nf->Filial->Pessoa->Cidade->cidade }} {{$nf->Filial->Pessoa->Cidade->Estado->sigla }} {{$nf->Filial->Pessoa->Cidade->Estado->Pais->pais }}">
                 {{ $nf->Filial->Pessoa->endereco }}, {{ $nf->Filial->Pessoa->numero }} -
                 @if (!empty($nf->Filial->Pessoa->complemento))
-                {{ $nf->Filial->Pessoa->complemento }} -
+                  {{ $nf->Filial->Pessoa->complemento }} -
                 @endif
                 {{ $nf->Filial->Pessoa->Cidade->cidade }} / {{ $nf->Filial->Pessoa->Cidade->Estado->sigla }} -
                 {{ mascarar($nf->Filial->Pessoa->cep, '##.###-###') }}<br />
               </a>
-            </small>
-          <p>
+            </font>
+          </div>
         </td>
       </p>
       </tr>
