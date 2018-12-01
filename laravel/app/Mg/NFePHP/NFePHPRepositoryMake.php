@@ -192,7 +192,7 @@ class NFePHPRepositoryMake
 
             $std->IE = numeroLimpo($nf->Pessoa->ie);
             if ($nf->Pessoa->Cidade->Estado->sigla != 'MT') {
-                $std->indIEDest = (empty($std->IE)) ? '9' : '1';
+                $std->indIEDest = (empty($std->IE)) ? '2' : '1';
             } else {
                 $std->indIEDest = (empty($std->IE)) ? '2' : '1';
             }
@@ -251,7 +251,7 @@ class NFePHPRepositoryMake
           if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)){
               $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
           }
-          $std->cEAN = null;
+          $std->cEAN = 'SEM GTIN';
           try {
               $gtin = new Gtin($nfpb->ProdutoBarra->barras);
               if ($gtin->isValid()) {
