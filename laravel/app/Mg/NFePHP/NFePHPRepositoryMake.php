@@ -191,10 +191,28 @@ class NFePHPRepositoryMake
             $std->xNome = substr(Strings::replaceSpecialsChars($nf->Pessoa->pessoa), 0, 60);
 
             $std->IE = numeroLimpo($nf->Pessoa->ie);
-            if ($nf->Pessoa->Cidade->Estado->sigla != 'MT') {
-                $std->indIEDest = (empty($std->IE)) ? '2' : '1';
+
+            if (!empty($std->IE)) {
+                $std->indIEDest = '1';
             } else {
-                $std->indIEDest = (empty($std->IE)) ? '2' : '1';
+                switch ($nf->Pessoa->Cidade->Estado->sigla) {
+                    case 'AM':
+                    case 'BA':
+                    case 'CE':
+                    case 'GO':
+                    case 'MG':
+                    case 'MS':
+                    //case 'MT':
+                    case 'PE':
+                    case 'RN':
+                    case 'SE':
+                    case 'SP':
+                        $std->indIEDest = '9';
+                        break;
+                    default:
+                        $std->indIEDest = '2';
+                        break;
+                }
             }
 
             if ($nf->Pessoa->fisica) {
