@@ -1,5 +1,4 @@
-﻿/*
--- POR MES
+﻿-- POR MES
 select 
 	-- POR MES
 	 date_trunc('month', lancamento) as mes
@@ -8,6 +7,7 @@ select
 	--, p.fantasia
 	--, gc.grupocliente
 	, sum(n.valortotal * case when no.codoperacao = 1 then -1 else 1 end ) as venda
+	, sum(case when no.codoperacao = 1 then -1 else 1 end ) as quant
 from tblnegocio n
 inner join tblfilial f on (f.codfilial = n.codfilial)
 left join tblpessoa pv on (pv.codpessoa = n.codpessoavendedor)
@@ -17,7 +17,7 @@ inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoper
 where codnegociostatus = 2
 --and lancamento <= '2018-01-25 23:59:59.9'
 and lancamento >= '2012-01-01 00:00:00.0'
-and lancamento <= '2018-09-30 23:59:59.9'
+and lancamento <= '2018-11-30 23:59:59.9'
 and n.codnaturezaoperacao in (1, 2, 5) -- venda, devolucao, cupom
 --and n.codnaturezaoperacao in (2) -- venda, devolucao, cupom
 --and n.codfilial in (101, 102) -- Botanico
@@ -34,7 +34,6 @@ group by
 order by 1 desc, 2 desc
 --limit 200
 --"2015-01-12 00:00:00";263437.47
-*/
 
 /*
 -- POR SEMANA

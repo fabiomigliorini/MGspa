@@ -14,7 +14,7 @@ inner join (
     inner join tblprodutobarra pb_un on (pb_un.codprodutovariacao = pb.codprodutovariacao and pb_un.codprodutoembalagem is null)
     --where pb.codprodutobarra = 62979
     ) iq_barra on (iq_barra.codprodutobarra = i.codprodutobarra)
-where codnfeterceiro = 16609
+where codnfeterceiro = 20757
 and iq_barra.barras != i.cean
 */
 
@@ -30,19 +30,23 @@ CAIXA = 1 + CODIGO DA UNIDADE
 */
 select 
     p.codproduto,
-    --i.cprod, 
-    coalesce(pv.referencia, p.referencia) as referencia,
-    p.produto,
+    i.cprod, 
+    --pv.codprodutovariacao,
+    --coalesce(pv.referencia, p.referencia) as referencia,
+    p.produto || coalesce(' | ' || pv.variacao, '') as produto,
     --xprod,
     p.preco,
     iq_barra_un.barras as unidade,
+    /*
+    pb.barras as pacote,
     (
         select pb_pt.barras
         from tblprodutobarra pb_pt
         where pb_pt.codprodutovariacao = pb.codprodutovariacao
         and pb_pt.barras not in (pb.barras, iq_barra_un.barras)
         limit 1
-    ) as pacote,
+    ) as caixa,
+    cast(pe.quantidade as bigint)  as pacote, 
     (
         select cast(pe_pt.quantidade as int)
         from tblprodutobarra pb_pt
@@ -50,11 +54,10 @@ select
         where pb_pt.codprodutovariacao = pb.codprodutovariacao
         and pb_pt.barras not in (pb.barras, iq_barra_un.barras)
         limit 1
-    ) as pacote,
-    pb.barras as caixa,
+    ) as caixa,
     cast(i.qcom as bigint) as compra,
-    cast(pe.quantidade as bigint)  as caixa, 
-    cast(i.qcom * pe.quantidade as bigint)  as total
+    */
+    cast(i.qcom * coalesce(pe.quantidade, 1) as bigint)  as total
 from tblnfeterceiroitem i
 inner join tblprodutobarra pb on (i.codprodutobarra = pb.codprodutobarra)
 inner join tblprodutovariacao pv on (pv.codprodutovariacao = pb.codprodutovariacao)
@@ -65,11 +68,11 @@ inner join (
     from tblprodutobarra pb2
     inner join tblprodutobarra pb_un on (pb_un.codprodutovariacao = pb2.codprodutovariacao and pb_un.codprodutoembalagem is null)
     ) iq_barra_un on (iq_barra_un.codprodutobarra = i.codprodutobarra)
-where codnfeterceiro in (16465, 16466)
---and i.cean != pb.barras
---and i.cean = iq_barra_un.barras
---and cprod = coalesce(pv.referencia, p.referencia)
-order by produto
+where codnfeterceiro in (20822)
+--and i.cean != pb.barras -- Barras Embalagem Compra nao bate
+--and i.ceantrib != iq_barra_un.barras -- Barras Unidade nao bate
+--and cprod != coalesce(pv.referencia, p.referencia) -- Referencia nao bate
+order by produto, pv.variacao, pv.codprodutovariacao
     
 /*
 select * 
