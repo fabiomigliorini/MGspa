@@ -1,14 +1,22 @@
 ﻿-- delete from tbljobs where payload ilike '%EstoqueCalculaEstatisticas%';
 -- delete from tbljobs where queue ilike '%parado_cm%';
 
-select queue, count(*) from tbljobs group by queue order by queue
+delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup group by dup.payload);
+select 'lara', queue, count(*) from tbljobs group by queue union all
+select 'spa', queue, count(*) from tbljobsspa group by queue order by queue
 
 /*
+
+ALTER SEQUENCE tbljobs_id_seq RESTART;
+ALTER SEQUENCE tbljobsspa_id_seq RESTART;
+
+select * from tbljobsspa --where payload ilike '%codnotafiscal%codnotafiscal%'
+
+delete from tbljobsspa where payload like '%NFeAutorizadaMail%'
 
 select * from tbljobs where payload ilike '%codnotafiscal%codnotafiscal%'
 
 -- apaga jobs duplicadas
-delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup group by dup.payload)
 
 update tbljobs set queue = 'parado_cm' where payload ilike '%EstoqueCalculaCustoMedio%' and queue != 'parado_cm'
 delete from tbljobs where queue = 'parado_cm'
@@ -46,16 +54,9 @@ update tbljobs set queue = 'low' where tbljobs.id in (select j2.id from tbljobs 
 select queue, count(*) from tbljobs group by queue order by queue
 
 delete from tbljobs where id in (
-18966745
-,18966849
-,18966742
-,18966783
-,18966799
-,18966801
-,18964532
-,18964803
-,18960238
-,18960237
+931394
+,931360
+,931414
 )
 
 'high';39

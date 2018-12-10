@@ -1,9 +1,9 @@
 ﻿/*
 update tblnfeterceiroitem set codprodutobarra = 30008100 where cean = '9556089002608'
-select codprodutobarra, * from tblnfeterceiroitem where ceantrib ilike '789664471142%'
-select codprodutobarra, * from tblnfeterceiroitem where cprod ilike '902472' order by criacao desc
+select codprodutobarra, * from tblnfeterceiroitem where ceantrib ilike '%7890000000543%' or cean ilike '%7890000000543%'
+select codprodutobarra, * from tblnfeterceiroitem where cprod ilike '0732306' order by criacao desc
 
-select distinct cprod, xprod, cean, ceantrib from tblnfeterceiroitem where xprod ilike '%248%190%' and (cean ilike '78944%' or ceantrib ilike '78944%') order by xprod, cean, ceantrib
+select distinct cprod, xprod, cean, ceantrib from tblnfeterceiroitem where xprod ilike '%2032%' and (cean ilike '78944%' or ceantrib ilike '78944%') order by xprod, cean, ceantrib
 
 select * from tblnegocioprodutobarra where codprodutobarra = 952785
  
@@ -26,7 +26,8 @@ select
 from tblnfeterceiroitem nti
 inner join tblprodutobarra pb on (pb.codprodutobarra = nti.codprodutobarra)
 inner join tblnfeterceiro nt on (nt.codnfeterceiro = nti.codnfeterceiro)
-where pb.codproduto = 3760
+where pb.codproduto = 3705
+
 --where pb.codprodutovariacao between 13276 and 13277
 --where pb.codprodutovariacao = 6342
 group by 
