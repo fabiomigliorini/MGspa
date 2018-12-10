@@ -290,7 +290,7 @@ class NFePHPRepositoryMake
           $std->qTrib = $std->qCom;
 
           // SE FOR EMBALAGEM, PEGA PRIMEIRO CODIGO DE BARRAS DE UNIDADE POSSIVEL
-          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem) && !empty($std->cEAN)) {
+          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem) && $std->cEAN != 'SEM GTIN') {
              foreach ($nfpb->ProdutoBarra->ProdutoVariacao->ProdutoBarraS()->whereNull('codprodutoembalagem')->get() as $pbUnidade) {
                  try {
                      $gtin = new Gtin($pbUnidade->barras);
