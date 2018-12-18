@@ -12,7 +12,7 @@
 */
 
 Route::get('/', function () {
-    return view('nfe');
+    return view('welcome');
 });
 
 // Auth::routes();
