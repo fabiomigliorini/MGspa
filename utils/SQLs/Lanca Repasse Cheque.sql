@@ -1,16 +1,16 @@
-﻿select * from tblportador order by codportador
+select * from tblportador order by codportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-12-06', null, '2018-12-06 11:41', 1)
+values (210, '2018-12-18', null, '2018-12-18 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2292, '2018-12-06 10:00', 1
+select codcheque, 2298, '2018-12-18 10:00', 1
 from tblcheque where cmc7 in (
-'<74880037<0180030145>000007622962:',
-'<23755817<0180002265>259900697794:',
-'<13623047<0180006635>600002111847:'
+'<00142704<0188502505>393004379215:',
+	'<00111808<0188500095>732007239836:',
+	'<00141021<0188501475>899000964157:'
 )
 
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc)
@@ -24,8 +24,8 @@ order by 1 desc
 
 --update tblcheque set valor = 172.32 where cmc7 = '<34113644<0480001325>711720814794:'
 
---update tblchequerepasse set data = '2018-12-06', criacao = '2018-12-06 11:41' where codchequerepasse = 2286
---update tblchequerepassecheque set criacao = '2018-12-06 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2018-12-18', criacao = '2018-12-18 11:41' where codchequerepasse = 2286
+--update tblchequerepassecheque set criacao = '2018-12-18 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2086
 
@@ -88,9 +88,8 @@ inner join tblchequerepasse cr on (cr.codchequerepasse = crc.codchequerepasse)
 where crc.codcheque = 8836
 
 
-update tblchequerepassecheque set codchequerepasse = 2155
+update tblchequerepassecheque set codchequerepasse = 2295
 where codcheque in(select codcheque from tblcheque where cmc7 in (
-'<03341685<0180000205>219130149255:',
-'<74880161<0180001075>200000901660:',
-'<00138632<0188509225>674000570023:'
+'<23755815<0180000535>272500343479:',
+'<10432634<0189000635>100300031358:'
 ))
