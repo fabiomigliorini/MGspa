@@ -19,6 +19,15 @@ class NFePHPRepositoryMail
             $destinatario = $nf->Pessoa->emailnfe??$nf->Pessoa->email??$nf->Pessoa->emailcobranca;
         }
 
+        if (empty($destinatario)) {
+            return [
+                'sucesso' => true,
+                'mensagem' => 'Não foi informado nenhum destinatário!',
+                'destinatario' => [],
+                'error' => []
+            ];
+        }
+
         // transforma em array
         if (strpos($destinatario, ',')) {
             $destinatarios = explode(',', $destinatario);
