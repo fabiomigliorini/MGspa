@@ -1,4 +1,4 @@
-﻿--Negocios Fechados Sem Movimentacao de estoque
+--Negocios Fechados Sem Movimentacao de estoque
 select n.codfilial, n.codnegocio, n.lancamento, n.alteracao, npb.codnegocioprodutobarra, em.codestoquemovimento, p.codproduto, p.produto
 from tblnegocio n
 inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoperacao)
@@ -9,6 +9,7 @@ inner join tbltipoproduto tp on (tp.codtipoproduto = p.codtipoproduto)
 left join tblestoquemovimento em on (em.codnegocioprodutobarra = npb.codnegocioprodutobarra)
 where n.codnegociostatus = 2
 and n.lancamento >= '2016-04-01 00:00:00'
+--and n.lancamento >= '2018-11-01 00:00:00'
 and tp.estoque = true
 and no.estoque = true
 and em.codestoquemovimento is null

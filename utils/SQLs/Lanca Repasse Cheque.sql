@@ -1,16 +1,15 @@
 select * from tblportador order by codportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-12-18', null, '2018-12-18 11:41', 1)
+values (210, '2018-12-26', null, '2018-12-26 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2298, '2018-12-18 10:00', 1
+select codcheque, 2305, '2018-12-26 10:00', 1
 from tblcheque where cmc7 in (
-'<00142704<0188502505>393004379215:',
-	'<00111808<0188500095>732007239836:',
-	'<00141021<0188501475>899000964157:'
+	'<00141020<0188506845>881000800045:',
+	'<00138637<0188504895>639000114601:'
 )
 
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc)
@@ -24,8 +23,8 @@ order by 1 desc
 
 --update tblcheque set valor = 172.32 where cmc7 = '<34113644<0480001325>711720814794:'
 
---update tblchequerepasse set data = '2018-12-18', criacao = '2018-12-18 11:41' where codchequerepasse = 2286
---update tblchequerepassecheque set criacao = '2018-12-18 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2018-12-26', criacao = '2018-12-26 11:41' where codchequerepasse = 2286
+--update tblchequerepassecheque set criacao = '2018-12-26 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2086
 
