@@ -589,7 +589,8 @@ class NFePHPRepository extends MgRepository
         // Se Denegada
         // 301 Uso Denegado: Irregularidade fiscal do emitente
         // 302 Uso Denegado: Irregularidade fiscal do destinatário
-        if (in_array($protNFe->infProt->cStat, [301, 302])) {
+	// 303 Uso Denegado: Destinatario nao habilitado a operar na UF
+        if (in_array($protNFe->infProt->cStat, [301, 302, 303])) {
             static::vincularProtocoloDenegacao($nf, $protNFe, $resp);
             return false;
         }
