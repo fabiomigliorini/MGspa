@@ -308,7 +308,7 @@ class DistribuicaoRepository
             ->setName('Liberation Sans')
             ->setSize(10)
             ;
-        $titulo = "Transferência {$marca->marca}";
+        $titulo = "Transferência";
         $spreadsheet->getProperties()
             ->setCreator("MG Papelaria")
             ->setLastModifiedBy("MG Papelaria")
