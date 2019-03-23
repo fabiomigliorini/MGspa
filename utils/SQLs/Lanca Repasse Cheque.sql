@@ -1,15 +1,17 @@
-select * from tblportador order by codportador
+﻿select * from tblportador order by codportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2018-12-26', null, '2018-12-26 11:41', 1)
+values (210, '2019-03-21', null, '2019-03-21 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2305, '2018-12-26 10:00', 1
+select codcheque, 2330, '2019-03-21 10:00', 1
 from tblcheque where cmc7 in (
-	'<00141020<0188506845>881000800045:',
-	'<00138637<0188504895>639000114601:'
+	'<34113643<0480001905>741680814799:',
+	'<03341680<0180000905>298130157443:',
+	'<23702344<0180044525>356206007090:',
+	'<74810223<0180003035>700003362118:'
 )
 
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc)
@@ -23,10 +25,10 @@ order by 1 desc
 
 --update tblcheque set valor = 172.32 where cmc7 = '<34113644<0480001325>711720814794:'
 
---update tblchequerepasse set data = '2018-12-26', criacao = '2018-12-26 11:41' where codchequerepasse = 2286
---update tblchequerepassecheque set criacao = '2018-12-26 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2019-03-21', criacao = '2019-03-21 11:41' where codchequerepasse = 2286
+--update tblchequerepassecheque set criacao = '2019-03-21 11:41' where codchequerepasse = 2286
 
---select * from tblchequerepassecheque where codchequerepasse = 2086
+--select * delete from tblchequerepassecheque where codchequerepasse = 2321
 
 --delete from tblchequerepassecheque where codchequerepassecheque between 15837 and 15847
 
@@ -34,7 +36,8 @@ order by 1 desc
 delete from tblchequerepassecheque  where codcheque in (
 	select codcheque
 	from tblcheque where cmc7 in (
-	'<74808129<0180011725>200008905614:'
+	'<23702346<0180008625>394302807980:',
+	'<10408540<0183127435>000300003001:'
 	)
 )
 
@@ -66,7 +69,7 @@ inner join tblchequemotivodevolucao cmd on (cmd.numero = 12)
 where c.cmc7 = '<34182182<0480001185>801421544691:'
 
 -- MARCA INDSTATUS - EM COBRANCA
-update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select codcheque from tblcheque where cmc7 = '<34182182<0480001185>801421544691:')
+update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select codcheque from tblcheque where cmc7 = '<03341682<0180003045>275130143037:')
 
 
 select * from tblchequedevolucao order by codchequedevolucao desc

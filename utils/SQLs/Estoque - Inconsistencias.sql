@@ -1,4 +1,4 @@
---Negocios Fechados Sem Movimentacao de estoque
+﻿--Negocios Fechados Sem Movimentacao de estoque
 select n.codfilial, n.codnegocio, n.lancamento, n.alteracao, npb.codnegocioprodutobarra, em.codestoquemovimento, p.codproduto, p.produto
 from tblnegocio n
 inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoperacao)
@@ -58,8 +58,8 @@ inner join tblproduto p on (p.codproduto = pb.codproduto)
 inner join tbltipoproduto tp on (tp.codtipoproduto = p.codtipoproduto)
 left join tblestoquemovimento em on (em.codnotafiscalprodutobarra = npb.codnotafiscalprodutobarra)
 where ((n.emitida = true and n.nfeautorizacao is not null and n.nfeinutilizacao is null and n.nfecancelamento is null) or n.emitida = false)
---and n.saida >= '2017-12-01 00:00:00' 
-and n.saida >= '2016-01-01 00:00:00' 
+--and n.saida >= '2016-01-01 00:00:00' 
+and n.saida >= '2019-03-01 00:00:00' 
 and tp.estoque = true
 and no.estoque = true
 and em.codestoquemovimento is null
@@ -98,7 +98,6 @@ and no.estoque = true
 and round((coalesce(em.entradaquantidade, 0) + coalesce(em.saidaquantidade, 0)), 1) != round((npb.quantidade * coalesce(pe.quantidade, 1)), 1)
 order by p.codproduto, pb.codprodutobarra, n.codfilial, n.codnotafiscal, p.produto
 
-
 -- Transferencia/Devolucao sem registro de origem
 select em.codestoquemes, em.data, emt.descricao, EMT.CODESTOQUEMOVIMENTOTIPO, em.entradaquantidade, em.saidaquantidade, nfpb.codnotafiscal, npb.codnegocio
 from tblestoquemovimentotipo emt
@@ -111,6 +110,21 @@ and em.data >= '2016-01-01'
 --and em.codnotafiscalprodutobarra is not null
 AND em.codestoquemovimentotipo = 4201 -- Transferencia Entrada
 order by em.data, em.codestoquemes
+
+-- Valor entrada diferente da saida nas transferencias
+with recalcular as (
+	select mov.codestoquemes, mes.codestoquesaldo
+	from tblestoquemovimento mov
+	inner join tblestoquemovimento orig on (orig.codestoquemovimento = mov.codestoquemovimentoorigem)
+	inner join tblestoquemes mes on (mes.codestoquemes = mov.codestoquemes)
+	inner join tblestoquesaldo sld on (sld.codestoquesaldo = mes.codestoquesaldo)
+	where sld.fiscal = true
+	and abs(coalesce(mov.entradavalor, 0) - coalesce(orig.saidavalor, 0)) > 0.02
+)
+select 'wget http://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/' || min(codestoquemes)::varchar 
+from recalcular
+group by codestoquesaldo
+order by 1
 
 --Estoque Negativo
 select pv.codproduto, p.produto, coalesce(pv.variacao, '{ Sem Variacao }'), es.saldoquantidade, es.saldovalor, es.ultimaconferencia
