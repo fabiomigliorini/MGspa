@@ -30,3 +30,6 @@ update tblpessoa set email = 'nfe@mgpapelaria.com.br', emailnfe = null, emailcob
 --altera senha para "baseteste" e para impressora matricial do deposito
 update tblusuario set senha = '$1$k8wt4L/C$/xxhrvZ2z4DroCR6dUszJ/', impressoramatricial = null, impressoratermica = null, impressoratelanegocio = null;
 
+--limpa jobs
+delete from tbljobs;
+delete from tbljobsspa;
