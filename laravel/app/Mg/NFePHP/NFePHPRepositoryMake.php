@@ -285,6 +285,10 @@ class NFePHPRepositoryMake
           $std->vUnCom = number_format($nfpb->valorunitario, 10, '.', '');
           $std->vProd = number_format($nfpb->valortotal, 2, '.', '');
 
+          // Pedido
+          $std->xPed = Strings::replaceSpecialsChars($nfpb->pedido);
+          $std->nItemPed = Strings::replaceSpecialsChars($nfpb->pedidoitem);
+
           $std->cEANTrib = $std->cEAN;
           $std->uTrib = $std->uCom;
           $std->qTrib = $std->qCom;
@@ -561,16 +565,41 @@ class NFePHPRepositoryMake
         $std->modFrete = $nf->frete;
         $nfe->tagtransp($std);
 
+        // Tranportadora
+        $std = new \stdClass();
+        $std->xNome = substr(Strings::replaceSpecialsChars($nf->PessoaTransportador->pessoa), 0, 60);
+        $std->IE = numeroLimpo($nf->PessoaTransportador->ie);
+        $end = [
+            Strings::replaceSpecialsChars($nf->PessoaTransportador->endereco),
+            Strings::replaceSpecialsChars($nf->PessoaTransportador->numero),
+            Strings::replaceSpecialsChars($nf->PessoaTransportador->complemento),
+            Strings::replaceSpecialsChars($nf->PessoaTransportador->bairro),
+        ];
+        $std->xEnder = implode(
+            array_filter($end),
+            ', '
+        );
+        $std->xMun = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->cidade);
+        $std->UF = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->Estado->sigla);
+        if ($nf->PessoaTransportador->fisica) {
+            $std->CNPJ = '';
+            $std->CPF = str_pad($nf->PessoaTransportador->cnpj, 11, '0', STR_PAD_LEFT); //'58716523000119';
+        } else {
+            $std->CNPJ = str_pad($nf->PessoaTransportador->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
+            $std->CPF = '';
+        }
+        $nfe->tagtransporta($std);
+
         // Volumes
-        // $std = new \stdClass();
-        // $std->item = 1;
-        // $std->qVol = 2;
-        // $std->esp = 'caixa';
-        // $std->marca = 'OLX';
-        // $std->nVol = '11111';
-        // $std->pesoL = 10.00;
-        // $std->pesoB = 11.00;
-        // $nfe->tagvol($std);
+        $std = new \stdClass();
+        $std->item = 1;
+        $std->qVol = number_format($nf->volumes, 0, '.', '');
+        $std->esp = Strings::replaceSpecialsChars($nf->volumesespecie);
+        $std->marca = Strings::replaceSpecialsChars($nf->volumesmarca);
+        $std->nVol = Strings::replaceSpecialsChars($nf->volumesnumero);
+        $std->pesoL = number_format($nf->pesoliquido, 3, '.', '');
+        $std->pesoB = number_format($nf->pesobruto, 3, '.', '');
+        $nfe->tagvol($std);
 
         // Faturas
         // $std = new \stdClass();

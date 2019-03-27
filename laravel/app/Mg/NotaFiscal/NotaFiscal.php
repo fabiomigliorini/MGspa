@@ -108,6 +108,11 @@ class NotaFiscal extends MGModel
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
+    public function PessoaTransportador()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoatransportador', 'codpessoa');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
