@@ -20,7 +20,7 @@ update tbljobsspa set queue = 'default' where tbljobsspa.id in (select j2.id fro
 delete from tbljobsspa where payload like '%NFeAutorizadaMail%'
 
 update tbljobs set queue = 'parado_cm' where queue = 'urgent'
-update tbljobs set queue = 'urgent' where tbljobs.id in (select j2.id from tbljobs j2 where j2.queue = 'parado_cm' order by j2.payload limit 20)
+update tbljobs set queue = 'urgent' where tbljobs.id in (select j2.id from tbljobs j2 where j2.queue = 'parado_cm' order by j2.payload limit 10)
 
 select * from tbljobs where queue = 'parado_cm' order by id
 delete from tbljobs where queue = 'parado_cm' 
