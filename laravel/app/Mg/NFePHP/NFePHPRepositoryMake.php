@@ -287,7 +287,7 @@ class NFePHPRepositoryMake
 
           // Pedido
           $std->xPed = Strings::replaceSpecialsChars($nfpb->pedido);
-          $std->nItemPed = number_format($nf->pedidoitem, 0, '.', '');
+          $std->nItemPed = number_format($nfpb->pedidoitem, 0, '.', '');
 
           $std->cEANTrib = $std->cEAN;
           $std->uTrib = $std->uCom;
