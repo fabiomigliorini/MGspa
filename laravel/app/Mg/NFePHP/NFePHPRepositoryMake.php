@@ -567,28 +567,30 @@ class NFePHPRepositoryMake
 
         // Tranportadora
         $std = new \stdClass();
-        $std->xNome = substr(Strings::replaceSpecialsChars($nf->PessoaTransportador->pessoa), 0, 60);
-        $std->IE = numeroLimpo($nf->PessoaTransportador->ie);
-        $end = [
-            Strings::replaceSpecialsChars($nf->PessoaTransportador->endereco),
-            Strings::replaceSpecialsChars($nf->PessoaTransportador->numero),
-            Strings::replaceSpecialsChars($nf->PessoaTransportador->complemento),
-            Strings::replaceSpecialsChars($nf->PessoaTransportador->bairro),
-        ];
-        $std->xEnder = implode(
-            array_filter($end),
-            ', '
-        );
-        $std->xMun = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->cidade);
-        $std->UF = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->Estado->sigla);
-        if ($nf->PessoaTransportador->fisica) {
-            $std->CNPJ = '';
-            $std->CPF = str_pad($nf->PessoaTransportador->cnpj, 11, '0', STR_PAD_LEFT); //'58716523000119';
-        } else {
-            $std->CNPJ = str_pad($nf->PessoaTransportador->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
-            $std->CPF = '';
-        }
-        $nfe->tagtransporta($std);
+	if (!empty($nf->codpessoatransportador)) {
+            $std->xNome = substr(Strings::replaceSpecialsChars($nf->PessoaTransportador->pessoa), 0, 60);
+            $std->IE = numeroLimpo($nf->PessoaTransportador->ie);
+            $end = [
+                Strings::replaceSpecialsChars($nf->PessoaTransportador->endereco),
+                Strings::replaceSpecialsChars($nf->PessoaTransportador->numero),
+                Strings::replaceSpecialsChars($nf->PessoaTransportador->complemento),
+                Strings::replaceSpecialsChars($nf->PessoaTransportador->bairro),
+            ];
+            $std->xEnder = implode(
+                array_filter($end),
+                ', '
+            );
+            $std->xMun = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->cidade);
+            $std->UF = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->Estado->sigla);
+            if ($nf->PessoaTransportador->fisica) {
+                $std->CNPJ = '';
+                $std->CPF = str_pad($nf->PessoaTransportador->cnpj, 11, '0', STR_PAD_LEFT); //'58716523000119';
+            } else {
+                $std->CNPJ = str_pad($nf->PessoaTransportador->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
+                $std->CPF = '';
+            }
+            $nfe->tagtransporta($std);
+	}
 
         // Volumes
         $std = new \stdClass();
