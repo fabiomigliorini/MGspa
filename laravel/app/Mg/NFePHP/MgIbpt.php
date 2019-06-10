@@ -60,7 +60,7 @@ class MgIbpt extends Ibpt
                 $reg->descricao = 'Nao Localizado';
                 $reg->vigenciainicio = Carbon::today();
                 $reg->vigenciafim = Carbon::today();
-            } else {
+            } elseif(isset($consulta->Descricao)) {
                 // Salva na Tabela de cache
                 $reg->descricao = $consulta->Descricao;
                 $reg->nacional = $consulta->Nacional;
