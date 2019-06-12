@@ -166,7 +166,11 @@ class NFePHPRepositoryMake
         $std->xFant = Strings::replaceSpecialsChars($nf->Filial->Pessoa->fantasia);
         $std->IE = numeroLimpo($nf->Filial->Pessoa->ie);
         $std->CRT = $nf->Filial->crt;
-        $std->CNPJ = str_pad($nf->Filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+	if ($nf->Filial->Pessoa->fisica) {
+            $std->CPF = str_pad($nf->Filial->Pessoa->cnpj, 11, '0', STR_PAD_LEFT);
+	} else {
+            $std->CNPJ = str_pad($nf->Filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+	}
         $nfe->tagemit($std);
 
         // Endereço Emitente
@@ -602,6 +606,17 @@ class NFePHPRepositoryMake
         $std->pesoL = number_format($nf->pesoliquido, 3, '.', '');
         $std->pesoB = number_format($nf->pesobruto, 3, '.', '');
         $nfe->tagvol($std);
+
+	if (!empty($nf->placa)) {
+	    $std = new \stdClass();
+	    $std->placa = Strings::replaceSpecialsChars($nf->placa);
+	    if (!empty($nf->codestadoplaca)) {
+	    	$std->UF = $nf->EstadoPlaca->sigla;
+	    }
+	    //$std->UF = 'RJ';
+	    //$std->RNTC = '999999';
+	    $nfe->tagveicTransp($std);
+	}
 
         // Faturas
         // $std = new \stdClass();

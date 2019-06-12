@@ -9,6 +9,7 @@ use Mg\NaturezaOperacao\Operacao;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
+use Mg\Cidade\Estado;
 
 class NotaFiscal extends MGModel
 {
@@ -111,6 +112,11 @@ class NotaFiscal extends MGModel
     public function PessoaTransportador()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoatransportador', 'codpessoa');
+    }
+
+    public function EstadoPlaca()
+    {
+        return $this->belongsTo(Estado::class, 'codestadoplaca', 'codestado');
     }
 
     public function UsuarioAlteracao()

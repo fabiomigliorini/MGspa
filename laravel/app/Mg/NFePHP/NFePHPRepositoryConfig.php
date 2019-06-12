@@ -12,17 +12,19 @@ class NFePHPRepositoryConfig
     public static function config (Filial $filial, $versao = '4.00')
     {
 
-        if (empty($filial->nfcetoken)) {
-            throw new \Exception("Não foi informado o Token CSC para a Filial!");
-        }
-
-        if (empty($filial->nfcetokenid)) {
-            throw new \Exception("Não foi informado o ID do Token CSC para a Filial!");
-        }
-
-        if (empty($filial->tokenibpt)) {
-            throw new \Exception("Não foi informado o ID do Token do IBPT para a Filial!");
-        }
+	if (!$filial->Pessoa->fisica) {
+            if (empty($filial->nfcetoken)) {
+                throw new \Exception("Não foi informado o Token CSC para a Filial!");
+            }
+    
+            if (empty($filial->nfcetokenid)) {
+                throw new \Exception("Não foi informado o ID do Token CSC para a Filial!");
+            }
+    
+            if (empty($filial->tokenibpt)) {
+                throw new \Exception("Não foi informado o ID do Token do IBPT para a Filial!");
+	    }
+	}
 
         $config = [
            'atualizacao' => '2018-02-06 06:01:21',
