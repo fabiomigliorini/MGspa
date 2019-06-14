@@ -151,7 +151,6 @@ and es.ultimaconferencia is null
 and elpv.codestoquelocal in (101001)
 order by p.produto, pv.variacao nulls first
 
-
 -- Movimento da Variacao para quando quiser excluir
 select mov.codnegocioprodutobarra, mov.codnotafiscalprodutobarra, mov.codestoquemes, mov.manual
 from tblestoquelocalprodutovariacao elpv

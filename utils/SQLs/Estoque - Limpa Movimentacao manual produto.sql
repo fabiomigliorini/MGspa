@@ -6,7 +6,7 @@ where tblestoquemovimento.codestoquesaldoconferencia in (
 	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
 	inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
 	inner join tblestoquesaldoconferencia esc on (esc.codestoquesaldo = es.codestoquesaldo)
-	where pv.codproduto = 004747
+	where pv.codproduto = 35780
 )
 
 -- LIMPA CONFERENCIAS
@@ -17,7 +17,7 @@ where tblestoquesaldoconferencia.codestoquesaldoconferencia in (
 	inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
 	inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
 	inner join tblestoquesaldoconferencia esc on (esc.codestoquesaldo = es.codestoquesaldo)
-	where pv.codproduto = 004747
+	where pv.codproduto = 35780
 )
 
 -- LIMPA MOVIMENTOS MANUAIS
@@ -31,7 +31,7 @@ delete from tblestoquemovimento where tblestoquemovimento.codestoquemovimento in
 	where mov.codestoquemovimentotipo in (1002, 1001)
 	and mov.manual = true
 	and es.fiscal = false
-	and pv.codproduto = 004747
+	and pv.codproduto = 35780
 )
 
 -- RECALCULAR SALDOS
@@ -40,21 +40,22 @@ from tblprodutovariacao pv
 inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
 inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
 inner join tblestoquemes mes on (mes.codestoquesaldo = es.codestoquesaldo)
-where pv.codproduto = 004747
+where pv.codproduto = 35780
 and es.fiscal = false
 order by mes.codestoquesaldo, mes.mes
 
 -- VERIFICAR MANUALMENTE OUTROS MOVIMENTOS MANUAIS
-select distinct mov.codestoquemes, 'https://sistema.mgpapelaria.com.br/MGLara/estoque-mes/'||mov.codestoquemes::varchar--, mov.codestoquemovimentotipo, mov.entradaquantidade, mov.saidaquantidade, mov.data
+select mov.codestoquemes, 'https://sistema.mgpapelaria.com.br/MGLara/estoque-mes/'||mov.codestoquemes::varchar--, mov.codestoquemovimentotipo, mov.entradaquantidade, mov.saidaquantidade, mov.data
 from tblprodutovariacao pv
 inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.codprodutovariacao)
 inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
 inner join tblestoquemes mes on (mes.codestoquesaldo = es.codestoquesaldo)
 inner join tblestoquemovimento mov on (mov.codestoquemes = mes.codestoquemes)
 where mov.manual = true
-and es.fiscal = false
-and pv.codproduto = 004747
---order by data desc
+--and es.fiscal = false
+and pv.codproduto = 35780
+order by mov.entradaquantidade desc nulls last
+limit 50
 
 
 -- CONSERTA DATA ULTIMA CONFERENCIA
