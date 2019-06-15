@@ -12,26 +12,36 @@ class NFePHPRepositoryConfig
     public static function config (Filial $filial, $versao = '4.00')
     {
 
-	if (!$filial->Pessoa->fisica) {
+        if (!$filial->Pessoa->fisica) {
             if (empty($filial->nfcetoken)) {
                 throw new \Exception("Não foi informado o Token CSC para a Filial!");
             }
-    
+
             if (empty($filial->nfcetokenid)) {
                 throw new \Exception("Não foi informado o ID do Token CSC para a Filial!");
             }
-    
+
             if (empty($filial->tokenibpt)) {
                 throw new \Exception("Não foi informado o ID do Token do IBPT para a Filial!");
-	    }
-	}
+	        }
+        }
+
+        if ($filial->Pessoa->fisica) {
+            $cnpj = str_pad($filial->Pessoa->cnpj, 11, '0', STR_PAD_LEFT);
+            $typePerson = 'F';
+        } else {
+            $cnpj = str_pad($filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+            $typePerson = 'J';
+        }
+
 
         $config = [
            'atualizacao' => '2018-02-06 06:01:21',
            'tpAmb' => $filial->nfeambiente, // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
            'razaosocial' => $filial->Pessoa->pessoa,
            'siglaUF' => $filial->Pessoa->Cidade->Estado->sigla,
-           'cnpj' => str_pad($filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT),
+           'cnpj' => $cnpj,
+           'typePerson' => $typePerson,
            'schemes' => 'PL_009_V4',
            'versao' => '4.00',
            'CSC' => $filial->nfcetoken,
