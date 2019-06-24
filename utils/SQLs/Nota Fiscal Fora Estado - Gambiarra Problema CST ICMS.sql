@@ -1,11 +1,11 @@
 ﻿update tblnotafiscal 
 set observacoes = observacoes || '  - ICMS Recolhido antecipadamente por estimativa simplificada / carga media - Mercadoria entregue ao destinatario dentro do territorio de Mato Grosso' 
-where codnotafiscal = 1089594;
+where codnotafiscal = 01158565;
 
 update tblnotafiscalprodutobarra
 set icmscst = 060
 where icmscst = 090 
-and codnotafiscal = 1089594;
+and codnotafiscal = 01158565;
 
 /*
 Inutilização	151170223656680 - 24/08/2017 17:35:39
