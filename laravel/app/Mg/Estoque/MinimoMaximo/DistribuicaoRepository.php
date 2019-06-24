@@ -382,21 +382,22 @@ class DistribuicaoRepository
         // percorre produtos
         foreach ($produtos as $prod) {
             $linha2 = $linha + 1;
+	    $linha3 = $linha2 + 1;
 
             // codigo do produto
-            $sheet->mergeCells("A{$linha}:A{$linha2}");
+            $sheet->mergeCells("A{$linha}:A{$linha3}");
             $sheet->setCellValue("A{$linha}", $prod->codproduto);
             $sheet->getCell("A{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
-            $sheet->getStyle("A{$linha}:A{$linha2}")->getNumberFormat()->setFormatCode('000000');
+            $sheet->getStyle("A{$linha}:A{$linha3}")->getNumberFormat()->setFormatCode('000000');
 
             // Produto
-            $sheet->mergeCells("B{$linha}:B{$linha2}");
+            $sheet->mergeCells("B{$linha}:B{$linha3}");
             $sheet->setCellValue("B{$linha}", $prod->produto);
             $sheet->getStyle("B{$linha}")->getFont()->setBold(true);
             $sheet->getStyle("B{$linha}")->getFont()->setSize(12);
 
             // Barras
-            $sheet->mergeCells("C{$linha}:C{$linha2}");
+            $sheet->mergeCells("C{$linha}:C{$linha3}");
             $texto = [];
             $linhasBarras = 0;
             foreach ($prod->barras->take(5) as $barras) {
@@ -413,15 +414,19 @@ class DistribuicaoRepository
 
             // ajusta altura das linhas conforme quantidade de codigos de barras
             $sheet->getRowDimension($linha)->setRowHeight(14);
-            if ($linhasBarras > 2) {
-                $height = ($linhasBarras - 1) * 12;
-                $sheet->getRowDimension($linha2)->setRowHeight($height);
+            $sheet->getRowDimension($linha2)->setRowHeight(11);
+            if ($linhasBarras > 3) {
+                $height = ($linhasBarras - 2) * 11;
+		if ($height > 55) {
+                    $height = 55;
+		}
+                $sheet->getRowDimension($linha3)->setRowHeight($height);
             } else {
-                $sheet->getRowDimension($linha2)->setRowHeight(10);
+                $sheet->getRowDimension($linha3)->setRowHeight(11);
             }
 
             // Saldo Deposito
-            $sheet->mergeCells("D{$linha}:D{$linha2}");
+            $sheet->mergeCells("D{$linha}:D{$linha3}");
             $sheet->setCellValue("D{$linha}", $prod->saldoquantidade);
 
             // Filiais
@@ -433,13 +438,16 @@ class DistribuicaoRepository
                 // Saldo
                 $sheet->setCellValue("{$coluna}{$linha}", $dest->transferir);
 
+                $str = "={$dest->saldoquantidade}+{$coluna}{$linha}";
+		$sheet->setCellValue("{$coluna}{$linha2}", $str);
+
                 // percentual
                 if (!empty($dest->estoquemaximo)) {
-                    $str = "=({$dest->saldoquantidade}+{$coluna}{$linha})/{$dest->estoquemaximo}";
+                    $str = $dest->estoquemaximo;
                 } else {
                     $str = 'nada';
                 }
-                $sheet->setCellValue("{$coluna}{$linha2}", $str);
+                $sheet->setCellValue("{$coluna}{$linha3}", $str);
             }
 
             // formata quantidades dos estoques das filiais
@@ -448,25 +456,30 @@ class DistribuicaoRepository
             $sheet->getStyle("E{$linha}:H{$linha}")->getFont()->setBold(true);
 
             // formata percentuais dos estoques das filiais
-            $sheet->getStyle("E{$linha2}:H{$linha2}")->getFont()->setSize(8);
-            $sheet->getStyle("E{$linha2}:H{$linha2}")->getNumberFormat()->setFormatCode('0%');
-            $sheet->getStyle("E{$linha2}:H{$linha2}")->getFont()->getColor()->setARGB('FF999999');
+            $sheet->getStyle("E{$linha2}:H{$linha3}")->getFont()->setSize(8);
+            $sheet->getStyle("E{$linha2}:H{$linha3}")->getFont()->getColor()->setARGB('FF999999');
+
+	    // Alinhamento Vertical
+	    $sheet->getStyle("E{$linha3}:H{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+            $sheet->getStyle("A{$linha}:D{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("H{$linha}:H{$linha2}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
             // Saldo Final Deposito
+	    $sheet->mergeCells("H{$linha}:H{$linha2}");
             $str = "=D{$linha}-E{$linha}-F{$linha}-G{$linha}";
             $sheet->setCellValue("H{$linha}", $str);
-            $sheet->getStyle("H{$linha}:H{$linha}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("D{$linha}:H{$linha3}")->getNumberFormat()->setFormatCode('#,##0');
 
             // Percentual Deposito
             if (!empty($prod->estoquemaximo)) {
-                $str = "=H{$linha}/{$prod->estoquemaximo}";
+                $str = $prod->estoquemaximo;
             } else {
                 $str = 'nada';
             }
-            $sheet->setCellValue("H{$linha2}", $str);
-            $sheet->getStyle("H{$linha2}")->getNumberFormat()->setFormatCode('0%');
+            $sheet->setCellValue("H{$linha3}", $str);
 
-            $linha += 2;
+
+            $linha += 3;
         }
         $linhaFinal = $linha-1;
 
@@ -491,7 +504,6 @@ class DistribuicaoRepository
         // Alinhamento dos dados Centralizados e no topo da celula
         $sheet->getStyle("A{$linhaInicial}:A{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("D{$linhaInicial}:H{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A1:H{$linhaFinal}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
 
         // Fundo Azul no Botanico
         $sheet->getStyle("E{$linhaInicial}:E{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
