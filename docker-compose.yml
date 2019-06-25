@@ -4,9 +4,6 @@ services:
         build:
             './.docker'
         tty: true
-        ports:
-            - "83:80"
-            - "91:91"
         volumes:
             - ./:/opt/www/MGspa
             - ../MGLara/:/opt/www/MGLara
