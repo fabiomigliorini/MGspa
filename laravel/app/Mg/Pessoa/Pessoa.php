@@ -3,7 +3,9 @@
 namespace Mg\Pessoa;
 
 use Mg\MgModel;
+
 use Mg\Cidade\Cidade;
+use Mg\Certidao\CertidaoEmissor;
 
 use DB;
 use Carbon\Carbon;
@@ -225,6 +227,11 @@ class Pessoa extends MGModel
         return $this->hasMany(Cheque::class, 'codpessoa', 'codpessoa');
     }
 
+    public function PessoaCertidaoS()
+    {
+        return $this->hasMany(PessoaCertidao::class, 'codpessoa', 'codpessoa');
+    }
+
     public static function getNotaFiscalOpcoes()
     {
         return array(
@@ -305,9 +312,18 @@ class Pessoa extends MGModel
 
     }
 
-
     public static function vendedoresOrdenadoPorNome()
     {
         return self::where('vendedor', true)->orderBy('pessoa', 'asc');
     }
+
+    public function certidaoSefazMT()
+    {
+        return $this->PessoaCertidaoS()->where('validade', '>=', Carbon::createMidnightDate())
+            ->ativo()
+            ->where('codcertidaoemissor', CertidaoEmissor::SEFAZ_MT)
+            ->orderBy('validade', 'desc')
+            ->first();
+    }
+
 }

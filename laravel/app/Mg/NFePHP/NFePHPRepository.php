@@ -210,8 +210,10 @@ class NFePHPRepository extends MgRepository
         $xmlAssinado = file_get_contents($pathAssinada);
 
         // Vincula o Protocolo no XML Assinado
-        $prot = new Protocol();
-        $xmlProtocolado = $prot->add($xmlAssinado, $resp);
+        // $prot = new Protocol();
+        // $xmlProtocolado = $prot->add($xmlAssinado, $resp);
+        $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $resp);
+
 
         // Salva o Arquivo com a NFe Aprovada
         $pathAprovada = NFePHPRepositoryPath::pathNFeAutorizada($nf, true);
@@ -240,8 +242,9 @@ class NFePHPRepository extends MgRepository
         $xmlAssinado = file_get_contents($pathAssinada);
 
         // Vincula o Protocolo no XML Assinado
-        $prot = new Protocol();
-        $xmlProtocolado = $prot->add($xmlAssinado, $resp);
+        // $prot = new Protocol();
+        // $xmlProtocolado = $prot->add($xmlAssinado, $resp);
+        $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $resp);
 
         // Salva o Arquivo com a NFe Aprovada
         $pathNFeDenegada = NFePHPRepositoryPath::pathNFeDenegada($nf, true);
@@ -273,7 +276,10 @@ class NFePHPRepository extends MgRepository
         if (isset($procEventoNFe->evento)) {
             $xmlProtocolado = $resp;
         } else {
-            $xmlProtocolado = Complements::toAuthorize($tools->lastRequest, $resp);
+            // $xmlProtocolado = Complements::toAuthorize($tools->lastRequest, $resp);
+            $pathAutorizada = NFePHPRepositoryPath::pathNFeAutorizada($nf);
+            $xmlAutorizado = file_get_contents($pathAutorizada);
+            $xmlProtocolado = Complements::cancelRegister($xmlAutorizado, $resp);
         }
 
         // Salva o Arquivo com a NFe Aprovada
@@ -382,6 +388,7 @@ class NFePHPRepository extends MgRepository
 
         // solicita a sefaz cancelamento
         $resp = $tools->sefazCancela($nf->nfechave, $justificativa, $nf->nfeautorizacao);
+        // return $resp;
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -422,6 +429,11 @@ class NFePHPRepository extends MgRepository
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
         if (strlen($justificativa) < 15) {
           throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
+        }
+
+        // Valida Pessoa Juridica
+        if (!empty($nf->Filial->Pessoa->fisica)) {
+            throw new \Exception('Impossível inutilizar Nota Fiscal de Emitente Pessoal Física! Corrija as incoerências e transmita a nota fiscal novamente!');
         }
 
         // Valida Autorização
@@ -589,7 +601,7 @@ class NFePHPRepository extends MgRepository
         // Se Denegada
         // 301 Uso Denegado: Irregularidade fiscal do emitente
         // 302 Uso Denegado: Irregularidade fiscal do destinatário
-	// 303 Uso Denegado: Destinatario nao habilitado a operar na UF
+        // 303 Uso Denegado: Destinatario nao habilitado a operar na UF
         if (in_array($protNFe->infProt->cStat, [301, 302, 303])) {
             static::vincularProtocoloDenegacao($nf, $protNFe, $resp);
             return false;

@@ -332,6 +332,42 @@ class NFePHPRepositoryMake
           $std->indTot = 1;
           $nfe->tagprod($std);
 
+          $infAdProd = '';
+          if (!empty($nfpb->observacoes)) {
+              $infAdProd .= "{$nfpb->observacoes}; \n";
+          }
+          if ($nfpb->certidaosefazmt) {
+              $cert = $nf->Filial->Pessoa->certidaoSefazMT();
+              $val = $cert->validade->format('d/m/Y');
+              $infAdProd .= "{$cert->CertidaoTipo->sigla} Emitente {$cert->numero} Autenticacao {$cert->autenticacao} Validade {$val}.; \n";
+              $cert = $nf->Pessoa->certidaoSefazMT();
+              $val = $cert->validade->format('d/m/Y');
+              $infAdProd .= "{$cert->CertidaoTipo->sigla} Destinatario {$cert->numero} Autenticacao {$cert->autenticacao} Validade {$val}.; \n";
+          }
+          if (!empty($nfpb->fethabvalor)) {
+              $val = formataNumero($nfpb->fethabvalor);
+              $infAdProd .= "Fethab R$ {$val}.; \n";
+          }
+          if (!empty($nfpb->iagrovalor)) {
+              $val = formataNumero($nfpb->iagrovalor);
+              $infAdProd .= "Iagro R$ {$val}.; \n";
+          }
+          if (!empty($nfpb->funruralvalor)) {
+              $val = formataNumero($nfpb->funruralvalor);
+              $infAdProd .= "Funrural R$ {$val}.; \n";
+          }
+          if (!empty($nfpb->senarvalor)) {
+              $val = formataNumero($nfpb->senarvalor);
+              $infAdProd .= "Senar R$ {$val}.; \n";
+          }
+
+          if (!empty($infAdProd)) {
+              $std = new \stdClass();
+              $std->item = $nItem;
+              $std->infAdProd = $infAdProd;
+              $nfe->taginfAdProd($std);
+          }
+
           // Cest
           if (isset($nfpb->ProdutoBarra->Produto->Cest)) {
               $std = new \stdClass();
@@ -744,9 +780,9 @@ class NFePHPRepositoryMake
             if ($totalTribMunicipal > 0) {
                 $infCpl .= " " . formataNumero($totalTribMunicipal) . " de tributos municipais";
             }
-            $infCpl .= ". Fonte: {$ibptFonte}.;";
+            $infCpl .= ". Fonte: {$ibptFonte}.; \n";
         }
-        $infCpl .= $nf->observacoes;
+        $infCpl .= $nf->observacoes . "\n";
         $infCpl = preg_replace('/\s+/', ' ', $infCpl);
 
         // MENSAGEM Aproveitamento ICMS - Simples
@@ -782,7 +818,8 @@ class NFePHPRepositoryMake
 
     }
 
-    public static function rateiaDescontoSeguroFreteOutras($nf) {
+    public static function rateiaDescontoSeguroFreteOutras($nf)
+    {
 
         // Inicializa totalizadores
         $vFreteTotal = 0;
