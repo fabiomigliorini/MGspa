@@ -1,0 +1,13 @@
+version: '3.3'
+services:
+    mgspa:
+        build:
+            './.docker'
+        tty: true
+        ports:
+            - "83:80"
+            - "91:91"
+        volumes:
+            - ./:/opt/www/MGspa
+            - ../MGLara/:/opt/www/MGLara
+        network_mode: host
