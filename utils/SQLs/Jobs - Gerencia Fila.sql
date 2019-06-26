@@ -19,15 +19,17 @@ update tbljobsspa set queue = 'default' where tbljobsspa.id in (select j2.id fro
 
 delete from tbljobsspa where payload like '%NFeAutorizadaMail%'
 
+update tbljobs set queue = 'parado_' || queue where payload ilike '%nota%fiscal%'
+
 update tbljobs set queue = 'parado_cm' where queue = 'urgent'
-update tbljobs set queue = 'urgent' where tbljobs.id in (select j2.id from tbljobs j2 where j2.queue = 'parado_cm' order by j2.payload limit 1000)
+update tbljobs set queue = 'urgent' where tbljobs.id in (select j2.id from tbljobs j2 where j2.queue = 'parado_cm' order by j2.payload limit 5000)
 
 select * from tbljobs where queue = 'parado_cm' order by id
 delete from tbljobs where  queue = 'parado_cm' 
 
 -- apaga jobs duplicadas
 
-delete from tbljobs where id = 1184761
+delete from tbljobs where id = 6211879
 
 update tbljobs set queue = 'parado_cm' where payload ilike '%EstoqueCalculaCustoMedio%' and queue != 'parado_cm'
 delete from tbljobs where queue = 'parado_cm'
