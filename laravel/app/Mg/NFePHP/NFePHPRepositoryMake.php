@@ -263,6 +263,7 @@ class NFePHPRepositoryMake
         $rateio = static::rateiaDescontoSeguroFreteOutras($nf);
 
         // Produtos
+        $observacoesProdutos = '';
         foreach ($nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get() as $nfpb) {
           $nItem++;
 
@@ -334,7 +335,7 @@ class NFePHPRepositoryMake
 
           $infAdProd = '';
           if (!empty($nfpb->observacoes)) {
-              $infAdProd .= "{$nfpb->observacoes}; \n";
+              $infAdProd .= str_replace("\n", "; \n", $nfpb->observacoes) . "; \n";
           }
           if ($nfpb->certidaosefazmt) {
               $cert = $nf->Filial->Pessoa->certidaoSefazMT();
@@ -362,10 +363,12 @@ class NFePHPRepositoryMake
           }
 
           if (!empty($infAdProd)) {
-              $std = new \stdClass();
-              $std->item = $nItem;
-              $std->infAdProd = $infAdProd;
-              $nfe->taginfAdProd($std);
+              // MOVIDO PARA OBSERVACOES DA NOTA POR ORIENTACAO DA DENISE
+              $observacoesProdutos .= $infAdProd;
+              // $std = new \stdClass();
+              // $std->item = $nItem;
+              // $std->infAdProd = $infAdProd;
+              // $nfe->taginfAdProd($std);
           }
 
           // Cest
@@ -782,7 +785,12 @@ class NFePHPRepositoryMake
             }
             $infCpl .= ". Fonte: {$ibptFonte}.; \n";
         }
-        $infCpl .= $nf->observacoes . "\n";
+        if (!empty($nf->observacoes)) {
+            $infCpl .= str_replace("\n", "; \n", $nf->observacoes) . "; \n";
+        }
+        if (!empty($observacoesProdutos)) {
+            $infCpl .= $observacoesProdutos;
+        }
         $infCpl = preg_replace('/\s+/', ' ', $infCpl);
 
         // MENSAGEM Aproveitamento ICMS - Simples
