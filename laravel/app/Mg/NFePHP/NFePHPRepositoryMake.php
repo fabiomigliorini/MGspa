@@ -762,7 +762,7 @@ class NFePHPRepositoryMake
             // Pagamento a Prazo
             if ($totalPrazo > 0) {
               $std = new \stdClass();
-              $std->tPag = '05';
+              $std->tPag = ($nf->codfilial==401)?'99':'05';
               $std->vPag = number_format($totalPrazo, 2, '.', '');
               $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
               $elem = $nfe->tagdetPag($std);
