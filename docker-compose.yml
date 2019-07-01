@@ -8,12 +8,15 @@ services:
             bash -c "cd opt/www/MGspa/
             && chmod -R a+w laravel/storage/
             && chmod -R a+w laravel/bootstrap/
-            && mkdir producao
+            && mkdir -p producao
             && cd producao/
-            && mkdir pwa
-            && ln -s ../laravel/public api
+            && mkdir -p pwa
+            && ln -f -s ../laravel/public api
             && cd api/
-            && ln -s /opt/www/MGLara/public/imagens/ imagens
+            && ln -f -s /opt/www/MGLara/public/imagens/ imagens
+            && service nginx start
+            && service php7.1-fpm start
+            && service memcached start
             && /bin/bash"
         volumes:
             - ./:/opt/www/MGspa
