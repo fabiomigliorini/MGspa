@@ -4,6 +4,17 @@ services:
         build:
             './.docker'
         tty: true
+        command: >
+            bash -c "cd opt/www/MGspa/
+            && chmod -R a+w laravel/storage/
+            && chmod -R a+w laravel/bootstrap/
+            && mkdir producao
+            && cd producao/
+            && mkdir pwa
+            && ln -s ../laravel/public api
+            && cd api/
+            && ln -s /opt/www/MGLara/public/imagens/ imagens
+            && /bin/bash"
         volumes:
             - ./:/opt/www/MGspa
             - ../MGLara/:/opt/www/MGLara
