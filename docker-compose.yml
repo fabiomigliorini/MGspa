@@ -3,9 +3,10 @@ services:
     mgspa:
         build:
             './.docker'
+        working_dir: /opt/www/MGspa
         tty: true
         command: >
-            bash -c "cd opt/www/MGspa/
+            bash -c "cd /opt/www/MGspa/
             && chmod -R a+w laravel/storage/
             && chmod -R a+w laravel/bootstrap/
             && mkdir -p producao
