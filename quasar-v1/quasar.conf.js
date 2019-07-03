@@ -59,11 +59,11 @@ module.exports = function (ctx) {
         'QPageSticky',
         'QFab',
         'QFabAction',
-        'QDialog',
         'QTooltip',
         'QSeparator',
         'QInfiniteScroll',
         'QAvatar',
+        'QRating',
       ],
 
       directives: [

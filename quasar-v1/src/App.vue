@@ -11,7 +11,7 @@
 </script>
 
 <style>
-  .q-if {
+  /*.q-if {
     padding-bottom: 2px;
   }
   .q-if,
@@ -51,5 +51,5 @@
   .q-rating i.q-icon:not(.active) {
     color: grey;
     opacity: 0.1;
-  }
+  }*/
 </style>

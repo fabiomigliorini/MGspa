@@ -11,13 +11,13 @@
       <q-list dense>
       <!-- Filtro de Descricao -->
         <q-item>
-          <q-item-label>
-            <q-input v-model="filter.marca" float-label="Descrição" >
-              <template v-slot:prepend>
+          <q-item-section>
+            <q-input v-model="filter.marca" dense label="Descrição" >
+              <template v-slot:before>
                 <q-icon name="search" />
               </template>
             </q-input>
-          </q-item-label>
+          </q-item-section>
         </q-item>
         <q-item-label header>Ordenar Por</q-item-label>
           <!-- Ordena por Vendas -->
@@ -137,61 +137,63 @@
             <q-item :to="'/marca/' + item.codmarca">
 
               <!-- Imagem -->
-              <q-item-section :image="item.imagem.url" v-if="item.imagem" />
+              <q-item-section thumbnail class="q-ml-none">
+                <img :src="item.imagem.url" v-if="item.imagem">
+              </q-item-section>
 
               <!-- Coluna 1 -->
-              <q-item-label>
-                <q-item-tile>
+              <q-item-section>
+                <q-item-label>
                   {{ item.marca }}
                   <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
-                </q-item-tile>
-                <q-item-tile sublabel>
+                </q-item-label>
+                <q-item-label caption>
                   #{{ numeral(item.codmarca).format('00000000') }}
-                </q-item-tile>
-              </q-item-label>
+                </q-item-label>
+              </q-item-section>
 
               <!-- Coluna 2 -->
-              <q-item-label class="col-sm-2 gt-sm">
-                <q-item-tile sublabel>
+              <q-item-section class="col-sm-2 gt-sm">
+                <q-item-label sublabel>
                   <span v-if="item.itensabaixominimo > 0">
                     {{ numeral(item.itensabaixominimo).format('0,0') }} <q-icon name="arrow_downward" />
                   </span>
                   <span v-if="item.itensacimamaximo > 0">
                     <q-icon name="arrow_upward" /> {{ numeral(item.itensacimamaximo).format('0,0') }}
                   </span>
-                </q-item-tile>
-                <q-item-tile sublabel>
+                </q-item-label>
+                <q-item-label cation>
                   <q-icon name="date_range" />
                   {{ item.estoqueminimodias }} à
                   {{ item.estoquemaximodias }} Dias
-                </q-item-tile>
-              </q-item-label>
+                </q-item-label>
+              </q-item-section>
 
               <!-- Coluna 3 -->
-              <q-item-label class="col-sm-2 gt-xs">
-                <q-item-tile sublabel>
+              <q-item-section class="col-sm-2 gt-xs">
+                <q-item-label caption>
                   <template v-if="item.dataultimacompra" class="text-grey">
                     <q-icon name="add_shopping_cart" />
                     {{ moment(item.dataultimacompra).fromNow() }}
                   </template>
-                </q-item-tile>
-              </q-item-label>
+                </q-item-label>
+              </q-item-section>
 
               <!-- Direita (Estrelas) -->
               <q-item-section class="col-xs-1" right>
-                <q-item-tile v-if="!item.abcignorar">
+                <q-item-label v-if="!item.abcignorar">
                   <q-rating readonly v-model="item.abccategoria" :max="3" size="1.7rem" />
-                </q-item-tile>
-                <q-item-tile sublabel >
+                </q-item-label>
+                <q-item-label caption>
                   {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%
                   <template v-if="item.abcposicao">
                     ({{ numeral(item.abcposicao).format('0,0') }}&deg;)
                   </template>
-                </q-item-tile>
+                </q-item-label>
               </q-item-section>
 
             </q-item>
-            <q-item-separator />
+            <q-separator />
 
           </template>
         </q-infinite-scroll>
