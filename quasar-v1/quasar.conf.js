@@ -59,7 +59,10 @@ module.exports = function (ctx) {
         'QPageSticky',
         'QFab',
         'QFabAction',
-        'QDialog'
+        'QDialog',
+        'QRating',
+        'QInfiniteScroll',
+        'QSeparator'
       ],
 
       directives: [

@@ -3,7 +3,6 @@ import { Notify, Loading } from 'quasar'
 import refresh from '../jwt/Refresh'
 
 export default ({ Vue }) => {
-  console.log('oi', process.env)
   Vue.prototype.$axios = axios.create({
     baseURL: process.env.API_URL,
     'X-Requested-With': 'XMLHttpRequest'
