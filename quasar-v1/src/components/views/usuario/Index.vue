@@ -82,6 +82,7 @@
     </div>
 
     <div slot="content">
+
       <q-dialog :content-css="{ minWidth: '50vw' }" v-model="createModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
@@ -89,14 +90,10 @@
             <span slot="subtitle">Novo grupos de usuário</span>
             <q-icon slot="right" name="add" />
           </q-card-title>
-          <q-card-main>
+          <q-card-section>
             <form @submit.prevent="createGrupoUsuario()">
               <q-field>
-                <q-input
-                  type="text"
-                  v-model="dataGrupousuario.grupousuario"
-                  float-label="Grupo"
-                />
+                <q-input type="text" v-model="dataGrupousuario.grupousuario" float-label="Grupo"/>
               </q-field>
               <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
             </form>
@@ -105,9 +102,10 @@
               <q-btn color="" @click="createModal = false">Cancelar</q-btn>
               <q-btn @click.prevent="createGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
-          </q-card-main>
+          </q-card-section>
         </q-card>
       </q-dialog>
+
       <q-dialog :content-css="{ minWidth: '50vw' }" v-model="updateModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
@@ -115,7 +113,7 @@
             <span slot="subtitle">Editar grupo de usuário</span>
             <q-icon slot="right" name="edit" />
           </q-card-title>
-          <q-card-main>
+          <q-card-section>
             <form @submit.prevent="updateGrupoUsuario()">
               <q-field>
                 <q-input
@@ -131,16 +129,16 @@
               <q-btn color="" @click="updateModal = false">Cancelar</q-btn>
               <q-btn @click.prevent="updateGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
-          </q-card-main>
+          </q-card-section>
         </q-card>
       </q-dialog>
 
       <q-card v-if="grupousuario.inativo">
-        <q-card-main>
+        <q-card-section>
           <span class="text-red">
             Inativo desde {{ moment(grupousuario.inativo).format('L') }}
           </span>
-        </q-card-main>
+        </q-card-section>
       </q-card>
 
       <!-- Se tiver registros -->
@@ -156,22 +154,28 @@
             <q-item :to="'/usuario/' + item.codusuario">
 
               <!-- Imagem -->
-              <!-- <q-item-section :image="item.imagem.url" v-if="item.imagem" /> -->
-              <q-item-section :avatar="item.imagem.url" v-if="item.imagem" />
-              <q-item-section v-else />
-              <q-item-label>
-                <q-item-section>
+              <q-item-section avatar>
+                <q-avatar v-if="item.imagem">
+                  <img :src="item.imagem.url">
+                </q-avatar>
+                <q-icon color="primary" name="account_circle" />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>
                   {{ item.usuario }}
                   <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
-                </q-item-section>
-                <q-item-section sublabel>
+                </q-item-label>
+                <q-item-label caption>
                   <span v-for="grupo in item.grupos">
                     {{ grupo.grupousuario }}: {{ grupo.filial }},
                   </span>
-                </q-item-section>
-              </q-item-label>
+                </q-item-label>
+
+              </q-item-section>
+
             </q-item>
-            <q-item-separator inset />
+            <q-separator/>
           </template>
         </q-infinite-scroll>
       </q-list>
