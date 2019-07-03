@@ -50,7 +50,13 @@ module.exports = function (ctx) {
         'QCard',
         'QCardSection',
         'QCardActions',
-        'QSelect'
+        'QSelect',
+        'QScrollArea',
+        'QInput',
+        'QRadio',
+        'QToggle',
+        'QRange',
+        'QPageSticky'
       ],
 
       directives: [

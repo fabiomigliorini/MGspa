@@ -1,4 +1,4 @@
-<template>
+<template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
   <mg-layout drawer back-path="/">
     <!-- Título da Página -->
     <template slot="title">
@@ -8,69 +8,68 @@
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
       <!-- <q-scroll-area class="fit"> -->
-      <q-list no-border>
+      <q-list dense>
       <!-- Filtro de Descricao -->
         <q-item>
-          <q-item-main>
-            <q-field icon="search">
-              <q-input v-model="filter.marca" float-label="Descrição" />
-            </q-field>
-          </q-item-main>
+          <q-item-label>
+            <q-input v-model="filter.marca" float-label="Descrição" >
+              <template v-slot:prepend>
+                <q-icon name="search" />
+              </template>
+            </q-input>
+          </q-item-label>
         </q-item>
-        <q-list-header>Ordenar Por</q-list-header>
+        <q-item-label header>Ordenar Por</q-item-label>
           <!-- Ordena por Vendas -->
-        <q-item tag="label">
-          <q-item-side icon="trending_up">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Vendas</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+        <q-item >
+          <q-item-section avatar>
+            <q-icon name="trending_up" />
+          </q-item-section>
+          <q-item-section>Vendas</q-item-section>
+          <q-item-section side>
             <q-radio v-model="filter.sort" val="abcposicao" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
         <!-- Ordena Alfabeticamente -->
-        <q-item tag="label">
-          <q-item-side icon="sort_by_alpha">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Descrição</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+        <q-item>
+          <q-item-section avatar>
+            <q-icon name="sort_by_alpha" />
+          </q-item-section>
+          <q-item-section>Descrição</q-item-section>
+          <q-item-section side>
             <q-radio v-model="filter.sort" val="marca" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
-        <q-list-header>Estoque</q-list-header>
+        <q-item-label header>Estoque</q-item-label>
           <!-- Filtra Estoque Sobrando -->
-          <q-item tag="label">
-            <q-item-side icon="arrow_upward">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>Sobrando</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="arrow_upward" />
+            </q-item-section>
+            <q-item-section>Sobrando</q-item-section>
+            <q-item-section side>
               <q-toggle v-model="filter.sobrando" />
-            </q-item-side>
+            </q-item-section>
           </q-item>
           <!-- Filtra Estoque Faltando -->
-          <q-item tag="label">
-            <q-item-side icon="arrow_downward">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>Faltando</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="arrow_downward" />
+            </q-item-section>
+            <q-item-section>Faltando</q-item-section>
+            <q-item-section side>
               <q-toggle v-model="filter.faltando" />
-            </q-item-side>
+            </q-item-section>
           </q-item>
 
-          <q-list-header>Curva ABC</q-list-header>
+          <q-item-label header>Curva ABC</q-item-label>
 
           <!-- Filtra Pela Classificação da CURVA ABC -->
-          <q-item tag="label">
-            <q-item-side icon="star">
-            </q-item-side>
-            <q-item-main>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="star" />
+            </q-item-section>
+            <q-item-section>
               <q-range
                 v-model="filter.abccategoria"
                 label
@@ -80,45 +79,42 @@
                 :max="4"
                 :step="1"
               ></q-range>
-            </q-item-main>
+            </q-item-section>
           </q-item>
 
-          <q-list-header>Ativos</q-list-header>
+          <q-item-label header>Ativos</q-item-label>
 
           <!-- Filtra Ativos -->
-          <q-item tag="label">
-            <q-item-side icon="thumb_up">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>Ativos</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="thumb_up" />
+            </q-item-section>
+            <q-item-section>Ativos</q-item-section>
+            <q-item-section side>
               <q-radio v-model="filter.inativo" :val='1' />
-            </q-item-side>
+            </q-item-section>
           </q-item>
 
           <!-- Filtra Inativos -->
-          <q-item tag="label">
-            <q-item-side icon="thumb_down">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>Inativos</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="thumb_down" />
+            </q-item-section>
+            <q-item-section>Inativos</q-item-section>
+            <q-item-section side>
               <q-radio v-model="filter.inativo" :val="2" />
-            </q-item-side>
+            </q-item-section>
           </q-item>
 
           <!-- Filtra Ativos e Inativos -->
-          <q-item tag="label">
-            <q-item-side icon="thumbs_up_down">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>Ativos e Inativos</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="thumbs_up_down" />
+            </q-item-section>
+            <q-item-section>Ativos e Inativos</q-item-section>
+            <q-item-section side>
               <q-radio v-model="filter.inativo" :val="9" />
-            </q-item-side>
+            </q-item-section>
           </q-item>
 
         </q-list>
@@ -141,10 +137,10 @@
             <q-item :to="'/marca/' + item.codmarca">
 
               <!-- Imagem -->
-              <q-item-side :image="item.imagem.url" v-if="item.imagem" />
+              <q-item-section :image="item.imagem.url" v-if="item.imagem" />
 
               <!-- Coluna 1 -->
-              <q-item-main>
+              <q-item-label>
                 <q-item-tile>
                   {{ item.marca }}
                   <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
@@ -152,10 +148,10 @@
                 <q-item-tile sublabel>
                   #{{ numeral(item.codmarca).format('00000000') }}
                 </q-item-tile>
-              </q-item-main>
+              </q-item-label>
 
               <!-- Coluna 2 -->
-              <q-item-main class="col-sm-2 gt-sm">
+              <q-item-label class="col-sm-2 gt-sm">
                 <q-item-tile sublabel>
                   <span v-if="item.itensabaixominimo > 0">
                     {{ numeral(item.itensabaixominimo).format('0,0') }} <q-icon name="arrow_downward" />
@@ -169,20 +165,20 @@
                   {{ item.estoqueminimodias }} à
                   {{ item.estoquemaximodias }} Dias
                 </q-item-tile>
-              </q-item-main>
+              </q-item-label>
 
               <!-- Coluna 3 -->
-              <q-item-main class="col-sm-2 gt-xs">
+              <q-item-label class="col-sm-2 gt-xs">
                 <q-item-tile sublabel>
                   <template v-if="item.dataultimacompra" class="text-grey">
                     <q-icon name="add_shopping_cart" />
                     {{ moment(item.dataultimacompra).fromNow() }}
                   </template>
                 </q-item-tile>
-              </q-item-main>
+              </q-item-label>
 
               <!-- Direita (Estrelas) -->
-              <q-item-side class="col-xs-1" right>
+              <q-item-section class="col-xs-1" right>
                 <q-item-tile v-if="!item.abcignorar">
                   <q-rating readonly v-model="item.abccategoria" :max="3" size="1.7rem" />
                 </q-item-tile>
@@ -192,7 +188,7 @@
                     ({{ numeral(item.abcposicao).format('0,0') }}&deg;)
                   </template>
                 </q-item-tile>
-              </q-item-side>
+              </q-item-section>
 
             </q-item>
             <q-item-separator />
