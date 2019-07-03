@@ -57,6 +57,9 @@ module.exports = function (ctx) {
         'QToggle',
         'QRange',
         'QPageSticky'
+        'QFab',
+        'QFabAction',
+        'QDialog',
       ],
 
       directives: [

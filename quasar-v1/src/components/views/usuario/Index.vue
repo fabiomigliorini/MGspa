@@ -12,69 +12,69 @@
 
       <form>
         <q-item>
-          <q-item-main>
+          <q-item-label>
             <q-input v-model="filter.usuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
-          </q-item-main>
+          </q-item-label>
         </q-item>
-        <q-list-header>Grupos</q-list-header>
+        <q-item-label>Grupos</q-item-label>
         <q-item tag="label">
-          <q-item-side icon="done_all">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Todos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+          <q-item-section icon="done_all">
+          </q-item-section>
+          <q-item-label>
+            <q-item-section title>Todos</q-item-section>
+          </q-item-label>
+          <q-item-section right>
             <q-radio v-model="filter.grupo" :val="null" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
         <template v-for="grupo in grupos">
           <q-item tag="label">
-            <q-item-side icon="people">
-            </q-item-side>
-            <q-item-main>
-              <q-item-tile title>{{ grupo.grupousuario }}</q-item-tile>
-            </q-item-main>
-            <q-item-side right>
+            <q-item-section icon="people">
+            </q-item-section>
+            <q-item-label>
+              <q-item-section title>{{ grupo.grupousuario }}</q-item-section>
+            </q-item-label>
+            <q-item-section right>
               <q-radio v-model="filter.grupo" :val="grupo.codgrupousuario" />
-            </q-item-side>
+            </q-item-section>
           </q-item>
         </template>
-        <q-list-header>Ativos</q-list-header>
+        <q-item-label>Ativos</q-item-label>
 
         <!-- Filtra Ativos -->
         <q-item tag="label">
-          <q-item-side icon="thumb_up">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+          <q-item-section icon="thumb_up">
+          </q-item-section>
+          <q-item-label>
+            <q-item-section title>Ativos</q-item-section>
+          </q-item-label>
+          <q-item-section right>
             <q-radio v-model="filter.inativo" :val="1" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
 
         <!-- Filtra Inativos -->
         <q-item tag="label">
-          <q-item-side icon="thumb_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+          <q-item-section icon="thumb_down">
+          </q-item-section>
+          <q-item-label>
+            <q-item-section title>Inativos</q-item-section>
+          </q-item-label>
+          <q-item-section right>
             <q-radio v-model="filter.inativo" :val="2" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
 
         <!-- Filtra Ativos e Inativos -->
         <q-item tag="label">
-          <q-item-side icon="thumbs_up_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos e Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+          <q-item-section icon="thumbs_up_down">
+          </q-item-section>
+          <q-item-label>
+            <q-item-section title>Ativos e Inativos</q-item-section>
+          </q-item-label>
+          <q-item-section right>
             <q-radio v-model="filter.inativo" :val="9" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
 
       </form>
@@ -82,7 +82,7 @@
     </div>
 
     <div slot="content">
-      <q-modal :content-css="{ minWidth: '50vw' }" v-model="createModal">
+      <q-dialog :content-css="{ minWidth: '50vw' }" v-model="createModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
             Novo
@@ -107,8 +107,8 @@
             </q-card-actions>
           </q-card-main>
         </q-card>
-      </q-modal>
-      <q-modal :content-css="{ minWidth: '50vw' }" v-model="updateModal">
+      </q-dialog>
+      <q-dialog :content-css="{ minWidth: '50vw' }" v-model="updateModal">
         <q-card style="box-shadow:none;">
           <q-card-title>
             Editar
@@ -133,7 +133,7 @@
             </q-card-actions>
           </q-card-main>
         </q-card>
-      </q-modal>
+      </q-dialog>
 
       <q-card v-if="grupousuario.inativo">
         <q-card-main>
@@ -156,20 +156,20 @@
             <q-item :to="'/usuario/' + item.codusuario">
 
               <!-- Imagem -->
-              <!-- <q-item-side :image="item.imagem.url" v-if="item.imagem" /> -->
-              <q-item-side :avatar="item.imagem.url" v-if="item.imagem" />
-              <q-item-side v-else />
-              <q-item-main>
-                <q-item-tile>
+              <!-- <q-item-section :image="item.imagem.url" v-if="item.imagem" /> -->
+              <q-item-section :avatar="item.imagem.url" v-if="item.imagem" />
+              <q-item-section v-else />
+              <q-item-label>
+                <q-item-section>
                   {{ item.usuario }}
                   <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
-                </q-item-tile>
-                <q-item-tile sublabel>
+                </q-item-section>
+                <q-item-section sublabel>
                   <span v-for="grupo in item.grupos">
                     {{ grupo.grupousuario }}: {{ grupo.filial }},
                   </span>
-                </q-item-tile>
-              </q-item-main>
+                </q-item-section>
+              </q-item-label>
             </q-item>
             <q-item-separator inset />
           </template>
