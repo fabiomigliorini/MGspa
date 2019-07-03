@@ -56,10 +56,10 @@ module.exports = function (ctx) {
         'QRadio',
         'QToggle',
         'QRange',
-        'QPageSticky'
+        'QPageSticky',
         'QFab',
         'QFabAction',
-        'QDialog',
+        'QDialog'
       ],
 
       directives: [
