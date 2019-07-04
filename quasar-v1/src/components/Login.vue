@@ -3,22 +3,22 @@
   <div id="row-login">
 
     <q-card id="card-login">
-      <q-card-main>
+      <q-card-section>
         <form @submit.prevent="login()">
 
           <div class="item-content">
-            <q-input v-model="usuario" float-label="Usuário" autofocus />
+            <q-input v-model="usuario" label="Usuário" autofocus />
           </div>
 
           <div class="item-content">
-            <q-input v-model="senha" type="password" float-label="Senha" />
+            <q-input v-model="senha" type="password" label="Senha" />
           </div>
           <br>
           <q-btn color="primary" icon-right="send" type="submit">
             entrar
           </q-btn>
         </form>
-      </q-card-main>
+      </q-card-section>
     </q-card>
 
   </div>
