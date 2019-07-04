@@ -35,10 +35,12 @@ module.exports = function (ctx) {
 
       components: [
         'QLayout',
-        'QHeader',
-        'QDrawer',
         'QPageContainer',
         'QPage',
+        'QHeader',
+        'QFooter',
+        'QPageScroller',
+        'QDrawer',
         'QToolbar',
         'QToolbarTitle',
         'QBtn',
@@ -64,15 +66,18 @@ module.exports = function (ctx) {
         'QInfiniteScroll',
         'QAvatar',
         'QRating',
+        'QDialog',
       ],
 
       directives: [
-        'Ripple'
+        'Ripple',
+        'ClosePopup'
       ],
 
       // Quasar plugins
       plugins: [
-        'Notify'
+        'Notify',
+        'Dialog'
       ]
     },
 

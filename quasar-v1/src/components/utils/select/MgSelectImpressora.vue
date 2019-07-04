@@ -1,43 +1,41 @@
 <template>
-  <q-select
-    :value="value"
-    :options="data"
-    :float-label="label"
-    @change="handleChange"
-  />
+  <q-select v-model="value" :options="options" :label="label" clearable @change="handleChange"/>
 </template>
 
 <script>
-
-import { QSelect } from 'quasar'
-
 export default {
   name: 'mg-select-impressora',
-  props: ['value', 'label'],
-  components: {
-    QSelect
-  },
+  props: ['value', 'label', 'loadData'],
   data () {
     return {
-      data: []
+      options: []
+    }
+  },
+  watch:{
+    loadData(val){
+      if(val){
+        this.getImpressoras()
+      }
     }
   },
   methods: {
     handleChange (newVal) {
       this.$emit('input', newVal)
     },
-    loadData: function () {
-      let vm = this
+    getImpressoras: function () {
+      let vm = this;
       vm.$axios.get('impressora').then(function (request) {
-        vm.data = request.data
+        vm.options = request.data.map(impressora => {
+          return {
+            value: impressora.value,
+            label: impressora.label
+          }
+        })
       }).catch(function (error) {
         console.log(error.response)
       })
     }
   },
-  created () {
-    this.loadData()
-  }
 }
 </script>
 

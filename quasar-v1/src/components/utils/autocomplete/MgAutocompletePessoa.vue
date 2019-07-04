@@ -1,71 +1,73 @@
 <template>
-  <!--<q-search clearable v-model="terms"  :init="init" :placeholder="placeholder" >
-    <q-autocomplete
-      @search="search"
-      @selected="selected"
-      :min-characters="3"
-      :max-results="90"
-      :debounce="600"
-    />
-  </q-search>-->
+  <q-select v-model="model"
+            clearable
+            use-input
+            input-debounce="200"
+            :label="label"
+            :options="options"
+            @filter="search"
+  >
+    <template v-slot:option="scope">
+      <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
+        <q-item-section avatar>
+          <q-icon :name="scope.opt.icon" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label v-html="scope.opt.label" />
+          <q-item-label caption>{{ scope.opt.description }}</q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+  </q-select>
+
 </template>
 
 <script>
 
 export default {
   name: 'mg-autocomplete-pessoa',
-  props: ['init', 'placeholder'],
+  props: ['label'],
   components: {
   },
   data () {
     return {
-      terms: ''
-    }
-  },
-  watch: {
-    terms: {
-      handler: function (val, oldVal) {
-        if (val.length === 0) {
-          let vm = this
-          vm.$emit('input', null)
-        }
-      }
-    },
-    init: {
-      handler: function (val, oldVal) {
-        if (val !== null) {
-          this.initSelect(val)
-        }
-      }
+      model: null,
+      options: [],
     }
   },
   methods: {
-    initSelect (codpessoa) {
-      let vm = this
-      vm.$axios.get('pessoa/' + codpessoa).then(response => {
-        let pessoa = response.data
-        vm.terms = pessoa.pessoa
-      }).catch(function (error) {
-        console.log(error)
-      })
+    search (val, update, abort) {
+      let vm = this;
+      if (val.length < 3) {
+        abort();
+        return
+      }
+      setTimeout(() => {
+        update(() => {
+          let params = { pessoa: val };
+          vm.$axios.get('pessoa/autocomplete', { params }).then(response => {
+            vm.options = vm.parseResults(response.data);
+          }).catch(function (error) { });
+        });
+      }, 500)
     },
-    selected (item) {
-      let vm = this
-      vm.$emit('input', item.id)
+    parseResults(data){
+      return data.map(res => {
+        return {
+          value: res.codpessoa,
+          label: (res.pessoa)?res.pessoa:res.fantasia,
+          description: this.formatCpfOrCnpj(res.cnpj)
+        }
+      });
     },
-    search (terms, done) {
-      let vm = this
-      let params = {}
-      params.sort = 'fantasia'
-      params.pessoa = terms
-      vm.$axios.get('pessoa/autocomplete', { params }).then(response => {
-        let results = response.data
-        done(results)
-      }).catch(function (error) {
-        done([])
-        console.log(error.response)
-      })
-    }
+    formatCpfOrCnpj(cnpjOrCpf){
+      if(cnpjOrCpf.length > 14){
+        return cnpjOrCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+      }else{
+        return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+      }
+
+    },
   }
 }
 </script>

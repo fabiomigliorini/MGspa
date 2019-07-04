@@ -14,7 +14,7 @@ export default [
 
   // Grupo de Usuarios
   { path: '/usuario', component: () => import('components/views/usuario/Index') },
-  { path: '/usuario/create', component: () => import('components/views/usuario/Create') },
+  // { path: '/usuario/create', component: () => import('components/views/usuario/Create') },
   { path: '/usuario/perfil', component: () => import('components/views/usuario/Profile') },
   { path: '/usuario/impressoras', component: () => import('components/views/usuario/Print') },
   { path: '/usuario/foto', component: () => import('components/views/usuario/Photo') },

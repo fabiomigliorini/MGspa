@@ -36,6 +36,7 @@
 
     <!-- Left Side Panel -->
     <q-drawer
+      bordered
       v-if="drawer"
       side="left"
       v-model="left"
@@ -49,25 +50,31 @@
     </q-drawer>
 
     <!-- Right Side Panel -->
-    <q-drawer v-model="rightSide" side="right" behavior="mobile">
+    <q-drawer v-model="rightSide" side="right" behavior="mobile" bordered>
 
-      <q-list inset-separator>
 
-        <q-item>
-          <q-item-section link to="/inbox/1" v-if="perfil.avatar">
-            <q-item-section avatar>
-              <img :src="perfil.avatar">
-            </q-item-section>
+
+      <q-item>
+        <q-item-section link to="/inbox/1" v-if="perfil.avatar">
+          <q-item-section avatar>
+            <img :src="perfil.avatar">
           </q-item-section>
-          <q-item-label link @click.native="$router.push('/usuario/perfil')" style="cursor:pointer">
-            {{ perfil.usuario }}
-          </q-item-label>
-          <q-item-section right>
-            <q-item-section link icon="exit_to_app"@click.native="logout" style="cursor:pointer"/>
-          </q-item-section>
-        </q-item>
+        </q-item-section>
 
-      </q-list>
+        <q-item-section @click.native="$router.push('/usuario/perfil')" class="cursor-pointer">
+          {{ perfil.usuario }}
+        </q-item-section>
+
+        <q-item-section avatar>
+          <q-item-section @click.native="logout" class="cursor-pointer">
+            <q-icon name="exit_to_app"/>
+          </q-item-section>
+        </q-item-section>
+      </q-item>
+
+      <q-separator/>
+
+
 
       <!-- <q-list inset-separator>
         <q-item>
@@ -81,12 +88,30 @@
         </q-item>
       </q-list> -->
 
-      <div class="row wrap">
-        <div class="text-center col-3" v-for="aplicativo in aplicativos">
-          <span @click="$router.push(aplicativo.path)" style="cursor:pointer">
-            <q-icon :name="aplicativo.icon" style="font-size:3em" color="primary" />
-            <small class="text-primary">{{ aplicativo.title }}</small>
-          </span>
+      <div class="row">
+        <div class="text-center col-4" v-for="aplicativo in aplicativos">
+
+          <q-item @click.native="$router.push(aplicativo.path)" style="cursor:pointer">
+
+            <!--<q-item-section avatar>-->
+              <!--<q-icon :name="aplicativo.icon" color="primary"/>-->
+            <!--</q-item-section>-->
+            <!--<q-item-section>-->
+              <!--<small class="text-primary">{{ aplicativo.title }}</small>-->
+            <!--</q-item-section>-->
+
+
+            <q-item-section>
+              <q-item-label>
+                <q-icon size="25px" :name="aplicativo.icon" color="primary"/>
+              </q-item-label>
+              <q-item-label caption class="text-primary">
+                {{ aplicativo.title }}
+              </q-item-label>
+            </q-item-section>
+
+          </q-item>
+
         </div>
 
       </div>

@@ -1,36 +1,31 @@
 <template>
-  <q-select
-    :value="value"
-    :options="data"
-    :float-label="label"
-    @change="handleChange"
-    clearable
-  />
+  <q-select v-model="value" :options="options" :label="label" clearable @change="handleChange"/>
 </template>
 
 <script>
-
-import { QSelect } from 'quasar'
-
 export default {
   name: 'mg-select-estoque-local',
-  props: ['value', 'label'],
-  components: {
-    QSelect
-  },
+  props: ['value', 'label', 'loadData'],
   data () {
     return {
-      data: []
+      options: []
+    }
+  },
+  watch:{
+    loadData(val){
+      if(val){
+        this.getEstoqueLocal()
+      }
     }
   },
   methods: {
     handleChange (newVal) {
       this.$emit('input', newVal)
     },
-    loadData: function () {
+    getEstoqueLocal: function () {
       let vm = this
       vm.$axios.get('estoque-local', {params: {fields: 'codestoquelocal,estoquelocal', sort: 'estoquelocal'}}).then(function (request) {
-        vm.data = request.data.data.map(estoquelocal => {
+        vm.options = request.data.data.map(estoquelocal => {
           return {
             value: estoquelocal.codestoquelocal,
             label: estoquelocal.estoquelocal
@@ -41,9 +36,6 @@ export default {
       })
     }
   },
-  created () {
-    this.loadData()
-  }
 }
 </script>
 

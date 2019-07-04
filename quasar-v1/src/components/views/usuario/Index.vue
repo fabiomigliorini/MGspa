@@ -9,129 +9,133 @@
     </template>
 
     <div slot="drawer">
-
       <form>
-        <q-item>
-          <q-item-label>
-            <q-input v-model="filter.usuario" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
-          </q-item-label>
-        </q-item>
-        <q-item-label>Grupos</q-item-label>
-        <q-item tag="label">
-          <q-item-section icon="done_all">
+
+        <q-item dense>
+          <q-item-section>
+            <q-input v-model="filter.usuario" label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
           </q-item-section>
-          <q-item-label>
-            <q-item-section title>Todos</q-item-section>
-          </q-item-label>
-          <q-item-section right>
+        </q-item>
+
+        <q-item>
+          <q-item-section class="text-subtitle1">
+            Grupos
+          </q-item-section>
+        </q-item>
+        <q-separator />
+
+        <q-item tag="label" dense>
+          <q-item-section avatar>
+            <q-icon name="done_all" />
+          </q-item-section>
+          <q-item-section title>Todos</q-item-section>
+          <q-item-section avatar>
             <q-radio v-model="filter.grupo" :val="null" />
           </q-item-section>
         </q-item>
+
         <template v-for="grupo in grupos">
-          <q-item tag="label">
-            <q-item-section icon="people">
+          <q-item dense tag="label">
+            <q-item-section avatar>
+              <q-icon name="people"/>
             </q-item-section>
-            <q-item-label>
-              <q-item-section title>{{ grupo.grupousuario }}</q-item-section>
-            </q-item-label>
-            <q-item-section right>
+            <q-item-section title>{{ grupo.grupousuario }}</q-item-section>
+            <q-item-section avatar>
               <q-radio v-model="filter.grupo" :val="grupo.codgrupousuario" />
             </q-item-section>
           </q-item>
         </template>
-        <q-item-label>Ativos</q-item-label>
+
+        <q-item>
+          <q-item-section class="text-subtitle1">
+            Ativos
+          </q-item-section>
+        </q-item>
+
+        <q-separator />
 
         <!-- Filtra Ativos -->
-        <q-item tag="label">
-          <q-item-section icon="thumb_up">
+        <q-item tag="label" dense>
+          <q-item-section avatar>
+            <q-icon name="thumb_up"/>
           </q-item-section>
-          <q-item-label>
-            <q-item-section title>Ativos</q-item-section>
-          </q-item-label>
-          <q-item-section right>
+          <q-item-section title>Ativos</q-item-section>
+          <q-item-section avatar>
             <q-radio v-model="filter.inativo" :val="1" />
           </q-item-section>
         </q-item>
 
         <!-- Filtra Inativos -->
-        <q-item tag="label">
-          <q-item-section icon="thumb_down">
+        <q-item tag="label" dense>
+          <q-item-section avatar>
+            <q-icon name="thumb_down"/>
           </q-item-section>
-          <q-item-label>
-            <q-item-section title>Inativos</q-item-section>
-          </q-item-label>
-          <q-item-section right>
+          <q-item-section>Inativos</q-item-section>
+          <q-item-section avatar>
             <q-radio v-model="filter.inativo" :val="2" />
           </q-item-section>
         </q-item>
 
         <!-- Filtra Ativos e Inativos -->
-        <q-item tag="label">
-          <q-item-section icon="thumbs_up_down">
+        <q-item tag="label" dense>
+          <q-item-section avatar>
+            <q-icon name="thumbs_up_down"/>
           </q-item-section>
-          <q-item-label>
-            <q-item-section title>Ativos e Inativos</q-item-section>
-          </q-item-label>
-          <q-item-section right>
+          <q-item-section >Ativos e Inativos</q-item-section>
+          <q-item-section avatar>
             <q-radio v-model="filter.inativo" :val="9" />
           </q-item-section>
         </q-item>
 
       </form>
-
     </div>
 
     <div slot="content">
 
-      <q-dialog :content-css="{ minWidth: '50vw' }" v-model="createModal">
-        <q-card style="box-shadow:none;">
-          <q-card-title>
-            Novo
-            <span slot="subtitle">Novo grupos de usuário</span>
-            <q-icon slot="right" name="add" />
-          </q-card-title>
-          <q-card-section>
-            <form @submit.prevent="createGrupoUsuario()">
-              <q-field>
-                <q-input type="text" v-model="dataGrupousuario.grupousuario" float-label="Grupo"/>
-              </q-field>
-              <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
-            </form>
-            <br />
-            <q-card-actions vertival>
-              <q-btn color="" @click="createModal = false">Cancelar</q-btn>
+      <!--DIALOG-->
+      <template>
+
+        <!--NOVO USUARIO-->
+        <create-user ref="createUserModal" @criada='loadDataGrupos()'/>
+
+        <!--NOVO GRUPO DE USUSARIO-->
+        <q-dialog v-model="createModal">
+          <q-card style="width: 400px; max-width: 80vw;">
+            <q-toolbar>
+              <q-toolbar-title><span class="text-weight-bold">Novo grupo de usuário</span></q-toolbar-title>
+            </q-toolbar>
+
+            <q-card-section>
+              <form @submit.prevent="createGrupoUsuario()">
+                <q-input type="text" v-model="dataGrupousuario.grupousuario" label="Grupo" :rules="[val => !!val || 'Preencha o campo']"/>
+              </form>
+            </q-card-section>
+            <q-card-actions>
+              <q-btn v-close-popup :tabindex="-1">Cancelar</q-btn>
               <q-btn @click.prevent="createGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
-          </q-card-section>
-        </q-card>
-      </q-dialog>
+          </q-card>
+        </q-dialog>
 
-      <q-dialog :content-css="{ minWidth: '50vw' }" v-model="updateModal">
-        <q-card style="box-shadow:none;">
-          <q-card-title>
-            Editar
-            <span slot="subtitle">Editar grupo de usuário</span>
-            <q-icon slot="right" name="edit" />
-          </q-card-title>
-          <q-card-section>
-            <form @submit.prevent="updateGrupoUsuario()">
-              <q-field>
-                <q-input
-                  type="text"
-                  v-model="grupousuario.grupousuario"
-                  float-label="Grupo"
-                />
-              </q-field>
-              <mg-erros-validacao :erros="erros.grupousuario"></mg-erros-validacao>
-            </form>
-            <br />
-            <q-card-actions vertival>
-              <q-btn color="" @click="updateModal = false">Cancelar</q-btn>
+        <!--EDITAR GRUPO DE USUSARIO-->
+        <q-dialog v-model="updateModal">
+          <q-card >
+            <q-toolbar>
+              <q-toolbar-title><span class="text-weight-bold">Editar grupo de usuário</span></q-toolbar-title>
+            </q-toolbar>
+
+            <q-card-section>
+              <form @submit.prevent="updateGrupoUsuario()">
+                <q-input type="text" v-model="grupousuario.grupousuario" label="Grupo" :rules="[val => !!val || 'Preencha o campo']"/>
+              </form>
+            </q-card-section>
+            <q-card-actions>
+              <q-btn v-close-popup :tabindex="-1">Cancelar</q-btn>
               <q-btn @click.prevent="updateGrupoUsuario" color="primary">Salvar</q-btn>
             </q-card-actions>
-          </q-card-section>
-        </q-card>
-      </q-dialog>
+          </q-card>
+        </q-dialog>
+      </template>
 
       <q-card v-if="grupousuario.inativo">
         <q-card-section>
@@ -148,26 +152,26 @@
         <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
 
           <!-- Percorre registros  -->
-          <template v-for="item in data">
+          <template v-for="usuario in data">
 
             <!-- Link para detalhes -->
-            <q-item :to="'/usuario/' + item.codusuario">
+            <q-item :to="'/usuario/' + usuario.codusuario">
 
               <!-- Imagem -->
               <q-item-section avatar>
-                <q-avatar v-if="item.imagem">
-                  <img :src="item.imagem.url">
+                <q-avatar v-if="usuario.imagem">
+                  <img :src="usuario.imagem.url">
                 </q-avatar>
-                <q-icon color="primary" name="account_circle" />
+                <q-icon color="primary" name="account_circle" v-if="!usuario.imagem"/>
               </q-item-section>
 
               <q-item-section>
                 <q-item-label>
-                  {{ item.usuario }}
-                  <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
+                  {{ usuario.usuario }}
+                  <q-chip tag square pointing="left" color="negative" v-if="usuario.inativo">Inativo</q-chip>
                 </q-item-label>
                 <q-item-label caption>
-                  <span v-for="grupo in item.grupos">
+                  <span v-for="grupo in usuario.grupos">
                     {{ grupo.grupousuario }}: {{ grupo.filial }},
                   </span>
                 </q-item-label>
@@ -184,13 +188,7 @@
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
       <q-page-sticky corner="bottom-right" :offset="[90, 18]" v-if="grupousuario">
-        <q-fab
-          color="primary"
-          active-icon="edit"
-          icon="edit"
-          direction="up"
-          class="animate-pop"
-        >
+        <q-fab color="primary" active-icon="edit" icon="edit" direction="up" class="animate-pop">
           <q-fab-action color="primary" icon="edit" @click="updateModal = true">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar Grupo</q-tooltip>
           </q-fab-action>
@@ -210,11 +208,11 @@
       <q-page-sticky corner="bottom-right" :offset="[18, 18]">
 
         <q-fab color="primary" icon="add" direction="up">
-          <q-fab-action color="primary" @click="$router.push('/usuario/create')" icon="account_circle">
+          <q-fab-action color="primary" @click.native="createUser()" icon="account_circle">
             <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Usuário</q-tooltip>
           </q-fab-action>
 
-          <q-fab-action color="primary" @click="createModal = true" icon="supervisor_account">
+          <q-fab-action color="primary" @click.native="createModal = true" icon="supervisor_account">
             <q-tooltip anchor="center left" self="center right" :offset="[10, 0]">Novo Grupo</q-tooltip>
           </q-fab-action>
 
@@ -224,9 +222,7 @@
     </div>
 
     <div slot="mgfooter" v-if="grupousuario">
-      <mg-autor
-        :data="grupousuario"
-        ></mg-autor>
+      <mg-autor :data="grupousuario"/>
     </div>
 
   </mg-layout>
@@ -234,9 +230,9 @@
 
 <script>
 import MgLayout from '../../../layouts/MgLayout'
-import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutor from '../../utils/MgAutor'
 import MgNoData from '../../utils/MgNoData'
+import CreateUser from './components/CreateUser'
 
 import { debounce } from 'quasar'
 
@@ -244,9 +240,9 @@ export default {
   name: 'grupo-usuario',
   components: {
     MgLayout,
-    MgErrosValidacao,
     MgAutor,
-    MgNoData
+    MgNoData,
+    CreateUser,
   },
   data () {
     return {
@@ -267,8 +263,8 @@ export default {
   watch: {
     filter: {
       handler: function (val, oldVal) {
-        this.page = 1
-        this.loadData(false, null)
+        this.page = 1;
+        this.loadData(false, null);
         if (val.grupo !== null) {
           this.loadDataGrupo(val.grupo)
         }
@@ -282,22 +278,22 @@ export default {
   methods: {
     // scroll infinito - carregar mais registros
     loadMore (index, done) {
-      this.page++
+      this.page++;
       this.loadData(true, done)
     },
 
     // carrega registros da api
     loadData: debounce(function (concat, done) {
       // salva no Vuex filtro da marca
-      this.$store.commit('filtroUsuario/updateFiltroUsuario', this.filter)
+      this.$store.commit('filtroUsuario/updateFiltroUsuario', this.filter);
 
       // inicializa variaveis
-      var vm = this
-      var params = this.filter
-      params.page = this.page
-      params.sort = 'usuario'
-      params.fields = 'usuario,codusuario,inativo,codimagem'
-      this.loading = true
+      var vm = this;
+      var params = this.filter;
+      params.page = this.page;
+      params.sort = 'usuario';
+      params.fields = 'usuario,codusuario,inativo,codimagem';
+      this.loading = true;
 
       // faz chamada api
       vm.$axios.get('usuario', {
@@ -322,7 +318,7 @@ export default {
         }
 
         // desmarca flag de carregando
-        this.loading = false
+        this.loading = false;
 
         // Executa done do scroll infinito
         if (done) {
@@ -331,62 +327,53 @@ export default {
       })
     }, 500),
 
+    createUser: function(){
+      console.log('entrou');
+      this.$refs.createUserModal.add()
+    },
+
     createGrupoUsuario: function () {
-      let vm = this
-      vm.$q.dialog({
-        title: 'Salvar',
-        message: 'Tem certeza que deseja salvar?',
-        ok: 'Salvar',
-        cancel: 'Cancelar'
-      }).then(() => {
-        vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then(function (request) {
-          vm.$q.notify({
-            message: 'Novo grupo inserido',
-            type: 'positive',
-          })
-          vm.dataGrupousuario.grupousuario = null
-          vm.erros = false
-          vm.createModal = false
-          vm.loadDataGrupos()
-        }).catch(function (error) {
-          vm.erros = error.response.data.erros
-        })
+      let vm = this;
+      vm.$axios.post('grupo-usuario', vm.dataGrupousuario).then( response => {
+        vm.$q.notify({
+          message: 'Novo grupo inserido',
+          type: 'positive',
+        });
+        vm.dataGrupousuario.grupousuario = null;
+        vm.erros = false;
+        vm.createModal = false;
+        vm.loadDataGrupos()
+      }).catch(function (error) {
+        vm.erros = error.response.data.errors;
       })
     },
 
     updateGrupoUsuario: function () {
-      let vm = this
-      vm.$q.dialog({
-        title: 'Salvar',
-        message: 'Tem certeza que deseja salvar?',
-        ok: 'Salvar',
-        cancel: 'Cancelar'
-      }).then(() => {
+      let vm = this;
         vm.$axios.put('grupo-usuario/' + vm.grupousuario.codgrupousuario, { 'grupousuario': vm.grupousuario.grupousuario }).then(function (request) {
           vm.$q.notify({
             message: 'Grupo atualizado',
             type: 'positive',
-          })
-          vm.dataGrupousuario.grupousuario = null
-          vm.erros = false
-          vm.updateModal = false
+          });
+          vm.dataGrupousuario.grupousuario = null;
+          vm.erros = false;
+          vm.updateModal = false;
           vm.loadDataGrupos()
         }).catch(function (error) {
           vm.erros = error.response.data.erros
         })
-      })
     },
 
     activate: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: true,
+        persistent: true,
         title: 'Ativar',
-        message: 'Tem certeza que deseja ativar?',
-        ok: 'Ativar',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja ativar?'
+      }).onOk(() => {
         vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
-          vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+          vm.loadDataGrupo(vm.grupousuario.codgrupousuario);
           vm.$q.notify({
             message: 'Grupo ativado',
             type: 'positive',
@@ -394,19 +381,19 @@ export default {
         }).catch(function (error) {
           console.log(error.response)
         })
-      })
+      }).onCancel(() => {});
     },
 
     inactivate: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: true,
+        persistent: true,
         title: 'Inativar',
-        message: 'Tem certeza que deseja inativar?',
-        ok: 'Inativar',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja inativar?'
+      }).onOk(() => {
         vm.$axios.post('grupo-usuario/' + vm.grupousuario.codgrupousuario + '/inativo').then(function (request) {
-          vm.loadDataGrupo(vm.grupousuario.codgrupousuario)
+          vm.loadDataGrupo(vm.grupousuario.codgrupousuario);
           vm.$q.notify({
             message: 'Grupo inativado',
             type: 'positive',
@@ -414,38 +401,38 @@ export default {
         }).catch(function (error) {
           console.log(error.response)
         })
-      })
+      }).onCancel(() => {});
     },
 
     destroy: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: true,
+        persistent: true,
         title: 'Excluir',
-        message: 'Tem certeza que deseja excluir?',
-        ok: 'Excluir',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja excluir?'
+      }).onOk(() => {
         vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
           vm.$q.notify({
             message: 'Registro excluido',
             type: 'positive',
-          })
-          vm.filter.grupo = null
-          vm.loadDataGrupos()
+          });
+          vm.filter.grupo = null;
+          vm.loadDataGrupos();
           vm.grupousuario = false
         }).catch(function (error) {
           console.log(error)
         })
-      })
+      }).onCancel(() => {});
     },
 
     refresher (index, done) {
-      this.page++
+      this.page++;
       this.loadData(true, done)
     },
 
     loadDataGrupo: function (id) {
-      let vm = this
+      let vm = this;
       vm.$axios.get('grupo-usuario/' + id + '/detalhes').then(function (request) {
         vm.grupousuario = request.data
       }).catch(function (error) {
@@ -454,10 +441,10 @@ export default {
     },
 
     loadDataGrupos: function () {
-      let vm = this
+      let vm = this;
       let params = {
         sort: 'grupousuario'
-      }
+      };
       vm.$axios.get('grupo-usuario', {
         params
       }).then(function (response) {
@@ -468,15 +455,13 @@ export default {
     }
   },
   created () {
-    this.filter = this.$store.state.filtroUsuario
+    this.filter = this.$store.state.filtroUsuario;
     this.loadDataGrupos()
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.q-item-sublabel > span {
-  font-weight: normal;
-}
+<style>
+
 </style>
