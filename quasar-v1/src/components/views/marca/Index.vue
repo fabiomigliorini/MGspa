@@ -7,118 +7,118 @@
 
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
-      <!-- <q-scroll-area class="fit"> -->
-      <q-list dense>
+
       <!-- Filtro de Descricao -->
-        <q-item>
-          <q-item-section>
-            <q-input v-model="filter.marca" dense label="Descrição" >
-              <template v-slot:before>
-                <q-icon name="search" />
-              </template>
-            </q-input>
-          </q-item-section>
-        </q-item>
-        <q-item-label header>Ordenar Por</q-item-label>
-          <!-- Ordena por Vendas -->
-        <q-item >
-          <q-item-section avatar>
-            <q-icon name="trending_up" />
-          </q-item-section>
-          <q-item-section>Vendas</q-item-section>
-          <q-item-section side>
-            <q-radio v-model="filter.sort" val="abcposicao" />
-          </q-item-section>
-        </q-item>
-        <!-- Ordena Alfabeticamente -->
-        <q-item>
-          <q-item-section avatar>
-            <q-icon name="sort_by_alpha" />
-          </q-item-section>
-          <q-item-section>Descrição</q-item-section>
-          <q-item-section side>
-            <q-radio v-model="filter.sort" val="marca" />
-          </q-item-section>
-        </q-item>
-        <q-item-label header>Estoque</q-item-label>
-          <!-- Filtra Estoque Sobrando -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="arrow_upward" />
-            </q-item-section>
-            <q-item-section>Sobrando</q-item-section>
-            <q-item-section side>
-              <q-toggle v-model="filter.sobrando" />
-            </q-item-section>
-          </q-item>
-          <!-- Filtra Estoque Faltando -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="arrow_downward" />
-            </q-item-section>
-            <q-item-section>Faltando</q-item-section>
-            <q-item-section side>
-              <q-toggle v-model="filter.faltando" />
-            </q-item-section>
-          </q-item>
+      <q-item>
+        <q-item-section>
+          <q-input v-model="filter.marca" dense label="Descrição" >
+            <template v-slot:before>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </q-item-section>
+      </q-item>
 
-          <q-item-label header>Curva ABC</q-item-label>
+      <q-item-label header>Ordenar Por</q-item-label>
+      <q-separator/>
 
-          <!-- Filtra Pela Classificação da CURVA ABC -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="star" />
-            </q-item-section>
-            <q-item-section>
-              <q-range
-                v-model="filter.abccategoria"
-                label
-                markers
-                snap
-                :min="0"
-                :max="4"
-                :step="1"
-              ></q-range>
-            </q-item-section>
-          </q-item>
+      <!-- Ordena por Vendas -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="trending_up" />
+        </q-item-section>
+        <q-item-section>Vendas</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.sort" val="abcposicao" />
+        </q-item-section>
+      </q-item>
 
-          <q-item-label header>Ativos</q-item-label>
+      <!-- Ordena Alfabeticamente -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="sort_by_alpha" />
+        </q-item-section>
+        <q-item-section>Descrição</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.sort" val="marca" />
+        </q-item-section>
+      </q-item>
 
-          <!-- Filtra Ativos -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="thumb_up" />
-            </q-item-section>
-            <q-item-section>Ativos</q-item-section>
-            <q-item-section side>
-              <q-radio v-model="filter.inativo" :val='1' />
-            </q-item-section>
-          </q-item>
+      <q-item-label header>Estoque</q-item-label>
+      <q-separator/>
 
-          <!-- Filtra Inativos -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="thumb_down" />
-            </q-item-section>
-            <q-item-section>Inativos</q-item-section>
-            <q-item-section side>
-              <q-radio v-model="filter.inativo" :val="2" />
-            </q-item-section>
-          </q-item>
+      <!-- Filtra Estoque Sobrando -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="arrow_upward" />
+        </q-item-section>
+        <q-item-section>Sobrando</q-item-section>
+        <q-item-section side>
+          <q-toggle v-model="filter.sobrando" />
+        </q-item-section>
+      </q-item>
 
-          <!-- Filtra Ativos e Inativos -->
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="thumbs_up_down" />
-            </q-item-section>
-            <q-item-section>Ativos e Inativos</q-item-section>
-            <q-item-section side>
-              <q-radio v-model="filter.inativo" :val="9" />
-            </q-item-section>
-          </q-item>
+      <!-- Filtra Estoque Faltando -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="arrow_downward" />
+        </q-item-section>
+        <q-item-section>Faltando</q-item-section>
+        <q-item-section side>
+          <q-toggle v-model="filter.faltando" />
+        </q-item-section>
+      </q-item>
 
-        </q-list>
-      <!-- </q-scroll-area> -->
+      <q-item-label header>Curva ABC</q-item-label>
+      <q-separator/>
+
+      <!-- Filtra Pela Classificação da CURVA ABC -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="star" />
+        </q-item-section>
+        <q-item-section>
+          <q-range v-model="filter.abccategoria" label markers snap :min="0" :max="4" :step="1"/>
+        </q-item-section>
+      </q-item>
+
+      <q-item-label header>Ativos</q-item-label>
+      <q-separator/>
+
+      <!-- Filtra Ativos -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="thumb_up" />
+        </q-item-section>
+        <q-item-section>Ativos</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.inativo" :val='1' />
+        </q-item-section>
+      </q-item>
+
+      <!-- Filtra Inativos -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="thumb_down" />
+        </q-item-section>
+        <q-item-section>Inativos</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.inativo" :val="2" />
+        </q-item-section>
+      </q-item>
+
+      <!-- Filtra Ativos e Inativos -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="thumbs_up_down" />
+        </q-item-section>
+        <q-item-section>Ativos e Inativos</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.inativo" :val="9" />
+        </q-item-section>
+      </q-item>
+
+
     </template>
 
     <!-- Conteúdo Princial (Meio) -->
@@ -134,15 +134,15 @@
           <template v-for="item in data">
 
             <!-- Link para detalhes -->
-            <q-item :to="'/marca/' + item.codmarca">
+            <q-item :to="'/marca/' + item.codmarca" :inset-level="(!item.imagem)?'2':'0'">
 
               <!-- Imagem -->
-              <q-item-section thumbnail class="q-ml-none">
+              <q-item-section thumbnail>
                 <img :src="item.imagem.url" v-if="item.imagem">
               </q-item-section>
 
               <!-- Coluna 1 -->
-              <q-item-section>
+              <q-item-section >
                 <q-item-label>
                   {{ item.marca }}
                   <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
@@ -152,35 +152,33 @@
                 </q-item-label>
               </q-item-section>
 
-              <!-- Coluna 2 -->
-              <q-item-section class="col-sm-2 gt-sm">
-                <q-item-label sublabel>
-                  <span v-if="item.itensabaixominimo > 0">
-                    {{ numeral(item.itensabaixominimo).format('0,0') }} <q-icon name="arrow_downward" />
-                  </span>
-                  <span v-if="item.itensacimamaximo > 0">
-                    <q-icon name="arrow_upward" /> {{ numeral(item.itensacimamaximo).format('0,0') }}
-                  </span>
+              <q-item-section class="gt-xs">
+                <q-item-label class="row" caption>
+                  <div class="col-6">
+                    <template v-if="item.itensabaixominimo > 0">
+                      {{ numeral(item.itensabaixominimo).format('0,0') }} <q-icon name="arrow_downward" />
+                    </template>
+                    <template v-if="item.itensacimamaximo > 0">
+                      <q-icon name="arrow_upward" /> {{ numeral(item.itensacimamaximo).format('0,0') }}
+                    </template>
+                  </div>
+                  <div class="col-6 text-center">
+                    <template v-if="item.dataultimacompra" class="text-grey">
+                      <q-icon name="add_shopping_cart" />
+                      {{ moment(item.dataultimacompra).fromNow() }}
+                    </template>
+                  </div>
                 </q-item-label>
-                <q-item-label cation>
+
+                <q-item-label caption >
                   <q-icon name="date_range" />
                   {{ item.estoqueminimodias }} à
                   {{ item.estoquemaximodias }} Dias
                 </q-item-label>
               </q-item-section>
 
-              <!-- Coluna 3 -->
-              <q-item-section class="col-sm-2 gt-xs">
-                <q-item-label caption>
-                  <template v-if="item.dataultimacompra" class="text-grey">
-                    <q-icon name="add_shopping_cart" />
-                    {{ moment(item.dataultimacompra).fromNow() }}
-                  </template>
-                </q-item-label>
-              </q-item-section>
-
               <!-- Direita (Estrelas) -->
-              <q-item-section class="col-xs-1" right>
+              <q-item-section avatar>
                 <q-item-label v-if="!item.abcignorar">
                   <q-rating readonly v-model="item.abccategoria" :max="3" size="1.7rem" />
                 </q-item-label>

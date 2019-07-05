@@ -11,17 +11,17 @@
     <div slot="drawer">
       <form>
 
-        <q-item dense>
+        <q-item>
           <q-item-section>
-            <q-input v-model="filter.usuario" label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
+            <q-input v-model="filter.usuario" label="Descrição" :before="[{icon: 'search', handler () {}}]">
+              <template v-slot:before>
+                <q-icon name="search" />
+              </template>
+            </q-input>
           </q-item-section>
         </q-item>
 
-        <q-item>
-          <q-item-section class="text-subtitle1">
-            Grupos
-          </q-item-section>
-        </q-item>
+        <q-item-label header>Grupos</q-item-label>
         <q-separator />
 
         <q-item tag="label" dense>
@@ -46,12 +46,7 @@
           </q-item>
         </template>
 
-        <q-item>
-          <q-item-section class="text-subtitle1">
-            Ativos
-          </q-item-section>
-        </q-item>
-
+        <q-item-label header>Ativos</q-item-label>
         <q-separator />
 
         <!-- Filtra Ativos -->

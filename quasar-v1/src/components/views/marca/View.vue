@@ -8,123 +8,108 @@
 
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
+      <div class="row q-pa-md q-col-gutter-sm">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
+          <q-card class="my-card">
+            <!--<q-img :src="item.imagem.url" v-if="item.codimagem">-->
+              <!--<div class="absolute-bottom text-subtitle2 text-center">-->
+                <!--{{item.marca}}-->
+              <!--</div>-->
+            <!--</q-img>-->
+            <q-img src="https://dummyimage.com/600x400/000/fff">
+              <div class="absolute-top text-subtitle2 text-center">
+                <q-item-label class="text-h6">
 
-        <!-- <ul class="breadcrumb">
-        <li>
-          <router-link :to="{ path: '/' }">
-            <q-icon name="home"/>
-          </router-link>
-        </li>
-        <li>
-          <router-link :to="{ path: '/marca' }">
-            <q-icon name="label_outline"/>
-          </router-link>
-        </li>
-        <li>
-          <router-link :to="{ path: '/marca/' + this.id }">
-            {{ item.marca }}
-          </router-link>
-        </li>
-      </ul>
-      -->
+                  {{item.marca}}
 
-      <!--
-      <q-breadcrumbs separator=">">
-        <q-breadcrumbs-el to="/"><q-icon name="home" size="2rem"/></q-breadcrumbs-el>
-        <q-breadcrumbs-el to="/marca"><q-icon name="label_outline" size="2rem"/></q-breadcrumbs-el>
-        <q-breadcrumbs-el>{{ item.marca }}</q-breadcrumbs-el>
-      </q-breadcrumbs>
-      -->
-
-      <div class="row">
-        <div class="col-md-6 q-pa-sm">
-          <q-card>
-            <q-card-media overlay-position="top">
-              <img :src="item.imagem.url" v-if="item.codimagem">
-              <img src="/statics/logo.png" v-else>
-              <q-card-title slot="overlay">
-                {{item.marca}}
-                <div slot="subtitle">
-                  <q-rating readonly v-model="item.abccategoria" :max="3" size="3rem" />
-                  <q-icon name="trending_up" /> {{ numeral(item.abcposicao).format('0,0') }}&deg;
-                </div>
-
-                <div slot="right" class="row items-center">
-
-                  <q-icon name="more_vert">
-                    <q-popover ref="popover">
-                      <q-list link class="no-border">
-                        <q-item @click="$refs.popover.close()">
-                          <q-item-main label="Inativar" />
+                  <q-btn color="grey-6" round flat icon="more_vert" class="float-right" ref="popover">
+                    <q-menu cover auto-close>
+                      <q-list>
+                        <q-item clickable @click="$router.push('/marca/' + item.codmarca + '/foto/')">
+                          <q-item-section v-if="!item.codimagem">Adicionar Imagem</q-item-section>
+                          <q-item-section v-if="item.codimagem">Aterar Imagem</q-item-section>
                         </q-item>
-                        <q-item @click="$refs.popover.close()">
-                          <q-item-main label="Excluir imagem" />
+                        <q-item clickable @click="deleteImage()" v-if="item.codimagem">
+                          <q-item-section>Excluir imagem</q-item-section>
+                        </q-item>
+                        <q-item clickable @click.native="activate()" v-if="item.inativo">
+                          <q-item-section>Ativar</q-item-section>
+                        </q-item>
+                        <q-item clickable @click.native="inactivate()" v-if="!item.inativo">
+                          <q-item-section>Inativar</q-item-section>
                         </q-item>
                       </q-list>
-                    </q-popover>
-                  </q-icon>
+                    </q-menu>
+                  </q-btn>
 
-                </div>
-              </q-card-title>
-            </q-card-media>
-            <q-card-separator />
-            <q-card-main>
-              <p class="text-faded">
-                Representa {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}% das vendas: <br>
-                R$ {{ numeral(new Intl.NumberFormat().format(item.vendabimestrevalor)).format() }} no Bimestre <br>
-                R$ {{ numeral(new Intl.NumberFormat().format(item.vendasemestrevalor)).format() }} no Semestre <br>
-                R$ {{ numeral(new Intl.NumberFormat().format(item.vendaanovalor)).format() }} no Ano
-              </p>
+                </q-item-label>
 
-              <p class="text-faded" v-if="item.itensabaixominimo > 0">
-                Última compra {{moment(item.dataultimacompra).fromNow()}}. <br>
-                <b>{{ numeral(item.itensabaixominimo).format('0,0') }}</b> produtos da marca estão abaixo do estoque mínimo! <br>
-                <b>{{ numeral(item.itensacimamaximo).format('0,0') }}</b> produtos da marca estão acima do estoque máximo!
-              </p>
+                <q-item-label>
+                  <q-rating readonly v-model="item.abccategoria" :max="3" size="3rem" />
+                  <q-icon name="trending_up" /> {{ numeral(item.abcposicao).format('0,0') }}&deg;
+                </q-item-label>
 
-              <p class="text-faded" v-if="item.itensacimamaximo > 0">
-                Estoque programado para durar entre
-                {{ item.estoqueminimodias }} e
-                {{ item.estoquemaximodias }} dias.
-              </p>
-
-            </q-card-main>
-            <q-card-separator />
-            <q-card-actions>
-              <q-btn color="primary" flat @click.native="activate()" v-if="item.inativo">Ativar</q-btn>
-              <q-btn color="red" flat @click.native="inactivate()" v-else>Inativar</q-btn>
-              <q-btn color="primary" flat @click="$router.push('/marca/' + item.codmarca + '/foto/')">
-                <span v-if="item.codimagem">Alterar Imagem</span>
-                <span v-else>Cadastrar Imagem</span>
-              </q-btn>
-              <q-btn color="red" flat @click="deleteImage()" v-if="item.codimagem">Excluir Imagem</q-btn>
-            </q-card-actions>
+              </div>
+            </q-img>
           </q-card>
         </div>
 
-        <div class="col-md-6 q-pa-sm" v-if="item.site && item.descricaosite">
-          <q-card>
-            <q-card-title>
-              Site
-            </q-card-title>
-            <q-card-main>
-              <p class="text-faded">
-                {{ item.descricaosite }}
-              </p>
-            </q-card-main>
-          </q-card>
-        </div>
+        <div class="col-xs-12 col-sm-6 col-md-8 col-lg-8">
 
+          <q-card class="my-card full-height">
+            <q-card-section>
+              <q-item class="q-px-none">
+                <q-item-section>
+                  <q-item-label class="text-subtitle1">
+                    Representa {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}% das vendas:
+                  </q-item-label>
+                  <q-item-label caption>
+                    <li>R$ {{ numeral(new Intl.NumberFormat().format(item.vendabimestrevalor)).format() }} no Bimestre</li>
+                    <li>R$ {{ numeral(new Intl.NumberFormat().format(item.vendasemestrevalor)).format() }} no Semestre</li>
+                    <li>R$ {{ numeral(new Intl.NumberFormat().format(item.vendaanovalor)).format() }} no Ano</li>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-px-none">
+                <q-item-section v-if="item.itensabaixominimo > 0">
+                  <q-item-label class="text-subtitle1">
+                    Última compra {{moment(item.dataultimacompra).fromNow()}}.
+                  </q-item-label>
+
+                  <q-item-label caption>
+                    <li><b>{{ numeral(item.itensabaixominimo).format('0,0') }}</b> produtos da marca estão abaixo do estoque mínimo!</li>
+                    <li><b>{{ numeral(item.itensacimamaximo).format('0,0') }}</b> produtos da marca estão acima do estoque máximo!</li>
+                  </q-item-label>
+
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-px-none">
+                <q-item-section class="text-subtitle1">
+                  <q-item-label v-if="item.itensacimamaximo > 0">
+                    Estoque programado para durar entre
+                    {{ item.estoqueminimodias }} e
+                    {{ item.estoquemaximodias }} dias.
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item v-if="item.site && item.descricaosite" class="q-px-none">
+                <q-item-section>
+                  <q-item-label class="text-subtitle1">Site</q-item-label>
+                  <q-item-label caption>{{ item.descricaosite }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+            </q-card-section>
+          </q-card>
+
+        </div>
       </div>
 
       <q-page-sticky corner="bottom-right" :offset="[18, 18]">
-        <q-fab
-          color="primary"
-          icon="edit"
-          active-icon="edit"
-          direction="up"
-          class="animate-pop"
-        >
+        <q-fab color="primary" icon="edit" active-icon="edit" direction="up" class="animate-pop">
           <router-link :to="{ path: '/marca/' + item.codmarca + '/update' }">
             <q-fab-action color="primary" icon="edit">
               <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
@@ -170,60 +155,60 @@ export default {
     // carrega registros da api
     loadData: debounce(function () {
       // inicializa variaveis
-      var vm = this
-      var params = {}
-      this.loading = true
+      var vm = this;
+      var params = {};
+      this.loading = true;
 
       // faz chamada api
       vm.$axios.get('marca/' + this.id + '/detalhes', { params }).then(response => {
-        vm.item = response.data
+        vm.item = response.data;
         // desmarca flag de carregando
         this.loading = false
       })
     }, 500),
 
     activate: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: 'Cancelar',
+        persistent: true,
         title: 'Ativar',
-        message: 'Tem certeza que deseja inativar?',
-        ok: 'Ativar',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja Ativar?'
+      }).onOk(() => {
         vm.$axios.delete('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
           vm.$q.notify({
             message: 'Registro ativado',
             type: 'positive',
-          })
+          });
           vm.loadData(vm.item.codmarca)
         }).catch(function (error) {
           console.log(error)
         })
-      })
+      }).onCancel(() => {});
     },
 
     inactivate: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: 'Cancelar',
+        persistent: true,
         title: 'Inativar',
-        message: 'Tem certeza que deseja inativar?',
-        ok: 'Inativar',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja inativar?'
+      }).onOk(() => {
         vm.$axios.post('marca/' + vm.item.codmarca + '/inativo').then(function (request) {
           vm.$q.notify({
             message: 'Registro inativado',
             type: 'positive',
-          })
+          });
           vm.loadData(vm.item.codusuario)
         }).catch(function (error) {
           console.log(error)
         })
-      })
+      }).onCancel(() => {});
     },
 
     deleteImage: function () {
-      let vm = this
+      let vm = this;
 
       this.$q.dialog({
         title: 'Excluir',
@@ -232,7 +217,7 @@ export default {
         cancel: 'Cancelar'
       }).then(() => {
         vm.$axios.post('imagem/' + vm.item.codimagem + '/inativo', { codmarca: vm.item.codmarca }).then(function (request) {
-          vm.loadData(vm.item.codmarca)
+          vm.loadData(vm.item.codmarca);
           vm.$q.notify({
             message:'Imagem excluida!',
             type:'negative'})
@@ -242,7 +227,7 @@ export default {
       })
     },
     destroy: function () {
-      let vm = this
+      let vm = this;
       this.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza que deseja excluir?',
@@ -250,7 +235,7 @@ export default {
         cancel: 'Cancelar'
       }).then(() => {
         vm.$axios.delete('marca/' + vm.item.codmarca).then(function (request) {
-          vm.$router.push('/marca')
+          vm.$router.push('/marca');
           vm.$q.notify({
             message:'Registro excluido!',
             type:'positive'})
@@ -262,7 +247,7 @@ export default {
     }
   },
   created () {
-    this.id = this.$route.params.id
+    this.id = this.$route.params.id;
     this.loadData()
   }
 

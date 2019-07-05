@@ -67,6 +67,8 @@ module.exports = function (ctx) {
         'QAvatar',
         'QRating',
         'QDialog',
+        'QImg',
+        'QMenu',
       ],
 
       directives: [
