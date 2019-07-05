@@ -8,13 +8,18 @@
             @filter="search"
   >
     <template v-slot:option="scope">
-      <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
-        <q-item-section avatar>
-          <q-icon :name="scope.opt.icon" />
-        </q-item-section>
+      <q-item
+        v-bind="scope.itemProps"
+        v-on="scope.itemEvents"
+      >
         <q-item-section>
-          <q-item-label v-html="scope.opt.label" />
-          <q-item-label caption>{{ scope.opt.description }}</q-item-label>
+          <q-item-label v-html="scope.opt.pessoa" ></q-item-label>
+          <q-item-label caption>
+            {{ scope.opt.fantasia }}
+            <span class="float-right">
+              {{ formatCpfOrCnpj(scope.opt.cnpj, scope.opt.fisica) }}
+            </span>
+          </q-item-label>
         </q-item-section>
       </q-item>
     </template>
@@ -46,24 +51,24 @@ export default {
         update(() => {
           let params = { pessoa: val };
           vm.$axios.get('pessoa/autocomplete', { params }).then(response => {
-            vm.options = vm.parseResults(response.data);
+            vm.options = response.data.map(res => {
+              res.label = res.fantasia;
+              res.value = res.codpessoa;
+              return res;
+            });
           }).catch(function (error) { });
         });
       }, 500)
     },
-    parseResults(data){
-      return data.map(res => {
-        return {
-          value: res.codpessoa,
-          label: (res.pessoa)?res.pessoa:res.fantasia,
-          description: this.formatCpfOrCnpj(res.cnpj)
-        }
-      });
-    },
-    formatCpfOrCnpj(cnpjOrCpf){
-      if(cnpjOrCpf.length > 14){
-        return cnpjOrCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    formatCpfOrCnpj(cnpj, fisica){
+      if (cnpj == null) {
+        return null;
+      }
+      if (fisica) {
+        cnpj = cnpj.padStart(11, '0');
+        return cnpj.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
       }else{
+        cnpj = cnpj.padStart(14, '0');
         return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
       }
 

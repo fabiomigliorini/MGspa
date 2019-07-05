@@ -10,40 +10,75 @@
     </template>
 
     <div slot="content">
-      <div class="row">
-        <div class="col-md-4 q-pa-sm">
+      <div class="row q-pa-sm q-col-gutter-sm">
+        <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
           <q-card>
-            <q-card-title>
-              Dados
-              <span slot="subtitle">Dados do usuário</span>
-              <q-icon slot="right" name="account_circle" />
-            </q-card-title>
-            <q-card-main>
-              <dl>
-                <dt>#</dt>
-                <dd>{{ numeral(item.codusuario).format('00000000') }}</dd>
-                <dt>Usuário</dt>
-                <dd>{{ item.usuario }}</dd>
-                <dt>Filial</dt>
-                <dd>{{ item.filial.filial }}</dd>
-                <template v-if="item.pessoa">
-                  <dt>Pessoa</dt>
-                  <dd>{{ item.pessoa.pessoa }}</dd>
-                </template>
-                <dt>Impressora Matricial</dt>
-                <dd>{{ item.impressoramatricial }}</dd>
-                <dt>Impressora Térmica</dt>
-                <dd>{{ item.impressoratermica }}</dd>
-                <dt>Último acesso</dt>
-                <dd>{{ moment(item.ultimoacesso).format('LLLL') }}</dd>
-                <dt>Ativo</dt>
-                <dd>
-                  <span class="text-red" v-if="item.inativo">Inativo desde {{ moment(item.inativo).format('L') }}</span>
-                  <span v-else>Sim</span>
-                </dd>
-              </dl>
-            </q-card-main>
-            <q-card-separator />
+            <q-card-section :class="(!item.inativo)?'text-h6 bg-positive text-white':'text-h6 bg-negative text-white' ">
+              Dados do usuário
+              <span v-if="!item.inativo">Ativo</span>
+              <span v-if="item.inativo">Inativo</span>
+              <q-icon name="account_circle" class="float-right" size="30px"/>
+            </q-card-section>
+            <q-separator/>
+
+            <q-card-section>
+
+              <q-item class="q-px-none">
+                <q-item-section>
+                  <q-item-label caption>
+                    {{ item.usuario }} # {{ numeral(item.codusuario).format('00000000') }}
+                  </q-item-label>
+                  <q-item-label v-if="item.pessoa">
+                    {{ item.pessoa.pessoa }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-px-none">
+                <q-item-section>
+                  <q-item-label caption>Filial</q-item-label>
+                  <q-item-label>{{ item.filial.filial }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-px-none">
+                <q-item-section>
+                  <q-item-label caption>Impressora Matricial</q-item-label>
+                  <q-item-label>{{ item.impressoramatricial }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-px-none">
+                <q-item-section>
+                  <q-item-label caption>Impressora Térmica</q-item-label>
+                  <q-item-label>{{ item.impressoratermica }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-px-none">
+                <q-item-section>
+                  <q-item-label caption>
+                    Último acesso
+                  </q-item-label>
+                  <q-item-label>
+                    {{ moment(item.ultimoacesso).format('LLLL') }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-px-none" v-if="item.inativo">
+                <q-item-section>
+                  <q-item-label caption>
+                    Inativo desde
+                  </q-item-label>
+                  <q-item-label>
+                    {{ moment(item.inativo).format('L') }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+
+            </q-card-section>
+
             <q-card-actions>
               <q-btn color="primary" flat @click.native="activate()" v-if="item.inativo">Ativar</q-btn>
               <q-btn color="red" flat @click.native="inactivate()" v-else>Inativar</q-btn>
@@ -51,45 +86,65 @@
 
           </q-card>
         </div>
-        <div class="col-md-4 q-pa-sm">
+
+        <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
           <q-card>
-            <q-card-title>
-              Grupos
-              <span slot="subtitle">Grupos do usuário</span>
-              <q-icon slot="right" name="supervisor_account" />
-            </q-card-title>
-            <q-card-main>
-              <dl>
-                <template v-for="grupo in item.grupos">
-                  <dt>{{ grupo.grupousuario }}</dt>
-                  <dd>{{ grupo.filiais.toString() }}</dd>
-                </template>
-              </dl>
-            </q-card-main>
+            <q-card-section class="text-h6">
+              Grupos do usuário
+              <q-icon  name="supervisor_account" class="float-right" size="30px"/>
+            </q-card-section>
+            <q-separator/>
+
+            <q-card-section>
+
+              <q-list separator highlight	>
+                <q-item v-for="grupo in item.grupos" class="q-px-none" :key="grupo.id">
+                  <q-item-section>
+                    <q-item-label caption>
+                      {{ grupo.grupousuario }}
+                    </q-item-label>
+                    <q-item-label>
+                      {{ grupo.filiais.toString() }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+
+            </q-card-section>
             <q-card-separator />
+
             <q-card-actions>
               <router-link :to="{ path: '/usuario/' + item.codusuario + '/grupos' }">
                 <q-btn flat>Grupos</q-btn>
               </router-link>
             </q-card-actions>
+
           </q-card>
         </div>
-        <div class="col-md-4 q-pa-sm">
+
+        <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
           <q-card>
-            <q-card-title>
-              Permissões
-              <span slot="subtitle">Permissões do usuário</span>
-              <q-icon slot="right" name="lock_open" />
-            </q-card-title>
-            <q-list separator>
-              <template v-for="(permissao, index) in item.permissoes">
-                  <q-collapsible :label="index">
-                    <div v-for="item in permissao">
-                      {{ item }}
-                    </div>
-                  </q-collapsible>
-              </template>
-            </q-list>
+            <q-card-section class="text-h6">
+              Permissões do usuário
+              <q-icon name="lock_open" class="float-right" size="30px"/>
+            </q-card-section>
+            <q-separator/>
+
+            <q-card-section>
+              <q-list separator>
+                <template v-for="(permissao, index) in item.permissoes">
+                  <q-expansion-item expand-separator :label="index" :key="index" dense dense-toggle>
+                    <q-card>
+                      <q-card-section v-for="item in permissao">
+                        {{ item }}
+                      </q-card-section>
+                    </q-card>
+                  </q-expansion-item>
+                </template>
+              </q-list>
+            </q-card-section>
+
+
           </q-card>
         </div>
       </div>
@@ -153,7 +208,7 @@ export default {
   },
   methods: {
     carregaDados: function (id) {
-      let vm = this
+      let vm = this;
       vm.$axios.get('usuario/' + id + '/detalhes').then(function (request) {
         vm.item = request.data
       }).catch(function (error) {
@@ -161,61 +216,61 @@ export default {
       })
     },
     activate: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: 'Cancelar',
+        persistent: true,
         title: 'Ativar',
-        message: 'Tem certeza que deseja inativar?',
-        ok: 'Ativar',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja Ativar?'
+      }).onOk(() => {
         vm.$axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
           vm.$q.notify({
             message: 'Registro ativado',
             type: 'positive',
-          })
+          });
           vm.carregaDados(vm.item.codusuario)
         }).catch(function (error) {
           console.log(error)
         })
-      })
+      }).onCancel(() => {});
     },
     inactivate: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: 'Cancelar',
+        persistent: true,
         title: 'Inativar',
-        message: 'Tem certeza que deseja inativar?',
-        ok: 'Inativar',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja inativar?'
+      }).onOk(() => {
         vm.$axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
           vm.$q.notify({
             message: 'Registro inativado',
             type: 'positive',
-          })
+          });
           vm.carregaDados(vm.item.codusuario)
         }).catch(function (error) {
           console.log(error)
         })
-      })
+      }).onCancel(() => {});
     },
     destroy: function () {
-      let vm = this
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: 'Cancelar',
+        persistent: true,
         title: 'Excluir',
-        message: 'Tem certeza que deseja excluir?',
-        ok: 'Excluir',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja excluir?'
+      }).onOk(() => {
         vm.$axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
           vm.$q.notify({
             message: 'Registro excluido',
             type: 'positive',
-          })
+          });
           vm.$router.push('/usuario')
         }).catch(function (error) {
           console.log(error)
         })
-      })
+      }).onCancel(() => {});
     }
   },
   mounted () {

@@ -69,6 +69,7 @@ module.exports = function (ctx) {
         'QDialog',
         'QImg',
         'QMenu',
+        'QExpansionItem',
       ],
 
       directives: [
