@@ -37,11 +37,11 @@
       -->
 
       <div class="row">
-        <div class="col-md-6 q-pa-sm">
+        <div class="col-md-6 col-lg-4 col-xl-3 q-pa-sm">
           <q-card>
             <q-card-media overlay-position="top">
               <img :src="item.imagem.url" v-if="item.codimagem">
-              <img src="/statics/logo.png" v-else>
+              <img src="/statics/semimagem.jpg" v-else>
               <q-card-title slot="overlay">
                 {{item.marca}}
                 <div slot="subtitle">
@@ -76,21 +76,23 @@
                 R$ {{ numeral(new Intl.NumberFormat().format(item.vendaanovalor)).format() }} no Ano
               </p>
 
-              <p class="text-faded" v-if="item.itensabaixominimo > 0">
+              <!-- <p class="text-faded" v-if="item.itensabaixominimo > 0">
                 Última compra {{moment(item.dataultimacompra).fromNow()}}. <br>
                 <b>{{ numeral(item.itensabaixominimo).format('0,0') }}</b> produtos da marca estão abaixo do estoque mínimo! <br>
                 <b>{{ numeral(item.itensacimamaximo).format('0,0') }}</b> produtos da marca estão acima do estoque máximo!
-              </p>
+              </p> -->
 
-              <p class="text-faded" v-if="item.itensacimamaximo > 0">
+              <!-- <p class="text-faded" v-if="item.itensacimamaximo > 0">
                 Estoque programado para durar entre
                 {{ item.estoqueminimodias }} e
                 {{ item.estoquemaximodias }} dias.
-              </p>
+              </p> -->
 
             </q-card-main>
             <q-card-separator />
             <q-card-actions>
+              <q-btn color="primary" flat @click.native="planilhaPedido()">Planilha Pedido</q-btn>
+              <q-btn color="primary" flat @click.native="planilhaDistribuicaoSaldoDeposito()">Distribuição Saldo</q-btn>
               <q-btn color="primary" flat @click.native="activate()" v-if="item.inativo">Ativar</q-btn>
               <q-btn color="red" flat @click.native="inactivate()" v-else>Inativar</q-btn>
               <q-btn color="primary" flat @click="$router.push('/marca/' + item.codmarca + '/foto/')">
@@ -163,7 +165,8 @@ export default {
   data () {
     return {
       item: false,
-      id: null
+      id: null,
+      planilha: null,
     }
   },
   methods: {
@@ -215,7 +218,49 @@ export default {
             message: 'Registro inativado',
             type: 'positive',
           })
-          vm.loadData(vm.item.codusuario)
+          vm.loadData(vm.item.codmarca)
+        }).catch(function (error) {
+          console.log(error)
+        })
+      })
+    },
+
+    planilhaPedido: function () {
+      let vm = this
+      vm.$q.dialog({
+        title: 'Planilha de Pedido',
+        message: 'Tem certeza que deseja gerar a planilha de pedido de compra?',
+        ok: 'Gerar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.put('marca/' + vm.item.codmarca + '/planilha/pedido').then(function (request) {
+          let arquivo = request.data;
+          vm.planilha = arquivo;
+          vm.$q.notify({
+            message: 'Planilha criada em "' + arquivo + '"!',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          console.log(error)
+        })
+      })
+    },
+
+    planilhaDistribuicaoSaldoDeposito: function () {
+      let vm = this
+      vm.$q.dialog({
+        title: 'Planilha de Distribuição de Saldo',
+        message: 'Tem certeza que deseja criar a planilha de distribuição de saldo do estoque do depósito para as lojas?',
+        ok: 'Gerar',
+        cancel: 'Cancelar'
+      }).then(() => {
+        vm.$axios.put('marca/' + vm.item.codmarca + '/planilha/distribuicao-saldo-deposito').then(function (request) {
+          let arquivo = request.data;
+          vm.planilha = arquivo;
+          vm.$q.notify({
+            message: 'Planilha criada em ' + arquivo + '!',
+            type: 'positive',
+          })
         }).catch(function (error) {
           console.log(error)
         })
@@ -224,7 +269,6 @@ export default {
 
     deleteImage: function () {
       let vm = this
-
       this.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza de deseja excluir a imagem?',

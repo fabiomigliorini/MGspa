@@ -142,6 +142,7 @@
 
               <!-- Imagem -->
               <q-item-side :image="item.imagem.url" v-if="item.imagem" />
+              <q-item-side :image="'/statics/semimagem.jpg'" v-else />
 
               <!-- Coluna 1 -->
               <q-item-main>
