@@ -10,28 +10,28 @@
     </template>
 
     <div slot="content">
-      <div class="layout-padding">
-        <div class="row">
-          <div class="col-xs-6 col-sm-4 col-lg-2">
-            <div class="card text-center category-link text-primary" @click="$router.push('impressoras')">
-              <q-icon name="print" />
-              <p class="caption">Impressoras</p>
-            </div>
+
+      <div class="row q-pa-md">
+        <div class="col-xs-6 col-sm-4 col-lg-2">
+          <div class="card text-center category-link text-primary" @click="$router.push('impressoras')">
+            <q-icon name="print" />
+            <p class="caption">Impressoras</p>
           </div>
-          <div class="col-xs-6 col-sm-4 col-lg-2">
-            <div class="card text-center category-link text-primary" @click="$router.push('senha')">
-              <q-icon name="vpn_key" />
-              <p class="caption">Trocar senha</p>
-            </div>
+        </div>
+        <div class="col-xs-6 col-sm-4 col-lg-2">
+          <div class="card text-center category-link text-primary" @click="$router.push('senha')">
+            <q-icon name="vpn_key" />
+            <p class="caption">Trocar senha</p>
           </div>
-          <div class="col-xs-6 col-sm-4 col-lg-2">
-            <div class="card text-center category-link text-primary" @click="$router.push('foto')">
-              <q-icon name="account_box" />
-              <p class="caption">Alterar foto</p>
-            </div>
+        </div>
+        <div class="col-xs-6 col-sm-4 col-lg-2">
+          <div class="card text-center category-link text-primary" @click="$router.push('foto')">
+            <q-icon name="account_box" />
+            <p class="caption">Alterar foto</p>
           </div>
         </div>
       </div>
+
     </div>
 
   </mg-layout>

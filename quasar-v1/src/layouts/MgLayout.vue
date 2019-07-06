@@ -218,26 +218,26 @@ export default {
   },
   methods: {
     logout () {
-      var vm = this
-
-      vm.$q.dialog({
+      let vm = this;
+      this.$q.dialog({
+        cancel: 'Cancelar',
+        persistent: true,
         title: 'Sair do sistema',
-        message: 'Tem certeza que deseja sair?',
-        ok: 'Sair',
-        cancel: 'Cancelar'
-      }).then(() => {
+        message: 'Tem certeza que deseja excluir?'
+      }).onOk(() => {
         vm.$axios.get('auth/logout').then(response => {
-          localStorage.removeItem('auth.token')
-          localStorage.removeItem('auth.usuario.usuario')
-          localStorage.removeItem('auth.usuario.codusuario')
-          localStorage.removeItem('auth.usuario.avatar')
-          vm.$router.push('/login')
+          localStorage.removeItem('auth.token');
+          localStorage.removeItem('auth.usuario.usuario');
+          localStorage.removeItem('auth.usuario.codusuario');
+          localStorage.removeItem('auth.usuario.avatar');
+          vm.$router.push('/login');
           vm.$q.notify({
             message: 'Até mais...',
-            type: 'positive',
+            color: 'positive',
           })
         })
-      })
+      }).onCancel(() => {});
+
     }
   }
 }
