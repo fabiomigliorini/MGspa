@@ -163,7 +163,7 @@ class DistribuicaoRepository
             $prod->destinos = $dests;
         }
 
-        file_put_contents('/tmp/saida.json', $prods->toJson());
+        //file_put_contents('/tmp/saida.json', $prods->toJson());
 
         return $prods;
     }
