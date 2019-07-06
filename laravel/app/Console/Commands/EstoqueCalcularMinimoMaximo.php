@@ -69,7 +69,7 @@ class EstoqueCalcularMinimoMaximo extends Command
             }
             // se for pra gerar o pedido de compra
             if ($this->option('gerar-pedido')) {
-                $ret = ComprasRepository::gerarPlanilhaPedido($m);
+                $ret = ComprasRepository::criarPlanilhaPedido($m);
             }
             return $ret;
         }

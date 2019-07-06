@@ -129,7 +129,7 @@ class ComprasRepository
         return empty($lotes)?null:$lotes * $lote;
     }
 
-    public static function gerarPlanilhaPedido(Marca $marca)
+    public static function criarPlanilhaPedido(Marca $marca)
     {
         $produtos = static::buscarProdutos($marca);
 

@@ -127,21 +127,24 @@ class MarcaController extends MgController
         $model->delete();
     }
 
-    public function ativar(Request $request, $id) {
+    public function ativar(Request $request, $id)
+    {
         $model = Marca::findOrFail($id);
         $model = MarcaRepository::ativar($model);
 
         return response()->json($model, 200);
     }
 
-    public function inativar(Request $request, $id) {
+    public function inativar(Request $request, $id)
+    {
         $model = Marca::findOrFail($id);
         $model = MarcaRepository::inativar($model);
 
         return response()->json($model, 200);
     }
 
-    public function autor(Request $request, $id) {
+    public function autor(Request $request, $id)
+    {
         $model = Marca::findOrFail($id);
         $res = [
             'codusuario' => $model->codusuario,
@@ -159,9 +162,27 @@ class MarcaController extends MgController
         return response()->json($res, 200);
     }
 
-    public function autocompletar (Request $request) {
+    public function autocompletar(Request $request)
+    {
         $res = MarcaRepository::autocompletar($request->all());
 
         return response()->json($res, 206);
+    }
+
+    public function criarPlanilhaPedido(Request $request, $id)
+    {
+        $model = Marca::findOrFail($id);
+        // $ret = VendaMensalRepository::atualizarMarca($model);
+        $ret = ComprasRepository::criarPlanilhaPedido($model);
+        return response()->json($res, 200);
+    }
+
+    public function criarPlanilhaDistribuicaoSaldoDeposito(Request $request, $id)
+    {
+        $model = Marca::findOrFail($id);
+        // $ret = VendaMensalRepository::atualizarMarca($model);
+        $ret = DistribuicaoRepository::criarPlanilhaDistribuicaoSaldoDeposito($m);
+        $ret = ComprasRepository::criarPlanilhaPedido($model);
+        return response()->json($res, 200);
     }
 }
