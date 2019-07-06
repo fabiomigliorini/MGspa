@@ -38,7 +38,7 @@ class UsuarioController extends MgController
 
         }
 
-        return response()->json($res, 206);
+        return response()->json($res, 200);
 
     }
 
