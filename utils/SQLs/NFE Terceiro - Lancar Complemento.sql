@@ -1,4 +1,4 @@
-﻿--update tblnfeterceiroitem set complemento = vprod * 2.6, margem = 85 where codnfeterceiro = 22721
+﻿update tblnfeterceiroitem set complemento = vprod * 2.6, margem = 85 where codnfeterceiro = 23806
 
 with it as (
 	select nti.codnfeterceiro, sum(nti.complemento) as complemento
@@ -8,4 +8,4 @@ with it as (
 select nt.valorprodutos, nt.valortotal, it.complemento, nt.valortotal + it.complemento as geral
 from tblnfeterceiro nt
 inner join it on (it.codnfeterceiro  = nt.codnfeterceiro)
-where nt.codnfeterceiro = 22721
+where nt.codnfeterceiro = 23806
