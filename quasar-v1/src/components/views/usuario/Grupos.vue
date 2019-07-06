@@ -10,49 +10,51 @@
     </template>
 
     <div slot="content">
-      <div class="layout-padding">
-        <q-list highlight>
-          <q-item>
-            <q-item-main class="col-xs-4"></q-item-main>
-            <q-item-main class="col-sm-1 grupo-item-main" v-for="grupo in grupos" :key="grupo.codgrupousuario">
-              {{ grupo.grupousuario.substr(0, 3) }}
-            </q-item-main>
-          </q-item>
-          <q-item v-for="filial in filiais" :key="filial.codfilial">
-            <q-item-main class="col-xs-4">
-              <q-item-tile class="filial-item-title">{{ filial.filial }}</q-item-tile>
-            </q-item-main>
-            <q-item-main class="col-sm-1" v-for="item in grupos" :key="item.codgrupousuario">
-              <q-btn @click.prevent="removeGrupo(filial.codfilial, item.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="grupousuario[item.codgrupousuario] && grupousuario[item.codgrupousuario][filial.codfilial]"></q-btn>
-              <q-btn @click.prevent="adicionaGrupo(filial.codfilial, item.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
-            </q-item-main>
-          </q-item>
-        </q-list>
-<!--
-        <table class="q-table striped-odd">
-          <thead>
-            <tr>
-              <th>
-                &nbsp;
-              </th>
-                <th v-for="grupo in grupos">
-                    {{ grupo.grupousuario }}
-                </th>
-            </tr>
-          </thead>
-          <tbody>
-              <tr v-for="filial in filiais">
-                <th class="text-left">
-                  {{ filial.filial }}
-                </th>
-                  <td class="text-center" v-for="item in grupos">
-                    <q-btn @click.prevent="removeGrupo(filial.codfilial, item.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="grupousuario[item.codgrupousuario] && grupousuario[item.codgrupousuario][filial.codfilial]"></q-btn>
-                    <q-btn @click.prevent="adicionaGrupo(filial.codfilial, item.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
-                  </td>
-              </tr>
-          </tbody>
-        </table>
- -->
+      <div class="row q-pa-md">
+
+        <div class="col-12 q-py-md gt-xs">
+          <div class="row justify-center text-subtitle1 text-grey-7">
+            <div class="col-sm-2 col-md-2 col-lg-1">
+              Filial
+            </div>
+            <div class="col-sm-1 col-md-1 col-lg-1 text-center" v-for="grupo in grupos" :key="grupo.codgrupousuario">
+              {{ grupo.grupousuario.substring(0, 3) }}
+            </div>
+          </div>
+          <q-separator/>
+        </div>
+
+        <div class="col-12 ">
+          <div class="row justify-center" v-for="filial in filiais" :key="filial.codfilial">
+            <div class="col-xs-12 col-sm-2 col-md-2 col-lg-1 text-subtitle1">
+              {{ filial.filial }}
+            </div>
+
+            <div class="col-12 lt-sm">
+              <div class="row justify-center text-grey-7">
+                <div class="col-xs-2 text-center" v-for="grupo in grupos" :key="grupo.codgrupousuario">
+                  {{ grupo.grupousuario.substring(0, 3) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xs-2 col-sm-1 col-md-1 col-lg-1 text-center" v-for="item in grupos" :key="item.codgrupousuario">
+
+              <q-btn @click.prevent="removeGrupo(filial.codfilial, item.codgrupousuario)"
+                     flat round small color="positive" icon="check_box"
+                     v-if="grupousuario[item.codgrupousuario] && grupousuario[item.codgrupousuario][filial.codfilial]"
+              />
+
+              <q-btn @click.prevent="adicionaGrupo(filial.codfilial, item.codgrupousuario)"
+                     flat round small color="grey-7" icon="check_box_outline_blank" v-else
+              />
+            </div>
+            <div class="col-12 lt-sm">
+              <q-separator/>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -61,13 +63,11 @@
 
 <script>
 import MgLayout from '../../../layouts/MgLayout'
-import MgErrosValidacao from '../../utils/MgErrosValidacao'
 
 export default {
   name: 'usuario-grupos',
   components: {
     MgLayout,
-    MgErrosValidacao
   },
   data () {
     return {
@@ -79,12 +79,12 @@ export default {
   },
   methods: {
     carregaDados: function (id) {
-      let vm = this
+      let vm = this;
       vm.$axios.get('usuario/' + id).then(function (request) {
         vm.data = request.data
       }).catch(function (error) {
         console.log(error.response)
-      })
+      });
       vm.$axios.get('usuario/' + id + '/grupos').then(function (request) {
         vm.grupousuario = request.data
       }).catch(function (error) {
@@ -92,11 +92,11 @@ export default {
       })
     },
     carregaFiliais: function () {
-      let vm = this
+      let vm = this;
       let params = {
         sort: 'filial',
         fields: 'codfilial,filial'
-      }
+      };
       vm.$axios.get('filial', { params }).then(function (request) {
         vm.filiais = request.data.data
       }).catch(function (error) {
@@ -104,11 +104,11 @@ export default {
       })
     },
     carregaGrupos: function () {
-      let vm = this
+      let vm = this;
       let params = {
         sort: 'grupousuario',
         fields: 'grupousuario,codgrupousuario'
-      }
+      };
       vm.$axios.get('grupo-usuario', { params }).then(function (response) {
         vm.grupos = response.data.data
       }).catch(function (error) {
@@ -116,11 +116,11 @@ export default {
       })
     },
     adicionaGrupo (codfilial, codgrupousuario) {
-      var vm = this
+      var vm = this;
       var dados = {
         codfilial: codfilial,
         codgrupousuario: codgrupousuario
-      }
+      };
       vm.$axios.post('usuario/' + vm.data.codusuario + '/grupos', dados).then(function (request) {
         if (request.status === 201) {
           vm.carregaDados(vm.data.codusuario)
@@ -130,11 +130,11 @@ export default {
       })
     },
     removeGrupo (codfilial, codgrupousuario) {
-      var vm = this
+      var vm = this;
       var dados = {
         codfilial: codfilial,
         codgrupousuario: codgrupousuario
-      }
+      };
       vm.$axios.delete('usuario/' + vm.data.codusuario + '/grupos', { params: dados }).then(function (request) {
         if (request.status === 204) {
           vm.carregaDados(vm.data.codusuario)
@@ -146,8 +146,8 @@ export default {
 
   },
   created () {
-    this.carregaDados(this.$route.params.id)
-    this.carregaGrupos()
+    this.carregaDados(this.$route.params.id);
+    this.carregaGrupos();
     this.carregaFiliais()
   }
 }

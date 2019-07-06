@@ -65,7 +65,18 @@ export default {
         });
         vm.$router.push('/usuario/' + request.data.codusuario)
       }).catch(function (error) {
-        vm.erros = error.response.data.erros
+        if(error.response.data.errors.usuario){
+          vm.$q.notify({message: error.response.data.errors.usuario, color: 'negative'})
+        }
+        if(error.response.data.errors.impressoramatricial){
+          vm.$q.notify({message: error.response.data.errors.impressoramatricial, color: 'negative'})
+        }
+        if(error.response.data.errors.impressoratermica){
+          vm.$q.notify({message: error.response.data.errors.impressoratermica, color: 'negative'})
+        }
+        if(error.response.data.errors.senha){
+          vm.$q.notify({message: error.response.data.errors.senha, color: 'negative'})
+        }
       })
     }
   }

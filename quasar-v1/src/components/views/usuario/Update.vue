@@ -26,7 +26,7 @@
                 <mg-select-filial label="Filial" v-model="data.codfilial"/>
               </div>
               <div class="col-12">
-                <mg-autocomplete-pessoa placeholder="Pessoa" v-model="data.codpessoa" :init="data.codpessoa"/>
+                <mg-autocomplete-pessoa label="Pessoa" v-model="data.codpessoa" :init="data.codpessoa"/>
               </div>
               <div class="col-12">
                 <mg-select-impressora label="Impressora Matricial" v-model="data.impressoramatricial"/>

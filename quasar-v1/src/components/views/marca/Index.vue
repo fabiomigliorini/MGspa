@@ -199,13 +199,10 @@
 
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
-      <router-link :to="{ path: '/marca/create' }">
-        <q-page-sticky corner="bottom-right" :offset="[18, 18]">
-          <q-btn round color="primary">
-            <q-icon name="add" />
-          </q-btn>
-        </q-page-sticky>
-      </router-link>
+
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn fab icon="add" color="primary" :to="{ path: '/marca/create' }"/>
+      </q-page-sticky>
 
     </div>
 

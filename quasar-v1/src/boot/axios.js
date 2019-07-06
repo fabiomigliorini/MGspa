@@ -38,7 +38,7 @@ export default ({ Vue }) => {
         }
       }
     }
-    Notify.create(mensagem);
+    Notify.create({message: mensagem, color: 'warning'});
     return Promise.reject(error)
   })
 }

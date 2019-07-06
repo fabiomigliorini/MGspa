@@ -14,7 +14,7 @@
         <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
           <q-card>
             <q-card-section :class="(!item.inativo)?'text-h6 bg-positive text-white':'text-h6 bg-negative text-white' ">
-              Dados do usuário
+              Usuário
               <span v-if="!item.inativo">Ativo</span>
               <span v-if="item.inativo">Inativo</span>
               <q-icon name="account_circle" class="float-right" size="30px"/>
@@ -111,7 +111,6 @@
               </q-list>
 
             </q-card-section>
-            <q-card-separator />
 
             <q-card-actions>
               <router-link :to="{ path: '/usuario/' + item.codusuario + '/grupos' }">
@@ -132,10 +131,10 @@
 
             <q-card-section>
               <q-list separator>
-                <template v-for="(permissao, index) in item.permissoes">
-                  <q-expansion-item expand-separator :label="index" :key="index" dense dense-toggle>
+                <template v-for="(itens, permissao) in item.permissoes">
+                  <q-expansion-item expand-separator :label="permissao" :key="permissao" dense dense-toggle>
                     <q-card>
-                      <q-card-section v-for="item in permissao">
+                      <q-card-section v-for="(item, index) in itens" :key="permissao + '_' + index">
                         {{ item }}
                       </q-card-section>
                     </q-card>
@@ -152,8 +151,8 @@
       <q-page-sticky corner="bottom-right" :offset="[18, 18]">
         <q-fab
           color="primary"
-          icon="edit"
-          active-icon="edit"
+          icon="add"
+          active-icon="add"
           direction="up"
           class="animate-pop"
         >
@@ -226,7 +225,7 @@ export default {
         vm.$axios.delete('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
           vm.$q.notify({
             message: 'Registro ativado',
-            type: 'positive',
+            color: 'positive',
           });
           vm.carregaDados(vm.item.codusuario)
         }).catch(function (error) {
@@ -245,7 +244,7 @@ export default {
         vm.$axios.post('usuario/' + vm.item.codusuario + '/inativo').then(function (request) {
           vm.$q.notify({
             message: 'Registro inativado',
-            type: 'positive',
+            color: 'positive',
           });
           vm.carregaDados(vm.item.codusuario)
         }).catch(function (error) {
@@ -264,7 +263,7 @@ export default {
         vm.$axios.delete('usuario/' + vm.item.codusuario).then(function (request) {
           vm.$q.notify({
             message: 'Registro excluido',
-            type: 'positive',
+            color: 'positive',
           });
           vm.$router.push('/usuario')
         }).catch(function (error) {

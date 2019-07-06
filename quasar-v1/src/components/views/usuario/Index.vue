@@ -163,7 +163,9 @@
               <q-item-section>
                 <q-item-label>
                   {{ usuario.usuario }}
-                  <q-chip tag square pointing="left" color="negative" v-if="usuario.inativo">Inativo</q-chip>
+                  <q-chip dense color="negative" text-color="white" v-if="usuario.inativo">
+                    Inativo
+                  </q-chip>
                 </q-item-label>
                 <q-item-label caption>
                   <span v-for="grupo in usuario.grupos">

@@ -70,8 +70,11 @@ module.exports = function (ctx) {
         'QImg',
         'QMenu',
         'QExpansionItem',
+        'QChip',
       ],
-
+      config: {
+        notify: { /* Notify defaults */ }
+      },
       directives: [
         'Ripple',
         'ClosePopup'
