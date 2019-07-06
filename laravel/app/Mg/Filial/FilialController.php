@@ -20,7 +20,7 @@ class FilialController extends MgController
         $qry = FilialRepository::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
-        return response()->json($res, 206);
+        return response()->json($res, 200);
 
     }
 

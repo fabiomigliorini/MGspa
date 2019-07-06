@@ -30,7 +30,7 @@ class MarcaController extends MgController
             }
         }
 
-        return response()->json($res, 206);
+        return response()->json($res, 200);
     }
 
     /**
@@ -166,7 +166,7 @@ class MarcaController extends MgController
     {
         $res = MarcaRepository::autocompletar($request->all());
 
-        return response()->json($res, 206);
+        return response()->json($res, 200);
     }
 
     public function criarPlanilhaPedido(Request $request, $id)

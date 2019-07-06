@@ -20,7 +20,7 @@ class PessoaController extends MgController
         $qry = PessoaRepository::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
-        return response()->json($res, 206);
+        return response()->json($res, 200);
 
     }
 
@@ -41,7 +41,7 @@ class PessoaController extends MgController
     {
         $qry = PessoaRepository::autocomplete($request->all());
 
-        return response()->json($qry, 206);
+        return response()->json($qry, 200);
     }
 
     public function novaPessoa (Request $request)
