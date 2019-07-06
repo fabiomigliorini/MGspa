@@ -142,6 +142,7 @@
 
               <!-- Imagem -->
               <q-item-side :image="item.imagem.url" v-if="item.imagem" />
+              <q-item-side :image="'/statics/semimagem.jpg'" v-else />
 
               <!-- Coluna 1 -->
               <q-item-main>
@@ -172,14 +173,14 @@
               </q-item-main>
 
               <!-- Coluna 3 -->
-              <q-item-main class="col-sm-2 gt-xs">
+              <!-- <q-item-main class="col-sm-2 gt-xs">
                 <q-item-tile sublabel>
                   <template v-if="item.dataultimacompra" class="text-grey">
                     <q-icon name="add_shopping_cart" />
                     {{ moment(item.dataultimacompra).fromNow() }}
                   </template>
                 </q-item-tile>
-              </q-item-main>
+              </q-item-main> -->
 
               <!-- Direita (Estrelas) -->
               <q-item-side class="col-xs-1" right>

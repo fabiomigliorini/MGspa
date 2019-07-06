@@ -8,6 +8,9 @@ use Mg\MgController;
 use App\Http\Requests;
 use Illuminate\Validation\Rule;
 
+use Mg\Estoque\MinimoMaximo\ComprasRepository;
+use Mg\Estoque\MinimoMaximo\DistribuicaoRepository;
+
 class MarcaController extends MgController
 {
 
@@ -172,17 +175,14 @@ class MarcaController extends MgController
     public function criarPlanilhaPedido(Request $request, $id)
     {
         $model = Marca::findOrFail($id);
-        // $ret = VendaMensalRepository::atualizarMarca($model);
-        $ret = ComprasRepository::criarPlanilhaPedido($model);
+        $res = ComprasRepository::criarPlanilhaPedido($model);
         return response()->json($res, 200);
     }
 
     public function criarPlanilhaDistribuicaoSaldoDeposito(Request $request, $id)
     {
         $model = Marca::findOrFail($id);
-        // $ret = VendaMensalRepository::atualizarMarca($model);
-        $ret = DistribuicaoRepository::criarPlanilhaDistribuicaoSaldoDeposito($m);
-        $ret = ComprasRepository::criarPlanilhaPedido($model);
+        $res = DistribuicaoRepository::criarPlanilhaDistribuicaoSaldoDeposito($model);
         return response()->json($res, 200);
     }
 }

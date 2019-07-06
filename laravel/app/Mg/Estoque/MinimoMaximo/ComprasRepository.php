@@ -380,5 +380,6 @@ class ComprasRepository
         }
         $writer->save($arquivo);
         chmod($arquivo, 0666);
+        return $arquivo;
     }
 }
