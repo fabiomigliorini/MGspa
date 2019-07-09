@@ -6,38 +6,64 @@
     </template>
 
     <template slot="drawer">
+      <q-list>
 
-      <q-list highlight>
-
-        <q-item link v-for="(item, index) in dados.Permissoes" :key="item.codpermissao" v-bind:class="{ 'active': tabs == index }">
-          <q-item-main @click.native="tab(index)">
-            <span style="word-wrap: break-word;">{{ index }}</span>
-          </q-item-main>
+        <q-item clickable v-ripple v-for="(item, index) in dados.Permissoes" :key="item.codpermissao" v-bind:class="{ 'active': tabs == index }">
+          <q-item-section @click.native="tab(index)" class="text-subtitle1">
+            {{ index }}
+          </q-item-section>
         </q-item>
 
       </q-list>
-
     </template>
 
-    <div slot="content">
-      <div class="layout-padding">
-        <q-list highlight  v-if="permissoes">
-          <q-item>
-            <q-item-main class="col-xs-4"></q-item-main>
-            <q-item-main class="col-sm-1" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
+    <div slot="content" v-if="permissoes">
+      <div class="row q-pa-md">
+        <div class="col-12">
+
+
+
+          <div class="row justify-center">
+            <div class="col-sm-5 col-md-4 col-lg-2"/>
+            <div class=" col-1 gt-xs text-center" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
               {{ grupo.grupousuario.substr(0, 3) }}
-            </q-item-main>
-          </q-item>
-          <q-item v-for="(permissao, index) in permissoes" :key="permissao">
-            <q-item-main class="col-xs-4">
-              <q-item-tile class="permissao-item-title">{{ index }}</q-item-tile>
-            </q-item-main>
-            <q-item-main class="col-sm-1" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
-              <q-btn @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-positive" icon="check_box" v-if="permissao.codgrupousuario.includes(grupo.codgrupousuario)"></q-btn>
-              <q-btn @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)" flat round small class="text-grey" icon="check_box_outline_blank" v-else></q-btn>
-            </q-item-main>
-          </q-item>
-        </q-list>
+            </div>
+          </div>
+
+
+          <div class="row justify-center" v-for="(permissao, index) in permissoes" :key="permissao">
+            <div class="col-xs-12 col-sm-5 col-md-4 col-lg-2 text-subtitle1 self-center">
+              {{ index }}
+            </div>
+
+            <div class="col-12 lt-sm">
+              <div class="row justify-center">
+                <div class="col-2 text-center text-grey-7" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
+                  {{ grupo.grupousuario.substr(0, 3) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xs-2 col-sm-1 col-md-1 col-lg-1 text-center" v-for="grupo in dados.Grupos" :key="grupo.codgrupousuario">
+              <q-btn @click.prevent="removePermissao(tabs, index, grupo.codgrupousuario)"
+                     flat round small
+                     class="text-positive"
+                     icon="check_box"
+                     v-if="permissao.codgrupousuario.includes(grupo.codgrupousuario)"
+              />
+              <q-btn @click.prevent="adicionaPermissao(tabs, index, grupo.codgrupousuario)"
+                     flat round small
+                     class="text-grey"
+                     icon="check_box_outline_blank"
+                     v-else
+              />
+            </div>
+            <div class="col-12 lt-sm">
+              <q-separator/>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </mg-layout>

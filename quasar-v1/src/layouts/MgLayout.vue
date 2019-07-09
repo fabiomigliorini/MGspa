@@ -52,23 +52,23 @@
     <!-- Right Side Panel -->
     <q-drawer v-model="rightSide" side="right" behavior="mobile" bordered>
 
-
-
       <q-item>
-        <q-item-section link to="/inbox/1" v-if="perfil.avatar">
-          <q-item-section avatar>
-            <img :src="perfil.avatar">
-          </q-item-section>
+        <q-item-section avatar link to="/inbox/1" v-if="perfil.avatar">
+          <img :src="perfil.avatar">
         </q-item-section>
 
-        <q-item-section @click.native="$router.push('/usuario/perfil')" class="cursor-pointer">
+        <q-item-section @click.native="$router.push('/usuario/perfil')" class="cursor-pointer text-subtitle1">
           {{ perfil.usuario }}
+          <q-tooltip anchor="center left" self="center middle">
+            Ver meu perfil
+          </q-tooltip>
         </q-item-section>
 
-        <q-item-section avatar>
-          <q-item-section @click.native="logout" class="cursor-pointer">
-            <q-icon name="exit_to_app"/>
-          </q-item-section>
+        <q-item-section avatar @click.native="logout" class="cursor-pointer">
+          <q-btn icon="exit_to_app" flat/>
+          <q-tooltip>
+            Sair do sistema
+          </q-tooltip>
         </q-item-section>
       </q-item>
 

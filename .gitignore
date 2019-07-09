@@ -2,3 +2,5 @@ producao/
 api
 
 laravel/public/public
+
+laravel/app/Libraries/SlimImageCropper/Slim\.php
