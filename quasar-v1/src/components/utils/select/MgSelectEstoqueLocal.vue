@@ -1,29 +1,31 @@
 <template>
-  <q-select v-model="value" :options="options" :label="label" clearable @change="handleChange"/>
+  <q-select v-model="model" :options="options" :label="label" clearable @input="selected"/>
 </template>
 
 <script>
 export default {
   name: 'mg-select-estoque-local',
-  props: ['value', 'label', 'loadData'],
+  props: ['label', 'loadData'],
   data () {
     return {
+      model: null,
       options: []
     }
   },
   watch:{
     loadData(val){
-      if(val){
+      if(val === true){
         this.getEstoqueLocal()
       }
     }
   },
   methods: {
-    handleChange (newVal) {
-      this.$emit('input', newVal)
+    selected (val) {
+      let vm = this;
+      vm.$emit('input', val.value)
     },
     getEstoqueLocal: function () {
-      let vm = this
+      let vm = this;
       vm.$axios.get('estoque-local', {params: {fields: 'codestoquelocal,estoquelocal', sort: 'estoquelocal'}}).then(function (request) {
         vm.options = request.data.data.map(estoquelocal => {
           return {

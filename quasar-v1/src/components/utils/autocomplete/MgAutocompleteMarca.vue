@@ -1,71 +1,59 @@
 <template>
-  <!--<q-search clearable v-model="terms"  :init="init" :placeholder="placeholder">
-    <q-autocomplete
-      @search="search"
-      @selected="selected"
-      :min-characters="3"
-      :max-results="90"
-      :debounce="600"
-    />
-  </q-search>-->
+  <q-select v-model="model"
+            clearable
+            use-input
+            input-debounce="200"
+            :label="label"
+            :options="options"
+            @filter="search"
+            @input="selected"
+  >
+    <template v-slot:option="scope">
+      <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
+        <q-item-section>
+          <q-item-label v-html="scope.opt.label" ></q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+
+  </q-select>
 </template>
 
 <script>
 
 export default {
   name: 'mg-autocomplete-marca',
-  props: ['init', 'placeholder'],
-  components: {
-  },
+  props: ['label'],
   data () {
     return {
-      terms: ''
-    }
-  },
-  watch: {
-    terms: {
-      handler: function (val, oldVal) {
-        if (val.length === 0) {
-          let vm = this
-          vm.$emit('input', null)
-        }
-      }
-    },
-    init: {
-      handler: function (val, oldVal) {
-        if (val !== null) {
-          this.initSelect(val)
-        }
-      }
+      model: null,
+      options: [],
     }
   },
   methods: {
-    initSelect (codmarca) {
-      let vm = this
-      vm.$axios.get('marca/' + codmarca).then(response => {
-        let marca = response.data
-        vm.terms = marca.marca
-      }).catch(function (error) {
-        console.log(error)
-      })
+    selected (val) {
+      let vm = this;
+      vm.$emit('input', val.value)
     },
-    selected (item) {
-      let vm = this
-      vm.$emit('input', item.id)
+    search (val, update, abort) {
+      let vm = this;
+      if (val.length < 3) {
+        abort();
+        return
+      }
+      setTimeout(() => {
+        update(() => {
+          let params = { marca: val };
+          vm.$axios.get('marca/autocompletar', { params }).then(response => {
+            vm.options = response.data.map(res => {
+              res.label = res.label;
+              res.value = res.id;
+              return res;
+            });
+          }).catch(function (error) {})
+        });
+      }, 500)
     },
-    search (terms, done) {
-      let vm = this
-      let params = {}
-      params.sort = 'marca'
-      params.marca = terms
-      vm.$axios.get('marca/autocompletar', { params }).then(response => {
-        let results = response.data
-        done(results)
-      }).catch(function (error) {
-        done([])
-        console.log(error.response)
-      })
-    }
   }
 }
 </script>

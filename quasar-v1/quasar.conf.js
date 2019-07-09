@@ -71,6 +71,12 @@ module.exports = function (ctx) {
         'QMenu',
         'QExpansionItem',
         'QChip',
+        'QDate',
+        'QTabs',
+        'QTab',
+        'QRouteTab',
+        'QTimeline',
+        'QTimelineEntry',
       ],
       config: {
         notify: { /* Notify defaults */ }
@@ -106,8 +112,8 @@ module.exports = function (ctx) {
       open: true // opens browser window automatically
     },
 
-    // animations: 'all', // --- includes all animations
-    animations: [],
+    // embedding all animations
+    animations: 'all',
 
     ssr: {
       pwa: false

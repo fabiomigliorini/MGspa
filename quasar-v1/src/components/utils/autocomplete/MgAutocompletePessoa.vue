@@ -6,12 +6,10 @@
             :label="label"
             :options="options"
             @filter="search"
+            @input="selected"
   >
     <template v-slot:option="scope">
-      <q-item
-        v-bind="scope.itemProps"
-        v-on="scope.itemEvents"
-      >
+      <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
         <q-item-section>
           <q-item-label v-html="scope.opt.pessoa" ></q-item-label>
           <q-item-label caption>
@@ -32,8 +30,6 @@
 export default {
   name: 'mg-autocomplete-pessoa',
   props: ['label'],
-  components: {
-  },
   data () {
     return {
       model: null,
@@ -41,6 +37,10 @@ export default {
     }
   },
   methods: {
+    selected (val) {
+      let vm = this;
+      vm.$emit('input', val.value)
+    },
     search (val, update, abort) {
       let vm = this;
       if (val.length < 3) {

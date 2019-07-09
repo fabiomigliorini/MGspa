@@ -1,13 +1,14 @@
 <template>
-  <q-select v-model="value" :options="options" :label="label" clearable @change="handleChange"/>
+  <q-select v-model="model" :options="options" :label="label" clearable @change="selected"/>
 </template>
 
 <script>
 export default {
   name: 'mg-select-filial',
-  props: ['value', 'label', 'loadData'],
+  props: ['label', 'loadData'],
   data () {
     return {
+      model: null,
       options: []
     }
   },
@@ -19,8 +20,8 @@ export default {
     }
   },
   methods: {
-    handleChange (newVal) {
-      this.$emit('input', newVal)
+    selected (val) {
+      this.$emit('input', val.value)
     },
     getFiliais() {
       let vm = this;

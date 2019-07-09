@@ -4,76 +4,56 @@
       Conferência de estoque
     </template>
     <div slot="content">
-      <div class="layout-padding">
-        <div class="row">
-          <div class="col-xs-12 col-sm-6 col-md-4">
-            <div class="row">
-              <div class="q-caption">Conferir Produtos de</div>
-            </div>
+      <div class="row q-pa-md justify-center">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
 
-            <!-- Codestoquelocal -->
-            <div class="row">
-              <div class="col">
-                <mg-select-estoque-local
-                  label="Local"
-                  v-model="data.codestoquelocal"
-                  required>
-                </mg-select-estoque-local>
-                <mg-erros-validacao :erros="erros.codestoquelocal"></mg-erros-validacao>
-              </div>
-            </div>
+          <div class="text-subtitle2 text-grey-7 col-12">Conferir Produtos de</div>
 
-            <!-- Tipo - Fisico/Fiscal -->
-            <div class="row">
-              <div class="col">
-                <q-select float-label="Tipo" v-model="data.fiscal" :options="tipos"/>
-                <mg-erros-validacao :erros="erros.fiscal"></mg-erros-validacao>
-              </div>
-            </div>
-
-            <!-- Codigo da Marca -->
-            <div class="row">
-              <div class="col">
-                <mg-autocomplete-marca placeholder="Marca" v-model="data.codmarca" :init="data.codmarca"></mg-autocomplete-marca>
-                <mg-erros-validacao :erros="erros.codmarca"></mg-erros-validacao>
-              </div>
-            </div>
-
-            <!-- Data para jogar o movimento do estoque -->
-            <div class="row">
-              <div class="col">
-                <q-input type="datetime-local" v-model="data.data" stack-label="Ajustar Estoque em" align="center" clearable />
-                <mg-erros-validacao :erros="erros.data"></mg-erros-validacao>
-              </div>
-            </div>
-
+          <!-- Codestoquelocal -->
+          <div class="col-12">
+            <mg-select-estoque-local label="Local" v-model="data.codestoquelocal" :loadData="loadFields"/>
           </div>
+
+          <!-- Tipo - Fisico/Fiscal -->
+          <div class="col-12">
+            <q-select label="Tipo" v-model="data.fiscal" :options="tipos" map-options/>
+          </div>
+
+          <!-- Codigo da Marca -->
+          <div class="col-12">
+            <mg-autocomplete-marca label="Marca" v-model="data.codmarca" :init="data.codmarca"/>
+          </div>
+
+          <!-- Data para jogar o movimento do estoque -->
+          <div class="col-12">
+            <q-input type="datetime-local" v-model="data.data" label="Ajustar Estoque em" align="center" clearable />
+          </div>
+
           <q-page-sticky corner="bottom-right" :offset="[32, 32]">
-            <q-btn round color="primary" icon="done" @click.prevent="iniciarConferencia()" />
+            <q-btn fab color="primary" icon="done" @click.prevent="iniciarConferencia()" />
           </q-page-sticky>
+
         </div>
       </div>
+
     </div>
   </mg-layout>
 </template>
 
 <script>
-
 import MgSelectEstoqueLocal from '../../utils/select/MgSelectEstoqueLocal'
 import MgLayout from '../../../layouts/MgLayout'
-import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutocompleteMarca from '../../utils/autocomplete/MgAutocompleteMarca'
-
 export default {
   name: 'estoque-saldo-conferencia-index',
   components: {
     MgLayout,
     MgSelectEstoqueLocal,
-    MgErrosValidacao,
     MgAutocompleteMarca
   },
   data () {
     return {
+      loadFields: false,
       tipos: [
           {
             label: 'Fisico',
@@ -98,30 +78,30 @@ export default {
   },
   methods: {
     validaCampos: function () {
-      var ret = true
+      var ret = true;
       if (this.data.codestoquelocal == null) {
-        this.erros.codestoquelocal = ['Selecione o Local']
+        this.erros.codestoquelocal = ['Selecione o Local'];
         ret = false
       } else {
         this.erros.codestoquelocal = []
       }
 
       if (this.data.codmarca == null) {
-        this.erros.codmarca = ['Selecione a Marca']
+        this.erros.codmarca = ['Selecione a Marca'];
         ret = false
       } else {
         this.erros.codmarca = []
       }
 
       if (this.data.fiscal == null) {
-        this.erros.fiscal = ['Selecione o Tipo']
+        this.erros.fiscal = ['Selecione o Tipo'];
         ret = false
       } else {
         this.erros.fiscal = []
       }
 
       if (this.data.data == null) {
-        this.erros.data = ['Selecione a Data']
+        this.erros.data = ['Selecione a Data'];
         ret = false
       } else {
         this.erros.data = []
@@ -144,7 +124,8 @@ export default {
       )
     },
   },
-  created () {
+  mounted () {
+    this.loadFields = true;
     if (this.data.data == null) {
       this.data.data = this.moment().format('YYYY-MM-DDTHH:mm')
     }

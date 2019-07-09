@@ -1,40 +1,36 @@
 <template>
-  <q-select
-    :value="value"
-    :options="data"
-    :float-label="label"
-    @change="handleChange"
-    clearable
-  />
+  <q-select v-model="model" :options="options" :label="label" @change="selected" clearable />
 </template>
 
 <script>
-
-import { QSelect } from 'quasar'
-
 export default {
   name: 'mg-select-natureza-operacao',
-  props: ['value', 'label'],
-  components: {
-    QSelect
-  },
+  props: ['label', 'loadData'],
   data () {
     return {
-      data: []
+      model: null,
+      options: []
+    }
+  },
+  watch:{
+    loadData(val){
+      if(val === true){
+        this.getNaturezaOperacao()
+      }
     }
   },
   methods: {
-    handleChange (newVal) {
-      this.$emit('input', newVal)
+    selected (val) {
+      this.$emit('input', val.value)
     },
-    loadData: function () {
-      let vm = this
+    getNaturezaOperacao: function () {
+      let vm = this;
       let params= {
         fields: 'naturezaoperacao,codnaturezaoperacao',
         sort: 'naturezaoperacao'
-      }
+      };
       vm.$axios.get('natureza-operacao/autocompletar', {params}).then(function (request) {
-        vm.data = request.data.data.map(natop => {
+        vm.options = request.data.data.map(natop => {
           return {
             value: natop.codnaturezaoperacao,
             label: natop.naturezaoperacao
@@ -45,9 +41,6 @@ export default {
       })
     }
   },
-  created () {
-    this.loadData()
-  }
 }
 </script>
 
