@@ -29,7 +29,7 @@ module.exports = function (ctx) {
 
     framework: {
       // iconSet: 'ionicons-v4',
-      // lang: 'de', // Quasar language
+       lang: 'pt-br', // Quasar language
 
       // all: true, // --- includes everything; for dev only!
 
@@ -77,6 +77,8 @@ module.exports = function (ctx) {
         'QRouteTab',
         'QTimeline',
         'QTimelineEntry',
+        'QPopupProxy',
+        'QSlideItem',
       ],
       config: {
         notify: { /* Notify defaults */ }

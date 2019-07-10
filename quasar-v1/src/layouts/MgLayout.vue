@@ -247,4 +247,7 @@ export default {
 .icone-app {
   font-size: 50px
 }
+.space-end{
+  margin-bottom: 300px;
+}
 </style>
