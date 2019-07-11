@@ -26,7 +26,15 @@
 
           <!-- Data para jogar o movimento do estoque -->
           <div class="col-12">
-            <q-input type="datetime-local" v-model="data.data" label="Ajustar Estoque em" align="center" clearable />
+            <q-input label="Ajustar Estoque em" v-model="data.data" mask="##/##/####" :rules="['data.data']">
+              <template v-slot:append>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                    <q-date mask="DD-MM-YYYY" v-model="data.data" @input="() => $refs.qDateProxy.hide()" minimal />
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
           </div>
 
           <q-page-sticky corner="bottom-right" :offset="[32, 32]">

@@ -79,6 +79,7 @@ module.exports = function (ctx) {
         'QTimelineEntry',
         'QPopupProxy',
         'QSlideItem',
+        'QLinearProgress',
       ],
       config: {
         notify: { /* Notify defaults */ }

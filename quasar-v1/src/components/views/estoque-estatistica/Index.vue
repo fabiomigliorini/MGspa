@@ -18,7 +18,7 @@
 
         <!-- LOCAIS -->
         <q-item dense v-for="local in item.locais" :key="local.codprodutovariacao">
-          <q-item-section class="text-subtitle2">
+          <q-item-section>
             <q-item-label>{{ local.estoquelocal }}</q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -28,7 +28,7 @@
 
         <!-- TODOS LOCAIS -->
         <q-item dense>
-          <q-item-section class="text-subtitle2">
+          <q-item-section>
             <q-item-label>Todos</q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -45,7 +45,7 @@
             <q-item-label class="text-subtitle1 text-grey-7 q-pa-sm">Variações Ativas</q-item-label>
             <q-item dense v-for="variacao in variacoesAtivas" :key="variacao.codprodutovariacao">
               <q-item-section>
-                <q-item-label class="text-subtitle2">{{ variacao.variacao }}</q-item-label>
+                <q-item-label>{{ variacao.variacao }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
@@ -59,7 +59,7 @@
             <q-item-label class="text-subtitle1 text-grey-7">Variações Descontinuadas</q-item-label>
             <q-item dense v-for="variacao in variacoesDescontinuadas" :key="variacao.codprodutovariacao">
               <q-item-section>
-                <q-item-label class="text-subtitle2">{{ variacao.variacao }}</q-item-label>
+                <q-item-label>{{ variacao.variacao }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
@@ -73,7 +73,7 @@
             <q-item-label class="text-grey-7 text-subtitle1">Variações Inativas</q-item-label>
             <q-item dense v-for="variacao in variacoesInativas" :key="variacao.codprodutovariacao">
               <q-item-section>
-                <q-item-label class="text-subtitle2">{{ variacao.variacao }}</q-item-label>
+                <q-item-label>{{ variacao.variacao }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-radio v-model="filter.codprodutovariacao" :val="variacao.codprodutovariacao" />
@@ -85,7 +85,7 @@
           <!-- TODAS VARIACOES -->
           <q-item dense>
             <q-item-section>
-              <q-item-label class="text-subtitle2">Todos</q-item-label>
+              <q-item-label>Todos</q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-radio v-model="filter.codprodutovariacao" val="" />

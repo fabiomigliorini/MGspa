@@ -37,6 +37,9 @@ export default {
       })
     },
   },
+  mounted() {
+    this.getFiliais()
+  }
 }
 </script>
 
