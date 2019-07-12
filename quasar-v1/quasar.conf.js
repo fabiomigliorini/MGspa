@@ -80,6 +80,7 @@ module.exports = function (ctx) {
         'QPopupProxy',
         'QSlideItem',
         'QLinearProgress',
+        'QOptionGroup',
       ],
       config: {
         notify: { /* Notify defaults */ }

@@ -5,139 +5,114 @@
     </template>
 
     <!-- Menu Drawer (Esquerda) -->
-    <template slot="drawer" width="200" style="width: 200px;">
-      <q-list no-border>
+    <template slot="drawer">
+      <q-list>
 
         <!-- Local -->
-        <q-item tag="label">
-          <q-field icon="place" class="col-12">
-            <q-item-main>
-              <mg-select-estoque-local
-              label="local"
-              v-model="filter.codestoquelocal"
-              required />
-            </q-item-main>
-          </q-field>
+        <q-item dense>
+          <q-item-section avatar>
+            <q-icon name="place"/>
+          </q-item-section>
+          <q-item-section>
+            <mg-select-estoque-local label="local" v-model="filter.codestoquelocal"/>
+          </q-item-section>
         </q-item>
 
         <!-- Origem -->
-        <q-item tag="label">
-          <q-item-main>
-            <q-field icon="place" class="col-12">
-              <mg-select-estoque-local
-                label="Origem"
-                v-model="filter.codestoquelocalorigem"
-                required />
-            </q-field>
-          </q-item-main>
+        <q-item dense>
+          <q-item-section avatar>
+            <q-icon name="place"/>
+          </q-item-section>
+          <q-item-section>
+            <mg-select-estoque-local label="Origem" v-model="filter.codestoquelocalorigem"/>
+          </q-item-section>
         </q-item>
 
         <!-- Grupo Economico -->
-        <q-item tag="label">
-          <q-item-main>
-            <q-field icon="business" class="col-12">
-              <q-input
-                float-label="Grupo Economico"
-                type = "number"
-                label="local"
-                v-model="filter.codgrupoeconomico"
-                required/>
-              </q-field>
-          </q-item-main>
+        <q-item dense>
+          <q-item-section avatar>
+            <q-icon  name="business"/>
+          </q-item-section>
+          <q-item-section>
+            <q-input label="Grupo Econômico" type="number" v-model="filter.codgrupoeconomico"/>
+          </q-item-section>
         </q-item>
 
         <!-- Tipo -->
-        <q-item tag="label">
-          <q-item-main>
-            <q-field icon="business_center" class="col-12">
-              <q-option-group
-                type="checkbox"
-                v-model="filter.indtipo"
-                :options="[
-                  { label: 'Compra', value: '10' },
-                  { label: 'Transferência', value: '20' },
-                  { label: 'Venda', value: '30' }
-                ]"
-                />
-            </q-field>
-          </q-item-main>
+        <q-item dense>
+          <q-item-section>
+            <q-icon name="business_center"/>
+          </q-item-section>
+          <q-item-section>
+            <q-option-group type="checkbox" v-model="filter.indtipo"
+                            :options="[ { label: 'Compra', value: '10' },
+                                        { label: 'Transferência', value: '20' },
+                                        { label: 'Venda', value: '30' }
+                                      ]"
+            />
+          </q-item-section>
         </q-item>
 
-        <!-- Destino -->
-        <!-- <q-item tag="label">
-          <q-item-main>
-            <mg-select-estoque-local
-            label="Destino"
-            v-model="filter.codestoquelocaldestino"
-            required>
-          </mg-select-estoque-local>
-          </q-item-main>
-        </q-item> -->
+       <!--Destino-->
+      <!-- <q-item dense>
+        <q-item-section>
+          <mg-select-estoque-local label="Destino" v-model="filter.codestoquelocaldestino"/>
+        </q-item-section>
+      </q-item>-->
 
       </q-list>
     </template>
 
     <div slot="content" >
+      <q-infinite-scroll :handler="buscaListagem" ref="infiniteScroll" v-if="pedidos.length > 0">
+        <q-list separator>
 
-      <div v-if="pedidos.length > 0">
+          <q-item v-for="pedido in pedidos" :key="pedido.codpedido" @click.native="abrirPedido(pedido.codpedido)">
+            <q-item-section>
+              <q-item-label>
+                {{ pedido.tipo }}
+                {{ pedido.estoquelocalorigem }}
+                {{ pedido.estoquelocal }}
+                {{ pedido.grupoeconomico }}
+              </q-item-label>
 
-      <q-infinite-scroll :handler="buscaListagem" ref="infiniteScroll">
+              <q-item-label caption>
+                {{ numeral(pedido.itens).format('0,0') }} Itens
+                <template v-if="pedido.observacoes">
+                  <br /> {{ pedido.observacoes }}
+                </template>
+                <!-- {{ pedido.variacao }} -->
+              </q-item-label>
+            </q-item-section>
 
-      <q-list highlight inset-separator>
+            <q-item-section side>
+              <q-tooltip>
+                Criado {{ moment(pedido.criacao).format('LLLL') }} por {{ pedido.usuariocriacao }}.
+              </q-tooltip>
+              <q-item-label>
+                {{ moment(pedido.criacao).fromNow() }}
+                <!-- {{ numeral(parseFloat(pedido.saldoquantidade)).format('0,0') }} -->
+                <!-- {{ pedido.um }} -->
+              </q-item-label>
+              <q-item-label>
+                <q-icon name="watch_later" color="primary"/>
+              </q-item-label>
+            </q-item-section>
 
-        <q-item multiline v-for="pedido in pedidos" :key="pedido.codpedido" @click.native="abrirPedido(pedido.codpedido)">
-          <q-item-main>
-            <q-item-tile label lines="1">
-              {{ pedido.tipo }}
-              {{ pedido.estoquelocalorigem }}
-              {{ pedido.estoquelocal }}
-              {{ pedido.grupoeconomico }}
-            </q-item-tile>
-            <q-item-tile sublabel lines="1">
-              {{ numeral(pedido.itens).format('0,0') }} Itens
-              <template v-if="pedido.observacoes">
-                <br /> {{ pedido.observacoes }}
-              </template>
-              <!-- {{ pedido.variacao }} -->
-            </q-item-tile>
-          </q-item-main>
-
-          <q-item-side right>
-            <q-tooltip>
-              Criado
-              {{ moment(pedido.criacao).format('LLLL') }}
-              por {{ pedido.usuariocriacao }}.
-            </q-tooltip>
-            <q-item-tile stamp>
-              {{ moment(pedido.criacao).fromNow() }}
-              <!-- {{ numeral(parseFloat(pedido.saldoquantidade)).format('0,0') }} -->
-              <!-- {{ pedido.um }} -->
-            </q-item-tile>
-
-
-            <q-item-tile icon="watch_later" color="primary" />
-          </q-item-side>
-
-        </q-item>
-
-      </q-list>
+          </q-item>
+        </q-list>
       </q-infinite-scroll>
-      </div>
-
       <!-- <q-page-sticky position="bottom-right" :offset="[18, 18]">
         <q-btn round color="primary" @click="confirmarRequisicoes()" icon="done" />
       </q-page-sticky> -->
     </div>
   </mg-layout>
 </template>
-
 <script>
-
 import MgSelectEstoqueLocal from '../../utils/select/MgSelectEstoqueLocal'
 import MgLayout from '../../../layouts/MgLayout'
-
 export default {
-  name: 'estoque-saldo-conferencia-index',
+  name: 'pedido-view',
   components: {
     MgLayout,
     MgSelectEstoqueLocal
@@ -184,14 +159,14 @@ export default {
         codestoquelocalorigem: this.filter.codestoquelocalorigem,
         codgrupoeconomico: this.filter.codgrupoeconomico,
         page: (index + 1)
-      }
+      };
 
       // busca registros
-      let vm = this
+      let vm = this;
       vm.$axios.get('pedido', { params }).then(function(request){
 
         // concatena no array de pedidos os registros retornados pela api
-        vm.pedidos = vm.pedidos.concat(request.data)
+        vm.pedidos = vm.pedidos.concat(request.data);
 
         // se foi chamado pelo scroll infinito
         if (done) {
@@ -200,8 +175,8 @@ export default {
           if (request.data.length === 0) {
             vm.$q.notify({
               message: 'Fim!',
-              type: 'warning',
-            })
+              color: 'warning',
+            });
             vm.$refs.infiniteScroll.stop()
 
           // se veio mais registros, continua scroll infinito
@@ -210,7 +185,7 @@ export default {
               message: 'Mais ' + request.data.length + ' registros carregados!',
               color: 'primary',
               icon: 'add',
-            })
+            });
             vm.$refs.infiniteScroll.resume()
           }
           done()
@@ -222,15 +197,15 @@ export default {
       }).catch(function(error) {
         vm.$q.notify({
           message: 'Erro ao carregar Pedidos!',
-          type: 'negative',
-        })
+          color: 'negative',
+        });
         console.log(error)
       })
     },
 
   },
   mounted() {
-    this.id = this.$route.params.id
+    this.id = this.$route.params.id;
     console.log(this.$route.params)
   }
 }
