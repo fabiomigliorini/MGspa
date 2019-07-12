@@ -14,9 +14,9 @@
               <q-input v-model="data.usuario" label="Usuário"/>
               <q-input type="password" v-model="data.senha" label="Senha" />
               <mg-autocomplete-pessoa label="Pessoa" v-model="data.codpessoa"></mg-autocomplete-pessoa>
-              <mg-select-filial :loadData="isModalOpened" label="Filial" v-model="data.codfilial"/>
-              <mg-select-impressora :loadData="isModalOpened" label="Impressora Matricial" v-model="data.impressoramatricial"/>
-              <mg-select-impressora :loadData="isModalOpened" label="Impressora Térmica"  v-model="data.impressoratermica"/>
+              <mg-select-filial label="Filial" v-model="data.codfilial"/>
+              <mg-select-impressora label="Impressora Matricial" v-model="data.impressoramatricial"/>
+              <mg-select-impressora label="Impressora Térmica"  v-model="data.impressoratermica"/>
             </div>
           </div>
         </form>

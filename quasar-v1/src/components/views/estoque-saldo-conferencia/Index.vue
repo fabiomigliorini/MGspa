@@ -11,7 +11,7 @@
 
           <!-- Codestoquelocal -->
           <div class="col-12">
-            <mg-select-estoque-local label="Local" v-model="data.codestoquelocal" :loadData="loadFields"/>
+            <mg-select-estoque-local label="Local" v-model="data.codestoquelocal"/>
           </div>
 
           <!-- Tipo - Fisico/Fiscal -->
