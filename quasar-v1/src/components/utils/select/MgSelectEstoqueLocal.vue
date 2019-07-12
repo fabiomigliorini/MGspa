@@ -5,18 +5,11 @@
 <script>
 export default {
   name: 'mg-select-estoque-local',
-  props: ['label', 'loadData'],
+  props: ['label'],
   data () {
     return {
       model: null,
       options: []
-    }
-  },
-  watch:{
-    loadData(val){
-      if(val === true){
-        this.getEstoqueLocal()
-      }
     }
   },
   methods: {
@@ -38,6 +31,9 @@ export default {
       })
     }
   },
+  mounted() {
+    this.getEstoqueLocal()
+  }
 }
 </script>
 

@@ -18,11 +18,11 @@ module.exports = function (ctx) {
     extras: [
       // 'ionicons-v4',
       // 'mdi-v3',
-      // 'fontawesome-v5',
       // 'eva-icons',
       // 'themify',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
+      'fontawesome-v5',
       'roboto-font', // optional, you are not bound to it
       'material-icons' // optional, you are not bound to it
     ],
@@ -81,6 +81,8 @@ module.exports = function (ctx) {
         'QSlideItem',
         'QLinearProgress',
         'QOptionGroup',
+        'QTime',
+        'QCheckbox',
       ],
       config: {
         notify: { /* Notify defaults */ }

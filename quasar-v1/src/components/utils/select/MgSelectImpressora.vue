@@ -5,18 +5,11 @@
 <script>
 export default {
   name: 'mg-select-impressora',
-  props: ['label', 'loadData'],
+  props: ['label'],
   data () {
     return {
       model: null,
       options: []
-    }
-  },
-  watch:{
-    loadData(val){
-      if(val){
-        this.getImpressoras()
-      }
     }
   },
   methods: {
@@ -37,6 +30,9 @@ export default {
       })
     }
   },
+  mounted() {
+    this.getImpressoras()
+  }
 }
 </script>
 

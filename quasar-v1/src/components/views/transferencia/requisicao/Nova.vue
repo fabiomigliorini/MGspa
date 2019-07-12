@@ -5,44 +5,25 @@
     </template>
 
     <template slot="tabHeader">
-      <!-- <q-tabs v-model="filter.conferidos"> -->
-      <q-tabs>
-        <q-tab slot="title" name="produtos" label="Produtos" default></q-tab>
-        <q-tab slot="title" name="faltando" label="Faltando" default></q-tab>
-        <q-tab slot="title" name="separar" label="Separar"></q-tab>
-        <q-tab slot="title" name="conferir" label="Separado"></q-tab>
-        <q-tab slot="title" name="transito" label="Conferido"></q-tab>
-        <q-tab slot="title" name="entregue" label="Entregue"></q-tab>
-      </q-tabs>
-
-      <q-checkbox v-model="filtro.selecionartodos"></q-checkbox>
-
+      <q-checkbox color="secondary" v-model="filtro.selecionartodos"></q-checkbox>
     </template>
 
     <!-- Menu Drawer (Esquerda) -->
-    <template slot="drawer" width="200" style="width: 200px;">
-      <q-list no-border>
+    <template slot="drawer">
+      <q-list>
 
         <!-- Origem -->
-        <q-item tag="label">
-          <q-item-main>
-            <mg-select-estoque-local
-            label="Origem"
-            v-model="filtro.codestoquelocalorigem"
-            required>
-          </mg-select-estoque-local>
-          </q-item-main>
+        <q-item dense>
+          <q-item-section>
+            <mg-select-estoque-local label="Origem" v-model="filtro.codestoquelocalorigem"/>
+          </q-item-section>
         </q-item>
 
         <!-- Destino -->
-        <q-item tag="label">
-          <q-item-main>
-            <mg-select-estoque-local
-            label="Destino"
-            v-model="filtro.codestoquelocaldestino"
-            required>
-          </mg-select-estoque-local>
-          </q-item-main>
+        <q-item dense>
+          <q-item-section>
+            <mg-select-estoque-local label="Destino" v-model="filtro.codestoquelocaldestino"/>
+          </q-item-section>
         </q-item>
 
       </q-list>
@@ -50,26 +31,36 @@
 
     <div slot="content">
 
+      <q-tabs v-model="tabs" inline-label class="bg-primary text-white shadow-2">
+        <q-tab name="produtos" label="Produtos" default></q-tab>
+        <q-tab name="faltando" label="Faltando" default></q-tab>
+        <q-tab name="separar" label="Separar"></q-tab>
+        <q-tab name="conferir" label="Separado"></q-tab>
+        <q-tab name="transito" label="Conferido"></q-tab>
+        <q-tab name="entregue" label="Entregue"></q-tab>
+      </q-tabs>
 
-      <q-list highlight inset-separator>
+      <q-list separator>
 
-        <q-item multiline v-for="produto in produtos" :key="produto.codprodutovariacao">
+        <q-item v-for="produto in produtos" :key="produto.codprodutovariacao">
           <!-- <q-item-side avatar="statics/boy-avatar.png" /> -->
-          <q-item-side>
+          <q-item-section>
             <q-checkbox v-model="produto.selecionado"></q-checkbox>
-          </q-item-side>
+          </q-item-section>
 
-          <q-item-main>
+          <q-item-section>
 
             <q-tooltip>
               <q-chip detail square dense icon="vpn_key">
                 #{{ numeral(produto.codproduto).format('000000') }}
               </q-chip>
               <br />
+
               <q-chip detail square dense icon="local_offer">
                 {{ produto.referencia }}
               </q-chip>
               <br />
+
               <template v-for="barras in produto.barras">
                 <q-chip detail square dense icon="view_column">
                   {{ barras.barras }}
@@ -80,32 +71,25 @@
                 </q-chip>
                 <br />
               </template>
+
             </q-tooltip>
-            <q-item-tile label lines="1">
+            <q-item-label>
               {{ produto.produto }}
               <a :href="'/estoque-estatistica/' + produto.codproduto + '?codprodutovariacao='+produto.codprodutovariacao" target="_blank" tabindex="-1">
                 <q-icon name="multiline_chart" />
               </a>
-            </q-item-tile>
-            <q-item-tile sublabel lines="1">
+            </q-item-label>
+
+            <q-item-label caption>
               {{ produto.variacao }}
-            </q-item-tile>
-          </q-item-main>
+            </q-item-label>
+          </q-item-section>
 
+          <q-item-section class="col-xs-2 col-md-2 col-lg-1">
+            <q-input v-model="produto.transferir" type="number"  min="0" :step="produto.lotetransferencia" :max="produto.saldoquantidade_origem"/>
+          </q-item-section>
 
-          <q-item-main class="col-xs-2 col-md-2 col-lg-1">
-              <q-input
-                v-model="produto.transferir"
-                type="number"
-                align="right"
-                min="0"
-                :step="produto.lotetransferencia"
-                :max="produto.saldoquantidade_origem"
-              />
-          </q-item-main>
-
-
-          <q-item-side right>
+          <q-item-section>
             <q-tooltip>
               Saldo de {{ numeral(parseFloat(produto.saldoquantidade)).format('0,0') }}
               {{ produto.um }}. <br />
@@ -118,17 +102,19 @@
               {{ numeral(parseFloat(produto.saldoquantidade_origem)).format('0,0') }}
               {{ produto.um }}.
             </q-tooltip>
-            <q-item-tile stamp>
+            <q-item-label caption>
               {{ numeral(parseFloat(produto.saldoquantidade)).format('0,0') }}
               {{ produto.um }}
-            </q-item-tile>
+            </q-item-label>
             <!-- {{ numeral(parseFloat(produto.preco)).format('0,0.00') }} -->
 
             <!-- {{ numeral(parseFloat(produto.saldopercentual)).format('0,0') }} -->
 
-            <q-item-tile :icon="bateria(produto.saldopercentual)" :color="corBateria(produto.saldopercentual)" />
+            <q-item-label>
+              <q-icon :name="bateria(produto.saldopercentual)" :color="corBateria(produto.saldopercentual)" />
+            </q-item-label>
             <!-- {{ numeral((parseFloat(produto.saldoquantidade) / parseFloat(produto.estoquemaximo))*100).format('0,0.00') }} -->
-          </q-item-side>
+          </q-item-section>
         </q-item>
 
       </q-list>
@@ -155,6 +141,7 @@ export default {
   },
   data () {
     return {
+      tabs: 'produtos',
       produtos: [],
       filtro: {
         codestoquelocalorigem: 101001,
@@ -189,8 +176,8 @@ export default {
 
     criarRequisicoes: function () {
 
-      let requisicoes = []
-      let vm = this
+      let requisicoes = [];
+      let vm = this;
 
       // monta array com requisicoes
       this.produtos.forEach(function (prod) {
@@ -204,30 +191,30 @@ export default {
           quantidade: prod.transferir
         })
 
-      })
+      });
 
       // se nenhum produto retorna erro
       if (requisicoes.length == 0) {
         this.$q.notify({
-          type: 'negative',
+          color: 'negative',
           message: 'Nenhum produto selecionado!'
-        })
+        });
         return
       }
 
       vm.$axios.post('transferencia/requisicao', { requisicoes }).then(function(request){
         vm.$q.notify({
           message: 'Requisição criada!',
-          type: 'positive',
-        })
+          color: 'positive',
+        });
         vm.carregaListagem()
       }).catch(function(error) {
         vm.$q.notify({
           message: 'Erro ao salvar!',
-          type: 'negative',
-        })
+          color: 'negative',
+        });
         console.log(error)
-      })
+      });
 
       console.log(requisicoes.length)
     },
@@ -259,28 +246,28 @@ export default {
     },
 
     carregaListagem: function () {
-      this.produtos = []
+      this.produtos = [];
       let params = {
         codestoquelocalorigem: this.filtro.codestoquelocalorigem,
         codestoquelocaldestino: this.filtro.codestoquelocaldestino
-      }
+      };
       if (params.codestoquelocalorigem == null || params.codestoquelocaldestino == null) {
         return
       }
       if (params.codestoquelocalorigem == params.codestoquelocaldestino) {
         return
       }
-      let vm = this
+      let vm = this;
       vm.$axios.get('transferencia/produtos-faltando-sem-requisicao', { params }).then(function(request){
         request.data.forEach(function (prod) {
           prod.selecionado = false
-        })
+        });
         vm.produtos = request.data
       }).catch(function(error) {
         vm.$q.notify({
           message: 'Erro ao carregar dados!',
-          type: 'negative',
-        })
+          color: 'negative',
+        });
         console.log(error)
       })
     }

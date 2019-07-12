@@ -19,8 +19,7 @@
         </slot>
       </q-toolbar>
 
-      <slot name="tabHeader">
-      </slot>
+      <slot name="tabHeader"></slot>
 
     </q-header>
 

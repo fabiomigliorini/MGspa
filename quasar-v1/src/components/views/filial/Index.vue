@@ -8,77 +8,75 @@
     <div slot="drawer">
 
       <form>
-        <q-item>
-          <q-item-main>
-            <q-input v-model="filter.filial" float-label="Descrição" :before="[{icon: 'search', handler () {}}]"/>
-          </q-item-main>
+        <q-item dense>
+          <q-item-section avatar>
+            <q-icon name="search"/>
+          </q-item-section>
+          <q-item-section>
+            <q-input v-model="filter.filial" label="Descrição"/>
+          </q-item-section>
         </q-item>
-        <q-list-header>Ativos</q-list-header>
+
+        <q-item-label class="text-subtitle1 q-pa-sm">Ativos</q-item-label>
         <!-- Filtra Ativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumb_up">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
-            <q-radio v-model="filter.inativo" :val="1" />
-          </q-item-side>
+        <q-item dense>
+          <q-item-section avatar>
+            <q-icon name="thumb_up"/>
+          </q-item-section>
+          <q-item-section>
+            Ativos
+          </q-item-section>
+          <q-item-section side>
+            <q-radio v-model="filter.inativo" :val="1"/>
+          </q-item-section>
         </q-item>
 
         <!-- Filtra Inativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumb_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+        <q-item dense>
+          <q-item-section>
+            <q-icon name="thumb_down"/>
+          </q-item-section>
+          <q-item-section>
+            Inativos
+          </q-item-section>
+          <q-item-section side>
             <q-radio v-model="filter.inativo" :val="2" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
 
         <!-- Filtra Ativos e Inativos -->
-        <q-item tag="label">
-          <q-item-side icon="thumbs_up_down">
-          </q-item-side>
-          <q-item-main>
-            <q-item-tile title>Ativos e Inativos</q-item-tile>
-          </q-item-main>
-          <q-item-side right>
+        <q-item dense>
+          <q-item-section avatar>
+            <q-icon name="thumbs_up_down"/>
+          </q-item-section>
+          <q-item-section>
+            Ativos e Inativos
+          </q-item-section>
+          <q-item-section side>
             <q-radio v-model="filter.inativo" :val="9" />
-          </q-item-side>
+          </q-item-section>
         </q-item>
 
       </form>
-
     </div>
-
     <div slot="content">
         <p v-for="item in data">
           {{ item.filial }}
         </p>
     </div>
 
-
-
-
   </mg-layout>
 </template>
 
 <script>
 import MgLayout from '../../../layouts/MgLayout'
-import MgErrosValidacao from '../../utils/MgErrosValidacao'
 import MgAutor from '../../utils/MgAutor'
 import MgNoData from '../../utils/MgNoData'
-
 import { debounce } from 'quasar'
-
 export default {
   name: 'grupo-usuario',
   components: {
     MgLayout,
-    MgErrosValidacao,
     MgAutor,
     MgNoData
   },
@@ -95,7 +93,7 @@ export default {
   watch: {
     filter: {
       handler: function (val, oldVal) {
-        this.page = 1
+        this.page = 1;
         this.loadData(false, null)
       },
       deep: true
@@ -104,7 +102,7 @@ export default {
   methods: {
     // scroll infinito - carregar mais registros
     loadMore (index, done) {
-      this.page++
+      this.page++;
       this.loadData(true, done)
     },
 
@@ -112,20 +110,18 @@ export default {
     loadData: debounce(function (concat, done) {
 
       // inicializa variaveis
-      var vm = this
+      var vm = this;
 
       // salva no Vuex filtro da filial
-      vm.$store.commit('filtroFilial/updateFiltroFilial', vm.filter)
-      var params = vm.filter
-      params.page = this.page
-      params.sort = 'filial'
-      params.fields = 'filial,codfilial,inativo'
-      vm.loading = true
+      vm.$store.commit('filtroFilial/updateFiltroFilial', vm.filter);
+      var params = vm.filter;
+      params.page = this.page;
+      params.sort = 'filial';
+      params.fields = 'filial,codfilial,inativo';
+      vm.loading = true;
 
       // faz chamada api
-      vm.$axios.get('filial', {
-        params
-      }).then(response => {
+      vm.$axios.get('filial', {params}).then(response => {
         // Se for para concatenar, senao inicializa
         if (concat) {
           vm.data = vm.data.concat(response.data.data)
@@ -145,7 +141,7 @@ export default {
         }
 
         // desmarca flag de carregando
-        this.loading = false
+        this.loading = false;
 
         // Executa done do scroll infinito
         if (done) {
@@ -153,32 +149,29 @@ export default {
         }
       })
     }, 500),
-
-
     destroy: function () {
-      let vm = this
+      let vm = this;
       vm.$q.dialog({
         title: 'Excluir',
         message: 'Tem certeza que deseja excluir?',
         ok: 'Excluir',
         cancel: 'Cancelar'
-      }).then(() => {
+      }).onOk(() => {
         vm.$axios.delete('grupo-usuario/' + vm.grupousuario.codgrupousuario).then(function (request) {
           vm.$q.notify({
             message: 'Registro excluido',
             type: 'positive',
-          })
-          vm.filter.grupo = null
-          vm.loadDataGrupos()
+          });
+          vm.filter.grupo = null;
+          vm.loadDataGrupos();
           vm.grupousuario = false
         }).catch(function (error) {
           console.log(error)
         })
       })
     },
-
     refresher (index, done) {
-      this.page++
+      this.page++;
       this.loadData(true, done)
     },
 
@@ -191,7 +184,7 @@ export default {
     }
   },
   created () {
-    this.filter = this.filialState
+    this.filter = this.filialState;
     this.loadData()
   }
 }
