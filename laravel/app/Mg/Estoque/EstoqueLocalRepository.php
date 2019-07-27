@@ -13,6 +13,10 @@ class EstoquelocalRepository extends MgRepository
             $qry->AtivoInativo($filter['inativo']);
         }
 
+        if (!empty($filter['controlaestoque'])) {
+            $qry->where('controlaestoque', $filter['controlaestoque']);
+        }
+
         if (!empty($filter['estoquelocal'])) {
             $qry->palavras('estoquelocal', $filter['estoquelocal']);
         }

@@ -330,7 +330,7 @@ class EstoqueSaldoConferenciaRepository extends MgRepository
 
         if ($elpv = $pv->EstoqueLocalProdutoVariacaoS()->where('codestoquelocal', $codestoquelocal)->first()) {
             if ($es = $elpv->EstoqueSaldoS()->where('fiscal', $fiscal)->first()) {
-                foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'DESC')->whereNull('inativo')->get() as $esc) {
+                foreach ($es->EstoqueSaldoConferenciaS()->orderBy('data', 'DESC')->orderBy('criacao', 'DESC')->whereNull('inativo')->get() as $esc) {
                     $conferencias[] = [
                         'codestoquesaldoconferencia' => $esc->codestoquesaldoconferencia,
                         'data' => $esc->data->toW3cString(),

@@ -128,7 +128,7 @@
       <q-list v-if="data.length > 0">
 
         <!-- Scroll infinito -->
-        <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
+        <q-infinite-scroll @load="loadMore" ref="infiniteScroll">
 
           <!-- Percorre registros  -->
           <template v-for="item in data">

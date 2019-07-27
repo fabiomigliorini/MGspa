@@ -64,7 +64,7 @@
     </template>
 
     <div slot="content" >
-      <q-infinite-scroll :handler="buscaListagem" ref="infiniteScroll" v-if="pedidos.length > 0">
+      <q-infinite-scroll @load="buscaListagem" ref="infiniteScroll" v-if="pedidos.length > 0">
         <q-list separator>
 
           <q-item v-for="pedido in pedidos" :key="pedido.codpedido" @click.native="abrirPedido(pedido.codpedido)">

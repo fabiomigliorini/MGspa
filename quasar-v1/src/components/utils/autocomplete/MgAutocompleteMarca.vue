@@ -1,12 +1,15 @@
 <template>
-  <q-select v-model="model"
-            clearable
-            use-input
-            input-debounce="200"
-            :label="label"
-            :options="options"
-            @filter="search"
-            @input="selected"
+  <q-select
+      outlined
+      v-model="model"
+      use-input
+      input-debounce="200"
+      :label="label"
+      @filter="search"
+      clearable
+      :options="options"
+      @input="selected"
+      :rules="rules"
   >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
@@ -15,7 +18,6 @@
         </q-item-section>
       </q-item>
     </template>
-
   </q-select>
 </template>
 
@@ -23,7 +25,7 @@
 
 export default {
   name: 'mg-autocomplete-marca',
-  props: ['label'],
+  props: ['value', 'label', 'rules'],
   data () {
     return {
       model: null,
@@ -32,8 +34,11 @@ export default {
   },
   methods: {
     selected (val) {
-      let vm = this;
-      vm.$emit('input', val.value)
+      if (!this.model) {
+        this.$emit('input', null)
+        return
+      }
+      this.$emit('input', this.model.value)
     },
     search (val, update, abort) {
       let vm = this;
@@ -54,6 +59,23 @@ export default {
         });
       }, 500)
     },
+
+    init () {
+      if (!this.value) {
+        return
+      }
+      let vm = this;
+      let params = { codmarca: this.value };
+      vm.$axios.get('marca/autocompletar', { params }).then(response => {
+        vm.model = {
+          label: response.data[0].label,
+          value: response.data[0].id,
+        }
+      }).catch(function (error) {})
+    }
+  },
+  mounted() {
+    this.init()
   }
 }
 </script>

@@ -20,7 +20,7 @@
 
       <div>
 
-      <q-infinite-scroll :handler="buscaListagem" ref="infiniteScroll">
+      <q-infinite-scroll @load="buscaListagem" ref="infiniteScroll">
 
       <q-list highlight inset-separator>
 

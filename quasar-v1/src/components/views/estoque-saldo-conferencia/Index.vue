@@ -5,7 +5,7 @@
     </template>
     <div slot="content">
       <div class="row q-pa-md justify-center">
-        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 q-gutter-md">
 
           <div class="text-subtitle2 text-grey-7 col-12">Conferir Produtos de</div>
 
@@ -16,21 +16,32 @@
 
           <!-- Tipo - Fisico/Fiscal -->
           <div class="col-12">
-            <q-select label="Tipo" v-model="data.fiscal" :options="tipos" map-options/>
+            <q-select outlined label="Tipo" v-model="data.fiscal" :options="tipos" map-options/>
           </div>
 
           <!-- Codigo da Marca -->
           <div class="col-12">
-            <mg-autocomplete-marca label="Marca" v-model="data.codmarca" :init="data.codmarca"/>
+            <mg-autocomplete-marca
+              label="Marca"
+              v-model="data.codmarca"
+              :init="data.codmarca"
+              />
           </div>
 
           <!-- Data para jogar o movimento do estoque -->
           <div class="col-12">
-            <q-input label="Ajustar Estoque em" v-model="data.data" mask="##/##/####" :rules="['data.data']">
-              <template v-slot:append>
+            <q-input outlined v-model="data.data" mask="##/##/#### ##:##" input-class="text-center" label="Data de ajuste">
+              <template v-slot:prepend>
                 <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                    <q-date mask="DD-MM-YYYY" v-model="data.data" @input="() => $refs.qDateProxy.hide()" minimal />
+                  <q-popup-proxy transition-show="scale" transition-hide="scale">
+                    <q-date v-model="data.data" mask="DD/MM/YYYY HH:mm" />
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+              <template v-slot:append>
+                <q-icon name="access_time" class="cursor-pointer">
+                  <q-popup-proxy transition-show="scale" transition-hide="scale">
+                    <q-time v-model="data.data" mask="DD/MM/YYYY HH:mm" format24h />
                   </q-popup-proxy>
                 </q-icon>
               </template>
@@ -85,57 +96,52 @@ export default {
     }
   },
   methods: {
+    mostrarErro: function (mensagem) {
+      this.$q.notify({
+        message: mensagem,
+        color: 'negative',
+      })
+    },
     validaCampos: function () {
-      var ret = true;
       if (this.data.codestoquelocal == null) {
-        this.erros.codestoquelocal = ['Selecione o Local'];
-        ret = false
-      } else {
-        this.erros.codestoquelocal = []
+        this.mostrarErro('Selecione o Local!')
+        return false
       }
 
       if (this.data.codmarca == null) {
-        this.erros.codmarca = ['Selecione a Marca'];
-        ret = false
-      } else {
-        this.erros.codmarca = []
+        this.mostrarErro('Selecione a Marca!')
+        return false
       }
 
       if (this.data.fiscal == null) {
-        this.erros.fiscal = ['Selecione o Tipo'];
-        ret = false
-      } else {
-        this.erros.fiscal = []
+        this.mostrarErro('Selecione o Tipo!')
+        return false
       }
 
       if (this.data.data == null) {
-        this.erros.data = ['Selecione a Data'];
-        ret = false
-      } else {
-        this.erros.data = []
+        this.mostrarErro('Informe a data para ajustar o estoque!')
+        return false
       }
 
-      return ret
-
+      return true;
     },
     iniciarConferencia: function () {
-
       if (this.validaCampos() == false) {
         return
       }
-
       this.$router.push('/estoque-saldo-conferencia/listagem/'
         + this.data.codestoquelocal + '/'
         + this.data.codmarca + '/'
         + this.data.fiscal + '/'
-        + this.data.data
+        + this.moment(this.data.data, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DDTHH:mm')
       )
     },
   },
   mounted () {
     this.loadFields = true;
     if (this.data.data == null) {
-      this.data.data = this.moment().format('YYYY-MM-DDTHH:mm')
+      this.data.data = this.moment().format('DD/MM/YYYY HH:mm')
+      // this.data.data = new Date()
     }
   }
 }

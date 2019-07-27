@@ -47,17 +47,17 @@
           <q-radio v-model="filter.inativo" :val="9" />
         </q-item-section>
       </q-item>
-      <q-separator />
+      <!-- <q-separator /> -->
 
       <!-- Filtra por data de corte -->
       <q-item-label class="text-subtitle1 text-grey-7 q-pa-md">Data de Corte Conferência</q-item-label>
       <q-item dense>
         <q-item-section>
-          <q-input v-model="filter.dataCorte" mask="##/##/####" :rules="['filter.dataCorte']">
+          <q-input outlined v-model="filter.dataCorte" input-class="text-center" mask="##/##/####" :rules="['filter.dataCorte']">
             <template v-slot:append>
               <q-icon name="event" class="cursor-pointer">
                 <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                  <q-date mask="DD-MM-YYYY" v-model="filter.dataCorte" @input="() => $refs.qDateProxy.hide()" minimal />
+                  <q-date mask="DD/MM/YYYY" v-model="filter.dataCorte" @input="() => $refs.qDateProxy.hide()" minimal />
                 </q-popup-proxy>
               </q-icon>
             </template>
@@ -76,30 +76,36 @@
       <template v-if="carregado">
 
         <!-- Infinite scroll -->
-        <q-infinite-scroll :handler="loadMore" ref="infiniteScroll" v-if="data.produtos.length > 0">
+        <q-infinite-scroll @load="loadMore" ref="infiniteScroll" v-if="data.produtos.length > 0">
 
           <!-- Funcao swipe para zerar o produto -->
           <div>
 
             <!--<q-slide-item @left="swipeProduto(produto)">-->
-            <q-list separator>
+            <q-list separator class="space-end">
               <template v-for="produto in data.produtos">
-                <q-slide-item @left="onRight"
-                              left-color="warning"
-                              @action="swipeProduto(produto)"
+
+                <q-slide-item @left="slideItemReset"
+                              @right="slideItemReset"
+                              left-color="orange"
+                              right-color="orange"
+                              @action="slideItemAction(produto)"
                               @click.native="buscaProduto(produto)"
                               :key="produto.id"
                 >
                   <template v-slot:left>
-                    <span class="text-h6">
-                      Zerar o estoque do produto
-                    </span>
+                    Zerar
+                  </template>
+                  <template v-slot:right>
+                    Zerar
                   </template>
 
-                  <q-item >
-                    <q-item-section thumbnail>
-                      <img :src="produto.imagem" v-if="produto.imagem"/>
-                      <img src="assets/no-image-16-9.png" v-else/>
+                  <q-item  clickable v-ripple>
+                    <q-item-section avatar>
+                      <q-avatar square>
+                        <img :src="produto.imagem" v-if="produto.imagem"/>
+                        <img src="assets/no-image-4-4.svg" v-else/>
+                      </q-avatar>
                     </q-item-section>
 
                     <q-item-section>
@@ -137,7 +143,6 @@
               </template>
             </q-list>
           </div>
-
         </q-infinite-scroll>
 
         <!-- se não houver produtos para mostrar -->
@@ -165,20 +170,22 @@
       </q-page-sticky>
 
       <!-- MODAL DE DETALHES DO PRODUTO -->
-      <q-dialog v-model="modalProduto" persistent maximized transition-show="slide-up" transition-hide="slide-down">
+      <q-dialog v-model="modalProduto" maximized>
         <q-layout view="Lhh lpR fff" container class="bg-white">
 
           <q-page-container v-if="produtoCarregado">
             <q-page padding>
 
-              <div class="row justify-center">
+              <div class="row justify-center space-end">
 
                 <!-- COLUNA 1 -->
                 <div class="col-xs-12 col-sm-6 col-md-3 col-lg-3">
                   <q-card class="my-card no-shadow">
                    <!-- <img :src="produtoImagem" v-if="produtoImagem">
-                    <img src="assets/no-image-16-9.png" v-else>-->
-                    <img src="assets/no-image-16-9.png">
+                    <img src="assets/no-image-4-4.svg" v-else>-->
+                    <!-- <img src="assets/no-image-4-4.svg"> -->
+                    <img :src="produtoImagem" v-if="produtoImagem"/>
+                    <img src="assets/no-image-4-4.svg" v-else/>
 
                     <q-card-section>
                       <q-item>
@@ -268,7 +275,7 @@
                       <!-- SE DATA VENCIMENTO-->
                       <q-item v-if="produto.localizacao.vencimento">
                         <q-item-section avatar>
-                          <q-icon color="red" name="access alarm"/>
+                          <q-icon color="red" name="access_alarm"/>
                         </q-item-section>
 
                         <q-item-section>
@@ -345,7 +352,7 @@
                       Últimas conferências
                     </q-timeline-entry>
 
-                    <transition-group enter-active-class="animated fadeInDown" leave-active-class="animated fadeOutUp">
+                    <transition-group>
                       <q-timeline-entry v-for="(conf, iconf) in produto.conferencias"
                                         :key="conf.codestoquesaldoconferencia"
                                         :title="numeral(parseFloat(conf.quantidadeinformada)).format('0,0') + ' '
@@ -444,12 +451,10 @@
                       <form>
 
                         <!-- QUANTIDADE -->
-                        <q-item class="q-px-none" dense>
-                          <q-item-section avatar>
-                            <q-icon name="widgets"/>
-                          </q-item-section>
+                        <q-item class="" dense>
                           <q-item-section>
-                            <q-input label="Quantidade"
+                            <q-input outlined
+                                     label="Quantidade"
                                      type="number"
                                      v-model="conferencia.quantidade"
                                      :decimals="3"
@@ -458,21 +463,56 @@
                                      clearable
                                      @keydown.enter="salvaConferencia()"
                                      :hint="'Quantidade Atual: ' + numeral(parseFloat(produto.saldoatual.quantidade)).format('0,0')"
-                            />
+                                     input-class="text-right"
+                            >
+                              <template v-slot:prepend>
+                                <q-icon name="widgets"/>
+                              </template>
+                            </q-input>
                           </q-item-section>
                         </q-item>
 
-                        <!-- VENCIMENTO -->
-                        <q-item class="q-px-none" dense>
-                          <q-item-section avatar>
-                            <q-icon name="alarm" color="red"/>
-                          </q-item-section>
+                        <!-- CUSTO -->
+                        <q-item class="" dense>
                           <q-item-section>
-                            <q-input label="Vencimento" v-model="conferencia.vencimento" mask="##/##/#####" :rules="['conferencia.vencimento']">
+                            <q-input
+                                outlined
+                                label="Custo"
+                                type="number"
+                                v-model="conferencia.customedio"
+                                :decimals="6"
+                                input-class="text-right"
+                                clearable
+                                @keydown.enter="salvaConferencia()"
+                                :hint="'Custo Médio Atual: ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.000000')"
+                                ref="campoCustoMedioInformado">
+                              <template v-slot:prepend>
+                                <q-icon name="attach_money" color="blue"/>
+                              </template>
+                            </q-input>
+                          </q-item-section>
+                        </q-item>
+
+
+                        <!-- VENCIMENTO -->
+                        <q-item class="" dense>
+                          <q-item-section>
+                            <q-input
+                                outlined
+                                label="Vencimento"
+                                v-model="conferencia.vencimento"
+                                mask="##/##/#####"
+                                :rules="['conferencia.vencimento']"
+                                input-class="text-center"
+                                :hint="'Data de vencimento do produto'"
+                                >
+                              <template v-slot:prepend>
+                                <q-icon name="alarm" color="red"/>
+                              </template>
                               <template v-slot:append>
                                 <q-icon name="event" class="cursor-pointer">
                                   <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                                    <q-date mask="DD-MM-YYYY" v-model="conferencia.vencimento" @input="() => $refs.qDateProxy.hide()" minimal />
+                                    <q-date mask="DD/MM/YYYY" v-model="conferencia.vencimento" @input="() => $refs.qDateProxy.hide()" minimal />
                                   </q-popup-proxy>
                                 </q-icon>
                               </template>
@@ -481,48 +521,42 @@
                         </q-item>
 
                         <!-- BOTAO LOCALIZACAO -->
-                        <q-item dense class="q-px-none">
-                          <q-item-section avatar>
-                            <q-icon name="place" color="green"/>
-                          </q-item-section>
-
+                        <q-item dense class="">
                           <q-item-section>
-                            <div class="row q-col-gutter-sm">
+                            <div class="row q-col-gutter-x-sm">
                               <div class="col-3" @keydown.enter="salvaConferencia()">
-                                <q-input label="Corr" v-model="conferencia.corredor" type="number" :decimals="0" min="0" max="99" align="center" clearable/>
+                                <q-input outlined label="Corredor" v-model="conferencia.corredor" type="number" :decimals="0" min="0" max="99" align="center">
+                                </q-input>
                               </div>
                               <div class="col-3"@keydown.enter="salvaConferencia()">
-                                <q-input label="Prat" v-model="conferencia.prateleira" type="number" :decimals="0" min="0" max="99" align="center" clearable/>
+                                <q-input outlined label="Prateleira" v-model="conferencia.prateleira" type="number" :decimals="0" min="0" max="99" align="center" />
                               </div>
                               <div class="col-3" @keydown.enter="salvaConferencia()">
-                                <q-input label="Col" v-model="conferencia.coluna" type="number" :decimals="0" min="0" max="99" align="center" clearable />
+                                <q-input outlined label="Coluna" v-model="conferencia.coluna" type="number" :decimals="0" min="0" max="99" align="center" />
                               </div>
                               <div class="col-3" @keydown.enter="salvaConferencia()">
-                                <q-input label="Bloc" v-model="conferencia.bloco" type="number" :decimals="0" min="0" max="99" align="center" clearable />
+                                <q-input outlined label="Bloco" v-model="conferencia.bloco" type="number" :decimals="0" min="0" max="99" align="center"  />
+                              </div>
+                            </div>
+                            <div>
+                              <div class="q-field__bottom row">
+                                <div class="q-field__messages col">
+                                  <div>Localização do Produto</div>
+                                </div>
                               </div>
                             </div>
                           </q-item-section>
                         </q-item>
 
-                        <!-- CUSTO -->
-                        <q-item class="q-px-none" dense>
-                          <q-item-section avatar>
-                            <q-icon name="attach_money" color="blue"/>
-                          </q-item-section>
-                          <q-item-section>
-                            <q-input label="Custo" type="number" v-model="conferencia.customedio" :decimals="6" align="right" clearable  @keydown.enter="salvaConferencia()"  ref="campoCustoMedioInformado"/>
-                            <!--<q-field  :helper="'O custo atual é R$ ' + numeral(parseFloat(produto.saldoatual.custo)).format('0,0.00')">
-                            </q-field>-->
-                          </q-item-section>
-                        </q-item>
 
                         <!-- OBSERVACOES -->
-                        <q-item class="q-px-none" dense>
-                          <q-item-section avatar>
-                            <q-icon name="description"/>
-                          </q-item-section>
+                        <q-item class="" dense>
                           <q-item-section>
-                            <q-input filled label="Observações" type="textarea" v-model="conferencia.observacoes" clearable />
+                            <q-input outlined label="Observações" type="textarea" v-model="conferencia.observacoes" clearable>
+                              <template v-slot:prepend>
+                                <q-icon name="description"/>
+                              </template>
+                            </q-input>
                           </q-item-section>
                         </q-item>
                       </form>
@@ -566,11 +600,12 @@
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
                   <form @submit.prevent="buscaProduto()">
                     <q-item>
-                      <q-item-section avatar>
-                        <q-icon name="view_column"/>
-                      </q-item-section>
                       <q-item-section>
-                        <q-input clearable v-model="buscaPorBarras" float-label="Informe o código de barras" ref="campoBarras" align="center" />
+                        <q-input label="Código de Barras" outlined clearable v-model="buscaPorBarras" float-label="Informe o código de barras" ref="campoBarras" align="center">
+                          <template v-slot:prepend>
+                            <q-icon name="view_column"/>
+                          </template>
+                        </q-input>
                       </q-item-section>
                     </q-item>
                   </form>
@@ -666,13 +701,11 @@ export default {
 
   },
   methods: {
-    onRight({reset}){
-      this.finalize(reset)
-    },
-    finalize (reset) {
+    slideItemReset({reset}){
+      console.log(reset)
       this.timer = setTimeout(() => {
         reset()
-      }, 1000)
+      }, 500)
     },
     // Chama API para zerar saldo do estoque do produto
     zerarProduto (produto) {
@@ -701,12 +734,13 @@ export default {
     },
 
     // confirma se tem certeza que eh pra zerar saldo do estoque do produto
-    swipeProduto (produto) {
+    slideItemAction (produto) {
+
       let vm = this;
 
       // se nao estiver na aba de itens pra conferir, cai fora
       if (vm.filter.conferidos != 'conferir') {
-        this.$q.notify({message: 'Produto já Zerado', color: 'negative'});
+        this.$q.notify({message: 'Produto já conferido', color: 'negative'});
         return
       }
 
@@ -757,7 +791,7 @@ export default {
         return
       }
 
-      let params = {
+      var params = {
         codprodutovariacao: vm.produto.variacao.codprodutovariacao,
         codestoquelocal: vm.filter.codestoquelocal,
         fiscal: parseInt(vm.filter.fiscal),
@@ -771,6 +805,10 @@ export default {
         coluna: vm.conferencia.coluna,
         bloco: vm.conferencia.bloco
       };
+      if (params.vencimento)  {
+        params.vencimento = vm.moment(params.vencimento, 'DD/MM/YYYY').format('YYYY-MM-DD')
+      }
+      console.log(params);
       vm.$axios.post('estoque-saldo-conferencia', params).then(function(request) {
         vm.modalConferencia = false;
         vm.conferenciaSalva = true;
@@ -795,7 +833,7 @@ export default {
           vm.parseProduto(request.data);
           vm.$q.notify({
             message: 'Conferência Inativada',
-            color: 'warning',
+            color: 'positive',
           })
         }).onCancel(function(error) {
           console.log(error);
@@ -818,7 +856,7 @@ export default {
         codmarca: vm.filter.codmarca,
         fiscal: vm.filter.fiscal,
         inativo: vm.filter.inativo,
-        dataCorte: vm.filter.dataCorte,
+        dataCorte: vm.moment(vm.filter.dataCorte, 'DD/MM/YYYY').format('YYYY-MM-DD'),
         conferidos: (vm.filter.conferidos=='conferidos')?1:0,
         page: vm.page
       };
@@ -907,15 +945,19 @@ export default {
 
       // remove registro da listagem se está na aba de *conferidos*
       // e data da *conferencia nao e posterior a data de corte*
+      console.log(this.produto.saldoatual.ultimaconferencia)
+
+      var dataCorte = this.moment(this.filter.dataCorte, 'DD/MM/YYYY')
+      var ultimaConferencia = this.moment(this.produto.saldoatual.ultimaconferencia);
       if (this.filter.conferidos == 'conferidos'
-          && (!this.moment(this.produto.saldoatual.ultimaconferencia).isAfter(this.filter.dataCorte))) {
+          && (!ultimaConferencia.isAfter(dataCorte))) {
         this.data.produtos.splice(i, 1);
         return
 
       // remove registro da listagem se está na aba de produtos *a conferir*
       // e a data de *conferencia e posterior a data de corte*
       } else if (this.filter.conferidos != 'conferidos'
-          && this.moment(this.produto.saldoatual.ultimaconferencia).isAfter(this.filter.dataCorte)) {
+          && ultimaConferencia.isAfter(dataCorte)) {
         this.data.produtos.splice(i, 1);
         return
       }

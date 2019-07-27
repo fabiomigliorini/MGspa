@@ -10,6 +10,10 @@ class MarcaRepository extends MgRepository
     {
         $qry = Marca::query();
 
+        if (!empty($filter['codmarca'])) {
+            $qry->where('codmarca', $filter['codmarca']);
+        }
+
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);
         }
@@ -50,8 +54,7 @@ class MarcaRepository extends MgRepository
     {
         $qry = static::pesquisar($params)
                 ->select('codmarca', 'marca')
-                ->take(10);
-
+                ->take(20);
         $ret = [];
         foreach ($qry->get() as $item) {
             $ret[] = [
@@ -60,7 +63,6 @@ class MarcaRepository extends MgRepository
                 'id' => $item->codmarca,
             ];
         }
-
         return $ret;
     }
 

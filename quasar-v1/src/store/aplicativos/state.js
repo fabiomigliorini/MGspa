@@ -5,6 +5,7 @@ export default {
       title: 'Início',
       path: '/'
     },
+    /*
     {
       icon: 'label_outline',
       title: 'Marcas',
@@ -20,6 +21,7 @@ export default {
       title: 'Permissões',
       path: '/permissao'
     },
+*/
     {
       icon: 'assignment',
       title: 'Conferência de estoque',
@@ -30,15 +32,17 @@ export default {
       title: 'Vendas',
       path: '/estoque-estatistica/100'
     },
-/*    {
+    /*
+    {
       icon: 'description',
       title: 'Nota Fiscal Terceiro',
       path: '/notafiscal-terceiro'
-    },*/
+    },*
     {
       icon: 'add_shopping_cart',
       title: 'Pedidos e Transferências',
       path: '/pedido'
     }
+*/
   ]
 }

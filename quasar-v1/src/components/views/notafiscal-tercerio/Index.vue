@@ -112,7 +112,7 @@
 
 
       <!-- Infinite scroll -->
-      <q-infinite-scroll :handler="loadMore" ref="infiniteScroll">
+      <q-infinite-scroll @load="loadMore" ref="infiniteScroll">
 
         <q-list>
           <q-item v-for="nota in xml.data" :key="nota.codnotafiscalterceirodfe">

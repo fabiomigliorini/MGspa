@@ -65,7 +65,7 @@
         <q-tab name="30" label="Cancelados" />
       </q-tabs>
 
-      <q-infinite-scroll :handler="loadData" ref="infiniteScroll">
+      <q-infinite-scroll @load="loadData" ref="infiniteScroll">
 
         <q-list separator v-if="data.length > 0">
 

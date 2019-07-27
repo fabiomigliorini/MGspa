@@ -19,7 +19,8 @@ RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
     && sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list' \
     && apt update
 
-RUN apt install -y php7.1-cli \
+RUN apt-get update \
+    && apt install -y php7.1-cli \
     php7.1-fpm \
     php7.1-pgsql \
     php7.1-gd \

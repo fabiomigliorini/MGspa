@@ -18,9 +18,7 @@ class EstoqueLocalController extends MgController
         list($filter, $sort, $fields) = $this->filtros($request);
         $qry = EstoqueLocalRepository::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
-
         return response()->json($res, 206);
-
     }
 
     /**
@@ -32,13 +30,11 @@ class EstoqueLocalController extends MgController
     public function show(Request $request, $id)
     {
         $model = EstoqueLocal::findOrFail($id, $request->get('fields'));
-
         return response()->json($model, 200);
     }
-    
+
     public function autocompletar (Request $request) {
         $res = EstoqueLocalRepository::autocompletar($request->all());
-
         return response()->json($res, 206);
     }
 

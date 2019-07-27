@@ -222,7 +222,7 @@ export default {
         cancel: 'Cancelar',
         persistent: true,
         title: 'Sair do sistema',
-        message: 'Tem certeza que deseja excluir?'
+        message: 'Tem certeza que deseja sair do sistema?'
       }).onOk(() => {
         vm.$axios.get('auth/logout').then(response => {
           localStorage.removeItem('auth.token');
@@ -247,6 +247,6 @@ export default {
   font-size: 50px
 }
 .space-end{
-  margin-bottom: 300px;
+  margin-bottom: 100px;
 }
 </style>
