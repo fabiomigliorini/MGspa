@@ -8,15 +8,13 @@
 
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
-      <div class="row q-pa-md q-col-gutter-sm">
+      <div class="row q-pa-md q-col-gutter-md  space-end">
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
           <q-card class="my-card">
             <q-img :src="imagem">
               <div class="absolute-top text-subtitle2 text-center">
                 <q-item-label class="text-h6">
-
                   {{item.marca}}
-
                   <q-btn round flat icon="more_vert" class="float-right" ref="popover">
                     <q-menu cover auto-close>
                       <q-list>
