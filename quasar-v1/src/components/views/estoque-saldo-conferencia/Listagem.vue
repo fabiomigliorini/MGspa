@@ -104,7 +104,7 @@
                     <q-item-section avatar>
                       <q-avatar square>
                         <img :src="produto.imagem" v-if="produto.imagem"/>
-                        <img src="assets/no-image-4-4.svg" v-else/>
+                        <img src="/statics/no-image-4-4.svg" v-else/>
                       </q-avatar>
                     </q-item-section>
 
@@ -182,10 +182,10 @@
                 <div class="col-xs-12 col-sm-6 col-md-3 col-lg-3">
                   <q-card class="my-card no-shadow">
                    <!-- <img :src="produtoImagem" v-if="produtoImagem">
-                    <img src="assets/no-image-4-4.svg" v-else>-->
-                    <!-- <img src="assets/no-image-4-4.svg"> -->
+                    <img src="/statics/no-image-4-4.svg" v-else>-->
+                    <!-- <img src="/statics/no-image-4-4.svg"> -->
                     <img :src="produtoImagem" v-if="produtoImagem"/>
-                    <img src="assets/no-image-4-4.svg" v-else/>
+                    <img src="/statics/no-image-4-4.svg" v-else/>
 
                     <q-card-section>
                       <q-item>
