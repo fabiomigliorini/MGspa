@@ -11,18 +11,13 @@
       <div class="row q-pa-md q-col-gutter-sm">
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
           <q-card class="my-card">
-            <!--<q-img :src="item.imagem.url" v-if="item.codimagem">-->
-              <!--<div class="absolute-bottom text-subtitle2 text-center">-->
-                <!--{{item.marca}}-->
-              <!--</div>-->
-            <!--</q-img>-->
-            <q-img src="https://dummyimage.com/600x400/000/fff">
+            <q-img :src="imagem">
               <div class="absolute-top text-subtitle2 text-center">
                 <q-item-label class="text-h6">
 
                   {{item.marca}}
 
-                  <q-btn color="grey-6" round flat icon="more_vert" class="float-right" ref="popover">
+                  <q-btn round flat icon="more_vert" class="float-right" ref="popover">
                     <q-menu cover auto-close>
                       <q-list>
                         <q-item clickable @click="$router.push('/marca/' + item.codmarca + '/foto/')">
@@ -45,7 +40,7 @@
                 </q-item-label>
 
                 <q-item-label>
-                  <q-rating readonly v-model="item.abccategoria" :max="3" size="3rem" />
+                  <q-rating readonly v-model="item.abccategoria" :max="3" size="1.7rem" />
                   <q-icon name="trending_up" /> {{ numeral(item.abcposicao).format('0,0') }}&deg;
                 </q-item-label>
 
@@ -103,6 +98,10 @@
               </q-item>
 
             </q-card-section>
+            <q-card-actions>
+              <q-btn color="primary" flat @click.native="planilhaPedido()">Planilha Pedido</q-btn>
+              <q-btn color="primary" flat @click.native="planilhaDistribuicaoSaldoDeposito()">Distribuição Saldo</q-btn>
+            </q-card-actions>
           </q-card>
 
         </div>
@@ -148,10 +147,60 @@ export default {
   data () {
     return {
       item: false,
-      id: null
+      id: null,
+      planilha: null,
+    }
+  },
+  computed: {
+    imagem: function () {
+      if (this.item.codimagem) {
+        return this.item.imagem.url
+      }
+      return '/statics/no-image-4-4.svg'
     }
   },
   methods: {
+    planilhaPedido: function () {
+      let vm = this
+      vm.$q.dialog({
+        title: 'Planilha de Pedido',
+        message: 'Tem certeza que deseja gerar a planilha de pedido de compra?',
+        ok: 'Gerar',
+        cancel: 'Cancelar'
+      }).onOk(() => {
+        vm.$axios.put('marca/' + vm.item.codmarca + '/planilha/pedido').then(function (request) {
+          let arquivo = request.data;
+          vm.planilha = arquivo;
+          vm.$q.notify({
+            message: 'Planilha criada em "' + arquivo + '"!',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          console.log(error)
+        })
+      })
+    },
+    planilhaDistribuicaoSaldoDeposito: function () {
+      let vm = this
+      vm.$q.dialog({
+        title: 'Planilha de Distribuição de Saldo',
+        message: 'Tem certeza que deseja criar a planilha de distribuição de saldo do estoque do depósito para as lojas?',
+        ok: 'Gerar',
+        cancel: 'Cancelar'
+      }).onOk(() => {
+        vm.$axios.put('marca/' + vm.item.codmarca + '/planilha/distribuicao-saldo-deposito').then(function (request) {
+          let arquivo = request.data;
+          vm.planilha = arquivo;
+          vm.$q.notify({
+            message: 'Planilha criada em ' + arquivo + '!',
+            type: 'positive',
+          })
+        }).catch(function (error) {
+          console.log(error)
+        })
+      })
+    },
+
     // carrega registros da api
     loadData: debounce(function () {
       // inicializa variaveis

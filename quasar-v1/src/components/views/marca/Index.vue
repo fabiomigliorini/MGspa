@@ -11,8 +11,8 @@
       <!-- Filtro de Descricao -->
       <q-item>
         <q-item-section>
-          <q-input v-model="filter.marca" dense label="Descrição" >
-            <template v-slot:before>
+          <q-input outlined v-model="filter.marca" label="Descrição" >
+            <template v-slot:prepend>
               <q-icon name="search" />
             </template>
           </q-input>
@@ -78,7 +78,7 @@
           <q-icon name="star" />
         </q-item-section>
         <q-item-section>
-          <q-range v-model="filter.abccategoria" label markers snap :min="0" :max="4" :step="1"/>
+          <q-range v-model="filter.abccategoria" label markers snap :min="0" :max="3" :step="1"/>
         </q-item-section>
       </q-item>
 
@@ -134,11 +134,16 @@
           <template v-for="item in data">
 
             <!-- Link para detalhes -->
-            <q-item :to="'/marca/' + item.codmarca" :inset-level="(!item.imagem)?'2':'0'">
+            <q-item :to="'/marca/' + item.codmarca" >
 
               <!-- Imagem -->
-              <q-item-section thumbnail>
-                <img :src="item.imagem.url" v-if="item.imagem">
+              <q-item-section avatar>
+                <q-avatar square>
+                  <img :src="item.imagem.url" v-if="item.imagem">
+                  <img src="/statics/no-image-4-4.svg" v-else/>
+                </q-avatar>
+              </q-item-section>
+
               </q-item-section>
 
               <!-- Coluna 1 -->

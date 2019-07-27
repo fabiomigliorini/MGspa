@@ -5,12 +5,12 @@ export default {
       title: 'Início',
       path: '/'
     },
-    /*
     {
       icon: 'label_outline',
       title: 'Marcas',
       path: '/marca'
     },
+    /*
     {
       icon: 'supervisor_account',
       title: 'Usuários',
