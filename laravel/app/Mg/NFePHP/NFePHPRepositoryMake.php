@@ -69,7 +69,9 @@ class NFePHPRepositoryMake
         // Identificacao Nfe
         $std = new \stdClass();
         $std->cUF = $nf->Filial->Pessoa->Cidade->Estado->codigooficial;
-        $std->cNF = $nf->numero;
+        //$std->cNF = $nf->numero;
+	//$std->cNF = $nf->codnotafiscal;
+	$std->cNF = 99999999 - $nf->numero;
         $std->natOp = $nf->NaturezaOperacao->naturezaoperacao;
         $std->mod = $nf->modelo;
         //$std->indPag = ($nf->NotaFiscalDuplicatasS()->count() > 0) ? 1 : 0; //0=Pagamento à vista; 1=Pagamento a prazo; 2=Outros
