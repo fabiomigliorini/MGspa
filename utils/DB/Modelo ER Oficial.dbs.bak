@@ -1510,6 +1510,7 @@
 			<column name="nfeserie" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
 				<defo>1</defo>
 			</column>
+			<column name="validadecertificado" type="date" length="13" decimal="0" jt="91" />
 			<index name="tblfilial_pkey" unique="PRIMARY_KEY" >
 				<column name="codfilial" />
 			</index>
@@ -2808,6 +2809,7 @@
 			<column name="qcom" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vuncom" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vprod" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="vdesc" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="ceantrib" type="varchar" length="30" decimal="0" jt="12" />
 			<column name="utrib" type="varchar" length="10" decimal="0" jt="12" />
 			<column name="qtrib" type="numeric" length="14" decimal="2" jt="2" />
@@ -3067,6 +3069,7 @@
 			<column name="funruralvalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="senarvalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="observacoes" type="varchar" length="1500" decimal="0" jt="12" />
 			<index name="tblnotafiscalprodutobarra_pkey" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalprodutobarra" />
 			</index>
@@ -4663,6 +4666,7 @@
 			<column name="iagrokg" type="numeric" length="14" decimal="6" jt="2" />
 			<column name="funruralpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
+			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
 			<index name="tbltributacaonaturezaoperacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codtributacaonaturezaoperacao" />
 			</index>
@@ -8650,6 +8654,7 @@ $function$
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 			<column name="nfeserie" />
+			<column name="validadecertificado" />
 		</entity>
 		<entity schema="mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="272" y="240" >
 			<column name="codnaturezaoperacao" />
@@ -8761,6 +8766,7 @@ $function$
 			<column name="funruralvalor" />
 			<column name="senarpercentual" />
 			<column name="senarvalor" />
+			<column name="observacoes" />
 		</entity>
 		<entity schema="mgsis" name="tblnegocioprodutobarra" color="B3CEF5" x="1472" y="432" >
 			<column name="codnegocioprodutobarra" />
@@ -9136,10 +9142,11 @@ FROM
 		<entity schema="mgsis" name="tblproduto" color="B2CDF7" x="544" y="320" />
 	</layout>
 	<layout name="Layout_Natureza_Operacao" id="Layout_16a9431" show_relation="columns" >
-		<entity schema="mgsis" name="tblnaturezaoperacao" color="3986C1" x="64" y="80" />
 		<entity schema="mgsis" name="tbltributacao" color="3986C1" x="48" y="528" />
 		<entity schema="mgsis" name="tbltributacaonaturezaoperacao" color="3986C1" x="464" y="80" />
+		<entity schema="mgsis" name="tblnaturezaoperacao" color="3986C1" x="64" y="80" />
 		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="3986C1" x="864" y="48" />
+		<entity schema="mgsis" name="tblnotafiscal" color="3986C1" x="1168" y="48" />
 	</layout>
 	<layout name="Layout_Negocio" id="Layout2983189" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblsubgrupoproduto" color="B2CDF7" x="464" y="1152" />
@@ -9159,7 +9166,6 @@ FROM
 		<entity schema="mgsis" name="tblpessoa" color="B2CDF7" x="1008" y="48" />
 	</layout>
 	<layout name="Layout_Nfe_Terceiro" id="Layout462291" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="64" y="688" />
 		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="976" y="80" />
 		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="B2CDF7" x="1008" y="272" />
 		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="B2CDF7" x="976" y="464" />
@@ -9174,6 +9180,7 @@ FROM
 		<entity schema="mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="320" y="560" />
 		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="768" y="864" />
 		<entity schema="mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="272" y="48" />
+		<entity schema="mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="64" y="688" />
 	</layout>
 	<layout name="Layout_Nota_Fiscal" id="Layout_364e738" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="64" y="96" />
@@ -9356,6 +9363,7 @@ FROM
 			<column name="codusuariocriacao" />
 			<column name="inativo" />
 			<column name="nfeserie" />
+			<column name="validadecertificado" />
 		</entity>
 	</layout>
 	<layout name="Layout_Vendas" id="Layout_4271ffc" confirmed="y" show_relation="columns" >
