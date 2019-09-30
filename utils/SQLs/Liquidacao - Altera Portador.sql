@@ -1,4 +1,4 @@
-﻿update tblliquidacaotitulo set codportador = 202008 where codliquidacaotitulo = 48687
+﻿update tblliquidacaotitulo set codportador = 202008 where codliquidacaotitulo = 50808
 
 update tblmovimentotitulo
 set codportador = lt.codportador

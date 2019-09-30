@@ -19,3 +19,13 @@ and coalesce(n.indmanifestacao, 0) not in (210240, 210220)
 and coalesce(n.indsituacao, 0) not in (2, 3)
 and i.codprodutobarra is null
 order by n.emitente, n.codnfeterceiro, i.nitem
+
+-- Notas para importar que desconto nao bate com itens
+select n.codnfeterceiro, n.nfechave, n.emitente, coalesce(valordesconto, 0)
+from tblnfeterceiro n
+where n.codnotafiscal is null
+and n.ignorada = false
+and coalesce(n.indmanifestacao, 0) not in (210240, 210220)
+and coalesce(n.indsituacao, 0) not in (2, 3)
+and coalesce(valordesconto, 0)  > 0
+order by n.codnfeterceiro

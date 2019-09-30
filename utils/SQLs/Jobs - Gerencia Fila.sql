@@ -10,8 +10,10 @@ select 'spa', queue, count(*) from tbljobsspa group by queue order by queue
 
 ALTER SEQUENCE tbljobs_id_seq RESTART;
 ALTER SEQUENCE tbljobsspa_id_seq RESTART;
+delete from tbljobsspa ;
 
 select * from tbljobsspa --where payload ilike '%codnotafiscal%codnotafiscal%'
+select * from tbljobs where payload ilike '%codnotafiscal%codnotafiscal%'
 
 update tbljobsspa set queue = 'default' where payload like '%NFeAutorizadaMail%'
 update tbljobsspa set queue = 'parado' where payload like '%NFeAutorizadaMail%'
