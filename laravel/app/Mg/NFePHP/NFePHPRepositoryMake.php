@@ -70,8 +70,8 @@ class NFePHPRepositoryMake
         $std = new \stdClass();
         $std->cUF = $nf->Filial->Pessoa->Cidade->Estado->codigooficial;
         //$std->cNF = $nf->numero;
-	//$std->cNF = $nf->codnotafiscal;
-	$std->cNF = 99999999 - $nf->numero;
+        //$std->cNF = $nf->codnotafiscal;
+        $std->cNF = 99999999 - $nf->numero;
         $std->natOp = $nf->NaturezaOperacao->naturezaoperacao;
         $std->mod = $nf->modelo;
         //$std->indPag = ($nf->NotaFiscalDuplicatasS()->count() > 0) ? 1 : 0; //0=Pagamento à vista; 1=Pagamento a prazo; 2=Outros
@@ -191,7 +191,13 @@ class NFePHPRepositoryMake
         $nfe->tagenderEmit($std);
 
         // Destinatario
-        if ($nf->codpessoa != Pessoa::CONSUMIDOR) {
+        if ($nf->codpessoa == Pessoa::CONSUMIDOR) {
+            if (!empty($nf->cpf)) {
+                $std = new \stdClass();
+                $std->CPF = str_pad($nf->cpf, 11, '0', STR_PAD_LEFT); //'58716523000119';
+                $nfe->tagdest($std);
+            }
+        } else {
 
             $std = new \stdClass();
             $std->xNome = substr(Strings::replaceSpecialsChars($nf->Pessoa->pessoa), 0, 60);
