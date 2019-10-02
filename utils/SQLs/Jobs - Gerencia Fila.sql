@@ -6,7 +6,9 @@ delete from tbljobsspa where tbljobsspa.id not in (select min(id) from tbljobssp
 select 'lara', queue, count(*) from tbljobs group by queue union all
 select 'spa', queue, count(*) from tbljobsspa group by queue order by queue
 
+
 /*
+delete from tbljobs where payload ilike '%1681715,%'
 
 ALTER SEQUENCE tbljobs_id_seq RESTART;
 ALTER SEQUENCE tbljobsspa_id_seq RESTART;
