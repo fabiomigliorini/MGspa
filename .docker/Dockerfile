@@ -44,7 +44,7 @@ RUN mv /var/www/html/index.nginx-debian.html /var/www/html/index.html
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get install -y nodejs
-RUN npm install -g quasar-cli
+RUN npm install -g @quasar/cli
 
 COPY config/php/php.ini /etc/php/7.1/fpm/php.ini
 COPY config/nginx/default.conf /etc/nginx/sites-available/default
