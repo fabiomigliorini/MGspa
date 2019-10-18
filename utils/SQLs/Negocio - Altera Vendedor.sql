@@ -3,5 +3,5 @@ set codpessoavendedor =
 	(select p.codpessoa 
 	from tblpessoa p 
 	where p.vendedor = true 
-	and p.pessoa ilike '%dayane%') 
-where codnegocio = 1603159	
+	and p.pessoa ilike '%LUIZA%') 
+where codnegocio = 1661778	
