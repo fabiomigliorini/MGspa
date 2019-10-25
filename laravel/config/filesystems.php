@@ -55,6 +55,11 @@ return [
             'visibility' => 'public',
         ],
 
+        'cielo-lio' => [
+            'driver' => 'local',
+            'root' => storage_path('app/cielo-lio'),
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

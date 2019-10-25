@@ -18,6 +18,11 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
+Route::group(['prefix' => 'v1/cielo-lio'], function () {
+    Route::post('', '\Mg\CieloLio\CieloLioController@callback');
+});
+
+
 Route::group(['prefix' => 'v1/auth'], function () {
     Route::post('login', 'Auth\LoginController@authenticate');
     Route::get('logout', 'Auth\LoginController@logout');
@@ -25,8 +30,6 @@ Route::group(['prefix' => 'v1/auth'], function () {
     Route::get('refresh', 'Auth\LoginController@refreshToken');
     Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
 });
-
-
 
 Route::group(['prefix' => 'v1'], function () {
 
@@ -146,7 +149,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::delete('marca/{id}/inativo', '\Mg\Marca\MarcaController@ativar')->name('marca.ativar');
         Route::post('marca/{id}/inativo', '\Mg\Marca\MarcaController@inativar')->name('marca.inativar');
         Route::apiResource('marca', '\Mg\Marca\MarcaController');
-        
+
         Route::put('marca/{id}/planilha/distribuicao-saldo-deposito', '\Mg\Marca\MarcaController@criarPlanilhaDistribuicaoSaldoDeposito');
         Route::put('marca/{id}/planilha/pedido', '\Mg\Marca\MarcaController@criarPlanilhaPedido');
 
