@@ -27,7 +27,11 @@ class NFePHPController extends MgController
     public function criar(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::criar($nf);
+        $offline = false;
+        if (!empty($request->offline)) {
+            $offline = true;
+        }
+        $res = NFePHPRepository::criar($nf, $offline);
         return response($res, 200)->header('Content-Type', 'text/xml');
     }
 

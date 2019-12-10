@@ -48,7 +48,7 @@ class NFePHPRepositoryMake
         return true;
     }
 
-    public static function montarXml (NotaFiscal $nf)
+    public static function montarXml (NotaFiscal $nf, $offline = false)
     {
         // Valida se o preenchimento da NFe está correto
         NFePHPRepositoryValidacao::validar($nf);
@@ -131,7 +131,11 @@ class NFePHPRepositoryMake
         } else {
 
             $std->tpImp = 4; // Danfe NFC-e
-            $std->tpEmis = $nf->Filial->Empresa->modoemissaonfce;
+            if ($offline) {
+                $std->tpEmis = Empresa::MODOEMISSAONFCE_OFFLINE;
+            } else {
+                $std->tpEmis = $nf->Filial->Empresa->modoemissaonfce;
+            }
 
             // Se estiver em modo OffLine
             if ($std->tpEmis == Empresa::MODOEMISSAONFCE_OFFLINE) {

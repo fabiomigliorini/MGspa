@@ -41,14 +41,14 @@ class NFePHPRepository extends MgRepository
         return $r;
     }
 
-    public static function criar(NotaFiscal $nf)
+    public static function criar(NotaFiscal $nf, $offline = false)
     {
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPRepositoryConfig::instanciaTools($nf->Filial);
         $tools->model($nf->modelo);
 
         // Cria Arquivo XML
-        $xml = NFePHPRepositoryMake::montarXml($nf);
+        $xml = NFePHPRepositoryMake::montarXml($nf, $offline);
 
         // Assina XML
         $xmlAssinado = $tools->signNFe($xml);
