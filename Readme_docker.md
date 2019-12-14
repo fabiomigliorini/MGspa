@@ -1,4 +1,4 @@
- 
+
 # MGapps
 ### Início
 Clone os repositórios a seguir em uma mesma pasta:
@@ -47,7 +47,7 @@ Ainda dentro do container e no diretório `/opt/www/MGLara/`
 
 <pre>
 $ cd public/
-$ rsync -uva super@netuno.mgpapelaria.com.br:/opt/www/MGLara/public/imagens/ imagens/
+$ rsync -uva super@netuno.mgpapelaria.com.br:/opt/www/MGLara/public/imagens/ MGLara/public/imagens/
 </pre>
 
 ### MGsis
@@ -116,3 +116,7 @@ Copie os arquivos compilados para o diretório `producao/`
 $ rsync -uva dist/pwa-mat/ ../producao/pwa/
 </pre>
 Acesse pelo endereço endereço: http://localhost:83/
+
+
+http://localhost:83/MGLara/
+http://localhost:82/MGsis/
