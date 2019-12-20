@@ -1,6 +1,7 @@
 ﻿-- delete from tbljobs where payload ilike '%EstoqueCalculaEstatisticas%';
 -- delete from tbljobs where queue ilike '%parado_cm%';
 
+--update tbljobs set queue = 'parado_cm' where queue = 'urgent';
 delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup group by dup.payload);
 delete from tbljobsspa where tbljobsspa.id not in (select min(id) from tbljobsspa dup group by dup.payload);
 select 'lara', queue, count(*) from tbljobs group by queue union all
@@ -19,14 +20,14 @@ select * from tbljobs where payload ilike '%codnotafiscal%codnotafiscal%'
 
 update tbljobsspa set queue = 'default' where payload like '%NFeAutorizadaMail%'
 update tbljobsspa set queue = 'parado' where payload like '%NFeAutorizadaMail%'
-update tbljobsspa set queue = 'default' where tbljobsspa.id in (select j2.id from tbljobsspa j2 where j2.queue = 'parado' order by j2.payload limit 10)
+update tbljobsspa set queue = 'default' where tbljobsspa.id in (select j2.id from tbljobsspa j2 where j2.queue = 'parado' order by j2.payload limit 1)
 
 delete from tbljobsspa where payload like '%NFeAutorizadaMail%'
 
 update tbljobs set queue = 'parado_' || queue where payload ilike '%nota%fiscal%'
 
 update tbljobs set queue = 'parado_cm' where queue = 'urgent'
-update tbljobs set queue = 'urgent' where tbljobs.id in (select j2.id from tbljobs j2 where j2.queue = 'parado_cm' order by j2.payload limit 5000)
+update tbljobs set queue = 'urgent' where tbljobs.id in (select j2.id from tbljobs j2 where j2.queue = 'parado_cm' order by j2.payload limit 10000)
 
 select * from tbljobs where queue = 'parado_cm' order by id
 delete from tbljobs where  queue = 'parado_cm' 

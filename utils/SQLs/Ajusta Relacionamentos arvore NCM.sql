@@ -45,3 +45,5 @@ update tblncm
 set codncmpai = (select n2.codncm from tblncm n2 where n2.ncm = substring(tblncm.ncm from 1 for 1) and char_length(n2.ncm) = 1)
 where codncmpai is null
 and char_length(ncm) > 1;
+
+

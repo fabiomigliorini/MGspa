@@ -1,18 +1,22 @@
 ﻿select * from tblportador order by codportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2019-10-18', null, '2019-10-18 11:41', 1)
+values (210, '2019-12-20', null, '2019-12-20 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc limit 50 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2407, '2019-10-18 10:00', 1
+select codcheque, 2423, '2019-12-20 10:00', 1
 from tblcheque where cmc7 in (
-	'<23715847<0180002595>003800557351:',
-	'<74880780<0180027165>200005589585:',
-	'<74880781<0180027155>200005589585:',
-	'<00111809<0188500165>720007216201:'
-)
+	'<00111806<0188500435>746007497533:',
+	'<00111807<0188514125>712011727786:',
+	'<00159113<0188504755>102000551586:',
+	'<00159115<0188504735>176000551580:',
+	'<00159114<0188504745>128000551581:',
+	'<00159111<0188500065>109000852518:',
+	'<00111807<0188503985>756014379095:',
+	'NIL'
+	)
 
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc)
 
@@ -25,8 +29,8 @@ order by 1 desc
 
 --update tblcheque set valor = 1429 where cmc7 = '<74881019<0180016775>200002298305:'
 
---update tblchequerepasse set data = '2019-10-18', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2019-10-18 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2019-12-20', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2019-12-20 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 
@@ -38,8 +42,7 @@ order by 1 desc
 delete from tblchequerepassecheque  where codcheque in (
 	select codcheque
 	from tblcheque where cmc7 in (
-	'<23755812<0180001305>282200703864:',
-	'<23755813<0180000715>241300343476:'
+	'<00142707<0188505135>304005009099:'
 	)
 )
 
@@ -64,7 +67,7 @@ delete from tblchequerepassecheque where codchequerepassecheque in (15693, 15692
 /*
 -- INSERE CHEQUE COMO DEVOLVIDO
 insert into tblchequedevolucao (codchequerepassecheque, codchequemotivodevolucao, data, observacoes, criacao, alteracao, codusuariocriacao, codusuarioalteracao)
-select crc.codchequerepassecheque, cmd.codchequemotivodevolucao, '2019-10-09', 'Repassado para cobranca', '2019-10-18', '2019-10-18', 1, 1
+select crc.codchequerepassecheque, cmd.codchequemotivodevolucao, '2019-10-09', 'Repassado para cobranca', '2019-12-20', '2019-12-20', 1, 1
 from tblchequerepassecheque crc
 inner join tblcheque c on (c.codcheque = crc.codcheque)
 inner join tblchequemotivodevolucao cmd on (cmd.numero = 22)
@@ -72,6 +75,9 @@ where c.cmc7 = '<00111803<0188512425>708011750687:'
 
 -- MARCA INDSTATUS - EM COBRANCA
 update tblcheque set indstatus = 4 where indstatus = 2 and codcheque in (select codcheque from tblcheque where cmc7 = '<00111803<0188512425>708011750687:')
+
+update tblcheque set indstatus = 5 where indstatus = 1 and codcheque in (9940)
+
 
 
 select * from tblchequedevolucao order by codchequedevolucao desc
