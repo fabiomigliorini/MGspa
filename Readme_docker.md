@@ -93,13 +93,13 @@ cd Docker
 git clone git@github.com:fabiomigliorini/MGsis.git
 ```
 
-Copiar o arquivo `.env` do diretório `protected`
+Copiar o arquivo `.env.php` do diretório `protected`
 ```
 cd ~/Docker/MGsis
 scp super@netuno.mgpapelaria.com.br:/opt/www/MGsis/protected/.env.php protected/
 ```
 
-Lembrar de alterar a conexão no arquivo `.env`:
+Lembrar de alterar a conexão no arquivo `protected/.env.php`:
 ```
 define('MGSPA_NFEPHP_URL', 'https://localhost:82/api/v1/nfe-php/');
 define('CONNECTION_STRING', 'pgsql:host=127.0.0.1;port=54320;dbname=mgsis');
@@ -107,7 +107,7 @@ define('CONNECTION_STRING', 'pgsql:host=127.0.0.1;port=54320;dbname=mgsis');
 
 Inície o container
 ```
-$ ./start
+./start
 ```
 
 Acesse pelo endereço endereço: http://localhost:82/MGsis/
