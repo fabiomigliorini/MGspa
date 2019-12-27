@@ -26,7 +26,7 @@ Clonar e copiar o arquivo `.env` para a raíz do projeto
 cd ~
 mkdir Docker
 cd Docker
-git clone  git@github.com:fabiomigliorini/MGLara.git
+git clone git@github.com:fabiomigliorini/MGLara.git
 cd ~/Docker/MGLara
 sudo chmod a+w storage/ -R
 scp super@netuno.mgpapelaria.com.br:/opt/www/MGLara/.env .env
@@ -60,99 +60,104 @@ Acesse pelo endereço endereço: http://localhost:83/MGLara/
 ### MGsis
 
 Clonar e copiar o arquivo `.env` para a pasta protected do projeto
-
 ```
 cd ~
 mkdir Docker
 cd Docker
 git clone  git@github.com:fabiomigliorini/MGsis.git
-cd ~/Docker/MGsis
-scp super@netuno.mgpapelaria.com.br:/opt/www/MGsis/protected/.env.php protected/
-```
-Lembrar de alterar a conexão no arquivo `.env`:
-```
-DB_HOST=localhost:54320
 ```
 
 Copiar o arquivo `.env` do diretório `protected`
+```
+cd ~/Docker/MGsis
+scp super@netuno.mgpapelaria.com.br:/opt/www/MGsis/protected/.env.php protected/
+```
+
+Lembrar de alterar a conexão no arquivo `.env`:
+```
+define('MGSPA_NFEPHP_URL', 'https://localhost:82/api/v1/nfe-php/');
+define('CONNECTION_STRING', 'pgsql:host=127.0.0.1;port=54320;dbname=mgsis');
+```
 
 Inície o container
 ```
 $ ./start
 ```
+
 Acesse pelo endereço endereço: http://localhost:82/MGsis/
 
 ---
 
-
-### Início
-
-Clone os repositórios a seguir em uma mesma pasta:
-```
-git clone  git@github.com:fabiomigliorini/MGUplon.git
-git clone  git@github.com:fabiomigliorini/MGspa.git
-```
-
-
-
-
 ### MGUplon
-Copiar o arquivo `.env` para a raíz do projeto
 
-Inície o container
+Clonar e copiar o arquivo `.env` para a pasta protected do projeto
 ```
-$ ./start
+cd ~
+mkdir Docker
+cd Docker
+git clone git@github.com:fabiomigliorini/MGUplon.git
+cd ~/Docker/MGUplon
+sudo chmod a+w storage/ -R
+scp super@netuno.mgpapelaria.com.br:/opt/www/MGUplon/.env .env
+```
+Lembrar de alterar a porta do postgresql `.env`:
+```
+DB_PORT=54320
+```
+Inície e acesse o container
+```
+./start
+./shell
+```
+Certifique-se que esteja no diretório `/opt/www/MGUplon/` e instale as dependências
+```
+composer install
 ```
 
-Acesse o container
-```
-$ ./shell
-```
+Acesse pelo endereço endereço: http://localhost:81/MGUplon/
 
-Instale as dependências
-```
-$ composer install
-```
-Acesse pelo endereço endereço: http://localhost:81/MGUplon
+---
 
 ### MGspa
-Copiar o arquivo `.env` para o diretório `laravel/`
 
-Copiar o arquivo `.env` para o diretório `quasar/`
-
-Alterar a propriedade API_URL do .env do **quasar** para:
+Clonar e copiar o arquivo `.env` para a pasta protected do projeto
 ```
-API_URL=http://localhost:91/api/v1/
+cd ~
+mkdir Docker
+cd Docker
+git clone git@github.com:fabiomigliorini/MGspa.git
+cd ~/Docker/MGspa
+sudo chmod a+w laravel/storage/ -R
+scp super@netuno.mgpapelaria.com.br:/opt/www/MGspa/laravel/.env laravel/.env
+scp super@netuno.mgpapelaria.com.br:/opt/www/MGspa/quasar-v1/.env quasar-v1/.env
 ```
-Inície o container
+Alterar no `.env` do laravel:
 ```
-$ ./start
+DB_PORT=54320
+QUEUE_DRIVER=sync
 ```
-Acesse o container
+Aterar no `.env` do quasar:
 ```
-$ ./shell
+API_URL=http://<seu-ip>:91/api/v1/
+```
+Inície e acess o container
+```
+./start
+./shell
 ```
 Instale as dependências do **Laravel**
 ```
-$ cd laravel/
-$ composer install
+cd laravel/
+composer install
 ```
 Instale as dependências do **Quasar**
 ```
-$ cd ../quasar/
-$ npm install
+cd ../quasar-v1/
+npm install
 ```
 
-Compile o projeto
+Rodando o projeto
 ```
-$ quasar build -m pwa
+quasar dev -m pwa
 ```
-
-Copie os arquivos compilados para o diretório `producao/`
-```
-$ rsync -uva dist/pwa-mat/ ../producao/pwa/
-```
-Acesse pelo endereço endereço: http://localhost:83/
-
-
-http://localhost:82/MGsis/
+Acesse pelo endereço endereço: http://localhost:8080/#/
