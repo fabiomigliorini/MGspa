@@ -1,9 +1,10 @@
 
 # MGapps
 
-Pré Requisito Docker
+Pré Requisito Docker e Git
 ```
-sudo apt install docker docker-compose docker.io
+sudo apt install docker docker-compose docker.io git git-man
+
 ```
 
 ---
