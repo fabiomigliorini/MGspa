@@ -3,9 +3,20 @@
 
 Pré Requisito Docker e Git
 ```
-sudo apt install docker docker-compose docker.io git git-man
-
+sudo apt install docker docker-compose docker.io git git-man xclip
 ```
+Configurar git
+```
+git config --global user.name "John Doe"
+git config --global user.email "your_email@example.com"
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+ssh-add ~/.ssh/id_rsa
+xclip -sel clip < ~/.ssh/id_rsa.pub
+```
+Acessar https://github.com/settings/ssh/new e preencher:
+* Title: Nome do Computador, por exemplo: "escmig98-db"
+* Key: Ctrl + V
+* Clicar em "Add SSH Key"
 
 ---
 
