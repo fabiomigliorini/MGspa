@@ -1,6 +1,11 @@
 
 # MGapps
 
+Pré Requisito Docker
+```
+sudo apt install docker docker-compose docker.io
+```
+
 ---
 
 ### MGdata
