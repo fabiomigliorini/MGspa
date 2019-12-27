@@ -8,7 +8,7 @@ sudo apt install docker docker-compose docker.io git git-man xclip
 
 Adicionar o usuario do linux ao grupo do Docker
 ```
-sudo usermod -G docker usuario
+sudo usermod -a -G docker usuario
 ```
 
 Reinicie o computador por causa do Grupo, é mais efetivo do que ficar descobrindo
@@ -36,7 +36,7 @@ Inície o container e Importe o banco de dados:
 cd ~
 mkdir Docker
 cd Docker
-git clone  git@github.com:fabiomigliorini/MGdb.git
+git clone git@github.com:fabiomigliorini/MGdb.git
 cd ~/Docker/MGdb
 ./start
 ./copiar-base-producao
@@ -47,7 +47,7 @@ Acesse pelo endereço endereço: pgsql://localhost:54320/
 ---
 
 ### MGLara
-Clonar e copiar o arquivo `.env` para a raíz do projeto
+Clonar a base de código e copiar o arquivo `.env` para a raiz do projeto:
 ```
 cd ~
 mkdir Docker
@@ -90,7 +90,7 @@ Clonar e copiar o arquivo `.env` para a pasta protected do projeto
 cd ~
 mkdir Docker
 cd Docker
-git clone  git@github.com:fabiomigliorini/MGsis.git
+git clone git@github.com:fabiomigliorini/MGsis.git
 ```
 
 Copiar o arquivo `.env` do diretório `protected`
