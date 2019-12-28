@@ -102,6 +102,7 @@ scp super@netuno.mgpapelaria.com.br:/opt/www/MGsis/protected/.env.php protected/
 Lembrar de alterar a conexão no arquivo `protected/.env.php`:
 ```
 define('MGSPA_NFEPHP_URL', 'https://localhost:82/api/v1/nfe-php/');
+define('MGLARA_URL', 'http://localhost:83/MGLara/');
 define('CONNECTION_STRING', 'pgsql:host=127.0.0.1;port=54320;dbname=mgsis');
 ```
 
