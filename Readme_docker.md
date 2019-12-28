@@ -57,9 +57,11 @@ cd ~/Docker/MGLara
 sudo chmod a+w storage/ -R
 scp super@netuno.mgpapelaria.com.br:/opt/www/MGLara/.env .env
 ```
-Lembrar de alterar a porta do postgresql `.env`:
+Alterar no `.env`:
 ```
 DB_PORT=54320
+
+MGSIS_URL=http://localhost:82/MGsis/
 ```
 Inície e acesse o container
 ```
