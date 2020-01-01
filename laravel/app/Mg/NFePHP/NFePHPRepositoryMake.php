@@ -274,7 +274,8 @@ class NFePHPRepositoryMake
 
         // Produtos
         $observacoesProdutos = '';
-        foreach ($nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get() as $nfpb) {
+        $nfpbs = $nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get();
+        foreach ($nfpbs as $nfpb) {
           $nItem++;
 
           // Item
@@ -445,11 +446,6 @@ class NFePHPRepositoryMake
                       $std->motDesICMS = 9;
                       $std->pRedBC = number_format($pRedBC, 2, '.', '');
                       $std->vICMSDeson = number_format(($std->vBC * ($std->pRedBC / 100) / (1 - ($std->pRedBC / 100))) * ($std->pICMS/100), 2, '.', '');
-                      // $std->vICMSDeson = ($std->vBC * ($std->pRedBC / 100) / (1 – ($std->pRedBC / 100))) * ($std->pICMS/100);
-                      // $std->vICMSDeson = ($std->vBC * ($std->pRedBC/100) / (1 – ($std->pRedBC/100))) * ($std->pICMS/100);
-                  }
-                  if (!empty($nfpb->icmsbase) && ($nfpb->icmsbase < $nfpb->valortotal) && $nfpb->icmscst == 20) {
-                      $std->pRedBC = number_format((1 - round($nfpb->icmsbase / $nfpb->valortotal, 2)) * 100, 2, '.', '');
                   }
                   if ($nfpb->icmsstvalor > 0) {
                       $std->modBCST = 4; // 4 - Margem de Valor Agregado (%)
