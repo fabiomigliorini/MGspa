@@ -2802,6 +2802,7 @@
 			<column name="nitem" type="smallint" length="5" decimal="0" jt="5" />
 			<column name="cprod" type="varchar" length="30" decimal="0" jt="12" />
 			<column name="xprod" type="varchar" length="200" decimal="0" jt="12" />
+			<column name="infadprod" type="varchar" length="1000" jt="12" />
 			<column name="cean" type="varchar" length="30" decimal="0" jt="12" />
 			<column name="ncm" type="varchar" length="10" decimal="0" jt="12" />
 			<column name="cfop" type="smallint" length="5" decimal="0" jt="5" />
@@ -9166,21 +9167,21 @@ FROM
 		<entity schema="mgsis" name="tblpessoa" color="B2CDF7" x="1008" y="48" />
 	</layout>
 	<layout name="Layout_Nfe_Terceiro" id="Layout462291" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="976" y="80" />
-		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="B2CDF7" x="1008" y="272" />
-		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="B2CDF7" x="976" y="464" />
-		<entity schema="mgsis" name="tblnegocio" color="B2CDF7" x="528" y="160" />
-		<entity schema="mgsis" name="tblprodutobarra" color="B2CDF7" x="320" y="1120" />
-		<entity schema="mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="528" y="864" />
-		<entity schema="mgsis" name="tblnegociostatus" color="B2CDF7" x="592" y="640" />
-		<entity schema="mgsis" name="tblnotafiscal" color="B2CDF7" x="768" y="80" />
-		<entity schema="mgsis" name="tbltitulo" color="B2CDF7" x="544" y="1168" />
-		<entity schema="mgsis" name="tblnfeterceiroduplicata" color="B2CDF7" x="240" y="384" />
-		<entity schema="mgsis" name="tblnfeterceiro" color="B2CDF7" x="48" y="48" />
-		<entity schema="mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="320" y="560" />
-		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="768" y="864" />
+		<entity schema="mgsis" name="tblnfeterceiroduplicata" color="B2CDF7" x="240" y="416" />
+		<entity schema="mgsis" name="tblnfeterceiro" color="B2CDF7" x="48" y="80" />
+		<entity schema="mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="64" y="720" />
+		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="1040" y="96" />
+		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="B2CDF7" x="1072" y="288" />
+		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="B2CDF7" x="1072" y="512" />
+		<entity schema="mgsis" name="tblnotafiscal" color="B2CDF7" x="784" y="112" />
+		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="1056" y="784" />
+		<entity schema="mgsis" name="tbltitulo" color="B2CDF7" x="768" y="1072" />
+		<entity schema="mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="448" y="1456" />
+		<entity schema="mgsis" name="tblnegocio" color="B2CDF7" x="560" y="128" />
+		<entity schema="mgsis" name="tblnegociostatus" color="B2CDF7" x="608" y="720" />
+		<entity schema="mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="320" y="704" />
 		<entity schema="mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="272" y="48" />
-		<entity schema="mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="64" y="688" />
+		<entity schema="mgsis" name="tblprodutobarra" color="B2CDF7" x="464" y="1168" />
 	</layout>
 	<layout name="Layout_Nota_Fiscal" id="Layout_364e738" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="64" y="96" />
