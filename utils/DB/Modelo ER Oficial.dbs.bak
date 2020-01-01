@@ -351,12 +351,14 @@
 			<column name="codcest" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
 			<column name="codncm" type="bigint" jt="-5" />
 			<column name="cest" type="varchar" length="7" decimal="0" jt="12" mandatory="y" />
-			<column name="ncm" type="varchar" length="8" decimal="0" jt="12" mandatory="y" />
-			<column name="descricao" type="varchar" length="600" decimal="0" jt="12" mandatory="y" />
+			<column name="ncm" type="varchar" length="8" decimal="0" jt="12" />
+			<column name="descricao" type="text" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="coddecreto271" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="mva" type="numeric" length="5" decimal="2" jt="2" />
 			<index name="pk_tabcest" unique="PRIMARY_KEY" >
 				<column name="codcest" />
 			</index>
@@ -374,6 +376,10 @@
 			</index>
 			<index name="idx_tblcest_1" unique="NORMAL" >
 				<column name="codusuariocriacao" />
+			</index>
+			<index name="tblcest_cest_ncm_key" unique="UNIQUE" >
+				<column name="cest" />
+				<column name="ncm" />
 			</index>
 			<fk name="fk_tblcest_codncm" to_schema="mgsis" to_table="tblncm" >
 				<fk_column name="codncm" pk="codncm" />
@@ -870,6 +876,19 @@
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
+		<table name="tbldecreto271" >
+			<column name="coddecreto271" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="tabela" type="smallint" length="5" decimal="0" jt="5" />
+			<column name="item" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="cest" type="varchar" length="7" decimal="0" jt="12" />
+			<column name="ncm" type="varchar" length="8" decimal="0" jt="12" />
+			<column name="descricao" type="text" decimal="0" jt="12" />
+			<column name="ncmoriginal" type="varchar" length="15" decimal="0" jt="12" />
+			<column name="cestoriginal" type="varchar" length="15" decimal="0" jt="12" />
+			<index name="tbldecreto271_pkey" unique="PRIMARY_KEY" >
+				<column name="coddecreto271" />
+			</index>
+		</table>
 		<table name="tbldistribuicaodfe" >
 			<column name="coddistribuicaodfe" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
 			<column name="nfechave" type="varchar" decimal="0" jt="12" />
@@ -1053,6 +1072,9 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="deposito" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
+			</column>
+			<column name="controlaestoque" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>true</defo>
 			</column>
 			<index name="pk_tblestoquelocal" unique="PRIMARY_KEY" >
 				<column name="codestoquelocal" />
@@ -2042,7 +2064,7 @@
 			</column>
 			<column name="abcposicao" type="bigint" jt="-5" />
 			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
-				<defo>4</defo>
+				<defo>0</defo>
 			</column>
 			<column name="codgrupoeconomico" type="bigint" jt="-5" />
 			<index name="tblmarca_pkey" unique="PRIMARY_KEY" >
@@ -2359,6 +2381,7 @@
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="inativo" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codncm2020" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblncm_pkey" unique="PRIMARY_KEY" >
 				<column name="codncm" />
 			</index>
@@ -2377,6 +2400,17 @@
 			<fk name="tblncm_codusuariocriacao_fkey" to_schema="mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
+		</table>
+		<table name="tblncm2020" >
+			<column name="codncm2020" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="ncm" type="varchar" length="15" decimal="0" jt="12" />
+			<column name="datainicio" type="date" length="13" decimal="0" jt="91" />
+			<column name="datafim" type="date" length="13" decimal="0" jt="91" />
+			<column name="utrib" type="varchar" length="8" decimal="0" jt="12" />
+			<column name="utribdescricao" type="varchar" length="50" decimal="0" jt="12" />
+			<index name="tblncm2020_pkey" unique="PRIMARY_KEY" >
+				<column name="codncm2020" />
+			</index>
 		</table>
 		<table name="tblncmtributacao" generator_rows="100" >
 			<column name="codncmtributacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
@@ -2434,6 +2468,7 @@
 			<column name="codestoquelocaldestino" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="recebimento" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariorecebimento" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
 			<index name="tblnegocio_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegocio" />
 			</index>
@@ -2833,6 +2868,10 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="modalidadeicmsgarantido" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="cest" type="varchar" length="10" decimal="0" jt="12" />
 			<index name="tblnfeterceiroitem_pkey" unique="PRIMARY_KEY" >
 				<column name="codnfeterceiroitem" />
 			</index>
@@ -2925,6 +2964,7 @@
 			</column>
 			<column name="placa" type="varchar" length="7" decimal="0" jt="12" />
 			<column name="codestadoplaca" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
 			<index name="tblnotafiscal_pkey" unique="PRIMARY_KEY" >
 				<column name="codnotafiscal" />
 			</index>
@@ -3059,7 +3099,7 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="pedido" type="varchar" length="15" jt="12" />
 			<column name="pedidoitem" type="integer" jt="4" />
-			<column name="certidaosefazmt" type="bool" jt="-7" mandatory="y" >
+			<column name="certidaosefazmt" type="bool" length="1" decimal="0" jt="-7" >
 				<defo>false</defo>
 			</column>
 			<column name="fethabkg" type="numeric" length="14" decimal="6" jt="2" />
@@ -3071,6 +3111,11 @@
 			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="senarvalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="observacoes" type="varchar" length="1500" decimal="0" jt="12" />
+			<column name="icmsbasepercentual" type="numeric" length="5" decimal="2" jt="2" />
+			<column name="valorfrete" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
 			<index name="tblnotafiscalprodutobarra_pkey" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalprodutobarra" />
 			</index>
@@ -3808,6 +3853,20 @@
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
+		<table name="tblportaria195" >
+			<column name="codportaria195" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="tabela" type="varchar" length="5" decimal="0" jt="12" />
+			<column name="item" type="varchar" length="6" decimal="0" jt="12" />
+			<column name="cest" type="varchar" length="9" decimal="0" jt="12" />
+			<column name="ncm" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="descricao" type="text" decimal="0" jt="12" />
+			<column name="mva" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="mvaoriginal" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="cestoriginal" type="varchar" length="9" decimal="0" jt="12" />
+			<index name="tblportaria195_pkey" unique="PRIMARY_KEY" >
+				<column name="codportaria195" />
+			</index>
+		</table>
 		<table name="tblprancheta" >
 			<column name="codprancheta" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
 			<column name="prancheta" type="varchar" length="50" jt="12" mandatory="y" />
@@ -3953,6 +4012,13 @@
 			<column name="abccategoria" type="smallint" jt="5" mandatory="y" >
 				<defo>4</defo>
 			</column>
+			<column name="abc" type="char" length="1" decimal="0" jt="1" mandatory="y" >
+				<defo>&#039;C&#039;::bpchar</defo>
+			</column>
+			<column name="codcestanterior" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="bit" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<index name="tblproduto_pkey" unique="PRIMARY_KEY" >
 				<column name="codproduto" />
 			</index>
@@ -3983,6 +4049,9 @@
 			<index name="idx_tblproduto_0" unique="NORMAL" >
 				<column name="codprodutoimagem" />
 			</index>
+			<constraint name="tblproduto_abc_check" >
+				<string>abc = ANY (ARRAY[&#039;A&#039;::bpchar, &#039;B&#039;::bpchar, &#039;C&#039;::bpchar])</string>
+			</constraint>
 			<fk name="tblproduto_codmarca_fkey" to_schema="mgsis" to_table="tblmarca" >
 				<fk_column name="codmarca" pk="codmarca" />
 			</fk>
@@ -4668,6 +4737,9 @@
 			<column name="funruralpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="bit" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<index name="tbltributacaonaturezaoperacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codtributacaonaturezaoperacao" />
 			</index>
@@ -6094,6 +6166,7 @@
 		<sequence name="tblcontacontabil_codcontacontabil_seq" start="1" />
 		<sequence name="tblcupomfiscal_codcupomfiscal_seq" start="1" />
 		<sequence name="tblcupomfiscalprodutobarra_codcupomfiscalprodutobarra_seq" start="1" />
+		<sequence name="tbldecreto271_coddecreto271_seq" start="1" />
 		<sequence name="tbldistribuicaodfe_coddistribuicaodfe_seq" start="1" />
 		<sequence name="tblecf_codecf_seq" start="1" />
 		<sequence name="tblecfreducaoz_codecfreducaoz_seq" start="1" />
@@ -6133,6 +6206,7 @@
 		<sequence name="tblmetafilialpessoa_codmetafilialpessoa_seq" start="1" />
 		<sequence name="tblmovimentotitulo_codmovimentotitulo_seq" start="1" />
 		<sequence name="tblnaturezaoperacao_codnaturezaoperacao_seq" start="1" />
+		<sequence name="tblncm2020_codncm2020_seq" start="1" />
 		<sequence name="tblncm_codncm_seq" start="1" />
 		<sequence name="tblncmtributacao_codncmtributacao_seq" start="1" />
 		<sequence name="tblnegocio_codnegocio_seq" start="1" />
@@ -6183,6 +6257,7 @@
 		<sequence name="tblpessoa_codpessoa_seq" start="1" />
 		<sequence name="tblpessoacertidao_codpessoacertidao_seq" start="1" />
 		<sequence name="tblportador_codportador_seq" start="1" />
+		<sequence name="tblportaria195_codportaria195_seq" start="1" />
 		<sequence name="tblprancheta_codprancheta_seq" start="1" />
 		<sequence name="tblpranchetaproduto_codpranchetaproduto_seq" start="1" />
 		<sequence name="tblprefixogs1_codprefixogs1_seq" start="1" />
@@ -6225,13 +6300,13 @@
 		<sequence name="tblvalecompramodelo_codvalecompramodelo_seq" start="1" />
 		<sequence name="tblvalecompramodeloprodutobarra_codvalecompraprodutobarra_seq" start="1" />
 		<sequence name="tblvalecompraprodutobarra_codvalecompraprodutobarra_seq" start="1" />
-		<procedure name="connectby" id="Procedure_fb5079" isSystem="false" params_known="y" >
+		<procedure name="connectby" id="Procedure_53eab76" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer, text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$connectby_text$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
@@ -6240,13 +6315,13 @@ AS '$libdir/tablefunc', $function$connectby_text$function$
 			<input_param name="$6" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="connectby" id="Procedure_d57032" isSystem="false" params_known="y" >
+		<procedure name="connectby" id="Procedure_2cb2208" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$connectby_text$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
@@ -6254,13 +6329,13 @@ AS '$libdir/tablefunc', $function$connectby_text$function$
 			<input_param name="$5" jt="4" type="int4" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="connectby" id="Procedure_5566f80" isSystem="false" params_known="y" >
+		<procedure name="connectby" id="Procedure_1ac8f5c" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer, text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$connectby_text_serial$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
@@ -6270,13 +6345,13 @@ AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 			<input_param name="$7" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="connectby" id="Procedure_5efc953" isSystem="false" params_known="y" >
+		<procedure name="connectby" id="Procedure_3943003" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$connectby_text_serial$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
@@ -6285,7 +6360,7 @@ AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 			<input_param name="$6" jt="4" type="int4" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="criatriggers_geraauditoria" id="Procedure_31be853" isSystem="false" params_known="y" >
+		<procedure name="criatriggers_geraauditoria" id="Procedure_26ba0a7" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.criatriggers_geraauditoria(brecria boolean DEFAULT false)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6319,74 +6394,74 @@ BEGIN
 	RETURN TRUE;
 END;
 $function$
-;]]></string>
+]]></string>
 			<input_param name="brecria" jt="-7" type="bool" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
-		<procedure name="crosstab" id="Procedure_56c43fb" isSystem="false" params_known="y" >
+		<procedure name="crosstab" id="Procedure_51ee7d0" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$crosstab_hash$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="crosstab" id="Procedure_36f173b" isSystem="false" params_known="y" >
+		<procedure name="crosstab" id="Procedure_161e699" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$crosstab$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="crosstab" id="Procedure_14e504c" isSystem="false" params_known="y" >
+		<procedure name="crosstab" id="Procedure_86a8f2" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$crosstab$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="4" type="int4" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="crosstab2" id="Procedure_27ecf00" isSystem="false" params_known="y" >
+		<procedure name="crosstab2" id="Procedure_42d9d37" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab2(text)
  RETURNS SETOF tablefunc_crosstab_2
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$crosstab$function$
-;]]></string>
+]]></string>
 			<input_param name="row_name" jt="12" type="text" />
 			<input_param name="category_1" jt="12" type="text" />
 			<input_param name="category_2" jt="12" type="text" />
 			<input_param name="$1" jt="12" type="text" />
 		</procedure>
-		<procedure name="crosstab3" id="Procedure_19a548b" isSystem="false" params_known="y" >
+		<procedure name="crosstab3" id="Procedure_2a38a80" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab3(text)
  RETURNS SETOF tablefunc_crosstab_3
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$crosstab$function$
-;]]></string>
+]]></string>
 			<input_param name="row_name" jt="12" type="text" />
 			<input_param name="category_1" jt="12" type="text" />
 			<input_param name="category_2" jt="12" type="text" />
 			<input_param name="category_3" jt="12" type="text" />
 			<input_param name="$1" jt="12" type="text" />
 		</procedure>
-		<procedure name="crosstab4" id="Procedure_6d79a9" isSystem="false" params_known="y" >
+		<procedure name="crosstab4" id="Procedure_2f00b4e" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab4(text)
  RETURNS SETOF tablefunc_crosstab_4
  LANGUAGE c
  STABLE STRICT
 AS '$libdir/tablefunc', $function$crosstab$function$
-;]]></string>
+]]></string>
 			<input_param name="row_name" jt="12" type="text" />
 			<input_param name="category_1" jt="12" type="text" />
 			<input_param name="category_2" jt="12" type="text" />
@@ -6733,13 +6808,15 @@ BEGIN
 	RETURN QUERY select count(*) as atualizados from tblestoquelocalprodutovariacaovenda where alteracao = v_data_atualizacao;
 END;
 $function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="-5" type="int8" />
+			<result_param name="atualizados" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-5" type="int8" />
 			<result_param name="atualizados" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-5" type="int8" />
 			<result_param name="atualizados" jt="-5" type="int8" />
 		</procedure>
-		<procedure name="fncalculaestoque" id="Procedure_1ea3b26" isSystem="false" params_known="y" >
+		<procedure name="fncalculaestoque" id="Procedure_293517a" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fncalculaestoque(pcodproduto bigint)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6845,7 +6922,7 @@ BEGIN
 	return true;
 END;
 $function$
-;]]></string>
+]]></string>
 			<input_param name="pcodproduto" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
@@ -6913,7 +6990,11 @@ BEGIN
          
 END;
 $function$
-;]]></string>
+]]></string>
+			<result_param name="codprodutocombinado" jt="12" type="text" />
+			<result_param name="codproduto" jt="-5" type="int8" />
+			<result_param name="codprodutorelacionado" jt="-5" type="int8" />
+			<result_param name="vendas" jt="-5" type="int8" />
 			<result_param name="codprodutocombinado" jt="12" type="text" />
 			<result_param name="codproduto" jt="-5" type="int8" />
 			<result_param name="codprodutorelacionado" jt="-5" type="int8" />
@@ -6923,7 +7004,7 @@ $function$
 			<result_param name="codprodutorelacionado" jt="-5" type="int8" />
 			<result_param name="vendas" jt="-5" type="int8" />
 		</procedure>
-		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_4575382" isSystem="false" params_known="y" >
+		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_33e2717" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
  RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
  LANGUAGE plpgsql
@@ -6998,7 +7079,7 @@ BEGIN
          
 END;
 $function$
-;]]></string>
+]]></string>
 			<input_param name="pmovimento" jt="91" type="date" />
 			<input_param name="pcrz" jt="-5" type="int8" />
 			<result_param name="tipo" jt="12" type="text" />
@@ -7006,7 +7087,7 @@ $function$
 			<result_param name="movimento" jt="91" type="date" />
 			<result_param name="valor" jt="2" type="numeric" />
 		</procedure>
-		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_4d65cc4" isSystem="false" params_known="y" >
+		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_31ca825" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint, pdesejado numeric)
  RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric, diferenca numeric)
  LANGUAGE plpgsql
@@ -7083,7 +7164,7 @@ BEGIN
          
 END;
 $function$
-;]]></string>
+]]></string>
 			<input_param name="pmovimento" jt="91" type="date" />
 			<input_param name="pcrz" jt="-5" type="int8" />
 			<input_param name="pdesejado" jt="2" type="numeric" />
@@ -7181,11 +7262,12 @@ AS $function$
 				RETURN NEW;
 				END;
 			$function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
-		<procedure name="fntblnegocio_atualiza_valoraprazo" id="Procedure_1bb3d7f" isSystem="false" params_known="y" >
+		<procedure name="fntblnegocio_atualiza_valoraprazo" id="Procedure_54a538d" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocio_atualiza_valoraprazo(pcodnegocio bigint)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -7208,11 +7290,11 @@ AS $function$
 				RETURN TRUE;
 			END;
 			$function$
-;]]></string>
+]]></string>
 			<input_param name="pcodnegocio" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
-		<procedure name="fntblnegocio_atualiza_valorprodutos" id="Procedure_314cb78" isSystem="false" params_known="y" >
+		<procedure name="fntblnegocio_atualiza_valorprodutos" id="Procedure_34c2b74" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocio_atualiza_valorprodutos(pcodnegocio bigint)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -7233,11 +7315,11 @@ AS $function$
 				RETURN TRUE;
 			END;
 			$function$
-;]]></string>
+]]></string>
 			<input_param name="pcodnegocio" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
-		<procedure name="fntblnegocio_atualiza_valortotal" id="Procedure_519f2" isSystem="false" params_known="y" >
+		<procedure name="fntblnegocio_atualiza_valortotal" id="Procedure_47959b2" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocio_atualiza_valortotal(pcodnegocio bigint)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -7251,7 +7333,7 @@ AS $function$
 				RETURN TRUE;
 			END;
 			$function$
-;]]></string>
+]]></string>
 			<input_param name="pcodnegocio" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
@@ -7277,7 +7359,8 @@ AS $function$
 				RETURN NEW;
 			END;
 			$function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
@@ -7303,7 +7386,8 @@ AS $function$
 				RETURN NEW;
 			END;
 			$function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
@@ -7329,11 +7413,12 @@ AS $function$
 				RETURN NEW;
 			END;
 			$function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
-		<procedure name="fntblnotafiscal_atualiza_valorprodutos" id="Procedure_3dce0bb" isSystem="false" params_known="y" >
+		<procedure name="fntblnotafiscal_atualiza_valorprodutos" id="Procedure_1d54210" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnotafiscal_atualiza_valorprodutos(pcodnotafiscal bigint)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -7346,6 +7431,10 @@ AS $function$
 				vIcmsStValor   numeric (14,2);
 				vIpiBase       numeric (14,2);
 				vIpiValor      numeric (14,2);
+				vDesconto      numeric (14,2);
+				vFrete         numeric (14,2);
+				vSeguro        numeric (14,2);
+				vOutras        numeric (14,2);
 			BEGIN
 				-- calcula total produtos
 				SELECT 
@@ -7356,6 +7445,10 @@ AS $function$
 				     , vIcmsStValor
 				     , vIpiBase
 				     , vIpiValor
+					 , vDesconto
+					 , vFrete
+					 , vSeguro
+					 , vOutras
 					   SUM(COALESCE(tblNotaFiscalProdutoBarra.valortotal, 0))
 					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsBase, 0))
 					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsValor, 0))
@@ -7363,7 +7456,10 @@ AS $function$
 					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsStValor, 0))
 					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiBase, 0))
 					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiValor, 0))
-					   
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.valordesconto, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.valorfrete, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.valorseguro, 0))
+					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.valoroutras, 0))
 				FROM tblNotaFiscalProdutoBarra
 				WHERE tblNotaFiscalProdutoBarra.codNotaFiscal = pCodNotaFiscal;
 				-- Atualiza Tabela com valores calculados
@@ -7378,12 +7474,11 @@ AS $function$
 				 WHERE tblNotaFiscal.CodNotaFiscal = pCodNotaFiscal;
 				RETURN TRUE;
 			END;
-			$function$
-;]]></string>
+			$function$]]></string>
 			<input_param name="pcodnotafiscal" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
-		<procedure name="fntblnotafiscal_atualiza_valortotal" id="Procedure_346502a" isSystem="false" params_known="y" >
+		<procedure name="fntblnotafiscal_atualiza_valortotal" id="Procedure_4979a53" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnotafiscal_atualiza_valortotal(pcodnotafiscal bigint)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -7402,8 +7497,7 @@ AS $function$
 				 WHERE tblNotaFiscal.CodNotaFiscal = pCodNotaFiscal;
 				RETURN TRUE;
 			END;
-			$function$
-;]]></string>
+			$function$]]></string>
 			<input_param name="pcodnotafiscal" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
@@ -7429,7 +7523,8 @@ AS $function$
 				RETURN NEW;
 			END;
 			$function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
@@ -7454,8 +7549,8 @@ AS $function$
 				END IF;
 				RETURN NEW;
 			END;
-			$function$
-;]]></string>
+			$function$]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
@@ -7495,7 +7590,8 @@ BEGIN
 	RETURN NEW;
 END;
 $function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
@@ -7535,7 +7631,8 @@ AS $function$
 				RETURN NEW;
 				END;
 			$function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
@@ -7590,7 +7687,8 @@ BEGIN
 	RETURN NEW;
 END;
 $function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
@@ -7682,21 +7780,66 @@ BEGIN
 	RETURN NULL;
 END;
 $function$
-;]]></string>
+]]></string>
+			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
-		<procedure name="normal_rand" id="Procedure_1f705e6" isSystem="false" params_known="y" >
+		<procedure name="normal_rand" id="Procedure_e0717a" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.normal_rand(integer, double precision, double precision)
  RETURNS SETOF double precision
  LANGUAGE c
  STRICT
 AS '$libdir/tablefunc', $function$normal_rand$function$
-;]]></string>
+]]></string>
 			<input_param name="$1" jt="4" type="int4" />
 			<input_param name="$2" jt="8" type="float8" />
 			<input_param name="$3" jt="8" type="float8" />
 			<result_param name="returnValue" jt="8" type="float8" />
+		</procedure>
+		<procedure name="unaccent" id="Procedure_3dd692f" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(regdictionary, text)
+ RETURNS text
+ LANGUAGE c
+ STABLE PARALLEL SAFE STRICT
+AS '$libdir/unaccent', $function$unaccent_dict$function$
+]]></string>
+			<input_param name="$1" jt="1111" type="regdictionary" />
+			<input_param name="$2" jt="12" type="text" />
+			<result_param name="returnValue" jt="12" type="text" />
+		</procedure>
+		<procedure name="unaccent" id="Procedure_1320d09" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(text)
+ RETURNS text
+ LANGUAGE c
+ STABLE PARALLEL SAFE STRICT
+AS '$libdir/unaccent', $function$unaccent_dict$function$
+]]></string>
+			<input_param name="$1" jt="12" type="text" />
+			<result_param name="returnValue" jt="12" type="text" />
+		</procedure>
+		<procedure name="unaccent_init" id="Procedure_42ed239" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent_init(internal)
+ RETURNS internal
+ LANGUAGE c
+ PARALLEL SAFE
+AS '$libdir/unaccent', $function$unaccent_init$function$
+]]></string>
+			<input_param name="$1" jt="1111" type="internal" />
+			<result_param name="returnValue" jt="1111" type="internal" />
+		</procedure>
+		<procedure name="unaccent_lexize" id="Procedure_a00876" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent_lexize(internal, internal, internal, internal)
+ RETURNS internal
+ LANGUAGE c
+ PARALLEL SAFE
+AS '$libdir/unaccent', $function$unaccent_lexize$function$
+]]></string>
+			<input_param name="$1" jt="1111" type="internal" />
+			<input_param name="$2" jt="1111" type="internal" />
+			<input_param name="$3" jt="1111" type="internal" />
+			<input_param name="$4" jt="1111" type="internal" />
+			<result_param name="returnValue" jt="1111" type="internal" />
 		</procedure>
 		<trigger name="tblmovimentotituloaiauad" table="tblmovimentotitulo" id="Trigger4846959" isSystem="false" >
 			<string><![CDATA[CREATE TRIGGER tblmovimentotituloaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblmovimentotitulo FOR EACH ROW EXECUTE PROCEDURE fntblmovimentotituloaiauad()]]></string>
@@ -8579,15 +8722,18 @@ $function$
 		</function>
 	</schema>
 	<connector name="MGsis_Desenv" database="PostgreSQL" host="localhost" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
-	<connector name="MGsis_Escmig99" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.2.jar" driver_desc="Standard" host="api.mgspa.escmig99.teste" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="MGsis_Docker" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.2.jar" driver_desc="Standard" host="localhost" port="54320" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<connector name="MGsis_Prod" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.2.jar" driver_desc="Standard" host="sistema.mgpapelaria.com.br" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblfilial" color="B7C8E3" x="768" y="64" />
-		<entity schema="mgsis" name="tblpermissao" color="B7C8E3" x="48" y="592" />
-		<entity schema="mgsis" name="tblgrupousuariousuario" color="B7C8E3" x="432" y="48" />
-		<entity schema="mgsis" name="tblgrupousuario" color="B7C8E3" x="448" y="384" />
-		<entity schema="mgsis" name="tblgrupousuariopermissao" color="B7C8E3" x="464" y="640" />
-		<entity schema="mgsis" name="tblimagem" color="C1D8EE" x="224" y="448" />
+		<entity schema="mgsis" name="tblfilial" color="B7C8E3" x="816" y="112" />
+		<entity schema="mgsis" name="tblpermissao" color="B7C8E3" x="96" y="640" />
+		<entity schema="mgsis" name="tblgrupousuariousuario" color="B7C8E3" x="480" y="96" />
+		<entity schema="mgsis" name="tblgrupousuario" color="B7C8E3" x="496" y="432" />
+		<entity schema="mgsis" name="tblgrupousuariopermissao" color="B7C8E3" x="512" y="688" />
+		<entity schema="mgsis" name="tblimagem" color="C1D8EE" x="272" y="496" />
+		<entity schema="mgsis" name="tbldecreto271" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis" name="tblncm2020" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis" name="tblportaria195" color="3986C1" x="48" y="48" />
 		<browser id="Browse_260dba35" name="tblgrupousuario" confirm_updates="y" confirmed="y" >
 			<browse_table schema="mgsis" entity="tblgrupousuario" x="10" y="10" width="453" height="349" />
 		</browser>
@@ -8679,6 +8825,9 @@ $function$
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 			<column name="codprodutoimagem" />
+			<column name="abc" />
+			<column name="codcestanterior" />
+			<column name="bit" />
 		</entity>
 		<entity schema="mgsis" name="tblprodutoembalagem" color="C1D8EE" x="528" y="496" >
 			<column name="codprodutoembalagem" />
@@ -8741,6 +8890,7 @@ $function$
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 			<column name="codestadoplaca" />
+			<column name="cpf" />
 		</entity>
 		<entity schema="mgsis" name="tbltitulo" color="3986C1" x="48" y="992" />
 		<entity schema="mgsis" name="tblestoquelocalprodutovariacao" color="3986C1" x="688" y="1664" />
@@ -8768,6 +8918,13 @@ $function$
 			<column name="senarpercentual" />
 			<column name="senarvalor" />
 			<column name="observacoes" />
+			<column name="icmsbasepercentual" />
+			<column name="icmsbasepercentual" />
+			<column name="codprodutoembalagem" />
+			<column name="valorfrete" />
+			<column name="valorseguro" />
+			<column name="valordesconto" />
+			<column name="valoroutras" />
 		</entity>
 		<entity schema="mgsis" name="tblnegocioprodutobarra" color="B3CEF5" x="1472" y="432" >
 			<column name="codnegocioprodutobarra" />
@@ -9184,25 +9341,25 @@ FROM
 		<entity schema="mgsis" name="tblprodutobarra" color="B2CDF7" x="464" y="1168" />
 	</layout>
 	<layout name="Layout_Nota_Fiscal" id="Layout_364e738" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="64" y="96" />
-		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="48" y="272" />
-		<entity schema="mgsis" name="tbloperacao" color="C1D8EE" x="80" y="544" />
-		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="80" y="720" />
-		<entity schema="mgsis" name="tblpessoa" color="C1D8EE" x="832" y="96" />
-		<entity schema="mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="64" y="928" />
-		<entity schema="mgsis" name="tblprodutobarra" color="C1D8EE" x="400" y="832" />
-		<entity schema="mgsis" name="tblprodutoembalagem" color="C1D8EE" x="384" y="1136" />
-		<entity schema="mgsis" name="tblproduto" color="C1D8EE" x="624" y="896" />
-		<entity schema="mgsis" name="tblprodutovariacao" color="C1D8EE" x="880" y="928" />
-		<entity schema="mgsis" name="tblpais" color="C1D8EE" x="1152" y="1216" />
-		<entity schema="mgsis" name="tblestado" color="C1D8EE" x="1152" y="992" />
-		<entity schema="mgsis" name="tblcidade" color="C1D8EE" x="1152" y="736" />
-		<entity schema="mgsis" name="tblfilial" color="C1D8EE" x="1120" y="80" />
-		<entity schema="mgsis" name="tblibptcache" color="C1D8EE" x="1376" y="96" />
-		<entity schema="mgsis" name="tblempresa" color="C1D8EE" x="1120" y="528" />
-		<entity schema="mgsis" name="tblprefixogs1" color="C1D8EE" x="1376" y="560" />
-		<entity schema="mgsis" name="tblnotafiscal" color="C1D8EE" x="304" y="48" />
-		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="C1D8EE" x="544" y="144" />
+		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="64" y="112" />
+		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="48" y="288" />
+		<entity schema="mgsis" name="tbloperacao" color="C1D8EE" x="80" y="560" />
+		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="80" y="736" />
+		<entity schema="mgsis" name="tblpessoa" color="C1D8EE" x="832" y="112" />
+		<entity schema="mgsis" name="tblpais" color="C1D8EE" x="1152" y="1232" />
+		<entity schema="mgsis" name="tblestado" color="C1D8EE" x="1152" y="1008" />
+		<entity schema="mgsis" name="tblcidade" color="C1D8EE" x="1152" y="752" />
+		<entity schema="mgsis" name="tblfilial" color="C1D8EE" x="1120" y="96" />
+		<entity schema="mgsis" name="tblibptcache" color="C1D8EE" x="1376" y="112" />
+		<entity schema="mgsis" name="tblempresa" color="C1D8EE" x="1120" y="544" />
+		<entity schema="mgsis" name="tblprefixogs1" color="C1D8EE" x="1376" y="576" />
+		<entity schema="mgsis" name="tblprodutoembalagem" color="C1D8EE" x="320" y="1408" />
+		<entity schema="mgsis" name="tblprodutobarra" color="C1D8EE" x="368" y="1024" />
+		<entity schema="mgsis" name="tblproduto" color="C1D8EE" x="624" y="1072" />
+		<entity schema="mgsis" name="tblprodutovariacao" color="C1D8EE" x="880" y="1072" />
+		<entity schema="mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="48" y="1024" />
+		<entity schema="mgsis" name="tblnotafiscal" color="C1D8EE" x="304" y="64" />
+		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="C1D8EE" x="560" y="48" />
 	</layout>
 	<layout name="Layout_Pessoa" id="Layout_156d02e" show_relation="columns" >
 		<entity schema="mgsis" name="tblpessoa" color="3986C1" x="48" y="48" />
@@ -9275,6 +9432,9 @@ FROM
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 			<column name="codprodutoimagem" />
+			<column name="abc" />
+			<column name="codcestanterior" />
+			<column name="bit" />
 		</entity>
 		<entity schema="mgsis" name="tblprodutovariacao" color="C1D8EE" x="832" y="512" >
 			<column name="codprodutovariacao" />

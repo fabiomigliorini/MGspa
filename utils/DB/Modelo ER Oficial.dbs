@@ -3111,6 +3111,11 @@
 			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="senarvalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="observacoes" type="varchar" length="1500" decimal="0" jt="12" />
+			<column name="icmsbasepercentual" type="numeric" length="5" decimal="2" jt="2" />
+			<column name="valorfrete" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
 			<index name="tblnotafiscalprodutobarra_pkey" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalprodutobarra" />
 			</index>
@@ -4732,6 +4737,9 @@
 			<column name="funruralpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="bit" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<index name="tbltributacaonaturezaoperacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codtributacaonaturezaoperacao" />
 			</index>
@@ -7410,52 +7418,67 @@ AS $function$
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 		</procedure>
-		<procedure name="fntblnotafiscal_atualiza_valorprodutos" id="Procedure_1d54210" isSystem="false" params_known="y" >
+		<procedure name="fntblnotafiscal_atualiza_valorprodutos" id="Procedure_3e9c58" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnotafiscal_atualiza_valorprodutos(pcodnotafiscal bigint)
  RETURNS boolean
  LANGUAGE plpgsql
 AS $function$
-			DECLARE
-				vValorProdutos numeric (14,2);
-				vIcmsBase      numeric (14,2);
-				vIcmsValor     numeric (14,2);
-				vIcmsStBase    numeric (14,2);
-				vIcmsStValor   numeric (14,2);
-				vIpiBase       numeric (14,2);
-				vIpiValor      numeric (14,2);
-			BEGIN
-				-- calcula total produtos
-				SELECT 
-				  INTO vValorProdutos
-				     , vIcmsBase
-				     , vIcmsValor
-				     , vIcmsStBase
-				     , vIcmsStValor
-				     , vIpiBase
-				     , vIpiValor
-					   SUM(COALESCE(tblNotaFiscalProdutoBarra.valortotal, 0))
-					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsBase, 0))
-					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsValor, 0))
-					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsStBase, 0))
-					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsStValor, 0))
-					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiBase, 0))
-					 , SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiValor, 0))
-					   
-				FROM tblNotaFiscalProdutoBarra
-				WHERE tblNotaFiscalProdutoBarra.codNotaFiscal = pCodNotaFiscal;
-				-- Atualiza Tabela com valores calculados
-				UPDATE tblNotaFiscal
-				   SET valorProdutos   = coalesce(vValorProdutos, 0)
-				     , IcmsBase       = coalesce(vIcmsBase     , 0)
-				     , IcmsValor      = coalesce(vIcmsValor    , 0)
-				     , IcmsStBase     = coalesce(vIcmsStBase   , 0)
-				     , IcmsStValor    = coalesce(vIcmsStValor  , 0)
-				     , IpiBase        = coalesce(vIpiBase      , 0)
-				     , IpiValor       = coalesce(vIpiValor     , 0)
-				 WHERE tblNotaFiscal.CodNotaFiscal = pCodNotaFiscal;
-				RETURN TRUE;
-			END;
-			$function$
+DECLARE
+	vValorProdutos numeric (14,2);
+	vIcmsBase      numeric (14,2);
+	vIcmsValor     numeric (14,2);
+	vIcmsStBase    numeric (14,2);
+	vIcmsStValor   numeric (14,2);
+	vIpiBase       numeric (14,2);
+	vIpiValor      numeric (14,2);
+	vDesconto      numeric (14,2);
+	vFrete         numeric (14,2);
+	vSeguro        numeric (14,2);
+	vOutras        numeric (14,2);
+BEGIN
+	-- calcula total produtos
+	SELECT 
+	INTO vValorProdutos
+		, vIcmsBase
+		, vIcmsValor
+		, vIcmsStBase
+		, vIcmsStValor
+		, vIpiBase
+		, vIpiValor
+		, vDesconto
+		, vFrete
+		, vSeguro
+		, vOutras
+		SUM(COALESCE(tblNotaFiscalProdutoBarra.valortotal, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsBase, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsValor, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsStBase, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.IcmsStValor, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiBase, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.IpiValor, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.valordesconto, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.valorfrete, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.valorseguro, 0))
+		, SUM(COALESCE(tblNotaFiscalProdutoBarra.valoroutras, 0))
+	FROM tblNotaFiscalProdutoBarra
+	WHERE tblNotaFiscalProdutoBarra.codNotaFiscal = pCodNotaFiscal;
+	-- Atualiza Tabela com valores calculados
+	UPDATE tblNotaFiscal
+	SET valorProdutos   = coalesce(vValorProdutos, 0)
+		, IcmsBase       = coalesce(vIcmsBase     , 0)
+		, IcmsValor      = coalesce(vIcmsValor    , 0)
+		, IcmsStBase     = coalesce(vIcmsStBase   , 0)
+		, IcmsStValor    = coalesce(vIcmsStValor  , 0)
+		, IpiBase        = coalesce(vIpiBase      , 0)
+		, IpiValor       = coalesce(vIpiValor     , 0)
+		, valordesconto  = coalesce(vDesconto     , 0)
+		, valorfrete     = coalesce(vFrete        , 0)
+		, valorseguro    = coalesce(vSeguro       , 0)
+		, valoroutras    = coalesce(vOutras       , 0)
+	WHERE tblNotaFiscal.CodNotaFiscal = pCodNotaFiscal;
+	RETURN TRUE;
+END;
+$function$
 ]]></string>
 			<input_param name="pcodnotafiscal" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
@@ -7479,8 +7502,7 @@ AS $function$
 				 WHERE tblNotaFiscal.CodNotaFiscal = pCodNotaFiscal;
 				RETURN TRUE;
 			END;
-			$function$
-]]></string>
+			$function$]]></string>
 			<input_param name="pcodnotafiscal" jt="-5" type="int8" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
@@ -7532,8 +7554,7 @@ AS $function$
 				END IF;
 				RETURN NEW;
 			END;
-			$function$
-]]></string>
+			$function$]]></string>
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
 			<result_param name="returnValue" jt="1111" type="trigger" />
@@ -8903,6 +8924,12 @@ $function$
 			<column name="senarvalor" />
 			<column name="observacoes" />
 			<column name="icmsbasepercentual" />
+			<column name="icmsbasepercentual" />
+			<column name="codprodutoembalagem" />
+			<column name="valorfrete" />
+			<column name="valorseguro" />
+			<column name="valordesconto" />
+			<column name="valoroutras" />
 		</entity>
 		<entity schema="mgsis" name="tblnegocioprodutobarra" color="B3CEF5" x="1472" y="432" >
 			<column name="codnegocioprodutobarra" />
@@ -9319,25 +9346,25 @@ FROM
 		<entity schema="mgsis" name="tblprodutobarra" color="B2CDF7" x="464" y="1168" />
 	</layout>
 	<layout name="Layout_Nota_Fiscal" id="Layout_364e738" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="64" y="96" />
-		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="48" y="272" />
-		<entity schema="mgsis" name="tbloperacao" color="C1D8EE" x="80" y="544" />
-		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="80" y="720" />
-		<entity schema="mgsis" name="tblpessoa" color="C1D8EE" x="832" y="96" />
-		<entity schema="mgsis" name="tblpais" color="C1D8EE" x="1152" y="1216" />
-		<entity schema="mgsis" name="tblestado" color="C1D8EE" x="1152" y="992" />
-		<entity schema="mgsis" name="tblcidade" color="C1D8EE" x="1152" y="736" />
-		<entity schema="mgsis" name="tblfilial" color="C1D8EE" x="1120" y="80" />
-		<entity schema="mgsis" name="tblibptcache" color="C1D8EE" x="1376" y="96" />
-		<entity schema="mgsis" name="tblempresa" color="C1D8EE" x="1120" y="528" />
-		<entity schema="mgsis" name="tblprefixogs1" color="C1D8EE" x="1376" y="560" />
-		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="C1D8EE" x="560" y="96" />
-		<entity schema="mgsis" name="tblprodutoembalagem" color="C1D8EE" x="320" y="1392" />
-		<entity schema="mgsis" name="tblprodutobarra" color="C1D8EE" x="368" y="1008" />
-		<entity schema="mgsis" name="tblproduto" color="C1D8EE" x="624" y="1056" />
-		<entity schema="mgsis" name="tblprodutovariacao" color="C1D8EE" x="880" y="1056" />
-		<entity schema="mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="48" y="1008" />
-		<entity schema="mgsis" name="tblnotafiscal" color="C1D8EE" x="304" y="48" />
+		<entity schema="mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="64" y="112" />
+		<entity schema="mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="48" y="288" />
+		<entity schema="mgsis" name="tbloperacao" color="C1D8EE" x="80" y="560" />
+		<entity schema="mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="80" y="736" />
+		<entity schema="mgsis" name="tblpessoa" color="C1D8EE" x="832" y="112" />
+		<entity schema="mgsis" name="tblpais" color="C1D8EE" x="1152" y="1232" />
+		<entity schema="mgsis" name="tblestado" color="C1D8EE" x="1152" y="1008" />
+		<entity schema="mgsis" name="tblcidade" color="C1D8EE" x="1152" y="752" />
+		<entity schema="mgsis" name="tblfilial" color="C1D8EE" x="1120" y="96" />
+		<entity schema="mgsis" name="tblibptcache" color="C1D8EE" x="1376" y="112" />
+		<entity schema="mgsis" name="tblempresa" color="C1D8EE" x="1120" y="544" />
+		<entity schema="mgsis" name="tblprefixogs1" color="C1D8EE" x="1376" y="576" />
+		<entity schema="mgsis" name="tblprodutoembalagem" color="C1D8EE" x="320" y="1408" />
+		<entity schema="mgsis" name="tblprodutobarra" color="C1D8EE" x="368" y="1024" />
+		<entity schema="mgsis" name="tblproduto" color="C1D8EE" x="624" y="1072" />
+		<entity schema="mgsis" name="tblprodutovariacao" color="C1D8EE" x="880" y="1072" />
+		<entity schema="mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="48" y="1024" />
+		<entity schema="mgsis" name="tblnotafiscal" color="C1D8EE" x="304" y="64" />
+		<entity schema="mgsis" name="tblnotafiscalprodutobarra" color="C1D8EE" x="560" y="48" />
 	</layout>
 	<layout name="Layout_Pessoa" id="Layout_156d02e" show_relation="columns" >
 		<entity schema="mgsis" name="tblpessoa" color="3986C1" x="48" y="48" />
