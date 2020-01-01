@@ -442,6 +442,14 @@ class NFePHPRepositoryMake
                   $std->vBC = number_format($nfpb->icmsbase, 2, '.', '');
                   $std->pICMS = number_format($nfpb->icmspercentual, 2, '.', '');
                   $std->vICMS = number_format($nfpb->icmsvalor, 2, '.', '');
+                  $pRedBC = 100.0 - $nfpb->icmsbasepercentual;
+                  if ($std->CST == 20 && $pRedBC > 0) {
+                      $std->motDesICMS = 9;
+                      $std->pRedBC = number_format($pRedBC, 2, '.', '');
+                      $std->vICMSDeson = number_format(($std->vBC * ($std->pRedBC / 100) / (1 - ($std->pRedBC / 100))) * ($std->pICMS/100), 2, '.', '');
+                      // $std->vICMSDeson = ($std->vBC * ($std->pRedBC / 100) / (1 – ($std->pRedBC / 100))) * ($std->pICMS/100);
+                      // $std->vICMSDeson = ($std->vBC * ($std->pRedBC/100) / (1 – ($std->pRedBC/100))) * ($std->pICMS/100);
+                  }
                   if (!empty($nfpb->icmsbase) && ($nfpb->icmsbase < $nfpb->valortotal) && $nfpb->icmscst == 20) {
                       $std->pRedBC = number_format((1 - round($nfpb->icmsbase / $nfpb->valortotal, 2)) * 100, 2, '.', '');
                   }
