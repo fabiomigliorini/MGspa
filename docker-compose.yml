@@ -22,4 +22,5 @@ services:
         volumes:
             - ./:/opt/www/MGspa
             - ../MGLara/:/opt/www/MGLara
+            - ../NFePHP/:/opt/www/NFePHP
         network_mode: host

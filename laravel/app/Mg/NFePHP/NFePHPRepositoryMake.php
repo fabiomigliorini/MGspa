@@ -272,11 +272,10 @@ class NFePHPRepositoryMake
         //instancia a classe Ibpt
         $ibpt = new MgIbpt($nf->Filial);
 
-        $rateio = static::rateiaDescontoSeguroFreteOutras($nf);
-
         // Produtos
         $observacoesProdutos = '';
-        foreach ($nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get() as $nfpb) {
+        $nfpbs = $nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get();
+        foreach ($nfpbs as $nfpb) {
           $nItem++;
 
           // Item
@@ -330,17 +329,17 @@ class NFePHPRepositoryMake
 
           // SE NAO ACHOU NENHUM CODIGO DE BARRAS DE UNIDADE, USA MESMO CODIGO DE BARRAS DA EMBALAGEM
           $std->vUnTrib = number_format($std->vProd / $std->qTrib, 10, '.', '');
-          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vFrete)) {
-              $std->vFrete = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vFrete, 2, '.', '');
+          if ($nfpb->valorfrete >= 0.01) {
+              $std->vFrete = number_format($nfpb->valorfrete, 2, '.', '');
           }
-          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vSeg)) {
-              $std->vSeg = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vSeg, 2, '.', '');
+          if ($nfpb->valorseguro >= 0.01) {
+              $std->vSeg = number_format($nfpb->valorseguro, 2, '.', '');
           }
-          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vDesc)) {
-              $std->vDesc = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vDesc, 2, '.', '');
+          if ($nfpb->valordesconto >= 0.01) {
+              $std->vDesc = number_format($nfpb->valordesconto, 2, '.', '');
           }
-          if (!empty($rateio[$nfpb->codnotafiscalprodutobarra]->vOutro)) {
-              $std->vOutro = number_format($rateio[$nfpb->codnotafiscalprodutobarra]->vOutro, 2, '.', '');
+          if ($nfpb->valoroutras >= 0.01) {
+              $std->vOutro = number_format($nfpb->valoroutras, 2, '.', '');
           }
           $std->indTot = 1;
           $nfe->tagprod($std);
@@ -442,8 +441,11 @@ class NFePHPRepositoryMake
                   $std->vBC = number_format($nfpb->icmsbase, 2, '.', '');
                   $std->pICMS = number_format($nfpb->icmspercentual, 2, '.', '');
                   $std->vICMS = number_format($nfpb->icmsvalor, 2, '.', '');
-                  if (!empty($nfpb->icmsbase) && ($nfpb->icmsbase < $nfpb->valortotal) && $nfpb->icmscst == 20) {
-                      $std->pRedBC = number_format((1 - round($nfpb->icmsbase / $nfpb->valortotal, 2)) * 100, 2, '.', '');
+                  $pRedBC = 100.0 - $nfpb->icmsbasepercentual;
+                  if ($std->CST == 20 && $pRedBC > 0) {
+                      $std->motDesICMS = 9;
+                      $std->pRedBC = number_format($pRedBC, 2, '.', '');
+                      $std->vICMSDeson = number_format(($std->vBC * ($std->pRedBC / 100) / (1 - ($std->pRedBC / 100))) * ($std->pICMS/100), 2, '.', '');
                   }
                   if ($nfpb->icmsstvalor > 0) {
                       $std->modBCST = 4; // 4 - Margem de Valor Agregado (%)
@@ -622,7 +624,7 @@ class NFePHPRepositoryMake
 
         // Tranportadora
         $std = new \stdClass();
-	if (!empty($nf->codpessoatransportador)) {
+        if (!empty($nf->codpessoatransportador)) {
             $std->xNome = substr(Strings::replaceSpecialsChars($nf->PessoaTransportador->pessoa), 0, 60);
             $std->IE = numeroLimpo($nf->PessoaTransportador->ie);
             $end = [
@@ -645,7 +647,7 @@ class NFePHPRepositoryMake
                 $std->CPF = '';
             }
             $nfe->tagtransporta($std);
-	}
+        }
 
         // Volumes
         $std = new \stdClass();
@@ -658,16 +660,16 @@ class NFePHPRepositoryMake
         $std->pesoB = number_format($nf->pesobruto, 3, '.', '');
         $nfe->tagvol($std);
 
-	if (!empty($nf->placa)) {
-	    $std = new \stdClass();
-	    $std->placa = Strings::replaceSpecialsChars($nf->placa);
-	    if (!empty($nf->codestadoplaca)) {
-	    	$std->UF = $nf->EstadoPlaca->sigla;
-	    }
-	    //$std->UF = 'RJ';
-	    //$std->RNTC = '999999';
-	    $nfe->tagveicTransp($std);
-	}
+        if (!empty($nf->placa)) {
+            $std = new \stdClass();
+            $std->placa = Strings::replaceSpecialsChars($nf->placa);
+            if (!empty($nf->codestadoplaca)) {
+                $std->UF = $nf->EstadoPlaca->sigla;
+            }
+            //$std->UF = 'RJ';
+            //$std->RNTC = '999999';
+            $nfe->tagveicTransp($std);
+        }
 
         // Faturas
         // $std = new \stdClass();
@@ -837,60 +839,5 @@ class NFePHPRepositoryMake
         return $xml;
 
     }
-
-    public static function rateiaDescontoSeguroFreteOutras($nf)
-    {
-
-        // Inicializa totalizadores
-        $vFreteTotal = 0;
-        $vSegTotal = 0;
-        $vDescTotal = 0;
-        $vOutroTotal = 0;
-
-        // busca itens da nota
-        $nfpbs = $nf->NotaFiscalProdutoBarraS()->orderBy('valortotal')->orderBy('codnotafiscalprodutobarra')->get();
-
-        // Calcula quantidade de registros
-        $quantidade = $nfpbs->count();
-        $i = 0;
-
-        // Percorre itens da nota
-        foreach ($nfpbs as $nfpb)
-        {
-            $i++;
-
-            // se estiver no ultimo registro, faz o valor pela diferenca
-            if ($i == $quantidade) {
-                $vFrete = $nf->valorfrete - $vFreteTotal;
-                $vSeg = $nf->valorseguro - $vSegTotal;
-                $vDesc = $nf->valordesconto - $vDescTotal;
-                $vOutro = $nf->valoroutras - $vOutroTotal;
-
-            // Senao faz pela media ponderada
-            } else {
-                $vFrete = round(($nf->valorfrete / $nf->valorprodutos) * $nfpb->valortotal, 2);
-                $vSeg = round(($nf->valorseguro / $nf->valorprodutos) * $nfpb->valortotal, 2);
-                $vDesc = round(($nf->valordesconto / $nf->valorprodutos) * $nfpb->valortotal, 2);
-                $vOutro = round(($nf->valoroutras / $nf->valorprodutos) * $nfpb->valortotal, 2);
-            }
-
-            // Busca
-            $vFreteTotal += $vFrete;
-            $vSegTotal += $vSeg;
-            $vDescTotal += $vDesc;
-            $vOutroTotal += $vOutro;
-
-            $ret[$nfpb->codnotafiscalprodutobarra] = (object) [
-              'vFrete' => $vFrete,
-              'vSeg' => $vSeg,
-              'vDesc' => $vDesc,
-              'vOutro' => $vOutro,
-            ];
-        }
-
-        return $ret;
-
-    }
-
 
 }
