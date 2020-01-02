@@ -329,16 +329,16 @@ class NFePHPRepositoryMake
 
           // SE NAO ACHOU NENHUM CODIGO DE BARRAS DE UNIDADE, USA MESMO CODIGO DE BARRAS DA EMBALAGEM
           $std->vUnTrib = number_format($std->vProd / $std->qTrib, 10, '.', '');
-          if (!empty($nfpb->valorfrete)) {
+          if ($nfpb->valorfrete >= 0.01) {
               $std->vFrete = number_format($nfpb->valorfrete, 2, '.', '');
           }
-          if (!empty($nfpb->valorseguro)) {
+          if ($nfpb->valorseguro >= 0.01) {
               $std->vSeg = number_format($nfpb->valorseguro, 2, '.', '');
           }
-          if (!empty($nfpb->valordesconto)) {
+          if ($nfpb->valordesconto >= 0.01) {
               $std->vDesc = number_format($nfpb->valordesconto, 2, '.', '');
           }
-          if (!empty($nfpb->valoroutras)) {
+          if ($nfpb->valoroutras >= 0.01) {
               $std->vOutro = number_format($nfpb->valoroutras, 2, '.', '');
           }
           $std->indTot = 1;
