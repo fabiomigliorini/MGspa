@@ -10,6 +10,9 @@ update tbltributacaonaturezaoperacao set icmslppercentual = 12 where icmslpperce
 -- Adiciona coluna com BIT - Bens de Informatica e Telecomunicacao
 alter table tbltributacaonaturezaoperacao add bit boolean not null default false
 
+--adiciona campo com percentual da base de calculo do icms, pra quando houver reducao
+alter table tblnotafiscalprodutobarra add icmsbasepercentual numeric (5,2)
+
 -- Adiciona Parametrizacao Venda / BIT / Tributada
 insert into tbltributacaonaturezaoperacao (
        codtributacao, codnaturezaoperacao, 
@@ -54,8 +57,98 @@ SELECT codtributacao, codnaturezaoperacao,
   from tbltributacaonaturezaoperacao 
   where codnaturezaoperacao = 1 and codtributacao = 3 and codtipoproduto = 0 and ncm is null
 
---adiciona campo com percentual da base de calculo do icms, pra quando houver reducao
-alter table tblnotafiscalprodutobarra add icmsbasepercentual numeric (5,2)
+-- Adiciona Parametrizacao Devolucao Venda / BIT / Tributada
+insert into tbltributacaonaturezaoperacao (
+       codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, icmscst, icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, "bit"
+)
+SELECT codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, 20 as icmscst, 52.94 as icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, true as "bit"
+  from tbltributacaonaturezaoperacao 
+  where codnaturezaoperacao = 2 and codtributacao = 1 and codtipoproduto = 0
+
+-- Adiciona Parametrizacao Devolucao Venda / BIT / Substituicao
+insert into tbltributacaonaturezaoperacao (
+       codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, icmscst, icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, "bit"
+)
+SELECT codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, icmscst, icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, true as "bit"
+  from tbltributacaonaturezaoperacao 
+  where codnaturezaoperacao = 2 and codtributacao = 3 and codtipoproduto = 0 and ncm is null
+
+
+
+-- Adiciona Parametrizacao Compra / BIT / Tributada
+insert into tbltributacaonaturezaoperacao (
+       codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, icmscst, icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, "bit"
+)
+SELECT codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, 20 as icmscst, 52.94 as icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, true as "bit"
+  from tbltributacaonaturezaoperacao 
+  where codnaturezaoperacao = 4 and codtributacao = 1 and codtipoproduto = 0
+
+-- Adiciona Parametrizacao Compra / BIT / Substituicao
+insert into tbltributacaonaturezaoperacao (
+       codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, icmscst, icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, "bit"
+)
+SELECT codtributacao, codnaturezaoperacao, 
+       codcfop, icmsbase, icmspercentual, codestado, csosn, codtipoproduto, 
+       acumuladordominiovista, acumuladordominioprazo, historicodominio, 
+       movimentacaofisica, movimentacaocontabil, alteracao, codusuarioalteracao, 
+       criacao, codusuariocriacao, ncm, icmscst, icmslpbase, icmslppercentual, 
+       ipicst, piscst, pispercentual, cofinscst, cofinspercentual, csllpercentual, 
+       irpjpercentual, certidaosefazmt, fethabkg, iagrokg, funruralpercentual, 
+       senarpercentual, observacoesnf, true as "bit"
+  from tbltributacaonaturezaoperacao 
+  where codnaturezaoperacao = 4 and codtributacao = 3 and codtipoproduto = 0 and ncm is null
+
+
+
 
 
 
