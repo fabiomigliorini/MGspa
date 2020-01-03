@@ -41,8 +41,8 @@ update tblproduto set codcest = (
 
 update tblproduto set codtributacao = 3 where codcest is not null;
 
-update tblproduto set codtributacao = 1 where codtributacao != 1 and codncm in (
-12144
+update tblproduto set codtributacao = 1, codcest = null where codtributacao != 1 and codncm in (
+14153
 );
 
 select count(*), n.ncm, n.codncm

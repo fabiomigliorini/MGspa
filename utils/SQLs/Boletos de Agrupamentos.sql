@@ -7,10 +7,11 @@
 , sum(saldo)
 , count(codtitulo)
 from tbltitulo 
-where boleto 
---and numero like 'A%' 
-and emissao >= '2013-01-01'
+where numero like 'A%' 
+and emissao >= '2019-01-01'
 and estornado is null
+and boleto
+--and debito > 0
 group by 
   extract(year from emissao)
 , extract(month from emissao)

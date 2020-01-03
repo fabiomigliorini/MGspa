@@ -7,7 +7,7 @@
 delete from tblboletoretorno where codboletoretorno in (
 select codboletoretorno 
 from tblboletoretorno 
-where arquivo = 'CB071000.RET' and dataretorno = '2017-10-10' and codportador = 3943
+where arquivo = 'CB211200.RET' and dataretorno = '2019-12-23' and codportador = 3941
 order by linha
 )
 */
