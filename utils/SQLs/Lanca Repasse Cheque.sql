@@ -1,15 +1,14 @@
 ﻿select * from tblportador order by codportador
 
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2020-01-02', null, '2020-01-02 11:41', 1)
+values (210, '2020-01-13', null, '2020-01-13 11:41', 1)
 
 select * from tblchequerepasse order by codchequerepasse desc limit 50 
 
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2432, '2020-01-02 10:00', 1
+select codcheque, 2439, '2020-01-13 10:00', 1
 from tblcheque where cmc7 in (
-	'<00182339<0188514775>712003760605:',
-	'<00111805<0188500025>752007510226:',
+	'<00111808<0188507695>743010526671:',
 	'NIL'
 	)
 
@@ -24,8 +23,8 @@ order by 1 desc
 
 --update tblcheque set valor = 1429 where cmc7 = '<74881019<0180016775>2<00182339<0188514775>712003760605:00002298305:'
 
---update tblchequerepasse set data = '2020-01-02', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2020-01-02 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2020-01-13', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2020-01-13 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 

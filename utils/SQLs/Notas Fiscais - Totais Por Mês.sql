@@ -7,7 +7,7 @@ select
 --	*
 from tblnotafiscal nf
 inner join tblnaturezaoperacao no ON (no.codnaturezaoperacao = nf.codnaturezaoperacao)
-where nf.saida between '2019-01-01' and '2019-11-30 23:59:59'
+where nf.saida between '2019-01-01' and '2019-12-31 23:59:59'
 and nf.nfecancelamento is null
 and nf.nfeinutilizacao is null
 group by
