@@ -446,6 +446,12 @@ class NFePHPRepositoryMake
                       $std->motDesICMS = 9;
                       $std->pRedBC = number_format($pRedBC, 2, '.', '');
                       $std->vICMSDeson = number_format(($std->vBC * ($std->pRedBC / 100) / (1 - ($std->pRedBC / 100))) * ($std->pICMS/100), 2, '.', '');
+                  } elseif ($std->CST == 41) {
+                      $std->motDesICMS = 3;
+                      $deson = $nfpb->valortotal + $nfpb->valorfrete + $nfpb->valorseguro - $nfpb->valordesconto + $nfpb->valoroutras;
+                      $deson *=  ($nf->Pessoa->Cidade->codestado == $nf->Filial->Pessoa->Cidade->codestado)?0.17:0.12;
+                      // $std->vICMSDeson = 0;
+                      $std->vICMSDeson = number_format($deson, 2, '.', '');
                   }
                   if ($nfpb->icmsstvalor > 0) {
                       $std->modBCST = 4; // 4 - Margem de Valor Agregado (%)
