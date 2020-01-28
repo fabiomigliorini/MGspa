@@ -762,7 +762,12 @@ class NFePHPRepository extends MgRepository
 
         if ($nf->modelo == NotaFiscal::MODELO_NFE) {
 
-            $pathLogo = public_path('MGPapelariaLogo.jpeg');
+            // Logo somente na Migliorini
+            if ($nf->Filial->codempresa == 1) {
+                $pathLogo = public_path('MGPapelariaLogo.jpeg');
+	    } else {
+                $pathLogo = '';
+            }
 
             $danfe = new Danfe($xml, 'P', 'A4', $pathLogo, 'I', '', 'helvetica');
             $id = $danfe->montaDANFE('P', 'A4', 'C', Danfe::SIT_NONE, false, '', 5, 5, 5);
