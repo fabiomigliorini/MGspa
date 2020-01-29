@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="PostgreSQL" id="Project4820597" template="Default" database="PostgreSQL" >
+<project name="PostgreSQL" id="Project4820597" database="PostgreSQL" >
 	<schema name="mgsis" catalogname="mgsis" >
 		<table name="migrations" >
 			<column name="migration" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
@@ -144,6 +144,18 @@
 			<fk name="tblbaseremota_codusuariocriacao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
+		</table>
+		<table name="tblbit" >
+			<column name="codbit" type="bigserial" jt="-5" mandatory="y" />
+			<column name="numero" type="integer" jt="4" mandatory="y" />
+			<column name="ncm" type="varchar" length="8" jt="12" />
+			<column name="descricao" type="text" jt="12" mandatory="y" />
+			<index name="pk_tblbit_codbit" unique="PRIMARY_KEY" >
+				<column name="codbit" />
+			</index>
+			<index name="idx_tblbit" unique="UNIQUE" >
+				<column name="ncm" />
+			</index>
 		</table>
 		<table name="tblboletomotivoocorrencia" >
 			<column name="codboletomotivoocorrencia" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
@@ -4749,6 +4761,9 @@
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codtipoproduto" type="bigint" jt="-5" mandatory="y" />
 			<column name="codestado" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="bit" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<column name="ncm" type="varchar" length="10" jt="12" />
 			<column name="codcfop" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="csosn" type="varchar" length="4" decimal="0" jt="12" mandatory="y" />
@@ -4757,6 +4772,7 @@
 			<column name="icmspercentual" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="icmslpbase" type="numeric" length="5" decimal="2" jt="2" />
 			<column name="icmslppercentual" type="numeric" length="4" decimal="2" jt="2" />
+			<column name="icmslppercentualimportado" type="numeric" length="5" decimal="2" jt="2" />
 			<column name="ipicst" type="numeric" length="3" decimal="0" jt="2" />
 			<column name="piscst" type="numeric" length="3" decimal="0" jt="2" />
 			<column name="pispercentual" type="numeric" length="4" decimal="2" jt="2" />
@@ -4785,9 +4801,6 @@
 			<column name="funruralpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
 			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="bit" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
-				<defo>false</defo>
-			</column>
 			<index name="tbltributacaonaturezaoperacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codtributacaonaturezaoperacao" />
 			</index>
@@ -5304,7 +5317,7 @@
     tblcupomfiscal.datamovimento,
     tblcupomfiscal.numero,
     tblcupomfiscal.cancelado,
-    vwcupomfiscalprodutobarratotais.valortotal,
+    ${name}produtobarratotais.valortotal,
     tblcupomfiscal.descontoacrescimo,
     (COALESCE(vwcupomfiscalprodutobarratotais.valortotal, (0)::numeric) + COALESCE(tblcupomfiscal.descontoacrescimo, (0)::numeric)) AS valortotalfinal
    FROM ((tblcupomfiscal
@@ -5394,51 +5407,51 @@
     c.generation_expression,
     c.is_updatable
    FROM information_schema.columns c
-  WHERE ((c.table_schema)::text = 'mgsis'::text);]]></view_script>
-			<column name="table_catalog" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="table_schema" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="table_name" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="column_name" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="ordinal_position" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="column_default" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="is_nullable" type="&quot;information_schema&quot;.&quot;yes_or_no&quot;" />
-			<column name="data_type" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="character_maximum_length" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="character_octet_length" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="numeric_precision" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="numeric_precision_radix" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="numeric_scale" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="datetime_precision" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="interval_type" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="interval_precision" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="character_set_catalog" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="character_set_schema" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="character_set_name" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="collation_catalog" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="collation_schema" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="collation_name" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="domain_catalog" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="domain_schema" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="domain_name" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="udt_catalog" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="udt_schema" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="udt_name" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="scope_catalog" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="scope_schema" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="scope_name" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="maximum_cardinality" type="&quot;information_schema&quot;.&quot;cardinal_number&quot;" />
-			<column name="dtd_identifier" type="&quot;information_schema&quot;.&quot;sql_identifier&quot;" />
-			<column name="is_self_referencing" type="&quot;information_schema&quot;.&quot;yes_or_no&quot;" />
-			<column name="is_identity" type="&quot;information_schema&quot;.&quot;yes_or_no&quot;" />
-			<column name="identity_generation" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="identity_start" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="identity_increment" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="identity_maximum" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="identity_minimum" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="identity_cycle" type="&quot;information_schema&quot;.&quot;yes_or_no&quot;" />
-			<column name="is_generated" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="generation_expression" type="&quot;information_schema&quot;.&quot;character_data&quot;" />
-			<column name="is_updatable" type="&quot;information_schema&quot;.&quot;yes_or_no&quot;" />
+  WHERE ((c.table_schema)::text = '${schema}'::text);]]></view_script>
+			<column name="table_catalog" type="&quot;sql_identifier&quot;" />
+			<column name="table_schema" type="&quot;sql_identifier&quot;" />
+			<column name="table_name" type="&quot;sql_identifier&quot;" />
+			<column name="column_name" type="&quot;sql_identifier&quot;" />
+			<column name="ordinal_position" type="&quot;cardinal_number&quot;" />
+			<column name="column_default" type="&quot;character_data&quot;" />
+			<column name="is_nullable" type="&quot;yes_or_no&quot;" />
+			<column name="data_type" type="&quot;character_data&quot;" />
+			<column name="character_maximum_length" type="&quot;cardinal_number&quot;" />
+			<column name="character_octet_length" type="&quot;cardinal_number&quot;" />
+			<column name="numeric_precision" type="&quot;cardinal_number&quot;" />
+			<column name="numeric_precision_radix" type="&quot;cardinal_number&quot;" />
+			<column name="numeric_scale" type="&quot;cardinal_number&quot;" />
+			<column name="datetime_precision" type="&quot;cardinal_number&quot;" />
+			<column name="interval_type" type="&quot;character_data&quot;" />
+			<column name="interval_precision" type="&quot;cardinal_number&quot;" />
+			<column name="character_set_catalog" type="&quot;sql_identifier&quot;" />
+			<column name="character_set_schema" type="&quot;sql_identifier&quot;" />
+			<column name="character_set_name" type="&quot;sql_identifier&quot;" />
+			<column name="collation_catalog" type="&quot;sql_identifier&quot;" />
+			<column name="collation_schema" type="&quot;sql_identifier&quot;" />
+			<column name="collation_name" type="&quot;sql_identifier&quot;" />
+			<column name="domain_catalog" type="&quot;sql_identifier&quot;" />
+			<column name="domain_schema" type="&quot;sql_identifier&quot;" />
+			<column name="domain_name" type="&quot;sql_identifier&quot;" />
+			<column name="udt_catalog" type="&quot;sql_identifier&quot;" />
+			<column name="udt_schema" type="&quot;sql_identifier&quot;" />
+			<column name="udt_name" type="&quot;sql_identifier&quot;" />
+			<column name="scope_catalog" type="&quot;sql_identifier&quot;" />
+			<column name="scope_schema" type="&quot;sql_identifier&quot;" />
+			<column name="scope_name" type="&quot;sql_identifier&quot;" />
+			<column name="maximum_cardinality" type="&quot;cardinal_number&quot;" />
+			<column name="dtd_identifier" type="&quot;sql_identifier&quot;" />
+			<column name="is_self_referencing" type="&quot;yes_or_no&quot;" />
+			<column name="is_identity" type="&quot;yes_or_no&quot;" />
+			<column name="identity_generation" type="&quot;character_data&quot;" />
+			<column name="identity_start" type="&quot;character_data&quot;" />
+			<column name="identity_increment" type="&quot;character_data&quot;" />
+			<column name="identity_maximum" type="&quot;character_data&quot;" />
+			<column name="identity_minimum" type="&quot;character_data&quot;" />
+			<column name="identity_cycle" type="&quot;yes_or_no&quot;" />
+			<column name="is_generated" type="&quot;character_data&quot;" />
+			<column name="generation_expression" type="&quot;character_data&quot;" />
+			<column name="is_updatable" type="&quot;yes_or_no&quot;" />
 		</view>
 		<view name="vwliquidacaotitulo" >
 			<view_script><![CDATA[ SELECT tblliquidacaotitulo.codliquidacaotitulo,
@@ -5511,7 +5524,7 @@
     tblnegocio.codusuario,
     tblusuario.usuario,
     tblusuario.codecf AS codecfusuario,
-    vwnegocioprodutobarratotais.valortotal,
+    ${name}produtobarratotais.valortotal,
     tblnegocio.valordesconto,
     (COALESCE(vwnegocioprodutobarratotais.valortotal, (0)::numeric) - COALESCE(tblnegocio.valordesconto, (0)::numeric)) AS valortotalfinal,
     vwnegocioformapagamentototais.valorpagamentoavista,
@@ -5769,7 +5782,7 @@
     tblcidade.codigooficial,
     tblcidade.cidade,
     tblestado.sigla,
-    vwnotafiscalprodutobarratotais.valortotal,
+    ${name}produtobarratotais.valortotal,
     vwnotafiscalprodutobarratotais.icmsbase,
     vwnotafiscalprodutobarratotais.icmsvalor,
     vwnotafiscalprodutobarratotais.ipibase,
@@ -6227,6 +6240,7 @@
 		<sequence name="tblauditoriaexcecao_codauditoriaexcecao_seq" options="START WITH 1" />
 		<sequence name="tblbanco_codbanco_seq" options="START WITH 1" />
 		<sequence name="tblbaseremota_codbaseremota_seq" options="START WITH 1" />
+		<sequence name="tblbit_codbit_seq" options="START WITH 1" />
 		<sequence name="tblboletomotivoocorrencia_codboletomotivoocorrencia_seq" options="START WITH 1" />
 		<sequence name="tblboletoretorno_codboletoretorno_seq" options="START WITH 1" />
 		<sequence name="tblboletotipoocorrencia_codboletotipoocorrencia_seq" options="START WITH 1" />
@@ -6319,6 +6333,7 @@
 		<sequence name="tblnotafiscal_numero_301_1_55_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_numero_301_1_65_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_numero_401_920_55_seq" options="START WITH 1" />
+		<sequence name="tblnotafiscal_numero_801_920_55_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalcartacorrecao_codnotafiscalcartacorrecao_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalduplicatas_codnotafiscalduplicatas_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalprodutobarra_codnotafiscalprodutobarra_seq" options="START WITH 1" />
@@ -8832,15 +8847,12 @@ $function$
 	<connector name="dev@docker" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="localhost" port="54320" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<connector name="prod@netuno" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="sistema.mgpapelaria.com.br" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblfilial" color="B7C8E3" x="816" y="112" />
-		<entity schema="mgsis.mgsis" name="tblpermissao" color="B7C8E3" x="96" y="640" />
-		<entity schema="mgsis.mgsis" name="tblgrupousuariousuario" color="B7C8E3" x="480" y="96" />
-		<entity schema="mgsis.mgsis" name="tblgrupousuario" color="B7C8E3" x="496" y="432" />
-		<entity schema="mgsis.mgsis" name="tblgrupousuariopermissao" color="B7C8E3" x="512" y="688" />
-		<entity schema="mgsis.mgsis" name="tblimagem" color="C1D8EE" x="272" y="496" />
-		<entity schema="mgsis.mgsis" name="tbldecreto271" color="3986C1" x="48" y="48" />
-		<entity schema="mgsis.mgsis" name="tblncm2020" color="3986C1" x="48" y="48" />
-		<entity schema="mgsis.mgsis" name="tblportaria195" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="B7C8E3" x="768" y="64" />
+		<entity schema="mgsis.mgsis" name="tblpermissao" color="B7C8E3" x="48" y="592" />
+		<entity schema="mgsis.mgsis" name="tblgrupousuariousuario" color="B7C8E3" x="432" y="48" />
+		<entity schema="mgsis.mgsis" name="tblgrupousuario" color="B7C8E3" x="448" y="384" />
+		<entity schema="mgsis.mgsis" name="tblgrupousuariopermissao" color="B7C8E3" x="464" y="640" />
+		<entity schema="mgsis.mgsis" name="tblimagem" color="C1D8EE" x="80" y="160" />
 	</layout>
 	<layout name="Layout_Cheques" id="Layout_3a399d00" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="928" y="48" >
@@ -9054,17 +9066,18 @@ $function$
 		<entity schema="mgsis.mgsis" name="tblferiado" color="C1D8EE" x="48" y="48" />
 	</layout>
 	<layout name="Layout_Fiscal" id="Layout4922365" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tbltributacao" color="B2CDF7" x="560" y="320" />
-		<entity schema="mgsis.mgsis" name="tblestado" color="B2CDF7" x="1184" y="544" />
-		<entity schema="mgsis.mgsis" name="tbltipoproduto" color="B2CDF7" x="1184" y="336" />
-		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="B2CDF7" x="528" y="560" />
-		<entity schema="mgsis.mgsis" name="tblcfop" color="B2CDF7" x="560" y="112" />
-		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao" color="B2CDF7" x="896" y="144" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="288" y="80" />
-		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="1136" y="80" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="48" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="80" y="768" />
-		<entity schema="mgsis.mgsis" name="tblncm" color="B2CDF7" x="704" y="560" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="64" y="64" />
+		<entity schema="mgsis.mgsis" name="tbltipoproduto" color="B2CDF7" x="1280" y="512" />
+		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="1216" y="48" />
+		<entity schema="mgsis.mgsis" name="tblncm" color="B2CDF7" x="656" y="816" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="320" y="96" />
+		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao" color="B2CDF7" x="896" y="96" />
+		<entity schema="mgsis.mgsis" name="tblestado" color="B2CDF7" x="976" y="800" />
+		<entity schema="mgsis.mgsis" name="tblcfop" color="B2CDF7" x="640" y="80" />
+		<entity schema="mgsis.mgsis" name="tbltributacao" color="B2CDF7" x="640" y="288" />
+		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="B2CDF7" x="656" y="576" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="48" y="992" />
+		<entity schema="mgsis.mgsis" name="tblbit" color="C1D8EE" x="1248" y="752" />
 	</layout>
 	<layout name="Layout_Geral" id="Layout4866226" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tbl_migration" color="B3CCF5" x="3440" y="1568" />
