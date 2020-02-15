@@ -147,9 +147,9 @@
 		</table>
 		<table name="tblbit" >
 			<column name="codbit" type="bigserial" jt="-5" mandatory="y" />
-			<column name="numero" type="integer" jt="4" />
+			<column name="numero" type="integer" jt="4" mandatory="y" />
 			<column name="ncm" type="varchar" length="8" jt="12" />
-			<column name="descricao" type="text" jt="12" />
+			<column name="descricao" type="text" jt="12" mandatory="y" />
 			<index name="pk_tblbit_codbit" unique="PRIMARY_KEY" >
 				<column name="codbit" />
 			</index>
@@ -4174,13 +4174,13 @@
 			<fk name="tblprodutobarra_codmarca_fkey" to_schema="mgsis.mgsis" to_table="tblmarca" >
 				<fk_column name="codmarca" pk="codmarca" />
 			</fk>
-			<fk name="tblprodutobarra_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" >
+			<fk name="tblprodutobarra_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
 			<fk name="tblprodutobarra_codprodutoembalagem_fkey" to_schema="mgsis.mgsis" to_table="tblprodutoembalagem" >
 				<fk_column name="codprodutoembalagem" pk="codprodutoembalagem" />
 			</fk>
-			<fk name="fk_tblprodutobarra" to_schema="mgsis.mgsis" to_table="tblprodutovariacao" >
+			<fk name="fk_tblprodutobarra" to_schema="mgsis.mgsis" to_table="tblprodutovariacao" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
 			</fk>
 			<fk name="tblprodutobarra_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
@@ -4222,7 +4222,7 @@
 			<index name="idx_tblprodutoembalagem" unique="NORMAL" >
 				<column name="codprodutoimagem" />
 			</index>
-			<fk name="tblprodutoembalagem_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" >
+			<fk name="tblprodutoembalagem_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
 			<fk name="tblprodutoembalagem_codunidademedida_fkey" to_schema="mgsis.mgsis" to_table="tblunidademedida" >
@@ -4251,7 +4251,7 @@
 			<index name="tblprodutohistoricopreco_pkey" unique="PRIMARY_KEY" >
 				<column name="codprodutohistoricopreco" />
 			</index>
-			<fk name="tblprodutohistoricopreco_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" >
+			<fk name="tblprodutohistoricopreco_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
 			<fk name="tblprodutohistoricopreco_codprodutoembalagem_fkey" to_schema="mgsis.mgsis" to_table="tblprodutoembalagem" delete_action="cascade" >
@@ -4290,7 +4290,7 @@
 			<index name="idx_tblprodutoimagem_2" unique="NORMAL" >
 				<column name="codusuarioalteracao" />
 			</index>
-			<fk name="fk_tblprodutoimagem" to_schema="mgsis.mgsis" to_table="tblproduto" >
+			<fk name="fk_tblprodutoimagem" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
 			<fk name="fk_tblprodutoimagem_0" to_schema="mgsis.mgsis" to_table="tblimagem" >
@@ -4358,7 +4358,7 @@
 			<fk name="fk_tblprodutovariacao" to_schema="mgsis.mgsis" to_table="tblmarca" >
 				<fk_column name="codmarca" pk="codmarca" />
 			</fk>
-			<fk name="fk_tblprodutovariacao_2" to_schema="mgsis.mgsis" to_table="tblproduto" >
+			<fk name="fk_tblprodutovariacao_2" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
 			<fk name="fk_tblprodutovariacao_3" to_schema="mgsis.mgsis" to_table="tblprodutoimagem" delete_action="setNull" >
@@ -5317,7 +5317,7 @@
     tblcupomfiscal.datamovimento,
     tblcupomfiscal.numero,
     tblcupomfiscal.cancelado,
-    vwcupomfiscalprodutobarratotais.valortotal,
+    ${name}produtobarratotais.valortotal,
     tblcupomfiscal.descontoacrescimo,
     (COALESCE(vwcupomfiscalprodutobarratotais.valortotal, (0)::numeric) + COALESCE(tblcupomfiscal.descontoacrescimo, (0)::numeric)) AS valortotalfinal
    FROM ((tblcupomfiscal
@@ -6240,6 +6240,7 @@
 		<sequence name="tblauditoriaexcecao_codauditoriaexcecao_seq" options="START WITH 1" />
 		<sequence name="tblbanco_codbanco_seq" options="START WITH 1" />
 		<sequence name="tblbaseremota_codbaseremota_seq" options="START WITH 1" />
+		<sequence name="tblbit_codbit_seq" options="START WITH 1" />
 		<sequence name="tblboletomotivoocorrencia_codboletomotivoocorrencia_seq" options="START WITH 1" />
 		<sequence name="tblboletoretorno_codboletoretorno_seq" options="START WITH 1" />
 		<sequence name="tblboletotipoocorrencia_codboletotipoocorrencia_seq" options="START WITH 1" />
@@ -9489,19 +9490,19 @@ $function$
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B3CEF5" x="400" y="48" />
 	</layout>
 	<layout name="Layout_Produtos" id="Layout_1a34eed8" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="496" y="48" />
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="64" y="688" />
-		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="48" y="288" />
-		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="80" y="80" />
-		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="288" y="48" />
-		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="688" y="48" />
-		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="896" y="48" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="94C3EA" x="320" y="288" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="832" y="720" />
-		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="94C3EA" x="1072" y="704" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="576" y="320" />
-		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="576" y="640" />
-		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="880" y="272" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="592" y="368" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="896" y="320" />
+		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="1056" y="96" />
+		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="832" y="80" />
+		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="576" y="64" />
+		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="336" y="48" />
+		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="48" y="432" />
+		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="96" y="176" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="80" y="784" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="94C3EA" x="352" y="320" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="896" y="960" />
+		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="608" y="896" />
+		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="94C3EA" x="1152" y="352" />
 	</layout>
 	<layout name="Layout_Transferencia" id="Layout_54b90e3" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblnegocio" color="FFFFCC" x="48" y="48" />
