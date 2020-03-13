@@ -2,14 +2,17 @@
 
 -- Cria Repasse
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2020-02-28', null, '2020-02-28 11:41', 1);
+values (210, '2020-03-12', null, '2020-03-12 11:41', 1);
 select * from tblchequerepasse order by codchequerepasse desc limit 50 
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2448, '2020-02-28 10:00', 1
+select codcheque, 2453, '2020-03-12 10:00', 1
 from tblcheque where cmc7 in (
-	'<23702346<0180005655>308000391287:',
+	'<23755811<0180001155>285200343474:',
+	'<74808127<0180017865>200000268326:',
+	'<23702349<0180016515>344403598079:',
+	'<00142708<0188502315>363013610827:',
 	'NIL'
 	);
 
@@ -24,12 +27,14 @@ where crc.codchequerepasse >= 1900
 group by crc.codchequerepasse
 order by 1 desc;
 
---update tblcheque set valor = 1429 where cmc7 = '<74881019<0180016775>2<00182339<0188514775>712003760605:00002298305:'
+--update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
---update tblchequerepasse set data = '2020-02-28', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2020-02-28 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2020-03-12', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2020-03-12 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
+
+-- update tblcheque set indstatus = 1 where codcheque = 10135
 
 --update tblchequerepassecheque set codchequerepasse = 2399 where codchequerepassecheque in (17214, 17213)
 
@@ -39,9 +44,7 @@ order by 1 desc;
 delete from tblchequerepassecheque  where codcheque in (
 	select codcheque
 	from tblcheque where cmc7 in (
-	'<00142701<0188513195>367010510591:',
-	'<00111800<0188507915>740012702144:',
-	'<00111800<0188502475>733016372741:'
+	'<10408547<0189005575>000102362944:'
 	)
 )
 
