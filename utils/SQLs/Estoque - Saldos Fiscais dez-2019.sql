@@ -1,13 +1,16 @@
 ﻿select * 
 from mvwestoque2019  e
 where e.quant < 0 
-and e.codproduto not in (
+and e.codproduto in (
 	select e2.codproduto 
 	from mvwestoque2019 e2
 	where e2.quant > 0
+	and e2.codfilial in (101, 102, 103, 104)
 )
 and e.codfilial  in (101, 102, 103, 104)
 
+
+--select * from mvwestoque2019 where codproduto = 107232
 
 /*
 drop MATERIALIZED VIEW mvwestoque2019 ;

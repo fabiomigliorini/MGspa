@@ -110,12 +110,26 @@ set codnotafiscal = notas.codnotafiscal
 from notas
 where notas.codnotafiscalprodutobarra = tblestoque2019creditoicms.codnotafiscalprodutobarra;
 
+update tblestoque2019creditoicms set icmsorigempercentual = 4 where icmsorigempercentual between 3.9 and 4.1;
+update tblestoque2019creditoicms set icmsorigempercentual = 7 where icmsorigempercentual between 6.5 and 7.1;
+update tblestoque2019creditoicms set icmsorigempercentual = 7 where icmsorigempercentual > 7;
+update tblestoque2019creditoicms set icmsorigempercentual = null where icmsorigempercentual =0;
+
+update tblestoque2019creditoicms 
+set icmsorigempercentual = nf.percentual 
+from tblnotafiscalcreditoicmssimples nf
+where tblestoque2019creditoicms.icmsorigempercentual is null
+and tblestoque2019creditoicms.codnotafiscal = nf.codnotafiscal
+and nf.percentual > 0;
+
+
 -- valores do ICMS
 update tblestoque2019creditoicms set icmsgarantidopercentual = null where codtributacao != 1;
 update tblestoque2019creditoicms set icmsorigempercentual = null where codtributacao != 1;
-update tblestoque2019creditoicms set icmsgarantidovalor = custoultimaentrada * (icmsgarantidopercentual / 100), icmsgarantidovalortotal = custoultimaentrada * (icmsgarantidopercentual / 100) * quant;
-update tblestoque2019creditoicms set icmsorigempercentual = 7 where icmsorigempercentual > 7;
+update tblestoque2019creditoicms set icmsgarantidovalor = custoultimaentrada * (icmsgarantidopercentual / 100);
+update tblestoque2019creditoicms set icmsgarantidovalortotal = icmsgarantidovalor * quant;
 update tblestoque2019creditoicms set icmsorigemvalor = custoultimaentrada * (icmsorigempercentual / 100), icmsorigemvalortotal = custoultimaentrada * (icmsorigempercentual / 100) * quant;
+update tblestoque2019creditoicms set icmsorigemvalortotal = icmsorigemvalor * quant;
 
 select 
 	codtributacao,
@@ -126,6 +140,7 @@ select
 	sum(icmsgarantidovalortotal) as icmsgarantidovalortotal,
 	sum(icmsorigemvalortotal) as icmsorigemvalortotal
 from tblestoque2019creditoicms 
+--where inativo is not null
 group by 
 	codtributacao,
 	codnotafiscalprodutobarra is null
@@ -138,6 +153,6 @@ order by 1, 2
 select * 
 from tblestoque2019creditoicms 
 --where codtributacao = 1 
-order by produto 
+order by produto, codproduto, codfilial
 --limit 500
 */

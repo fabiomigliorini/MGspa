@@ -6,7 +6,7 @@
 			nti.xprod, 
 			--nti.cean, 
 			case when nti.ncm = n.ncm then n.ncm else 'DIVERG' end as ncm,
-			case when nti.cest = c.cest then c.cest else 'DIVERG' end as cest,
+			case when coalesce(nti.cest, '') = coalesce(c.cest, '') then c.cest else 'DIVERG' end as cest,
 			c.mva,
 			coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) - coalesce(vdesc, 0) as valor,
 			ipivipi,
@@ -17,7 +17,7 @@
 		left join tblproduto p on (p.codproduto = pb.codproduto)
 		left join tblncm n on (n.codncm = p.codncm)
 		left join tblcest c on (c.codcest = p.codcest)
-		where nti.codnfeterceiro = 27481
+		where nti.codnfeterceiro = 27355
 		order by nitem
 	)
 	select 
