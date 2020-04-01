@@ -24,6 +24,11 @@
 --Lua de Cristal
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (26042)
 
+--Republic VIX
+--update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (25002)
+
+
+
 --99 Express
 --update tblnfeterceiroitem set complemento = vprod - ipivipi, margem = 75 where codnfeterceiro in (24568)
 

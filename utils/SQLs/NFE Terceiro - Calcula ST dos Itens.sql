@@ -17,12 +17,12 @@
 		left join tblproduto p on (p.codproduto = pb.codproduto)
 		left join tblncm n on (n.codncm = p.codncm)
 		left join tblcest c on (c.codcest = p.codcest)
-		where nti.codnfeterceiro = 27355
+		where nti.codnfeterceiro = 27530
 		order by nitem
 	)
 	select 
 		*,
-		round((((valor + coalesce(ipivipi, 0)) * (1+(mva/100))) * 0.17) - vicms, 2) as vicmsstcalculado
+		round((((valor + coalesce(ipivipi, 0)) * (1+(mva/100))) * 0.17) - coalesce(vicms, 0), 2) as vicmsstcalculado
 	from itens
 )
 select 
