@@ -24,6 +24,9 @@
 --Lua de Cristal
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (26042)
 
+--Lumasol
+--update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (27605)
+
 --99 Express
 --update tblnfeterceiroitem set complemento = vprod - ipivipi, margem = 75 where codnfeterceiro in (24568)
 

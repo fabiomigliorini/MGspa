@@ -10,7 +10,16 @@
 			c.mva,
 			coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) - coalesce(vdesc, 0) as valor,
 			ipivipi,
-			case when coalesce(picms, 0) > 7 then (coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) - coalesce(vdesc, 0)) * 0.07 else vicms end as vicms,
+			case when coalesce(n.bit, false) then
+				0.4117
+			else
+				1.0
+			end as reducao,
+			case when coalesce(picms, 0) > 7 then 
+				(coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) - coalesce(vdesc, 0)) * 0.07 
+			else 
+				vicms 
+			end as vicms,
 			vicmsst
 		from tblnfeterceiroitem nti
 		left join tblprodutobarra pb on (pb.codprodutobarra = nti.codprodutobarra)
@@ -22,7 +31,7 @@
 	)
 	select 
 		*,
-		round((((valor + coalesce(ipivipi, 0)) * (1+(mva/100))) * 0.17) - vicms, 2) as vicmsstcalculado
+		round((((valor + coalesce(ipivipi, 0)) * (1+(mva/100))) * 0.17 * reducao) - (vicms * reducao), 2) as vicmsstcalculado
 	from itens
 )
 select 
