@@ -1,4 +1,4 @@
-﻿--STYROFORM (1/2 mais Frete)
+--STYROFORM (1/2 mais Frete)
 --update tblnfeterceiroitem set complemento = (vprod *1.8933) , margem = 37 where codnfeterceiro = 26000
 
 --CIRANDA TEXTIL / BRITANNIA (Nota Cheia, mas quantidade dos produtos é / 100)
@@ -26,6 +26,9 @@
 
 --Lumasol
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (27605)
+
+--Republic VIX
+--update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (25002)
 
 --99 Express
 --update tblnfeterceiroitem set complemento = vprod - ipivipi, margem = 75 where codnfeterceiro in (24568)

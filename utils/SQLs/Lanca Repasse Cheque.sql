@@ -1,9 +1,9 @@
-﻿--select * from tblportador order by codportador
+--select * from tblportador order by codportador
 
 -- Cria Repasse
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
 values (210, '2020-04-07', null, '2020-04-07 11:41', 1);
-select * from tblchequerepasse order by codchequerepasse desc limit 50 
+select * from tblchequerepasse order by codchequerepasse desc limit 50
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
@@ -85,7 +85,7 @@ update tblchequedevolucao set data = '2018-08-30', criacao = date_trunc('second'
 
 */
 
-select * 
+select *
 from tblcheque c
 inner join tblchequerepassecheque crc  on (crc.codcheque = c.codcheque)
 where crc.codchequerepasse = 2186
