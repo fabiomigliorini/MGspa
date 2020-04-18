@@ -26,7 +26,7 @@
 		left join tblproduto p on (p.codproduto = pb.codproduto)
 		left join tblncm n on (n.codncm = p.codncm)
 		left join tblcest c on (c.codcest = p.codcest)
-		where nti.codnfeterceiro = 27903
+		where nti.codnfeterceiro = 27904
 		order by nitem
 	)
 	select
@@ -38,4 +38,4 @@ select
 	*,
 	vicmsstcalculado - coalesce(vicmsst, 0) as diferenca,
 	sum(vicmsstcalculado - coalesce(vicmsst, 0)) over (order by nitem asc) as acumulado
-from final	
+from final
