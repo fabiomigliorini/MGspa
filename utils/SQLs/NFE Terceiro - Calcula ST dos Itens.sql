@@ -9,7 +9,6 @@
 			case when coalesce(nti.cest, '') = coalesce(c.cest, '') then c.cest else 'DIVERG' end as cest,
 			round(1 + (c.mva / 100), 4) as mva,
 			coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) + coalesce(ipivipi, 0) - coalesce(vdesc, 0) as valor,
-			ipivipi,
 			case when coalesce(n.bit, false) then
 				0.4117
 			else
@@ -26,7 +25,7 @@
 		left join tblproduto p on (p.codproduto = pb.codproduto)
 		left join tblncm n on (n.codncm = p.codncm)
 		left join tblcest c on (c.codcest = p.codcest)
-		where nti.codnfeterceiro = 27904
+		where nti.codnfeterceiro = 28110
 		order by nitem
 	)
 	select
