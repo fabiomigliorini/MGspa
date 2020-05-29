@@ -1,4 +1,5 @@
-﻿-- VERIFICA SE VARIACAO ESTA ATIVA
+﻿/*
+-- VERIFICA SE VARIACAO ESTA ATIVA
 select * 
 from tblprodutovariacao pv
 inner join tblproduto p on (p.codproduto = pv.codproduto)
@@ -25,8 +26,15 @@ and pv.codprodutovariacao in (
 , 18599
 , 7331
 )
+*/
 
 -- DESCONTINUA VARIACAO
 UPDATE TBLPRODUTOVARIACAO SET DESCONTINUADO = date_trunc('seconds', NOW()) WHERE DESCONTINUADO IS NULL AND CODPRODUTOVARIACAO IN (
-40012
+00005702
+,00000080
+,00016102
+,00023145
+,00002026
+,00015840
+,00019364
 )

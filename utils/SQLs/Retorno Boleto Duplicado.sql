@@ -5,10 +5,10 @@
 
 --delete from tblmovimentotitulo where codboletoretorno in (
 delete from tblboletoretorno where codboletoretorno in (
-select codboletoretorno 
-from tblboletoretorno 
-where arquivo = 'CB211200.RET' and dataretorno = '2019-12-23' and codportador = 3941
-order by linha
+	select codboletoretorno 
+	from tblboletoretorno 
+	where arquivo = 'CB120200.RET' and dataretorno = '2020-02-12' and codportador = 3941
+	order by linha
 )
 */
 /*

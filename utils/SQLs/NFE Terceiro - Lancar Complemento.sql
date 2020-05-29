@@ -1,4 +1,4 @@
-﻿--STYROFORM (1/2 mais Frete)
+--STYROFORM (1/2 mais Frete)
 --update tblnfeterceiroitem set complemento = (vprod *1.8933) , margem = 37 where codnfeterceiro = 26000
 
 --CIRANDA TEXTIL / BRITANNIA (Nota Cheia, mas quantidade dos produtos é / 100)
@@ -19,7 +19,16 @@
 --update tblnfeterceiroitem set complemento = (vprod * 1.4), margem = 30 where codnfeterceiro = 25931
 
 --FOUR STAR / CW
-update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (26670)
+--update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (27832, 27833)
+
+--Lua de Cristal
+--update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (26042)
+
+--Lumasol
+--update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (27605)
+
+--Republic VIX
+--update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (25002)
 
 --99 Express
 --update tblnfeterceiroitem set complemento = vprod - ipivipi, margem = 75 where codnfeterceiro in (24568)
@@ -27,6 +36,10 @@ update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 
 --MAGNO
 --update tblnfeterceiroitem set complemento = vprod * 0.98630137, margem = 37 where codnfeterceiro in (25681)
 
+--DU Careca
+--update tblnfeterceiroitem set complemento = vprod - vdesc, margem = 37 where codnfeterceiro in (27610)
+
+--update tblnfeterceiroitem set complemento = (vprod - vdesc), margem = 37 where codnfeterceiro in (27609)
 
 
 with it as (
