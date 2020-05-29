@@ -494,7 +494,9 @@ class EstoqueEstatisticaRepository
         if (!empty($codprodutovariacao)) {
             if ($pv = $variacoes->where('codprodutovariacao', $codprodutovariacao)->first()) {
                 $variacao = $pv->variacao;
-                $vendainicio = Carbon::createFromFormat('Y-m-d', $pv->vendainicio);
+		if (!empty($pv->vendainicio)) {
+                    $vendainicio = Carbon::createFromFormat('Y-m-d', $pv->vendainicio);
+                }
                 $vendaquantidade = $pv->vendaquantidade;
                 $saldoquantidade = $pv->saldoquantidade;
             }

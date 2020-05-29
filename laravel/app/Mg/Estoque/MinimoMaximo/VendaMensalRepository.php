@@ -532,7 +532,11 @@ class VendaMensalRepository
             $descDeposito = 0;
             foreach ($recalcular as $loja) {
 
-                $qtMaximo = round(($percs[$loja->codestoquelocal] * $totDeposito) / 100, 0);
+                if (!isset($percs[$loja->codestoquelocal])) {
+                    $qtMaximo = 0;
+                } else {
+                    $qtMaximo = round(($percs[$loja->codestoquelocal] * $totDeposito) / 100, 0);
+                }
 
                 // Grava Minimo / Maximo da Filial
                 $elpv = EstoqueLocalProdutoVariacao::firstOrCreate([
