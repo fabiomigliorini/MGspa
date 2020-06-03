@@ -445,7 +445,11 @@ class NFePHPRepositoryMake
                   if ($std->CST == 20 && $pRedBC > 0) {
                       $std->motDesICMS = 9;
                       $std->pRedBC = number_format($pRedBC, 2, '.', '');
-                      $std->vICMSDeson = number_format(($std->vBC * ($std->pRedBC / 100) / (1 - ($std->pRedBC / 100))) * ($std->pICMS/100), 2, '.', '');
+                      if ($pRedBC >= 100) {
+                          $std->vICMSDeson = number_format((($nfpb->valortotal + $nfpb->valorfrete + $nfpb->valorseguro + $nfpb->valoroutras - $nfpb->valordesconto) * $std->pICMS/100), 2, '.', '');
+                      } else {
+                          $std->vICMSDeson = number_format(($std->vBC * ($std->pRedBC / 100) / (1 - ($std->pRedBC / 100))) * ($std->pICMS/100), 2, '.', '');
+                      }
                   } elseif ($std->CST == 41) {
                       $std->motDesICMS = 3;
                       $aliq =  ($nf->Pessoa->Cidade->codestado == $nf->Filial->Pessoa->Cidade->codestado)?0.17:0.12;
