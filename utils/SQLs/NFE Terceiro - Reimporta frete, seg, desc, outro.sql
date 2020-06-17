@@ -11,12 +11,14 @@ with orig as (
 	from tblnotafiscalprodutobarra nfpb
 	inner join tblnfeterceiro nt on (nt.codnotafiscal = nfpb.codnotafiscal)
 	inner join tblnfeterceiroitem nti on (nti.codnfeterceiro = nt.codnfeterceiro and nfpb.codprodutobarra = nti.codprodutobarra and nti.vprod = nfpb.valortotal)
-	where nfpb.codnotafiscal = 01619928
+	where nfpb.codnotafiscal = 1638870
 )
 update tblnotafiscalprodutobarra 
 set valorfrete = orig.vfrete
 , valorseguro = orig.vseg
 , valordesconto = orig.vdesc
 , valoroutras = orig.voutro
+, icmsvalor = orig.vicms
+, icmsbase
 from orig
 where tblnotafiscalprodutobarra.codnotafiscalprodutobarra = orig.codnotafiscalprodutobarra

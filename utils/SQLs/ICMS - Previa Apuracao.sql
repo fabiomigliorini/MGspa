@@ -7,7 +7,7 @@ select
 	sum(case when no.codoperacao != 1 then 1 else -1 end * nf.icmsvalor) as saldo
 from tblnotafiscal nf
 inner join tblnaturezaoperacao no ON (no.codnaturezaoperacao = nf.codnaturezaoperacao)
-where nf.saida between '2020-04-01' and '2020-04-30 23:59:59'
+where nf.saida between '2020-05-01' and '2020-05-31 23:59:59'
 and nf.nfecancelamento is null
 and nf.nfeinutilizacao is null
 and nf.codfilial between 101 and 104
