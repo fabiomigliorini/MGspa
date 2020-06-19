@@ -150,6 +150,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('marca/{id}/inativo', '\Mg\Marca\MarcaController@inativar')->name('marca.inativar');
         Route::apiResource('marca', '\Mg\Marca\MarcaController');
 
+        Route::get('boleto/retorno-pendente', '\Mg\Boleto\BoletoController@retornoPendente');
+
+
         Route::put('marca/{id}/planilha/distribuicao-saldo-deposito', '\Mg\Marca\MarcaController@criarPlanilhaDistribuicaoSaldoDeposito');
         Route::put('marca/{id}/planilha/pedido', '\Mg\Marca\MarcaController@criarPlanilhaPedido');
 
