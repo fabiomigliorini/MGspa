@@ -3,7 +3,7 @@
 namespace Mg\Estoque;
 use Mg\MgService;
 
-class EstoquelocalRepository extends MgService
+class EstoqueLocalService extends MgService
 {
     public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
     {
