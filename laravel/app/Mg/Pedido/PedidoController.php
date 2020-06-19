@@ -103,7 +103,7 @@ class PedidoController extends MgController
     {
         $data = $request->all();
         DB::beginTransaction();
-        $model = PedidoRepository::insert($data);
+        $model = PedidoService::insert($data);
         DB::commit();
         return response()->json($model, 201);
     }
@@ -113,7 +113,7 @@ class PedidoController extends MgController
         $data = $request->all();
         $model = Pedido::findOrFail($id);
         DB::beginTransaction();
-        $model = PedidoRepository::update($model, $data);
+        $model = PedidoService::update($model, $data);
         DB::commit();
         return response()->json($model, 201);
     }
@@ -122,7 +122,7 @@ class PedidoController extends MgController
     {
         $model = Pedido::findOrFail($id);
         DB::beginTransaction();
-        $model = PedidoRepository::delete($model);
+        $model = PedidoService::delete($model);
         DB::commit();
         return response()->json($request->all(), 204);
     }
@@ -149,7 +149,7 @@ class PedidoController extends MgController
         $data = $request->all();
         $data['codpedido'] = $id;
         DB::beginTransaction();
-        $model = PedidoItemRepository::insert($data);
+        $model = PedidoItemService::insert($data);
         DB::commit();
         return response()->json($model, 201);
     }
@@ -162,7 +162,7 @@ class PedidoController extends MgController
             abort(404);
         }
         DB::beginTransaction();
-        $model = PedidoItemRepository::update($model, $data);
+        $model = PedidoItemService::update($model, $data);
         DB::commit();
         return response()->json($model, 201);
     }
@@ -174,14 +174,14 @@ class PedidoController extends MgController
             abort(404);
         }
         DB::beginTransaction();
-        $model = PedidoItemRepository::delete($model);
+        $model = PedidoItemService::delete($model);
         DB::commit();
         return response()->json($request->all(), 204);
     }
 
     public function produtosParaTransferir (Request $request, $codestoquelocalorigem, $codestoquelocaldestino)
     {
-        $res = PedidoRepository::produtosParaTransferir($codestoquelocalorigem, $codestoquelocaldestino);
+        $res = PedidoService::produtosParaTransferir($codestoquelocalorigem, $codestoquelocaldestino);
         return response()->json($res, 200);
     }
 

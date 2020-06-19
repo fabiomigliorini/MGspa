@@ -1,6 +1,6 @@
 <?php
 namespace Mg\Estoque;
-use Mg\MgRepository;
+use Mg\MgService;
 use Mg\MgModel;
 
 /**

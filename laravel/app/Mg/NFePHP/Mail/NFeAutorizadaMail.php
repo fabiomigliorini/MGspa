@@ -8,8 +8,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\NFePHP\NFePHPRepositoryPath;
-use Mg\NFePHP\NFePHPRepository;
+use Mg\NFePHP\NFePHPPathService;
+use Mg\NFePHP\NFePHPService;
 
 class NFeAutorizadaMail extends Mailable
 {
@@ -35,14 +35,14 @@ class NFeAutorizadaMail extends Mailable
     public function build()
     {
 
-        $pathNFeAutorizada = NFePHPRepositoryPath::pathNFeAutorizada($this->nf);
+        $pathNFeAutorizada = NFePHPPathService::pathNFeAutorizada($this->nf);
         if (!file_exists($pathNFeAutorizada)) {
             throw new \Exception("Arquivo XML não localizado ($pathNFeAutorizada)!");
         }
 
-        $pathDanfe = NFePHPRepositoryPath::pathDanfe($this->nf);
+        $pathDanfe = NFePHPPathService::pathDanfe($this->nf);
         if (!file_exists($pathDanfe)) {
-            NFePHPRepository::danfe($this->nf);
+            NFePHPService::danfe($this->nf);
             if (!file_exists($pathDanfe)) {
                 throw new \Exception("Erro ao gerar arquivo PDF ($pathDanfe)!");
             }

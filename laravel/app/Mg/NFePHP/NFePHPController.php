@@ -20,7 +20,7 @@ class NFePHPController extends MgController
     public function sefazStatus(Request $request, $id)
     {
         $filial = Filial::findOrFail($id);
-        $res = NFePHPRepository::sefazStatus($filial);
+        $res = NFePHPService::sefazStatus($filial);
         return response()->json($res, 200);
     }
 
@@ -31,98 +31,98 @@ class NFePHPController extends MgController
         if (!empty($request->offline)) {
             $offline = true;
         }
-        $res = NFePHPRepository::criar($nf, $offline);
+        $res = NFePHPService::criar($nf, $offline);
         return response($res, 200)->header('Content-Type', 'text/xml');
     }
 
     public function enviar(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::enviar($nf);
+        $res = NFePHPService::enviar($nf);
         return response()->json($res, 200);
     }
 
     public function enviarSincrono(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::enviarSincrono($nf);
+        $res = NFePHPService::enviarSincrono($nf);
         return response()->json($res, 200);
     }
 
     public function consultarRecibo(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::consultarRecibo($nf);
+        $res = NFePHPService::consultarRecibo($nf);
         return response()->json($res, 200);
     }
 
     public function cancelar(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::cancelar($nf, $request->justificativa);
+        $res = NFePHPService::cancelar($nf, $request->justificativa);
         return response()->json($res, 200);
     }
 
     public function inutilizar(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::inutilizar($nf, $request->justificativa);
+        $res = NFePHPService::inutilizar($nf, $request->justificativa);
         return response()->json($res, 200);
     }
 
     public function consultar(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::consultar($nf);
+        $res = NFePHPService::consultar($nf);
         return response()->json($res, 200);
     }
 
     public function cartaCorrecao(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::cartaCorrecao($nf, $request->texto);
+        $res = NFePHPService::cartaCorrecao($nf, $request->texto);
         return response()->json($res, 200);
     }
 
     public function danfe(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::danfe($nf);
+        $res = NFePHPService::danfe($nf);
         return response()->file($res);
     }
 
     public function imprimir(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepository::imprimir($nf, $request->impressora);
+        $res = NFePHPService::imprimir($nf, $request->impressora);
         return response()->json($res, 200);
     }
 
     public function mail(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepositoryMail::mail($nf, $request->destinatario);
+        $res = NFePHPMailService::mail($nf, $request->destinatario);
         return $res;
         return response()->json($res, 200);
     }
 
     public function mailCancelamento(Request $request, $id)
     {
-        $res = NFePHPRepositoryMail::mailCancelamento($id);
+        $res = NFePHPMailService::mailCancelamento($id);
         return response()->json($res, 200);
     }
 
     public function cscConsulta(Request $request, $id)
     {
         $filial = Filial::findOrFail($id);
-        $res = NFePHPRepository::cscConsulta($filial);
+        $res = NFePHPService::cscConsulta($filial);
         return response()->json($res, 200);
     }
 
     public function xml(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $xml = NFePHPRepository::xml($nf);
+        $xml = NFePHPService::xml($nf);
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
 
@@ -131,14 +131,14 @@ class NFePHPController extends MgController
         $per_page = $request->per_page??50;
         $current_page = $request->current_page??1;
         $desc = boolval($request->desc);
-        $res = NFePHPRepositoryRobo::pendentes($per_page, $current_page, $desc);
+        $res = NFePHPRoboService::pendentes($per_page, $current_page, $desc);
         return response()->json($res, 200);
     }
 
     public function resolver(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPRepositoryRobo::resolver($nf);
+        $res = NFePHPRoboService::resolver($nf);
         return response()->json($res, 200);
     }
 
@@ -147,7 +147,7 @@ class NFePHPController extends MgController
         $per_page = $request->per_page??10;
         $current_page = $request->current_page??1;
         $desc = boolval($request->desc);
-        $res = NFePHPRepositoryRobo::resolverPendentes($per_page, $current_page, $desc);
+        $res = NFePHPRoboService::resolverPendentes($per_page, $current_page, $desc);
         return response()->json($res, 200);
     }
 

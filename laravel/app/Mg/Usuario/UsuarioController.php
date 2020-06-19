@@ -18,7 +18,7 @@ class UsuarioController extends MgController
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->filtros($request);
-        $qry = UsuarioRepository::pesquisar($filter, $sort, $fields)->with('Imagem');
+        $qry = UsuarioService::pesquisar($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
         foreach ($res as $i => $usuario) {
@@ -107,7 +107,7 @@ class UsuarioController extends MgController
      */
     public function detalhes($id)
     {
-        $model = UsuarioRepository::detalhes($id);
+        $model = UsuarioService::detalhes($id);
         return response()->json($model, 200);
     }
 
@@ -213,14 +213,14 @@ class UsuarioController extends MgController
 
     public function ativar(Request $request, $id) {
         $model = Usuario::findOrFail($id);
-        $model = UsuarioRepository::ativar($model);
+        $model = UsuarioService::ativar($model);
 
         return response()->json($model, 200);
     }
 
     public function inativar(Request $request, $id) {
         $model = Usuario::findOrFail($id);
-        $model = UsuarioRepository::inativar($model);
+        $model = UsuarioService::inativar($model);
 
         return response()->json($model, 200);
     }

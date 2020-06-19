@@ -14,7 +14,7 @@ class EstoqueEstatisticaController extends MgController
      */
     public function show(Request $request, $id)
     {
-        $res = EstoqueEstatisticaRepository::buscaEstatisticaProduto($id, null, $request->codprodutovariacao, $request->codestoquelocal);
+        $res = EstoqueEstatisticaService::buscaEstatisticaProduto($id, null, $request->codprodutovariacao, $request->codestoquelocal);
 
         return response()->json($res, 206);
     }

@@ -17,7 +17,7 @@ class PessoaController extends MgController
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->filtros($request);
-        $qry = PessoaRepository::pesquisar($filter, $sort, $fields);
+        $qry = PessoaService::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
         return response()->json($res, 200);
@@ -39,14 +39,14 @@ class PessoaController extends MgController
 
     public function autocomplete (Request $request)
     {
-        $qry = PessoaRepository::autocomplete($request->all());
+        $qry = PessoaService::autocomplete($request->all());
 
         return response()->json($qry, 200);
     }
 
     public function novaPessoa (Request $request)
     {
-        return PessoaRepository::novaPessoa();
+        return PessoaService::novaPessoa();
         //return response()->json($qry, 206);
     }
 

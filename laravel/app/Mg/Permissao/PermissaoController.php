@@ -18,7 +18,7 @@ class PermissaoController extends Controller
      */
     public function index(Request $request)
     {
-        $qry = PermissaoRepository::listagemPermissoesPorGrupoUsuario();
+        $qry = PermissaoService::listagemPermissoesPorGrupoUsuario();
         return response()->json($qry, 206);
     }
 

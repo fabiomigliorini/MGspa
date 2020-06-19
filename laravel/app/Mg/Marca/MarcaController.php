@@ -8,8 +8,8 @@ use Mg\MgController;
 use App\Http\Requests;
 use Illuminate\Validation\Rule;
 
-use Mg\Estoque\MinimoMaximo\ComprasRepository;
-use Mg\Estoque\MinimoMaximo\DistribuicaoRepository;
+use Mg\Estoque\MinimoMaximo\ComprasService;
+use Mg\Estoque\MinimoMaximo\DistribuicaoService;
 
 class MarcaController extends MgController
 {
@@ -24,7 +24,7 @@ class MarcaController extends MgController
         list($filter, $sort, $fields) = $this->filtros($request);
         $filter['abccategoria'] = json_decode($filter['abccategoria'], true);
 
-        $qry = MarcaRepository::pesquisar($filter, $sort, $fields)->with('Imagem');
+        $qry = MarcaService::pesquisar($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
         foreach ($res as $i => $marca) {
@@ -84,7 +84,7 @@ class MarcaController extends MgController
      */
     public function detalhes($id)
     {
-        $model = MarcaRepository::detalhes($id);
+        $model = MarcaService::detalhes($id);
         return response()->json($model, 200);
     }
 
@@ -133,7 +133,7 @@ class MarcaController extends MgController
     public function ativar(Request $request, $id)
     {
         $model = Marca::findOrFail($id);
-        $model = MarcaRepository::ativar($model);
+        $model = MarcaService::ativar($model);
 
         return response()->json($model, 200);
     }
@@ -141,7 +141,7 @@ class MarcaController extends MgController
     public function inativar(Request $request, $id)
     {
         $model = Marca::findOrFail($id);
-        $model = MarcaRepository::inativar($model);
+        $model = MarcaService::inativar($model);
 
         return response()->json($model, 200);
     }
@@ -167,21 +167,21 @@ class MarcaController extends MgController
 
     public function autocompletar(Request $request)
     {
-        $res = MarcaRepository::autocompletar($request->all());
+        $res = MarcaService::autocompletar($request->all());
         return response()->json($res, 200);
     }
 
     public function criarPlanilhaPedido(Request $request, $id)
     {
         $model = Marca::findOrFail($id);
-        $res = ComprasRepository::criarPlanilhaPedido($model);
+        $res = ComprasService::criarPlanilhaPedido($model);
         return response()->json($res, 200);
     }
 
     public function criarPlanilhaDistribuicaoSaldoDeposito(Request $request, $id)
     {
         $model = Marca::findOrFail($id);
-        $res = DistribuicaoRepository::criarPlanilhaDistribuicaoSaldoDeposito($model);
+        $res = DistribuicaoService::criarPlanilhaDistribuicaoSaldoDeposito($model);
         return response()->json($res, 200);
     }
 }

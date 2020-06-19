@@ -4,8 +4,8 @@ namespace Mg\Estoque;
 
 use Illuminate\Http\Request;
 use Mg\MgController;
-use Mg\Marca\MarcaRepository;
-use Mg\Produto\ProdutoRepository;
+use Mg\Marca\MarcaService;
+use Mg\Produto\ProdutoService;
 use Mg\Estoque\EstoqueSaldoConferencia;
 
 use DB;
@@ -37,7 +37,7 @@ class EstoqueSaldoConferenciaController extends MgController
         $conferidos = boolval($request->conferidos);
         $dataCorte = new \Carbon\Carbon($request->dataCorte);
 
-        $res = EstoqueSaldoConferenciaRepository::buscaListagem(
+        $res = EstoqueSaldoConferenciaService::buscaListagem(
             $codmarca,
             $codestoquelocal,
             $fiscal,
@@ -59,7 +59,7 @@ class EstoqueSaldoConferenciaController extends MgController
     {
         $codprodutovariacao = $request->codprodutovariacao;
         if (empty($codprodutovariacao)) {
-            if (!$pb  = \Mg\Produto\ProdutoRepository::buscaPorBarras($request->barras)) {
+            if (!$pb  = \Mg\Produto\ProdutoService::buscaPorBarras($request->barras)) {
                 return response()->json([
                     'erro' => true,
                     'mensagem' => 'Código de Barras não localizado!'
@@ -69,7 +69,7 @@ class EstoqueSaldoConferenciaController extends MgController
             $codprodutovariacao = $pb->codprodutovariacao;
         }
 
-        $res = EstoqueSaldoConferenciaRepository::buscaProduto($codprodutovariacao, $request->codestoquelocal, $request->fiscal);
+        $res = EstoqueSaldoConferenciaService::buscaProduto($codprodutovariacao, $request->codestoquelocal, $request->fiscal);
 
         return response()->json($res, 206);
     }
@@ -112,7 +112,7 @@ class EstoqueSaldoConferenciaController extends MgController
 
         DB::beginTransaction();
 
-        $model = EstoqueSaldoConferenciaRepository::criaConferencia(
+        $model = EstoqueSaldoConferenciaService::criaConferencia(
             $request->codprodutovariacao,
             $request->codestoquelocal,
             $fiscal,
@@ -129,7 +129,7 @@ class EstoqueSaldoConferenciaController extends MgController
 
         DB::commit();
 
-        $res = EstoqueSaldoConferenciaRepository::buscaProduto($request->codprodutovariacao, $request->codestoquelocal, $fiscal);
+        $res = EstoqueSaldoConferenciaService::buscaProduto($request->codprodutovariacao, $request->codestoquelocal, $fiscal);
 
         return response()->json($res, 201);
     }
@@ -152,7 +152,7 @@ class EstoqueSaldoConferenciaController extends MgController
 
         DB::beginTransaction();
 
-        $model = EstoqueSaldoConferenciaRepository::zerarProduto(
+        $model = EstoqueSaldoConferenciaService::zerarProduto(
             $request->codprodutovariacao,
             $request->codestoquelocal,
             $fiscal,
@@ -161,7 +161,7 @@ class EstoqueSaldoConferenciaController extends MgController
 
         DB::commit();
 
-        $res = EstoqueSaldoConferenciaRepository::buscaProduto($request->codprodutovariacao, $request->codestoquelocal, $fiscal);
+        $res = EstoqueSaldoConferenciaService::buscaProduto($request->codprodutovariacao, $request->codestoquelocal, $fiscal);
 
         return response()->json($res, 201);
     }
@@ -171,10 +171,10 @@ class EstoqueSaldoConferenciaController extends MgController
         $model = EstoqueSaldoConferencia::findOrFail($id);
 
         DB::beginTransaction();
-        EstoqueSaldoConferenciaRepository::inativar($model);
+        EstoqueSaldoConferenciaService::inativar($model);
         DB:: commit();
 
-        $res = EstoqueSaldoConferenciaRepository::buscaProduto(
+        $res = EstoqueSaldoConferenciaService::buscaProduto(
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
             $model->EstoqueSaldo->fiscal);

@@ -49,7 +49,7 @@ class NFePHPJobResolver implements ShouldQueue
     public function handle()
     {
         $nf = NotaFiscal::findOrFail($this->codnotafiscal);
-        $res = NFePHPRepositoryRobo::resolver($nf);
+        $res = NFePHPRoboService::resolver($nf);
         $res = $this->eliminarXML($res);
         if (!isset($res->resolvido) || ($res->resolvido == false)) {
             Log::error("NFePHPJobResolver: Erro ao resolver #{$this->codnotafiscal}", (array) $res);

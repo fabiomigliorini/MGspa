@@ -17,7 +17,7 @@ class GrupoUsuarioController extends MgController
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->filtros($request);
-        $qry = GrupoUsuarioRepository::pesquisar($filter, $sort, $fields);
+        $qry = GrupoUsuarioService::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
         return response()->json($res, 200);
@@ -72,7 +72,7 @@ class GrupoUsuarioController extends MgController
      */
     public function detalhes($id)
     {
-        $model = GrupoUsuarioRepository::detalhes($id);
+        $model = GrupoUsuarioService::detalhes($id);
         return response()->json($model, 200);
     }
 
@@ -138,14 +138,14 @@ class GrupoUsuarioController extends MgController
 
     public function ativar(Request $request, $id) {
         $model = GrupoUsuario::findOrFail($id);
-        $model = GrupoUsuarioRepository::ativar($model);
+        $model = GrupoUsuarioService::ativar($model);
 
         return response()->json($model, 200);
     }
 
     public function inativar(Request $request, $id) {
         $model = GrupoUsuario::findOrFail($id);
-        $model = GrupoUsuarioRepository::inativar($model);
+        $model = GrupoUsuarioService::inativar($model);
 
         return response()->json($model, 200);
     }

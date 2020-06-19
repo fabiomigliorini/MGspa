@@ -38,8 +38,8 @@ class FaltandoMail extends Mailable
 
       // $marca = Marca::findOrFail(10000064);
 
-        // $produtos = ComprasRepository::buscarProdutos($marca);
-        $produtos = ComprasRepository::buscarProdutos();
+        // $produtos = ComprasService::buscarProdutos($marca);
+        $produtos = ComprasService::buscarProdutos();
         $marcas = collect();
         foreach ($produtos as $key => $prod) {
             if (empty($prod->comprar)) {
@@ -79,14 +79,14 @@ class FaltandoMail extends Mailable
         ->with(['marcas' => $marcas]);
 
         /*
-          $pathNFeAutorizada = NFePHPRepositoryPath::pathNFeAutorizada($this->marca);
+          $pathNFeAutorizada = NFePHPPathService::pathNFeAutorizada($this->marca);
           if (!file_exists($pathNFeAutorizada)) {
               throw new \Exception("Arquivo XML não localizado ($pathNFeAutorizada)!");
           }
 
-          $pathDanfe = NFePHPRepositoryPath::pathDanfe($this->marca);
+          $pathDanfe = NFePHPPathService::pathDanfe($this->marca);
           if (!file_exists($pathDanfe)) {
-              NFePHPRepository::danfe($this->marca);
+              NFePHPService::danfe($this->marca);
               if (!file_exists($pathDanfe)) {
                   throw new \Exception("Erro ao gerar arquivo PDF ($pathDanfe)!");
               }
