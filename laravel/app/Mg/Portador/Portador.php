@@ -5,7 +5,13 @@ namespace Mg\Portador;
 use Mg\MgModel;
 use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
-// use Mg\Titulo\MovimentoTitulo;
+
+use Mg\Boleto\BoletoRetorno;
+// use Mg\Cheque\ChequeRepasse;
+// use Mg\Cobranca\Cobranca;
+use Mg\Titulo\LiquidacaoTitulo;
+use Mg\Titulo\MovimentoTitulo;
+use Mg\Titulo\Titulo;
 
 class Portador extends MGModel
 {
@@ -56,25 +62,39 @@ class Portador extends MGModel
     }
 
     // Tabelas Filhas
+    public function BoletoRetornoS()
+    {
+        return $this->hasMany(BoletoRetorno::class, 'codportador', 'codportador');
+    }
+
+    // public function ChequeRepasseS()
+    // {
+    //     return $this->hasMany(ChequeRepasse::class, 'codportador', 'codportador');
+    // }
+
+    // public function CobrancaS()
+    // {
+    //     return $this->hasMany(Cobranca::class, 'codportador', 'codportador');
+    // }
+
+    public function LiquidacaoTituloS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codportador', 'codportador');
+    }
+
+    public function MovimentoTituloS()
+    {
+        return $this->hasMany(MovimentoTitulo::class, 'codportador', 'codportador');
+    }
+
+    public function TituloS()
+    {
+        return $this->hasMany(Titulo::class, 'codportador', 'codportador');
+    }
+
     public function UsuarioS()
     {
         return $this->hasMany(Usuario::class, 'codportador', 'codportador');
     }
-
-    // public function MovimentoTituloS()
-    // {
-    //     return $this->hasMany(MovimentoTitulo::class, 'codportador', 'codportador');
-    // }
-
-    public function BoletoRetornoS()
-    {
-        return $this->hasMany(BoletoRetorno::class, 'codportador', 'codportador');
-    }
-
-    public function BoletoRetornoS()
-    {
-        return $this->hasMany(BoletoRetorno::class, 'codportador', 'codportador');
-    }
-
 
 }
