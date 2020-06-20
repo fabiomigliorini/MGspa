@@ -75,8 +75,12 @@ class GeradorModelCommand extends Command
         $code .= $this->conteudo['Fillable'];
         $code .= $this->conteudo['Dates'];
         $code .= $this->conteudo['Casts'];
-        $code .= $this->conteudo['BelongsTo'];
-        $code .= $this->conteudo['HasMany'];
+        if (!empty($this->conteudo['BelongsTo'])) {
+            $code .= $this->conteudo['BelongsTo'];
+        }
+        if (!empty($this->conteudo['HasMany'])) {
+            $code .= $this->conteudo['HasMany'];
+        }
         $code .= $this->conteudo['Rodape'];
         file_put_contents($this->arquivo, $code);
     }
@@ -353,6 +357,22 @@ class {$this->classe} extends MgModel
         return "{$caminho}/{$classe}.php";
     }
 
+    public function sugereNomeMetodoRelacionamento ($coluna, $tabela)
+    {
+        if (isset($this->models[$tabela])) {
+            $metodo = $this->models[$tabela]['classe'];
+            if ($this->models[$tabela]['campocodigo'] != $coluna) {
+                $sufixo = str_replace($this->models[$tabela]['campocodigo'], '', $coluna);
+                $metodo = $metodo . Str::studly($sufixo);
+                return $metodo;
+            }
+            return $metodo;
+        }
+        $metodo = preg_replace('/(cod(?!.cod*))/', '', $coluna);
+        $metodo = Str::studly($metodo);
+        return $metodo;
+    }
+
     public function descobrirMetodoBelongsTo ($coluna, $tabela)
     {
         if (!@$metodo = $this->models[$this->tabela]['belongsTo'][$coluna]['metodo']) {
@@ -366,8 +386,7 @@ class {$this->classe} extends MgModel
                     break;
 
                 default:
-                    $metodo = preg_replace('/(cod(?!.cod*))/', '', $coluna);
-                    $metodo = Str::studly($metodo);
+                    $metodo = $this->sugereNomeMetodoRelacionamento ($coluna, $tabela);
                     break;
             }
         }
