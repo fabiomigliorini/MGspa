@@ -71,8 +71,30 @@
         "namespace": "Mg\\Banco",
         "classe": "Banco",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Banco\/Banco.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcheque.codbanco": {
+                "tabela": "tblcheque",
+                "coluna": "codbanco",
+                "metodo": "ChequeS"
+            },
+            "tblportador.codbanco": {
+                "tabela": "tblportador",
+                "coluna": "codbanco",
+                "metodo": "PortadorS"
+            }
+        }
     },
     "tblfilial": {
         "tabela": "tblfilial",
@@ -98,8 +120,35 @@
         "namespace": "Mg\\Boleto",
         "classe": "BoletoRetorno",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Boleto\/BoletoRetorno.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmovimentotitulo.codboletoretorno": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codboletoretorno",
+                "metodo": "MovimentoTituloS"
+            }
+        }
     },
     "tblchequerepasse": {
         "tabela": "tblchequerepasse",
@@ -107,8 +156,30 @@
         "namespace": "Mg\\Cheque",
         "classe": "ChequeRepasse",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/ChequeRepasse.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblchequerepassecheque.codchequerepasse": {
+                "tabela": "tblchequerepassecheque",
+                "coluna": "codchequerepasse",
+                "metodo": "ChequeRepasseChequeS"
+            }
+        }
     },
     "tblcobranca": {
         "tabela": "tblcobranca",
@@ -116,8 +187,40 @@
         "namespace": "Mg\\Cobranca",
         "classe": "Cobranca",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cobranca\/Cobranca.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codcheque": {
+                "tabela": "tblcheque",
+                "coluna": "codcheque",
+                "metodo": "Cheque"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmovimentotitulo.codcobranca": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codcobranca",
+                "metodo": "MovimentoTituloS"
+            }
+        }
     },
     "tblliquidacaotitulo": {
         "tabela": "tblliquidacaotitulo",
@@ -125,8 +228,45 @@
         "namespace": "Mg\\Titulo",
         "classe": "LiquidacaoTitulo",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/LiquidacaoTitulo.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codusuario": {
+                "tabela": "tblusuario",
+                "coluna": "codusuario",
+                "metodo": "Usuario"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codusuarioestorno": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioestorno",
+                "metodo": "UsuarioEstorno"
+            }
+        },
+        "hasMany": {
+            "tblmovimentotitulo.codliquidacaotitulo": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codliquidacaotitulo",
+                "metodo": "MovimentoTituloS"
+            }
+        }
     },
     "tblmovimentotitulo": {
         "tabela": "tblmovimentotitulo",
@@ -134,7 +274,58 @@
         "namespace": "Mg\\Titulo",
         "classe": "MovimentoTitulo",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/MovimentoTitulo.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codboletoretorno": {
+                "tabela": "tblboletoretorno",
+                "coluna": "codboletoretorno",
+                "metodo": "BoletoRetorno"
+            },
+            "codcobranca": {
+                "tabela": "tblcobranca",
+                "coluna": "codcobranca",
+                "metodo": "Cobranca"
+            },
+            "codliquidacaotitulo": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codliquidacaotitulo",
+                "metodo": "LiquidacaoTitulo"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codtipomovimentotitulo": {
+                "tabela": "tbltipomovimentotitulo",
+                "coluna": "codtipomovimentotitulo",
+                "metodo": "TipoMovimentoTitulo"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codtituloagrupamento": {
+                "tabela": "tbltituloagrupamento",
+                "coluna": "codtituloagrupamento",
+                "metodo": "TituloAgrupamento"
+            },
+            "codtitulorelacionado": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulorelacionado",
+                "metodo": "TituloRelacionado"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tbltitulo": {
@@ -143,6 +334,561 @@
         "namespace": "Mg\\Titulo",
         "classe": "Titulo",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/Titulo.php",
+        "belongsTo": {
+            "codcontacontabil": {
+                "tabela": "tblcontacontabil",
+                "coluna": "codcontacontabil",
+                "metodo": "ContaContabil"
+            },
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codnegocioformapagamento": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codnegocioformapagamento",
+                "metodo": "NegocioFormaPagamento"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codtipotitulo": {
+                "tabela": "tbltipotitulo",
+                "coluna": "codtipotitulo",
+                "metodo": "TipoTitulo"
+            },
+            "codtituloagrupamento": {
+                "tabela": "tbltituloagrupamento",
+                "coluna": "codtituloagrupamento",
+                "metodo": "TituloAgrupamento"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codvalecompraformapagamento": {
+                "tabela": "tblvalecompraformapagamento",
+                "coluna": "codvalecompraformapagamento",
+                "metodo": "ValeCompraFormaPagamento"
+            }
+        },
+        "hasMany": {
+            "tblboletoretorno.codtitulo": {
+                "tabela": "tblboletoretorno",
+                "coluna": "codtitulo",
+                "metodo": "BoletoRetornoS"
+            },
+            "tblcheque.codtitulo": {
+                "tabela": "tblcheque",
+                "coluna": "codtitulo",
+                "metodo": "ChequeS"
+            },
+            "tblcobranca.codtitulo": {
+                "tabela": "tblcobranca",
+                "coluna": "codtitulo",
+                "metodo": "CobrancaS"
+            },
+            "tblcobrancahistoricotitulo.codtitulo": {
+                "tabela": "tblcobrancahistoricotitulo",
+                "coluna": "codtitulo",
+                "metodo": "CobrancaHistoricoTituloS"
+            },
+            "tblmovimentotitulo.codtitulo": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codtitulo",
+                "metodo": "MovimentoTituloS"
+            },
+            "tblmovimentotitulo.codtitulorelacionado": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codtitulorelacionado",
+                "metodo": "MovimentoTituloRelacionadoS"
+            },
+            "tblnfeterceiroduplicata.codtitulo": {
+                "tabela": "tblnfeterceiroduplicata",
+                "coluna": "codtitulo",
+                "metodo": "NfeTerceiroDuplicataS"
+            },
+            "tblvalecompra.codtitulo": {
+                "tabela": "tblvalecompra",
+                "coluna": "codtitulo",
+                "metodo": "ValeCompraS"
+            }
+        }
+    },
+    "tblcheque": {
+        "tabela": "tblcheque",
+        "campocodigo": "codcheque",
+        "namespace": "Mg\\Cheque",
+        "classe": "Cheque",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/Cheque.php",
+        "belongsTo": {
+            "codbanco": {
+                "tabela": "tblbanco",
+                "coluna": "codbanco",
+                "metodo": "Banco"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblchequeemitente.codcheque": {
+                "tabela": "tblchequeemitente",
+                "coluna": "codcheque",
+                "metodo": "ChequeEmitenteS"
+            },
+            "tblchequerepassecheque.codcheque": {
+                "tabela": "tblchequerepassecheque",
+                "coluna": "codcheque",
+                "metodo": "ChequeRepasseChequeS"
+            },
+            "tblcobranca.codcheque": {
+                "tabela": "tblcobranca",
+                "coluna": "codcheque",
+                "metodo": "CobrancaS"
+            }
+        }
+    },
+    "tblpessoa": {
+        "tabela": "tblpessoa",
+        "campocodigo": "codpessoa",
+        "namespace": "Mg\\Pessoa",
+        "classe": "Pessoa",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Pessoa.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblchequeemitente": {
+        "tabela": "tblchequeemitente",
+        "campocodigo": "codchequeemitente",
+        "namespace": "Mg\\Cheque",
+        "classe": "ChequeEmitente",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/ChequeEmitente.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblchequerepassecheque": {
+        "tabela": "tblchequerepassecheque",
+        "campocodigo": "codchequerepassecheque",
+        "namespace": "Mg\\Cheque",
+        "classe": "ChequeRepasseCheque",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/ChequeRepasseCheque.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblcontacontabil": {
+        "tabela": "tblcontacontabil",
+        "campocodigo": "codcontacontabil",
+        "namespace": "Mg\\ContaContabil",
+        "classe": "ContaContabil",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ContaContabil\/ContaContabil.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnaturezaoperacao.codcontacontabil": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codcontacontabil",
+                "metodo": "NaturezaOperacaoS"
+            },
+            "tbltitulo.codcontacontabil": {
+                "tabela": "tbltitulo",
+                "coluna": "codcontacontabil",
+                "metodo": "TituloS"
+            }
+        }
+    },
+    "tblnegocioformapagamento": {
+        "tabela": "tblnegocioformapagamento",
+        "campocodigo": "codnegocioformapagamento",
+        "namespace": "Mg\\Negocio",
+        "classe": "NegocioFormaPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioFormaPagamento.php",
+        "belongsTo": {
+            "codformapagamento": {
+                "tabela": "tblformapagamento",
+                "coluna": "codformapagamento",
+                "metodo": "FormaPagamento"
+            },
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tbltitulo.codnegocioformapagamento": {
+                "tabela": "tbltitulo",
+                "coluna": "codnegocioformapagamento",
+                "metodo": "TituloS"
+            }
+        }
+    },
+    "tbltipotitulo": {
+        "tabela": "tbltipotitulo",
+        "campocodigo": "codtipotitulo",
+        "namespace": "Mg\\Titulo",
+        "classe": "TipoTitulo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/TipoTitulo.php",
+        "belongsTo": {
+            "codtipomovimentotitulo": {
+                "tabela": "tbltipomovimentotitulo",
+                "coluna": "codtipomovimentotitulo",
+                "metodo": "TipoMovimentoTitulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnaturezaoperacao.codtipotitulo": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codtipotitulo",
+                "metodo": "NaturezaOperacaoS"
+            },
+            "tbltitulo.codtipotitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtipotitulo",
+                "metodo": "TituloS"
+            }
+        }
+    },
+    "tbltituloagrupamento": {
+        "tabela": "tbltituloagrupamento",
+        "campocodigo": "codtituloagrupamento",
+        "namespace": "Mg\\Titulo",
+        "classe": "TituloAgrupamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/TituloAgrupamento.php",
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmovimentotitulo.codtituloagrupamento": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codtituloagrupamento",
+                "metodo": "MovimentoTituloS"
+            },
+            "tbltitulo.codtituloagrupamento": {
+                "tabela": "tbltitulo",
+                "coluna": "codtituloagrupamento",
+                "metodo": "TituloS"
+            }
+        }
+    },
+    "tblvalecompraformapagamento": {
+        "tabela": "tblvalecompraformapagamento",
+        "campocodigo": "codvalecompraformapagamento",
+        "namespace": "Mg\\ValeCompra",
+        "classe": "ValeCompraFormaPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompraFormaPagamento.php",
+        "belongsTo": {
+            "codformapagamento": {
+                "tabela": "tblformapagamento",
+                "coluna": "codformapagamento",
+                "metodo": "FormaPagamento"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codvalecompra": {
+                "tabela": "tblvalecompra",
+                "coluna": "codvalecompra",
+                "metodo": "ValeCompra"
+            }
+        },
+        "hasMany": {
+            "tbltitulo.codvalecompraformapagamento": {
+                "tabela": "tbltitulo",
+                "coluna": "codvalecompraformapagamento",
+                "metodo": "TituloS"
+            }
+        }
+    },
+    "tblcobrancahistoricotitulo": {
+        "tabela": "tblcobrancahistoricotitulo",
+        "campocodigo": "codcobrancahistoricotitulo",
+        "namespace": "Mg\\Cobranca",
+        "classe": "CobrancaHistoricoTitulo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cobranca\/CobrancaHistoricoTitulo.php",
+        "belongsTo": {
+            "codcobrancahistorico": {
+                "tabela": "tblcobrancahistorico",
+                "coluna": "codcobrancahistorico",
+                "metodo": "CobrancaHistorico"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblnfeterceiroduplicata": {
+        "tabela": "tblnfeterceiroduplicata",
+        "campocodigo": "codnfeterceiroduplicata",
+        "namespace": "Mg\\NfeTerceiro",
+        "classe": "NfeTerceiroDuplicata",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NfeTerceiro\/NfeTerceiroDuplicata.php",
+        "belongsTo": {
+            "codnfeterceiro": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnfeterceiro",
+                "metodo": "NfeTerceiro"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblvalecompra": {
+        "tabela": "tblvalecompra",
+        "campocodigo": "codvalecompra",
+        "namespace": "Mg\\ValeCompra",
+        "classe": "ValeCompra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompra.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codpessoafavorecido": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoafavorecido",
+                "metodo": "PessoaFavorecido"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codvalecompramodelo": {
+                "tabela": "tblvalecompramodelo",
+                "coluna": "codvalecompramodelo",
+                "metodo": "ValeCompraModelo"
+            }
+        },
+        "hasMany": {
+            "tblvalecompraformapagamento.codvalecompra": {
+                "tabela": "tblvalecompraformapagamento",
+                "coluna": "codvalecompra",
+                "metodo": "ValeCompraFormaPagamentoS"
+            },
+            "tblvalecompraprodutobarra.codvalecompra": {
+                "tabela": "tblvalecompraprodutobarra",
+                "coluna": "codvalecompra",
+                "metodo": "ValeCompraProdutoBarraS"
+            }
+        }
+    },
+    "tbltipomovimentotitulo": {
+        "tabela": "tbltipomovimentotitulo",
+        "campocodigo": "codtipomovimentotitulo",
+        "namespace": "Mg\\Titulo",
+        "classe": "TipoMovimentoTitulo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/TipoMovimentoTitulo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmovimentotitulo.codtipomovimentotitulo": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codtipomovimentotitulo",
+                "metodo": "MovimentoTituloS"
+            },
+            "tbltipotitulo.codtipomovimentotitulo": {
+                "tabela": "tbltipotitulo",
+                "coluna": "codtipomovimentotitulo",
+                "metodo": "TipoTituloS"
+            }
+        }
+    },
+    "tblnaturezaoperacao": {
+        "tabela": "tblnaturezaoperacao",
+        "campocodigo": "codnaturezaoperacao",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "NaturezaOperacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/NaturezaOperacao.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblformapagamento": {
+        "tabela": "tblformapagamento",
+        "campocodigo": "codformapagamento",
+        "namespace": "Mg\\FormaPagamento",
+        "classe": "FormaPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/FormaPagamento\/FormaPagamento.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnegocio": {
+        "tabela": "tblnegocio",
+        "campocodigo": "codnegocio",
+        "namespace": "Mg\\Negocio",
+        "classe": "Negocio",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/Negocio.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblcobrancahistorico": {
+        "tabela": "tblcobrancahistorico",
+        "campocodigo": "codcobrancahistorico",
+        "namespace": "Mg\\Cobranca",
+        "classe": "CobrancaHistorico",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cobranca\/CobrancaHistorico.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnfeterceiro": {
+        "tabela": "tblnfeterceiro",
+        "campocodigo": "codnfeterceiro",
+        "namespace": "Mg\\NfeTerceiro",
+        "classe": "NfeTerceiro",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NfeTerceiro\/NfeTerceiro.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblvalecompramodelo": {
+        "tabela": "tblvalecompramodelo",
+        "campocodigo": "codvalecompramodelo",
+        "namespace": "Mg\\ValeCompra",
+        "classe": "ValeCompraModelo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompraModelo.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblvalecompraprodutobarra": {
+        "tabela": "tblvalecompraprodutobarra",
+        "campocodigo": "codvalecompraprodutobarra",
+        "namespace": "Mg\\ValeCompra",
+        "classe": "ValeCompraProdutoBarra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompraProdutoBarra.php",
         "belongsTo": [],
         "hasMany": []
     }
