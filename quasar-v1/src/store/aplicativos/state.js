@@ -32,6 +32,11 @@ export default {
       title: 'Vendas',
       path: '/estoque-estatistica/100'
     },
+    {
+      icon: 'payment',
+      title: 'Boletos',
+      path: '/boleto'
+    },
     /*
     {
       icon: 'description',

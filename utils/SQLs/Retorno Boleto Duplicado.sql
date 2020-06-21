@@ -29,13 +29,22 @@ order by
 --select * from tblboletoretorno where nossonumero ilike '%13010003914%' and codportador = 3941
 
 select 
-	codportador, dataretorno, arquivo
-	, count(*)
+	codportador, 
+	dataretorno, 
+	arquivo,
+	count(codportador) as registros,
+	count(codtitulo) as sucesso,
+	sum(pagamento) as pagamento,
+	sum(valor) as valor,
+	null
 from	tblboletoretorno
 where 
     dataretorno >= '2017-01-01'
-    and codportador = 210
+    --and codportador = 210
 group by
 	codportador, dataretorno, arquivo
 order by 
 	codportador, dataretorno, arquivo
+
+
+--update tblboletoretorno set codtitulo = null where arquivo = 'CB190600.RET' and codportador = 3943 and dataretorno = '2020-06-19'

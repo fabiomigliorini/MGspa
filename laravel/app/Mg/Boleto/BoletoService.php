@@ -33,7 +33,10 @@ class BoletoService
                         break;
                 }
             }
-            $ret[$portador->codportador] = [
+            if (empty($retornos)) {
+                continue;
+            }
+            $ret[] = [
                 'codportador' => $portador->codportador,
                 'portador' => $portador->portador,
                 'retornos' => $retornos

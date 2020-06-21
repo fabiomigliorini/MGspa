@@ -73,8 +73,10 @@ class BoletoRetornoService
         }
 
         // move arquivo para pasta de "processados"
-        static::arquivarRetorno($portador, $arquivo, $dataretorno);
+        // static::arquivarRetorno($portador, $arquivo, $dataretorno);
         return [
+            'codportador' => $codportador,
+            'arquivo' => $arquivo,
             'linhas' => $numeroLinhas,
             'registros' => $sucesso + $falha,
             'sucesso' => $sucesso,

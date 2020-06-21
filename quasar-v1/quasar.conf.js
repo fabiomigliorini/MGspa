@@ -83,6 +83,7 @@ module.exports = function (ctx) {
         'QOptionGroup',
         'QTime',
         'QCheckbox',
+        'QTable',
       ],
       config: {
         notify: { /* Notify defaults */ }
