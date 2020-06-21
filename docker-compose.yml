@@ -23,4 +23,5 @@ services:
             - ./:/opt/www/MGspa
             - ../MGLara/:/opt/www/MGLara
             - ../NFePHP/:/opt/www/NFePHP
+            - /media/publico:/media/publico
         network_mode: host

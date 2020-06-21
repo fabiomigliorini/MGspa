@@ -7,7 +7,6 @@ use Illuminate\Validation\Rule;
 
 use App\Models\Imagem;
 use DB;
-use Storage;
 use Carbon\Carbon;
 use App\Libraries\SlimImageCropper\Slim;
 use Mg\Marca\Marca;

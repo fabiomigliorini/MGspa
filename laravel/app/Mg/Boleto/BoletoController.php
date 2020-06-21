@@ -12,8 +12,16 @@ class BoletoController extends MgController
 
     public function retornoPendente(Request $request)
     {
-        return ['teste' => 'vamos resolver o problema das revistinhas agora?'];
-        return $request->all();
+        return BoletoService::retornoPendente();
+    }
+
+    public function processarRetorno(Request $request)
+    {
+        $request->validate([
+          'codportador' => ['required', 'integer'],
+          'arquivo' => ['required', 'string'],
+        ]);
+        return BoletoRetornoService::processarRetorno($request->codportador, $request->arquivo);
     }
 
 }

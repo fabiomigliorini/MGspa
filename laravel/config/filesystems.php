@@ -60,6 +60,12 @@ return [
             'root' => storage_path('app/cielo-lio'),
         ],
 
+        'boleto' => [
+            'driver' => 'local',
+            'root' => env('BOLETO_PATH'),
+        ],
+
+        /*
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -67,6 +73,7 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
         ],
+        */
 
     ],
 

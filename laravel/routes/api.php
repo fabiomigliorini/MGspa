@@ -82,6 +82,10 @@ Route::group(['prefix' => 'v1'], function () {
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
+        // Boletos
+        Route::get('boleto/retorno-pendente', '\Mg\Boleto\BoletoController@retornoPendente');
+        Route::post('boleto/processar-retorno', '\Mg\Boleto\BoletoController@processarRetorno');
+
         // Pedidos
         Route::apiResource('pedido', '\Mg\Pedido\PedidoController');
         Route::get('pedido/produtos-para-transferir/{codestoquelocalorigem}/{codestoquelocaldestino}', '\Mg\Pedido\PedidoController@produtosParaTransferir');
@@ -149,9 +153,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::delete('marca/{id}/inativo', '\Mg\Marca\MarcaController@ativar')->name('marca.ativar');
         Route::post('marca/{id}/inativo', '\Mg\Marca\MarcaController@inativar')->name('marca.inativar');
         Route::apiResource('marca', '\Mg\Marca\MarcaController');
-
-        Route::get('boleto/retorno-pendente', '\Mg\Boleto\BoletoController@retornoPendente');
-
 
         Route::put('marca/{id}/planilha/distribuicao-saldo-deposito', '\Mg\Marca\MarcaController@criarPlanilhaDistribuicaoSaldoDeposito');
         Route::put('marca/{id}/planilha/pedido', '\Mg\Marca\MarcaController@criarPlanilhaPedido');
