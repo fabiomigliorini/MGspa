@@ -29,22 +29,25 @@ order by
 --select * from tblboletoretorno where nossonumero ilike '%13010003914%' and codportador = 3941
 
 select 
-	codportador, 
-	dataretorno, 
-	arquivo,
-	count(codportador) as registros,
-	count(codtitulo) as sucesso,
-	sum(pagamento) as pagamento,
-	sum(valor) as valor,
+	br.dataretorno, 
+	br.arquivo,
+	br.codportador, 
+	p.portador,
+	count(br.codportador) as registros,
+	count(br.codtitulo) as sucesso,
+	count(br.codportador) - count(br.codtitulo) as falha,
+	sum(br.pagamento) as pagamento,
+	sum(br.valor) as valor,
 	null
-from	tblboletoretorno
+from	tblboletoretorno br
+inner join tblportador p on (p.codportador = br.codportador)
 where 
-    dataretorno >= '2017-01-01'
+    br.dataretorno >= date_trunc('year', now() - '1 year'::interval)
     --and codportador = 210
 group by
-	codportador, dataretorno, arquivo
+	br.codportador, p.portador, br.dataretorno, br.arquivo
 order by 
-	codportador, dataretorno, arquivo
+	dataretorno DESC, arquivo DESC, codportador
 
 
 --update tblboletoretorno set codtitulo = null where arquivo = 'CB190600.RET' and codportador = 3943 and dataretorno = '2020-06-19'

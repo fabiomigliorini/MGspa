@@ -4,7 +4,6 @@ namespace Mg\Boleto;
 
 use App\Models\Boleto;
 
-use DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 

@@ -84,6 +84,8 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Boletos
         Route::get('boleto/retorno-pendente', '\Mg\Boleto\BoletoController@retornoPendente');
+        Route::get('boleto/retorno-processado', '\Mg\Boleto\BoletoController@retornoProcessado');
+        Route::get('boleto/retorno/{codportador}/{arquivo}/{dataretorno}', '\Mg\Boleto\BoletoController@retorno');
         Route::post('boleto/processar-retorno', '\Mg\Boleto\BoletoController@processarRetorno');
 
         // Pedidos

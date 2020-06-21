@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:55:48
+ * Date: 21/Jun/2020 02:01:12
  */
 
 namespace Mg\Boleto;
@@ -11,6 +11,7 @@ use Mg\Titulo\MovimentoTitulo;
 use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
+use Mg\Boleto\BoletoMotivoOcorrencia;
 
 class BoletoRetorno extends MgModel
 {
@@ -67,6 +68,11 @@ class BoletoRetorno extends MgModel
 
 
     // Chaves Estrangeiras
+    public function BoletoMotivoOcorrencia()
+    {
+        return $this->belongsTo(BoletoMotivoOcorrencia::class, 'codboletomotivoocorrencia', 'codboletomotivoocorrencia');
+    }
+
     public function Portador()
     {
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');

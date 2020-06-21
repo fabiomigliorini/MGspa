@@ -140,6 +140,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codboletomotivoocorrencia": {
+                "tabela": "tblboletomotivoocorrencia",
+                "coluna": "codboletomotivoocorrencia",
+                "metodo": "BoletoMotivoOcorrencia"
             }
         },
         "hasMany": {
@@ -891,5 +896,56 @@
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompraProdutoBarra.php",
         "belongsTo": [],
         "hasMany": []
+    },
+    "tblboletomotivoocorrencia": {
+        "tabela": "tblboletomotivoocorrencia",
+        "campocodigo": "codboletomotivoocorrencia",
+        "namespace": "Mg\\Boleto",
+        "classe": "BoletoMotivoOcorrencia",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Boleto\/BoletoMotivoOcorrencia.php",
+        "belongsTo": {
+            "codboletotipoocorrencia": {
+                "tabela": "tblboletotipoocorrencia",
+                "coluna": "codboletotipoocorrencia",
+                "metodo": "BoletoTipoOcorrencia"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblboletotipoocorrencia": {
+        "tabela": "tblboletotipoocorrencia",
+        "campocodigo": "codboletotipoocorrencia",
+        "namespace": "Mg\\Boleto",
+        "classe": "BoletoTipoOcorrencia",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Boleto\/BoletoTipoOcorrencia.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblboletomotivoocorrencia.codboletotipoocorrencia": {
+                "tabela": "tblboletomotivoocorrencia",
+                "coluna": "codboletotipoocorrencia",
+                "metodo": "BoletoMotivoOcorrenciaS"
+            }
+        }
     }
 }

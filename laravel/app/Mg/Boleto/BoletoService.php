@@ -45,6 +45,77 @@ class BoletoService
         return $ret;
     }
 
+    public static function retornoProcessado()
+    {
+        $sql = "
+            select
+            	br.dataretorno,
+            	br.arquivo,
+            	br.codportador,
+            	p.portador,
+            	count(br.codportador) as registros,
+            	count(br.codtitulo) as sucesso,
+                count(br.codportador) - count(br.codtitulo) as falha,
+            	sum(br.pagamento) as pagamento,
+            	sum(br.valor) as valor,
+            	null
+            from tblboletoretorno br
+            inner join tblportador p on (p.codportador = br.codportador)
+            where
+                br.dataretorno >= date_trunc('year', now() - '1 year'::interval)
+            group by
+            	br.codportador, p.portador, br.dataretorno, br.arquivo
+            order by
+            	dataretorno DESC, arquivo DESC, codportador
+            ";
+        $arquivos = DB::select($sql);
+        return $arquivos;
+    }
+
+    public static function retorno ($codportador, $arquivo, $dataretorno)
+    {
+        $regs = BoletoRetorno::where([
+            'codportador' => $codportador,
+            'arquivo' => $arquivo,
+            'dataretorno' => $dataretorno,
+        ])->orderBy('linha')->get();
+
+        $ret = [];
+        foreach ($regs as $reg) {
+            $tmp = $reg->only([
+                'codboletoretorno',
+                'linha',
+                'nossonumero',
+                'numero',
+                'valor',
+                'codbancocobrador',
+                'agenciacobradora',
+                'agenciacobradora',
+                'codboletomotivoocorrencia',
+                'despesas',
+                'outrasdespesas',
+                'jurosatraso',
+                'abatimento',
+                'desconto',
+                'pagamento',
+                'jurosmora',
+                'protesto',
+                'codtitulo',
+            ]);
+            $tmp['motivo'] = $reg->BoletoMotivoOcorrencia->motivo;
+            $tmp['ocorrencia'] = $reg->BoletoMotivoOcorrencia->BoletoTipoOcorrencia->ocorrencia;
+            $tmp['fantasia'] = null;
+            if (!empty($reg->codtitulo)) {
+                $tmp['fantasia'] = $reg->Titulo->Pessoa->fantasia;
+            }
+            $ret[] = $tmp;
+            // $ret[] = [
+            //
+            // ];
+        }
+        return $ret;
+    }
+
     public static function arquivarRetornoHtml($portador, $arquivo)
     {
         $info = pathinfo($arquivo);

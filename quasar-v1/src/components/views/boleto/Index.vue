@@ -9,19 +9,19 @@
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content" class="q-pa-sm space-end">
 
-      <!--Retornos para Processar-->
-      <div class="row q-col-gutter-md" v-if="!loading">
+      <!--Retornos Pendentes -->
+      <div class="row q-col-gutter-md" v-if="!loadingPendente">
 
-        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" v-for="portador in retornoPendente">
+        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" v-for="portador in retornoPendente" :key="portador.codportador">
           <q-card>
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">{{portador.portador}}</div>
             </q-card-section>
 
             <q-list dense>
-              <q-item clickable v-for="arquivo in portador.retornos">
+              <q-item clickable v-for="arquivo in portador.retornos" :key="arquivo">
                 <q-item-section>
-                  <q-checkbox v-model="retornoProcessar" :val="portador.codportador + '-' + arquivo" :label="arquivo" />
+                  <q-checkbox v-model="retornoPendenteSelecionado" :val="portador.codportador + '-' + arquivo" :label="arquivo" />
                 </q-item-section>
               </q-item>
 
@@ -33,24 +33,27 @@
           </q-card>
         </div>
       </div>
+      <br />
 
-      <div class="row q-col-gutter-md" v-if="!loading">
-        <q-card>
-          <q-card-section class="bg-primary text-white">
-            <div class="text-h6">Últimos Retornos Processados</div>
-          </q-card-section>
-          <q-separator />
-          <q-card-section>
-            <q-table
-              dense
-              flat
-              :data="data"
-              :columns="columns"
-              row-key="name"
-              @click="abrirRetorno"
-            />
-          </q-card-section>
-        </q-card>
+      <!-- Arquivos Processados -->
+      <div class="row q-col-gutter-md" v-if="!loadingProcessado">
+        <div class="col-xs-12">
+          <q-card>
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">Retornos Processados</div>
+            </q-card-section>
+            <div class="q-pa-md">
+              <q-table
+                flat
+                dense
+                :data="retornoProcessado"
+                :columns="columns"
+                @row-click="abrirRetorno"
+                :pagination.sync="pagination"
+              />
+            </div>
+          </q-card>
+        </div>
       </div>
 
     </div>
@@ -69,131 +72,37 @@ export default {
   },
   data () {
     return {
-      loading: true,
+      loadingPendente: true,
+      loadingProcessado: true,
       processando: false,
-      retornoProcessar: [],
       retornoPendente: [],
-
+      retornoPendenteSelecionado: [],
+      retornoProcessado: [],
+      pagination: {
+        rowsPerPage: 18 // current rows per page being displayed
+      },
       columns: [
-        {
-          name: 'name',
-          required: true,
-          label: 'Dessert (100g serving)',
-          align: 'left',
-          field: row => row.name,
-          format: val => `${val}`,
-          sortable: true
-        },
-        { name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true },
-        { name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true },
-        { name: 'carbs', label: 'Carbs (g)', field: 'carbs' },
-        { name: 'protein', label: 'Protein (g)', field: 'protein' },
-        { name: 'sodium', label: 'Sodium (mg)', field: 'sodium' },
-        { name: 'calcium', label: 'Calcium (%)', field: 'calcium', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
-        { name: 'iron', label: 'Iron (%)', field: 'iron', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) }
+        { name: 'dataretorno', align: 'center', label: 'Data', field: 'dataretorno', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis' },
+        { name: 'arquivo', align: 'left', label: 'Arquivo', field: 'arquivo', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis'  },
+        { name: 'portador', align: 'left', label: 'Portador', field: 'portador', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis'  },
+        { name: 'registros', align: 'right', label: 'Registros', field: 'registros', sortable: true },
+        { name: 'sucesso', align: 'right', label: 'Sucesso', field: 'sucesso', sortable: true },
+        { name: 'falha', align: 'right', label: 'Falha', field: 'falha', sortable: true },
+        { name: 'pagamento', align: 'right', label: 'Pagamento', field: 'pagamento', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
+        { name: 'valor', align: 'right', label: 'Valor', field: 'valor', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
+        // {
+        //   name: 'name',
+        //   required: true,
+        //   label: 'Dessert (100g serving)',
+        //   align: 'left',
+        //   field: row => row.name,
+        //   format: val => `${val}`,
+        //   sortable: true
+        // },
+        // { name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true },
+        // { name: 'calcium', label: 'Calcium (%)', field: 'calcium', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
+        // { name: 'iron', label: 'Iron (%)', field: 'iron', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) }
       ],
-      data: [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-          sodium: 87,
-          calcium: '14%',
-          iron: '1%'
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-          sodium: 129,
-          calcium: '8%',
-          iron: '1%'
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-          sodium: 337,
-          calcium: '6%',
-          iron: '7%'
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-          sodium: 413,
-          calcium: '3%',
-          iron: '8%'
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-          sodium: 327,
-          calcium: '7%',
-          iron: '16%'
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-          sodium: 50,
-          calcium: '0%',
-          iron: '0%'
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-          sodium: 38,
-          calcium: '0%',
-          iron: '2%'
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          sodium: 562,
-          calcium: '0%',
-          iron: '45%'
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          sodium: 326,
-          calcium: '2%',
-          iron: '22%'
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          sodium: 54,
-          calcium: '12%',
-          iron: '6%'
-        }
-      ]
     }
   },
   watch: {
@@ -203,36 +112,47 @@ export default {
   },
 
   methods: {
-    // carrega registros da api
-    loadRetornoProcessar: debounce(function () {
+
+    loadRetornoPendente: debounce(function () {
       // inicializa variaveis
       let vm = this;
-      let params = vm.filter;
-      this.loading = true;
+      this.loadingPendente = true;
       // faz chamada api
-      vm.retornoProcessar = [];
-      vm.$axios.get('boleto/retorno-pendente', { params }).then(response => {
+      vm.retornoPendenteSelecionado = [];
+      vm.$axios.get('boleto/retorno-pendente').then(response => {
         vm.retornoPendente = response.data;
         vm.retornoPendente.forEach((portador) => {
           portador.retornos.forEach((arquivo) => {
-            vm.retornoProcessar = vm.retornoProcessar.concat([portador.codportador + '-' + arquivo]);
+            vm.retornoPendenteSelecionado = vm.retornoPendenteSelecionado.concat([portador.codportador + '-' + arquivo]);
           });
         });
-        this.loading = false;
+        this.loadingPendente = false;
+      })
+    }, 500),
+
+    loadRetornoProcessado: debounce(function () {
+      // inicializa variaveis
+      let vm = this;
+      this.loadingProcessado = true;
+      // faz chamada api
+      vm.retornoProcessado = [];
+      vm.$axios.get('boleto/retorno-processado').then(response => {
+        vm.retornoProcessado = response.data;
+        this.loadingProcessado = false;
       })
     }, 500),
 
     processar: throttle(function(codportador) {
-      this.retornoProcessar.forEach((itemProcessar) => {
-        if (itemProcessar.startsWith(codportador + '-')) {
+      this.retornoPendenteSelecionado.forEach((itemSelecionado) => {
+        if (itemSelecionado.startsWith(codportador + '-')) {
           let vm = this;
-          let arquivo = itemProcessar.replace(codportador + '-', '');
+          let arquivo = itemSelecionado.replace(codportador + '-', '');
           vm.$axios.post('boleto/processar-retorno', {
             codportador: codportador,
             'arquivo': arquivo
           }).then(response => {
-            vm.retornoProcessar = vm.retornoProcessar.filter(function(itemFiltrar){
-              return itemFiltrar != itemProcessar;
+            vm.retornoPendente = vm.retornoPendente.filter(function(itemFiltrar){
+              return itemFiltrar != itemSelecionado;
             });
             let pendente = vm.retornoPendente.find( portador => portador.codportador === codportador );
             pendente.retornos = pendente.retornos.filter(function(itemFiltrar) {
@@ -241,7 +161,6 @@ export default {
             vm.retornoPendente = vm.retornoPendente.filter(function(itemFiltrar){
               return itemFiltrar.retornos.length > 0;
             });
-            console.log(pendente);
             let color = 'positive';
             let mensagem = response.data.sucesso + ' registros processados no arquivo ' + response.data.arquivo;
             if (response.data.falha > 0) {
@@ -252,17 +171,21 @@ export default {
               color: color,
               message: mensagem
             });
+            setTimeout(function(){ vm.loadRetornoProcessado(); }, 1500);
           });
         }
       });
     }, 500),
 
     abrirRetorno: debounce(function(evt, row) {
-      console.log(evt);
+      // this.$router.push('/boleto/retorno/' + row.codportador + '/' + row.arquivo + '/' + row.dataretorno);
+      let route = this.$router.resolve('/boleto/retorno/' + row.codportador + '/' + row.arquivo + '/' + row.dataretorno);
+      window.open(route.href, '_blank');
     }, 500),
   },
   created () {
-    this.loadRetornoProcessar()
+    this.loadRetornoPendente()
+    this.loadRetornoProcessado()
   }
 }
 </script>
