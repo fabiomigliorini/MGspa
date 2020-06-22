@@ -160,7 +160,7 @@ export default {
 
     loadRetornoFalha: debounce(function () {
       let vm = this;
-      this.loadingFalha = true;
+      // this.loadingFalha = true;
       vm.$axios.get('boleto/retorno-falha').then(response => {
         vm.retornoFalha = response.data;
         this.loadingFalha = false;
@@ -170,7 +170,7 @@ export default {
     loadRetornoPendente: debounce(function () {
       // inicializa variaveis
       let vm = this;
-      this.loadingPendente = true;
+      // this.loadingPendente = true;
       // faz chamada api
       vm.retornoPendenteSelecionado = [];
       vm.$axios.get('boleto/retorno-pendente').then(response => {
@@ -187,7 +187,7 @@ export default {
     loadRetornoProcessado: debounce(function () {
       // inicializa variaveis
       let vm = this;
-      this.loadingProcessado = true;
+      // this.loadingProcessado = true;
       // faz chamada api
       vm.retornoProcessado = [];
       vm.$axios.get('boleto/retorno-processado').then(response => {
@@ -244,7 +244,10 @@ export default {
               color: color,
               message: mensagem
             });
-            setTimeout(function(){ vm.loadRetornoProcessado(); }, 1500);
+            setTimeout(function(){
+              vm.loadRetornoProcessado();
+              vm.loadRetornoFalha();
+            }, 1500);
           });
         }
       });
