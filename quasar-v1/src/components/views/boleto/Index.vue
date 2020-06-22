@@ -9,83 +9,127 @@
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content" class="q-pa-sm space-end">
 
-      <!-- Retorno Com Falhas -->
-      <div class="row q-col-gutter-md" v-if="!loadingFalha && retornoFalha.length > 0">
-        <div class="col-xs-12">
+      <!-- retornos -->
+      <template>
+        <div>
           <q-card>
-            <q-card-section class="bg-negative text-white">
-              <div class="text-h6">
-                Retornos Com Falha de Processamento
+            <q-toolbar class="bg-primary text-white shadow-2">
+              <div class="text-h6 text-uppercase">
+                Retornos
+              </div>
+              <q-space />
+              <q-tabs v-model="tabRetorno" inline-label>
+                <q-tab name="falha" icon="error"  label="Com Falha" v-if="retornoFalha.length > 0" />
+                <q-tab name="pendente" icon="note_add" label="Para Processar" v-if="retornoPendente.length > 0" />
+                <q-tab name="processado" icon="history" label="Processados" v-if="retornoProcessado.length > 0" />
+              </q-tabs>
+            </q-toolbar>
+
+            <q-separator />
+
+            <!-- Falha de Processamento -->
+            <q-tab-panels v-model="tabRetorno" animated v-if="retornoFalha.length > 0">
+              <q-tab-panel name="falha">
                 <q-btn
                   :loading="loadingReprocessar"
                   flat
-                  round
+                  label="Reprocessar Registros"
                   @click="reprocessar()"
                   icon="cached"
                 />
-              </div>
-            </q-card-section>
-            <div class="q-pa-md">
-              <q-table
-                flat
-                dense
-                :data="retornoFalha"
-                :columns="columnsFalha"
-                :pagination.sync="paginationFalha"
-                @row-click="abrirRetorno"
-              />
-            </div>
-          </q-card>
-          <div class="col-xs-12">
-            <br />
-          </div>
-        </div>
-      </div>
+                <q-table
+                  flat
+                  dense
+                  :data="retornoFalha"
+                  :columns="columnsFalha"
+                  :pagination.sync="paginationFalha"
+                  @row-click="abrirRetorno"
+                />
+              </q-tab-panel>
 
+              <!--Retornos Pendentes -->
+              <q-tab-panel name="pendente" v-if="retornoPendente.length > 0">
+                <div class="row q-col-gutter-md" v-if="!loadingPendente">
+                  <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" v-for="portador in retornoPendente" :key="portador.codportador">
+                    <q-card>
+                      <q-card-section class="bg-primary text-white">
+                        <div class="text-h6">{{portador.portador}}</div>
+                      </q-card-section>
+                      <q-list dense>
+                        <q-item clickable v-for="arquivo in portador.retornos" :key="arquivo">
+                          <q-item-section>
+                            <q-checkbox v-model="retornoPendenteSelecionado" :val="portador.codportador + '-' + arquivo" :label="arquivo" />
+                          </q-item-section>
+                        </q-item>
+                      </q-list>
+                      <q-separator />
+                      <q-card-actions align="right">
+                        <q-btn flat @click="processar(portador.codportador)">Processar</q-btn>
+                      </q-card-actions>
+                    </q-card>
+                  </div>
+                </div>
+              </q-tab-panel>
 
-      <!--Retornos Pendentes -->
-      <div class="row q-col-gutter-md" v-if="!loadingPendente">
-        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" v-for="portador in retornoPendente" :key="portador.codportador">
-          <q-card>
-            <q-card-section class="bg-primary text-white">
-              <div class="text-h6">{{portador.portador}}</div>
-            </q-card-section>
-            <q-list dense>
-              <q-item clickable v-for="arquivo in portador.retornos" :key="arquivo">
-                <q-item-section>
-                  <q-checkbox v-model="retornoPendenteSelecionado" :val="portador.codportador + '-' + arquivo" :label="arquivo" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-            <q-separator />
-            <q-card-actions align="right">
-              <q-btn flat @click="processar(portador.codportador)">Processar</q-btn>
-            </q-card-actions>
+              <!-- Arquivos Processados -->
+              <q-tab-panel name="processado" v-if="retornoProcessado.length > 0">
+                <q-table
+                  flat
+                  dense
+                  :data="retornoProcessado"
+                  :columns="columnsProcessado"
+                  :pagination.sync="paginationProcessado"
+                  @row-click="abrirRetorno"
+                />
+              </q-tab-panel>
+            </q-tab-panels>
           </q-card>
         </div>
-      </div>
+      </template>
+
       <br />
 
-      <!-- Arquivos Processados -->
-      <div class="row q-col-gutter-md" v-if="!loadingProcessado">
-        <div class="col-xs-12">
+      <!-- remessas -->
+      <template>
+        <div>
           <q-card>
-            <q-card-section class="bg-primary text-white">
-              <div class="text-h6">Retornos Processados</div>
-            </q-card-section>
-            <div class="q-pa-md">
-              <q-table
-                flat
-                dense
-                :data="retornoProcessado"
-                :columns="columnsProcessado"
-                :pagination.sync="paginationProcessado"
-                @row-click="abrirRetorno"
-              />
-            </div>
+            <q-toolbar class="bg-primary text-white shadow-2">
+              <div class="text-h6 text-uppercase">
+                Remessas
+              </div>
+              <q-space />
+              <q-tabs v-model="tabRemessa" inline-label>
+                <q-tab name="gerar" icon="note_add" label="Para Gerar" v-if="remessaGerar.length > 0" />
+                <q-tab name="geradas" icon="history" label="Geradas" v-if="remessaGerada.length > 0" />
+              </q-tabs>
+            </q-toolbar>
+
+            <q-separator />
+
+            <!-- Para Gerar -->
+            <q-tab-panels v-model="tabRemessa" animated v-if="remessaGerar.length > 0">
+              <q-tab-panel name="gerar">
+                <pre>
+
+                  SELECT tblPortador.portador, remessa, Count(codtitulo), tblTitulo.remessa, tblPortador.codportador
+                  FROM tblPortador INNER JOIN tblTitulo ON tblPortador.codportador = tblTitulo.codportador
+                  WHERE (((tblTitulo.saldo)>0))
+                  GROUP BY tblPortador.portador, remessa, tblTitulo.remessa, tblPortador.codportador, tblTitulo.boleto
+                  HAVING (((tblTitulo.remessa) Is Not Null)) OR (((tblTitulo.boleto)=true))
+                  ORDER BY Max(tblTitulo.emissao) DESC , tblPortador.codportador;
+
+                </pre>
+              </q-tab-panel>
+
+              <!--Geradas -->
+              <q-tab-panel name="geradas" v-if="remessaGerada.length > 0">
+                Geradas
+              </q-tab-panel>
+            </q-tab-panels>
           </q-card>
         </div>
-      </div>
+      </template>
+
 
     </div>
   </mg-layout>
@@ -103,14 +147,19 @@ export default {
   },
   data () {
     return {
+      tabRetorno: '',
+      tabRemessa: 'gerar',
       loadingFalha: true,
       loadingPendente: true,
       loadingProcessado: true,
       loadingReprocessar: false,
       processando: false,
+      retornoFalha: [],
       retornoPendente: [],
       retornoPendenteSelecionado: [],
       retornoProcessado: [],
+      remessaGerar: [1, 2, 3],
+      remessaGerada: [1, 2, 3],
       paginationFalha: {
         rowsPerPage: 18 // current rows per page being displayed
       },
@@ -164,6 +213,7 @@ export default {
       vm.$axios.get('boleto/retorno-falha').then(response => {
         vm.retornoFalha = response.data;
         this.loadingFalha = false;
+        vm.decideTabRetorno();
       })
     }, 500),
 
@@ -181,6 +231,7 @@ export default {
           });
         });
         this.loadingPendente = false;
+        vm.decideTabRetorno();
       })
     }, 500),
 
@@ -193,6 +244,7 @@ export default {
       vm.$axios.get('boleto/retorno-processado').then(response => {
         vm.retornoProcessado = response.data;
         this.loadingProcessado = false;
+        vm.decideTabRetorno();
       })
     }, 500),
 
@@ -253,6 +305,18 @@ export default {
       });
     }, 500),
 
+    decideTabRetorno: function () {
+      if (this.retornoFalha.length > 0) {
+        this.tabRetorno = 'falha';
+        return;
+      }
+      if (this.retornoPendente.length > 0) {
+        this.tabRetorno = 'pendente';
+        return;
+      }
+      this.tabRetorno = 'processado';
+    },
+
     abrirRetorno: debounce(function(evt, row) {
       // this.$router.push('/boleto/retorno/' + row.codportador + '/' + row.arquivo + '/' + row.dataretorno);
       let route = this.$router.resolve('/boleto/retorno/' + row.codportador + '/' + row.arquivo + '/' + row.dataretorno);
@@ -260,9 +324,9 @@ export default {
     }, 500),
   },
   created () {
-    this.loadRetornoFalha()
-    this.loadRetornoPendente()
-    this.loadRetornoProcessado()
+    this.loadRetornoFalha();
+    this.loadRetornoPendente();
+    this.loadRetornoProcessado();
   }
 }
 </script>

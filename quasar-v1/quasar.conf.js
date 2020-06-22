@@ -74,6 +74,8 @@ module.exports = function (ctx) {
         'QDate',
         'QTabs',
         'QTab',
+        'QTabPanels',
+        'QTabPanel',
         'QRouteTab',
         'QTimeline',
         'QTimelineEntry',
@@ -84,6 +86,7 @@ module.exports = function (ctx) {
         'QTime',
         'QCheckbox',
         'QTable',
+        'QSpace',
       ],
       config: {
         notify: { /* Notify defaults */ }
