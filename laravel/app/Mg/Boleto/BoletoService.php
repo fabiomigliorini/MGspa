@@ -45,6 +45,47 @@ class BoletoService
         return $ret;
     }
 
+    public static function retornoFalha()
+    {
+        $regs = BoletoRetorno::whereNull('codtitulo')
+            ->orderBy('codportador')
+            ->orderBy('dataretorno')
+            ->orderBy('arquivo')
+            ->orderBy('linha')
+            ->get();
+        $ret = [];
+        foreach ($regs as $reg) {
+            $tmp = $reg->only([
+                'codboletoretorno',
+                'linha',
+                'nossonumero',
+                'numero',
+                'valor',
+                'codbancocobrador',
+                'agenciacobradora',
+                'agenciacobradora',
+                'codboletomotivoocorrencia',
+                'despesas',
+                'outrasdespesas',
+                'jurosatraso',
+                'abatimento',
+                'desconto',
+                'pagamento',
+                'jurosmora',
+                'protesto',
+                'codtitulo',
+                'arquivo',
+                'codportador',
+            ]);
+            $tmp['dataretorno'] = $reg->dataretorno->format('Y-m-d');
+            $tmp['motivo'] = $reg->BoletoMotivoOcorrencia->motivo;
+            $tmp['ocorrencia'] = $reg->BoletoMotivoOcorrencia->BoletoTipoOcorrencia->ocorrencia;
+            $tmp['fantasia'] = null;
+            $ret[] = $tmp;
+        }
+        return $ret;
+    }
+
     public static function retornoProcessado()
     {
         $sql = "
@@ -109,9 +150,6 @@ class BoletoService
                 $tmp['fantasia'] = $reg->Titulo->Pessoa->fantasia;
             }
             $ret[] = $tmp;
-            // $ret[] = [
-            //
-            // ];
         }
         return $ret;
     }

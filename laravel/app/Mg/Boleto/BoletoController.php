@@ -17,12 +17,22 @@ class BoletoController extends MgController
 
     public function retornoProcessado(Request $request)
     {
-        return BoletoService::retornoProcessado($request->codportador, $request->arquivo);
+        return BoletoService::retornoProcessado();
+    }
+
+    public function retornoFalha(Request $request)
+    {
+        return BoletoService::retornoFalha();
     }
 
     public function retorno(Request $request, $codportador, $arquivo, $dataretorno)
     {
         return BoletoService::retorno($codportador, $arquivo, $dataretorno);
+    }
+
+    public function reprocessarRetorno(Request $request)
+    {
+        return BoletoRetornoService::reprocessarRetorno();
     }
 
     public function processarRetorno(Request $request)

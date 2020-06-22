@@ -72,7 +72,7 @@ class BoletoRetornoService
         }
 
         // move arquivo para pasta de "processados"
-        // static::arquivarRetorno($portador, $arquivo, $dataretorno);
+        static::arquivarRetorno($portador, $arquivo, $dataretorno);
         return [
             'codportador' => $codportador,
             'arquivo' => $arquivo,
@@ -241,5 +241,24 @@ class BoletoRetornoService
         }
 
         return true;
+    }
+
+    public static function reprocessarRetorno ()
+    {
+        $sucesso = 0;
+        $falha = 0;
+        $brs = BoletoRetorno::whereNull('codtitulo')->get();
+        foreach ($brs as $br){
+            if (static::processarBoletoRetorno($br)) {
+                $sucesso++;
+            } else {
+                $falha++;
+            }
+        }
+        return [
+            'registros' => $sucesso + $falha,
+            'sucesso' => $sucesso,
+            'falha' => $falha
+        ];
     }
 }

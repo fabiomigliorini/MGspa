@@ -9,22 +9,53 @@
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content" class="q-pa-sm space-end">
 
+      <!-- Retorno Com Falhas -->
+      <div class="row q-col-gutter-md" v-if="!loadingFalha && retornoFalha.length > 0">
+        <div class="col-xs-12">
+          <q-card>
+            <q-card-section class="bg-negative text-white">
+              <div class="text-h6">
+                Retornos Com Falha de Processamento
+                <q-btn
+                  :loading="loadingReprocessar"
+                  flat
+                  round
+                  @click="reprocessar()"
+                  icon="cached"
+                />
+              </div>
+            </q-card-section>
+            <div class="q-pa-md">
+              <q-table
+                flat
+                dense
+                :data="retornoFalha"
+                :columns="columnsFalha"
+                :pagination.sync="paginationFalha"
+                @row-click="abrirRetorno"
+              />
+            </div>
+          </q-card>
+          <div class="col-xs-12">
+            <br />
+          </div>
+        </div>
+      </div>
+
+
       <!--Retornos Pendentes -->
       <div class="row q-col-gutter-md" v-if="!loadingPendente">
-
         <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2" v-for="portador in retornoPendente" :key="portador.codportador">
           <q-card>
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">{{portador.portador}}</div>
             </q-card-section>
-
             <q-list dense>
               <q-item clickable v-for="arquivo in portador.retornos" :key="arquivo">
                 <q-item-section>
                   <q-checkbox v-model="retornoPendenteSelecionado" :val="portador.codportador + '-' + arquivo" :label="arquivo" />
                 </q-item-section>
               </q-item>
-
             </q-list>
             <q-separator />
             <q-card-actions align="right">
@@ -47,9 +78,9 @@
                 flat
                 dense
                 :data="retornoProcessado"
-                :columns="columns"
+                :columns="columnsProcessado"
+                :pagination.sync="paginationProcessado"
                 @row-click="abrirRetorno"
-                :pagination.sync="pagination"
               />
             </div>
           </q-card>
@@ -72,16 +103,42 @@ export default {
   },
   data () {
     return {
+      loadingFalha: true,
       loadingPendente: true,
       loadingProcessado: true,
+      loadingReprocessar: false,
       processando: false,
       retornoPendente: [],
       retornoPendenteSelecionado: [],
       retornoProcessado: [],
-      pagination: {
+      paginationFalha: {
         rowsPerPage: 18 // current rows per page being displayed
       },
-      columns: [
+      paginationProcessado: {
+        rowsPerPage: 18 // current rows per page being displayed
+      },
+      columnsFalha: [
+        { name: 'codboletoretorno', align: 'right', label: '#', field: 'codboletoretorno', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
+        { name: 'linha', align: 'right', label: 'Linha', field: 'linha', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
+        { name: 'nossonumero', align: 'right', label: 'NossoNumero', field: 'nossonumero', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
+        { name: 'numero', align: 'right', label: 'Número', field: 'numero', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
+        { name: 'pagamento', align: 'right', label: 'Pagamento', field: 'pagamento'},
+        { name: 'jurosatraso', align: 'right', label: 'Atraso', field: 'jurosatraso'},
+        { name: 'jurosmora', align: 'right', label: 'Mora', field: 'jurosmora'},
+        { name: 'abatimento', align: 'right', label: 'Abatimento', field: 'abatimento'},
+        { name: 'desconto', align: 'right', label: 'Desconto', field: 'desconto'},
+        { name: 'protesto', align: 'right', label: 'Protesto', field: 'protesto'},
+        { name: 'valor', align: 'right', label: 'Valor', field: 'valor'},
+
+        { name: 'ocorrencia', align: 'left', label: 'Ocorrencia', field: 'ocorrencia', sortable: true},
+        { name: 'motivo', align: 'left', label: 'Motivo', field: 'motivo', sortable: true},
+        { name: 'despesas', align: 'right', label: 'Despesas', field: 'despesas'},
+        { name: 'outrasdespesas', align: 'right', label: 'Outras', field: 'outrasdespesas'},
+
+        { name: 'codbancocobrador', align: 'right', label: 'Banco', field: 'codbancocobrador'},
+        { name: 'agenciacobradora', align: 'right', label: 'Agencia', field: 'agenciacobradora'},
+      ],
+      columnsProcessado: [
         { name: 'dataretorno', align: 'center', label: 'Data', field: 'dataretorno', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis' },
         { name: 'arquivo', align: 'left', label: 'Arquivo', field: 'arquivo', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis'  },
         { name: 'portador', align: 'left', label: 'Portador', field: 'portador', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis'  },
@@ -90,18 +147,6 @@ export default {
         { name: 'falha', align: 'right', label: 'Falha', field: 'falha', sortable: true },
         { name: 'pagamento', align: 'right', label: 'Pagamento', field: 'pagamento', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
         { name: 'valor', align: 'right', label: 'Valor', field: 'valor', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
-        // {
-        //   name: 'name',
-        //   required: true,
-        //   label: 'Dessert (100g serving)',
-        //   align: 'left',
-        //   field: row => row.name,
-        //   format: val => `${val}`,
-        //   sortable: true
-        // },
-        // { name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true },
-        // { name: 'calcium', label: 'Calcium (%)', field: 'calcium', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
-        // { name: 'iron', label: 'Iron (%)', field: 'iron', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) }
       ],
     }
   },
@@ -112,6 +157,15 @@ export default {
   },
 
   methods: {
+
+    loadRetornoFalha: debounce(function () {
+      let vm = this;
+      this.loadingFalha = true;
+      vm.$axios.get('boleto/retorno-falha').then(response => {
+        vm.retornoFalha = response.data;
+        this.loadingFalha = false;
+      })
+    }, 500),
 
     loadRetornoPendente: debounce(function () {
       // inicializa variaveis
@@ -140,6 +194,25 @@ export default {
         vm.retornoProcessado = response.data;
         this.loadingProcessado = false;
       })
+    }, 500),
+
+    reprocessar: throttle(function(codportador) {
+      let vm = this;
+      this.loadingReprocessar = true;
+      vm.$axios.post('boleto/reprocessar-retorno', {
+    }).then(response => {
+      let color = 'positive';
+      let mensagem = response.data.sucesso + ' registros reprocessados ';
+      if (response.data.falha > 0) {
+        color = 'negative';
+        mensagem = response.data.falha + ' registros com falha e ' + mensagem;
+      }
+      this.$q.notify({
+        color: color,
+        message: mensagem
+      });
+      this.loadingReprocessar = false;
+      setTimeout(function(){ vm.loadRetornoFalha(); }, 500); });
     }, 500),
 
     processar: throttle(function(codportador) {
@@ -184,6 +257,7 @@ export default {
     }, 500),
   },
   created () {
+    this.loadRetornoFalha()
     this.loadRetornoPendente()
     this.loadRetornoProcessado()
   }

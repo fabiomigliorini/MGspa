@@ -50,4 +50,4 @@ order by
 	dataretorno DESC, arquivo DESC, codportador
 
 
---update tblboletoretorno set codtitulo = null where arquivo = 'CB190600.RET' and codportador = 3943 and dataretorno = '2020-06-19'
+--update tblboletoretorno set codtitulo = null where arquivo = 'CB200600.RET' and codportador = 3940 and dataretorno = '2020-06-22'
