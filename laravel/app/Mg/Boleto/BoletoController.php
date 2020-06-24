@@ -44,4 +44,10 @@ class BoletoController extends MgController
         return BoletoRetornoService::processarRetorno($request->codportador, $request->arquivo);
     }
 
+    public function remessaPendente(Request $request)
+    {
+        return BoletoService::RemessaPendente();
+    }
+
+
 }

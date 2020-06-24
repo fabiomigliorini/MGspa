@@ -77,7 +77,7 @@ class BoletoService
                 'arquivo',
                 'codportador',
             ]);
-            $tmp['dataretorno'] = $reg->dataretorno->format('Y-m-d');
+            $tmp['dataretorno'] = $reg->dataretorno->toW3cString();
             $tmp['motivo'] = $reg->BoletoMotivoOcorrencia->motivo;
             $tmp['ocorrencia'] = $reg->BoletoMotivoOcorrencia->BoletoTipoOcorrencia->ocorrencia;
             $tmp['fantasia'] = null;
@@ -163,6 +163,62 @@ class BoletoService
             Storage::disk('boleto')->delete($destino);
         }
         return Storage::disk('boleto')->move($origem, $destino);
+    }
+
+    public static function remessaPendente()
+    {
+        // $portadores = Portador::ativo()->where('emiteboleto', true)->orderBy('codportador')->get();
+        $portadores = Portador::ativo()->where('emiteboleto', true)->orderBy('codportador')->get();
+        $ret = [];
+        foreach ($portadores as $portador) {
+            $titulos = $portador->TituloS()
+                ->with('Pessoa')
+                ->with('Filial')
+                ->where('saldo', '>', 0)
+                ->where('boleto', true)
+                ->whereNull('remessa')
+                ->orderBy('codtitulo')
+                ->get();
+            $retTitulos = [];
+            foreach ($titulos as $titulo) {
+                // $retTitulos[] = $titulo;
+                $retTitulos[] = [
+                    'codtitulo' => $titulo->codtitulo,
+                    'codfilial' => $titulo->codfilial,
+                    'filial' => $titulo->Filial->filial,
+                    'codpessoa' => $titulo->codpessoa,
+                    'pessoa' => $titulo->Pessoa->pessoa,
+                    'fantasia' => $titulo->Pessoa->fantasia,
+                    'numero' => $titulo->numero,
+                    'nossonumero' => $titulo->nossonumero,
+                    'fatura' => $titulo->fatura,
+                    'emissao' => $titulo->emissao->toW3cString(),
+                    'vencimento' => $titulo->vencimento->toW3cString(),
+                    'debito' => $titulo->debito,
+                    'saldo' => $titulo->saldo,
+                    'remessa' => $titulo->remessa,
+                ];
+            }
+            $dir = "{$portador->conta}-{$portador->contadigito}/Remessa/";
+            $arquivos = Storage::disk('boleto')->files($dir);
+            $remessas = [];
+            foreach ($arquivos as $arquivo) {
+                $info = pathinfo($arquivo);
+                if (strtolower($info['extension']) == 'rem') {
+                    $remessas[] = $info['basename'];
+                }
+            }
+            if ($titulos->count() == 0 && empty($remessas)) {
+                continue;
+            }
+            $ret[] = [
+                'codportador' => $portador->codportador,
+                'portador' => $portador->portador,
+                'titulos' => $retTitulos,
+                'remessas' => $remessas
+            ];
+        }
+        return $ret;
     }
 
 }

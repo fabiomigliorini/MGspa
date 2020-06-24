@@ -90,6 +90,8 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('boleto/processar-retorno', '\Mg\Boleto\BoletoController@processarRetorno');
         Route::post('boleto/reprocessar-retorno', '\Mg\Boleto\BoletoController@reprocessarRetorno');
 
+        Route::get('boleto/remessa-pendente', '\Mg\Boleto\BoletoController@remessaPendente');
+
         // Pedidos
         Route::apiResource('pedido', '\Mg\Pedido\PedidoController');
         Route::get('pedido/produtos-para-transferir/{codestoquelocalorigem}/{codestoquelocaldestino}', '\Mg\Pedido\PedidoController@produtosParaTransferir');
