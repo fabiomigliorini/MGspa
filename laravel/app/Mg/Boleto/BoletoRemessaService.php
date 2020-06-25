@@ -258,7 +258,7 @@ class BoletoRemessaService
         $linhas[] = '';
 
         // salva arquivo
-        $linhas = implode("\n", $linhas);
+        $linhas = implode("\r\n", $linhas);
         Storage::disk('boleto')->put($arquivo, $linhas);
 
         // retorna nome do arquivo gerado
