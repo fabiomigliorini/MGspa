@@ -28,8 +28,8 @@
             <q-separator />
 
             <!-- Falha de Processamento -->
-            <q-tab-panels v-model="tabRetorno" animated v-if="retornoFalha.length > 0">
-              <q-tab-panel name="falha">
+            <q-tab-panels v-model="tabRetorno" animated>
+              <q-tab-panel name="falha" v-if="retornoFalha.length > 0">
                 <q-btn
                   :loading="loadingReprocessarRetorno"
                   flat
