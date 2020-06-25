@@ -13,7 +13,7 @@
         :columns="columns"
         :data="data"
         :pagination.sync="pagination"
-        @row-click="abrirTitulo"
+        @row-click="abreTitulo"
       />
     </div>
   </mg-layout>
@@ -79,7 +79,7 @@ export default {
       })
     }, 500),
 
-    abrirTitulo: debounce(function(evt, row) {
+    abreTitulo: debounce(function(evt, row) {
       if (row.codtitulo != null) {
         var win = window.open(process.env.MGSIS_URL + '/index.php?r=titulo/view&id=' + row.codtitulo, '_blank');
         return;

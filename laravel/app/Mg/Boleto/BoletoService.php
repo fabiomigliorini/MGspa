@@ -2,13 +2,13 @@
 
 namespace Mg\Boleto;
 
-use App\Models\Boleto;
 
 use DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 use Mg\Portador\Portador;
+use Mg\Sequence\SequenceService;
 
 class BoletoService
 {
@@ -214,6 +214,7 @@ class BoletoService
             $ret[] = [
                 'codportador' => $portador->codportador,
                 'portador' => $portador->portador,
+                'proximaremessa' => SequenceService::simulaProximo("tbltitulo_remessa_{$portador->codportador}_seq"),
                 'titulos' => $retTitulos,
                 'remessas' => $remessas
             ];

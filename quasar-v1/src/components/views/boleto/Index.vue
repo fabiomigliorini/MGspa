@@ -42,7 +42,7 @@
                   dense
                   :data="retornoFalha"
                   :columns="columnsRetornoFalha"
-                  :pagination.sync="paginationFalha"
+                  :pagination.sync="paginationRetornoFalha"
                   @row-click="abreRetorno"
                 />
               </q-tab-panel>
@@ -73,15 +73,12 @@
 
               <!-- Arquivos Processados -->
               <q-tab-panel name="processado" v-if="retornoProcessado.length > 0">
-                <!-- <pre>
-{{retornoProcessado}}
-                </pre> -->
                 <q-table
                   flat
                   dense
                   :data="retornoProcessado"
                   :columns="columnsRetornoProcessado"
-                  :pagination.sync="paginationProcessado"
+                  :pagination.sync="paginationRetornoProcessado"
                   @row-click="abreRetorno"
                 />
               </q-tab-panel>
@@ -117,21 +114,26 @@
                   <div class="col-xs-12" v-for="portador in remessaPendente" :key="portador.codportador">
                     <q-card>
                       <q-card-section class="bg-primary text-white">
-                        <div class="text-h6">{{portador.portador}}</div>
+                        <div class="text-h6">Arquivos Portador {{portador.portador}}</div>
                       </q-card-section>
-                      <q-list>
-                        <q-item v-for="arquivo in portador.remessas" :key="arquivo">
-                          <q-item-section avatar>
-                            <q-btn icon="archive" flat @click="arquivarRemessa(portador.codportador, arquivo)">
-                              <q-tooltip>Arquivar</q-tooltip>
-                            </q-btn>
-                          </q-item-section>
-                          <q-item-section>
-                            {{arquivo}}
-                          </q-item-section>
-                        </q-item>
-                      </q-list>
-                      <q-separator />
+
+                      <div class="row q-col-gutter-md q-pa-md">
+
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-2 col-xl-1" v-for="arquivo in portador.remessas">
+                          <q-card class="my-card">
+                              <q-item>
+                                <q-item-section class="ellipsis">
+                                  {{arquivo}}
+                                </q-item-section>
+                                <q-item-section avatar>
+                                  <q-btn icon="archive" round flat @click="arquivarRemessa(portador.codportador, arquivo)">
+                                    <q-tooltip>Arquivar Remessa</q-tooltip>
+                                  </q-btn>
+                                </q-item-section>
+                              </q-item>
+                          </q-card>
+                        </div>
+                      </div>
                       <q-card-section v-if="portador.titulos.length > 0">
                         <q-table
                           flat
@@ -141,32 +143,22 @@
                           :data="portador.titulos"
                           :selected.sync="titulosSelecionados[portador.codportador]"
                           row-key="codtitulo"
+                          :pagination.sync="paginationRemessaPendente"
+                          @row-click="abreTitulo"
                         />
                       </q-card-section>
                       <q-card-actions align="right" v-if="portador.titulos.length > 0">
-                        <q-btn flat @click="gerarRemessa(portador.codportador)">Gerar Remessa</q-btn>
+                        <q-btn flat @click="gerarRemessa(portador.codportador)">Gerar Arquivo de Remessa {{ portador.proximaremessa }}</q-btn>
                       </q-card-actions>
                     </q-card>
                   </div>
                 </div>
 
-                <pre>
-
-{{titulosSelecionados}}
-
-                  SELECT tblPortador.portador, remessa, Count(codtitulo), tblTitulo.remessa, tblPortador.codportador
-                  FROM tblPortador INNER JOIN tblTitulo ON tblPortador.codportador = tblTitulo.codportador
-                  WHERE (((tblTitulo.saldo)>0))
-                  GROUP BY tblPortador.portador, remessa, tblTitulo.remessa, tblPortador.codportador, tblTitulo.boleto
-                  HAVING (((tblTitulo.remessa) Is Not Null)) OR (((tblTitulo.boleto)=true))
-                  ORDER BY Max(tblTitulo.emissao) DESC , tblPortador.codportador;
-
-                </pre>
               </q-tab-panel>
 
               <!--Geradas -->
               <q-tab-panel name="geradas" v-if="remessaGerada.length > 0">
-                Geradas
+                Aguenta mais uns dias meu bem!
               </q-tab-panel>
             </q-tab-panels>
           </q-card>
@@ -192,6 +184,7 @@ export default {
     return {
       tabRetorno: '',
       tabRemessa: 'pendente',
+      tabRemessaPendente: 210,
       loadingRetornoFalha: true,
       loadingRetornoPendente: true,
       loadingRetornoProcessado: true,
@@ -207,29 +200,32 @@ export default {
 
       titulosSelecionados: [],
 
-      paginationFalha: {
+      paginationRetornoFalha: {
         rowsPerPage: 18 // current rows per page being displayed
       },
-      paginationProcessado: {
+      paginationRetornoProcessado: {
         rowsPerPage: 18 // current rows per page being displayed
+      },
+      paginationRemessaPendente: {
+        rowsPerPage: 100 // current rows per page being displayed
       },
       columnsRetornoFalha: [
-        { name: 'codboletoretorno', align: 'right', label: '#', field: 'codboletoretorno', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
+        { name: 'codboletoretorno', align: 'right', label: '#', field: 'codboletoretorno', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis', format: (val, row) => this.formataCodigo(val, row)},
         { name: 'linha', align: 'right', label: 'Linha', field: 'linha', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
         { name: 'nossonumero', align: 'right', label: 'NossoNumero', field: 'nossonumero', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
         { name: 'numero', align: 'right', label: 'Número', field: 'numero', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
-        { name: 'pagamento', align: 'right', label: 'Pagamento', field: 'pagamento'},
-        { name: 'jurosatraso', align: 'right', label: 'Atraso', field: 'jurosatraso'},
-        { name: 'jurosmora', align: 'right', label: 'Mora', field: 'jurosmora'},
-        { name: 'abatimento', align: 'right', label: 'Abatimento', field: 'abatimento'},
-        { name: 'desconto', align: 'right', label: 'Desconto', field: 'desconto'},
-        { name: 'protesto', align: 'right', label: 'Protesto', field: 'protesto'},
-        { name: 'valor', align: 'right', label: 'Valor', field: 'valor'},
+        { name: 'pagamento', align: 'right', label: 'Pagamento', field: 'pagamento', format: (val, row) => this.formataValor(val, row)},
+        { name: 'jurosatraso', align: 'right', label: 'Atraso', field: 'jurosatraso', format: (val, row) => this.formataValor(val, row)},
+        { name: 'jurosmora', align: 'right', label: 'Mora', field: 'jurosmora', format: (val, row) => this.formataValor(val, row)},
+        { name: 'abatimento', align: 'right', label: 'Abatimento', field: 'abatimento', format: (val, row) => this.formataValor(val, row)},
+        { name: 'desconto', align: 'right', label: 'Desconto', field: 'desconto', format: (val, row) => this.formataValor(val, row)},
+        { name: 'protesto', align: 'right', label: 'Protesto', field: 'protesto', format: (val, row) => this.formataValor(val, row)},
+        { name: 'valor', align: 'right', label: 'Valor', field: 'valor', format: (val, row) => this.formataValor(val, row)},
 
         { name: 'ocorrencia', align: 'left', label: 'Ocorrencia', field: 'ocorrencia', sortable: true},
         { name: 'motivo', align: 'left', label: 'Motivo', field: 'motivo', sortable: true},
-        { name: 'despesas', align: 'right', label: 'Despesas', field: 'despesas'},
-        { name: 'outrasdespesas', align: 'right', label: 'Outras', field: 'outrasdespesas'},
+        { name: 'despesas', align: 'right', label: 'Despesas', field: 'despesas', format: (val, row) => this.formataValor(val, row)},
+        { name: 'outrasdespesas', align: 'right', label: 'Outras', field: 'outrasdespesas', format: (val, row) => this.formataValor(val, row)},
 
         { name: 'codbancocobrador', align: 'right', label: 'Banco', field: 'codbancocobrador'},
         { name: 'agenciacobradora', align: 'right', label: 'Agencia', field: 'agenciacobradora'},
@@ -245,8 +241,8 @@ export default {
         { name: 'valor', align: 'right', label: 'Valor', field: 'valor', format: (val, row) => this.formataValor(val, row), sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
       ],
       columnsRemessaPendente: [
-        { name: 'fantasia', align: 'left', label: 'Nome Fantasia', field: 'fantasia', sortable: true },
-        { name: 'numero', align: 'left', label: 'Número', field: 'numero', sortable: true },
+        { name: 'fantasia', align: 'left', label: 'Nome Fantasia', field: 'fantasia', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis'},
+        { name: 'numero', align: 'left', label: 'Número', field: 'numero', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis'},
         { name: 'nossonumero', align: 'right', label: 'Nosso Número', field: 'nossonumero', sortable: true },
         { name: 'emissao', align: 'right', label: 'Emissão', field: 'emissao', sortable: true, format: (val, row) => this.formataData(val, row) },
         { name: 'vencimento', align: 'right', label: 'Vencimento', field: 'vencimento', sortable: true, format: (val, row) => this.formataData(val, row) },
@@ -264,10 +260,23 @@ export default {
   methods: {
 
     formataData: function(val, row) {
+      if (val == null) {
+        return null;
+      }
       return this.moment(val).format('DD/MM/YYYY');
     },
 
+    formataCodigo: function(val, row) {
+      if (val == null) {
+        return null;
+      }
+      return '#' + this.numeral(parseFloat(val)).format('00000000');
+    },
+
     formataValor: function(val, row) {
+      if (val == null) {
+        return null;
+      }
       return this.numeral(parseFloat(val)).format('0,0.00');
     },
 
@@ -387,6 +396,17 @@ export default {
       window.open(route.href, '_blank');
     }, 500),
 
+    abreTitulo: debounce(function(evt, row) {
+      if (row.codtitulo != null) {
+        var win = window.open(process.env.MGSIS_URL + '/index.php?r=titulo/view&id=' + row.codtitulo, '_blank');
+        return;
+      }
+      this.$q.notify({
+        color: 'negative',
+        message: 'Retorno não está vinculado à nenhum titulo!'
+      });
+    }, 500),
+
     loadRemessaPendente: debounce(function () {
       // inicializa variaveis
       let vm = this;
@@ -397,12 +417,52 @@ export default {
         vm.titulosSelecionados = [];
         vm.remessaPendente.forEach((portador) => {
           vm.titulosSelecionados[portador.codportador] = portador.titulos;
-          console.log(portador.codportador);
         });
         this.loadingRemessaPendente = false;
         // vm.decideTabRemessa();
       })
     }, 500),
+
+    arquivarRemessa: throttle(function(codportador, arquivo) {
+      let vm = this;
+      vm.$axios.post('boleto/arquivar-remessa/' + codportador + '/' + arquivo, {
+      }).then(response => {
+        let portador = vm.remessaPendente.find(portador => portador.codportador === codportador);
+        portador.remessas = portador.remessas.filter(function(remessa) {
+            return remessa !== arquivo;
+        });
+        // let
+        // let pendente = vm.retornoPendente.find(portador => portador.codportador === codportador);
+
+        let color = 'positive';
+        let mensagem = arquivo + ' arquivado com sucesso!';
+        this.$q.notify({
+          color: color,
+          message: mensagem
+        });
+        // vm.loadRemessaPendente();
+      });
+    }, 500),
+
+    gerarRemessa: throttle(function(codportador) {
+      let vm = this;
+      let codtitulo = [];
+      this.titulosSelecionados[codportador].forEach((item) => {
+        codtitulo.push(item.codtitulo);
+      });
+      vm.$axios.post('boleto/gerar-remessa/' + codportador, {
+        'codtitulo': codtitulo
+      }).then(response => {
+        let color = 'positive';
+        let mensagem = 'Remessa ' + response.data.remessa + ' gerada no arquivo ' + response.data.arquivo + ' com ' + response.data.titulos + ' Títulos!';
+        this.$q.notify({
+          color: color,
+          message: mensagem
+        });
+        vm.loadRemessaPendente();
+      });
+    }, 500),
+
 
   },
   created () {

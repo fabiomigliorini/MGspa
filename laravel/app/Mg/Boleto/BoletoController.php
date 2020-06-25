@@ -49,5 +49,18 @@ class BoletoController extends MgController
         return BoletoService::RemessaPendente();
     }
 
+    public function arquivarRemessa(Request $request, $codportador, $arquivo)
+    {
+        BoletoRemessaService::arquivarRemessa($codportador, $arquivo);
+    }
+
+    public function gerarRemessa(Request $request, $codportador)
+    {
+        $request->validate([
+          'codtitulo' => ['required', 'array', 'min:1'],
+        ]);
+        return BoletoRemessaService::gerarRemessa($codportador, $request->codtitulo);
+    }
+
 
 }

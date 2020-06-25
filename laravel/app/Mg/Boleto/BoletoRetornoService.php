@@ -2,8 +2,6 @@
 
 namespace Mg\Boleto;
 
-use App\Models\Boleto;
-
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -11,7 +9,6 @@ use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\TipoMovimentoTitulo;
-
 
 class BoletoRetornoService
 {
