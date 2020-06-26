@@ -207,7 +207,7 @@ export default {
   data () {
     return {
       tabRetorno: '',
-      tabRemessa: 'enviada',
+      tabRemessa: 'pendente',
       tabRemessaPendente: 210,
       loadingRetornoFalha: true,
       loadingRetornoPendente: true,
