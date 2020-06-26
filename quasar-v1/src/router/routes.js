@@ -8,6 +8,7 @@ export default [
   // Boleto
   { path: '/boleto', component: () => import('components/views/boleto/Index') },
   { path: '/boleto/retorno/:codportador/:arquivo/:dataretorno', component: () => import('components/views/boleto/retorno') },
+  { path: '/boleto/remessa/:codportador/:remessa', component: () => import('components/views/boleto/remessa') },
 
   // Marca
   { path: '/marca', component: () => import('components/views/marca/Index') },

@@ -9,6 +9,7 @@ use Carbon\Carbon;
 
 use Mg\Portador\Portador;
 use Mg\Sequence\SequenceService;
+use Mg\Titulo\Titulo;
 
 class BoletoService
 {
@@ -221,5 +222,63 @@ class BoletoService
         }
         return $ret;
     }
+
+    public static function remessaEnviada()
+    {
+        $portadores = Portador::ativo()->where('emiteboleto', true)->orderBy('portador')->get();
+        $ret = [];
+        foreach ($portadores as $portador) {
+            $sql = "
+                select
+                    codportador,
+                    remessa,
+                    sum(debito) as total,
+                    sum(saldo) as saldo,
+                    count(codtitulo) as quantidade
+                from tbltitulo
+                where boleto = true
+                and codportador = :codportador
+                and remessa is not null
+                group by codportador, remessa
+                order by remessa desc
+            ";
+            $arquivos =
+            $ret[] = [
+                'codportador' => $portador->codportador,
+                'portador' => $portador->portador,
+                'remessas' => DB::select($sql, ['codportador' => $portador->codportador])
+            ];
+        }
+        return $ret;
+    }
+
+    public static function remessa ($codportador, $remessa)
+    {
+        $regs = Titulo::where([
+            'codportador' => $codportador,
+            'boleto' => true,
+            'remessa' => $remessa,
+        ])->with('Pessoa')->with('Filial')->orderBy('numero')->get();
+
+        $ret = [];
+        foreach ($regs as $reg) {
+            $tmp = $reg->only([
+                "codtitulo",
+                "numero",
+                "debito",
+                "nossonumero",
+                "saldo",
+                "codfilial",
+                "codpessoa",
+            ]);
+            $tmp['emissao'] = $reg->emissao->toW3cString();
+            $tmp['vencimento'] = $reg->vencimento->toW3cString();
+            $tmp['filial'] = $reg->Filial->filial;
+            $tmp['fantasia'] = $reg->Pessoa->fantasia;
+            $ret[] = $tmp;
+        }
+        return $ret;
+    }
+
 
 }

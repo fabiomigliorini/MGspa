@@ -100,7 +100,7 @@
               <q-space />
               <q-tabs v-model="tabRemessa" inline-label>
                 <q-tab name="pendente" icon="note_add" label="Pendentes" v-if="remessaPendente.length > 0" />
-                <q-tab name="geradas" icon="history" label="Geradas" v-if="remessaGerada.length > 0" />
+                <q-tab name="enviada" icon="history" label="Enviadas" v-if="remessaEnviada.length > 0" />
               </q-tabs>
             </q-toolbar>
 
@@ -156,9 +156,33 @@
 
               </q-tab-panel>
 
-              <!--Geradas -->
-              <q-tab-panel name="geradas" v-if="remessaGerada.length > 0">
-                Aguenta mais uns dias meu bem!
+              <!--Enviadas -->
+              <q-tab-panel name="enviada" v-if="remessaEnviada.length > 0">
+
+                <div class="row q-col-gutter-md">
+                  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-4" v-for="portador in remessaEnviada" :key="portador.codportador">
+                    <q-card>
+                      <q-card-section class="bg-primary text-white">
+                        <div class="text-h6">Remessas Portador {{portador.portador}}</div>
+                      </q-card-section>
+                      <q-card-section v-if="portador.remessas.length > 0">
+                        <q-table
+                        flat
+                        dense
+                        :data="portador.remessas"
+                        :pagination.sync="paginationRemessaEnviada"
+                        :columns="columnsRemessaEnviada"
+                        row-key="remessa"
+                        @row-click="abreRemessa"
+                        />
+                      </q-card-section>
+                    </q-card>
+                  </div>
+                </div>
+
+
+                <template v-for >
+                </template>
               </q-tab-panel>
             </q-tab-panels>
           </q-card>
@@ -183,7 +207,7 @@ export default {
   data () {
     return {
       tabRetorno: '',
-      tabRemessa: 'pendente',
+      tabRemessa: 'enviada',
       tabRemessaPendente: 210,
       loadingRetornoFalha: true,
       loadingRetornoPendente: true,
@@ -196,7 +220,7 @@ export default {
       retornoPendenteSelecionado: [],
       retornoProcessado: [],
       remessaPendente: [],
-      remessaGerada: [1, 2, 3],
+      remessaEnviada: [],
 
       titulosSelecionados: [],
 
@@ -209,6 +233,10 @@ export default {
       paginationRemessaPendente: {
         rowsPerPage: 100 // current rows per page being displayed
       },
+      paginationRemessaEnviada: {
+        rowsPerPage: 10 // current rows per page being displayed
+      },
+
       columnsRetornoFalha: [
         { name: 'codboletoretorno', align: 'right', label: '#', field: 'codboletoretorno', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis', format: (val, row) => this.formataCodigo(val, row)},
         { name: 'linha', align: 'right', label: 'Linha', field: 'linha', sortable: true, headerClasses: 'bg-negative text-white', classes: 'bg-grey-2 ellipsis' },
@@ -247,6 +275,12 @@ export default {
         { name: 'emissao', align: 'right', label: 'Emissão', field: 'emissao', sortable: true, format: (val, row) => this.formataData(val, row) },
         { name: 'vencimento', align: 'right', label: 'Vencimento', field: 'vencimento', sortable: true, format: (val, row) => this.formataData(val, row) },
         { name: 'debito', align: 'right', label: 'Débito', field: 'debito', sortable: true, format: (val, row) => this.formataValor(val, row), sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
+        { name: 'saldo', align: 'right', label: 'Saldo', field: 'saldo', sortable: true, format: (val, row) => this.formataValor(val, row), sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
+      ],
+      columnsRemessaEnviada: [
+        { name: 'remessa', align: 'right', label: 'Remessa', field: 'remessa', sortable: true, headerClasses: 'bg-primary text-white', classes: 'bg-grey-2 ellipsis', sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
+        { name: 'quantidade', align: 'right', label: 'Quantidade', field: 'quantidade', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
+        { name: 'total', align: 'right', label: 'Total', field: 'total', sortable: true, format: (val, row) => this.formataValor(val, row), sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
         { name: 'saldo', align: 'right', label: 'Saldo', field: 'saldo', sortable: true, format: (val, row) => this.formataValor(val, row), sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
       ],
     }
@@ -407,6 +441,21 @@ export default {
       });
     }, 500),
 
+    abreRemessa: debounce(function(evt, row) {
+      // this.$router.push('/boleto/retorno/' + row.codportador + '/' + row.arquivo + '/' + row.dataretorno);
+      let route = this.$router.resolve('/boleto/remessa/' + row.codportador + '/' + row.remessa);
+      window.open(route.href, '_blank');
+      console.log(row);
+      // if (row.codtitulo != null) {
+      //   var win = window.open(process.env.MGSIS_URL + '/index.php?r=titulo/view&id=' + row.codtitulo, '_blank');
+      //   return;
+      // }
+      // this.$q.notify({
+      //   color: 'negative',
+      //   message: 'Retorno não está vinculado à nenhum titulo!'
+      // });
+    }, 500),
+
     loadRemessaPendente: debounce(function () {
       // inicializa variaveis
       let vm = this;
@@ -423,6 +472,14 @@ export default {
       })
     }, 500),
 
+    loadRemessaEnviada: debounce(function () {
+      let vm = this;
+      vm.$axios.get('boleto/remessa-enviada').then(response => {
+        vm.remessaEnviada = response.data;
+        this.loadingRemessaEnviada = false;
+      })
+    }, 500),
+
     arquivarRemessa: throttle(function(codportador, arquivo) {
       let vm = this;
       vm.$axios.post('boleto/arquivar-remessa/' + codportador + '/' + arquivo, {
@@ -431,36 +488,40 @@ export default {
         portador.remessas = portador.remessas.filter(function(remessa) {
             return remessa !== arquivo;
         });
-        // let
-        // let pendente = vm.retornoPendente.find(portador => portador.codportador === codportador);
-
         let color = 'positive';
         let mensagem = arquivo + ' arquivado com sucesso!';
         this.$q.notify({
           color: color,
           message: mensagem
         });
-        // vm.loadRemessaPendente();
       });
     }, 500),
 
     gerarRemessa: throttle(function(codportador) {
-      let vm = this;
-      let codtitulo = [];
-      this.titulosSelecionados[codportador].forEach((item) => {
-        codtitulo.push(item.codtitulo);
-      });
-      vm.$axios.post('boleto/gerar-remessa/' + codportador, {
-        'codtitulo': codtitulo
-      }).then(response => {
-        let color = 'positive';
-        let mensagem = 'Remessa ' + response.data.remessa + ' gerada no arquivo ' + response.data.arquivo + ' com ' + response.data.titulos + ' Títulos!';
-        this.$q.notify({
-          color: color,
-          message: mensagem
+      this.$q.dialog({
+        title: 'Confirma',
+        message: 'Deseja mesmo continuar com a geração da remessa? Será impossível desfazer esta ação!',
+        cancel: true,
+        persistent: true
+      }).onOk(() => {
+        let vm = this;
+        let codtitulo = [];
+        this.titulosSelecionados[codportador].forEach((item) => {
+          codtitulo.push(item.codtitulo);
         });
-        vm.loadRemessaPendente();
-      });
+        vm.$axios.post('boleto/gerar-remessa/' + codportador, {
+          'codtitulo': codtitulo
+        }).then(response => {
+          let color = 'positive';
+          let mensagem = 'Remessa ' + response.data.remessa + ' gerada no arquivo ' + response.data.arquivo + ' com ' + response.data.titulos + ' Títulos!';
+          this.$q.notify({
+            color: color,
+            message: mensagem
+          });
+          vm.loadRemessaPendente();
+          vm.loadRemessaEnviada();
+        });
+      })
     }, 500),
 
 
@@ -470,6 +531,7 @@ export default {
     this.loadRetornoPendente();
     this.loadRetornoProcessado();
     this.loadRemessaPendente();
+    this.loadRemessaEnviada();
   }
 }
 </script>
