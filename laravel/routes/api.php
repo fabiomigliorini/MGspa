@@ -90,6 +90,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('boleto/processar-retorno', '\Mg\Boleto\BoletoController@processarRetorno');
         Route::post('boleto/reprocessar-retorno', '\Mg\Boleto\BoletoController@reprocessarRetorno');
 
+        // Dominio
+        Route::post('dominio/estoque', '\Mg\Dominio\DominioController@estoque');
+
         Route::get('boleto/remessa-pendente', '\Mg\Boleto\BoletoController@remessaPendente');
         Route::get('boleto/remessa-enviada', '\Mg\Boleto\BoletoController@remessaEnviada');
         Route::get('boleto/remessa/{codportador}/{remessa}', '\Mg\Boleto\BoletoController@remessa');

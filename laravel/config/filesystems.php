@@ -65,6 +65,11 @@ return [
             'root' => env('BOLETO_PATH'),
         ],
 
+        'dominio' => [
+            'driver' => 'local',
+            'root' => env('DOMINIO_PATH'),
+        ],
+
         /*
         's3' => [
             'driver' => 's3',
