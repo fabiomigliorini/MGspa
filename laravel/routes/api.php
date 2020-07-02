@@ -93,6 +93,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         // Dominio
         Route::post('dominio/estoque', '\Mg\Dominio\DominioController@estoque');
         Route::post('dominio/produto', '\Mg\Dominio\DominioController@produto');
+        Route::post('dominio/pessoa', '\Mg\Dominio\DominioController@pessoa');
 
         Route::get('boleto/remessa-pendente', '\Mg\Boleto\BoletoController@remessaPendente');
         Route::get('boleto/remessa-enviada', '\Mg\Boleto\BoletoController@remessaEnviada');

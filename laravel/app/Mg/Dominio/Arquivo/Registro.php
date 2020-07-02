@@ -27,6 +27,7 @@ class Registro
                     case 'decimal':
                         $valor = (int) ($valor * pow(10, $detalhes['casas']));
                     case 'numeric':
+                        $valor = preg_replace('/[^0-9]/', '', $valor);
                         $padChar = '0';
                         $padType = STR_PAD_LEFT;
                         break;

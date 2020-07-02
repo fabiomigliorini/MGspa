@@ -38,14 +38,13 @@ class ArquivoProduto extends Arquivo
     {
         $this->mes = $mes;
         $this->filial = $Filial;
-        $this->arquivo = $mes->format('Ym') . '-' . str_pad($Filial->empresadominio, 4, '0', STR_PAD_LEFT) . '-Estoque.txt';
+        $this->arquivo = $mes->format('Ym') . '-' . str_pad($Filial->empresadominio, 4, '0', STR_PAD_LEFT) . '-Produtos.txt';
+        $this->inicio = (clone $this->mes)->startOfMonth();
+        $this->fim = (clone $this->mes)->endOfMonth();
     }
 
     function processa()
     {
-        $this->inicio = (clone $this->mes)->startOfMonth();
-        $this->fim = (clone $this->mes)->endOfMonth();
-
     	$sql = "
             with mov as (
             	SELECT DISTINCT codProduto
