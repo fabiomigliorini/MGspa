@@ -947,5 +947,284 @@
                 "metodo": "BoletoMotivoOcorrenciaS"
             }
         }
+    },
+    "tbltributacaonaturezaoperacao": {
+        "tabela": "tbltributacaonaturezaoperacao",
+        "campocodigo": "codtributacaonaturezaoperacao",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "TributacaoNaturezaOperacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/TributacaoNaturezaOperacao.php",
+        "belongsTo": {
+            "codcfop": {
+                "tabela": "tblcfop",
+                "coluna": "codcfop",
+                "metodo": "Cfop"
+            },
+            "codestado": {
+                "tabela": "tblestado",
+                "coluna": "codestado",
+                "metodo": "Estado"
+            },
+            "codnaturezaoperacao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NaturezaOperacao"
+            },
+            "codtipoproduto": {
+                "tabela": "tbltipoproduto",
+                "coluna": "codtipoproduto",
+                "metodo": "TipoProduto"
+            },
+            "codtributacao": {
+                "tabela": "tbltributacao",
+                "coluna": "codtributacao",
+                "metodo": "Tributacao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblcfop": {
+        "tabela": "tblcfop",
+        "campocodigo": "codcfop",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "Cfop",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/Cfop.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnotafiscalprodutobarra.codcfop": {
+                "tabela": "tblnotafiscalprodutobarra",
+                "coluna": "codcfop",
+                "metodo": "NotaFiscalProdutoBarraS"
+            },
+            "tbltributacaonaturezaoperacao.codcfop": {
+                "tabela": "tbltributacaonaturezaoperacao",
+                "coluna": "codcfop",
+                "metodo": "TributacaoNaturezaOperacaoS"
+            }
+        }
+    },
+    "tblestado": {
+        "tabela": "tblestado",
+        "campocodigo": "codestado",
+        "namespace": "Mg\\Cidade",
+        "classe": "Estado",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cidade\/Estado.php",
+        "belongsTo": {
+            "codpais": {
+                "tabela": "tblpais",
+                "coluna": "codpais",
+                "metodo": "Pais"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcidade.codestado": {
+                "tabela": "tblcidade",
+                "coluna": "codestado",
+                "metodo": "CidadeS"
+            },
+            "tblibptcache.codestado": {
+                "tabela": "tblibptcache",
+                "coluna": "codestado",
+                "metodo": "IbptCacheS"
+            },
+            "tblnotafiscal.codestadoplaca": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codestadoplaca",
+                "metodo": "NotaFiscalS"
+            },
+            "tbltributacaonaturezaoperacao.codestado": {
+                "tabela": "tbltributacaonaturezaoperacao",
+                "coluna": "codestado",
+                "metodo": "TributacaoNaturezaOperacaoS"
+            }
+        }
+    },
+    "tbltipoproduto": {
+        "tabela": "tbltipoproduto",
+        "campocodigo": "codtipoproduto",
+        "namespace": "Mg\\Produto",
+        "classe": "TipoProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/TipoProduto.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblproduto.codtipoproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codtipoproduto",
+                "metodo": "ProdutoS"
+            },
+            "tbltributacaonaturezaoperacao.codtipoproduto": {
+                "tabela": "tbltributacaonaturezaoperacao",
+                "coluna": "codtipoproduto",
+                "metodo": "TributacaoNaturezaOperacaoS"
+            }
+        }
+    },
+    "tbltributacao": {
+        "tabela": "tbltributacao",
+        "campocodigo": "codtributacao",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "Tributacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/Tributacao.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblncmtributacao.codtributacao": {
+                "tabela": "tblncmtributacao",
+                "coluna": "codtributacao",
+                "metodo": "NcmTributacaoS"
+            },
+            "tblproduto.codtributacao": {
+                "tabela": "tblproduto",
+                "coluna": "codtributacao",
+                "metodo": "ProdutoS"
+            },
+            "tbltributacaonaturezaoperacao.codtributacao": {
+                "tabela": "tbltributacaonaturezaoperacao",
+                "coluna": "codtributacao",
+                "metodo": "TributacaoNaturezaOperacaoS"
+            }
+        }
+    },
+    "tblnotafiscalprodutobarra": {
+        "tabela": "tblnotafiscalprodutobarra",
+        "campocodigo": "codnotafiscalprodutobarra",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscalProdutoBarra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalProdutoBarra.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblpais": {
+        "tabela": "tblpais",
+        "campocodigo": "codpais",
+        "namespace": "Mg\\Cidade",
+        "classe": "Pais",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cidade\/Pais.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblcidade": {
+        "tabela": "tblcidade",
+        "campocodigo": "codcidade",
+        "namespace": "Mg\\Cidade",
+        "classe": "Cidade",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cidade\/Cidade.php",
+        "belongsTo": {
+            "codestado": {
+                "tabela": "tblestado",
+                "coluna": "codestado",
+                "metodo": "Estado"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoa.codcidade": {
+                "tabela": "tblpessoa",
+                "coluna": "codcidade",
+                "metodo": "PessoaS"
+            },
+            "tblpessoa.codcidadecobranca": {
+                "tabela": "tblpessoa",
+                "coluna": "codcidadecobranca",
+                "metodo": "PessoaCobrancaS"
+            }
+        }
+    },
+    "tblibptcache": {
+        "tabela": "tblibptcache",
+        "campocodigo": "codibptcache",
+        "namespace": "Mg\\IbptCache",
+        "classe": "IbptCache",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/IbptCache\/IbptCache.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnotafiscal": {
+        "tabela": "tblnotafiscal",
+        "campocodigo": "codnotafiscal",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscal",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscal.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblproduto": {
+        "tabela": "tblproduto",
+        "campocodigo": "codproduto",
+        "namespace": "Mg\\Produto",
+        "classe": "Produto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/Produto.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblncmtributacao": {
+        "tabela": "tblncmtributacao",
+        "campocodigo": "codncmtributacao",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "NcmTributacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/NcmTributacao.php",
+        "belongsTo": [],
+        "hasMany": []
     }
 }

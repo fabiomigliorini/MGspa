@@ -340,5 +340,6 @@ class RegistroProduto4 extends Registro
         $this->periodicidadeIpi = 'M';
         $this->contaContabil = 55;
         $this->unidadeInventariadaDiferente = 'N';
+        $this->unidade = 'UN';
     }
 }

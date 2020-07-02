@@ -106,9 +106,11 @@ class ArquivoProduto extends Arquivo
             $reg->descricaoProduto = $produto->produto;
             $reg->tipoItem = $produto->codtipoproduto;
             $reg->unidadeMedida = $produto->sigla;
-            $reg->unidade = $produto->sigla;
+            // $reg->unidade = $produto->sigla;
             $reg->valorUnitario = $produto->preco;
             $reg->codigoNcm = $produto->ncm;
+            $reg->dataSaldoFinal = $this->fim;
+            $reg->valorFinalEstoque = 0;
             $this->registros[] = $reg;
 
             $embalagens = ProdutoEmbalagem::with('unidadeMedida')->where('codproduto', $produto->codproduto)->orderBY('quantidade')->get();
@@ -119,7 +121,7 @@ class ArquivoProduto extends Arquivo
                 $reg->codigoProduto =  "{$cod}-{$quant}";
                 $reg->descricaoProduto = "{$produto->produto} C/{$quant}";
                 $reg->unidadeMedida = $emb->unidadeMedida->sigla;
-                $reg->unidade = $emb->unidadeMedida->sigla;
+                // $reg->unidade = $emb->unidadeMedida->sigla;
                 $reg->valorUnitario = $emb->preco??($emb->quantidade * $produto->preco);
                 $this->unidadeInventariadaDiferente = 'S';
                 $this->registros[] = $reg;

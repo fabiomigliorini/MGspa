@@ -33,4 +33,11 @@ class DominioController extends MgController
         return DominioService::pessoa($codfilial, $mes);
     }
 
+    public function entrada(DominioRequest $request)
+    {
+        $codfilial = (int) $request->codfilial;
+        $mes = Carbon::parse($request->mes);
+        return DominioService::entrada($codfilial, $mes);
+    }
+
 }
