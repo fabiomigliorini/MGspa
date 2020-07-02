@@ -102,11 +102,11 @@ class RegistroProduto4 extends Registro
                 'tamanho' => 7,
                 'tipo' => 'numeric',
             ],
-            'branco1' => [
+            'brancos3' => [
                 'tamanho' => 17,
                 'tipo' => 'char',
             ],
-            'branco2' => [
+            'brancos4' => [
                 'tamanho' => 1,
                 'tipo' => 'char',
             ],
@@ -235,7 +235,6 @@ class RegistroProduto4 extends Registro
             'codigoBarras' => [
                 'tamanho' => 16,
                 'tipo' => 'char',
-                'casas' => ''
             ],
             'tipoMedicamento' => [
                 'tamanho' => 1,
@@ -314,7 +313,7 @@ class RegistroProduto4 extends Registro
                 'tamanho' => 1,
                 'tipo' => 'char',
             ],
-            'reservado' => [
+            'brancos5' => [
                 'tamanho' => 46,
                 'tipo' => 'char',
             ],
@@ -322,17 +321,12 @@ class RegistroProduto4 extends Registro
         ];
 
         $this->identificador = 4;
-        $this->quantidadeInicialEstoque = 0;
-        $this->quantidadeFinalEstoque = 0;
-        $this->valorInicialEstoque = 0;
-        $this->valorFinalEstoque = 0;
-        $this->observacao = "Exportacao MGsis @ " . date('d/m/Y H:i:s');
+        $this->observacao = 'Exportacao MGspa @ ' . date('d/m/Y H:i:s');
         $this->exportaDnf = 'N';
         $this->incentivoFiscal = 'N';
         $this->geraInformacaoGrfCbt = 'N';
         $this->geraInformacaoScanc = 'N';
         $this->produtoGasolinaA = 'N';
-        $this->unidade = 'UN';
         $this->tipoServicoProduto = 1;
         $this->geraInformacoesRegistro88stSintegra = 'N';
         $this->tipo = 'O';

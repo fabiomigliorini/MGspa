@@ -7,13 +7,11 @@ use DB;
 
 use Mg\Dominio\Arquivo\Arquivo;
 use Mg\Filial\Filial;
-use Mg\Estoque\EstoqueLocalProdutoVariacao;
-use Mg\Estoque\EstoqueSaldo;
-use Mg\Estoque\EstoqueMes;
+use Mg\Produto\ProdutoEmbalagem;
 
 /**
  *
- * Geração de arquivos textos com o Estoque para integracao
+ * Geração de arquivos textos com o cadastro de Produtos para integracao
  * com o Dominio Sistemas
  *
  * @property Carbon $mes
@@ -45,15 +43,17 @@ class ArquivoProduto extends Arquivo
 
     function processa()
     {
-    	$sql = "
+        $sql = "
             with mov as (
-            	SELECT DISTINCT codProduto
-            	FROM tblNotaFiscal
-            	inner join tblNotaFiscalProdutoBarra on (tblNotaFiscalProdutoBarra.codNotaFiscal = tblNotaFiscal.codNotaFiscal)
-            	inner join tblProdutoBarra on (tblProdutoBarra.codProdutoBarra = tblNotaFiscalProdutoBarra.codProdutoBarra)
-            	WHERE tblNotaFiscal.codfilial =  :codfilial
-            	and tblNotaFiscal.saida >= :inicio
-            	and tblNotaFiscal.saida <= :fim
+              SELECT DISTINCT codProduto
+              FROM tblNotaFiscal
+              inner join tblNotaFiscalProdutoBarra on (tblNotaFiscalProdutoBarra.codNotaFiscal = tblNotaFiscal.codNotaFiscal)
+              inner join tblProdutoBarra on (tblProdutoBarra.codProdutoBarra = tblNotaFiscalProdutoBarra.codProdutoBarra)
+              WHERE tblNotaFiscal.codfilial =  :codfilial
+              and tblNotaFiscal.saida >= :inicio
+              and tblNotaFiscal.saida <= :fim
+              and tblNotaFiscal.codoperacao = 1
+              -- limit 10
             )
             SELECT distinct
             	  tblproduto.codProduto
@@ -61,12 +61,9 @@ class ArquivoProduto extends Arquivo
             	, tblproduto.referencia
             	, tblproduto.codunidademedida
             	, tblUnidadeMedida.sigla
-            	--, tblproduto.codsubgrupoproduto
-            	--, tblproduto.codmarca
             	, tblproduto.preco
             	, tblproduto.importado
             	, tblncm.ncm
-            	--, tblproduto.codtributacao
             	, tblproduto.inativo
             	, tblproduto.codtipoproduto
             FROM tblproduto
@@ -74,17 +71,17 @@ class ArquivoProduto extends Arquivo
             left join tblNcm on (tblNcm.codncm = tblProduto.codncm)
             inner join mov on (mov.codproduto = tblproduto.codproduto)
             order by codproduto
-    	";
+        ";
 
-    	$params = [
+      	$params = [
             'codfilial' => $this->filial->codfilial,
             'inicio' => $this->inicio,
             'fim' => $this->fim,
         ];
 
-    	$produtos = DB::select($sql, $params);
+      	$produtos = DB::select($sql, $params);
 
-    	foreach ($produtos as $produto) {
+      	foreach ($produtos as $produto) {
 
             $reg = new RegistroProduto4();
             $reg->codigoProduto = str_pad($produto->codproduto, 6, '0', STR_PAD_LEFT);
@@ -109,13 +106,24 @@ class ArquivoProduto extends Arquivo
             $reg->descricaoProduto = $produto->produto;
             $reg->tipoItem = $produto->codtipoproduto;
             $reg->unidadeMedida = $produto->sigla;
+            $reg->unidade = $produto->sigla;
             $reg->valorUnitario = $produto->preco;
             $reg->codigoNcm = $produto->ncm;
-            // $reg->dataSaldoFinal = $dataSaldo;
-            // $reg->valorFinalEstoque = $produto->saldovalor;
-            // $reg->quantidadeFinalEstoque = $produto->saldoquantidade;
-
             $this->registros[] = $reg;
+
+            $embalagens = ProdutoEmbalagem::with('unidadeMedida')->where('codproduto', $produto->codproduto)->orderBY('quantidade')->get();
+            foreach ($embalagens as $emb) {
+                $reg = (clone $reg);
+                $quant = round($emb->quantidade, 0);
+                $cod = str_pad($produto->codproduto, 6, '0', STR_PAD_LEFT);
+                $reg->codigoProduto =  "{$cod}-{$quant}";
+                $reg->descricaoProduto = "{$produto->produto} C/{$quant}";
+                $reg->unidadeMedida = $emb->unidadeMedida->sigla;
+                $reg->unidade = $emb->unidadeMedida->sigla;
+                $reg->valorUnitario = $emb->preco??($emb->quantidade * $produto->preco);
+                $this->unidadeInventariadaDiferente = 'S';
+                $this->registros[] = $reg;
+            }
 
         }
 
