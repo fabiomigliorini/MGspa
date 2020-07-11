@@ -5,6 +5,9 @@ export default [
   { path: '/login', component: () => import('components/Login') }, // Login
   { path: '*', component: () => import('components/Error404') },
 
+  // Etiquetas
+  { path: '/etiqueta', component: () => import('components/views/etiqueta/Index') },
+
   // Boleto
   { path: '/boleto', component: () => import('components/views/boleto/Index') },
   { path: '/boleto/retorno/:codportador/:arquivo/:dataretorno', component: () => import('components/views/boleto/retorno') },

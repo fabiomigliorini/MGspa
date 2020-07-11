@@ -87,6 +87,7 @@ module.exports = function (ctx) {
         'QCheckbox',
         'QTable',
         'QSpace',
+        'QForm',
       ],
       config: {
         notify: { /* Notify defaults */ }

@@ -37,6 +37,11 @@ export default {
       title: 'Boletos',
       path: '/boleto'
     },
+    {
+      icon: 'fas fa-barcode',
+      title: 'Etiquetas',
+      path: '/etiqueta'
+    },
     /*
     {
       icon: 'description',

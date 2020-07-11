@@ -24,21 +24,21 @@ export default ({ Vue }) => {
     return response
   }, function (error) {
     Loading.hide();
-    console.log('erro: ' + error);
-    let mensagem = 'Erro ao acessar API';
+    // console.log('erro: ' + error);
+    // let mensagem = 'Erro ao acessar API';
     if (error.response) {
       if (error.response.status) {
         const originalRequest = error.config;
         if (error.response.status === 401 && !originalRequest._retry) {
           refresh.handle(error.response)
         }
-        mensagem += ' - ' + error.response.status;
-        if (error.response.data.mensagem) {
-          mensagem += ' - ' + error.response.data.mensagem
-        }
+        // mensagem += ' - ' + error.response.status;
+        // if (error.response.data.mensagem) {
+        //   mensagem += ' - ' + error.response.data.mensagem
+        // }
       }
     }
-    Notify.create({message: mensagem, color: 'warning'});
+    // Notify.create({message: mensagem, color: 'warning'});
     return Promise.reject(error)
   })
 }

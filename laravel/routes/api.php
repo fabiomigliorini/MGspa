@@ -82,6 +82,9 @@ Route::group(['prefix' => 'v1'], function () {
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
+        // Etiquetas
+        Route::get('etiqueta/barras', '\Mg\Etiqueta\EtiquetaController@barras');
+
         // Boletos
         Route::get('boleto/retorno-pendente', '\Mg\Boleto\BoletoController@retornoPendente');
         Route::get('boleto/retorno-processado', '\Mg\Boleto\BoletoController@retornoProcessado');
