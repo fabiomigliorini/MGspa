@@ -17,7 +17,15 @@
 			case when coalesce(picms, 0) > 7 then
 				(coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) - coalesce(vdesc, 0)) * 0.07
 			else
-				coalesce(vicms, 0)
+				case when coalesce(vicms, 0) = 0 then
+					case when p.importado then
+						(coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) - coalesce(vdesc, 0)) * 0.04
+					else 
+						(coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) - coalesce(vdesc, 0)) * 0.07
+					end
+				else 
+					coalesce(vicms, 0)
+				end
 			end as vicms,
 			vicmsst
 		from tblnfeterceiroitem nti
@@ -25,7 +33,7 @@
 		left join tblproduto p on (p.codproduto = pb.codproduto)
 		left join tblncm n on (n.codncm = p.codncm)
 		left join tblcest c on (c.codcest = p.codcest)
-		where nti.codnfeterceiro = 28743
+		where nti.codnfeterceiro = 28815
 		order by nitem
 	)
 	select
