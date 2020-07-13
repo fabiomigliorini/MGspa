@@ -31,7 +31,10 @@ RUN apt-get update \
     php7.1-zip
 
 RUN update-alternatives --set php /usr/bin/php7.1 \
+    && apt update \
     && apt install -y memcached \
+    cups \
+    lpr \
     php-pear \
     php7.1-dev \
     composer \

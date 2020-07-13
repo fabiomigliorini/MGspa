@@ -1,47 +1,67 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 13/Jul/2020 15:53:42
+ */
 
 namespace Mg\Negocio;
 
 use Mg\MgModel;
+use Mg\CupomFiscal\CupomFiscalProdutoBarra;
+use Mg\Estoque\EstoqueMovimento;
+use Mg\Negocio\NegocioProdutoBarra;
+use Mg\Negocio\NegocioProdutoBarraPedidoItem;
+use Mg\NotaFiscal\NotaFiscalProdutoBarra;
+use Mg\Negocio\Negocio;
+use Mg\Produto\ProdutoBarra;
+use Mg\Usuario\Usuario;
 
-class NegocioProdutoBarra extends MGModel
+class NegocioProdutoBarra extends MgModel
 {
     protected $table = 'tblnegocioprodutobarra';
-    protected $primaryKey = 'codnegociprodutobarra';
+    protected $primaryKey = 'codnegocioprodutobarra';
+
+
     protected $fillable = [
         'codnegocio',
-        'quantidade',
-        'valorunitario',
-        'valortotal',
+        'codnegocioprodutobarradevolucao',
         'codprodutobarra',
-        'codcaixamercadoria',
-        'codnegocioprodutobarradevolucao'
-    ];
-    protected $dates = [
+        'codusuarioconferencia',
         'conferencia',
+        'quantidade',
+        'valortotal',
+        'valorunitario'
+    ];
+
+    protected $dates = [
         'alteracao',
+        'conferencia',
         'criacao'
     ];
 
+    protected $casts = [
+        'codnegocio' => 'integer',
+        'codnegocioprodutobarra' => 'integer',
+        'codnegocioprodutobarradevolucao' => 'integer',
+        'codprodutobarra' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuarioconferencia' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'quantidade' => 'float',
+        'valortotal' => 'float',
+        'valorunitario' => 'float'
+    ];
+
+
     // Chaves Estrangeiras
-    public function UsuarioAlteracao()
+    public function Negocio()
     {
-        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
-    }
-
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-    public function UsuarioConferencia()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
+        return $this->belongsTo(Negocio::class, 'codnegocio', 'codnegocio');
     }
 
     public function NegocioProdutoBarraDevolucao()
     {
-        return $this->belongsTo(NegocioProdutoBarra::class, 'codnegocioprodutobarradevolucao', 'codnegocioprodutobarradevolucao');
+        return $this->belongsTo(NegocioProdutoBarra::class, 'codnegocioprodutobarradevolucao', 'codnegocioprodutobarra');
     }
 
     public function ProdutoBarra()
@@ -49,14 +69,46 @@ class NegocioProdutoBarra extends MGModel
         return $this->belongsTo(ProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
-    public function Negocio()
+    public function UsuarioAlteracao()
     {
-        return $this->belongsTo(Negocio::class, 'codnegocio', 'codnegocio');
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
     }
 
+    public function UsuarioConferencia()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
     // Tabelas Filhas
+    public function y()
+    {
+        return $this->hasMany(CupomFiscalProdutoBarra::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
+    }
+
+    public function EstoqueMovimentoS()
+    {
+        return $this->hasMany(EstoqueMovimento::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
+    }
+
+    public function NegocioProdutoBarraDevolucaoS()
+    {
+        return $this->hasMany(NegocioProdutoBarra::class, 'codnegocioprodutobarradevolucao', 'codnegocioprodutobarra');
+    }
+
     public function NegocioProdutoBarraPedidoItemS()
     {
         return $this->hasMany(NegocioProdutoBarraPedidoItem::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
     }
+
+    public function NotaFiscalProdutoBarraS()
+    {
+        return $this->hasMany(NotaFiscalProdutoBarra::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
+    }
+
 }

@@ -18,8 +18,10 @@ class EtiquetaResource extends Resource
         $preco = $this->Produto->preco;
         $unidademedidasigla = $this->Produto->UnidadeMedida->sigla;
         $produto = $this->Produto->produto;
+        $quantidadeembalagem = 1;
         if (!empty($this->codprodutoembalagem)) {
             $preco = $this->ProdutoEmbalagem->preco??$preco * $this->ProdutoEmbalagem->quantidade;
+            $quantidadeembalagem = (double) $this->ProdutoEmbalagem->quantidade;
             $unidademedidasigla = $this->ProdutoEmbalagem->UnidadeMedida->sigla;
             $produto .= ' C/' . (int) $this->ProdutoEmbalagem->quantidade;
         }
@@ -35,6 +37,8 @@ class EtiquetaResource extends Resource
             'preco' => (double) $preco,
             'unidademedidasigla' => $unidademedidasigla,
             'imagem' => $imagem,
+            'quantidadeembalagem' => $quantidadeembalagem,
+            'quantidadeetiqueta' => $this->quantidadeetiqueta??1,
         ];
         return $ret;
     }

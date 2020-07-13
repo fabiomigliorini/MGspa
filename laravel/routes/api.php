@@ -84,6 +84,10 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Etiquetas
         Route::get('etiqueta/barras', '\Mg\Etiqueta\EtiquetaController@barras');
+        Route::get('etiqueta/impressoras', '\Mg\Etiqueta\EtiquetaController@impressoras');
+        Route::get('etiqueta/negocio', '\Mg\Etiqueta\EtiquetaController@negocio');
+        Route::get('etiqueta/periodo', '\Mg\Etiqueta\EtiquetaController@periodo');
+        Route::post('etiqueta/imprimir', '\Mg\Etiqueta\EtiquetaController@imprimir');
 
         // Boletos
         Route::get('boleto/retorno-pendente', '\Mg\Boleto\BoletoController@retornoPendente');

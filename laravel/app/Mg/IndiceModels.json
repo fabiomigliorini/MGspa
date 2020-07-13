@@ -1226,5 +1226,240 @@
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/NcmTributacao.php",
         "belongsTo": [],
         "hasMany": []
+    },
+    "tblnegocioprodutobarra": {
+        "tabela": "tblnegocioprodutobarra",
+        "campocodigo": "codnegocioprodutobarra",
+        "namespace": "Mg\\Negocio",
+        "classe": "NegocioProdutoBarra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioProdutoBarra.php",
+        "belongsTo": {
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codnegocioprodutobarradevolucao": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarradevolucao",
+                "metodo": "NegocioProdutoBarraDevolucao"
+            },
+            "codprodutobarra": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuarioconferencia": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioconferencia",
+                "metodo": "UsuarioConferencia"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcupomfiscalprodutobarra.codnegocioprodutobarra": {
+                "tabela": "tblcupomfiscalprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "y"
+            },
+            "tblestoquemovimento.codnegocioprodutobarra": {
+                "tabela": "tblestoquemovimento",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "EstoqueMovimentoS"
+            },
+            "tblnegocioprodutobarra.codnegocioprodutobarradevolucao": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarradevolucao",
+                "metodo": "NegocioProdutoBarraDevolucaoS"
+            },
+            "tblnegocioprodutobarrapedidoitem.codnegocioprodutobarra": {
+                "tabela": "tblnegocioprodutobarrapedidoitem",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NegocioProdutoBarraPedidoItemS"
+            },
+            "tblnotafiscalprodutobarra.codnegocioprodutobarra": {
+                "tabela": "tblnotafiscalprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NotaFiscalProdutoBarraS"
+            }
+        }
+    },
+    "tblprodutobarra": {
+        "tabela": "tblprodutobarra",
+        "campocodigo": "codprodutobarra",
+        "namespace": "Mg\\Produto",
+        "classe": "ProdutoBarra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/ProdutoBarra.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblcupomfiscalprodutobarra": {
+        "tabela": "tblcupomfiscalprodutobarra",
+        "campocodigo": "codcupomfiscalprodutobarra",
+        "namespace": "Mg\\CupomFiscal",
+        "classe": "CupomFiscalProdutoBarra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/CupomFiscal\/CupomFiscalProdutoBarra.php",
+        "belongsTo": {
+            "codcupomfiscal": {
+                "tabela": "tblcupomfiscal",
+                "coluna": "codcupomfiscal",
+                "metodo": "CupomFiscal"
+            },
+            "codnegocioprodutobarra": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NegocioProdutoBarra"
+            },
+            "codprodutobarra": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblestoquemovimento": {
+        "tabela": "tblestoquemovimento",
+        "campocodigo": "codestoquemovimento",
+        "namespace": "Mg\\Estoque",
+        "classe": "EstoqueMovimento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Estoque\/EstoqueMovimento.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnegocioprodutobarrapedidoitem": {
+        "tabela": "tblnegocioprodutobarrapedidoitem",
+        "campocodigo": "codnegocioprodutobarrapedidoitem",
+        "namespace": "Mg\\Negocio",
+        "classe": "NegocioProdutoBarraPedidoItem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioProdutoBarraPedidoItem.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblcupomfiscal": {
+        "tabela": "tblcupomfiscal",
+        "campocodigo": "codcupomfiscal",
+        "namespace": "Mg\\CupomFiscal",
+        "classe": "CupomFiscal",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/CupomFiscal\/CupomFiscal.php",
+        "belongsTo": {
+            "codecf": {
+                "tabela": "tblecf",
+                "coluna": "codecf",
+                "metodo": "Ecf"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcupomfiscalprodutobarra.codcupomfiscal": {
+                "tabela": "tblcupomfiscalprodutobarra",
+                "coluna": "codcupomfiscal",
+                "metodo": "CupomFiscalProdutoBarraS"
+            }
+        }
+    },
+    "tblecf": {
+        "tabela": "tblecf",
+        "campocodigo": "codecf",
+        "namespace": "Mg\\CupomFiscal",
+        "classe": "Ecf",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/CupomFiscal\/Ecf.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuario": {
+                "tabela": "tblusuario",
+                "coluna": "codusuario",
+                "metodo": "Usuario"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcupomfiscal.codecf": {
+                "tabela": "tblcupomfiscal",
+                "coluna": "codecf",
+                "metodo": "CupomFiscalS"
+            },
+            "tblecfreducaoz.codecf": {
+                "tabela": "tblecfreducaoz",
+                "coluna": "codecf",
+                "metodo": "EcfReducaoZS"
+            },
+            "tblusuario.codecf": {
+                "tabela": "tblusuario",
+                "coluna": "codecf",
+                "metodo": "UsuarioS"
+            }
+        }
+    },
+    "tblecfreducaoz": {
+        "tabela": "tblecfreducaoz",
+        "campocodigo": "codecfreducaoz",
+        "namespace": "Mg\\EcfReducaoZ",
+        "classe": "EcfReducaoZ",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/EcfReducaoZ\/EcfReducaoZ.php",
+        "belongsTo": {
+            "codecf": {
+                "tabela": "tblecf",
+                "coluna": "codecf",
+                "metodo": "Ecf"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }

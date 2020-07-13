@@ -4,7 +4,7 @@ namespace Mg\Produto;
 
 class Barras
 {
-    public static function calculaDigitoGtin($barras)
+    public static function calculaDigitoGtin($barras): int
     {
         //preenche com zeros a esquerda
         $codigo = "000000000000000000" . $barras;
@@ -31,7 +31,7 @@ class Barras
         return $digito;
     }
 
-    public static function validarEan13($barras)
+    public static function validarEan13($barras): bool
     {
         //calcula comprimento string
         $compr = strlen($barras);
@@ -55,7 +55,7 @@ class Barras
         }
     }
 
-    public static function validarCode128C($barras)
+    public static function validarCode128C($barras): bool
     {
         //calcula comprimento string
         $compr = strlen($barras);
@@ -74,7 +74,7 @@ class Barras
     }
 
 
-    public static function validarEan8($barras)
+    public static function validarEan8($barras): bool
     {
         //calcula comprimento string
         $compr = strlen($barras);
@@ -98,7 +98,7 @@ class Barras
         }
     }
 
-    public static function validar($barras, $validarPrefixoGS1 = false)
+    public static function validar($barras, $validarPrefixoGS1 = false): bool
     {
         //calcula comprimento string
         $compr = strlen($barras);
@@ -139,7 +139,7 @@ class Barras
     /**
      * Valida prefixos do GS1 Conforme tabela receita federal
      */
-    public static function validarPrefixoGS1 ($barras)
+    public static function validarPrefixoGS1 ($barras): bool
     {
         $barras = str_pad($barras, 14, '0', STR_PAD_LEFT);
         $inicio = substr($barras, 0, 6);
