@@ -239,12 +239,9 @@ export default {
     return {
       prompt: false,
       barras: null,
-      impressora: 'argox',
+      impressora: null,
       impressoras: [],
-      modelo: {
-        value: 'gondola',
-        label: 'Grande para Gondola'
-      },
+      modelo: null,
       modelos: [
         {
           value: '3colunas',
