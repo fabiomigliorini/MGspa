@@ -78,7 +78,7 @@
                 max="99999999"
                 v-model="codnegocio"
                 ref="codnegocio"
-                label="#Negócio"
+                label="Negócio"
                 error-message="Negócio não localizado!"
                 :error="!isNegocioValido"
                 >

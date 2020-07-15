@@ -132,7 +132,7 @@ class EtiquetaService
         }
 
         // carrega template da etiqueta
-        $template = file_get_contents(base_path("app/Mg/Etiqueta/modelos/{$modelo}.txt"));
+        $template = file_get_contents(base_path("app/Mg/Etiqueta/modelos/{$modelo}.prn"));
 
         // percorre array das linhas gerando um arquivo texto com todas etiquetas
         $arquivo = tempnam(sys_get_temp_dir(), "MGEtiqueta");
