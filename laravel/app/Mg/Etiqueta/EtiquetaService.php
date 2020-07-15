@@ -8,6 +8,8 @@ use Carbon\Carbon;
 use Mg\Produto\ProdutoBarra;
 use Mg\Produto\Barras;
 
+use Mg\Utils\MaskService;
+
 class EtiquetaService
 {
     public static function impressoras()
@@ -52,6 +54,12 @@ class EtiquetaService
                 $tamanhoDescricao = 28;
                 break;
 
+            case '4colunas':
+            case '4colunas_sempreco':
+                $colunas = 4;
+                $tamanhoDescricao = 0;
+                break;
+
             default:
                 $colunas = 1;
                 $tamanhoDescricao = 45;
@@ -79,7 +87,7 @@ class EtiquetaService
                     $linhas[$linha][$coluna]['Preco'] =
                         number_format($pb->ProdutoEmbalagem->preco??($pb->Produto->preco*$pb->ProdutoEmbalagem->quantidade), 2, ',', '.');
                 }
-                if (strlen($linhas[$linha][$coluna]['Preco']) < 6) {
+                if (strlen($linhas[$linha][$coluna]['Preco']) < 6 && $modelo != '4colunas') {
                     $linhas[$linha][$coluna]['Preco'] = str_pad($linhas[$linha][$coluna]['Preco'], 6, ' ', STR_PAD_LEFT);
                 }
                 $linhas[$linha][$coluna]['Preco'] = str_replace(' ', '  ', $linhas[$linha][$coluna]['Preco']);
@@ -92,7 +100,7 @@ class EtiquetaService
                 // o42 - Code93 - nao le codigo "100182-8" no leitor metrologic - nao utilizar
                 // a42 - Code3 of 9
                 $linhas[$linha][$coluna]['Barras'] = $pb->barras;
-                $linhas[$linha][$coluna]['NumeroBarras'] = $pb->barras;
+                $linhas[$linha][$coluna]['NumeroBarras'] = MaskService::ean($pb->barras);
 
                 if (Barras::validarEan13($pb->barras)) {
                     $linhas[$linha][$coluna]['ModeloBarras'] = 'f42';

@@ -207,7 +207,7 @@
                 :options="impressoras"
                 label="Impressora"
                 outlined
-                error-message="Informe aa Impressora!"
+                error-message="Informe a Impressora!"
                 :error="!impressora"
                 />
               <!-- <q-input dense v-model="address" autofocus @keyup.enter="prompt = false" /> -->
@@ -244,12 +244,8 @@ export default {
       modelo: null,
       modelos: [
         {
-          value: '3colunas',
-          label: 'Pequena com 3 Colunas por linha'
-        },
-        {
-          value: '3colunas_sempreco',
-          label: 'Pequena com 3 Colunas por linha - Sem Preço'
+          value: 'gondola',
+          label: 'Grande para Gondola'
         },
         {
           value: '2colunas',
@@ -260,8 +256,20 @@ export default {
           label: 'Média com 2 Colunas por linha - Sem Preço'
         },
         {
-          value: 'gondola',
-          label: 'Grande para Gondola'
+          value: '3colunas',
+          label: 'Pequena com 3 Colunas por linha'
+        },
+        {
+          value: '3colunas_sempreco',
+          label: 'Pequena com 3 Colunas por linha - Sem Preço'
+        },
+        {
+          value: '4colunas',
+          label: 'Mini com 4 Colunas por linha'
+        },
+        {
+          value: '4colunas_sempreco',
+          label: 'Mini com 4 Colunas por linha - Sem Preço'
         },
       ],
       isBarrasValido: true,
