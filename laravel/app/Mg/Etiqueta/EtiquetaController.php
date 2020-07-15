@@ -11,7 +11,6 @@ use Mg\Negocio\Negocio;
 
 class EtiquetaController extends MgController
 {
-
     public function barras(Request $request)
     {
         $request->validate([
@@ -64,5 +63,4 @@ class EtiquetaController extends MgController
         ]);
         return EtiquetaService::imprimir($request->impressora, $request->modelo, $request->etiquetas);
     }
-
 }

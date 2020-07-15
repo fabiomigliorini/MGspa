@@ -170,7 +170,7 @@ class EtiquetaService
         ];
     }
 
-    public static function buscarProdutoBarraComPrecoAlterado (Carbon $datainicial, Carbon $datafinal)
+    public static function buscarProdutoBarraComPrecoAlterado(Carbon $datainicial, Carbon $datafinal)
     {
         $sql = '
             select distinct t.codproduto, t.codprodutoembalagem, p.produto, pe.quantidade
