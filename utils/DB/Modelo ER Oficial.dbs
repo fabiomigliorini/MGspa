@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="PostgreSQL" id="Project4820597" template="Default" database="PostgreSQL" >
+<project name="PostgreSQL" id="Project4820597" database="PostgreSQL" >
 	<schema name="mgsis" catalogname="mgsis" >
 		<table name="migrations" >
 			<column name="migration" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
@@ -13,7 +13,9 @@
 			</index>
 		</table>
 		<table name="tblauditoria" >
-			<column name="codauditoria" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codauditoria" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblauditoria_codauditoria_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tabela" type="varchar" length="120" decimal="0" jt="12" mandatory="y" />
 			<column name="data" type="timestamp" length="29" decimal="6" jt="93" mandatory="y" >
 				<defo>clock_timestamp()</defo>
@@ -30,7 +32,9 @@
 			</index>
 		</table>
 		<table name="tblauditoriaexcecao" >
-			<column name="codauditoriaexcecao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codauditoriaexcecao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblauditoriaexcecao_codauditoriaexcecao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tabela" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="campo" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<index name="tblauditoriaexcecao_pkey" unique="PRIMARY_KEY" >
@@ -40,7 +44,7 @@
 		<table name="tblauditoriatransmissao" >
 			<column name="codauditoria" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codbaseremota" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="transmitida" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="transmitida" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="resultado" type="text" length="2147483647" decimal="0" jt="12" />
@@ -105,7 +109,9 @@
 			</fk>
 		</table>
 		<table name="tblbanco" >
-			<column name="codbanco" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codbanco" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblbanco_codbanco_seq&#039;::regclass)</defo>
+			</column>
 			<column name="banco" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="3" decimal="0" jt="12" />
 			<column name="numerobanco" type="bigint" length="19" decimal="0" jt="-5" />
@@ -125,7 +131,9 @@
 			</fk>
 		</table>
 		<table name="tblbaseremota" >
-			<column name="codbaseremota" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codbaseremota" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblbaseremota_codbaseremota_seq&#039;::regclass)</defo>
+			</column>
 			<column name="baseremota" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="conexao" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="inicioreplicacao" type="timestamp" length="29" decimal="6" jt="93" mandatory="y" >
@@ -146,7 +154,9 @@
 			</fk>
 		</table>
 		<table name="tblbit" >
-			<column name="codbit" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codbit" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblbit_codbit_seq&#039;::regclass)</defo>
+			</column>
 			<column name="numero" type="integer" jt="4" mandatory="y" />
 			<column name="ncm" type="varchar" length="8" jt="12" />
 			<column name="descricao" type="text" jt="12" mandatory="y" />
@@ -158,7 +168,9 @@
 			</index>
 		</table>
 		<table name="tblboletomotivoocorrencia" >
-			<column name="codboletomotivoocorrencia" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codboletomotivoocorrencia" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblboletomotivoocorrencia_codboletomotivoocorrencia_seq&#039;::regclass)</defo>
+			</column>
 			<column name="motivo" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="codboletotipoocorrencia" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -182,7 +194,9 @@
 			</fk>
 		</table>
 		<table name="tblboletoretorno" >
-			<column name="codboletoretorno" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codboletoretorno" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblboletoretorno_codboletoretorno_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codboletomotivoocorrencia" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="dataretorno" type="date" length="13" decimal="0" jt="91" mandatory="y" />
@@ -232,7 +246,9 @@
 			</fk>
 		</table>
 		<table name="tblboletotipoocorrencia" >
-			<column name="codboletotipoocorrencia" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codboletotipoocorrencia" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblboletotipoocorrencia_codboletotipoocorrencia_seq&#039;::regclass)</defo>
+			</column>
 			<column name="ocorrencia" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -249,7 +265,9 @@
 			</fk>
 		</table>
 		<table name="tblcaixamercadoria" >
-			<column name="codcaixamercadoria" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcaixamercadoria" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcaixamercadoria_codcaixamercadoria_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codcaixamercadoriamodelo" type="bigint" jt="-5" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -280,7 +298,9 @@
 			</fk>
 		</table>
 		<table name="tblcaixamercadoriamodelo" >
-			<column name="codcaixamercadoriamodelo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcaixamercadoriamodelo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcaixamercadoriamodelo_codcaixamercadoriamodelo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="caixamercadoriamodelo" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -305,7 +325,9 @@
 			</fk>
 		</table>
 		<table name="tblcargo" >
-			<column name="codcargo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcargo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcargo_codcargo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="cargo" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="inativo" type="timestamp" jt="93" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -329,7 +351,9 @@
 			</fk>
 		</table>
 		<table name="tblcertidaoemissor" >
-			<column name="codcertidaoemissor" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcertidaoemissor" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcertidaoemissor_codcertidaoemissor_seq&#039;::regclass)</defo>
+			</column>
 			<column name="certidaoemissor" type="varchar" length="30" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -344,7 +368,9 @@
 			</index>
 		</table>
 		<table name="tblcertidaotipo" >
-			<column name="codcertidaotipo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcertidaotipo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcertidaotipo_codcertidaotipo_seq1&#039;::regclass)</defo>
+			</column>
 			<column name="certidaotipo" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="sigla" type="varchar" length="10" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -363,7 +389,9 @@
 			</index>
 		</table>
 		<table name="tblcest" >
-			<column name="codcest" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcest" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcest_codcest_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codncm" type="bigint" jt="-5" />
 			<column name="cest" type="varchar" length="7" decimal="0" jt="12" mandatory="y" />
 			<column name="ncm" type="varchar" length="8" decimal="0" jt="12" />
@@ -407,7 +435,9 @@
 			</fk>
 		</table>
 		<table name="tblcfop" >
-			<column name="codcfop" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcfop" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcfop_codcfop_seq&#039;::regclass)</defo>
+			</column>
 			<column name="cfop" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -424,7 +454,9 @@
 			</fk>
 		</table>
 		<table name="tblcheque" >
-			<column name="codcheque" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcheque" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcheque_codcheque_seq&#039;::regclass)</defo>
+			</column>
 			<column name="cmc7" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="codbanco" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="agencia" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
@@ -470,6 +502,9 @@
 			<index name="idx_tblcheque_indstatus" unique="NORMAL" >
 				<column name="indstatus" />
 			</index>
+			<constraint name="ck_0" >
+				<string>CHECK ((indstatus = ANY (ARRAY[1, 2, 3, 4, 5])))</string>
+			</constraint>
 			<fk name="tblcheque_codbanco_fkey" to_schema="mgsis.mgsis" to_table="tblbanco" >
 				<fk_column name="codbanco" pk="codbanco" />
 			</fk>
@@ -487,7 +522,9 @@
 			</fk>
 		</table>
 		<table name="tblchequedevolucao" >
-			<column name="codchequedevolucao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codchequedevolucao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblchequedevolucao_codchequedevolucao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codchequerepassecheque" type="bigint" jt="-5" mandatory="y" />
 			<column name="codchequemotivodevolucao" type="bigint" jt="-5" mandatory="y" />
 			<column name="data" type="date" jt="91" mandatory="y" />
@@ -525,7 +562,9 @@
 			</fk>
 		</table>
 		<table name="tblchequeemitente" >
-			<column name="codchequeemitente" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codchequeemitente" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblchequeemitente_codchequeemitente_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codcheque" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" mandatory="y" />
 			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
@@ -554,7 +593,9 @@
 			</fk>
 		</table>
 		<table name="tblchequemotivodevolucao" >
-			<column name="codchequemotivodevolucao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codchequemotivodevolucao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblchequemotivodevolucao_codchequemotivodevolucao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="numero" type="smallint" jt="5" mandatory="y" />
 			<column name="chequemotivodevolucao" type="varchar" length="200" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -581,7 +622,9 @@
 			</fk>
 		</table>
 		<table name="tblchequerepasse" >
-			<column name="codchequerepasse" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codchequerepasse" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblchequerepasse_codchequerepasse_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codportador" type="bigint" jt="-5" mandatory="y" />
 			<column name="data" type="date" jt="91" mandatory="y" />
 			<column name="observacoes" type="varchar" jt="12" >
@@ -615,7 +658,9 @@
 			</fk>
 		</table>
 		<table name="tblchequerepassecheque" >
-			<column name="codchequerepassecheque" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codchequerepassecheque" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblchequerepassecheque_codchequerepassecheque_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codcheque" type="bigint" jt="-5" mandatory="y" />
 			<column name="codchequerepasse" type="bigint" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -652,7 +697,9 @@
 			</fk>
 		</table>
 		<table name="tblcidade" >
-			<column name="codcidade" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcidade" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcidade_codcidade_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestado" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="cidade" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="3" decimal="0" jt="12" />
@@ -678,7 +725,9 @@
 			</fk>
 		</table>
 		<table name="tblcobranca" >
-			<column name="codcobranca" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcobranca" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcobranca_codcobranca_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codcheque" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="agendamento" type="date" length="13" decimal="0" jt="91" mandatory="y" />
@@ -688,7 +737,7 @@
 			<column name="observacoes" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="debitoacerto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="creditoacerto" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="acertado" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="acertado" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -724,10 +773,12 @@
 			</fk>
 		</table>
 		<table name="tblcobrancahistorico" >
-			<column name="codcobrancahistorico" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcobrancahistorico" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcobrancahistorico_codcobrancahistorico_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="historico" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
-			<column name="emailautomatico" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="emailautomatico" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -751,7 +802,9 @@
 			</fk>
 		</table>
 		<table name="tblcobrancahistoricotitulo" >
-			<column name="codcobrancahistoricotitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcobrancahistoricotitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcobrancahistoricotitulo_codcobrancahistoricotitulo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codcobrancahistorico" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -792,10 +845,12 @@
 			</fk>
 		</table>
 		<table name="tblcontacontabil" >
-			<column name="codcontacontabil" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcontacontabil" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcontacontabil_codcontacontabil_seq&#039;::regclass)</defo>
+			</column>
 			<column name="contacontabil" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="numero" type="varchar" length="15" decimal="0" jt="12" />
-			<column name="inativo" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="inativo" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -813,11 +868,13 @@
 			</fk>
 		</table>
 		<table name="tblcupomfiscal" >
-			<column name="codcupomfiscal" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcupomfiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcupomfiscal_codcupomfiscal_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codecf" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="datamovimento" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="numero" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="cancelado" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="cancelado" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="descontoacrescimo" type="numeric" length="14" decimal="2" jt="2" />
@@ -849,7 +906,9 @@
 			</fk>
 		</table>
 		<table name="tblcupomfiscalprodutobarra" >
-			<column name="codcupomfiscalprodutobarra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codcupomfiscalprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblcupomfiscalprodutobarra_codcupomfiscalprodutobarra_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codcupomfiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="aliquotaicms" type="varchar" length="10" decimal="0" jt="12" />
@@ -889,7 +948,9 @@
 			</fk>
 		</table>
 		<table name="tbldecreto271" >
-			<column name="coddecreto271" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="coddecreto271" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbldecreto271_coddecreto271_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tabela" type="smallint" length="5" decimal="0" jt="5" />
 			<column name="item" type="varchar" length="10" decimal="0" jt="12" />
 			<column name="cest" type="varchar" length="7" decimal="0" jt="12" />
@@ -902,7 +963,9 @@
 			</index>
 		</table>
 		<table name="tbldistribuicaodfe" >
-			<column name="coddistribuicaodfe" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="coddistribuicaodfe" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbldistribuicaodfe_coddistribuicaodfe_seq&#039;::regclass)</defo>
+			</column>
 			<column name="nfechave" type="varchar" decimal="0" jt="12" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
@@ -938,7 +1001,9 @@
 			</fk>
 		</table>
 		<table name="tblecf" >
-			<column name="codecf" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codecf" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblecf_codecf_seq&#039;::regclass)</defo>
+			</column>
 			<column name="ecf" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="acbrmonitorcaminho" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="acbrmonitorcaminhorede" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
@@ -975,7 +1040,9 @@
 			</fk>
 		</table>
 		<table name="tblecfreducaoz" >
-			<column name="codecfreducaoz" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codecfreducaoz" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblecfreducaoz_codecfreducaoz_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codecf" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="movimento" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="observacoes" type="varchar" length="500" decimal="0" jt="12" />
@@ -1004,7 +1071,9 @@
 			</fk>
 		</table>
 		<table name="tblempresa" >
-			<column name="codempresa" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codempresa" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblempresa_codempresa_seq&#039;::regclass)</defo>
+			</column>
 			<column name="empresa" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -1026,7 +1095,9 @@
 			</fk>
 		</table>
 		<table name="tblestado" >
-			<column name="codestado" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestado" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestado_codestado_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpais" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="estado" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="2" decimal="0" jt="12" />
@@ -1055,7 +1126,9 @@
 			</fk>
 		</table>
 		<table name="tblestadocivil" >
-			<column name="codestadocivil" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestadocivil" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestadocivil_codestadocivil_seq&#039;::regclass)</defo>
+			</column>
 			<column name="estadocivil" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -1096,7 +1169,9 @@
 			<column name="icmsorigemvalortotal" type="numeric" length="14" decimal="2" jt="2" />
 		</table>
 		<table name="tblestoquelocal" >
-			<column name="codestoquelocal" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquelocal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquelocal_codestoquelocal_seq&#039;::regclass)</defo>
+			</column>
 			<column name="sigla" type="varchar" length="3" jt="12" mandatory="y" />
 			<column name="estoquelocal" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
@@ -1105,10 +1180,10 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="deposito" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="deposito" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="controlaestoque" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="controlaestoque" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
 			<index name="pk_tblestoquelocal" unique="PRIMARY_KEY" >
@@ -1137,7 +1212,9 @@
 			</fk>
 		</table>
 		<table name="tblestoquelocalprodutovariacao" >
-			<column name="codestoquelocalprodutovariacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquelocalprodutovariacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquelocalproduto_codestoquelocalproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestoquelocal" type="bigint" jt="-5" mandatory="y" />
 			<column name="codprodutovariacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="estoqueminimo" type="bigint" length="19" decimal="0" jt="-5" />
@@ -1193,7 +1270,9 @@
 			</fk>
 		</table>
 		<table name="tblestoquelocalprodutovariacaovenda" >
-			<column name="codestoquelocalprodutovariacaovenda" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquelocalprodutovariacaovenda" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquelocalprodutovariaca_codestoquelocalprodutovariaca_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestoquelocalprodutovariacao" type="bigint" jt="-5" mandatory="y" />
 			<column name="mes" type="date" jt="91" mandatory="y" />
 			<column name="quantidade" type="numeric" length="14" decimal="2" jt="2" />
@@ -1202,7 +1281,7 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="ignorar" type="bool" jt="-7" mandatory="y" >
+			<column name="ignorar" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="vendadiaquantidade" type="float8" length="17" decimal="17" jt="6" />
@@ -1243,7 +1322,9 @@
 			</fk>
 		</table>
 		<table name="tblestoquemes" >
-			<column name="codestoquemes" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquemes" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquemes_codestoquemes_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestoquesaldo" type="bigint" jt="-5" mandatory="y" />
 			<column name="mes" type="date" jt="91" mandatory="y" />
 			<column name="inicialquantidade" type="numeric" length="14" decimal="3" jt="2" />
@@ -1286,11 +1367,13 @@
 			</fk>
 		</table>
 		<table name="tblestoquemovimento" >
-			<column name="codestoquemovimento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquemovimento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquemovimento_codestoquemovimento_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestoquemovimentoorigem" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codestoquemes" type="bigint" jt="-5" mandatory="y" />
 			<column name="codestoquemovimentotipo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="manual" type="bool" jt="-7" mandatory="y" >
+			<column name="manual" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="data" type="timestamp" length="29" decimal="6" jt="93" mandatory="y" />
@@ -1356,7 +1439,9 @@
 			</fk>
 		</table>
 		<table name="tblestoquemovimentotipo" >
-			<column name="codestoquemovimentotipo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquemovimentotipo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquemovimentotipo_codestoquemovimentotipo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestoquemovimentotipoorigem" type="bigint" jt="-5" />
 			<column name="sigla" type="varchar" length="3" jt="12" mandatory="y" />
 			<column name="descricao" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
@@ -1365,13 +1450,13 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="manual" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="manual" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="atualizaultimaentrada" type="bool" jt="-7" mandatory="y" >
+			<column name="atualizaultimaentrada" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="transferencia" type="bool" length="1" decimal="0" jt="-7" >
+			<column name="transferencia" type="boolean" length="1" decimal="0" jt="-7" >
 				<defo>false</defo>
 			</column>
 			<index name="tblestoquemovimentotipo_pkey" unique="PRIMARY_KEY" >
@@ -1394,9 +1479,11 @@
 			</fk>
 		</table>
 		<table name="tblestoquesaldo" >
-			<column name="codestoquesaldo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquesaldo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquesaldo_codestoquesaldo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestoquelocalprodutovariacao" type="bigint" jt="-5" mandatory="y" />
-			<column name="fiscal" type="bool" length="1" decimal="0" jt="-7" mandatory="y" />
+			<column name="fiscal" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" />
 			<column name="ultimaconferencia" type="timestamp" jt="93" />
 			<column name="saldoquantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="saldovalor" type="numeric" length="14" decimal="2" jt="2" />
@@ -1433,7 +1520,9 @@
 			</fk>
 		</table>
 		<table name="tblestoquesaldoconferencia" >
-			<column name="codestoquesaldoconferencia" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codestoquesaldoconferencia" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblestoquesaldoconferencia_codestoquesaldoconferencia_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codestoquesaldo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="quantidadesistema" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="quantidadeinformada" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
@@ -1469,7 +1558,9 @@
 			</fk>
 		</table>
 		<table name="tblfamiliaproduto" >
-			<column name="codfamiliaproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codfamiliaproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblfamiliaproduto_codfamiliaproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codsecaoproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="familiaproduto" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="codimagem" type="bigint" length="19" decimal="0" jt="-5" />
@@ -1508,7 +1599,9 @@
 			</fk>
 		</table>
 		<table name="tblferiado" >
-			<column name="codferiado" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codferiado" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblferiado_codferiado_seq&#039;::regclass)</defo>
+			</column>
 			<column name="data" type="date" jt="91" mandatory="y" />
 			<column name="feriado" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -1533,11 +1626,13 @@
 			</fk>
 		</table>
 		<table name="tblfilial" >
-			<column name="codfilial" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblfilial_codfilial_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codempresa" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="filial" type="varchar" length="20" decimal="0" jt="12" mandatory="y" />
-			<column name="emitenfe" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="emitenfe" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="acbrnfemonitorcaminho" type="varchar" length="100" decimal="0" jt="12" />
@@ -1597,27 +1692,29 @@
 			</fk>
 		</table>
 		<table name="tblformapagamento" >
-			<column name="codformapagamento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codformapagamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblformapagamento_codformapagamento_seq&#039;::regclass)</defo>
+			</column>
 			<column name="formapagamento" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
-			<column name="boleto" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="boleto" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="fechamento" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="fechamento" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="notafiscal" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="notafiscal" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="parcelas" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="diasentreparcelas" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="avista" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="avista" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="formapagamentoecf" type="varchar" length="5" decimal="0" jt="12" />
-			<column name="entrega" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="entrega" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="valecompra" type="bool" jt="-7" mandatory="y" >
+			<column name="valecompra" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 				<comment><![CDATA[Habilitado utilização em vale compra]]></comment>
 			</column>
@@ -1636,7 +1733,9 @@
 			</fk>
 		</table>
 		<table name="tblgrupocliente" >
-			<column name="codgrupocliente" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codgrupocliente" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblgrupocliente_codgrupocliente_seq&#039;::regclass)</defo>
+			</column>
 			<column name="grupocliente" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -1653,7 +1752,9 @@
 			</fk>
 		</table>
 		<table name="tblgrupoeconomico" >
-			<column name="codgrupoeconomico" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codgrupoeconomico" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblgrupoeconomico_codgrupoeconomico_seq&#039;::regclass)</defo>
+			</column>
 			<column name="grupoeconomico" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -1678,7 +1779,9 @@
 			</fk>
 		</table>
 		<table name="tblgrupoproduto" >
-			<column name="codgrupoproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codgrupoproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblgrupoproduto_codgrupoproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codfamiliaproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="grupoproduto" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="codimagem" type="bigint" jt="-5" />
@@ -1711,7 +1814,9 @@
 			</fk>
 		</table>
 		<table name="tblgrupousuario" >
-			<column name="codgrupousuario" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codgrupousuario" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblgrupousuario_codgrupousuario_seq&#039;::regclass)</defo>
+			</column>
 			<column name="grupousuario" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="observacoes" type="varchar" length="600" jt="12" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -1739,7 +1844,9 @@
 			</fk>
 		</table>
 		<table name="tblgrupousuariopermissao" >
-			<column name="codgrupousuariopermissao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codgrupousuariopermissao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblgrupousuariopermissao_codgrupousuariopermissao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codgrupousuario" type="bigint" jt="-5" mandatory="y" />
 			<column name="codpermissao" type="bigint" jt="-5" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -1779,7 +1886,9 @@
 			</fk>
 		</table>
 		<table name="tblgrupousuariousuario" >
-			<column name="codgrupousuariousuario" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codgrupousuariousuario" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblgrupousuariousuario_codgrupousuariousuario_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codgrupousuario" type="bigint" jt="-5" mandatory="y" />
 			<column name="codusuario" type="bigint" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
@@ -1827,7 +1936,9 @@
 			</fk>
 		</table>
 		<table name="tblibptax" >
-			<column name="codibptax" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codibptax" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblibptax_codibptax_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codncm" type="bigint" jt="-5" />
 			<column name="codigo" type="varchar" length="10" jt="12" mandatory="y" />
 			<column name="ex" type="varchar" length="3" decimal="0" jt="12" />
@@ -1880,7 +1991,9 @@
 			</fk>
 		</table>
 		<table name="tblibptcache" >
-			<column name="codibptcache" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codibptcache" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblibptcache_codibptcache_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
 			<column name="codestado" type="bigint" jt="-5" mandatory="y" />
 			<column name="ncm" type="varchar" length="20" jt="12" mandatory="y" />
@@ -1935,7 +2048,9 @@
 			</fk>
 		</table>
 		<table name="tblimagem" >
-			<column name="codimagem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codimagem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblimagem_codimagem_seq&#039;::regclass)</defo>
+			</column>
 			<column name="observacoes" type="varchar" length="200" jt="12" />
 			<column name="inativo" type="timestamp" jt="93" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -1960,7 +2075,9 @@
 			</fk>
 		</table>
 		<table name="tbljobs" >
-			<column name="id" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbljobs_id_seq&#039;::regclass)</defo>
+			</column>
 			<column name="queue" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="payload" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
 			<column name="attempts" type="smallint" length="5" decimal="0" jt="5" mandatory="y" />
@@ -1978,7 +2095,9 @@
 			</index>
 		</table>
 		<table name="tbljobsfailed" >
-			<column name="id" type="serial" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="id" type="integer" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>nextval(&#039;tbljobsfailed_id_seq&#039;::regclass)</defo>
+			</column>
 			<column name="connection" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
 			<column name="queue" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
 			<column name="payload" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
@@ -1990,7 +2109,9 @@
 			</index>
 		</table>
 		<table name="tbljobsfailedspa" >
-			<column name="id" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbljobsfailedspa_id_seq&#039;::regclass)</defo>
+			</column>
 			<column name="connection" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
 			<column name="queue" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
 			<column name="payload" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
@@ -2006,7 +2127,9 @@
 			</index>
 		</table>
 		<table name="tbljobsspa" >
-			<column name="id" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="id" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbljobsspa_id_seq&#039;::regclass)</defo>
+			</column>
 			<column name="queue" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="payload" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
 			<column name="attempts" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
@@ -2021,7 +2144,9 @@
 			</index>
 		</table>
 		<table name="tblliquidacaotitulo" >
-			<column name="codliquidacaotitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codliquidacaotitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblliquidacaotitulo_codliquidacaotitulo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="transacao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="sistema" type="timestamp" length="29" decimal="6" jt="93" mandatory="y" >
 				<defo>now()</defo>
@@ -2064,10 +2189,12 @@
 			</fk>
 		</table>
 		<table name="tblmarca" >
-			<column name="codmarca" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codmarca" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblmarca_codmarca_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codimagem" type="bigint" jt="-5" />
 			<column name="marca" type="varchar" length="50" decimal="0" jt="12" />
-			<column name="site" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="site" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="inativo" type="timestamp" jt="93" />
@@ -2079,7 +2206,7 @@
 				<defo>30</defo>
 			</column>
 			<column name="codopencart" type="bigint" jt="-5" />
-			<column name="controlada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="controlada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -2094,7 +2221,7 @@
 			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
 			<column name="vendaultimocalculo" type="timestamp" jt="93" />
-			<column name="abcignorar" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="abcignorar" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="abcposicao" type="bigint" jt="-5" />
@@ -2128,7 +2255,9 @@
 			</fk>
 		</table>
 		<table name="tblmenu" >
-			<column name="codmenu" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codmenu" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblmenu_codmenu_seq&#039;::regclass)</defo>
+			</column>
 			<column name="nome" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="form" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -2146,7 +2275,9 @@
 			</fk>
 		</table>
 		<table name="tblmeta" >
-			<column name="codmeta" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codmeta" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblmeta_codmeta_seq&#039;::regclass)</defo>
+			</column>
 			<column name="periodoinicial" type="timestamp" jt="93" mandatory="y" />
 			<column name="periodofinal" type="timestamp" jt="93" mandatory="y" />
 			<column name="premioprimeirovendedorfilial" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
@@ -2176,7 +2307,9 @@
 			</fk>
 		</table>
 		<table name="tblmetafilial" >
-			<column name="codmetafilial" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codmetafilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblmetafilial_codmetafilial_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codmeta" type="bigint" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
 			<column name="valormetafilial" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
@@ -2215,7 +2348,9 @@
 			</fk>
 		</table>
 		<table name="tblmetafilialpessoa" >
-			<column name="codmetafilialpessoa" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codmetafilialpessoa" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblmetafilialpessoa_codmetafilialpessoa_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codmetafilial" type="bigint" jt="-5" mandatory="y" />
 			<column name="codpessoa" type="bigint" jt="-5" mandatory="y" />
 			<column name="codcargo" type="bigint" jt="-5" mandatory="y" />
@@ -2258,7 +2393,9 @@
 			</fk>
 		</table>
 		<table name="tblmovimentotitulo" >
-			<column name="codmovimentotitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codmovimentotitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblmovimentotitulo_codmovimentotitulo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codtipomovimentotitulo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" />
@@ -2335,11 +2472,13 @@
 			</fk>
 		</table>
 		<table name="tblnaturezaoperacao" >
-			<column name="codnaturezaoperacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnaturezaoperacao_codnaturezaoperacao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="naturezaoperacao" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codestoquemovimentotipo" type="bigint" jt="-5" mandatory="y" />
-			<column name="emitida" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="emitida" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
@@ -2354,22 +2493,22 @@
 			<column name="finnfe" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
 				<defo>1</defo>
 			</column>
-			<column name="ibpt" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="ibpt" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="estoque" type="bool" jt="-7" mandatory="y" >
+			<column name="estoque" type="boolean" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
-			<column name="financeiro" type="bool" jt="-7" mandatory="y" >
+			<column name="financeiro" type="boolean" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
-			<column name="compra" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="compra" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="venda" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="venda" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="vendadevolucao" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="vendadevolucao" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<index name="tblnaturezaoperacao_pkey" unique="PRIMARY_KEY" >
@@ -2407,7 +2546,9 @@
 			</fk>
 		</table>
 		<table name="tblncm" >
-			<column name="codncm" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codncm" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblncm_codncm_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codncmpai" type="bigint" jt="-5" />
 			<column name="ncm" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
 			<column name="descricao" type="varchar" length="1500" decimal="0" jt="12" mandatory="y" />
@@ -2417,7 +2558,7 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="inativo" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codncm2020" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="bit" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="bit" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<index name="tblncm_pkey" unique="PRIMARY_KEY" >
@@ -2440,7 +2581,9 @@
 			</fk>
 		</table>
 		<table name="tblncm2020" >
-			<column name="codncm2020" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codncm2020" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblncm2020_codncm2020_seq&#039;::regclass)</defo>
+			</column>
 			<column name="ncm" type="varchar" length="15" decimal="0" jt="12" />
 			<column name="datainicio" type="date" length="13" decimal="0" jt="91" />
 			<column name="datafim" type="date" length="13" decimal="0" jt="91" />
@@ -2451,7 +2594,9 @@
 			</index>
 		</table>
 		<table name="tblncmtributacao" generator_rows="100" >
-			<column name="codncmtributacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codncmtributacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblncmtributacao_codncmtributacao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="ncm" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
 			<column name="ncmexcecao" type="varchar" length="200" jt="12" />
 			<column name="codtributacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -2470,7 +2615,9 @@
 			</fk>
 		</table>
 		<table name="tblnegocio" >
-			<column name="codnegocio" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnegocio" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnegocio_codnegocio_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codestoquelocal" type="bigint" jt="-5" mandatory="y" />
@@ -2481,7 +2628,7 @@
 			<column name="observacoes" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="codusuario" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="entrega" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="entrega" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="acertoentrega" type="timestamp" length="29" decimal="6" jt="93" />
@@ -2597,7 +2744,9 @@
 			</fk>
 		</table>
 		<table name="tblnegociocaixamercadoria" >
-			<column name="codnegociocaixamercadoria" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnegociocaixamercadoria" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnegociocaixamercadoria_codnegociocaixamercadoria_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnegocio" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codcaixamercadoria" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -2641,7 +2790,9 @@
 			</fk>
 		</table>
 		<table name="tblnegocioformapagamento" >
-			<column name="codnegocioformapagamento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnegocioformapagamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnegocioformapagamento_codnegocioformapagamento_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnegocio" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codformapagamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="valorpagamento" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
@@ -2672,7 +2823,9 @@
 			</fk>
 		</table>
 		<table name="tblnegocioprodutobarra" >
-			<column name="codnegocioprodutobarra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnegocioprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnegocioprodutobarra_codnegocioprodutobarra_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnegocio" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
 			<column name="valorunitario" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
@@ -2720,7 +2873,9 @@
 			</fk>
 		</table>
 		<table name="tblnegocioprodutobarrapedidoitem" >
-			<column name="codnegocioprodutobarrapedidoitem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnegocioprodutobarrapedidoitem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnegocioprodutobarrapedidoi_codnegocioprodutobarrapedidoi_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpedidoitem" type="bigint" jt="-5" mandatory="y" />
 			<column name="codnegocioprodutobarra" type="bigint" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -2756,7 +2911,9 @@
 			</fk>
 		</table>
 		<table name="tblnegociostatus" >
-			<column name="codnegociostatus" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnegociostatus" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnegociostatus_codnegociostatus_seq&#039;::regclass)</defo>
+			</column>
 			<column name="negociostatus" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -2773,7 +2930,9 @@
 			</fk>
 		</table>
 		<table name="tblnfeterceiro" >
-			<column name="codnfeterceiro" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnfeterceiro" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnfeterceiro_codnfeterceiro_seq&#039;::regclass)</defo>
+			</column>
 			<column name="nsu" type="varchar" length="20" decimal="0" jt="12" />
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
@@ -2807,7 +2966,7 @@
 			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="ignorada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="ignorada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="codnegocio" type="bigint" jt="-5" />
@@ -2843,7 +3002,9 @@
 			</fk>
 		</table>
 		<table name="tblnfeterceiroduplicata" >
-			<column name="codnfeterceiroduplicata" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnfeterceiroduplicata" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnfeterceiroduplicata_codnfeterceiroduplicata_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnfeterceiro" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="ndup" type="varchar" length="50" decimal="0" jt="12" />
@@ -2870,7 +3031,9 @@
 			</fk>
 		</table>
 		<table name="tblnfeterceiroitem" >
-			<column name="codnfeterceiroitem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnfeterceiroitem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnfeterceiroitem_codnfeterceiroitem_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnfeterceiro" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="nitem" type="smallint" length="5" decimal="0" jt="5" />
 			<column name="cprod" type="varchar" length="30" decimal="0" jt="12" />
@@ -2909,7 +3072,7 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="modalidadeicmsgarantido" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="modalidadeicmsgarantido" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="cest" type="varchar" length="10" decimal="0" jt="12" />
@@ -2930,13 +3093,15 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscal" >
-			<column name="codnotafiscal" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscal_codnotafiscal_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="emitida" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="emitida" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfeimpressa" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="nfeimpressa" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="serie" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
@@ -3015,6 +3180,12 @@
 			<index name="idx_tblnotafiscal" unique="NORMAL" >
 				<column name="codestoquelocal" />
 			</index>
+			<index name="tblnotafiscal_exportacaodomino_idx" unique="NORMAL" >
+				<column name="codfilial" />
+				<column name="saida" />
+				<column name="modelo" />
+				<column name="codoperacao" />
+			</index>
 			<fk name="tblnotafiscal_codfilial_fkey" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -3046,9 +3217,9 @@
 		<table name="tblnotafiscalbackup" >
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="emitida" type="bool" length="1" decimal="0" jt="-7" />
+			<column name="emitida" type="boolean" length="1" decimal="0" jt="-7" />
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfeimpressa" type="bool" length="1" decimal="0" jt="-7" />
+			<column name="nfeimpressa" type="boolean" length="1" decimal="0" jt="-7" />
 			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
 			<column name="emissao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3101,7 +3272,9 @@
 			</index>
 		</table>
 		<table name="tblnotafiscalcartacorrecao" >
-			<column name="codnotafiscalcartacorrecao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalcartacorrecao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalcartacorrecao_codnotafiscalcartacorrecao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="lote" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
 			<column name="data" type="timestamp" length="29" decimal="6" jt="93" mandatory="y" >
@@ -3130,7 +3303,7 @@
 		</table>
 		<table name="tblnotafiscalcreditoicmssimples" >
 			<column name="codnotafiscalcreditoicmssimples" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<type_extra>GENERATED BY DEFAULT AS IDENTITY</type_extra>
+				<defo>nextval(&#039;tblnotafiscalcreditoicmssimpl_codnotafiscalcreditoicmssimpl_seq&#039;::regclass)</defo>
 			</column>
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="percentual" type="numeric" length="5" decimal="2" jt="2" />
@@ -3146,7 +3319,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalduplicatas" >
-			<column name="codnotafiscalduplicatas" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalduplicatas" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalduplicatas_codnotafiscalduplicatas_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="fatura" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="vencimento" type="date" length="13" decimal="0" jt="91" mandatory="y" />
@@ -3172,7 +3347,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalprodutobarra" >
-			<column name="codnotafiscalprodutobarra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalprodutobarra_codnotafiscalprodutobarra_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codnotafiscalprodutobarraorigem" type="bigint" jt="-5" />
 			<column name="codprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -3214,7 +3391,7 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="pedido" type="varchar" length="15" jt="12" />
 			<column name="pedidoitem" type="integer" jt="4" />
-			<column name="certidaosefazmt" type="bool" length="1" decimal="0" jt="-7" >
+			<column name="certidaosefazmt" type="boolean" length="1" decimal="0" jt="-7" >
 				<defo>false</defo>
 			</column>
 			<column name="fethabkg" type="numeric" length="14" decimal="6" jt="2" />
@@ -3272,7 +3449,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalreferenciada" >
-			<column name="codnotafiscalreferenciada" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalreferenciada" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalreferenciada_codnotafiscalreferenciada_seq&#039;::regclass)</defo>
+			</column>
 			<column name="nfechave" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3293,7 +3472,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceiro" >
-			<column name="codnotafiscalterceiro" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalterceiro" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiro_codnotafiscalterceiro_seq&#039;::regclass)</defo>
+			</column>
 			<column name="coddistribuicaodfe" type="bigint" jt="-5" />
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnegocio" type="bigint" jt="-5" />
@@ -3308,7 +3489,7 @@
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
 			<column name="emissao" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="ignorada" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="ignorada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" />
@@ -3330,10 +3511,12 @@
 			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="download" type="bool" length="1" decimal="0" jt="-7" >
+			<column name="download" type="boolean" length="1" decimal="0" jt="-7" >
 				<defo>false</defo>
 			</column>
-			<column name="protocolo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="protocolo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiro_protocolo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tipo" type="smallint" jt="5" >
 				<comment><![CDATA[tpNF]]></comment>
 			</column>
@@ -3384,7 +3567,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceiroduplicata" >
-			<column name="codnotafiscalterceiroduplicata" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalterceiroduplicata" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiroduplicat_codnotafiscalterceiroduplicat_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnotafiscalterceiro" type="bigint" jt="-5" mandatory="y" />
 			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="ndup" type="varchar" length="50" decimal="0" jt="12" />
@@ -3414,8 +3599,12 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceiroevento" >
-			<column name="codnotafiscalterceiroevento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
-			<column name="coddistribuicaodfe" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalterceiroevento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiroevento_codnotafiscalterceiroevento_seq&#039;::regclass)</defo>
+			</column>
+			<column name="coddistribuicaodfe" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiroevento_coddistribuicaodfe_seq&#039;::regclass)</defo>
+			</column>
 			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="codorgao" type="smallint" jt="5" >
 				<comment><![CDATA[cOrgao]]></comment>
@@ -3423,11 +3612,15 @@
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="nfechave" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="dhevento" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="tpevento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="tpevento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiroevento_tpevento_seq&#039;::regclass)</defo>
+			</column>
 			<column name="nseqevento" type="smallint" jt="5" mandatory="y" />
 			<column name="evento" type="varchar" length="60" jt="12" mandatory="y" />
 			<column name="dhrecebimento" type="timestamp" jt="93" />
-			<column name="protocolo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="protocolo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiroevento_protocolo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3446,7 +3639,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceirogrupo" >
-			<column name="codnotafiscalterceirogrupo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalterceirogrupo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceirogrupo_codnotafiscalterceirogrupo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnotafiscalterceiro" type="bigint" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -3463,7 +3658,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceiroitem" >
-			<column name="codnotafiscalterceiroitem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalterceiroitem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiroitem_codnotafiscalterceiroitem_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnotafiscalterceirogrupo" type="bigint" jt="-5" mandatory="y" />
 			<column name="numero" type="smallint" jt="5" mandatory="y" />
 			<column name="referencia" type="varchar" length="30" jt="12" />
@@ -3484,7 +3681,7 @@
 			<column name="valordesconto" type="numeric" length="15" decimal="2" jt="2" />
 			<column name="valoroutras" type="numeric" length="15" decimal="2" jt="2" />
 			<column name="valortotal" type="numeric" length="15" decimal="2" jt="2" />
-			<column name="compoetotal" type="bool" jt="-7" mandatory="y" >
+			<column name="compoetotal" type="boolean" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
 			<column name="csosn" type="smallint" jt="5" />
@@ -3553,7 +3750,7 @@
 				<comment><![CDATA[vCOFINS]]></comment>
 			</column>
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="conferido" type="bool" jt="-7" >
+			<column name="conferido" type="boolean" jt="-7" >
 				<defo>false</defo>
 			</column>
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -3570,7 +3767,9 @@
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceiroprodutobarra" >
-			<column name="codnotafiscalterceiroprodutobarra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codnotafiscalterceiroprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblnotafiscalterceiroprodutob_codnotafiscalterceiroprodutob_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codnotafiscalterceirogrupo" type="bigint" jt="-5" mandatory="y" />
 			<column name="codprodutobarra" type="bigint" jt="-5" />
 			<column name="margem" type="numeric" length="6" decimal="2" jt="2" />
@@ -3600,7 +3799,9 @@
 			</fk>
 		</table>
 		<table name="tbloperacao" >
-			<column name="codoperacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbloperacao_codoperacao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="operacao" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -3617,7 +3818,9 @@
 			</fk>
 		</table>
 		<table name="tblpais" >
-			<column name="codpais" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codpais" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblpais_codpais_seq&#039;::regclass)</defo>
+			</column>
 			<column name="pais" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="sigla" type="varchar" length="2" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3637,7 +3840,9 @@
 			</fk>
 		</table>
 		<table name="tblparametrosgerais" >
-			<column name="codparametrosgerais" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codparametrosgerais" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblparametrosgerais_codparametrosgerais_seq&#039;::regclass)</defo>
+			</column>
 			<column name="transacaoinicial" type="date" length="13" decimal="0" jt="91" />
 			<column name="transacaofinal" type="date" length="13" decimal="0" jt="91" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3655,7 +3860,9 @@
 			</fk>
 		</table>
 		<table name="tblpedido" >
-			<column name="codpedido" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codpedido" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblpedido_codpedido_seq&#039;::regclass)</defo>
+			</column>
 			<column name="indtipo" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
 				<comment><![CDATA[10 - Compra
 20 - Transferencia
@@ -3709,7 +3916,9 @@
 			</fk>
 		</table>
 		<table name="tblpedidoitem" >
-			<column name="codpedidoitem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codpedidoitem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblpedidoitem_codpedidoitem_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpedido" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codprodutovariacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
@@ -3751,7 +3960,9 @@
 			</fk>
 		</table>
 		<table name="tblpermissao" >
-			<column name="codpermissao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codpermissao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblpermissao_codpermissao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="permissao" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="observacoes" type="varchar" length="600" jt="12" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -3778,23 +3989,25 @@
 			</fk>
 		</table>
 		<table name="tblpessoa" >
-			<column name="codpessoa" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblpessoa_codpessoa_seq&#039;::regclass)</defo>
+			</column>
 			<column name="pessoa" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="fantasia" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="inativo" type="date" length="13" decimal="0" jt="91" />
-			<column name="cliente" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="cliente" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="fornecedor" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="fornecedor" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="fisica" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="fisica" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="codsexo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
-			<column name="consumidor" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="consumidor" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
 			<column name="contato" type="varchar" length="100" decimal="0" jt="12" />
@@ -3820,12 +4033,12 @@
 			<column name="emailcobranca" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="codformapagamento" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="credito" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="creditobloqueado" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="creditobloqueado" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
 			<column name="observacoes" type="varchar" length="255" decimal="0" jt="12" />
 			<column name="mensagemvenda" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="vendedor" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="vendedor" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="rg" type="varchar" length="30" decimal="0" jt="12" />
@@ -3869,6 +4082,9 @@
 			<index name="idx_tblpessoa_codgrupoeconomico" unique="NORMAL" >
 				<column name="codgrupoeconomico" />
 			</index>
+			<constraint name="tblpessoa_notafiscal_check" >
+				<string>CHECK ((notafiscal = ANY (ARRAY[0, 1, 2, 9])))</string>
+			</constraint>
 			<fk name="tblpessoa_codcidade_fkey" to_schema="mgsis.mgsis" to_table="tblcidade" >
 				<fk_column name="codcidade" pk="codcidade" />
 			</fk>
@@ -3898,7 +4114,9 @@
 			</fk>
 		</table>
 		<table name="tblpessoacertidao" >
-			<column name="codpessoacertidao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codpessoacertidao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblpessoacertidao_codpessoacertidao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpessoa" type="bigint" jt="-5" mandatory="y" />
 			<column name="codcertidaoemissor" type="bigint" jt="-5" mandatory="y" />
 			<column name="codcertidaotipo" type="bigint" jt="-5" mandatory="y" />
@@ -3924,14 +4142,16 @@
 			</fk>
 		</table>
 		<table name="tblportador" >
-			<column name="codportador" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblportador_codportador_seq&#039;::regclass)</defo>
+			</column>
 			<column name="portador" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="codbanco" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="agencia" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="agenciadigito" type="integer" length="10" decimal="0" jt="4" />
 			<column name="conta" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="contadigito" type="integer" length="10" decimal="0" jt="4" />
-			<column name="emiteboleto" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="emiteboleto" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" />
@@ -3967,7 +4187,9 @@
 			</fk>
 		</table>
 		<table name="tblportaria195" >
-			<column name="codportaria195" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codportaria195" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblportaria195_codportaria195_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tabela" type="varchar" length="5" decimal="0" jt="12" />
 			<column name="item" type="varchar" length="6" decimal="0" jt="12" />
 			<column name="cest" type="varchar" length="9" decimal="0" jt="12" />
@@ -3981,7 +4203,9 @@
 			</index>
 		</table>
 		<table name="tblprancheta" >
-			<column name="codprancheta" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codprancheta" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblprancheta_codprancheta_seq&#039;::regclass)</defo>
+			</column>
 			<column name="prancheta" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4006,7 +4230,9 @@
 			</fk>
 		</table>
 		<table name="tblpranchetaproduto" >
-			<column name="codpranchetaproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codpranchetaproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblpranchetaproduto_codpranchetaproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codprancheta" type="bigint" jt="-5" mandatory="y" />
 			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4048,10 +4274,12 @@
 			</fk>
 		</table>
 		<table name="tblprefixogs1" >
-			<column name="codprefixogs1" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codprefixogs1" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblprefixogs1_codprefixogs1_seq&#039;::regclass)</defo>
+			</column>
 			<column name="inicial" type="varchar" length="3" jt="12" mandatory="y" />
 			<column name="final" type="varchar" length="3" jt="12" mandatory="y" />
-			<column name="especial" type="bool" jt="-7" mandatory="y" >
+			<column name="especial" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="descricao" type="varchar" length="200" jt="12" />
@@ -4080,7 +4308,9 @@
 			</fk>
 		</table>
 		<table name="tblproduto" >
-			<column name="codproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblproduto_codproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="produto" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="codncm" type="bigint" jt="-5" />
 			<column name="codcest" type="bigint" jt="-5" />
@@ -4089,7 +4319,7 @@
 			<column name="codsubgrupoproduto" type="bigint" jt="-5" mandatory="y" />
 			<column name="codmarca" type="bigint" jt="-5" mandatory="y" />
 			<column name="preco" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="importado" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="importado" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="codtributacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -4097,7 +4327,7 @@
 			<column name="codtipoproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo>0</defo>
 			</column>
-			<column name="site" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="site" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="descricaosite" type="text" length="1024" jt="12" />
@@ -4112,13 +4342,13 @@
 			<column name="altura" type="numeric" length="8" decimal="2" jt="2" />
 			<column name="largura" type="numeric" length="8" decimal="2" jt="2" />
 			<column name="profundidade" type="numeric" length="8" decimal="2" jt="2" />
-			<column name="vendesite" type="bool" jt="-7" mandatory="y" >
+			<column name="vendesite" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="metakeywordsite" type="varchar" length="200" jt="12" />
 			<column name="metadescriptionsite" type="text" jt="12" />
 			<column name="codprodutoimagem" type="bigint" jt="-5" />
-			<column name="abcignorar" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="abcignorar" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="abcposicao" type="bigint" jt="-5" />
@@ -4159,6 +4389,9 @@
 			<index name="idx_tblproduto_0" unique="NORMAL" >
 				<column name="codprodutoimagem" />
 			</index>
+			<constraint name="tblproduto_abc_check" >
+				<string>CHECK ((abc = ANY (ARRAY[&#039;A&#039;::bpchar, &#039;B&#039;::bpchar, &#039;C&#039;::bpchar])))</string>
+			</constraint>
 			<fk name="tblproduto_codmarca_fkey" to_schema="mgsis.mgsis" to_table="tblmarca" >
 				<fk_column name="codmarca" pk="codmarca" />
 			</fk>
@@ -4191,7 +4424,9 @@
 			</fk>
 		</table>
 		<table name="tblprodutobarra" >
-			<column name="codprodutobarra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblprodutobarra_codprodutobarra_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codprodutovariacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="variacao" type="varchar" length="100" decimal="0" jt="12" />
@@ -4238,7 +4473,9 @@
 			</fk>
 		</table>
 		<table name="tblprodutoembalagem" >
-			<column name="codprodutoembalagem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codprodutoembalagem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblprodutoembalagem_codprodutoembalagem_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codproduto" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codunidademedida" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="quantidade" type="numeric" length="20" decimal="10" jt="2" />
@@ -4251,7 +4488,7 @@
 			<column name="altura" type="numeric" length="8" decimal="2" jt="2" />
 			<column name="largura" type="numeric" length="8" decimal="2" jt="2" />
 			<column name="profundidade" type="numeric" length="8" decimal="2" jt="2" />
-			<column name="vendesite" type="bool" jt="-7" mandatory="y" >
+			<column name="vendesite" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="descricaosite" type="text" length="1024" jt="12" />
@@ -4286,7 +4523,9 @@
 			</fk>
 		</table>
 		<table name="tblprodutohistoricopreco" >
-			<column name="codprodutohistoricopreco" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codprodutohistoricopreco" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblprodutohistoricopreco_codprodutohistoricopreco_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codprodutoembalagem" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="precoantigo" type="numeric" length="14" decimal="2" jt="2" />
@@ -4312,7 +4551,9 @@
 			</fk>
 		</table>
 		<table name="tblprodutoimagem" >
-			<column name="codprodutoimagem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codprodutoimagem" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblprodutoimagem_codprodutoimagem_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
 			<column name="codimagem" type="bigint" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4351,7 +4592,9 @@
 			</fk>
 		</table>
 		<table name="tblprodutovariacao" >
-			<column name="codprodutovariacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codprodutovariacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblprodutovariacao_codprodutovariacao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
 			<column name="variacao" type="varchar" length="100" jt="12" />
 			<column name="referencia" type="varchar" length="50" decimal="0" jt="12" />
@@ -4419,7 +4662,9 @@
 			</fk>
 		</table>
 		<table name="tblregistrospc" >
-			<column name="codregistrospc" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codregistrospc" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblregistrospc_codregistrospc_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="inclusao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="baixa" type="date" length="13" decimal="0" jt="91" />
@@ -4443,7 +4688,9 @@
 			</fk>
 		</table>
 		<table name="tblregulamentoicmsstmt" >
-			<column name="codregulamentoicmsstmt" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codregulamentoicmsstmt" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblregulamentoicmsstmt_codregulamentoicmsstmt_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codncm" type="bigint" jt="-5" />
 			<column name="subitem" type="varchar" length="10" jt="12" mandatory="y" />
 			<column name="descricao" type="varchar" length="600" jt="12" mandatory="y" />
@@ -4481,7 +4728,9 @@
 			</fk>
 		</table>
 		<table name="tblsecaoproduto" >
-			<column name="codsecaoproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codsecaoproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblsecaoproduto_codsecaoproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="secaoproduto" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="codimagem" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="inativo" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4513,7 +4762,9 @@
 			</fk>
 		</table>
 		<table name="tblsexo" >
-			<column name="codsexo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codsexo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblsexo_codsexo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="sexo" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -4530,7 +4781,9 @@
 			</fk>
 		</table>
 		<table name="tblsubgrupoproduto" >
-			<column name="codsubgrupoproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codsubgrupoproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblsubgrupoproduto_codsubgrupoproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codgrupoproduto" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="subgrupoproduto" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="inativo" type="timestamp" jt="93" />
@@ -4563,27 +4816,29 @@
 			</fk>
 		</table>
 		<table name="tbltipomovimentotitulo" >
-			<column name="codtipomovimentotitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codtipomovimentotitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbltipomovimentotitulo_codtipomovimentotitulo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tipomovimentotitulo" type="varchar" length="20" decimal="0" jt="12" />
-			<column name="implantacao" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="implantacao" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="ajuste" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="ajuste" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="armotizacao" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="armotizacao" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="juros" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="juros" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="desconto" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="desconto" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="pagamento" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="pagamento" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="estorno" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="estorno" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="observacao" type="varchar" length="255" decimal="0" jt="12" />
@@ -4602,13 +4857,15 @@
 			</fk>
 		</table>
 		<table name="tbltipoproduto" >
-			<column name="codtipoproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codtipoproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbltipoproduto_codtipoproduto_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tipoproduto" type="varchar" length="30" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="estoque" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="estoque" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<index name="tbltipoproduto_pkey" unique="PRIMARY_KEY" >
@@ -4622,20 +4879,22 @@
 			</fk>
 		</table>
 		<table name="tbltipotitulo" >
-			<column name="codtipotitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codtipotitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbltipotitulo_codtipotitulo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tipotitulo" type="varchar" length="20" decimal="0" jt="12" />
-			<column name="pagar" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="pagar" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="receber" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="receber" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="observacoes" type="varchar" length="255" decimal="0" jt="12" />
 			<column name="codtipomovimentotitulo" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="debito" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="debito" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="credito" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="credito" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4659,7 +4918,9 @@
 			</fk>
 		</table>
 		<table name="tbltitulo" >
-			<column name="codtitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbltitulo_codtitulo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codtipotitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" />
@@ -4674,11 +4935,11 @@
 			<column name="vencimentooriginal" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="debito" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="credito" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="gerencial" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="gerencial" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="observacao" type="varchar" length="255" decimal="0" jt="12" />
-			<column name="boleto" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="boleto" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="nossonumero" type="varchar" length="20" decimal="0" jt="12" />
@@ -4760,7 +5021,9 @@
 			</fk>
 		</table>
 		<table name="tbltituloagrupamento" >
-			<column name="codtituloagrupamento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codtituloagrupamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbltituloagrupamento_codtituloagrupamento_seq&#039;::regclass)</defo>
+			</column>
 			<column name="emissao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="cancelamento" type="date" length="13" decimal="0" jt="91" />
 			<column name="observacao" type="varchar" length="200" decimal="0" jt="12" />
@@ -4785,7 +5048,9 @@
 			</fk>
 		</table>
 		<table name="tbltributacao" >
-			<column name="codtributacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codtributacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbltributacao_codtributacao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="tributacao" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="aliquotaicmsecf" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4803,12 +5068,14 @@
 			</fk>
 		</table>
 		<table name="tbltributacaonaturezaoperacao" >
-			<column name="codtributacaonaturezaoperacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codtributacaonaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbltributacaonaturezaoperacao_codtributacaonaturezaoperacao_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codtributacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codtipoproduto" type="bigint" jt="-5" mandatory="y" />
 			<column name="codestado" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="bit" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="bit" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="ncm" type="varchar" length="10" jt="12" />
@@ -4830,17 +5097,17 @@
 			<column name="acumuladordominiovista" type="integer" length="10" decimal="0" jt="4" />
 			<column name="acumuladordominioprazo" type="integer" length="10" decimal="0" jt="4" />
 			<column name="historicodominio" type="varchar" length="512" decimal="0" jt="12" />
-			<column name="movimentacaofisica" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="movimentacaofisica" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
-			<column name="movimentacaocontabil" type="bool" length="1" decimal="0" jt="-7" mandatory="y" >
+			<column name="movimentacaocontabil" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>true</defo>
 			</column>
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="certidaosefazmt" type="bool" jt="-7" mandatory="y" >
+			<column name="certidaosefazmt" type="boolean" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
 			<column name="fethabkg" type="numeric" length="14" decimal="6" jt="2" />
@@ -4908,8 +5175,8 @@
 			<column name="acumuladordominiovista" type="integer" length="10" decimal="0" jt="4" />
 			<column name="acumuladordominioprazo" type="integer" length="10" decimal="0" jt="4" />
 			<column name="historicodominio" type="varchar" length="512" decimal="0" jt="12" />
-			<column name="movimentacaofisica" type="bool" length="1" decimal="0" jt="-7" />
-			<column name="movimentacaocontabil" type="bool" length="1" decimal="0" jt="-7" />
+			<column name="movimentacaofisica" type="boolean" length="1" decimal="0" jt="-7" />
+			<column name="movimentacaocontabil" type="boolean" length="1" decimal="0" jt="-7" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4925,7 +5192,7 @@
 			<column name="cofinspercentual" type="numeric" length="4" decimal="2" jt="2" />
 			<column name="csllpercentual" type="numeric" length="4" decimal="2" jt="2" />
 			<column name="irpjpercentual" type="numeric" length="4" decimal="2" jt="2" />
-			<column name="certidaosefazmt" type="bool" length="1" decimal="0" jt="-7" />
+			<column name="certidaosefazmt" type="boolean" length="1" decimal="0" jt="-7" />
 			<column name="fethabkg" type="numeric" length="14" decimal="6" jt="2" />
 			<column name="iagrokg" type="numeric" length="14" decimal="6" jt="2" />
 			<column name="funruralpercentual" type="numeric" length="8" decimal="5" jt="2" />
@@ -4933,7 +5200,9 @@
 			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
 		</table>
 		<table name="tblunidademedida" >
-			<column name="codunidademedida" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codunidademedida" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblunidademedida_codunidademedida_seq&#039;::regclass)</defo>
+			</column>
 			<column name="unidademedida" type="varchar" length="15" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="3" decimal="0" jt="12" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -4952,7 +5221,9 @@
 			</fk>
 		</table>
 		<table name="tblusuario" >
-			<column name="codusuario" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codusuario" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblusuario_codusuario_seq&#039;::regclass)</defo>
+			</column>
 			<column name="usuario" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="senha" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="codecf" type="bigint" length="19" decimal="0" jt="-5" />
@@ -5015,7 +5286,9 @@
 			</fk>
 		</table>
 		<table name="tblvalecompra" >
-			<column name="codvalecompra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codvalecompra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblvalecompra_codvalecompra_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codvalecompramodelo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
 			<column name="codpessoafavorecido" type="bigint" jt="-5" mandatory="y" />
@@ -5079,7 +5352,9 @@
 			</fk>
 		</table>
 		<table name="tblvalecompraformapagamento" >
-			<column name="codvalecompraformapagamento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codvalecompraformapagamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblvalecompraformapagamento_codvalecompraformapagamento_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codvalecompra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codformapagamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="valorpagamento" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
@@ -5116,7 +5391,9 @@
 			</fk>
 		</table>
 		<table name="tblvalecompramodelo" >
-			<column name="codvalecompramodelo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codvalecompramodelo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblvalecompramodelo_codvalecompramodelo_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codpessoafavorecido" type="bigint" jt="-5" mandatory="y" />
 			<column name="modelo" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="ano" type="integer" jt="4" />
@@ -5153,7 +5430,9 @@
 			</fk>
 		</table>
 		<table name="tblvalecompramodeloprodutobarra" >
-			<column name="codvalecompramodeloprodutobarra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codvalecompramodeloprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblvalecompramodeloprodutobarra_codvalecompraprodutobarra_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codprodutobarra" type="bigint" jt="-5" mandatory="y" />
 			<column name="codvalecompramodelo" type="bigint" jt="-5" mandatory="y" />
 			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
@@ -5192,7 +5471,9 @@
 			</fk>
 		</table>
 		<table name="tblvalecompraprodutobarra" >
-			<column name="codvalecompraprodutobarra" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="codvalecompraprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tblvalecompraprodutobarra_codvalecompraprodutobarra_seq&#039;::regclass)</defo>
+			</column>
 			<column name="codprodutobarra" type="bigint" jt="-5" mandatory="y" />
 			<column name="codvalecompra" type="bigint" jt="-5" mandatory="y" />
 			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
@@ -5231,7 +5512,7 @@
 			</fk>
 		</table>
 		<view name="vwboleto" >
-			<view_script><![CDATA[ SELECT tblbanco.numerobanco,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblbanco.numerobanco,
     tblportador.agencia,
     tblportador.agenciadigito,
     tbltitulo.nossonumero,
@@ -5282,7 +5563,7 @@
 			<column name="saldo" type="numeric" />
 			<column name="multa" type="numeric" />
 			<column name="juros" type="numeric" />
-			<column name="boleto" type="bool" />
+			<column name="boleto" type="boolean" />
 			<column name="codtitulo" type="bigint" />
 			<column name="emissao" type="date" />
 			<column name="numero" type="varchar" />
@@ -5301,12 +5582,12 @@
 			<column name="convenio" type="numeric" />
 			<column name="codportador" type="bigint" />
 			<column name="carteira" type="integer" />
-			<column name="fisica" type="bool" />
+			<column name="fisica" type="boolean" />
 			<column name="cnpj" type="numeric" />
 			<column name="remessa" type="bigint" />
 		</view>
 		<view name="vwboletoretorno" >
-			<view_script><![CDATA[ SELECT tblboletoretorno.codboletoretorno,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblboletoretorno.codboletoretorno,
     tblboletoretorno.codboletomotivoocorrencia,
     tblboletotipoocorrencia.ocorrencia,
     tblboletomotivoocorrencia.motivo,
@@ -5358,7 +5639,7 @@
 			<column name="arquivo" type="varchar" />
 		</view>
 		<view name="vwcupomfiscal" >
-			<view_script><![CDATA[ SELECT tblcupomfiscal.codcupomfiscal,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblcupomfiscal.codcupomfiscal,
     tblcupomfiscal.codecf,
     tblecf.ecf,
     tblcupomfiscal.datamovimento,
@@ -5375,13 +5656,13 @@
 			<column name="ecf" type="varchar" />
 			<column name="datamovimento" type="date" />
 			<column name="numero" type="bigint" />
-			<column name="cancelado" type="bool" />
+			<column name="cancelado" type="boolean" />
 			<column name="valortotal" type="numeric" />
 			<column name="descontoacrescimo" type="numeric" />
 			<column name="valortotalfinal" type="numeric" />
 		</view>
 		<view name="vwcupomfiscalprodutobarra" >
-			<view_script><![CDATA[ SELECT tblcupomfiscalprodutobarra.codcupomfiscalprodutobarra,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblcupomfiscalprodutobarra.codcupomfiscalprodutobarra,
     tblcupomfiscalprodutobarra.codcupomfiscal,
     tblcupomfiscalprodutobarra.codprodutobarra,
     tblcupomfiscalprodutobarra.aliquotaicms,
@@ -5401,7 +5682,7 @@
 			<column name="codnegocio" type="bigint" />
 		</view>
 		<view name="vwcupomfiscalprodutobarratotais" >
-			<view_script><![CDATA[ SELECT tblcupomfiscalprodutobarra.codcupomfiscal,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblcupomfiscalprodutobarra.codcupomfiscal,
     sum((COALESCE(tblcupomfiscalprodutobarra.quantidade, (0)::numeric) * COALESCE(tblcupomfiscalprodutobarra.valorunitario, (0)::numeric))) AS valortotal
    FROM tblcupomfiscalprodutobarra
   GROUP BY tblcupomfiscalprodutobarra.codcupomfiscal;]]></view_script>
@@ -5409,7 +5690,7 @@
 			<column name="valortotal" type="numeric" />
 		</view>
 		<view name="vwiscolunas" >
-			<view_script><![CDATA[ SELECT c.table_catalog,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT c.table_catalog,
     c.table_schema,
     c.table_name,
     c.column_name,
@@ -5501,7 +5782,7 @@
 			<column name="is_updatable" type="&quot;yes_or_no&quot;" />
 		</view>
 		<view name="vwliquidacaotitulo" >
-			<view_script><![CDATA[ SELECT tblliquidacaotitulo.codliquidacaotitulo,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblliquidacaotitulo.codliquidacaotitulo,
     iq.codpessoa,
     tblpessoa.fantasia,
     iq.debito,
@@ -5539,7 +5820,7 @@
 			<column name="usuario" type="varchar" />
 		</view>
 		<view name="vwnegocio" >
-			<view_script><![CDATA[ SELECT tblnegocio.codnegocio,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnegocio.codnegocio,
     tblnegocio.codpessoa,
     tblpessoa.fantasia,
     tblpessoa.pessoa,
@@ -5597,7 +5878,7 @@
 			<column name="telefone2" type="varchar" />
 			<column name="telefone3" type="varchar" />
 			<column name="cnpj" type="numeric" />
-			<column name="fisica" type="bool" />
+			<column name="fisica" type="boolean" />
 			<column name="endereco" type="varchar" />
 			<column name="numero" type="varchar" />
 			<column name="complemento" type="varchar" />
@@ -5630,7 +5911,7 @@
 			<column name="valortroco" type="numeric" />
 		</view>
 		<view name="vwnegocio_listagem" >
-			<view_script><![CDATA[ SELECT tblnegocio.codnegocio,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnegocio.codnegocio,
     tblnegocio.codpessoa,
     tblpessoa.fantasia,
     tblpessoa.pessoa,
@@ -5665,7 +5946,7 @@
 			<column name="fantasia" type="varchar" />
 			<column name="pessoa" type="varchar" />
 			<column name="cnpj" type="numeric" />
-			<column name="fisica" type="bool" />
+			<column name="fisica" type="boolean" />
 			<column name="codfilial" type="bigint" />
 			<column name="filial" type="varchar" />
 			<column name="codpessoafilial" type="bigint" />
@@ -5683,7 +5964,7 @@
 			<column name="valorpagamentoaprazo" type="numeric" />
 		</view>
 		<view name="vwnegocioformapagamento" >
-			<view_script><![CDATA[ SELECT tblnegocioformapagamento.codnegocioformapagamento,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnegocioformapagamento.codnegocioformapagamento,
     tblnegocioformapagamento.codnegocio,
     tblnegocioformapagamento.valorpagamento,
     tblnegocioformapagamento.codformapagamento,
@@ -5702,16 +5983,16 @@
 			<column name="valorpagamento" type="numeric" />
 			<column name="codformapagamento" type="bigint" />
 			<column name="formapagamento" type="varchar" />
-			<column name="boleto" type="bool" />
-			<column name="fechamento" type="bool" />
-			<column name="notafiscal" type="bool" />
+			<column name="boleto" type="boolean" />
+			<column name="fechamento" type="boolean" />
+			<column name="notafiscal" type="boolean" />
 			<column name="parcelas" type="bigint" />
 			<column name="diasentreparcelas" type="bigint" />
-			<column name="avista" type="bool" />
+			<column name="avista" type="boolean" />
 			<column name="formapagamentoecf" type="varchar" />
 		</view>
 		<view name="vwnegocioformapagamentototais" >
-			<view_script><![CDATA[ SELECT tblnegocioformapagamento.codnegocio,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnegocioformapagamento.codnegocio,
     sum(
         CASE
             WHEN (COALESCE(tblformapagamento.avista, true) = true) THEN COALESCE(tblnegocioformapagamento.valorpagamento, (0)::numeric)
@@ -5732,7 +6013,7 @@
 			<column name="valorpagamentototal" type="numeric" />
 		</view>
 		<view name="vwnegocioprodutobarra" >
-			<view_script><![CDATA[ SELECT tblnegocioprodutobarra.codnegocioprodutobarra,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnegocioprodutobarra.codnegocioprodutobarra,
     tblnegocioprodutobarra.codnegocio,
     tblnegocioprodutobarra.quantidade,
     tblnegocioprodutobarra.valorunitario,
@@ -5771,7 +6052,7 @@
 			<column name="preco" type="numeric" />
 			<column name="sigla" type="varchar" />
 			<column name="quantidade_embalagem" type="numeric" />
-			<column name="importado" type="bool" />
+			<column name="importado" type="boolean" />
 			<column name="ncm" type="varchar" />
 			<column name="barras" type="varchar" />
 			<column name="variacao" type="varchar" />
@@ -5782,7 +6063,7 @@
 			<column name="aliquotaicmsecf" type="varchar" />
 		</view>
 		<view name="vwnegocioprodutobarratotais" >
-			<view_script><![CDATA[ SELECT tblnegocioprodutobarra.codnegocio,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnegocioprodutobarra.codnegocio,
     sum(tblnegocioprodutobarra.valortotal) AS valortotal
    FROM tblnegocioprodutobarra
   GROUP BY tblnegocioprodutobarra.codnegocio;]]></view_script>
@@ -5790,7 +6071,7 @@
 			<column name="valortotal" type="numeric" />
 		</view>
 		<view name="vwnotafiscal" >
-			<view_script><![CDATA[ SELECT tblnotafiscal.codnotafiscal,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnotafiscal.codnotafiscal,
     tblnaturezaoperacao.naturezaoperacao,
     tblnotafiscal.modelo,
     tblnotafiscal.serie,
@@ -5889,7 +6170,7 @@
 			<column name="cidadefilial" type="varchar" />
 			<column name="siglafilial" type="varchar" />
 			<column name="codpessoa" type="bigint" />
-			<column name="fisica" type="bool" />
+			<column name="fisica" type="boolean" />
 			<column name="cnpj" type="numeric" />
 			<column name="ie" type="varchar" />
 			<column name="pessoa" type="varchar" />
@@ -5925,12 +6206,12 @@
 			<column name="nfedatacancelamento" type="timestamp" />
 			<column name="nfeinutilizacao" type="varchar" />
 			<column name="nfedatainutilizacao" type="timestamp" />
-			<column name="emitida" type="bool" />
+			<column name="emitida" type="boolean" />
 			<column name="frete" type="smallint" />
 			<column name="volumes" type="integer" />
 		</view>
 		<view name="vwnotafiscalprodutobarra" >
-			<view_script><![CDATA[ SELECT tblnotafiscalprodutobarra.codnotafiscalprodutobarra,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnotafiscalprodutobarra.codnotafiscalprodutobarra,
     tblnotafiscalprodutobarra.codnotafiscal,
     tblnotafiscalprodutobarra.codcfop,
     vwprodutobarra.codproduto,
@@ -5985,7 +6266,7 @@
 			<column name="barras" type="varchar" />
 		</view>
 		<view name="vwnotafiscalprodutobarratotais" >
-			<view_script><![CDATA[ SELECT tblnotafiscalprodutobarra.codnotafiscal,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblnotafiscalprodutobarra.codnotafiscal,
     sum(tblnotafiscalprodutobarra.valortotal) AS valortotal,
     sum(tblnotafiscalprodutobarra.icmsbase) AS icmsbase,
     sum(tblnotafiscalprodutobarra.icmsvalor) AS icmsvalor,
@@ -6005,7 +6286,7 @@
 			<column name="icmsstvalor" type="numeric" />
 		</view>
 		<view name="vwpessoa" >
-			<view_script><![CDATA[ SELECT tblpessoa.codpessoa,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblpessoa.codpessoa,
     tblpessoa.pessoa,
     tblpessoa.fantasia,
     tblpessoa.inativo,
@@ -6038,8 +6319,8 @@
 			<column name="pessoa" type="varchar" />
 			<column name="fantasia" type="varchar" />
 			<column name="inativo" type="date" />
-			<column name="cliente" type="bool" />
-			<column name="fornecedor" type="bool" />
+			<column name="cliente" type="boolean" />
+			<column name="fornecedor" type="boolean" />
 			<column name="cnpj" type="numeric" />
 			<column name="ie" type="varchar" />
 			<column name="contato" type="varchar" />
@@ -6053,15 +6334,15 @@
 			<column name="email" type="varchar" />
 			<column name="emailcobranca" type="varchar" />
 			<column name="emailnfe" type="varchar" />
-			<column name="creditobloqueado" type="bool" />
+			<column name="creditobloqueado" type="boolean" />
 			<column name="telefone1" type="varchar" />
 			<column name="telefone2" type="varchar" />
 			<column name="telefone3" type="varchar" />
 			<column name="codcidade" type="bigint" />
-			<column name="fisica" type="bool" />
+			<column name="fisica" type="boolean" />
 		</view>
 		<view name="vwprodutobarra" >
-			<view_script><![CDATA[ SELECT tblprodutobarra.codprodutobarra,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblprodutobarra.codprodutobarra,
     tblprodutoembalagem.codprodutoembalagem,
     tblproduto.codproduto,
     tblproduto.produto,
@@ -6110,7 +6391,7 @@
 			<column name="preco" type="numeric" />
 			<column name="sigla" type="varchar" />
 			<column name="quantidade" type="numeric" />
-			<column name="importado" type="bool" />
+			<column name="importado" type="boolean" />
 			<column name="ncm" type="varchar" />
 			<column name="barras" type="varchar" />
 			<column name="variacao" type="varchar" />
@@ -6120,7 +6401,7 @@
 			<column name="codtributacao" type="bigint" />
 			<column name="tributacao" type="varchar" />
 			<column name="aliquotaicmsecf" type="varchar" />
-			<column name="site" type="bool" />
+			<column name="site" type="boolean" />
 			<column name="codsubgrupoproduto" type="bigint" />
 			<column name="subgrupoproduto" type="varchar" />
 			<column name="codgrupoproduto" type="bigint" />
@@ -6131,7 +6412,7 @@
 			<column name="secaoproduto" type="varchar" />
 		</view>
 		<view name="vwprodutotributacao" >
-			<view_script><![CDATA[ SELECT tblproduto.codproduto,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblproduto.codproduto,
     tblprodutobarra.codprodutobarra,
     tbltributacaonaturezaoperacao.codtributacaonaturezaoperacao,
     tbltributacaonaturezaoperacao.codtributacao,
@@ -6164,7 +6445,7 @@
 			<column name="codtipoproduto" type="bigint" />
 		</view>
 		<view name="vwtitulo" >
-			<view_script><![CDATA[ SELECT tbltitulo.codtitulo,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tbltitulo.codtitulo,
     tblfilial.filial,
     tbltitulo.codtipotitulo,
     tbltipotitulo.tipotitulo,
@@ -6221,7 +6502,7 @@
 			<column name="debitosaldo" type="numeric" />
 			<column name="creditosaldo" type="numeric" />
 			<column name="saldo" type="numeric" />
-			<column name="boleto" type="bool" />
+			<column name="boleto" type="boolean" />
 			<column name="nossonumero" type="varchar" />
 			<column name="emissao" type="date" />
 			<column name="transacao" type="date" />
@@ -6233,14 +6514,14 @@
 			<column name="pessoa" type="varchar" />
 			<column name="codcontacontabil" type="bigint" />
 			<column name="contacontabil" type="varchar" />
-			<column name="gerencial" type="bool" />
+			<column name="gerencial" type="boolean" />
 			<column name="codfilial" type="bigint" />
 			<column name="transacaoliquidacao" type="date" />
 			<column name="cnpj" type="numeric" />
 			<column name="codnegocioformapagamento" type="bigint" />
 			<column name="codnegocio" type="bigint" />
 			<column name="codtituloagrupamento" type="bigint" />
-			<column name="fisica" type="bool" />
+			<column name="fisica" type="boolean" />
 			<column name="pessoafilial" type="varchar" />
 			<column name="cnpjfilial" type="numeric" />
 			<column name="telefone1filial" type="varchar" />
@@ -6248,7 +6529,7 @@
 			<column name="telefone1" type="varchar" />
 		</view>
 		<view name="vwtituloagrupamento_baixados" >
-			<view_script><![CDATA[ SELECT tbltitulo.codtitulo,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tbltitulo.codtitulo,
     tbltitulo.codfilial,
     tbltitulo.codpessoa,
     tbltitulo.numero,
@@ -6276,15 +6557,15 @@
 			<column name="vencimento" type="date" />
 			<column name="debito" type="numeric" />
 			<column name="credito" type="numeric" />
-			<column name="boleto" type="bool" />
+			<column name="boleto" type="boolean" />
 			<column name="nossonumero" type="varchar" />
 			<column name="codportador" type="bigint" />
-			<column name="gerencial" type="bool" />
+			<column name="gerencial" type="boolean" />
 			<column name="codtituloagrupamento" type="bigint" />
 			<column name="filial" type="varchar" />
 		</view>
 		<materialized_view name="mvwestoque2019" >
-			<view_script><![CDATA[ SELECT p.codproduto,
+			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT p.codproduto,
     p.produto,
     p.inativo,
     p.preco,
@@ -6502,33 +6783,19 @@
 		<sequence name="tblvalecompramodelo_codvalecompramodelo_seq" options="START WITH 1" />
 		<sequence name="tblvalecompramodeloprodutobarra_codvalecompraprodutobarra_seq" options="START WITH 1" />
 		<sequence name="tblvalecompraprodutobarra_codvalecompraprodutobarra_seq" options="START WITH 1" />
-		<procedure name="connectby" id="Procedure_2424a45" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer, text)
+		<procedure name="connectby" id="Procedure_937e2d" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text$function$
+AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
 			<input_param name="$4" jt="12" type="text" />
-			<input_param name="$5" jt="4" type="int4" />
-			<input_param name="$6" jt="12" type="text" />
-			<result_param name="returnValue" jt="1111" type="record" />
-		</procedure>
-		<procedure name="connectby" id="Procedure_157a779" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer)
- RETURNS SETOF record
- LANGUAGE c
- STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text$function$
-;]]></string>
-			<input_param name="$1" jt="12" type="text" />
-			<input_param name="$2" jt="12" type="text" />
-			<input_param name="$3" jt="12" type="text" />
-			<input_param name="$4" jt="12" type="text" />
-			<input_param name="$5" jt="4" type="int4" />
+			<input_param name="$5" jt="12" type="text" />
+			<input_param name="$6" jt="4" type="int4" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="connectby" id="Procedure_f6015c" isSystem="false" params_known="y" >
@@ -6547,19 +6814,33 @@ AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 			<input_param name="$7" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="connectby" id="Procedure_937e2d" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer)
+		<procedure name="connectby" id="Procedure_157a779" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text_serial$function$
+AS '$libdir/tablefunc', $function$connectby_text$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
 			<input_param name="$4" jt="12" type="text" />
-			<input_param name="$5" jt="12" type="text" />
-			<input_param name="$6" jt="4" type="int4" />
+			<input_param name="$5" jt="4" type="int4" />
+			<result_param name="returnValue" jt="1111" type="record" />
+		</procedure>
+		<procedure name="connectby" id="Procedure_2424a45" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer, text)
+ RETURNS SETOF record
+ LANGUAGE c
+ STABLE STRICT
+AS '$libdir/tablefunc', $function$connectby_text$function$
+;]]></string>
+			<input_param name="$1" jt="12" type="text" />
+			<input_param name="$2" jt="12" type="text" />
+			<input_param name="$3" jt="12" type="text" />
+			<input_param name="$4" jt="12" type="text" />
+			<input_param name="$5" jt="4" type="int4" />
+			<input_param name="$6" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="criatriggers_geraauditoria" id="Procedure_4dac13f" isSystem="false" params_known="y" >
@@ -6600,15 +6881,15 @@ $function$
 			<input_param name="brecria" jt="-7" type="bool" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
-		<procedure name="crosstab" id="Procedure_253a733" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, text)
+		<procedure name="crosstab" id="Procedure_48e3f76" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$crosstab_hash$function$
+AS '$libdir/tablefunc', $function$crosstab$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
-			<input_param name="$2" jt="12" type="text" />
+			<input_param name="$2" jt="4" type="int4" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="crosstab" id="Procedure_2045f1d" isSystem="false" params_known="y" >
@@ -6621,15 +6902,15 @@ AS '$libdir/tablefunc', $function$crosstab$function$
 			<input_param name="$1" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="crosstab" id="Procedure_48e3f76" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, integer)
+		<procedure name="crosstab" id="Procedure_253a733" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$crosstab$function$
+AS '$libdir/tablefunc', $function$crosstab_hash$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
-			<input_param name="$2" jt="4" type="int4" />
+			<input_param name="$2" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="crosstab2" id="Procedure_42e6c0b" isSystem="false" params_known="y" >
@@ -7212,89 +7493,6 @@ $function$
 			<result_param name="codprodutorelacionado" jt="-5" type="int8" />
 			<result_param name="vendas" jt="-5" type="int8" />
 		</procedure>
-		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_47a2ab6" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
- RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	pcodecf bigint;
-BEGIN
-	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Geral' as tipo
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
-	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
-	  from tblecfreducaoz
-	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblecfreducaoz.movimento = pmovimento
-	   and tblecfreducaoz.crz = pcrz
-	 group by 
-	       tblecfreducaoz.codecfreducaoz
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     ;
-	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
-/*
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscalprodutobarra.aliquotaicms
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-*/
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Cancelado' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = true
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Desconto' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(descontoacrescimo)  as total
-	  from tblcupomfiscal 
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
-         
-END;
-$function$
-;]]></string>
-			<input_param name="pmovimento" jt="91" type="date" />
-			<input_param name="pcrz" jt="-5" type="int8" />
-			<result_param name="tipo" jt="12" type="text" />
-			<result_param name="codecf" jt="-5" type="int8" />
-			<result_param name="movimento" jt="91" type="date" />
-			<result_param name="valor" jt="2" type="numeric" />
-		</procedure>
 		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_5114246" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint, pdesejado numeric)
  RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric, diferenca numeric)
@@ -7381,6 +7579,89 @@ $function$
 			<result_param name="movimento" jt="91" type="date" />
 			<result_param name="valor" jt="2" type="numeric" />
 			<result_param name="diferenca" jt="2" type="numeric" />
+		</procedure>
+		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_47a2ab6" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
+ RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	pcodecf bigint;
+BEGIN
+	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Geral' as tipo
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
+	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
+	  from tblecfreducaoz
+	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblecfreducaoz.movimento = pmovimento
+	   and tblecfreducaoz.crz = pcrz
+	 group by 
+	       tblecfreducaoz.codecfreducaoz
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     ;
+	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
+/*
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscalprodutobarra.aliquotaicms
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+*/
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Cancelado' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = true
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Desconto' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(descontoacrescimo)  as total
+	  from tblcupomfiscal 
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
+         
+END;
+$function$
+;]]></string>
+			<input_param name="pmovimento" jt="91" type="date" />
+			<input_param name="pcrz" jt="-5" type="int8" />
+			<result_param name="tipo" jt="12" type="text" />
+			<result_param name="codecf" jt="-5" type="int8" />
+			<result_param name="movimento" jt="91" type="date" />
+			<result_param name="valor" jt="2" type="numeric" />
 		</procedure>
 		<procedure name="fntblmovimentotituloaiauad" id="Procedure_342935b" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblmovimentotituloaiauad()
@@ -8022,6 +8303,16 @@ AS '$libdir/tablefunc', $function$normal_rand$function$
 			<input_param name="$3" jt="8" type="float8" />
 			<result_param name="returnValue" jt="8" type="float8" />
 		</procedure>
+		<procedure name="unaccent" id="Procedure_2b91618" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(text)
+ RETURNS text
+ LANGUAGE c
+ STABLE PARALLEL SAFE STRICT
+AS '$libdir/unaccent', $function$unaccent_dict$function$
+;]]></string>
+			<input_param name="$1" jt="12" type="text" />
+			<result_param name="returnValue" jt="12" type="text" />
+		</procedure>
 		<procedure name="unaccent" id="Procedure_426ff4b" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(regdictionary, text)
  RETURNS text
@@ -8031,16 +8322,6 @@ AS '$libdir/unaccent', $function$unaccent_dict$function$
 ;]]></string>
 			<input_param name="$1" jt="1111" type="regdictionary" />
 			<input_param name="$2" jt="12" type="text" />
-			<result_param name="returnValue" jt="12" type="text" />
-		</procedure>
-		<procedure name="unaccent" id="Procedure_2b91618" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(text)
- RETURNS text
- LANGUAGE c
- STABLE PARALLEL SAFE STRICT
-AS '$libdir/unaccent', $function$unaccent_dict$function$
-;]]></string>
-			<input_param name="$1" jt="12" type="text" />
 			<result_param name="returnValue" jt="12" type="text" />
 		</procedure>
 		<procedure name="unaccent_init" id="Procedure_4c73b35" isSystem="false" params_known="y" >
@@ -8946,15 +9227,15 @@ $function$
 ;]]></string>
 		</function>
 	</schema>
-	<connector name="dev@docker" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="localhost" port="54320" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
-	<connector name="prod@netuno" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="sistema.mgpapelaria.com.br" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="dev@docker" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.14.jar" driver_desc="Standard" host="localhost" port="54320" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="prod@netuno" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.14.jar" driver_desc="Standard" host="sistema.mgpapelaria.com.br" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblfilial" color="B7C8E3" x="768" y="64" />
-		<entity schema="mgsis.mgsis" name="tblpermissao" color="B7C8E3" x="48" y="592" />
-		<entity schema="mgsis.mgsis" name="tblgrupousuariousuario" color="B7C8E3" x="432" y="48" />
 		<entity schema="mgsis.mgsis" name="tblgrupousuario" color="B7C8E3" x="448" y="384" />
 		<entity schema="mgsis.mgsis" name="tblgrupousuariopermissao" color="B7C8E3" x="464" y="640" />
+		<entity schema="mgsis.mgsis" name="tblgrupousuariousuario" color="B7C8E3" x="432" y="48" />
 		<entity schema="mgsis.mgsis" name="tblimagem" color="C1D8EE" x="80" y="160" />
+		<entity schema="mgsis.mgsis" name="tblpermissao" color="B7C8E3" x="48" y="592" />
 		<script name="SQL_Editor" id="Editor_3819819" language="SQL" >
 			<string><![CDATA[﻿--select * from tblportador order by codportador
 
@@ -9066,10 +9347,17 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 	</layout>
 	<layout name="Layout_Boletos" id="Layout_22f77b0" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblboletomotivoocorrencia" color="3986C1" x="384" y="48" />
-		<entity schema="mgsis.mgsis" name="tblboletotipoocorrencia" color="3986C1" x="720" y="48" />
 		<entity schema="mgsis.mgsis" name="tblboletoretorno" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tblboletotipoocorrencia" color="3986C1" x="720" y="48" />
 	</layout>
 	<layout name="Layout_Cheques" id="Layout_3a399d00" confirmed="y" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblbanco" color="C1D8EE" x="48" y="112" />
+		<entity schema="mgsis.mgsis" name="tblcheque" color="C1D8EE" x="304" y="48" />
+		<entity schema="mgsis.mgsis" name="tblchequedevolucao" color="C1D8EE" x="592" y="560" />
+		<entity schema="mgsis.mgsis" name="tblchequeemitente" color="C1D8EE" x="656" y="48" />
+		<entity schema="mgsis.mgsis" name="tblchequemotivodevolucao" color="C1D8EE" x="912" y="624" />
+		<entity schema="mgsis.mgsis" name="tblchequerepasse" color="C1D8EE" x="928" y="304" />
+		<entity schema="mgsis.mgsis" name="tblchequerepassecheque" color="C1D8EE" x="528" y="288" />
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="928" y="48" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
@@ -9082,10 +9370,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblchequeemitente" color="C1D8EE" x="656" y="48" />
-		<entity schema="mgsis.mgsis" name="tblchequedevolucao" color="C1D8EE" x="592" y="560" />
-		<entity schema="mgsis.mgsis" name="tblbanco" color="C1D8EE" x="48" y="112" />
-		<entity schema="mgsis.mgsis" name="tblchequerepasse" color="C1D8EE" x="928" y="304" />
 		<entity schema="mgsis.mgsis" name="tblportador" color="C1D8EE" x="1184" y="288" >
 			<column name="codportador" />
 			<column name="codbanco" />
@@ -9094,7 +9378,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="inativo" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblchequerepassecheque" color="C1D8EE" x="528" y="288" />
 		<entity schema="mgsis.mgsis" name="tbltitulo" color="C1D8EE" x="160" y="640" >
 			<column name="codtitulo" />
 			<column name="codtipotitulo" />
@@ -9108,11 +9391,33 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codvalecompraformapagamento" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblcheque" color="C1D8EE" x="304" y="48" />
-		<entity schema="mgsis.mgsis" name="tblchequemotivodevolucao" color="C1D8EE" x="912" y="624" />
 	</layout>
 	<layout name="Layout_DFe_Terceiros" id="Layout_4f5c1dd" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="528" y="288" >
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1D8EE" x="528" y="96" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="64" y="368" >
+			<column name="codfilial" />
+			<column name="codempresa" />
+			<column name="codpessoa" />
+			<column name="acbrnfemonitorcodusuario" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="48" y="544" >
+			<column name="codnaturezaoperacao" />
+			<column name="codestoquemovimentotipo" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codnaturezaoperacaodevolucao" />
+			<column name="codtipotitulo" />
+			<column name="codcontacontabil" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="768" y="64" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="C1D8EE" x="1024" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroevento" color="C1D8EE" x="192" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="C1D8EE" x="1024" y="352" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="C1D8EE" x="1328" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroprodutobarra" color="C1D8EE" x="1008" y="592" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="512" y="320" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
 			<column name="codestadocivil" />
@@ -9124,28 +9429,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="C1D8EE" x="1296" y="80" />
-		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="288" y="96" >
-			<column name="codfilial" />
-			<column name="codempresa" />
-			<column name="codpessoa" />
-			<column name="acbrnfemonitorcodusuario" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="nfeserie" />
-			<column name="validadecertificado" />
-		</entity>
-		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="272" y="240" >
-			<column name="codnaturezaoperacao" />
-			<column name="codestoquemovimentotipo" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codnaturezaoperacaodevolucao" />
-			<column name="codtipotitulo" />
-			<column name="codcontacontabil" />
-		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="C1D8EE" x="1040" y="48" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="240" y="496" >
+		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="48" y="736" >
 			<column name="codproduto" />
 			<column name="codncm" />
 			<column name="codcest" />
@@ -9160,26 +9444,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="abc" />
 			<column name="codcestanterior" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="528" y="496" >
-			<column name="codprodutoembalagem" />
-			<column name="codproduto" />
-			<column name="codunidademedida" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codprodutoimagem" />
-		</entity>
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="480" y="640" >
-			<column name="codprodutovariacao" />
-			<column name="codproduto" />
-			<column name="codmarca" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codprodutoimagem" />
-			<column name="lotecompra" />
-		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroprodutobarra" color="C1D8EE" x="1056" y="640" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="C1D8EE" x="1040" y="352" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="784" y="752" >
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="752" y="832" >
 			<column name="codprodutobarra" />
 			<column name="codprodutovariacao" />
 			<column name="codproduto" />
@@ -9188,27 +9453,42 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroevento" color="C1D8EE" x="48" y="176" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="784" y="64" />
-		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1D8EE" x="544" y="96" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="384" y="848" >
+			<column name="codprodutoembalagem" />
+			<column name="codproduto" />
+			<column name="codunidademedida" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="464" y="640" >
+			<column name="codprodutovariacao" />
+			<column name="codproduto" />
+			<column name="codmarca" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+			<column name="lotecompra" />
+		</entity>
 	</layout>
 	<layout name="Layout_Devolucao" id="Layout7285461" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="1232" y="48" />
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="B2CDF7" x="48" y="160" />
-		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="528" y="704" />
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="304" y="528" />
-		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="528" y="448" />
-		<entity schema="mgsis.mgsis" name="tbltitulo" color="B2CDF7" x="800" y="448" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="1024" y="176" />
-		<entity schema="mgsis.mgsis" name="tbltipotitulo" color="B2CDF7" x="560" y="160" />
 		<entity schema="mgsis.mgsis" name="tblcontacontabil" color="B2CDF7" x="816" y="176" />
 		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="272" y="208" />
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="304" y="528" />
+		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="528" y="704" />
+		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="528" y="448" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="1232" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="1024" y="176" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="B2CDF7" x="48" y="160" />
+		<entity schema="mgsis.mgsis" name="tbltipotitulo" color="B2CDF7" x="560" y="160" />
+		<entity schema="mgsis.mgsis" name="tbltitulo" color="B2CDF7" x="800" y="448" />
 	</layout>
 	<layout name="Layout_Empresa" id="Layout7239500" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblempresa" color="B2CDF7" x="768" y="48" />
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="B2CDF7" x="112" y="48" />
-		<entity schema="mgsis.mgsis" name="tblfilial" color="B2CDF7" x="416" y="48" />
 		<entity schema="mgsis.mgsis" name="tblestoquelocal" color="3986C1" x="416" y="1584" />
+		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacao" color="3986C1" x="688" y="1664" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="B2CDF7" x="416" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="416" y="992" />
 		<entity schema="mgsis.mgsis" name="tblnfeterceiro" color="3986C1" x="736" y="992" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="3986C1" x="416" y="656" >
 			<column name="codnotafiscal" />
@@ -9223,11 +9503,29 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codestadoplaca" />
 			<column name="cpf" />
 		</entity>
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="B2CDF7" x="112" y="48" />
 		<entity schema="mgsis.mgsis" name="tbltitulo" color="3986C1" x="48" y="992" />
-		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacao" color="3986C1" x="688" y="1664" />
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="416" y="992" />
 	</layout>
 	<layout name="Layout_Estoque" id="Layout_1cc2625c" confirmed="y" show_column_type="y" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblestoquelocal" color="B3CEF5" x="416" y="1024" />
+		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacao" color="B3CEF5" x="400" y="608" />
+		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacaovenda" color="C1D8EE" x="656" y="48" />
+		<entity schema="mgsis.mgsis" name="tblestoquemes" color="B3CEF5" x="768" y="944" />
+		<entity schema="mgsis.mgsis" name="tblestoquemovimento" color="B3CEF5" x="1120" y="544" />
+		<entity schema="mgsis.mgsis" name="tblestoquemovimentotipo" color="B3CEF5" x="1120" y="992" />
+		<entity schema="mgsis.mgsis" name="tblestoquesaldo" color="B3CEF5" x="752" y="608" />
+		<entity schema="mgsis.mgsis" name="tblestoquesaldoconferencia" color="B3CEF5" x="784" y="288" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="352" y="144" />
+		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B3CEF5" x="1472" y="432" >
+			<column name="codnegocioprodutobarra" />
+			<column name="codnegocio" />
+			<column name="codprodutobarra" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codnegocioprodutobarradevolucao" />
+			<column name="conferencia" />
+			<column name="codusuarioconferencia" />
+		</entity>
 		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B3CEF5" x="1472" y="720" >
 			<column name="codnotafiscalprodutobarra" />
 			<column name="codnotafiscal" />
@@ -9255,44 +9553,25 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="valordesconto" />
 			<column name="valoroutras" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B3CEF5" x="1472" y="432" >
-			<column name="codnegocioprodutobarra" />
-			<column name="codnegocio" />
-			<column name="codprodutobarra" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codnegocioprodutobarradevolucao" />
-			<column name="conferencia" />
-			<column name="codusuarioconferencia" />
-		</entity>
 		<entity schema="mgsis.mgsis" name="tblproduto" color="B3CEF5" x="64" y="176" />
-		<entity schema="mgsis.mgsis" name="tblestoquelocal" color="B3CEF5" x="416" y="1024" />
-		<entity schema="mgsis.mgsis" name="tblestoquesaldo" color="B3CEF5" x="752" y="608" />
-		<entity schema="mgsis.mgsis" name="tblestoquemovimentotipo" color="B3CEF5" x="1120" y="992" />
-		<entity schema="mgsis.mgsis" name="tblestoquemovimento" color="B3CEF5" x="1120" y="544" />
-		<entity schema="mgsis.mgsis" name="tblestoquemes" color="B3CEF5" x="768" y="944" />
-		<entity schema="mgsis.mgsis" name="tblestoquesaldoconferencia" color="B3CEF5" x="784" y="288" />
-		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="352" y="144" />
-		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacaovenda" color="C1D8EE" x="656" y="48" />
 		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="B3CEF5" x="48" y="784" />
-		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacao" color="B3CEF5" x="400" y="608" />
 	</layout>
 	<layout name="Layout_Feriados" id="Layout_1d848eea" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblferiado" color="C1D8EE" x="48" y="48" />
 	</layout>
 	<layout name="Layout_Fiscal" id="Layout4922365" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="64" y="64" />
-		<entity schema="mgsis.mgsis" name="tbltipoproduto" color="B2CDF7" x="1280" y="512" />
+		<entity schema="mgsis.mgsis" name="tblbit" color="C1D8EE" x="1248" y="752" />
+		<entity schema="mgsis.mgsis" name="tblcfop" color="B2CDF7" x="640" y="80" />
+		<entity schema="mgsis.mgsis" name="tblestado" color="B2CDF7" x="976" y="800" />
 		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="1216" y="48" />
 		<entity schema="mgsis.mgsis" name="tblncm" color="B2CDF7" x="656" y="816" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="320" y="96" />
-		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao" color="B2CDF7" x="896" y="96" />
-		<entity schema="mgsis.mgsis" name="tblestado" color="B2CDF7" x="976" y="800" />
-		<entity schema="mgsis.mgsis" name="tblcfop" color="B2CDF7" x="640" y="80" />
-		<entity schema="mgsis.mgsis" name="tbltributacao" color="B2CDF7" x="640" y="288" />
 		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="B2CDF7" x="656" y="576" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="64" y="64" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="320" y="96" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="48" y="992" />
-		<entity schema="mgsis.mgsis" name="tblbit" color="C1D8EE" x="1248" y="752" />
+		<entity schema="mgsis.mgsis" name="tbltipoproduto" color="B2CDF7" x="1280" y="512" />
+		<entity schema="mgsis.mgsis" name="tbltributacao" color="B2CDF7" x="640" y="288" />
+		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao" color="B2CDF7" x="896" y="96" />
 	</layout>
 	<layout name="Layout_Geral" id="Layout4866226" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tbl_migration" color="B3CCF5" x="3440" y="1568" />
@@ -9324,6 +9603,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblestado" color="F5D8B3" x="2816" y="2592" />
 		<entity schema="mgsis.mgsis" name="tblestadocivil" color="BEF5B3" x="320" y="2848" />
 		<entity schema="mgsis.mgsis" name="tblestoquemovimento" color="B3CCF5" x="1760" y="2352" />
+		<entity schema="mgsis.mgsis" name="tblestoquemovimentotipo" color="B3CCF5" x="1984" y="2720" />
 		<entity schema="mgsis.mgsis" name="tblestoquesaldo" color="B3B3F5" x="2000" y="1232" />
 		<entity schema="mgsis.mgsis" name="tblfilial" color="B3B3F5" x="1552" y="880" />
 		<entity schema="mgsis.mgsis" name="tblformapagamento" color="CAB3F5" x="2352" y="752" />
@@ -9354,6 +9634,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblportador" color="BEF5B3" x="1280" y="1152" />
 		<entity schema="mgsis.mgsis" name="tblproduto" color="CAB3F5" x="544" y="1136" />
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="CAB3F5" x="320" y="880" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="F5D8B3" x="800" y="3008" />
 		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="F5D8B3" x="1024" y="3008" />
 		<entity schema="mgsis.mgsis" name="tblregistrospc" color="BEF5B3" x="320" y="3056" />
 		<entity schema="mgsis.mgsis" name="tblsexo" color="B3CCF5" x="2720" y="1824" />
@@ -9361,15 +9642,13 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbltipomovimentotitulo" color="BEF5B3" x="1280" y="832" />
 		<entity schema="mgsis.mgsis" name="tbltipoproduto" color="CAB3F5" x="544" y="672" />
 		<entity schema="mgsis.mgsis" name="tbltipotitulo" color="F5D8B3" x="3040" y="2592" />
+		<entity schema="mgsis.mgsis" name="tbltitulo" color="F5D8B3" x="2320" y="2592" />
 		<entity schema="mgsis.mgsis" name="tbltituloagrupamento" color="CAB3F5" x="2560" y="800" />
 		<entity schema="mgsis.mgsis" name="tbltributacao" color="CAB3F5" x="320" y="656" />
 		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao" color="CAB3F5" x="48" y="880" />
 		<entity schema="mgsis.mgsis" name="tblunidademedida" color="CAB3F5" x="544" y="880" />
 		<entity schema="mgsis.mgsis" name="vwcupomfiscalprodutobarratotais" color="B3B3F5" x="1936" y="416" />
 		<entity schema="mgsis.mgsis" name="vwnegocioprodutobarratotais" color="F5D8B3" x="3520" y="2784" />
-		<entity schema="mgsis.mgsis" name="tbltitulo" color="F5D8B3" x="2320" y="2592" />
-		<entity schema="mgsis.mgsis" name="tblestoquemovimentotipo" color="B3CCF5" x="1984" y="2720" />
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="F5D8B3" x="800" y="3008" />
 		<group name="tblauthitemchild" color="F7F1EA" >
 			<comment><![CDATA[Used by : 
    tblgrupoproduto]]></comment>
@@ -9566,27 +9845,27 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		</group>
 	</layout>
 	<layout name="Layout_Imagens" id="Layout5020259" confirmed="y" show_column_type="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="B2CDF7" x="560" y="560" />
 		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="800" y="272" />
-		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="800" y="48" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="B2CDF7" x="48" y="528" />
 		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="B2CDF7" x="880" y="560" />
-		<entity schema="mgsis.mgsis" name="tblmarca" color="B2CDF7" x="80" y="112" />
 		<entity schema="mgsis.mgsis" name="tblimagem" color="B2CDF7" x="544" y="144" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="B2CDF7" x="80" y="112" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="B2CDF7" x="48" y="528" />
 		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="B2CDF7" x="320" y="352" />
+		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="800" y="48" />
+		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="B2CDF7" x="560" y="560" />
 	</layout>
 	<layout name="Layout_Integracao_OpenCart" id="Layout_13ca872c" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="48" y="80" />
-		<entity schema="mgsis.mgsis" name="tblimagem" color="C1D8EE" x="80" y="336" />
 		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="C1D8EE" x="304" y="688" />
-		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="C1D8EE" x="80" y="688" />
 		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="C1D8EE" x="544" y="704" />
-		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="C1D8EE" x="768" y="704" />
+		<entity schema="mgsis.mgsis" name="tblimagem" color="C1D8EE" x="80" y="336" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="48" y="80" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="544" y="96" />
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="1024" y="48" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="784" y="192" />
 		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="1008" y="512" />
 		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="C1D8EE" x="304" y="320" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="544" y="96" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="784" y="192" />
+		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="C1D8EE" x="80" y="688" />
+		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="C1D8EE" x="768" y="704" />
 	</layout>
 	<layout name="Layout_Laravel_Queue" id="Layout7041969" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="migrations" color="B2CDF7" x="48" y="48" />
@@ -9598,9 +9877,9 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 	<layout name="Layout_Meta" id="Layout_dd20140" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblcargo" color="C1D8EE" x="336" y="432" />
 		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="944" y="48" />
+		<entity schema="mgsis.mgsis" name="tblmeta" color="C1D8EE" x="304" y="112" />
 		<entity schema="mgsis.mgsis" name="tblmetafilial" color="C1D8EE" x="688" y="112" />
 		<entity schema="mgsis.mgsis" name="tblmetafilialpessoa" color="C1D8EE" x="656" y="464" />
-		<entity schema="mgsis.mgsis" name="tblmeta" color="C1D8EE" x="304" y="112" />
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="48" y="48" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
@@ -9615,87 +9894,87 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		</entity>
 	</layout>
 	<layout name="Layout_NCM" id="Layout9248750" confirmed="y" show_column_type="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblregulamentoicmsstmt" color="B2CDF7" x="48" y="48" />
-		<entity schema="mgsis.mgsis" name="tblncm" color="B2CDF7" x="400" y="48" />
 		<entity schema="mgsis.mgsis" name="tblcest" color="B2CDF7" x="640" y="48" />
 		<entity schema="mgsis.mgsis" name="tblibptax" color="B2CDF7" x="224" y="320" />
+		<entity schema="mgsis.mgsis" name="tblncm" color="B2CDF7" x="400" y="48" />
 		<entity schema="mgsis.mgsis" name="tblproduto" color="B2CDF7" x="544" y="320" />
+		<entity schema="mgsis.mgsis" name="tblregulamentoicmsstmt" color="B2CDF7" x="48" y="48" />
 	</layout>
 	<layout name="Layout_Natureza_Operacao" id="Layout_16a9431" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="3986C1" x="64" y="80" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="3986C1" x="1168" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="3986C1" x="864" y="48" />
 		<entity schema="mgsis.mgsis" name="tbltributacao" color="3986C1" x="48" y="528" />
 		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao" color="3986C1" x="464" y="80" />
-		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="3986C1" x="64" y="80" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="3986C1" x="864" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="3986C1" x="1168" y="48" />
 	</layout>
 	<layout name="Layout_Negocio" id="Layout2983189" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="B2CDF7" x="464" y="1152" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B2CDF7" x="48" y="1376" />
 		<entity schema="mgsis.mgsis" name="tblestoquelocal" color="B2CDF7" x="48" y="1168" />
-		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="48" y="992" />
-		<entity schema="mgsis.mgsis" name="tbloperacao" color="B2CDF7" x="256" y="1024" />
-		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="B2CDF7" x="480" y="1440" />
 		<entity schema="mgsis.mgsis" name="tblfilial" color="B2CDF7" x="720" y="992" />
-		<entity schema="mgsis.mgsis" name="tblnegociostatus" color="B2CDF7" x="256" y="864" />
 		<entity schema="mgsis.mgsis" name="tblformapagamento" color="B2CDF7" x="64" y="608" />
-		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="64" y="320" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="368" y="128" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="B2CDF7" x="832" y="128" />
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="624" y="128" />
+		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="B2CDF7" x="480" y="1440" />
 		<entity schema="mgsis.mgsis" name="tblmarca" color="B2CDF7" x="1040" y="1232" />
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="624" y="128" />
+		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="48" y="992" />
+		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="64" y="320" />
+		<entity schema="mgsis.mgsis" name="tblnegociostatus" color="B2CDF7" x="256" y="864" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="368" y="128" />
+		<entity schema="mgsis.mgsis" name="tbloperacao" color="B2CDF7" x="256" y="1024" />
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="B2CDF7" x="1008" y="48" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="B2CDF7" x="832" y="128" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B2CDF7" x="48" y="1376" />
+		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="B2CDF7" x="464" y="1152" />
 	</layout>
 	<layout name="Layout_Nfe_Terceiro" id="Layout462291" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblnfeterceiroduplicata" color="B2CDF7" x="240" y="464" />
-		<entity schema="mgsis.mgsis" name="tblnfeterceiro" color="B2CDF7" x="48" y="128" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="1040" y="144" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="B2CDF7" x="1072" y="336" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="B2CDF7" x="1072" y="560" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="784" y="160" />
-		<entity schema="mgsis.mgsis" name="tbltitulo" color="B2CDF7" x="768" y="1120" />
-		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="448" y="1504" />
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="560" y="176" />
-		<entity schema="mgsis.mgsis" name="tblnegociostatus" color="B2CDF7" x="608" y="768" />
-		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="320" y="752" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B2CDF7" x="464" y="1216" />
-		<entity schema="mgsis.mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="64" y="768" />
 		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="272" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="560" y="176" />
+		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="448" y="1504" />
+		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="320" y="752" />
+		<entity schema="mgsis.mgsis" name="tblnegociostatus" color="B2CDF7" x="608" y="768" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiro" color="B2CDF7" x="48" y="128" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiroduplicata" color="B2CDF7" x="240" y="464" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="64" y="768" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="784" y="160" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="B2CDF7" x="1072" y="560" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="B2CDF7" x="1072" y="336" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="1056" y="832" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="1040" y="144" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B2CDF7" x="464" y="1216" />
+		<entity schema="mgsis.mgsis" name="tbltitulo" color="B2CDF7" x="768" y="1120" />
 	</layout>
 	<layout name="Layout_Nota_Fiscal" id="Layout_364e738" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="112" y="160" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="96" y="336" />
-		<entity schema="mgsis.mgsis" name="tbloperacao" color="C1D8EE" x="128" y="608" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="128" y="784" />
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="880" y="160" />
-		<entity schema="mgsis.mgsis" name="tblpais" color="C1D8EE" x="1200" y="1280" />
-		<entity schema="mgsis.mgsis" name="tblestado" color="C1D8EE" x="1200" y="1056" />
 		<entity schema="mgsis.mgsis" name="tblcidade" color="C1D8EE" x="1200" y="800" />
+		<entity schema="mgsis.mgsis" name="tblempresa" color="C1D8EE" x="1168" y="592" />
+		<entity schema="mgsis.mgsis" name="tblestado" color="C1D8EE" x="1200" y="1056" />
 		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="1168" y="144" />
 		<entity schema="mgsis.mgsis" name="tblibptcache" color="C1D8EE" x="1424" y="160" />
-		<entity schema="mgsis.mgsis" name="tblempresa" color="C1D8EE" x="1168" y="592" />
-		<entity schema="mgsis.mgsis" name="tblprefixogs1" color="C1D8EE" x="1424" y="624" />
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="368" y="1456" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="416" y="1072" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="672" y="1120" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="928" y="1120" />
 		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="96" y="1072" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="C1D8EE" x="352" y="112" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="96" y="336" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="128" y="784" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="C1D8EE" x="608" y="96" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="112" y="160" />
+		<entity schema="mgsis.mgsis" name="tbloperacao" color="C1D8EE" x="128" y="608" />
+		<entity schema="mgsis.mgsis" name="tblpais" color="C1D8EE" x="1200" y="1280" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="880" y="160" />
+		<entity schema="mgsis.mgsis" name="tblprefixogs1" color="C1D8EE" x="1424" y="624" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="672" y="1120" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="416" y="1072" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="368" y="1456" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="928" y="1120" />
 		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao_backup" color="3986C1" x="48" y="48" />
 	</layout>
 	<layout name="Layout_Pessoa" id="Layout_156d02e" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="3986C1" x="48" y="48" />
 		<entity schema="mgsis.mgsis" name="tblcertidaoemissor" color="C1D8EE" x="624" y="48" />
-		<entity schema="mgsis.mgsis" name="tblpessoacertidao" color="C1D8EE" x="320" y="48" />
 		<entity schema="mgsis.mgsis" name="tblcertidaotipo" color="C1D8EE" x="624" y="240" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tblpessoacertidao" color="C1D8EE" x="320" y="48" />
 	</layout>
 	<layout name="Layout_Prancheta" id="Layout_2e976812" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="320" y="112" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="640" y="48" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="656" y="432" />
 		<entity schema="mgsis.mgsis" name="tblprancheta" color="C1D8EE" x="48" y="48" />
 		<entity schema="mgsis.mgsis" name="tblpranchetaproduto" color="C1D8EE" x="48" y="320" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="320" y="112" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="656" y="432" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="640" y="48" />
 	</layout>
 	<layout name="Layout_ProdutoBarra" id="Layout_26dd18a" confirmed="y" show_column_type="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblcupomfiscalprodutobarra" color="B3CEF5" x="640" y="48" />
@@ -9705,24 +9984,65 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B3CEF5" x="400" y="48" />
 	</layout>
 	<layout name="Layout_Produtos" id="Layout_1a34eed8" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="592" y="368" />
-		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="896" y="320" />
-		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="1056" y="96" />
 		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="832" y="80" />
 		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="576" y="64" />
-		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="336" y="48" />
-		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="48" y="432" />
-		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="96" y="176" />
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="80" y="784" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="896" y="960" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="896" y="320" />
+		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="608" y="896" />
 		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="94C3EA" x="1152" y="352" />
 		<entity schema="mgsis.mgsis" name="tblproduto" color="94C3EA" x="352" y="320" />
-		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="608" y="896" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="896" y="960" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="80" y="784" />
+		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="48" y="432" />
+		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="96" y="176" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="592" y="368" />
+		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="1056" y="96" />
+		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="336" y="48" />
 	</layout>
 	<layout name="Layout_Transferencia" id="Layout_54b90e3" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="FFFFCC" x="48" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="FFFFCC" x="288" y="112" />
+		<entity schema="mgsis.mgsis" name="tblcaixamercadoria" color="FFCCFF" x="48" y="736" />
+		<entity schema="mgsis.mgsis" name="tblcaixamercadoriamodelo" color="FFCCFF" x="320" y="736" />
 		<entity schema="mgsis.mgsis" name="tblestoquelocal" color="C1D8EE" x="576" y="64" />
+		<entity schema="mgsis.mgsis" name="tblgrupoeconomico" color="006666" x="1040" y="304" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="1056" y="576" >
+			<column name="codmarca" />
+			<column name="codimagem" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codgrupoeconomico" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="FFFFCC" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnegociocaixamercadoria" color="FFFFCC" x="48" y="528" />
+		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="FFFFCC" x="288" y="112" />
+		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarrapedidoitem" color="FFFFCC" x="464" y="384" />
+		<entity schema="mgsis.mgsis" name="tblpedido" color="CCFFCC" x="816" y="64" />
+		<entity schema="mgsis.mgsis" name="tblpedidoitem" color="CCFFCC" x="816" y="304" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="1040" y="48" >
+			<column name="codpessoa" />
+			<column name="codsexo" />
+			<column name="codestadocivil" />
+			<column name="codcidade" />
+			<column name="codcidadecobranca" />
+			<column name="codformapagamento" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codgrupocliente" />
+			<column name="codgrupoeconomico" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="832" y="688" >
+			<column name="codproduto" />
+			<column name="codncm" />
+			<column name="codcest" />
+			<column name="codunidademedida" />
+			<column name="codsubgrupoproduto" />
+			<column name="codmarca" />
+			<column name="codtributacao" />
+			<column name="codtipoproduto" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codprodutoimagem" />
+			<column name="abc" />
+			<column name="codcestanterior" />
+		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="304" y="560" >
 			<column name="codprodutobarra" />
 			<column name="codprodutovariacao" />
@@ -9740,24 +10060,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codprodutoimagem" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnegociocaixamercadoria" color="FFFFCC" x="48" y="528" />
-		<entity schema="mgsis.mgsis" name="tblcaixamercadoria" color="FFCCFF" x="48" y="736" />
-		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarrapedidoitem" color="FFFFCC" x="464" y="384" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="832" y="688" >
-			<column name="codproduto" />
-			<column name="codncm" />
-			<column name="codcest" />
-			<column name="codunidademedida" />
-			<column name="codsubgrupoproduto" />
-			<column name="codmarca" />
-			<column name="codtributacao" />
-			<column name="codtipoproduto" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codprodutoimagem" />
-			<column name="abc" />
-			<column name="codcestanterior" />
-		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="832" y="512" >
 			<column name="codprodutovariacao" />
 			<column name="codproduto" />
@@ -9767,8 +10069,26 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codprodutoimagem" />
 			<column name="lotecompra" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblcaixamercadoriamodelo" color="FFCCFF" x="320" y="736" />
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="1040" y="48" >
+	</layout>
+	<layout name="Layout_Vales_Escolares" id="Layout_f43af46" confirmed="y" joined_routing="y" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="784" y="1040" >
+			<column name="codfilial" />
+			<column name="codempresa" />
+			<column name="codpessoa" />
+			<column name="acbrnfemonitorcodusuario" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="inativo" />
+			<column name="nfeserie" />
+			<column name="validadecertificado" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblformapagamento" color="C1D8EE" x="48" y="912" >
+			<column name="codformapagamento" />
+			<column name="valecompra" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="48" y="64" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
 			<column name="codestadocivil" />
@@ -9780,20 +10100,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblgrupoeconomico" color="006666" x="1040" y="304" />
-		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="1056" y="576" >
-			<column name="codmarca" />
-			<column name="codimagem" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codgrupoeconomico" />
-		</entity>
-		<entity schema="mgsis.mgsis" name="tblpedidoitem" color="CCFFCC" x="816" y="304" />
-		<entity schema="mgsis.mgsis" name="tblpedido" color="CCFFCC" x="816" y="64" />
-	</layout>
-	<layout name="Layout_Vales_Escolares" id="Layout_f43af46" confirmed="y" joined_routing="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblvalecompraprodutobarra" color="C1D8EE" x="752" y="416" />
-		<entity schema="mgsis.mgsis" name="tblvalecompraformapagamento" color="C1D8EE" x="400" y="880" />
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="816" y="752" >
 			<column name="codprodutobarra" />
 			<column name="codprodutovariacao" />
@@ -9816,45 +10122,18 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codvalecompraformapagamento" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="48" y="64" >
-			<column name="codpessoa" />
-			<column name="codsexo" />
-			<column name="codestadocivil" />
-			<column name="codcidade" />
-			<column name="codcidadecobranca" />
-			<column name="codformapagamento" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="codgrupocliente" />
-			<column name="codgrupoeconomico" />
-		</entity>
-		<entity schema="mgsis.mgsis" name="tblformapagamento" color="C1D8EE" x="48" y="912" >
-			<column name="codformapagamento" />
-			<column name="valecompra" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-		</entity>
-		<entity schema="mgsis.mgsis" name="tblvalecompramodeloprodutobarra" color="C1D8EE" x="752" y="64" />
-		<entity schema="mgsis.mgsis" name="tblvalecompramodelo" color="C1D8EE" x="432" y="48" />
 		<entity schema="mgsis.mgsis" name="tblvalecompra" color="C1D8EE" x="432" y="432" />
-		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="784" y="1040" >
-			<column name="codfilial" />
-			<column name="codempresa" />
-			<column name="codpessoa" />
-			<column name="acbrnfemonitorcodusuario" />
-			<column name="codusuarioalteracao" />
-			<column name="codusuariocriacao" />
-			<column name="inativo" />
-			<column name="nfeserie" />
-			<column name="validadecertificado" />
-		</entity>
+		<entity schema="mgsis.mgsis" name="tblvalecompraformapagamento" color="C1D8EE" x="400" y="880" />
+		<entity schema="mgsis.mgsis" name="tblvalecompramodelo" color="C1D8EE" x="432" y="48" />
+		<entity schema="mgsis.mgsis" name="tblvalecompramodeloprodutobarra" color="C1D8EE" x="752" y="64" />
+		<entity schema="mgsis.mgsis" name="tblvalecompraprodutobarra" color="C1D8EE" x="752" y="416" />
 	</layout>
 	<layout name="Layout_Vendas" id="Layout_4271ffc" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="416" y="304" />
 		<entity schema="mgsis.mgsis" name="tblestoquelocal" color="C1D8EE" x="416" y="48" />
 		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacao" color="C1D8EE" x="48" y="48" />
 		<entity schema="mgsis.mgsis" name="tblestoquelocalprodutovariacaovenda" color="C1D8EE" x="48" y="496" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="656" y="48" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="C1D8EE" x="416" y="304" />
 		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="944" y="48" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="656" y="48" />
 	</layout>
 </project>
