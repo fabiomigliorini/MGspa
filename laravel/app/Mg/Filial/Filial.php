@@ -1,59 +1,30 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 16/Jul/2020 15:30:21
+ */
 
 namespace Mg\Filial;
 
-/**
- * Campos
- * @property  bigint                         $codfilial                          NOT NULL DEFAULT nextval('tblfilial_codfilial_seq'::regclass)
- * @property  bigint                         $codempresa
- * @property  bigint                         $codpessoa
- * @property  varchar(20)                    $filial                             NOT NULL
- * @property  boolean                        $emitenfe                           NOT NULL DEFAULT false
- * @property  varchar(100)                   $acbrnfemonitorcaminho
- * @property  varchar(100)                   $acbrnfemonitorcaminhorede
- * @property  timestamp                      $acbrnfemonitorbloqueado
- * @property  bigint                         $acbrnfemonitorcodusuario
- * @property  numeric(7,0)                   $empresadominio
- * @property  varchar(20)                    $acbrnfemonitorip
- * @property  bigint                         $acbrnfemonitorporta
- * @property  varchar(500)                   $odbcnumeronotafiscal
- * @property  smallint                       $crt                                NOT NULL DEFAULT 1
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  varchar(32)                    $nfcetoken
- * @property  varchar(6)                     $nfcetokenid
- * @property  smallint                       $nfeambiente                        NOT NULL DEFAULT 2
- * @property  varchar(50)                    $senhacertificado
- * @property  bigint                         $ultimonsu
- * @property  varchar(200)                   $tokenibpt
- *
- * Chaves Estrangeiras
- * @property  Empresa                        $Empresa
- * @property  Pessoa                         $Pessoa
- * @property  Usuario                        $AcbrNfeMonitorUsuario
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  Portador[]                     $PortadorS
- * @property  EstoqueLocal[]                 $EstoqueLocalS
- * @property  Ecf[]                          $EcfS
- * @property  Negocio[]                      $NegocioS
- * @property  NfeTerceiro[]                  $NfeTerceiroS
- * @property  NotaFiscal[]                   $NotaFiscalS
- * @property  Titulo[]                       $TituloS
- * @property  Usuario[]                      $UsuarioS
- * @property  ValeCompra[]                   $ValeCompraS
- */
-
 use Mg\MgModel;
-use Carbon\Carbon;
+use Mg\NotaFiscalTerceiro\DistribuicaoDfe;
+use Mg\CupomFiscal\Ecf;
+use Mg\Estoque\EstoqueLocal;
+use Mg\Usuario\GrupoUsuarioUsuario;
+use Mg\NFePHP\IbptCache;
+use Mg\Meta\MetaFilial;
+use Mg\Negocio\Negocio;
+use Mg\NfeTerceiro\NfeTerceiro;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\Portador\Portador;
+use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
+use Mg\ValeCompra\ValeCompra;
+use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
-class Filial extends MGModel
+class Filial extends MgModel
 {
     const CRT_SIMPLES = 1;
     const CRT_SIMPLES_EXCESSO = 2;
@@ -64,35 +35,62 @@ class Filial extends MGModel
 
     protected $table = 'tblfilial';
     protected $primaryKey = 'codfilial';
+
     protected $fillable = [
-        'codempresa',
-        'codpessoa',
-        'filial',
-        'emitenfe',
+        'acbrnfemonitorbloqueado',
         'acbrnfemonitorcaminho',
         'acbrnfemonitorcaminhorede',
-        'acbrnfemonitorbloqueado',
         'acbrnfemonitorcodusuario',
-        'empresadominio',
         'acbrnfemonitorip',
         'acbrnfemonitorporta',
-        'odbcnumeronotafiscal',
+        'codempresa',
+        'codpessoa',
         'crt',
+        'emitenfe',
+        'empresadominio',
+        'filial',
         'nfcetoken',
         'nfcetokenid',
         'nfeambiente',
+        'nfeserie',
+        'odbcnumeronotafiscal',
         'senhacertificado',
-        'ultimonsu',
         'tokenibpt',
+        'ultimonsu',
+        'validadecertificado'
     ];
+
     protected $dates = [
         'acbrnfemonitorbloqueado',
         'alteracao',
         'criacao',
+        'inativo',
+        'validadecertificado'
+    ];
+
+    protected $casts = [
+        'acbrnfemonitorcodusuario' => 'integer',
+        'acbrnfemonitorporta' => 'integer',
+        'codempresa' => 'integer',
+        'codfilial' => 'integer',
+        'codpessoa' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'crt' => 'integer',
+        'emitenfe' => 'boolean',
+        'empresadominio' => 'float',
+        'nfeambiente' => 'integer',
+        'nfeserie' => 'integer',
+        'ultimonsu' => 'integer'
     ];
 
 
     // Chaves Estrangeiras
+    public function UsuarioAcbrnfemonitor()
+    {
+        return $this->belongsTo(Usuario::class, 'acbrnfemonitorcodusuario', 'codusuario');
+    }
+
     public function Empresa()
     {
         return $this->belongsTo(Empresa::class, 'codempresa', 'codempresa');
@@ -101,11 +99,6 @@ class Filial extends MGModel
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function AcbrNfeMonitorUsuario()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuario', 'acbrnfemonitorcodusuario');
     }
 
     public function UsuarioAlteracao()
@@ -120,9 +113,14 @@ class Filial extends MGModel
 
 
     // Tabelas Filhas
-    public function PortadorS()
+    public function DistribuicaoDfeS()
     {
-        return $this->hasMany(Portador::class, 'codfilial', 'codfilial');
+        return $this->hasMany(DistribuicaoDfe::class, 'codfilial', 'codfilial');
+    }
+
+    public function EcfS()
+    {
+        return $this->hasMany(Ecf::class, 'codfilial', 'codfilial');
     }
 
     public function EstoqueLocalS()
@@ -130,19 +128,19 @@ class Filial extends MGModel
         return $this->hasMany(EstoqueLocal::class, 'codfilial', 'codfilial');
     }
 
-    #public function Estoquesaldo_2013_2014S()
-    #{
-    #    return $this->hasMany(Estoquesaldo_2013_2014::class, 'codfilial', 'codfilial');
-    #}
-
-    #public function GrupousuariousuarioS()
-    #{
-    #    return $this->hasMany(Grupousuariousuario::class, 'codfilial', 'codfilial');
-    #}
-
-    public function EcfS()
+    public function GrupoUsuarioUsuarioS()
     {
-        return $this->hasMany(Ecf::class, 'codfilial', 'codfilial');
+        return $this->hasMany(GrupoUsuarioUsuario::class, 'codfilial', 'codfilial');
+    }
+
+    public function IbptCacheS()
+    {
+        return $this->hasMany(IbptCache::class, 'codfilial', 'codfilial');
+    }
+
+    public function MetaFilialS()
+    {
+        return $this->hasMany(MetaFilial::class, 'codfilial', 'codfilial');
     }
 
     public function NegocioS()
@@ -160,6 +158,16 @@ class Filial extends MGModel
         return $this->hasMany(NotaFiscal::class, 'codfilial', 'codfilial');
     }
 
+    public function NotaFiscalTerceiroS()
+    {
+        return $this->hasMany(NotaFiscalTerceiro::class, 'codfilial', 'codfilial');
+    }
+
+    public function PortadorS()
+    {
+        return $this->hasMany(Portador::class, 'codfilial', 'codfilial');
+    }
+
     public function TituloS()
     {
         return $this->hasMany(Titulo::class, 'codfilial', 'codfilial');
@@ -172,6 +180,7 @@ class Filial extends MGModel
 
     public function ValeCompraS()
     {
-        return $this->hasMany(ValeCompra::class, 'codfilial');
+        return $this->hasMany(ValeCompra::class, 'codfilial', 'codfilial');
     }
+
 }

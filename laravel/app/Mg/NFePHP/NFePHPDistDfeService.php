@@ -5,20 +5,23 @@ namespace Mg\NFePHP;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Filial\Filial;
 
-class NFePHPConsultaSefazService
+class NFePHPDistDfeService
 {
-    public static function consultaSefaz($filial, $ultimoNsu)
+    public static function consultar(Filial $filial, int $nsu = null)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
-        //só funciona para o modelo 55
+
+        // só funciona para o modelo 55
         $tools->model('55');
-        //este serviço somente opera em ambiente de produção
+
+        // mesmo em teste utilizar na producao
         $tools->setEnvironment(1);
+        // $tools->setEnvironment($filial->nfeambiente);
 
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         // $ultNSU = 0;
-        $ultNSU = $ultimoNsu->nsu??0;
+        $nsu = DistribuicaoDfe = $ultimoNsu->nsu??0;
         $maxNSU = $ultNSU;
         $loopLimit = 50;
         $iCount = 0;

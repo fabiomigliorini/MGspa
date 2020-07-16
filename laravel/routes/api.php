@@ -75,6 +75,8 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
     Route::get('nfe-php/resolver-pendentes', '\Mg\NFePHP\NFePHPController@resolverPendentes');
 
+    Route::post('nfe-php/dist-dfe/{codfilial}/{nsu?}', '\Mg\NFePHP\NFePHPController@distDfe');
+
     Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
     Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
 });
