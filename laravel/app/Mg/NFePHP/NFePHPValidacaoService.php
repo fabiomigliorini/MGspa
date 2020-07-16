@@ -10,7 +10,6 @@ use Mg\Filial\Empresa;
 
 class NFePHPValidacaoService
 {
-
     public static function validar(NotaFiscal $nf)
     {
         static::validarEmitente($nf);
@@ -23,7 +22,7 @@ class NFePHPValidacaoService
     public static function validarEmitente(NotaFiscal $nf)
     {
         if (!$nf->emitida) {
-          throw new \Exception('Nota Fiscal não é de nossa emissão!');
+            throw new \Exception('Nota Fiscal não é de nossa emissão!');
         }
         return true;
     }
@@ -34,7 +33,7 @@ class NFePHPValidacaoService
             return true;
         }
         if (!empty($nf->Pessoa->ie)) {
-          throw new \Exception('Não é permitida emissão de NFCe para Pessoas com Inscrição Estadual!');
+            throw new \Exception('Não é permitida emissão de NFCe para Pessoas com Inscrição Estadual!');
         }
         return true;
     }
@@ -45,7 +44,7 @@ class NFePHPValidacaoService
             return true;
         }
         if ($nf->codpessoa == Pessoa::CONSUMIDOR) {
-          throw new \Exception('Não é permitida emissão de NFe para Consumidor!');
+            throw new \Exception('Não é permitida emissão de NFe para Consumidor!');
         }
         return true;
     }
@@ -70,7 +69,7 @@ class NFePHPValidacaoService
         return true;
     }
 
-    public static function validarCertidoes (NotaFiscal $nf)
+    public static function validarCertidoes(NotaFiscal $nf)
     {
         // Se nao precisar de certidao
         if ($nf->NotaFiscalProdutoBarraS()->where('certidaosefazmt', true)->count() <= 0) {
@@ -86,9 +85,4 @@ class NFePHPValidacaoService
         }
         return true;
     }
-
-
-
-
-
 }

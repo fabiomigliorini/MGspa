@@ -19,12 +19,11 @@ use NFePHP\Gtin\Gtin;
 
 class NFePHPMakeService
 {
-
     public static function gerarNumeroNotaFiscal(NotaFiscal $nf)
     {
 
         // Se Nota Fiscal já tem número já está tudo OK
-        If (!empty($nf->numero)) {
+        if (!empty($nf->numero)) {
             return true;
         }
 
@@ -48,7 +47,7 @@ class NFePHPMakeService
         return true;
     }
 
-    public static function montarXml (NotaFiscal $nf, $offline = false)
+    public static function montarXml(NotaFiscal $nf, $offline = false)
     {
         // Valida se o preenchimento da NFe está correto
         NFePHPValidacaoService::validar($nf);
@@ -129,7 +128,6 @@ class NFePHPMakeService
 
         // DANFE NFCe
         } else {
-
             $std->tpImp = 4; // Danfe NFC-e
             if ($offline) {
                 $std->tpEmis = Empresa::MODOEMISSAONFCE_OFFLINE;
@@ -149,9 +147,7 @@ class NFePHPMakeService
                 // Data, Hora e Justificativa da contingencia
                 $std->dhCont = $nf->Filial->Empresa->contingenciadata->toW3cString();
                 $std->xJust = $nf->Filial->Empresa->contingenciajustificativa; //Justificativa da entrada em contingência
-
             }
-
         }
 
         // Cria Tag Ide
@@ -172,11 +168,11 @@ class NFePHPMakeService
         $std->xFant = Strings::replaceSpecialsChars($nf->Filial->Pessoa->fantasia);
         $std->IE = numeroLimpo($nf->Filial->Pessoa->ie);
         $std->CRT = $nf->Filial->crt;
-	if ($nf->Filial->Pessoa->fisica) {
+        if ($nf->Filial->Pessoa->fisica) {
             $std->CPF = str_pad($nf->Filial->Pessoa->cnpj, 11, '0', STR_PAD_LEFT);
-	} else {
+        } else {
             $std->CNPJ = str_pad($nf->Filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
-	}
+        }
         $nfe->tagemit($std);
 
         // Endereço Emitente
@@ -202,7 +198,6 @@ class NFePHPMakeService
                 $nfe->tagdest($std);
             }
         } else {
-
             $std = new \stdClass();
             $std->xNome = substr(Strings::replaceSpecialsChars($nf->Pessoa->pessoa), 0, 60);
 
@@ -257,7 +252,6 @@ class NFePHPMakeService
             $std->xPais = Strings::replaceSpecialsChars($nf->Pessoa->Cidade->Estado->Pais->pais);
             $std->fone = numeroLimpo(($nf->Pessoa->telefone1??$nf->Pessoa->telefone2)??$nf->Pessoa->telefone3);
             $nfe->tagenderDest($std);
-
         }
 
         $nItem = 0;
@@ -276,158 +270,155 @@ class NFePHPMakeService
         $observacoesProdutos = '';
         $nfpbs = $nf->NotaFiscalProdutoBarraS()->orderBy('codnotafiscalprodutobarra')->get();
         foreach ($nfpbs as $nfpb) {
-          $nItem++;
+            $nItem++;
 
-          // Item
-          $std = new \stdClass();
-          $std->item = $nItem;
-          $std->cProd = mascarar($nfpb->ProdutoBarra->codproduto, "######");
-          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)){
-              $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
-          }
-          $std->cEAN = 'SEM GTIN';
-          try {
-              $gtin = new Gtin($nfpb->ProdutoBarra->barras);
-              if ($gtin->isValid()) {
-                  $std->cEAN = $nfpb->ProdutoBarra->barras;
-              }
-          } catch (\Exception $e) {
-          }
-          $std->xProd = Strings::replaceSpecialsChars($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
-          $std->NCM = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->Ncm->ncm);
-          $std->CFOP = $nfpb->codcfop;
-          $std->uCom = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->UnidadeMedida->sigla);
-          $std->qCom = number_format($nfpb->quantidade, 3, '.', '');
-          $std->vUnCom = number_format($nfpb->valorunitario, 10, '.', '');
-          $std->vProd = number_format($nfpb->valortotal, 2, '.', '');
+            // Item
+            $std = new \stdClass();
+            $std->item = $nItem;
+            $std->cProd = mascarar($nfpb->ProdutoBarra->codproduto, "######");
+            if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)) {
+                $std->cProd .= '-' . formataNumero($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade, 0);
+            }
+            $std->cEAN = 'SEM GTIN';
+            try {
+                $gtin = new Gtin($nfpb->ProdutoBarra->barras);
+                if ($gtin->isValid()) {
+                    $std->cEAN = $nfpb->ProdutoBarra->barras;
+                }
+            } catch (\Exception $e) {
+            }
+            $std->xProd = Strings::replaceSpecialsChars($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
+            $std->NCM = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->Ncm->ncm);
+            $std->CFOP = $nfpb->codcfop;
+            $std->uCom = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->UnidadeMedida->sigla);
+            $std->qCom = number_format($nfpb->quantidade, 3, '.', '');
+            $std->vUnCom = number_format($nfpb->valorunitario, 10, '.', '');
+            $std->vProd = number_format($nfpb->valortotal, 2, '.', '');
 
-          // Pedido
-          $std->xPed = Strings::replaceSpecialsChars($nfpb->pedido);
-          $std->nItemPed = number_format($nfpb->pedidoitem, 0, '.', '');
+            // Pedido
+            $std->xPed = Strings::replaceSpecialsChars($nfpb->pedido);
+            $std->nItemPed = number_format($nfpb->pedidoitem, 0, '.', '');
 
-          $std->cEANTrib = $std->cEAN;
-          $std->uTrib = $std->uCom;
-          $std->qTrib = $std->qCom;
+            $std->cEANTrib = $std->cEAN;
+            $std->uTrib = $std->uCom;
+            $std->qTrib = $std->qCom;
 
-          // SE FOR EMBALAGEM, PEGA PRIMEIRO CODIGO DE BARRAS DE UNIDADE POSSIVEL
-          if (!empty($nfpb->ProdutoBarra->codprodutoembalagem) && $std->cEAN != 'SEM GTIN') {
-             foreach ($nfpb->ProdutoBarra->ProdutoVariacao->ProdutoBarraS()->whereNull('codprodutoembalagem')->get() as $pbUnidade) {
-                 try {
-                     $gtin = new Gtin($pbUnidade->barras);
-                     if ($gtin->isValid()) {
-                         $std->cEANTrib = $pbUnidade->barras;
-                         if (empty($pbUnidade->codprodutoembalagem)) {
-                             $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->UnidadeMedida->sigla);
-                         }
-                         $std->qTrib = number_format($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade * $nfpb->quantidade, 3, '.', '');
-                         break;
-                     }
-                 } catch (\Exception $e) {
-                 }
-             }
-          }
+            // SE FOR EMBALAGEM, PEGA PRIMEIRO CODIGO DE BARRAS DE UNIDADE POSSIVEL
+            if (!empty($nfpb->ProdutoBarra->codprodutoembalagem) && $std->cEAN != 'SEM GTIN') {
+                foreach ($nfpb->ProdutoBarra->ProdutoVariacao->ProdutoBarraS()->whereNull('codprodutoembalagem')->get() as $pbUnidade) {
+                    try {
+                        $gtin = new Gtin($pbUnidade->barras);
+                        if ($gtin->isValid()) {
+                            $std->cEANTrib = $pbUnidade->barras;
+                            if (empty($pbUnidade->codprodutoembalagem)) {
+                                $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->UnidadeMedida->sigla);
+                            }
+                            $std->qTrib = number_format($nfpb->ProdutoBarra->ProdutoEmbalagem->quantidade * $nfpb->quantidade, 3, '.', '');
+                            break;
+                        }
+                    } catch (\Exception $e) {
+                    }
+                }
+            }
 
-          // SE NAO ACHOU NENHUM CODIGO DE BARRAS DE UNIDADE, USA MESMO CODIGO DE BARRAS DA EMBALAGEM
-          $std->vUnTrib = number_format($std->vProd / $std->qTrib, 10, '.', '');
-          if ($nfpb->valorfrete >= 0.01) {
-              $std->vFrete = number_format($nfpb->valorfrete, 2, '.', '');
-          }
-          if ($nfpb->valorseguro >= 0.01) {
-              $std->vSeg = number_format($nfpb->valorseguro, 2, '.', '');
-          }
-          if ($nfpb->valordesconto >= 0.01) {
-              $std->vDesc = number_format($nfpb->valordesconto, 2, '.', '');
-          }
-          if ($nfpb->valoroutras >= 0.01) {
-              $std->vOutro = number_format($nfpb->valoroutras, 2, '.', '');
-          }
-          $std->indTot = 1;
-          $nfe->tagprod($std);
+            // SE NAO ACHOU NENHUM CODIGO DE BARRAS DE UNIDADE, USA MESMO CODIGO DE BARRAS DA EMBALAGEM
+            $std->vUnTrib = number_format($std->vProd / $std->qTrib, 10, '.', '');
+            if ($nfpb->valorfrete >= 0.01) {
+                $std->vFrete = number_format($nfpb->valorfrete, 2, '.', '');
+            }
+            if ($nfpb->valorseguro >= 0.01) {
+                $std->vSeg = number_format($nfpb->valorseguro, 2, '.', '');
+            }
+            if ($nfpb->valordesconto >= 0.01) {
+                $std->vDesc = number_format($nfpb->valordesconto, 2, '.', '');
+            }
+            if ($nfpb->valoroutras >= 0.01) {
+                $std->vOutro = number_format($nfpb->valoroutras, 2, '.', '');
+            }
+            $std->indTot = 1;
+            $nfe->tagprod($std);
 
-          $infAdProd = '';
-          if (!empty($nfpb->observacoes)) {
-              $infAdProd .= str_replace("\n", "; \n", $nfpb->observacoes) . "; \n";
-          }
-          if ($nfpb->certidaosefazmt) {
-              $cert = $nf->Filial->Pessoa->certidaoSefazMT();
-              $val = $cert->validade->format('d/m/Y');
-              $infAdProd .= "{$cert->CertidaoTipo->sigla} Emitente {$cert->numero} Autenticacao {$cert->autenticacao} Validade {$val}.; \n";
-              $cert = $nf->Pessoa->certidaoSefazMT();
-              $val = $cert->validade->format('d/m/Y');
-              $infAdProd .= "{$cert->CertidaoTipo->sigla} Destinatario {$cert->numero} Autenticacao {$cert->autenticacao} Validade {$val}.; \n";
-          }
-          if (!empty($nfpb->fethabvalor)) {
-              $val = formataNumero($nfpb->fethabvalor);
-              $infAdProd .= "Fethab R$ {$val}.; \n";
-          }
-          if (!empty($nfpb->iagrovalor)) {
-              $val = formataNumero($nfpb->iagrovalor);
-              $infAdProd .= "Iagro R$ {$val}.; \n";
-          }
-          if (!empty($nfpb->funruralvalor)) {
-              $val = formataNumero($nfpb->funruralvalor);
-              $infAdProd .= "Funrural R$ {$val}.; \n";
-          }
-          if (!empty($nfpb->senarvalor)) {
-              $val = formataNumero($nfpb->senarvalor);
-              $infAdProd .= "Senar R$ {$val}.; \n";
-          }
+            $infAdProd = '';
+            if (!empty($nfpb->observacoes)) {
+                $infAdProd .= str_replace("\n", "; \n", $nfpb->observacoes) . "; \n";
+            }
+            if ($nfpb->certidaosefazmt) {
+                $cert = $nf->Filial->Pessoa->certidaoSefazMT();
+                $val = $cert->validade->format('d/m/Y');
+                $infAdProd .= "{$cert->CertidaoTipo->sigla} Emitente {$cert->numero} Autenticacao {$cert->autenticacao} Validade {$val}.; \n";
+                $cert = $nf->Pessoa->certidaoSefazMT();
+                $val = $cert->validade->format('d/m/Y');
+                $infAdProd .= "{$cert->CertidaoTipo->sigla} Destinatario {$cert->numero} Autenticacao {$cert->autenticacao} Validade {$val}.; \n";
+            }
+            if (!empty($nfpb->fethabvalor)) {
+                $val = formataNumero($nfpb->fethabvalor);
+                $infAdProd .= "Fethab R$ {$val}.; \n";
+            }
+            if (!empty($nfpb->iagrovalor)) {
+                $val = formataNumero($nfpb->iagrovalor);
+                $infAdProd .= "Iagro R$ {$val}.; \n";
+            }
+            if (!empty($nfpb->funruralvalor)) {
+                $val = formataNumero($nfpb->funruralvalor);
+                $infAdProd .= "Funrural R$ {$val}.; \n";
+            }
+            if (!empty($nfpb->senarvalor)) {
+                $val = formataNumero($nfpb->senarvalor);
+                $infAdProd .= "Senar R$ {$val}.; \n";
+            }
 
-          if (!empty($infAdProd)) {
-              // MOVIDO PARA OBSERVACOES DA NOTA POR ORIENTACAO DA DENISE
-              $observacoesProdutos .= $infAdProd;
-              // $std = new \stdClass();
+            if (!empty($infAdProd)) {
+                // MOVIDO PARA OBSERVACOES DA NOTA POR ORIENTACAO DA DENISE
+                $observacoesProdutos .= $infAdProd;
+                // $std = new \stdClass();
               // $std->item = $nItem;
               // $std->infAdProd = $infAdProd;
               // $nfe->taginfAdProd($std);
-          }
+            }
 
-          // Cest
-          if (isset($nfpb->ProdutoBarra->Produto->Cest)) {
-              $std = new \stdClass();
-              $std->item = $nItem;
-              $std->CEST = $nfpb->ProdutoBarra->Produto->Cest->cest;
-              $cest = $nfe->tagCEST($std);
-          }
+            // Cest
+            if (isset($nfpb->ProdutoBarra->Produto->Cest)) {
+                $std = new \stdClass();
+                $std->item = $nItem;
+                $std->CEST = $nfpb->ProdutoBarra->Produto->Cest->cest;
+                $cest = $nfe->tagCEST($std);
+            }
 
-          // Se natureza de operacao esta marcada para destacar IBPT
-          $vTotTrib = 0;
-          if ($nf->NaturezaOperacao->ibpt) {
+            // Se natureza de operacao esta marcada para destacar IBPT
+            $vTotTrib = 0;
+            if ($nf->NaturezaOperacao->ibpt) {
 
               // Faz consulta ao WebService do IBPT
-              $tax = $ibpt->pesquisar($nfpb);
+                $tax = $ibpt->pesquisar($nfpb);
 
-              // Se nao houve erro ao consultar
-              if (!isset($tax->error)) {
+                // Se nao houve erro ao consultar
+                if (!isset($tax->error)) {
 
                   // monta string com fonte do IBPT para utilizar nos Dados Adicionais
-                  $ibptFonte = "{$tax->fonte} {$tax->chave} {$tax->versao}";
+                    $ibptFonte = "{$tax->fonte} {$tax->chave} {$tax->versao}";
 
-                  // Valcula valor dos tributos
-                  $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado)?$tax->importado:$tax->nacional)) / 100;
-                  $vTotTribEstadual = ($nfpb->valortotal * $tax->estadual) / 100;
-                  $vTotTribMunicipal = ($nfpb->valortotal * $tax->municipal) / 100;
-                  $vTotTrib = round($vTotTribFederal + $vTotTribEstadual + $vTotTribMunicipal, 2);
+                    // Valcula valor dos tributos
+                    $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado)?$tax->importado:$tax->nacional)) / 100;
+                    $vTotTribEstadual = ($nfpb->valortotal * $tax->estadual) / 100;
+                    $vTotTribMunicipal = ($nfpb->valortotal * $tax->municipal) / 100;
+                    $vTotTrib = round($vTotTribFederal + $vTotTribEstadual + $vTotTribMunicipal, 2);
 
-                  // Acumula totais dos tributos da nota
-                  $totalTribFederal += $vTotTribFederal;
-                  $totalTribEstadual += $vTotTribEstadual;
-                  $totalTribMunicipal += $vTotTribMunicipal;
-                  $totalTrib += $vTotTrib;
+                    // Acumula totais dos tributos da nota
+                    $totalTribFederal += $vTotTribFederal;
+                    $totalTribEstadual += $vTotTribEstadual;
+                    $totalTribMunicipal += $vTotTribMunicipal;
+                    $totalTrib += $vTotTrib;
+                }
+            }
 
+            // Gera TAG Imposto
+            $std = new \stdClass();
+            $std->item = $nItem;
+            $std->vTotTrib = number_format($vTotTrib, 2, '.', '');
+            $nfe->tagimposto($std);
 
-              }
-
-          }
-
-          // Gera TAG Imposto
-          $std = new \stdClass();
-          $std->item = $nItem;
-          $std->vTotTrib = number_format($vTotTrib, 2, '.', '');
-          $nfe->tagimposto($std);
-
-          // Verifica Codigo do Regime Tributario
-          switch ($nf->Filial->crt) {
+            // Verifica Codigo do Regime Tributario
+            switch ($nf->Filial->crt) {
 
               // Lucro Presumido
               case Filial::CRT_REGIME_NORMAL:
@@ -468,7 +459,6 @@ class NFePHPMakeService
 
                   // Partilha ICMS
                   if ($nf->Filial->Pessoa->Cidade->codestado != $nf->Pessoa->Cidade->codestado) {
-
                       $std = new \stdClass();
                       $std->item = $nItem; //item da NFe
                       $std->vBCUFDest = number_format($nfpb->icmsbase, 2, '.', '');
@@ -601,16 +591,15 @@ class NFePHPMakeService
                   break;
           }
 
-          $totalPis += $nfpb->pisvalor;
-          $totalCofins += $nfpb->cofinsvalor;
-
+            $totalPis += $nfpb->pisvalor;
+            $totalCofins += $nfpb->cofinsvalor;
         }
 
         // Total ICMS da Nota
         $std = new \stdClass();
         if ($nf->Filial->crt == Filial::CRT_REGIME_NORMAL) {
-          $std->vBC = number_format($nf->icmsbase, 2, '.', '');
-          $std->vICMS = number_format($nf->icmsvalor, 2, '.', '');
+            $std->vBC = number_format($nf->icmsbase, 2, '.', '');
+            $std->vICMS = number_format($nf->icmsvalor, 2, '.', '');
         }
         // $std->vICMSDeson = 0.00;
         $std->vBCST = number_format($nf->icmsstbase, 2, '.', '');
@@ -697,10 +686,10 @@ class NFePHPMakeService
         // caso total das parcelas seja maior que o total da nota, calcula vTroco
         // para casos de dizima como por exemplo NF #00830316
         if ($nf->modelo == NotaFiscal::MODELO_NFE) {
-          $prazo = $nf->NotaFiscalDuplicatass()->where('vencimento', '>', Carbon::today())->sum('valor');
-          if ($prazo > $nf->valortotal) {
-              $std->vTroco = number_format($prazo - $nf->valortotal, 2, '.', '');
-          }
+            $prazo = $nf->NotaFiscalDuplicatass()->where('vencimento', '>', Carbon::today())->sum('valor');
+            if ($prazo > $nf->valortotal) {
+                $std->vTroco = number_format($prazo - $nf->valortotal, 2, '.', '');
+            }
         }
         $elem = $nfe->tagpag($std);
 
@@ -708,75 +697,70 @@ class NFePHPMakeService
         // for ajuste ou devolucao para evitar a Rejeicao:
         // 871 - Rejeicao: O campo Forma de Pagamento deve ser preenchido com a opcao Sem Pagamento
         if (in_array($nf->NaturezaOperacao->finnfe, [NaturezaOperacao::FINNFE_AJUSTE, NaturezaOperacao::FINNFE_DEVOLUCAO_RETORNO])) {
-
-          $std = new \stdClass();
-          $std->tPag = '90';
-          $std->vPag = number_format($nf->valortotal, 2, '.', '');
-          $elem = $nfe->tagdetPag($std);
-
-        } else{
+            $std = new \stdClass();
+            $std->tPag = '90';
+            $std->vPag = number_format($nf->valortotal, 2, '.', '');
+            $elem = $nfe->tagdetPag($std);
+        } else {
 
             // Duplicatas - Somente quando NFE
             if ($nf->modelo == NotaFiscal::MODELO_NFE) {
-
-              $dups = [];
-              $nDup = 0;
-              foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
+                $dups = [];
+                $nDup = 0;
+                foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
 
                 // Se duplicata tiver vencimento <= hoje ocorre Rejeicao
-                // 898 - Rejeicao: Data de vencimento da parcela nao informada ou menor que Data de Autorizacao
-                if ($nfd->vencimento->isPast()) {
-                    continue;
+                    // 898 - Rejeicao: Data de vencimento da parcela nao informada ou menor que Data de Autorizacao
+                    if ($nfd->vencimento->isPast()) {
+                        continue;
+                    }
+
+                    // Duplicatas
+                    $std = new \stdClass();
+                    $nDup++;
+                    //$std->nDup = Strings::replaceSpecialsChars($nfd->fatura);
+                    $std->nDup = mascarar($nDup, '###');
+                    #$nFat = $std->nDup;
+                    $nFat = Strings::replaceSpecialsChars($nfd->fatura);
+                    $std->dVenc = $nfd->vencimento->format('Y-m-d');
+                    $std->vDup = number_format($nfd->valor, 2, '.', '');
+                    $totalPrazo += $nfd->valor;
+                    $dups[] = $std;
                 }
 
-                // Duplicatas
-                $std = new \stdClass();
-                $nDup++;
-                //$std->nDup = Strings::replaceSpecialsChars($nfd->fatura);
-                $std->nDup = mascarar($nDup, '###');
-                #$nFat = $std->nDup;
-                $nFat = Strings::replaceSpecialsChars($nfd->fatura);
-                $std->dVenc = $nfd->vencimento->format('Y-m-d');
-                $std->vDup = number_format($nfd->valor, 2, '.', '');
-                $totalPrazo += $nfd->valor;
-                $dups[] = $std;
-              }
+                if (!empty($totalPrazo)) {
+                    $std = new \stdClass();
+                    $std->nFat = $nFat;
+                    $std->vOrig = number_format($totalPrazo, 2, '.', '');
+                    $std->vDesc = null;
+                    $std->vLiq = number_format($totalPrazo, 2, '.', '');
+                    $elem = $nfe->tagfat($std);
 
-              if (!empty($totalPrazo)) {
-
-                $std = new \stdClass();
-                $std->nFat = $nFat;
-                $std->vOrig = number_format($totalPrazo, 2, '.', '');
-                $std->vDesc = null;
-                $std->vLiq = number_format($totalPrazo, 2, '.', '');
-                $elem = $nfe->tagfat($std);
-
-                foreach ($dups as $dup) {
-                  $nfe->tagdup($dup);
+                    foreach ($dups as $dup) {
+                        $nfe->tagdup($dup);
+                    }
                 }
-
-              }
             }
 
             // Pagamento a Vista
             if ($nf->valortotal > $totalPrazo) {
-              // TODO: Trazer informação do tipo de pagamento do negocio
-              $std = new \stdClass();
-              // 01=Dinheiro
-              // 02=Cheque
-              // 03=Cartão de Crédito
-              // 04=Cartão de Débito
-              // 05=Crédito Loja
-              // 10=Vale Alimentação
-              // 11=Vale Refeição
-              // 12=Vale Presente
-              // 13=Vale Combustível
-              // 15=Boleto Bancário
-              // 90=Sem Pagamento;
-              // 99=Outros.
-              $std->tPag = '01';
-              $std->vPag = number_format($nf->valortotal - $totalPrazo, 2, '.', '');
-              // $std->CNPJ = '12345678901234';
+                // TODO: Trazer informação do tipo de pagamento do negocio
+                $std = new \stdClass();
+                // 01=Dinheiro
+                // 02=Cheque
+                // 03=Cartão de Crédito
+                // 04=Cartão de Débito
+                // 05=Crédito Loja
+                // 10=Vale Alimentação
+                // 11=Vale Refeição
+                // 12=Vale Presente
+                // 13=Vale Combustível
+                // 15=Boleto Bancário
+                // 90=Sem Pagamento;
+                // 99=Outros.
+                $std->tPag = '01';
+                $std->vPag = number_format($nf->valortotal - $totalPrazo, 2, '.', '');
+                // $std->CNPJ = '12345678901234';
               // $std->tBand = '01';
               // $std->cAut = '3333333';
               // $std->tpIntegra = 1; //incluso na NT 2015/002
@@ -786,11 +770,11 @@ class NFePHPMakeService
 
             // Pagamento a Prazo
             if ($totalPrazo > 0) {
-              $std = new \stdClass();
-              $std->tPag = ($nf->codfilial==401)?'99':'05';
-              $std->vPag = number_format($totalPrazo, 2, '.', '');
-              $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
-              $elem = $nfe->tagdetPag($std);
+                $std = new \stdClass();
+                $std->tPag = ($nf->codfilial==401)?'99':'05';
+                $std->vPag = number_format($totalPrazo, 2, '.', '');
+                $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
+                $elem = $nfe->tagdetPag($std);
             }
         }
 
@@ -848,7 +832,5 @@ class NFePHPMakeService
         $path = NFePHPPathService::pathNFeAssinada($nf, true);
         file_put_contents($path, $xml);
         return $xml;
-
     }
-
 }

@@ -8,8 +8,7 @@ use Mg\NotaFiscal\NotaFiscal;
 
 class NFePHPRoboService
 {
-
-    public static function pendentes ($per_page = 50, $current_page = 1, $desc = false)
+    public static function pendentes($per_page = 50, $current_page = 1, $desc = false)
     {
         $desc = ($desc)?'DESC':'ASC';
         $offset = ($per_page * ($current_page - 1));
@@ -57,16 +56,15 @@ class NFePHPRoboService
         }
 
         return $ret;
-
     }
 
-    public static function resolvido (NotaFiscal $nf)
+    public static function resolvido(NotaFiscal $nf)
     {
         if (!empty($nf->nfeautorizacao)) {
             return true;
         }
         if (!empty($nf->nfeinutilizacao)) {
-          return true;
+            return true;
         }
         if (!empty($nf->nfecancelamento)) {
             return true;
@@ -81,27 +79,26 @@ class NFePHPRoboService
         }
         // Tenta Enviar
         try {
-          $resEnvioSincrono = NFePHPService::enviarSincrono($nf);
-          $nf = $nf->fresh();
+            $resEnvioSincrono = NFePHPService::enviarSincrono($nf);
+            $nf = $nf->fresh();
 
-        // Se excecao no envio, provavelmente por problema na geracao do XML
+            // Se excecao no envio, provavelmente por problema na geracao do XML
         } catch (\Exception $e) {
 
           // tenta criar o XML e enviar novamente
-          try {
-              $resCriar = NFePHPService::criar($nf);
-              $nf = $nf->fresh();
-              $resEnvioSincrono = NFePHPService::enviarSincrono($nf);
-              $nf = $nf->fresh();
+            try {
+                $resCriar = NFePHPService::criar($nf);
+                $nf = $nf->fresh();
+                $resEnvioSincrono = NFePHPService::enviarSincrono($nf);
+                $nf = $nf->fresh();
 
-          // se ainda assim der excecao, retorna erro
-          } catch (\Exception $e2) {
-              return (object) [
+                // se ainda assim der excecao, retorna erro
+            } catch (\Exception $e2) {
+                return (object) [
                 'resolvido' => false,
                 'erro' => $e2->getMessage()
               ];
-          }
-
+            }
         }
 
         // se resolveu com procedimento acima, manda o email e retorna sucesso
@@ -123,7 +120,7 @@ class NFePHPRoboService
             $resConsulta = NFePHPService::consultar($nf);
             $nf = $nf->fresh();
 
-        // se excecao ao consultar, retorna mensagem
+            // se excecao ao consultar, retorna mensagem
         } catch (\Exception $e) {
             return (object) [
               'resolvido' => false,
@@ -136,9 +133,9 @@ class NFePHPRoboService
         if (static::resolvido($nf)) {
             if (empty($nf->nfecancelamento)) {
                 try {
-                  $resMail =  NFePHPMailService::mail($nf);
+                    $resMail =  NFePHPMailService::mail($nf);
                 } catch (\Exception $e) {
-                  $resMail = $e->getMessage();
+                    $resMail = $e->getMessage();
                 }
             }
             return (object) [
@@ -159,7 +156,7 @@ class NFePHPRoboService
                 $resEnvioSincrono = NFePHPService::enviarSincrono($nf);
                 $nf = $nf->fresh();
 
-            // caso execao, retorna mensagem
+                // caso execao, retorna mensagem
             } catch (\Exception $e) {
                 return (object) [
                   'resolvido' => false,
@@ -183,7 +180,6 @@ class NFePHPRoboService
                   'resMail' => $resMail??null
                 ];
             }
-
         }
 
         // se nao conseguiu resolver, retorna resultados das tentativas
@@ -193,7 +189,5 @@ class NFePHPRoboService
           'resConsulta' => $resConsulta??null,
           'resCriar' => $resCriar??null
         ];
-
     }
-
 }

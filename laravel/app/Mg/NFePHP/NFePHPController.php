@@ -150,5 +150,4 @@ class NFePHPController extends MgController
         $res = NFePHPRoboService::resolverPendentes($per_page, $current_page, $desc);
         return response()->json($res, 200);
     }
-
 }

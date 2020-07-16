@@ -18,11 +18,10 @@ use NFePHP\DA\NFe\Danfe;
 
 class NFePHPService extends MgService
 {
-
     const EXCEPTION_CHAVE_NFE_AUSENTE = 999;
     const EXCEPTION_XML_ASSINADO_INEXISTENTE = 998;
 
-    public static function sefazStatus (Filial $filial)
+    public static function sefazStatus(Filial $filial)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
         $resp = $tools->sefazStatus();
@@ -31,7 +30,7 @@ class NFePHPService extends MgService
         return $r;
     }
 
-    public static function cscConsulta (Filial $filial)
+    public static function cscConsulta(Filial $filial)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
         $tools->model('65');
@@ -60,7 +59,6 @@ class NFePHPService extends MgService
 
         // Retorna Resultado do processo
         return $xmlAssinado;
-
     }
 
     public static function enviar(NotaFiscal $nf)
@@ -72,7 +70,7 @@ class NFePHPService extends MgService
 
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
-            throw new \Exception ('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
+            throw new \Exception('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
         }
 
         // Carrega Arquivo XML Assinado
@@ -113,7 +111,6 @@ class NFePHPService extends MgService
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
             $cStat = $respStd->cStat;
             $xMotivo = $respStd->xMotivo;
-
         }
 
         // Retorna Resultado do processo
@@ -125,7 +122,6 @@ class NFePHPService extends MgService
             'nfedataenvio' => ($nf->nfedataenvio)?$nf->nfedataenvio->toW3cString():null,
             'resp' => $resp,
         ];
-
     }
 
 
@@ -137,7 +133,7 @@ class NFePHPService extends MgService
 
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
-            throw new \Exception ('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
+            throw new \Exception('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
         }
 
         // Carrega Arquivo XML Assinado
@@ -164,7 +160,7 @@ class NFePHPService extends MgService
         if (isset($respStd->protNFe->infProt->cStat)) {
 
             // Processa Protocolo para saber se foi autorizada
-            $sucesso = static::processarProtocolo ($nf, $respStd->protNFe, $resp);
+            $sucesso = static::processarProtocolo($nf, $respStd->protNFe, $resp);
             $nf = $nf->fresh();
 
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
@@ -186,11 +182,10 @@ class NFePHPService extends MgService
           'nfedataautorizacao' => ($nf->nfedataautorizacao)?$nf->nfedataautorizacao->toW3cString():null,
           'resp' => $resp
         ];
-
     }
 
 
-    public static function vincularProtocoloAutorizacao (NotaFiscal $nf, $protNFe, $resp)
+    public static function vincularProtocoloAutorizacao(NotaFiscal $nf, $protNFe, $resp)
     {
 
         // Verifica se tem o infProt
@@ -222,11 +217,11 @@ class NFePHPService extends MgService
         return true;
     }
 
-    public static function vincularProtocoloDenegacao (NotaFiscal $nf, $protNFe, $resp)
+    public static function vincularProtocoloDenegacao(NotaFiscal $nf, $protNFe, $resp)
     {
         // Verifica se tem o infProt
         if (!isset($protNFe->infProt)) {
-          return false;
+            return false;
         }
         $infProt = $protNFe->infProt;
 
@@ -253,11 +248,11 @@ class NFePHPService extends MgService
         return true;
     }
 
-    public static function vincularProtocoloCancelamento (NotaFiscal $nf, $procEventoNFe, $resp, $justificativa = null, $tools = null)
+    public static function vincularProtocoloCancelamento(NotaFiscal $nf, $procEventoNFe, $resp, $justificativa = null, $tools = null)
     {
         // Verifica se tem o infEvento
         if (!isset($procEventoNFe->retEvento->infEvento)) {
-          return false;
+            return false;
         }
         $infEvento = $procEventoNFe->retEvento->infEvento;
 
@@ -289,7 +284,7 @@ class NFePHPService extends MgService
         return true;
     }
 
-    public static function vincularProtocoloInutilizacao (NotaFiscal $nf, $resp, $respStd, $justificativa)
+    public static function vincularProtocoloInutilizacao(NotaFiscal $nf, $resp, $respStd, $justificativa)
     {
         // Verifica se tem o infInut
         if (!isset($respStd->infInut)) {
@@ -311,7 +306,7 @@ class NFePHPService extends MgService
     {
         // valida se existe Chave da NFe
         if (empty($nf->nfereciboenvio)) {
-            throw new \Exception ('Esta NFe não possui número de Recibo para ser consultado!');
+            throw new \Exception('Esta NFe não possui número de Recibo para ser consultado!');
         }
 
         // Instancia Tools para a configuracao e certificado
@@ -332,13 +327,12 @@ class NFePHPService extends MgService
         if (isset($respStd->protNFe->infProt->cStat)) {
 
             // Processa Protocolo para saber se foi autorizada
-            $sucesso = static::processarProtocolo ($nf, $respStd->protNFe, $resp);
+            $sucesso = static::processarProtocolo($nf, $respStd->protNFe, $resp);
             $nf = $nf->fresh();
 
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
             $cStat = $respStd->protNFe->infProt->cStat;
             $xMotivo = $respStd->protNFe->infProt->xMotivo;
-
         }
 
         // Retorna Resultado do processo
@@ -350,15 +344,14 @@ class NFePHPService extends MgService
             'nfedataautorizacao' => ($nf->nfedataautorizacao)?$nf->nfedataautorizacao->toW3cString():null,
             'resp' => $resp
         ];
-
     }
 
-    public static function cancelar (NotaFiscal $nf, $justificativa)
+    public static function cancelar(NotaFiscal $nf, $justificativa)
     {
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
         if (strlen($justificativa) < 15) {
-          throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
+            throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
         }
 
         // Valida Autorização
@@ -407,7 +400,6 @@ class NFePHPService extends MgService
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
             $cStat = $respStd->retEvento->infEvento->cStat;
             $xMotivo = $respStd->retEvento->infEvento->xMotivo;
-
         }
 
         // Retorna Resultado do processo
@@ -419,7 +411,6 @@ class NFePHPService extends MgService
             'nfedatanfecancelamento' => ($nf->nfedatanfecancelamento)?$nf->nfedatanfecancelamento->toW3cString():null,
             'resp' => $resp
         ];
-
     }
 
     public static function inutilizar(NotaFiscal $nf, $justificativa)
@@ -428,7 +419,7 @@ class NFePHPService extends MgService
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
         if (strlen($justificativa) < 15) {
-          throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
+            throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
         }
 
         // Valida Pessoa Juridica
@@ -471,7 +462,7 @@ class NFePHPService extends MgService
             // Se Inutilizacao Homologada
             // 102 - Inutilizacao de Numero Homologado
             if (in_array($respStd->infInut->cStat, [102])) {
-                static::vincularProtocoloInutilizacao ($nf, $resp, $respStd, $justificativa);
+                static::vincularProtocoloInutilizacao($nf, $resp, $respStd, $justificativa);
                 $nf = $nf->fresh();
                 $sucesso = true;
             }
@@ -479,7 +470,6 @@ class NFePHPService extends MgService
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
             $cStat = $respStd->infInut->cStat;
             $xMotivo = $respStd->infInut->xMotivo;
-
         }
 
         // Retorna Resultado do processo
@@ -491,7 +481,6 @@ class NFePHPService extends MgService
             'nfedatainutilizacao' => ($nf->nfedatainutilizacao)?$nf->nfedatainutilizacao->toW3cString():null,
             'resp' => $resp
         ];
-
     }
 
     public static function cartaCorrecao(NotaFiscal $nf, $texto)
@@ -499,17 +488,17 @@ class NFePHPService extends MgService
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($texto));
         if (strlen($justificativa) < 15) {
-          throw new \Exception('O Texto deve ter pelo menos 15 caracteres!');
+            throw new \Exception('O Texto deve ter pelo menos 15 caracteres!');
         }
 
         // Valida Inutilizacao
         if ($nf->modelo == NotaFiscal::MODELO_NFCE) {
-          throw new \Exception('Não é permitido Carta de Correção para NFCe!');
+            throw new \Exception('Não é permitido Carta de Correção para NFCe!');
         }
 
         // Valida Inutilizacao
         if (!empty($nf->nfeinutilizacao)) {
-          throw new \Exception('Esta nota já está Inutilizada!');
+            throw new \Exception('Esta nota já está Inutilizada!');
         }
 
         // Valida Autorização
@@ -568,13 +557,11 @@ class NFePHPService extends MgService
                 $sucesso = true;
                 $protocolo = $respStd->retEvento->infEvento->nProt;
                 $protocolodata = $respStd->retEvento->infEvento->dhRegEvento;
-
             }
 
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
             $cStat = $respStd->retEvento->infEvento->cStat;
             $xMotivo = $respStd->retEvento->infEvento->xMotivo;
-
         }
 
         // Retorna Resultado do processo
@@ -588,7 +575,7 @@ class NFePHPService extends MgService
         ];
     }
 
-    public static function processarProtocolo (NotaFiscal $nf, $protNFe, $resp)
+    public static function processarProtocolo(NotaFiscal $nf, $protNFe, $resp)
     {
 
         // Se Autorizado
@@ -608,7 +595,6 @@ class NFePHPService extends MgService
         }
 
         return false;
-
     }
 
     public static function processarEventoCancelamento(NotaFiscal $nf, $procEventoNFe, $resp, $justificativa = null, $tools = null)
@@ -619,19 +605,18 @@ class NFePHPService extends MgService
         // 135 - Evento registrado e vinculado A NFe
         // 155 - Cancelamento Homologado Fora de Prazo
         if (in_array($procEventoNFe->retEvento->infEvento->cStat, [101, 135, 155])) {
-            static::vincularProtocoloCancelamento ($nf, $procEventoNFe, $resp, $justificativa, $tools);
+            static::vincularProtocoloCancelamento($nf, $procEventoNFe, $resp, $justificativa, $tools);
             return true;
         }
 
         return false;
-
     }
 
     public static function consultar(NotaFiscal $nf)
     {
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
-            throw new \Exception ('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
+            throw new \Exception('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
         }
 
         // Instancia Tools para a configuracao e certificado
@@ -660,7 +645,7 @@ class NFePHPService extends MgService
         if (isset($respStd->protNFe->infProt->cStat)) {
 
             // Processa Protocolo para saber se foi autorizada
-            $sucesso = static::processarProtocolo ($nf, $respStd->protNFe, $resp);
+            $sucesso = static::processarProtocolo($nf, $respStd->protNFe, $resp);
             $nf = $nf->fresh();
 
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
@@ -673,43 +658,40 @@ class NFePHPService extends MgService
 
             // Se veio somente um evento, forca array de eventos
             if (!is_array($respStd->procEventoNFe)) {
-              $respStd->procEventoNFe = [$respStd->procEventoNFe];
+                $respStd->procEventoNFe = [$respStd->procEventoNFe];
             }
 
             foreach ($respStd->procEventoNFe as $procEventoNFe) {
 
               // Cancelamento
-              if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
+                if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
               $procEventoNFe->evento->infEvento->tpEvento == 110111) {
 
                 // Processa Protocolo para saber se foi autorizada
-                $sucesso = static::processarEventoCancelamento($nf, $procEventoNFe, $resp);
-                $nf = $nf->fresh();
+                    $sucesso = static::processarEventoCancelamento($nf, $procEventoNFe, $resp);
+                    $nf = $nf->fresh();
 
-                // joga mensagem recebida da Sefaz para Variaveis de Retorno
-                $tpEvento = $procEventoNFe->evento->infEvento->tpEvento;
-                $cStat = $procEventoNFe->retEvento->infEvento->cStat;
-                $xMotivo = $procEventoNFe->retEvento->infEvento->xMotivo;
-              }
+                    // joga mensagem recebida da Sefaz para Variaveis de Retorno
+                    $tpEvento = $procEventoNFe->evento->infEvento->tpEvento;
+                    $cStat = $procEventoNFe->retEvento->infEvento->cStat;
+                    $xMotivo = $procEventoNFe->retEvento->infEvento->xMotivo;
+                }
 
-              // Carta de Correcao
-              if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
+                // Carta de Correcao
+                if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
               $procEventoNFe->evento->infEvento->tpEvento == 110110) {
-
-                $nfcc = NotaFiscalCartaCorrecao::firstOrNew([
+                    $nfcc = NotaFiscalCartaCorrecao::firstOrNew([
                   'codnotafiscal' => $nf->codnotafiscal,
                   'sequencia' => $procEventoNFe->evento->infEvento->nSeqEvento
                 ]);
-                $nfcc->lote = $procEventoNFe->evento->infEvento->nSeqEvento;
-                $nfcc->data = Carbon::parse($procEventoNFe->retEvento->infEvento->dhRegEvento);
-                $nfcc->texto = $procEventoNFe->evento->infEvento->detEvento->xCorrecao;
-                $nfcc->protocolo = $procEventoNFe->retEvento->infEvento->nProt;
-                $nfcc->protocolodata = Carbon::parse($procEventoNFe->retEvento->infEvento->dhRegEvento);
-                $nfcc->save();
-
-              }
+                    $nfcc->lote = $procEventoNFe->evento->infEvento->nSeqEvento;
+                    $nfcc->data = Carbon::parse($procEventoNFe->retEvento->infEvento->dhRegEvento);
+                    $nfcc->texto = $procEventoNFe->evento->infEvento->detEvento->xCorrecao;
+                    $nfcc->protocolo = $procEventoNFe->retEvento->infEvento->nProt;
+                    $nfcc->protocolodata = Carbon::parse($procEventoNFe->retEvento->infEvento->dhRegEvento);
+                    $nfcc->save();
+                }
             }
-
         }
 
         return (object) [
@@ -726,7 +708,6 @@ class NFePHPService extends MgService
             'justificativa' => $nf->justificativa,
             'resp' => $resp
         ];
-
     }
 
     public static function danfe(NotaFiscal $nf)
@@ -751,7 +732,7 @@ class NFePHPService extends MgService
                 throw new \Exception("Nota Fiscal ainda não está autorizada!");
             }
 
-        // Se arquivo XML Autorizado nao existir
+            // Se arquivo XML Autorizado nao existir
         } elseif (!file_exists($path)) {
             throw new \Exception("Não foi Localizado o arquivo da NFe ($path)");
 
@@ -765,29 +746,25 @@ class NFePHPService extends MgService
             // Logo somente na Migliorini
             if ($nf->Filial->codempresa == 1) {
                 $pathLogo = public_path('MGPapelariaLogo.jpeg');
-	    } else {
+            } else {
                 $pathLogo = '';
             }
 
             $danfe = new Danfe($xml, 'P', 'A4', $pathLogo, 'I', '', 'helvetica');
             $id = $danfe->montaDANFE('P', 'A4', 'C', Danfe::SIT_NONE, false, '', 5, 5, 5);
             $pdf = $danfe->render();
-
         } else {
-
             $pathLogo = public_path('MGPapelariaLogoSeloPretoBranco.jpeg');
 
             $danfce = new DanfceMg($xml, $pathLogo);
             $id = $danfce->monta();
             $pdf = $danfce->render();
-
         }
 
         $pathDanfe = NFePHPPathService::pathDanfe($nf, true);
         file_put_contents($pathDanfe, $pdf);
 
         return $pathDanfe;
-
     }
 
     public static function imprimir(NotaFiscal $nf, $impressora = null)
@@ -806,7 +783,7 @@ class NFePHPService extends MgService
             $impressora = $nf->UsuarioCriacao->impressoratermica;
         }
         if (empty($impressora)) {
-          throw new \Exception("Impressora não informada!", 1);
+            throw new \Exception("Impressora não informada!", 1);
         }
 
         // Executa comando de impressao
@@ -822,7 +799,7 @@ class NFePHPService extends MgService
         ];
     }
 
-    public static function xml (NotaFiscal $nf)
+    public static function xml(NotaFiscal $nf)
     {
         $path = NFePHPPathService::pathNFeAutorizada($nf);
         if (!file_exists($path)) {
@@ -833,5 +810,4 @@ class NFePHPService extends MgService
         }
         return file_get_contents($path);
     }
-
 }

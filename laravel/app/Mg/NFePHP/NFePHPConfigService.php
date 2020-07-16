@@ -9,9 +9,8 @@ use Mg\Filial\Filial;
 
 class NFePHPConfigService
 {
-    public static function config (Filial $filial, $versao = '4.00')
+    public static function config(Filial $filial, $versao = '4.00')
     {
-
         if (!$filial->Pessoa->fisica) {
             if (empty($filial->nfcetoken)) {
                 throw new \Exception("Não foi informado o Token CSC para a Filial!");
@@ -23,7 +22,7 @@ class NFePHPConfigService
 
             if (empty($filial->tokenibpt)) {
                 throw new \Exception("Não foi informado o ID do Token do IBPT para a Filial!");
-	        }
+            }
         }
 
         if ($filial->Pessoa->fisica) {
@@ -57,7 +56,7 @@ class NFePHPConfigService
         return json_encode($config);
     }
 
-    public static function instanciaTools (Filial $filial, $versao = '4.00')
+    public static function instanciaTools(Filial $filial, $versao = '4.00')
     {
         // Monta Configuracao da Filial
         $config = static::config($filial, $versao);
@@ -75,5 +74,4 @@ class NFePHPConfigService
         }
         return new Tools($config, Certificate::readPfx($pfx, $filial->senhacertificado));
     }
-
 }

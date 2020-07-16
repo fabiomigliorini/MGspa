@@ -9,8 +9,8 @@ use NFePHP\NFe\Common\Standardize;
 
 class NFePHPDownloadService
 {
-
-    public static function downloadNotaFiscalTerceiro (Filial $filial, $chave){
+    public static function downloadNotaFiscalTerceiro(Filial $filial, $chave)
+    {
 
         // FAZ A CONSULTA NO WEBSERVICE E TRAZ O XML
         try {
@@ -38,11 +38,9 @@ class NFePHPDownloadService
                 $res = $st->toStd($xml);
             }
             return $res;
-
         } catch (\Exception $e) {
             echo str_replace("\n", "<br/>", $e->getMessage());
             return $e;
         }
     } // FIM DO DOWNLOAD NFeTerceiro
-
 }

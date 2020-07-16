@@ -7,9 +7,8 @@ use Mg\Filial\Filial;
 
 class NFePHPConsultaSefazService
 {
-
-    public static function consultaSefaz($filial, $ultimoNsu){
-
+    public static function consultaSefaz($filial, $ultimoNsu)
+    {
         $tools = NFePHPConfigService::instanciaTools($filial);
         //só funciona para o modelo 55
         $tools->model('55');
@@ -56,14 +55,12 @@ class NFePHPConsultaSefazService
             if (empty($lote)) {
                 //lote vazio
                 continue;
-            }else{
+            } else {
                 return $lote;
             }
 
 
             sleep(2);
         }
-
     }
-
 }

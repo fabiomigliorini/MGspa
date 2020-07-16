@@ -12,7 +12,7 @@ use Log;
 
 use Mg\NotaFiscal\NotaFiscal;
 
-class NFePHPJobResolver implements ShouldQueue
+class NFePHPResolverJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -32,11 +32,11 @@ class NFePHPJobResolver implements ShouldQueue
     {
         $arr = (array) $res;
         foreach ($arr as $key => $value) {
-          if (is_object($res->$key)) {
-              $res->$key = $this->eliminarXML($res->$key);
-          } elseif (is_string($value) && (substr($value, 0, 5) == '<?xml')) {
-              unset($res->$key);
-          }
+            if (is_object($res->$key)) {
+                $res->$key = $this->eliminarXML($res->$key);
+            } elseif (is_string($value) && (substr($value, 0, 5) == '<?xml')) {
+                unset($res->$key);
+            }
         }
         return $res;
     }
@@ -52,9 +52,9 @@ class NFePHPJobResolver implements ShouldQueue
         $res = NFePHPRoboService::resolver($nf);
         $res = $this->eliminarXML($res);
         if (!isset($res->resolvido) || ($res->resolvido == false)) {
-            Log::error("NFePHPJobResolver: Erro ao resolver #{$this->codnotafiscal}", (array) $res);
+            Log::error("NFePHPResolverJob: Erro ao resolver #{$this->codnotafiscal}", (array) $res);
         } else {
-            Log::notice("NFePHPJobResolver: Resolvido #{$this->codnotafiscal}");
+            Log::notice("NFePHPResolverJob: Resolvido #{$this->codnotafiscal}");
         }
     }
 }

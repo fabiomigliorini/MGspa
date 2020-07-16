@@ -10,7 +10,6 @@ use Validator;
 
 class NFePHPMailService
 {
-
     public static function mail(NotaFiscal $nf, $destinatario = null)
     {
 
@@ -75,9 +74,8 @@ class NFePHPMailService
         ];
     }
 
-    public static function mailCancelamento (NotaFiscal $nf)
+    public static function mailCancelamento(NotaFiscal $nf)
     {
-      dd('mail-cancelamento');
+        dd('mail-cancelamento');
     }
-
 }

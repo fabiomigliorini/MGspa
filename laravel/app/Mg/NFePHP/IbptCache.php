@@ -42,5 +42,4 @@ class IbptCache extends MGModel
     {
         return $this->belongsTo(Filial::class, 'codestado', 'codestado');
     }
-
 }

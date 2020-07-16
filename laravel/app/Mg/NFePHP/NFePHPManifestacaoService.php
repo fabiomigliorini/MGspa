@@ -9,9 +9,8 @@ use NFePHP\NFe\Common\Standardize;
 
 class NFePHPManifestacaoService
 {
-
-    public static function manifestacao($request){
-
+    public static function manifestacao($request)
+    {
         try {
             $filial = Filial::findOrFail($request->filial);
 
@@ -35,7 +34,7 @@ class NFePHPManifestacaoService
             //a ciencia não requer justificativa
             $xJust = $request->justificativa??null;
 
-             //a ciencia em geral será numero inicial de uma sequencia para essa nota e evento
+            //a ciencia em geral será numero inicial de uma sequencia para essa nota e evento
             $nSeqEvento = 1;
 
             $response = $tools->sefazManifesta($chNFe, $tpEvento, $xJust, $nSeqEvento = 1);
@@ -54,5 +53,4 @@ class NFePHPManifestacaoService
             return $e->getMessage();
         }
     } // FIM manifestacao
-
 }
