@@ -3,6 +3,7 @@
 namespace Mg\NFePHP;
 
 use Mg\NotaFiscal\NotaFiscal;
+use Mg\Dfe\DistribuicaoDfe;
 use Mg\Filial\Filial;
 
 class NFePHPPathService
@@ -74,6 +75,17 @@ class NFePHPPathService
             @mkdir($path, 0775, true);
         }
         $path .= "/{$nf->nfechave}-CCe.xml";
+        return $path;
+    }
+
+    public static function pathDfeGz(DistribuicaoDfe $dfe, bool $criar = false)
+    {
+        $ambiente = ($dfe->Filial->nfeambiente == 1)?'producao':'homologacao';
+        $path = env('NFE_PHP_PATH') . "DFe/{$dfe->codfilial}/{$ambiente}/" . $dfe->criacao->format('Y/m');
+        if ($criar) {
+            @mkdir($path, 0775, true);
+        }
+        $path .= "/{$dfe->coddistribuicaodfe}.xml.gz";
         return $path;
     }
 }

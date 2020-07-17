@@ -1632,40 +1632,56 @@
         },
         "hasMany": []
     },
-    "tbldistribuicaodfe": {
-        "tabela": "tbldistribuicaodfe",
-        "campocodigo": "coddistribuicaodfe",
-        "namespace": "Mg\\NotaFiscalTerceiro",
-        "classe": "DistribuicaoDfe",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscalTerceiro\/DistribuicaoDfe.php",
-        "belongsTo": {
-            "codfilial": {
-                "tabela": "tblfilial",
-                "coluna": "codfilial",
-                "metodo": "Filial"
-            }
-        },
-        "hasMany": {
-            "tblnotafiscalterceiro.coddistribuicaodfe": {
-                "tabela": "tblnotafiscalterceiro",
-                "coluna": "coddistribuicaodfe",
-                "metodo": "NotaFiscalTerceiroS"
-            },
-            "tblnotafiscalterceiroevento.coddistribuicaodfe": {
-                "tabela": "tblnotafiscalterceiroevento",
-                "coluna": "coddistribuicaodfe",
-                "metodo": "NotaFiscalTerceiroEventoS"
-            }
-        }
-    },
     "tblnotafiscalterceiro": {
         "tabela": "tblnotafiscalterceiro",
         "campocodigo": "codnotafiscalterceiro",
         "namespace": "Mg\\NotaFiscalTerceiro",
         "classe": "NotaFiscalTerceiro",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscalTerceiro\/NotaFiscalTerceiro.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codnaturezaoperacao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NaturezaOperacao"
+            },
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            }
+        },
+        "hasMany": {
+            "tbldistribuicaodfe.codnotafiscalterceiro": {
+                "tabela": "tbldistribuicaodfe",
+                "coluna": "codnotafiscalterceiro",
+                "metodo": "DistribuicaoDfeS"
+            },
+            "tblnotafiscalterceiroduplicata.codnotafiscalterceiro": {
+                "tabela": "tblnotafiscalterceiroduplicata",
+                "coluna": "codnotafiscalterceiro",
+                "metodo": "NotaFiscalTerceiroDuplicataS"
+            },
+            "tblnotafiscalterceirogrupo.codnotafiscalterceiro": {
+                "tabela": "tblnotafiscalterceirogrupo",
+                "coluna": "codnotafiscalterceiro",
+                "metodo": "NotaFiscalTerceiroGrupoS"
+            }
+        }
     },
     "tblnotafiscalterceiroevento": {
         "tabela": "tblnotafiscalterceiroevento",
@@ -1778,6 +1794,137 @@
         "namespace": "Mg\\NfeTerceiro",
         "classe": "NfeTerceiroItem",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NfeTerceiro\/NfeTerceiroItem.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tbldistribuicaodfeevento": {
+        "tabela": "tbldistribuicaodfeevento",
+        "campocodigo": "coddistribuicaodfeevento",
+        "namespace": "Mg\\Dfe",
+        "classe": "DistribuicaoDfeEvento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Dfe\/DistribuicaoDfeEvento.php",
+        "belongsTo": {
+            "coddfeevento": {
+                "tabela": "tbldfeevento",
+                "coluna": "coddfeevento",
+                "metodo": "DfeEvento"
+            },
+            "coddistribuicaodfe": {
+                "tabela": "tbldistribuicaodfe",
+                "coluna": "coddistribuicaodfe",
+                "metodo": "DistribuicaoDfe"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tbldfeevento": {
+        "tabela": "tbldfeevento",
+        "campocodigo": "coddfeevento",
+        "namespace": "Mg\\Dfe",
+        "classe": "DfeEvento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Dfe\/DfeEvento.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tbldistribuicaodfeevento.coddfeevento": {
+                "tabela": "tbldistribuicaodfeevento",
+                "coluna": "coddfeevento",
+                "metodo": "DistribuicaoDfeEventoS"
+            }
+        }
+    },
+    "tbldfetipo": {
+        "tabela": "tbldfetipo",
+        "campocodigo": "coddfetipo",
+        "namespace": "Mg\\Dfe",
+        "classe": "DfeTipo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Dfe\/DfeTipo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tbldistribuicaodfe.coddfetipo": {
+                "tabela": "tbldistribuicaodfe",
+                "coluna": "coddfetipo",
+                "metodo": "DistribuicaoDfeS"
+            }
+        }
+    },
+    "tbldistribuicaodfe": {
+        "tabela": "tbldistribuicaodfe",
+        "campocodigo": "coddistribuicaodfe",
+        "namespace": "Mg\\Dfe",
+        "classe": "DistribuicaoDfe",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Dfe\/DistribuicaoDfe.php",
+        "belongsTo": {
+            "coddfetipo": {
+                "tabela": "tbldfetipo",
+                "coluna": "coddfetipo",
+                "metodo": "DfeTipo"
+            },
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codnotafiscalterceiro": {
+                "tabela": "tblnotafiscalterceiro",
+                "coluna": "codnotafiscalterceiro",
+                "metodo": "NotaFiscalTerceiro"
+            }
+        },
+        "hasMany": {
+            "tbldistribuicaodfeevento.coddistribuicaodfe": {
+                "tabela": "tbldistribuicaodfeevento",
+                "coluna": "coddistribuicaodfe",
+                "metodo": "DistribuicaoDfeEventoS"
+            }
+        }
+    },
+    "tblnotafiscalterceiroduplicata": {
+        "tabela": "tblnotafiscalterceiroduplicata",
+        "campocodigo": "codnotafiscalterceiroduplicata",
+        "namespace": "Mg\\NotaFiscalTerceiro",
+        "classe": "NotaFiscalTerceiroDuplicata",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscalTerceiro\/NotaFiscalTerceiroDuplicata.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnotafiscalterceirogrupo": {
+        "tabela": "tblnotafiscalterceirogrupo",
+        "campocodigo": "codnotafiscalterceirogrupo",
+        "namespace": "Mg\\NotaFiscalTerceiro",
+        "classe": "NotaFiscalTerceiroGrupo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscalTerceiro\/NotaFiscalTerceiroGrupo.php",
         "belongsTo": [],
         "hasMany": []
     }

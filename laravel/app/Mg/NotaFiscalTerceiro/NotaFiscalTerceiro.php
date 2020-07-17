@@ -1,72 +1,114 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 17/Jul/2020 15:10:00
+ */
 
 namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
+use Mg\Dfe\DistribuicaoDfe;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroDuplicata;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
+use Mg\Filial\Filial;
+use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\Negocio\Negocio;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\Pessoa\Pessoa;
 
-class NotaFiscalTerceiro extends MGModel
+class NotaFiscalTerceiro extends MgModel
 {
     protected $table = 'tblnotafiscalterceiro';
     protected $primaryKey = 'codnotafiscalterceiro';
+
+
     protected $fillable = [
-        'coddidtribuicaodfe',
-        'codnotafiscal',
-        'codnegocio',
-        'codfilial',
-        'codoperacao',
-        'codnaturezaoperacao',
-        'codpessoa',
-        'natop',
-        'emitente',
         'cnpj',
-        'ie',
+        'codfilial',
+        'codnaturezaoperacao',
+        'codnegocio',
+        'codnotafiscal',
+        'codoperacao',
+        'codpessoa',
+        'cpf',
+        'digito',
+        'download',
         'emissao',
-        'ignorada',
-        'indsituacao',
-        'justificativa',
-        'indmanifestacao',
-        'nfechave',
-        'modelo',
-        'serie',
-        'numero',
+        'emitente',
         'entrada',
-        'valortotal',
         'icmsbase',
-        'icmsvalor',
         'icmsstbase',
         'icmsstvalor',
+        'icmsvalor',
+        'ie',
+        'ignorada',
+        'indmanifestacao',
+        'indsituacao',
         'ipivalor',
-        'valorprodutos',
-        'valorfrete',
-        'valorseguro',
-        'valordesconto',
-        'valoroutras',
-        'download',
+        'justificativa',
+        'modelo',
+        'natop',
+        'nfechave',
+        'numero',
         'protocolo',
-        'tipo', // tpNF
-        'digito',
+        'recebimento',
+        'serie',
+        'tipo',
+        'valordesconto',
+        'valorfrete',
+        'valoroutras',
+        'valorprodutos',
+        'valorseguro',
+        'valortotal'
+    ];
 
-    ];
     protected $dates = [
-        'emissao',
+        'alteracao',
         'criacao',
-        'alteracao'
+        'emissao',
+        'entrada',
+        'recebimento'
     ];
+
+    protected $casts = [
+        'cnpj' => 'float',
+        'codfilial' => 'integer',
+        'codnaturezaoperacao' => 'integer',
+        'codnegocio' => 'integer',
+        'codnotafiscal' => 'integer',
+        'codnotafiscalterceiro' => 'integer',
+        'codoperacao' => 'integer',
+        'codpessoa' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'cpf' => 'float',
+        'download' => 'boolean',
+        'icmsbase' => 'float',
+        'icmsstbase' => 'float',
+        'icmsstvalor' => 'float',
+        'icmsvalor' => 'float',
+        'ignorada' => 'boolean',
+        'indmanifestacao' => 'integer',
+        'indsituacao' => 'integer',
+        'ipivalor' => 'float',
+        'modelo' => 'integer',
+        'numero' => 'integer',
+        'protocolo' => 'integer',
+        'serie' => 'integer',
+        'tipo' => 'integer',
+        'valordesconto' => 'float',
+        'valorfrete' => 'float',
+        'valoroutras' => 'float',
+        'valorprodutos' => 'float',
+        'valorseguro' => 'float',
+        'valortotal' => 'float'
+    ];
+
 
     // Chaves Estrangeiras
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
-    }
-    
-    public function UsuarioAlteracao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
-    }
-
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     public function NaturezaOperacao()
@@ -74,25 +116,36 @@ class NotaFiscalTerceiro extends MGModel
         return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
     }
 
+    public function Negocio()
+    {
+        return $this->belongsTo(Negocio::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function NotaFiscal()
+    {
+        return $this->belongsTo(NotaFiscal::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
-    public function NFeTerceiroDistribuicaoDfe()
-    {
-        return $this->belongsTo(NotaFiscalTerceiroDistribuicaoDfe::class, 'coddidtribuicaodfe', 'coddidtribuicaodfe');
-    }
 
     // Tabelas Filhas
-    public function NotaFiscalTerceiroGrupoS()
+    public function DistribuicaoDfeS()
     {
-        return $this->hasMany(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+        return $this->hasMany(DistribuicaoDfe::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
     public function NotaFiscalTerceiroDuplicataS()
     {
         return $this->hasMany(NotaFiscalTerceiroDuplicata::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+    }
+
+    public function NotaFiscalTerceiroGrupoS()
+    {
+        return $this->hasMany(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
 }

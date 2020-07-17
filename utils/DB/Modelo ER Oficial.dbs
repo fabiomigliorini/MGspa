@@ -962,14 +962,53 @@
 				<column name="coddecreto271" />
 			</index>
 		</table>
+		<table name="tbldfeevento" >
+			<column name="coddfeevento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbldfeevento_coddfeevento_seq&#039;::regclass)</defo>
+			</column>
+			<column name="tpevento" type="integer" jt="4" />
+			<column name="dfeevento" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tbldfeevento_coddfeevento" unique="PRIMARY_KEY" >
+				<column name="coddfeevento" />
+			</index>
+			<fk name="fk_tbldfeevento_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tbldfeevento_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tbldfetipo" >
+			<column name="coddfetipo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbldfetipo_coddfetipo_seq&#039;::regclass)</defo>
+			</column>
+			<column name="dfetipo" type="varchar" length="50" jt="12" mandatory="y" />
+			<column name="schemaxml" type="varchar" length="100" jt="12" />
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tbldfeschema_coddfeschema" unique="PRIMARY_KEY" >
+				<column name="coddfetipo" />
+			</index>
+			<fk name="fk_tbldfetipo_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tbldfetipo_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
 		<table name="tbldistribuicaodfe" >
 			<column name="coddistribuicaodfe" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo>nextval(&#039;tbldistribuicaodfe_coddistribuicaodfe_seq&#039;::regclass)</defo>
 			</column>
-			<column name="nfechave" type="varchar" decimal="0" jt="12" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
-			<column name="schema" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
+			<column name="coddfetipo" type="bigint" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -990,14 +1029,62 @@
 			<index name="idx_tbldistribuicaodfe_codusuariocriacao" unique="NORMAL" >
 				<column name="codusuariocriacao" />
 			</index>
-			<index name="tbldistribuicaodfe_schema_idx" unique="NORMAL" >
-				<column name="schema" />
-			</index>
 			<index name="unq_tbldistribuicaodfe_nsu" unique="UNIQUE" >
 				<column name="nsu" />
 			</index>
 			<fk name="fk_tbldistribuicaodfe_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tbldistribuicaodfe_tbldfetipo" to_schema="mgsis.mgsis" to_table="tbldfetipo" >
+				<fk_column name="coddfetipo" pk="coddfetipo" />
+			</fk>
+		</table>
+		<table name="tbldistribuicaodfeevento" >
+			<column name="coddistribuicaodfeevento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo>nextval(&#039;tbldistribuicaodfeevento_coddistribuicaodfeevento_seq&#039;::regclass)</defo>
+			</column>
+			<column name="coddistribuicaodfe" type="bigint" jt="-5" mandatory="y" />
+			<column name="orgao" type="smallint" jt="5" >
+				<comment><![CDATA[corgao]]></comment>
+			</column>
+			<column name="nfechave" type="varchar" length="44" jt="12" >
+				<comment><![CDATA[chnfe]]></comment>
+			</column>
+			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
+			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
+			<column name="data" type="timestamp" jt="93" >
+				<comment><![CDATA[dhevento]]></comment>
+			</column>
+			<column name="coddfeevento" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[tpEvento]]></comment>
+			</column>
+			<column name="sequencia" type="smallint" jt="5" >
+				<comment><![CDATA[nSeqEvento]]></comment>
+			</column>
+			<column name="recebimento" type="timestamp" jt="93" >
+				<comment><![CDATA[dhRecbto]]></comment>
+			</column>
+			<column name="protocolo" type="varchar" length="15" jt="12" >
+				<comment><![CDATA[nProt]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tbldistribuicaodfeevento_coddistribuicaodfeevento" unique="PRIMARY_KEY" >
+				<column name="coddistribuicaodfeevento" />
+			</index>
+			<fk name="fk_tbldistribuicaodfeevento_tbldistribuicaodfe" to_schema="mgsis.mgsis" to_table="tbldistribuicaodfe" delete_action="cascade" update_action="cascade" >
+				<fk_column name="coddistribuicaodfe" pk="coddistribuicaodfe" />
+			</fk>
+			<fk name="fk_tbldistribuicaodfeevento_tbldfeevento" to_schema="mgsis.mgsis" to_table="tbldfeevento" update_action="cascade" >
+				<fk_column name="coddfeevento" pk="coddfeevento" />
+			</fk>
+			<fk name="fk_tbldistribuicaodfeevento_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tbldistribuicaodfeevento_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblecf" >
@@ -3596,46 +3683,6 @@
 			</index>
 			<fk name="fk_tblnotafiscalterceiroduplicata_tblnotafiscalterceiro" to_schema="mgsis.mgsis" to_table="tblnotafiscalterceiro" >
 				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
-			</fk>
-		</table>
-		<table name="tblnotafiscalterceiroevento" >
-			<column name="codnotafiscalterceiroevento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>nextval(&#039;tblnotafiscalterceiroevento_codnotafiscalterceiroevento_seq&#039;::regclass)</defo>
-			</column>
-			<column name="coddistribuicaodfe" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>nextval(&#039;tblnotafiscalterceiroevento_coddistribuicaodfe_seq&#039;::regclass)</defo>
-			</column>
-			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
-			<column name="codorgao" type="smallint" jt="5" >
-				<comment><![CDATA[cOrgao]]></comment>
-			</column>
-			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
-			<column name="nfechave" type="varchar" length="100" jt="12" mandatory="y" />
-			<column name="dhevento" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="tpevento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>nextval(&#039;tblnotafiscalterceiroevento_tpevento_seq&#039;::regclass)</defo>
-			</column>
-			<column name="nseqevento" type="smallint" jt="5" mandatory="y" />
-			<column name="evento" type="varchar" length="60" jt="12" mandatory="y" />
-			<column name="dhrecebimento" type="timestamp" jt="93" />
-			<column name="protocolo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>nextval(&#039;tblnotafiscalterceiroevento_protocolo_seq&#039;::regclass)</defo>
-			</column>
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
-			<index name="idx_tblnotafiscalterceiroevento_nsu" unique="NORMAL" >
-				<column name="nsu" />
-			</index>
-			<index name="idx_tblnotafiscalterceiroevento_coddistribuicaodfe" unique="NORMAL" >
-				<column name="coddistribuicaodfe" />
-			</index>
-			<index name="pk_tblnotafiscalterceiroevento_codnotafiscalterceiroevento" unique="PRIMARY_KEY" >
-				<column name="codnotafiscalterceiroevento" />
-			</index>
-			<fk name="fk_tblnotafiscalterceiroevento_tbldistribuicaodfe_0" to_schema="mgsis.mgsis" to_table="tbldistribuicaodfe" >
-				<fk_column name="coddistribuicaodfe" pk="coddistribuicaodfe" />
 			</fk>
 		</table>
 		<table name="tblnotafiscalterceirogrupo" >
@@ -6648,7 +6695,10 @@
 		<sequence name="tblcupomfiscal_codcupomfiscal_seq" options="START WITH 1" />
 		<sequence name="tblcupomfiscalprodutobarra_codcupomfiscalprodutobarra_seq" options="START WITH 1" />
 		<sequence name="tbldecreto271_coddecreto271_seq" options="START WITH 1" />
+		<sequence name="tbldfeevento_coddfeevento_seq" options="START WITH 1" />
+		<sequence name="tbldfetipo_coddfetipo_seq" options="START WITH 1" />
 		<sequence name="tbldistribuicaodfe_coddistribuicaodfe_seq" options="START WITH 1" />
+		<sequence name="tbldistribuicaodfeevento_coddistribuicaodfeevento_seq" options="START WITH 1" />
 		<sequence name="tblecf_codecf_seq" options="START WITH 1" />
 		<sequence name="tblecfreducaoz_codecfreducaoz_seq" options="START WITH 1" />
 		<sequence name="tblempresa_codempresa_seq" options="START WITH 1" />
@@ -6724,10 +6774,6 @@
 		<sequence name="tblnotafiscalterceiro_codnotafiscalterceiro_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalterceiro_protocolo_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalterceiroduplicat_codnotafiscalterceiroduplicat_seq" options="START WITH 1" />
-		<sequence name="tblnotafiscalterceiroevento_coddistribuicaodfe_seq" options="START WITH 1" />
-		<sequence name="tblnotafiscalterceiroevento_codnotafiscalterceiroevento_seq" options="START WITH 1" />
-		<sequence name="tblnotafiscalterceiroevento_protocolo_seq" options="START WITH 1" />
-		<sequence name="tblnotafiscalterceiroevento_tpevento_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalterceirogrupo_codnotafiscalterceirogrupo_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalterceiroitem_codnotafiscalterceiroitem_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalterceiroprodutob_codnotafiscalterceiroprodutob_seq" options="START WITH 1" />
@@ -9393,8 +9439,12 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		</entity>
 	</layout>
 	<layout name="Layout_DFe_Terceiros" id="Layout_4f5c1dd" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1D8EE" x="528" y="96" />
-		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="64" y="368" >
+		<comment><![CDATA[PostgreSQL]]></comment>
+		<entity schema="mgsis.mgsis" name="tbldfeevento" color="C1D8EE" x="352" y="304" />
+		<entity schema="mgsis.mgsis" name="tbldfetipo" color="C1D8EE" x="336" y="48" />
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1D8EE" x="592" y="64" />
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfeevento" color="C1D8EE" x="80" y="112" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="48" y="432" >
 			<column name="codfilial" />
 			<column name="codempresa" />
 			<column name="codpessoa" />
@@ -9402,7 +9452,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="48" y="544" >
+		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="256" y="592" >
 			<column name="codnaturezaoperacao" />
 			<column name="codestoquemovimentotipo" />
 			<column name="codusuarioalteracao" />
@@ -9411,13 +9461,12 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codtipotitulo" />
 			<column name="codcontacontabil" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="768" y="64" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="C1D8EE" x="1024" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroevento" color="C1D8EE" x="192" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="C1D8EE" x="1024" y="352" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="C1D8EE" x="1328" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroprodutobarra" color="C1D8EE" x="1008" y="592" />
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="512" y="320" >
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="832" y="96" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="C1D8EE" x="1088" y="80" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="C1D8EE" x="1088" y="384" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="C1D8EE" x="1392" y="80" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroprodutobarra" color="C1D8EE" x="1072" y="624" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="576" y="352" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
 			<column name="codestadocivil" />
@@ -9429,7 +9478,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="48" y="736" >
+		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="112" y="768" >
 			<column name="codproduto" />
 			<column name="codncm" />
 			<column name="codcest" />
@@ -9444,7 +9493,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="abc" />
 			<column name="codcestanterior" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="752" y="832" >
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="816" y="864" >
 			<column name="codprodutobarra" />
 			<column name="codprodutovariacao" />
 			<column name="codproduto" />
@@ -9453,7 +9502,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="384" y="848" >
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="448" y="880" >
 			<column name="codprodutoembalagem" />
 			<column name="codproduto" />
 			<column name="codunidademedida" />
@@ -9461,7 +9510,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codprodutoimagem" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="464" y="640" >
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="528" y="672" >
 			<column name="codprodutovariacao" />
 			<column name="codproduto" />
 			<column name="codmarca" />

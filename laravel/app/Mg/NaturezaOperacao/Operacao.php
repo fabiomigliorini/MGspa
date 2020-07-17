@@ -4,12 +4,12 @@ namespace Mg\NaturezaOperacao;
 
 use Mg\MgModel;
 
-class Operacao extends MGModel
+class Operacao extends MgModel
 {
 
     const ENTRADA = 1;
     const SAIDA = 2;
-    
+
     protected $table = 'tbloperacao';
     protected $primaryKey = 'codoperacao';
     protected $fillable = [
