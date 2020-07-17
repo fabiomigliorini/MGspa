@@ -966,6 +966,7 @@
 			<column name="coddfeevento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo>nextval(&#039;tbldfeevento_coddfeevento_seq&#039;::regclass)</defo>
 			</column>
+			<column name="tpevento" type="integer" jt="4" />
 			<column name="dfeevento" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -1049,7 +1050,9 @@
 			<column name="nfechave" type="varchar" length="44" jt="12" >
 				<comment><![CDATA[chnfe]]></comment>
 			</column>
-			<column name="emissao" type="timestamp" jt="93" >
+			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
+			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
+			<column name="data" type="timestamp" jt="93" >
 				<comment><![CDATA[dhevento]]></comment>
 			</column>
 			<column name="coddfeevento" type="bigint" jt="-5" mandatory="y" >
@@ -1058,7 +1061,7 @@
 			<column name="sequencia" type="smallint" jt="5" >
 				<comment><![CDATA[nSeqEvento]]></comment>
 			</column>
-			<column name="autorizacao" type="timestamp" jt="93" >
+			<column name="recebimento" type="timestamp" jt="93" >
 				<comment><![CDATA[dhRecbto]]></comment>
 			</column>
 			<column name="protocolo" type="varchar" length="15" jt="12" >

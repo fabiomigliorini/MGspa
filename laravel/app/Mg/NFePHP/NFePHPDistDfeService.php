@@ -12,8 +12,13 @@ use Mg\Dfe\DistribuicaoDfe;
 use Mg\Dfe\DistribuicaoDfeEvento;
 use Mg\Dfe\DfeTipo;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroItem;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\PessoaService;
+use Mg\Pessoa\Pessoa;
+use Mg\Cidade\Cidade;
+use Mg\Filial\FilialService;
 
 class NFePHPDistDfeService
 {
@@ -77,16 +82,15 @@ class NFePHPDistDfeService
                     static::processarProcEventoNFe($dd, $gz);
                     break;
 
-                // case 'procNFe_v4.00.xsd':
-                    //static::processarNFe($dd, $gz);
+                case 'procNFe_v4.00.xsd':
+                    static::processarProcNFe($dd, $gz);
                     break;
 
                 default:
-                    // dd([
-                    //     $dt->schemaxml,
-                    //     $dd,
-                    // ]);
-                    // code...
+                    dd([
+                        $dt->schemaxml,
+                        $dd,
+                    ]);
                     break;
             }
         }
@@ -206,32 +210,133 @@ class NFePHPDistDfeService
     }
 
 
-    public static function novoFornecedor($emit)
+    public static function processarProcNFe (DistribuicaoDfe $dd, $gz)
     {
-        $codcidade = Cidade::where('codigooficial', $emit->enderEmit->cMun)->first();
+        // Carrega XML
+        $dom = new \DOMDocument();
+        $dom->loadXML(gzdecode($gz));
 
-        $fornecedor = new Pessoa();
-        $fornecedor->pessoa = $emit->xNome;
-        $fornecedor->fantasia = $emit->xFant??$emit->xNome;
-        $fornecedor->cliente = false;
-        $fornecedor->fornecedor = true;
-        $fornecedor->fisica = false;
-        $fornecedor->cnpj = $emit->CNPJ;
-        $fornecedor->ie = $emit->IE;
-        $fornecedor->endereco = $emit->enderEmit->xLgr;
-        $fornecedor->numero = $emit->enderEmit->nro;
-        $fornecedor->complemento = $emit->enderEmit->xCpl??null;
-        $fornecedor->codcidade = $codcidade->codcidade;
-        $fornecedor->bairro = $emit->enderEmit->xBairro;
-        $fornecedor->cep = $emit->enderEmit->CEP;
-        $fornecedor->telefone1 = $emit->enderEmit->fone??null;
-        $fornecedor->emailnfe = 'nfe@mgpapelaria.com.br';
-        $fornecedor->notafiscal = 0;
-        // dd($pessoa);
-        $fornecedor->save();
+        // procura se tem a nota no banco ja
+        $nft = NotaFiscalTerceiro::firstOrNew([
+            'nfechave' => $dom->getElementsByTagName('chNFe')->item(0)->nodeValue
+        ]);
 
-        $novoForncedor = Pessoa::orderBy('criacao', 'DESC')->first();
-        return $novoForncedor;
+        // associa valores recebidos pelo xml
+        $nft->codfilial = $nft->codfilial??$dd->codfilial;
+        $nft->natop = $nft->natop??$dom->getElementsByTagName('natOp')->item(0)->nodeValue??null;
+        $nft->modelo = $nft->modelo??$dom->getElementsByTagName('mod')->item(0)->nodeValue??null;
+        $nft->serie = $nft->serie??$dom->getElementsByTagName('serie')->item(0)->nodeValue??null;
+        $nft->numero = $nft->numero??$dom->getElementsByTagName('nNF')->item(0)->nodeValue??null;
+        $nft->emissao = $nft->emissao??Carbon::parse($dom->getElementsByTagName('dhEmi')->item(0)->nodeValue)??null;
+        $nft->tipo = $nft->tipo??$dom->getElementsByTagName('tpNF')->item(0)->nodeValue??null;
+        $nft->finalidade = $nft->finalidade??$dom->getElementsByTagName('finNFe')->item(0)->nodeValue??null;
+
+        $emit = $dom->getElementsByTagName('emit')->item(0);
+        $nft->cnpj = $nft->cnpj??$emit->getElementsByTagName('CNPJ')->item(0)->nodeValue??null;
+        $nft->cpf = $nft->cpf??$emit->getElementsByTagName('CPF')->item(0)->nodeValue??null;
+        $nft->emitente = $nft->emitente??$emit->getElementsByTagName('xNome')->item(0)->nodeValue??null;
+        $nft->ie = $nft->ie??$emit->getElementsByTagName('IE')->item(0)->nodeValue??null;
+
+        // se pessoa nao cadastrada, cria
+        if ($pessoa = PessoaService::buscarPorCnpjIe($nft->cnpj??$nft->cpf, $nft->ie)) {
+            $nft->codpessoa = $pessoa->codpessoa;
+        } else {
+            $cidade = Cidade::where('codigooficial', $emit->getElementsByTagName('cMun')->item(0)->nodeValue)->first();
+            $pessoa = new Pessoa();
+            $pessoa->cnpj = $emit->getElementsByTagName('CNPJ')->item(0)->nodeValue??$emit->getElementsByTagName('CPF')->item(0)->nodeValue;
+            $pessoa->fisica = $emit->getElementsByTagName('CPF')->item(0)?true:false;
+            $pessoa->pessoa = $emit->getElementsByTagName('xNome')->item(0)->nodeValue;
+            $pessoa->fantasia = $emit->getElementsByTagName('xFant')->item(0)->nodeValue??$pessoa->pessoa;
+
+            $pessoa->endereco = $emit->getElementsByTagName('xLgr')->item(0)->nodeValue;
+            $pessoa->numero = $emit->getElementsByTagName('nro')->item(0)->nodeValue;
+            $pessoa->bairro = $emit->getElementsByTagName('xBairro')->item(0)->nodeValue;
+            $pessoa->codcidade = $cidade->codcidade;
+            $pessoa->cep = $emit->getElementsByTagName('CEP')->item(0)->nodeValue;
+
+            $pessoa->enderecocobranca = $pessoa->endereco;
+            $pessoa->numerocobranca = $pessoa->numero;
+            $pessoa->bairrocobranca = $pessoa->bairro;
+            $pessoa->codcidadecobranca = $pessoa->codcidade;
+            $pessoa->cepcobranca = $pessoa->cep;
+
+            $pessoa->telefone1 = $emit->getElementsByTagName('fone')->item(0)->nodeValue;
+            $pessoa->ie = $emit->getElementsByTagName('IE')->item(0)->nodeValue;
+
+            $pessoa->email = 'nfe@mgpapelaria.com.br';
+
+            $pessoa->fornecedor = true;
+            $pessoa->notafiscal = 0;
+            $pessoa->save();
+        }
+
+        // atualiza CRT da pessoa
+        $pessoa->crt = $emit->getElementsByTagName('CRT')->item(0)->nodeValue;
+        $pessoa->save();
+        $nft->save();
+
+        // Filial
+        $dest = $dom->getElementsByTagName('dest')->item(0);
+        $cnpj = $dest->getElementsByTagName('CNPJ')->item(0)->nodeValue??null;
+        $cpf = $dest->getElementsByTagName('CPF')->item(0)->nodeValue??null;
+        $ie = $dest->getElementsByTagName('IE')->item(0)->nodeValue??null;
+        if ($filial = FilialService::buscarPorCnpjIe($cnpj??$cpf, $ie)) {
+            $nft->codfilial = $filial->codfilial;
+        }
+
+        // Verifica todos os grupos criados
+        $nfts = $nft->NotaFiscalTerceiroGrupoS;
+        $codnotafiscalterceirogrupos = $nfts->pluck('codnotafiscalterceirogrupo');
+
+        $dets = $dom->getElementsByTagName('det');
+        foreach ($dets as $det) {
+            $numero = $det->getAttribute('nItem');
+            if ($nfti = NotaFiscalTerceiroItem::whereIn('codnotafiscalterceirogrupo', $codnotafiscalterceirogrupos)->where('numero', $numero)->first()) {
+                $nftg = $nfti->NotaFiscalTerceiroGrupo;
+            } else {
+                $nftg = NotaFiscalTerceiroGrupo::create([
+                    'codnotafiscalterceiro' => $nft->codnotafiscalterceiro
+                ]);
+                $nfti = new NotaFiscalTerceiroItem();
+                $nfti->codnotafiscalterceirogrupo = $nftg->codnotafiscalterceirogrupo;
+                $nfti->numero = $numero;
+            }
+            $nfti->referencia = $det->getElementsByTagName('cProd')->item(0)->nodeValue??null;
+            $nfti->barras = $det->getElementsByTagName('cEAN')->item(0)->nodeValue??null;
+            $nfti->produto = $det->getElementsByTagName('xProd')->item(0)->nodeValue??null;
+            $nfti->cfop = $det->getElementsByTagName('CFOP')->item(0)->nodeValue??null;
+            $nfti->unidademedida = $det->getElementsByTagName('uCom')->item(0)->nodeValue??null;
+            $nfti->quantidade = (double) $det->getElementsByTagName('qCom')->item(0)->nodeValue??null;
+            $nfti->valorunitario = (double) $det->getElementsByTagName('vUnCom')->item(0)->nodeValue??null;
+            $nfti->valorproduto = (double) $det->getElementsByTagName('vProd')->item(0)->nodeValue??null;
+            $nfti->compoetotal = boolval($det->getElementsByTagName('indTot')->item(0)->nodeValue)??null;
+            $nfti->save();
+            dd($nfti->getAttributes());
+            dd($nftg);
+            dd($nItem);
+            dd($det);
+        }
+
+        dd($nft->getAttributes());
+
+        $nft->valortotal = $nft->valortotal??$dom->getElementsByTagName('vNF')->item(0)->nodeValue??null;
+        $nft->recebimento = Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue)??null;
+        $nft->protocolo = $dom->getElementsByTagName('nProt')->item(0)->nodeValue??null;
+        $nft->indsituacao = $dom->getElementsByTagName('cSitNFe')->item(0)->nodeValue??null;
+        if (!empty($nft->codoperacao)) {
+            switch ((int)$dom->getElementsByTagName('tpNF')->item(0)->nodeValue) {
+                case 1:
+                $nft->codoperacao = Operacao::ENTRADA;
+                break;
+                default:
+                $nft->codoperacao = Operacao::SAIDA;
+                break;
+            }
+        }
+
+        // vincula dfe na nota fiscal de terceiro
+        $dd->codnotafiscalterceiro = $nft->codnotafiscalterceiro;
+        $dd->save();
     }
 
 

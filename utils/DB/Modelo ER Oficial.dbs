@@ -1009,6 +1009,7 @@
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="coddfetipo" type="bigint" jt="-5" mandatory="y" />
+			<column name="codnotafiscalterceiro" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
@@ -1037,6 +1038,9 @@
 			</fk>
 			<fk name="fk_tbldistribuicaodfe_tbldfetipo" to_schema="mgsis.mgsis" to_table="tbldfetipo" >
 				<fk_column name="coddfetipo" pk="coddfetipo" />
+			</fk>
+			<fk name="fk_tbldistribuicaodfe_tblnotafiscalterceiro" to_schema="mgsis.mgsis" to_table="tblnotafiscalterceiro" delete_action="setNull" update_action="cascade" >
+				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
 			</fk>
 		</table>
 		<table name="tbldistribuicaodfeevento" >
@@ -1071,6 +1075,9 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="descricao" type="text" jt="12" >
+				<comment><![CDATA[xCorrecao]]></comment>
+			</column>
 			<index name="pk_tbldistribuicaodfeevento_coddistribuicaodfeevento" unique="PRIMARY_KEY" >
 				<column name="coddistribuicaodfeevento" />
 			</index>
@@ -3562,7 +3569,6 @@
 			<column name="codnotafiscalterceiro" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo>nextval(&#039;tblnotafiscalterceiro_codnotafiscalterceiro_seq&#039;::regclass)</defo>
 			</column>
-			<column name="coddistribuicaodfe" type="bigint" jt="-5" />
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnegocio" type="bigint" jt="-5" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -3572,17 +3578,23 @@
 			<column name="natop" type="varchar" length="60" decimal="0" jt="12" >
 				<comment><![CDATA[natOp]]></comment>
 			</column>
-			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
+			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" >
+				<comment><![CDATA[xNome]]></comment>
+			</column>
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
 			<column name="emissao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="ignorada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
-			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" />
+			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" >
+				<comment><![CDATA[cSitNFe]]></comment>
+			</column>
 			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
 			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" />
-			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" >
+				<comment><![CDATA[chNFe]]></comment>
+			</column>
 			<column name="modelo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
@@ -3613,11 +3625,16 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="recebimento" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
+			<column name="finalidade" type="smallint" jt="5" >
+				<comment><![CDATA[finNFe
+1=NF-e normal;
+2=NF-e complementar;
+3=NF-e de ajuste;
+4=Devolução/Retorno.]]></comment>
+			</column>
 			<index name="pk_tblnotafiscalterceiro_codnotafiscalterceiro" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiro" />
-			</index>
-			<index name="idx_tblnotafiscalterceiro_coddistribuicaodfe" unique="NORMAL" >
-				<column name="coddistribuicaodfe" />
 			</index>
 			<index name="idx_tblnotafiscalterceiro_codpessoa" unique="NORMAL" >
 				<column name="codpessoa" />
@@ -3634,9 +3651,6 @@
 			<index name="idx_tblnotafiscalterceiro_codnegocio" unique="NORMAL" >
 				<column name="codnegocio" />
 			</index>
-			<fk name="fk_tblnotafiscalterceiro_tbldistribuicaodfe" to_schema="mgsis.mgsis" to_table="tbldistribuicaodfe" >
-				<fk_column name="coddistribuicaodfe" pk="coddistribuicaodfe" />
-			</fk>
 			<fk name="fk_tblnotafiscalterceiro_tblpessoa" to_schema="mgsis.mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
@@ -3709,7 +3723,9 @@
 				<defo>nextval(&#039;tblnotafiscalterceiroitem_codnotafiscalterceiroitem_seq&#039;::regclass)</defo>
 			</column>
 			<column name="codnotafiscalterceirogrupo" type="bigint" jt="-5" mandatory="y" />
-			<column name="numero" type="smallint" jt="5" mandatory="y" />
+			<column name="numero" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[nItem]]></comment>
+			</column>
 			<column name="referencia" type="varchar" length="30" jt="12" />
 			<column name="produto" type="varchar" length="200" jt="12" mandatory="y" />
 			<column name="ncm" type="varchar" length="10" jt="12" />
@@ -3766,7 +3782,7 @@
 			<column name="ipibase" type="numeric" length="15" decimal="2" jt="2" >
 				<comment><![CDATA[vBC]]></comment>
 			</column>
-			<column name="ipipercentual" type="numeric" length="7" decimal="4" jt="2" mandatory="y" >
+			<column name="ipipercentual" type="numeric" length="7" decimal="4" jt="2" >
 				<comment><![CDATA[pIPI]]></comment>
 			</column>
 			<column name="ipivalor" type="numeric" length="15" decimal="2" jt="2" >
@@ -4105,6 +4121,12 @@
 			</column>
 			<column name="codgrupocliente" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codgrupoeconomico" type="bigint" jt="-5" />
+			<column name="crt" type="smallint" jt="5" >
+				<comment><![CDATA[Código de Regime Tributário
+1=Simples Nacional;
+2=Simples Nacional, excesso sublimite de receita bruta;
+3=Regime Normal.]]></comment>
+			</column>
 			<index name="tblpessoa_pkey" unique="PRIMARY_KEY" >
 				<column name="codpessoa" />
 			</index>
@@ -9415,6 +9437,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
+			<column name="crt" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblportador" color="C1D8EE" x="1184" y="288" >
 			<column name="codportador" />
@@ -9443,7 +9466,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbldfeevento" color="C1D8EE" x="352" y="304" />
 		<entity schema="mgsis.mgsis" name="tbldfetipo" color="C1D8EE" x="336" y="48" />
 		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1D8EE" x="592" y="64" />
-		<entity schema="mgsis.mgsis" name="tbldistribuicaodfeevento" color="C1D8EE" x="80" y="112" />
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfeevento" color="C1D8EE" x="64" y="80" />
 		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="48" y="432" >
 			<column name="codfilial" />
 			<column name="codempresa" />
@@ -9461,7 +9484,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codtipotitulo" />
 			<column name="codcontacontabil" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="832" y="96" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="832" y="64" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="C1D8EE" x="1088" y="80" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="C1D8EE" x="1088" y="384" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="C1D8EE" x="1392" y="80" />
@@ -9477,6 +9500,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
+			<column name="crt" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="112" y="768" >
 			<column name="codproduto" />
@@ -9940,6 +9964,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
+			<column name="crt" />
 		</entity>
 	</layout>
 	<layout name="Layout_NCM" id="Layout9248750" confirmed="y" show_column_type="y" show_relation="columns" >
@@ -10076,6 +10101,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
+			<column name="crt" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="832" y="688" >
 			<column name="codproduto" />
@@ -10148,6 +10174,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
+			<column name="crt" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="816" y="752" >
 			<column name="codprodutobarra" />

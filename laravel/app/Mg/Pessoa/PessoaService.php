@@ -41,8 +41,14 @@ class PessoaService extends MgService
 
     public static function buscarPorCnpjIe ($cnpj, $ie)
     {
+        $qry = Pessoa::where('cnpj', $cnpj);
         $ie = (int) numeroLimpo($ie);
-        return Pessoa::where('cnpj', $cnpj)->where(DB::raw("cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric)"), $ie)->first();
+        if (!empty($ie)) {
+            $qry = $qry->where(DB::raw("cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric)"), $ie);
+        } else {
+            $qry = $qry->whereNull('ie');
+        }
+        return $qry->first();
     }
 
 }

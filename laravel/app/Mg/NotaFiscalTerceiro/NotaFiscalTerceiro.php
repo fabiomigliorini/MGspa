@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Jul/2020 15:10:00
+ * Date: 17/Jul/2020 16:23:43
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -36,6 +36,7 @@ class NotaFiscalTerceiro extends MgModel
         'emissao',
         'emitente',
         'entrada',
+        'finalidade',
         'icmsbase',
         'icmsstbase',
         'icmsstvalor',
@@ -83,6 +84,7 @@ class NotaFiscalTerceiro extends MgModel
         'codusuariocriacao' => 'integer',
         'cpf' => 'float',
         'download' => 'boolean',
+        'finalidade' => 'integer',
         'icmsbase' => 'float',
         'icmsstbase' => 'float',
         'icmsstvalor' => 'float',

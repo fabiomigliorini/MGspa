@@ -1,6 +1,11 @@
 <?php
+
 namespace Mg\Filial;
+
+use DB;
+
 use Mg\MgService;
+use Mg\Pessoa\Pessoa;
 
 class FilialService extends MgService
 {
@@ -22,4 +27,22 @@ class FilialService extends MgService
         $qry = self::qryColunas($qry, $fields);
         return $qry;
     }
+
+
+    public static function buscarPorCnpjIe ($cnpj, $ie)
+    {
+        $ie = (int) numeroLimpo($ie);
+        $sql = "
+            SELECT codpessoa
+            FROM tblpessoa
+            WHERE cnpj = :cnpj
+            AND cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric) = :ie
+        ";
+        $codpessoas = collect(DB::select($sql, [
+            'cnpj' => $cnpj,
+            'ie' => $ie
+        ]))->pluck('codpessoa');
+        return Filial::whereIn('codpessoa', $codpessoas)->first();
+    }
+
 }
