@@ -3735,20 +3735,47 @@
 				<comment><![CDATA[infadprod]]></comment>
 			</column>
 			<column name="ncm" type="varchar" length="10" jt="12" />
+			<column name="cest" type="varchar" length="10" jt="12" />
 			<column name="cfop" type="smallint" jt="5" mandatory="y" />
-			<column name="barrastributavel" type="varchar" length="50" jt="12" />
-			<column name="unidademedidatributavel" type="varchar" length="6" jt="12" />
-			<column name="quantidadetributavel" type="numeric" length="15" decimal="4" jt="2" />
-			<column name="valorunitariotributavel" type="numeric" length="21" decimal="10" jt="2" />
-			<column name="barras" type="varchar" length="50" jt="12" />
-			<column name="unidademedida" type="varchar" length="6" decimal="3" jt="12" mandatory="y" />
-			<column name="quantidade" type="numeric" length="15" decimal="4" jt="2" mandatory="y" />
-			<column name="valorunitario" type="numeric" length="21" decimal="10" jt="2" mandatory="y" />
-			<column name="valorproduto" type="numeric" length="15" decimal="2" jt="2" mandatory="y" />
-			<column name="valorfrete" type="numeric" length="15" decimal="2" jt="2" />
-			<column name="valorseguro" type="numeric" length="15" decimal="2" jt="2" />
-			<column name="valordesconto" type="numeric" length="15" decimal="2" jt="2" />
-			<column name="valoroutras" type="numeric" length="15" decimal="2" jt="2" />
+			<column name="barrastributavel" type="varchar" length="50" jt="12" >
+				<comment><![CDATA[cEanTrib]]></comment>
+			</column>
+			<column name="unidademedidatributavel" type="varchar" length="6" jt="12" >
+				<comment><![CDATA[uTrib]]></comment>
+			</column>
+			<column name="quantidadetributavel" type="numeric" length="15" decimal="4" jt="2" >
+				<comment><![CDATA[qTrib]]></comment>
+			</column>
+			<column name="valorunitariotributavel" type="numeric" length="21" decimal="10" jt="2" >
+				<comment><![CDATA[vUnTrib]]></comment>
+			</column>
+			<column name="barras" type="varchar" length="50" jt="12" >
+				<comment><![CDATA[cEan]]></comment>
+			</column>
+			<column name="unidademedida" type="varchar" length="6" decimal="3" jt="12" mandatory="y" >
+				<comment><![CDATA[uCom]]></comment>
+			</column>
+			<column name="quantidade" type="numeric" length="15" decimal="4" jt="2" mandatory="y" >
+				<comment><![CDATA[qCom]]></comment>
+			</column>
+			<column name="valorunitario" type="numeric" length="21" decimal="10" jt="2" mandatory="y" >
+				<comment><![CDATA[vUnCom]]></comment>
+			</column>
+			<column name="valorproduto" type="numeric" length="15" decimal="2" jt="2" mandatory="y" >
+				<comment><![CDATA[vProd]]></comment>
+			</column>
+			<column name="valorfrete" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vFrete]]></comment>
+			</column>
+			<column name="valorseguro" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vSeg]]></comment>
+			</column>
+			<column name="valordesconto" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vDesc]]></comment>
+			</column>
+			<column name="valoroutras" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vOutro]]></comment>
+			</column>
 			<column name="valortotal" type="numeric" length="15" decimal="2" jt="2" />
 			<column name="compoetotal" type="boolean" jt="-7" mandatory="y" >
 				<defo>true</defo>

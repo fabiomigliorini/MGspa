@@ -3800,8 +3800,14 @@
 			<column name="icmsstbasemodalidade" type="smallint" jt="5" >
 				<comment><![CDATA[modBCST]]></comment>
 			</column>
+			<column name="icmsstbasepercentualreducao" type="numeric" length="5" decimal="2" jt="2" >
+				<comment><![CDATA[pRedBCST]]></comment>
+			</column>
 			<column name="icmsstbase" type="numeric" length="15" decimal="2" jt="2" >
 				<comment><![CDATA[vBCST]]></comment>
+			</column>
+			<column name="icmsstmva" type="numeric" length="5" decimal="2" jt="2" >
+				<comment><![CDATA[pMVAST]]></comment>
 			</column>
 			<column name="icmsstpercentual" type="numeric" length="7" decimal="4" jt="2" >
 				<comment><![CDATA[pICMSST]]></comment>
