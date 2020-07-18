@@ -18,9 +18,19 @@ use Mg\Pessoa\Pessoa;
 
 class NotaFiscalTerceiro extends MgModel
 {
+
+    const INDSITUACAO_AUTORIZADA = 1;
+    const INDSITUACAO_DENEGADA = 2;
+    const INDSITUACAO_CANCELADA = 3;
+
+    // const INDMANIFESTACAO_SEM = null;
+    const INDMANIFESTACAO_REALIZADA = 210200;
+    const INDMANIFESTACAO_DESCONHECIDA = 210220;
+    const INDMANIFESTACAO_NAOREALIZADA = 210240;
+    const INDMANIFESTACAO_CIENCIA = 210210;
+
     protected $table = 'tblnotafiscalterceiro';
     protected $primaryKey = 'codnotafiscalterceiro';
-
 
     protected $fillable = [
         'cnpj',
