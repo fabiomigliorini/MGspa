@@ -1,64 +1,115 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 18/Jul/2020 08:20:05
+ */
 
 namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
 
-class NotaFiscalTerceiroItem extends MGModel
+class NotaFiscalTerceiroItem extends MgModel
 {
     protected $table = 'tblnotafiscalterceiroitem';
     protected $primaryKey = 'codnotafiscalterceiroitem';
+
+
     protected $fillable = [
-        'codnotafiscalterceirogrupo',
-        'numero',
-        'referencia',
-        'produto',
-        'ncm',
-        'cfop',
-        'barrastributavel',
-        'unidademedidatributavel',
-        'quantidadetributavel',
-        'valorunitariotributavel',
+        'adicional',
         'barras',
-        'unidademedida',
-        'quantidade',
-        'valorunitario',
-        'valorproduto',
-        'valorfrete',
-        'valorseguro',
-        'valordesconto',
-        'valoroutras',
-        'valortotal',
-        'compoetotal',
-        'csosn',
-        'origem',
-        'icmsbasemodalidade',
-        'icmsbase',
-        'icmspercentual',
-        'icmsvalor',
-        'icmscst',
-        'icmsstbasemodalidade',
-        'icmsstbase',
-        'icmsstpercentual',
-        'icmsstvalor',
-        'ipicst',
-        'ipibase',
-        'ipipercentual',
-        'ipivalor',
-        'piscst',
-        'pisbase',
-        'pispercentual',
-        'pisvalor',
-        'cofinscst',
+        'barrastributavel',
+        'cest',
+        'cfop',
+        'codnotafiscalterceirogrupo',
         'cofinsbase',
+        'cofinscst',
         'cofinspercentual',
         'cofinsvalor',
-        'conferido'
-
+        'compoetotal',
+        'csosn',
+        'icmsbase',
+        'icmsbasemodalidade',
+        'icmscst',
+        'icmspercentual',
+        'icmsstbase',
+        'icmsstbasemodalidade',
+        'icmsstpercentual',
+        'icmsstvalor',
+        'icmsvalor',
+        'ipibase',
+        'ipicst',
+        'ipipercentual',
+        'ipivalor',
+        'ncm',
+        'numero',
+        'origem',
+        'pisbase',
+        'piscst',
+        'pispercentual',
+        'pisvalor',
+        'produto',
+        'quantidade',
+        'quantidadetributavel',
+        'referencia',
+        'unidademedida',
+        'unidademedidatributavel',
+        'valordesconto',
+        'valorfrete',
+        'valoroutras',
+        'valorproduto',
+        'valorseguro',
+        'valortotal',
+        'valorunitario',
+        'valorunitariotributavel'
     ];
+
     protected $dates = [
-        'criacao',
         'alteracao',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'cfop' => 'integer',
+        'codnotafiscalterceirogrupo' => 'integer',
+        'codnotafiscalterceiroitem' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'cofinsbase' => 'float',
+        'cofinscst' => 'integer',
+        'cofinspercentual' => 'float',
+        'cofinsvalor' => 'float',
+        'compoetotal' => 'boolean',
+        'csosn' => 'integer',
+        'icmsbase' => 'float',
+        'icmsbasemodalidade' => 'integer',
+        'icmscst' => 'integer',
+        'icmspercentual' => 'float',
+        'icmsstbase' => 'float',
+        'icmsstbasemodalidade' => 'integer',
+        'icmsstpercentual' => 'float',
+        'icmsstvalor' => 'float',
+        'icmsvalor' => 'float',
+        'ipibase' => 'float',
+        'ipicst' => 'integer',
+        'ipipercentual' => 'float',
+        'ipivalor' => 'float',
+        'numero' => 'integer',
+        'origem' => 'integer',
+        'pisbase' => 'float',
+        'piscst' => 'integer',
+        'pispercentual' => 'float',
+        'pisvalor' => 'float',
+        'quantidade' => 'float',
+        'quantidadetributavel' => 'float',
+        'valordesconto' => 'float',
+        'valorfrete' => 'float',
+        'valoroutras' => 'float',
+        'valorproduto' => 'float',
+        'valorseguro' => 'float',
+        'valortotal' => 'float',
+        'valorunitario' => 'float',
+        'valorunitariotributavel' => 'float'
     ];
 
 
@@ -68,15 +119,4 @@ class NotaFiscalTerceiroItem extends MGModel
         return $this->belongsTo(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
     }
 
-    public function UsuarioAlteracao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
-    }
-
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-    // Tabelas Filhas
 }

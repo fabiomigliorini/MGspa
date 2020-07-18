@@ -1,13 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Jul/2020 10:14:59
+ * Date: 18/Jul/2020 08:17:23
  */
 
 namespace Mg\Dfe;
 
 use Mg\MgModel;
-use Mg\NotaFiscalTerceiro\DistribuicaoDfe;
+use Mg\Dfe\DistribuicaoDfe;
 use Mg\Usuario\Usuario;
 
 class DfeTipo extends MgModel

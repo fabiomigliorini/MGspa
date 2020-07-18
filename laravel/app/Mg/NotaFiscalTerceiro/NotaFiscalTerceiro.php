@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Jul/2020 16:23:43
+ * Date: 18/Jul/2020 08:17:44
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -51,6 +51,7 @@ class NotaFiscalTerceiro extends MgModel
         'natop',
         'nfechave',
         'numero',
+        'observacoes',
         'protocolo',
         'recebimento',
         'serie',

@@ -1,30 +1,43 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 18/Jul/2020 08:17:54
+ */
 
 namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 
-class NotaFiscalTerceiroDuplicata extends MGModel
+class NotaFiscalTerceiroDuplicata extends MgModel
 {
     protected $table = 'tblnotafiscalterceiroduplicata';
     protected $primaryKey = 'codnotafiscalterceiroduplicata';
+
+
     protected $fillable = [
         'codnotafiscalterceiro',
         'codtitulo',
-        'duplicata',
-        'vencimento',
+        'numero',
         'valor',
-        'ndup',
-        'dvenc',
-        'vdup'
+        'vencimento'
+    ];
 
-    ];
     protected $dates = [
-        'dvenc',
-        'vencimento',
+        'alteracao',
         'criacao',
-        'alteracao'
+        'vencimento'
     ];
+
+    protected $casts = [
+        'codnotafiscalterceiro' => 'integer',
+        'codnotafiscalterceiroduplicata' => 'integer',
+        'codtitulo' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'valor' => 'float'
+    ];
+
 
     // Chaves Estrangeiras
     public function NotaFiscalTerceiro()
@@ -32,15 +45,4 @@ class NotaFiscalTerceiroDuplicata extends MGModel
         return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
-    public function UsuarioAlteracao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
-    }
-
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-    // Tabelas Filhas
 }
