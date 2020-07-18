@@ -15,6 +15,7 @@ use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroItem;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroDuplicata;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroPagamento;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\PessoaService;
 use Mg\Pessoa\Pessoa;
@@ -38,11 +39,17 @@ class NFePHPDistDfeService
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
         // $resp = $tools->sefazDistDFe($nsu);
         // file_put_contents("/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/{$filial->codfilial}-{$nsu}.xml", $resp);
+
         // em desenvolvimento pega um arquivo de exemplo
         $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-0.xml');
         // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49737.xml');
         // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49793.xml');
         // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49843.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4548.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4598.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4648.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4698.xml');
 
         $domResp = new \DOMDocument();
         $domResp->loadXML($resp);
@@ -91,10 +98,7 @@ class NFePHPDistDfeService
                     break;
 
                 default:
-                    dd([
-                        $dt->schemaxml,
-                        $dd,
-                    ]);
+                    throw new \Exception("Impossível determinar acao para Schema '{$dt->schemaxml}'", 1);
                     break;
             }
         }
@@ -431,6 +435,19 @@ class NFePHPDistDfeService
             $nfd->valor = $dup->getElementsByTagName('vDup')->item(0)->nodeValue;
             $nfd->vencimento = @Carbon::parse($dup->getElementsByTagName('dVenc')->item(0)->nodeValue);
             $nfd->save();
+        }
+
+        $pags = $dom->getElementsByTagName('pag');
+        foreach ($pags as $pag) {
+            $nftp = NotaFiscalTerceiroPagamento::firstOrNew([
+                'codnotafiscalterceiro' => $nft->codnotafiscalterceiro,
+                'forma' => $pag->getElementsByTagName('tPag')->item(0)->nodeValue,
+            ]);
+            $nftp->valor = @$pag->getElementsByTagName('vPag')->item(0)->nodeValue;
+            $nftp->cnpj = @$pag->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+            $nftp->bandeira = @$pag->getElementsByTagName('tBand')->item(0)->nodeValue;
+            $nftp->autorizacao = @$pag->getElementsByTagName('cAut')->item(0)->nodeValue;
+            $nftp->save();
         }
 
         // vincula dfe na nota fiscal de terceiro
