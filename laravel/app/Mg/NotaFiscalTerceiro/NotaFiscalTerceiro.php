@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 08:17:44
+ * Date: 18/Jul/2020 13:36:14
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -10,11 +10,13 @@ use Mg\MgModel;
 use Mg\Dfe\DistribuicaoDfe;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroDuplicata;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroPagamento;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Pessoa\Pessoa;
+use Mg\Usuario\Usuario;
 
 class NotaFiscalTerceiro extends MgModel
 {
@@ -144,6 +146,16 @@ class NotaFiscalTerceiro extends MgModel
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
 
     // Tabelas Filhas
     public function DistribuicaoDfeS()
@@ -159,6 +171,11 @@ class NotaFiscalTerceiro extends MgModel
     public function NotaFiscalTerceiroGrupoS()
     {
         return $this->hasMany(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+    }
+
+    public function NotaFiscalTerceiroPagamentoS()
+    {
+        return $this->hasMany(NotaFiscalTerceiroPagamento::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
 }

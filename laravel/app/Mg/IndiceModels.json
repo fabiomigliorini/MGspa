@@ -1663,6 +1663,16 @@
                 "tabela": "tblpessoa",
                 "coluna": "codpessoa",
                 "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": {
@@ -1680,6 +1690,11 @@
                 "tabela": "tblnotafiscalterceirogrupo",
                 "coluna": "codnotafiscalterceiro",
                 "metodo": "NotaFiscalTerceiroGrupoS"
+            },
+            "tblnotafiscalterceiropagamento.codnotafiscalterceiro": {
+                "tabela": "tblnotafiscalterceiropagamento",
+                "coluna": "codnotafiscalterceiro",
+                "metodo": "NotaFiscalTerceiroPagamentoS"
             }
         }
     },
@@ -1921,6 +1936,16 @@
                 "tabela": "tblnotafiscalterceiro",
                 "coluna": "codnotafiscalterceiro",
                 "metodo": "NotaFiscalTerceiro"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": []
@@ -1936,6 +1961,16 @@
                 "tabela": "tblnotafiscalterceiro",
                 "coluna": "codnotafiscalterceiro",
                 "metodo": "NotaFiscalTerceiro"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": {
@@ -1962,6 +1997,16 @@
                 "tabela": "tblnotafiscalterceirogrupo",
                 "coluna": "codnotafiscalterceirogrupo",
                 "metodo": "NotaFiscalTerceiroGrupo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": []
@@ -1982,6 +2027,41 @@
                 "tabela": "tblprodutobarra",
                 "coluna": "codprodutobarra",
                 "metodo": "ProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblnotafiscalterceiropagamento": {
+        "tabela": "tblnotafiscalterceiropagamento",
+        "campocodigo": "codnotafiscalterceiropagamento",
+        "namespace": "Mg\\NotaFiscalTerceiro",
+        "classe": "NotaFiscalTerceiroPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscalTerceiro\/NotaFiscalTerceiroPagamento.php",
+        "belongsTo": {
+            "codnotafiscalterceiro": {
+                "tabela": "tblnotafiscalterceiro",
+                "coluna": "codnotafiscalterceiro",
+                "metodo": "NotaFiscalTerceiro"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": []

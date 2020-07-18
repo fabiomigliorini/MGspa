@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 08:20:05
+ * Date: 18/Jul/2020 13:37:01
  */
 
 namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
+use Mg\Usuario\Usuario;
 
 class NotaFiscalTerceiroItem extends MgModel
 {
@@ -34,6 +35,8 @@ class NotaFiscalTerceiroItem extends MgModel
         'icmspercentual',
         'icmsstbase',
         'icmsstbasemodalidade',
+        'icmsstbasepercentualreducao',
+        'icmsstmva',
         'icmsstpercentual',
         'icmsstvalor',
         'icmsvalor',
@@ -87,6 +90,8 @@ class NotaFiscalTerceiroItem extends MgModel
         'icmspercentual' => 'float',
         'icmsstbase' => 'float',
         'icmsstbasemodalidade' => 'integer',
+        'icmsstbasepercentualreducao' => 'float',
+        'icmsstmva' => 'float',
         'icmsstpercentual' => 'float',
         'icmsstvalor' => 'float',
         'icmsvalor' => 'float',
@@ -117,6 +122,16 @@ class NotaFiscalTerceiroItem extends MgModel
     public function NotaFiscalTerceiroGrupo()
     {
         return $this->belongsTo(NotaFiscalTerceiroGrupo::class, 'codnotafiscalterceirogrupo', 'codnotafiscalterceirogrupo');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
 }

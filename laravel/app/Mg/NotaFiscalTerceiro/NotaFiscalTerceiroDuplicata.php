@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 08:17:54
+ * Date: 18/Jul/2020 13:36:32
  */
 
 namespace Mg\NotaFiscalTerceiro;
 
 use Mg\MgModel;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\Usuario\Usuario;
 
 class NotaFiscalTerceiroDuplicata extends MgModel
 {
@@ -43,6 +44,16 @@ class NotaFiscalTerceiroDuplicata extends MgModel
     public function NotaFiscalTerceiro()
     {
         return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
 }

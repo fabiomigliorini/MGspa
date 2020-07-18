@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 08:19:55
+ * Date: 18/Jul/2020 13:36:54
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -9,6 +9,7 @@ namespace Mg\NotaFiscalTerceiro;
 use Mg\MgModel;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
 use Mg\Produto\ProdutoBarra;
+use Mg\Usuario\Usuario;
 
 class NotaFiscalTerceiroProdutoBarra extends MgModel
 {
@@ -52,6 +53,16 @@ class NotaFiscalTerceiroProdutoBarra extends MgModel
     public function ProdutoBarra()
     {
         return $this->belongsTo(ProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
 }
