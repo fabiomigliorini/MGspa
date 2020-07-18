@@ -3584,14 +3584,18 @@
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
 			<column name="emissao" type="timestamp" length="29" decimal="6" jt="93" />
-			<column name="ignorada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
-				<defo>false</defo>
-			</column>
 			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" >
 				<comment><![CDATA[cSitNFe]]></comment>
 			</column>
 			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" />
+			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" >
+				<defo>0</defo>
+				<comment><![CDATA[0: Sem Manifestação
+210200; Operação Realizada
+210220: Operação Desconhecida
+210240: Operação Não Realizada
+210210: Ciência da Operação]]></comment>
+			</column>
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" >
 				<comment><![CDATA[chNFe]]></comment>
 			</column>
@@ -3632,6 +3636,8 @@
 			</column>
 			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
 			<column name="recebimento" type="timestamp" length="29" decimal="6" jt="93" />
+			<column name="revisada" type="timestamp" jt="93" />
+			<column name="arquivada" type="timestamp" jt="93" />
 			<column name="criacao" type="timestamp" length="29" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="29" decimal="6" jt="93" />

@@ -1,13 +1,18 @@
 <template>
-  <q-select v-model="model"
-            clearable
-            use-input
-            input-debounce="200"
-            :label="label"
-            :options="options"
-            @filter="search"
-            @input="selected"
-  >
+  <q-select
+    v-model="model"
+    outlined
+    clearable
+    use-input
+    input-debounce="200"
+    :label="label"
+    :options="options"
+    @filter="search"
+    @input="selected"
+    >
+    <template v-slot:prepend>
+      <q-icon name="person_search" />
+    </template>
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
         <q-item-section>

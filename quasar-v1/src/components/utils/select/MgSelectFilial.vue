@@ -1,5 +1,15 @@
 <template>
-  <q-select v-model="model" :options="options" :label="label" clearable @change="selected"/>
+  <q-select
+    outlined
+    v-model="model"
+    :options="options"
+    :label="label"
+    clearable
+    @change="selected">
+    <template v-slot:prepend>
+      <q-icon name="store" />
+    </template>
+  </q-select>
 </template>
 
 <script>

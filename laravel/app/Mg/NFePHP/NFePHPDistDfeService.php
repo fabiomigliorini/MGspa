@@ -437,6 +437,7 @@ class NFePHPDistDfeService
             $nfd->save();
         }
 
+        // Formas de Pagamento
         $pags = $dom->getElementsByTagName('pag');
         foreach ($pags as $pag) {
             $nftp = NotaFiscalTerceiroPagamento::firstOrNew([

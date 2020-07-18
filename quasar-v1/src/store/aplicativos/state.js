@@ -42,12 +42,12 @@ export default {
       title: 'Etiquetas',
       path: '/etiqueta'
     },
-    /*
     {
-      icon: 'description',
-      title: 'Nota Fiscal Terceiro',
-      path: '/notafiscal-terceiro'
-    },*
+      icon: 'fas fa-newspaper',
+      title: 'Nota Fiscal de Terceiro',
+      path: '/nota-fiscal-terceiro'
+    },
+    /*
     {
       icon: 'add_shopping_cart',
       title: 'Pedidos e Transferências',
