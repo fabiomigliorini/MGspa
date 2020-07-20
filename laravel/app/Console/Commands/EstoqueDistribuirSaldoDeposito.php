@@ -6,14 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
 use Mg\Marca\Marca;
-/*
-use Mg\Produto\ProdutoVariacao;
-use Mg\Produto\Produto;
-
-use Mg\Estoque\MinimoMaximo\VendaMensalRepository;
-use Mg\Estoque\MinimoMaximo\ComprasRepository;
-*/
-use Mg\Estoque\MinimoMaximo\DistribuicaoRepository;
+use Mg\Estoque\MinimoMaximo\DistribuicaoService;
 
 class EstoqueDistribuirSaldoDeposito extends Command
 {
@@ -50,11 +43,11 @@ class EstoqueDistribuirSaldoDeposito extends Command
     {
         if ($cod = $this->option('codmarca')) {
             $m = Marca::findOrFail($cod);
-            $ret = DistribuicaoRepository::criarPlanilhaDistribuicaoSaldoDeposito($m);
+            $ret = DistribuicaoService::criarPlanilhaDistribuicaoSaldoDeposito($m);
             return $ret;
         }
 
-        DistribuicaoRepository::criarPlanilhaDistribuicaoSaldoDeposito();
+        DistribuicaoService::criarPlanilhaDistribuicaoSaldoDeposito();
 
         /*
         $ret = false;
@@ -63,31 +56,31 @@ class EstoqueDistribuirSaldoDeposito extends Command
         // se for somente uma variacao
         if ($cod = $this->option('codprodutovariacao')) {
           $m = ProdutoVariacao::findOrFail($cod);
-          return VendaMensalRepository::atualizarVariacao($m);
+          return VendaMensalService::atualizarVariacao($m);
         }
 
         // se for somente um produto
         if ($cod = $this->option('codproduto')) {
           $m = Produto::findOrFail($cod);
-          return VendaMensalRepository::atualizarProduto($m);
+          return VendaMensalService::atualizarProduto($m);
         }
 
         // se for somente uma marca
         if ($cod = $this->option('codmarca')) {
           $m = Marca::findOrFail($cod);
           if ($recalcular) {
-            $ret = VendaMensalRepository::atualizarMarca($m);
+            $ret = VendaMensalService::atualizarMarca($m);
           }
           // se for pra gerar o pedido de compra
           if ($this->option('gerar-pedido')) {
-            $ret = ComprasRepository::criarPlanilhaPedido($m);
+            $ret = ComprasService::criarPlanilhaPedido($m);
           }
           return $ret;
         }
 
         // se for geral
         if ($recalcular) {
-          $ret = VendaMensalRepository::atualizar();
+          $ret = VendaMensalService::atualizar();
         }
         if ($this->option('enviar-mail-faltando')) {
           $destinatario = env('MAIL_ADDRES_ESTOQUE_FALTANDO', null);

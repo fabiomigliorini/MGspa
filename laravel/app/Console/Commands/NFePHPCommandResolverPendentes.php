@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 
-use Mg\NFePHP\NFePHPRepositoryRobo;
+use Mg\NFePHP\NFePHPRoboService;
 use Mg\NFePHP\NFePHPResolverJob;
 
 class NFePHPCommandResolverPendentes extends Command
@@ -41,7 +41,7 @@ class NFePHPCommandResolverPendentes extends Command
     public function handle()
     {
         $quantidade = $this->option('quantidade')??1000;
-        $pendentes = NFePHPRepositoryRobo::pendentes($quantidade);
+        $pendentes = NFePHPRoboService::pendentes($quantidade);
         foreach ($pendentes as $pendente) {
             $this->info("Agendando Job para #$pendente->codnotafiscal");
             NFePHPResolverJob::dispatch($pendente->codnotafiscal);
