@@ -47,12 +47,17 @@ export default {
       title: 'Nota Fiscal de Terceiro',
       path: '/nota-fiscal-terceiro'
     },
+    {
+      icon: 'sync',
+      title: 'Distribuição DFe',
+      path: '/dfe-distribuicao'
+    },
     /*
     {
       icon: 'add_shopping_cart',
       title: 'Pedidos e Transferências',
       path: '/pedido'
     }
-*/
+    */
   ]
 }
