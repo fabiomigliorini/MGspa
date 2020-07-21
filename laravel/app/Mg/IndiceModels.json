@@ -588,8 +588,155 @@
         "namespace": "Mg\\Pessoa",
         "classe": "Pessoa",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Pessoa.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codcidade": {
+                "tabela": "tblcidade",
+                "coluna": "codcidade",
+                "metodo": "Cidade"
+            },
+            "codcidadecobranca": {
+                "tabela": "tblcidade",
+                "coluna": "codcidadecobranca",
+                "metodo": "CidadeCobranca"
+            },
+            "codestadocivil": {
+                "tabela": "tblestadocivil",
+                "coluna": "codestadocivil",
+                "metodo": "EstadoCivil"
+            },
+            "codformapagamento": {
+                "tabela": "tblformapagamento",
+                "coluna": "codformapagamento",
+                "metodo": "FormaPagamento"
+            },
+            "codgrupocliente": {
+                "tabela": "tblgrupocliente",
+                "coluna": "codgrupocliente",
+                "metodo": "GrupoCliente"
+            },
+            "codgrupoeconomico": {
+                "tabela": "tblgrupoeconomico",
+                "coluna": "codgrupoeconomico",
+                "metodo": "GrupoEconomico"
+            },
+            "codsexo": {
+                "tabela": "tblsexo",
+                "coluna": "codsexo",
+                "metodo": "Sexo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcheque.codpessoa": {
+                "tabela": "tblcheque",
+                "coluna": "codpessoa",
+                "metodo": "ChequeS"
+            },
+            "tblcobrancahistorico.codpessoa": {
+                "tabela": "tblcobrancahistorico",
+                "coluna": "codpessoa",
+                "metodo": "CobrancaHistoricoS"
+            },
+            "tblcupomfiscal.codpessoa": {
+                "tabela": "tblcupomfiscal",
+                "coluna": "codpessoa",
+                "metodo": "CupomFiscalS"
+            },
+            "tblfilial.codpessoa": {
+                "tabela": "tblfilial",
+                "coluna": "codpessoa",
+                "metodo": "FilialS"
+            },
+            "tblliquidacaotitulo.codpessoa": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codpessoa",
+                "metodo": "LiquidacaoTituloS"
+            },
+            "tblmetafilialpessoa.codpessoa": {
+                "tabela": "tblmetafilialpessoa",
+                "coluna": "codpessoa",
+                "metodo": "MetaFilialPessoaS"
+            },
+            "tblnegocio.codpessoa": {
+                "tabela": "tblnegocio",
+                "coluna": "codpessoa",
+                "metodo": "NegocioS"
+            },
+            "tblnegocio.codpessoavendedor": {
+                "tabela": "tblnegocio",
+                "coluna": "codpessoavendedor",
+                "metodo": "NegocioVendedorS"
+            },
+            "tblnfeterceiro.codpessoa": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codpessoa",
+                "metodo": "NfeTerceiroS"
+            },
+            "tblnotafiscal.codpessoa": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codpessoa",
+                "metodo": "NotaFiscalS"
+            },
+            "tblnotafiscal.codpessoatransportador": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codpessoatransportador",
+                "metodo": "NotaFiscalTransportadorS"
+            },
+            "tblnotafiscalterceiro.codpessoa": {
+                "tabela": "tblnotafiscalterceiro",
+                "coluna": "codpessoa",
+                "metodo": "NotaFiscalTerceiroS"
+            },
+            "tblpessoacertidao.codpessoa": {
+                "tabela": "tblpessoacertidao",
+                "coluna": "codpessoa",
+                "metodo": "PessoaCertidaoS"
+            },
+            "tblregistrospc.codpessoa": {
+                "tabela": "tblregistrospc",
+                "coluna": "codpessoa",
+                "metodo": "RegistroSpcS"
+            },
+            "tbltitulo.codpessoa": {
+                "tabela": "tbltitulo",
+                "coluna": "codpessoa",
+                "metodo": "TituloS"
+            },
+            "tbltituloagrupamento.codpessoa": {
+                "tabela": "tbltituloagrupamento",
+                "coluna": "codpessoa",
+                "metodo": "TituloAgrupamentoS"
+            },
+            "tblusuario.codpessoa": {
+                "tabela": "tblusuario",
+                "coluna": "codpessoa",
+                "metodo": "UsuarioS"
+            },
+            "tblvalecompra.codpessoa": {
+                "tabela": "tblvalecompra",
+                "coluna": "codpessoa",
+                "metodo": "ValeCompraS"
+            },
+            "tblvalecompra.codpessoafavorecido": {
+                "tabela": "tblvalecompra",
+                "coluna": "codpessoafavorecido",
+                "metodo": "ValeCompraFavorecidoS"
+            },
+            "tblvalecompramodelo.codpessoafavorecido": {
+                "tabela": "tblvalecompramodelo",
+                "coluna": "codpessoafavorecido",
+                "metodo": "ValeCompraModeloFavorecidoS"
+            }
+        }
     },
     "tblchequeemitente": {
         "tabela": "tblchequeemitente",
@@ -946,8 +1093,35 @@
         "namespace": "Mg\\FormaPagamento",
         "classe": "FormaPagamento",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/FormaPagamento\/FormaPagamento.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnegocioformapagamento.codformapagamento": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codformapagamento",
+                "metodo": "NegocioFormaPagamentoS"
+            },
+            "tblpessoa.codformapagamento": {
+                "tabela": "tblpessoa",
+                "coluna": "codformapagamento",
+                "metodo": "PessoaS"
+            },
+            "tblvalecompraformapagamento.codformapagamento": {
+                "tabela": "tblvalecompraformapagamento",
+                "coluna": "codformapagamento",
+                "metodo": "ValeCompraFormaPagamentoS"
+            }
+        }
     },
     "tblnegocio": {
         "tabela": "tblnegocio",
@@ -955,8 +1129,100 @@
         "namespace": "Mg\\Negocio",
         "classe": "Negocio",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/Negocio.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codestoquelocal": {
+                "tabela": "tblestoquelocal",
+                "coluna": "codestoquelocal",
+                "metodo": "EstoqueLocal"
+            },
+            "codestoquelocaldestino": {
+                "tabela": "tblestoquelocal",
+                "coluna": "codestoquelocaldestino",
+                "metodo": "EstoqueLocalDestino"
+            },
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codnaturezaoperacao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NaturezaOperacao"
+            },
+            "codnegociostatus": {
+                "tabela": "tblnegociostatus",
+                "coluna": "codnegociostatus",
+                "metodo": "NegocioStatus"
+            },
+            "codoperacao": {
+                "tabela": "tbloperacao",
+                "coluna": "codoperacao",
+                "metodo": "Operacao"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codpessoavendedor": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoavendedor",
+                "metodo": "PessoaVendedor"
+            },
+            "codusuario": {
+                "tabela": "tblusuario",
+                "coluna": "codusuario",
+                "metodo": "Usuario"
+            },
+            "codusuarioacertoentrega": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioacertoentrega",
+                "metodo": "UsuarioAcertoEntrega"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codusuariorecebimento": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariorecebimento",
+                "metodo": "UsuarioRecebimento"
+            }
+        },
+        "hasMany": {
+            "tblnegociocaixamercadoria.codnegocio": {
+                "tabela": "tblnegociocaixamercadoria",
+                "coluna": "codnegocio",
+                "metodo": "NegocioCaixaMercadoriaS"
+            },
+            "tblnegocioformapagamento.codnegocio": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codnegocio",
+                "metodo": "NegocioFormaPagamentoS"
+            },
+            "tblnegocioprodutobarra.codnegocio": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocio",
+                "metodo": "NegocioProdutoBarraS"
+            },
+            "tblnfeterceiro.codnegocio": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnegocio",
+                "metodo": "NfeTerceiroS"
+            },
+            "tblnotafiscalterceiro.codnegocio": {
+                "tabela": "tblnotafiscalterceiro",
+                "coluna": "codnegocio",
+                "metodo": "NotaFiscalTerceiroS"
+            }
+        }
     },
     "tblcobrancahistorico": {
         "tabela": "tblcobrancahistorico",
@@ -964,8 +1230,30 @@
         "namespace": "Mg\\Cobranca",
         "classe": "CobrancaHistorico",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cobranca\/CobrancaHistorico.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcobrancahistoricotitulo.codcobrancahistorico": {
+                "tabela": "tblcobrancahistoricotitulo",
+                "coluna": "codcobrancahistorico",
+                "metodo": "CobrancaHistoricoTituloS"
+            }
+        }
     },
     "tblnfeterceiro": {
         "tabela": "tblnfeterceiro",
@@ -1034,8 +1322,35 @@
         "namespace": "Mg\\ValeCompra",
         "classe": "ValeCompraModelo",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompraModelo.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codpessoafavorecido": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoafavorecido",
+                "metodo": "PessoaFavorecido"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblvalecompra.codvalecompramodelo": {
+                "tabela": "tblvalecompra",
+                "coluna": "codvalecompramodelo",
+                "metodo": "ValeCompraS"
+            },
+            "tblvalecompramodeloprodutobarra.codvalecompramodelo": {
+                "tabela": "tblvalecompramodeloprodutobarra",
+                "coluna": "codvalecompramodelo",
+                "metodo": "ValecompramodeloprodutobarraS"
+            }
+        }
     },
     "tblvalecompraprodutobarra": {
         "tabela": "tblvalecompraprodutobarra",
@@ -1791,7 +2106,33 @@
         "namespace": "Mg\\Meta",
         "classe": "MetaFilialPessoa",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Meta\/MetaFilialPessoa.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codcargo": {
+                "tabela": "tblcargo",
+                "coluna": "codcargo",
+                "metodo": "Cargo"
+            },
+            "codmetafilial": {
+                "tabela": "tblmetafilial",
+                "coluna": "codmetafilial",
+                "metodo": "MetaFilial"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tbloperacao": {
@@ -2064,6 +2405,163 @@
                 "metodo": "UsuarioCriacao"
             }
         },
+        "hasMany": []
+    },
+    "tblestadocivil": {
+        "tabela": "tblestadocivil",
+        "campocodigo": "codestadocivil",
+        "namespace": "Mg\\Pessoa",
+        "classe": "EstadoCivil",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/EstadoCivil.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoa.codestadocivil": {
+                "tabela": "tblpessoa",
+                "coluna": "codestadocivil",
+                "metodo": "PessoaS"
+            }
+        }
+    },
+    "tblgrupocliente": {
+        "tabela": "tblgrupocliente",
+        "campocodigo": "codgrupocliente",
+        "namespace": "Mg\\Pessoa",
+        "classe": "GrupoCliente",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/GrupoCliente.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoa.codgrupocliente": {
+                "tabela": "tblpessoa",
+                "coluna": "codgrupocliente",
+                "metodo": "PessoaS"
+            }
+        }
+    },
+    "tblgrupoeconomico": {
+        "tabela": "tblgrupoeconomico",
+        "campocodigo": "codgrupoeconomico",
+        "namespace": "Mg\\GrupoEconomico",
+        "classe": "GrupoEconomico",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/GrupoEconomico\/GrupoEconomico.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblsexo": {
+        "tabela": "tblsexo",
+        "campocodigo": "codsexo",
+        "namespace": "Mg\\Pessoa",
+        "classe": "Sexo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Sexo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoa.codsexo": {
+                "tabela": "tblpessoa",
+                "coluna": "codsexo",
+                "metodo": "PessoaS"
+            }
+        }
+    },
+    "tblpessoacertidao": {
+        "tabela": "tblpessoacertidao",
+        "campocodigo": "codpessoacertidao",
+        "namespace": "Mg\\Pessoa",
+        "classe": "PessoaCertidao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/PessoaCertidao.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblregistrospc": {
+        "tabela": "tblregistrospc",
+        "campocodigo": "codregistrospc",
+        "namespace": "Mg\\Pessoa",
+        "classe": "RegistroSpc",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/RegistroSpc.php",
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblnegociostatus": {
+        "tabela": "tblnegociostatus",
+        "campocodigo": "codnegociostatus",
+        "namespace": "Mg\\Negocio",
+        "classe": "NegocioStatus",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioStatus.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnegociocaixamercadoria": {
+        "tabela": "tblnegociocaixamercadoria",
+        "campocodigo": "codnegociocaixamercadoria",
+        "namespace": "Mg\\Negocio",
+        "classe": "NegocioCaixaMercadoria",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioCaixaMercadoria.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblcargo": {
+        "tabela": "tblcargo",
+        "campocodigo": "codcargo",
+        "namespace": "Mg\\Pessoa",
+        "classe": "Cargo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Cargo.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblvalecompramodeloprodutobarra": {
+        "tabela": "tblvalecompramodeloprodutobarra",
+        "campocodigo": "codvalecompramodeloprodutobarra",
+        "namespace": "Mg\\Valecompramodeloprodutobarra",
+        "classe": "Valecompramodeloprodutobarra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Valecompramodeloprodutobarra\/Valecompramodeloprodutobarra.php",
+        "belongsTo": [],
         "hasMany": []
     }
 }

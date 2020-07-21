@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 13:36:14
+ * Date: 21/Jul/2020 11:47:50
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -34,7 +34,9 @@ class NotaFiscalTerceiro extends MgModel
     protected $table = 'tblnotafiscalterceiro';
     protected $primaryKey = 'codnotafiscalterceiro';
 
+
     protected $fillable = [
+        'arquivada',
         'cnpj',
         'codfilial',
         'codnaturezaoperacao',
@@ -54,7 +56,6 @@ class NotaFiscalTerceiro extends MgModel
         'icmsstvalor',
         'icmsvalor',
         'ie',
-        'ignorada',
         'indmanifestacao',
         'indsituacao',
         'ipivalor',
@@ -66,6 +67,7 @@ class NotaFiscalTerceiro extends MgModel
         'observacoes',
         'protocolo',
         'recebimento',
+        'revisada',
         'serie',
         'tipo',
         'valordesconto',
@@ -78,10 +80,12 @@ class NotaFiscalTerceiro extends MgModel
 
     protected $dates = [
         'alteracao',
+        'arquivada',
         'criacao',
         'emissao',
         'entrada',
-        'recebimento'
+        'recebimento',
+        'revisada'
     ];
 
     protected $casts = [
@@ -102,7 +106,6 @@ class NotaFiscalTerceiro extends MgModel
         'icmsstbase' => 'float',
         'icmsstvalor' => 'float',
         'icmsvalor' => 'float',
-        'ignorada' => 'boolean',
         'indmanifestacao' => 'integer',
         'indsituacao' => 'integer',
         'ipivalor' => 'float',

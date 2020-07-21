@@ -1,17 +1,41 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 21/Jul/2020 12:02:26
+ */
 
 namespace Mg\Pessoa;
 
-use Mg\MgModel;
-
-use Mg\Cidade\Cidade;
 use Mg\Certidao\CertidaoEmissor;
-
 use DB;
 use Carbon\Carbon;
 
+use Mg\MgModel;
+use Mg\Cheque\Cheque;
+use Mg\Cobranca\CobrancaHistorico;
+use Mg\CupomFiscal\CupomFiscal;
+use Mg\Filial\Filial;
+use Mg\Titulo\LiquidacaoTitulo;
+use Mg\Meta\MetaFilialPessoa;
+use Mg\Negocio\Negocio;
+use Mg\NfeTerceiro\NfeTerceiro;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\Pessoa\PessoaCertidao;
+use Mg\Pessoa\RegistroSpc;
+use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloAgrupamento;
+use Mg\Usuario\Usuario;
+use Mg\ValeCompra\ValeCompra;
+use Mg\ValeCompra\ValeCompraModelo;
+use Mg\Cidade\Cidade;
+use Mg\Pessoa\EstadoCivil;
+use Mg\FormaPagamento\FormaPagamento;
+use Mg\Pessoa\GrupoCliente;
+use Mg\GrupoEconomico\GrupoEconomico;
+use Mg\Pessoa\Sexo;
 
-class Pessoa extends MGModel
+class Pessoa extends MgModel
 {
 
     const NOTAFISCAL_TRATAMENTOPADRAO = 0;
@@ -23,56 +47,84 @@ class Pessoa extends MGModel
 
     protected $table = 'tblpessoa';
     protected $primaryKey = 'codpessoa';
+
+
     protected $fillable = [
-        'pessoa',
-        'fantasia',
-        'inativo',
+        'bairro',
+        'bairrocobranca',
+        'cep',
+        'cepcobranca',
         'cliente',
-        'fornecedor',
-        'fisica',
-        'codsexo',
         'cnpj',
-        'ie',
+        'codcidade',
+        'codcidadecobranca',
+        'codestadocivil',
+        'codformapagamento',
+        'codgrupocliente',
+        'codgrupoeconomico',
+        'codsexo',
+        'complemento',
+        'complementocobranca',
+        'conjuge',
         'consumidor',
         'contato',
-        'codestadocivil',
-        'conjuge',
+        'credito',
+        'creditobloqueado',
+        'crt',
+        'desconto',
+        'email',
+        'emailcobranca',
+        'emailnfe',
         'endereco',
-        'numero',
-        'complemento',
-        'codcidade',
-        'bairro',
-        'cep',
         'enderecocobranca',
+        'fantasia',
+        'fisica',
+        'fornecedor',
+        'ie',
+        'mensagemvenda',
+        'notafiscal',
+        'numero',
         'numerocobranca',
-        'complementocobranca',
-        'codcidadecobranca',
-        'bairrocobranca',
-        'cepcobranca',
+        'observacoes',
+        'pessoa',
+        'rg',
         'telefone1',
         'telefone2',
         'telefone3',
-        'email',
-        'emailnfe',
-        'emailcobranca',
-        'codformapagamento',
-        'credito',
-        'creditobloqueado',
-        'observacoes',
-        'mensagemvenda',
-        'vendedor',
-        'rg',
-        'desconto',
-        'notafiscal',
         'toleranciaatraso',
-        'codgrupocliente',
-    ];
-    protected $dates = [
-        'inativo',
-        'alteracao',
-        'criacao',
+        'vendedor'
     ];
 
+    protected $dates = [
+        'alteracao',
+        'criacao',
+        'inativo'
+    ];
+
+    protected $casts = [
+        'cliente' => 'boolean',
+        'cnpj' => 'float',
+        'codcidade' => 'integer',
+        'codcidadecobranca' => 'integer',
+        'codestadocivil' => 'integer',
+        'codformapagamento' => 'integer',
+        'codgrupocliente' => 'integer',
+        'codgrupoeconomico' => 'integer',
+        'codpessoa' => 'integer',
+        'codsexo' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'consumidor' => 'boolean',
+        'credito' => 'float',
+        'creditobloqueado' => 'boolean',
+        'crt' => 'integer',
+        'desconto' => 'float',
+        'fisica' => 'boolean',
+        'fornecedor' => 'boolean',
+        'notafiscal' => 'integer',
+        'toleranciaatraso' => 'integer',
+        'vendedor' => 'boolean'
+    ];
 
     public function getCobrancanomesmoenderecoAttribute()
     {
@@ -83,20 +135,106 @@ class Pessoa extends MGModel
             ($this->bairrocobranca      <>  $this->bairro     ) or
             ($this->codcidadecobranca   <>  $this->codcidade  ) or
             ($this->cepcobranca         <>  $this->cep        )
-           )
+        ) {
             return false;
-        else
+        } else {
             return true;
+        }
     }
 
-
-    /*
-    public function Usuario()
+    public function getNotaFiscalRange()
     {
-        return $this->hasMany(Usuario::class, 'codpessoa', 'codpessoa');
+        return array(
+            self::NOTAFISCAL_TRATAMENTOPADRAO,
+            self::NOTAFISCAL_SEMPRE,
+            self::NOTAFISCAL_SOMENTE_FECHAMENTO,
+            self::NOTAFISCAL_NUNCA,
+        );
     }
-    */
 
+    public function getNotaFiscalDescricao()
+    {
+        $opcoes = $this->getNotaFiscalOpcoes();
+        if (!isset($this->notafiscal)) {
+            return null;
+        }
+        return isset($opcoes[$this->notafiscal]) ? $opcoes[$this->notafiscal] : "Tipo Desconhecido ({$this->notafiscal})";
+    }
+
+    public function totalTitulos()
+    {
+        $query = DB::select('
+                SELECT SUM(saldo) AS saldo, MIN(vencimento) AS vencimento
+                FROM tbltitulo
+                WHERE codpessoa = :codpessoa AND saldo != 0',
+                ['codpessoa' => $this->codpessoa]
+        )[0];
+
+        $query->vencimentodias = 0;
+
+        if ($query->vencimento) {
+            $venc = Carbon::createFromFormat("Y-m-d", $query->vencimento);
+            $hoje = Carbon::now();
+            $query->vencimentodias = $dif = $hoje->diffInDays($venc, false);
+        }
+
+        return $query;
+    }
+
+    public function scopeId($query, $codpessoa)
+    {
+        if (trim($codpessoa) === '') {
+            return;
+        }
+        $query->where('codpessoa', $codpessoa);
+    }
+
+    public function scopePessoa($query, $pessoa)
+    {
+        if (trim($pessoa) === '')
+            return;
+
+        $pessoa = explode(' ', trim($pessoa));
+
+        $query->where(function ($q1) use ($pessoa) {
+            $q1->orWhere(function ($q2) use ($pessoa)
+            {
+                foreach ($pessoa as $str)
+                    $q2->where('fantasia', 'ILIKE', "%$str%");
+            });
+
+            $q1->orWhere(function($q2) use ($pessoa)
+            {
+                foreach ($pessoa as $str)
+                    $q2->where('pessoa', 'ILIKE', "%$str%");
+            });
+        });
+    }
+
+    public static function vendedoresOrdenadoPorNome()
+    {
+        return self::where('vendedor', true)->orderBy('pessoa', 'asc');
+    }
+
+    public function certidaoSefazMT()
+    {
+        return $this->PessoaCertidaoS()->where('validade', '>=', Carbon::createMidnightDate())
+            ->ativo()
+            ->where('codcertidaoemissor', CertidaoEmissor::SEFAZ_MT)
+            ->orderBy('validade', 'desc')
+            ->first();
+    }
+
+    public static function getNotaFiscalOpcoes()
+    {
+        return array(
+            self::NOTAFISCAL_TRATAMENTOPADRAO => "Tratamento Padrão",
+            self::NOTAFISCAL_SEMPRE => "Sempre",
+            self::NOTAFISCAL_SOMENTE_FECHAMENTO => "Somente no Fechamento",
+            self::NOTAFISCAL_NUNCA => "Nunca Emitir",
+        );
+    }
+    
 
     // Chaves Estrangeiras
     public function Cidade()
@@ -124,6 +262,11 @@ class Pessoa extends MGModel
         return $this->belongsTo(GrupoCliente::class, 'codgrupocliente', 'codgrupocliente');
     }
 
+    public function GrupoEconomico()
+    {
+        return $this->belongsTo(GrupoEconomico::class, 'codgrupoeconomico', 'codgrupoeconomico');
+    }
+
     public function Sexo()
     {
         return $this->belongsTo(Sexo::class, 'codsexo', 'codsexo');
@@ -141,25 +284,9 @@ class Pessoa extends MGModel
 
 
     // Tabelas Filhas
-
-    public function ValeCompraModeloFavorecidoS()
+    public function ChequeS()
     {
-        return $this->hasMany(ValeCompraModelo::class, 'codpessoa', 'codpessoafavorecido');
-    }
-
-    public function ValeCompraS()
-    {
-        return $this->hasMany(ValeCompra::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function ValeCompraFavorecidoS()
-    {
-        return $this->hasMany(ValeCompra::class, 'codpessoa', 'codpessoafavorecido');
-    }
-
-    public function MetaFilialPessoaS()
-    {
-        return $this->hasMany(MetaFilialPessoa::class, 'codpessoa', 'codpessoa');
+        return $this->hasMany(Cheque::class, 'codpessoa', 'codpessoa');
     }
 
     public function CobrancaHistoricoS()
@@ -167,7 +294,7 @@ class Pessoa extends MGModel
         return $this->hasMany(CobrancaHistorico::class, 'codpessoa', 'codpessoa');
     }
 
-    public function CupomfiscalS()
+    public function CupomFiscalS()
     {
         return $this->hasMany(CupomFiscal::class, 'codpessoa', 'codpessoa');
     }
@@ -182,14 +309,19 @@ class Pessoa extends MGModel
         return $this->hasMany(LiquidacaoTitulo::class, 'codpessoa', 'codpessoa');
     }
 
-    public function NegocioPessoaS()
+    public function MetaFilialPessoaS()
+    {
+        return $this->hasMany(MetaFilialPessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function NegocioS()
     {
         return $this->hasMany(Negocio::class, 'codpessoa', 'codpessoa');
     }
 
     public function NegocioVendedorS()
     {
-        return $this->hasMany(Negocio::class, 'codpessoa', 'codpessoavendedor');
+        return $this->hasMany(Negocio::class, 'codpessoavendedor', 'codpessoa');
     }
 
     public function NfeTerceiroS()
@@ -202,29 +334,14 @@ class Pessoa extends MGModel
         return $this->hasMany(NotaFiscal::class, 'codpessoa', 'codpessoa');
     }
 
-    public function RegistroSpcS()
+    public function NotaFiscalTransportadorS()
     {
-        return $this->hasMany(RegistroSpc::class, 'codpessoa', 'codpessoa');
+        return $this->hasMany(NotaFiscal::class, 'codpessoatransportador', 'codpessoa');
     }
 
-    public function TituloAgrupamentoS()
+    public function NotaFiscalTerceiroS()
     {
-        return $this->hasMany(TituloAgrupamento::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function TituloS()
-    {
-        return $this->hasMany(Titulo::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function UsuarioS()
-    {
-        return $this->hasMany(Usuario::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function ChequeS()
-    {
-        return $this->hasMany(Cheque::class, 'codpessoa', 'codpessoa');
+        return $this->hasMany(NotaFiscalTerceiro::class, 'codpessoa', 'codpessoa');
     }
 
     public function PessoaCertidaoS()
@@ -232,98 +349,39 @@ class Pessoa extends MGModel
         return $this->hasMany(PessoaCertidao::class, 'codpessoa', 'codpessoa');
     }
 
-    public static function getNotaFiscalOpcoes()
+    public function RegistroSpcS()
     {
-        return array(
-            self::NOTAFISCAL_TRATAMENTOPADRAO => "Tratamento Padrão",
-            self::NOTAFISCAL_SEMPRE => "Sempre",
-            self::NOTAFISCAL_SOMENTE_FECHAMENTO => "Somente no Fechamento",
-            self::NOTAFISCAL_NUNCA => "Nunca Emitir",
-        );
+        return $this->hasMany(RegistroSpc::class, 'codpessoa', 'codpessoa');
     }
 
-    public function getNotaFiscalRange()
+    public function TituloS()
     {
-        return array(
-            self::NOTAFISCAL_TRATAMENTOPADRAO,
-            self::NOTAFISCAL_SEMPRE,
-            self::NOTAFISCAL_SOMENTE_FECHAMENTO,
-            self::NOTAFISCAL_NUNCA,
-        );
+        return $this->hasMany(Titulo::class, 'codpessoa', 'codpessoa');
     }
 
-    public function getNotaFiscalDescricao()
+    public function TituloAgrupamentoS()
     {
-        $opcoes = $this->getNotaFiscalOpcoes();
-        if (!isset($this->notafiscal))
-            return null;
-
-        return isset($opcoes[$this->notafiscal]) ? $opcoes[$this->notafiscal] : "Tipo Desconhecido ({$this->notafiscal})";
+        return $this->hasMany(TituloAgrupamento::class, 'codpessoa', 'codpessoa');
     }
 
-    public function totalTitulos()
+    public function UsuarioS()
     {
-        $query = DB::select('
-                SELECT SUM(saldo) AS saldo, MIN(vencimento) AS vencimento
-                FROM tbltitulo
-                WHERE codpessoa = :codpessoa AND saldo != 0',
-                ['codpessoa' => $this->codpessoa]
-        )[0];
-
-        $query->vencimentodias = 0;
-
-        if ($query->vencimento) {
-            $venc = Carbon::createFromFormat("Y-m-d", $query->vencimento);
-            $hoje = Carbon::now();
-            $query->vencimentodias = $dif = $hoje->diffInDays($venc, false);
-        }
-
-        return $query;
+        return $this->hasMany(Usuario::class, 'codpessoa', 'codpessoa');
     }
 
-    public function scopeId($query, $codpessoa)
+    public function ValeCompraS()
     {
-        if (trim($codpessoa) === '')
-            return;
-
-        $query->where('codpessoa', $codpessoa);
+        return $this->hasMany(ValeCompra::class, 'codpessoa', 'codpessoa');
     }
 
-    public function scopePessoa($query, $pessoa)
+    public function ValeCompraFavorecidoS()
     {
-        if (trim($pessoa) === '')
-            return;
-
-        $pessoa = explode(' ', trim($pessoa));
-
-        $query->where(function ($q1) use ($pessoa) {
-            $q1->orWhere(function ($q2) use ($pessoa)
-            {
-                foreach ($pessoa as $str)
-                    $q2->where('fantasia', 'ILIKE', "%$str%");
-            });
-
-            $q1->orWhere(function($q2) use ($pessoa)
-            {
-                foreach ($pessoa as $str)
-                    $q2->where('pessoa', 'ILIKE', "%$str%");
-            });
-        });
-
+        return $this->hasMany(ValeCompra::class, 'codpessoafavorecido', 'codpessoa');
     }
 
-    public static function vendedoresOrdenadoPorNome()
+    public function ValeCompraModeloFavorecidoS()
     {
-        return self::where('vendedor', true)->orderBy('pessoa', 'asc');
-    }
-
-    public function certidaoSefazMT()
-    {
-        return $this->PessoaCertidaoS()->where('validade', '>=', Carbon::createMidnightDate())
-            ->ativo()
-            ->where('codcertidaoemissor', CertidaoEmissor::SEFAZ_MT)
-            ->orderBy('validade', 'desc')
-            ->first();
+        return $this->hasMany(ValeCompraModelo::class, 'codpessoafavorecido', 'codpessoa');
     }
 
 }
