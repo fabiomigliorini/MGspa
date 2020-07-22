@@ -19,7 +19,7 @@ class DfeController extends MgController
         $codfilial = $request->codfilial;
         $datade = (empty($request->datade))?null:Carbon::parse($request->datade);
         $dataate = (empty($request->dataate))?null:Carbon::parse($request->dataate);
-        $nfechave = $request->nfechave;
+        $nfechave = trim(numeroLimpo($request->nfechave));
         $nsude = $request->nsude;
         $nsuate = $request->nsuate;
         // dd($request->all());

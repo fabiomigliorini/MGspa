@@ -38,19 +38,48 @@ class NFePHPDistDfeService
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
         // dd($nsu);
-        $resp = $tools->sefazDistDFe($nsu);
-        file_put_contents("/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/{$filial->codfilial}-{$nsu}.xml", $resp);
+        // $resp = $tools->sefazDistDFe($nsu);
+        // file_put_contents("/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/{$filial->codfilial}-{$nsu}.xml", $resp);
 
         // em desenvolvimento pega um arquivo de exemplo
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49737.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49793.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49843.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4548.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/103-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/801-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49844.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49894.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-50044.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/104-4427.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-12075.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49994.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49893.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50093.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49793.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50043.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4548.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50193.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4598.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49993.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4698.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50293.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4648.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49943.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49737.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49843.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50143.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50243.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-11975.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4599.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/103-15499.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-50094.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-50144.xml');
         // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4598.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4648.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4698.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4549.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/104-0.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-12025.xml');
+        $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49944.xml');
 
         $domResp = new \DOMDocument();
         $domResp->loadXML($resp);
@@ -124,21 +153,27 @@ class NFePHPDistDfeService
         ]);
 
         // Busca Registro no Banco de Dados
-        $dde = DistribuicaoDfeEvento::firstOrNew([
-            'coddistribuicaodfe' => $dd->coddistribuicaodfe
-        ]);
+        if (!empty($dd->coddistribuicaodfeevento)) {
+            $dde = $dd->DistribuicaoDfeEvento;
+        } else {
+            $dde = new DistribuicaoDfeEvento();
+        }
 
         // Associa os dados do XML no registro
         $dde->coddfeevento = $de->coddfeevento;
         $dde->orgao = @$dom->getElementsByTagName('cOrgao')->item(0)->nodeValue;
         $dde->cnpj = @$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue;
         $dde->cpf = @$dom->getElementsByTagName('CPF')->item(0)->nodeValue;
-        $dde->nfechave = @$dom->getElementsByTagName('chNFe')->item(0)->nodeValue;
-        $dde->data = @Carbon::parse($dom->getElementsByTagName('dhEvento')->item(0)->nodeValue);
         $dde->sequencia = @$dom->getElementsByTagName('nSeqEvento')->item(0)->nodeValue;
         $dde->recebimento = @Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue);
         $dde->protocolo = @$dom->getElementsByTagName('nProt')->item(0)->nodeValue;
         $dde->save();
+
+        // vincula dfe no evento
+        $dd->coddistribuicaodfeevento = $dde->coddistribuicaodfeevento;
+        $dd->nfechave = @$dom->getElementsByTagName('chNFe')->item(0)->nodeValue;
+        $dd->data = @Carbon::parse($dom->getElementsByTagName('dhEvento')->item(0)->nodeValue);
+        $dd->save();
     }
 
     public static function processarResNFe(DistribuicaoDfe $dd, $gz)
@@ -180,6 +215,8 @@ class NFePHPDistDfeService
 
         // vincula dfe na nota fiscal de terceiro
         $dd->codnotafiscalterceiro = $nft->codnotafiscalterceiro;
+        $dd->nfechave = $nft->nfechave;
+        $dd->data = $nft->recebimento??$nft->emissao;
         $dd->save();
     }
 
@@ -196,17 +233,17 @@ class NFePHPDistDfeService
         ]);
 
         // Busca Registro no Banco de Dados
-        $dde = DistribuicaoDfeEvento::firstOrNew([
-            'coddistribuicaodfe' => $dd->coddistribuicaodfe
-        ]);
+        if (!empty($dd->coddistribuicaodfeevento)) {
+            $dde = $dd->DistribuicaoDfeEvento;
+        } else {
+            $dde = new DistribuicaoDfeEvento();
+        }
 
         // Associa os dados do XML no registro
         $dde->coddfeevento = $de->coddfeevento;
         $dde->orgao = @$dom->getElementsByTagName('cOrgao')->item(0)->nodeValue;
         $dde->cnpj = @$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue;
         $dde->cpf = @$dom->getElementsByTagName('CPF')->item(0)->nodeValue;
-        $dde->nfechave = @$dom->getElementsByTagName('chNFe')->item(0)->nodeValue;
-        $dde->data = @Carbon::parse($dom->getElementsByTagName('dhEvento')->item(0)->nodeValue);
         $dde->sequencia = @$dom->getElementsByTagName('nSeqEvento')->item(0)->nodeValue;
         $dde->recebimento = @Carbon::parse($dom->getElementsByTagName('dhRegEvento')->item(0)->nodeValue);
         $dde->protocolo = @$dom->getElementsByTagName('nProt')->item(0)->nodeValue;
@@ -215,6 +252,13 @@ class NFePHPDistDfeService
         $dde->descricao = @$dom->getElementsByTagName('xCorrecao')->item(0)->nodeValue;
 
         $dde->save();
+
+        // vincula dfe no evento
+        $dd->coddistribuicaodfeevento = $dde->coddistribuicaodfeevento;
+        $dd->nfechave = @$dom->getElementsByTagName('chNFe')->item(0)->nodeValue;
+        $dd->data = @Carbon::parse($dom->getElementsByTagName('dhEvento')->item(0)->nodeValue);
+        $dd->save();
+
     }
 
 
@@ -454,6 +498,8 @@ class NFePHPDistDfeService
 
         // vincula dfe na nota fiscal de terceiro
         $dd->codnotafiscalterceiro = $nft->codnotafiscalterceiro;
+        $dd->nfechave = $nft->nfechave;
+        $dd->data = $nft->recebimento??$nft->emissao??Carbon::now();
         $dd->save();
     }
 }

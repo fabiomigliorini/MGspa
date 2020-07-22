@@ -32,12 +32,10 @@ class DistribuicaoDfeResource extends Resource
         ])->first();
 
         // Eventos
-        $ret['DistribuicaoDfeEventoS'] = [];
-        $qry = $this->DistribuicaoDfeEventoS()->select([
+        $ret['DistribuicaoDfeEvento'] = [];
+        $qry = $this->DistribuicaoDfeEvento()->select([
             'coddistribuicaodfeevento',
             'orgao',
-            'nfechave',
-            'data',
             'sequencia',
             'recebimento',
             'protocolo',
@@ -46,16 +44,14 @@ class DistribuicaoDfeResource extends Resource
             'descricao',
             'coddfeevento',
         ]);
-        if ($ddes = $qry->get()) {
-            foreach ($ddes as $dde) {
-                $arr = $dde->toArray();
-                $arr['DfeEvento'] = $dde->DfeEvento()->select([
-                    'coddfeevento',
-                    'dfeevento',
-                    'tpevento'
-                    ])->first()->toArray();
-                $ret['DistribuicaoDfeEventoS'][] = $arr;
-            }
+        if ($dde = $qry->first()) {
+            $arr = $dde->toArray();
+            $arr['DfeEvento'] = $dde->DfeEvento()->select([
+                'coddfeevento',
+                'dfeevento',
+                'tpevento'
+                ])->first()->toArray();
+            $ret['DistribuicaoDfeEvento'] = $arr;
         }
 
         // NotaFiscalTerceiro

@@ -2165,11 +2165,6 @@
                 "coluna": "coddfeevento",
                 "metodo": "DfeEvento"
             },
-            "coddistribuicaodfe": {
-                "tabela": "tbldistribuicaodfe",
-                "coluna": "coddistribuicaodfe",
-                "metodo": "DistribuicaoDfe"
-            },
             "codusuarioalteracao": {
                 "tabela": "tblusuario",
                 "coluna": "codusuarioalteracao",
@@ -2181,7 +2176,13 @@
                 "metodo": "UsuarioCriacao"
             }
         },
-        "hasMany": []
+        "hasMany": {
+            "tbldistribuicaodfe.coddistribuicaodfeevento": {
+                "tabela": "tbldistribuicaodfe",
+                "coluna": "coddistribuicaodfeevento",
+                "metodo": "DistribuicaoDfeS"
+            }
+        }
     },
     "tbldfeevento": {
         "tabela": "tbldfeevento",
@@ -2256,15 +2257,14 @@
                 "tabela": "tblnotafiscalterceiro",
                 "coluna": "codnotafiscalterceiro",
                 "metodo": "NotaFiscalTerceiro"
+            },
+            "coddistribuicaodfeevento": {
+                "tabela": "tbldistribuicaodfeevento",
+                "coluna": "coddistribuicaodfeevento",
+                "metodo": "DistribuicaoDfeEvento"
             }
         },
-        "hasMany": {
-            "tbldistribuicaodfeevento.coddistribuicaodfe": {
-                "tabela": "tbldistribuicaodfeevento",
-                "coluna": "coddistribuicaodfe",
-                "metodo": "DistribuicaoDfeEventoS"
-            }
-        }
+        "hasMany": []
     },
     "tblnotafiscalterceiroduplicata": {
         "tabela": "tblnotafiscalterceiroduplicata",

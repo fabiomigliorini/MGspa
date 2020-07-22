@@ -23,15 +23,15 @@ class DfeService
         }
 
         if (!empty($datade)) {
-            $qry->where('criacao', '>=', $datade->startOfDay());
+            $qry->where('data', '>=', $datade->startOfDay());
         }
         if (!empty($dataate)) {
-            $qry->where('criacao', '<=', $dataate->endOfDay());
+            $qry->where('data', '<=', $dataate->endOfDay());
         }
 
-        // if (!empty($nfechave)) {
-        //     $qry->where('codfilial', $codfilial);
-        // }
+        if (!empty($nfechave)) {
+            $qry->where('nfechave', 'ilike', "%$nfechave%");
+        }
 
         if (!empty($nsude)) {
             $qry->where('nsu', '>=', $nsude);
@@ -40,7 +40,7 @@ class DfeService
             $qry->where('nsu', '<=', $nsuate);
         }
 
-        $qry->orderBy('criacao', 'desc')->orderBy('nsu', 'desc');
+        $qry->orderBy('data', 'desc')->orderBy('nsu', 'desc');
 
         return $qry;
     }

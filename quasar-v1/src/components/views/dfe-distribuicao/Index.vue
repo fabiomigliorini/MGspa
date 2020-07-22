@@ -113,66 +113,68 @@
                 </q-item-label>
               </q-item-section>
 
-              <!-- NotaFiscalTerceiro -->
-              <q-item-section top v-if="item.codnotafiscalterceiro > 0">
-                <q-item-label lines="1">
-                  <span class="text-weight-medium" v-if="item.NotaFiscalTerceiro.codpessoa">
-                    {{item.NotaFiscalTerceiro.Pessoa.fantasia}}
-                  </span>
-                  <span class="text-weight-medium" v-else>
-                    {{item.NotaFiscalTerceiro.emitente}}
-                  </span>
-                </q-item-label>
-                <q-item-label lines="1">
-                  <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
-                    R$ {{numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00')}}
-                  </span>
-                  <span class="text-grey-8" v-if="item.NotaFiscalTerceiro.natop">
-                    - {{item.NotaFiscalTerceiro.natop}}
-                  </span>
-                </q-item-label>
+              <q-item-section top>
+
+                <!-- NotaFiscalTerceiro -->
+                <template v-if="item.codnotafiscalterceiro > 0">
+                  <q-item-label lines="1">
+                    <span class="text-weight-medium" v-if="item.NotaFiscalTerceiro.codpessoa">
+                      {{item.NotaFiscalTerceiro.Pessoa.fantasia}}
+                    </span>
+                    <span class="text-weight-medium" v-else>
+                      {{item.NotaFiscalTerceiro.emitente}}
+                    </span>
+                  </q-item-label>
+                  <q-item-label lines="1">
+                    <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
+                      R$ {{numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00')}}
+                    </span>
+                    <span class="text-grey-8" v-if="item.NotaFiscalTerceiro.natop">
+                      - {{item.NotaFiscalTerceiro.natop}}
+                    </span>
+                  </q-item-label>
+                </template>
+
+                <!-- DistribuicaoDfeEventoS -->
+                <template v-if="item.coddistribuicaodfeevento > 0">
+                  <q-item-label lines="1">
+                    <span class="text-weight-medium">
+                      {{item.DistribuicaoDfeEvento.orgao}}
+                    </span>
+                    <span class="text-weight-medium">
+                      {{formataCnpj(item.DistribuicaoDfeEvento.cnpj)}}
+                      {{formataCpf(item.DistribuicaoDfeEvento.cpf)}}
+                    </span>
+                  </q-item-label>
+                  <q-item-label lines="1" v-if="item.DistribuicaoDfeEvento.coddistribuicaodfeevento > 0">
+                    <span class="text-grey-8">
+                       {{item.DistribuicaoDfeEvento.DfeEvento.dfeevento}}
+                       ({{item.DistribuicaoDfeEvento.DfeEvento.tpevento}})
+                    </span>
+                    <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
+                      {{numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00')}}
+                    </span>
+                  </q-item-label>
+                </template>
+
+                <!-- chave -->
                 <q-item-label caption lines="1">
-                  {{formataNfeChave(item.NotaFiscalTerceiro.nfechave)}}
+                  {{formataNfeChave(item.nfechave)}}
                 </q-item-label>
               </q-item-section>
 
-              <!-- DistribuicaoDfeEventoS -->
-              <q-item-section top v-for="evt in item.DistribuicaoDfeEventoS">
-                <q-item-label lines="1">
-                  <span class="text-weight-medium">
-                    {{evt.orgao}}
-                  </span>
-                  <span class="text-weight-medium">
-                    {{formataCnpj(evt.cnpj)}}
-                    {{formataCpf(evt.cpf)}}
-                  </span>
-                </q-item-label>
-                <q-item-label lines="1">
-                  <span class="text-grey-8">
-                     {{evt.DfeEvento.dfeevento}}
-                     ({{evt.DfeEvento.tpevento}})
-                  </span>
-                  <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
-                    {{numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00')}}
-                  </span>
-                </q-item-label>
-                <q-item-label caption lines="1">
-                  {{formataNfeChave(evt.nfechave)}}
-                </q-item-label>
-              </q-item-section>
-
-              <!-- Direita (Estrelas) -->
+              <!-- data e NSU -->
               <q-item-section top side class="gt-xs">
                 <q-chip size="sm" square icon="dialpad">
                   {{ numeral(item.nsu).format('0,0') }}
                 </q-chip>
-                <abbr :title="moment(item.criacao).format('LLL')">
-                  {{ moment(item.criacao).fromNow() }}
+                <abbr :title="moment(item.data).format('LLL')">
+                  {{ moment(item.data).fromNow() }}
                 </abbr>
               </q-item-section>
 
             </q-item>
-            <q-separator spaced inset="item" />
+            <q-separator inset="item" />
 
           </template>
         </q-infinite-scroll>

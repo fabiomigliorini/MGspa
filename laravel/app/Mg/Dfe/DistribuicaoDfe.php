@@ -1,16 +1,16 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Jul/2020 15:21:43
+ * Date: 22/Jul/2020 07:23:04
  */
 
 namespace Mg\Dfe;
 
 use Mg\MgModel;
-use Mg\Dfe\DistribuicaoDfeEvento;
 use Mg\Dfe\DfeTipo;
 use Mg\Filial\Filial;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\Dfe\DistribuicaoDfeEvento;
 
 class DistribuicaoDfe extends MgModel
 {
@@ -20,19 +20,24 @@ class DistribuicaoDfe extends MgModel
 
     protected $fillable = [
         'coddfetipo',
+        'coddistribuicaodfeevento',
         'codfilial',
         'codnotafiscalterceiro',
+        'data',
+        'nfechave',
         'nsu'
     ];
 
     protected $dates = [
         'alteracao',
-        'criacao'
+        'criacao',
+        'data'
     ];
 
     protected $casts = [
         'coddfetipo' => 'integer',
         'coddistribuicaodfe' => 'integer',
+        'coddistribuicaodfeevento' => 'integer',
         'codfilial' => 'integer',
         'codnotafiscalterceiro' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -46,6 +51,11 @@ class DistribuicaoDfe extends MgModel
         return $this->belongsTo(DfeTipo::class, 'coddfetipo', 'coddfetipo');
     }
 
+    public function DistribuicaoDfeEvento()
+    {
+        return $this->belongsTo(DistribuicaoDfeEvento::class, 'coddistribuicaodfeevento', 'coddistribuicaodfeevento');
+    }
+
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
@@ -54,13 +64,6 @@ class DistribuicaoDfe extends MgModel
     public function NotaFiscalTerceiro()
     {
         return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
-    }
-
-
-    // Tabelas Filhas
-    public function DistribuicaoDfeEventoS()
-    {
-        return $this->hasMany(DistribuicaoDfeEvento::class, 'coddistribuicaodfe', 'coddistribuicaodfe');
     }
 
 }
