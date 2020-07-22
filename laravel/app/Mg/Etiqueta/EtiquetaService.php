@@ -12,20 +12,6 @@ use Mg\Utils\MaskService;
 
 class EtiquetaService
 {
-    public static function impressoras()
-    {
-        $o = shell_exec("lpstat -d -p");
-        $res = explode("\n", $o);
-        foreach ($res as $r) {
-            if (strpos($r, "printer") !== false) {
-                $r = str_replace("printer ", "", $r);
-                $r = explode(" ", $r);
-                $printers[] = $r[0];
-            }
-        }
-        return $printers;
-    }
-
     // Imprime Etiqueta usando cups
     // Listagem das etiquetas = array com "codprodutobarra" e "quantidade"
     public static function imprimir($impressora, $modelo, $etiquetas)

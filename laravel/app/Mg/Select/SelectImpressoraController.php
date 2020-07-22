@@ -1,20 +1,18 @@
 <?php
 
-namespace Mg\Usuario;
+namespace Mg\Select;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-class ImpressoraController extends Controller
+class SelectImpressoraController extends Controller
 {
-    public function index(Request $request) {
+    public static function index(Request $request)
+    {
         $o = shell_exec("lpstat -d -p");
         $res = explode("\n", $o);
-        $printers = [];
-        foreach ($res as $r)
-        {
-            if (strpos($r, "printer") !== FALSE)
-            {
+        foreach ($res as $r) {
+            if (strpos($r, "printer") !== false) {
                 $r = str_replace("printer ", "", $r);
                 $r = explode(" ", $r);
                 $printers[] = [
@@ -23,7 +21,6 @@ class ImpressoraController extends Controller
                 ];
             }
         }
-
-        return response()->json($printers, 200);
+        return $printers;
     }
 }

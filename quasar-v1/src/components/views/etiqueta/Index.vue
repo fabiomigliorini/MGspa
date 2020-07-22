@@ -184,7 +184,7 @@
         <q-btn fab icon="print" color="primary"  @click="prompt = true" />
       </q-page-sticky>
       <q-dialog v-model="prompt" persistent>
-        <q-card style="min-width: 350px">
+        <q-card style="min-width: 400px">
           <q-form
           @submit="imprimir"
           dense
@@ -201,16 +201,14 @@
                 outlined
                 error-message="Informe o modelo da Etiqueta!"
                 :error="!modelo"
+                class="q-mb-md"
                 />
-              <q-select
+              <mg-select-impressora
                 v-model="impressora"
-                :options="impressoras"
                 label="Impressora"
-                outlined
                 error-message="Informe a Impressora!"
-                :error="!impressora"
-                />
-              <!-- <q-input dense v-model="address" autofocus @keyup.enter="prompt = false" /> -->
+                :error="impressora==null"
+              />
             </q-card-section>
 
             <q-card-actions align="right" class="text-primary">
@@ -230,17 +228,19 @@ import { debounce } from 'quasar'
 // import { throttle } from 'quasar'
 // import { Notify } from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
+import MgSelectImpressora from '../../../components/utils/select/MgSelectImpressora'
+
 export default {
   components: {
     MgLayout,
     debounce,
+    MgSelectImpressora,
   },
   data () {
     return {
       prompt: false,
       barras: null,
       impressora: null,
-      impressoras: [],
       modelo: null,
       modelos: [
         {
@@ -386,15 +386,32 @@ export default {
       var win = window.open(process.env.MGLARA_URL + '/produto/' + codproduto, '_blank');
     },
 
-    carregarImpressoras: debounce(function () {
-      let vm = this;
-      vm.$axios.get('etiqueta/impressoras').then(response => {
-        this.impressoras = response.data;
-      })
-    }, 500),
-
     imprimir: debounce(function () {
-      console.log('imprimir');
+
+      if (this.etiquetas.length == 0) {
+        this.$q.notify({
+          color: 'negative',
+          message: 'Nenhuma etiqueta para imprimir!'
+        });
+        return;
+      }
+
+      if (this.modelo == null) {
+        this.$q.notify({
+          color: 'negative',
+          message: 'Nenhum modelo selecionado!'
+        });
+        return;
+      }
+
+      if (this.impressora == null) {
+        this.$q.notify({
+          color: 'negative',
+          message: 'Nenhuma impressora selecionada!'
+        });
+        return;
+      }
+
       let vm = this;
       let params = {
         modelo: this.modelo.value,
@@ -404,7 +421,7 @@ export default {
       vm.$axios.post('etiqueta/imprimir', params).then(response => {
         this.$q.notify({
           color: 'positive',
-          message: response.data.quantidadeetiqueta + ' etiqueta(s) impressas na ' + response.data.impressora
+          message: response.data.quantidadeetiqueta + ' etiqueta(s) enviada(s) para ' + response.data.impressora
         });
         this.prompt = false;
         console.log(response.data);
@@ -417,7 +434,6 @@ export default {
 
   },
   created () {
-    this.carregarImpressoras();
   }
 }
 </script>

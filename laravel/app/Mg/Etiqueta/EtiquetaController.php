@@ -49,11 +49,6 @@ class EtiquetaController extends MgController
         return EtiquetaResource::collection($pbs);
     }
 
-    public function impressoras(Request $request)
-    {
-        return EtiquetaService::impressoras();
-    }
-
     public function imprimir(Request $request)
     {
         $request->validate([

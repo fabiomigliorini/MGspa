@@ -88,7 +88,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Etiquetas
         Route::get('etiqueta/barras', '\Mg\Etiqueta\EtiquetaController@barras');
-        Route::get('etiqueta/impressoras', '\Mg\Etiqueta\EtiquetaController@impressoras');
         Route::get('etiqueta/negocio', '\Mg\Etiqueta\EtiquetaController@negocio');
         Route::get('etiqueta/periodo', '\Mg\Etiqueta\EtiquetaController@periodo');
         Route::post('etiqueta/imprimir', '\Mg\Etiqueta\EtiquetaController@imprimir');
@@ -146,9 +145,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('grupo-usuario/{id}/inativo', '\Mg\Usuario\GrupoUsuarioController@inativar')->name('grupo-usuario.inativar');
         Route::apiResource('grupo-usuario', '\Mg\Usuario\GrupoUsuarioController');
 
-        // Impressoras
-        Route::get('impressora', '\Mg\Usuario\ImpressoraController@index');
-
         // Filiais
         Route::apiResource('filial', '\Mg\Filial\FilialController');
 
@@ -186,5 +182,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
+
+        // Impressoras
+        Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
+
     });
 });
