@@ -1,54 +1,89 @@
 <template>
   <q-select
-    outlined
     v-model="model"
+    outlined
     :options="options"
     :label="label"
     clearable
-    @change="selected">
-    <template v-slot:prepend>
-      <q-icon name="store" />
+    use-input
+    input-debounce="200"
+    @input="selected"
+    @filter="filterFn"
+    :error-message="errorMessage"
+    :error="error"
+    :loading="loading"
+    standout
+  >
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey">
+          Sem resultados
+        </q-item-section>
+      </q-item>
     </template>
   </q-select>
 </template>
 
 <script>
 export default {
-  name: 'mg-select-filial',
-  props: ['label', 'loadData'],
+  name: 'mg-select-impressora',
+  props: ['label', 'value', 'errorMessage', 'error'],
   data () {
     return {
       model: null,
-      options: []
-    }
-  },
-  watch:{
-    loadData(val){
-      if(val){
-        this.getFiliais()
-      }
+      loading: true,
+      options: [],
+      allOptions: [],
     }
   },
   methods: {
+
+    // ao selecionar retorna value
     selected (val) {
+      if (!val) {
+        this.$emit('input', null)
+        return
+      }
       this.$emit('input', val.value)
     },
-    getFiliais() {
+
+    init: function () {
+      let vm = this
+      if (this.value) {
+        vm.model = this.allOptions.find(function (el) {
+          return el.value == vm.value;
+        });
+      }
+    },
+
+    // carrega todas opcoes
+    loadAllOptions: function () {
       let vm = this;
-      vm.$axios.get('filial', {params: {fields: 'codfilial,filial', sort: 'filial'}}).then(function (request) {
-        vm.options = request.data.data.map(filial => {
-          return {
-            value: filial.codfilial,
-            label: filial.filial
-          }
-        })
-      }).catch(function (error) {
-        console.log(error.response)
+      vm.loading = true;
+      vm.$axios.get('select/filial').then(function (request) {
+        vm.allOptions = request.data
+        vm.loading = false;
+        vm.init()
       })
     },
+
+    //filtra o array com todas opcoes (allOptions)
+    filterFn (val, update) {
+      if (val === '') {
+        update(() => {
+          this.options = this.allOptions
+        })
+        return
+      }
+      update(() => {
+        const needle = val.toLowerCase()
+        this.options = this.allOptions.filter(v => v.value.toLowerCase().indexOf(needle) > -1)
+      })
+    }
   },
   mounted() {
-    this.getFiliais()
+    this.loadAllOptions()
+    this.init()
   }
 }
 </script>

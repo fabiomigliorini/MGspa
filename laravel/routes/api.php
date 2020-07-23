@@ -185,6 +185,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Impressoras
         Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
+        Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
 
     });
 });

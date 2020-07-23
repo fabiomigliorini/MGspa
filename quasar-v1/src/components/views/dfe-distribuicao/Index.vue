@@ -32,7 +32,6 @@
       <q-item>
         <q-item-section>
           <mg-select-filial label="Filial" v-model="filter.codfilial"/>
-          <q-input outlined v-model="filter.codfilial" label="De" type="numeric" />
         </q-item-section>
       </q-item>
 
@@ -80,8 +79,6 @@
           </q-input>
         </q-item-section>
       </q-item>
-
-      <pre>{{filter}}</pre>
 
     </template>
 
