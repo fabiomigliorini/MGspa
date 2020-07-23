@@ -1,6 +1,7 @@
 <template>
   <q-layout :view="view">
     <q-header v-model="header" :reveal="headerReveal">
+      <q-ajax-bar size="3px"/>
       <q-toolbar color="primary">
         <slot name="menu">
           <q-btn flat round dense icon="menu" @click="left = !left" v-if="drawer"/>
