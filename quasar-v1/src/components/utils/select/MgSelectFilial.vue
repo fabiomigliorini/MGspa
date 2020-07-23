@@ -27,7 +27,33 @@
 <script>
 export default {
   name: 'mg-select-impressora',
-  props: ['label', 'value', 'errorMessage', 'error'],
+  props: {
+    label: {
+      type: String,
+      required: false,
+      default: 'Filial'
+    },
+    value: {
+      type: Number,
+      required: false,
+      default: null
+    },
+    errorMessage: {
+      type: String,
+      required: false,
+      default: null
+    },
+    error: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    filtroDfe: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+  },
   data () {
     return {
       model: null,
@@ -60,7 +86,14 @@ export default {
     loadAllOptions: function () {
       let vm = this;
       vm.loading = true;
-      vm.$axios.get('select/filial').then(function (request) {
+      let params = {
+        dfe: false
+      }
+      if (vm.filtroDfe) {
+        params.dfe = true;
+      }
+      console.log(params)
+      vm.$axios.get('select/filial', {params}).then(function (request) {
         vm.allOptions = request.data
         vm.loading = false;
         vm.init()

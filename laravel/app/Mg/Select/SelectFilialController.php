@@ -12,10 +12,14 @@ class SelectFilialController extends Controller
     public static function index(Request $request)
     {
         // busca filiais
-        $ret = Filial::ativo()->select([
+        $qry = Filial::ativo()->select([
             'codfilial',
             'filial'
-        ])->orderBy('filial')->get();
+        ])->orderBy('codempresa')->orderBy('codfilial');
+        if (filter_var($request->dfe, FILTER_VALIDATE_BOOLEAN)) {
+            $qry->where('dfe', true);
+        }
+        $ret = $qry->get();
 
         // renomeia colunas
         $ret = $ret->map(function($item){

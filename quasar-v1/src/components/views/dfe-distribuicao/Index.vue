@@ -31,7 +31,7 @@
       <!-- Filtro codfilial -->
       <q-item>
         <q-item-section>
-          <mg-select-filial label="Filial" v-model="filter.codfilial"/>
+          <mg-select-filial label="Filial" v-model="filter.codfilial" filtro-dfe/>
         </q-item-section>
       </q-item>
 
