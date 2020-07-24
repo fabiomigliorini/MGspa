@@ -8,7 +8,7 @@ export default {
       console.log(response)
       if (!response.data.mensagem) {
         localStorage.setItem('auth.token', response.data)
-        window.location.reload()
+        // window.location.reload()
         // let method = resource.config.method.toLowerCase()
         // return window.axios[method](resource.config.url, resource.config.params)
       } else {

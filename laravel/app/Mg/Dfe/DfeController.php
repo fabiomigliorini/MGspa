@@ -34,4 +34,12 @@ class DfeController extends MgController
         return DistribuicaoDfeResource::collection($qry->paginate());
     }
 
+    public function xml(Request $request, int $coddistribuicaodfe)
+    {
+        $xml = DfeService::xml($coddistribuicaodfe);
+        return response($xml, 200, [
+            'Content-Type' => 'application/xml'
+        ]);
+    }
+
 }

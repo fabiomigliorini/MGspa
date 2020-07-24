@@ -445,15 +445,6 @@ export default {
       // this.$router.push('/boleto/retorno/' + row.codportador + '/' + row.arquivo + '/' + row.dataretorno);
       let route = this.$router.resolve('/boleto/remessa/' + row.codportador + '/' + row.remessa);
       window.open(route.href, '_blank');
-      console.log(row);
-      // if (row.codtitulo != null) {
-      //   var win = window.open(process.env.MGSIS_URL + '/index.php?r=titulo/view&id=' + row.codtitulo, '_blank');
-      //   return;
-      // }
-      // this.$q.notify({
-      //   color: 'negative',
-      //   message: 'Retorno não está vinculado à nenhum titulo!'
-      // });
     }, 500),
 
     loadRemessaPendente: debounce(function () {

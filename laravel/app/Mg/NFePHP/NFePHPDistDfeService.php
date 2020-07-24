@@ -502,4 +502,12 @@ class NFePHPDistDfeService
         $dd->data = $nft->recebimento??$nft->emissao??Carbon::now();
         $dd->save();
     }
+
+    public static function carregarXml(DistribuicaoDfe $dd)
+    {
+        $path = NFePHPPathService::pathDfeGz($dd, true);
+        return gzdecode(file_get_contents($path));
+    }
+
+
 }

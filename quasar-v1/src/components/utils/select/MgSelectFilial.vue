@@ -14,6 +14,9 @@
     :loading="loading"
     standout
   >
+    <template v-slot:prepend>
+      <q-icon name="store" />
+    </template>
     <template v-slot:no-option>
       <q-item>
         <q-item-section class="text-grey">
@@ -92,7 +95,6 @@ export default {
       if (vm.filtroDfe) {
         params.dfe = true;
       }
-      console.log(params)
       vm.$axios.get('select/filial', {params}).then(function (request) {
         vm.allOptions = request.data
         vm.loading = false;
@@ -110,7 +112,7 @@ export default {
       }
       update(() => {
         const needle = val.toLowerCase()
-        this.options = this.allOptions.filter(v => v.value.toLowerCase().indexOf(needle) > -1)
+        this.options = this.allOptions.filter(v => v.label.toLowerCase().indexOf(needle) > -1)
       })
     }
   },

@@ -21,7 +21,6 @@ module.exports = function (ctx) {
       // 'eva-icons',
       // 'themify',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
-
       'fontawesome-v5',
       'roboto-font', // optional, you are not bound to it
       'material-icons' // optional, you are not bound to it
@@ -29,10 +28,8 @@ module.exports = function (ctx) {
 
     framework: {
       // iconSet: 'ionicons-v4',
-       lang: 'pt-br', // Quasar language
-
+      lang: 'pt-br', // Quasar language
       // all: true, // --- includes everything; for dev only!
-
       components: [
         'QLayout',
         'QPageContainer',

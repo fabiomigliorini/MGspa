@@ -59,7 +59,6 @@ export default {
   watch: {
     variacoes: {
       handler: function (val, oldVal) {
-        console.log('watch')
         this.atualizaGrafico()
       },
       deep: true

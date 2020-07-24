@@ -3,7 +3,7 @@
 
     <!-- Título da Página -->
     <template slot="title">
-      Nota Fiscal terceiro
+      Nota Fiscal Terceiro
     </template>
 
     <!-- Menu Drawer (Esquerda) -->

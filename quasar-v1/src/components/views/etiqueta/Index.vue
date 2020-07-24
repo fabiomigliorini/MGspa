@@ -424,9 +424,7 @@ export default {
           message: response.data.quantidadeetiqueta + ' etiqueta(s) enviada(s) para ' + response.data.impressora
         });
         this.prompt = false;
-        console.log(response.data);
       }).catch(error => {
-        console.log(response.data);
         this.prompt = false;
       });
 

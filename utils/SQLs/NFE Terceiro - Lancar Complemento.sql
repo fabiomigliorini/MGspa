@@ -12,7 +12,8 @@
 --update tblnfeterceiroitem set vuntrib = vprod/qtrib, vuncom = vprod/qcom where codnfeterceiro = 26044
 
 --ISSAM/ZEIN
---update tblnfeterceiroitem set complemento = (vprod / 0.35) - vprod, margem = 100 where codnfeterceiro = 24454
+-- update tblnfeterceiroitem set complemento = (vprod / 0.35) - vprod, margem = 40 where codnfeterceiro = 29140
+-- update tblnfeterceiroitem set complemento = vprod, margem = 40 where codnfeterceiro = 29140
 
 --WINCY
 --update tblnfeterceiroitem set complemento = (vprod * 1.5), margem = 40 where codnfeterceiro = 24521

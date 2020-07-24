@@ -95,7 +95,7 @@
           <template v-for="item in data">
 
             <!-- Link para detalhes -->
-            <q-item clickable v-ripple>
+            <q-item clickable v-ripple @click="abrirDistribuicaoDfe(item)">
 
               <q-item-section top avatar>
                 <q-avatar color="teal" text-color="white" :icon="iconeDfeTipo(item.DfeTipo.schemaxml)" />
@@ -172,7 +172,6 @@
 
             </q-item>
             <q-separator inset="item" />
-
           </template>
         </q-infinite-scroll>
       </q-list>
@@ -213,7 +212,8 @@ export default {
       data: [],
       page: 1,
       filter: {}, // Vem do Store
-      loading: true
+      loading: true,
+      xml: null,
     }
   },
 
@@ -231,6 +231,24 @@ export default {
   },
 
   methods: {
+
+    abrirDistribuicaoDfe (item) {
+      this.carregarXml(item.coddistribuicaodfe)
+    },
+
+    // carrega xml Distribuicao Dfe
+    carregarXml: debounce(function (coddistribuicaodfe) {
+      // inicializa variaveis
+      var vm = this
+      // faz chamada api
+      vm.$axios.get('dfe/distribuicao/' + coddistribuicaodfe + '/xml').then(response => {
+        this.xml = response.data;
+        let blob = new Blob([response.data], {type: 'text/xml'});
+        let url = URL.createObjectURL(blob);
+        window.open(url);
+        URL.revokeObjectURL(url, '_self');
+      })
+    }, 500),
 
     formataCpf(cpf) {
       if (cpf == null) {

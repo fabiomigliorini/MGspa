@@ -81,6 +81,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
 
     Route::get('dfe/distribuicao', '\Mg\Dfe\DfeController@distribuicao');
+    Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
 });
 
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {

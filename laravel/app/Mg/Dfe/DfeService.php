@@ -5,6 +5,8 @@ namespace Mg\Dfe;
 use DB;
 use Carbon\Carbon;
 
+use Mg\NFePHP\NFePHPDistDfeService;
+
 class DfeService
 {
     public static function pesquisarDistribuicao(
@@ -43,6 +45,13 @@ class DfeService
         $qry->orderBy('data', 'desc')->orderBy('nsu', 'desc');
 
         return $qry;
+    }
+
+    public static function xml($coddistribuicaodfe)
+    {
+        $dd = DistribuicaoDfe::findOrFail($coddistribuicaodfe);
+        $xml = NFePHPDistDfeService::carregarXml($dd);
+        return $xml;
     }
 
 }
