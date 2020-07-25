@@ -36,17 +36,26 @@
                    error-message="Informe entre 1 e 1000!"
                    :error="quantidadeetiqueta<1 || quantidadeetiqueta>1000"
                 />
-                 <q-input
-                   outlined
-                   v-model="barras"
-                   ref="barras"
-                   label="Código de Barras"
-                   @keyup="converteBarrasQuantidade"
-                   error-message="Código de Barras não localizado"
-                   :error="!isBarrasValido"
-                   autofocus
-                   >
-                 </q-input>
+                <q-input
+                  outlined
+                  v-model="barras"
+                  ref="barras"
+                  label="Código de Barras"
+                  @keyup="converteBarrasQuantidade"
+                  error-message="Código de Barras não localizado"
+                  :error="!isBarrasValido"
+                  autofocus
+                >
+                </q-input>
+                <q-input
+                  outlined
+                  v-model="codprodutobarra"
+                />
+                <mg-select-produto-barra
+                  outlined
+                  v-model="codprodutobarra"
+                  label="Produto"
+                />
               </q-card-section>
               <q-card-actions align="right">
                <q-btn label="Limpar" type="reset" color="primary" flat />
@@ -229,12 +238,14 @@ import { debounce } from 'quasar'
 // import { Notify } from 'quasar'
 import MgLayout from '../../../layouts/MgLayout'
 import MgSelectImpressora from '../../../components/utils/select/MgSelectImpressora'
+import MgSelectProdutoBarra from '../../../components/utils/select/MgSelectProdutoBarra'
 
 export default {
   components: {
     MgLayout,
     debounce,
     MgSelectImpressora,
+    MgSelectProdutoBarra,
   },
   data () {
     return {
@@ -276,6 +287,7 @@ export default {
       isNegocioValido: true,
       quantidadeetiqueta: 1,
       etiquetas: [],
+      codprodutobarra: null,
       codnegocio: null,
       dataInicial: this.moment().startOf('day').subtract(1, 'days').format('YYYY-MM-DD'),
       dataFinal: this.moment().startOf('day').subtract(1, 'days').format('YYYY-MM-DD'),
