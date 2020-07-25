@@ -20,9 +20,9 @@ class NFePHPConfigService
                 throw new \Exception("Não foi informado o ID do Token CSC para a Filial!");
             }
 
-            if (empty($filial->tokenibpt)) {
-                throw new \Exception("Não foi informado o ID do Token do IBPT para a Filial!");
-            }
+            // if (empty($filial->tokenibpt)) {
+            //     throw new \Exception("Não foi informado o ID do Token do IBPT para a Filial!");
+            // }
         }
 
         if ($filial->Pessoa->fisica) {

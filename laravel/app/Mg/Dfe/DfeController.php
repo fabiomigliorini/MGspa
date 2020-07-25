@@ -7,6 +7,9 @@ use Mg\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 
+use Mg\Filial\Filial;
+use Mg\Dfe\DistribuicaoDfe;
+
 class DfeController extends MgController
 {
     /**
@@ -40,6 +43,28 @@ class DfeController extends MgController
         return response($xml, 200, [
             'Content-Type' => 'application/xml'
         ]);
+    }
+
+    public function filiaisHabilitadas (Request $request)
+    {
+        $filiais = Filial::select([
+            'codfilial',
+            'filial'
+        ])->ativo()
+        ->where('dfe', true)
+        ->orderBy('codempresa')
+        ->orderBy('codfilial')
+        ->get();
+        $arr = [];
+        foreach ($filiais as $filial) {
+            $ret = [
+                'codfilial' => $filial->codfilial,
+                'filial' => $filial->filial,
+            ];
+            $ret['nsu'] = DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu');
+            $arr[] = $ret;
+        }
+        return $arr;
     }
 
 }

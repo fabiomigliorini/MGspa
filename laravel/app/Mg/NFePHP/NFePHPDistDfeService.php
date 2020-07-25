@@ -38,7 +38,7 @@ class NFePHPDistDfeService
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
         // dd($nsu);
-        // $resp = $tools->sefazDistDFe($nsu);
+        $resp = $tools->sefazDistDFe($nsu);
         // file_put_contents("/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/{$filial->codfilial}-{$nsu}.xml", $resp);
 
         // em desenvolvimento pega um arquivo de exemplo
@@ -79,7 +79,7 @@ class NFePHPDistDfeService
         // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4549.xml');
         // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/104-0.xml');
         // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-12025.xml');
-        $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49944.xml');
+        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49944.xml');
 
         $domResp = new \DOMDocument();
         $domResp->loadXML($resp);

@@ -177,13 +177,66 @@
       </q-list>
 
       <!-- Se não tiver registros -->
-      <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
+      <!-- <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data> -->
+
+
 
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="search" color="primary"/>
+        <q-btn fab icon="search" color="primary" @click="openSefazDialog()"/>
       </q-page-sticky>
 
+      <q-dialog v-model="sefazDialog">
+        <q-card class="column">
+          <q-card-section>
+            <div class="text-h6">Pesquisar DFe na Sefaz por mais DFe's</div>
+          </q-card-section>
+
+          <q-card-section class="col q-pt-none">
+            <q-list bordered class="rounded-borders" style="min-width: 350px">
+              <template v-for="filial in filiaisHabilitadas">
+                <!-- <q-item-label header>{{filial.filial}}</q-item-label> -->
+                <q-item v-ripple clickable @click="filial.selecionada = !filial.selecionada">
+                  <q-item-section side>
+                    <q-checkbox v-model="filial.selecionada" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>
+                      {{filial.filial}}
+                      <small v-if="filial.nsu" class="text-grey-7">
+                        ({{filial.nsu}}<template v-if="filial.nsufinal">
+                          / {{filial.nsufinal}}
+                        </template>)
+                      </small>
+                    </q-item-label>
+                    <q-item-label caption>
+                      <q-linear-progress
+                        stripe rounded
+                        size="10px"
+                        :value="filial.percentual"
+                        :indeterminate="filial.percentualIndeterminado"
+                        />
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-separator />
+              </template>
+            </q-list>
+          </q-card-section>
+
+          <q-card-actions align="right" class="bg-white">
+            <q-btn flat label="CANCELAR" color="grey" v-close-popup />
+            <q-btn
+              flat
+              label="PESQUISAR"
+              icon="search"
+              color="primary"
+              :disabled="filiaisSelecionadas.length == 0"
+              @click="pesquisarSefazSelecionadas()"/>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </div>
+
 
   </mg-layout>
 </template>
@@ -212,8 +265,20 @@ export default {
       data: [],
       page: 1,
       filter: {}, // Vem do Store
-      loading: true,
       xml: null,
+      sefazDialog: false,
+      filiaisHabilitadas: [],
+
+      progress2: 0.5,
+
+    }
+  },
+
+  computed: {
+    filiaisSelecionadas: function () {
+      return this.filiaisHabilitadas.filter(function (filial) {
+        return filial.selecionada
+      });
     }
   },
 
@@ -231,6 +296,80 @@ export default {
   },
 
   methods: {
+
+    pesquisarSefazSelecionadas: function () {
+      let vm = this;
+      this.filiaisSelecionadas.forEach(function (filial) {
+        // if (filial.codfilial != 201) {
+        //   return;
+        // }
+        vm.pesquisarSefazFilial(filial);
+      })
+    },
+
+    pesquisarSefazFilial: function (filial) {
+
+      // inicializa variaveis
+      var vm = this
+
+      // Mostra Percentual indeterminado
+      if (!filial.nsufinal) {
+        filial.percentualIndeterminado = true;
+      }
+
+      // monta URL pesquisa
+      var url = 'nfe-php/dist-dfe/' + filial.codfilial;
+      if (filial.nsu) {
+        url = url + '/' + filial.nsu;
+      }
+
+      // faz chamada api
+      vm.$axios.post(url).then(response => {
+        if (!filial.nsuinicial) {
+          filial.nsuinicial = filial.nsu;
+        }
+        filial.nsufinal = parseInt(response.data.maxNSU);
+        filial.nsu = parseInt(response.data.ultNSU);
+        let pesquisados = filial.nsu - filial.nsuinicial;
+        let total = filial.nsufinal - filial.nsuinicial;
+        filial.percentualIndeterminado = false;
+        if (total == 0) {
+          filial.percentual = 1;
+        } else {
+          filial.percentual = pesquisados / total;
+        }
+        if (filial.percentual != 1 && vm.sefazDialog) {
+          vm.pesquisarSefazFilial (filial);
+        }
+      })
+
+    },
+
+    openSefazDialog: function () {
+      this.sefazDialog = true;
+      if (this.filiaisHabilitadas.length == 0) {
+        this.loadFiliaisHabilitadas();
+      }
+    },
+
+    // carrega registros da api
+    loadFiliaisHabilitadas: debounce(function () {
+
+      // inicializa variaveis
+      var vm = this
+
+      // faz chamada api
+      vm.$axios.get('dfe/filiais-habilitadas').then(response => {
+        vm.filiaisHabilitadas = response.data.map(function (filial){
+          filial.selecionada = true;
+          filial.percentual = 0;
+          filial.percentualIndeterminado = false;
+          filial.nsuinicial = null;
+          filial.nsufinal = null;
+          return filial
+        })
+      })
+    }, 500),
 
     abrirDistribuicaoDfe (item) {
       this.carregarXml(item.coddistribuicaodfe)
@@ -312,7 +451,6 @@ export default {
       var vm = this
       var params = this.filter
       params.page = this.page
-      this.loading = true
 
       // faz chamada api
       vm.$axios.get('dfe/distribuicao', {
@@ -336,9 +474,6 @@ export default {
           }
         }
 
-        // desmarca flag de carregando
-        this.loading = false
-
         // Executa done do scroll infinito
         if (done) {
           done()
@@ -351,6 +486,8 @@ export default {
   // na criacao, busca filtro do Vuex
   created () {
     this.filter = this.$store.state.filtroDfeDistribuicao
+    this.loadFiliaisHabilitadas();
+
   }
 
 }

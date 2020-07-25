@@ -29,7 +29,7 @@
 
 <script>
 export default {
-  name: 'mg-select-impressora',
+  name: 'mg-select-filial',
   props: {
     label: {
       type: String,

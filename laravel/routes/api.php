@@ -82,6 +82,7 @@ Route::group(['prefix' => 'v1'], function () {
 
     Route::get('dfe/distribuicao', '\Mg\Dfe\DfeController@distribuicao');
     Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
+    Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
 });
 
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
