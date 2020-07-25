@@ -37,49 +37,8 @@ class NFePHPDistDfeService
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
-        // dd($nsu);
         $resp = $tools->sefazDistDFe($nsu);
         // file_put_contents("/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/{$filial->codfilial}-{$nsu}.xml", $resp);
-
-        // em desenvolvimento pega um arquivo de exemplo
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/103-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/801-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49844.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49894.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-50044.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/104-4427.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-12075.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49994.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49893.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50093.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49793.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50043.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4548.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50193.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4598.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49993.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4698.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50293.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-4648.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49943.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49737.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-49843.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50143.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/401-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/old/101-50243.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-11975.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4599.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/103-15499.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-50094.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-50144.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/401-4549.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/104-0.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/102-12025.xml');
-        // $resp = file_get_contents('/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/101-49944.xml');
 
         $domResp = new \DOMDocument();
         $domResp->loadXML($resp);
@@ -134,8 +93,8 @@ class NFePHPDistDfeService
         }
 
         return [
-            'ultNSU' => $domResp->getElementsByTagName('ultNSU')->item(0)->nodeValue,
-            'maxNSU' => $domResp->getElementsByTagName('maxNSU')->item(0)->nodeValue,
+            'ultNSU' => (int) $domResp->getElementsByTagName('ultNSU')->item(0)->nodeValue,
+            'maxNSU' => (int) $domResp->getElementsByTagName('maxNSU')->item(0)->nodeValue,
             'documentos' => $docs->length,
         ];
     }
