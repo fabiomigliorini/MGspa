@@ -42,11 +42,11 @@ export default {
       title: 'Etiquetas',
       path: '/etiqueta'
     },
-    {
-      icon: 'fas fa-newspaper',
-      title: 'Nota Fiscal de Terceiro',
-      path: '/nota-fiscal-terceiro'
-    },
+    // {
+    //   icon: 'fas fa-newspaper',
+    //   title: 'Nota Fiscal de Terceiro',
+    //   path: '/nota-fiscal-terceiro'
+    // },
     {
       icon: 'sync',
       title: 'Distribuição DFe',
