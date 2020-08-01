@@ -5,6 +5,46 @@
 			<column name="migration" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="batch" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
 		</table>
+		<table name="rlpprodutobarra" >
+			<column name="codprodutobarra" type="bigint" jt="-5" mandatory="y" />
+			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
+			<column name="codprodutovariacao" type="bigint" jt="-5" mandatory="y" />
+			<column name="codprodutoembalagem" type="bigint" jt="-5" />
+			<column name="codunidademedida" type="bigint" jt="-5" mandatory="y" />
+			<column name="codmarca" type="bigint" jt="-5" mandatory="y" />
+			<column name="codimagem" type="bigint" jt="-5" />
+			<column name="descricao" type="varchar" length="400" jt="12" mandatory="y" />
+			<column name="referencia" type="varchar" length="100" jt="12" />
+			<column name="preco" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
+			<column name="barras" type="varchar" length="50" jt="12" />
+			<column name="quantidade" type="numeric" length="20" decimal="10" jt="2" />
+			<column name="inativo" type="timestamp" jt="93" />
+			<column name="descontinuado" type="timestamp" jt="93" />
+			<index name="pk_rlpprodutobarra_codprodutobarra" unique="PRIMARY_KEY" >
+				<column name="codprodutobarra" />
+			</index>
+			<fk name="fk_rlpprodutobarra_tblproduto" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codproduto" pk="codproduto" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblprodutobarra" to_schema="mgsis.mgsis" to_table="tblprodutobarra" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codprodutobarra" pk="codprodutobarra" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblprodutovariacao" to_schema="mgsis.mgsis" to_table="tblprodutovariacao" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblprodutoembalagem" to_schema="mgsis.mgsis" to_table="tblprodutoembalagem" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codprodutoembalagem" pk="codprodutoembalagem" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblunidademedida" to_schema="mgsis.mgsis" to_table="tblunidademedida" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codunidademedida" pk="codunidademedida" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblmarca" to_schema="mgsis.mgsis" to_table="tblmarca" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codmarca" pk="codmarca" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblimagem" to_schema="mgsis.mgsis" to_table="tblimagem" delete_action="setNull" update_action="cascade" >
+				<fk_column name="codimagem" pk="codimagem" />
+			</fk>
+		</table>
 		<table name="tbl_migration" >
 			<column name="version" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="apply_time" type="integer" length="10" decimal="0" jt="4" />
@@ -6546,7 +6586,7 @@
     tblncm.ncm,
     tblprodutobarra.barras,
     tblprodutobarra.variacao,
-    tblproduto.inativo,
+    (COALESCE(tblprodutovariacao.inativo, (tblproduto.inativo)::timestamp without time zone))::date AS inativo,
     tblmarca.codmarca,
     tblmarca.marca,
     tblproduto.codtributacao,
@@ -6560,19 +6600,20 @@
     tblfamiliaproduto.codfamiliaproduto,
     tblfamiliaproduto.familiaproduto,
     tblsecaoproduto.codsecaoproduto,
-    tblsecaoproduto.secaoproduto
-   FROM (((((((((((tblproduto
-     JOIN tblprodutovariacao ON ((tblprodutovariacao.codproduto = tblproduto.codproduto)))
-     JOIN tblprodutobarra ON ((tblprodutobarra.codprodutovariacao = tblprodutovariacao.codprodutovariacao)))
+    tblsecaoproduto.secaoproduto,
+    tblprodutovariacao.descontinuado
+   FROM (((((((((((tblprodutobarra
+     JOIN tblprodutovariacao ON ((tblprodutovariacao.codprodutovariacao = tblprodutobarra.codprodutovariacao)))
+     JOIN tblproduto ON ((tblproduto.codproduto = tblprodutovariacao.codproduto)))
      LEFT JOIN tblprodutoembalagem ON ((tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)))
-     LEFT JOIN tblunidademedida ON ((tblunidademedida.codunidademedida = COALESCE(tblprodutoembalagem.codunidademedida, tblproduto.codunidademedida))))
-     LEFT JOIN tblmarca ON ((tblmarca.codmarca = COALESCE(tblprodutovariacao.codmarca, tblproduto.codmarca))))
-     LEFT JOIN tbltributacao ON ((tbltributacao.codtributacao = tblproduto.codtributacao)))
-     LEFT JOIN tblncm ON ((tblncm.codncm = tblproduto.codncm)))
-     LEFT JOIN tblsubgrupoproduto ON ((tblsubgrupoproduto.codsubgrupoproduto = tblproduto.codsubgrupoproduto)))
-     LEFT JOIN tblgrupoproduto ON ((tblgrupoproduto.codgrupoproduto = tblsubgrupoproduto.codgrupoproduto)))
-     LEFT JOIN tblfamiliaproduto ON ((tblfamiliaproduto.codfamiliaproduto = tblgrupoproduto.codfamiliaproduto)))
-     LEFT JOIN tblsecaoproduto ON ((tblsecaoproduto.codsecaoproduto = tblfamiliaproduto.codsecaoproduto)));]]></view_script>
+     JOIN tblunidademedida ON ((tblunidademedida.codunidademedida = COALESCE(tblprodutoembalagem.codunidademedida, tblproduto.codunidademedida))))
+     JOIN tblmarca ON ((tblmarca.codmarca = COALESCE(tblprodutovariacao.codmarca, tblproduto.codmarca))))
+     JOIN tbltributacao ON ((tbltributacao.codtributacao = tblproduto.codtributacao)))
+     JOIN tblncm ON ((tblncm.codncm = tblproduto.codncm)))
+     JOIN tblsubgrupoproduto ON ((tblsubgrupoproduto.codsubgrupoproduto = tblproduto.codsubgrupoproduto)))
+     JOIN tblgrupoproduto ON ((tblgrupoproduto.codgrupoproduto = tblsubgrupoproduto.codgrupoproduto)))
+     JOIN tblfamiliaproduto ON ((tblfamiliaproduto.codfamiliaproduto = tblgrupoproduto.codfamiliaproduto)))
+     JOIN tblsecaoproduto ON ((tblsecaoproduto.codsecaoproduto = tblfamiliaproduto.codsecaoproduto)));]]></view_script>
 			<column name="codprodutobarra" type="bigint" />
 			<column name="codprodutoembalagem" type="bigint" />
 			<column name="codproduto" type="bigint" />
@@ -6601,6 +6642,7 @@
 			<column name="familiaproduto" type="varchar" />
 			<column name="codsecaoproduto" type="bigint" />
 			<column name="secaoproduto" type="varchar" />
+			<column name="descontinuado" type="timestamp" />
 		</view>
 		<view name="vwprodutotributacao" >
 			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblproduto.codproduto,
@@ -6974,33 +7016,19 @@
 		<sequence name="tblvalecompramodelo_codvalecompramodelo_seq" options="START WITH 1" />
 		<sequence name="tblvalecompramodeloprodutobarra_codvalecompraprodutobarra_seq" options="START WITH 1" />
 		<sequence name="tblvalecompraprodutobarra_codvalecompraprodutobarra_seq" options="START WITH 1" />
-		<procedure name="connectby" id="Procedure_2424a45" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer, text)
+		<procedure name="connectby" id="Procedure_937e2d" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text$function$
+AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
 			<input_param name="$4" jt="12" type="text" />
-			<input_param name="$5" jt="4" type="int4" />
-			<input_param name="$6" jt="12" type="text" />
-			<result_param name="returnValue" jt="1111" type="record" />
-		</procedure>
-		<procedure name="connectby" id="Procedure_157a779" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer)
- RETURNS SETOF record
- LANGUAGE c
- STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text$function$
-;]]></string>
-			<input_param name="$1" jt="12" type="text" />
-			<input_param name="$2" jt="12" type="text" />
-			<input_param name="$3" jt="12" type="text" />
-			<input_param name="$4" jt="12" type="text" />
-			<input_param name="$5" jt="4" type="int4" />
+			<input_param name="$5" jt="12" type="text" />
+			<input_param name="$6" jt="4" type="int4" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="connectby" id="Procedure_f6015c" isSystem="false" params_known="y" >
@@ -7019,19 +7047,33 @@ AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 			<input_param name="$7" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="connectby" id="Procedure_937e2d" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer)
+		<procedure name="connectby" id="Procedure_157a779" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text_serial$function$
+AS '$libdir/tablefunc', $function$connectby_text$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
 			<input_param name="$2" jt="12" type="text" />
 			<input_param name="$3" jt="12" type="text" />
 			<input_param name="$4" jt="12" type="text" />
-			<input_param name="$5" jt="12" type="text" />
-			<input_param name="$6" jt="4" type="int4" />
+			<input_param name="$5" jt="4" type="int4" />
+			<result_param name="returnValue" jt="1111" type="record" />
+		</procedure>
+		<procedure name="connectby" id="Procedure_2424a45" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer, text)
+ RETURNS SETOF record
+ LANGUAGE c
+ STABLE STRICT
+AS '$libdir/tablefunc', $function$connectby_text$function$
+;]]></string>
+			<input_param name="$1" jt="12" type="text" />
+			<input_param name="$2" jt="12" type="text" />
+			<input_param name="$3" jt="12" type="text" />
+			<input_param name="$4" jt="12" type="text" />
+			<input_param name="$5" jt="4" type="int4" />
+			<input_param name="$6" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="criatriggers_geraauditoria" id="Procedure_4dac13f" isSystem="false" params_known="y" >
@@ -7072,15 +7114,15 @@ $function$
 			<input_param name="brecria" jt="-7" type="bool" />
 			<result_param name="returnValue" jt="-7" type="bool" />
 		</procedure>
-		<procedure name="crosstab" id="Procedure_253a733" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, text)
+		<procedure name="crosstab" id="Procedure_48e3f76" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$crosstab_hash$function$
+AS '$libdir/tablefunc', $function$crosstab$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
-			<input_param name="$2" jt="12" type="text" />
+			<input_param name="$2" jt="4" type="int4" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="crosstab" id="Procedure_2045f1d" isSystem="false" params_known="y" >
@@ -7093,15 +7135,15 @@ AS '$libdir/tablefunc', $function$crosstab$function$
 			<input_param name="$1" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
-		<procedure name="crosstab" id="Procedure_48e3f76" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, integer)
+		<procedure name="crosstab" id="Procedure_253a733" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$crosstab$function$
+AS '$libdir/tablefunc', $function$crosstab_hash$function$
 ;]]></string>
 			<input_param name="$1" jt="12" type="text" />
-			<input_param name="$2" jt="4" type="int4" />
+			<input_param name="$2" jt="12" type="text" />
 			<result_param name="returnValue" jt="1111" type="record" />
 		</procedure>
 		<procedure name="crosstab2" id="Procedure_42e6c0b" isSystem="false" params_known="y" >
@@ -7684,89 +7726,6 @@ $function$
 			<result_param name="codprodutorelacionado" jt="-5" type="int8" />
 			<result_param name="vendas" jt="-5" type="int8" />
 		</procedure>
-		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_47a2ab6" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
- RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	pcodecf bigint;
-BEGIN
-	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Geral' as tipo
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
-	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
-	  from tblecfreducaoz
-	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblecfreducaoz.movimento = pmovimento
-	   and tblecfreducaoz.crz = pcrz
-	 group by 
-	       tblecfreducaoz.codecfreducaoz
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     ;
-	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
-/*
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscalprodutobarra.aliquotaicms
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-*/
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Cancelado' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = true
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Desconto' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(descontoacrescimo)  as total
-	  from tblcupomfiscal 
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
-         
-END;
-$function$
-;]]></string>
-			<input_param name="pmovimento" jt="91" type="date" />
-			<input_param name="pcrz" jt="-5" type="int8" />
-			<result_param name="tipo" jt="12" type="text" />
-			<result_param name="codecf" jt="-5" type="int8" />
-			<result_param name="movimento" jt="91" type="date" />
-			<result_param name="valor" jt="2" type="numeric" />
-		</procedure>
 		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_5114246" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint, pdesejado numeric)
  RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric, diferenca numeric)
@@ -7853,6 +7812,187 @@ $function$
 			<result_param name="movimento" jt="91" type="date" />
 			<result_param name="valor" jt="2" type="numeric" />
 			<result_param name="diferenca" jt="2" type="numeric" />
+		</procedure>
+		<procedure name="fnlistatotaisecfreducaoz" id="Procedure_47a2ab6" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
+ RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	pcodecf bigint;
+BEGIN
+	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Geral' as tipo
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
+	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
+	  from tblecfreducaoz
+	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblecfreducaoz.movimento = pmovimento
+	   and tblecfreducaoz.crz = pcrz
+	 group by 
+	       tblecfreducaoz.codecfreducaoz
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     ;
+	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
+/*
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscalprodutobarra.aliquotaicms
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+*/
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Cancelado' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = true
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Desconto' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(descontoacrescimo)  as total
+	  from tblcupomfiscal 
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
+         
+END;
+$function$
+;]]></string>
+			<input_param name="pmovimento" jt="91" type="date" />
+			<input_param name="pcrz" jt="-5" type="int8" />
+			<result_param name="tipo" jt="12" type="text" />
+			<result_param name="codecf" jt="-5" type="int8" />
+			<result_param name="movimento" jt="91" type="date" />
+			<result_param name="valor" jt="2" type="numeric" />
+		</procedure>
+		<procedure name="fnrlpprodutobarra_atualiza" id="Procedure_2d1" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnrlpprodutobarra_atualiza(pcodproduto bigint)
+ RETURNS bigint
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	QUANT BIGINT;
+	ORIG RECORD;
+begin
+	
+	QUANT = 0;
+	for ORIG in (
+		select 
+			pb.codprodutobarra,
+			pb.codproduto,
+			pb.codprodutovariacao,
+			pb.codprodutoembalagem,
+			coalesce(pe.codunidademedida, p.codunidademedida) as codunidademedida,
+			coalesce(coalesce(pb.codmarca, pv.codmarca), p.codmarca) as codmarca,
+			null::bigint as codimagem,
+		    COALESCE(p.produto, '') 
+		    	|| COALESCE(' ' || pv.variacao, '')
+		    	|| COALESCE(' ' || pb.variacao, '')
+		    	|| COALESCE(' C/' || replace(to_char(pe.quantidade, 'FM999G999G999G990D0000'::varchar), ',0000', ''), '')
+				|| coalesce(p.referencia, '') || coalesce(pv.referencia, '')  || coalesce(pb.referencia, '') 
+		    	AS descricao,	
+			coalesce(p.referencia, '') || coalesce(pv.referencia, '')  || coalesce(pb.referencia, '') as referencia,
+			coalesce(pe.quantidade, 1) as quantidade,
+			coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) as preco,
+			pb.barras,
+			coalesce(pv.inativo, p.inativo) as inativo,
+			pv.descontinuado
+		from tblprodutobarra pb
+		inner join tblproduto p on (p.codproduto = pb.codproduto)
+		inner join tblprodutovariacao pv on (pv.codprodutovariacao = pb.codprodutovariacao )
+		left join tblprodutoembalagem pe on (pe.codprodutoembalagem  = pb.codprodutoembalagem )
+		where pb.codproduto = 1
+	) loop 
+	
+		QUANT = QUANT + 1;
+	
+		insert into rlpprodutobarra (
+			codprodutobarra, 
+			codproduto, 
+			codprodutovariacao, 
+			codprodutoembalagem, 
+			codunidademedida, 
+			codmarca, 
+			codimagem, 
+			descricao, 
+			referencia, 
+			preco, 
+			barras, 
+			inativo, 
+			descontinuado, 
+			quantidade
+		) VALUES (
+			orig.codprodutobarra, 
+			orig.codproduto, 
+			orig.codprodutovariacao, 
+			orig.codprodutoembalagem, 
+			orig.codunidademedida, 
+			orig.codmarca, 
+			orig.codimagem, 
+			orig.descricao, 
+			orig.referencia, 
+			orig.preco, 
+			orig.barras, 
+			orig.inativo, 
+			orig.descontinuado, 
+			orig.quantidade
+		)
+		on conflict (codprodutobarra) do
+		UPDATE SET 
+			codproduto=orig.codproduto, 
+			codprodutovariacao=orig.codprodutovariacao, 
+			codprodutoembalagem=orig.codprodutoembalagem, 
+			codunidademedida=orig.codunidademedida, 
+			codmarca=orig.codmarca, 
+			codimagem=orig.codimagem, 
+			descricao=orig.descricao, 
+			referencia=orig.referencia, 
+			preco=orig.preco, 
+			barras=orig.barras, 
+			inativo=orig.inativo, 
+			descontinuado=orig.descontinuado, 
+			quantidade=orig.quantidade
+		;
+		
+	end loop ;
+  
+	return QUANT;
+END;
+$function$
+;]]></string>
+			<input_param name="pcodproduto" jt="-5" type="int8" />
+			<result_param name="returnValue" jt="-5" type="int8" />
 		</procedure>
 		<procedure name="fntblmovimentotituloaiauad" id="Procedure_342935b" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblmovimentotituloaiauad()
@@ -8494,6 +8634,16 @@ AS '$libdir/tablefunc', $function$normal_rand$function$
 			<input_param name="$3" jt="8" type="float8" />
 			<result_param name="returnValue" jt="8" type="float8" />
 		</procedure>
+		<procedure name="unaccent" id="Procedure_2b91618" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(text)
+ RETURNS text
+ LANGUAGE c
+ STABLE PARALLEL SAFE STRICT
+AS '$libdir/unaccent', $function$unaccent_dict$function$
+;]]></string>
+			<input_param name="$1" jt="12" type="text" />
+			<result_param name="returnValue" jt="12" type="text" />
+		</procedure>
 		<procedure name="unaccent" id="Procedure_426ff4b" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(regdictionary, text)
  RETURNS text
@@ -8503,16 +8653,6 @@ AS '$libdir/unaccent', $function$unaccent_dict$function$
 ;]]></string>
 			<input_param name="$1" jt="1111" type="regdictionary" />
 			<input_param name="$2" jt="12" type="text" />
-			<result_param name="returnValue" jt="12" type="text" />
-		</procedure>
-		<procedure name="unaccent" id="Procedure_2b91618" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(text)
- RETURNS text
- LANGUAGE c
- STABLE PARALLEL SAFE STRICT
-AS '$libdir/unaccent', $function$unaccent_dict$function$
-;]]></string>
-			<input_param name="$1" jt="12" type="text" />
 			<result_param name="returnValue" jt="12" type="text" />
 		</procedure>
 		<procedure name="unaccent_init" id="Procedure_4c73b35" isSystem="false" params_known="y" >
@@ -9650,6 +9790,9 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codprodutoembalagem" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
+			<column name="codunidademedida" />
+			<column name="preco" />
+			<column name="codimagem" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="432" y="896" >
 			<column name="codprodutoembalagem" />
@@ -10184,19 +10327,22 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B3CEF5" x="400" y="48" />
 	</layout>
 	<layout name="Layout_Produtos" id="Layout_1a34eed8" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="832" y="80" />
-		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="576" y="64" />
-		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="896" y="320" />
-		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="608" y="896" />
-		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="94C3EA" x="1152" y="352" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="94C3EA" x="352" y="320" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="896" y="960" />
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="80" y="784" />
-		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="48" y="432" />
-		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="96" y="176" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="592" y="368" />
-		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="1056" y="96" />
-		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="336" y="48" />
+		<entity schema="mgsis.mgsis" name="rlpprodutobarra" color="C1D8EE" x="1264" y="608" />
+		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="880" y="128" />
+		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="624" y="112" />
+		<entity schema="mgsis.mgsis" name="tblimagem" color="3986C1" x="1328" y="160" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="944" y="368" />
+		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="656" y="944" />
+		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="94C3EA" x="1200" y="400" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="94C3EA" x="400" y="368" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="992" y="976" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="128" y="832" />
+		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="96" y="480" />
+		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="144" y="224" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="640" y="416" />
+		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="1104" y="144" />
+		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="384" y="96" />
+		<entity schema="mgsis.mgsis" name="tblunidademedida" color="3986C1" x="48" y="48" />
 	</layout>
 	<layout name="Layout_Transferencia" id="Layout_54b90e3" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblcaixamercadoria" color="FFCCFF" x="48" y="736" />
@@ -10252,6 +10398,9 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codprodutoembalagem" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
+			<column name="codunidademedida" />
+			<column name="preco" />
+			<column name="codimagem" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="592" y="752" >
 			<column name="codprodutoembalagem" />
@@ -10311,6 +10460,9 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codprodutoembalagem" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
+			<column name="codunidademedida" />
+			<column name="preco" />
+			<column name="codimagem" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tbltitulo" color="C1D8EE" x="48" y="448" >
 			<column name="codtitulo" />

@@ -5,6 +5,46 @@
 			<column name="migration" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="batch" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
 		</table>
+		<table name="rlpprodutobarra" >
+			<column name="codprodutobarra" type="bigint" jt="-5" mandatory="y" />
+			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
+			<column name="codprodutovariacao" type="bigint" jt="-5" mandatory="y" />
+			<column name="codprodutoembalagem" type="bigint" jt="-5" />
+			<column name="codunidademedida" type="bigint" jt="-5" mandatory="y" />
+			<column name="codmarca" type="bigint" jt="-5" mandatory="y" />
+			<column name="codimagem" type="bigint" jt="-5" />
+			<column name="descricao" type="varchar" length="400" jt="12" mandatory="y" />
+			<column name="referencia" type="varchar" length="100" jt="12" />
+			<column name="preco" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
+			<column name="barras" type="varchar" length="50" jt="12" />
+			<column name="quantidade" type="numeric" length="20" decimal="10" jt="2" />
+			<column name="inativo" type="timestamp" jt="93" />
+			<column name="descontinuado" type="timestamp" jt="93" />
+			<index name="pk_rlpprodutobarra_codprodutobarra" unique="PRIMARY_KEY" >
+				<column name="codprodutobarra" />
+			</index>
+			<fk name="fk_rlpprodutobarra_tblproduto" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codproduto" pk="codproduto" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblprodutobarra" to_schema="mgsis.mgsis" to_table="tblprodutobarra" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codprodutobarra" pk="codprodutobarra" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblprodutovariacao" to_schema="mgsis.mgsis" to_table="tblprodutovariacao" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblprodutoembalagem" to_schema="mgsis.mgsis" to_table="tblprodutoembalagem" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codprodutoembalagem" pk="codprodutoembalagem" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblunidademedida" to_schema="mgsis.mgsis" to_table="tblunidademedida" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codunidademedida" pk="codunidademedida" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblmarca" to_schema="mgsis.mgsis" to_table="tblmarca" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codmarca" pk="codmarca" />
+			</fk>
+			<fk name="fk_rlpprodutobarra_tblimagem" to_schema="mgsis.mgsis" to_table="tblimagem" delete_action="setNull" update_action="cascade" >
+				<fk_column name="codimagem" pk="codimagem" />
+			</fk>
+		</table>
 		<table name="tbl_migration" >
 			<column name="version" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="apply_time" type="integer" length="10" decimal="0" jt="4" />
@@ -1754,6 +1794,9 @@
 				<defo>1</defo>
 			</column>
 			<column name="validadecertificado" type="date" length="13" decimal="0" jt="91" />
+			<column name="dfe" type="boolean" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
 			<index name="tblfilial_pkey" unique="PRIMARY_KEY" >
 				<column name="codfilial" />
 			</index>
@@ -6543,7 +6586,7 @@
     tblncm.ncm,
     tblprodutobarra.barras,
     tblprodutobarra.variacao,
-    tblproduto.inativo,
+    (COALESCE(tblprodutovariacao.inativo, (tblproduto.inativo)::timestamp without time zone))::date AS inativo,
     tblmarca.codmarca,
     tblmarca.marca,
     tblproduto.codtributacao,
@@ -6557,19 +6600,20 @@
     tblfamiliaproduto.codfamiliaproduto,
     tblfamiliaproduto.familiaproduto,
     tblsecaoproduto.codsecaoproduto,
-    tblsecaoproduto.secaoproduto
-   FROM (((((((((((tblproduto
-     JOIN tblprodutovariacao ON ((tblprodutovariacao.codproduto = tblproduto.codproduto)))
-     JOIN tblprodutobarra ON ((tblprodutobarra.codprodutovariacao = tblprodutovariacao.codprodutovariacao)))
+    tblsecaoproduto.secaoproduto,
+    tblprodutovariacao.descontinuado
+   FROM (((((((((((tblprodutobarra
+     JOIN tblprodutovariacao ON ((tblprodutovariacao.codprodutovariacao = tblprodutobarra.codprodutovariacao)))
+     JOIN tblproduto ON ((tblproduto.codproduto = tblprodutovariacao.codproduto)))
      LEFT JOIN tblprodutoembalagem ON ((tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)))
-     LEFT JOIN tblunidademedida ON ((tblunidademedida.codunidademedida = COALESCE(tblprodutoembalagem.codunidademedida, tblproduto.codunidademedida))))
-     LEFT JOIN tblmarca ON ((tblmarca.codmarca = COALESCE(tblprodutovariacao.codmarca, tblproduto.codmarca))))
-     LEFT JOIN tbltributacao ON ((tbltributacao.codtributacao = tblproduto.codtributacao)))
-     LEFT JOIN tblncm ON ((tblncm.codncm = tblproduto.codncm)))
-     LEFT JOIN tblsubgrupoproduto ON ((tblsubgrupoproduto.codsubgrupoproduto = tblproduto.codsubgrupoproduto)))
-     LEFT JOIN tblgrupoproduto ON ((tblgrupoproduto.codgrupoproduto = tblsubgrupoproduto.codgrupoproduto)))
-     LEFT JOIN tblfamiliaproduto ON ((tblfamiliaproduto.codfamiliaproduto = tblgrupoproduto.codfamiliaproduto)))
-     LEFT JOIN tblsecaoproduto ON ((tblsecaoproduto.codsecaoproduto = tblfamiliaproduto.codsecaoproduto)));]]></view_script>
+     JOIN tblunidademedida ON ((tblunidademedida.codunidademedida = COALESCE(tblprodutoembalagem.codunidademedida, tblproduto.codunidademedida))))
+     JOIN tblmarca ON ((tblmarca.codmarca = COALESCE(tblprodutovariacao.codmarca, tblproduto.codmarca))))
+     JOIN tbltributacao ON ((tbltributacao.codtributacao = tblproduto.codtributacao)))
+     JOIN tblncm ON ((tblncm.codncm = tblproduto.codncm)))
+     JOIN tblsubgrupoproduto ON ((tblsubgrupoproduto.codsubgrupoproduto = tblproduto.codsubgrupoproduto)))
+     JOIN tblgrupoproduto ON ((tblgrupoproduto.codgrupoproduto = tblsubgrupoproduto.codgrupoproduto)))
+     JOIN tblfamiliaproduto ON ((tblfamiliaproduto.codfamiliaproduto = tblgrupoproduto.codfamiliaproduto)))
+     JOIN tblsecaoproduto ON ((tblsecaoproduto.codsecaoproduto = tblfamiliaproduto.codsecaoproduto)));]]></view_script>
 			<column name="codprodutobarra" type="bigint" />
 			<column name="codprodutoembalagem" type="bigint" />
 			<column name="codproduto" type="bigint" />
@@ -6598,6 +6642,7 @@
 			<column name="familiaproduto" type="varchar" />
 			<column name="codsecaoproduto" type="bigint" />
 			<column name="secaoproduto" type="varchar" />
+			<column name="descontinuado" type="timestamp" />
 		</view>
 		<view name="vwprodutotributacao" >
 			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblproduto.codproduto,
@@ -9587,13 +9632,14 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbldfetipo" color="C1D8EE" x="288" y="48" />
 		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1D8EE" x="544" y="80" />
 		<entity schema="mgsis.mgsis" name="tbldistribuicaodfeevento" color="C1D8EE" x="48" y="96" />
-		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="80" y="432" >
+		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="48" y="400" >
 			<column name="codfilial" />
 			<column name="codempresa" />
 			<column name="codpessoa" />
 			<column name="acbrnfemonitorcodusuario" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
+			<column name="dfe" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="112" y="608" >
 			<column name="codnaturezaoperacao" />
@@ -9604,7 +9650,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codtipotitulo" />
 			<column name="codcontacontabil" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="816" y="80" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="816" y="48" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="C1D8EE" x="1056" y="64" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="C1D8EE" x="1088" y="608" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="C1D8EE" x="1376" y="96" />
@@ -9646,6 +9692,9 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codprodutoembalagem" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
+			<column name="codunidademedida" />
+			<column name="preco" />
+			<column name="codimagem" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="432" y="896" >
 			<column name="codprodutoembalagem" />
@@ -10180,19 +10229,22 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B3CEF5" x="400" y="48" />
 	</layout>
 	<layout name="Layout_Produtos" id="Layout_1a34eed8" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="832" y="80" />
-		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="576" y="64" />
-		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="896" y="320" />
-		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="608" y="896" />
-		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="94C3EA" x="1152" y="352" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="94C3EA" x="352" y="320" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="896" y="960" />
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="80" y="784" />
-		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="48" y="432" />
-		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="96" y="176" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="592" y="368" />
-		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="1056" y="96" />
-		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="336" y="48" />
+		<entity schema="mgsis.mgsis" name="rlpprodutobarra" color="C1D8EE" x="1264" y="608" />
+		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="880" y="128" />
+		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="624" y="112" />
+		<entity schema="mgsis.mgsis" name="tblimagem" color="3986C1" x="1328" y="160" />
+		<entity schema="mgsis.mgsis" name="tblmarca" color="94C3EA" x="944" y="368" />
+		<entity schema="mgsis.mgsis" name="tblncm" color="94C3EA" x="656" y="944" />
+		<entity schema="mgsis.mgsis" name="tblncmtributacao" color="94C3EA" x="1200" y="400" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="94C3EA" x="400" y="368" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="94C3EA" x="992" y="976" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="94C3EA" x="128" y="832" />
+		<entity schema="mgsis.mgsis" name="tblprodutohistoricopreco" color="94C3EA" x="96" y="480" />
+		<entity schema="mgsis.mgsis" name="tblprodutoimagem" color="94C3EA" x="144" y="224" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="94C3EA" x="640" y="416" />
+		<entity schema="mgsis.mgsis" name="tblsecaoproduto" color="94C3EA" x="1104" y="144" />
+		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="94C3EA" x="384" y="96" />
+		<entity schema="mgsis.mgsis" name="tblunidademedida" color="3986C1" x="48" y="48" />
 	</layout>
 	<layout name="Layout_Transferencia" id="Layout_54b90e3" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblcaixamercadoria" color="FFCCFF" x="48" y="736" />
@@ -10248,6 +10300,9 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codprodutoembalagem" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
+			<column name="codunidademedida" />
+			<column name="preco" />
+			<column name="codimagem" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="592" y="752" >
 			<column name="codprodutoembalagem" />
@@ -10278,6 +10333,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="inativo" />
 			<column name="nfeserie" />
 			<column name="validadecertificado" />
+			<column name="dfe" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblformapagamento" color="C1D8EE" x="48" y="912" >
 			<column name="codformapagamento" />
@@ -10306,6 +10362,9 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codprodutoembalagem" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
+			<column name="codunidademedida" />
+			<column name="preco" />
+			<column name="codimagem" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tbltitulo" color="C1D8EE" x="48" y="448" >
 			<column name="codtitulo" />
