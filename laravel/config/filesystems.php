@@ -70,6 +70,11 @@ return [
             'root' => env('DOMINIO_PATH'),
         ],
 
+        'lio' => [
+            'driver' => 'local',
+            'root' => env('LIO_PATH'),
+        ],
+
         /*
         's3' => [
             'driver' => 's3',
