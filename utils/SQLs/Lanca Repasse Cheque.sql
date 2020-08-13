@@ -2,16 +2,16 @@
 
 -- Cria Repasse
 insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2020-07-24', null, '2020-07-24 11:41', 1);
+values (210, '2020-08-06', null, '2020-08-06 11:41', 1);
 select * from tblchequerepasse order by codchequerepasse desc limit 50
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2480, '2020-07-24 10:00', 1
+select codcheque, 2486, '2020-08-06 10:00', 1
 from tblcheque where cmc7 in (
-	'<23706761<0180353275>506800682848:',
-	'<00149933<0188500045>078000960407:',
-	'<00148156<0188500015>514001000802:',
+	'<00111807<0188513055>716011750680:',
+	'<00111809<0188513035>752011750685:',
+	'<74880185<0180000465>800009638958:',
 	'NIL'
 	);
 
@@ -28,8 +28,8 @@ order by 1 desc;
 
 --update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
---update tblchequerepasse set data = '2020-07-24', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2020-07-24 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2020-08-06', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2020-08-06 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 

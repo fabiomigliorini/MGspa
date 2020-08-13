@@ -20,7 +20,7 @@
 --update tblnfeterceiroitem set complemento = (vprod * 1.4), margem = 30 where codnfeterceiro = 25931
 
 --FOUR STAR / CW
---update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (28985, 28986)
+--update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (29424, 29425)
 
 --Lua de Cristal
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (26042)
@@ -40,7 +40,15 @@
 --DU Careca
 --update tblnfeterceiroitem set complemento = vprod - vdesc, margem = 37 where codnfeterceiro in (27610)
 
---update tblnfeterceiroitem set complemento = (vprod - vdesc), margem = 37 where codnfeterceiro in (27609)
+-- Rocie
+--update tblnfeterceiroitem set complemento = (vprod * 2.5) - vprod, margem = 40 where codnfeterceiro in (29228)
+
+
+-- Bazzi Company
+-- update tblnfeterceiroitem set complemento = (vprod * 5.2435) - vprod, margem = 40 where codnfeterceiro in (29286)
+
+
+--
 
 
 with it as (

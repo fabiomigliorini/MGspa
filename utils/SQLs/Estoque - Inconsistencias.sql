@@ -8,8 +8,8 @@ inner join tblproduto p on (p.codproduto = pb.codproduto)
 inner join tbltipoproduto tp on (tp.codtipoproduto = p.codtipoproduto)
 left join tblestoquemovimento em on (em.codnegocioprodutobarra = npb.codnegocioprodutobarra)
 where n.codnegociostatus = 2
-and n.lancamento >= '2016-04-01 00:00:00'
---and n.lancamento >= '2018-11-01 00:00:00'
+--and n.lancamento >= '2016-04-01 00:00:00'
+and n.lancamento >= '2020-11-01 00:00:00'
 and tp.estoque = true
 and no.estoque = true
 and em.codestoquemovimento is null
@@ -59,7 +59,7 @@ inner join tbltipoproduto tp on (tp.codtipoproduto = p.codtipoproduto)
 left join tblestoquemovimento em on (em.codnotafiscalprodutobarra = npb.codnotafiscalprodutobarra)
 where ((n.emitida = true and n.nfeautorizacao is not null and n.nfeinutilizacao is null and n.nfecancelamento is null) or n.emitida = false)
 and n.saida >= '2016-01-01 00:00:00' 
---and n.saida >= '2020-01-01 00:00:00' 
+--and n.saida >= '2020-06-01 00:00:00' 
 and tp.estoque = true
 and no.estoque = true
 and em.codestoquemovimento is null
