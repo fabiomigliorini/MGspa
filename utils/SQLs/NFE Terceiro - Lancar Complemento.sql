@@ -41,7 +41,7 @@
 --update tblnfeterceiroitem set complemento = vprod - vdesc, margem = 37 where codnfeterceiro in (27610)
 
 -- Rocie
---update tblnfeterceiroitem set complemento = (vprod * 2.5) - vprod, margem = 40 where codnfeterceiro in (29228)
+--update tblnfeterceiroitem set complemento = (vprod * 2.5) - vprod, margem = 40 where codnfeterceiro in (29449)
 
 
 -- Bazzi Company
