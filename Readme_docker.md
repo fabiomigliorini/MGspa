@@ -1,9 +1,9 @@
 
 # MGapps
 
-Pré Requisito Docker, Git e Xclip
+Pré Requisito Docker, Git, Xclip e Postgresql Client
 ```
-sudo apt install docker docker-compose docker.io git git-man xclip
+sudo apt install docker docker-compose docker.io git git-man xclip postgresql-client
 ```
 
 Adicionar o usuario do linux ao grupo do Docker
