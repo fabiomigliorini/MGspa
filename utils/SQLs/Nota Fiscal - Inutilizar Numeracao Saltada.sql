@@ -21,8 +21,8 @@ insert into tblnotafiscal
 	(numero, codfilial, codestoquelocal, modelo, emitida, emissao, saida, codpessoa, codnaturezaoperacao, serie) 
 select 
 	num as numero, 
-	102 as codfilial, 
-	102001 as codestoquelocal, 
+	103 as codfilial, 
+	103001 as codestoquelocal, 
 	65 as modelo, 
 	true as emitida, 
 	date_trunc('day', now()) as emissao, 
@@ -32,8 +32,8 @@ select
 	1 as serie
 	--num, nf.numero, nf.codnotafiscal
 --from generate_series(2, 5) num
-from generate_series(427761, 439702) num
-left join tblnotafiscal nf on (nf.numero = num and nf.codfilial = 102 and nf.serie = 1 and nf.modelo = 65 and nf.emitida = true)
+from generate_series(586067, 586067) num
+left join tblnotafiscal nf on (nf.numero = num and nf.codfilial = 103 and nf.serie = 1 and nf.modelo = 65 and nf.emitida = true)
 where nf.codnotafiscal is null
 order by 1
 /*
@@ -42,8 +42,8 @@ delete from tblnotafiscal where codnotafiscal in (
 	from tblnotafiscal nf 
 	where nf.codpessoa = 1 
 	and nf.modelo = 65 
-	and nf.codfilial = 102 
-	and nf.numero between 547102 and 556375 
+	and nf.codfilial = 103 
+	and nf.numero between 547103 and 556375 
 	and nf.nfeautorizacao is null 
 	and nf.nfecancelamento is null 
 	and nf.emitida = true 
@@ -52,13 +52,13 @@ delete from tblnotafiscal where codnotafiscal in (
 	desc
 	limit 2000
 )
-delete from tblnotafiscal where codpessoa = 1 and modelo = 65 and codfilial = 102 and numero between 547102 and 556375 and nfeautorizacao is null and nfecancelamento is null and emitida = true and nfeinutilizacao is null limit 1000
+delete from tblnotafiscal where codpessoa = 1 and modelo = 65 and codfilial = 103 and numero between 547103 and 556375 and nfeautorizacao is null and nfecancelamento is null and emitida = true and nfeinutilizacao is null limit 1000
 */
 --  Quantidade para inutilizar
 select count(*)
 from tblnotafiscal nf
 where nf.emitida = true
-and nf.codfilial = 102
+and nf.codfilial = 103
 and nf.modelo = 65
 and nf.serie = 1
 --and nf.saida = date_trunc('day', now())
@@ -73,7 +73,7 @@ limit 1100
 select 'wget https://api.mgspa.mgpapelaria.com.br/api/v1/nfe-php/' || nf.codnotafiscal || '/inutilizar?justificativa=falha+de+sistema%2C+saltou+numeracao' as comando, numero
 from tblnotafiscal nf
 where nf.emitida = true
-and nf.codfilial = 102
+and nf.codfilial = 103
 and nf.modelo = 65
 and nf.serie = 1
 --and nf.saida = date_trunc('day', now())
@@ -90,20 +90,20 @@ limit 200
 update tblnotafiscal 
 set nfeautorizacao = null, nfedataautorizacao = null 
 where emitida = true
-and codfilial = 102
+and codfilial = 103
 and modelo = 65
 and serie = 1
 and nfeautorizacao is not null
 --and numero between 197949 and 197949
 and numero in (
-434055, 435161, 435162
+586067
 )
 /*
 -- verifica quais nao foram inutilizadas na faixa
 select *
 from tblnotafiscal nf
 where nf.emitida = true
-and nf.codfilial = 102
+and nf.codfilial = 103
 and nf.modelo = 65
 and nf.serie = 1
 and nf.nfeinutilizacao is not null
@@ -114,7 +114,7 @@ order by numero asc
 select count(*)
 from tblnotafiscal nf
 where nf.emitida = true
-and nf.codfilial = 102
+and nf.codfilial = 103
 and nf.modelo = 65
 and nf.serie = 1
 and nf.nfeinutilizacao is not null

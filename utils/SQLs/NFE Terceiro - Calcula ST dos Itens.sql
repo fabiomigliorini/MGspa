@@ -33,7 +33,7 @@
 		left join tblproduto p on (p.codproduto = pb.codproduto)
 		left join tblncm n on (n.codncm = p.codncm)
 		left join tblcest c on (c.codcest = p.codcest)
-		where nti.codnfeterceiro = 29558
+		where nti.codnfeterceiro = 30176
 		order by nitem
 	)
 	select

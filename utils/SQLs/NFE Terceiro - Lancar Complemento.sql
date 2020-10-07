@@ -13,14 +13,14 @@
 
 --ISSAM/ZEIN
 -- update tblnfeterceiroitem set complemento = (vprod / 0.35) - vprod, margem = 40 where codnfeterceiro = 29140
--- update tblnfeterceiroitem set complemento = vprod, margem = 40 where codnfeterceiro = 29140
+-- update tblnfeterceiroitem set complemento = vprod, margem = 40 where codnfeterceiro = 30044
 
 --WINCY
 --update tblnfeterceiroitem set complemento = (vprod * 1.5), margem = 40 where codnfeterceiro = 24521
 --update tblnfeterceiroitem set complemento = (vprod * 1.4), margem = 30 where codnfeterceiro = 25931
 
 --FOUR STAR / CW
---update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (29424, 29425)
+--update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (30112, 30111)
 
 --Lua de Cristal
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (26042)
@@ -47,8 +47,15 @@
 -- Bazzi Company
 -- update tblnfeterceiroitem set complemento = (vprod * 5.2435) - vprod, margem = 40 where codnfeterceiro in (29286)
 
+-- Brindes Coelho (Ex Lumasol)
+-- update tblnfeterceiroitem set complemento = (vprod * 1.014355021), margem = 40 where codnfeterceiro in (29823) 
+
+-- Brindes Coelho (Ex Lumasol)
+-- update tblnfeterceiroitem set complemento = (vprod * 1.014355021), margem = 40 where codnfeterceiro in (30001) 
 
 --
+
+
 
 
 with it as (
@@ -59,7 +66,7 @@ with it as (
 select nt.valorprodutos, nt.valortotal, it.complemento, nt.valortotal + it.complemento as geral
 from tblnfeterceiro nt
 inner join it on (it.codnfeterceiro  = nt.codnfeterceiro)
-where nt.codnfeterceiro in (25499)
+where nt.codnfeterceiro in (30171)
 
 
 --select * from tblnfeterceiroitem where codnfeterceiro = 24692 order by nitem
