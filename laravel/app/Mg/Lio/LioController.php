@@ -4,6 +4,8 @@ namespace Mg\Lio;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+
 use Mg\MgController;
 
 use DB;
@@ -16,11 +18,11 @@ class LioController extends MgController
     public function vendasAbertas(Request $request)
     {
         $request->validate([
-          'cnpj' => ['required', 'numeric'],
-          'terminal' => ['required', 'numeric'],
+          'terminal' => ['required', 'string'],
         ]);
-        $cnpj = $request->cnpj;
         $terminal = $request->terminal;
+	$codusuario = Auth::user()->codusuario;
+
         $sql = '
             with orig as (
             	select
@@ -43,7 +45,7 @@ class LioController extends MgController
             	where n.codnegociostatus  = 1
             	and nat.venda = true
             	and n.valortotal > 0
-            	and pf.cnpj = :cnpj
+                -- and n.codusuario = :codusuario
             	order by n.lancamento desc
             	limit 100
             )
@@ -53,7 +55,7 @@ class LioController extends MgController
         ';
 
         $negocios = DB::select($sql, [
-            'cnpj' => $cnpj
+	    // 'codusuario' => $codusuario
         ]);
         return $negocios;
     }
@@ -63,10 +65,16 @@ class LioController extends MgController
         $request->validate([
           'order' => ['required', 'json'],
         ]);
+
         $order = $request->order;
         $obj = json_decode($order);
         $arquivo = "{$obj->id}.json";
         Storage::disk('lio')->put($arquivo, $order);
+
+	$pagamentos = $request->pagamentos;
+        $arquivo = "{$obj->id}.pagamentos.json";
+	Storage::disk('lio')->put($arquivo, $pagamentos);
+
     }
 
 

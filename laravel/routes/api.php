@@ -84,12 +84,14 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
     Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
 
-    Route::get('lio/vendas-abertas', '\Mg\Lio\LioController@vendasAbertas');
-    Route::post('lio/order', '\Mg\Lio\LioController@order');
 });
 
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
+
+        // Cielo Lio (Danilo)
+        Route::get('lio/vendas-abertas', '\Mg\Lio\LioController@vendasAbertas');
+        Route::post('lio/order', '\Mg\Lio\LioController@order');
 
         // Etiquetas
         Route::get('etiqueta/barras', '\Mg\Etiqueta\EtiquetaController@barras');
