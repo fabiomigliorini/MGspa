@@ -2563,5 +2563,185 @@
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Valecompramodeloprodutobarra\/Valecompramodeloprodutobarra.php",
         "belongsTo": [],
         "hasMany": []
+    },
+    "tblliopedidostatus": {
+        "tabela": "tblliopedidostatus",
+        "campocodigo": "codliopedidostatus",
+        "namespace": "Mg\\Lio",
+        "classe": "LioPedidoStatus",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Lio\/LioPedidoStatus.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblliopedido.codliopedidostatus": {
+                "tabela": "tblliopedido",
+                "coluna": "codliopedidostatus",
+                "metodo": "LioPedidoS"
+            }
+        }
+    },
+    "tblliopedido": {
+        "tabela": "tblliopedido",
+        "campocodigo": "codliopedido",
+        "namespace": "Mg\\Lio",
+        "classe": "LioPedido",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Lio\/LioPedido.php",
+        "belongsTo": {
+            "codliopedidostatus": {
+                "tabela": "tblliopedidostatus",
+                "coluna": "codliopedidostatus",
+                "metodo": "LioPedidoStatus"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblliopedidopagamento.codliopedido": {
+                "tabela": "tblliopedidopagamento",
+                "coluna": "codliopedido",
+                "metodo": "LioPedidoPagamentoS"
+            }
+        }
+    },
+    "tblliopedidopagamento": {
+        "tabela": "tblliopedidopagamento",
+        "campocodigo": "codliopedidopagamento",
+        "namespace": "Mg\\Lio",
+        "classe": "LioPedidoPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Lio\/LioPedidoPagamento.php",
+        "belongsTo": {
+            "codliobandeiracartao": {
+                "tabela": "tblliobandeiracartao",
+                "coluna": "codliobandeiracartao",
+                "metodo": "LioBandeiraCartao"
+            },
+            "codliopedido": {
+                "tabela": "tblliopedido",
+                "coluna": "codliopedido",
+                "metodo": "LioPedido"
+            },
+            "codlioproduto": {
+                "tabela": "tbllioproduto",
+                "coluna": "codlioproduto",
+                "metodo": "LioProduto"
+            },
+            "codlioterminal": {
+                "tabela": "tbllioterminal",
+                "coluna": "codlioterminal",
+                "metodo": "LioTerminal"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblliobandeiracartao": {
+        "tabela": "tblliobandeiracartao",
+        "campocodigo": "codliobandeiracartao",
+        "namespace": "Mg\\Lio",
+        "classe": "LioBandeiraCartao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Lio\/LioBandeiraCartao.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblliopedidopagamento.codliobandeiracartao": {
+                "tabela": "tblliopedidopagamento",
+                "coluna": "codliobandeiracartao",
+                "metodo": "LioPedidoPagamentoS"
+            }
+        }
+    },
+    "tbllioproduto": {
+        "tabela": "tbllioproduto",
+        "campocodigo": "codlioproduto",
+        "namespace": "Mg\\Lio",
+        "classe": "LioProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Lio\/LioProduto.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblliopedidopagamento.codlioproduto": {
+                "tabela": "tblliopedidopagamento",
+                "coluna": "codlioproduto",
+                "metodo": "LioPedidoPagamentoS"
+            }
+        }
+    },
+    "tbllioterminal": {
+        "tabela": "tbllioterminal",
+        "campocodigo": "codlioterminal",
+        "namespace": "Mg\\Lio",
+        "classe": "LioTerminal",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Lio\/LioTerminal.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblliopedidopagamento.codlioterminal": {
+                "tabela": "tblliopedidopagamento",
+                "coluna": "codlioterminal",
+                "metodo": "LioPedidoPagamentoS"
+            }
+        }
     }
 }
