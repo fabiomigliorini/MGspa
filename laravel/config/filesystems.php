@@ -55,11 +55,6 @@ return [
             'visibility' => 'public',
         ],
 
-        'cielo-lio' => [
-            'driver' => 'local',
-            'root' => storage_path('app/cielo-lio'),
-        ],
-
         'boleto' => [
             'driver' => 'local',
             'root' => env('BOLETO_PATH'),
