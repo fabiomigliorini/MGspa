@@ -25,29 +25,29 @@ class LioController extends MgController
 
         $sql = '
             with orig as (
-            	select
-            		n.codnegocio,
-            		n.lancamento,
-            		p.fantasia,
-            		n.valortotal,
-            		(
-            			select  sum(nfp.valorpagamento)
-            			from tblnegocioformapagamento nfp
-            			where nfp.codnegocio = n.codnegocio
-            			group by nfp.codnegocio
+                select
+                    n.codnegocio,
+                    n.lancamento,
+                    p.fantasia,
+                    n.valortotal,
+                    (
+                        select  sum(nfp.valorpagamento)
+                        from tblnegocioformapagamento nfp
+                        where nfp.codnegocio = n.codnegocio
+                        group by nfp.codnegocio
 
-            		) as valorpago
-            	from tblnegocio n
-            	inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao )
-            	inner join tblpessoa p on (p.codpessoa = n.codpessoa )
-            	inner join tblfilial f on (f.codfilial = n.codfilial)
-            	inner join tblpessoa pf on (pf.codpessoa = f.codpessoa)
-            	where n.codnegociostatus  = 1
-            	and nat.venda = true
-            	and n.valortotal > 0
-                -- and n.codusuario = :codusuario
-            	order by n.lancamento desc
-            	limit 100
+                    ) as valorpago
+                from tblnegocio n
+                inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao )
+                inner join tblpessoa p on (p.codpessoa = n.codpessoa )
+                inner join tblfilial f on (f.codfilial = n.codfilial)
+                inner join tblpessoa pf on (pf.codpessoa = f.codpessoa)
+                where n.codnegociostatus  = 1
+                and nat.venda = true
+                and n.valortotal > 0
+                and n.codusuario = :codusuario
+                order by n.lancamento desc
+                limit 100
             )
             select *, valortotal - coalesce(valorpago, 0) as valorsaldo
             from orig
@@ -55,7 +55,7 @@ class LioController extends MgController
         ';
 
         $negocios = DB::select($sql, [
-	    // 'codusuario' => $codusuario
+           'codusuario' => $codusuario
         ]);
         return $negocios;
     }
@@ -68,15 +68,19 @@ class LioController extends MgController
 
         $order = $request->order;
         $obj = json_decode($order);
-        $arquivo = "{$obj->id}.json";
+        $arquivo = "order/{$obj->id}.json";
         Storage::disk('lio')->put($arquivo, $order);
 
         $pagamentos = $request->pagamentos;
-        $arquivo = "{$obj->id}.pagamentos.json";
-	    Storage::disk('lio')->put($arquivo, $pagamentos);
+        $arquivo = "pagamentos/{$obj->id}.json";
+        Storage::disk('lio')->put($arquivo, $pagamentos);
 
     }
 
+    /*
+     * Callback que servidor da Cielo chama
+     * Nao estamos usando esses dados por enquanto
+     */
     public function callback(Request $request)
     {
         $file = 'callback/' . date('Y-m-d H-i-s') . ' ' . uniqid() . '.json';
