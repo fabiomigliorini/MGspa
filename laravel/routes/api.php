@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
 // });
 
 Route::group(['prefix' => 'v1/cielo-lio'], function () {
-    Route::post('', '\Mg\CieloLio\CieloLioController@callback');
+    Route::post('', '\Mg\Lio\LioController@callback');
 });
 
 

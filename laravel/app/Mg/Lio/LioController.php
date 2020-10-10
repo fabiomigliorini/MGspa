@@ -21,7 +21,7 @@ class LioController extends MgController
           'terminal' => ['required', 'string'],
         ]);
         $terminal = $request->terminal;
-	$codusuario = Auth::user()->codusuario;
+        $codusuario = Auth::user()->codusuario;
 
         $sql = '
             with orig as (
@@ -71,11 +71,17 @@ class LioController extends MgController
         $arquivo = "{$obj->id}.json";
         Storage::disk('lio')->put($arquivo, $order);
 
-	$pagamentos = $request->pagamentos;
+        $pagamentos = $request->pagamentos;
         $arquivo = "{$obj->id}.pagamentos.json";
-	Storage::disk('lio')->put($arquivo, $pagamentos);
+	    Storage::disk('lio')->put($arquivo, $pagamentos);
 
     }
 
+    public function callback(Request $request)
+    {
+        $file = 'recebidos/' . date('Y-m-d H-i-s') . ' ' . uniqid() . '.json';
+        Storage::disk('cielo-lio')->put($file, $request->getContent());
+        return response()->json($request->all(), 200);
+    }
 
 }
