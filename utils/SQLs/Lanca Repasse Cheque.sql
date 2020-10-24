@@ -1,15 +1,15 @@
 ﻿--select * from tblportador order by codportador
 
 -- Cria Repasse
-insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao)
-values (210, '2020-10-06', null, '2020-10-06 11:41', 1);
-select * from tblchequerepasse order by codchequerepasse desc limit 50
+insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (210, '2020-10-23', 'Envelope Autoatendimento', '2020-10-23 11:41', 1);
+
+select * from tblchequerepasse order by codchequerepasse desc limit 50;
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2496, '2020-10-06 10:00', 1
+select codcheque, 2504, '2020-10-23 10:00', 1
 from tblcheque where cmc7 in (
-	'<74808126<0180018865>200000268326:',
+	'<00159112<0188500705>190000760232:',
 	'NIL'
 	);
 
@@ -26,8 +26,8 @@ order by 1 desc;
 
 --update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
---update tblchequerepasse set data = '2020-10-06', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2020-10-06 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2020-10-23', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2020-10-23 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 
@@ -39,12 +39,13 @@ order by 1 desc;
 --delete from tblchequerepassecheque where codchequerepassecheque between 15837 and 15847
 
 /*
-delete from tblchequerepassecheque  where codchequerepasse = 2479 and codcheque in (
+delete from tblchequerepassecheque  where  codcheque in (
 	select codcheque
 	from tblcheque where cmc7 in (
-	'<23706761<0180353275>506800682848:',
-	'<00149933<0188500045>078000960407:',
-	'<00148156<0188500015>514001000802:'
+	'<00111805<0188508125>723010526673:',
+	'<00111808<0188500095>707008391679:',
+	'<23706767<0180495465>566000462136:',
+	'<00136288<0188500905>328002097831:'
 	)
 )
 
