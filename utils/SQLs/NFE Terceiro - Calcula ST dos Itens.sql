@@ -33,13 +33,10 @@
 		left join tblproduto p on (p.codproduto = pb.codproduto)
 		left join tblncm n on (n.codncm = p.codncm)
 		left join tblcest c on (c.codcest = p.codcest)
-		where nti.codnfeterceiro = 30251
+		where nti.codnfeterceiro = 30674
 		order by nitem
 	)
-	select
-		*,
-		round((valor * reducao * mva * 0.27) - (vicms * reducao), 2) as vicmsstcalculado
-	from itens
+	select *, round((valor * reducao * mva * 0.17) - (vicms * reducao), 2) as vicmsstcalculado from itens
 )
 select
 	*,
@@ -47,6 +44,10 @@ select
 	sum(coalesce(vicmsstcalculado, 0) - coalesce(vicmsst, 0)) over (order by nitem asc) as acumulado
 from final
 
-select observacao , * from tbltitulo where observacao ilike '%273718%'
 
-
+select observacao, tt.tipotitulo, cc.contacontabil, t.vencimento, t.debito, t.credito, saldo, * 
+from tbltitulo t
+inner join tbltipotitulo tt on (tt.codtipotitulo = t.codtipotitulo)
+inner join tblcontacontabil cc on (cc.codcontacontabil = t.codcontacontabil)
+where observacao ilike '%417%'
+order by t.vencimento desc
