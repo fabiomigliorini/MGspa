@@ -1,0 +1,2 @@
+#!/bin/bash
+rsync -uva super@netuno.mgpapelaria.com.br:/opt/www/Lio/ ./Lio/
