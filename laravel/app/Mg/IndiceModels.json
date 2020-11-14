@@ -106,7 +106,7 @@
             "acbrnfemonitorcodusuario": {
                 "tabela": "tblusuario",
                 "coluna": "acbrnfemonitorcodusuario",
-                "metodo": "UsuarioAcbrnfemonitor"
+                "metodo": "UsuarioAcbrNfeMonitor"
             },
             "codempresa": {
                 "tabela": "tblempresa",
@@ -199,6 +199,11 @@
                 "tabela": "tblvalecompra",
                 "coluna": "codfilial",
                 "metodo": "ValeCompraS"
+            },
+            "tbllioterminal.codfilial": {
+                "tabela": "tbllioterminal",
+                "coluna": "codfilial",
+                "metodo": "LioTerminalS"
             }
         }
     },
@@ -2016,9 +2021,9 @@
     "tblnotafiscalterceiroevento": {
         "tabela": "tblnotafiscalterceiroevento",
         "campocodigo": "codnotafiscalterceiroevento",
-        "namespace": "Mg\\NotaFiscalTerceiro",
+        "namespace": "Mg\\Dfe",
         "classe": "NotaFiscalTerceiroEvento",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscalTerceiro\/NotaFiscalTerceiroEvento.php",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Dfe\/NotaFiscalTerceiroEvento.php",
         "belongsTo": {
             "coddistribuicaodfe": {
                 "tabela": "tbldistribuicaodfe",

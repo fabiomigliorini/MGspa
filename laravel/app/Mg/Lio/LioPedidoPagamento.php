@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 10/Oct/2020 11:11:48
+ * Date: 14/Nov/2020 08:48:00
  */
 
 namespace Mg\Lio;

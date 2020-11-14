@@ -1,13 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2020 15:30:21
+ * Date: 14/Nov/2020 08:51:58
  */
 
 namespace Mg\Filial;
 
 use Mg\MgModel;
-use Mg\NotaFiscalTerceiro\DistribuicaoDfe;
+use Mg\Dfe\DistribuicaoDfe;
 use Mg\CupomFiscal\Ecf;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Usuario\GrupoUsuarioUsuario;
@@ -21,6 +21,7 @@ use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
 use Mg\ValeCompra\ValeCompra;
+use Mg\Lio\LioTerminal;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -46,6 +47,7 @@ class Filial extends MgModel
         'codempresa',
         'codpessoa',
         'crt',
+        'dfe',
         'emitenfe',
         'empresadominio',
         'filial',
@@ -77,6 +79,7 @@ class Filial extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'crt' => 'integer',
+        'dfe' => 'boolean',
         'emitenfe' => 'boolean',
         'empresadominio' => 'float',
         'nfeambiente' => 'integer',
@@ -86,7 +89,7 @@ class Filial extends MgModel
 
 
     // Chaves Estrangeiras
-    public function UsuarioAcbrnfemonitor()
+    public function UsuarioAcbrNfeMonitor()
     {
         return $this->belongsTo(Usuario::class, 'acbrnfemonitorcodusuario', 'codusuario');
     }
@@ -136,6 +139,11 @@ class Filial extends MgModel
     public function IbptCacheS()
     {
         return $this->hasMany(IbptCache::class, 'codfilial', 'codfilial');
+    }
+
+    public function LioTerminalS()
+    {
+        return $this->hasMany(LioTerminal::class, 'codfilial', 'codfilial');
     }
 
     public function MetaFilialS()
