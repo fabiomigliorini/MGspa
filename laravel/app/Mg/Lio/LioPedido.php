@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 14/Nov/2020 08:47:51
+ * Date: 14/Nov/2020 14:07:58
  */
 
 namespace Mg\Lio;
 
 use Mg\MgModel;
 use Mg\Lio\LioPedidoPagamento;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Lio\LioPedidoStatus;
 use Mg\Usuario\Usuario;
 
@@ -63,6 +64,11 @@ class LioPedido extends MgModel
     public function LioPedidoPagamentoS()
     {
         return $this->hasMany(LioPedidoPagamento::class, 'codliopedido', 'codliopedido');
+    }
+
+    public function NegocioFormaPagamentoS()
+    {
+        return $this->hasMany(NegocioFormaPagamento::class, 'codliopedido', 'codliopedido');
     }
 
 }

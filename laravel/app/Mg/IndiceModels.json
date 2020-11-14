@@ -818,6 +818,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codliopedido": {
+                "tabela": "tblliopedido",
+                "coluna": "codliopedido",
+                "metodo": "LioPedido"
             }
         },
         "hasMany": {
@@ -2623,6 +2628,11 @@
                 "tabela": "tblliopedidopagamento",
                 "coluna": "codliopedido",
                 "metodo": "LioPedidoPagamentoS"
+            },
+            "tblnegocioformapagamento.codliopedido": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codliopedido",
+                "metodo": "NegocioFormaPagamentoS"
             }
         }
     },

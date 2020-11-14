@@ -2353,10 +2353,10 @@
 			<column name="cartao" type="varchar" length="20" jt="12" >
 				<comment><![CDATA[payment.paymentFields.pan / payment.mask]]></comment>
 			</column>
-			<column name="autorizacao" type="numeric" jt="2" >
+			<column name="autorizacao" type="varchar" length="100" jt="12" >
 				<comment><![CDATA[payments.authCode]]></comment>
 			</column>
-			<column name="nsu" type="numeric" jt="2" >
+			<column name="nsu" type="varchar" length="100" jt="12" >
 				<comment><![CDATA[payments.cieloCode]]></comment>
 			</column>
 			<column name="codliobandeiracartao" type="bigint" jt="-5" >
@@ -2470,7 +2470,7 @@
 			</column>
 			<column name="lioterminal" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="terminal" type="varchar" length="20" decimal="0" jt="12" mandatory="y" />
-			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codfilial" type="bigint" jt="-5" />
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />

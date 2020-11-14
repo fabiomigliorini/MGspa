@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:50:25
+ * Date: 14/Nov/2020 14:22:45
  */
 
 namespace Mg\Negocio;
@@ -11,6 +11,7 @@ use Mg\Titulo\Titulo;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
+use Mg\Lio\LioPedido;
 
 class NegocioFormaPagamento extends MgModel
 {
@@ -20,6 +21,7 @@ class NegocioFormaPagamento extends MgModel
 
     protected $fillable = [
         'codformapagamento',
+        'codliopedido',
         'codnegocio',
         'valorpagamento'
     ];
@@ -31,6 +33,7 @@ class NegocioFormaPagamento extends MgModel
 
     protected $casts = [
         'codformapagamento' => 'integer',
+        'codliopedido' => 'integer',
         'codnegocio' => 'integer',
         'codnegocioformapagamento' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -43,6 +46,11 @@ class NegocioFormaPagamento extends MgModel
     public function FormaPagamento()
     {
         return $this->belongsTo(FormaPagamento::class, 'codformapagamento', 'codformapagamento');
+    }
+
+    public function LioPedido()
+    {
+        return $this->belongsTo(LioPedido::class, 'codliopedido', 'codliopedido');
     }
 
     public function Negocio()
