@@ -3,7 +3,6 @@
 namespace Mg\Lio;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
 use Mg\MgController;
@@ -65,16 +64,14 @@ class LioController extends MgController
         $request->validate([
           'order' => ['required', 'json'],
         ]);
+        $id = LioJsonService::salvar($request->order, $request->pagamentos);
+        return $id;
 
-        $order = $request->order;
-        $obj = json_decode($order);
-        $arquivo = "order/{$obj->id}.json";
-        Storage::disk('lio')->put($arquivo, $order);
+    }
 
-        $pagamentos = $request->pagamentos;
-        $arquivo = "pagamentos/{$obj->id}.json";
-        Storage::disk('lio')->put($arquivo, $pagamentos);
-
+    public function parse($id, Request $request)
+    {
+        return LioService::parse($id);
     }
 
     /*

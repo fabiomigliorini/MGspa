@@ -2302,22 +2302,26 @@
 				<defo><![CDATA[nextval('tblliopedido_codliopedido_seq'::regclass)]]></defo>
 			</column>
 			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
-				<comment><![CDATA[price]]></comment>
+				<comment><![CDATA[price / 100]]></comment>
 			</column>
 			<column name="valorpago" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
-				<comment><![CDATA[paidAmount]]></comment>
+				<comment><![CDATA[paidAmount / 100]]></comment>
 			</column>
 			<column name="valorsaldo" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
-				<comment><![CDATA[price]]></comment>
+				<comment><![CDATA[pendingAmount / 100]]></comment>
 			</column>
 			<column name="referencia" type="varchar" length="100" jt="12" >
 				<comment><![CDATA[reference]]></comment>
 			</column>
 			<column name="uuid" type="uuid" jt="1111" mandatory="y" />
 			<column name="codliopedidostatus" type="bigint" length="1" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" >
+				<comment><![CDATA[createdAt]]></comment>
+			</column>
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" >
+				<comment><![CDATA[updatedAt]]></comment>
+			</column>
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblliopedido_codliopedido" unique="PRIMARY_KEY" >
 				<column name="codliopedido" />
@@ -2341,18 +2345,18 @@
 			</column>
 			<column name="codliopedido" type="bigint" jt="-5" mandatory="y" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" >
-				<comment><![CDATA[payments.amount]]></comment>
+				<comment><![CDATA[payments.amount / 100]]></comment>
 			</column>
 			<column name="parcelas" type="smallint" jt="5" >
 				<comment><![CDATA[payments.paymentFilelds.numberOfQuotas]]></comment>
 			</column>
 			<column name="cartao" type="varchar" length="20" jt="12" >
-				<comment><![CDATA[payments.pan]]></comment>
+				<comment><![CDATA[payment.paymentFields.pan / payment.mask]]></comment>
 			</column>
-			<column name="autorizacao" type="numeric" jt="2" >
+			<column name="autorizacao" type="varchar" length="100" jt="12" >
 				<comment><![CDATA[payments.authCode]]></comment>
 			</column>
-			<column name="nsu" type="numeric" jt="2" >
+			<column name="nsu" type="varchar" length="100" jt="12" >
 				<comment><![CDATA[payments.cieloCode]]></comment>
 			</column>
 			<column name="codliobandeiracartao" type="bigint" jt="-5" >
@@ -2402,9 +2406,13 @@
 			</fk>
 		</table>
 		<table name="tblliopedidostatus" >
-			<column name="codliopedidostatus" type="bigint" jt="-5" mandatory="y" />
+			<column name="codliopedidostatus" type="bigint" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblliopedidostatus_codliopedidostatus_seq'::regclass)]]></defo>
+			</column>
 			<column name="liopedidostatus" type="varchar" length="20" jt="12" mandatory="y" />
-			<column name="sigla" type="varchar" length="20" jt="12" mandatory="y" />
+			<column name="sigla" type="varchar" length="20" jt="12" mandatory="y" >
+				<comment><![CDATA[status]]></comment>
+			</column>
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
@@ -2423,7 +2431,7 @@
 			<column name="codlioproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo><![CDATA[nextval('tbllioproduto_codlioproduto_seq'::regclass)]]></defo>
 			</column>
-			<column name="liproduto" type="varchar" length="100" jt="12" mandatory="y" >
+			<column name="lioproduto" prior="liproduto" type="varchar" length="100" jt="12" mandatory="y" >
 				<comment><![CDATA[payments.paymentFilelds.productName]]></comment>
 			</column>
 			<column name="nomeprimario" type="varchar" length="100" jt="12" mandatory="y" >
@@ -2432,7 +2440,9 @@
 			<column name="codigoprimario" type="smallint" length="100" jt="5" mandatory="y" >
 				<comment><![CDATA[payments.paymentFilelds.primaryProductCode]]></comment>
 			</column>
-			<column name="nomesecundario" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="nomesecundario" type="varchar" length="100" jt="12" mandatory="y" >
+				<comment><![CDATA[payments.paymentFilelds.secondaryProductName]]></comment>
+			</column>
 			<column name="codigosecundario" type="smallint" jt="5" mandatory="y" >
 				<comment><![CDATA[payments.paymentFilelds.primaryProductCode]]></comment>
 			</column>
@@ -2458,9 +2468,9 @@
 			<column name="codlioterminal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo><![CDATA[nextval('tbllioterminal_codlioterminal_seq'::regclass)]]></defo>
 			</column>
-			<column name="lioterminal" type="varchar" jt="12" mandatory="y" />
-			<column name="terminal" type="numeric" length="10" decimal="0" jt="2" mandatory="y" />
-			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="lioterminal" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="terminal" type="varchar" length="20" decimal="0" jt="12" mandatory="y" />
+			<column name="codfilial" type="bigint" jt="-5" />
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
@@ -7084,6 +7094,7 @@
 		<sequence name="tblliopedido_codliopedido_seq" options="START WITH 1" />
 		<sequence name="tblliopedidopagamento_codbandeiracartao_seq" options="START WITH 1" />
 		<sequence name="tblliopedidopagamento_codliopedidopagamento_seq" options="START WITH 1" />
+		<sequence name="tblliopedidostatus_codliopedidostatus_seq" />
 		<sequence name="tbllioproduto_codlioproduto_seq" options="START WITH 1" />
 		<sequence name="tbllioterminal_codlioterminal_seq" options="START WITH 1" />
 		<sequence name="tblliquidacaotitulo_codliquidacaotitulo_seq" options="START WITH 1" />
@@ -9346,6 +9357,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbljobsspa" color="C1D8EE" x="480" y="48" />
 	</layout>
 	<layout name="Layout_Lio" id="Layout_244a" show_relation="columns" >
+		<comment><![CDATA[PostgreSQL]]></comment>
 		<entity schema="mgsis.mgsis" name="tblfilial" color="3986C1" x="48" y="688" >
 			<column name="codfilial" />
 			<column name="codempresa" />

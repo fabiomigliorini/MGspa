@@ -92,6 +92,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         // Cielo Lio (Danilo)
         Route::get('lio/vendas-abertas', '\Mg\Lio\LioController@vendasAbertas');
         Route::post('lio/order', '\Mg\Lio\LioController@order');
+        Route::post('lio/{id}/parse', '\Mg\Lio\LioController@parse');
 
         // Etiquetas
         Route::get('etiqueta/barras', '\Mg\Etiqueta\EtiquetaController@barras');

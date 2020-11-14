@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 14/Nov/2020 08:47:34
+ * Date: 14/Nov/2020 11:20:41
  */
 
 namespace Mg\Lio;
@@ -19,7 +19,7 @@ class LioProduto extends MgModel
     protected $fillable = [
         'codigoprimario',
         'codigosecundario',
-        'liproduto',
+        'lioproduto',
         'nomeprimario',
         'nomesecundario'
     ];

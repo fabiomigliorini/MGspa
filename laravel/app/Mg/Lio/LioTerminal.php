@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 14/Nov/2020 08:48:05
+ * Date: 14/Nov/2020 11:42:07
  */
 
 namespace Mg\Lio;
@@ -32,8 +32,7 @@ class LioTerminal extends MgModel
         'codfilial' => 'integer',
         'codlioterminal' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer',
-        'terminal' => 'float'
+        'codusuariocriacao' => 'integer'
     ];
 
 
