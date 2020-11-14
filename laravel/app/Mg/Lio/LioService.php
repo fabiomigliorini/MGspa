@@ -7,6 +7,9 @@ use Carbon\Carbon;
 // use DB;
 
 use Mg\Pessoa\Pessoa;
+use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioFormaPagamento;
+use Mg\FormaPagamento\FormaPagamento;
 
 class LioService
 {
@@ -110,6 +113,24 @@ class LioService
             }
             $pagamento->alteracao = carbon::createFromTimestampMs($payment->requestDate);
             $pagamento->save();
+        }
+
+        if (!empty($order->number)) {
+            $n = Negocio::where(['codnegocio' => $order->number])->first();
+            if ($n) {
+                $nfp = NegocioFormaPagamento::firstOrNew([
+                    'codliopedido' => $pedido->codliopedido
+                ]);
+                $nfp->codnegocio = $order->number;
+                $nfp->valorpagamento = $pedido->valorpago;
+                $fp = FormaPagamento::firstOrNew(['lio' => true]);
+                if (!$fp->exists) {
+                    $fp->formapagamento = 'Cielo Lio';
+                    $fp->save();
+                }
+                $nfp->codformapagamento = $fp->codformapagamento;
+                $nfp->save();
+            }
         }
 
         return $pedido;
