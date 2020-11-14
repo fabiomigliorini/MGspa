@@ -2280,12 +2280,22 @@
 			<column name="siglalio" type="varchar" length="50" jt="12" >
 				<comment><![CDATA[payments.brand]]></comment>
 			</column>
+			<column name="criacao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="idx_tblbandeiracartao" unique="UNIQUE_KEY" >
 				<column name="siglalio" />
 			</index>
 			<index name="pk_tblliobandeiracartao_codliobandeiracartao" unique="PRIMARY_KEY" >
 				<column name="codliobandeiracartao" />
 			</index>
+			<fk name="fk_tblliobandeiracartao_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblliobandeiracartao_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tblliopedido" >
 			<column name="codliopedido" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
@@ -2305,6 +2315,10 @@
 			</column>
 			<column name="uuid" type="uuid" jt="1111" mandatory="y" />
 			<column name="codliopedidostatus" type="bigint" length="1" jt="-5" mandatory="y" />
+			<column name="criacao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblliopedido_codliopedido" unique="PRIMARY_KEY" >
 				<column name="codliopedido" />
 			</index>
@@ -2313,6 +2327,12 @@
 			</index>
 			<fk name="fk_tblliopedido_tblliopedidostatus" to_schema="mgsis.mgsis" to_table="tblliopedidostatus" update_action="cascade" >
 				<fk_column name="codliopedidostatus" pk="codliopedidostatus" />
+			</fk>
+			<fk name="fk_tblliopedido_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblliopedido_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblliopedidopagamento" >
@@ -2355,6 +2375,10 @@
 				<comment><![CDATA[payments.paymentFilelds.statusCode == 1]]></comment>
 			</column>
 			<column name="codlioterminal" type="bigint" jt="-5" />
+			<column name="criacao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblliopedidopagamento_codliopedidopagamento" unique="PRIMARY_KEY" >
 				<column name="codliopedidopagamento" />
 			</index>
@@ -2370,14 +2394,30 @@
 			<fk name="fk_tblliopedidopagamento_tbllioterminal" to_schema="mgsis.mgsis" to_table="tbllioterminal" update_action="cascade" >
 				<fk_column name="codlioterminal" pk="codlioterminal" />
 			</fk>
+			<fk name="fk_tblliopedidopagamento_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblliopedidopagamento_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tblliopedidostatus" >
 			<column name="codliopedidostatus" type="bigint" jt="-5" mandatory="y" />
 			<column name="liopedidostatus" type="varchar" length="20" jt="12" mandatory="y" />
 			<column name="sigla" type="varchar" length="20" jt="12" mandatory="y" />
+			<column name="criacao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblliopedidostatus_codliopedidostatus" unique="PRIMARY_KEY" >
 				<column name="codliopedidostatus" />
 			</index>
+			<fk name="fk_tblliopedidostatus_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblliopedidostatus_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tbllioproduto" >
 			<column name="codlioproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
@@ -2396,6 +2436,10 @@
 			<column name="codigosecundario" type="smallint" jt="5" mandatory="y" >
 				<comment><![CDATA[payments.paymentFilelds.primaryProductCode]]></comment>
 			</column>
+			<column name="criacao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbllioproduto_codlioproduto" unique="PRIMARY_KEY" >
 				<column name="codlioproduto" />
 			</index>
@@ -2403,6 +2447,12 @@
 				<column name="codigoprimario" />
 				<column name="codigosecundario" />
 			</index>
+			<fk name="fk_tbllioproduto_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tbllioproduto_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tbllioterminal" >
 			<column name="codlioterminal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
@@ -2411,6 +2461,10 @@
 			<column name="lioterminal" type="varchar" jt="12" mandatory="y" />
 			<column name="terminal" type="numeric" length="10" decimal="0" jt="2" mandatory="y" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="criacao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbllioterminal_codlioterminal" unique="PRIMARY_KEY" >
 				<column name="codlioterminal" />
 			</index>
@@ -2419,6 +2473,12 @@
 			</index>
 			<fk name="fk_tbllioterminal_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tbllioterminal_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tbllioterminal_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblliquidacaotitulo" >
@@ -9300,14 +9360,36 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbljobsspa" color="C1D8EE" x="480" y="48" />
 	</layout>
 	<layout name="Layout_Lio" id="Layout_244a" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblfilial" color="3986C1" x="48" y="688" />
-		<entity schema="mgsis.mgsis" name="tblliobandeiracartao" color="C1D8EE" x="144" y="544" />
-		<entity schema="mgsis.mgsis" name="tblliopedido" color="C1D8EE" x="448" y="272" />
-		<entity schema="mgsis.mgsis" name="tblliopedidopagamento" color="C1D8EE" x="384" y="512" />
-		<entity schema="mgsis.mgsis" name="tblliopedidostatus" color="C1D8EE" x="704" y="272" />
-		<entity schema="mgsis.mgsis" name="tbllioproduto" color="C1D8EE" x="752" y="464" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="3986C1" x="48" y="688" >
+			<column name="codfilial" />
+			<column name="codempresa" />
+			<column name="codpessoa" />
+			<column name="acbrnfemonitorcodusuario" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblliobandeiracartao" color="C1D8EE" x="896" y="384" />
+		<entity schema="mgsis.mgsis" name="tblliopedido" color="C1D8EE" x="352" y="384" />
+		<entity schema="mgsis.mgsis" name="tblliopedidopagamento" color="C1D8EE" x="688" y="704" />
+		<entity schema="mgsis.mgsis" name="tblliopedidostatus" color="C1D8EE" x="832" y="64" />
+		<entity schema="mgsis.mgsis" name="tbllioproduto" color="C1D8EE" x="640" y="304" />
 		<entity schema="mgsis.mgsis" name="tbllioterminal" color="C1D8EE" x="416" y="848" />
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="48" y="48" >
+			<column name="codnegocio" />
+			<column name="codpessoa" />
+			<column name="codfilial" />
+			<column name="codestoquelocal" />
+			<column name="codpessoavendedor" />
+			<column name="codoperacao" />
+			<column name="codnegociostatus" />
+			<column name="codusuario" />
+			<column name="codusuarioacertoentrega" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codnaturezaoperacao" />
+			<column name="codestoquelocaldestino" />
+			<column name="codusuariorecebimento" />
+		</entity>
 		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="3986C1" x="384" y="48" />
 	</layout>
 	<layout name="Layout_Meta" id="Layout_dd20140" confirmed="y" show_relation="columns" >
