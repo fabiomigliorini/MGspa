@@ -3148,6 +3148,7 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codliopedido" type="bigint" jt="-5" />
 			<index name="tblnegocioformapagamento_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegocioformapagamento" />
 			</index>
@@ -3168,6 +3169,9 @@
 			</fk>
 			<fk name="tblnegocioformapagamento_codusuariocriacao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblnegocioformapagamento_tblliopedido" to_schema="mgsis.mgsis" to_table="tblliopedido" >
+				<fk_column name="codliopedido" pk="codliopedido" />
 			</fk>
 		</table>
 		<table name="tblnegocioprodutobarra" >
@@ -7094,7 +7098,7 @@
 		<sequence name="tblliopedido_codliopedido_seq" options="START WITH 1" />
 		<sequence name="tblliopedidopagamento_codbandeiracartao_seq" options="START WITH 1" />
 		<sequence name="tblliopedidopagamento_codliopedidopagamento_seq" options="START WITH 1" />
-		<sequence name="tblliopedidostatus_codliopedidostatus_seq" />
+		<sequence name="tblliopedidostatus_codliopedidostatus_seq" options="START WITH 1" />
 		<sequence name="tbllioproduto_codlioproduto_seq" options="START WITH 1" />
 		<sequence name="tbllioterminal_codlioterminal_seq" options="START WITH 1" />
 		<sequence name="tblliquidacaotitulo_codliquidacaotitulo_seq" options="START WITH 1" />
