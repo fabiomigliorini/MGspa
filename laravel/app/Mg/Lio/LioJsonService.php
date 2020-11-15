@@ -47,6 +47,7 @@ class LioJsonService
     {
         $file = 'callback/' . date('Y/m/d/H-i-s') . '-' . uniqid() . '.json';
         Storage::disk('lio')->put($file, $content);
+        return $file;
     }
 
 }

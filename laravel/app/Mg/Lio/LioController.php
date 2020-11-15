@@ -85,8 +85,8 @@ class LioController extends MgController
      */
     public function callback(Request $request)
     {
-        $id = LioJsonService::salvarCallback($request->getContent());
-        return true;
+        $file = LioJsonService::salvarCallback($request->getContent());
+        return $file;
     }
 
 }
