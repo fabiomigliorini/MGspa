@@ -85,9 +85,11 @@ class LioController extends MgController
      */
     public function callback(Request $request)
     {
-        $file = 'callback/' . date('Y-m-d H-i-s') . ' ' . uniqid() . '.json';
-        Storage::disk('lio')->put($file, $request->getContent());
-        return response()->json($request->all(), 200);
+        $request->validate([
+          'order' => ['required', 'json'],
+        ]);
+        $id = LioJsonService::salvarCallback($request->getContent());
+        return true;
     }
 
 }

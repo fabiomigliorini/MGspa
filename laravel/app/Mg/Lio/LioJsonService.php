@@ -8,16 +8,23 @@ class LioJsonService
 {
     public static function carregarOrder ($id)
     {
-        $arquivo = "order/{$id}.json";
+        $diretorio = static::diretorio($id);
+        $arquivo = "order/{$diretorio}/{$id}.json";
         $json = Storage::disk('lio')->get($arquivo);
         return json_decode($json);
     }
 
     public static function carregarPagamento ($id)
     {
-        $arquivo = "pagamento/{$id}.json";
+        $diretorio = static::diretorio($id);
+        $arquivo = "pagamento/{$diretorio}/{$id}.json";
         $json = Storage::disk('lio')->get($arquivo);
         return json_decode($json);
+    }
+
+    public static function diretorio ($id)
+    {
+        return str_replace('-', '/', $id);
     }
 
     public static function salvar ($jsonOrder, $jsonPagamento)
@@ -25,13 +32,21 @@ class LioJsonService
         $obj = json_decode($jsonOrder);
         $id = $obj->id;
 
-        $arquivo = "order/{$id}.json";
+        $diretorio = static::diretorio($id);
+
+        $arquivo = "order/{$diretorio}/{$id}.json";
         Storage::disk('lio')->put($arquivo, $jsonOrder);
 
-        $arquivo = "pagamento/{$id}.json";
+        $arquivo = "pagamento/{$diretorio}/{$id}.json";
         Storage::disk('lio')->put($arquivo, $jsonPagamento);
 
         return $id;
+    }
+
+    public static function salvarCallback ($content)
+    {
+        $file = 'callback/' . date('Y/m/d/H-i-s') . ' ' . uniqid() . '.json';
+        Storage::disk('lio')->put($file, $content);
     }
 
 }
