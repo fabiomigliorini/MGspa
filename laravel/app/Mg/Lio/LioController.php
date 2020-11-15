@@ -85,9 +85,6 @@ class LioController extends MgController
      */
     public function callback(Request $request)
     {
-        $request->validate([
-          'order' => ['required', 'json'],
-        ]);
         $id = LioJsonService::salvarCallback($request->getContent());
         return true;
     }

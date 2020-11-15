@@ -45,7 +45,7 @@ class LioJsonService
 
     public static function salvarCallback ($content)
     {
-        $file = 'callback/' . date('Y/m/d/H-i-s') . ' ' . uniqid() . '.json';
+        $file = 'callback/' . date('Y/m/d/H-i-s') . '-' . uniqid() . '.json';
         Storage::disk('lio')->put($file, $content);
     }
 
