@@ -30,27 +30,29 @@ class LioController extends MgController
                     p.fantasia,
                     n.valortotal,
                     (
-                        select  sum(nfp.valorpagamento)
+                        select sum(nfp.valorpagamento)
                         from tblnegocioformapagamento nfp
                         where nfp.codnegocio = n.codnegocio
                         group by nfp.codnegocio
-
-                    ) as valorpago
+                    ) as valorpago,
+                    case when n.codusuario = u.codusuario then true else false end as usuario,
+                    case when n.codfilial = u.codfilial then true else false end as filial,
+                    n.codusuario
                 from tblnegocio n
                 inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao )
                 inner join tblpessoa p on (p.codpessoa = n.codpessoa )
                 inner join tblfilial f on (f.codfilial = n.codfilial)
                 inner join tblpessoa pf on (pf.codpessoa = f.codpessoa)
+                left join tblusuario u on (u.codusuario = :codusuario)
                 where n.codnegociostatus  = 1
                 and nat.venda = true
                 and n.valortotal > 0
-                and n.codusuario = :codusuario
-                order by n.lancamento desc
-                limit 100
             )
             select *, valortotal - coalesce(valorpago, 0) as valorsaldo
             from orig
-            order by lancamento desc
+            where valortotal > coalesce(valorpago, 0)
+            order by usuario desc, filial desc, lancamento desc
+            limit 100
         ';
 
         $negocios = DB::select($sql, [
