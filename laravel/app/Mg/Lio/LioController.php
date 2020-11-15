@@ -67,8 +67,8 @@ class LioController extends MgController
           'order' => ['required', 'json'],
         ]);
         $id = LioJsonService::salvar($request->order, $request->pagamentos);
+        LioService::parse($id);
         return $id;
-
     }
 
     public function parse($id, Request $request)
