@@ -4,12 +4,10 @@ namespace Mg\Lio;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
-use Mg\MgController;
-
+use App\Http\Requests;
 use DB;
 
-use App\Http\Requests;
+use Mg\MgController;
 
 class LioController extends MgController
 {
@@ -67,13 +65,18 @@ class LioController extends MgController
           'order' => ['required', 'json'],
         ]);
         $id = LioJsonService::salvar($request->order, $request->pagamentos);
+        DB::beginTransaction();
         LioService::parse($id);
+        DB::commit();
         return $id;
     }
 
     public function parse($id, Request $request)
     {
-        return LioService::parse($id);
+        DB::beginTransaction();
+        $ret = LioService::parse($id);
+        DB::commit();
+        return $ret;
     }
 
     /*
