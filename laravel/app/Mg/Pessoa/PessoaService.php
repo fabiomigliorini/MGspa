@@ -6,7 +6,7 @@ use Mg\MgService;
 use Mg\Cidade\Cidade;
 use DB;
 
-class PessoaService extends MgService
+class PessoaService
 {
     /**
      * Busca Autocomplete Quasar
@@ -50,5 +50,39 @@ class PessoaService extends MgService
         }
         return $qry->first();
     }
+
+    public static function podeVenderAPrazo(Pessoa $pessoa, $valorAvaliar = 0)
+	{
+        // se nao esta vendendo a prazo
+        if ($valorAvaliar <= 0) {
+            return true;
+        }
+
+		// se esta com o credito marcado como bloqueado
+		if ($pessoa->creditobloqueado) {
+            return false;
+        }
+
+		// se tem valor limite definido
+        if (!empty($pessoa->credito)) {
+            // busca no banco total dos titulos
+    		$saldo = $pessoa->TituloS()->sum('saldo');
+    		$creditototal = $saldo + $valorAvaliar;
+            if ($creditototal > ($pessoa->credito * 1.05)) {
+                return false;
+            }
+        }
+
+        // Tolerancia de Atraso baseado no primeiro titulo
+        $titulo = $pessoa->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'asc')->first();
+        if ($titulo->vencimento->isPast()) {
+            if ($titulo->vencimento->diffInDays() > $pessoa->toleranciaatraso) {
+                return false;
+            }
+        }
+
+		return true;
+	}
+
 
 }

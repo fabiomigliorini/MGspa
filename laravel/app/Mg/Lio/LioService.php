@@ -126,12 +126,15 @@ class LioService
                 $fp = FormaPagamento::firstOrNew(['lio' => true]);
                 if (!$fp->exists) {
                     $fp->formapagamento = 'Cielo Lio';
+                    $fp->avista = true;
                     $fp->save();
                 }
                 $nfp->codformapagamento = $fp->codformapagamento;
                 $nfp->save();
+                $fechado = \Mg\Negocio\NegocioService::fecharSePago($n);
             }
         }
+
 
         return $pedido;
     }

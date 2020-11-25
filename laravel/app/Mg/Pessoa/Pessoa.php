@@ -1,13 +1,12 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jul/2020 12:02:26
+ * Date: 16/Nov/2020 17:19:35
  */
 
 namespace Mg\Pessoa;
 
 use Mg\Certidao\CertidaoEmissor;
-use DB;
 use Carbon\Carbon;
 
 use Mg\MgModel;
@@ -126,96 +125,6 @@ class Pessoa extends MgModel
         'vendedor' => 'boolean'
     ];
 
-    public function getCobrancanomesmoenderecoAttribute()
-    {
-        if (
-            ($this->enderecocobranca    <>  $this->endereco   ) or
-            ($this->numerocobranca      <>  $this->numero     ) or
-            ($this->complementocobranca <>  $this->complemento) or
-            ($this->bairrocobranca      <>  $this->bairro     ) or
-            ($this->codcidadecobranca   <>  $this->codcidade  ) or
-            ($this->cepcobranca         <>  $this->cep        )
-        ) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    public function getNotaFiscalRange()
-    {
-        return array(
-            self::NOTAFISCAL_TRATAMENTOPADRAO,
-            self::NOTAFISCAL_SEMPRE,
-            self::NOTAFISCAL_SOMENTE_FECHAMENTO,
-            self::NOTAFISCAL_NUNCA,
-        );
-    }
-
-    public function getNotaFiscalDescricao()
-    {
-        $opcoes = $this->getNotaFiscalOpcoes();
-        if (!isset($this->notafiscal)) {
-            return null;
-        }
-        return isset($opcoes[$this->notafiscal]) ? $opcoes[$this->notafiscal] : "Tipo Desconhecido ({$this->notafiscal})";
-    }
-
-    public function totalTitulos()
-    {
-        $query = DB::select('
-                SELECT SUM(saldo) AS saldo, MIN(vencimento) AS vencimento
-                FROM tbltitulo
-                WHERE codpessoa = :codpessoa AND saldo != 0',
-                ['codpessoa' => $this->codpessoa]
-        )[0];
-
-        $query->vencimentodias = 0;
-
-        if ($query->vencimento) {
-            $venc = Carbon::createFromFormat("Y-m-d", $query->vencimento);
-            $hoje = Carbon::now();
-            $query->vencimentodias = $dif = $hoje->diffInDays($venc, false);
-        }
-
-        return $query;
-    }
-
-    public function scopeId($query, $codpessoa)
-    {
-        if (trim($codpessoa) === '') {
-            return;
-        }
-        $query->where('codpessoa', $codpessoa);
-    }
-
-    public function scopePessoa($query, $pessoa)
-    {
-        if (trim($pessoa) === '')
-            return;
-
-        $pessoa = explode(' ', trim($pessoa));
-
-        $query->where(function ($q1) use ($pessoa) {
-            $q1->orWhere(function ($q2) use ($pessoa)
-            {
-                foreach ($pessoa as $str)
-                    $q2->where('fantasia', 'ILIKE', "%$str%");
-            });
-
-            $q1->orWhere(function($q2) use ($pessoa)
-            {
-                foreach ($pessoa as $str)
-                    $q2->where('pessoa', 'ILIKE', "%$str%");
-            });
-        });
-    }
-
-    public static function vendedoresOrdenadoPorNome()
-    {
-        return self::where('vendedor', true)->orderBy('pessoa', 'asc');
-    }
-
     public function certidaoSefazMT()
     {
         return $this->PessoaCertidaoS()->where('validade', '>=', Carbon::createMidnightDate())
@@ -224,17 +133,6 @@ class Pessoa extends MgModel
             ->orderBy('validade', 'desc')
             ->first();
     }
-
-    public static function getNotaFiscalOpcoes()
-    {
-        return array(
-            self::NOTAFISCAL_TRATAMENTOPADRAO => "Tratamento Padrão",
-            self::NOTAFISCAL_SEMPRE => "Sempre",
-            self::NOTAFISCAL_SOMENTE_FECHAMENTO => "Somente no Fechamento",
-            self::NOTAFISCAL_NUNCA => "Nunca Emitir",
-        );
-    }
-    
 
     // Chaves Estrangeiras
     public function Cidade()

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jul/2020 11:54:21
+ * Date: 16/Nov/2020 16:21:06
  */
 
 namespace Mg\Negocio;

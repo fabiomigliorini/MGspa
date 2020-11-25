@@ -2544,8 +2544,25 @@
         "namespace": "Mg\\Negocio",
         "classe": "NegocioStatus",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioStatus.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnegocio.codnegociostatus": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegociostatus",
+                "metodo": "NegocioS"
+            }
+        }
     },
     "tblnegociocaixamercadoria": {
         "tabela": "tblnegociocaixamercadoria",
