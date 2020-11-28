@@ -49,7 +49,7 @@ class LioController extends MgController
             select *, valortotal - coalesce(valorpago, 0) as valorsaldo
             from orig
             where valortotal > coalesce(valorpago, 0)
-            order by usuario desc, filial desc, lancamento desc
+            order by usuario desc, lancamento desc, filial desc
             limit 100
         ';
 
