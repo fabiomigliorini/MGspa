@@ -1,19 +1,17 @@
 ﻿--select * from tblportador order by codportador
 
 -- Cria Repasse
-insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (210, '2020-11-13', null, '2020-11-13 11:41', 1);
+insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (210, '2020-11-23', null, '2020-11-23 11:41', 1);
 
 select * from tblchequerepasse order by codchequerepasse desc limit 50;
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2512, '2020-11-13 10:00', 1
+select codcheque, 2514, '2020-11-23 10:00', 1
 from tblcheque where cmc7 in (
-	'<00182338<0188515445>761003760602:',
-	'<00111807<0188501255>744008387647:',
-	'<23755816<0180028925>229600168966:',
-	'<00111805<0188501435>769012325259:',
-	'<00111806<0188505635>739010110144:',
+	'<00111803<0188508715>777013715501:',
+	'<00141026<0188503085>858000964153:',
+	'<10408545<0180019785>002000085445:',
 	'NIL'
 	);
 
@@ -30,8 +28,8 @@ order by 1 desc;
 
 --update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
---update tblchequerepasse set data = '2020-11-13', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2020-11-13 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2020-11-23', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2020-11-23 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 
@@ -46,10 +44,9 @@ order by 1 desc;
 delete from tblchequerepassecheque  where  codcheque in (
 	select codcheque
 	from tblcheque where cmc7 in (
-	'<00111805<0188508125>723010526673:',
-	'<00111808<0188500095>707008391679:',
-	'<23706767<0180495465>566000462136:',
-	'<00136288<0188500905>328002097831:'
+	'<00111803<0188508715>777013715501:',
+	'<00141026<0188503085>858000964153:',
+	'<10408545<0180019785>002000085445:'
 	)
 )
 

@@ -5,7 +5,7 @@ set codpessoavendedor =
 	from tblpessoa p 
 	where p.vendedor = true 
 	and p.pessoa ilike '%elidiane%mol%') 
-where codnegocio = 2032237
+where codnegocio = 2064654
 
 
 
