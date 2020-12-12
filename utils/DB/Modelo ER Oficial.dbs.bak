@@ -2283,9 +2283,9 @@
 			<column name="siglalio" type="varchar" length="50" jt="12" >
 				<comment><![CDATA[payments.brand]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="idx_tblbandeiracartao" unique="UNIQUE_KEY" >
 				<column name="siglalio" />
@@ -2318,11 +2318,11 @@
 			</column>
 			<column name="uuid" type="uuid" jt="1111" mandatory="y" />
 			<column name="codliopedidostatus" type="bigint" length="1" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" >
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[createdAt]]></comment>
 			</column>
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" >
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[updatedAt]]></comment>
 			</column>
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -2393,9 +2393,9 @@
 				<comment><![CDATA[payments.paymentFilelds.statusCode == 1]]></comment>
 			</column>
 			<column name="codlioterminal" type="bigint" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblliopedidopagamento_codliopedidopagamento" unique="PRIMARY_KEY" >
 				<column name="codliopedidopagamento" />
@@ -2427,9 +2427,9 @@
 			<column name="sigla" type="varchar" length="20" jt="12" mandatory="y" >
 				<comment><![CDATA[status]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblliopedidostatus_codliopedidostatus" unique="PRIMARY_KEY" >
 				<column name="codliopedidostatus" />
@@ -2460,9 +2460,9 @@
 			<column name="codigosecundario" type="smallint" jt="5" mandatory="y" >
 				<comment><![CDATA[payments.paymentFilelds.primaryProductCode]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbllioproduto_codlioproduto" unique="PRIMARY_KEY" >
 				<column name="codlioproduto" />
@@ -2485,15 +2485,18 @@
 			<column name="lioterminal" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="terminal" type="varchar" length="20" decimal="0" jt="12" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbllioterminal_codlioterminal" unique="PRIMARY_KEY" >
 				<column name="codlioterminal" />
 			</index>
 			<index name="idx_tbllioterminal" unique="UNIQUE_KEY" >
 				<column name="terminal" />
+			</index>
+			<index name="idx_tbllioterminal_0" unique="NORMAL" >
+				<column name="codfilial" />
 			</index>
 			<fk name="fk_tbllioterminal_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
@@ -7151,6 +7154,8 @@
 		<sequence name="tblnotafiscal_numero_301_1_55_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_numero_301_1_65_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_numero_401_920_55_seq" options="START WITH 1" />
+		<sequence name="tblnotafiscal_numero_402_920_55_seq" options="START WITH 1" />
+		<sequence name="tblnotafiscal_numero_402_921_55_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_numero_801_920_55_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalcartacorrecao_codnotafiscalcartacorrecao_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscalcreditoicmssimpl_codnotafiscalcreditoicmssimpl_seq" options="START WITH 1" />
@@ -9439,7 +9444,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblproduto" color="B2CDF7" x="544" y="320" />
 		<entity schema="mgsis.mgsis" name="tblregulamentoicmsstmt" color="B2CDF7" x="48" y="48" />
 	</layout>
-	<layout name="Layout_Natureza_Operacao" id="Layout_16a9431" show_relation="columns" >
+	<layout name="Layout_Natureza_Operacao" id="Layout_16a9431" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="3986C1" x="64" y="80" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="3986C1" x="1168" y="48" />
 		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="3986C1" x="864" y="48" />
@@ -9632,7 +9637,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="valecompra" />
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
-			<column name="lio" />
 			<column name="lio" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="48" y="64" >
