@@ -16,14 +16,17 @@
 -- update tblnfeterceiroitem set complemento = vprod, margem = 40 where codnfeterceiro = 30044
 
 --WINCY
---update tblnfeterceiroitem set complemento = (vprod * 1.5), margem = 40 where codnfeterceiro = 24521
---update tblnfeterceiroitem set complemento = (vprod * 1.4), margem = 30 where codnfeterceiro = 25931
+--update tblnfeterceiroitem set complemento = (vprod * 1.5), margem = 40 where codnfeterceiro = 30667
+--update tblnfeterceiroitem set complemento = (vprod * 1.4), margem = 40 where codnfeterceiro = 25931
 
 --FOUR STAR / CW
 -- update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (30644)
 
 --Lua de Cristal
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (26042)
+
+--Elite / Imposul
+--update tblnfeterceiroitem set complemento = vprod, margem = 40 where codnfeterceiro in (30990)
 
 --Lumasol
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (27605)

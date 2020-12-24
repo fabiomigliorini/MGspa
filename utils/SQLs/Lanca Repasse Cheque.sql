@@ -1,17 +1,15 @@
 ﻿--select * from tblportador order by codportador
 
 -- Cria Repasse
-insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (210, '2020-11-23', null, '2020-11-23 11:41', 1);
+insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (210, '2020-12-24', null, '2020-12-24 11:41', 1);
 
 select * from tblchequerepasse order by codchequerepasse desc limit 50;
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2514, '2020-11-23 10:00', 1
+select codcheque, 2522, '2020-12-24 10:00', 1
 from tblcheque where cmc7 in (
-	'<00111803<0188508715>777013715501:',
-	'<00141026<0188503085>858000964153:',
-	'<10408545<0180019785>002000085445:',
+	'<00111801<0188507905>739014412991:',
 	'NIL'
 	);
 
@@ -19,17 +17,22 @@ from tblcheque where cmc7 in (
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc);
 
 -- Consulta Total Cheques do Repasse
-select crc.codchequerepasse, sum(c.valor), count(crc.codchequerepassecheque)
-from tblchequerepassecheque crc
-inner join tblcheque c on (c.codcheque = crc.codcheque)
-where crc.codchequerepasse >= 1900
-group by crc.codchequerepasse
-order by 1 desc;
+with totais as (
+	select crc.codchequerepasse, sum(c.valor), count(crc.codchequerepassecheque)
+	from tblchequerepassecheque crc
+	inner join tblcheque c on (c.codcheque = crc.codcheque)
+	where crc.codchequerepasse >= 1900
+	group by crc.codchequerepasse
+	order by 1 desc
+)
+select * 
+from totais t
+inner join tblchequerepasse cr on (cr.codchequerepasse = t.codchequerepasse)
 
 --update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
---update tblchequerepasse set data = '2020-11-23', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2020-11-23 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2020-12-24', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2020-12-24 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 
@@ -44,9 +47,7 @@ order by 1 desc;
 delete from tblchequerepassecheque  where  codcheque in (
 	select codcheque
 	from tblcheque where cmc7 in (
-	'<00111803<0188508715>777013715501:',
-	'<00141026<0188503085>858000964153:',
-	'<10408545<0180019785>002000085445:'
+	'<10408544<0189011945>000300184470:'
 	)
 )
 
@@ -107,3 +108,10 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 '<23755815<0180000535>272500343479:',
 '<10432634<0189000635>100300031358:'
 ))
+
+select codcheque , codchequerepasse , count(*), max(codchequerepassecheque)
+from tblchequerepassecheque t
+group by codcheque , codchequerepasse
+having count(*) > 1
+
+delete from tblchequerepassecheque where codchequerepassecheque in (17644, 17645)
