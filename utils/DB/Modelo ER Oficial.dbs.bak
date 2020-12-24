@@ -20,6 +20,24 @@
 			<index name="pk_rlpprodutobarra_codprodutobarra" unique="PRIMARY_KEY" >
 				<column name="codprodutobarra" />
 			</index>
+			<index name="idx_fk_rlpprodutobarra_tblimagem" unique="NORMAL" >
+				<column name="codimagem" />
+			</index>
+			<index name="idx_fk_rlpprodutobarra_tblmarca" unique="NORMAL" >
+				<column name="codmarca" />
+			</index>
+			<index name="idx_fk_rlpprodutobarra_tblproduto" unique="NORMAL" >
+				<column name="codproduto" />
+			</index>
+			<index name="idx_fk_rlpprodutobarra_tblprodutoembalagem" unique="NORMAL" >
+				<column name="codprodutoembalagem" />
+			</index>
+			<index name="idx_fk_rlpprodutobarra_tblprodutovariacao" unique="NORMAL" >
+				<column name="codprodutovariacao" />
+			</index>
+			<index name="idx_fk_rlpprodutobarra_tblunidademedida" unique="NORMAL" >
+				<column name="codunidademedida" />
+			</index>
 			<fk name="fk_rlpprodutobarra_tblproduto" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
@@ -114,6 +132,9 @@
 				<column name="itemname" />
 				<column name="userid" />
 			</index>
+			<index name="idx_fk_auth_assignment_codusuario" unique="NORMAL" >
+				<column name="userid" />
+			</index>
 			<fk name="fk_auth_assignment_itemname" to_schema="mgsis.mgsis" to_table="tblauthitem" delete_action="cascade" update_action="cascade" >
 				<fk_column name="itemname" pk="name" />
 			</fk>
@@ -138,6 +159,9 @@
 				<column name="parent" />
 				<column name="child" />
 			</index>
+			<index name="idx_fk_auth_item_child_child" unique="NORMAL" >
+				<column name="child" />
+			</index>
 			<fk name="fk_auth_item_child_child" to_schema="mgsis.mgsis" to_table="tblauthitem" delete_action="cascade" update_action="cascade" >
 				<fk_column name="child" pk="name" />
 			</fk>
@@ -159,6 +183,12 @@
 			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
 			<index name="tblbanco_pkey" unique="PRIMARY_KEY" >
 				<column name="codbanco" />
+			</index>
+			<index name="idx_tblbanco_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblbanco_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblbanco_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -182,6 +212,12 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblbaseremota_pkey" unique="PRIMARY_KEY" >
 				<column name="codbaseremota" />
+			</index>
+			<index name="idx_tblbaseremota_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblbaseremota_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblbaseremota_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -219,6 +255,12 @@
 			</index>
 			<index name="tblboletomotivoocorrencia_codboletotipoocorrencia_idx" unique="NORMAL" >
 				<column name="codboletotipoocorrencia" />
+			</index>
+			<index name="idx_tblboletomotivoocorrencia_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblboletomotivoocorrencia_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblboletomotivoocorrencia_codboletotipoocorrencia_fkey" to_schema="mgsis.mgsis" to_table="tblboletotipoocorrencia" >
 				<fk_column name="codboletotipoocorrencia" pk="codboletotipoocorrencia" />
@@ -266,6 +308,15 @@
 			<index name="tblboletoretorno_codtitulo_idx" unique="NORMAL" >
 				<column name="codtitulo" />
 			</index>
+			<index name="idx_fk_tblboletoretorno_tblboletomotivoocorrencia" unique="NORMAL" >
+				<column name="codboletomotivoocorrencia" />
+			</index>
+			<index name="idx_tblboletoretorno_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblboletoretorno_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblboletoretorno_codportador_fkey" to_schema="mgsis.mgsis" to_table="tblportador" >
 				<fk_column name="codportador" pk="codportador" />
 			</fk>
@@ -293,6 +344,12 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblboletotipoocorrencia_pkey" unique="PRIMARY_KEY" >
 				<column name="codboletotipoocorrencia" />
+			</index>
+			<index name="idx_tblboletotipoocorrencia_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblboletotipoocorrencia_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblboletotipoocorrencia_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -483,6 +540,12 @@
 			<index name="tblcfop_pkey" unique="PRIMARY_KEY" >
 				<column name="codcfop" />
 			</index>
+			<index name="idx_tblcfop_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcfop_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblcfop_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -538,6 +601,12 @@
 			</index>
 			<index name="idx_tblcheque_indstatus" unique="NORMAL" >
 				<column name="indstatus" />
+			</index>
+			<index name="idx_tblcheque_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcheque_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<constraint name="ck_0" >
 				<string><![CDATA[CHECK ((indstatus = ANY (ARRAY[1, 2, 3, 4, 5])))]]></string>
@@ -618,6 +687,12 @@
 			</index>
 			<index name="tblchequeemitente_codcheque_idx" unique="NORMAL" >
 				<column name="codcheque" />
+			</index>
+			<index name="idx_tblchequeemitente_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblchequeemitente_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblchequeemitente_codcheque_fkey" to_schema="mgsis.mgsis" to_table="tblcheque" >
 				<fk_column name="codcheque" pk="codcheque" />
@@ -751,6 +826,12 @@
 			<index name="tblcidade_codestado_idx" unique="NORMAL" >
 				<column name="codestado" />
 			</index>
+			<index name="idx_tblcidade_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcidade_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblcidade_codestado_fkey" to_schema="mgsis.mgsis" to_table="tblestado" >
 				<fk_column name="codestado" pk="codestado" />
 			</fk>
@@ -793,6 +874,12 @@
 			<index name="tblcobranca_codtitulo_idx" unique="NORMAL" >
 				<column name="codtitulo" />
 			</index>
+			<index name="idx_tblcobranca_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcobranca_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblcobranca_codcheque_fkey" to_schema="mgsis.mgsis" to_table="tblcheque" >
 				<fk_column name="codcheque" pk="codcheque" />
 			</fk>
@@ -828,6 +915,12 @@
 			<index name="tblcobrancahistorico_codpessoa_idx" unique="NORMAL" >
 				<column name="codpessoa" />
 			</index>
+			<index name="idx_tblcobrancahistorico_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcobrancahistorico_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblcobrancahistorico_codpessoa_fkey" to_schema="mgsis.mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
@@ -850,6 +943,18 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcobrancahistoricotitulo_pkey" unique="PRIMARY_KEY" >
 				<column name="codcobrancahistoricotitulo" />
+			</index>
+			<index name="idx_tblcobrancahistoricotitulo_codcobrancahistorico_fkey" unique="NORMAL" >
+				<column name="codcobrancahistorico" />
+			</index>
+			<index name="idx_tblcobrancahistoricotitulo_codtitulo_fkey" unique="NORMAL" >
+				<column name="codtitulo" />
+			</index>
+			<index name="idx_tblcobrancahistoricotitulo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcobrancahistoricotitulo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblcobrancahistoricotitulo_codcobrancahistorico_fkey" to_schema="mgsis.mgsis" to_table="tblcobrancahistorico" >
 				<fk_column name="codcobrancahistorico" pk="codcobrancahistorico" />
@@ -874,6 +979,12 @@
 			<index name="tblcodigo_pkey" unique="PRIMARY_KEY" >
 				<column name="tabela" />
 			</index>
+			<index name="idx_tblcodigo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcodigo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblcodigo_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -896,6 +1007,12 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcontacontabil_pkey" unique="PRIMARY_KEY" >
 				<column name="codcontacontabil" />
+			</index>
+			<index name="idx_tblcontacontabil_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcontacontabil_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblcontacontabil_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -928,6 +1045,12 @@
 			</index>
 			<index name="tblcupomfiscal_codpessoa_idx" unique="NORMAL" >
 				<column name="codpessoa" />
+			</index>
+			<index name="idx_tblcupomfiscal_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcupomfiscal_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblcupomfiscal_codecf_fkey" to_schema="mgsis.mgsis" to_table="tblecf" >
 				<fk_column name="codecf" pk="codecf" />
@@ -967,6 +1090,12 @@
 			</index>
 			<index name="tblcupomfiscalprodutobarra_codprodutobarra_idx" unique="NORMAL" >
 				<column name="codprodutobarra" />
+			</index>
+			<index name="idx_tblcupomfiscalprodutobarra_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblcupomfiscalprodutobarra_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblcupomfiscalprodutobarra_codcupomfiscal_fkey" to_schema="mgsis.mgsis" to_table="tblcupomfiscal" >
 				<fk_column name="codcupomfiscal" pk="codcupomfiscal" />
@@ -1012,6 +1141,12 @@
 			<index name="pk_tbldfeevento_coddfeevento" unique="PRIMARY_KEY" >
 				<column name="coddfeevento" />
 			</index>
+			<index name="idx_fk_tbldfeevento_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbldfeevento_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tbldfeevento_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
@@ -1031,6 +1166,12 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbldfeschema_coddfeschema" unique="PRIMARY_KEY" >
 				<column name="coddfetipo" />
+			</index>
+			<index name="idx_fk_tbldfetipo_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbldfetipo_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tbldfetipo_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
@@ -1071,6 +1212,15 @@
 			</index>
 			<index name="idx_tbldistribuicaodfe_codusuariocriacao" unique="NORMAL" >
 				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbldistribuicaodfe_tbldfetipo" unique="NORMAL" >
+				<column name="coddfetipo" />
+			</index>
+			<index name="idx_fk_tbldistribuicaodfe_tbldistribuicaodfeevento" unique="NORMAL" >
+				<column name="coddistribuicaodfeevento" />
+			</index>
+			<index name="idx_fk_tbldistribuicaodfe_tblnotafiscalterceiro" unique="NORMAL" >
+				<column name="codnotafiscalterceiro" />
 			</index>
 			<fk name="fk_tbldistribuicaodfe_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
@@ -1116,6 +1266,15 @@
 			<index name="pk_tbldistribuicaodfeevento_coddistribuicaodfeevento" unique="PRIMARY_KEY" >
 				<column name="coddistribuicaodfeevento" />
 			</index>
+			<index name="idx_fk_tbldistribuicaodfeevento_tbldfeevento" unique="NORMAL" >
+				<column name="coddfeevento" />
+			</index>
+			<index name="idx_fk_tbldistribuicaodfeevento_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbldistribuicaodfeevento_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tbldistribuicaodfeevento_tbldfeevento" to_schema="mgsis.mgsis" to_table="tbldfeevento" update_action="cascade" >
 				<fk_column name="coddfeevento" pk="coddfeevento" />
 			</fk>
@@ -1152,6 +1311,12 @@
 			<index name="tblecf_codusuario_idx" unique="NORMAL" >
 				<column name="codusuario" />
 			</index>
+			<index name="idx_tblecf_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblecf_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblecf_codfilial_fkey" to_schema="mgsis.mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -1186,6 +1351,12 @@
 			<index name="tblecfreducaoz_codecf_idx" unique="NORMAL" >
 				<column name="codecf" />
 			</index>
+			<index name="idx_tblecfreducaoz_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblecfreducaoz_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblecfreducaoz_codecf_fkey" to_schema="mgsis.mgsis" to_table="tblecf" >
 				<fk_column name="codecf" pk="codecf" />
 			</fk>
@@ -1212,6 +1383,12 @@
 			</column>
 			<index name="tblempresa_pkey" unique="PRIMARY_KEY" >
 				<column name="codempresa" />
+			</index>
+			<index name="idx_tblempresa_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblempresa_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblempresa_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -1241,6 +1418,12 @@
 			<index name="tblestado_codpais_idx" unique="NORMAL" >
 				<column name="codpais" />
 			</index>
+			<index name="idx_tblestado_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblestado_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblestado_codpais_fkey" to_schema="mgsis.mgsis" to_table="tblpais" >
 				<fk_column name="codpais" pk="codpais" />
 			</fk>
@@ -1263,6 +1446,12 @@
 			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
 			<index name="tblestadocivil_pkey" unique="PRIMARY_KEY" >
 				<column name="codestadocivil" />
+			</index>
+			<index name="idx_tblestadocivil_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblestadocivil_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblestadocivil_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -1539,6 +1728,9 @@
 			<index name="idx_tblestoquemovimento_codnotafiscalprodutobarra" unique="NORMAL" >
 				<column name="codnotafiscalprodutobarra" />
 			</index>
+			<index name="idx_tblestoquemovimento_codestoquemovimentotipo_fkey" unique="NORMAL" >
+				<column name="codestoquemovimentotipo" />
+			</index>
 			<fk name="tblestoquemovimento_codestoquemovimentotipo_fkey" to_schema="mgsis.mgsis" to_table="tblestoquemovimentotipo" >
 				<fk_column name="codestoquemovimentotipo" pk="codestoquemovimentotipo" />
 			</fk>
@@ -1593,6 +1785,12 @@
 			</index>
 			<index name="idx_tblestoquemovimentotipo" unique="NORMAL" >
 				<column name="codestoquemovimentotipoorigem" />
+			</index>
+			<index name="idx_tblestoquemovimentotipo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblestoquemovimentotipo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="fk_tblestoquemovimentotipo" to_schema="mgsis.mgsis" to_table="tblestoquemovimentotipo" >
 				<fk_column name="codestoquemovimentotipoorigem" pk="codestoquemovimentotipo" />
@@ -1804,6 +2002,12 @@
 			<index name="tblfilial_codempresa_idx" unique="NORMAL" >
 				<column name="codempresa" />
 			</index>
+			<index name="idx_tblfilial_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblfilial_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblfilial_codempresa_fkey" to_schema="mgsis.mgsis" to_table="tblempresa" update_action="cascade" >
 				<fk_column name="codempresa" pk="codempresa" />
 			</fk>
@@ -1857,6 +2061,12 @@
 			<index name="tblformapagamento_pkey" unique="PRIMARY_KEY" >
 				<column name="codformapagamento" />
 			</index>
+			<index name="idx_tblformapagamento_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblformapagamento_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblformapagamento_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -1875,6 +2085,12 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblgrupocliente_pkey" unique="PRIMARY_KEY" >
 				<column name="codgrupocliente" />
+			</index>
+			<index name="idx_tblgrupocliente_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblgrupocliente_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblgrupocliente_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -1931,6 +2147,12 @@
 			</index>
 			<index name="idx_tblgrupoproduto_0" unique="NORMAL" >
 				<column name="codfamiliaproduto" />
+			</index>
+			<index name="idx_tblgrupoproduto_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblgrupoproduto_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="fk_tblgrupoproduto" to_schema="mgsis.mgsis" to_table="tblimagem" >
 				<fk_column name="codimagem" pk="codimagem" />
@@ -2111,6 +2333,12 @@
 			</index>
 			<index name="idx_tblibptax" unique="NORMAL" >
 				<column name="codncm" />
+			</index>
+			<index name="idx_tblibptax_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblibptax_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="fk_tblibptax" to_schema="mgsis.mgsis" to_table="tblncm" >
 				<fk_column name="codncm" pk="codncm" />
@@ -2293,6 +2521,12 @@
 			<index name="pk_tblliobandeiracartao_codliobandeiracartao" unique="PRIMARY_KEY" >
 				<column name="codliobandeiracartao" />
 			</index>
+			<index name="idx_fk_tblliobandeiracartao_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblliobandeiracartao_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblliobandeiracartao_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
@@ -2331,6 +2565,15 @@
 			</index>
 			<index name="idx_tblliopedido" unique="UNIQUE_KEY" >
 				<column name="uuid" />
+			</index>
+			<index name="idx_fk_tblliopedido_tblliopedidostatus" unique="NORMAL" >
+				<column name="codliopedidostatus" />
+			</index>
+			<index name="idx_fk_tblliopedido_tblusuario" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblliopedido_tblusuario_0" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="fk_tblliopedido_tblliopedidostatus" to_schema="mgsis.mgsis" to_table="tblliopedidostatus" update_action="cascade" >
 				<fk_column name="codliopedidostatus" pk="codliopedidostatus" />
@@ -2400,6 +2643,24 @@
 			<index name="pk_tblliopedidopagamento_codliopedidopagamento" unique="PRIMARY_KEY" >
 				<column name="codliopedidopagamento" />
 			</index>
+			<index name="idx_tblliopedidopagamento" unique="NORMAL" >
+				<column name="codlioproduto" />
+			</index>
+			<index name="idx_fk_tblliopedidopagamento_tblliobandeiracartao" unique="NORMAL" >
+				<column name="codliobandeiracartao" />
+			</index>
+			<index name="idx_fk_tblliopedidopagamento_tblliopedido" unique="NORMAL" >
+				<column name="codliopedido" />
+			</index>
+			<index name="idx_fk_tblliopedidopagamento_tbllioterminal" unique="NORMAL" >
+				<column name="codlioterminal" />
+			</index>
+			<index name="idx_fk_tblliopedidopagamento_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblliopedidopagamento_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblliopedidopagamento_tblliopedido" to_schema="mgsis.mgsis" to_table="tblliopedido" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codliopedido" pk="codliopedido" />
 			</fk>
@@ -2433,6 +2694,12 @@
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblliopedidostatus_codliopedidostatus" unique="PRIMARY_KEY" >
 				<column name="codliopedidostatus" />
+			</index>
+			<index name="idx_fk_tblliopedidostatus_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblliopedidostatus_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tblliopedidostatus_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
@@ -2471,6 +2738,12 @@
 				<column name="codigoprimario" />
 				<column name="codigosecundario" />
 			</index>
+			<index name="idx_fk_tbllioproduto_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbllioproduto_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tbllioproduto_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
@@ -2497,6 +2770,12 @@
 			</index>
 			<index name="idx_tbllioterminal_0" unique="NORMAL" >
 				<column name="codfilial" />
+			</index>
+			<index name="idx_fk_tbllioterminal_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbllioterminal_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tbllioterminal_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
@@ -2533,6 +2812,21 @@
 			</index>
 			<index name="tblliquidacaotitulo_codportador_idx" unique="NORMAL" >
 				<column name="codportador" />
+			</index>
+			<index name="idx_tblliquidacaotitulo_codpessoa_fkey" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
+			<index name="idx_tblliquidacaotitulo_codusuario_fkey" unique="NORMAL" >
+				<column name="codusuario" />
+			</index>
+			<index name="idx_tblliquidacaotitulo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblliquidacaotitulo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_tblliquidacaotitulo_codusuarioestorno_fkey" unique="NORMAL" >
+				<column name="codusuarioestorno" />
 			</index>
 			<fk name="tblliquidacaotitulo_codpessoa_fkey" to_schema="mgsis.mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
@@ -2606,6 +2900,12 @@
 			<index name="idx_tblmarca_codgrupoeconomico" unique="NORMAL" >
 				<column name="codgrupoeconomico" />
 			</index>
+			<index name="idx_tblmarca_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblmarca_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="fk_tblmarca" to_schema="mgsis.mgsis" to_table="tblimagem" >
 				<fk_column name="codimagem" pk="codimagem" />
 			</fk>
@@ -2631,6 +2931,12 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblmenu_pkey" unique="PRIMARY_KEY" >
 				<column name="codmenu" />
+			</index>
+			<index name="idx_tblmenu_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblmenu_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblmenu_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -2805,6 +3111,12 @@
 			<index name="tblmovimentotitulo_codtitulorelacionado_idx" unique="NORMAL" >
 				<column name="codtitulorelacionado" />
 			</index>
+			<index name="idx_tblmovimentotitulo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblmovimentotitulo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblmovimentotitulo_codboletoretorno_fkey" to_schema="mgsis.mgsis" to_table="tblboletoretorno" >
 				<fk_column name="codboletoretorno" pk="codboletoretorno" />
 			</fk>
@@ -2891,6 +3203,12 @@
 			<index name="idx_tblnaturezaoperacao_2" unique="NORMAL" >
 				<column name="codestoquemovimentotipo" />
 			</index>
+			<index name="idx_tblnaturezaoperacao_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnaturezaoperacao_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="fk_tblnaturezaoperacao" to_schema="mgsis.mgsis" to_table="tblnaturezaoperacao" >
 				<fk_column name="codnaturezaoperacaodevolucao" pk="codnaturezaoperacao" />
 			</fk>
@@ -2934,6 +3252,12 @@
 			</index>
 			<index name="idx_tblncm" unique="NORMAL" >
 				<column name="codncmpai" />
+			</index>
+			<index name="idx_tblncm_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblncm_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="fk_tblncm_tblncm" to_schema="mgsis.mgsis" to_table="tblncm" >
 				<fk_column name="codncmpai" pk="codncm" />
@@ -3068,6 +3392,18 @@
 			<index name="idx_tblnegocio_codusuariorecebimento" unique="NORMAL" >
 				<column name="codusuariorecebimento" />
 			</index>
+			<index name="idx_tblnegocio_codnaturezaoperacao_fkey" unique="NORMAL" >
+				<column name="codnaturezaoperacao" />
+			</index>
+			<index name="idx_tblnegocio_codusuarioacertoentrega_fkey" unique="NORMAL" >
+				<column name="codusuarioacertoentrega" />
+			</index>
+			<index name="idx_tblnegocio_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnegocio_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblnegocio_codfilial_fkey" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -3175,6 +3511,15 @@
 			<index name="tblnegocioformapagamento_codnegocio_idx" unique="NORMAL" >
 				<column name="codnegocio" />
 			</index>
+			<index name="idx_tblnegocioformapagamento" unique="NORMAL" >
+				<column name="codliopedido" />
+			</index>
+			<index name="idx_tblnegocioformapagamento_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnegocioformapagamento_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblnegocioformapagamento_codformapagamento_fkey" to_schema="mgsis.mgsis" to_table="tblformapagamento" >
 				<fk_column name="codformapagamento" pk="codformapagamento" />
 			</fk>
@@ -3221,6 +3566,12 @@
 			</index>
 			<index name="idx_tblnegocioprodutobarra_codusuarioconferencia" unique="NORMAL" >
 				<column name="codusuarioconferencia" />
+			</index>
+			<index name="idx_tblnegocioprodutobarra_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnegocioprodutobarra_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblnegocioprodutobarra_codnegocio_fkey" to_schema="mgsis.mgsis" to_table="tblnegocio" >
 				<fk_column name="codnegocio" pk="codnegocio" />
@@ -3291,6 +3642,12 @@
 			<index name="tblnegociostatus_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegociostatus" />
 			</index>
+			<index name="idx_tblnegociostatus_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnegociostatus_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblnegociostatus_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -3345,6 +3702,27 @@
 			<index name="idx_tblnfeterceiro" unique="NORMAL" >
 				<column name="codnegocio" />
 			</index>
+			<index name="idx_tblnfeterceiro_codfilial_fkey" unique="NORMAL" >
+				<column name="codfilial" />
+			</index>
+			<index name="idx_tblnfeterceiro_codnaturezaoperacao_fkey" unique="NORMAL" >
+				<column name="codnaturezaoperacao" />
+			</index>
+			<index name="idx_tblnfeterceiro_codnotafiscal_fkey" unique="NORMAL" >
+				<column name="codnotafiscal" />
+			</index>
+			<index name="idx_tblnfeterceiro_codoperacao_fkey" unique="NORMAL" >
+				<column name="codoperacao" />
+			</index>
+			<index name="idx_tblnfeterceiro_codpessoa_fkey" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
+			<index name="idx_tblnfeterceiro_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnfeterceiro_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblnfeterceiro_codfilial_fkey" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -3385,6 +3763,18 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnfeterceiroduplicata_pkey" unique="PRIMARY_KEY" >
 				<column name="codnfeterceiroduplicata" />
+			</index>
+			<index name="idx_tblnfeterceiroduplicata_codnfeterceiro_fkey" unique="NORMAL" >
+				<column name="codnfeterceiro" />
+			</index>
+			<index name="idx_tblnfeterceiroduplicata_codtitulo_fkey" unique="NORMAL" >
+				<column name="codtitulo" />
+			</index>
+			<index name="idx_tblnfeterceiroduplicata_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnfeterceiroduplicata_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblnfeterceiroduplicata_codnfeterceiro_fkey" to_schema="mgsis.mgsis" to_table="tblnfeterceiro" >
 				<fk_column name="codnfeterceiro" pk="codnfeterceiro" />
@@ -3447,6 +3837,18 @@
 			<column name="cest" type="varchar" length="10" decimal="0" jt="12" />
 			<index name="tblnfeterceiroitem_pkey" unique="PRIMARY_KEY" >
 				<column name="codnfeterceiroitem" />
+			</index>
+			<index name="idx_tblnfeterceiroitem_codnfeterceiro_fkey" unique="NORMAL" >
+				<column name="codnfeterceiro" />
+			</index>
+			<index name="idx_tblnfeterceiroitem_codprodutobarra_fkey" unique="NORMAL" >
+				<column name="codprodutobarra" />
+			</index>
+			<index name="idx_tblnfeterceiroitem_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnfeterceiroitem_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblnfeterceiroitem_codnfeterceiro_fkey" to_schema="mgsis.mgsis" to_table="tblnfeterceiro" >
 				<fk_column name="codnfeterceiro" pk="codnfeterceiro" />
@@ -3555,6 +3957,24 @@
 				<column name="modelo" />
 				<column name="codoperacao" />
 			</index>
+			<index name="idx_fk_tblnotafiscal_tblpessoa" unique="NORMAL" >
+				<column name="codpessoatransportador" />
+			</index>
+			<index name="idx_tblnotafiscal_codestadoplaca_fk" unique="NORMAL" >
+				<column name="codestadoplaca" />
+			</index>
+			<index name="idx_tblnotafiscal_codnaturezaoperacao_fkey" unique="NORMAL" >
+				<column name="codnaturezaoperacao" />
+			</index>
+			<index name="idx_tblnotafiscal_codpessoa_fkey" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
+			<index name="idx_tblnotafiscal_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnotafiscal_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblnotafiscal_codfilial_fkey" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -3660,6 +4080,15 @@
 			<index name="tblnotafiscalcartacorrecao_pkey" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalcartacorrecao" />
 			</index>
+			<index name="idx_tblnotafiscalcartacorrecao_codnotafiscal_fkey" unique="NORMAL" >
+				<column name="codnotafiscal" />
+			</index>
+			<index name="idx_tblnotafiscalcartacorrecao_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnotafiscalcartacorrecao_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblnotafiscalcartacorrecao_codnotafiscal_fkey" to_schema="mgsis.mgsis" to_table="tblnotafiscal" >
 				<fk_column name="codnotafiscal" pk="codnotafiscal" />
 			</fk>
@@ -3704,6 +4133,12 @@
 			</index>
 			<index name="tblnotafiscalduplicatas_codnotafiscal_idx" unique="NORMAL" >
 				<column name="codnotafiscal" />
+			</index>
+			<index name="idx_tblnotafiscalduplicatas_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnotafiscalduplicatas_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblnotafiscalduplicatas_codnotafiscal_fkey" to_schema="mgsis.mgsis" to_table="tblnotafiscal" >
 				<fk_column name="codnotafiscal" pk="codnotafiscal" />
@@ -3795,6 +4230,12 @@
 			<index name="idx_tblnotafiscalprodutobarra" unique="NORMAL" >
 				<column name="codnotafiscalprodutobarraorigem" />
 			</index>
+			<index name="idx_tblnotafiscalprodutobarra_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnotafiscalprodutobarra_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblnotafiscalprodutobarra_codcfop_fkey" to_schema="mgsis.mgsis" to_table="tblcfop" >
 				<fk_column name="codcfop" pk="codcfop" />
 			</fk>
@@ -3829,6 +4270,15 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalreferenciada" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalreferenciada" />
+			</index>
+			<index name="idx_tblnotafiscalreferenciada_codnotafiscal_fkey" unique="NORMAL" >
+				<column name="codnotafiscal" />
+			</index>
+			<index name="idx_tblnotafiscalreferenciada_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblnotafiscalreferenciada_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblnotafiscalreferenciada_codnotafiscal_fkey" to_schema="mgsis.mgsis" to_table="tblnotafiscal" >
 				<fk_column name="codnotafiscal" pk="codnotafiscal" />
@@ -3924,6 +4374,12 @@
 			<index name="idx_tblnotafiscalterceiro_codnegocio" unique="NORMAL" >
 				<column name="codnegocio" />
 			</index>
+			<index name="idx_fk_tblnotafiscalterceiro_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceiro_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblnotafiscalterceiro_tblpessoa" to_schema="mgsis.mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
@@ -3971,6 +4427,12 @@
 			<index name="idx_tblnotafiscalterceiroduplicata_codnotafiscalterceiro" unique="NORMAL" >
 				<column name="codnotafiscalterceiro" />
 			</index>
+			<index name="idx_fk_tblnotafiscalterceiroduplicata_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceiroduplicata_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblnotafiscalterceiroduplicata_tblnotafiscalterceiro" to_schema="mgsis.mgsis" to_table="tblnotafiscalterceiro" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
 			</fk>
@@ -3998,6 +4460,12 @@
 			</index>
 			<index name="idx_tblnotafiscalterceiroitem_codnotafiscalterceiro" unique="NORMAL" >
 				<column name="codnotafiscalterceiro" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceirogrupo_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceirogrupo_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tblnotafiscalterceiroitem_tblnotafiscalterceiro" to_schema="mgsis.mgsis" to_table="tblnotafiscalterceiro" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
@@ -4121,6 +4589,12 @@
 			<index name="idx_tblnotafiscalterceiroitemoriginal_codnotafiscalterceiroitem" unique="NORMAL" >
 				<column name="codnotafiscalterceirogrupo" />
 			</index>
+			<index name="idx_fk_tblnotafiscalterceiroitem_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceiroitem_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblnotafiscalterceiroitemoriginal_tblnotafiscalterceiroitem" to_schema="mgsis.mgsis" to_table="tblnotafiscalterceirogrupo" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codnotafiscalterceirogrupo" pk="codnotafiscalterceirogrupo" />
 			</fk>
@@ -4171,6 +4645,15 @@
 			<index name="pk_tblnotafiscalterceiropagamento_codnotafiscalterceiropagament" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiropagamento" />
 			</index>
+			<index name="idx_fk_tblnotafiscalterceiropagamento_tblnotafiscalterceiro" unique="NORMAL" >
+				<column name="codnotafiscalterceiro" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceiropagamento_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceiropagamento_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblnotafiscalterceiropagamento_tblnotafiscalterceiro" to_schema="mgsis.mgsis" to_table="tblnotafiscalterceiro" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codnotafiscalterceiro" pk="codnotafiscalterceiro" />
 			</fk>
@@ -4206,6 +4689,12 @@
 			<index name="idx_tblnotafiscalterceiroitemprodutobarra_codprodutobarra" unique="NORMAL" >
 				<column name="codprodutobarra" />
 			</index>
+			<index name="idx_fk_tblnotafiscalterceiroprodutobarra_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnotafiscalterceiroprodutobarra_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblnotafiscalterceiroitemprodutobarra_tblnotafiscalterceiroi" to_schema="mgsis.mgsis" to_table="tblnotafiscalterceirogrupo" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codnotafiscalterceirogrupo" pk="codnotafiscalterceirogrupo" />
 			</fk>
@@ -4231,6 +4720,12 @@
 			<index name="tbloperacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codoperacao" />
 			</index>
+			<index name="idx_tbloperacao_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbloperacao_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tbloperacao_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -4253,6 +4748,12 @@
 			<index name="tblpais_pkey" unique="PRIMARY_KEY" >
 				<column name="codpais" />
 			</index>
+			<index name="idx_tblpais_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblpais_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblpais_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -4272,6 +4773,12 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblparametrosgerais_pkey" unique="PRIMARY_KEY" >
 				<column name="codparametrosgerais" />
+			</index>
+			<index name="idx_tblparametrosgerais_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblparametrosgerais_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblparametrosgerais_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -4509,6 +5016,15 @@
 			<index name="idx_tblpessoa_codgrupoeconomico" unique="NORMAL" >
 				<column name="codgrupoeconomico" />
 			</index>
+			<index name="idx_tblpessoa_codgrupocliente_fkey" unique="NORMAL" >
+				<column name="codgrupocliente" />
+			</index>
+			<index name="idx_tblpessoa_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblpessoa_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<constraint name="tblpessoa_notafiscal_check" >
 				<string><![CDATA[CHECK ((notafiscal = ANY (ARRAY[0, 1, 2, 9])))]]></string>
 			</constraint>
@@ -4558,6 +5074,15 @@
 			<index name="pk_tblpessoacertidao_codpessoacertidao" unique="PRIMARY_KEY" >
 				<column name="codpessoacertidao" />
 			</index>
+			<index name="idx_fk_tblpessoacertidao_tblcertidaoemissor" unique="NORMAL" >
+				<column name="codcertidaoemissor" />
+			</index>
+			<index name="idx_fk_tblpessoacertidao_tblcertidaotipo" unique="NORMAL" >
+				<column name="codcertidaotipo" />
+			</index>
+			<index name="idx_fk_tblpessoacertidao_tblpessoa" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
 			<fk name="fk_tblpessoacertidao_tblpessoa" to_schema="mgsis.mgsis" to_table="tblpessoa" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
@@ -4599,6 +5124,12 @@
 			</index>
 			<index name="tblportador_codfilial_idx" unique="NORMAL" >
 				<column name="codfilial" />
+			</index>
+			<index name="idx_tblportador_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblportador_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblportador_codbanco_fkey" to_schema="mgsis.mgsis" to_table="tblbanco" >
 				<fk_column name="codbanco" pk="codbanco" />
@@ -4816,6 +5347,9 @@
 			<index name="idx_tblproduto_0" unique="NORMAL" >
 				<column name="codprodutoimagem" />
 			</index>
+			<index name="idx_tblproduto_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<constraint name="tblproduto_abc_check" >
 				<string><![CDATA[CHECK ((abc = ANY (ARRAY['A'::bpchar, 'B'::bpchar, 'C'::bpchar])))]]></string>
 			</constraint>
@@ -4880,6 +5414,15 @@
 			<index name="idx_tblprodutobarra" unique="NORMAL" >
 				<column name="codprodutovariacao" />
 			</index>
+			<index name="idx_tblprodutobarra_codmarca_fkey" unique="NORMAL" >
+				<column name="codmarca" />
+			</index>
+			<index name="idx_tblprodutobarra_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblprodutobarra_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblprodutobarra_codmarca_fkey" to_schema="mgsis.mgsis" to_table="tblmarca" >
 				<fk_column name="codmarca" pk="codmarca" />
 			</fk>
@@ -4933,6 +5476,12 @@
 			<index name="idx_tblprodutoembalagem" unique="NORMAL" >
 				<column name="codprodutoimagem" />
 			</index>
+			<index name="idx_tblprodutoembalagem_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblprodutoembalagem_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblprodutoembalagem_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
 			</fk>
@@ -4963,6 +5512,18 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblprodutohistoricopreco_pkey" unique="PRIMARY_KEY" >
 				<column name="codprodutohistoricopreco" />
+			</index>
+			<index name="idx_tblprodutohistoricopreco_codproduto_fkey" unique="NORMAL" >
+				<column name="codproduto" />
+			</index>
+			<index name="idx_tblprodutohistoricopreco_codprodutoembalagem_fkey" unique="NORMAL" >
+				<column name="codprodutoembalagem" />
+			</index>
+			<index name="idx_tblprodutohistoricopreco_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblprodutohistoricopreco_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblprodutohistoricopreco_codproduto_fkey" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codproduto" pk="codproduto" />
@@ -5104,6 +5665,15 @@
 			<index name="tblregistrospc_pkey" unique="PRIMARY_KEY" >
 				<column name="codregistrospc" />
 			</index>
+			<index name="idx_tblregistrospc_codpessoa_fkey" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
+			<index name="idx_tblregistrospc_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblregistrospc_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblregistrospc_codpessoa_fkey" to_schema="mgsis.mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
@@ -5200,6 +5770,12 @@
 			<index name="tblsexo_pkey" unique="PRIMARY_KEY" >
 				<column name="codsexo" />
 			</index>
+			<index name="idx_tblsexo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblsexo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblsexo_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -5228,6 +5804,12 @@
 			</index>
 			<index name="idx_tblsubgrupoproduto" unique="NORMAL" >
 				<column name="codimagem" />
+			</index>
+			<index name="idx_tblsubgrupoproduto_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblsubgrupoproduto_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblsubgrupoproduto_codgrupoproduto_fkey" to_schema="mgsis.mgsis" to_table="tblgrupoproduto" update_action="cascade" >
 				<fk_column name="codgrupoproduto" pk="codgrupoproduto" />
@@ -5276,6 +5858,12 @@
 			<index name="tbltipomovimentotitulo_pkey" unique="PRIMARY_KEY" >
 				<column name="codtipomovimentotitulo" />
 			</index>
+			<index name="idx_tbltipomovimentotitulo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbltipomovimentotitulo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tbltipomovimentotitulo_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -5297,6 +5885,12 @@
 			</column>
 			<index name="tbltipoproduto_pkey" unique="PRIMARY_KEY" >
 				<column name="codtipoproduto" />
+			</index>
+			<index name="idx_tbltipoproduto_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbltipoproduto_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tbltipoproduto_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -5333,6 +5927,12 @@
 			</index>
 			<index name="tbltipotitulo_codtipomovimentotitulo_idx" unique="NORMAL" >
 				<column name="codtipomovimentotitulo" />
+			</index>
+			<index name="idx_tbltipotitulo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbltipotitulo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tbltipotitulo_codtipomovimentotitulo_fkey" to_schema="mgsis.mgsis" to_table="tbltipomovimentotitulo" >
 				<fk_column name="codtipomovimentotitulo" pk="codtipomovimentotitulo" />
@@ -5416,6 +6016,12 @@
 			<index name="idx_tbltitulo" unique="NORMAL" >
 				<column name="codvalecompraformapagamento" />
 			</index>
+			<index name="idx_tbltitulo_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbltitulo_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tbltitulo_codcontacontabil_fkey" to_schema="mgsis.mgsis" to_table="tblcontacontabil" >
 				<fk_column name="codcontacontabil" pk="codcontacontabil" />
 			</fk>
@@ -5464,6 +6070,15 @@
 			<index name="tblTituloAgrupamento_pkey" unique="PRIMARY_KEY" >
 				<column name="codtituloagrupamento" />
 			</index>
+			<index name="idx_tbltituloagrupamento_codpessoa_fkey" unique="NORMAL" >
+				<column name="codpessoa" />
+			</index>
+			<index name="idx_tbltituloagrupamento_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbltituloagrupamento_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tbltituloagrupamento_codpessoa_fkey" to_schema="mgsis.mgsis" to_table="tblpessoa" >
 				<fk_column name="codpessoa" pk="codpessoa" />
 			</fk>
@@ -5486,6 +6101,12 @@
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tbltributacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codtributacao" />
+			</index>
+			<index name="idx_tbltributacao_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbltributacao_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tbltributacao_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
@@ -5567,6 +6188,12 @@
 				<column name="codestado" />
 				<column name="ncm" />
 			</index>
+			<index name="idx_tbltributacaonaturezaoperacao_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tbltributacaonaturezaoperacao_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tbltributacaonaturezaoperacao_codcfop_fkey" to_schema="mgsis.mgsis" to_table="tblcfop" >
 				<fk_column name="codcfop" pk="codcfop" />
 			</fk>
@@ -5640,6 +6267,12 @@
 			<index name="tblunidademedida_pkey" unique="PRIMARY_KEY" >
 				<column name="codunidademedida" />
 			</index>
+			<index name="idx_tblunidademedida_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblunidademedida_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="tblunidademedida_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
@@ -5686,6 +6319,18 @@
 			</index>
 			<index name="tblusuario_codpessoa_idx" unique="NORMAL" >
 				<column name="codpessoa" />
+			</index>
+			<index name="idx_tblusuario_codimagem_fkey" unique="NORMAL" >
+				<column name="codimagem" />
+			</index>
+			<index name="idx_tblusuario_codportador_fkey" unique="NORMAL" >
+				<column name="codportador" />
+			</index>
+			<index name="idx_tblusuario_codusuarioalteracao_fkey" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_tblusuario_codusuariocriacao_fkey" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="tblusuario_codecf_fkey" to_schema="mgsis.mgsis" to_table="tblecf" >
 				<fk_column name="codecf" pk="codecf" />
