@@ -8,8 +8,8 @@ inner join tblproduto p on (p.codproduto = pb.codproduto)
 inner join tbltipoproduto tp on (tp.codtipoproduto = p.codtipoproduto)
 left join tblestoquemovimento em on (em.codnegocioprodutobarra = npb.codnegocioprodutobarra)
 where n.codnegociostatus = 2
---and n.lancamento >= '2016-04-01 00:00:00'
-and n.lancamento >= '2020-11-01 00:00:00'
+and n.lancamento >= '2016-04-01 00:00:00'
+--and n.lancamento >= '2020-01-01 00:00:00'
 and tp.estoque = true
 and no.estoque = true
 and em.codestoquemovimento is null

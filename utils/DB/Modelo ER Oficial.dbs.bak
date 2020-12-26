@@ -3322,10 +3322,6 @@
 			</column>
 			<column name="acertoentrega" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuarioacertoentrega" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="valorprodutos" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
 				<defo><![CDATA[0]]></defo>
@@ -3343,6 +3339,10 @@
 			<column name="recebimento" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariorecebimento" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnegocio_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegocio" />
 			</index>
@@ -5093,6 +5093,67 @@
 				<fk_column name="codcertidaotipo" pk="codcertidaotipo" />
 			</fk>
 		</table>
+		<table name="tblpixcob" prior="tbl" >
+			<column name="codpixcob" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblpixcob_codpixcob_seq'::regclass)]]></defo>
+			</column>
+			<column name="txid" type="varchar" length="40" jt="12" >
+				<comment><![CDATA[Identificador da transação]]></comment>
+			</column>
+			<column name="location" type="varchar" length="200" jt="12" />
+			<column name="expiracao" type="bigint" jt="-5" >
+				<comment><![CDATA[Tempo de vida da cobrança em Segundos]]></comment>
+			</column>
+			<column name="codpixstatus" type="bigint" length="1" jt="-5" mandatory="y" />
+			<column name="nome" type="varchar" length="100" jt="12" />
+			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
+			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
+			<column name="valororiginal" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="solicitacaopagador" type="varchar" length="140" jt="12" />
+			<column name="codnegocio" type="bigint" jt="-5" />
+			<column name="codportador" type="bigint" jt="-5" mandatory="y" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblpixcob_codpixcob" unique="PRIMARY_KEY" >
+				<column name="codpixcob" />
+			</index>
+			<fk name="fk_tblpixcob_tblpixstatus" to_schema="mgsis.mgsis" to_table="tblpixstatus" >
+				<fk_column name="codpixstatus" pk="codpixstatus" />
+			</fk>
+			<fk name="fk_tblpixcob_tblnegocio" to_schema="mgsis.mgsis" to_table="tblnegocio" >
+				<fk_column name="codnegocio" pk="codnegocio" />
+			</fk>
+			<fk name="fk_tblpixcob_tblportador" to_schema="mgsis.mgsis" to_table="tblportador" >
+				<fk_column name="codportador" pk="codportador" />
+			</fk>
+			<fk name="fk_tblpixcob_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblpixcob_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblpixstatus" >
+			<column name="codpixstatus" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblpixstatus_codpixstatus_seq'::regclass)]]></defo>
+			</column>
+			<column name="pixstatus" type="varchar" length="50" jt="12" mandatory="y" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblpixstatus_codpixstatus" unique="PRIMARY_KEY" >
+				<column name="codpixstatus" />
+			</index>
+			<fk name="fk_tblpixstatus_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblpixstatus_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
 		<table name="tblportador" >
 			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo><![CDATA[nextval('tblportador_codportador_seq'::regclass)]]></defo>
@@ -5111,11 +5172,12 @@
 			<column name="diretorioremessa" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="diretorioretorno" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="carteira" type="integer" length="10" decimal="0" jt="4" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="pixdict" prior="dict" type="varchar" length="77" jt="12" />
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblportador_pkey" unique="PRIMARY_KEY" >
 				<column name="codportador" />
 			</index>
@@ -7822,6 +7884,8 @@
 		<sequence name="tblpermissao_codpermissao_seq" options="START WITH 1" />
 		<sequence name="tblpessoa_codpessoa_seq" options="START WITH 1" />
 		<sequence name="tblpessoacertidao_codpessoacertidao_seq" options="START WITH 1" />
+		<sequence name="tblpixcob_codpixcob_seq" options="START WITH 1" />
+		<sequence name="tblpixstatus_codpixstatus_seq" options="START WITH 1" />
 		<sequence name="tblportador_codportador_seq" options="START WITH 1" />
 		<sequence name="tblportaria195_codportaria195_seq" options="START WITH 1" />
 		<sequence name="tblprancheta_codprancheta_seq" options="START WITH 1" />
@@ -9521,6 +9585,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 			<column name="inativo" />
+			<column name="pixdict" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tbltitulo" color="C1D8EE" x="160" y="640" >
 			<column name="codtitulo" />
@@ -10024,7 +10089,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbljobsfailedspa" color="C1D8EE" x="480" y="208" />
 		<entity schema="mgsis.mgsis" name="tbljobsspa" color="C1D8EE" x="480" y="48" />
 	</layout>
-	<layout name="Layout_Lio" id="Layout_244a" show_relation="columns" >
+	<layout name="Layout_Lio" id="Layout_244a" confirmed="y" show_relation="columns" >
 		<comment><![CDATA[PostgreSQL]]></comment>
 		<entity schema="mgsis.mgsis" name="tblfilial" color="3986C1" x="48" y="736" >
 			<column name="codfilial" />
@@ -10158,6 +10223,12 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblcertidaotipo" color="C1D8EE" x="624" y="240" />
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="3986C1" x="48" y="48" />
 		<entity schema="mgsis.mgsis" name="tblpessoacertidao" color="C1D8EE" x="320" y="48" />
+	</layout>
+	<layout name="Layout_Pix" id="Layout_1b31" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="48" y="480" />
+		<entity schema="mgsis.mgsis" name="tblpixcob" color="C1D8EE" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tblpixstatus" color="C1D8EE" x="384" y="48" />
+		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="720" y="176" />
 	</layout>
 	<layout name="Layout_Prancheta" id="Layout_2e976812" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblprancheta" color="C1D8EE" x="48" y="48" />
