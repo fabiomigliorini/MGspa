@@ -62,6 +62,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codportador",
                 "metodo": "UsuarioS"
+            },
+            "tblpixcob.codportador": {
+                "tabela": "tblpixcob",
+                "coluna": "codportador",
+                "metodo": "PixCobS"
             }
         }
     },
@@ -1231,6 +1236,11 @@
                 "tabela": "tblnotafiscalterceiro",
                 "coluna": "codnegocio",
                 "metodo": "NotaFiscalTerceiroS"
+            },
+            "tblpixcob.codnegocio": {
+                "tabela": "tblpixcob",
+                "coluna": "codnegocio",
+                "metodo": "PixCobS"
             }
         }
     },
@@ -2775,5 +2785,66 @@
                 "metodo": "LioPedidoPagamentoS"
             }
         }
+    },
+    "tblpixstatus": {
+        "tabela": "tblpixstatus",
+        "campocodigo": "codpixstatus",
+        "namespace": "Mg\\Pix",
+        "classe": "PixStatus",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pix\/PixStatus.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpixcob.codpixstatus": {
+                "tabela": "tblpixcob",
+                "coluna": "codpixstatus",
+                "metodo": "PixCobS"
+            }
+        }
+    },
+    "tblpixcob": {
+        "tabela": "tblpixcob",
+        "campocodigo": "codpixcob",
+        "namespace": "Mg\\Pix",
+        "classe": "PixCob",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pix\/PixCob.php",
+        "belongsTo": {
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codpixstatus": {
+                "tabela": "tblpixstatus",
+                "coluna": "codpixstatus",
+                "metodo": "PixStatus"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }
