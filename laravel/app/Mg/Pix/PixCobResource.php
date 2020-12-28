@@ -15,7 +15,7 @@ class PixCobResource extends Resource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['status'] = $this->PixStatus->pixstatus;
+        $ret['status'] = $this->PixCobStatus->pixcobstatus;
         $ret['brcode'] = BrCodeService::montar($this);
         $ret['PixS'] = [];
         foreach ($this->PixS as $pix) {
