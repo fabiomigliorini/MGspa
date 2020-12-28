@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Dec/2020 08:55:22
+ * Date: 28/Dec/2020 16:15:14
  */
 
 namespace Mg\Pix;
@@ -10,14 +10,14 @@ use Mg\MgModel;
 use Mg\Pix\PixCob;
 use Mg\Usuario\Usuario;
 
-class PixStatus extends MgModel
+class PixCobStatus extends MgModel
 {
-    protected $table = 'tblpixstatus';
-    protected $primaryKey = 'codpixstatus';
+    protected $table = 'tblpixcobstatus';
+    protected $primaryKey = 'codpixcobstatus';
 
 
     protected $fillable = [
-        'pixstatus'
+        'pixcobstatus'
     ];
 
     protected $dates = [
@@ -26,7 +26,7 @@ class PixStatus extends MgModel
     ];
 
     protected $casts = [
-        'codpixstatus' => 'integer',
+        'codpixcobstatus' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
     ];
@@ -47,7 +47,7 @@ class PixStatus extends MgModel
     // Tabelas Filhas
     public function PixCobS()
     {
-        return $this->hasMany(PixCob::class, 'codpixstatus', 'codpixstatus');
+        return $this->hasMany(PixCob::class, 'codpixcobstatus', 'codpixcobstatus');
     }
 
 }

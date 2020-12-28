@@ -6,6 +6,7 @@ use Carbon\Carbon;
 
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
+use Mg\Portador\Portador;
 use Mg\Pix\GerenciaNet\GerenciaNetService;
 
 class PixService
@@ -85,5 +86,48 @@ class PixService
             return GerenciaNetService::consultarPixCob($cob);
         }
         throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+    }
+
+    public static function importarPix(Portador $portador, array $arrPix, PixCob $pixCob = null)
+    {
+        $pix = Pix::firstOrNew([
+            'e2eid' => $arrPix['endToEndId'],
+        ]);
+        $pix->codportador = $portador->codportador;
+        if (!empty($pixCob)) {
+            $pix->codpixcob = $pixCob->codpixcob;
+        }
+        $pix->txid = $arrPix['txid']??null;
+        $pix->valor = $arrPix['valor']??null;
+        $pix->horario = Carbon::parse($arrPix['horario']??null);
+        if (isset($arrPix['pagador'])) {
+            $pix->nome = $arrPix['pagador']['nome']??null;
+            $pix->cpf = $arrPix['pagador']['cpf']??null;
+            $pix->cnpj = $arrPix['pagador']['cnpj']??null;
+        }
+        $pix->infopagador = $arrPix['infoPagador']??null;
+        $pix->save();
+
+        $arrDevs = $arrPix['devolucoes']??[];
+        foreach ($arrDevs as $arrDev) {
+            $pixDevolucao = PixDevolucao::firstOrNew([
+                'codpix' => $pix->codpix,
+                'rtrid' => $arrDev['rtrId']
+            ]);
+            $pixDevolucao->id = $arrDev['id']??null;
+            $pixDevolucao->valor = $arrDev['valor']??null;
+            if (!empty($arrDev['horario']['solicitacao'])) {
+                $pixDevolucao->solicitacao = Carbon::parse($arrDev['horario']['solicitacao']);
+            }
+            if (!empty($arrDev['horario']['liquidacao'])) {
+                $pixDevolucao->liquidacao = Carbon::parse($arrDev['horario']['liquidacao']);
+            }
+            $status = PixDevolucaoStatus::firstOrCreate([
+                'pixdevolucaostatus' => $arrDev['status']
+            ]);
+            $pixDevolucao->codpixdevolucaostatus = $status->codpixdevolucaostatus;
+            $pixDevolucao->save();
+        }
+        return $pix;
     }
 }

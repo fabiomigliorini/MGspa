@@ -67,6 +67,11 @@
                 "tabela": "tblpixcob",
                 "coluna": "codportador",
                 "metodo": "PixCobS"
+            },
+            "tblpix.codportador": {
+                "tabela": "tblpix",
+                "coluna": "codportador",
+                "metodo": "PixS"
             }
         }
     },
@@ -2786,12 +2791,12 @@
             }
         }
     },
-    "tblpixstatus": {
-        "tabela": "tblpixstatus",
-        "campocodigo": "codpixstatus",
+    "tblpixcobstatus": {
+        "tabela": "tblpixcobstatus",
+        "campocodigo": "codpixcobstatus",
         "namespace": "Mg\\Pix",
-        "classe": "PixStatus",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pix\/PixStatus.php",
+        "classe": "PixCobStatus",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pix\/PixCobStatus.php",
         "belongsTo": {
             "codusuarioalteracao": {
                 "tabela": "tblusuario",
@@ -2805,9 +2810,9 @@
             }
         },
         "hasMany": {
-            "tblpixcob.codpixstatus": {
+            "tblpixcob.codpixcobstatus": {
                 "tabela": "tblpixcob",
-                "coluna": "codpixstatus",
+                "coluna": "codpixcobstatus",
                 "metodo": "PixCobS"
             }
         }
@@ -2824,10 +2829,10 @@
                 "coluna": "codnegocio",
                 "metodo": "Negocio"
             },
-            "codpixstatus": {
-                "tabela": "tblpixstatus",
-                "coluna": "codpixstatus",
-                "metodo": "PixStatus"
+            "codpixcobstatus": {
+                "tabela": "tblpixcobstatus",
+                "coluna": "codpixcobstatus",
+                "metodo": "PixCobStatus"
             },
             "codportador": {
                 "tabela": "tblportador",
@@ -2845,6 +2850,104 @@
                 "metodo": "UsuarioCriacao"
             }
         },
+        "hasMany": {
+            "tblpix.codpixcob": {
+                "tabela": "tblpix",
+                "coluna": "codpixcob",
+                "metodo": "PixS"
+            }
+        }
+    },
+    "tblpix": {
+        "tabela": "tblpix",
+        "campocodigo": "codpix",
+        "namespace": "Mg\\Pix",
+        "classe": "Pix",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pix\/Pix.php",
+        "belongsTo": {
+            "codpixcob": {
+                "tabela": "tblpixcob",
+                "coluna": "codpixcob",
+                "metodo": "PixCob"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpixdevolucao.codpix": {
+                "tabela": "tblpixdevolucao",
+                "coluna": "codpix",
+                "metodo": "PixDevolucaoS"
+            }
+        }
+    },
+    "tblpixdevolucao": {
+        "tabela": "tblpixdevolucao",
+        "campocodigo": "codpixdevolucao",
+        "namespace": "Mg\\Pix",
+        "classe": "PixDevolucao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pix\/PixDevolucao.php",
+        "belongsTo": {
+            "codpix": {
+                "tabela": "tblpix",
+                "coluna": "codpix",
+                "metodo": "Pix"
+            },
+            "codpixdevolucaostatus": {
+                "tabela": "tblpixdevolucaostatus",
+                "coluna": "codpixdevolucaostatus",
+                "metodo": "PixDevolucaoStatus"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
+    },
+    "tblpixdevolucaostatus": {
+        "tabela": "tblpixdevolucaostatus",
+        "campocodigo": "codpixdevolucaostatus",
+        "namespace": "Mg\\Pix",
+        "classe": "PixDevolucaoStatus",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pix\/PixDevolucaoStatus.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpixdevolucao.codpixdevolucaostatus": {
+                "tabela": "tblpixdevolucao",
+                "coluna": "codpixdevolucaostatus",
+                "metodo": "PixDevolucaoS"
+            }
+        }
     }
 }

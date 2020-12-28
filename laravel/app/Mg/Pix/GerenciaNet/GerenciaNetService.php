@@ -6,6 +6,7 @@ use Carbon\Carbon;
 
 use Mg\Pix\PixCob;
 use Mg\Pix\PixStatus;
+use Mg\Pix\PixService;
 
 class GerenciaNetService
 {
@@ -174,7 +175,8 @@ class GerenciaNetService
             ],
         ];
         curl_setopt_array($curl, $opt);
-        $dadosPix = json_decode(curl_exec($curl), true);
+        $dadosPix = curl_exec($curl);
+        $dadosPix = json_decode($dadosPix, true);
         curl_close($curl);
         static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
 
@@ -186,6 +188,10 @@ class GerenciaNetService
             'location' => $dadosPix['location'],
             'codpixstatus' => $status->codpixstatus
         ]);
+
+        foreach ($dadosPix['pix'] as $pix) {
+            PixService::importarPix($cob->Portador, $pix, $cob);
+        }
 
         $cob = $cob->fresh();
         return $cob;

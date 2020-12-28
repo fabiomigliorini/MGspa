@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Dec/2020 08:55:50
+ * Date: 28/Dec/2020 15:15:58
  */
 
 namespace Mg\Portador;
@@ -15,6 +15,7 @@ use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
 use Mg\Pix\PixCob;
+use Mg\Pix\Pix;
 use Mg\Banco\Banco;
 use Mg\Filial\Filial;
 
@@ -108,6 +109,11 @@ class Portador extends MgModel
     public function MovimentoTituloS()
     {
         return $this->hasMany(MovimentoTitulo::class, 'codportador', 'codportador');
+    }
+
+    public function PixS()
+    {
+        return $this->hasMany(Pix::class, 'codportador', 'codportador');
     }
 
     public function PixCobS()
