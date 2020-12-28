@@ -6,8 +6,10 @@ use Carbon\Carbon;
 
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Portador\Portador;
 use Mg\Pix\GerenciaNet\GerenciaNetService;
+use Mg\FormaPagamento\FormaPagamento;
 
 class PixService
 {
@@ -83,8 +85,10 @@ class PixService
             throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
         }
         if ($cob->Portador->Banco->numerobanco == 364) {
-            return GerenciaNetService::consultarPixCob($cob);
+            $cob = GerenciaNetService::consultarPixCob($cob);
         }
+        static::processarPixCobNegocio($cob);
+        return $cob;
         throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
     }
 
@@ -129,5 +133,26 @@ class PixService
             $pixDevolucao->save();
         }
         return $pix;
+    }
+
+    public static function processarPixCobNegocio (PixCob $cob)
+    {
+        if (empty($cob->codnegocio)) {
+            return;
+        }
+        $nfp = NegocioFormaPagamento::firstOrNew([
+            'codpixcob' => $cob->codpixcob
+        ]);
+        $nfp->codnegocio = $cob->codnegocio;
+        $nfp->valorpagamento = $cob->PixS()->sum('valor');
+        $fp = FormaPagamento::firstOrNew(['pix' => true]);
+        if (!$fp->exists) {
+            $fp->formapagamento = 'PIX';
+            $fp->avista = true;
+            $fp->save();
+        }
+        $nfp->codformapagamento = $fp->codformapagamento;
+        $nfp->save();
+        $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
     }
 }

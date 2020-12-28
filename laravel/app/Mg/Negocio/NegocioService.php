@@ -73,7 +73,7 @@ class NegocioService
         //atualiza status
         $negocio->update([
             'codnegociostatus' => NegocioStatus::FECHADO,
-            'codusuario' => Auth::user()->codusuario,
+            'codusuario' => Auth::user()->codusuario??$negocio->codusuario,
             'lancamento' => Carbon::now()
         ]);
 
