@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 14/Nov/2020 14:22:57
+ * Date: 28/Dec/2020 16:37:48
  */
 
 namespace Mg\FormaPagamento;
@@ -29,6 +29,7 @@ class FormaPagamento extends MgModel
         'lio',
         'notafiscal',
         'parcelas',
+        'pix',
         'valecompra'
     ];
 
@@ -49,6 +50,7 @@ class FormaPagamento extends MgModel
         'lio' => 'boolean',
         'notafiscal' => 'boolean',
         'parcelas' => 'integer',
+        'pix' => 'boolean',
         'valecompra' => 'boolean'
     ];
 

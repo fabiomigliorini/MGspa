@@ -833,6 +833,11 @@
                 "tabela": "tblliopedido",
                 "coluna": "codliopedido",
                 "metodo": "LioPedido"
+            },
+            "codpixcob": {
+                "tabela": "tblpixcob",
+                "coluna": "codpixcob",
+                "metodo": "PixCob"
             }
         },
         "hasMany": {
@@ -2855,6 +2860,11 @@
                 "tabela": "tblpix",
                 "coluna": "codpixcob",
                 "metodo": "PixS"
+            },
+            "tblnegocioformapagamento.codpixcob": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codpixcob",
+                "metodo": "NegocioFormaPagamentoS"
             }
         }
     },

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 14/Nov/2020 14:22:45
+ * Date: 28/Dec/2020 16:37:40
  */
 
 namespace Mg\Negocio;
@@ -12,6 +12,7 @@ use Mg\FormaPagamento\FormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
 use Mg\Lio\LioPedido;
+use Mg\Pix\PixCob;
 
 class NegocioFormaPagamento extends MgModel
 {
@@ -23,6 +24,7 @@ class NegocioFormaPagamento extends MgModel
         'codformapagamento',
         'codliopedido',
         'codnegocio',
+        'codpixcob',
         'valorpagamento'
     ];
 
@@ -36,6 +38,7 @@ class NegocioFormaPagamento extends MgModel
         'codliopedido' => 'integer',
         'codnegocio' => 'integer',
         'codnegocioformapagamento' => 'integer',
+        'codpixcob' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'valorpagamento' => 'float'
@@ -56,6 +59,11 @@ class NegocioFormaPagamento extends MgModel
     public function Negocio()
     {
         return $this->belongsTo(Negocio::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function PixCob()
+    {
+        return $this->belongsTo(PixCob::class, 'codpixcob', 'codpixcob');
     }
 
     public function UsuarioAlteracao()

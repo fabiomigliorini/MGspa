@@ -2058,6 +2058,9 @@
 			<column name="lio" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
+			<column name="pix" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
+			</column>
 			<index name="tblformapagamento_pkey" unique="PRIMARY_KEY" >
 				<column name="codformapagamento" />
 			</index>
@@ -3502,6 +3505,7 @@
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codliopedido" type="bigint" jt="-5" />
+			<column name="codpixcob" type="bigint" jt="-5" />
 			<index name="tblnegocioformapagamento_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegocioformapagamento" />
 			</index>
@@ -3534,6 +3538,9 @@
 			</fk>
 			<fk name="fk_tblnegocioformapagamento_tblliopedido" to_schema="mgsis.mgsis" to_table="tblliopedido" >
 				<fk_column name="codliopedido" pk="codliopedido" />
+			</fk>
+			<fk name="fk_tblnegocioformapagamento_tblpixcob" to_schema="mgsis.mgsis" to_table="tblpixcob" >
+				<fk_column name="codpixcob" pk="codpixcob" />
 			</fk>
 		</table>
 		<table name="tblnegocioprodutobarra" >
@@ -10323,13 +10330,15 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblpessoacertidao" color="C1D8EE" x="320" y="48" />
 	</layout>
 	<layout name="Layout_Pix" id="Layout_1b31" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="48" y="480" />
-		<entity schema="mgsis.mgsis" name="tblpix" color="C1D8EE" x="384" y="240" />
-		<entity schema="mgsis.mgsis" name="tblpixcob" color="C1D8EE" x="48" y="48" />
-		<entity schema="mgsis.mgsis" name="tblpixcobstatus" color="C1D8EE" x="384" y="48" />
-		<entity schema="mgsis.mgsis" name="tblpixdevolucao" color="C1D8EE" x="384" y="576" />
-		<entity schema="mgsis.mgsis" name="tblpixdevolucaostatus" color="C1D8EE" x="720" y="608" />
-		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="704" y="64" />
+		<entity schema="mgsis.mgsis" name="tblformapagamento" color="3986C1" x="48" y="96" />
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="384" y="480" />
+		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="3986C1" x="48" y="512" />
+		<entity schema="mgsis.mgsis" name="tblpix" color="C1D8EE" x="720" y="240" />
+		<entity schema="mgsis.mgsis" name="tblpixcob" color="C1D8EE" x="384" y="48" />
+		<entity schema="mgsis.mgsis" name="tblpixcobstatus" color="C1D8EE" x="720" y="48" />
+		<entity schema="mgsis.mgsis" name="tblpixdevolucao" color="C1D8EE" x="720" y="576" />
+		<entity schema="mgsis.mgsis" name="tblpixdevolucaostatus" color="C1D8EE" x="1056" y="608" />
+		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="1040" y="64" />
 	</layout>
 	<layout name="Layout_Prancheta" id="Layout_2e976812" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblprancheta" color="C1D8EE" x="48" y="48" />
@@ -10455,6 +10464,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 			<column name="lio" />
+			<column name="pix" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="48" y="64" >
 			<column name="codpessoa" />

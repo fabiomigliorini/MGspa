@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Dec/2020 16:15:06
+ * Date: 28/Dec/2020 16:35:26
  */
 
 namespace Mg\Pix;
 
 use Mg\MgModel;
 use Mg\Pix\Pix;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Pix\PixCobStatus;
 use Mg\Portador\Portador;
@@ -80,6 +81,11 @@ class PixCob extends MgModel
 
 
     // Tabelas Filhas
+    public function NegocioFormaPagamentoS()
+    {
+        return $this->hasMany(NegocioFormaPagamento::class, 'codpixcob', 'codpixcob');
+    }
+
     public function PixS()
     {
         return $this->hasMany(Pix::class, 'codpixcob', 'codpixcob');
