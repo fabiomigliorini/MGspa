@@ -5182,7 +5182,6 @@
 			<column name="id" type="varchar" length="40" jt="12" />
 			<column name="rtrid" type="varchar" length="40" jt="12" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="horario" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="solicitacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="liquidacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codpixdevolucaostatus" type="bigint" length="1" jt="-5" mandatory="y" />

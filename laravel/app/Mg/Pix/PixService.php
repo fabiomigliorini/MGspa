@@ -35,10 +35,10 @@ class PixService
         $cob->expiracao = 259200;
 
         // Status NOVA
-        $status = PixStatus::firstOrCreate([
-            'pixstatus' => 'NOVA'
+        $status = PixCobStatus::firstOrCreate([
+            'pixcobstatus' => 'NOVA'
         ]);
-        $cob->codpixstatus = $status->codpixstatus;
+        $cob->codpixcobstatus = $status->codpixcobstatus;
 
         // CNPJ ou CPF
         if (!empty($negocio->Pessoa->cnpj)) {

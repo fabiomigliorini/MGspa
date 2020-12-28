@@ -5,7 +5,7 @@ namespace Mg\Pix\GerenciaNet;
 use Carbon\Carbon;
 
 use Mg\Pix\PixCob;
-use Mg\Pix\PixStatus;
+use Mg\Pix\PixCobStatus;
 use Mg\Pix\PixService;
 
 class GerenciaNetService
@@ -132,13 +132,13 @@ class GerenciaNetService
         curl_close($curl);
         static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
 
-        $status = PixStatus::firstOrCreate([
-            'pixstatus' => $dadosPix['status']
+        $status = PixCobStatus::firstOrCreate([
+            'pixcobstatus' => $dadosPix['status']
         ]);
 
         $ret = $cob->update([
             'location' => $dadosPix['location'],
-            'codpixstatus' => $status->codpixstatus
+            'codpixcobstatus' => $status->codpixcobstatus
         ]);
 
         $cob = $cob->fresh();
@@ -180,13 +180,13 @@ class GerenciaNetService
         curl_close($curl);
         static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
 
-        $status = PixStatus::firstOrCreate([
-            'pixstatus' => $dadosPix['status']
+        $status = PixCobStatus::firstOrCreate([
+            'pixcobstatus' => $dadosPix['status']
         ]);
 
         $ret = $cob->update([
             'location' => $dadosPix['location'],
-            'codpixstatus' => $status->codpixstatus
+            'codpixcobstatus' => $status->codpixcobstatus
         ]);
 
         foreach ($dadosPix['pix'] as $pix) {

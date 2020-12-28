@@ -45,7 +45,7 @@ class BrCodeService
     // public static function montar(PixCob $cob)
     public static function montar($cob)
     {
-        if ($cob->PixStatus->pixstatus == 'NOVA') {
+        if ($cob->PixCobStatus->pixcobstatus == 'NOVA') {
             return null;
         }
 
