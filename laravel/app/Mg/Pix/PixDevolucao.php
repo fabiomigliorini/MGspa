@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Dec/2020 15:15:37
+ * Date: 29/Dec/2020 15:40:42
  */
 
 namespace Mg\Pix;
@@ -20,7 +20,6 @@ class PixDevolucao extends MgModel
     protected $fillable = [
         'codpix',
         'codpixdevolucaostatus',
-        'horario',
         'id',
         'liquidacao',
         'rtrid',
@@ -31,7 +30,6 @@ class PixDevolucao extends MgModel
     protected $dates = [
         'alteracao',
         'criacao',
-        'horario',
         'liquidacao',
         'solicitacao'
     ];
