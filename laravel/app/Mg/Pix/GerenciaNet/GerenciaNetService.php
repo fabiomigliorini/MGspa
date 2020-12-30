@@ -189,8 +189,10 @@ class GerenciaNetService
             'codpixcobstatus' => $status->codpixcobstatus
         ]);
 
-        foreach ($dadosPix['pix'] as $pix) {
-            PixService::importarPix($cob->Portador, $pix, $cob);
+        if (isset($dadosPix['pix'])) {
+            foreach ($dadosPix['pix'] as $pix) {
+                PixService::importarPix($cob->Portador, $pix, $cob);
+            }
         }
 
         $cob = $cob->fresh();
