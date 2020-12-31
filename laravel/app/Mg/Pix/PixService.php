@@ -140,11 +140,15 @@ class PixService
         if (empty($cob->codnegocio)) {
             return;
         }
+        $valorpagamento = $cob->PixS()->sum('valor');
+        if ($valorpagamento <= 0) {
+            return;
+        }
         $nfp = NegocioFormaPagamento::firstOrNew([
             'codpixcob' => $cob->codpixcob
         ]);
         $nfp->codnegocio = $cob->codnegocio;
-        $nfp->valorpagamento = $cob->PixS()->sum('valor');
+        $nfp->valorpagamento = $valorpagamento;
         $fp = FormaPagamento::firstOrNew(['pix' => true]);
         if (!$fp->exists) {
             $fp->formapagamento = 'PIX';
