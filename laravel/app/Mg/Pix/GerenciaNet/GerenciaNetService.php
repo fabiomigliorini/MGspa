@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Mg\Pix\PixCob;
 use Mg\Pix\PixCobStatus;
 use Mg\Pix\PixService;
+use Mg\Portador\Portador;
 
 class GerenciaNetService
 {
@@ -36,22 +37,7 @@ class GerenciaNetService
             ],
         ];
         curl_setopt_array($curl, $opt);
-
-        // curl_setopt($curl, CURLOPT_VERBOSE, true);
-        // $verbose = fopen('php://temp', 'w+');
-        // curl_setopt($curl, CURLOPT_STDERR, $verbose);
-
         $response = curl_exec($curl);
-
-        // if ($response === FALSE) {
-        //     printf("cUrl error (#%d): %s<br>\n", curl_errno($curl),
-        //            htmlspecialchars(curl_error($curl)));
-        // }
-        // rewind($verbose);
-        // $verboseLog = stream_get_contents($verbose);
-        // echo "Verbose information:\n<pre>", htmlspecialchars($verboseLog), "</pre>\n";
-
-        // dd($response);
         curl_close($curl);
 
         if ($response === false) {
@@ -144,8 +130,9 @@ class GerenciaNetService
         $cob = $cob->fresh();
         return $cob;
     }
+
     /*
-    * Esta rotina consome um endpoid PUT da Gerencianet para emissão da cobrança
+    * Esta rotina consome um endpoid GET da Gerencianet para consultar uma cobrança
     */
     public static function consultarPixCob(PixCob $cob)
     {
@@ -197,5 +184,82 @@ class GerenciaNetService
 
         $cob = $cob->fresh();
         return $cob;
+    }
+
+    /*
+    * Esta rotina consome um endpoid GET da Gerencianet para consultar os pix recebidos nos ultimos 7 dias
+    */
+    public static function consultarPix(Portador $portador, Carbon $inicio = null, Carbon $fim = null)
+    {
+
+        // Busca informações do token de autenticação de acordo com suas credencias e certificado
+        $dadosToken = static::getAccessToken();
+        $tokenType = $dadosToken['token_type'];
+        $accessToken = $dadosToken['access_token'];
+
+        $pix_url = env('PIX_GERENCIANET_URL'); // Monta a url para a requisição que gera a cobrança
+        $inicio = $inicio??new Carbon('-1 week');
+        $pix_url .= '?inicio=' . $inicio->toIso8601ZuluString();
+        $fim = $fim??new Carbon();
+        $pix_url .= '&fim=' . $fim->toIso8601ZuluString();
+        $pix_url .= '&paginacao.itensPorPagina=100';
+
+        $paginaAtual = 0;
+        $pixRecebidos = [];
+        do {
+            $pix_url_pagina = $pix_url . '&paginacao.paginaAtual=' . $paginaAtual;
+            $curl = curl_init();
+            $opt = [
+                CURLOPT_URL => $pix_url_pagina,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_SSLCERT => env('PIX_GERENCIANET_CERTIFICADO'),
+                CURLOPT_SSLCERTPASSWD => "",
+                CURLOPT_HTTPHEADER => [
+                    "authorization: $tokenType $accessToken",
+                    "Content-Type: application/json"
+                ],
+            ];
+            curl_setopt_array($curl, $opt);
+            $dadosPix = curl_exec($curl);
+            $dadosPix = json_decode($dadosPix, true);
+            curl_close($curl);
+            static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
+            if (isset($dadosPix['pix'])) {
+                foreach ($dadosPix['pix'] as $pix) {
+                    $pixRecebidos[] = PixService::importarPix($portador, $pix);
+                }
+            }
+            $paginaAtual = $dadosPix['parametros']['paginacao']['paginaAtual'] + 1;
+            $quantidadeDePaginas = $dadosPix['parametros']['paginacao']['quantidadeDePaginas'];
+            if ($paginaAtual > 10) {
+                throw new \Exception("Abortando Looping Infinito", 1);
+            }
+        } while ($paginaAtual < $quantidadeDePaginas);
+
+        return collect($pixRecebidos);
+
+        // $status = PixCobStatus::firstOrCreate([
+        //     'pixcobstatus' => $dadosPix['status']
+        // ]);
+        //
+        // $ret = $cob->update([
+        //     'location' => $dadosPix['location'],
+        //     'codpixcobstatus' => $status->codpixcobstatus
+        // ]);
+        //
+        // if (isset($dadosPix['pix'])) {
+        //     foreach ($dadosPix['pix'] as $pix) {
+        //         PixService::importarPix($cob->Portador, $pix, $cob);
+        //     }
+        // }
+        //
+        // $cob = $cob->fresh();
+        // return $cob;
     }
 }

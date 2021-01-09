@@ -86,9 +86,8 @@ class PixService
         }
         if ($cob->Portador->Banco->numerobanco == 364) {
             $cob = GerenciaNetService::consultarPixCob($cob);
+            return $cob;
         }
-        static::processarPixCobNegocio($cob);
-        return $cob;
         throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
     }
 
@@ -96,12 +95,16 @@ class PixService
     {
         $pix = Pix::firstOrNew([
             'e2eid' => $arrPix['endToEndId'],
+            'codportador' => $portador->codportador,
         ]);
-        $pix->codportador = $portador->codportador;
+        $pix->txid = $arrPix['txid']??null;
+        if (empty($pix->codpixcob) && !empty($pix->txid)) {
+            $pixCob = PixCob::where('codportador', $pix->codportador)
+                ->where('txid', $pix->txid)->first();
+        }
         if (!empty($pixCob)) {
             $pix->codpixcob = $pixCob->codpixcob;
         }
-        $pix->txid = $arrPix['txid']??null;
         $pix->valor = $arrPix['valor']??null;
         $pix->horario = Carbon::parse($arrPix['horario']??null);
         if (isset($arrPix['pagador'])) {
@@ -132,6 +135,10 @@ class PixService
             $pixDevolucao->codpixdevolucaostatus = $status->codpixdevolucaostatus;
             $pixDevolucao->save();
         }
+
+        if (!empty($pix->codpixcob)) {
+            static::processarPixCobNegocio($pix->PixCob);
+        }
         return $pix;
     }
 
@@ -159,4 +166,17 @@ class PixService
         $nfp->save();
         $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
     }
+
+    public static function consultarPix(Portador $portador)
+    {
+        if (empty($portador->pixdict)) {
+            throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
+        }
+        if ($portador->Banco->numerobanco == 364) {
+            $pixRecebidos = GerenciaNetService::consultarPix($portador);
+            return $pixRecebidos;
+        }
+        throw new \Exception("Sem integração definida para o Banco {$portador->Banco->numerobanco}!", 1);
+    }
+
 }

@@ -5,6 +5,7 @@ namespace Mg\Pix;
 use Illuminate\Http\Request;
 
 use Mg\Negocio\Negocio;
+use Mg\Portador\Portador;
 
 class PixController
 {
@@ -41,5 +42,14 @@ class PixController
         $cob = PixCob::findOrFail($codpixcob);
         return new PixCobResource($cob);
     }
+
+    public function consultarPix (Request $request)
+    {
+        $portador = Portador::findOrFail(env('PIX_GERENCIANET_CODPORTADOR'));
+        $pixRecebidos = PixService::consultarPix($portador);
+        // dd($pixRecebidos);
+        return PixResource::collection($pixRecebidos);
+    }
+
 
 }
