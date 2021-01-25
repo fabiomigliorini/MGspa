@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "2da6c15df2112180f5cc2b2af9688df6",
-    "content-hash": "d1f18c6488a5c84ccdeec43c3613dfbb",
+    "hash": "ddd55c5d215e49c5c680ff7536bc4927",
+    "content-hash": "3718054aeba1977247e010b83304ce50",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -64,12 +64,12 @@
             "version": "v0.11.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/barryvdh/laravel-cors.git",
+                "url": "https://github.com/fruitcake/laravel-cors.git",
                 "reference": "c95ac944f2f20a17949aae6645692dfd3b402bca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/barryvdh/laravel-cors/zipball/c95ac944f2f20a17949aae6645692dfd3b402bca",
+                "url": "https://api.github.com/repos/fruitcake/laravel-cors/zipball/c95ac944f2f20a17949aae6645692dfd3b402bca",
                 "reference": "c95ac944f2f20a17949aae6645692dfd3b402bca",
                 "shasum": ""
             },
@@ -481,6 +481,7 @@
                     "email": "jakub.onderka@gmail.com"
                 }
             ],
+            "abandoned": "php-parallel-lint/php-console-color",
             "time": "2018-09-29 17:23:10"
         },
         {
@@ -527,6 +528,7 @@
                 }
             ],
             "description": "Highlight PHP code in terminal",
+            "abandoned": "php-parallel-lint/php-console-highlighter",
             "time": "2018-09-29 18:48:56"
         },
         {
@@ -1261,6 +1263,7 @@
                 "cron",
                 "schedule"
             ],
+            "abandoned": "dragonmantank/cron-expression",
             "time": "2017-01-23 04:29:33"
         },
         {
@@ -1684,6 +1687,81 @@
                 "nfephp"
             ],
             "time": "2017-09-01 19:30:23"
+        },
+        {
+            "name": "nfephp-org/sped-mdfe",
+            "version": "v4.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nfephp-org/sped-mdfe.git",
+                "reference": "e2dbde41fb66a20185cb45d6f6095ed0bf6a7e85"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nfephp-org/sped-mdfe/zipball/e2dbde41fb66a20185cb45d6f6095ed0bf6a7e85",
+                "reference": "e2dbde41fb66a20185cb45d6f6095ed0bf6a7e85",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-json": "*",
+                "ext-libxml": "*",
+                "ext-openssl": "*",
+                "ext-simplexml": "*",
+                "ext-soap": "*",
+                "ext-zlib": "*",
+                "justinrainbow/json-schema": "^5.2",
+                "nfephp-org/sped-common": "^5.0",
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.*",
+                "scrutinizer/ocular": "~1.1",
+                "squizlabs/php_codesniffer": "~2.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "NFePHP\\MDFe\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0+",
+                "LGPL-3.0+",
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Roberto L. Machado",
+                    "email": "linux.rlm@gmail.com.br",
+                    "homepage": "http://www.nfephp.org",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Cleiton Perin",
+                    "email": "cperin20@gmail.com.br",
+                    "homepage": "https://www.facebook.com/cperin20",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Comunidade NFePHP",
+                    "homepage": "https://github.com/nfephp-org/sped-mdfe/graphs/contributors"
+                }
+            ],
+            "description": "API para geração e comunicação da MDFe com as SEFAZ autorizadoras.",
+            "homepage": "https://github.com/nfephp-org/sped-mdfe",
+            "keywords": [
+                "mdfe",
+                "nfephp",
+                "sped"
+            ],
+            "time": "2019-10-28 16:51:56"
         },
         {
             "name": "nfephp-org/sped-nfe",
