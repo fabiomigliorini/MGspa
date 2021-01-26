@@ -2959,5 +2959,310 @@
                 "metodo": "PixDevolucaoS"
             }
         }
+    },
+    "tblveiculotipo": {
+        "tabela": "tblveiculotipo",
+        "campocodigo": "codveiculotipo",
+        "namespace": "Mg\\Veiculo",
+        "classe": "VeiculoTipo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Veiculo\/VeiculoTipo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblveiculo.codveiculotipo": {
+                "tabela": "tblveiculo",
+                "coluna": "codveiculotipo",
+                "metodo": "VeiculoS"
+            }
+        }
+    },
+    "tblveiculo": {
+        "tabela": "tblveiculo",
+        "campocodigo": "codveiculo",
+        "namespace": "Mg\\Veiculo",
+        "classe": "Veiculo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Veiculo\/Veiculo.php",
+        "belongsTo": {
+            "codestado": {
+                "tabela": "tblestado",
+                "coluna": "codestado",
+                "metodo": "Estado"
+            },
+            "codpessoaproprietario": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoaproprietario",
+                "metodo": "PessoaProprietario"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codveiculotipo": {
+                "tabela": "tblveiculotipo",
+                "coluna": "codveiculotipo",
+                "metodo": "VeiculoTipo"
+            }
+        },
+        "hasMany": {
+            "tblmdfeveiculo.codveiculo": {
+                "tabela": "tblmdfeveiculo",
+                "coluna": "codveiculo",
+                "metodo": "MdfeVeiculoS"
+            },
+            "tblveiculoconjuntoveiculo.codveiculo": {
+                "tabela": "tblveiculoconjuntoveiculo",
+                "coluna": "codveiculo",
+                "metodo": "VeiculoConjuntoVeiculoS"
+            }
+        }
+    },
+    "tblveiculoconjunto": {
+        "tabela": "tblveiculoconjunto",
+        "campocodigo": "codveiculoconjunto",
+        "namespace": "Mg\\Veiculo",
+        "classe": "VeiculoConjunto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Veiculo\/VeiculoConjunto.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblveiculoconjuntoveiculo.codveiculoconjunto": {
+                "tabela": "tblveiculoconjuntoveiculo",
+                "coluna": "codveiculoconjunto",
+                "metodo": "VeiculoConjuntoVeiculoS"
+            }
+        }
+    },
+    "tblveiculoconjuntoveiculo": {
+        "tabela": "tblveiculoconjuntoveiculo",
+        "campocodigo": "codveiculoconjuntoveiculo",
+        "namespace": "Mg\\Veiculo",
+        "classe": "VeiculoConjuntoVeiculo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Veiculo\/VeiculoConjuntoVeiculo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codveiculo": {
+                "tabela": "tblveiculo",
+                "coluna": "codveiculo",
+                "metodo": "Veiculo"
+            },
+            "codveiculoconjunto": {
+                "tabela": "tblveiculoconjunto",
+                "coluna": "codveiculoconjunto",
+                "metodo": "VeiculoConjunto"
+            }
+        },
+        "hasMany": []
+    },
+    "tblmdfeveiculo": {
+        "tabela": "tblmdfeveiculo",
+        "campocodigo": "codmdfeveiculo",
+        "namespace": "Mg\\Mdfe",
+        "classe": "MdfeVeiculo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mdfe\/MdfeVeiculo.php",
+        "belongsTo": {
+            "codmdfe": {
+                "tabela": "tblmdfe",
+                "coluna": "codmdfe",
+                "metodo": "Mdfe"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codveiculo": {
+                "tabela": "tblveiculo",
+                "coluna": "codveiculo",
+                "metodo": "Veiculo"
+            }
+        },
+        "hasMany": []
+    },
+    "tblmdfe": {
+        "tabela": "tblmdfe",
+        "campocodigo": "codmdfe",
+        "namespace": "Mg\\Mdfe",
+        "classe": "Mdfe",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mdfe\/Mdfe.php",
+        "belongsTo": {
+            "codcidadecarregamento": {
+                "tabela": "tblcidade",
+                "coluna": "codcidadecarregamento",
+                "metodo": "CidadeCarregamento"
+            },
+            "codestadofim": {
+                "tabela": "tblestado",
+                "coluna": "codestadofim",
+                "metodo": "EstadoFim"
+            },
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codmdfestatus": {
+                "tabela": "tblmdfestatus",
+                "coluna": "codmdfestatus",
+                "metodo": "MdfeStatus"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmdfeestado.codmdfe": {
+                "tabela": "tblmdfeestado",
+                "coluna": "codmdfe",
+                "metodo": "MdfeEstadoS"
+            },
+            "tblmdfenfe.codmdfe": {
+                "tabela": "tblmdfenfe",
+                "coluna": "codmdfe",
+                "metodo": "MdfeNfeS"
+            },
+            "tblmdfeveiculo.codmdfe": {
+                "tabela": "tblmdfeveiculo",
+                "coluna": "codmdfe",
+                "metodo": "MdfeVeiculoS"
+            }
+        }
+    },
+    "tblmdfestatus": {
+        "tabela": "tblmdfestatus",
+        "campocodigo": "codmdfestatus",
+        "namespace": "Mg\\Mdfe",
+        "classe": "MdfeStatus",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mdfe\/MdfeStatus.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmdfe.codmdfestatus": {
+                "tabela": "tblmdfe",
+                "coluna": "codmdfestatus",
+                "metodo": "MdfeS"
+            }
+        }
+    },
+    "tblmdfeestado": {
+        "tabela": "tblmdfeestado",
+        "campocodigo": "codmdfeestado",
+        "namespace": "Mg\\Mdfe",
+        "classe": "MdfeEstado",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mdfe\/MdfeEstado.php",
+        "belongsTo": {
+            "codestado": {
+                "tabela": "tblestado",
+                "coluna": "codestado",
+                "metodo": "Estado"
+            },
+            "codmdfe": {
+                "tabela": "tblmdfe",
+                "coluna": "codmdfe",
+                "metodo": "Mdfe"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblmdfenfe": {
+        "tabela": "tblmdfenfe",
+        "campocodigo": "codmdfenfe",
+        "namespace": "Mg\\Mdfe",
+        "classe": "MdfeNfe",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mdfe\/MdfeNfe.php",
+        "belongsTo": {
+            "codcidadedescarga": {
+                "tabela": "tblcidade",
+                "coluna": "codcidadedescarga",
+                "metodo": "CidadeDescarga"
+            },
+            "codmdfe": {
+                "tabela": "tblmdfe",
+                "coluna": "codmdfe",
+                "metodo": "Mdfe"
+            },
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }
