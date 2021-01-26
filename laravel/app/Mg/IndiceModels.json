@@ -214,6 +214,11 @@
                 "tabela": "tbllioterminal",
                 "coluna": "codfilial",
                 "metodo": "LioTerminalS"
+            },
+            "tblmdfe.codfilial": {
+                "tabela": "tblmdfe",
+                "coluna": "codfilial",
+                "metodo": "MdfeS"
             }
         }
     },
@@ -750,6 +755,11 @@
                 "tabela": "tblvalecompramodelo",
                 "coluna": "codpessoafavorecido",
                 "metodo": "ValeCompraModeloFavorecidoS"
+            },
+            "tblveiculo.codpessoaproprietario": {
+                "tabela": "tblveiculo",
+                "coluna": "codpessoaproprietario",
+                "metodo": "VeiculoS"
             }
         }
     },
@@ -1555,12 +1565,27 @@
             "tblnotafiscal.codestadoplaca": {
                 "tabela": "tblnotafiscal",
                 "coluna": "codestadoplaca",
-                "metodo": "NotaFiscalS"
+                "metodo": "NotaFiscalPlacaS"
             },
             "tbltributacaonaturezaoperacao.codestado": {
                 "tabela": "tbltributacaonaturezaoperacao",
                 "coluna": "codestado",
                 "metodo": "TributacaoNaturezaOperacaoS"
+            },
+            "tblmdfe.codestadofim": {
+                "tabela": "tblmdfe",
+                "coluna": "codestadofim",
+                "metodo": "MdfeFimS"
+            },
+            "tblmdfeestado.codestado": {
+                "tabela": "tblmdfeestado",
+                "coluna": "codestado",
+                "metodo": "MdfeEstadoS"
+            },
+            "tblveiculo.codestado": {
+                "tabela": "tblveiculo",
+                "coluna": "codestado",
+                "metodo": "VeiculoS"
             }
         }
     },
@@ -1682,6 +1707,16 @@
                 "tabela": "tblpessoa",
                 "coluna": "codcidadecobranca",
                 "metodo": "PessoaCobrancaS"
+            },
+            "tblmdfe.codcidadecarregamento": {
+                "tabela": "tblmdfe",
+                "coluna": "codcidadecarregamento",
+                "metodo": "MdfeCarregamentoS"
+            },
+            "tblmdfenfe.codcidadedescarga": {
+                "tabela": "tblmdfenfe",
+                "coluna": "codcidadedescarga",
+                "metodo": "MdfeNfeDescargaS"
             }
         }
     },
@@ -1721,8 +1756,95 @@
         "namespace": "Mg\\NotaFiscal",
         "classe": "NotaFiscal",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscal.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codestadoplaca": {
+                "tabela": "tblestado",
+                "coluna": "codestadoplaca",
+                "metodo": "EstadoPlaca"
+            },
+            "codestoquelocal": {
+                "tabela": "tblestoquelocal",
+                "coluna": "codestoquelocal",
+                "metodo": "EstoqueLocal"
+            },
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codnaturezaoperacao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NaturezaOperacao"
+            },
+            "codoperacao": {
+                "tabela": "tbloperacao",
+                "coluna": "codoperacao",
+                "metodo": "Operacao"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codpessoatransportador": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoatransportador",
+                "metodo": "PessoaTransportador"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmdfenfe.codnotafiscal": {
+                "tabela": "tblmdfenfe",
+                "coluna": "codnotafiscal",
+                "metodo": "MdfeNfeS"
+            },
+            "tblnfeterceiro.codnotafiscal": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnotafiscal",
+                "metodo": "NfeTerceiroS"
+            },
+            "tblnotafiscalcartacorrecao.codnotafiscal": {
+                "tabela": "tblnotafiscalcartacorrecao",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscalCartaCorrecaoS"
+            },
+            "tblnotafiscalcreditoicmssimples.codnotafiscal": {
+                "tabela": "tblnotafiscalcreditoicmssimples",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscalCreditoIcmsSimplesS"
+            },
+            "tblnotafiscalduplicatas.codnotafiscal": {
+                "tabela": "tblnotafiscalduplicatas",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscalDuplicatasS"
+            },
+            "tblnotafiscalprodutobarra.codnotafiscal": {
+                "tabela": "tblnotafiscalprodutobarra",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscalProdutoBarraS"
+            },
+            "tblnotafiscalreferenciada.codnotafiscal": {
+                "tabela": "tblnotafiscalreferenciada",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscalReferenciadaS"
+            },
+            "tblnotafiscalterceiro.codnotafiscal": {
+                "tabela": "tblnotafiscalterceiro",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscalTerceiroS"
+            }
+        }
     },
     "tblproduto": {
         "tabela": "tblproduto",
@@ -3263,6 +3385,48 @@
                 "metodo": "UsuarioCriacao"
             }
         },
+        "hasMany": []
+    },
+    "tblnotafiscalcartacorrecao": {
+        "tabela": "tblnotafiscalcartacorrecao",
+        "campocodigo": "codnotafiscalcartacorrecao",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscalCartaCorrecao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalCartaCorrecao.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnotafiscalcreditoicmssimples": {
+        "tabela": "tblnotafiscalcreditoicmssimples",
+        "campocodigo": "codnotafiscalcreditoicmssimples",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscalCreditoIcmsSimples",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalCreditoIcmsSimples.php",
+        "belongsTo": {
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
+            }
+        },
+        "hasMany": []
+    },
+    "tblnotafiscalduplicatas": {
+        "tabela": "tblnotafiscalduplicatas",
+        "campocodigo": "codnotafiscalduplicatas",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscalDuplicatas",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalDuplicatas.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblnotafiscalreferenciada": {
+        "tabela": "tblnotafiscalreferenciada",
+        "campocodigo": "codnotafiscalreferenciada",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscalReferenciada",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalReferenciada.php",
+        "belongsTo": [],
         "hasMany": []
     }
 }

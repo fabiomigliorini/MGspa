@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Nov/2020 17:19:35
+ * Date: 26/Jan/2021 08:41:20
  */
 
 namespace Mg\Pessoa;
@@ -27,6 +27,7 @@ use Mg\Titulo\TituloAgrupamento;
 use Mg\Usuario\Usuario;
 use Mg\ValeCompra\ValeCompra;
 use Mg\ValeCompra\ValeCompraModelo;
+use Mg\Veiculo\Veiculo;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -87,6 +88,7 @@ class Pessoa extends MgModel
         'observacoes',
         'pessoa',
         'rg',
+        'rntrc',
         'telefone1',
         'telefone2',
         'telefone3',
@@ -280,6 +282,11 @@ class Pessoa extends MgModel
     public function ValeCompraModeloFavorecidoS()
     {
         return $this->hasMany(ValeCompraModelo::class, 'codpessoafavorecido', 'codpessoa');
+    }
+
+    public function VeiculoS()
+    {
+        return $this->hasMany(Veiculo::class, 'codpessoaproprietario', 'codpessoa');
     }
 
 }

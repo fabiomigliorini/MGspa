@@ -1,17 +1,29 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 26/Jan/2021 08:52:09
+ */
 
 namespace Mg\NotaFiscal;
 
 use Mg\MgModel;
-use Mg\Filial\Filial;
+use Mg\Mdfe\MdfeNfe;
+use Mg\NfeTerceiro\NfeTerceiro;
+use Mg\NotaFiscal\NotaFiscalCartaCorrecao;
+use Mg\NotaFiscal\NotaFiscalCreditoIcmsSimples;
+use Mg\NotaFiscal\NotaFiscalDuplicatas;
+use Mg\NotaFiscal\NotaFiscalProdutoBarra;
+use Mg\NotaFiscal\NotaFiscalReferenciada;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\Cidade\Estado;
 use Mg\Estoque\EstoqueLocal;
-use Mg\NaturezaOperacao\Operacao;
+use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
-use Mg\Cidade\Estado;
 
-class NotaFiscal extends MGModel
+class NotaFiscal extends MgModel
 {
     const MODELO_NFE              = 55;
     const MODELO_NFCE             = 65;
@@ -32,66 +44,115 @@ class NotaFiscal extends MGModel
 
     protected $table = 'tblnotafiscal';
     protected $primaryKey = 'codnotafiscal';
+
+
     protected $fillable = [
-      'codnaturezaoperacao',
-      'emitida',
-      'nfechave',
-      'nfeimpressa',
-      'serie',
-      'numero',
-      'emissao',
-      'saida',
-      'codfilial',
-      'codpessoa',
-      'observacoes',
-      'volumes',
-      'codoperacao',
-      'nfereciboenvio',
-      'nfedataenvio',
-      'nfeautorizacao',
-      'nfedataautorizacao',
-      'valorfrete',
-      'valorseguro',
-      'valordesconto',
-      'valoroutras',
-      'nfecancelamento',
-      'nfedatacancelamento',
-      'nfeinutilizacao',
-      'nfedatainutilizacao',
-      'justificativa',
-      'modelo',
-      'valorprodutos',
-      'valortotal',
-      'icmsbase',
-      'icmsvalor',
-      'icmsstbase',
-      'icmsstvalor',
-      'ipibase',
-      'ipivalor',
-      'frete',
-      'tpemis',
-      'codestoquelocal',
-    ];
-    protected $dates = [
+        'codestadoplaca',
+        'codestoquelocal',
+        'codfilial',
+        'codnaturezaoperacao',
+        'codoperacao',
+        'codpessoa',
+        'codpessoatransportador',
+        'cpf',
         'emissao',
-        'saida',
-        'nfedataenvio',
+        'emitida',
+        'frete',
+        'icmsbase',
+        'icmsstbase',
+        'icmsstvalor',
+        'icmsvalor',
+        'ipibase',
+        'ipivalor',
+        'justificativa',
+        'modelo',
+        'nfeautorizacao',
+        'nfecancelamento',
+        'nfechave',
         'nfedataautorizacao',
         'nfedatacancelamento',
+        'nfedataenvio',
         'nfedatainutilizacao',
-        'alteracao',
-        'criacao',
+        'nfeimpressa',
+        'nfeinutilizacao',
+        'nfereciboenvio',
+        'numero',
+        'observacoes',
+        'pesobruto',
+        'pesoliquido',
+        'placa',
+        'saida',
+        'serie',
+        'tpemis',
+        'valordesconto',
+        'valorfrete',
+        'valoroutras',
+        'valorprodutos',
+        'valorseguro',
+        'valortotal',
+        'volumes',
+        'volumesespecie',
+        'volumesmarca',
+        'volumesnumero'
     ];
 
+    protected $dates = [
+        'alteracao',
+        'criacao',
+        'emissao',
+        'nfedataautorizacao',
+        'nfedatacancelamento',
+        'nfedataenvio',
+        'nfedatainutilizacao',
+        'saida'
+    ];
+
+    protected $casts = [
+        'codestadoplaca' => 'integer',
+        'codestoquelocal' => 'integer',
+        'codfilial' => 'integer',
+        'codnaturezaoperacao' => 'integer',
+        'codnotafiscal' => 'integer',
+        'codoperacao' => 'integer',
+        'codpessoa' => 'integer',
+        'codpessoatransportador' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'cpf' => 'float',
+        'emitida' => 'boolean',
+        'frete' => 'integer',
+        'icmsbase' => 'float',
+        'icmsstbase' => 'float',
+        'icmsstvalor' => 'float',
+        'icmsvalor' => 'float',
+        'ipibase' => 'float',
+        'ipivalor' => 'float',
+        'modelo' => 'integer',
+        'nfeimpressa' => 'boolean',
+        'numero' => 'integer',
+        'pesobruto' => 'float',
+        'pesoliquido' => 'float',
+        'serie' => 'integer',
+        'tpemis' => 'integer',
+        'valordesconto' => 'float',
+        'valorfrete' => 'float',
+        'valoroutras' => 'float',
+        'valorprodutos' => 'float',
+        'valorseguro' => 'float',
+        'valortotal' => 'float',
+        'volumes' => 'integer'
+    ];
+
+
     // Chaves Estrangeiras
-    public function Operacao()
+    public function EstadoPlaca()
     {
-        return $this->belongsTo(Operacao::class, 'codoperacao', 'codoperacao');
+        return $this->belongsTo(Estado::class, 'codestadoplaca', 'codestado');
     }
 
-    public function NaturezaOperacao()
+    public function EstoqueLocal()
     {
-        return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
+        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
     }
 
     public function Filial()
@@ -99,9 +160,14 @@ class NotaFiscal extends MGModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
-    public function EstoqueLocal()
+    public function NaturezaOperacao()
     {
-        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
+        return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
+    }
+
+    public function Operacao()
+    {
+        return $this->belongsTo(Operacao::class, 'codoperacao', 'codoperacao');
     }
 
     public function Pessoa()
@@ -114,11 +180,6 @@ class NotaFiscal extends MGModel
         return $this->belongsTo(Pessoa::class, 'codpessoatransportador', 'codpessoa');
     }
 
-    public function EstadoPlaca()
-    {
-        return $this->belongsTo(Estado::class, 'codestadoplaca', 'codestado');
-    }
-
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -129,15 +190,16 @@ class NotaFiscal extends MGModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
     // Tabelas Filhas
-    public function NotaFiscalProdutoBarraS()
+    public function MdfeNfeS()
     {
-        return $this->hasMany(NotaFiscalProdutoBarra::class, 'codnotafiscal', 'codnotafiscal');
+        return $this->hasMany(MdfeNfe::class, 'codnotafiscal', 'codnotafiscal');
     }
 
-    public function NotaFiscalDuplicatasS()
+    public function NfeTerceiroS()
     {
-        return $this->hasMany(NotaFiscalDuplicatas::class, 'codnotafiscal', 'codnotafiscal');
+        return $this->hasMany(NfeTerceiro::class, 'codnotafiscal', 'codnotafiscal');
     }
 
     public function NotaFiscalCartaCorrecaoS()
@@ -145,8 +207,29 @@ class NotaFiscal extends MGModel
         return $this->hasMany(NotaFiscalCartaCorrecao::class, 'codnotafiscal', 'codnotafiscal');
     }
 
+    public function NotaFiscalCreditoIcmsSimplesS()
+    {
+        return $this->hasMany(NotaFiscalCreditoIcmsSimples::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
+    public function NotaFiscalDuplicatasS()
+    {
+        return $this->hasMany(NotaFiscalDuplicatas::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
+    public function NotaFiscalProdutoBarraS()
+    {
+        return $this->hasMany(NotaFiscalProdutoBarra::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
     public function NotaFiscalReferenciadaS()
     {
         return $this->hasMany(NotaFiscalReferenciada::class, 'codnotafiscal', 'codnotafiscal');
     }
+
+    public function NotaFiscalTerceiroS()
+    {
+        return $this->hasMany(NotaFiscalTerceiro::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
 }

@@ -1,13 +1,15 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jul/2020 09:15:51
+ * Date: 26/Jan/2021 08:39:21
  */
 
 namespace Mg\Cidade;
 
 use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
+use Mg\Mdfe\Mdfe;
+use Mg\Mdfe\MdfeNfe;
 use Mg\Cidade\Estado;
 use Mg\Usuario\Usuario;
 
@@ -56,6 +58,16 @@ class Cidade extends MgModel
 
 
     // Tabelas Filhas
+    public function MdfeCarregamentoS()
+    {
+        return $this->hasMany(Mdfe::class, 'codcidadecarregamento', 'codcidade');
+    }
+
+    public function MdfeNfeDescargaS()
+    {
+        return $this->hasMany(MdfeNfe::class, 'codcidadedescarga', 'codcidade');
+    }
+
     public function PessoaS()
     {
         return $this->hasMany(Pessoa::class, 'codcidade', 'codcidade');

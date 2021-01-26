@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 14/Nov/2020 08:51:58
+ * Date: 26/Jan/2021 08:47:19
  */
 
 namespace Mg\Filial;
@@ -22,6 +22,7 @@ use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
 use Mg\ValeCompra\ValeCompra;
 use Mg\Lio\LioTerminal;
+use Mg\Mdfe\Mdfe;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -36,6 +37,7 @@ class Filial extends MgModel
 
     protected $table = 'tblfilial';
     protected $primaryKey = 'codfilial';
+
 
     protected $fillable = [
         'acbrnfemonitorbloqueado',
@@ -144,6 +146,11 @@ class Filial extends MgModel
     public function LioTerminalS()
     {
         return $this->hasMany(LioTerminal::class, 'codfilial', 'codfilial');
+    }
+
+    public function MdfeS()
+    {
+        return $this->hasMany(Mdfe::class, 'codfilial', 'codfilial');
     }
 
     public function MetaFilialS()
