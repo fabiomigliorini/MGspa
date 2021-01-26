@@ -835,7 +835,7 @@
 			<fk name="tblcidade_codestado_fkey" to_schema="mgsis.mgsis" to_table="tblestado" >
 				<fk_column name="codestado" pk="codestado" />
 			</fk>
-			<fk name="tblcidade_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
+			<fk name="tblcidade_codusuarioalteracao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 			<fk name="tblcidade_codusuariocriacao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
@@ -2922,6 +2922,198 @@
 				<fk_column name="codgrupoeconomico" pk="codgrupoeconomico" />
 			</fk>
 		</table>
+		<table name="tblmdfe" >
+			<column name="codmdfe" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblmdfe_codmdfe_seq'::regclass)]]></defo>
+			</column>
+			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
+			<column name="tipoemitente" prior="tipo" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[tpEmit
+1 - Prestador de Servico
+2 - Transportador Carga Propria
+3 - Prestador de Servico - CTe Globalizado]]></comment>
+			</column>
+			<column name="tipotransportador" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[tpTransp
+1 - ETC - Empresa
+2 - TAC - Autônomo
+3 - CTC - Cooperativa]]></comment>
+			</column>
+			<column name="modelo" type="smallint" jt="5" mandatory="y" >
+				<defo><![CDATA[58]]></defo>
+				<comment><![CDATA[mod]]></comment>
+			</column>
+			<column name="serie" type="smallint" jt="5" mandatory="y" />
+			<column name="numero" type="integer" jt="4" >
+				<comment><![CDATA[nMDF]]></comment>
+			</column>
+			<column name="chmdfe" type="varchar" length="44" jt="12" >
+				<comment><![CDATA[chMDFe]]></comment>
+			</column>
+			<column name="modal" type="smallint" jt="5" mandatory="y" >
+				<defo><![CDATA[1]]></defo>
+				<comment><![CDATA[1 - Rodoviario
+2 - Aereo
+3 - Aquaviario
+4 - Ferroviario]]></comment>
+			</column>
+			<column name="emissao" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+				<defo><![CDATA[now()]]></defo>
+				<comment><![CDATA[dhEmi]]></comment>
+			</column>
+			<column name="tipoemissao" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[tpEmis
+1 - Normal
+2 - Contingencia]]></comment>
+			</column>
+			<column name="codcidadecarregamento" prior="codestadoinicio" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[UFIni
+infMunCarrega]]></comment>
+			</column>
+			<column name="codestadofim" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[UFFim]]></comment>
+			</column>
+			<column name="informacoesadicionais" type="varchar" length="2000" jt="12" >
+				<comment><![CDATA[infAdFisco]]></comment>
+			</column>
+			<column name="informacoescomplementares" type="varchar" length="5000" jt="12" >
+				<comment><![CDATA[infCpl]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<index name="pk_tblmdfe_codmdfe" unique="PRIMARY_KEY" >
+				<column name="codmdfe" />
+			</index>
+			<fk name="fk_tblmdfe_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
+				<fk_column name="codfilial" pk="codfilial" />
+			</fk>
+			<fk name="fk_tblmdfe_tblestado_0" to_schema="mgsis.mgsis" to_table="tblestado" update_action="cascade" >
+				<fk_column name="codestadofim" pk="codestado" />
+			</fk>
+			<fk name="fk_tblmdfe_tblcidade" to_schema="mgsis.mgsis" to_table="tblcidade" update_action="cascade" >
+				<fk_column name="codcidadecarregamento" pk="codcidade" />
+			</fk>
+			<fk name="fk_tblmdfe_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblmdfe_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblmdfeestado" >
+			<column name="codmdfeestado" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblmdfeestado_codmdfeestado_seq'::regclass)]]></defo>
+			</column>
+			<column name="codmdfe" type="bigint" jt="-5" mandatory="y" />
+			<column name="codestado" type="bigint" jt="-5" mandatory="y" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblmdfeestado_codmdfeestado" unique="PRIMARY_KEY" >
+				<column name="codmdfeestado" />
+			</index>
+			<fk name="fk_tblmdfeestado_tblestado" to_schema="mgsis.mgsis" to_table="tblestado" update_action="cascade" >
+				<fk_column name="codestado" pk="codestado" />
+			</fk>
+			<fk name="fk_tblmdfeestado_tblmdfe" to_schema="mgsis.mgsis" to_table="tblmdfe" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codmdfe" pk="codmdfe" />
+			</fk>
+			<fk name="fk_tblmdfeestado_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblmdfeestado_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblmdfenfe" prior="tblmdfedocumento" >
+			<column name="codmdfenfe" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblmdfenfe_codmdfenfe_seq'::regclass)]]></defo>
+			</column>
+			<column name="codmdfe" type="bigint" jt="-5" mandatory="y" />
+			<column name="codcidadedescarga" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[infMunDescarga]]></comment>
+			</column>
+			<column name="nfechave" prior="chnfe" type="varchar" length="44" jt="12" mandatory="y" >
+				<comment><![CDATA[chNfe]]></comment>
+			</column>
+			<column name="codnotafiscal" type="bigint" jt="-5" />
+			<column name="valor" type="numeric" length="15" decimal="2" jt="2" mandatory="y" >
+				<comment><![CDATA[vCarga]]></comment>
+			</column>
+			<column name="peso" type="numeric" length="15" decimal="4" jt="2" mandatory="y" >
+				<comment><![CDATA[qCarga
+Peso em KG]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblmdfenfe_codmdfenfe" unique="PRIMARY_KEY" >
+				<column name="codmdfenfe" />
+			</index>
+			<fk name="fk_tblmdfedocumento_tblmdfe" to_schema="mgsis.mgsis" to_table="tblmdfe" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codmdfe" pk="codmdfe" />
+			</fk>
+			<fk name="fk_tblmdfedocumento_tblcidade" to_schema="mgsis.mgsis" to_table="tblcidade" update_action="cascade" >
+				<fk_column name="codcidadedescarga" pk="codcidade" />
+			</fk>
+			<fk name="fk_tblmdfedocumento_tblnotafiscal" to_schema="mgsis.mgsis" to_table="tblnotafiscal" update_action="cascade" >
+				<fk_column name="codnotafiscal" pk="codnotafiscal" />
+			</fk>
+			<fk name="fk_tblmdfenfe_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblmdfenfe_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblmdfestatus" >
+			<column name="codmdfestatus" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblmdfestatus_codmdfestatus_seq'::regclass)]]></defo>
+			</column>
+			<column name="mdfestatus" type="varchar" length="30" decimal="0" jt="12" mandatory="y" />
+			<column name="sigla" type="varchar" length="5" decimal="0" jt="12" mandatory="y" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblmdfestatus_codmdfestatus" unique="PRIMARY_KEY" >
+				<column name="codmdfestatus" />
+			</index>
+		</table>
+		<table name="tblmdfeveiculo" >
+			<column name="codmdfeveiculo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblmdfeveiculo_codmdfeveiculo_seq'::regclass)]]></defo>
+			</column>
+			<column name="codmdfe" type="bigint" jt="-5" mandatory="y" />
+			<column name="codveiculo" type="bigint" jt="-5" mandatory="y" />
+			<column name="codpessoacondutor" prior="codpessoamotorista" type="bigint" jt="-5" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblmdfeveiculo_codmdfe" unique="PRIMARY_KEY" >
+				<column name="codmdfeveiculo" />
+			</index>
+			<index name="unq_tblmdfeveiculo" unique="UNIQUE_KEY" >
+				<column name="codmdfe" />
+				<column name="codveiculo" />
+			</index>
+			<fk name="fk_tblmdfeveiculo_tblmdfe" to_schema="mgsis.mgsis" to_table="tblmdfe" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codmdfe" pk="codmdfe" />
+			</fk>
+			<fk name="fk_tblmdfeveiculo_tblveiculo" to_schema="mgsis.mgsis" to_table="tblveiculo" update_action="cascade" >
+				<fk_column name="codveiculo" pk="codveiculo" />
+			</fk>
+			<fk name="fk_tblmdfeveiculo_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblmdfeveiculo_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
 		<table name="tblmenu" >
 			<column name="codmenu" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo><![CDATA[nextval('tblmenu_codmenu_seq'::regclass)]]></defo>
@@ -5002,6 +5194,7 @@
 2=Simples Nacional, excesso sublimite de receita bruta;
 3=Regime Normal.]]></comment>
 			</column>
+			<column name="rntrc" type="varchar" length="8" jt="12" />
 			<index name="tblpessoa_pkey" unique="PRIMARY_KEY" >
 				<column name="codpessoa" />
 			</index>
@@ -5114,14 +5307,14 @@
 				<comment><![CDATA[Identificador da transação]]></comment>
 			</column>
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="horario" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="horario" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="nome" type="varchar" length="100" jt="12" />
 			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="infopagador" type="varchar" length="140" jt="12" />
-			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpix_codpix" unique="PRIMARY_KEY" >
 				<column name="codpix" />
@@ -5247,12 +5440,12 @@
 			<column name="id" type="varchar" length="40" jt="12" />
 			<column name="rtrid" type="varchar" length="40" jt="12" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="solicitacao" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="liquidacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="solicitacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="liquidacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codpixdevolucaostatus" type="bigint" length="1" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpixdevolucao_codpixdevolucao" unique="PRIMARY_KEY" >
 				<column name="codpixdevolucao" />
@@ -5287,9 +5480,9 @@
 				<defo><![CDATA[nextval('tblpixdevolucaostatus_codpixdevolucaostatus_seq'::regclass)]]></defo>
 			</column>
 			<column name="pixdevolucaostatus" type="varchar" length="50" jt="12" mandatory="y" />
-			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpixdevolucaostatus_codpixdevolucaostatus" unique="PRIMARY_KEY" >
 				<column name="codpixdevolucaostatus" />
@@ -6801,6 +6994,155 @@
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
+		<table name="tblveiculo" >
+			<comment><![CDATA[cInt]]></comment>
+			<column name="codveiculo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblveiculo_codveiculo_seq'::regclass)]]></defo>
+			</column>
+			<column name="codveiculotipo" type="bigint" jt="-5" mandatory="y" />
+			<column name="veiculo" type="varchar" length="50" jt="12" />
+			<column name="placa" type="varchar" length="7" jt="12" />
+			<column name="renavam" type="varchar" length="11" jt="12" />
+			<column name="tara" type="bigint" jt="-5" >
+				<comment><![CDATA[tara em KG]]></comment>
+			</column>
+			<column name="capacidade" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[Capacidade em KG]]></comment>
+			</column>
+			<column name="capacidadem3" type="smallint" jt="5" >
+				<comment><![CDATA[capacidade em m3]]></comment>
+			</column>
+			<column name="codpessoaproprietario" prior="codpessoa" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[proprietario]]></comment>
+			</column>
+			<column name="tipoproprietario" type="smallint" jt="5" >
+				<comment><![CDATA[0 - TAC Agregado
+1 - TAC Independente
+2 - Outros]]></comment>
+			</column>
+			<column name="codestado" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[UF]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<index name="pk_tblveiculo_codveiculo" unique="PRIMARY_KEY" >
+				<column name="codveiculo" />
+			</index>
+			<index name="unq_tblveiculo" unique="UNIQUE_KEY" >
+				<column name="placa" />
+			</index>
+			<index name="unq_tblveiculo_0" unique="UNIQUE_KEY" >
+				<column name="renavam" />
+			</index>
+			<fk name="fk_tblveiculo_tblveiculotipo" to_schema="mgsis.mgsis" to_table="tblveiculotipo" update_action="cascade" >
+				<fk_column name="codveiculotipo" pk="codveiculotipo" />
+			</fk>
+			<fk name="fk_tblveiculo_tblpessoa" to_schema="mgsis.mgsis" to_table="tblpessoa" >
+				<fk_column name="codpessoaproprietario" pk="codpessoa" />
+			</fk>
+			<fk name="fk_tblveiculo_tblestado" to_schema="mgsis.mgsis" to_table="tblestado" update_action="cascade" >
+				<fk_column name="codestado" pk="codestado" />
+			</fk>
+			<fk name="fk_tblveiculo_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblveiculo_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblveiculoconjunto" >
+			<column name="codveiculoconjunto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblveiculoconjunto_codveiculoconjunto_seq'::regclass)]]></defo>
+			</column>
+			<column name="veiculoconjunto" type="varchar" length="50" jt="12" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<index name="pk_tblveiculoconjunto_codveiculoconjunto" unique="PRIMARY_KEY" >
+				<column name="codveiculoconjunto" />
+			</index>
+			<fk name="fk_tblveiculoconjunto_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblveiculoconjunto_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblveiculoconjuntoveiculo" >
+			<column name="codveiculoconjuntoveiculo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblveiculoconjuntoveiculo_codveiculoconjuntoveiculo_seq'::regclass)]]></defo>
+			</column>
+			<column name="codveiculoconjunto" type="bigint" jt="-5" mandatory="y" />
+			<column name="codveiculo" type="bigint" jt="-5" mandatory="y" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblveiculoconjuntoveiculo_codveiculoconjuntoveiculo" unique="PRIMARY_KEY" >
+				<column name="codveiculoconjuntoveiculo" />
+			</index>
+			<index name="unq_tblveiculoconjuntoveiculo" unique="UNIQUE_KEY" >
+				<column name="codveiculoconjunto" />
+				<column name="codveiculo" />
+			</index>
+			<fk name="fk_tblveiculoconjuntoveiculo_tblveiculoconjunto" to_schema="mgsis.mgsis" to_table="tblveiculoconjunto" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codveiculoconjunto" pk="codveiculoconjunto" />
+			</fk>
+			<fk name="fk_tblveiculoconjuntoveiculo_tblveiculo" to_schema="mgsis.mgsis" to_table="tblveiculo" delete_action="cascade" update_action="cascade" >
+				<fk_column name="codveiculo" pk="codveiculo" />
+			</fk>
+			<fk name="fk_tblveiculoconjuntoveiculo_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblveiculoconjuntoveiculo_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblveiculotipo" >
+			<column name="codveiculotipo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblveiculotipo_codveiculotipo_seq'::regclass)]]></defo>
+			</column>
+			<column name="veiculotipo" type="varchar" length="50" jt="12" mandatory="y" />
+			<column name="tracao" type="boolean" jt="-7" mandatory="y" />
+			<column name="reboque" type="boolean" jt="-7" mandatory="y" />
+			<column name="tiporodado" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[tpRod
+01 - Truck
+02 - Toco
+03 - Cavalo Mecanico
+04 - VAN
+05 - Utilitario
+06 - Outros]]></comment>
+			</column>
+			<column name="tipocarroceria" type="smallint" jt="5" mandatory="y" >
+				<comment><![CDATA[tpCar
+00 - Nao Aplicavel
+01 - Aberto
+02 - Fechada / Bau
+03 - Graneleira
+04 - Porta Container
+05 - Sider]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<index name="pk_tblveiculotipo_codveiculotipo" unique="PRIMARY_KEY" >
+				<column name="codveiculotipo" />
+			</index>
+			<fk name="fk_tblveiculotipo_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblveiculotipo_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+		</table>
 		<view name="vwboleto" >
 			<view_script><![CDATA[CREATE VIEW ${schema}.${name} AS  SELECT tblbanco.numerobanco,
     tblportador.agencia,
@@ -7983,6 +8325,11 @@
 		<sequence name="tbllioterminal_codlioterminal_seq" options="START WITH 1" />
 		<sequence name="tblliquidacaotitulo_codliquidacaotitulo_seq" options="START WITH 1" />
 		<sequence name="tblmarca_codmarca_seq" options="START WITH 1" />
+		<sequence name="tblmdfe_codmdfe_seq" options="START WITH 1" />
+		<sequence name="tblmdfeestado_codmdfeestado_seq" options="START WITH 1" />
+		<sequence name="tblmdfenfe_codmdfenfe_seq" options="START WITH 1" />
+		<sequence name="tblmdfestatus_codmdfestatus_seq" options="START WITH 1" />
+		<sequence name="tblmdfeveiculo_codmdfeveiculo_seq" options="START WITH 1" />
 		<sequence name="tblmenu_codmenu_seq" options="START WITH 1" />
 		<sequence name="tblmeta_codmeta_seq" options="START WITH 1" />
 		<sequence name="tblmetafilial_codmetafilial_seq" options="START WITH 1" />
@@ -8089,6 +8436,10 @@
 		<sequence name="tblvalecompramodelo_codvalecompramodelo_seq" options="START WITH 1" />
 		<sequence name="tblvalecompramodeloprodutobarra_codvalecompraprodutobarra_seq" options="START WITH 1" />
 		<sequence name="tblvalecompraprodutobarra_codvalecompraprodutobarra_seq" options="START WITH 1" />
+		<sequence name="tblveiculo_codveiculo_seq" options="START WITH 1" />
+		<sequence name="tblveiculoconjunto_codveiculoconjunto_seq" options="START WITH 1" />
+		<sequence name="tblveiculoconjuntoveiculo_codveiculoconjuntoveiculo_seq" options="START WITH 1" />
+		<sequence name="tblveiculotipo_codveiculotipo_seq" options="START WITH 1" />
 		<trigger name="tblmovimentotituloaiauad" table="tblmovimentotitulo" id="Trigger4846959" isSystem="false" >
 			<string><![CDATA[CREATE TRIGGER tblmovimentotituloaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblmovimentotitulo FOR EACH ROW EXECUTE PROCEDURE fntblmovimentotituloaiauad()]]></string>
 		</trigger>
@@ -9736,6 +10087,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
+			<column name="rntrc" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblportador" color="C1D8EE" x="1184" y="288" >
 			<column name="codportador" />
@@ -9802,6 +10154,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
+			<column name="rntrc" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="96" y="784" >
 			<column name="codproduto" />
@@ -10286,6 +10639,58 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<string><![CDATA[select * from tblliopedidopagamento where codliopedido = 00000061]]></string>
 		</script>
 	</layout>
+	<layout name="Layout_MDFe" id="Layout_12b2" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblcidade" color="3986C1" x="112" y="480" >
+			<column name="codcidade" />
+			<column name="codestado" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblestado" color="3986C1" x="96" y="672" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="3986C1" x="368" y="208" >
+			<column name="codfilial" />
+			<column name="codempresa" />
+			<column name="codpessoa" />
+			<column name="acbrnfemonitorcodusuario" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="nfeambiente" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblmdfe" color="CAEEC1" x="368" y="432" />
+		<entity schema="mgsis.mgsis" name="tblmdfeestado" color="CAEEC1" x="400" y="832" />
+		<entity schema="mgsis.mgsis" name="tblmdfenfe" color="CAEEC1" x="720" y="368" />
+		<entity schema="mgsis.mgsis" name="tblmdfestatus" color="CAEEC1" x="736" y="832" />
+		<entity schema="mgsis.mgsis" name="tblmdfeveiculo" color="CAEEC1" x="720" y="624" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="3986C1" x="720" y="80" >
+			<column name="codnotafiscal" />
+			<column name="codnaturezaoperacao" />
+			<column name="codfilial" />
+			<column name="codestoquelocal" />
+			<column name="codpessoa" />
+			<column name="codpessoatransportador" />
+			<column name="codoperacao" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codestadoplaca" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="3986C1" x="48" y="160" >
+			<column name="codpessoa" />
+			<column name="codsexo" />
+			<column name="codestadocivil" />
+			<column name="codcidade" />
+			<column name="codcidadecobranca" />
+			<column name="codformapagamento" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codgrupocliente" />
+			<column name="codgrupoeconomico" />
+			<column name="rntrc" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblveiculo" color="EEC1C1" x="1008" y="768" />
+		<entity schema="mgsis.mgsis" name="tblveiculoconjunto" color="EEC1C1" x="944" y="304" />
+		<entity schema="mgsis.mgsis" name="tblveiculoconjuntoveiculo" color="EEC1C1" x="960" y="528" />
+		<entity schema="mgsis.mgsis" name="tblveiculotipo" color="EEC1C1" x="1024" y="48" />
+	</layout>
 	<layout name="Layout_Meta" id="Layout_dd20140" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblcargo" color="C1D8EE" x="336" y="432" />
 		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="944" y="48" />
@@ -10304,6 +10709,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
+			<column name="rntrc" />
 		</entity>
 	</layout>
 	<layout name="Layout_NCM" id="Layout9248750" confirmed="y" show_column_type="y" show_relation="columns" >
@@ -10456,6 +10862,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
+			<column name="rntrc" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="832" y="688" >
 			<column name="codproduto" />
@@ -10532,6 +10939,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
+			<column name="rntrc" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="816" y="752" >
 			<column name="codprodutobarra" />
