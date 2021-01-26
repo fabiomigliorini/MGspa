@@ -18,6 +18,20 @@ use Mg\Usuario\Usuario;
 
 class Mdfe extends MgModel
 {
+    const TIPO_EMITENTE_PRESTADOR_SERVICO = 1;
+    const TIPO_EMITENTE_CARGA_PROPRIA = 2;
+    const TIPO_EMITENTE_CTE_GLOBALIZADO = 3;
+
+    const MODELO = 58;
+
+    const MODAL_RODOVIARIO = 1;
+    const MODAL_AEREO = 2;
+    const MODAL_AQUAVIARIO = 3;
+    const MODAL_FERROVIARIO = 4;
+
+    const TIPO_EMISSAO_NORMAL = 1;
+    const TIPO_EMISSAO_CONTINGENCIA = 2;
+
     protected $table = 'tblmdfe';
     protected $primaryKey = 'codmdfe';
 
