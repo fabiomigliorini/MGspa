@@ -2926,6 +2926,7 @@
 			<column name="codmdfe" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
 				<defo><![CDATA[nextval('tblmdfe_codmdfe_seq'::regclass)]]></defo>
 			</column>
+			<column name="codmdfestatus" type="bigint" length="1" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
 			<column name="tipoemitente" prior="tipo" type="smallint" jt="5" mandatory="y" >
 				<comment><![CDATA[tpEmit
@@ -3001,6 +3002,9 @@ infMunCarrega]]></comment>
 			</fk>
 			<fk name="fk_tblmdfe_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblmdfe_tblmdfestatus" to_schema="mgsis.mgsis" to_table="tblmdfestatus" update_action="cascade" >
+				<fk_column name="codmdfestatus" pk="codmdfestatus" />
 			</fk>
 		</table>
 		<table name="tblmdfeestado" >
@@ -3079,9 +3083,17 @@ Peso em KG]]></comment>
 			<column name="sigla" type="varchar" length="5" decimal="0" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblmdfestatus_codmdfestatus" unique="PRIMARY_KEY" >
 				<column name="codmdfestatus" />
 			</index>
+			<fk name="fk_tblmdfestatus_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblmdfestatus_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tblmdfeveiculo" >
 			<column name="codmdfeveiculo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
@@ -10656,7 +10668,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="nfeambiente" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblmdfe" color="CAEEC1" x="368" y="432" />
+		<entity schema="mgsis.mgsis" name="tblmdfe" color="CAEEC1" x="368" y="400" />
 		<entity schema="mgsis.mgsis" name="tblmdfeestado" color="CAEEC1" x="400" y="832" />
 		<entity schema="mgsis.mgsis" name="tblmdfenfe" color="CAEEC1" x="720" y="368" />
 		<entity schema="mgsis.mgsis" name="tblmdfestatus" color="CAEEC1" x="736" y="832" />
