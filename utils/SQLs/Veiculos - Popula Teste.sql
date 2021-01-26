@@ -52,4 +52,15 @@ from tblveiculoconjunto c
 inner join tblveiculo v on (right(v.placa, 4) = right(veiculoconjunto, 4) )
 
 
-update tblnotafiscal set pesobruto = 300 where codnotafiscal = 1709467
+update tblnotafiscal set pesobruto = null, pesoliquido = null where codnotafiscal = 1709467
+
+select vc.codveiculoconjunto 
+from tblveiculo v
+inner join tblveiculoconjuntoveiculo vcv on (vcv.codveiculo = v.codveiculo)
+inner join tblveiculoconjunto vc on (vc.codveiculoconjunto = vcv.codveiculoconjunto)
+where v.placa = 'ADH4298'
+and vc.inativo is null
+order by vc.criacao
+limit 1
+
+
