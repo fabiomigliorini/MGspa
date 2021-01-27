@@ -25,5 +25,34 @@ class MdfeController
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
 
+    // Cria Arquivo XML da MDFe
+    public function enviar (Request $request, $codmdfe)
+    {
+        $mdfe = Mdfe::findOrFail($codmdfe);
+        $ret = MdfeNfePhpService::enviar($mdfe);
+        return $ret;
+    }
+
+    // Consultar Recibo na Sefaz
+    public function consultarRecibo (Request $request, $codmdfe, $codmdfeenviosefaz = null)
+    {
+        if (!empty($codmdfeenviosefaz)) {
+            $mdfeEnvioSefaz = MdfeEnvioSefaz::findOrFail($codmdfeenviosefaz);
+        } else {
+            $mdfe = Mdfe::findOrFail($codmdfe);
+            $mdfeEnvioSefaz = $mdfe->MdfeEnvioSefazS()->orderBy('criacao', 'DESC')->first();
+        }
+        $ret = MdfeNfePhpService::consultarRecibo($mdfeEnvioSefaz);
+        return $ret;
+    }
+
+    // Consultar MDFe na Sefaz
+    public function consultar (Request $request, $codmdfe)
+    {
+        $mdfe = Mdfe::findOrFail($codmdfe);
+        $ret = MdfeNfePhpService::consultar($mdfe);
+        return $ret;
+    }
+
 
 }

@@ -3,8 +3,9 @@
 namespace Mg\Mdfe;
 
 // use DB;
-// use Carbon\Carbon;
+use Carbon\Carbon;
 use NFePHP\MDFe\Make;
+use NFePHP\MDFe\Common\Standardize;
 use NFePHP\Common\Keys;
 use NFePHP\Common\Strings;
 
@@ -26,7 +27,10 @@ class MdfeNfePhpService
         $std->cUF = $mdfe->Filial->Pessoa->Cidade->Estado->codigooficial;
         $std->tpAmb = $mdfe->Filial->nfeambiente;
         $std->tpEmit = $mdfe->tipoemitente;
-        $std->tpTransp = $mdfe->tipotransportador;
+        // 458 - Rejeição: Tipo de Transportador não deve ser informado para Emitente de Carga Própria proprietário do veículo
+        if ($mdfe->tipoemitente != Mdfe::TIPO_EMITENTE_CARGA_PROPRIA) {
+            $std->tpTransp = $mdfe->tipotransportador;
+        }
         $std->mod = $mdfe->modelo;
         $std->serie = $mdfe->serie;
         $std->nMDF = $mdfe->numero;
@@ -536,8 +540,118 @@ class MdfeNfePhpService
         // Salva XML
         $path = MdfeNfePhpPathService::pathMdfeAssinada($mdfe, true);
         file_put_contents($path, $xmlAssinado);
-        
+
         return $xmlAssinado;
+    }
+
+    public static function enviar (Mdfe $mdfe)
+    {
+        $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
+
+        // valida se existe Chave da NFe
+        if (empty($mdfe->chmdfe)) {
+            throw new \Exception('Chave da MDFe ausente!');
+        }
+
+        // Carrega Arquivo XML Assinado
+        $path = MdfeNfePhpPathService::pathMdfeAssinada($mdfe);
+        if (!file_exists($path)) {
+            throw new \Exception("Arquivo da MDFe não localizado ($path)!");
+        }
+        $xmlAssinado = file_get_contents($path);
+
+        // Monta Configuracao do Lote
+        $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
+
+        // Envia Lote para Sefaz
+        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
+        $path = MdfeNfePhpPathService::pathMdfeEnvio($mdfe, true);
+        file_put_contents($path, $resp);
+
+        $st = new Standardize();
+        $respStd = $st->toStd($resp);
+
+        // inicializa variaveis para retorno
+        $sucesso = false;
+        $cStat = null;
+        $xMotivo = 'Falha Comunicação SEFAZ!';
+
+        // Se veio cStat
+        $recibo = null;
+        if (isset($respStd->infRec->nRec)) {
+            $recibo = $respStd->infRec->nRec;
+        }
+
+        $recebimento = null;
+        if (isset($respStd->infRec->dhRecbto)) {
+            $recebimento = Carbon::parse($respStd->infRec->dhRecbto);
+        }
+
+        if (isset($respStd->cStat)) {
+            // Se Lote Recebido Com Sucesso
+            if ($respStd->cStat == 103) {
+                $sucesso = true;
+            }
+
+            // joga mensagem recebida da Sefaz para Variaveis de Retorno
+            $cStat = $respStd->cStat;
+            $xMotivo = $respStd->xMotivo;
+        }
+
+        $envio = MdfeEnvioSefaz::create([
+            'codmdfe' => $mdfe->codmdfe,
+            'recibo' => $recibo,
+            'recebimento' => $recebimento,
+            'cstatenvio' => $cStat,
+        ]);
+
+
+        // Retorna Resultado do processo
+        return [
+            'sucesso' => $sucesso,
+            'cStat' => $cStat,
+            'xMotivo' => $xMotivo,
+            'recibo' => $recibo,
+            'recebimento' => empty($recebimento)?null:$recebimento->format('Y-m-d H:i:s'),
+            'resp' => $resp,
+        ];
+    }
+
+    public static function consultarRecibo (MdfeEnvioSefaz $envio)
+    {
+        $mdfe = $envio->Mdfe;
+
+        $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
+
+        $resp = $tools->sefazConsultaRecibo($envio->recibo);
+        $st = new Standardize();
+        $respStd = $st->toStd($resp);
+
+        $sucesso = false;
+        $cStat = null;
+        $xMotivo = 'Falha Comunicação SEFAZ!';
+
+        if (isset($respStd->protMDFe->infProt->cStat)) {
+            $cStat = $respStd->protMDFe->infProt->cStat;
+        }
+
+        if (isset($respStd->protMDFe->infProt->xMotivo)) {
+            $xMotivo = $respStd->protMDFe->infProt->xMotivo;
+        }
+
+        $envio->update([
+            'cstatretorno' => $cStat,
+            'xmotivo' => $xMotivo
+        ]);
+
+
+        // Retorna Resultado do processo
+        return [
+            'sucesso' => $sucesso,
+            'cStat' => $cStat,
+            'xMotivo' => $xMotivo,
+            'resp' => $resp,
+        ];
     }
 
 }

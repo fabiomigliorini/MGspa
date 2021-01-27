@@ -28,6 +28,16 @@ class MdfeNfePhpPathService
         return $path;
     }
 
+    public static function pathMdfeEnvio(Mdfe $mdfe, bool $criar = false)
+    {
+        $path = static::pathMdfe($mdfe->Filial) . "temp/recibo/" . $mdfe->emissao->format('Ym');
+        if ($criar) {
+            @mkdir($path, 0775, true);
+        }
+        $path .= "/{$mdfe->chmdfe}-" . date('Y-m-d.H-i-s') . "-ret.xml";
+        return $path;
+    }
+
     /*
     public static function pathMdfeAutorizada(Mdfe $mdfe, bool $criar = false)
     {

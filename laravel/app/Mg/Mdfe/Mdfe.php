@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Jan/2021 09:53:26
+ * Date: 27/Jan/2021 18:34:51
  */
 
 namespace Mg\Mdfe;
@@ -10,6 +10,7 @@ use Mg\MgModel;
 use Mg\Mdfe\MdfeEstado;
 use Mg\Mdfe\MdfeNfe;
 use Mg\Mdfe\MdfeVeiculo;
+use Mg\Mdfe\MdfeEnvioSefaz;
 use Mg\Cidade\Cidade;
 use Mg\Cidade\Estado;
 use Mg\Filial\Filial;
@@ -114,6 +115,11 @@ class Mdfe extends MgModel
 
 
     // Tabelas Filhas
+    public function MdfeEnvioSefazS()
+    {
+        return $this->hasMany(MdfeEnvioSefaz::class, 'codmdfe', 'codmdfe');
+    }
+
     public function MdfeEstadoS()
     {
         return $this->hasMany(MdfeEstado::class, 'codmdfe', 'codmdfe');

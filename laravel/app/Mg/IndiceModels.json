@@ -3303,6 +3303,11 @@
                 "tabela": "tblmdfeveiculo",
                 "coluna": "codmdfe",
                 "metodo": "MdfeVeiculoS"
+            },
+            "tblmdfeenviosefaz.codmdfe": {
+                "tabela": "tblmdfeenviosefaz",
+                "coluna": "codmdfe",
+                "metodo": "MdfeEnvioSefazS"
             }
         }
     },
@@ -3437,6 +3442,31 @@
         "classe": "NotaFiscalReferenciada",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalReferenciada.php",
         "belongsTo": [],
+        "hasMany": []
+    },
+    "tblmdfeenviosefaz": {
+        "tabela": "tblmdfeenviosefaz",
+        "campocodigo": "codmdfeenviosefaz",
+        "namespace": "Mg\\Mdfe",
+        "classe": "MdfeEnvioSefaz",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mdfe\/MdfeEnvioSefaz.php",
+        "belongsTo": {
+            "codmdfe": {
+                "tabela": "tblmdfe",
+                "coluna": "codmdfe",
+                "metodo": "Mdfe"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     }
 }
