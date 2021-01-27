@@ -8,7 +8,6 @@ use NFePHP\MDFe\Make;
 use NFePHP\Common\Keys;
 use NFePHP\Common\Strings;
 
-
 class MdfeNfePhpService
 {
 
@@ -16,20 +15,6 @@ class MdfeNfePhpService
     {
 
         $mdfe = MdfeService::atribuirNumero($mdfe);
-
-        $config = [
-            // "atualizacao" => "2019-06-15 08:29:21",
-            'tpAmb' => $mdfe->Filial->nfeambiente,
-            // "razaosocial" => "SOFTWARE & HARDWARE INFORMATICA - ME",
-            // "siglaUF" => "SP",
-            // "cnpj" => "11222333444455",
-            // "inscricaomunicipal" => "11223",
-            // "codigomunicipio" => "3518800",
-            'schemes' => "PL_MDFe_300a",
-            'versao' => "3.00"
-        ];
-
-        $configJson = json_encode($config);
 
         $make = new Make();
         $make->setOnlyAscii(true);
@@ -222,6 +207,9 @@ class MdfeNfePhpService
                 if (!empty($mdfeVeiculo->Veiculo->capacidadem3)) {
                     $veicReboque->capM3 = $mdfeVeiculo->Veiculo->capacidadem3;
                 }
+                if (empty($veicTracao->capM3) && empty($veicTracao->capKG)) {
+                    $veicReboque->capKG = 0;
+                }
                 $veicReboque->tpCar = str_pad($mdfeVeiculo->Veiculo->VeiculoTipo->tipocarroceria, 2, '0', STR_PAD_LEFT);
                 $veicReboque->UF = $mdfeVeiculo->Veiculo->Estado->sigla;
 
@@ -311,63 +299,74 @@ class MdfeNfePhpService
 
         // $make->taginfCTe($std);
 
-        $infMunDescarga = new \stdClass();
-        $infMunDescarga->cMunDescarga = '1502400';
-        $infMunDescarga->xMunDescarga = 'CASTANHAL';
-        $infMunDescarga->nItem = 1;
-        $make->taginfMunDescarga($infMunDescarga);
+        $nItem = 0;
+        $vCarga = 0;
+        $qCarga = 0;
+        foreach ($mdfe->MdfeNfeS as $mdfeNfe) {
 
-        /* infCTe */
-        // $std = new \stdClass();
-        // $std->chCTe = '35310800000000000372570010001998991000614492';
-        // $std->nItem = 1;
-        // $make->taginfCTe($std);
+            // dd($mdfeNfe);
+            $infMunDescarga = new \stdClass();
+            $infMunDescarga->cMunDescarga = $mdfeNfe->CidadeDescarga->codigooficial;
+            $infMunDescarga->xMunDescarga = $mdfeNfe->CidadeDescarga->cidade;
+            $infMunDescarga->nItem = $nItem;
+            $make->taginfMunDescarga($infMunDescarga);
 
-        /* infNFe */
-        $std = new \stdClass();
-        $std->chNFe = '35310800000000000372570010001999091000099999';
-        $std->SegCodBarra = '012345678901234567890123456789012345';
-        $std->indReentrega = '1';
-        $std->nItem = 0;
+            /* infCTe */
+            // $std = new \stdClass();
+            // $std->chCTe = '35310800000000000372570010001998991000614492';
+            // $std->nItem = 1;
+            // $make->taginfCTe($std);
 
-        // Informações das Unidades de Transporte (Carreta/Reboque/Vagão)
-        // $stdinfUnidTransp = new \stdClass();
-        // $stdinfUnidTransp->tpUnidTransp = '1';
-        // $stdinfUnidTransp->idUnidTransp = 'AAA-1111';
+            /* infNFe */
+            $std = new \stdClass();
+            $std->chNFe = $mdfeNfe->nfechave;
+            // $std->SegCodBarra = '012345678901234567890123456789012345';
+            // $std->indReentrega = '1';
+            $std->nItem = $nItem;
 
-        // // Lacres das Unidades de Transporte
-        // $stdlacUnidTransp = new \stdClass();
-        // $stdlacUnidTransp->nLacre = ['00000001', '00000002'];
-        //
-        // $stdinfUnidTransp->lacUnidTransp = $stdlacUnidTransp;
+            // Informações das Unidades de Transporte (Carreta/Reboque/Vagão)
+            // $stdinfUnidTransp = new \stdClass();
+            // $stdinfUnidTransp->tpUnidTransp = '1';
+            // $stdinfUnidTransp->idUnidTransp = 'AAA-1111';
 
-        // Informações das Unidades de Carga (Containeres/ULD/Outros)
-        // $stdinfUnidCarga = new \stdClass();
-        // $stdinfUnidCarga->tpUnidCarga = '1';
-        // $stdinfUnidCarga->idUnidCarga = '01234567890123456789';
+            // // Lacres das Unidades de Transporte
+            // $stdlacUnidTransp = new \stdClass();
+            // $stdlacUnidTransp->nLacre = ['00000001', '00000002'];
+            //
+            // $stdinfUnidTransp->lacUnidTransp = $stdlacUnidTransp;
 
-        // lacres das Unidades de Carga
-        // $stdlacUnidCarga = new \stdClass();
-        // $stdlacUnidCarga->nLacre = ['00000001', '00000002'];
-        // $stdinfUnidCarga->lacUnidCarga = $stdlacUnidCarga;
-        // $stdinfUnidCarga->qtdRat = '3.50';
-        //
-        // $stdinfUnidTransp->infUnidCarga = [$stdinfUnidCarga];
-        // $stdinfUnidTransp->qtdRat = '3.50';
+            // Informações das Unidades de Carga (Containeres/ULD/Outros)
+            // $stdinfUnidCarga = new \stdClass();
+            // $stdinfUnidCarga->tpUnidCarga = '1';
+            // $stdinfUnidCarga->idUnidCarga = '01234567890123456789';
 
-        // $std->infUnidTransp = [$stdinfUnidTransp];
+            // lacres das Unidades de Carga
+            // $stdlacUnidCarga = new \stdClass();
+            // $stdlacUnidCarga->nLacre = ['00000001', '00000002'];
+            // $stdinfUnidCarga->lacUnidCarga = $stdlacUnidCarga;
+            // $stdinfUnidCarga->qtdRat = '3.50';
+            //
+            // $stdinfUnidTransp->infUnidCarga = [$stdinfUnidCarga];
+            // $stdinfUnidTransp->qtdRat = '3.50';
 
-        // transporte de produtos classificados pela ONU como perigosos
-        // $stdperi = new \stdClass();
-        // $stdperi->nONU = '1234';
-        // $stdperi->xNomeAE = 'testeNome';
-        // $stdperi->xClaRisco = 'testeClaRisco';
-        // $stdperi->grEmb = 'testegrEmb';
-        // $stdperi->qTotProd = '1';
-        // $stdperi->qVolTipo = '1';
-        // $std->peri = [$stdperi];
+            // $std->infUnidTransp = [$stdinfUnidTransp];
 
-        $make->taginfNFe($std);
+            // transporte de produtos classificados pela ONU como perigosos
+            // $stdperi = new \stdClass();
+            // $stdperi->nONU = '1234';
+            // $stdperi->xNomeAE = 'testeNome';
+            // $stdperi->xClaRisco = 'testeClaRisco';
+            // $stdperi->grEmb = 'testegrEmb';
+            // $stdperi->qTotProd = '1';
+            // $stdperi->qVolTipo = '1';
+            // $std->peri = [$stdperi];
+
+            $make->taginfNFe($std);
+            $qCarga += $mdfeNfe->peso;
+            $vCarga += $mdfeNfe->valor;
+            $nItem++;
+        }
+
 
         /* infMDFeTransp */
 
@@ -435,16 +434,16 @@ class MdfeNfePhpService
 
         /* grupo de totais */
         $std = new \stdClass();
-        $std->vCarga = '580042.92';
-        $std->cUnid = '01';
-        $std->qCarga = '35454.9400';
+        $std->vCarga = number_format($vCarga, 2, '.', '');
+        $std->cUnid = '01'; //KG Fixo
+        $std->qCarga = number_format($qCarga, 4, '.', '');
         $make->tagtot($std);
         /* fim grupo de totais */
 
         /* grupo de lacres */
         // for {
         $std = new \stdClass();
-        // $std->nLacre = '0000001';
+        $std->nLacre = '0000000';
         $make->taglacres($std);
         // }
         /* fim grupo de lacres */
@@ -522,13 +521,23 @@ class MdfeNfePhpService
 
         /* grupo Informações Adicionais */
         $std = new \stdClass();
-        $std->infCpl = 'Contrato No 007018 2 CARR BBB1111';
-        $std->infAdFisco = 'Contrato No 007018 2 CARR BBB1111';
+        $std->infCpl = $mdfe->informacoescomplementares;
+        $std->infAdFisco = $mdfe->informacoesadicionais;
         $make->taginfAdic($std);
         /* fim grupo Informações Adicionais */
 
+        // Monta XML
         $xml = $make->getXML(); // O conteúdo do XML fica armazenado na variável $xml
-        return $xml;
+
+        // Assina XML
+        $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
+        $xmlAssinado = $tools->signMDFe($xml);
+
+        // Salva XML
+        $path = MdfeNfePhpPathService::pathMdfeAssinada($mdfe, true);
+        file_put_contents($path, $xmlAssinado);
+        
+        return $xmlAssinado;
     }
 
 }
