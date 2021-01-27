@@ -2962,7 +2962,7 @@
 				<defo><![CDATA[now()]]></defo>
 				<comment><![CDATA[dhEmi]]></comment>
 			</column>
-			<column name="inicioviagem" type="timestamp" length="0" jt="93" >
+			<column name="inicioviagem" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[dhIniViagem]]></comment>
 			</column>
 			<column name="tipoemissao" type="smallint" jt="5" mandatory="y" >
@@ -3008,6 +3008,35 @@ infMunCarrega]]></comment>
 			</fk>
 			<fk name="fk_tblmdfe_tblmdfestatus" to_schema="mgsis.mgsis" to_table="tblmdfestatus" update_action="cascade" >
 				<fk_column name="codmdfestatus" pk="codmdfestatus" />
+			</fk>
+		</table>
+		<table name="tblmdfeenviosefaz" >
+			<column name="codmdfeenviosefaz" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
+				<defo><![CDATA[nextval('tblmdfeenviosefaz_codmdfeenviosefaz_seq'::regclass)]]></defo>
+			</column>
+			<column name="codmdfe" type="bigint" jt="-5" mandatory="y" />
+			<column name="cstatenvio" prior="cstat" type="bigint" jt="-5" />
+			<column name="recibo" type="varchar" length="30" jt="12" />
+			<column name="recebimento" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+				<defo><![CDATA[now()]]></defo>
+			</column>
+			<column name="cstatretorno" type="bigint" jt="-5" />
+			<column name="xmotivo" type="text" length="200" jt="12" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblmdfeenviosefaz_codmdfeenviosefaz" unique="PRIMARY_KEY" >
+				<column name="codmdfeenviosefaz" />
+			</index>
+			<fk name="fk_tblmdfeenviosefaz_tblmdfe" to_schema="mgsis.mgsis" to_table="tblmdfe" >
+				<fk_column name="codmdfe" pk="codmdfe" />
+			</fk>
+			<fk name="fk_tblmdfeenviosefaz_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblmdfeenviosefaz_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblmdfeestado" >
@@ -8350,6 +8379,8 @@ Peso em KG]]></comment>
 		<sequence name="tblliquidacaotitulo_codliquidacaotitulo_seq" options="START WITH 1" />
 		<sequence name="tblmarca_codmarca_seq" options="START WITH 1" />
 		<sequence name="tblmdfe_codmdfe_seq" options="START WITH 1" />
+		<sequence name="tblmdfe_numero_401_920_58_seq" options="START WITH 1" />
+		<sequence name="tblmdfeenviosefaz_codmdfeenviosefaz_seq" options="START WITH 1" />
 		<sequence name="tblmdfeestado_codmdfeestado_seq" options="START WITH 1" />
 		<sequence name="tblmdfenfe_codmdfenfe_seq" options="START WITH 1" />
 		<sequence name="tblmdfestatus_codmdfestatus_seq" options="START WITH 1" />
@@ -10684,6 +10715,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="nfeambiente" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblmdfe" color="CAEEC1" x="368" y="400" />
+		<entity schema="mgsis.mgsis" name="tblmdfeenviosefaz" color="CAEEC1" x="112" y="896" />
 		<entity schema="mgsis.mgsis" name="tblmdfeestado" color="CAEEC1" x="400" y="832" />
 		<entity schema="mgsis.mgsis" name="tblmdfenfe" color="CAEEC1" x="720" y="368" />
 		<entity schema="mgsis.mgsis" name="tblmdfestatus" color="CAEEC1" x="736" y="832" />
