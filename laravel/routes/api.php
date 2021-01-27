@@ -35,6 +35,7 @@ Route::group(['prefix' => 'v1'], function () {
 
     // MDFe
     Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
+    Route::post('mdfe/{codmdfe}/criar-xml', '\Mg\Mdfe\MdfeController@criarXml');
 
 
     // Pix Cob

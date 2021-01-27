@@ -760,6 +760,11 @@
                 "tabela": "tblveiculo",
                 "coluna": "codpessoaproprietario",
                 "metodo": "VeiculoS"
+            },
+            "tblmdfeveiculo.codpessoacondutor": {
+                "tabela": "tblmdfeveiculo",
+                "coluna": "codpessoacondutor",
+                "metodo": "MdfeVeiculoCondutorS"
             }
         }
     },
@@ -3236,6 +3241,11 @@
                 "tabela": "tblveiculo",
                 "coluna": "codveiculo",
                 "metodo": "Veiculo"
+            },
+            "codpessoacondutor": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoacondutor",
+                "metodo": "PessoaCondutor"
             }
         },
         "hasMany": []

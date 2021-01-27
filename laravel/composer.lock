@@ -1429,16 +1429,16 @@
         },
         {
             "name": "nfephp-org/sped-common",
-            "version": "v5.0.37",
+            "version": "v5.0.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nfephp-org/sped-common.git",
-                "reference": "a7345baa0b272e98768295c3b086fbf8e1942695"
+                "reference": "e7a44f9922109fbcd282857183e75d08a6a58e38"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nfephp-org/sped-common/zipball/a7345baa0b272e98768295c3b086fbf8e1942695",
-                "reference": "a7345baa0b272e98768295c3b086fbf8e1942695",
+                "url": "https://api.github.com/repos/nfephp-org/sped-common/zipball/e7a44f9922109fbcd282857183e75d08a6a58e38",
+                "reference": "e7a44f9922109fbcd282857183e75d08a6a58e38",
                 "shasum": ""
             },
             "require": {
@@ -1449,7 +1449,7 @@
                 "ext-soap": "*",
                 "league/flysystem": "^1.0",
                 "neitanod/forceutf8": "^2.0",
-                "php": ">=5.6",
+                "php": ">=7.0",
                 "psr/log": "^1.0"
             },
             "require-dev": {
@@ -1497,7 +1497,7 @@
                 "nfephp",
                 "sped"
             ],
-            "time": "2019-06-10 20:22:40"
+            "time": "2020-12-01 19:23:40"
         },
         {
             "name": "nfephp-org/sped-da",
@@ -4165,6 +4165,7 @@
                 "faker",
                 "fixtures"
             ],
+            "abandoned": true,
             "time": "2018-07-12 10:23:15"
         },
         {
@@ -4892,6 +4893,7 @@
             "keywords": [
                 "tokenizer"
             ],
+            "abandoned": true,
             "time": "2017-11-27 05:48:46"
         },
         {
@@ -5685,12 +5687,12 @@
             "version": "1.4.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/webmozart/assert.git",
+                "url": "https://github.com/webmozarts/assert.git",
                 "reference": "83e253c8e0be5b0257b881e1827274667c5c17a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/assert/zipball/83e253c8e0be5b0257b881e1827274667c5c17a9",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/83e253c8e0be5b0257b881e1827274667c5c17a9",
                 "reference": "83e253c8e0be5b0257b881e1827274667c5c17a9",
                 "shasum": ""
             },

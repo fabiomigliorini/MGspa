@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:31:33
+ * Date: 27/Jan/2021 11:00:27
  */
 
 namespace Mg\Mdfe;
@@ -10,6 +10,7 @@ use Mg\MgModel;
 use Mg\Mdfe\Mdfe;
 use Mg\Usuario\Usuario;
 use Mg\Veiculo\Veiculo;
+use Mg\Pessoa\Pessoa;
 
 class MdfeVeiculo extends MgModel
 {
@@ -42,6 +43,11 @@ class MdfeVeiculo extends MgModel
     public function Mdfe()
     {
         return $this->belongsTo(Mdfe::class, 'codmdfe', 'codmdfe');
+    }
+
+    public function PessoaCondutor()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoacondutor', 'codpessoa');
     }
 
     public function UsuarioAlteracao()

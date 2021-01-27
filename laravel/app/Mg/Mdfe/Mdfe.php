@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:32:12
+ * Date: 27/Jan/2021 09:53:26
  */
 
 namespace Mg\Mdfe;
@@ -45,6 +45,7 @@ class Mdfe extends MgModel
         'emissao',
         'informacoesadicionais',
         'informacoescomplementares',
+        'inicioviagem',
         'modal',
         'modelo',
         'numero',
@@ -58,7 +59,8 @@ class Mdfe extends MgModel
         'alteracao',
         'criacao',
         'emissao',
-        'inativo'
+        'inativo',
+        'inicioviagem'
     ];
 
     protected $casts = [

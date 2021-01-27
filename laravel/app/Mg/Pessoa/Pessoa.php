@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:41:20
+ * Date: 27/Jan/2021 11:02:06
  */
 
 namespace Mg\Pessoa;
@@ -28,6 +28,7 @@ use Mg\Usuario\Usuario;
 use Mg\ValeCompra\ValeCompra;
 use Mg\ValeCompra\ValeCompraModelo;
 use Mg\Veiculo\Veiculo;
+use Mg\Mdfe\MdfeVeiculo;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -92,6 +93,7 @@ class Pessoa extends MgModel
         'telefone1',
         'telefone2',
         'telefone3',
+        'tipotransportador',
         'toleranciaatraso',
         'vendedor'
     ];
@@ -123,6 +125,7 @@ class Pessoa extends MgModel
         'fisica' => 'boolean',
         'fornecedor' => 'boolean',
         'notafiscal' => 'integer',
+        'tipotransportador' => 'integer',
         'toleranciaatraso' => 'integer',
         'vendedor' => 'boolean'
     ];
@@ -207,6 +210,11 @@ class Pessoa extends MgModel
     public function LiquidacaoTituloS()
     {
         return $this->hasMany(LiquidacaoTitulo::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function MdfeVeiculoCondutorS()
+    {
+        return $this->hasMany(MdfeVeiculo::class, 'codpessoacondutor', 'codpessoa');
     }
 
     public function MetaFilialPessoaS()

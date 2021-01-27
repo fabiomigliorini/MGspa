@@ -23,6 +23,7 @@ class MdfeService
         $mdfe->serie = $nf->Filial->nfeserie;
         $mdfe->modal = Mdfe::MODAL_RODOVIARIO;
         $mdfe->emissao = Carbon::now();
+        $mdfe->inicioviagem = $mdfe->emissao;
         $mdfe->tipoemissao = Mdfe::TIPO_EMISSAO_NORMAL;
         $mdfe->codcidadecarregamento = $nf->Filial->Pessoa->codcidade;
         $mdfe->codestadofim = $nf->Pessoa->Cidade->codestado;
@@ -61,8 +62,40 @@ class MdfeService
                 $mdfeVeiculo->save();
             }
         }
-        
+
         return $mdfe;
+    }
+
+    public static function atribuirNumero (Mdfe $mdfe)
+    {
+        // Caso ja tenha numero atribuido, aborta
+        if (!empty($mdfe->numero)) {
+            return $mdfe;
+        }
+
+        // Monta nome da Sequence
+        $sequence = "tblmdfe_numero_{$mdfe->codfilial}_{$mdfe->serie}_{$mdfe->modelo}_seq";
+
+        // Cria Sequence se nao existir
+        $sql = "CREATE SEQUENCE IF NOT EXISTS {$sequence}";
+        DB::statement($sql);
+
+        // Busca proximo numero da sequence
+        $sql = 'SELECT NEXTVAL(:sequence) AS numero';
+        $res = DB::select($sql, ['sequence' => $sequence]);
+        $emissao = Carbon::now();
+        $inicioviagem = $mdfe->inicioviagem;
+        if (empty($inicioviagem)) {
+            $inicioviagem = $emissao;
+        } elseif ($inicioviagem->lessThan($emissao)) {
+            $inicioviagem = $emissao;
+        }
+        $mdfe->update([
+            'numero' => $res[0]->numero,
+            'emissao' => $emissao,
+            'inicioviagem' => $inicioviagem,
+        ]);
+        return $mdfe->fresh();
     }
 
 }
