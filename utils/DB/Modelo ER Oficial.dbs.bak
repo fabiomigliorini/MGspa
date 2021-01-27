@@ -3083,7 +3083,7 @@ Peso em KG]]></comment>
 			<column name="sigla" type="varchar" length="5" decimal="0" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblmdfestatus_codmdfestatus" unique="PRIMARY_KEY" >
 				<column name="codmdfestatus" />
@@ -5207,6 +5207,12 @@ Peso em KG]]></comment>
 3=Regime Normal.]]></comment>
 			</column>
 			<column name="rntrc" type="varchar" length="8" jt="12" />
+			<column name="tipotransportador" type="smallint" jt="5" >
+				<comment><![CDATA[tpTransp
+1 - ETC - Empresa
+2 - TAC - Autônomo
+3 - CTC - Cooperativa]]></comment>
+			</column>
 			<index name="tblpessoa_pkey" unique="PRIMARY_KEY" >
 				<column name="codpessoa" />
 			</index>
@@ -7018,13 +7024,13 @@ Peso em KG]]></comment>
 			<column name="tara" type="bigint" jt="-5" >
 				<comment><![CDATA[tara em KG]]></comment>
 			</column>
-			<column name="capacidade" type="bigint" jt="-5" mandatory="y" >
+			<column name="capacidade" type="bigint" jt="-5" >
 				<comment><![CDATA[Capacidade em KG]]></comment>
 			</column>
 			<column name="capacidadem3" type="smallint" jt="5" >
 				<comment><![CDATA[capacidade em m3]]></comment>
 			</column>
-			<column name="codpessoaproprietario" prior="codpessoa" type="bigint" jt="-5" mandatory="y" >
+			<column name="codpessoaproprietario" prior="codpessoa" type="bigint" jt="-5" >
 				<comment><![CDATA[proprietario]]></comment>
 			</column>
 			<column name="tipoproprietario" type="smallint" jt="5" >
@@ -9957,7 +9963,7 @@ AS '$libdir/unaccent', $function$unaccent_lexize$function$
 		</function>
 	</schema>
 	<connector name="dev@docker" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.18.jar" driver_desc="Standard" host="localhost" port="54320" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
-	<connector name="prod@netuno" database="PostgreSQL" host="sistema.mgpapelaria.com.br" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
+	<connector name="prod@netuno" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.18.jar" driver_desc="Standard" host="sistema.mgpapelaria.com.br" port="5432" instance="mgsis" user="mgsis" passwd="bWdzaXM=" />
 	<layout name="Layout_Autorizacao" id="Layout_93c6439" confirmed="y" show_column_type="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblfilial" color="B7C8E3" x="768" y="64" />
 		<entity schema="mgsis.mgsis" name="tblgrupousuario" color="B7C8E3" x="448" y="384" />
@@ -10100,6 +10106,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
 			<column name="rntrc" />
+			<column name="tipotransportador" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblportador" color="C1D8EE" x="1184" y="288" >
 			<column name="codportador" />
@@ -10167,6 +10174,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
 			<column name="rntrc" />
+			<column name="tipotransportador" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="96" y="784" >
 			<column name="codproduto" />
@@ -10652,6 +10660,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		</script>
 	</layout>
 	<layout name="Layout_MDFe" id="Layout_12b2" show_relation="columns" >
+		<comment><![CDATA[PostgreSQL]]></comment>
 		<entity schema="mgsis.mgsis" name="tblcidade" color="3986C1" x="112" y="480" >
 			<column name="codcidade" />
 			<column name="codestado" />
@@ -10697,6 +10706,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupocliente" />
 			<column name="codgrupoeconomico" />
 			<column name="rntrc" />
+			<column name="tipotransportador" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblveiculo" color="EEC1C1" x="1008" y="768" />
 		<entity schema="mgsis.mgsis" name="tblveiculoconjunto" color="EEC1C1" x="944" y="304" />
@@ -10722,6 +10732,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
 			<column name="rntrc" />
+			<column name="tipotransportador" />
 		</entity>
 	</layout>
 	<layout name="Layout_NCM" id="Layout9248750" confirmed="y" show_column_type="y" show_relation="columns" >
@@ -10875,6 +10886,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
 			<column name="rntrc" />
+			<column name="tipotransportador" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="832" y="688" >
 			<column name="codproduto" />
@@ -10952,6 +10964,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codgrupoeconomico" />
 			<column name="crt" />
 			<column name="rntrc" />
+			<column name="tipotransportador" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="816" y="752" >
 			<column name="codprodutobarra" />
