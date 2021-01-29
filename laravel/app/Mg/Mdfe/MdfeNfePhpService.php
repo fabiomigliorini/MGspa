@@ -4,16 +4,36 @@ namespace Mg\Mdfe;
 
 // use DB;
 use Carbon\Carbon;
+
 use NFePHP\MDFe\Make;
+use NFePHP\MDFe\Complements;
 use NFePHP\MDFe\Common\Standardize;
 use NFePHP\Common\Keys;
 use NFePHP\Common\Strings;
+use NFePHP\DA\MDFe\Damdfe;
 
 class MdfeNfePhpService
 {
 
+    public static function validarPreenchimento (Mdfe $mdfe)
+    {
+        $mdfeVeiculos = $mdfe->MdfeVeiculoS;
+        if (empty($mdfeVeiculos)) {
+            throw new \Exception("Nenhum Veículo informado!", 1);
+        }
+        foreach ($mdfeVeiculos as $mdfeVeiculo) {
+            if ($mdfeVeiculo->Veiculo->VeiculoTipo->tracao) {
+                if (empty($mdfeVeiculo->codpessoacondutor)) {
+                    throw new \Exception("Condutor do Veículo de Tração não informado!", 1);
+                }
+            }
+        }
+    }
+
     public static function criarXml (Mdfe $mdfe)
     {
+
+        static::validarPreenchimento($mdfe);
 
         $mdfe = MdfeService::atribuirNumero($mdfe);
 
@@ -35,24 +55,6 @@ class MdfeNfePhpService
         $std->serie = $mdfe->serie;
         $std->nMDF = $mdfe->numero;
         $std->cMDF = 99999999 - $mdfe->numero;
-        // if (empty($mdfe->chmdfe)) {
-        //     $chave = Keys::build(
-        //         $std->cUF,
-        //         $mdfe->emissao->format('y'),
-        //         $mdfe->emissao->format('m'),
-        //         $mdfe->Filial->Pessoa->cnpj,
-        //         $std->mod,
-        //         $std->serie,
-        //         $std->nMDF,
-        //         $mdfe->Filial->nfeambiente,
-        //         $std->cMDF
-        //     );
-        //     $mdfe->update(['chmdfe' => $chave]);
-        //     $mdfe = $mdfe->fresh();
-        // } else {
-        //     $chave = $mdfe->chmdfe;
-        // }
-        // dd($chave);
         $std->cDV = '?';
         $std->modal = $mdfe->modal;
         $std->dhEmi = $mdfe->emissao->toIso8601String();
@@ -533,6 +535,9 @@ class MdfeNfePhpService
         // Monta XML
         $xml = $make->getXML(); // O conteúdo do XML fica armazenado na variável $xml
 
+        // Salva Chave do MDFE no Banco de Dados
+        $mdfe->update(['chmdfe' => $make->chMDFe]);
+
         // Assina XML
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
         $xmlAssinado = $tools->signMDFe($xml);
@@ -617,13 +622,16 @@ class MdfeNfePhpService
         ];
     }
 
-    public static function consultarRecibo (MdfeEnvioSefaz $envio)
+    public static function consultarEnvio (MdfeEnvioSefaz $envio)
     {
         $mdfe = $envio->Mdfe;
 
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
 
         $resp = $tools->sefazConsultaRecibo($envio->recibo);
+        $path = MdfeNfePhpPathService::pathMdfeEnvio($mdfe, true);
+        file_put_contents($path, $resp);
+
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -633,6 +641,8 @@ class MdfeNfePhpService
 
         if (isset($respStd->protMDFe->infProt->cStat)) {
             $cStat = $respStd->protMDFe->infProt->cStat;
+            // Processa Protocolo para saber se foi autorizada
+            $sucesso = static::processarProtocolo($mdfe, $respStd->protMDFe, $resp);
         }
 
         if (isset($respStd->protMDFe->infProt->xMotivo)) {
@@ -652,6 +662,84 @@ class MdfeNfePhpService
             'xMotivo' => $xMotivo,
             'resp' => $resp,
         ];
+    }
+
+    public static function processarProtocolo(Mdfe $mdfe, $protMDFe, $resp)
+    {
+
+        // Se Autorizado
+        // 100 - Autorizado o uso da NF-e
+        // 150 - Autorizado o uso da NF-e, autorizacao fora de prazo
+        if (in_array($protMDFe->infProt->cStat, [100, 150])) {
+            return static::vincularProtocoloAutorizacao($mdfe, $protMDFe, $resp);
+        }
+
+        // Se Denegada
+        // 301 Uso Denegado: Irregularidade fiscal do emitente
+        // 302 Uso Denegado: Irregularidade fiscal do destinatário
+        // 303 Uso Denegado: Destinatario nao habilitado a operar na UF
+        if (in_array($protMDFe->infProt->cStat, [301, 302, 303])) {
+            static::vincularProtocoloDenegacao($mdfe, $protMDFe, $resp);
+            return false;
+        }
+
+        return false;
+    }
+
+    public static function vincularProtocoloAutorizacao(Mdfe $mdfe, $protMDFe, $resp)
+    {
+
+        // Verifica se tem o infProt
+        if (!isset($protMDFe->infProt)) {
+            return false;
+        }
+        $infProt = $protMDFe->infProt;
+
+        // Guarda no Banco de Dados informação da Autorização
+        // $ret = NotaFiscal::where('codnotafiscal', $mdfe->codnotafiscal)->update([
+        //   'nfeautorizacao' => $infProt->nProt,
+        //   'nfedataautorizacao' => Carbon::parse($infProt->dhRecbto)
+        // ]);
+
+        // Carrega o Arquivo com o XML Assinado
+        $pathAssinada = MdfeNfePhpPathService::pathMdfeAssinada($mdfe);
+        $xmlAssinado = file_get_contents($pathAssinada);
+
+        // Vincula o Protocolo no XML Assinado
+        // $prot = new Protocol();
+        // $xmlProtocolado = $prot->add($xmlAssinado, $resp);
+        $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $resp);
+
+        // Salva o Arquivo com a NFe Aprovada
+        $pathAprovada = MdfeNfePhpPathService::pathMdfeAutorizada($mdfe, true);
+        file_put_contents($pathAprovada, $xmlProtocolado);
+
+        return true;
+    }
+
+
+    public static function damdfe (Mdfe $mdfe)
+    {
+        $path = MdfeNfePhpPathService::pathMdfeAutorizada($mdfe);
+
+        // if (!file_exists($path)) {
+        //     $path = MdfeNfePhpPathService::pathMdfeAssinada($mdfe);
+        // }
+
+        if (!file_exists($path)) {
+            throw new \Exception("Não foi Localizado o arquivo da MDFe ($path)");
+        }
+
+        // Carrega XML Assinado
+        $xml = file_get_contents($path);
+        $pathLogo = public_path('MGPapelariaLogo.jpeg');
+        $damdfe = new Damdfe($xml);
+        $pdf = $damdfe->render();
+
+        $pathDamdfe = MdfeNfePhpPathService::pathDamdfe($mdfe, true);
+        file_put_contents($pathDamdfe, $pdf);
+
+        return $pathDamdfe;
     }
 
 }

@@ -38,7 +38,6 @@ class MdfeNfePhpPathService
         return $path;
     }
 
-    /*
     public static function pathMdfeAutorizada(Mdfe $mdfe, bool $criar = false)
     {
         $path = static::pathMdfe($mdfe->Filial) . "enviadas/aprovadas/" . $mdfe->emissao->format('Ym');
@@ -49,6 +48,17 @@ class MdfeNfePhpPathService
         return $path;
     }
 
+    public static function pathDamdfe(Mdfe $mdfe, bool $criar = false)
+    {
+        $path = static::pathMdfe($mdfe->Filial) . "pdf/" . $mdfe->emissao->format('Ym');
+        if ($criar) {
+            @mkdir($path, 0775, true);
+        }
+        $path .= "/{$mdfe->chmdfe}-Mdfe.pdf";
+        return $path;
+    }
+
+    /*
     public static function pathMdfeDenegada(Mdfe $mdfe, bool $criar = false)
     {
         $path = static::pathMdfe($mdfe->Filial) . "enviadas/denegadas/" . $mdfe->emissao->format('Ym');
@@ -56,16 +66,6 @@ class MdfeNfePhpPathService
             @mkdir($path, 0775, true);
         }
         $path .= "/{$mdfe->chmdfe}-Mdfe.xml";
-        return $path;
-    }
-
-    public static function pathDanfe(Mdfe $mdfe, bool $criar = false)
-    {
-        $path = static::pathMdfe($mdfe->Filial) . "pdf/" . $mdfe->emissao->format('Ym');
-        if ($criar) {
-            @mkdir($path, 0775, true);
-        }
-        $path .= "/{$mdfe->chmdfe}-Mdfe.pdf";
         return $path;
     }
 

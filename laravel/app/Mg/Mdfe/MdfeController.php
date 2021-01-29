@@ -34,7 +34,7 @@ class MdfeController
     }
 
     // Consultar Recibo na Sefaz
-    public function consultarRecibo (Request $request, $codmdfe, $codmdfeenviosefaz = null)
+    public function consultarEnvio (Request $request, $codmdfe, $codmdfeenviosefaz = null)
     {
         if (!empty($codmdfeenviosefaz)) {
             $mdfeEnvioSefaz = MdfeEnvioSefaz::findOrFail($codmdfeenviosefaz);
@@ -42,7 +42,7 @@ class MdfeController
             $mdfe = Mdfe::findOrFail($codmdfe);
             $mdfeEnvioSefaz = $mdfe->MdfeEnvioSefazS()->orderBy('criacao', 'DESC')->first();
         }
-        $ret = MdfeNfePhpService::consultarRecibo($mdfeEnvioSefaz);
+        $ret = MdfeNfePhpService::consultarEnvio($mdfeEnvioSefaz);
         return $ret;
     }
 
@@ -54,5 +54,12 @@ class MdfeController
         return $ret;
     }
 
+    // Emitir PDF do DAMDFe Documento Auxiliar do MDFe
+    public function damdfe (Request $request, $codmdfe)
+    {
+        $mdfe = Mdfe::findOrFail($codmdfe);
+        $res = MdfeNfePhpService::damdfe($mdfe);
+        return response()->file($res);
+    }
 
 }

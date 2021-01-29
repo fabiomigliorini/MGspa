@@ -11,7 +11,7 @@
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
         "nfephp-org/sped-common": "^5.0",
-        "nfephp-org/sped-da": "^0.1",
+        "nfephp-org/sped-da": "^0.2",
         "nfephp-org/sped-ibpt": "^1.0",
         "nfephp-org/sped-mdfe": "^4.1",
         "nfephp-org/sped-nfe": "^5.0",

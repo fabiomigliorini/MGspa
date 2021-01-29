@@ -37,8 +37,9 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
     Route::post('mdfe/{codmdfe}/criar-xml', '\Mg\Mdfe\MdfeController@criarXml');
     Route::post('mdfe/{codmdfe}/enviar', '\Mg\Mdfe\MdfeController@enviar');
-    Route::post('mdfe/{codmdfe}/consultar-recibo/{codmdfeenviosefaz?}', '\Mg\Mdfe\MdfeController@consultarRecibo');
+    Route::post('mdfe/{codmdfe}/consultar-envio/{codmdfeenviosefaz?}', '\Mg\Mdfe\MdfeController@consultarEnvio');
     Route::post('mdfe/{codmdfe}/consultar', '\Mg\Mdfe\MdfeController@consultar');
+    Route::post('mdfe/{codmdfe}/damdfe', '\Mg\Mdfe\MdfeController@damdfe');
 
 
     // Pix Cob
