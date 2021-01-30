@@ -543,7 +543,7 @@ class MdfeNfePhpService
         $xmlAssinado = $tools->signMDFe($xml);
 
         // Salva XML
-        $path = MdfeNfePhpPathService::pathMdfeAssinada($mdfe, true);
+        $path = MdfeNfePhpPathService::pathMdfeCriado($mdfe, true);
         file_put_contents($path, $xmlAssinado);
 
         return $xmlAssinado;
@@ -559,7 +559,7 @@ class MdfeNfePhpService
         }
 
         // Carrega Arquivo XML Assinado
-        $path = MdfeNfePhpPathService::pathMdfeAssinada($mdfe);
+        $path = MdfeNfePhpPathService::pathMdfeCriado($mdfe);
         if (!file_exists($path)) {
             throw new \Exception("Arquivo da MDFe não localizado ($path)!");
         }
@@ -570,7 +570,7 @@ class MdfeNfePhpService
 
         // Envia Lote para Sefaz
         $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
-        $path = MdfeNfePhpPathService::pathMdfeEnvio($mdfe, true);
+        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
         file_put_contents($path, $resp);
 
         $st = new Standardize();
@@ -629,7 +629,7 @@ class MdfeNfePhpService
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
 
         $resp = $tools->sefazConsultaRecibo($envio->recibo);
-        $path = MdfeNfePhpPathService::pathMdfeEnvio($mdfe, true);
+        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
         file_put_contents($path, $resp);
 
         $st = new Standardize();
@@ -702,7 +702,7 @@ class MdfeNfePhpService
         // ]);
 
         // Carrega o Arquivo com o XML Assinado
-        $pathAssinada = MdfeNfePhpPathService::pathMdfeAssinada($mdfe);
+        $pathAssinada = MdfeNfePhpPathService::pathMdfeCriado($mdfe);
         $xmlAssinado = file_get_contents($pathAssinada);
 
         // Vincula o Protocolo no XML Assinado
@@ -711,7 +711,7 @@ class MdfeNfePhpService
         $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $resp);
 
         // Salva o Arquivo com a NFe Aprovada
-        $pathAprovada = MdfeNfePhpPathService::pathMdfeAutorizada($mdfe, true);
+        $pathAprovada = MdfeNfePhpPathService::pathMdfeAutorizado($mdfe, true);
         file_put_contents($pathAprovada, $xmlProtocolado);
 
         return true;
@@ -720,10 +720,10 @@ class MdfeNfePhpService
 
     public static function damdfe (Mdfe $mdfe)
     {
-        $path = MdfeNfePhpPathService::pathMdfeAutorizada($mdfe);
+        $path = MdfeNfePhpPathService::pathMdfeAutorizado($mdfe);
 
         // if (!file_exists($path)) {
-        //     $path = MdfeNfePhpPathService::pathMdfeAssinada($mdfe);
+        //     $path = MdfeNfePhpPathService::pathMdfeCriado($mdfe);
         // }
 
         if (!file_exists($path)) {
