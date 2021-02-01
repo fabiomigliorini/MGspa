@@ -11,6 +11,7 @@ select
 from tblnegocio nf
 left join tot on (tot.codnegocio = nf.codnegocio)
 where nf.valorprodutos != coalesce(tot.total, 0)
+ORDER BY lancamento desc
 --limit 50
 
 /*
@@ -20,3 +21,5 @@ update tblnegocio set valorprodutos = 0, valordesconto = null where codnegocio =
 
 commit
 */
+
+update tblnegocio set codnegociostatus  = 2 where codnegocio = 2137384
