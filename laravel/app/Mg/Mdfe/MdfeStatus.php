@@ -17,6 +17,7 @@ class MdfeStatus extends MgModel
     const AUTORIZADO = 3;
     const NAO_AUTORIZADO = 4;
     const ENCERRADO = 5;
+    const CANCELADO = 9;
 
     protected $table = 'tblmdfestatus';
     protected $primaryKey = 'codmdfestatus';
