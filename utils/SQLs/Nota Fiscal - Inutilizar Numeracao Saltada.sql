@@ -21,8 +21,8 @@ insert into tblnotafiscal
 	(numero, codfilial, codestoquelocal, modelo, emitida, emissao, saida, codpessoa, codnaturezaoperacao, serie) 
 select 
 	num as numero, 
-	103 as codfilial, 
-	103001 as codestoquelocal, 
+	104 as codfilial, 
+	104001 as codestoquelocal, 
 	65 as modelo, 
 	true as emitida, 
 	date_trunc('day', now()) as emissao, 
@@ -32,10 +32,11 @@ select
 	1 as serie
 	--num, nf.numero, nf.codnotafiscal
 --from generate_series(2, 5) num
-from generate_series(586067, 586067) num
-left join tblnotafiscal nf on (nf.numero = num and nf.codfilial = 103 and nf.serie = 1 and nf.modelo = 65 and nf.emitida = true)
+from generate_series(223898, 223928) num
+left join tblnotafiscal nf on (nf.numero = num and nf.codfilial = 104 and nf.serie = 1 and nf.modelo = 65 and nf.emitida = true)
 where nf.codnotafiscal is null
 order by 1
+
 /*
 delete from tblnotafiscal where codnotafiscal in (
 	select nf.codnotafiscal 
@@ -123,6 +124,9 @@ and nf.numero between 537117 and 541781
 */
 
 
+
+
+update tblnotafiscal set nfeautorizacao = null, nfedataautorizacao = null where codnotafiscal = 1839140
 
 
 
