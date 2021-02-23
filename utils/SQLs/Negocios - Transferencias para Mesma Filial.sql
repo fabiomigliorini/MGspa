@@ -17,3 +17,4 @@ left join tblusuario u on (u.codusuario = n.codusuario)
 where n.codpessoa = f.codpessoa
 and n.codnaturezaoperacao in (15, 16)
 and n.codnegociostatus = 2
+order by n.lancamento desc

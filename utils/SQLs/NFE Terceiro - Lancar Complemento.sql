@@ -31,6 +31,11 @@
 --Lumasol
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (27605)
 
+
+update tblnfeterceiroitem set complemento = (vprod * 0.934308075), margem = 37 where codnfeterceiro in (32388)
+
+select sum(vprod) from tblnfeterceiroitem t where codnfeterceiro in (32388)
+
 --Republic VIX
 --update tblnfeterceiroitem set complemento = vprod, margem = 37 where codnfeterceiro in (25002)
 
