@@ -86,6 +86,7 @@ module.exports = function (ctx) {
         'QSpace',
         'QForm',
         'QAjaxBar',
+        'QSplitter',
       ],
       config: {
         notify: { /* Notify defaults */ }

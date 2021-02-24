@@ -18,3 +18,9 @@ where n.codpessoa = f.codpessoa
 and n.codnaturezaoperacao in (15, 16)
 and n.codnegociostatus = 2
 order by n.lancamento desc
+
+update tblnegocio set codnaturezaoperacao  = 18 where codnegocio = 2019849
+
+
+
+

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:32:58
+ * Date: 24/Feb/2021 14:28:23
  */
 
 namespace Mg\Veiculo;
@@ -17,6 +17,7 @@ class VeiculoTipo extends MgModel
 
 
     protected $fillable = [
+        'inativo',
         'reboque',
         'tipocarroceria',
         'tiporodado',

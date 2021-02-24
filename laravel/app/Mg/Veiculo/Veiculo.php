@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:32:28
+ * Date: 24/Feb/2021 19:11:36
  */
 
 namespace Mg\Veiculo;
@@ -26,6 +26,7 @@ class Veiculo extends MgModel
         'codestado',
         'codpessoaproprietario',
         'codveiculotipo',
+        'inativo',
         'placa',
         'renavam',
         'tara',

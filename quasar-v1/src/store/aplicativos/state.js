@@ -52,6 +52,11 @@ export default {
       title: 'Distribuição DFe',
       path: '/dfe-distribuicao'
     },
+    {
+      icon: 'local_shipping',
+      title: 'Veículos',
+      path: '/veiculo'
+    },
     /*
     {
       icon: 'add_shopping_cart',

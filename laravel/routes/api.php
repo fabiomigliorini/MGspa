@@ -214,5 +214,18 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
         Route::get('select/produto-barra', '\Mg\Select\SelectProdutoBarraController@index');
 
+        Route::get('veiculo', '\Mg\Veiculo\VeiculoController@index');
+        Route::post('veiculo/{id}/inativo', '\Mg\Veiculo\VeiculoController@inativar');
+        Route::delete('veiculo/{id}/inativo', '\Mg\Veiculo\VeiculoController@ativar');
+        Route::delete('veiculo/{id}', '\Mg\Veiculo\VeiculoController@delete');
+
+        Route::get('veiculo-tipo', '\Mg\Veiculo\VeiculoTipoController@index');
+        Route::get('veiculo-tipo/{id}', '\Mg\Veiculo\VeiculoTipoController@show');
+        Route::put('veiculo-tipo/{id}', '\Mg\Veiculo\VeiculoTipoController@update');
+        Route::post('veiculo-tipo/{id}/inativo', '\Mg\Veiculo\VeiculoTipoController@inativar');
+        Route::delete('veiculo-tipo/{id}/inativo', '\Mg\Veiculo\VeiculoTipoController@ativar');
+        Route::delete('veiculo-tipo/{id}', '\Mg\Veiculo\VeiculoTipoController@delete');
+        Route::post('veiculo-tipo', '\Mg\Veiculo\VeiculoTipoController@store');
+
     });
 });

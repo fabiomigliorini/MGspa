@@ -148,7 +148,7 @@ class {$this->classe} extends MgModel
             'codusuariocriacao',
             'alteracao',
             'codusuarioalteracao',
-            'inativo'
+            // 'inativo'
         ];
         $campos = [];
         foreach ($this->colunas as $coluna) {

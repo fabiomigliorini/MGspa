@@ -6,6 +6,11 @@ export default [
   { path: '*', component: () => import('components/Error404') },
 
   // Etiquetas
+  { path: '/veiculo', component: () => import('components/views/veiculo/Index') },
+  { path: '/veiculo/tipo/create', component: () => import('components/views/veiculo/tipo/Create') },
+  { path: '/veiculo/tipo/:codveiculotipo/edit', component: () => import('components/views/veiculo/tipo/Edit') },
+
+  // Etiquetas
   { path: '/etiqueta', component: () => import('components/views/etiqueta/Index') },
 
   // Boleto
