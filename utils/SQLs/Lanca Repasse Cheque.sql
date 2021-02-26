@@ -1,15 +1,16 @@
 ﻿--select * from tblportador order by codportador
 
 -- Cria Repasse
-insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (210, '2021-02-16', null, '2021-02-16 11:41', 1);
+insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (1, '2021-02-16', null, '2021-02-16 11:41', 1);
 
 select * from tblchequerepasse order by codchequerepasse desc limit 50;
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2529, '2021-02-16 10:00', 1
+select codcheque, 2532, '2021-02-16 10:00', 1
 from tblcheque where cmc7 in (
-	'<00141120<0188510135>767000669746:',
+	'<00111802<0188501045>709007497531:',
+	'<00141373<0188501035>421001353214:',
 	'NIL'
 	);
 
