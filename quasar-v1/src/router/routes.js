@@ -7,6 +7,7 @@ export default [
 
   // Etiquetas
   { path: '/veiculo', component: () => import('components/views/veiculo/Index') },
+  { path: '/veiculo/create', component: () => import('components/views/veiculo/Create') },
   { path: '/veiculo/tipo/create', component: () => import('components/views/veiculo/tipo/Create') },
   { path: '/veiculo/tipo/:codveiculotipo/edit', component: () => import('components/views/veiculo/tipo/Edit') },
 

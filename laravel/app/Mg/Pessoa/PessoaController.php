@@ -19,9 +19,7 @@ class PessoaController extends MgController
         list($filter, $sort, $fields) = $this->filtros($request);
         $qry = PessoaService::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
-
         return response()->json($res, 200);
-
     }
 
     /**
@@ -33,14 +31,12 @@ class PessoaController extends MgController
     public function show(Request $request, $id)
     {
         $model = Pessoa::findOrFail($id, $request->get('fields'));
-
         return response()->json($model, 200);
     }
 
     public function autocomplete (Request $request)
     {
         $qry = PessoaService::autocomplete($request->all());
-
         return response()->json($qry, 200);
     }
 

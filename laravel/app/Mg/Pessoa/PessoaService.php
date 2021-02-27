@@ -13,11 +13,26 @@ class PessoaService
      */
     public static function autocomplete($params)
     {
-        $nome = $params['pessoa'];
         $qry = Pessoa::query();
-        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica');
-        $qry->where('pessoa', 'ilike', $nome.'%')->orWhere('fantasia', 'ilike', $nome.'%');
-        $ret = $qry->limit(50)->get();
+        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica', 'ie');
+        if (isset($params['pessoa'])) {
+            $nome = $params['pessoa'];
+            $qry->where(function ($q) use ($nome) {
+                $q->palavras('pessoa', $nome);
+            });
+            $qry->orWhere(function ($q) use ($nome) {
+                $q->palavras('fantasia', $nome);
+            });
+            $num = preg_replace('/\D/', '', $nome);
+            if ($num == $nome) {
+                $qry->orWhere('cnpj', $num);
+            }
+        }
+        if (isset($params['codpessoa'])) {
+            $qry->where('codpessoa', $params['codpessoa']);
+        }
+        $qry->orderBy('fantasia', 'asc');
+        $ret = $qry->limit(100)->get();
         return $ret;
     }
 
@@ -25,15 +40,12 @@ class PessoaService
     public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
     {
         $qry = Pessoa::query();
-
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);
         }
-
         if (!empty($filter['filial'])) {
             $qry->palavras('filial', $filter['filial']);
         }
-
         $qry = self::qryOrdem($qry, $sort);
         $qry = self::qryColunas($qry, $fields);
         return $qry;

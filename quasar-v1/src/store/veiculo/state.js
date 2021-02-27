@@ -16,6 +16,11 @@ export default {
     {value: 4, label: 'Porta Container'},
     {value: 5, label: 'Sider'},
   ],
+  optionsTipoProprietario: [
+    {value: 0, label: 'TAC Agregado'},
+    {value: 1, label: 'TAC Independente'},
+    {value: 2, label: 'Outros'},
+  ],
   veiculoTipo: [],
   veiculo: [],
 }
