@@ -94,6 +94,10 @@ class NFePHPMakeService
         // 9=Operação não presencial, outros.
         $std->indPres = 1;
 
+        // 0=Operação sem intermediador (em site ou plataforma própria)
+        // 1=Operação em site ou plataforma de terceiros (intermediadores/marketplace)
+        $std->indIntermed = 0;
+
         // 0=Emissão de NF-e com aplicativo do contribuinte;
         // 1=Emissão de NF-e avulsa pelo Fisco;
         // 2=Emissão de NF-e avulsa, pelo contribuinte com seu certificado digital, através do site do Fisco;

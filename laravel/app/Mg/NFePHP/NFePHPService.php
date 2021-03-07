@@ -15,6 +15,7 @@ use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Factories\Protocol;
 use NFePHP\Common\Strings;
 use NFePHP\DA\NFe\Danfe;
+use NFePHP\DA\NFe\Danfce;
 
 class NFePHPService extends MgService
 {
@@ -745,20 +746,43 @@ class NFePHPService extends MgService
 
             // Logo somente na Migliorini
             if ($nf->Filial->codempresa == 1) {
-                $pathLogo = public_path('MGPapelariaLogo.jpeg');
+                $logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(public_path('MGPapelariaLogo.jpeg')));
             } else {
-                $pathLogo = '';
+                $logo = null;
             }
 
-            $danfe = new Danfe($xml, 'P', 'A4', $pathLogo, 'I', '', 'helvetica');
-            $id = $danfe->montaDANFE('P', 'A4', 'C', Danfe::SIT_NONE, false, '', 5, 5, 5);
-            $pdf = $danfe->render();
+            $danfe = new Danfe($xml);
+            $danfe->debugMode(false);
+            $danfe->setDefaultFont('helvetica');
+            // $danfe->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webenf.com.br');
+            // Caso queira mudar a configuracao padrao de impressao
+            /*  $this->printParameters( $orientacao = '', $papel = 'A4', $margSup = 2, $margEsq = 2 ); */
+            //Informe o numero DPEC
+            /*  $danfe->depecNumber('123456789'); */
+            //Configura a posicao da logo
+            /*  $danfe->logoParameters($logo, 'C', false);  */
+            //Gera o PDF
+            $pdf = $danfe->render($logo);
         } else {
-            $pathLogo = public_path('MGPapelariaLogoSeloPretoBranco.jpeg');
 
-            $danfce = new DanfceMg($xml, $pathLogo);
-            $id = $danfce->monta();
-            $pdf = $danfce->render();
+            // Logo somente na Migliorini
+            if ($nf->Filial->codempresa == 1) {
+                $logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(public_path('MGPapelariaLogoSeloPretoBranco.jpeg')));
+            } else {
+                $logo = null;
+            }
+
+            $danfce = new Danfce($xml);
+            $danfce->debugMode(true);//seta modo debug, deve ser false em produção
+            $danfce->setPaperWidth(80); //seta a largura do papel em mm max=80 e min=58
+            $danfce->setMargins(2);//seta as margens
+            $danfce->setDefaultFont('helvetica');//altera o font pode ser 'times' ou 'arial'
+            $danfce->setOffLineDoublePrint(false); //ativa ou desativa a impressão conjunta das via do consumidor e da via do estabelecimento qnado a nfce for emitida em contingência OFFLINE
+            //$danfce->setPrintResume(true); //ativa ou desativa a impressao apenas do resumo
+            //$danfce->setViaEstabelecimento(); //altera a via do consumidor para a via do estabelecimento, quando a NFCe for emitida em contingência OFFLINE
+            //$danfce->setAsCanceled(); //força marcar nfce como cancelada
+            $danfce->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webnfe.com.br');
+            $pdf = $danfce->render($logo);
         }
 
         $pathDanfe = NFePHPPathService::pathDanfe($nf, true);

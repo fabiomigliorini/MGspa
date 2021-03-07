@@ -22,7 +22,9 @@ class NFePHPPathService
     {
         $path = static::pathNFe($nf->Filial) . "assinadas/" . $nf->emissao->format('Ym');
         if ($criar) {
-            @mkdir($path, 0775, true);
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
         $path .= "/{$nf->nfechave}-NFe.xml";
         return $path;
@@ -32,7 +34,9 @@ class NFePHPPathService
     {
         $path = static::pathNFe($nf->Filial) . "enviadas/aprovadas/" . $nf->emissao->format('Ym');
         if ($criar) {
-            @mkdir($path, 0775, true);
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
         $path .= "/{$nf->nfechave}-protNFe.xml";
         return $path;
@@ -42,7 +46,9 @@ class NFePHPPathService
     {
         $path = static::pathNFe($nf->Filial) . "enviadas/denegadas/" . $nf->emissao->format('Ym');
         if ($criar) {
-            @mkdir($path, 0775, true);
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
         $path .= "/{$nf->nfechave}-NFe.xml";
         return $path;
@@ -52,7 +58,9 @@ class NFePHPPathService
     {
         $path = static::pathNFe($nf->Filial) . "pdf/" . $nf->emissao->format('Ym');
         if ($criar) {
-            @mkdir($path, 0775, true);
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
         $path .= "/{$nf->nfechave}-NFe.pdf";
         return $path;
@@ -62,7 +70,9 @@ class NFePHPPathService
     {
         $path = static::pathNFe($nf->Filial) . "canceladas/" . $nf->emissao->format('Ym');
         if ($criar) {
-            @mkdir($path, 0775, true);
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
         $path .= "/{$nf->nfechave}-NFe.xml";
         return $path;
@@ -72,7 +82,9 @@ class NFePHPPathService
     {
         $path = static::pathNFe($nf->Filial) . "cartacorrecao/" . $nf->emissao->format('Ym');
         if ($criar) {
-            @mkdir($path, 0775, true);
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
         $path .= "/{$nf->nfechave}-CCe.xml";
         return $path;
@@ -83,7 +95,9 @@ class NFePHPPathService
         $ambiente = ($dfe->Filial->nfeambiente == 1)?'producao':'homologacao';
         $path = env('NFE_PHP_PATH') . "DFe/{$dfe->codfilial}/{$ambiente}/" . $dfe->criacao->format('Y/m');
         if ($criar) {
-            @mkdir($path, 0775, true);
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
         $path .= "/{$dfe->coddistribuicaodfe}.xml.gz";
         return $path;
