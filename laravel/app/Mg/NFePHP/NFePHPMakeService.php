@@ -96,7 +96,9 @@ class NFePHPMakeService
 
         // 0=Operação sem intermediador (em site ou plataforma própria)
         // 1=Operação em site ou plataforma de terceiros (intermediadores/marketplace)
-        $std->indIntermed = 0;
+        if ($std->tpAmb == 2) {
+            $std->indIntermed = 0;
+        }
 
         // 0=Emissão de NF-e com aplicativo do contribuinte;
         // 1=Emissão de NF-e avulsa pelo Fisco;
