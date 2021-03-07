@@ -1,76 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="PostgreSQL" id="Project4820597" database="PostgreSQL" >
 	<schema name="mgsis" catalogname="mgsis" >
-		<table name="migrations" >
-			<column name="migration" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
-			<column name="batch" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
-		</table>
-		<table name="rlpprodutobarra" >
-			<column name="codprodutobarra" type="bigint" jt="-5" mandatory="y" />
-			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
-			<column name="codprodutovariacao" type="bigint" jt="-5" mandatory="y" />
-			<column name="codprodutoembalagem" type="bigint" jt="-5" />
-			<column name="codunidademedida" type="bigint" jt="-5" mandatory="y" />
-			<column name="codmarca" type="bigint" jt="-5" mandatory="y" />
-			<column name="codimagem" type="bigint" jt="-5" />
-			<column name="descricao" type="varchar" length="400" jt="12" mandatory="y" />
-			<column name="referencia" type="varchar" length="100" jt="12" />
-			<column name="preco" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
-			<column name="barras" type="varchar" length="50" jt="12" />
-			<index name="pk_rlpprodutobarra_codprodutobarra" unique="PRIMARY_KEY" >
-				<column name="codprodutobarra" />
-			</index>
-			<index name="idx_fk_rlpprodutobarra_tblimagem" unique="NORMAL" >
-				<column name="codimagem" />
-			</index>
-			<index name="idx_fk_rlpprodutobarra_tblmarca" unique="NORMAL" >
-				<column name="codmarca" />
-			</index>
-			<index name="idx_fk_rlpprodutobarra_tblproduto" unique="NORMAL" >
-				<column name="codproduto" />
-			</index>
-			<index name="idx_fk_rlpprodutobarra_tblprodutoembalagem" unique="NORMAL" >
-				<column name="codprodutoembalagem" />
-			</index>
-			<index name="idx_fk_rlpprodutobarra_tblprodutovariacao" unique="NORMAL" >
-				<column name="codprodutovariacao" />
-			</index>
-			<index name="idx_fk_rlpprodutobarra_tblunidademedida" unique="NORMAL" >
-				<column name="codunidademedida" />
-			</index>
-			<fk name="fk_rlpprodutobarra_tblproduto" to_schema="mgsis.mgsis" to_table="tblproduto" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codproduto" pk="codproduto" />
-			</fk>
-			<fk name="fk_rlpprodutobarra_tblprodutobarra" to_schema="mgsis.mgsis" to_table="tblprodutobarra" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codprodutobarra" pk="codprodutobarra" />
-			</fk>
-			<fk name="fk_rlpprodutobarra_tblprodutovariacao" to_schema="mgsis.mgsis" to_table="tblprodutovariacao" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codprodutovariacao" pk="codprodutovariacao" />
-			</fk>
-			<fk name="fk_rlpprodutobarra_tblprodutoembalagem" to_schema="mgsis.mgsis" to_table="tblprodutoembalagem" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codprodutoembalagem" pk="codprodutoembalagem" />
-			</fk>
-			<fk name="fk_rlpprodutobarra_tblunidademedida" to_schema="mgsis.mgsis" to_table="tblunidademedida" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codunidademedida" pk="codunidademedida" />
-			</fk>
-			<fk name="fk_rlpprodutobarra_tblmarca" to_schema="mgsis.mgsis" to_table="tblmarca" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codmarca" pk="codmarca" />
-			</fk>
-			<fk name="fk_rlpprodutobarra_tblimagem" to_schema="mgsis.mgsis" to_table="tblimagem" delete_action="setNull" update_action="cascade" >
-				<fk_column name="codimagem" pk="codimagem" />
-			</fk>
-		</table>
-		<table name="tbl_migration" >
-			<column name="version" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
-			<column name="apply_time" type="integer" length="10" decimal="0" jt="4" />
-			<index name="tbl_migration_pkey" unique="PRIMARY_KEY" >
-				<column name="version" />
-			</index>
-		</table>
 		<table name="tblauditoria" >
 			<column name="codauditoria" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="tabela" type="varchar" length="120" decimal="0" jt="12" mandatory="y" />
-			<column name="data" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+			<column name="data" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" >
 				<defo><![CDATA[clock_timestamp()]]></defo>
 			</column>
 			<column name="colunacodigo" type="varchar" length="120" decimal="0" jt="12" />
@@ -99,7 +33,7 @@
 				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="resultado" type="text" length="2147483647" decimal="0" jt="12" />
-			<column name="data" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+			<column name="data" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" >
 				<defo><![CDATA[now()]]></defo>
 			</column>
 			<index name="tblauditoriatransmissao_pkey" unique="PRIMARY_KEY" >
@@ -170,11 +104,11 @@
 			<column name="banco" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="3" decimal="0" jt="12" />
 			<column name="numerobanco" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="tblbanco_pkey" unique="PRIMARY_KEY" >
 				<column name="codbanco" />
 			</index>
@@ -195,12 +129,12 @@
 			<column name="codbaseremota" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="baseremota" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="conexao" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="inicioreplicacao" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+			<column name="inicioreplicacao" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" >
 				<defo><![CDATA[now()]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblbaseremota_pkey" unique="PRIMARY_KEY" >
 				<column name="codbaseremota" />
@@ -234,9 +168,9 @@
 			<column name="codboletomotivoocorrencia" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="motivo" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="codboletotipoocorrencia" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblboletomotivoocorrencia_pkey" unique="PRIMARY_KEY" >
 				<column name="codboletomotivoocorrencia" />
@@ -281,9 +215,9 @@
 			<column name="protesto" type="varchar" length="1" decimal="0" jt="12" />
 			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="arquivo" type="varchar" length="20" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblboletoretorno_pkey" unique="PRIMARY_KEY" >
 				<column name="codboletoretorno" />
@@ -322,9 +256,9 @@
 		<table name="tblboletotipoocorrencia" >
 			<column name="codboletotipoocorrencia" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="ocorrencia" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblboletotipoocorrencia_pkey" unique="PRIMARY_KEY" >
 				<column name="codboletotipoocorrencia" />
@@ -346,11 +280,11 @@
 			<column name="codcaixamercadoria" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codcaixamercadoriamodelo" type="bigint" jt="-5" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblcaixamercadoria_codcaixamercadoria" unique="PRIMARY_KEY" >
 				<column name="codcaixamercadoria" />
 			</index>
@@ -377,11 +311,11 @@
 			<column name="codcaixamercadoriamodelo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="caixamercadoriamodelo" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblcaixamercadoriamodelo_codcaixamercadoriamodelo" unique="PRIMARY_KEY" >
 				<column name="codcaixamercadoriamodelo" />
 			</index>
@@ -401,9 +335,9 @@
 		<table name="tblcargo" >
 			<column name="codcargo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="cargo" type="varchar" length="50" jt="12" mandatory="y" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblcargo" unique="PRIMARY_KEY" >
@@ -425,11 +359,11 @@
 		<table name="tblcertidaoemissor" >
 			<column name="codcertidaoemissor" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="certidaoemissor" type="varchar" length="30" jt="12" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblcertidaoemissor_codcertidaoemissor" unique="PRIMARY_KEY" >
 				<column name="codcertidaoemissor" />
 			</index>
@@ -441,11 +375,11 @@
 			<column name="codcertidaotipo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="certidaotipo" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="sigla" type="varchar" length="10" jt="12" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblcertidaotipo_codcertidaotipo" unique="PRIMARY_KEY" >
 				<column name="codcertidaotipo" />
 			</index>
@@ -462,9 +396,9 @@
 			<column name="cest" type="varchar" length="7" decimal="0" jt="12" mandatory="y" />
 			<column name="ncm" type="varchar" length="8" decimal="0" jt="12" />
 			<column name="descricao" type="text" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="coddecreto271" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="mva" type="numeric" length="5" decimal="2" jt="2" />
@@ -503,9 +437,9 @@
 		<table name="tblcfop" >
 			<column name="codcfop" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="cfop" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcfop_pkey" unique="PRIMARY_KEY" >
 				<column name="codcfop" />
@@ -538,12 +472,12 @@
 			<column name="devolucao" type="date" length="13" decimal="0" jt="91" />
 			<column name="motivodevolucao" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="observacao" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="lancamento" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="cancelamento" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="lancamento" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="cancelamento" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="indstatus" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
@@ -577,7 +511,7 @@
 				<column name="codusuariocriacao" />
 			</index>
 			<constraint name="ck_0" >
-				<string><![CDATA[CHECK ((indstatus = ANY (ARRAY[1, 2, 3, 4, 5])))]]></string>
+				<string><![CDATA[(indstatus = ANY (ARRAY[1, 2, 3, 4, 5]))]]></string>
 			</constraint>
 			<fk name="tblcheque_codbanco_fkey" to_schema="mgsis.mgsis" to_table="tblbanco" >
 				<fk_column name="codbanco" pk="codbanco" />
@@ -601,9 +535,9 @@
 			<column name="codchequemotivodevolucao" type="bigint" jt="-5" mandatory="y" />
 			<column name="data" type="date" jt="91" mandatory="y" />
 			<column name="observacoes" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblchequedevolucao" unique="PRIMARY_KEY" >
 				<column name="codchequedevolucao" />
@@ -638,9 +572,9 @@
 			<column name="codcheque" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" mandatory="y" />
 			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblchequeemitente_pkey" unique="PRIMARY_KEY" >
 				<column name="codchequeemitente" />
@@ -672,9 +606,9 @@
 			<column name="codchequemotivodevolucao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="numero" type="smallint" jt="5" mandatory="y" />
 			<column name="chequemotivodevolucao" type="varchar" length="200" jt="12" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblchequemotivodevolucao" unique="PRIMARY_KEY" >
 				<column name="codchequemotivodevolucao" />
@@ -702,11 +636,11 @@
 			<column name="observacoes" type="varchar" jt="12" >
 				<defo><![CDATA[200]]></defo>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblchequerepasse" unique="PRIMARY_KEY" >
 				<column name="codchequerepasse" />
 			</index>
@@ -733,9 +667,9 @@
 			<column name="codchequerepassecheque" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codcheque" type="bigint" jt="-5" mandatory="y" />
 			<column name="codchequerepasse" type="bigint" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="compensacao" type="date" jt="91" />
 			<index name="pk_tblchequerepassecheque" unique="PRIMARY_KEY" >
@@ -772,9 +706,9 @@
 			<column name="cidade" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="3" decimal="0" jt="12" />
 			<column name="codigooficial" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcidade_pkey" unique="PRIMARY_KEY" >
 				<column name="codcidade" />
@@ -812,9 +746,9 @@
 			<column name="acertado" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcobranca_pkey" unique="PRIMARY_KEY" >
 				<column name="codcobranca" />
@@ -857,9 +791,9 @@
 			<column name="emailautomatico" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcobrancahistorico_pkey" unique="PRIMARY_KEY" >
 				<column name="codcobrancahistorico" />
@@ -887,9 +821,9 @@
 			<column name="codcobrancahistoricotitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codcobrancahistorico" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codtitulo" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcobrancahistoricotitulo_pkey" unique="PRIMARY_KEY" >
 				<column name="codcobrancahistoricotitulo" />
@@ -922,9 +856,9 @@
 		<table name="tblcodigo" >
 			<column name="tabela" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="codproximo" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcodigo_pkey" unique="PRIMARY_KEY" >
 				<column name="tabela" />
@@ -949,9 +883,9 @@
 			<column name="inativo" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcontacontabil_pkey" unique="PRIMARY_KEY" >
 				<column name="codcontacontabil" />
@@ -979,9 +913,9 @@
 			</column>
 			<column name="descontoacrescimo" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcupomfiscal_pkey" unique="PRIMARY_KEY" >
 				<column name="codcupomfiscal" />
@@ -1019,9 +953,9 @@
 			<column name="quantidade" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valorunitario" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="codnegocioprodutobarra" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblcupomfiscalprodutobarra_pkey" unique="PRIMARY_KEY" >
 				<column name="codcupomfiscalprodutobarra" />
@@ -1074,9 +1008,9 @@
 			<column name="coddfeevento" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="tpevento" type="integer" jt="4" />
 			<column name="dfeevento" type="varchar" length="100" jt="12" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbldfeevento_coddfeevento" unique="PRIMARY_KEY" >
 				<column name="coddfeevento" />
@@ -1098,9 +1032,9 @@
 			<column name="coddfetipo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="dfetipo" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="schemaxml" type="varchar" length="100" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbldfeschema_coddfeschema" unique="PRIMARY_KEY" >
 				<column name="coddfetipo" />
@@ -1123,15 +1057,15 @@
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="nsu" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="coddfetipo" type="bigint" jt="-5" mandatory="y" />
-			<column name="data" type="timestamp" length="0" decimal="6" jt="93" >
+			<column name="data" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[dhevento]]></comment>
 			</column>
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="coddistribuicaodfeevento" type="bigint" jt="-5" />
 			<column name="codnotafiscalterceiro" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbldistribuicaodfe_coddistribuicaodfe" unique="PRIMARY_KEY" >
 				<column name="coddistribuicaodfe" />
@@ -1187,15 +1121,15 @@
 			<column name="sequencia" type="smallint" jt="5" >
 				<comment><![CDATA[nSeqEvento]]></comment>
 			</column>
-			<column name="recebimento" type="timestamp" length="0" decimal="6" jt="93" >
+			<column name="recebimento" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[dhRecbto]]></comment>
 			</column>
 			<column name="protocolo" type="varchar" length="15" jt="12" >
 				<comment><![CDATA[nProt]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbldistribuicaodfeevento_coddistribuicaodfeevento" unique="PRIMARY_KEY" >
 				<column name="coddistribuicaodfeevento" />
@@ -1225,14 +1159,14 @@
 			<column name="acbrmonitorcaminho" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="acbrmonitorcaminhorede" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="codusuario" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="bloqueado" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="bloqueado" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="serie" type="varchar" length="20" decimal="0" jt="12" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="modelo" type="varchar" length="2" decimal="0" jt="12" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblecf_pkey" unique="PRIMARY_KEY" >
 				<column name="codecf" />
@@ -1271,9 +1205,9 @@
 			<column name="coo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="cro" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="grandetotal" type="numeric" length="13" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblecfreducaoz_pkey" unique="PRIMARY_KEY" >
 				<column name="codecfreducaoz" />
@@ -1300,11 +1234,11 @@
 		<table name="tblempresa" >
 			<column name="codempresa" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="empresa" type="varchar" length="50" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="contingenciadata" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="contingenciadata" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="contingenciajustificativa" type="varchar" length="256" decimal="0" jt="12" />
 			<column name="modoemissaonfce" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
 				<defo><![CDATA[1]]></defo>
@@ -1331,9 +1265,9 @@
 			<column name="estado" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="2" decimal="0" jt="12" />
 			<column name="codigooficial" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblestado_pkey" unique="PRIMARY_KEY" >
 				<column name="codestado" />
@@ -1363,11 +1297,11 @@
 		<table name="tblestadocivil" >
 			<column name="codestadocivil" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="estadocivil" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="tblestadocivil_pkey" unique="PRIMARY_KEY" >
 				<column name="codestadocivil" />
 			</index>
@@ -1384,38 +1318,15 @@
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
-		<table name="tblestoque2019creditoicms" >
-			<column name="codproduto" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="produto" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="inativo" type="date" length="13" decimal="0" jt="91" />
-			<column name="preco" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="quant" type="numeric" decimal="0" jt="2" />
-			<column name="custo" type="numeric" decimal="0" jt="2" />
-			<column name="valor" type="numeric" decimal="0" jt="2" />
-			<column name="markup" type="numeric" decimal="0" jt="2" />
-			<column name="codtributacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codnotafiscalprodutobarra" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="emissao" type="date" length="13" decimal="0" jt="91" />
-			<column name="custoultimaentrada" type="numeric" length="20" decimal="6" jt="2" />
-			<column name="icmsgarantidopercentual" type="numeric" length="5" decimal="2" jt="2" />
-			<column name="icmsgarantidovalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsgarantidovalortotal" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsorigempercentual" type="numeric" length="5" decimal="2" jt="2" />
-			<column name="icmsorigemvalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsorigemvalortotal" type="numeric" length="14" decimal="2" jt="2" />
-		</table>
 		<table name="tblestoquelocal" >
 			<column name="codestoquelocal" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="sigla" type="varchar" length="3" jt="12" mandatory="y" />
 			<column name="estoquelocal" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="deposito" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -1464,13 +1375,13 @@
 			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vendaanoquantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="vendaultimocalculo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="vendaultimocalculo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="vencimento" type="date" jt="91" />
 			<column name="vendadiaquantidadeprevisao" type="float8" length="17" decimal="17" jt="6" />
 			<column name="lotetransferencia" type="numeric" length="17" decimal="5" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblestoquelocalproduto" unique="PRIMARY_KEY" >
 				<column name="codestoquelocalprodutovariacao" />
@@ -1510,9 +1421,9 @@
 			<column name="mes" type="date" jt="91" mandatory="y" />
 			<column name="quantidade" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="ignorar" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -1567,9 +1478,9 @@
 			<column name="saldoquantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="saldovalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="customedio" type="numeric" length="14" decimal="6" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblestoquemes" unique="PRIMARY_KEY" >
 				<column name="codestoquemes" />
@@ -1605,7 +1516,7 @@
 			<column name="manual" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="data" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
+			<column name="data" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
 			<column name="entradaquantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="entradavalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="saidaquantidade" type="numeric" length="14" decimal="3" jt="2" />
@@ -1614,9 +1525,9 @@
 			<column name="codnotafiscalprodutobarra" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codestoquesaldoconferencia" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="observacoes" type="varchar" length="200" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblestoquemovimento_pkey" unique="PRIMARY_KEY" >
 				<column name="codestoquemovimento" />
@@ -1676,9 +1587,9 @@
 			<column name="sigla" type="varchar" length="3" jt="12" mandatory="y" />
 			<column name="descricao" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="preco" type="smallint" jt="5" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="manual" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -1718,15 +1629,15 @@
 			<column name="codestoquesaldo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codestoquelocalprodutovariacao" type="bigint" jt="-5" mandatory="y" />
 			<column name="fiscal" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" />
-			<column name="ultimaconferencia" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="ultimaconferencia" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="saldoquantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="saldovalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="customedio" type="numeric" length="14" decimal="6" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="dataentrada" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="dataentrada" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="tblestoquesaldo_pkey" unique="PRIMARY_KEY" >
 				<column name="codestoquesaldo" />
 			</index>
@@ -1760,13 +1671,13 @@
 			<column name="quantidadeinformada" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
 			<column name="customediosistema" type="numeric" length="14" decimal="6" jt="2" />
 			<column name="customedioinformado" type="numeric" length="14" decimal="6" jt="2" mandatory="y" />
-			<column name="data" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
+			<column name="data" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
 			<column name="observacoes" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblestoquesaldoconferencia" unique="PRIMARY_KEY" >
 				<column name="codestoquesaldoconferencia" />
 			</index>
@@ -1794,10 +1705,10 @@
 			<column name="codsecaoproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="familiaproduto" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="codimagem" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codopencart" type="bigint" jt="-5" />
 			<index name="pk_tblfamiliaproduto" unique="PRIMARY_KEY" >
@@ -1833,10 +1744,10 @@
 			<column name="data" type="date" jt="91" mandatory="y" />
 			<column name="feriado" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblferiado" unique="PRIMARY_KEY" >
 				<column name="codferiado" />
 			</index>
@@ -1863,7 +1774,7 @@
 			</column>
 			<column name="acbrnfemonitorcaminho" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="acbrnfemonitorcaminhorede" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="acbrnfemonitorbloqueado" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="acbrnfemonitorbloqueado" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="acbrnfemonitorcodusuario" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="empresadominio" type="numeric" length="7" decimal="0" jt="2" />
 			<column name="acbrnfemonitorip" type="varchar" length="20" decimal="0" jt="12" />
@@ -1872,9 +1783,9 @@
 			<column name="crt" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
 				<defo><![CDATA[1]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="nfcetoken" type="varchar" length="32" jt="12" />
 			<column name="nfcetokenid" type="varchar" length="6" jt="12" />
@@ -1884,7 +1795,7 @@
 			<column name="senhacertificado" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="ultimonsu" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="tokenibpt" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="nfeserie" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
 				<defo><![CDATA[1]]></defo>
 			</column>
@@ -1951,9 +1862,9 @@
 				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[Habilitado utilização em vale compra]]></comment>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="lio" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -1980,9 +1891,9 @@
 		<table name="tblgrupocliente" >
 			<column name="codgrupocliente" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="grupocliente" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblgrupocliente_pkey" unique="PRIMARY_KEY" >
 				<column name="codgrupocliente" />
@@ -2004,11 +1915,11 @@
 			<column name="codgrupoeconomico" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="grupoeconomico" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblgrupoeconomico_codgrupoeconomico" unique="PRIMARY_KEY" >
 				<column name="codgrupoeconomico" />
 			</index>
@@ -2030,10 +1941,10 @@
 			<column name="codfamiliaproduto" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="grupoproduto" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="codimagem" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codopencart" type="bigint" jt="-5" />
 			<index name="tblgrupoproduto_pkey" unique="PRIMARY_KEY" >
@@ -2068,11 +1979,11 @@
 			<column name="codgrupousuario" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="grupousuario" type="varchar" length="50" jt="12" mandatory="y" />
 			<column name="observacoes" type="varchar" length="600" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblgrupousuario" unique="PRIMARY_KEY" >
 				<column name="codgrupousuario" />
 			</index>
@@ -2096,9 +2007,9 @@
 			<column name="codgrupousuariopermissao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codgrupousuario" type="bigint" jt="-5" mandatory="y" />
 			<column name="codpermissao" type="bigint" jt="-5" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblgrupousuariopermissao" unique="PRIMARY_KEY" >
 				<column name="codgrupousuariopermissao" />
@@ -2137,9 +2048,9 @@
 			<column name="codgrupousuario" type="bigint" jt="-5" mandatory="y" />
 			<column name="codusuario" type="bigint" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblgrupousuariousuario" unique="PRIMARY_KEY" >
 				<column name="codgrupousuariousuario" />
@@ -2208,9 +2119,9 @@
 			<column name="chave" type="varchar" length="20" jt="12" mandatory="y" />
 			<column name="versao" type="varchar" length="20" jt="12" mandatory="y" />
 			<column name="fonte" type="varchar" length="20" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblibptax_pkey" unique="PRIMARY_KEY" >
 				<column name="codibptax" />
@@ -2239,6 +2150,21 @@
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
+		<table name="tblibptaxmt211a" >
+			<column name="codigo" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="ex" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="tipo" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="descricao" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="nacionalfederal" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="importadosfederal" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="estadual" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="municipal" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="vigenciainicio" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="vigenciafim" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="chave" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="versao" type="varchar" length="1024" decimal="0" jt="12" />
+			<column name="fonte" type="varchar" length="1024" decimal="0" jt="12" />
+		</table>
 		<table name="tblibptcache" >
 			<column name="codibptcache" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
@@ -2256,9 +2182,9 @@
 			<column name="chave" type="varchar" length="20" jt="12" />
 			<column name="versao" type="varchar" length="20" jt="12" />
 			<column name="fonte" type="varchar" length="50" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblibpt_codibpt" unique="PRIMARY_KEY" >
 				<column name="codibptcache" />
@@ -2297,10 +2223,10 @@
 		<table name="tblimagem" >
 			<column name="codimagem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="observacoes" type="varchar" length="200" jt="12" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="arquivo" type="varchar" length="150" decimal="0" jt="12" />
 			<index name="pk_tblimagem" unique="PRIMARY_KEY" >
@@ -2655,17 +2581,17 @@
 		<table name="tblliquidacaotitulo" >
 			<column name="codliquidacaotitulo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="transacao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
-			<column name="sistema" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+			<column name="sistema" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" >
 				<defo><![CDATA[now()]]></defo>
 			</column>
 			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="observacao" type="varchar" length="200" decimal="0" jt="12" />
 			<column name="codusuario" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="estornado" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="estornado" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioestorno" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="debito" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="credito" type="numeric" length="14" decimal="2" jt="2" />
@@ -2717,7 +2643,7 @@
 			<column name="site" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="descricaosite" type="varchar" length="1024" decimal="0" jt="12" />
 			<column name="estoqueminimodias" type="smallint" jt="5" mandatory="y" >
 				<defo><![CDATA[15]]></defo>
@@ -2729,9 +2655,9 @@
 			<column name="controlada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="dataultimacompra" type="date" jt="91" />
 			<column name="itensabaixominimo" type="smallint" jt="5" />
@@ -2740,7 +2666,7 @@
 			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vendaanopercentual" type="numeric" length="7" decimal="4" jt="2" />
-			<column name="vendaultimocalculo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="vendaultimocalculo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="abcignorar" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
@@ -2815,7 +2741,7 @@
 3 - Aquaviario
 4 - Ferroviario]]></comment>
 			</column>
-			<column name="emissao" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+			<column name="emissao" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" >
 				<defo><![CDATA[now()]]></defo>
 				<comment><![CDATA[dhEmi]]></comment>
 			</column>
@@ -2872,14 +2798,14 @@ infMunCarrega]]></comment>
 			<column name="codmdfe" type="bigint" jt="-5" mandatory="y" />
 			<column name="cstatenvio" prior="cstat" type="bigint" jt="-5" />
 			<column name="recibo" type="varchar" length="30" jt="12" />
-			<column name="recebimento" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+			<column name="recebimento" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" >
 				<defo><![CDATA[now()]]></defo>
 			</column>
 			<column name="cstatretorno" type="bigint" jt="-5" />
 			<column name="xmotivo" type="text" length="200" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblmdfeenviosefaz_codmdfeenviosefaz" unique="PRIMARY_KEY" >
 				<column name="codmdfeenviosefaz" />
@@ -2964,7 +2890,7 @@ Peso em KG]]></comment>
 			<column name="sigla" type="varchar" length="5" decimal="0" jt="12" mandatory="y" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblmdfestatus_codmdfestatus" unique="PRIMARY_KEY" >
 				<column name="codmdfestatus" />
@@ -3012,9 +2938,9 @@ Peso em KG]]></comment>
 			<column name="codmenu" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="nome" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="form" type="varchar" length="50" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblmenu_pkey" unique="PRIMARY_KEY" >
 				<column name="codmenu" />
@@ -3034,15 +2960,15 @@ Peso em KG]]></comment>
 		</table>
 		<table name="tblmeta" >
 			<column name="codmeta" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="periodoinicial" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
-			<column name="periodofinal" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
+			<column name="periodoinicial" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
+			<column name="periodofinal" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
 			<column name="premioprimeirovendedorfilial" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="percentualcomissaovendedor" type="numeric" length="4" decimal="2" jt="2" mandatory="y" />
 			<column name="percentualcomissaovendedormeta" type="numeric" length="4" decimal="2" jt="2" mandatory="y" />
 			<column name="percentualcomissaosubgerentemeta" type="numeric" length="4" decimal="2" jt="2" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="percentualcomissaoxerox" type="numeric" length="4" decimal="2" jt="2" />
@@ -3069,8 +2995,8 @@ Peso em KG]]></comment>
 			<column name="valormetafilial" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="valormetavendedor" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="observacoes" type="text" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblmetafilial" unique="PRIMARY_KEY" >
@@ -3106,8 +3032,8 @@ Peso em KG]]></comment>
 			<column name="codmetafilial" type="bigint" jt="-5" mandatory="y" />
 			<column name="codpessoa" type="bigint" jt="-5" mandatory="y" />
 			<column name="codcargo" type="bigint" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblmetafilialpessoa" unique="PRIMARY_KEY" >
@@ -3154,14 +3080,14 @@ Peso em KG]]></comment>
 			<column name="credito" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="historico" type="varchar" length="255" decimal="0" jt="12" />
 			<column name="transacao" type="date" length="13" decimal="0" jt="91" />
-			<column name="sistema" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="sistema" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codliquidacaotitulo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codtituloagrupamento" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codboletoretorno" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codcobranca" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblmovimentotitulo_pkey" unique="PRIMARY_KEY" >
 				<column name="codmovimentotitulo" />
@@ -3236,9 +3162,9 @@ Peso em KG]]></comment>
 				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="mensagemprocom" type="varchar" length="300" decimal="0" jt="12" />
 			<column name="codnaturezaoperacaodevolucao" type="bigint" jt="-5" />
@@ -3310,11 +3236,11 @@ Peso em KG]]></comment>
 			<column name="codncmpai" type="bigint" jt="-5" />
 			<column name="ncm" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
 			<column name="descricao" type="varchar" length="1500" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codncm2020" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="bit" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -3379,7 +3305,7 @@ Peso em KG]]></comment>
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codestoquelocal" type="bigint" jt="-5" mandatory="y" />
-			<column name="lancamento" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
+			<column name="lancamento" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
 			<column name="codpessoavendedor" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codnegociostatus" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -3389,7 +3315,7 @@ Peso em KG]]></comment>
 			<column name="entrega" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="acertoentrega" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="acertoentrega" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioacertoentrega" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="valorprodutos" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
@@ -3405,13 +3331,15 @@ Peso em KG]]></comment>
 				<defo><![CDATA[0]]></defo>
 			</column>
 			<column name="codestoquelocaldestino" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="recebimento" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="recebimento" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariorecebimento" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="valorfrete" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="codpessoatransportador" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnegocio_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegocio" />
 			</index>
@@ -3512,16 +3440,19 @@ Peso em KG]]></comment>
 			<fk name="fk_tblnegocio_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariorecebimento" pk="codusuario" />
 			</fk>
+			<fk name="tblnegocio_codpessoatransportador_fk" to_schema="mgsis.mgsis" to_table="tblpessoa" >
+				<fk_column name="codpessoatransportador" pk="codpessoa" />
+			</fk>
 		</table>
 		<table name="tblnegociocaixamercadoria" >
 			<column name="codnegociocaixamercadoria" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codnegocio" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codcaixamercadoria" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="recebimento" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="recebimento" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariorecebimento" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnegociocaixamercadoria_codnegociocaixamercadoria" unique="PRIMARY_KEY" >
 				<column name="codnegociocaixamercadoria" />
@@ -3562,9 +3493,9 @@ Peso em KG]]></comment>
 			<column name="codnegocio" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codformapagamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="valorpagamento" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codliopedido" type="bigint" jt="-5" />
 			<column name="codpixcob" type="bigint" jt="-5" />
@@ -3615,12 +3546,12 @@ Peso em KG]]></comment>
 			<column name="valorunitario" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
 			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="codprodutobarra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnegocioprodutobarradevolucao" type="bigint" jt="-5" />
-			<column name="conferencia" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="conferencia" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioconferencia" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnegocioprodutobarra_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegocioprodutobarra" />
@@ -3666,9 +3597,9 @@ Peso em KG]]></comment>
 			<column name="codnegocioprodutobarrapedidoitem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codpedidoitem" type="bigint" jt="-5" mandatory="y" />
 			<column name="codnegocioprodutobarra" type="bigint" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="idx_tblpedidoitemnegocioprodutobarra_codpedidoitem" unique="NORMAL" >
 				<column name="codpedidoitem" />
@@ -3701,9 +3632,9 @@ Peso em KG]]></comment>
 		<table name="tblnegociostatus" >
 			<column name="codnegociostatus" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="negociostatus" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnegociostatus_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegociostatus" />
@@ -3729,22 +3660,22 @@ Peso em KG]]></comment>
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
 			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="emissao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="nfedataautorizacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="emissao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="nfedataautorizacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" />
 			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
-			<column name="entrada" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="entrada" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="icmsbase" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="icmsvalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="icmsstbase" type="numeric" length="14" decimal="2" jt="2" />
@@ -3819,9 +3750,9 @@ Peso em KG]]></comment>
 			<column name="ndup" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="dvenc" type="date" length="13" decimal="0" jt="91" />
 			<column name="vdup" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnfeterceiroduplicata_pkey" unique="PRIMARY_KEY" >
 				<column name="codnfeterceiroduplicata" />
@@ -3887,9 +3818,9 @@ Peso em KG]]></comment>
 			<column name="codprodutobarra" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="margem" type="numeric" length="6" decimal="2" jt="2" />
 			<column name="complemento" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="modalidadeicmsgarantido" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -3935,8 +3866,8 @@ Peso em KG]]></comment>
 			</column>
 			<column name="serie" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
-			<column name="emissao" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
-			<column name="saida" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
+			<column name="emissao" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
+			<column name="saida" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
 			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codestoquelocal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -3953,22 +3884,22 @@ Peso em KG]]></comment>
 			<column name="pesobruto" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="nfereciboenvio" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedataenvio" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="nfedataenvio" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="nfeautorizacao" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedataautorizacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="nfedataautorizacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="valorfrete" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="nfecancelamento" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedatacancelamento" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="nfedatacancelamento" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="nfeinutilizacao" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedatainutilizacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="nfedatainutilizacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
 			<column name="modelo" type="smallint" length="5" decimal="0" jt="5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="valorprodutos" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
 				<defo><![CDATA[0]]></defo>
@@ -4061,77 +3992,20 @@ Peso em KG]]></comment>
 				<fk_column name="codestadoplaca" pk="codestado" />
 			</fk>
 		</table>
-		<table name="tblnotafiscalbackup" >
-			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="emitida" type="boolean" length="1" decimal="0" jt="-7" />
-			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfeimpressa" type="boolean" length="1" decimal="0" jt="-7" />
-			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
-			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
-			<column name="emissao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="saida" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="observacoes" type="varchar" length="1500" decimal="0" jt="12" />
-			<column name="volumes" type="integer" length="10" decimal="0" jt="4" />
-			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="nfereciboenvio" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedataenvio" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="nfeautorizacao" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedataautorizacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="valorfrete" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="nfecancelamento" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedatacancelamento" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="nfeinutilizacao" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="nfedatainutilizacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="modelo" type="smallint" length="5" decimal="0" jt="5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="valorprodutos" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsbase" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsvalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsstbase" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsstvalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="ipibase" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="ipivalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="frete" type="smallint" length="5" decimal="0" jt="5" />
-			<column name="tpemis" type="smallint" length="5" decimal="0" jt="5" />
-			<column name="codestoquelocal" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codpessoatransportador" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="volumesespecie" type="varchar" length="60" decimal="0" jt="12" />
-			<column name="volumesmarca" type="varchar" length="60" decimal="0" jt="12" />
-			<column name="volumesnumero" type="varchar" length="60" decimal="0" jt="12" />
-			<column name="pesoliquido" type="numeric" length="15" decimal="3" jt="2" />
-			<column name="pesobruto" type="numeric" length="14" decimal="3" jt="2" />
-			<column name="placa" type="varchar" length="7" decimal="0" jt="12" />
-			<column name="codestadoplaca" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
-			<index name="tblnotafiscalbackup_codnotafiscal_idx" unique="NORMAL" >
-				<column name="codnotafiscal" options="ASC" />
-			</index>
-		</table>
 		<table name="tblnotafiscalcartacorrecao" >
 			<column name="codnotafiscalcartacorrecao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="lote" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
-			<column name="data" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" >
+			<column name="data" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" >
 				<defo><![CDATA[now()]]></defo>
 			</column>
 			<column name="sequencia" type="integer" length="10" decimal="0" jt="4" mandatory="y" />
 			<column name="texto" type="text" length="2147483647" decimal="0" jt="12" mandatory="y" />
 			<column name="protocolo" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="protocolodata" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="protocolodata" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnotafiscalcartacorrecao_pkey" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalcartacorrecao" />
@@ -4176,9 +4050,9 @@ Peso em KG]]></comment>
 			<column name="fatura" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="vencimento" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnotafiscalduplicatas_pkey" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalduplicatas" />
@@ -4239,9 +4113,9 @@ Peso em KG]]></comment>
 			<column name="irpjvalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="descricaoalternativa" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="codnegocioprodutobarra" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="pedido" type="varchar" length="15" jt="12" />
 			<column name="pedidoitem" type="integer" jt="4" />
@@ -4312,9 +4186,9 @@ Peso em KG]]></comment>
 			<column name="codnotafiscalreferenciada" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="nfechave" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalreferenciada" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalreferenciada" />
@@ -4352,7 +4226,7 @@ Peso em KG]]></comment>
 			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
-			<column name="emissao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="emissao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" />
 			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
 			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" >
@@ -4362,7 +4236,7 @@ Peso em KG]]></comment>
 			<column name="modelo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
-			<column name="entrada" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="entrada" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="icmsbase" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="icmsvalor" type="numeric" length="14" decimal="2" jt="2" />
@@ -4393,12 +4267,12 @@ Peso em KG]]></comment>
 4=Devolução/Retorno.]]></comment>
 			</column>
 			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
-			<column name="recebimento" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="revisada" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="arquivada" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="recebimento" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="revisada" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="arquivada" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalterceiro_codnotafiscalterceiro" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiro" />
@@ -4459,9 +4333,9 @@ Peso em KG]]></comment>
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
 				<comment><![CDATA[vdup]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalterceiroduplicata_codnotafiscalterceiroduplicat" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiroduplicata" />
@@ -4491,9 +4365,9 @@ Peso em KG]]></comment>
 			<column name="conferido" type="boolean" jt="-7" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalterceiroitem_codnotafiscalterceiroitem" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceirogrupo" />
@@ -4617,9 +4491,9 @@ Peso em KG]]></comment>
 			<column name="cofinsvalor" type="numeric" length="15" decimal="2" jt="2" >
 				<comment><![CDATA[vCOFINS]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalterceiroitemoriginal_codnotafiscalterceiroitemo" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiroitem" />
@@ -4674,9 +4548,9 @@ Peso em KG]]></comment>
 			<column name="autorizacao" type="varchar" length="30" jt="12" >
 				<comment><![CDATA[cAut]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalterceiropagamento_codnotafiscalterceiropagament" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiropagamento" />
@@ -4710,9 +4584,9 @@ Peso em KG]]></comment>
 			<column name="valorproduto" type="numeric" length="14" decimal="2" jt="2" mandatory="y" >
 				<comment><![CDATA[vProd - Proporcional Rateado Por ProdutoBarra]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnotafiscalterceiroitemprodutobarra_codnotafiscalterceiroi" unique="PRIMARY_KEY" >
 				<column name="codnotafiscalterceiroprodutobarra" />
@@ -4745,9 +4619,9 @@ Peso em KG]]></comment>
 		<table name="tbloperacao" >
 			<column name="codoperacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="operacao" type="varchar" length="50" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tbloperacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codoperacao" />
@@ -4769,12 +4643,12 @@ Peso em KG]]></comment>
 			<column name="codpais" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="pais" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="sigla" type="varchar" length="2" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codigooficial" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="tblpais_pkey" unique="PRIMARY_KEY" >
 				<column name="codpais" />
 			</index>
@@ -4795,9 +4669,9 @@ Peso em KG]]></comment>
 			<column name="codparametrosgerais" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="transacaoinicial" type="date" length="13" decimal="0" jt="91" />
 			<column name="transacaofinal" type="date" length="13" decimal="0" jt="91" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblparametrosgerais_pkey" unique="PRIMARY_KEY" >
 				<column name="codparametrosgerais" />
@@ -4830,9 +4704,9 @@ Peso em KG]]></comment>
 			<column name="codgrupoeconomico" type="bigint" jt="-5" />
 			<column name="codestoquelocal" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codestoquelocalorigem" type="bigint" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="observacoes" type="text" jt="12" />
 			<index name="pk_tblpedido_codpedido" unique="PRIMARY_KEY" >
@@ -4879,9 +4753,9 @@ Peso em KG]]></comment>
 20 - Atendido
 90 - Cancelado]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpedidoitem_codpedidoitem" unique="PRIMARY_KEY" >
 				<column name="codpedidoitem" />
@@ -4915,9 +4789,9 @@ Peso em KG]]></comment>
 			<column name="codpermissao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="permissao" type="varchar" length="100" jt="12" mandatory="y" />
 			<column name="observacoes" type="varchar" length="600" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpermissao" unique="PRIMARY_KEY" >
 				<column name="codpermissao" />
@@ -4991,7 +4865,7 @@ Peso em KG]]></comment>
 			</column>
 			<column name="rg" type="varchar" length="30" decimal="0" jt="12" />
 			<column name="desconto" type="numeric" length="4" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="notafiscal" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
 				<comment><![CDATA[0 - Padrão
 1 - Sempre
@@ -4999,7 +4873,7 @@ Peso em KG]]></comment>
 9 - Nunca Emitir]]></comment>
 			</column>
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="toleranciaatraso" type="integer" length="10" decimal="0" jt="4" mandatory="y" >
 				<defo><![CDATA[7]]></defo>
@@ -5053,7 +4927,7 @@ Peso em KG]]></comment>
 				<column name="codusuariocriacao" />
 			</index>
 			<constraint name="tblpessoa_notafiscal_check" >
-				<string><![CDATA[CHECK ((notafiscal = ANY (ARRAY[0, 1, 2, 9])))]]></string>
+				<string><![CDATA[(notafiscal = ANY (ARRAY[0, 1, 2, 9]))]]></string>
 			</constraint>
 			<fk name="tblpessoa_codcidade_fkey" to_schema="mgsis.mgsis" to_table="tblcidade" >
 				<fk_column name="codcidade" pk="codcidade" />
@@ -5091,11 +4965,11 @@ Peso em KG]]></comment>
 			<column name="numero" type="varchar" length="20" jt="12" mandatory="y" />
 			<column name="autenticacao" type="varchar" length="20" jt="12" />
 			<column name="validade" type="date" jt="91" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblpessoacertidao_codpessoacertidao" unique="PRIMARY_KEY" >
 				<column name="codpessoacertidao" />
 			</index>
@@ -5127,14 +5001,14 @@ Peso em KG]]></comment>
 				<comment><![CDATA[Identificador da transação]]></comment>
 			</column>
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="horario" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="horario" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="nome" type="varchar" length="100" jt="12" />
 			<column name="cpf" type="numeric" length="11" decimal="0" jt="2" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="infopagador" type="varchar" length="140" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpix_codpix" unique="PRIMARY_KEY" >
 				<column name="codpix" />
@@ -5254,12 +5128,12 @@ Peso em KG]]></comment>
 			<column name="id" type="varchar" length="40" jt="12" />
 			<column name="rtrid" type="varchar" length="40" jt="12" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="solicitacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="liquidacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="solicitacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="liquidacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codpixdevolucaostatus" type="bigint" length="1" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpixdevolucao_codpixdevolucao" unique="PRIMARY_KEY" >
 				<column name="codpixdevolucao" />
@@ -5292,9 +5166,9 @@ Peso em KG]]></comment>
 		<table name="tblpixdevolucaostatus" prior="tbl" >
 			<column name="codpixdevolucaostatus" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="pixdevolucaostatus" type="varchar" length="50" jt="12" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblpixdevolucaostatus_codpixdevolucaostatus" unique="PRIMARY_KEY" >
 				<column name="codpixdevolucaostatus" />
@@ -5331,11 +5205,11 @@ Peso em KG]]></comment>
 			<column name="diretorioremessa" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="diretorioretorno" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="carteira" type="integer" length="10" decimal="0" jt="4" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="pixdict" prior="dict" type="varchar" length="77" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblportador_pkey" unique="PRIMARY_KEY" >
 				<column name="codportador" />
@@ -5382,12 +5256,12 @@ Peso em KG]]></comment>
 		<table name="tblprancheta" >
 			<column name="codprancheta" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="prancheta" type="varchar" length="50" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="observacoes" type="varchar" length="200" jt="12" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblprancheta" unique="PRIMARY_KEY" >
 				<column name="codprancheta" />
 			</index>
@@ -5408,11 +5282,11 @@ Peso em KG]]></comment>
 			<column name="codpranchetaproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codprancheta" type="bigint" jt="-5" mandatory="y" />
 			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="observacoes" type="varchar" length="200" jt="12" />
 			<index name="pk_tblpranchetaproduto" unique="PRIMARY_KEY" >
 				<column name="codpranchetaproduto" />
@@ -5454,9 +5328,9 @@ Peso em KG]]></comment>
 				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="descricao" type="varchar" length="200" jt="12" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblprefixogs1_codprefixogs1" unique="PRIMARY_KEY" >
 				<column name="codprefixogs1" />
@@ -5500,9 +5374,9 @@ Peso em KG]]></comment>
 				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="descricaosite" type="text" length="1024" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="observacoes" type="varchar" length="255" decimal="0" jt="12" />
 			<column name="codopencart" type="bigint" jt="-5" />
@@ -5562,7 +5436,7 @@ Peso em KG]]></comment>
 				<column name="codusuariocriacao" />
 			</index>
 			<constraint name="tblproduto_abc_check" >
-				<string><![CDATA[CHECK ((abc = ANY (ARRAY['A'::bpchar, 'B'::bpchar, 'C'::bpchar])))]]></string>
+				<string><![CDATA[(abc = ANY (ARRAY['A'::bpchar, 'B'::bpchar, 'C'::bpchar]))]]></string>
 			</constraint>
 			<fk name="tblproduto_codmarca_fkey" to_schema="mgsis.mgsis" to_table="tblmarca" >
 				<fk_column name="codmarca" pk="codmarca" />
@@ -5604,9 +5478,9 @@ Peso em KG]]></comment>
 			<column name="referencia" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="codmarca" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codprodutoembalagem" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblprodutobarra_pkey" unique="PRIMARY_KEY" >
 				<column name="codprodutobarra" />
@@ -5657,9 +5531,9 @@ Peso em KG]]></comment>
 			<column name="codunidademedida" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="quantidade" type="numeric" length="20" decimal="10" jt="2" />
 			<column name="preco" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="peso" type="numeric" length="7" decimal="4" jt="2" />
 			<column name="altura" type="numeric" length="8" decimal="2" jt="2" />
@@ -5711,9 +5585,9 @@ Peso em KG]]></comment>
 			<column name="codprodutoembalagem" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="precoantigo" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="preconovo" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblprodutohistoricopreco_pkey" unique="PRIMARY_KEY" >
 				<column name="codprodutohistoricopreco" />
@@ -5747,9 +5621,9 @@ Peso em KG]]></comment>
 			<column name="codprodutoimagem" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codproduto" type="bigint" jt="-5" mandatory="y" />
 			<column name="codimagem" type="bigint" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="ordem" type="integer" jt="4" mandatory="y" >
 				<defo><![CDATA[1]]></defo>
@@ -5788,27 +5662,27 @@ Peso em KG]]></comment>
 			<column name="variacao" type="varchar" length="100" jt="12" />
 			<column name="referencia" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="codmarca" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codopencart" type="bigint" jt="-5" />
 			<column name="dataultimacompra" type="date" jt="91" />
 			<column name="custoultimacompra" type="numeric" length="14" decimal="6" jt="2" />
 			<column name="quantidadeultimacompra" type="numeric" length="14" decimal="3" jt="2" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codprodutoimagem" type="bigint" jt="-5" />
 			<column name="vendadiaquantidadeprevisao" type="float8" length="17" decimal="17" jt="6" />
 			<column name="estoqueminimo" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="estoquemaximo" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="vendaultimocalculo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="vendaultimocalculo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="vendabimestrequantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="vendabimestrevalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vendasemestrequantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="vendasemestrevalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vendaanoquantidade" type="numeric" length="14" decimal="3" jt="2" />
 			<column name="vendaanovalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="descontinuado" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="descontinuado" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="vendainicio" type="date" length="13" decimal="0" jt="91" />
 			<column name="lotecompra" type="numeric" length="17" decimal="5" jt="2" />
 			<index name="pk_tblprodutovariacao" unique="PRIMARY_KEY" >
@@ -5856,9 +5730,9 @@ Peso em KG]]></comment>
 			<column name="inclusao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="baixa" type="date" length="13" decimal="0" jt="91" />
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="observacoes" type="varchar" length="500" decimal="0" jt="12" />
 			<index name="tblregistrospc_pkey" unique="PRIMARY_KEY" >
@@ -5892,9 +5766,9 @@ Peso em KG]]></comment>
 			<column name="ncmexceto" type="varchar" length="100" jt="12" />
 			<column name="icmsstsul" type="numeric" length="4" decimal="2" jt="2" />
 			<column name="icmsstnorte" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblregulamentoicmsstmt" unique="PRIMARY_KEY" >
 				<column name="codregulamentoicmsstmt" />
@@ -5925,10 +5799,10 @@ Peso em KG]]></comment>
 			<column name="codsecaoproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="secaoproduto" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="codimagem" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codopencart" type="bigint" jt="-5" />
 			<index name="pk_tblsecaoproduto" unique="PRIMARY_KEY" >
@@ -5956,9 +5830,9 @@ Peso em KG]]></comment>
 		<table name="tblsexo" >
 			<column name="codsexo" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="sexo" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblsexo_pkey" unique="PRIMARY_KEY" >
 				<column name="codsexo" />
@@ -5980,10 +5854,10 @@ Peso em KG]]></comment>
 			<column name="codsubgrupoproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codgrupoproduto" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="subgrupoproduto" type="varchar" length="50" decimal="0" jt="12" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codimagem" type="bigint" jt="-5" />
 			<column name="codopencart" type="bigint" jt="-5" />
@@ -6040,9 +5914,9 @@ Peso em KG]]></comment>
 				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="observacao" type="varchar" length="255" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tbltipomovimentotitulo_pkey" unique="PRIMARY_KEY" >
 				<column name="codtipomovimentotitulo" />
@@ -6063,9 +5937,9 @@ Peso em KG]]></comment>
 		<table name="tbltipoproduto" >
 			<column name="codtipoproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="tipoproduto" type="varchar" length="30" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="estoque" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -6103,9 +5977,9 @@ Peso em KG]]></comment>
 			<column name="credito" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tbltipotitulo_pkey" unique="PRIMARY_KEY" >
 				<column name="codtipotitulo" />
@@ -6139,7 +6013,7 @@ Peso em KG]]></comment>
 			<column name="numero" type="varchar" length="20" decimal="0" jt="12" mandatory="y" />
 			<column name="fatura" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="transacao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
-			<column name="sistema" type="timestamp" length="0" decimal="6" jt="93" mandatory="y" />
+			<column name="sistema" type="timestamp" length="22" decimal="0" jt="93" mandatory="y" />
 			<column name="emissao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="vencimento" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="vencimentooriginal" type="date" length="13" decimal="0" jt="91" mandatory="y" />
@@ -6162,10 +6036,10 @@ Peso em KG]]></comment>
 			<column name="codnegocioformapagamento" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codtituloagrupamento" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="remessa" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="estornado" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="estornado" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codvalecompraformapagamento" type="bigint" jt="-5" />
 			<index name="tbltitulo_pkey" unique="PRIMARY_KEY" >
@@ -6241,9 +6115,9 @@ Peso em KG]]></comment>
 			<column name="emissao" type="date" length="13" decimal="0" jt="91" mandatory="y" />
 			<column name="cancelamento" type="date" length="13" decimal="0" jt="91" />
 			<column name="observacao" type="varchar" length="200" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="debito" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="credito" type="numeric" length="14" decimal="2" jt="2" />
@@ -6274,9 +6148,9 @@ Peso em KG]]></comment>
 			<column name="codtributacao" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="tributacao" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
 			<column name="aliquotaicmsecf" type="varchar" length="10" decimal="0" jt="12" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tbltributacao_pkey" unique="PRIMARY_KEY" >
 				<column name="codtributacao" />
@@ -6328,9 +6202,9 @@ Peso em KG]]></comment>
 			<column name="movimentacaocontabil" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[true]]></defo>
 			</column>
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="certidaosefazmt" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
@@ -6393,52 +6267,15 @@ Peso em KG]]></comment>
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 		</table>
-		<table name="tbltributacaonaturezaoperacao_backup" >
-			<column name="codtributacaonaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codtributacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codcfop" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="icmsbase" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmspercentual" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="codestado" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="csosn" type="varchar" length="4" decimal="0" jt="12" />
-			<column name="codtipoproduto" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="acumuladordominiovista" type="integer" length="10" decimal="0" jt="4" />
-			<column name="acumuladordominioprazo" type="integer" length="10" decimal="0" jt="4" />
-			<column name="historicodominio" type="varchar" length="512" decimal="0" jt="12" />
-			<column name="movimentacaofisica" type="boolean" length="1" decimal="0" jt="-7" />
-			<column name="movimentacaocontabil" type="boolean" length="1" decimal="0" jt="-7" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="ncm" type="varchar" length="10" decimal="0" jt="12" />
-			<column name="icmscst" type="numeric" length="3" decimal="0" jt="2" />
-			<column name="icmslpbase" type="numeric" length="5" decimal="2" jt="2" />
-			<column name="icmslppercentual" type="numeric" length="4" decimal="2" jt="2" />
-			<column name="ipicst" type="numeric" length="3" decimal="0" jt="2" />
-			<column name="piscst" type="numeric" length="3" decimal="0" jt="2" />
-			<column name="pispercentual" type="numeric" length="4" decimal="2" jt="2" />
-			<column name="cofinscst" type="numeric" length="3" decimal="0" jt="2" />
-			<column name="cofinspercentual" type="numeric" length="4" decimal="2" jt="2" />
-			<column name="csllpercentual" type="numeric" length="4" decimal="2" jt="2" />
-			<column name="irpjpercentual" type="numeric" length="4" decimal="2" jt="2" />
-			<column name="certidaosefazmt" type="boolean" length="1" decimal="0" jt="-7" />
-			<column name="fethabkg" type="numeric" length="14" decimal="6" jt="2" />
-			<column name="iagrokg" type="numeric" length="14" decimal="6" jt="2" />
-			<column name="funruralpercentual" type="numeric" length="8" decimal="5" jt="2" />
-			<column name="senarpercentual" type="numeric" length="8" decimal="5" jt="2" />
-			<column name="observacoesnf" type="varchar" length="500" decimal="0" jt="12" />
-		</table>
 		<table name="tblunidademedida" >
 			<column name="codunidademedida" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="unidademedida" type="varchar" length="15" decimal="0" jt="12" />
 			<column name="sigla" type="varchar" length="3" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="tblunidademedida_pkey" unique="PRIMARY_KEY" >
 				<column name="codunidademedida" />
 			</index>
@@ -6466,11 +6303,11 @@ Peso em KG]]></comment>
 			<column name="impressoratelanegocio" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="codportador" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="impressoratermica" type="varchar" length="50" decimal="0" jt="12" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="ultimoacesso" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="ultimoacesso" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="inativo" type="date" length="13" decimal="0" jt="91" />
 			<column name="impressoramatricial" type="varchar" length="50" decimal="0" jt="12" />
 			<column name="remember_token" type="varchar" length="100" decimal="0" jt="12" />
@@ -6543,10 +6380,10 @@ Peso em KG]]></comment>
 			<column name="desconto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="total" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="codtitulo" type="bigint" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
 			<index name="pk_tblvalecompras" unique="PRIMARY_KEY" >
 				<column name="codvalecompra" />
@@ -6599,9 +6436,9 @@ Peso em KG]]></comment>
 			<column name="codvalecompra" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="codformapagamento" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
 			<column name="valorpagamento" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnegocioformapagamento_pkey_0" unique="PRIMARY_KEY" >
 				<column name="codvalecompraformapagamento" />
@@ -6641,10 +6478,10 @@ Peso em KG]]></comment>
 			<column name="totalprodutos" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="desconto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="total" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
 			<index name="pk_tblvalecompras_0" unique="PRIMARY_KEY" >
 				<column name="codvalecompramodelo" />
@@ -6675,9 +6512,9 @@ Peso em KG]]></comment>
 			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
 			<column name="preco" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="total" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
 			<index name="pk_tblvalecompraprodutobarra_0" unique="PRIMARY_KEY" >
 				<column name="codvalecompramodeloprodutobarra" />
@@ -6714,9 +6551,9 @@ Peso em KG]]></comment>
 			<column name="quantidade" type="numeric" length="14" decimal="3" jt="2" mandatory="y" />
 			<column name="preco" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="total" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
 			<index name="pk_tblvalecompraprodutobarra" unique="PRIMARY_KEY" >
 				<column name="codvalecompraprodutobarra" />
@@ -8189,8 +8026,8 @@ Peso em KG]]></comment>
 		<trigger name="tblmovimentotituloaiauad" table="tblmovimentotitulo" id="Trigger4846959" isSystem="false" >
 			<string><![CDATA[CREATE TRIGGER tblmovimentotituloaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblmovimentotitulo FOR EACH ROW EXECUTE PROCEDURE fntblmovimentotituloaiauad()]]></string>
 		</trigger>
-		<trigger name="tblnegocioaiau_valorprodutos_valoraprazo_valordesconto" table="tblnegocio" id="Trigger4846960" isSystem="false" >
-			<string><![CDATA[CREATE TRIGGER tblnegocioaiau_valorprodutos_valoraprazo_valordesconto AFTER INSERT OR UPDATE OF valorprodutos, valoraprazo, valordesconto ON mgsis.tblnegocio FOR EACH ROW EXECUTE PROCEDURE fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto()]]></string>
+		<trigger name="tblnegocioaiau_valorprodutos_valoraprazo_valordesconto_valorfre" table="tblnegocio" id="Trigger_c51" isSystem="false" >
+			<string><![CDATA[CREATE TRIGGER tblnegocioaiau_valorprodutos_valoraprazo_valordesconto_valorfre AFTER INSERT OR UPDATE OF valorprodutos, valoraprazo, valordesconto, valorfrete ON mgsis.tblnegocio FOR EACH ROW EXECUTE PROCEDURE fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto();]]></string>
 		</trigger>
 		<trigger name="tblnegocioformapagamentoaiauad" table="tblnegocioformapagamento" id="Trigger4846961" isSystem="false" >
 			<string><![CDATA[CREATE TRIGGER tblnegocioformapagamentoaiauad AFTER INSERT OR DELETE OR UPDATE ON mgsis.tblnegocioformapagamento FOR EACH ROW EXECUTE PROCEDURE fntblnegocioformapagamentoaiauad()]]></string>
@@ -8213,27 +8050,14 @@ Peso em KG]]></comment>
 		<trigger name="tbltituloau" table="tbltitulo" id="Trigger4846967" isSystem="false" >
 			<string><![CDATA[CREATE TRIGGER tbltituloau AFTER UPDATE ON mgsis.tbltitulo FOR EACH ROW EXECUTE PROCEDURE fntbltituloau()]]></string>
 		</trigger>
-		<function name="connectby" id="Function_d45" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer, text)
+		<function name="connectby" id="Function_24d2" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text$function$
+AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 ;]]></string>
 			<input_param jt="-1" type="text" />
-			<input_param jt="-1" type="text" />
-			<input_param jt="-1" type="text" />
-			<input_param jt="-1" type="text" />
-			<input_param jt="-1" type="integer" />
-			<input_param jt="-1" type="text" />
-		</function>
-		<function name="connectby" id="Function_3d7" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer)
- RETURNS SETOF record
- LANGUAGE c
- STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text$function$
-;]]></string>
 			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
@@ -8255,19 +8079,32 @@ AS '$libdir/tablefunc', $function$connectby_text_serial$function$
 			<input_param jt="-1" type="integer" />
 			<input_param jt="-1" type="text" />
 		</function>
-		<function name="connectby" id="Function_24d2" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, text, integer)
+		<function name="connectby" id="Function_3d7" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$connectby_text_serial$function$
+AS '$libdir/tablefunc', $function$connectby_text$function$
 ;]]></string>
 			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
+			<input_param jt="-1" type="integer" />
+		</function>
+		<function name="connectby" id="Function_d45" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.connectby(text, text, text, text, integer, text)
+ RETURNS SETOF record
+ LANGUAGE c
+ STABLE STRICT
+AS '$libdir/tablefunc', $function$connectby_text$function$
+;]]></string>
+			<input_param jt="-1" type="text" />
+			<input_param jt="-1" type="text" />
+			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="integer" />
+			<input_param jt="-1" type="text" />
 		</function>
 		<function name="criatriggers_geraauditoria" id="Function4846928" isSystem="false" params_known="n" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.criatriggers_geraauditoria(brecria boolean DEFAULT false)
@@ -8305,13 +8142,14 @@ END;
 $function$
 ;]]></string>
 		</function>
-		<function name="crosstab" id="Function_22e4" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text)
+		<function name="crosstab" id="Function_878" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$crosstab$function$
+AS '$libdir/tablefunc', $function$crosstab_hash$function$
 ;]]></string>
+			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
 		</function>
 		<function name="crosstab" id="Function_1a50" isSystem="false" params_known="y" >
@@ -8324,14 +8162,13 @@ AS '$libdir/tablefunc', $function$crosstab$function$
 			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="integer" />
 		</function>
-		<function name="crosstab" id="Function_878" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text, text)
+		<function name="crosstab" id="Function_22e4" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.crosstab(text)
  RETURNS SETOF record
  LANGUAGE c
  STABLE STRICT
-AS '$libdir/tablefunc', $function$crosstab_hash$function$
+AS '$libdir/tablefunc', $function$crosstab$function$
 ;]]></string>
-			<input_param jt="-1" type="text" />
 			<input_param jt="-1" type="text" />
 		</function>
 		<function name="crosstab2" id="Function_1f2b" isSystem="false" params_known="y" >
@@ -8889,89 +8726,6 @@ END;
 $function$
 ;]]></string>
 		</function>
-		<function name="fnlistatotaisecfreducaoz" id="Function_224d" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
- RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	pcodecf bigint;
-BEGIN
-	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Geral' as tipo
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
-	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
-	  from tblecfreducaoz
-	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblecfreducaoz.movimento = pmovimento
-	   and tblecfreducaoz.crz = pcrz
-	 group by 
-	       tblecfreducaoz.codecfreducaoz
-	     , tblecfreducaoz.codecf
-	     , tblecfreducaoz.movimento
-	     ;
-	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
-/*
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscalprodutobarra.aliquotaicms
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-*/
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Cancelado' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
-	  from tblcupomfiscal 
-	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = true
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	INSERT INTO tmpListaTotaisEcfReducaoZ 
-	select 
-	       'Desconto' as tipo
-	     , tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     , sum(descontoacrescimo)  as total
-	  from tblcupomfiscal 
-	 where tblcupomfiscal.datamovimento = pmovimento
-	   and tblcupomfiscal.codecf = pcodecf
-	   and tblcupomfiscal.cancelado = false
-	 group by tblcupomfiscal.codecf
-	     , tblcupomfiscal.datamovimento
-	     ;
-	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
-         
-END;
-$function$
-;]]></string>
-			<input_param name="pmovimento" jt="-1" type="date" />
-			<input_param name="pcrz" jt="-1" type="bigint" />
-			<result_param name="tipo" jt="-1" type="text" />
-			<result_param name="codecf" jt="-1" type="bigint" />
-			<result_param name="movimento" jt="-1" type="date" />
-			<result_param name="valor" jt="-1" type="numeric" />
-		</function>
 		<function name="fnlistatotaisecfreducaoz" id="Function_1ebf" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint, pdesejado numeric)
  RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric, diferenca numeric)
@@ -9058,6 +8812,89 @@ $function$
 			<result_param name="movimento" jt="-1" type="date" />
 			<result_param name="valor" jt="-1" type="numeric" />
 			<result_param name="diferenca" jt="-1" type="numeric" />
+		</function>
+		<function name="fnlistatotaisecfreducaoz" id="Function_224d" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fnlistatotaisecfreducaoz(pmovimento date, pcrz bigint)
+ RETURNS TABLE(tipo text, codecf bigint, movimento date, valor numeric)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	pcodecf bigint;
+BEGIN
+	CREATE TEMPORARY TABLE tmpListaTotaisEcfReducaoZ (tipo text, codecf bigint, movimento date, valor numeric(20,3)) ON COMMIT DROP;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Geral' as tipo
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))
+	--     , sum(coalesce(quantidade, 0) * coalesce(valorunitario)) - 6804.93
+	  from tblecfreducaoz
+	 inner join tblcupomfiscal on (tblcupomfiscal.codecf = tblecfreducaoz.codecf and tblcupomfiscal.datamovimento = tblecfreducaoz.movimento)
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblecfreducaoz.movimento = pmovimento
+	   and tblecfreducaoz.crz = pcrz
+	 group by 
+	       tblecfreducaoz.codecfreducaoz
+	     , tblecfreducaoz.codecf
+	     , tblecfreducaoz.movimento
+	     ;
+	SELECT INTO pCodEcf max(tmpListaTotaisEcfReducaoZ.codEcf) FROM tmpListaTotaisEcfReducaoZ;
+/*
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       tblcupomfiscalprodutobarra.aliquotaicms as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscalprodutobarra.aliquotaicms
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+*/
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Cancelado' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(coalesce(quantidade, 0) * coalesce(valorunitario))  as total
+	  from tblcupomfiscal 
+	 inner join tblcupomfiscalprodutobarra on (tblcupomfiscalprodutobarra.codcupomfiscal = tblcupomfiscal.codcupomfiscal)
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = true
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	INSERT INTO tmpListaTotaisEcfReducaoZ 
+	select 
+	       'Desconto' as tipo
+	     , tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     , sum(descontoacrescimo)  as total
+	  from tblcupomfiscal 
+	 where tblcupomfiscal.datamovimento = pmovimento
+	   and tblcupomfiscal.codecf = pcodecf
+	   and tblcupomfiscal.cancelado = false
+	 group by tblcupomfiscal.codecf
+	     , tblcupomfiscal.datamovimento
+	     ;
+	RETURN QUERY SELECT * FROM tmpListaTotaisEcfReducaoZ;
+         
+END;
+$function$
+;]]></string>
+			<input_param name="pmovimento" jt="-1" type="date" />
+			<input_param name="pcrz" jt="-1" type="bigint" />
+			<result_param name="tipo" jt="-1" type="text" />
+			<result_param name="codecf" jt="-1" type="bigint" />
+			<result_param name="movimento" jt="-1" type="date" />
+			<result_param name="valor" jt="-1" type="numeric" />
 		</function>
 		<function name="fntblmovimentotituloaiauad" id="Function4846928" isSystem="false" params_known="n" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblmovimentotituloaiauad()
@@ -9197,7 +9034,7 @@ AS $function$
 			$function$
 ;]]></string>
 		</function>
-		<function name="fntblnegocio_atualiza_valortotal" id="Function4846928" isSystem="false" params_known="n" >
+		<function name="fntblnegocio_atualiza_valortotal" id="Function4846928" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocio_atualiza_valortotal(pcodnegocio bigint)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -9205,13 +9042,14 @@ AS $function$
 			BEGIN
 				-- Atualiza Tabela com valores calculados
 				UPDATE tblNegocio
-				   SET valorAVista = coalesce(tblNegocio.valorProdutos, 0) - coalesce(tblNegocio.valorDesconto, 0) - coalesce(tblNegocio.valorAPrazo, 0)
-					 , valorTotal  = coalesce(tblNegocio.valorProdutos, 0) - coalesce(tblNegocio.valorDesconto, 0) 
+				   SET valorAVista = coalesce(tblNegocio.valorProdutos, 0) - coalesce(tblNegocio.valorDesconto, 0) - coalesce(tblNegocio.valorAPrazo, 0) + coalesce(tblNegocio.valorFrete, 0)
+					 , valorTotal  = coalesce(tblNegocio.valorProdutos, 0) - coalesce(tblNegocio.valorDesconto, 0) + coalesce(tblNegocio.valorFrete, 0)
 				 WHERE tblNegocio.CodNegocio = pCodNegocio;
 				RETURN TRUE;
 			END;
 			$function$
 ;]]></string>
+			<input_param name="pcodnegocio" jt="-1" type="bigint" />
 		</function>
 		<function name="fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto" id="Function4846928" isSystem="false" params_known="n" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.fntblnegocioaiau_valorprodutos_valoraprazo_valordesconto()
@@ -9649,6 +9487,15 @@ AS '$libdir/tablefunc', $function$normal_rand$function$
 			<input_param jt="-1" type="double precision" />
 			<input_param jt="-1" type="double precision" />
 		</function>
+		<function name="unaccent" id="Function_17e7" isSystem="false" params_known="y" >
+			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(text)
+ RETURNS text
+ LANGUAGE c
+ STABLE PARALLEL SAFE STRICT
+AS '$libdir/unaccent', $function$unaccent_dict$function$
+;]]></string>
+			<input_param jt="-1" type="text" />
+		</function>
 		<function name="unaccent" id="Function_26c8" isSystem="false" params_known="y" >
 			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(regdictionary, text)
  RETURNS text
@@ -9657,15 +9504,6 @@ AS '$libdir/tablefunc', $function$normal_rand$function$
 AS '$libdir/unaccent', $function$unaccent_dict$function$
 ;]]></string>
 			<input_param jt="-1" type="regdictionary" />
-			<input_param jt="-1" type="text" />
-		</function>
-		<function name="unaccent" id="Function_17e7" isSystem="false" params_known="y" >
-			<string><![CDATA[CREATE OR REPLACE FUNCTION mgsis.unaccent(text)
- RETURNS text
- LANGUAGE c
- STABLE PARALLEL SAFE STRICT
-AS '$libdir/unaccent', $function$unaccent_dict$function$
-;]]></string>
 			<input_param jt="-1" type="text" />
 		</function>
 		<function name="unaccent_init" id="Function_425" isSystem="false" params_known="y" >
@@ -10049,7 +9887,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao" color="B2CDF7" x="896" y="96" />
 	</layout>
 	<layout name="Layout_Geral" id="Layout4866226" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tbl_migration" color="B3CCF5" x="3440" y="1568" />
 		<entity schema="mgsis.mgsis" name="tblauditoria" color="B3CCF5" x="2720" y="1552" />
 		<entity schema="mgsis.mgsis" name="tblauditoriaexcecao" color="B3CCF5" x="3184" y="1552" />
 		<entity schema="mgsis.mgsis" name="tblauditoriatransmissao" color="B3CCF5" x="2720" y="2000" />
@@ -10298,7 +10135,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
    tblparametrosgerais
    tblprodutohistoricopreco]]></comment>
 			<entity schema="mgsis.mgsis" name="tblauditoriaexcecao" />
-			<entity schema="mgsis.mgsis" name="tbl_migration" />
 			<entity schema="mgsis.mgsis" name="tbloperacao" />
 			<callout x="2960" y="1504" pointer="SV" />
 		</group>
@@ -10343,7 +10179,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblsubgrupoproduto" color="C1D8EE" x="768" y="704" />
 	</layout>
 	<layout name="Layout_Laravel_Queue" id="Layout7041969" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="migrations" color="B2CDF7" x="48" y="48" />
 		<entity schema="mgsis.mgsis" name="tbljobs" color="B2CDF7" x="256" y="64" />
 		<entity schema="mgsis.mgsis" name="tbljobsfailed" color="94C3EA" x="48" y="176" />
 		<entity schema="mgsis.mgsis" name="tbljobsfailedspa" color="C1D8EE" x="480" y="208" />
@@ -10381,6 +10216,8 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariorecebimento" />
 			<column name="codusuariocriacao" />
 			<column name="codusuarioalteracao" />
+			<column name="valorfrete" />
+			<column name="codpessoatransportador" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="3986C1" x="384" y="96" />
 		<script name="SQL_Editor" id="Editor_4e0" language="SQL" >
@@ -10514,26 +10351,25 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tbltitulo" color="B2CDF7" x="768" y="1120" />
 	</layout>
 	<layout name="Layout_Nota_Fiscal" id="Layout_364e738" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="tblcidade" color="C1D8EE" x="1200" y="800" />
-		<entity schema="mgsis.mgsis" name="tblempresa" color="C1D8EE" x="1168" y="592" />
-		<entity schema="mgsis.mgsis" name="tblestado" color="C1D8EE" x="1200" y="1056" />
-		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="1168" y="144" />
-		<entity schema="mgsis.mgsis" name="tblibptcache" color="C1D8EE" x="1424" y="160" />
-		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="96" y="1072" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="C1D8EE" x="352" y="112" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="96" y="336" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="128" y="784" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="C1D8EE" x="608" y="96" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="112" y="160" />
-		<entity schema="mgsis.mgsis" name="tbloperacao" color="C1D8EE" x="128" y="608" />
-		<entity schema="mgsis.mgsis" name="tblpais" color="C1D8EE" x="1200" y="1280" />
-		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="880" y="160" />
-		<entity schema="mgsis.mgsis" name="tblprefixogs1" color="C1D8EE" x="1424" y="624" />
-		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="672" y="1120" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="416" y="1072" />
-		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="368" y="1456" />
-		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="928" y="1120" />
-		<entity schema="mgsis.mgsis" name="tbltributacaonaturezaoperacao_backup" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tblcidade" color="C1D8EE" x="1152" y="752" />
+		<entity schema="mgsis.mgsis" name="tblempresa" color="C1D8EE" x="1120" y="544" />
+		<entity schema="mgsis.mgsis" name="tblestado" color="C1D8EE" x="1152" y="1008" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="1120" y="96" />
+		<entity schema="mgsis.mgsis" name="tblibptcache" color="C1D8EE" x="1376" y="112" />
+		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="48" y="1024" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="C1D8EE" x="304" y="64" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="C1D8EE" x="48" y="288" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="C1D8EE" x="80" y="736" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="C1D8EE" x="560" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="C1D8EE" x="64" y="112" />
+		<entity schema="mgsis.mgsis" name="tbloperacao" color="C1D8EE" x="80" y="560" />
+		<entity schema="mgsis.mgsis" name="tblpais" color="C1D8EE" x="1152" y="1232" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="832" y="112" />
+		<entity schema="mgsis.mgsis" name="tblprefixogs1" color="C1D8EE" x="1376" y="576" />
+		<entity schema="mgsis.mgsis" name="tblproduto" color="C1D8EE" x="624" y="1072" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="C1D8EE" x="368" y="1024" />
+		<entity schema="mgsis.mgsis" name="tblprodutoembalagem" color="C1D8EE" x="320" y="1408" />
+		<entity schema="mgsis.mgsis" name="tblprodutovariacao" color="C1D8EE" x="880" y="1072" />
 	</layout>
 	<layout name="Layout_Pessoa" id="Layout_156d02e" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblcertidaoemissor" color="C1D8EE" x="624" y="48" />
@@ -10567,7 +10403,6 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B3CEF5" x="400" y="48" />
 	</layout>
 	<layout name="Layout_Produtos" id="Layout_1a34eed8" confirmed="y" show_relation="columns" >
-		<entity schema="mgsis.mgsis" name="rlpprodutobarra" color="C1D8EE" x="1264" y="608" />
 		<entity schema="mgsis.mgsis" name="tblfamiliaproduto" color="94C3EA" x="880" y="128" />
 		<entity schema="mgsis.mgsis" name="tblgrupoproduto" color="94C3EA" x="624" y="112" />
 		<entity schema="mgsis.mgsis" name="tblimagem" color="3986C1" x="1328" y="160" />
