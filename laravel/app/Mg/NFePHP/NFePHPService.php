@@ -15,7 +15,6 @@ use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Factories\Protocol;
 use NFePHP\Common\Strings;
 use NFePHP\DA\NFe\Danfe;
-use NFePHP\DA\NFe\Danfce;
 
 class NFePHPService extends MgService
 {
@@ -754,7 +753,7 @@ class NFePHPService extends MgService
             $danfe = new Danfe($xml);
             $danfe->debugMode(false);
             $danfe->setDefaultFont('helvetica');
-            // $danfe->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webenf.com.br');
+            $danfce->creditsIntegratorFooter('MGsis - Powered by NFePHP');
             // Caso queira mudar a configuracao padrao de impressao
             /*  $this->printParameters( $orientacao = '', $papel = 'A4', $margSup = 2, $margEsq = 2 ); */
             //Informe o numero DPEC
@@ -772,8 +771,8 @@ class NFePHPService extends MgService
                 $logo = null;
             }
 
-            $danfce = new Danfce($xml);
-            $danfce->debugMode(true);//seta modo debug, deve ser false em produção
+            $danfce = new DanfceMg($xml);
+            // $danfce->debugMode(true);//seta modo debug, deve ser false em produção
             $danfce->setPaperWidth(80); //seta a largura do papel em mm max=80 e min=58
             $danfce->setMargins(2);//seta as margens
             $danfce->setDefaultFont('helvetica');//altera o font pode ser 'times' ou 'arial'
@@ -781,7 +780,7 @@ class NFePHPService extends MgService
             //$danfce->setPrintResume(true); //ativa ou desativa a impressao apenas do resumo
             //$danfce->setViaEstabelecimento(); //altera a via do consumidor para a via do estabelecimento, quando a NFCe for emitida em contingência OFFLINE
             //$danfce->setAsCanceled(); //força marcar nfce como cancelada
-            $danfce->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webnfe.com.br');
+            $danfce->creditsIntegratorFooter('MGsis - Powered by NFePHP');
             $pdf = $danfce->render($logo);
         }
 
