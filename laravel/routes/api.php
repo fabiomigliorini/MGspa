@@ -212,9 +212,12 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         // Impressoras
         Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
+        Route::get('select/estado', '\Mg\Select\SelectEstadoController@index');
+        Route::get('select/veiculo-tipo', '\Mg\Select\SelectVeiculoTipoController@index');
         Route::get('select/produto-barra', '\Mg\Select\SelectProdutoBarraController@index');
 
         Route::get('veiculo', '\Mg\Veiculo\VeiculoController@index');
+        Route::post('veiculo', '\Mg\Veiculo\VeiculoController@store');
         Route::post('veiculo/{id}/inativo', '\Mg\Veiculo\VeiculoController@inativar');
         Route::delete('veiculo/{id}/inativo', '\Mg\Veiculo\VeiculoController@ativar');
         Route::delete('veiculo/{id}', '\Mg\Veiculo\VeiculoController@delete');

@@ -12,6 +12,7 @@
     </template>
 
     <div slot="content" class="q-pa-md">
+      <!-- <pre>{{veiculo}}</pre> -->
       <mg-veiculo-form :veiculo='veiculo' :errors='errors' @submit.prevent.native="create()" />
     </div>
     <div>
@@ -52,13 +53,15 @@ export default {
   methods: {
     create: function () {
       var vm = this;
-      vm.$axios.post('veiculo', vm.tipo).then(function (response) {
+      vm.$axios.post('veiculo', vm.veiculo).then(function (response) {
         vm.$q.notify({
           message:'Tipo de veículo criado!',
           type:'positive'
         });
+        console.log(response);
+        conole.log('aqui');
         vm.state.veiculo.unshift(response.data);
-        vm.state.veiculo = _.sortBy(vm.state.veiculo, ['veiculotipo']);
+        vm.state.veiculo = _.sortBy(vm.state.veiculo, ['veiculo']);
         vm.$router.push('/veiculo/');
       }).catch(function (error) {
         console.log(vm.errors);

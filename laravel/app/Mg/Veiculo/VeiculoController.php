@@ -69,18 +69,18 @@ class VeiculoController
         $veiculo = Veiculo::findOrFail($id);
         $veiculo->delete();
     }
-    //
-    // public function store (Request $request)
-    // {
-    //     $request->validate([
-    //         'Veiculo' => ['required', 'unique:tblVeiculo', 'min:5', 'max:50'],
-    //         'tracao' => ['required'],
-    //         'reboque' => ['required'],
-    //         'tiporodado' => ['required'],
-    //         'tipocarroceria' => ['required'],
-    //     ]);
-    //     $veiculo = Veiculo::create($request->all());
-    //     return $veiculo;
-    // }
+
+    public function store (Request $request)
+    {
+        $request->validate([
+            'codveiculotipo' => ['required'],
+            'veiculo' => ['required', 'unique:tblveiculo', 'min:5', 'max:50'],
+            'placa' => ['required', 'unique:tblveiculo', 'min:7', 'max:7'],
+            'tipoproprietario' => ['required'],
+            'codestado' => ['required'],
+        ]);
+        $veiculo = Veiculo::create($request->all());
+        return $veiculo;
+    }
 
 }
