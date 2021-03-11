@@ -5,9 +5,12 @@ export default [
   { path: '/login', component: () => import('components/Login') }, // Login
   { path: '*', component: () => import('components/Error404') },
 
-  // Etiquetas
+  // Veiculos
   { path: '/veiculo', component: () => import('components/views/veiculo/Index') },
   { path: '/veiculo/create', component: () => import('components/views/veiculo/Create') },
+  { path: '/veiculo/:codveiculo/edit', component: () => import('components/views/veiculo/Edit') },
+  { path: '/veiculo/conjunto/create', component: () => import('components/views/veiculo/conjunto/Create') },
+  { path: '/veiculo/conjunto/:codveiculoconjunto/edit', component: () => import('components/views/veiculo/conjunto/Edit') },
   { path: '/veiculo/tipo/create', component: () => import('components/views/veiculo/tipo/Create') },
   { path: '/veiculo/tipo/:codveiculotipo/edit', component: () => import('components/views/veiculo/tipo/Edit') },
 

@@ -1,11 +1,5 @@
 <template>
-  <mg-layout>
-
-    <q-btn flat round slot="menu" @click="$router.push('/veiculo')">
-      <q-icon name="arrow_back" />
-    </q-btn>
-
-    <q-btn flat round icon="done" slot="menuRight" @click.prevent="create()" />
+  <mg-layout back-path="/veiculo">
 
     <template slot="title">
       Novo Tipo de Veículo
@@ -13,6 +7,9 @@
 
     <div slot="content" class="q-pa-md">
       <mg-veiculo-tipo-form :tipo='tipo' :errors='errors' @submit.prevent.native="create()" />
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn fab icon="done" color="primary" @click.prevent="create()"  />
+      </q-page-sticky>
     </div>
 
   </mg-layout>

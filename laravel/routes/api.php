@@ -214,13 +214,24 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
         Route::get('select/estado', '\Mg\Select\SelectEstadoController@index');
         Route::get('select/veiculo-tipo', '\Mg\Select\SelectVeiculoTipoController@index');
+        Route::get('select/veiculo', '\Mg\Select\SelectVeiculoController@index');
         Route::get('select/produto-barra', '\Mg\Select\SelectProdutoBarraController@index');
 
         Route::get('veiculo', '\Mg\Veiculo\VeiculoController@index');
+        Route::get('veiculo/{id}', '\Mg\Veiculo\VeiculoController@show');
+        Route::put('veiculo/{id}', '\Mg\Veiculo\VeiculoController@update');
         Route::post('veiculo', '\Mg\Veiculo\VeiculoController@store');
         Route::post('veiculo/{id}/inativo', '\Mg\Veiculo\VeiculoController@inativar');
         Route::delete('veiculo/{id}/inativo', '\Mg\Veiculo\VeiculoController@ativar');
         Route::delete('veiculo/{id}', '\Mg\Veiculo\VeiculoController@delete');
+
+        Route::get('veiculo-conjunto', '\Mg\Veiculo\VeiculoConjuntoController@index');
+        Route::get('veiculo-conjunto/{id}', '\Mg\Veiculo\VeiculoConjuntoController@show');
+        Route::put('veiculo-conjunto/{id}', '\Mg\Veiculo\VeiculoConjuntoController@update');
+        Route::post('veiculo-conjunto/{id}/inativo', '\Mg\Veiculo\VeiculoConjuntoController@inativar');
+        Route::delete('veiculo-conjunto/{id}/inativo', '\Mg\Veiculo\VeiculoConjuntoController@ativar');
+        Route::delete('veiculo-conjunto/{id}', '\Mg\Veiculo\VeiculoConjuntoController@delete');
+        Route::post('veiculo-conjunto', '\Mg\Veiculo\VeiculoConjuntoController@store');
 
         Route::get('veiculo-tipo', '\Mg\Veiculo\VeiculoTipoController@index');
         Route::get('veiculo-tipo/{id}', '\Mg\Veiculo\VeiculoTipoController@show');

@@ -1,14 +1,9 @@
 <template>
 <div>
   <form>
-    <div class="row">
-      <div class="col-12">
+    <div class="row justify-center" >
+      <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" >
         <q-list dense>
-        </q-list>
-      </div>
-      <div class="col-xs-12 col-sm-6 col-md-4">
-        <q-list dense>
-
           <q-item>
             <q-item-section>
               <q-input autofocus outlined type="text" v-model="veiculo.veiculo" label="Apelido" :error='hasError("veiculo")'>
@@ -58,9 +53,21 @@
             </q-item-section>
           </q-item>
 
+          <q-item>
+            <q-item-section>
+              <q-input outlined type="text" v-model="veiculo.renavam" label="Renavam" mask="###########" :error='hasError("renavam")'>
+                <template v-slot:error>
+                  <template v-for="mensagem in errors.renavam">
+                    {{mensagem}}
+                  </template>
+                </template>
+              </q-input>
+            </q-item-section>
+          </q-item>
+
         </q-list>
       </div>
-      <div class="col-xs-12 col-sm-6 col-md-4">
+      <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" >
         <q-list dense>
           <q-item>
             <q-item-section>
@@ -88,23 +95,7 @@
 
           <q-item>
             <q-item-section>
-              <q-input outlined type="text" v-model="veiculo.renavam" label="Renavam" mask="##########-#" :error='hasError("renavam")'>
-                <template v-slot:error>
-                  <template v-for="mensagem in errors.renavam">
-                    {{mensagem}}
-                  </template>
-                </template>
-              </q-input>
-            </q-item-section>
-          </q-item>
-
-        </q-list>
-      </div>
-      <div class="col-xs-12 col-sm-6 col-md-4">
-        <q-list dense>
-          <q-item>
-            <q-item-section>
-              <q-input outlined type="number" v-model="veiculo.tara" label="Tara" step="1" min="0" max="999999" :error='hasError("tara")'>
+              <q-input outlined type="number" v-model="veiculo.tara" label="Tara (KG)" step="1" min="0" max="999999" :error='hasError("tara")'>
                 <template v-slot:error>
                   <template v-for="mensagem in errors.tara">
                     {{mensagem}}
@@ -116,7 +107,7 @@
 
           <q-item>
             <q-item-section>
-              <q-input outlined type="number" v-model="veiculo.capacidade" label="Capacidade" step="1" min="0" max="999999" :error='hasError("capacidade")'>
+              <q-input outlined type="number" v-model="veiculo.capacidade" label="Capacidade (KG)" step="1" min="0" max="999999" :error='hasError("capacidade")'>
                 <template v-slot:error>
                   <template v-for="mensagem in errors.capacidade">
                     {{mensagem}}
@@ -128,7 +119,7 @@
 
           <q-item>
             <q-item-section>
-              <q-input outlined type="number" v-model="veiculo.capacidadem3" label="Capacidade em Metros Cúbicos" step="1" min="0" max="999999" :error='hasError("capacidadem3")'>
+              <q-input outlined type="number" v-model="veiculo.capacidadem3" label="Capacidade (M3)" step="1" min="0" max="999999" :error='hasError("capacidadem3")'>
                 <template v-slot:error>
                   <template v-for="mensagem in errors.capacidadem3">
                     {{mensagem}}

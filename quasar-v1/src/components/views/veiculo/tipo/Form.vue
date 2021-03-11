@@ -1,8 +1,8 @@
 <template>
-  <form>
-
-    <div class="q-pa-md" style="max-width: 500px; margin: auto">
-      <q-list bordered dense>
+<form>
+  <div class="row justify-center">
+    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+      <q-list dense>
         <q-item-label header>Detalhes do Tipo</q-item-label>
         <q-item clickable v-ripple>
           <q-item-section>
@@ -22,8 +22,8 @@
           <q-item-section>
             <q-item-label>Tração</q-item-label>
           </q-item-section>
-          <q-item-section side >
-            <q-toggle color="blue" v-model="tipo.tracao"  :error='hasError("tracao")'/>
+          <q-item-section side>
+            <q-toggle color="blue" v-model="tipo.tracao" :error='hasError("tracao")' />
           </q-item-section>
         </q-item>
 
@@ -31,8 +31,8 @@
           <q-item-section>
             <q-item-label>Reboque</q-item-label>
           </q-item-section>
-          <q-item-section side >
-            <q-toggle color="blue" v-model="tipo.reboque"/>
+          <q-item-section side>
+            <q-toggle color="blue" v-model="tipo.reboque" />
           </q-item-section>
         </q-item>
 
@@ -41,11 +41,7 @@
         <q-item-label header>Rodado</q-item-label>
         <q-item tag="label" v-ripple>
           <q-item-section>
-            <q-option-group
-              v-model="tipo.tiporodado"
-              :options="state.optionsTipoRodado"
-              color="primary"
-              />
+            <q-option-group v-model="tipo.tiporodado" :options="state.optionsTipoRodado" color="primary" />
           </q-item-section>
         </q-item>
 
@@ -54,35 +50,29 @@
         <q-item-label header>Carroceria</q-item-label>
         <q-item tag="label" v-ripple>
           <q-item-section>
-            <q-option-group
-              v-model="tipo.tipocarroceria"
-              :options="state.optionsTipoCarroceria"
-              color="primary"
-              />
+            <q-option-group v-model="tipo.tipocarroceria" :options="state.optionsTipoCarroceria" color="primary" />
           </q-item-section>
         </q-item>
 
       </q-list>
     </div>
-
-  </form>
+  </div>
+</form>
 </template>
 
 <script>
 export default {
   name: 'mg-veiculo-form-tipo',
-  components: {
-  },
+  components: {},
   props: [
     'tipo',
     'errors'
   ],
-  data () {
-    return {
-    }
+  data() {
+    return {}
   },
   methods: {
-    hasError: function (field) {
+    hasError: function(field) {
       const item = this.errors[field];
       if (item == undefined) {
         return false;
@@ -90,9 +80,8 @@ export default {
       return item.length > 0;
     },
   },
-  mounted () {
-  },
-  created () {
+  mounted() {},
+  created() {
     this.state = this.$store.state.veiculo
   }
 }

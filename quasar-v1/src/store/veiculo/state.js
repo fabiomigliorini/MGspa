@@ -22,5 +22,6 @@ export default {
     {value: 2, label: 'Outros'},
   ],
   veiculoTipo: [],
+  veiculoConjunto: [],
   veiculo: [],
 }

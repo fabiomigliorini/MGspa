@@ -2,13 +2,13 @@
   <mg-layout back-path="/veiculo">
 
     <template slot="title">
-      Novo Veículo
+      Editar Tipo de Veículo
     </template>
 
     <div slot="content" class="q-pa-md">
-      <mg-veiculo-form :veiculo='veiculo' :errors='errors' @submit.prevent.native="create()" />
+      <mg-veiculo-form :veiculo='veiculo' :errors='errors' @submit.prevent.native="update()" v-if="veiculo.codveiculo" />
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="done" color="primary" @click.prevent="create()"  />
+        <q-btn fab icon="done" color="primary" @click.prevent="update()"  />
       </q-page-sticky>
     </div>
 
@@ -19,6 +19,7 @@
 import MgLayout from '../../../layouts/MgLayout'
 import MgVeiculoForm from './Form'
 import _ from 'lodash';
+import { debounce } from 'quasar'
 
 export default {
   name: 'mg-veiculo-create',
@@ -44,30 +45,41 @@ export default {
     }
   },
   methods: {
-    create: function () {
+    update: function () {
       var vm = this;
-      vm.$axios.post('veiculo', vm.veiculo).then(function (response) {
+      vm.$axios.put('veiculo/' + vm.veiculo.codveiculo, vm.veiculo).then(function (response) {
+        const idx = vm.state.veiculo.findIndex(el => el.codveiculo === vm.veiculo.codveiculo);
+        vm.$set(vm.state.veiculo, idx, response.data)  //works fine
+        vm.state.veiculo = _.sortBy(vm.state.veiculo, ['placa']);
         vm.$q.notify({
-          message:'Tipo de veículo criado!',
-          type:'positive'
+          message: 'Tipo alterado!',
+          type: 'positive',
         });
-        vm.state.veiculo.unshift(response.data);
-        vm.state.veiculo = _.sortBy(vm.state.veiculo, ['veiculo']);
         vm.$router.push('/veiculo/');
       }).catch(function (error) {
-        console.log(error);
+        console.log(vm.errors);
         vm.$q.notify({
           message: 'Falha ao salvar!',
           type: 'negative'
         });
         vm.errors = error.response.data.errors;
       })
-    }
+    },
+    loadVeiculo: debounce(function (codveiculo) {
+      var vm = this
+      vm.$axios.get('veiculo/' + codveiculo).then(response => {
+        vm.veiculo = response.data
+        const idx = vm.state.veiculo.findIndex(el => el.codveiculo === codveiculo);
+        vm.$set(vm.state.veiculo, idx, response.data)  //works fine
+      })
+    }, 500)
+
   },
   mounted () {
   },
   created () {
-    this.state = this.$store.state.veiculo
+    this.state = this.$store.state.veiculo;
+    this.loadVeiculo(this.$route.params.codveiculo);
   }
 }
 </script>

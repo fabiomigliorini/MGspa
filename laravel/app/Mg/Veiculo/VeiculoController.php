@@ -20,32 +20,32 @@ class VeiculoController
         $veiculo = Veiculo::findOrFail($id);
         return $veiculo;
     }
-    //
-    // public function update (Request $request, $id)
-    // {
-    //
-    //     $request->validate([
-    //         'Veiculo' => [
-    //             'required',
-    //             Rule::unique('tblVeiculo')->ignore($id, 'codVeiculo'),
-    //             'min:5',
-    //             'max:50',
-    //         ],
-    //         'tracao' => ['required'],
-    //         'reboque' => ['required'],
-    //         'tiporodado' => ['required'],
-    //         'tipocarroceria' => ['required'],
-    //     ], [
-    //     ]);
-    //
-    //     $request->validate([
-    //     ]);
-    //     $veiculo = Veiculo::findOrFail($id);
-    //     $veiculo->fill($request->all());
-    //     $veiculo->save();
-    //     return $veiculo;
-    // }
-    //
+
+    public function update (Request $request, $id)
+    {
+        $request->validate([
+            'codveiculotipo' => ['required'],
+            'veiculo' => [
+                'required',
+                Rule::unique('tblveiculo')->ignore($id, 'codveiculo'),
+                'min:5',
+                'max:50',
+            ],
+            'placa' => [
+                'required',
+                Rule::unique('tblveiculo')->ignore($id, 'codveiculo'),
+                'min:7',
+                'max:7',
+            ],
+            'tipoproprietario' => ['required'],
+            'codestado' => ['required'],
+        ]);
+        $veiculo = Veiculo::findOrFail($id);
+        $veiculo->fill($request->all());
+        $veiculo->save();
+        return $veiculo;
+    }
+
     public function inativar (Request $request, $id)
     {
         $veiculo = Veiculo::findOrFail($id);

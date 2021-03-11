@@ -33,9 +33,10 @@
                   <q-item-section>
                     <q-item-label lines="1">
                       {{veiculo.placa}}
+                      {{veiculo.veiculo}}
                     </q-item-label>
                     <q-item-label lines="1" caption>
-                      {{formataCodigo(veiculo.codveiculo)}} |
+                      {{formataCodigo(veiculo.codveiculo)}}
                       {{descricaoVeiculoTipo(veiculo)}}
                     </q-item-label>
                   </q-item-section>
@@ -86,8 +87,74 @@
           </q-tab-panel>
 
           <q-tab-panel name="conjunto">
-            <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quis praesentium cumque magnam odio iure quidem, quod illum numquam possimus obcaecati commodi minima assumenda consectetur culpa fuga nulla ullam. In, libero.</p>
-            <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quis praesentium cumque magnam odio iure quidem, quod illum numquam possimus obcaecati commodi minima assumenda consectetur culpa fuga nulla ullam. In, libero.</p>
+            <!-- Se não tiver registros -->
+            <mg-no-data v-if="state.veiculoConjunto.length == 0" class="layout-padding"></mg-no-data>
+            <q-list inset bordered class="rounded-borders" style="max-width: 600px; margin:auto">
+              <template v-for="conjunto in state.veiculoConjunto">
+
+                <q-item :class="inativoClass(conjunto.inativo)">
+                  <!-- <q-item-section avatar top> -->
+                  <!-- </q-item-section> -->
+
+                  <q-item-section>
+                    <q-item-label lines="1">
+                      {{conjunto.veiculoconjunto}}
+                    </q-item-label>
+                    <q-item-label lines="1" caption>
+                      <template v-for="veiculo in conjunto.veiculos">
+                        <q-chip size="sm" :icon="inconeTracao(veiculo)">
+                          {{veiculo.placa}}
+                        </q-chip>
+                      </template>
+                      <!-- {{formataCodigo(conjunto.codveiculoconjunto)}} | -->
+                      <!-- {{descricaoConjuntoRodado(conjunto.conjuntorodado)}} | -->
+                      <!-- {{descricaoConjuntoCarroceria(conjunto.conjuntocarroceria)}} -->
+                    </q-item-label>
+                  </q-item-section>
+
+                  <q-item-section side>
+                    <div class="text-grey-8 q-gutter-xs">
+                      <q-btn color="grey-7" round flat icon="more_vert">
+                        <q-menu cover auto-close>
+                          <q-list>
+                            <q-item clickable :to="'/veiculo/conjunto/'+conjunto.codveiculoconjunto+'/edit'">
+                              <q-item-section side>
+                                <q-icon name="edit" />
+                              </q-item-section>
+                              <q-item-section>
+                                Editar
+                              </q-item-section>
+                            </q-item>
+                            <q-item clickable v-if="conjunto.inativo" @click="reativarConjunto(conjunto)">
+                              <q-item-section side>
+                                <q-icon name="thumb_up" />
+                              </q-item-section>
+                              <q-item-section>Reativar</q-item-section>
+                            </q-item>
+                            <q-item clickable v-else @click="inativarConjunto(conjunto)">
+                              <q-item-section side>
+                                <q-icon name="thumb_down" />
+                              </q-item-section>
+                              <q-item-section>Inativar</q-item-section>
+                            </q-item>
+                            <q-item clickable @click="excluirConjunto(conjunto)">
+                              <q-item-section side>
+                                <q-icon name="delete" />
+                              </q-item-section>
+                              <q-item-section>Excluir</q-item-section>
+                            </q-item>
+                          </q-list>
+                        </q-menu>
+                      </q-btn>
+                    </div>
+                  </q-item-section>
+
+                </q-item>
+
+                <q-separator />
+
+              </template>
+            </q-list>
           </q-tab-panel>
 
           <q-tab-panel name="tipo">
@@ -163,6 +230,7 @@
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn fab icon="add" color="primary" to="/veiculo/tipo/create" v-if="state.tab == 'tipo'" />
+      <q-btn fab icon="add" color="primary" to="/veiculo/conjunto/create" v-if="state.tab == 'conjunto'" />
       <q-btn fab icon="add" color="primary" to="/veiculo/create" v-if="state.tab == 'veiculo'" />
     </q-page-sticky>
 
@@ -315,6 +383,61 @@ export default {
 
     },
 
+    inativarConjunto(conjunto) {
+      var vm = this
+      vm.$axios.post('veiculo-conjunto/' + conjunto.codveiculoconjunto + '/inativo').then(response => {
+        const idx = vm.state.veiculoConjunto.findIndex(el => el.codveiculoconjunto === conjunto.codveiculoconjunto);
+        vm.$set(vm.state.veiculoConjunto, idx, response.data.data) //works fine
+        vm.$q.notify({
+          message: 'Conjunto inativado!',
+          type: 'positive',
+        });
+      }).catch(function(error) {
+        console.log(error);
+        vm.$q.notify({
+          message: 'Falha ao inativar conjunto!',
+          type: 'negative',
+        });
+      });
+    },
+
+    reativarConjunto(conjunto) {
+      var vm = this
+      vm.$axios.delete('veiculo-conjunto/' + conjunto.codveiculoconjunto + '/inativo').then(response => {
+        const idx = vm.state.veiculoConjunto.findIndex(el => el.codveiculoconjunto === conjunto.codveiculoconjunto);
+        vm.$set(vm.state.veiculoConjunto, idx, response.data.data) //works fine
+        vm.$q.notify({
+          message: 'Conjunto reativado!',
+          type: 'positive',
+        });
+      }).catch(function(error) {
+        console.log(error);
+        vm.$q.notify({
+          message: 'Falha ao reativar conjunto!',
+          type: 'negative',
+        });
+      });
+    },
+
+    excluirConjunto(conjunto) {
+      var vm = this
+      vm.$axios.delete('veiculo-conjunto/' + conjunto.codveiculoconjunto).then(response => {
+        const idx = vm.state.veiculoConjunto.findIndex(el => el.codveiculoconjunto === conjunto.codveiculoconjunto);
+        vm.state.veiculoConjunto.splice(idx, 1);
+        vm.$q.notify({
+          message: 'Conjunto excluído!',
+          type: 'positive',
+        });
+      }).catch(function(error) {
+        console.log(error);
+        vm.$q.notify({
+          message: 'Falha ao excluir conjunto! Já não está em uso?',
+          type: 'negative',
+        });
+      });
+
+    },
+
     inativar(veiculo) {
       var vm = this
       vm.$axios.post('veiculo/' + veiculo.codveiculo + '/inativo').then(response => {
@@ -378,6 +501,13 @@ export default {
       })
     }, 500),
 
+    loadVeiculoConjunto: debounce(function(concat, done) {
+      var vm = this
+      vm.$axios.get('veiculo-conjunto').then(response => {
+        vm.state.veiculoConjunto = response.data.data
+      })
+    }, 500),
+
     loadVeiculo: debounce(function(concat, done) {
       var vm = this
       vm.$axios.get('veiculo').then(response => {
@@ -392,6 +522,7 @@ export default {
     this.state = this.$store.state.veiculo
     if (this.state.veiculoTipo.length == 0) {
       this.loadVeiculoTipo();
+      this.loadVeiculoConjunto();
       this.loadVeiculo();
     }
   }

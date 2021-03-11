@@ -2,11 +2,11 @@
   <mg-layout back-path="/veiculo">
 
     <template slot="title">
-      Novo Veículo
+      Novo Conjunto de Veículos
     </template>
 
     <div slot="content" class="q-pa-md">
-      <mg-veiculo-form :veiculo='veiculo' :errors='errors' @submit.prevent.native="create()" />
+      <mg-veiculo-conjunto-form :conjunto='conjunto' :errors='errors' @submit.prevent.native="create()" />
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
         <q-btn fab icon="done" color="primary" @click.prevent="create()"  />
       </q-page-sticky>
@@ -16,29 +16,26 @@
 </template>
 
 <script>
-import MgLayout from '../../../layouts/MgLayout'
-import MgVeiculoForm from './Form'
+import MgLayout from '../../../../layouts/MgLayout'
+import MgVeiculoConjuntoForm from './Form'
 import _ from 'lodash';
 
 export default {
-  name: 'mg-veiculo-create',
+  name: 'mg-veiculo-conjunto-create',
   components: {
     MgLayout,
-    MgVeiculoForm,
+    MgVeiculoConjuntoForm,
   },
   data () {
     return {
-      veiculo: {
-        codveiculotipo: null,
-        veiculo:  null,
-        placa:  null,
+      conjunto: {
+        veiculoconjunto: null,
         codestado: null,
-        renavam: null,
-        tara: null,
-        capacidade: null,
-        capacidadem3: null,
-        codpessoaproprietario: null,
-        tipoproprietario: null,
+        codveiculo: null,
+        veiculos: [
+          {codveiculo: null},
+          {codveiculo: null},
+        ]
       },
       errors: {}
     }
@@ -46,16 +43,16 @@ export default {
   methods: {
     create: function () {
       var vm = this;
-      vm.$axios.post('veiculo', vm.veiculo).then(function (response) {
+      vm.$axios.post('veiculo-conjunto', vm.conjunto).then(function (response) {
         vm.$q.notify({
-          message:'Tipo de veículo criado!',
+          message:'Conjunto de veículo criado!',
           type:'positive'
         });
-        vm.state.veiculo.unshift(response.data);
-        vm.state.veiculo = _.sortBy(vm.state.veiculo, ['veiculo']);
+        vm.state.veiculoConjunto.unshift(response.data.data);
+        vm.state.veiculoConjunto = _.sortBy(vm.state.veiculoConjunto, ['veiculoconjunto']);
         vm.$router.push('/veiculo/');
       }).catch(function (error) {
-        console.log(error);
+        console.log(vm.errors);
         vm.$q.notify({
           message: 'Falha ao salvar!',
           type: 'negative'
