@@ -14,6 +14,10 @@ export default [
   { path: '/veiculo/tipo/create', component: () => import('components/views/veiculo/tipo/Create') },
   { path: '/veiculo/tipo/:codveiculotipo/edit', component: () => import('components/views/veiculo/tipo/Edit') },
 
+  // MDFe
+  { path: '/mdfe/create', component: () => import('components/views/mdfe/Create') },
+
+
   // Etiquetas
   { path: '/etiqueta', component: () => import('components/views/etiqueta/Index') },
 

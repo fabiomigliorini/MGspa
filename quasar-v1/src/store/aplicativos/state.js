@@ -53,9 +53,14 @@ export default {
       path: '/dfe-distribuicao'
     },
     {
-      icon: 'local_shipping',
+      icon: 'local_taxi',
       title: 'Veículos',
       path: '/veiculo'
+    },
+    {
+      icon: 'local_shipping',
+      title: 'MDFe',
+      path: '/mdfe'
     },
     /*
     {
