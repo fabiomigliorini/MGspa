@@ -13,11 +13,11 @@ use Mg\Usuario\Usuario;
 class MdfeStatus extends MgModel
 {
     const EM_DIGITACAO = 1;
-    const TRANSMITIDO = 2;
-    const AUTORIZADO = 3;
-    const NAO_AUTORIZADO = 4;
-    const ENCERRADO = 5;
-    const CANCELADO = 9;
+    const TRANSMITIDA = 2;
+    const AUTORIZADA = 3;
+    const NAO_AUTORIZADA = 4;
+    const ENCERRADA = 5;
+    const CANCELADA = 9;
 
     protected $table = 'tblmdfestatus';
     protected $primaryKey = 'codmdfestatus';

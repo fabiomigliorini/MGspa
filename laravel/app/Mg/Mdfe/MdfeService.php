@@ -53,7 +53,7 @@ class MdfeService
         $res = DB::select($sql, ['placa' => $nf->placa]);
 
         // Se achou algum conjunto, adiciona todos os veiculos do conjunto no mdfe
-        if ($res[0]) {
+        if (isset($res[0])) {
             $conjunto = VeiculoConjunto::findOrFail($res[0]->codveiculoconjunto);
             foreach ($conjunto->VeiculoConjuntoVeiculoS as $vcv) {
                 $mdfeVeiculo = new MdfeVeiculo();

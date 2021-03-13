@@ -9,12 +9,18 @@ use Mg\NotaFiscal\NotaFiscal;
 class MdfeController
 {
 
+    public function show (Request $request, $codmdfe)
+    {
+        $mdfe = Mdfe::findOrFail($codmdfe);
+        return new MdfeResource($mdfe);
+    }
+
     // Cria registro de MDFE baseado nos dados de uma Nota Fiscal
     public function criarDaNotaFiscal (Request $request, $codnotafiscal)
     {
         $nf = NotaFiscal::findOrFail($codnotafiscal);
         $mdfe = MdfeService::criarDaNotaFiscal($nf);
-        return $mdfe;
+        return new MdfeResource($mdfe);
     }
 
     // Cria Arquivo XML da MDFe
@@ -51,6 +57,25 @@ class MdfeController
     {
         $mdfe = Mdfe::findOrFail($codmdfe);
         $ret = MdfeNfePhpService::consultar($mdfe);
+        return $ret;
+    }
+
+    // Cancelar MDFe na Sefaz
+    public function cancelar (Request $request, $codmdfe)
+    {
+        $request->validate([
+            'justificativa' => ['required', 'min:15', 'max:100'],
+        ]);
+        $mdfe = Mdfe::findOrFail($codmdfe);
+        $ret = MdfeNfePhpService::cancelar($mdfe, $request->justificativa);
+        return $ret;
+    }
+
+    // Encerrar MDFe na Sefaz
+    public function encerrar (Request $request, $codmdfe)
+    {
+        $mdfe = Mdfe::findOrFail($codmdfe);
+        $ret = MdfeNfePhpService::encerrar($mdfe);
         return $ret;
     }
 

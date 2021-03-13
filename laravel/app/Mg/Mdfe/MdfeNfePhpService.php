@@ -533,6 +533,10 @@ class MdfeNfePhpService
         /* fim grupo Informações Adicionais */
 
         // Monta XML
+        $ret = $make->monta();
+        if (count($make->errors) > 0) {
+            throw new \Exception($make->errors[0]);
+        }
         $xml = $make->getXML(); // O conteúdo do XML fica armazenado na variável $xml
 
         // Salva Chave do MDFE no Banco de Dados
@@ -603,13 +607,16 @@ class MdfeNfePhpService
             $xMotivo = $respStd->xMotivo;
         }
 
+        $mdfe->update([
+            'codmdfestatus' => MdfeStatus::TRANSMITIDA
+        ]);
+
         $envio = MdfeEnvioSefaz::create([
             'codmdfe' => $mdfe->codmdfe,
             'recibo' => $recibo,
             'recebimento' => $recebimento,
             'cstatenvio' => $cStat,
         ]);
-
 
         // Retorna Resultado do processo
         return [
@@ -664,6 +671,164 @@ class MdfeNfePhpService
         ];
     }
 
+    public static function consultar (Mdfe $mdfe)
+    {
+        if (empty($mdfe->chmdfe)) {
+            throw new \Exception("MDFe não tem chave!", 1);
+        }
+
+        $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
+
+        $resp = $tools->sefazConsultaChave($mdfe->chmdfe);
+        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
+        file_put_contents($path, $resp);
+
+        // dd($path);
+        // $path = '/opt/www/NFePHP/Arquivos/Mdfe/401/homologacao/retorno/2021/03/51210300018267882987589200000002021999997972-2021-03-12.19-42-16-Retorno.xml';
+        // $path = "/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000011999999986-2021-03-12.19-48-58-Retorno.xml";
+        // $resp = file_get_contents($path);
+
+        $st = new Standardize();
+        $respStd = $st->toStd($resp);
+
+        $sucesso = false;
+        $cStat = null;
+        $xMotivo = 'Falha Comunicação SEFAZ!';
+
+        if (isset($respStd->cStat)) {
+            $cStat = $respStd->cStat;
+            $xMotivo = $respStd->xMotivo;
+        }
+
+        if (isset($respStd->protMDFe->infProt->cStat)) {
+            $cStat = $respStd->protMDFe->infProt->cStat;
+            // Processa Protocolo para saber se foi autorizada
+            $sucesso = static::processarProtocolo($mdfe, $respStd->protMDFe, $resp);
+        }
+
+        if (isset($respStd->protMDFe->infProt->xMotivo)) {
+            $xMotivo = $respStd->protMDFe->infProt->xMotivo;
+        }
+
+        // Retorna Resultado do processo
+        return [
+            'sucesso' => $sucesso,
+            'cStat' => $cStat,
+            'xMotivo' => $xMotivo,
+            'resp' => $resp,
+        ];
+    }
+
+    public static function cancelar (Mdfe $mdfe, $justificativa)
+    {
+        if (empty($mdfe->chmdfe)) {
+            throw new \Exception('MDFe não tem chave!', 1);
+        }
+
+        if (empty($mdfe->protocoloautorizacao)) {
+            throw new \Exception('MDFe não tem Protocolo de Autorização!', 1);
+        }
+
+        $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
+        // Workaround CPF
+        $tools->config->cnpj = $tools->config->cpf;
+
+        $resp = $tools->sefazCancela($mdfe->chmdfe, $justificativa, $mdfe->protocoloautorizacao);
+        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
+        file_put_contents($path, $resp);
+        // $path = '/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000021999999975-2021-03-12.22-53-07-Retorno.xml';
+        // $resp = file_get_contents($path);
+
+        $st = new Standardize();
+        $respStd = $st->toStd($resp);
+
+        $sucesso = false;
+        $cStat = null;
+        $xMotivo = 'Falha Comunicação SEFAZ!';
+
+        if (isset($respStd->infEvento->cStat)) {
+            $cStat = $respStd->infEvento->cStat;
+            $xMotivo = $respStd->infEvento->xMotivo;
+            // Registrado
+            if ($respStd->infEvento->cStat == 135) {
+                $dh = Carbon::parse($respStd->infEvento->dhRegEvento);
+                $dh->setTimezone(config('app.timezone'));
+                $mdfe->update([
+                    'codmdfestatus' => MdfeStatus::CANCELADA,
+                    'justificativa' => $justificativa,
+                    'protocolocancelamento' => $respStd->infEvento->nProt,
+                    'inativo' => $dh,
+                ]);
+            }
+        }
+
+        // Retorna Resultado do processo
+        return [
+            'sucesso' => $sucesso,
+            'cStat' => $cStat,
+            'xMotivo' => $xMotivo,
+            'resp' => $resp,
+        ];
+    }
+
+    public static function encerrar (Mdfe $mdfe)
+    {
+        if (empty($mdfe->chmdfe)) {
+            throw new \Exception('MDFe não tem chave!', 1);
+        }
+
+        $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
+        // Workaround CPF
+        $tools->config->cnpj = $tools->config->cpf;
+
+        if ($mdfeNfe = $mdfe->MdfeNfeS()->whereNotNull('codnotafiscal')->first()) {
+            $cidade = $mdfeNfe->NotaFiscal->Pessoa->Cidade;
+        } else {
+            $cidade = $mdfe->CidadeCarregamento;
+        }
+        $cUF = $cidade->Estado->codigooficial;
+        $cMun = $cidade->codigooficial;
+        $encerramento = Carbon::now();
+        $encerramento->setTimezone('America/Sao_Paulo');
+        $dtEnc = $encerramento->format('Y-m-d'); // Opcional, caso nao seja preenchido pegara HOJE
+
+        $resp = $tools->sefazEncerra($mdfe->chmdfe, $mdfe->protocoloautorizacao, $cUF, $cMun, $dtEnc);
+        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
+        file_put_contents($path, $resp);
+
+        // $path = "/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000011999999986-2021-03-12.22-16-28-Retorno.xml";
+        // $resp = file_get_contents($path);
+
+        $st = new Standardize();
+        $respStd = $st->toStd($resp);
+
+        $sucesso = false;
+        $cStat = null;
+        $xMotivo = 'Falha Comunicação SEFAZ!';
+
+        if (isset($respStd->infEvento->cStat)) {
+            $cStat = $respStd->infEvento->cStat;
+            $xMotivo = $respStd->infEvento->xMotivo;
+            // Registrado
+            if ($respStd->infEvento->cStat == 135) {
+                $dh = Carbon::parse($respStd->infEvento->dhRegEvento);
+                $dh->setTimezone(config('app.timezone'));
+                $mdfe->update([
+                    'codmdfestatus' => MdfeStatus::ENCERRADA,
+                    'encerramento' => $dh,
+                ]);
+            }
+        }
+
+        // Retorna Resultado do processo
+        return [
+            'sucesso' => $sucesso,
+            'cStat' => $cStat,
+            'xMotivo' => $xMotivo,
+            'resp' => $resp,
+        ];
+    }
+
     public static function processarProtocolo(Mdfe $mdfe, $protMDFe, $resp)
     {
 
@@ -679,7 +844,10 @@ class MdfeNfePhpService
         // 302 Uso Denegado: Irregularidade fiscal do destinatário
         // 303 Uso Denegado: Destinatario nao habilitado a operar na UF
         if (in_array($protMDFe->infProt->cStat, [301, 302, 303])) {
-            static::vincularProtocoloDenegacao($mdfe, $protMDFe, $resp);
+            $mdfe->update([
+                'codmdfestatus' => MdfeStatus::NAO_AUTORIZADA
+            ]);
+            // static::vincularProtocoloDenegacao($mdfe, $protMDFe, $resp);
             return false;
         }
 
@@ -695,11 +863,15 @@ class MdfeNfePhpService
         }
         $infProt = $protMDFe->infProt;
 
-        // Guarda no Banco de Dados informação da Autorização
-        // $ret = NotaFiscal::where('codnotafiscal', $mdfe->codnotafiscal)->update([
-        //   'nfeautorizacao' => $infProt->nProt,
-        //   'nfedataautorizacao' => Carbon::parse($infProt->dhRecbto)
-        // ]);
+        $codmdfestatus = MdfeStatus::AUTORIZADA;
+        // Se ja estiver cancelada ou encerrada por exemplo, usa o mesmo status que já estava
+        if (!in_array($mdfe->codmdfestatus, [MdfeStatus::EM_DIGITACAO, MdfeStatus::TRANSMITIDA, MdfeStatus::NAO_AUTORIZADA])) {
+            $codmdfestatus = $mdfe->codmdfestatus;
+        }
+        $mdfe->update([
+            'codmdfestatus' => $codmdfestatus,
+            'protocoloautorizacao' => $protMDFe->infProt->nProt
+        ]);
 
         // Carrega o Arquivo com o XML Assinado
         $pathAssinada = MdfeNfePhpPathService::pathMdfeCriado($mdfe);

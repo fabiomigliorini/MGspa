@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Jan/2021 18:34:51
+ * Date: 12/Mar/2021 23:04:17
  */
 
 namespace Mg\Mdfe;
@@ -44,12 +44,17 @@ class Mdfe extends MgModel
         'codfilial',
         'codmdfestatus',
         'emissao',
+        'encerramento',
+        'inativo',
         'informacoesadicionais',
         'informacoescomplementares',
         'inicioviagem',
+        'justificativa',
         'modal',
         'modelo',
         'numero',
+        'protocoloautorizacao',
+        'protocolocancelamento',
         'serie',
         'tipoemissao',
         'tipoemitente',
@@ -60,6 +65,7 @@ class Mdfe extends MgModel
         'alteracao',
         'criacao',
         'emissao',
+        'encerramento',
         'inativo',
         'inicioviagem'
     ];
@@ -75,6 +81,8 @@ class Mdfe extends MgModel
         'modal' => 'integer',
         'modelo' => 'integer',
         'numero' => 'integer',
+        'protocoloautorizacao' => 'integer',
+        'protocolocancelamento' => 'integer',
         'serie' => 'integer',
         'tipoemissao' => 'integer',
         'tipoemitente' => 'integer',

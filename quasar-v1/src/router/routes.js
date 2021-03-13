@@ -15,7 +15,9 @@ export default [
   { path: '/veiculo/tipo/:codveiculotipo/edit', component: () => import('components/views/veiculo/tipo/Edit') },
 
   // MDFe
+  { path: '/mdfe', component: () => import('components/views/mdfe/Index') },
   { path: '/mdfe/create', component: () => import('components/views/mdfe/Create') },
+  { path: '/mdfe/:codmdfe', component: () => import('components/views/mdfe/View') },
 
 
   // Etiquetas

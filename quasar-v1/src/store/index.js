@@ -5,6 +5,7 @@ import example from './module-example'
 import aplicativos from './aplicativos'
 import perfil from './perfil'
 import veiculo from './veiculo'
+import mdfe from './mdfe'
 import filtroMarca from './filtro/marca'
 import filtroUsuario from './filtro/usuario'
 import filtroFilial from './filtro/filial'
@@ -20,6 +21,7 @@ const store = new Vuex.Store({
     aplicativos,
     perfil,
     veiculo,
+    mdfe,
     filtroMarca,
     filtroUsuario,
     filtroFilial,
