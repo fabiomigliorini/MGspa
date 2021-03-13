@@ -43,6 +43,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('mdfe/{codmdfe}/encerrar', '\Mg\Mdfe\MdfeController@encerrar');
     Route::get('mdfe/{codmdfe}/damdfe', '\Mg\Mdfe\MdfeController@damdfe');
     Route::get('mdfe/{codmdfe}', '\Mg\Mdfe\MdfeController@show');
+    Route::get('mdfe', '\Mg\Mdfe\MdfeController@index');
 
     // Pix Cob
     Route::post('pix/cob/criar-negocio/{codnegocio}', '\Mg\Pix\PixController@criarPixCobNegocio');

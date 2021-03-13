@@ -9,6 +9,12 @@ use Mg\NotaFiscal\NotaFiscal;
 class MdfeController
 {
 
+    public function index (Request $request)
+    {
+        $mdfes = Mdfe::orderBy('codmdfe', 'desc')->simplePaginate(100);
+        return MdfeResource::collection($mdfes);
+    }
+
     public function show (Request $request, $codmdfe)
     {
         $mdfe = Mdfe::findOrFail($codmdfe);

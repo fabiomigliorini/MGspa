@@ -11,8 +11,9 @@ delete from tbljobsspa where tbljobsspa.id not in (select min(id) from tbljobssp
 select 'lara', queue, count(*) from tbljobs group by queue union all
 select 'spa', queue, count(*) from tbljobsspa group by queue order by queue
 
+select * from tbljobs where payload ilike '%Negocio%'
 
-
+delete from tbljobs where queue = 'urgent'
 
 /*
 delete from tbljobs where payload ilike '%1681715,%'

@@ -1,4 +1,9 @@
 export default {
+  mdfes: [
+  ],
+  filtro: {
+    codmdfestatus: 1,
+  },
   optionsTipoEmitente: [
     {value: 1, label: 'Prestador de Serviço'},
     {value: 2, label: 'Transportador Carga Própria'},

@@ -2,236 +2,143 @@
 <mg-layout back-path="/">
   <!-- Título da Página -->
   <template slot="title">
-    Veículos
+    MDF-e's
   </template>
 
   <!-- Conteúdo Princial (Meio) -->
-  <div slot="content">
-    <!-- <pre>{{veiculoTipo}}</pre> -->
-
-    <template v-if="state">
-      <template>
-        <q-tabs v-model="state.tab" class="bg-primary text-white shadow-2">
-          <q-tab name="veiculo" icon="local_shipping" label="Veículos" />
-          <q-tab name="conjunto" icon="commute" label="Conjuntos" />
-          <q-tab name="tipo" icon="handyman" label="Tipos" />
-        </q-tabs>
-      </template>
-
-      <template>
-        <q-tab-panels v-model="state.tab" animated swipeable>
-          <q-tab-panel name="veiculo">
-            <mg-no-data v-if="state.veiculo.length == 0" class="layout-padding"></mg-no-data>
-            <q-list inset bordered class="rounded-borders" style="max-width: 600px; margin:auto">
-              <template v-for="veiculo in state.veiculo">
-
-                <q-item :class="inativoClass(veiculo.inativo)">
-                  <q-item-section avatar top>
-                    <q-avatar :icon="inconeVeiculo(veiculo)" color="primary" text-color="white" />
-                  </q-item-section>
-
-                  <q-item-section>
-                    <q-item-label lines="1">
-                      {{veiculo.placa}}
-                      {{veiculo.veiculo}}
-                    </q-item-label>
-                    <q-item-label lines="1" caption>
-                      {{formataCodigo(veiculo.codveiculo)}}
-                      {{descricaoVeiculoTipo(veiculo)}}
-                    </q-item-label>
-                  </q-item-section>
-
-                  <q-item-section side>
-                    <div class="text-grey-8 q-gutter-xs">
-                      <q-btn color="grey-7" round flat icon="more_vert">
-                        <q-menu cover auto-close>
-                          <q-list>
-                            <q-item clickable :to="'/veiculo/'+veiculo.codveiculo+'/edit'">
-                              <q-item-section side>
-                                <q-icon name="edit" />
-                              </q-item-section>
-                              <q-item-section>
-                                Editar
-                              </q-item-section>
-                            </q-item>
-                            <q-item clickable v-if="veiculo.inativo" @click="reativar(veiculo)">
-                              <q-item-section side>
-                                <q-icon name="thumb_up" />
-                              </q-item-section>
-                              <q-item-section>Reativar</q-item-section>
-                            </q-item>
-                            <q-item clickable v-else @click="inativar(veiculo)">
-                              <q-item-section side>
-                                <q-icon name="thumb_down" />
-                              </q-item-section>
-                              <q-item-section>Inativar</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="excluir(veiculo)">
-                              <q-item-section side>
-                                <q-icon name="delete" />
-                              </q-item-section>
-                              <q-item-section>Excluir</q-item-section>
-                            </q-item>
-                          </q-list>
-                        </q-menu>
-                      </q-btn>
-                    </div>
-                  </q-item-section>
-
-                </q-item>
-
-                <q-separator inset="item" />
-
-              </template>
-            </q-list>
-          </q-tab-panel>
-
-          <q-tab-panel name="conjunto">
-            <!-- Se não tiver registros -->
-            <mg-no-data v-if="state.veiculoConjunto.length == 0" class="layout-padding"></mg-no-data>
-            <q-list inset bordered class="rounded-borders" style="max-width: 600px; margin:auto">
-              <template v-for="conjunto in state.veiculoConjunto">
-
-                <q-item :class="inativoClass(conjunto.inativo)">
-                  <!-- <q-item-section avatar top> -->
-                  <!-- </q-item-section> -->
-
-                  <q-item-section>
-                    <q-item-label lines="1">
-                      {{conjunto.veiculoconjunto}}
-                    </q-item-label>
-                    <q-item-label lines="1" caption>
-                      <template v-for="veiculo in conjunto.veiculos">
-                        <q-chip size="sm" :icon="inconeTracao(veiculo)">
-                          {{veiculo.placa}}
-                        </q-chip>
-                      </template>
-                      <!-- {{formataCodigo(conjunto.codveiculoconjunto)}} | -->
-                      <!-- {{descricaoConjuntoRodado(conjunto.conjuntorodado)}} | -->
-                      <!-- {{descricaoConjuntoCarroceria(conjunto.conjuntocarroceria)}} -->
-                    </q-item-label>
-                  </q-item-section>
-
-                  <q-item-section side>
-                    <div class="text-grey-8 q-gutter-xs">
-                      <q-btn color="grey-7" round flat icon="more_vert">
-                        <q-menu cover auto-close>
-                          <q-list>
-                            <q-item clickable :to="'/veiculo/conjunto/'+conjunto.codveiculoconjunto+'/edit'">
-                              <q-item-section side>
-                                <q-icon name="edit" />
-                              </q-item-section>
-                              <q-item-section>
-                                Editar
-                              </q-item-section>
-                            </q-item>
-                            <q-item clickable v-if="conjunto.inativo" @click="reativarConjunto(conjunto)">
-                              <q-item-section side>
-                                <q-icon name="thumb_up" />
-                              </q-item-section>
-                              <q-item-section>Reativar</q-item-section>
-                            </q-item>
-                            <q-item clickable v-else @click="inativarConjunto(conjunto)">
-                              <q-item-section side>
-                                <q-icon name="thumb_down" />
-                              </q-item-section>
-                              <q-item-section>Inativar</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="excluirConjunto(conjunto)">
-                              <q-item-section side>
-                                <q-icon name="delete" />
-                              </q-item-section>
-                              <q-item-section>Excluir</q-item-section>
-                            </q-item>
-                          </q-list>
-                        </q-menu>
-                      </q-btn>
-                    </div>
-                  </q-item-section>
-
-                </q-item>
-
-                <q-separator />
-
-              </template>
-            </q-list>
-          </q-tab-panel>
-
-          <q-tab-panel name="tipo">
-            <!-- Se não tiver registros -->
-            <mg-no-data v-if="state.veiculoTipo.length == 0" class="layout-padding"></mg-no-data>
-            <q-list inset bordered class="rounded-borders" style="max-width: 600px; margin:auto">
-              <template v-for="tipo in state.veiculoTipo">
-
-                <q-item :class="inativoClass(tipo.inativo)">
-                  <q-item-section avatar top>
-                    <q-avatar :icon="inconeTracao(tipo)" color="primary" text-color="white" />
-                  </q-item-section>
-
-                  <q-item-section>
-                    <q-item-label lines="1">
-                      {{tipo.veiculotipo}}
-                    </q-item-label>
-                    <q-item-label lines="1" caption>
-                      {{formataCodigo(tipo.codveiculotipo)}} |
-                      {{descricaoTipoRodado(tipo.tiporodado)}} |
-                      {{descricaoTipoCarroceria(tipo.tipocarroceria)}}
-                    </q-item-label>
-                  </q-item-section>
-
-                  <q-item-section side>
-                    <div class="text-grey-8 q-gutter-xs">
-                      <q-btn color="grey-7" round flat icon="more_vert">
-                        <q-menu cover auto-close>
-                          <q-list>
-                            <q-item clickable :to="'/veiculo/tipo/'+tipo.codveiculotipo+'/edit'">
-                              <q-item-section side>
-                                <q-icon name="edit" />
-                              </q-item-section>
-                              <q-item-section>
-                                Editar
-                              </q-item-section>
-                            </q-item>
-                            <q-item clickable v-if="tipo.inativo" @click="reativarTipo(tipo)">
-                              <q-item-section side>
-                                <q-icon name="thumb_up" />
-                              </q-item-section>
-                              <q-item-section>Reativar</q-item-section>
-                            </q-item>
-                            <q-item clickable v-else @click="inativarTipo(tipo)">
-                              <q-item-section side>
-                                <q-icon name="thumb_down" />
-                              </q-item-section>
-                              <q-item-section>Inativar</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="excluirTipo(tipo)">
-                              <q-item-section side>
-                                <q-icon name="delete" />
-                              </q-item-section>
-                              <q-item-section>Excluir</q-item-section>
-                            </q-item>
-                          </q-list>
-                        </q-menu>
-                      </q-btn>
-                    </div>
-                  </q-item-section>
-
-                </q-item>
-
-                <q-separator inset="item" />
-
-              </template>
-            </q-list>
-          </q-tab-panel>
-        </q-tab-panels>
-      </template>
-
+  <div slot="content" v-if="state">
+    teste
+    <!--
+    <template>
+      <q-tabs v-model="state.tab" class="bg-primary text-white shadow-2">
+        <q-tab name="1" label="Digitação" />
+        <q-tab name="2" label="Transmitidas" />
+        <q-tab name="3" label="Autorizadas" />
+        <q-tab name="4" label="Não Autorizadas" />
+        <q-tab name="5" label="Encerradas" />
+        <q-tab name="9" label="Canceladas" />
+      </q-tabs>
     </template>
+    -->
+    <template>
+      <div>
+        <q-list separator>
+          <template v-for="mdfe in state.mdfes.data">
+            <q-item clickable v-ripple>
+              <q-item-section avatar>
+                <q-avatar :color="statusColor(mdfe.codmdfestatus)">
+                  {{mdfe.mdfestatussigla}}
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Item with caption {{ mdfe.codmdfe }}</q-item-label>
+                <q-item-label caption>Caption</q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-icon color="primary" name="bluetooth" />
+            </q-item-section>
+
+            <q-item-section>Icon as avatar</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-avatar color="teal" text-color="white" icon="bluetooth" />
+            </q-item-section>
+
+            <q-item-section>Avatar-type icon</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-avatar rounded color="purple" text-color="white" icon="bluetooth" />
+            </q-item-section>
+
+            <q-item-section>Rounded avatar-type icon</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-avatar color="primary" text-color="white">
+                R
+              </q-avatar>
+            </q-item-section>
+
+            <q-item-section>Letter avatar-type</q-item-section>
+          </q-item>
+
+          <q-separator />
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-avatar>
+                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>Image avatar</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-avatar square>
+                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>Image square avatar</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-avatar rounded>
+                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>Image rounded avatar</q-item-section>
+          </q-item>
+
+          <q-separator />
+
+          <q-item clickable v-ripple>
+            <q-item-section avatar>
+              <q-avatar rounded>
+                <img src="https://cdn.quasar.dev/img/mountains.jpg">
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>List item</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple>
+            <q-item-section thumbnail>
+              <img src="https://cdn.quasar.dev/img/mountains.jpg">
+            </q-item-section>
+            <q-item-section>List item</q-item-section>
+          </q-item>
+        </q-list>
+      </div>
+    </template>
+    <q-list dark bordered separator>
+      <q-item-section>
+        <q-item-label>Item with caption </q-item-label>
+        <q-item-label caption>Caption</q-item-label>
+      </q-item-section>
+      <template v-for="mdfe in state.mdfes.data">
+        <q-item clickable v-ripple>
+          <q-item-section>
+            <q-item-label>Item with caption {{ mdfe.codmdfe }}</q-item-label>
+            <q-item-label caption>Caption</q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-list>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" to="/veiculo/tipo/create" v-if="state.tab == 'tipo'" />
-      <q-btn fab icon="add" color="primary" to="/veiculo/conjunto/create" v-if="state.tab == 'conjunto'" />
-      <q-btn fab icon="add" color="primary" to="/veiculo/create" v-if="state.tab == 'veiculo'" />
+      <q-btn fab icon="add" color="primary" to="/mdfe/tipo/create" v-if="state.tab == 'tipo'" />
+      <q-btn fab icon="add" color="primary" to="/mdfe/conjunto/create" v-if="state.tab == 'conjunto'" />
+      <q-btn fab icon="add" color="primary" to="/mdfe/create" v-if="state.tab == 'mdfe'" />
     </q-page-sticky>
 
   </div>
@@ -278,6 +185,14 @@ export default {
 
   methods: {
 
+    statusColor: function (codmdfestatus) {
+      var ret = this.$store.state.mdfe.colorsStatus.find(el => el.value === codmdfestatus)
+      if (ret) {
+        return ret.color
+      }
+      return null;
+    },
+
     descricaoTipoCarroceria(value) {
       const item = this.state.optionsTipoCarroceria.find(item => item.value === value);
       if (item) {
@@ -301,14 +216,14 @@ export default {
       return '#' + this.numeral(parseFloat(codigo)).format('00000000');
     },
 
-    inconeVeiculo: function(veiculo) {
-      const tipo = this.state.veiculoTipo.find(item => item.codveiculotipo === veiculo.codveiculotipo);
+    inconeMdfe: function(mdfe) {
+      const tipo = this.state.mdfeTipo.find(item => item.codmdfetipo === mdfe.codmdfetipo);
       return this.inconeTracao(tipo);
     },
 
-    descricaoVeiculoTipo: function(veiculo) {
-      const tipo = this.state.veiculoTipo.find(item => item.codveiculotipo === veiculo.codveiculotipo);
-      return tipo.veiculotipo;
+    descricaoMdfeTipo: function(mdfe) {
+      const tipo = this.state.mdfeTipo.find(item => item.codmdfetipo === mdfe.codmdfetipo);
+      return tipo.mdfetipo;
     },
 
     inconeTracao: function(tipo) {
@@ -330,9 +245,9 @@ export default {
 
     inativarTipo(tipo) {
       var vm = this
-      vm.$axios.post('veiculo-tipo/' + tipo.codveiculotipo + '/inativo').then(response => {
-        const idx = vm.state.veiculoTipo.findIndex(el => el.codveiculotipo === tipo.codveiculotipo);
-        vm.$set(vm.state.veiculoTipo, idx, response.data) //works fine
+      vm.$axios.post('mdfe-tipo/' + tipo.codmdfetipo + '/inativo').then(response => {
+        const idx = vm.state.mdfeTipo.findIndex(el => el.codmdfetipo === tipo.codmdfetipo);
+        vm.$set(vm.state.mdfeTipo, idx, response.data) //works fine
         vm.$q.notify({
           message: 'Tipo inativado!',
           type: 'positive',
@@ -348,9 +263,9 @@ export default {
 
     reativarTipo(tipo) {
       var vm = this
-      vm.$axios.delete('veiculo-tipo/' + tipo.codveiculotipo + '/inativo').then(response => {
-        const idx = vm.state.veiculoTipo.findIndex(el => el.codveiculotipo === tipo.codveiculotipo);
-        vm.$set(vm.state.veiculoTipo, idx, response.data) //works fine
+      vm.$axios.delete('mdfe-tipo/' + tipo.codmdfetipo + '/inativo').then(response => {
+        const idx = vm.state.mdfeTipo.findIndex(el => el.codmdfetipo === tipo.codmdfetipo);
+        vm.$set(vm.state.mdfeTipo, idx, response.data) //works fine
         vm.$q.notify({
           message: 'Tipo reativado!',
           type: 'positive',
@@ -366,9 +281,9 @@ export default {
 
     excluirTipo(tipo) {
       var vm = this
-      vm.$axios.delete('veiculo-tipo/' + tipo.codveiculotipo).then(response => {
-        const idx = vm.state.veiculoTipo.findIndex(el => el.codveiculotipo === tipo.codveiculotipo);
-        vm.state.veiculoTipo.splice(idx, 1);
+      vm.$axios.delete('mdfe-tipo/' + tipo.codmdfetipo).then(response => {
+        const idx = vm.state.mdfeTipo.findIndex(el => el.codmdfetipo === tipo.codmdfetipo);
+        vm.state.mdfeTipo.splice(idx, 1);
         vm.$q.notify({
           message: 'Tipo excluído!',
           type: 'positive',
@@ -385,9 +300,9 @@ export default {
 
     inativarConjunto(conjunto) {
       var vm = this
-      vm.$axios.post('veiculo-conjunto/' + conjunto.codveiculoconjunto + '/inativo').then(response => {
-        const idx = vm.state.veiculoConjunto.findIndex(el => el.codveiculoconjunto === conjunto.codveiculoconjunto);
-        vm.$set(vm.state.veiculoConjunto, idx, response.data.data) //works fine
+      vm.$axios.post('mdfe-conjunto/' + conjunto.codmdfeconjunto + '/inativo').then(response => {
+        const idx = vm.state.mdfeConjunto.findIndex(el => el.codmdfeconjunto === conjunto.codmdfeconjunto);
+        vm.$set(vm.state.mdfeConjunto, idx, response.data.data) //works fine
         vm.$q.notify({
           message: 'Conjunto inativado!',
           type: 'positive',
@@ -403,9 +318,9 @@ export default {
 
     reativarConjunto(conjunto) {
       var vm = this
-      vm.$axios.delete('veiculo-conjunto/' + conjunto.codveiculoconjunto + '/inativo').then(response => {
-        const idx = vm.state.veiculoConjunto.findIndex(el => el.codveiculoconjunto === conjunto.codveiculoconjunto);
-        vm.$set(vm.state.veiculoConjunto, idx, response.data.data) //works fine
+      vm.$axios.delete('mdfe-conjunto/' + conjunto.codmdfeconjunto + '/inativo').then(response => {
+        const idx = vm.state.mdfeConjunto.findIndex(el => el.codmdfeconjunto === conjunto.codmdfeconjunto);
+        vm.$set(vm.state.mdfeConjunto, idx, response.data.data) //works fine
         vm.$q.notify({
           message: 'Conjunto reativado!',
           type: 'positive',
@@ -421,9 +336,9 @@ export default {
 
     excluirConjunto(conjunto) {
       var vm = this
-      vm.$axios.delete('veiculo-conjunto/' + conjunto.codveiculoconjunto).then(response => {
-        const idx = vm.state.veiculoConjunto.findIndex(el => el.codveiculoconjunto === conjunto.codveiculoconjunto);
-        vm.state.veiculoConjunto.splice(idx, 1);
+      vm.$axios.delete('mdfe-conjunto/' + conjunto.codmdfeconjunto).then(response => {
+        const idx = vm.state.mdfeConjunto.findIndex(el => el.codmdfeconjunto === conjunto.codmdfeconjunto);
+        vm.state.mdfeConjunto.splice(idx, 1);
         vm.$q.notify({
           message: 'Conjunto excluído!',
           type: 'positive',
@@ -438,11 +353,11 @@ export default {
 
     },
 
-    inativar(veiculo) {
+    inativar(mdfe) {
       var vm = this
-      vm.$axios.post('veiculo/' + veiculo.codveiculo + '/inativo').then(response => {
-        const idx = vm.state.veiculo.findIndex(el => el.codveiculo === veiculo.codveiculo);
-        vm.$set(vm.state.veiculo, idx, response.data) //works fine
+      vm.$axios.post('mdfe/' + mdfe.codmdfe + '/inativo').then(response => {
+        const idx = vm.state.mdfe.findIndex(el => el.codmdfe === mdfe.codmdfe);
+        vm.$set(vm.state.mdfe, idx, response.data) //works fine
         vm.$q.notify({
           message: ' inativado!',
           type: 'positive',
@@ -450,17 +365,17 @@ export default {
       }).catch(function(error) {
         console.log(error);
         vm.$q.notify({
-          message: 'Falha ao inativar veiculo!',
+          message: 'Falha ao inativar mdfe!',
           type: 'negative',
         });
       });
     },
 
-    reativar(veiculo) {
+    reativar(mdfe) {
       var vm = this
-      vm.$axios.delete('veiculo/' + veiculo.codveiculo + '/inativo').then(response => {
-        const idx = vm.state.veiculo.findIndex(el => el.codveiculo === veiculo.codveiculo);
-        vm.$set(vm.state.veiculo, idx, response.data) //works fine
+      vm.$axios.delete('mdfe/' + mdfe.codmdfe + '/inativo').then(response => {
+        const idx = vm.state.mdfe.findIndex(el => el.codmdfe === mdfe.codmdfe);
+        vm.$set(vm.state.mdfe, idx, response.data) //works fine
         vm.$q.notify({
           message: ' reativado!',
           type: 'positive',
@@ -468,17 +383,17 @@ export default {
       }).catch(function(error) {
         console.log(error);
         vm.$q.notify({
-          message: 'Falha ao reativar veiculo!',
+          message: 'Falha ao reativar mdfe!',
           type: 'negative',
         });
       });
     },
 
-    excluir(veiculo) {
+    excluir(mdfe) {
       var vm = this
-      vm.$axios.delete('veiculo/' + veiculo.codveiculo).then(response => {
-        const idx = vm.state.veiculo.findIndex(el => el.codveiculo === veiculo.codveiculo);
-        vm.state.veiculo.splice(idx, 1);
+      vm.$axios.delete('mdfe/' + mdfe.codmdfe).then(response => {
+        const idx = vm.state.mdfe.findIndex(el => el.codmdfe === mdfe.codmdfe);
+        vm.state.mdfe.splice(idx, 1);
         vm.$q.notify({
           message: ' excluído!',
           type: 'positive',
@@ -486,32 +401,17 @@ export default {
       }).catch(function(error) {
         console.log(error);
         vm.$q.notify({
-          message: 'Falha ao excluir veiculo! Já não está em uso?',
+          message: 'Falha ao excluir mdfe! Já não está em uso?',
           type: 'negative',
         });
       });
 
     },
 
-    // carrega registros da api
-    loadVeiculoTipo: debounce(function(concat, done) {
+    loadMdfe: debounce(function(concat, done) {
       var vm = this
-      vm.$axios.get('veiculo-tipo').then(response => {
-        vm.state.veiculoTipo = response.data
-      })
-    }, 500),
-
-    loadVeiculoConjunto: debounce(function(concat, done) {
-      var vm = this
-      vm.$axios.get('veiculo-conjunto').then(response => {
-        vm.state.veiculoConjunto = response.data.data
-      })
-    }, 500),
-
-    loadVeiculo: debounce(function(concat, done) {
-      var vm = this
-      vm.$axios.get('veiculo').then(response => {
-        vm.state.veiculo = response.data
+      vm.$axios.get('mdfe').then(response => {
+        vm.state.mdfes = response.data
       })
     }, 500),
 
@@ -519,12 +419,8 @@ export default {
 
   // na criacao, busca filtro do Vuex
   created() {
-    this.state = this.$store.state.veiculo
-    if (this.state.veiculoTipo.length == 0) {
-      this.loadVeiculoTipo();
-      this.loadVeiculoConjunto();
-      this.loadVeiculo();
-    }
+    this.state = this.$store.state.mdfe
+    this.loadMdfe();
   }
 
 }
