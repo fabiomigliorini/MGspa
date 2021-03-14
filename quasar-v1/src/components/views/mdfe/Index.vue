@@ -2,12 +2,11 @@
 <mg-layout back-path="/">
   <!-- Título da Página -->
   <template slot="title">
-    MDF-e's
+    MDFe's
   </template>
 
   <!-- Conteúdo Princial (Meio) -->
   <div slot="content" v-if="state">
-    teste
     <!--
     <template>
       <q-tabs v-model="state.tab" class="bg-primary text-white shadow-2">
@@ -21,121 +20,48 @@
     </template>
     -->
     <template>
-      <div>
-        <q-list separator>
-          <template v-for="mdfe in state.mdfes.data">
-            <q-item clickable v-ripple>
-              <q-item-section avatar>
-                <q-avatar :color="statusColor(mdfe.codmdfestatus)">
-                  {{mdfe.mdfestatussigla}}
-                </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>Item with caption {{ mdfe.codmdfe }}</q-item-label>
-                <q-item-label caption>Caption</q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
-
-          <q-item clickable v-ripple>
+      <q-list separator>
+        <template v-for="mdfe in state.mdfes.data">
+          <q-item clickable v-ripple :to="'/mdfe/' + mdfe.codmdfe">
             <q-item-section avatar>
-              <q-icon color="primary" name="bluetooth" />
-            </q-item-section>
-
-            <q-item-section>Icon as avatar</q-item-section>
-          </q-item>
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar>
-              <q-avatar color="teal" text-color="white" icon="bluetooth" />
-            </q-item-section>
-
-            <q-item-section>Avatar-type icon</q-item-section>
-          </q-item>
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar>
-              <q-avatar rounded color="purple" text-color="white" icon="bluetooth" />
-            </q-item-section>
-
-            <q-item-section>Rounded avatar-type icon</q-item-section>
-          </q-item>
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar>
-              <q-avatar color="primary" text-color="white">
-                R
+              <q-avatar :color="statusColor(mdfe.codmdfestatus)">
+                {{mdfe.mdfestatussigla}}
               </q-avatar>
             </q-item-section>
-
-            <q-item-section>Letter avatar-type</q-item-section>
-          </q-item>
-
-          <q-separator />
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar>
-              <q-avatar>
-                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
-              </q-avatar>
+            <q-item-section>
+              <q-item-label>
+                {{ formataCodigo(mdfe.codmdfe) }}
+                {{mdfe.filial}}
+                <template v-if="mdfe.numero">
+                  Nº {{mdfe.numero}}
+                </template>
+                <template v-if="mdfe.inicioviagem">
+                  <abbr :title="moment(mdfe.inicioviagem).format('llll')">
+                    {{ moment(mdfe.inicioviagem).fromNow() }}
+                  </abbr>
+                </template>
+              </q-item-label>
+              <q-item-label caption>
+                <template v-for="veiculo in mdfe.MdfeVeiculoS">
+                  {{veiculo.placa}}
+                </template>
+              </q-item-label>
+              <q-item-label caption>
+                <template v-for="nfe in mdfe.MdfeNfeS">
+                  NFe {{ formataChave(nfe.nfechave) }}
+                </template>
+              </q-item-label>
             </q-item-section>
-            <q-item-section>Image avatar</q-item-section>
           </q-item>
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar>
-              <q-avatar square>
-                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
-              </q-avatar>
-            </q-item-section>
-            <q-item-section>Image square avatar</q-item-section>
-          </q-item>
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar>
-              <q-avatar rounded>
-                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
-              </q-avatar>
-            </q-item-section>
-            <q-item-section>Image rounded avatar</q-item-section>
-          </q-item>
-
-          <q-separator />
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar>
-              <q-avatar rounded>
-                <img src="https://cdn.quasar.dev/img/mountains.jpg">
-              </q-avatar>
-            </q-item-section>
-            <q-item-section>List item</q-item-section>
-          </q-item>
-
-          <q-item clickable v-ripple>
-            <q-item-section thumbnail>
-              <img src="https://cdn.quasar.dev/img/mountains.jpg">
-            </q-item-section>
-            <q-item-section>List item</q-item-section>
-          </q-item>
-        </q-list>
-      </div>
+        </template>
+      </q-list>
     </template>
-    <q-list dark bordered separator>
-      <q-item-section>
-        <q-item-label>Item with caption </q-item-label>
-        <q-item-label caption>Caption</q-item-label>
-      </q-item-section>
-      <template v-for="mdfe in state.mdfes.data">
-        <q-item clickable v-ripple>
-          <q-item-section>
-            <q-item-label>Item with caption {{ mdfe.codmdfe }}</q-item-label>
-            <q-item-label caption>Caption</q-item-label>
-          </q-item-section>
-        </q-item>
-      </template>
-    </q-list>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-fab color="primary" icon="add" direction="up">
+        <q-fab-action color="primary" label="NFe" icon="fas fa-barcode" to="/mdfe/create-nfechave" />
+        <q-fab-action color="primary" label="Manual" icon="create" to="/mdfe/create" />
+      </q-fab>
       <q-btn fab icon="add" color="primary" to="/mdfe/tipo/create" v-if="state.tab == 'tipo'" />
       <q-btn fab icon="add" color="primary" to="/mdfe/conjunto/create" v-if="state.tab == 'conjunto'" />
       <q-btn fab icon="add" color="primary" to="/mdfe/create" v-if="state.tab == 'mdfe'" />
@@ -193,22 +119,6 @@ export default {
       return null;
     },
 
-    descricaoTipoCarroceria(value) {
-      const item = this.state.optionsTipoCarroceria.find(item => item.value === value);
-      if (item) {
-        return item.label;
-      }
-      return null;
-    },
-
-    descricaoTipoRodado(value) {
-      const item = this.state.optionsTipoRodado.find(item => item.value === value);
-      if (item) {
-        return item.label;
-      }
-      return null;
-    },
-
     formataCodigo: function(codigo) {
       if (codigo == null) {
         return null;
@@ -216,196 +126,19 @@ export default {
       return '#' + this.numeral(parseFloat(codigo)).format('00000000');
     },
 
-    inconeMdfe: function(mdfe) {
-      const tipo = this.state.mdfeTipo.find(item => item.codmdfetipo === mdfe.codmdfetipo);
-      return this.inconeTracao(tipo);
-    },
-
-    descricaoMdfeTipo: function(mdfe) {
-      const tipo = this.state.mdfeTipo.find(item => item.codmdfetipo === mdfe.codmdfetipo);
-      return tipo.mdfetipo;
-    },
-
-    inconeTracao: function(tipo) {
-      if (tipo.tracao == undefined) {
+    formataChave: function(chave){
+      if (chave == undefined) {
         return null;
       }
-      if (tipo.tracao) {
-        return 'fas fa-truck-pickup';
-      }
-      return 'fas fa-trailer';
-    },
-
-    inativoClass(inativo) {
-      if (inativo) {
-        return 'bg-red-1 text-grey-8';
-      }
-      return null;
-    },
-
-    inativarTipo(tipo) {
-      var vm = this
-      vm.$axios.post('mdfe-tipo/' + tipo.codmdfetipo + '/inativo').then(response => {
-        const idx = vm.state.mdfeTipo.findIndex(el => el.codmdfetipo === tipo.codmdfetipo);
-        vm.$set(vm.state.mdfeTipo, idx, response.data) //works fine
-        vm.$q.notify({
-          message: 'Tipo inativado!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao inativar tipo!',
-          type: 'negative',
-        });
-      });
-    },
-
-    reativarTipo(tipo) {
-      var vm = this
-      vm.$axios.delete('mdfe-tipo/' + tipo.codmdfetipo + '/inativo').then(response => {
-        const idx = vm.state.mdfeTipo.findIndex(el => el.codmdfetipo === tipo.codmdfetipo);
-        vm.$set(vm.state.mdfeTipo, idx, response.data) //works fine
-        vm.$q.notify({
-          message: 'Tipo reativado!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao reativar tipo!',
-          type: 'negative',
-        });
-      });
-    },
-
-    excluirTipo(tipo) {
-      var vm = this
-      vm.$axios.delete('mdfe-tipo/' + tipo.codmdfetipo).then(response => {
-        const idx = vm.state.mdfeTipo.findIndex(el => el.codmdfetipo === tipo.codmdfetipo);
-        vm.state.mdfeTipo.splice(idx, 1);
-        vm.$q.notify({
-          message: 'Tipo excluído!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao excluir tipo! Já não está em uso?',
-          type: 'negative',
-        });
-      });
-
-    },
-
-    inativarConjunto(conjunto) {
-      var vm = this
-      vm.$axios.post('mdfe-conjunto/' + conjunto.codmdfeconjunto + '/inativo').then(response => {
-        const idx = vm.state.mdfeConjunto.findIndex(el => el.codmdfeconjunto === conjunto.codmdfeconjunto);
-        vm.$set(vm.state.mdfeConjunto, idx, response.data.data) //works fine
-        vm.$q.notify({
-          message: 'Conjunto inativado!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao inativar conjunto!',
-          type: 'negative',
-        });
-      });
-    },
-
-    reativarConjunto(conjunto) {
-      var vm = this
-      vm.$axios.delete('mdfe-conjunto/' + conjunto.codmdfeconjunto + '/inativo').then(response => {
-        const idx = vm.state.mdfeConjunto.findIndex(el => el.codmdfeconjunto === conjunto.codmdfeconjunto);
-        vm.$set(vm.state.mdfeConjunto, idx, response.data.data) //works fine
-        vm.$q.notify({
-          message: 'Conjunto reativado!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao reativar conjunto!',
-          type: 'negative',
-        });
-      });
-    },
-
-    excluirConjunto(conjunto) {
-      var vm = this
-      vm.$axios.delete('mdfe-conjunto/' + conjunto.codmdfeconjunto).then(response => {
-        const idx = vm.state.mdfeConjunto.findIndex(el => el.codmdfeconjunto === conjunto.codmdfeconjunto);
-        vm.state.mdfeConjunto.splice(idx, 1);
-        vm.$q.notify({
-          message: 'Conjunto excluído!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao excluir conjunto! Já não está em uso?',
-          type: 'negative',
-        });
-      });
-
-    },
-
-    inativar(mdfe) {
-      var vm = this
-      vm.$axios.post('mdfe/' + mdfe.codmdfe + '/inativo').then(response => {
-        const idx = vm.state.mdfe.findIndex(el => el.codmdfe === mdfe.codmdfe);
-        vm.$set(vm.state.mdfe, idx, response.data) //works fine
-        vm.$q.notify({
-          message: ' inativado!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao inativar mdfe!',
-          type: 'negative',
-        });
-      });
-    },
-
-    reativar(mdfe) {
-      var vm = this
-      vm.$axios.delete('mdfe/' + mdfe.codmdfe + '/inativo').then(response => {
-        const idx = vm.state.mdfe.findIndex(el => el.codmdfe === mdfe.codmdfe);
-        vm.$set(vm.state.mdfe, idx, response.data) //works fine
-        vm.$q.notify({
-          message: ' reativado!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao reativar mdfe!',
-          type: 'negative',
-        });
-      });
-    },
-
-    excluir(mdfe) {
-      var vm = this
-      vm.$axios.delete('mdfe/' + mdfe.codmdfe).then(response => {
-        const idx = vm.state.mdfe.findIndex(el => el.codmdfe === mdfe.codmdfe);
-        vm.state.mdfe.splice(idx, 1);
-        vm.$q.notify({
-          message: ' excluído!',
-          type: 'positive',
-        });
-      }).catch(function(error) {
-        console.log(error);
-        vm.$q.notify({
-          message: 'Falha ao excluir mdfe! Já não está em uso?',
-          type: 'negative',
-        });
-      });
-
+      if(chave.length !== 44) {
+        return chave;
+      } else {
+    		return chave.split("").reduceRight(function(elemento, anterior){
+    			var temp = anterior + elemento;
+    		    if(temp.replace(/\s/g, "").length % 4 === 0) return " " + temp;
+    		    else return temp;
+    		});
+    	}
     },
 
     loadMdfe: debounce(function(concat, done) {

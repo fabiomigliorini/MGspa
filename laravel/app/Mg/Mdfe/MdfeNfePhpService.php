@@ -17,11 +17,14 @@ class MdfeNfePhpService
 
     public static function validarPreenchimento (Mdfe $mdfe)
     {
-        $mdfeVeiculos = $mdfe->MdfeVeiculoS;
-        if (empty($mdfeVeiculos)) {
+        if (empty($mdfe->Filial->Pessoa->rntrc)) {
+            throw new \Exception("RNTRC da Filial não informado!", 1);
+        }
+        $mdfeVeiculos = $mdfe->MdfeVeiculoS()->count();
+        if ($mdfeVeiculos==0) {
             throw new \Exception("Nenhum Veículo informado!", 1);
         }
-        foreach ($mdfeVeiculos as $mdfeVeiculo) {
+        foreach ($mdfe->MdfeVeiculoS as $mdfeVeiculo) {
             if ($mdfeVeiculo->Veiculo->VeiculoTipo->tracao) {
                 if (empty($mdfeVeiculo->codpessoacondutor)) {
                     throw new \Exception("Condutor do Veículo de Tração não informado!", 1);

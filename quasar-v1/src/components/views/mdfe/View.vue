@@ -3,7 +3,7 @@
 
     <!-- Título da Página -->
     <template slot="title">
-      MDF-e #{{ numeral(parseFloat(mdfe.codmdfe)).format('00000000') }}
+      MDFe #{{ numeral(parseFloat(mdfe.codmdfe)).format('00000000') }}
     </template>
 
     <!-- Conteúdo Princial (Meio) -->
@@ -60,13 +60,27 @@
                   </q-item-label>
                   <q-item-label>
                     <div class="q-gutter-sm" v-if="mdfe">
-                      <q-btn stack color="secondary" label="Criar XML" @click="criarXml()" icon="fas fa-file-code" v-if="[1, 2].includes(mdfe.codmdfestatus)" />
-                      <q-btn stack color="secondary" label="Transmitir" @click="enviar()" icon="fas fa-upload" v-if="mdfe.chmdfe && [1, 2].includes(mdfe.codmdfestatus)" />
-                      <q-btn stack color="secondary" label="Consultar Transmissão" @click="consultarEnvio()" icon="fas fa-download" v-if="mdfe.MdfeEnvioSefazS.length > 0 && [1, 2].includes(mdfe.codmdfestatus)" />
-                      <q-btn stack color="secondary" label="Consultar" @click="consultar()" icon="fas fa-sync" v-if="mdfe.chmdfe"/>
-                      <q-btn stack color="secondary" label="DAMDFe" @click="damdfe()" icon="fas fa-file-pdf" v-if="[3, 5].includes(mdfe.codmdfestatus)" />
-                      <q-btn stack color="secondary" label="Cancelar" @click="cancelarConfirmar()" icon="fas fa-ban" v-if="[3].includes(mdfe.codmdfestatus)" />
-                      <q-btn stack color="secondary" label="Encerrar" @click="encerrar()" icon="fas fa-check" v-if="[3].includes(mdfe.codmdfestatus)" />
+                      <q-btn round flat color="primary" :loading="loading.criarXml" @click="criarXml()" icon="fas fa-file-code" v-if="[1, 2].includes(mdfe.codmdfestatus)">
+                        <q-tooltip content-class="bg-accent">Criar XML</q-tooltip>
+                      </q-btn>
+                      <q-btn round flat color="primary" :loading="loading.enviar" @click="enviar()" icon="fas fa-upload" v-if="mdfe.chmdfe && [1, 2].includes(mdfe.codmdfestatus)">
+                        <q-tooltip content-class="bg-accent">Transmitir</q-tooltip>
+                      </q-btn>
+                      <q-btn round flat color="primary" :loading="loading.consultarEnvio" @click="consultarEnvio()" icon="fas fa-download" v-if="mdfe.MdfeEnvioSefazS.length > 0 && [1, 2].includes(mdfe.codmdfestatus)">
+                        <q-tooltip content-class="bg-accent">Consultar Transmissão</q-tooltip>
+                      </q-btn>
+                      <q-btn round flat color="primary" :loading="loading.consultar" @click="consultar()" icon="fas fa-sync" v-if="mdfe.chmdfe">
+                        <q-tooltip content-class="bg-accent">Consultar na Sefaz</q-tooltip>
+                      </q-btn>
+                      <q-btn round flat color="primary" :loading="loading.damdfe" @click="damdfe()" icon="fas fa-file-pdf" v-if="[3, 5].includes(mdfe.codmdfestatus)">
+                        <q-tooltip content-class="bg-accent">Gerar DAMDFe</q-tooltip>
+                      </q-btn>
+                      <q-btn round flat color="primary" :loading="loading.cancelar" @click="cancelarConfirmar()" icon="fas fa-ban" v-if="[3].includes(mdfe.codmdfestatus)">
+                        <q-tooltip content-class="bg-accent">Cancelar MDFe</q-tooltip>
+                      </q-btn>
+                      <q-btn round flat color="primary" :loading="loading.encerrar" @click="encerrar()" icon="fas fa-check" v-if="[3].includes(mdfe.codmdfestatus)">
+                        <q-tooltip content-class="bg-accent">Encerrar MDFe</q-tooltip>
+                      </q-btn>
                     </div>
                   </q-item-label>
                   <q-item-label v-if="mdfe.protocoloautorizacao">
@@ -102,7 +116,7 @@
                         retornou
                         {{ envio.cstatretorno }} ({{envio.xmotivo}})
                       </template>
-                      <q-btn flat size="xs" color="primary" @click="consultarEnvio(envio.codmdfeenviosefaz)" icon="fas fa-sync" v-if="mdfe.MdfeEnvioSefazS.length > 0" />
+                      <q-btn flat size="xs" color="primary" :loading="loading.consultarEnvio" @click="consultarEnvio(envio.codmdfeenviosefaz)" icon="fas fa-sync" v-if="mdfe.MdfeEnvioSefazS.length > 0" />
                     </q-item-label>
                   </template>
                 </q-item-section>
@@ -282,6 +296,15 @@ export default {
       mdfe: false,
       id: null,
       planilha: null,
+      loading: {
+        criarXml: false,
+        enviar: false,
+        consultarEnvio: false,
+        consultar: false,
+        damdfe: false,
+        cancelar: false,
+        encerrar: false,
+      }
     }
   },
   computed: {
@@ -343,13 +366,16 @@ export default {
 
     criarXml: function () {
       let vm = this
+      vm.loading.criarXml = true;
       vm.$axios.post('mdfe/' + vm.mdfe.codmdfe + '/criar-xml').then(function (request) {
+        vm.loading.criarXml = false;
         vm.loadData();
         vm.$q.notify({
           message: 'Arquivo XML Criado!',
           type: 'positive',
         })
       }).catch(function (error) {
+        vm.loading.criarXml = false;
         console.log(error)
         vm.$q.notify({
           message: 'Falha ao Criar arquivo XML!',
@@ -364,13 +390,16 @@ export default {
 
     enviar: function () {
       let vm = this
+      vm.loading.enviar = true;
       vm.$axios.post('mdfe/' + vm.mdfe.codmdfe + '/enviar').then(function (request) {
+        vm.loading.enviar = false;
         vm.loadData();
         vm.$q.notify({
           message: 'MDFe Trasmitida!',
           type: 'positive',
         })
       }).catch(function (error) {
+        vm.loading.enviar = false;
         console.log(error)
         vm.$q.notify({
           message: 'Falha ao Transmitir MDFe!',
@@ -385,11 +414,13 @@ export default {
 
     consultarEnvio: function (codmdfeenviosefaz) {
       let vm = this
+      vm.loading.consultarEnvio = true;
       var url = 'mdfe/' + vm.mdfe.codmdfe + '/consultar-envio'
       if (codmdfeenviosefaz) {
         url += '/' + codmdfeenviosefaz;
       }
       vm.$axios.post(url).then(function (request) {
+        vm.loading.consultarEnvio = false;
         vm.loadData();
         if (request.data.cStat) {
           var color = 'positive';
@@ -407,6 +438,7 @@ export default {
           })
         }
       }).catch(function (error) {
+        vm.loading.consultarEnvio = false;
         console.log(error)
         vm.$q.notify({
           message: 'Falha ao Consultar Transmissão da MDFe!',
@@ -421,7 +453,9 @@ export default {
 
     consultar: function () {
       let vm = this
+      vm.loading.consultar = true;
       vm.$axios.post('mdfe/' + vm.mdfe.codmdfe + '/consultar').then(function (request) {
+        vm.loading.consultar = false;
         vm.loadData();
         if (request.data.cStat) {
           var color = 'positive';
@@ -439,6 +473,7 @@ export default {
           })
         }
       }).catch(function (error) {
+        vm.loading.consultar = false;
         console.log(error)
         vm.$q.notify({
           message: 'Falha ao Consultar MDFe!',
@@ -468,9 +503,11 @@ export default {
 
     cancelar: function (justificativa) {
       let vm = this
+      vm.loading.cancelar = true;
       vm.$axios.post('mdfe/' + vm.mdfe.codmdfe + '/cancelar', {
         justificativa
       }).then(function (request) {
+        vm.loading.cancelar = false;
         vm.loadData();
         if (request.data.cStat) {
           var color = 'positive';
@@ -488,6 +525,7 @@ export default {
           })
         }
       }).catch(function (error) {
+        vm.loading.cancelar = false;
         console.log(error)
         vm.$q.notify({
           message: 'Falha ao Cancelar MDFe!',
@@ -505,7 +543,9 @@ export default {
 
     encerrar: function () {
       let vm = this
+      vm.loading.encerrar = true;
       vm.$axios.post('mdfe/' + vm.mdfe.codmdfe + '/encerrar').then(function (request) {
+        vm.loading.encerrar = false;
         vm.loadData();
         if (request.data.cStat) {
           var color = 'positive';
@@ -523,6 +563,7 @@ export default {
           })
         }
       }).catch(function (error) {
+        vm.loading.encerrar = false;
         console.log(error)
         vm.$q.notify({
           message: 'Falha ao Encerrar MDFe!',
@@ -533,16 +574,19 @@ export default {
 
     damdfe: function () {
       let vm = this
+      vm.loading.damdfe = true;
       vm.$axios.get('mdfe/' + vm.mdfe.codmdfe + '/damdfe', {responseType: 'blob'}).then(function (request) {
         var blob = new Blob([request.data], {type: 'application/pdf'});
         var url = URL.createObjectURL(blob);
         var printWindow = window.open(url);
+        vm.loading.damdfe = false;
         console.log(request);
         vm.$q.notify({
           message: 'DAMDFe emitida!',
           type: 'positive',
         })
       }).catch(function (error) {
+        vm.loading.damdfe = false;
         console.log(error)
         vm.$q.notify({
           message: 'Falha ao Emitir DAMDFe!',

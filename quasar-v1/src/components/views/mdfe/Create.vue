@@ -2,7 +2,7 @@
   <mg-layout back-path="/mdfe">
 
     <template slot="title">
-      Novo MDF-e
+      Novo MDFe
     </template>
 
     <div slot="content" class="q-pa-md">

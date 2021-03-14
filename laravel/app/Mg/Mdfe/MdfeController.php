@@ -29,6 +29,18 @@ class MdfeController
         return new MdfeResource($mdfe);
     }
 
+    // Cria registro de MDFE baseado nos dados de uma Nota Fiscal pela Chave
+    public function criarDaNfeChave (Request $request, $nfechave)
+    {
+        $nfechave = preg_replace('/[^0-9]/', '', $nfechave);
+        $nf = NotaFiscal::where(['nfechave' => $nfechave])->first();
+        if (!$nf) {
+            throw new \Exception("NFe não localizada!", 1);
+        }
+        $mdfe = MdfeService::criarDaNotaFiscal($nf);
+        return new MdfeResource($mdfe);
+    }
+
     // Cria Arquivo XML da MDFe
     public function criarXml (Request $request, $codmdfe)
     {

@@ -33,18 +33,6 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
-    // MDFe
-    Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
-    Route::post('mdfe/{codmdfe}/criar-xml', '\Mg\Mdfe\MdfeController@criarXml');
-    Route::post('mdfe/{codmdfe}/enviar', '\Mg\Mdfe\MdfeController@enviar');
-    Route::post('mdfe/{codmdfe}/consultar-envio/{codmdfeenviosefaz?}', '\Mg\Mdfe\MdfeController@consultarEnvio');
-    Route::post('mdfe/{codmdfe}/consultar', '\Mg\Mdfe\MdfeController@consultar');
-    Route::post('mdfe/{codmdfe}/cancelar', '\Mg\Mdfe\MdfeController@cancelar');
-    Route::post('mdfe/{codmdfe}/encerrar', '\Mg\Mdfe\MdfeController@encerrar');
-    Route::get('mdfe/{codmdfe}/damdfe', '\Mg\Mdfe\MdfeController@damdfe');
-    Route::get('mdfe/{codmdfe}', '\Mg\Mdfe\MdfeController@show');
-    Route::get('mdfe', '\Mg\Mdfe\MdfeController@index');
-
     // Pix Cob
     Route::post('pix/cob/criar-negocio/{codnegocio}', '\Mg\Pix\PixController@criarPixCobNegocio');
     Route::post('pix/cob/{codpixcob}/transmitir', '\Mg\Pix\PixController@transmitirPixCob');
@@ -110,6 +98,19 @@ Route::group(['prefix' => 'v1'], function () {
 
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
+
+        // MDFe
+        Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
+        Route::post('mdfe/criar-da-nfechave/{nfechave}', '\Mg\Mdfe\MdfeController@criarDaNfeChave');
+        Route::post('mdfe/{codmdfe}/criar-xml', '\Mg\Mdfe\MdfeController@criarXml');
+        Route::post('mdfe/{codmdfe}/enviar', '\Mg\Mdfe\MdfeController@enviar');
+        Route::post('mdfe/{codmdfe}/consultar-envio/{codmdfeenviosefaz?}', '\Mg\Mdfe\MdfeController@consultarEnvio');
+        Route::post('mdfe/{codmdfe}/consultar', '\Mg\Mdfe\MdfeController@consultar');
+        Route::post('mdfe/{codmdfe}/cancelar', '\Mg\Mdfe\MdfeController@cancelar');
+        Route::post('mdfe/{codmdfe}/encerrar', '\Mg\Mdfe\MdfeController@encerrar');
+        Route::get('mdfe/{codmdfe}/damdfe', '\Mg\Mdfe\MdfeController@damdfe');
+        Route::get('mdfe/{codmdfe}', '\Mg\Mdfe\MdfeController@show');
+        Route::get('mdfe', '\Mg\Mdfe\MdfeController@index');
 
         // Cielo Lio (Danilo)
         Route::get('lio/vendas-abertas', '\Mg\Lio\LioController@vendasAbertas');

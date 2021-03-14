@@ -17,8 +17,8 @@ export default [
   // MDFe
   { path: '/mdfe', component: () => import('components/views/mdfe/Index') },
   { path: '/mdfe/create', component: () => import('components/views/mdfe/Create') },
+  { path: '/mdfe/create-nfechave/:nfechave?', component: () => import('components/views/mdfe/CreateNfeChave') },
   { path: '/mdfe/:codmdfe', component: () => import('components/views/mdfe/View') },
-
 
   // Etiquetas
   { path: '/etiqueta', component: () => import('components/views/etiqueta/Index') },

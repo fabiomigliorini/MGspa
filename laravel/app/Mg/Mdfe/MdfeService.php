@@ -18,7 +18,7 @@ class MdfeService
         $mdfe->codmdfestatus = MdfeStatus::EM_DIGITACAO;
         $mdfe->codfilial = $nf->codfilial;
         $mdfe->tipoemitente = Mdfe::TIPO_EMITENTE_CARGA_PROPRIA;
-        $mdfe->tipotransportador = $nf->Filial->Pessoa->tipotransportador;
+        $mdfe->tipotransportador = $nf->Filial->Pessoa->tipotransportador??Mdfe::TIPO_TRANSPORTADOR_TAC;
         $mdfe->modelo = Mdfe::MODELO;
         $mdfe->serie = $nf->Filial->nfeserie;
         $mdfe->modal = Mdfe::MODAL_RODOVIARIO;

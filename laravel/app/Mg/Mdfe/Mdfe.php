@@ -33,6 +33,10 @@ class Mdfe extends MgModel
     const TIPO_EMISSAO_NORMAL = 1;
     const TIPO_EMISSAO_CONTINGENCIA = 2;
 
+    const TIPO_TRANSPORTADOR_ETC = 1; // Empresa
+    const TIPO_TRANSPORTADOR_TAC = 2; // Autonomo
+    const TIPO_TRANSPORTADOR_CTC = 3; // Cooperativa
+
     protected $table = 'tblmdfe';
     protected $primaryKey = 'codmdfe';
 
