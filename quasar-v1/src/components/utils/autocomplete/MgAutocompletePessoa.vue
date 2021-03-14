@@ -15,7 +15,7 @@
     :loading="loading"
     >
     <template v-slot:prepend>
-      <q-icon name="person_search" />
+      <q-icon name="person" />
     </template>
     <template v-slot:selected-item="scope">
       <div class="ellipsis">{{scope.opt.fantasia}}</div>
@@ -58,7 +58,7 @@ export default {
     },
     label: {
       required: false,
-      default: 'Filial'
+      default: 'Pessoa'
     },
     value: {
       required: false,

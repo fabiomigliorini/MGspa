@@ -4,7 +4,6 @@
     outlined
     :options="options"
     :label="label"
-    clearable
     use-input
     input-debounce="200"
     @input="selected"
@@ -15,7 +14,7 @@
     standout
   >
     <template v-slot:prepend>
-      <q-icon name="store" />
+      <q-icon name="location_city" />
     </template>
     <template v-slot:no-option>
       <q-item>
@@ -32,15 +31,14 @@
 
 <script>
 export default {
-  name: 'mg-select-filial',
+  name: 'mg-select-cidade',
   props: {
     label: {
       type: String,
       required: false,
-      default: 'Filial'
+      default: 'Cidade'
     },
     value: {
-      type: Number,
       required: false,
       default: null
     },
@@ -63,9 +61,8 @@ export default {
   data () {
     return {
       model: null,
-      loading: true,
+      loading: false,
       options: [],
-      allOptions: [],
     }
   },
   methods: {
@@ -80,47 +77,34 @@ export default {
     },
 
     init: function () {
-      let vm = this
       if (this.value) {
-        vm.model = this.allOptions.find(function (el) {
-          return el.value == vm.value;
-        });
+        let vm = this
+        vm.loading = true;
+        vm.$axios.get('select/cidade', {params: {codcidade: this.value}}).then(function (request) {
+          if (request.data.length > 0) {
+            vm.model = request.data[0];
+          }
+          vm.loading = false;
+        })
       }
     },
 
-    // carrega todas opcoes
-    loadAllOptions: function () {
-      let vm = this;
-      vm.loading = true;
-      let params = {
-        dfe: false
-      }
-      if (vm.filtroDfe) {
-        params.dfe = true;
-      }
-      vm.$axios.get('select/filial', {params}).then(function (request) {
-        vm.allOptions = request.data
-        vm.loading = false;
-        vm.init()
-      })
-    },
-
-    //filtra o array com todas opcoes (allOptions)
+    //pede para o backend as opcoes
     filterFn (val, update) {
       if (val === '') {
-        update(() => {
-          this.options = this.allOptions
-        })
         return
       }
       update(() => {
-        const needle = val.toLowerCase()
-        this.options = this.allOptions.filter(v => v.label.toLowerCase().indexOf(needle) > -1)
+        let vm = this;
+        vm.loading = true;
+        vm.$axios.get('select/cidade', {params: {cidade: val}}).then(function (request) {
+          vm.options = request.data
+          vm.loading = false;
+        })
       })
     }
   },
   mounted() {
-    this.loadAllOptions()
     this.init()
   }
 }

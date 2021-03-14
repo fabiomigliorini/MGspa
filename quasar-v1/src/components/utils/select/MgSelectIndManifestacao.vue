@@ -10,6 +10,9 @@
     <template v-slot:prepend>
       <q-icon name="share" />
     </template>
+    <template v-slot:error>
+        <slot name="error"/>
+    </template>
   </q-select>
 </template>
 

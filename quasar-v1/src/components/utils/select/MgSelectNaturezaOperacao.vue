@@ -1,5 +1,9 @@
 <template>
-  <q-select v-model="model" :options="options" :label="label" @change="selected" clearable />
+  <q-select v-model="model" :options="options" :label="label" @change="selected" clearable>
+    <template v-slot:error>
+      <slot name="error"/>
+    </template>
+  </q-select>
 </template>
 
 <script>

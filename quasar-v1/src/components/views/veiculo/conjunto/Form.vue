@@ -2,9 +2,7 @@
 <form>
   <div class="row justify-center">
     <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
-
       <q-list dense>
-
         <q-item>
           <q-item-section>
             <q-input autofocus outlined type="text" v-model="conjunto.veiculoconjunto" label="Nome" :error='hasError("veiculoconjunto")'>
@@ -21,20 +19,16 @@
         <template v-for="veiculo in conjunto.veiculos">
           <q-item>
             <q-item-section>
-              <div class="row">
-                <div class="col-sm-10">
-                  <mg-select-veiculo outlined v-model="veiculo.codveiculo" label="Veiculo" :error='hasError("codveiculo")'>
-                    <template v-slot:error>
-                      <template v-for="mensagem in errors.veiculos">
-                        {{mensagem}}
-                      </template>
-                    </template>
-                  </mg-select-veiculo>
-                </div>
-                <div class="col-sm-2 justify-center text-center">
-                  <q-btn round flat color="negative" icon="delete" @click="delVeiculo(veiculo)" />
-                </div>
-              </div>
+              <mg-select-veiculo outlined v-model="veiculo.codveiculo" label="Veiculo" :error='hasError("codveiculo")'>
+                <template v-slot:error>
+                  <template v-for="mensagem in errors.veiculos">
+                    {{mensagem}}
+                  </template>
+                </template>
+              </mg-select-veiculo>
+            </q-item-section>
+            <q-item-section top side style="min-width: 50px; border 1px solid blue">
+              <q-btn round flat color="negative" icon="delete" @click="delVeiculo(veiculo)" />
             </q-item-section>
           </q-item>
         </template>

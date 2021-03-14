@@ -21,6 +21,47 @@ class MdfeController
         return new MdfeResource($mdfe);
     }
 
+    public function update (Request $request, $codmdfe)
+    {
+        $request->validate([
+            'codfilial' => ['required'],
+            'tipoemitente' => ['required'],
+            'tipotransportador' => ['required'],
+            'emissao' => ['required'],
+            'inicioviagem' => ['required'],
+            'codcidadecarregamento' => ['required'],
+            'codestadofim' => ['required'],
+            'MdfeVeiculoS' => ['required', 'array', 'min:1'],
+            'MdfeVeiculoS.*.codveiculo' => ['required'],
+        ]);
+
+        $mdfe = Mdfe::findOrFail($codmdfe);
+
+        if (!in_array($mdfe->codmdfestatus, [MdfeStatus::EM_DIGITACAO, MdfeStatus::TRANSMITIDA, MdfeStatus::NAO_AUTORIZADA])) {
+            throw new \Exception("Esta MDFe não pode mais ser alterada!", 1);
+        }
+
+        $mdfe->fill($request->all());
+        $mdfe->save();
+        $cods = [];
+        foreach ($request->MdfeVeiculoS as $veiculo) {
+            if (empty($veiculo['codveiculo'])) {
+                continue;
+            }
+            $cods[] = $veiculo['codveiculo'];
+            $mdfeVeiculo = MdfeVeiculo::firstOrCreate([
+                'codveiculo' => $veiculo['codveiculo'],
+                'codmdfe' => $mdfe->codmdfe,
+            ]);
+            $mdfeVeiculo->update([
+                'codpessoacondutor' => $veiculo['codpessoacondutor']
+            ]);
+        }
+        MdfeVeiculo::where('codmdfe', $mdfe->codmdfe)->whereNotIn('codveiculo', $cods)->delete();
+        return new MdfeResource($mdfe);
+    }
+
+
     // Cria registro de MDFE baseado nos dados de uma Nota Fiscal
     public function criarDaNotaFiscal (Request $request, $codnotafiscal)
     {

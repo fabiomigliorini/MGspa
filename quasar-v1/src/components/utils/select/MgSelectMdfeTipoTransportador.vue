@@ -4,7 +4,6 @@
     outlined
     :options="options"
     :label="label"
-    clearable
     use-input
     input-debounce="200"
     @input="selected"
@@ -14,6 +13,9 @@
     :loading="loading"
     standout
   >
+    <template v-slot:prepend>
+      <q-icon name="store" />
+    </template>
     <template v-slot:no-option>
       <q-item>
         <q-item-section class="text-grey">
@@ -29,8 +31,33 @@
 
 <script>
 export default {
-  name: 'mg-select-impressora',
-  props: ['label', 'value', 'errorMessage', 'error'],
+  name: 'mg-select-mdfe-tipo-transportador',
+  props: {
+    label: {
+      type: String,
+      required: false,
+      default: 'Tipo de Transportador'
+    },
+    value: {
+      required: false,
+      default: null
+    },
+    errorMessage: {
+      type: String,
+      required: false,
+      default: null
+    },
+    error: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    filtroDfe: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+  },
   data () {
     return {
       model: null,
@@ -61,13 +88,8 @@ export default {
 
     // carrega todas opcoes
     loadAllOptions: function () {
-      let vm = this;
-      vm.loading = true;
-      vm.$axios.get('select/impressora').then(function (request) {
-        vm.allOptions = request.data
-        vm.loading = false;
-        vm.init()
-      })
+      this.loading = false;
+      this.allOptions = this.$store.state.mdfe.optionsTipoTransportador;
     },
 
     //filtra o array com todas opcoes (allOptions)
@@ -80,9 +102,12 @@ export default {
       }
       update(() => {
         const needle = val.toLowerCase()
-        this.options = this.allOptions.filter(v => v.value.toLowerCase().indexOf(needle) > -1)
+        this.options = this.allOptions.filter(v => v.label.toLowerCase().indexOf(needle) > -1)
       })
     }
+  },
+  created() {
+    this.state = this.$store.state.mdfe
   },
   mounted() {
     this.loadAllOptions()

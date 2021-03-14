@@ -15,7 +15,9 @@ class PessoaService
     {
         $qry = Pessoa::query();
         $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica', 'ie');
-        if (isset($params['pessoa'])) {
+        if (!empty($params['codpessoa'])) {
+            $qry->where('codpessoa', $params['codpessoa']);
+        } else if (isset($params['pessoa'])) {
             $nome = $params['pessoa'];
             $qry->where(function ($q) use ($nome) {
                 $q->palavras('pessoa', $nome);
@@ -27,9 +29,6 @@ class PessoaService
             if ($num == $nome) {
                 $qry->orWhere('cnpj', $num);
             }
-        }
-        if (isset($params['codpessoa'])) {
-            $qry->where('codpessoa', $params['codpessoa']);
         }
         $qry->orderBy('fantasia', 'asc');
         $ret = $qry->limit(100)->get();

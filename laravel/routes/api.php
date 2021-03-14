@@ -111,6 +111,7 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('mdfe/{codmdfe}/damdfe', '\Mg\Mdfe\MdfeController@damdfe');
         Route::get('mdfe/{codmdfe}', '\Mg\Mdfe\MdfeController@show');
         Route::get('mdfe', '\Mg\Mdfe\MdfeController@index');
+        Route::put('mdfe/{codmdfe}', '\Mg\Mdfe\MdfeController@update');
 
         // Cielo Lio (Danilo)
         Route::get('lio/vendas-abertas', '\Mg\Lio\LioController@vendasAbertas');
@@ -214,7 +215,9 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
-        // Impressoras
+        // Autocomplete / Select
+        Route::get('select/pessoa', '\Mg\Select\SelectPessoaController@index');
+        Route::get('select/cidade', '\Mg\Select\SelectCidadeController@index');
         Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
         Route::get('select/estado', '\Mg\Select\SelectEstadoController@index');

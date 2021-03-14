@@ -1,14 +1,14 @@
 <template>
-  <mg-layout back-path="/veiculo">
+  <mg-layout back-path="/mdfe">
 
     <template slot="title">
-      Editar Tipo de Veículo
+      Editar MDFe
     </template>
 
     <div slot="content" class="q-pa-md">
-      <mg-veiculo-form :veiculo='veiculo' :errors='errors' @submit.prevent.native="update()" v-if="veiculo.codveiculo" />
+      <mg-mdfe-form :mdfe='mdfe' :errors='errors' @submit.prevent.native="update()" v-if="mdfe.codmdfe" />
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="done" color="primary" @click.prevent="update()"  />
+        <q-btn fab icon="done" color="primary" @click.prevent="update()" />
       </q-page-sticky>
     </div>
 
@@ -17,29 +17,19 @@
 
 <script>
 import MgLayout from '../../../layouts/MgLayout'
-import MgVeiculoForm from './Form'
+import MgMdfeForm from './Form'
 import _ from 'lodash';
 import { debounce } from 'quasar'
 
 export default {
-  name: 'mg-veiculo-create',
+  name: 'mg-mdfe-create',
   components: {
     MgLayout,
-    MgVeiculoForm,
+    MgMdfeForm,
   },
   data () {
     return {
-      veiculo: {
-        codveiculotipo: null,
-        veiculo:  null,
-        placa:  null,
-        codestado: null,
-        renavam: null,
-        tara: null,
-        capacidade: null,
-        capacidadem3: null,
-        codpessoaproprietario: null,
-        tipoproprietario: null,
+      mdfe: {
       },
       errors: {}
     }
@@ -47,15 +37,12 @@ export default {
   methods: {
     update: function () {
       var vm = this;
-      vm.$axios.put('veiculo/' + vm.veiculo.codveiculo, vm.veiculo).then(function (response) {
-        const idx = vm.state.veiculo.findIndex(el => el.codveiculo === vm.veiculo.codveiculo);
-        vm.$set(vm.state.veiculo, idx, response.data)  //works fine
-        vm.state.veiculo = _.sortBy(vm.state.veiculo, ['placa']);
+      vm.$axios.put('mdfe/' + vm.mdfe.codmdfe, vm.mdfe).then(function (response) {
         vm.$q.notify({
-          message: 'Tipo alterado!',
+          message: 'MDFe alterado!',
           type: 'positive',
         });
-        vm.$router.push('/veiculo/');
+        vm.$router.push('/mdfe/' + vm.mdfe.codmdfe);
       }).catch(function (error) {
         console.log(vm.errors);
         vm.$q.notify({
@@ -63,14 +50,16 @@ export default {
           type: 'negative'
         });
         vm.errors = error.response.data.errors;
+        vm.$q.notify({
+          message: error.response.data.message,
+          type: 'negative'
+        });
       })
     },
-    loadVeiculo: debounce(function (codveiculo) {
+    loadMdfe: debounce(function (codmdfe) {
       var vm = this
-      vm.$axios.get('veiculo/' + codveiculo).then(response => {
-        vm.veiculo = response.data
-        const idx = vm.state.veiculo.findIndex(el => el.codveiculo === codveiculo);
-        vm.$set(vm.state.veiculo, idx, response.data)  //works fine
+      vm.$axios.get('mdfe/' + codmdfe).then(response => {
+        vm.mdfe = response.data.data
       })
     }, 500)
 
@@ -78,8 +67,8 @@ export default {
   mounted () {
   },
   created () {
-    this.state = this.$store.state.veiculo;
-    this.loadVeiculo(this.$route.params.codveiculo);
+    this.state = this.$store.state.mdfe;
+    this.loadMdfe(this.$route.params.codmdfe);
   }
 }
 </script>

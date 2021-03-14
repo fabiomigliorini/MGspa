@@ -19,14 +19,12 @@
     <template v-slot:no-option>
       <q-item>
         <q-item-section class="text-grey">
-          <pre>{{allOptions}}</pre>
-
           Sem resultados
         </q-item-section>
       </q-item>
     </template>
     <template v-slot:error>
-        <slot name="error"/>
+      <slot name="error"/>
     </template>
   </q-select>
 </template>
@@ -76,7 +74,6 @@ export default {
         this.$emit('input', null)
         return
       }
-      console.log(val.value);
       this.$emit('input', val.value)
     },
 
@@ -110,7 +107,6 @@ export default {
     }
   },
   created() {
-    console.log(this.$store.state.veiculo.optionsTipoProprietario);
     this.state = this.$store.state.veiculo
   },
   mounted() {

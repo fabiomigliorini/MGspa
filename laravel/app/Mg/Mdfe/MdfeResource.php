@@ -34,6 +34,7 @@ class MdfeResource extends Resource
         foreach ($this->MdfeVeiculoS as $mdfeVeiculo) {
             $retVeiculo = $mdfeVeiculo->toArray();
             $retVeiculo['placa'] = $mdfeVeiculo->Veiculo->placa;
+            $retVeiculo['tracao'] = $mdfeVeiculo->Veiculo->VeiculoTipo->tracao;
             $retVeiculo['proprietario'] = null;
             if (!empty($mdfeVeiculo->Veiculo->codpessoaproprietario)) {
                 $retVeiculo['proprietario'] = $mdfeVeiculo->Veiculo->PessoaProprietario->fantasia;

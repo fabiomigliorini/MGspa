@@ -24,7 +24,7 @@
       </q-item>
     </template>
     <template v-slot:error>
-        <slot name="error"/>
+      <slot name="error"/>
     </template>
   </q-select>
 </template>

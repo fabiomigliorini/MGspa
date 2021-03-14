@@ -256,11 +256,9 @@
 
       <q-page-sticky corner="bottom-right" :offset="[18, 18]">
         <q-fab color="primary" icon="edit" active-icon="edit" direction="up" class="animate-pop">
-          <router-link :to="{ path: '/mdfe/' + mdfe.codmdfe + '/update' }">
-            <q-fab-action color="primary" icon="edit">
-              <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
-            </q-fab-action>
-          </router-link>
+          <q-fab-action :to="'/mdfe/' +  + mdfe.codmdfe + '/edit'" color="primary" icon="edit">
+            <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Editar</q-tooltip>
+          </q-fab-action>
           <q-fab-action color="red" @click.native="destroy()" icon="delete">
             <q-tooltip anchor="center left" self="center right" :offset="[20, 0]">Excluir</q-tooltip>
           </q-fab-action>
