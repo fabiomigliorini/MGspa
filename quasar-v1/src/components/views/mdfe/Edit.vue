@@ -1,5 +1,5 @@
 <template>
-  <mg-layout back-path="/mdfe">
+  <mg-layout :back-path="'/mdfe/' + mdfe.codmdfe">
 
     <template slot="title">
       Editar MDFe

@@ -6,12 +6,14 @@
     </template>
 
     <div slot="content" class="q-pa-md">
-      <div class="row">
-          <div class="col-xs-12">
+      <form @submit.prevent='create()'>
+      <div class="row justify-center">
+          <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-2">
             <q-input autofocus outlined type="text" v-model="nfechave" mask="#### #### #### #### #### #### #### #### #### #### ####" label="Chave da NFe">
             </q-input>
           </div>
       </div>
+      </form>
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
         <q-btn fab icon="done" color="primary" @click.prevent="create()"  />
       </q-page-sticky>

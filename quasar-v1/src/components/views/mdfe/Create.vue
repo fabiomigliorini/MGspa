@@ -6,7 +6,11 @@
     </template>
 
     <div slot="content" class="q-pa-md">
-      <mg-mdfe-form :mdfe='mdfe' :errors='errors' @submit.prevent.native="create()" />
+      <div class="row ">
+        <div class="col-md-6">
+          <mg-mdfe-form :mdfe='mdfe' :errors='errors' @submit.prevent.native="create()" />
+        </div>
+      </div>
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
         <q-btn fab icon="done" color="primary" @click.prevent="create()"  />
       </q-page-sticky>
