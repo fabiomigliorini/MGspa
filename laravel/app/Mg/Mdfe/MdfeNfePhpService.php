@@ -51,9 +51,11 @@ class MdfeNfePhpService
         $std->tpAmb = $mdfe->Filial->nfeambiente;
         $std->tpEmit = $mdfe->tipoemitente;
         // 458 - Rejeição: Tipo de Transportador não deve ser informado para Emitente de Carga Própria proprietário do veículo
-        //if ($mdfe->tipoemitente != Mdfe::TIPO_EMITENTE_CARGA_PROPRIA) {
-            $std->tpTransp = $mdfe->tipotransportador;
-        //}
+        foreach ($mdfe->MdfeVeiculoS as $mdfeVeiculo) {
+            if ($mdfeVeiculo->Veiculo->codpessoaproprietario != $mdfe->Filial->codpessoa) {
+                $std->tpTransp = $mdfe->tipotransportador;
+            }
+        }
         $std->mod = $mdfe->modelo;
         $std->serie = $mdfe->serie;
         $std->nMDF = $mdfe->numero;
