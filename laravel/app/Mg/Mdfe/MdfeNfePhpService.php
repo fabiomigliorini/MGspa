@@ -17,9 +17,9 @@ class MdfeNfePhpService
 
     public static function validarPreenchimento (Mdfe $mdfe)
     {
-        if (empty($mdfe->Filial->Pessoa->rntrc)) {
-            throw new \Exception("RNTRC da Filial não informado!", 1);
-        }
+        //if (empty($mdfe->Filial->Pessoa->rntrc)) {
+            //throw new \Exception("RNTRC da Filial não informado!", 1);
+        //}
         $mdfeVeiculos = $mdfe->MdfeVeiculoS()->count();
         if ($mdfeVeiculos==0) {
             throw new \Exception("Nenhum Veículo informado!", 1);
@@ -51,9 +51,9 @@ class MdfeNfePhpService
         $std->tpAmb = $mdfe->Filial->nfeambiente;
         $std->tpEmit = $mdfe->tipoemitente;
         // 458 - Rejeição: Tipo de Transportador não deve ser informado para Emitente de Carga Própria proprietário do veículo
-        // if ($mdfe->tipoemitente != Mdfe::TIPO_EMITENTE_CARGA_PROPRIA) {
+        //if ($mdfe->tipoemitente != Mdfe::TIPO_EMITENTE_CARGA_PROPRIA) {
             $std->tpTransp = $mdfe->tipotransportador;
-        // }
+        //}
         $std->mod = $mdfe->modelo;
         $std->serie = $mdfe->serie;
         $std->nMDF = $mdfe->numero;
@@ -122,9 +122,12 @@ class MdfeNfePhpService
          */
 
         /* Grupo infANTT */
-        $infANTT = new \stdClass();
-        $infANTT->RNTRC = $mdfe->Filial->Pessoa->rntrc;
-        $make->taginfANTT($infANTT);
+	if (!empty($mdfe->Filial->Pessoa->rntrc)) {
+          $infANTT = new \stdClass();
+          //$infANTT->RNTRC = $mdfe->Filial->Pessoa->rntrc;
+	  $infANTT->RNTRC = substr($mdfe->Filial->Pessoa->rntrc, -8);
+	  $make->taginfANTT($infANTT);
+	}
 
         /* informações do CIOT */
         // for {
@@ -192,7 +195,7 @@ class MdfeNfePhpService
                     } else {
                         $prop->CNPJ = str_pad($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj, 14, '0', STR_PAD_LEFT);
                     }
-                    $prop->RNTRC = $mdfeVeiculo->Veiculo->PessoaProprietario->rntrc;
+                    $prop->RNTRC = substr($mdfeVeiculo->Veiculo->PessoaProprietario->rntrc, -8);
                     $prop->xNome = $mdfeVeiculo->Veiculo->PessoaProprietario->pessoa;
                     $prop->IE = $mdfeVeiculo->Veiculo->PessoaProprietario->ie??'ISENTO';
                     $prop->UF = $mdfeVeiculo->Veiculo->PessoaProprietario->Cidade->Estado->sigla;
@@ -230,7 +233,7 @@ class MdfeNfePhpService
                     } else {
                         $prop->CNPJ = str_pad($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj, 14, '0', STR_PAD_LEFT);
                     }
-                    $prop->RNTRC = $mdfeVeiculo->Veiculo->PessoaProprietario->rntrc;
+                    $prop->RNTRC = substr($mdfeVeiculo->Veiculo->PessoaProprietario->rntrc, -8);
                     $prop->xNome = $mdfeVeiculo->Veiculo->PessoaProprietario->pessoa;
                     $prop->IE = $mdfeVeiculo->Veiculo->PessoaProprietario->ie??'ISENTO';
                     $prop->UF = $mdfeVeiculo->Veiculo->PessoaProprietario->Cidade->Estado->sigla;
