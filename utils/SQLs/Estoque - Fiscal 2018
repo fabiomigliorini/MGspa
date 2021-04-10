@@ -1,20 +1,20 @@
 ﻿with estoques as (
-select 
-	f.codfilial
-	, pv.codproduto
-	, sum(es.saldoquantidade) as saldoquantidade
-	, sum(es.saldovalor) as saldovalor
-from tblestoquesaldo es
-inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutovariacao = es.codestoquelocalprodutovariacao)
-inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
-inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
-inner join tblfilial f on (f.codfilial = el.codfilial)
-where es.fiscal = true
-and coalesce(es.saldoquantidade, 0) !=0 
-and f.codempresa = 1
-group by 
-	f.codfilial
-	, pv.codproduto
+	select 
+		f.codfilial
+		, pv.codproduto
+		, sum(es.saldoquantidade) as saldoquantidade
+		, sum(es.saldovalor) as saldovalor
+	from tblestoquesaldo es
+	inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutovariacao = es.codestoquelocalprodutovariacao)
+	inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
+	inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
+	inner join tblfilial f on (f.codfilial = el.codfilial)
+	where es.fiscal = true
+	and coalesce(es.saldoquantidade, 0) !=0 
+	and f.codempresa = 1
+	group by 
+		f.codfilial
+		, pv.codproduto
 )
 select 
 	e.codfilial,

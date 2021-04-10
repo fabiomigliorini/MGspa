@@ -15,10 +15,6 @@
 -- update tblnfeterceiroitem set complemento = (vprod / 0.35) - vprod, margem = 40 where codnfeterceiro = 29140
 -- update tblnfeterceiroitem set complemento = vprod, margem = 40 where codnfeterceiro = 30044
 
---WINCY
---update tblnfeterceiroitem set complemento = (vprod * 1.5), margem = 40 where codnfeterceiro = 30667
---update tblnfeterceiroitem set complemento = (vprod * 1.4), margem = 40 where codnfeterceiro = 25931
-
 --FOUR STAR / CW
 -- update tblnfeterceiroitem set complemento = (vprod * 4 * 0.9) - vprod, margem = 40 where codnfeterceiro in (30644)
 
@@ -48,8 +44,8 @@ select sum(vprod) from tblnfeterceiroitem t where codnfeterceiro in (32388)
 --DU Careca
 --update tblnfeterceiroitem set complemento = vprod - vdesc, margem = 37 where codnfeterceiro in (27610)
 
---Rocie / Fartex / Wincy
---update tblnfeterceiroitem set complemento = (vprod * 2.5) - vprod - ipivipi, margem = 40 where codnfeterceiro in (30667)
+-- Rocie / Fartex / Wincy
+-- update tblnfeterceiroitem set complemento = (vprod * 2.5) - vprod, margem = 37 where codnfeterceiro in (32714)
 
 
 -- Bazzi Company
@@ -61,7 +57,7 @@ select sum(vprod) from tblnfeterceiroitem t where codnfeterceiro in (32388)
 -- Brindes Coelho (Ex Lumasol)
 -- update tblnfeterceiroitem set complemento = (vprod * 1.014355021), margem = 40 where codnfeterceiro in (30001) 
 
---
+update tblnfeterceiroitem set complemento = (vprod - vdesc), margem = 40 where codnfeterceiro in (32832)
 
 
 

@@ -7912,6 +7912,7 @@ Peso em KG]]></comment>
 		<sequence name="tblmarca_codmarca_seq" options="START WITH 1" />
 		<sequence name="tblmdfe_codmdfe_seq" options="START WITH 1" />
 		<sequence name="tblmdfe_numero_401_920_58_seq" options="START WITH 1" />
+		<sequence name="tblmdfe_numero_801_920_58_seq" options="START WITH 1" />
 		<sequence name="tblmdfeenviosefaz_codmdfeenviosefaz_seq" options="START WITH 1" />
 		<sequence name="tblmdfeestado_codmdfeestado_seq" options="START WITH 1" />
 		<sequence name="tblmdfenfe_codmdfenfe_seq" options="START WITH 1" />
