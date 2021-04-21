@@ -26,12 +26,12 @@ and npb.valorunitario < 5
 and npb.codprodutobarra != 989646
 
 
-select em.saldoquantidade, em.*
+select em.codestoquemes, es.fiscal, elpv.codestoquelocal, pv.variacao, em.mes, em.saldoquantidade, em.*
 from tblprodutovariacao pv
 inner join tblestoquelocalprodutovariacao elpv on (pv.codprodutovariacao = elpv.codprodutovariacao)
 inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao)
 inner join tblestoquemes em on (em.codestoquesaldo = es.codestoquesaldo)
-where pv.codproduto = 45117
+where pv.codproduto = 37115
 and em.saldoquantidade < 0
-order by mes
+order by fiscal, elpv.codestoquelocal, pv.variacao, mes
 

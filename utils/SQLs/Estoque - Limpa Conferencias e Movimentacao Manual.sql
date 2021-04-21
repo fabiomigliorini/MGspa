@@ -8,7 +8,7 @@ where tblestoquesaldoconferencia.codestoquesaldoconferencia in (
 	inner join tblestoquesaldo es on (es.codestoquesaldo = esc.codestoquesaldo)
 	inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutovariacao = es.codestoquelocalprodutovariacao)
 	inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao )
-	where pv.codproduto = 104077
+	where pv.codproduto = 36066
 )
 
 -- marca como nao conferido
@@ -20,7 +20,7 @@ where codestoquesaldo in (
 	inner join tblestoquesaldo es on (es.codestoquesaldo = esc.codestoquesaldo)
 	inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutovariacao = es.codestoquelocalprodutovariacao)
 	inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao )
-	where pv.codproduto = 104077
+	where pv.codproduto = 36066
 )
 
 -- apaga movimentos das conferencias de estoque
@@ -42,7 +42,7 @@ and tblestoquemovimento.codestoquemovimento in (
 	inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutovariacao = sld.codestoquelocalprodutovariacao)
 	inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao )
 	where mov.manual = true
-	and pv.codproduto = 104077
+	and pv.codproduto = 36066
 	and mov.codestoquemovimentoorigem is not null
 )
 
@@ -55,7 +55,7 @@ inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutova
 inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao )
 inner join tblestoquemovimento dest on (dest.codestoquemovimentoorigem = mov.codestoquemovimento)
 where mov.manual = true
-and pv.codproduto = 104077
+and pv.codproduto = 36066
 
 -- apaga restante dos movimentos manuais
 delete from tblestoquemovimento 
@@ -68,7 +68,7 @@ and tblestoquemovimento.codestoquemovimento in (
 	inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutovariacao = sld.codestoquelocalprodutovariacao)
 	inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao )
 	where mov.manual = true
-	and pv.codproduto = 104077
+	and pv.codproduto = 36066
 )
 
 select 'wget https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/' || mes.codestoquemes
@@ -76,7 +76,7 @@ from tblestoquemes mes
 inner join tblestoquesaldo sld on (sld.codestoquesaldo = mes.codestoquesaldo)
 inner join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocalprodutovariacao = sld.codestoquelocalprodutovariacao)
 inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao )
-where pv.codproduto = 104077
+where pv.codproduto = 14995
 order by mes.mes, mes.codestoquesaldo
 
 
