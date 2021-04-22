@@ -100,7 +100,7 @@ and round((coalesce(em.entradaquantidade, 0) + coalesce(em.saidaquantidade, 0)),
 order by p.codproduto, pb.codprodutobarra, n.codfilial, n.codnotafiscal, p.produto
 
 -- Transferencia/Devolucao sem registro de origem
-select em.codestoquemes, em.data, emt.descricao, EMT.CODESTOQUEMOVIMENTOTIPO, em.entradaquantidade, em.saidaquantidade, nfpb.codnotafiscal, npb.codnegocio
+select em.codestoquemes, em.data, emt.descricao, EMT.CODESTOQUEMOVIMENTOTIPO, em.entradaquantidade, em.saidaquantidade, nfpb.codnotafiscal, npb.codnegocio, 'wget http://sistema.mgpapelaria.com.br/MGLara/estoque/gera-movimento-nota-fiscal-produto-barra/' || cast(nfpb.codnotafiscalprodutobarra as varchar)
 from tblestoquemovimentotipo emt
 inner join tblestoquemovimento em on (em.codestoquemovimentotipo = emt.codestoquemovimentotipo)
 left join tblnotafiscalprodutobarra nfpb on (nfpb.codnotafiscalprodutobarra = em.codnotafiscalprodutobarra)
@@ -109,23 +109,26 @@ where emt.preco = 3
 and em.codestoquemovimentoorigem is null 
 and em.data >= '2016-01-01'
 --and em.codnotafiscalprodutobarra is not null
+--and nfpb.codnotafiscal  = 1093394
 AND em.codestoquemovimentotipo = 4201 -- Transferencia Entrada
 order by em.data, em.codestoquemes
 
 -- Valor entrada diferente da saida nas transferencias
 with recalcular as (
-	select mov.codestoquemes, mes.codestoquesaldo
+	select mov.codestoquemes, mes.codestoquesaldo, mes.mes
 	from tblestoquemovimento mov
 	inner join tblestoquemovimento orig on (orig.codestoquemovimento = mov.codestoquemovimentoorigem)
 	inner join tblestoquemes mes on (mes.codestoquemes = mov.codestoquemes)
 	inner join tblestoquesaldo sld on (sld.codestoquesaldo = mes.codestoquesaldo)
 	where sld.fiscal = true
-	and abs(coalesce(mov.entradavalor, 0) - coalesce(orig.saidavalor, 0)) > 0.02
+	and mov.entradaquantidade > 0
+	and (abs(coalesce(mov.entradavalor, 0) - coalesce(orig.saidavalor, 0)) / coalesce(mov.entradaquantidade, 0)) > 0.01
+	and coalesce(mov.entradaquantidade, 0) = coalesce(orig.saidaquantidade, 0)
 )
-select 'wget http://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/' || min(codestoquemes)::varchar 
+select 'wget http://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/' || min(codestoquemes)::varchar, mes
 from recalcular
-group by codestoquesaldo
-order by 1
+group by codestoquesaldo, mes
+order by 2, 1
 
 --Estoque Negativo
 select pv.codproduto, p.produto, coalesce(pv.variacao, '{ Sem Variacao }'), es.saldoquantidade, es.saldovalor, es.ultimaconferencia
