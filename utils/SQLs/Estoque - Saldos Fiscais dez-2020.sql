@@ -1,53 +1,7 @@
-select *, preco * quant
-from mvwestoque2020  e
-where e.quant < 0 
---order by produto, codproduto, codfilial
-order by preco * quant
-
-
-select *
-from mvwestoque2020  e
-where e.codproduto in (
-	select e2.codproduto 
-	from mvwestoque2020 e2
-	where e2.quant < 0
-) 
-
-
-
-select codproduto, produto, sum(preco * quant)
-from mvwestoque2020  e
-where e.codproduto in (
-	select e2.codproduto 
-	from mvwestoque2020 e2
-	where e2.quant < 0
-) 
-group by codproduto, produto
-order by 2, 1
-
-
-/*
-and e.codproduto in (
-	select e2.codproduto 
-	from mvwestoque2020 e2
-	where e2.quant > 0
-	and e2.codfilial in (101, 102, 103, 104)
-)
-and e.codfilial  in (101, 102, 103, 104)
-*/
-
-select codfilial, sum(e.valor) 
-from mvwestoque2020  e
-group by codfilial
-order by codfilial 
-
---select * from mvwestoque2020 where codproduto = 107232
-
-/*
+-- Apaga View
 drop MATERIALIZED VIEW mvwestoque2020 ;
 
-REFRESH MATERIALIZED VIEW mvwestoque2020 ;
-
+-- Cria View
 create materialized view mvwestoque2020  as 
     select
 	p.codproduto
@@ -118,4 +72,84 @@ create materialized view mvwestoque2020  as
     order by p.produto, p.codproduto, fiscal.codfilial, p.codproduto
     --limit 200
 
+-- Atualiza View
+REFRESH MATERIALIZED VIEW mvwestoque2020 ;
+
+-- Negativos agrupados por produto
+select codproduto, produto, sum(quant), sum(preco * quant)
+from mvwestoque2020  e
+where e.codproduto in (
+	select e2.codproduto 
+	from mvwestoque2020 e2
+	where e2.quant < 0
+) 
+group by codproduto, produto
+order by 2, 1
+
+-- Itens Negativos
+select *, preco * quant
+from mvwestoque2020  e
+where e.quant < 0 
+--order by produto, codproduto, codfilial
+order by preco * quant
+
+-- Todos Itens de Produtos Negativos
+select *
+from mvwestoque2020  e
+where e.codproduto in (
+	select e2.codproduto 
+	from mvwestoque2020 e2
+	where e2.quant < 0
+) 
+
+-- Totais do Estoque
+select codfilial, sum(e.valor) 
+from mvwestoque2020  e
+group by codfilial
+order by codfilial 
+
+/*
+101	2073605.92
+102	1576824.24
+103	2017471.56
+104	800836.97
 */
+
+with qry as (
+    select
+    p.codproduto
+    , p.produto
+    , p.inativo
+        , p.codtipoproduto
+    , p.preco
+        , um.sigla
+        , n.ncm
+    , fiscal.saldoquantidade
+    , fiscal.customedio
+    , fiscal.saldovalor
+    , p.preco / case when fiscal.customedio != 0 then fiscal.customedio else null end as markup
+    from tblproduto p
+    left join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
+    left join (
+    select
+        pv.codproduto
+        , sum(em.saldoquantidade) as saldoquantidade
+        , sum(em.saldovalor) as saldovalor
+        , sum(em.saldovalor) / case when sum(em.saldoquantidade) !=0 then sum(em.saldoquantidade) else null end as customedio
+    from tblestoquelocalprodutovariacao elpv
+    inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
+    inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
+    inner join tblfilial f on (f.codfilial = el.codfilial)
+    inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = true)
+    inner join tblestoquemes em on (em.codestoquemes = (select em2.codestoquemes from tblestoquemes em2 where em2.codestoquesaldo = es.codestoquesaldo and em2.mes <= :mes order by mes desc limit 1))
+    where f.codfilial = :codfilial
+      group by pv.codproduto
+    ) fiscal on (fiscal.codproduto = p.codproduto)
+    left join tblncm n on (n.codncm = p.codncm)
+    where p.codtipoproduto = 0
+    AND fiscal.saldoquantidade != 0
+
+    order by 7 desc, p.produto, p.codproduto
+)
+select sum(saldovalor) from qry
+
