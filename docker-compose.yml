@@ -24,5 +24,6 @@ services:
             - ../MGLara/:/opt/www/MGLara
             - ../NFePHP/:/opt/www/NFePHP
             - ../Lio/:/opt/www/Lio
+            - ../Stone/:/opt/www/Stone
             - /media/publico:/media/publico
         network_mode: host
