@@ -219,6 +219,11 @@
                 "tabela": "tblmdfe",
                 "coluna": "codfilial",
                 "metodo": "MdfeS"
+            },
+            "tblstonefilial.codfilial": {
+                "tabela": "tblstonefilial",
+                "coluna": "codfilial",
+                "metodo": "StoneFilialS"
             }
         }
     },
@@ -853,6 +858,11 @@
                 "tabela": "tblpixcob",
                 "coluna": "codpixcob",
                 "metodo": "PixCob"
+            },
+            "codstonetransacao": {
+                "tabela": "tblstonetransacao",
+                "coluna": "codstonetransacao",
+                "metodo": "StoneTransacao"
             }
         },
         "hasMany": {
@@ -1234,6 +1244,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariorecebimento",
                 "metodo": "UsuarioRecebimento"
+            },
+            "codpessoatransportador": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoatransportador",
+                "metodo": "PessoaTransportador"
             }
         },
         "hasMany": {
@@ -1266,6 +1281,11 @@
                 "tabela": "tblpixcob",
                 "coluna": "codnegocio",
                 "metodo": "PixCobS"
+            },
+            "tblstonepretransacao.codnegocio": {
+                "tabela": "tblstonepretransacao",
+                "coluna": "codnegocio",
+                "metodo": "StonePreTransacaoS"
             }
         }
     },

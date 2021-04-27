@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Dec/2020 08:55:40
+ * Date: 27/Apr/2021 16:40:48
  */
 
 namespace Mg\Negocio;
@@ -13,6 +13,7 @@ use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\Pix\PixCob;
+use Mg\Stone\StonePreTransacao;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -36,6 +37,7 @@ class Negocio extends MgModel
         'codnegociostatus',
         'codoperacao',
         'codpessoa',
+        'codpessoatransportador',
         'codpessoavendedor',
         'codusuario',
         'codusuarioacertoentrega',
@@ -48,6 +50,7 @@ class Negocio extends MgModel
         'valoraprazo',
         'valoravista',
         'valordesconto',
+        'valorfrete',
         'valorprodutos',
         'valortotal'
     ];
@@ -69,6 +72,7 @@ class Negocio extends MgModel
         'codnegociostatus' => 'integer',
         'codoperacao' => 'integer',
         'codpessoa' => 'integer',
+        'codpessoatransportador' => 'integer',
         'codpessoavendedor' => 'integer',
         'codusuario' => 'integer',
         'codusuarioacertoentrega' => 'integer',
@@ -80,6 +84,7 @@ class Negocio extends MgModel
         'valoraprazo' => 'float',
         'valoravista' => 'float',
         'valordesconto' => 'float',
+        'valorfrete' => 'float',
         'valorprodutos' => 'float',
         'valortotal' => 'float'
     ];
@@ -119,6 +124,11 @@ class Negocio extends MgModel
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function PessoaTransportador()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoatransportador', 'codpessoa');
     }
 
     public function PessoaVendedor()
@@ -181,6 +191,11 @@ class Negocio extends MgModel
     public function PixCobS()
     {
         return $this->hasMany(PixCob::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function StonePreTransacaoS()
+    {
+        return $this->hasMany(StonePreTransacao::class, 'codnegocio', 'codnegocio');
     }
 
 }

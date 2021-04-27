@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:47:19
+ * Date: 27/Apr/2021 16:38:23
  */
 
 namespace Mg\Filial;
@@ -23,6 +23,7 @@ use Mg\Usuario\Usuario;
 use Mg\ValeCompra\ValeCompra;
 use Mg\Lio\LioTerminal;
 use Mg\Mdfe\Mdfe;
+use Mg\Stone\StoneFilial;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -53,6 +54,7 @@ class Filial extends MgModel
         'emitenfe',
         'empresadominio',
         'filial',
+        'inativo',
         'nfcetoken',
         'nfcetokenid',
         'nfeambiente',
@@ -181,6 +183,11 @@ class Filial extends MgModel
     public function PortadorS()
     {
         return $this->hasMany(Portador::class, 'codfilial', 'codfilial');
+    }
+
+    public function StoneFilialS()
+    {
+        return $this->hasMany(StoneFilial::class, 'codfilial', 'codfilial');
     }
 
     public function TituloS()
