@@ -3468,5 +3468,215 @@
             }
         },
         "hasMany": []
+    },
+    "tblstonebandeira": {
+        "tabela": "tblstonebandeira",
+        "campocodigo": "codstonebandeira",
+        "namespace": "Mg\\Stone",
+        "classe": "StoneBandeira",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Stone\/StoneBandeira.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblstonetransacao.codstonebandeira": {
+                "tabela": "tblstonetransacao",
+                "coluna": "codstonebandeira",
+                "metodo": "StoneTransacaoS"
+            }
+        }
+    },
+    "tblstonetransacao": {
+        "tabela": "tblstonetransacao",
+        "campocodigo": "codstonetransacao",
+        "namespace": "Mg\\Stone",
+        "classe": "StoneTransacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Stone\/StoneTransacao.php",
+        "belongsTo": {
+            "codstonebandeira": {
+                "tabela": "tblstonebandeira",
+                "coluna": "codstonebandeira",
+                "metodo": "StoneBandeira"
+            },
+            "codstonefilial": {
+                "tabela": "tblstonefilial",
+                "coluna": "codstonefilial",
+                "metodo": "StoneFilial"
+            },
+            "codstonepretransacao": {
+                "tabela": "tblstonepretransacao",
+                "coluna": "codstonepretransacao",
+                "metodo": "StonePreTransacao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnegocioformapagamento.codstonetransacao": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codstonetransacao",
+                "metodo": "NegocioFormaPagamentoS"
+            },
+            "tblstonetransacaoparcela.codstonetransacao": {
+                "tabela": "tblstonetransacaoparcela",
+                "coluna": "codstonetransacao",
+                "metodo": "StoneTransacaoParcelaS"
+            }
+        }
+    },
+    "tblstonetransacaoparcela": {
+        "tabela": "tblstonetransacaoparcela",
+        "campocodigo": "codstonetransacaoparcela",
+        "namespace": "Mg\\Stone",
+        "classe": "StoneTransacaoParcela",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Stone\/StoneTransacaoParcela.php",
+        "belongsTo": {
+            "codstonetransacao": {
+                "tabela": "tblstonetransacao",
+                "coluna": "codstonetransacao",
+                "metodo": "StoneTransacao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblstonefilial": {
+        "tabela": "tblstonefilial",
+        "campocodigo": "codstonefilial",
+        "namespace": "Mg\\Stone",
+        "classe": "StoneFilial",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Stone\/StoneFilial.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblstonepretransacao.codstonefilial": {
+                "tabela": "tblstonepretransacao",
+                "coluna": "codstonefilial",
+                "metodo": "StonePreTransacaoS"
+            },
+            "tblstonetransacao.codstonefilial": {
+                "tabela": "tblstonetransacao",
+                "coluna": "codstonefilial",
+                "metodo": "StoneTransacaoS"
+            },
+            "tblstonepos.codstonefilial": {
+                "tabela": "tblstonepos",
+                "coluna": "codstonefilial",
+                "metodo": "StonePosS"
+            }
+        }
+    },
+    "tblstonepretransacao": {
+        "tabela": "tblstonepretransacao",
+        "campocodigo": "codstonepretransacao",
+        "namespace": "Mg\\Stone",
+        "classe": "StonePreTransacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Stone\/StonePreTransacao.php",
+        "belongsTo": {
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codstonefilial": {
+                "tabela": "tblstonefilial",
+                "coluna": "codstonefilial",
+                "metodo": "StoneFilial"
+            },
+            "codstonepos": {
+                "tabela": "tblstonepos",
+                "coluna": "codstonepos",
+                "metodo": "StonePos"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblstonetransacao.codstonepretransacao": {
+                "tabela": "tblstonetransacao",
+                "coluna": "codstonepretransacao",
+                "metodo": "StoneTransacaoS"
+            }
+        }
+    },
+    "tblstonepos": {
+        "tabela": "tblstonepos",
+        "campocodigo": "codstonepos",
+        "namespace": "Mg\\Stone",
+        "classe": "StonePos",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Stone\/StonePos.php",
+        "belongsTo": {
+            "codstonefilial": {
+                "tabela": "tblstonefilial",
+                "coluna": "codstonefilial",
+                "metodo": "StoneFilial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblstonepretransacao.codstonepos": {
+                "tabela": "tblstonepretransacao",
+                "coluna": "codstonepos",
+                "metodo": "StonePreTransacaoS"
+            }
+        }
     }
 }

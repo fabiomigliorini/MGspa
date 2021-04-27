@@ -2798,6 +2798,24 @@ infMunCarrega]]></comment>
 			<index name="pk_tblmdfe_codmdfe" unique="PRIMARY_KEY" >
 				<column name="codmdfe" />
 			</index>
+			<index name="idx_fk_tblmdfe_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblmdfe_tblcidade" unique="NORMAL" >
+				<column name="codcidadecarregamento" />
+			</index>
+			<index name="idx_fk_tblmdfe_tblfilial" unique="NORMAL" >
+				<column name="codfilial" />
+			</index>
+			<index name="idx_fk_tblmdfe_tblmdfestatus" unique="NORMAL" >
+				<column name="codmdfestatus" />
+			</index>
+			<index name="idx_fk_tblmdfe_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblmdfe_tblestado_0" unique="NORMAL" >
+				<column name="codestadofim" />
+			</index>
 			<fk name="fk_tblmdfe_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -2834,6 +2852,15 @@ infMunCarrega]]></comment>
 			<index name="pk_tblmdfeenviosefaz_codmdfeenviosefaz" unique="PRIMARY_KEY" >
 				<column name="codmdfeenviosefaz" />
 			</index>
+			<index name="idx_fk_tblmdfeenviosefaz_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblmdfeenviosefaz_tblmdfe" unique="NORMAL" >
+				<column name="codmdfe" />
+			</index>
+			<index name="idx_fk_tblmdfeenviosefaz_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="fk_tblmdfeenviosefaz_tblmdfe" to_schema="mgsis.mgsis" to_table="tblmdfe" >
 				<fk_column name="codmdfe" pk="codmdfe" />
 			</fk>
@@ -2854,6 +2881,18 @@ infMunCarrega]]></comment>
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblmdfeestado_codmdfeestado" unique="PRIMARY_KEY" >
 				<column name="codmdfeestado" />
+			</index>
+			<index name="idx_fk_tblmdfeestado_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblmdfeestado_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblmdfeestado_tblmdfe" unique="NORMAL" >
+				<column name="codmdfe" />
+			</index>
+			<index name="idx_fk_tblmdfeestado_tblestado" unique="NORMAL" >
+				<column name="codestado" />
 			</index>
 			<fk name="fk_tblmdfeestado_tblestado" to_schema="mgsis.mgsis" to_table="tblestado" update_action="cascade" >
 				<fk_column name="codestado" pk="codestado" />
@@ -2892,6 +2931,21 @@ Peso em KG]]></comment>
 			<index name="pk_tblmdfenfe_codmdfenfe" unique="PRIMARY_KEY" >
 				<column name="codmdfenfe" />
 			</index>
+			<index name="idx_fk_tblmdfedocumento_tblnotafiscal" unique="NORMAL" >
+				<column name="codnotafiscal" />
+			</index>
+			<index name="idx_fk_tblmdfenfe_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblmdfenfe_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblmdfedocumento_tblcidade" unique="NORMAL" >
+				<column name="codcidadedescarga" />
+			</index>
+			<index name="idx_fk_tblmdfedocumento_tblmdfe" unique="NORMAL" >
+				<column name="codmdfe" />
+			</index>
 			<fk name="fk_tblmdfedocumento_tblmdfe" to_schema="mgsis.mgsis" to_table="tblmdfe" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codmdfe" pk="codmdfe" />
 			</fk>
@@ -2919,6 +2973,12 @@ Peso em KG]]></comment>
 			<index name="pk_tblmdfestatus_codmdfestatus" unique="PRIMARY_KEY" >
 				<column name="codmdfestatus" />
 			</index>
+			<index name="idx_fk_tblmdfestatus_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblmdfestatus_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblmdfestatus_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
@@ -2941,6 +3001,18 @@ Peso em KG]]></comment>
 			<index name="unq_tblmdfeveiculo" unique="UNIQUE_KEY" >
 				<column name="codmdfe" />
 				<column name="codveiculo" />
+			</index>
+			<index name="idx_fk_tblmdfeveiculo_tblveiculo" unique="NORMAL" >
+				<column name="codveiculo" />
+			</index>
+			<index name="idx_fk_tblmdfeveiculo_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblmdfeveiculo_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblmdfeveiculo_tblpessoa" unique="NORMAL" >
+				<column name="codpessoacondutor" />
 			</index>
 			<fk name="fk_tblmdfeveiculo_tblmdfe" to_schema="mgsis.mgsis" to_table="tblmdfe" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codmdfe" pk="codmdfe" />
@@ -3425,6 +3497,9 @@ Peso em KG]]></comment>
 			<index name="idx_tblnegocio_codusuariocriacao_fkey" unique="NORMAL" >
 				<column name="codusuariocriacao" />
 			</index>
+			<index name="idx_tblnegocio_codpessoatransportador_fk" unique="NORMAL" >
+				<column name="codpessoatransportador" />
+			</index>
 			<fk name="tblnegocio_codfilial_fkey" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -3523,6 +3598,7 @@ Peso em KG]]></comment>
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="codliopedido" type="bigint" jt="-5" />
 			<column name="codpixcob" type="bigint" jt="-5" />
+			<column name="codstonetransacao" type="bigint" jt="-5" />
 			<index name="tblnegocioformapagamento_pkey" unique="PRIMARY_KEY" >
 				<column name="codnegocioformapagamento" />
 			</index>
@@ -3544,6 +3620,9 @@ Peso em KG]]></comment>
 			<index name="idx_fk_tblnegocioformapagamento_tblpixcob" unique="NORMAL" >
 				<column name="codpixcob" />
 			</index>
+			<index name="idx_fk_tblnegocioformapagamento_tblstonetransacao" unique="NORMAL" >
+				<column name="codstonetransacao" />
+			</index>
 			<fk name="tblnegocioformapagamento_codformapagamento_fkey" to_schema="mgsis.mgsis" to_table="tblformapagamento" >
 				<fk_column name="codformapagamento" pk="codformapagamento" />
 			</fk>
@@ -3561,6 +3640,9 @@ Peso em KG]]></comment>
 			</fk>
 			<fk name="fk_tblnegocioformapagamento_tblpixcob" to_schema="mgsis.mgsis" to_table="tblpixcob" >
 				<fk_column name="codpixcob" pk="codpixcob" />
+			</fk>
+			<fk name="fk_tblnegocioformapagamento_tblstonetransacao" to_schema="mgsis.mgsis" to_table="tblstonetransacao" update_action="cascade" >
+				<fk_column name="codstonetransacao" pk="codstonetransacao" />
 			</fk>
 		</table>
 		<table name="tblnegocioprodutobarra" >
@@ -5893,6 +5975,12 @@ Peso em KG]]></comment>
 			<index name="unq_tblstonebandeira_bandeira" unique="UNIQUE_KEY" >
 				<column name="bandeira" />
 			</index>
+			<index name="idx_fk_tblstonebandeira_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblstonebandeira_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblstonebandeira_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
@@ -5911,7 +5999,7 @@ Peso em KG]]></comment>
 				<comment><![CDATA[establishment.id]]></comment>
 			</column>
 			<column name="disponivelloja" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[mamba_released]]></comment>
 			</column>
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
@@ -5927,6 +6015,12 @@ Peso em KG]]></comment>
 			</index>
 			<index name="unq_tblstonefilial_establishmentid" unique="UNIQUE_INDEX" >
 				<column name="establishmentid" />
+			</index>
+			<index name="idx_fk_tblstonefilial_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblstonefilial_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tblfilialstone_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
@@ -5949,7 +6043,7 @@ Peso em KG]]></comment>
 				<comment><![CDATA[available_pos_list.pos_serial_number]]></comment>
 			</column>
 			<column name="islinked" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
@@ -5965,14 +6059,23 @@ Peso em KG]]></comment>
 			<index name="unq_tblstonepos_serialnumber" unique="UNIQUE_KEY" >
 				<column name="serialnumber" />
 			</index>
-			<fk name="fk_tblstonepos_tblstonefilial" virtual="y" to_schema="mgsis.mgsis" to_table="tblstonefilial" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codstonefilial" pk="codstonefilial" />
-			</fk>
+			<index name="idx_fk_tblstonepos_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblstonepos_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblstonepos_tblstonefilial" unique="NORMAL" >
+				<column name="codstonefilial" />
+			</index>
 			<fk name="fk_tblstonepos_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 			<fk name="fk_tblstonepos_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblstonepos_tblstonefilial" to_schema="mgsis.mgsis" to_table="tblstonefilial" update_action="cascade" >
+				<fk_column name="codstonefilial" pk="codstonefilial" />
 			</fk>
 		</table>
 		<table name="tblstonepretransacao" prior="tbl" >
@@ -6009,11 +6112,11 @@ Possivel de 2 a 12 vezes]]></comment>
 2 - Com Juros]]></comment>
 			</column>
 			<column name="processada" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[processed - se ja passou pelo POS]]></comment>
 			</column>
 			<column name="ativa" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[is_active]]></comment>
 			</column>
 			<column name="token" type="bigint" jt="-5" >
@@ -6031,11 +6134,27 @@ undone - desfeita, cancelada, desistiu]]></comment>
 			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
 			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codnegocio" type="bigint" jt="-5" />
 			<index name="pk_tblstonepretransacao_codstonepretransacao" unique="PRIMARY_KEY" >
 				<column name="codstonepretransacao" />
 			</index>
 			<index name="unq_tblstonepretransacao_pretransactionid" unique="UNIQUE_KEY" >
 				<column name="pretransactionid" />
+			</index>
+			<index name="idx_fk_tblstonepretransacao_tblnegocio" unique="NORMAL" >
+				<column name="codnegocio" />
+			</index>
+			<index name="idx_fk_tblstonepretransacao_tblstonefilial" unique="NORMAL" >
+				<column name="codstonefilial" />
+			</index>
+			<index name="idx_fk_tblstonepretransacao_tblstonepos" unique="NORMAL" >
+				<column name="codstonepos" />
+			</index>
+			<index name="idx_fk_tblstonepretransacao_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblstonepretransacao_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tblstonepretransacao_tblstonefilial" to_schema="mgsis.mgsis" to_table="tblstonefilial" update_action="cascade" >
 				<fk_column name="codstonefilial" pk="codstonefilial" />
@@ -6048,6 +6167,9 @@ undone - desfeita, cancelada, desistiu]]></comment>
 			</fk>
 			<fk name="fk_tblstonepretransacao_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblstonepretransacao_tblnegocio" to_schema="mgsis.mgsis" to_table="tblnegocio" update_action="cascade" >
+				<fk_column name="codnegocio" pk="codnegocio" />
 			</fk>
 		</table>
 		<table name="tblstonetransacao" prior="tbl" >
@@ -6097,7 +6219,7 @@ undone - desfeita, cancelada, desistiu]]></comment>
 3 - Voucher]]></comment>
 			</column>
 			<column name="conciliada" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[conciliation - se foi conciliada com a adquirente]]></comment>
 			</column>
 			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" >
@@ -6115,6 +6237,21 @@ undone - desfeita, cancelada, desistiu]]></comment>
 			</index>
 			<index name="unq_tblstonetransacao_stonetransactionid" unique="UNIQUE_KEY" >
 				<column name="stonetransactionid" />
+			</index>
+			<index name="idx_fk_tblstonetransacao_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblstonetransacao_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblstonetransacao_tblstonebandeira" unique="NORMAL" >
+				<column name="codstonebandeira" />
+			</index>
+			<index name="idx_fk_tblstonetransacao_tblstonefilial" unique="NORMAL" >
+				<column name="codstonefilial" />
+			</index>
+			<index name="idx_fk_tblstonetransacao_tblstonepretransacao" unique="NORMAL" >
+				<column name="codstonepretransacao" />
 			</index>
 			<fk name="fk_tblstonetransacao_tblstonepretransacao" to_schema="mgsis.mgsis" to_table="tblstonepretransacao" update_action="cascade" >
 				<fk_column name="codstonepretransacao" pk="codstonepretransacao" />
@@ -6163,14 +6300,20 @@ Pode mudar apos conciliacao]]></comment>
 				<column name="codstonetransacao" />
 				<column name="numero" />
 			</index>
-			<fk name="fk_tblstonetransacaoparcela_tblstonetransacao" to_schema="mgsis.mgsis" to_table="tblstonetransacao" delete_action="cascade" update_action="cascade" >
-				<fk_column name="codstonetransacaoparcela" pk="codstonetransacao" />
-			</fk>
+			<index name="idx_fk_tblstonetransacaoparcela_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblstonetransacaoparcela_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblstonetransacaoparcela_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
 			<fk name="fk_tblstonetransacaoparcela_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblstonetransacaoparcela_tblstonetransacao" to_schema="mgsis.mgsis" to_table="tblstonetransacao" update_action="cascade" >
+				<fk_column name="codstonetransacao" pk="codstonetransacao" />
 			</fk>
 		</table>
 		<table name="tblsubgrupoproduto" >
@@ -6477,6 +6620,18 @@ Pode mudar apos conciliacao]]></comment>
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
 			<index name="pk_tbltitulonfeterceiro_codtitulonfeterceiro" unique="PRIMARY_KEY" >
 				<column name="codtitulonfeterceiro" />
+			</index>
+			<index name="idx_fk_tbltitulonfeterceiro_tblnfeterceiro" unique="NORMAL" >
+				<column name="codnfeterceiro" />
+			</index>
+			<index name="idx_fk_tbltitulonfeterceiro_tbltitulo" unique="NORMAL" >
+				<column name="codtitulo" />
+			</index>
+			<index name="idx_fk_tbltitulonfeterceiro_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbltitulonfeterceiro_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tbltitulonfeterceiro_tbltitulo" to_schema="mgsis.mgsis" to_table="tbltitulo" >
 				<fk_column name="codtitulo" pk="codtitulo" />
@@ -6971,6 +7126,21 @@ Pode mudar apos conciliacao]]></comment>
 			<index name="unq_tblveiculo_0" unique="UNIQUE_KEY" >
 				<column name="renavam" />
 			</index>
+			<index name="idx_fk_tblveiculo_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblveiculo_tblveiculotipo" unique="NORMAL" >
+				<column name="codveiculotipo" />
+			</index>
+			<index name="idx_fk_tblveiculo_tblestado" unique="NORMAL" >
+				<column name="codestado" />
+			</index>
+			<index name="idx_fk_tblveiculo_tblpessoa" unique="NORMAL" >
+				<column name="codpessoaproprietario" />
+			</index>
+			<index name="idx_fk_tblveiculo_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
 			<fk name="fk_tblveiculo_tblveiculotipo" to_schema="mgsis.mgsis" to_table="tblveiculotipo" update_action="cascade" >
 				<fk_column name="codveiculotipo" pk="codveiculotipo" />
 			</fk>
@@ -6998,6 +7168,12 @@ Pode mudar apos conciliacao]]></comment>
 			<index name="pk_tblveiculoconjunto_codveiculoconjunto" unique="PRIMARY_KEY" >
 				<column name="codveiculoconjunto" />
 			</index>
+			<index name="idx_fk_tblveiculoconjunto_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblveiculoconjunto_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblveiculoconjunto_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
@@ -7019,6 +7195,15 @@ Pode mudar apos conciliacao]]></comment>
 			<index name="unq_tblveiculoconjuntoveiculo" unique="UNIQUE_KEY" >
 				<column name="codveiculoconjunto" />
 				<column name="codveiculo" />
+			</index>
+			<index name="idx_fk_tblveiculoconjuntoveiculo_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
+			<index name="idx_fk_tblveiculoconjuntoveiculo_tblveiculo" unique="NORMAL" >
+				<column name="codveiculo" />
+			</index>
+			<index name="idx_fk_tblveiculoconjuntoveiculo_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
 			</index>
 			<fk name="fk_tblveiculoconjuntoveiculo_tblveiculoconjunto" to_schema="mgsis.mgsis" to_table="tblveiculoconjunto" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codveiculoconjunto" pk="codveiculoconjunto" />
@@ -7063,6 +7248,12 @@ Pode mudar apos conciliacao]]></comment>
 			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblveiculotipo_codveiculotipo" unique="PRIMARY_KEY" >
 				<column name="codveiculotipo" />
+			</index>
+			<index name="idx_fk_tblveiculotipo_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblveiculotipo_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
 			</index>
 			<fk name="fk_tblveiculotipo_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
@@ -10844,11 +11035,38 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuarioalteracao" />
 			<column name="codusuariocriacao" />
 		</entity>
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="3986C1" x="960" y="48" >
+			<column name="codnegocio" />
+			<column name="codpessoa" />
+			<column name="codfilial" />
+			<column name="codestoquelocal" />
+			<column name="codpessoavendedor" />
+			<column name="codoperacao" />
+			<column name="codnegociostatus" />
+			<column name="codusuario" />
+			<column name="codusuarioacertoentrega" />
+			<column name="codnaturezaoperacao" />
+			<column name="codestoquelocaldestino" />
+			<column name="codusuariorecebimento" />
+			<column name="codusuariocriacao" />
+			<column name="codusuarioalteracao" />
+			<column name="codpessoatransportador" />
+		</entity>
+		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="3986C1" x="944" y="560" >
+			<column name="codnegocioformapagamento" />
+			<column name="codnegocio" />
+			<column name="codformapagamento" />
+			<column name="codusuarioalteracao" />
+			<column name="codusuariocriacao" />
+			<column name="codliopedido" />
+			<column name="codpixcob" />
+			<column name="codstonetransacao" />
+		</entity>
 		<entity schema="mgsis.mgsis" name="tblstonebandeira" color="C4EEC1" x="64" y="256" />
-		<entity schema="mgsis.mgsis" name="tblstonefilial" color="C4EEC1" x="496" y="80" />
-		<entity schema="mgsis.mgsis" name="tblstonepos" color="C4EEC1" x="816" y="64" />
-		<entity schema="mgsis.mgsis" name="tblstonepretransacao" color="C4EEC1" x="800" y="416" />
-		<entity schema="mgsis.mgsis" name="tblstonetransacao" color="C4EEC1" x="432" y="368" />
+		<entity schema="mgsis.mgsis" name="tblstonefilial" color="C4EEC1" x="384" y="64" />
+		<entity schema="mgsis.mgsis" name="tblstonepos" color="C4EEC1" x="656" y="48" />
+		<entity schema="mgsis.mgsis" name="tblstonepretransacao" color="C4EEC1" x="672" y="352" />
+		<entity schema="mgsis.mgsis" name="tblstonetransacao" color="C4EEC1" x="368" y="400" />
 		<entity schema="mgsis.mgsis" name="tblstonetransacaoparcela" color="C4EEC1" x="48" y="496" />
 	</layout>
 	<layout name="Layout_Transferencia" id="Layout_54b90e3" show_relation="columns" >
