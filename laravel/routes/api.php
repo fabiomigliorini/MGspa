@@ -18,12 +18,6 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
-Route::group(['prefix' => 'v1/stone-connect/webhook/'], function () {
-    Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
-    Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
-    Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
-    Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
-});
 
 Route::group(['prefix' => 'v1/cielo-lio'], function () {
     Route::post('', '\Mg\Lio\LioController@callback');
@@ -39,6 +33,16 @@ Route::group(['prefix' => 'v1/auth'], function () {
 });
 
 Route::group(['prefix' => 'v1'], function () {
+
+    Route::group(['prefix' => 'stone-connect'], function () {
+        Route::group(['prefix' => 'webhook/'], function () {
+            Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
+            Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
+            Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
+            Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
+        });
+    });
+
 
     // Pix Cob
     Route::post('pix/cob/criar-negocio/{codnegocio}', '\Mg\Pix\PixController@criarPixCobNegocio');
