@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\StoneConnect;
+namespace Mg\Stone\Connect;
 
 use Illuminate\Support\Facades\Storage;
 

@@ -19,10 +19,10 @@ use Illuminate\Http\Request;
 // });
 
 Route::group(['prefix' => 'v1/stone-connect/webhook/'], function () {
-    Route::post('pos-application', '\Mg\StoneConnect\WebhookController@posApplication');
-    Route::post('pre-transaction-status', '\Mg\StoneConnect\WebhookController@preTransactionStatus');
-    Route::post('processed-transaction', '\Mg\StoneConnect\WebhookController@processedTransaction');
-    Route::post('print-note-status', '\Mg\StoneConnect\WebhookController@printNoteStatus');
+    Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
+    Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
+    Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
+    Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
 });
 
 Route::group(['prefix' => 'v1/cielo-lio'], function () {

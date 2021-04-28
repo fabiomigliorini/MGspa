@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\StoneConnect;
+namespace Mg\Stone\Connect;
 
 use Illuminate\Http\Request;
 //use Illuminate\Support\Facades\Auth;
@@ -15,7 +15,7 @@ class WebhookController extends MgController
     public function posApplication(Request $request)
     {
         $file = WebhookJsonService::salvarPosApplication($request->getContent());
-        return response()->json(['success'=>true], 200);	
+        return response()->json(['success'=>true], 200);
     }
 
     public function preTransactionStatus(Request $request)
