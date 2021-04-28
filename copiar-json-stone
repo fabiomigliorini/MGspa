@@ -1,2 +1,2 @@
 #!/bin/bash
-rsync -uva super@netuno.mgpapelaria.com.br:/opt/www/Stone/ ./Stone/
+rsync -uva super@netuno.mgpapelaria.com.br:/opt/www/Stone/ ../Stone/
