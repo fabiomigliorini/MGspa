@@ -34,15 +34,26 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    // Stone Connect
     Route::group(['prefix' => 'stone-connect'], function () {
-        Route::group(['prefix' => 'webhook/'], function () {
+
+        // Webooks
+        Route::group(['prefix' => 'webhook'], function () {
             Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
             Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
             Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
             Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
         });
-    });
 
+        // Token
+        Route::group(['prefix' => 'filial'], function () {
+            Route::post('', '\Mg\Stone\Connect\FilialController@store');
+            Route::get('{codstonefilial}', '\Mg\Stone\Connect\FilialController@show');
+            Route::get('{codstonefilial}/webhook', '\Mg\Stone\Connect\FilialController@showWebhook');
+            //Route::get('{codstonefilial}/token', '\Mg\Stone\Connect\FilialController@token');
+        });
+
+    });
 
     // Pix Cob
     Route::post('pix/cob/criar-negocio/{codnegocio}', '\Mg\Pix\PixController@criarPixCobNegocio');
