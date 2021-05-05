@@ -52,7 +52,12 @@ class MgIbpt extends Ibpt
             $consulta = $this->productTaxes(
                 $nfpb->NotaFiscal->Pessoa->Cidade->Estado->sigla,
                 $nfpb->ProdutoBarra->Produto->Ncm->ncm,
-                0
+		0,
+		$nfpb->ProdutoBarra->Produto->produto,
+		$nfpb->ProdutoBarra->UnidadeMedida->sigla,
+		$nfpb->valorunitario,
+		$nfpb->ProdutoBarra->barras,
+		$nfpb->ProdutoBarra->codproduto
             );
 
             if (isset($consulta->httpcode) && ($consulta->httpcode == 404 || $consulta->httpcode == 403)) {
