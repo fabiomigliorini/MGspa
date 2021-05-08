@@ -156,10 +156,11 @@ class PixService
         ]);
         $nfp->codnegocio = $cob->codnegocio;
         $nfp->valorpagamento = $valorpagamento;
-        $fp = FormaPagamento::firstOrNew(['pix' => true]);
+        $fp = FormaPagamento::firstOrNew(['pix' => true, 'integracao' => true]);
         if (!$fp->exists) {
             $fp->formapagamento = 'PIX';
             $fp->avista = true;
+            $fp->integracao = true;            
             $fp->save();
         }
         $nfp->codformapagamento = $fp->codformapagamento;

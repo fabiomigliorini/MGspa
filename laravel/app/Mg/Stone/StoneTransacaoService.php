@@ -5,6 +5,9 @@ namespace Mg\Stone;
 use Illuminate\Support\Facades\Storage;
 
 use Mg\Stone\Connect\ApiService;
+use Mg\Negocio\NegocioFormaPagamento;
+use Mg\FormaPagamento\FormaPagamento;
+use Mg\Negocio\NegocioService;
 
 use Carbon\Carbon;
 
@@ -57,8 +60,11 @@ class StoneTransacaoService
         $stoneTransacao->codstonefilial = $stoneFilial->codstonefilial;
         $stoneTransacao->siclostransactionid = $transaction['siclos_transaction_id'];
         if (!empty($transaction['pre_transaction_id'])) {
-            if ($pre = StonePreTransacao::where('pretransactionid', $transaction['pre_transaction_id'])->first()) {
-                $stoneTransacao->codstonepretransacao = $pre->codstonepretransacao;
+            if ($stonePreTransacao = StonePreTransacao::where('pretransactionid', $transaction['pre_transaction_id'])->first()) {
+                $stoneTransacao->codstonepretransacao = $stonePreTransacao->codstonepretransacao;
+                $stonePreTransacao->update([
+                    'processada' => true
+                ]);
             }
         }
         $stoneTransacao->criacao = Carbon::parse($transaction['created_at']);
@@ -80,6 +86,31 @@ class StoneTransacaoService
         $stoneTransacao->tipo = $transaction['payment_type'];
         $stoneTransacao->conciliada = $transaction['conciliation'];
         $stoneTransacao->save();
+
+        if (empty($stonePreTransacao)) {
+            return;
+        }
+        if (empty($stonePreTransacao->codnegocio)) {
+            return;
+        }
+
+        $negocioFormaPagamento = NegocioFormaPagamento::firstOrNew([
+            'codstonetransacao' => $stoneTransacao->codstonetransacao
+        ]);
+        $negocioFormaPagamento->codnegocio = $stonePreTransacao->codnegocio;
+        $fp = FormaPagamento::firstOrNew(['stone' => true, 'integracao' => true]);
+        if (!$fp->exists) {
+            $fp->formapagamento = 'Stone Connect';
+            $fp->avista = true;
+            $fp->integracao = true;
+            $fp->save();
+        }
+        $negocioFormaPagamento->codformapagamento = $fp->codformapagamento;
+        $negocioFormaPagamento->valorpagamento = $stoneTransacao->valor;
+        $negocioFormaPagamento->save();
+
+        $fechado = NegocioService::fecharSePago($stonePreTransacao->Negocio);
+
         return $stoneTransacao;
     }
 

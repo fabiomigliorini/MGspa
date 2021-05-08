@@ -123,10 +123,11 @@ class LioService
                 ]);
                 $nfp->codnegocio = $order->number;
                 $nfp->valorpagamento = $pedido->valorpago;
-                $fp = FormaPagamento::firstOrNew(['lio' => true]);
+                $fp = FormaPagamento::firstOrNew(['lio' => true, 'integracao' => true]);
                 if (!$fp->exists) {
                     $fp->formapagamento = 'Cielo Lio';
                     $fp->avista = true;
+                    $fp->integracao = true;
                     $fp->save();
                 }
                 $nfp->codformapagamento = $fp->codformapagamento;
