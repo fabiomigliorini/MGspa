@@ -1875,6 +1875,9 @@
 			<column name="stone" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
+			<column name="integracao" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[false]]></defo>
+			</column>
 			<index name="tblformapagamento_pkey" unique="PRIMARY_KEY" >
 				<column name="codformapagamento" />
 			</index>
@@ -11170,6 +11173,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="lio" />
 			<column name="pix" />
 			<column name="stone" />
+			<column name="integracao" />
 		</entity>
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="48" y="64" >
 			<column name="codpessoa" />
