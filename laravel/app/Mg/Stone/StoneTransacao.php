@@ -16,6 +16,10 @@ use Mg\Usuario\Usuario;
 
 class StoneTransacao extends MgModel
 {
+
+    const STATUS_APROVADA = 1;
+    const STATUS_CANCELADA = 0;
+
     protected $table = 'tblstonetransacao';
     protected $primaryKey = 'codstonetransacao';
 

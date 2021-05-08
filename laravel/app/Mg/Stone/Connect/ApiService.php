@@ -269,5 +269,143 @@ class ApiService
         return json_decode($response, true);
     }
 
+    public static function preTransactionCreate (
+        $token,
+        $establishment_id,
+        $amount,
+        $information_title,
+        $payment_type = null,
+        $installment = null,
+        $installment_type = null)
+    {
+
+        $body = [
+            "amount" => intval($amount*100),
+            "establishment_id" => $establishment_id,
+        ];
+        if (!empty($information_title)) {
+            $body["information_title"] = $information_title;
+        }
+        if (!empty($payment_type)) {
+            $body["payment"]["type"] = $payment_type;
+        }
+        if (!empty($installment)) {
+            $body["payment"]["installment"] = $installment;
+        }
+        if (!empty($installment_type)) {
+            $body["payment"]["installment_type"] = $installment_type;
+        }
+        $body = json_encode($body);
+
+        $curl = curl_init();
+        $url = env('STONE_CONNECT_URL') . '/pre-transaction/create';
+        $auth = "Authorization: Bearer {$token}";
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_HTTPHEADER => [
+                $auth,
+                "Content-Type: application/json"
+            ],
+        ];
+        curl_setopt_array($curl, $opt);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        if ($response === false) {
+            throw new \Exception('Falha ao acessar API da Stone Connect!', 1);
+        }
+        return json_decode($response, true);
+    }
+
+    public static function preTransactionSingle ($token, $pre_transaction_id)
+    {
+        $curl = curl_init();
+        $url = env('STONE_CONNECT_URL') . '/pre-transaction/single/' . $pre_transaction_id;
+        $auth = "Authorization: Bearer {$token}";
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_HTTPHEADER => [
+                $auth,
+                "Content-Type: application/json"
+            ],
+        ];
+        curl_setopt_array($curl, $opt);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        if ($response === false) {
+            throw new \Exception('Falha ao acessar API da Stone Connect!', 1);
+        }
+        return json_decode($response, true);
+    }
+
+    public static function transactionSinglePreTransacion ($token, $pre_transaction_id)
+    {
+        $curl = curl_init();
+        $url = env('STONE_CONNECT_URL') . '/transactions/single/pre-transaction/' . $pre_transaction_id;
+        $auth = "Authorization: Bearer {$token}";
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_HTTPHEADER => [
+                $auth,
+                "Content-Type: application/json"
+            ],
+        ];
+        curl_setopt_array($curl, $opt);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        if ($response === false) {
+            throw new \Exception('Falha ao acessar API da Stone Connect!', 1);
+        }
+        return json_decode($response, true);
+    }
+
+    public static function transactionSingleStone ($token, $stone_transaction_id)
+    {
+        $curl = curl_init();
+        $url = env('STONE_CONNECT_URL') . '/transactions/single/stone/' . $stone_transaction_id;
+        $auth = "Authorization: Bearer {$token}";
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_HTTPHEADER => [
+                $auth,
+                "Content-Type: application/json"
+            ],
+        ];
+        curl_setopt_array($curl, $opt);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        if ($response === false) {
+            throw new \Exception('Falha ao acessar API da Stone Connect!', 1);
+        }
+        return json_decode($response, true);
+    }
 
 }

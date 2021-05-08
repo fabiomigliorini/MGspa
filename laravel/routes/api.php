@@ -45,12 +45,17 @@ Route::group(['prefix' => 'v1'], function () {
             Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
         });
 
-        // Token
+        // Filial
         Route::group(['prefix' => 'filial'], function () {
             Route::post('', '\Mg\Stone\Connect\FilialController@store');
             Route::get('{codstonefilial}', '\Mg\Stone\Connect\FilialController@show');
             Route::get('{codstonefilial}/webhook', '\Mg\Stone\Connect\FilialController@showWebhook');
-            //Route::get('{codstonefilial}/token', '\Mg\Stone\Connect\FilialController@token');
+        });
+
+        // Pre-Transacao
+        Route::group(['prefix' => 'pre-transacao'], function () {
+            Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');
+            Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
         });
 
     });

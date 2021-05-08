@@ -6065,6 +6065,9 @@ Peso em KG]]></comment>
 			<index name="idx_fk_tblstonepos_tblusuario_0" unique="NORMAL" >
 				<column name="codusuarioalteracao" />
 			</index>
+			<index name="idx_fk_tblstonepos_tblstonefilial" unique="NORMAL" >
+				<column name="codstonefilial" />
+			</index>
 			<fk name="fk_tblstonepos_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>

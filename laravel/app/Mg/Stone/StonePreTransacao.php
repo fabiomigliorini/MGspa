@@ -15,6 +15,14 @@ use Mg\Usuario\Usuario;
 
 class StonePreTransacao extends MgModel
 {
+
+    const TIPO_DEBITO = 1;
+    const TIPO_CREDITO = 2;
+    const TIPO_VOUCHER = 3;
+
+    const TIPO_PARCELAMENTO_SEM_JUROS = 1;
+    const TIPO_PARCELAMENTO_COM_JUROS = 2;
+
     protected $table = 'tblstonepretransacao';
     protected $primaryKey = 'codstonepretransacao';
 
