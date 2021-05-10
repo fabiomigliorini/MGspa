@@ -69,7 +69,7 @@ class StoneTransacaoService
         }
         $stoneTransacao->criacao = Carbon::parse($transaction['created_at']);
         $stoneTransacao->status = $transaction['transaction_status'];
-        if ($stoneTransacao->status = StoneTransacao::STATUS_CANCELADA && empyt($stoneTransacao->inativo)) {
+        if ($stoneTransacao->status == StoneTransacao::STATUS_CANCELADA && empyt($stoneTransacao->inativo)) {
             $stoneTransacao->inativo = Carbon::now();
         }
         $stoneTransacao->valor = $transaction['transaction_amount'];
