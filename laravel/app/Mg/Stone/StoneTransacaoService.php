@@ -69,7 +69,7 @@ class StoneTransacaoService
         }
         $stoneTransacao->criacao = Carbon::parse($transaction['created_at']);
         $stoneTransacao->status = $transaction['transaction_status'];
-        if ($stoneTransacao->status = StoneTransacao::STATUS_CANCELADA && empyt($stoneTransacao->inativo)) {
+        if ($stoneTransacao->status == StoneTransacao::STATUS_CANCELADA && empyt($stoneTransacao->inativo)) {
             $stoneTransacao->inativo = Carbon::now();
         }
         $stoneTransacao->valor = $transaction['transaction_amount'];
@@ -86,6 +86,17 @@ class StoneTransacaoService
         $stoneTransacao->tipo = $transaction['payment_type'];
         $stoneTransacao->conciliada = $transaction['conciliation'];
         $stoneTransacao->save();
+
+        foreach ($transaction['installments_detail'] as $installment) {
+            $stoneTransacaoParcela = StoneTransacaoParcela::firstOrNew([
+                'codstonetransacao' => $stoneTransacao->codstonetransacao,
+                'numero' => $installment['actual_installment']
+            ]);
+            $stoneTransacaoParcela->valor = $installment['gross_amount'];
+            $stoneTransacaoParcela->valorliquido = $installment['net_amount'];
+            $stoneTransacaoParcela->vencimento = $installment['prevision_liquidation_date'];
+            $stoneTransacaoParcela->save();
+        }
 
         if (empty($stonePreTransacao)) {
             return;
@@ -108,6 +119,7 @@ class StoneTransacaoService
         $negocioFormaPagamento->codformapagamento = $fp->codformapagamento;
         $negocioFormaPagamento->valorpagamento = $stoneTransacao->valor;
         $negocioFormaPagamento->save();
+
 
         $fechado = NegocioService::fecharSePago($stonePreTransacao->Negocio);
 

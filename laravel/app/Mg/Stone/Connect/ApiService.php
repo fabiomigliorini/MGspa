@@ -287,13 +287,15 @@ class ApiService
             $body["information_title"] = $information_title;
         }
         if (!empty($payment_type)) {
-            $body["payment"]["type"] = $payment_type;
+            $body["payment"]["type"] = intval($payment_type);
         }
         if (!empty($installment)) {
-            $body["payment"]["installment"] = $installment;
-        }
-        if (!empty($installment_type)) {
-            $body["payment"]["installment_type"] = $installment_type;
+            if ($installment >= 2) {
+                $body["payment"]["installment"] = intval($installment);
+                if (!empty($installment_type)) {
+                    $body["payment"]["installment_type"] = intval($installment_type);
+                }
+            }
         }
         $body = json_encode($body);
 
