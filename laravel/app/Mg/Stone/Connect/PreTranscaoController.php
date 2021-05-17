@@ -17,6 +17,7 @@ class PreTranscaoController extends MgController
     {
         $request->validate([
             'codstonefilial' => ['required', 'integer'],
+            'codstonepos' => ['integer', 'nullable'],
             'valor' => ['required', 'numeric'],
             'titulo' => ['string'],
             'codnegocio' => ['integer'],
@@ -29,6 +30,7 @@ class PreTranscaoController extends MgController
             $sf,
             $request->valor,
             $request->titulo??null,
+            $request->codstonepos??null,
             $request->codnegocio??null,
             $request->tipo??null,
             $request->parcelas??null,

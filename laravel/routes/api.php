@@ -58,6 +58,12 @@ Route::group(['prefix' => 'v1'], function () {
             Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
         });
 
+        // POS
+        Route::group(['prefix' => 'pos'], function () {
+            Route::post('', '\Mg\Stone\Connect\PosController@store');
+            Route::delete('{codstonepos}', '\Mg\Stone\Connect\PosController@destroy');
+        });
+
     });
 
     // Pix Cob

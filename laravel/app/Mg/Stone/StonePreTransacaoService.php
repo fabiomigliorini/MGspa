@@ -18,6 +18,7 @@ class StonePreTransacaoService
         StoneFilial $stoneFilial,
         $valor,
         $titulo = null,
+        $codstonepos = null,
         $codnegocio = null,
         $tipo = null,
         $parcelas = null,
@@ -26,12 +27,20 @@ class StonePreTransacaoService
     {
         $token = StoneFilialService::verificaTokenValido($stoneFilial);
 
+        // caso esteja apontando especificamente para uma maquineta (POS)
+        $pos_reference_id = null;
+        if (!empty($codstonepos)) {
+            $stonePos = StonePos::findOrFail($codstonepos);
+            $pos_reference_id = $stonePos->referenceid;
+        }
+
         // registra nova Pre Transacao na Stone
         $ret = ApiService::preTransactionCreate(
             $token,
             $stoneFilial->establishmentid,
             $valor,
             $titulo,
+            $pos_reference_id,
             $tipo,
             $parcelas,
             $tipoparcelamento
@@ -46,6 +55,7 @@ class StonePreTransacaoService
             'pretransactionid' => $ret['pre_transaction']['pre_transaction_id'],
             'valor' => $valor,
             'titulo' => $titulo,
+            'codstonepos' => $codstonepos,
             'codnegocio' => $codnegocio,
             'tipo' => $tipo,
             'parcelas' => $parcelas,
