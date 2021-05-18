@@ -116,8 +116,8 @@ export default {
       dialogPos: false,
       pos: {
         codstonefilial: null,
-        serialnumber: '6N028231',
-        apelido: 'Alfa'
+        serialnumber: null,
+        apelido: null
       },
     }
   },
