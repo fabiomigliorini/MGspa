@@ -280,8 +280,10 @@ class ApiService
         $installment_type = null)
     {
 
+        $amount = floatval($amount) * 100;
+        $amount = round($amount, 0);
         $body = [
-            "amount" => intval($amount*100),
+            "amount" => $amount,
             "establishment_id" => $establishment_id,
         ];
         if (!empty($pos_reference_id)) {
