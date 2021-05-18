@@ -33,7 +33,7 @@ export default {
       path: '/estoque-estatistica/100'
     },
     {
-      icon: 'payment',
+      icon: 'subtitles',
       title: 'Boletos',
       path: '/boleto'
     },
@@ -61,6 +61,11 @@ export default {
       icon: 'local_shipping',
       title: 'MDFe',
       path: '/mdfe'
+    },
+    {
+      icon: 'credit_card',
+      title: 'Stone Connect',
+      path: '/stone-connect'
     },
     /*
     {

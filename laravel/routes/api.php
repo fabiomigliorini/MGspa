@@ -34,36 +34,10 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
-    // Stone Connect
-    Route::group(['prefix' => 'stone-connect'], function () {
-
-        // Webooks
-        Route::group(['prefix' => 'webhook'], function () {
-            Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
-            Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
-            Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
-            Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
-        });
-
-        // Filial
-        Route::group(['prefix' => 'filial'], function () {
-            Route::post('', '\Mg\Stone\Connect\FilialController@store');
-            Route::get('{codstonefilial}', '\Mg\Stone\Connect\FilialController@show');
-            Route::get('{codstonefilial}/webhook', '\Mg\Stone\Connect\FilialController@showWebhook');
-        });
-
-        // Pre-Transacao
-        Route::group(['prefix' => 'pre-transacao'], function () {
-            Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');
-            Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
-        });
-
-        // POS
-        Route::group(['prefix' => 'pos'], function () {
-            Route::post('', '\Mg\Stone\Connect\PosController@store');
-            Route::delete('{codstonepos}', '\Mg\Stone\Connect\PosController@destroy');
-        });
-
+    // Pre-Transacao
+    Route::group(['prefix' => 'stone-connect/pre-transacao'], function () {
+        Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');
+        Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
     });
 
     // Pix Cob
@@ -131,6 +105,33 @@ Route::group(['prefix' => 'v1'], function () {
 
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
+
+        // Stone Connect
+        Route::group(['prefix' => 'stone-connect'], function () {
+
+            // Webooks
+            Route::group(['prefix' => 'webhook'], function () {
+                Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
+                Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
+                Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
+                Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
+            });
+
+            // Filial
+            Route::group(['prefix' => 'filial'], function () {
+                Route::post('', '\Mg\Stone\Connect\FilialController@store');
+                Route::get('', '\Mg\Stone\Connect\FilialController@index');
+                Route::get('{codstonefilial}', '\Mg\Stone\Connect\FilialController@show');
+                Route::get('{codstonefilial}/webhook', '\Mg\Stone\Connect\FilialController@showWebhook');
+            });
+
+            // POS
+            Route::group(['prefix' => 'pos'], function () {
+                Route::post('', '\Mg\Stone\Connect\PosController@store');
+                Route::delete('{codstonepos}', '\Mg\Stone\Connect\PosController@destroy');
+            });
+
+        });
 
         // MDFe
         Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');

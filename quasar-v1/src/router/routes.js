@@ -79,4 +79,7 @@ export default [
   { path: '/pedido/', component: () => import('components/views/pedido/Index') },
   { path: '/pedido/:id', component: () => import('components/views/pedido/View') },
 
+  // Stone Connect
+  { path: '/stone-connect/', component: () => import('components/views/stone-connect/Index') },
+
 ]

@@ -5,6 +5,7 @@ namespace Mg\Stone\Connect;
 use Illuminate\Http\Request;
 
 use Mg\Stone\StoneFilialService;
+use Mg\Stone\StoneFilialResource;
 use Mg\Stone\StoneFilial;
 
 use Mg\MgController;
@@ -20,7 +21,7 @@ class FilialController extends MgController
           'chaveprivada' => ['required', 'string'],
         ]);
         $stoneFilial = StoneFilialService::create($request->codfilial, $request->stonecode, $request->chaveprivada);
-        return $stoneFilial;
+        return new StoneFilialResource($stoneFilial);
     }
 
     public function show(Request $request, $codstonefilial)
@@ -28,7 +29,7 @@ class FilialController extends MgController
         $stoneFilial = StoneFilial::findOrFail($codstonefilial);
         StoneFilialService::sincroniza($stoneFilial);
         $stoneFilial->refresh();
-        return $stoneFilial;
+        return new StoneFilialResource($stoneFilial);
     }
 
     public function showWebhook(Request $request, $codstonefilial)
@@ -36,6 +37,12 @@ class FilialController extends MgController
         $stoneFilial = StoneFilial::findOrFail($codstonefilial);
         $weebhooks = StoneFilialService::consultaWebhook($stoneFilial);
         return $weebhooks;
+    }
+
+    public function index(Request $request)
+    {
+        $stoneFiliais = StoneFilial::orderBy('codfilial')->get();
+        return StoneFilialResource::collection($stoneFiliais);
     }
 
 }
