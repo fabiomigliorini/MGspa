@@ -74,7 +74,8 @@
         </q-card>
       </div>
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="add" color="primary" to="/mdfe/create"/>
+        <!-- <q-btn fab icon="add" color="primary" to="/mdfe/create"/> -->
+        <q-btn fab icon="add" color="primary"/>
       </q-page-sticky>
 
       <q-dialog v-model="dialogPos" persistent>
@@ -116,8 +117,8 @@ export default {
       dialogPos: false,
       pos: {
         codstonefilial: null,
-        serialnumber: '6N028231',
-        apelido: 'Alfa'
+        serialnumber: null,
+        apelido: null
       },
     }
   },
