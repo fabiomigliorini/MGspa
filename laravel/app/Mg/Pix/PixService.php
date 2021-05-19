@@ -190,7 +190,6 @@ class PixService
 
         $qrcode = GerenciaNetService::qrCode($cob->locationid);
         $imagem = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrcode['imagemQrcode']));
-        //file_put_contents("{$tmpfname}.png", $imagem);
 
         $html = view('pix/imprimir', ['cob' => $cob, 'qrcode' => $qrcode])->render();
         $dompdf = new Dompdf();
@@ -207,7 +206,7 @@ class PixService
         $tmpfname = tempnam(sys_get_temp_dir(), 'pixImpressaoQrCode') . '.pdf';
         file_put_contents($tmpfname, $pdf);
 
-        exec("lp \"{$tmpfname}\" -d $impressora");
+        exec("lp \"{$tmpfname}\" -d \"$impressora\"");
         unlink($tmpfname);
         return $pdf;
 
