@@ -124,10 +124,10 @@ class GerenciaNetService
 
         $ret = $cob->update([
             'location' => $dadosPix['location'],
+            'locationid' => $dadosPix['loc']['id']??null,
             'codpixcobstatus' => $status->codpixcobstatus
         ]);
 
-        $cob = $cob->fresh();
         return $cob;
     }
 
@@ -262,4 +262,40 @@ class GerenciaNetService
         // $cob = $cob->fresh();
         // return $cob;
     }
+
+    public static function qrCode($locationid)
+    {
+
+        // Busca informações do token de autenticação de acordo com suas credencias e certificado
+        $dadosToken = static::getAccessToken();
+        $tokenType = $dadosToken['token_type'];
+        $accessToken = $dadosToken['access_token'];
+
+        $pix_url_cob = env('PIX_GERENCIANET_URL_LOC') . '/' . $locationid . '/qrcode'; // Monta a url para a requisição que gera a cobrança
+
+        $curl = curl_init();
+        $opt = [
+            CURLOPT_URL => $pix_url_cob,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_SSLCERT => env('PIX_GERENCIANET_CERTIFICADO'),
+            CURLOPT_SSLCERTPASSWD => "",
+            CURLOPT_HTTPHEADER => [
+                "authorization: $tokenType $accessToken",
+                "Content-Type: application/json"
+            ],
+        ];
+        curl_setopt_array($curl, $opt);
+        $dadosPix = curl_exec($curl);
+        $dadosPix = json_decode($dadosPix, true);
+        curl_close($curl);
+        static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
+        return $dadosPix;
+    }
+
 }

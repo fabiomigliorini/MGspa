@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use Mg\Negocio\Negocio;
 use Mg\Portador\Portador;
+use Mg\Pix\GerenciaNet\GerenciaNetService;
 
 class PixController
 {
@@ -28,7 +29,15 @@ class PixController
     {
         $cob = PixCob::findOrFail($codpixcob);
         PixService::consultarPixCob($cob);
-        return new PixCobResource($cob);
+        $ret = new PixCobResource($cob);
+        $ret['qrcode'] = null;
+        $ret['qrcodeimagem'] = null;
+        if (!empty($cob->locationid)) {
+            $qrcode = GerenciaNetService::qrCode($cob->locationid);
+            $ret['qrcode'] = $qrcode['qrcode'];
+            $ret['qrcodeimagem'] = $qrcode['imagemQrcode'];
+        }
+        return $ret;
     }
 
     public function brCodePixCob (Request $request, $codpixcob)
@@ -54,7 +63,15 @@ class PixController
     public function detalhes (Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
-        return new PixCobResource($cob);
+        $ret = new PixCobResource($cob);
+        $ret['qrcode'] = null;
+        $ret['qrcodeimagem'] = null;
+        if (!empty($cob->locationid)) {
+            $qrcode = GerenciaNetService::qrCode($cob->locationid);
+            $ret['qrcode'] = $qrcode['qrcode'];
+            $ret['qrcodeimagem'] = $qrcode['imagemQrcode'];
+        }
+        return $ret;
     }
 
 

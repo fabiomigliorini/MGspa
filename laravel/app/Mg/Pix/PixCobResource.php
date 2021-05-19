@@ -16,7 +16,6 @@ class PixCobResource extends Resource
     {
         $ret = parent::toArray($request);
         $ret['status'] = $this->PixCobStatus->pixcobstatus;
-        $ret['brcode'] = BrCodeService::montar($this);
         $ret['pessoa'] = null;
         if (!empty($this->codnegocio)) {
             if ($this->Negocio->codpessoa != 1) {
