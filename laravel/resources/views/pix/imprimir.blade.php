@@ -7,6 +7,8 @@
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif">
 
+    <img src="{{ 'data://text/plain;base64,'. base64_encode(file_get_contents(public_path('MGPapelariaLogo.jpeg'))) }}" style="width: 100%" />
+
     @if (!empty($cob->codnegocio))
     <h3 style="text-align:center; margin-bottom: 5px">
         Negócio #{{ str_pad($cob->codnegocio, 8, '0', STR_PAD_LEFT) }} <br />
