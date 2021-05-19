@@ -34,6 +34,8 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');
+
     // Pre-Transacao
     Route::group(['prefix' => 'stone-connect/pre-transacao'], function () {
         Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');

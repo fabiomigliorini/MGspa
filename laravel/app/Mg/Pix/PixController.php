@@ -51,5 +51,11 @@ class PixController
         return PixResource::collection($pixRecebidos);
     }
 
+    public function detalhes (Request $request, $codpixcob)
+    {
+        $cob = PixCob::findOrFail($codpixcob);
+        return new PixCobResource($cob);
+    }
+
 
 }
