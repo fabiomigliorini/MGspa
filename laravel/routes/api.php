@@ -48,6 +48,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('pix/cob/{codpixcob}/consultar', '\Mg\Pix\PixController@consultarPixCob');
     Route::get('pix/cob/{codpixcob}/brcode', '\Mg\Pix\PixController@brCodePixCob');
     Route::get('pix/cob/{codpixcob}', '\Mg\Pix\PixController@show');
+    Route::post('pix/cob/{codpixcob}/imprimir-qr-code', '\Mg\Pix\PixController@imprimirQrCode');
 
     // Pix
     Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPix');

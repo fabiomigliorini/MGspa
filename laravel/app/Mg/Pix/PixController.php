@@ -74,5 +74,17 @@ class PixController
         return $ret;
     }
 
+    public function imprimirQrCode (Request $request, $codpixcob)
+    {
+        $request->validate([
+            'impressora' => ['required', 'string']
+        ]);
+        $cob = PixCob::findOrFail($codpixcob);
+        $pdf = PixService::imprimirQrCode($cob, $request->impressora);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="PixCob'.$codpixcob.'.pdf"'
+        ]);
+    }
 
 }

@@ -4,6 +4,8 @@ namespace Mg\Pix;
 
 use Carbon\Carbon;
 
+use Dompdf\Dompdf;
+
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
@@ -160,7 +162,7 @@ class PixService
         if (!$fp->exists) {
             $fp->formapagamento = 'PIX';
             $fp->avista = true;
-            $fp->integracao = true;            
+            $fp->integracao = true;
             $fp->save();
         }
         $nfp->codformapagamento = $fp->codformapagamento;
@@ -178,6 +180,37 @@ class PixService
             return $pixRecebidos;
         }
         throw new \Exception("Sem integração definida para o Banco {$portador->Banco->numerobanco}!", 1);
+    }
+
+    public static function imprimirQrCode(PixCob $cob, $impressora)
+    {
+        if (empty($cob->locationid)) {
+            return;
+        }
+
+        $qrcode = GerenciaNetService::qrCode($cob->locationid);
+        $imagem = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrcode['imagemQrcode']));
+        //file_put_contents("{$tmpfname}.png", $imagem);
+
+        $html = view('pix/imprimir', ['cob' => $cob, 'qrcode' => $qrcode])->render();
+        $dompdf = new Dompdf();
+
+        $options = $dompdf->getOptions();
+        $options->setDefaultFont('helvetica');
+        $dompdf->setOptions($options);
+
+        $dompdf->loadHtml($html);
+        $dompdf->set_paper(array(0,0,204,650));
+        // $dompdf->set_option('dpi', 72);
+        $dompdf->render();
+        $pdf = $dompdf->output();
+        $tmpfname = tempnam(sys_get_temp_dir(), 'pixImpressaoQrCode') . '.pdf';
+        file_put_contents($tmpfname, $pdf);
+
+        exec("lp \"{$tmpfname}\" -d $impressora");
+        unlink($tmpfname);
+        return $pdf;
+
     }
 
 }
