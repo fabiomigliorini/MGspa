@@ -109,6 +109,10 @@ Route::group(['prefix' => 'v1'], function () {
 Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
+        Route::group(['prefix' => 'produto'], function () {
+            Route::get('{codproduto}', '\Mg\Produto\ProdutoController@show');
+        });
+
         // Stone Connect
         Route::group(['prefix' => 'stone-connect'], function () {
 

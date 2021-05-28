@@ -21,6 +21,9 @@ export default [
   { path: '/mdfe/:codmdfe', component: () => import('components/views/mdfe/View') },
   { path: '/mdfe/:codmdfe/edit', component: () => import('components/views/mdfe/Edit') },
 
+  // Produto
+  { path: '/produto/:codproduto', component: () => import('components/views/produto/View') },
+
   // Etiquetas
   { path: '/etiqueta', component: () => import('components/views/etiqueta/Index') },
 

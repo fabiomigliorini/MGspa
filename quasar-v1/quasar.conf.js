@@ -88,6 +88,8 @@ module.exports = function (ctx) {
         'QForm',
         'QAjaxBar',
         'QSplitter',
+        'QCarousel',
+        'QCarouselSlide',
       ],
       config: {
         notify: { /* Notify defaults */ }
