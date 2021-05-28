@@ -1,29 +1,29 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:17:21
+ * Date: 28/May/2021 15:19:40
  */
 
 namespace Mg\NaturezaOperacao;
 
 use Mg\MgModel;
-use Mg\Produto\Produto;
-use Mg\Ncm\Ncm;
+use Mg\NaturezaOperacao\Ncm;
 use Mg\Usuario\Usuario;
 
-class Cest extends MgModel
+class RegulamentoIcmsStMt extends MgModel
 {
-    protected $table = 'tblcest';
-    protected $primaryKey = 'codcest';
+    protected $table = 'tblregulamentoicmsstmt';
+    protected $primaryKey = 'codregulamentoicmsstmt';
 
 
     protected $fillable = [
-        'cest',
-        'coddecreto271',
         'codncm',
         'descricao',
-        'mva',
-        'ncm'
+        'icmsstnorte',
+        'icmsstsul',
+        'ncm',
+        'ncmexceto',
+        'subitem'
     ];
 
     protected $dates = [
@@ -32,12 +32,12 @@ class Cest extends MgModel
     ];
 
     protected $casts = [
-        'codcest' => 'integer',
-        'coddecreto271' => 'integer',
         'codncm' => 'integer',
+        'codregulamentoicmsstmt' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'mva' => 'float'
+        'icmsstnorte' => 'float',
+        'icmsstsul' => 'float'
     ];
 
 
@@ -55,13 +55,6 @@ class Cest extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-
-    // Tabelas Filhas
-    public function ProdutoS()
-    {
-        return $this->hasMany(Produto::class, 'codcest', 'codcest');
     }
 
 }

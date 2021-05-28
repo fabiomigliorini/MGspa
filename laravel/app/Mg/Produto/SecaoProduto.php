@@ -1,26 +1,27 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:31:47
+ * Date: 28/May/2021 15:21:38
  */
 
 namespace Mg\Produto;
 
 use Mg\MgModel;
-use Mg\Produto\Produto;
-use Mg\Produto\ProdutoEmbalagem;
+use Mg\Produto\FamiliaProduto;
+use Mg\Imagem\Imagem;
 use Mg\Usuario\Usuario;
 
-class UnidadeMedida extends MgModel
+class SecaoProduto extends MgModel
 {
-    protected $table = 'tblunidademedida';
-    protected $primaryKey = 'codunidademedida';
+    protected $table = 'tblsecaoproduto';
+    protected $primaryKey = 'codsecaoproduto';
 
 
     protected $fillable = [
+        'codimagem',
+        'codopencart',
         'inativo',
-        'sigla',
-        'unidademedida'
+        'secaoproduto'
     ];
 
     protected $dates = [
@@ -30,13 +31,20 @@ class UnidadeMedida extends MgModel
     ];
 
     protected $casts = [
-        'codunidademedida' => 'integer',
+        'codimagem' => 'integer',
+        'codopencart' => 'integer',
+        'codsecaoproduto' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
     ];
 
 
     // Chaves Estrangeiras
+    public function Imagem()
+    {
+        return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -49,14 +57,9 @@ class UnidadeMedida extends MgModel
 
 
     // Tabelas Filhas
-    public function ProdutoS()
+    public function FamiliaProdutoS()
     {
-        return $this->hasMany(Produto::class, 'codunidademedida', 'codunidademedida');
-    }
-
-    public function ProdutoEmbalagemS()
-    {
-        return $this->hasMany(ProdutoEmbalagem::class, 'codunidademedida', 'codunidademedida');
+        return $this->hasMany(FamiliaProduto::class, 'codsecaoproduto', 'codsecaoproduto');
     }
 
 }

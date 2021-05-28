@@ -1,26 +1,25 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:31:47
+ * Date: 28/May/2021 15:22:48
  */
 
-namespace Mg\Produto;
+namespace Mg\Prancheta;
 
 use Mg\MgModel;
-use Mg\Produto\Produto;
-use Mg\Produto\ProdutoEmbalagem;
+use Mg\Prancheta\PranchetaProduto;
 use Mg\Usuario\Usuario;
 
-class UnidadeMedida extends MgModel
+class Prancheta extends MgModel
 {
-    protected $table = 'tblunidademedida';
-    protected $primaryKey = 'codunidademedida';
+    protected $table = 'tblprancheta';
+    protected $primaryKey = 'codprancheta';
 
 
     protected $fillable = [
         'inativo',
-        'sigla',
-        'unidademedida'
+        'observacoes',
+        'prancheta'
     ];
 
     protected $dates = [
@@ -30,7 +29,7 @@ class UnidadeMedida extends MgModel
     ];
 
     protected $casts = [
-        'codunidademedida' => 'integer',
+        'codprancheta' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
     ];
@@ -49,14 +48,9 @@ class UnidadeMedida extends MgModel
 
 
     // Tabelas Filhas
-    public function ProdutoS()
+    public function PranchetaProdutoS()
     {
-        return $this->hasMany(Produto::class, 'codunidademedida', 'codunidademedida');
-    }
-
-    public function ProdutoEmbalagemS()
-    {
-        return $this->hasMany(ProdutoEmbalagem::class, 'codunidademedida', 'codunidademedida');
+        return $this->hasMany(PranchetaProduto::class, 'codprancheta', 'codprancheta');
     }
 
 }

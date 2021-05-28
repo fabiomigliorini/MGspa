@@ -1,102 +1,98 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 28/May/2021 15:31:57
+ */
 
 namespace Mg\Produto;
 
 use Mg\MgModel;
+use Mg\Prancheta\PranchetaProduto;
+use Mg\Produto\ProdutoBarra;
+use Mg\Produto\ProdutoEmbalagem;
+use Mg\Produto\ProdutoHistoricoPreco;
+use Mg\Produto\ProdutoImagem;
+use Mg\Produto\ProdutoVariacao;
+use Mg\NaturezaOperacao\Cest;
 use Mg\Marca\Marca;
 use Mg\NaturezaOperacao\Ncm;
-use Mg\NaturezaOperacao\Cest;
+use Mg\Produto\SubGrupoProduto;
+use Mg\Produto\TipoProduto;
+use Mg\NaturezaOperacao\Tributacao;
+use Mg\Produto\UnidadeMedida;
+use Mg\Usuario\Usuario;
 
-/**
- * Campos
- * @property  bigint                         $codproduto                         NOT NULL DEFAULT nextval('tblproduto_codproduto_seq'::regclass)
- * @property  varchar(100)                   $produto                            NOT NULL
- * @property  varchar(50)                    $referencia
- * @property  bigint                         $codunidademedida                   NOT NULL
- * @property  bigint                         $codsubgrupoproduto                 NOT NULL
- * @property  bigint                         $codmarca                           NOT NULL
- * @property  numeric(14,2)                  $preco
- * @property  boolean                        $importado                          NOT NULL DEFAULT false
- * @property  bigint                         $codtributacao                      NOT NULL
- * @property  date                           $inativo
- * @property  bigint                         $codtipoproduto                     NOT NULL
- * @property  boolean                        $site                               NOT NULL DEFAULT false
- * @property  text                           $descricaosite
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  bigint                         $codncm
- * @property  bigint                         $codcest
- * @property  varchar(255)                   $observacoes
- * @property  bigint                         $codopencart
- * @property  bigint                         $codopencartvariacao
- * @property  numeric(7,4)                   $peso
- * @property  numeric(8,2)                   $altura
- * @property  numeric(8,2)                   $largura
- * @property  numeric(8,2)                   $profundidade
- * @property  boolean                        $vendesite                          NOT NULL DEFAULT false
- * @property  varchar(200)                   $metakeywordsite
- * @property  text                           $metadescriptionsite
- * @property  bigint                         $codprodutoimagem
- *
- * Chaves Estrangeiras
- * @property  Cest                           $Cest
- * @property  Ncm                            $Ncm
- * @property  Marca                          $Marca
- * @property  SubGrupoProduto                $SubGrupoProduto
- * @property  TipoProduto                    $TipoProduto
- * @property  Tributacao                     $Tributacao
- * @property  UnidadeMedida                  $UnidadeMedida
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- * @property  ProdutoImagem                  $ProdutoImagem
- *
- * Tabelas Filhas
- * @property  PranchetaProduto[]             $PranchetaProdutoS
- * @property  ProdutoImagem[]                $ProdutoImagemS
- * @property  ProdutoVariacao[]              $ProdutoVariacaoS
- * @property  ProdutoBarra[]                 $ProdutoBarraS
- * @property  ProdutoEmbalagem[]             $ProdutoEmbalagemS
- * @property  ProdutoHistoricoPreco[]        $ProdutoHistoricoPrecoS
- *
- * Relacionamentos N x N
- * @property  Imagem[]                       $ImagemS
- */
 class Produto extends MgModel
 {
     protected $table = 'tblproduto';
     protected $primaryKey = 'codproduto';
+
+
     protected $fillable = [
-        'produto',
-        'referencia',
-        'codunidademedida',
-        'codsubgrupoproduto',
-        'codmarca',
-        'preco',
-        'importado',
-        'codtributacao',
-        'codtipoproduto',
-        'site',
-        'descricaosite',
-        'codncm',
+        'abc',
+        'abccategoria',
+        'abcignorar',
+        'abcposicao',
+        'altura',
         'codcest',
-        'observacoes',
+        'codcestanterior',
+        'codmarca',
+        'codncm',
         'codopencart',
         'codopencartvariacao',
-        'peso',
-        'altura',
-        'largura',
-        'profundidade',
-        'vendesite',
-        'metakeywordsite',
-        'metadescriptionsite',
         'codprodutoimagem',
-    ];
-    protected $dates = [
+        'codsubgrupoproduto',
+        'codtipoproduto',
+        'codtributacao',
+        'codunidademedida',
+        'descricaosite',
+        'importado',
         'inativo',
+        'largura',
+        'metadescriptionsite',
+        'metakeywordsite',
+        'observacoes',
+        'peso',
+        'preco',
+        'produto',
+        'profundidade',
+        'referencia',
+        'site',
+        'vendesite'
+    ];
+
+    protected $dates = [
         'alteracao',
         'criacao',
+        'inativo'
+    ];
+
+    protected $casts = [
+        'abccategoria' => 'integer',
+        'abcignorar' => 'boolean',
+        'abcposicao' => 'integer',
+        'altura' => 'float',
+        'codcest' => 'integer',
+        'codcestanterior' => 'integer',
+        'codmarca' => 'integer',
+        'codncm' => 'integer',
+        'codopencart' => 'integer',
+        'codopencartvariacao' => 'integer',
+        'codproduto' => 'integer',
+        'codprodutoimagem' => 'integer',
+        'codsubgrupoproduto' => 'integer',
+        'codtipoproduto' => 'integer',
+        'codtributacao' => 'integer',
+        'codunidademedida' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'importado' => 'boolean',
+        'largura' => 'float',
+        'peso' => 'float',
+        'preco' => 'float',
+        'profundidade' => 'float',
+        'site' => 'boolean',
+        'vendesite' => 'boolean'
     ];
 
 
@@ -106,14 +102,19 @@ class Produto extends MgModel
         return $this->belongsTo(Cest::class, 'codcest', 'codcest');
     }
 
+    public function Marca()
+    {
+        return $this->belongsTo(Marca::class, 'codmarca', 'codmarca');
+    }
+
     public function Ncm()
     {
         return $this->belongsTo(Ncm::class, 'codncm', 'codncm');
     }
 
-    public function Marca()
+    public function ProdutoImagem()
     {
-        return $this->belongsTo(Marca::class, 'codmarca', 'codmarca');
+        return $this->belongsTo(ProdutoImagem::class, 'codprodutoimagem', 'codprodutoimagem');
     }
 
     public function SubGrupoProduto()
@@ -146,26 +147,11 @@ class Produto extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
-    public function ProdutoImagem()
-    {
-        return $this->belongsTo(ProdutoImagem::class, 'codprodutoimagem', 'codprodutoimagem');
-    }
-
 
     // Tabelas Filhas
     public function PranchetaProdutoS()
     {
         return $this->hasMany(PranchetaProduto::class, 'codproduto', 'codproduto');
-    }
-
-    public function ProdutoImagemS()
-    {
-        return $this->hasMany(ProdutoImagem::class, 'codproduto', 'codproduto');
-    }
-
-    public function ProdutoVariacaoS()
-    {
-        return $this->hasMany(ProdutoVariacao::class, 'codproduto', 'codproduto');
     }
 
     public function ProdutoBarraS()
@@ -183,12 +169,14 @@ class Produto extends MgModel
         return $this->hasMany(ProdutoHistoricoPreco::class, 'codproduto', 'codproduto');
     }
 
-
-    // Relacionamento N x N
-    public function ImagemS()
+    public function ProdutoImagemS()
     {
-        return $this->belongsToMany(Imagem::class, 'tblprodutoimagem', 'codproduto', 'codimagem');
+        return $this->hasMany(ProdutoImagem::class, 'codproduto', 'codproduto');
     }
 
+    public function ProdutoVariacaoS()
+    {
+        return $this->hasMany(ProdutoVariacao::class, 'codproduto', 'codproduto');
+    }
 
 }

@@ -1,106 +1,61 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 28/May/2021 15:34:49
+ */
 
 namespace Mg\Produto;
 
-/**
- * Campos
- * @property  bigint                         $codprodutobarra                    NOT NULL DEFAULT nextval('tblprodutobarra_codprodutobarra_seq'::regclass)
- * @property  bigint                         $codproduto                         NOT NULL
- * @property  varchar(100)                   $variacao
- * @property  varchar(50)                    $barras                             NOT NULL
- * @property  varchar(50)                    $referencia
- * @property  bigint                         $codmarca
- * @property  bigint                         $codprodutoembalagem
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  bigint                         $codprodutovariacao                 NOT NULL
- *
- * Chaves Estrangeiras
- * @property  ProdutoVariacao                $ProdutoVariacao
- * @property  Marca                          $Marca
- * @property  Produto                        $Produto
- * @property  ProdutoEmbalagem               $ProdutoEmbalagem
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  ValeCompraModeloProdutoBarra[] $ValeCompraModeloProdutoBarraS
- * @property  ValeCompraProdutoBarra[]       $ValeCompraProdutoBarraS
- * @property  CupomFiscalProdutoBarra[]      $CupomFiscalProdutoBarraS
- * @property  NegocioProdutoBarra[]          $NegocioProdutoBarraS
- * @property  NfeTerceiroItem[]              $NfeTerceiroItemS
- * @property  NotaFiscalProdutoBarra[]       $NotaFiscalProdutoBarraS
- */
- use Mg\MgModel;
+use Mg\MgModel;
+use Mg\CupomFiscal\CupomFiscalProdutoBarra;
+use Mg\Negocio\NegocioProdutoBarra;
+use Mg\NfeTerceiro\NfeTerceiroItem;
+use Mg\NotaFiscal\NotaFiscalProdutoBarra;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroProdutoBarra;
+use Mg\ValeCompra\ValeCompraModeloProdutoBarra;
+use Mg\ValeCompra\ValeCompraProdutoBarra;
+use Mg\Marca\Marca;
+use Mg\Produto\Produto;
+use Mg\Produto\ProdutoEmbalagem;
+use Mg\Produto\ProdutoVariacao;
+use Mg\Usuario\Usuario;
 
 class ProdutoBarra extends MgModel
 {
     protected $table = 'tblprodutobarra';
     protected $primaryKey = 'codprodutobarra';
+
+
     protected $fillable = [
-        'codproduto',
-        'variacao',
         'barras',
-        'referencia',
         'codmarca',
+        'codproduto',
         'codprodutoembalagem',
         'codprodutovariacao',
+        'referencia',
+        'variacao'
     ];
+
     protected $dates = [
         'alteracao',
-        'criacao',
+        'criacao'
     ];
 
-    // Atributo descricao
-    public function getDescricaoAttribute()
-    {
-        $descr = "{$this->Produto->produto} {$this->ProdutoVariacao->variacao}";
-        if ($this->codprodutoembalagem) {
-            $quant = formataNumero($this->ProdutoEmbalagem->quantidade, 0);
-            $descr = "{$descr} C/{$quant}";
-        }
-        return trim($descr);
-    }
-
-    /*
-    // Atributo referencia
-    public function getReferenciaAttribute()
-    {
-        if (!empty($this->referencia)) {
-            return $this->referencia;
-        }
-        if (!empty($this->ProdutoVariacao->referencia)) {
-            return $this->ProdutoVariacao->referencia;
-        }
-
-        return $this->Produto->referencia;
-    }
-
-    // Atributo preco
-    public function getPrecoAttribute()
-    {
-        if (!empty($this->codprodutoembalagem)) {
-            if (empty($this->ProdutoEmbalagem->preco)) {
-                return $this->ProdutoEmbalagem->quantidade * $this->produto->preco;
-            }
-            return (float) $this->ProdutoEmbalagem->preco;
-        }
-        return (float) $this->Produto->preco;
-    }
-    */
+    protected $casts = [
+        'codmarca' => 'integer',
+        'codproduto' => 'integer',
+        'codprodutobarra' => 'integer',
+        'codprodutoembalagem' => 'integer',
+        'codprodutovariacao' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer'
+    ];
 
     // Chaves Estrangeiras
-    public function ProdutoVariacao()
+    public function Marca()
     {
-        return $this->belongsTo(ProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
+        return $this->belongsTo(Marca::class, 'codmarca', 'codmarca');
     }
-
-//    public function Marca()
-//    {
-//        return $this->belongsTo(Marca::class, 'codmarca', 'codmarca');
-//    }
 
     public function Produto()
     {
@@ -110,6 +65,11 @@ class ProdutoBarra extends MgModel
     public function ProdutoEmbalagem()
     {
         return $this->belongsTo(ProdutoEmbalagem::class, 'codprodutoembalagem', 'codprodutoembalagem');
+    }
+
+    public function ProdutoVariacao()
+    {
+        return $this->belongsTo(ProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
     }
 
     public function UsuarioAlteracao()
@@ -124,16 +84,6 @@ class ProdutoBarra extends MgModel
 
 
     // Tabelas Filhas
-    public function ValeCompraModeloProdutoBarraS()
-    {
-        return $this->hasMany(ValeCompraModeloProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
-    }
-
-    public function ValeCompraProdutoBarraS()
-    {
-        return $this->hasMany(ValeCompraProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
-    }
-
     public function CupomFiscalProdutoBarraS()
     {
         return $this->hasMany(CupomFiscalProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
@@ -154,29 +104,19 @@ class ProdutoBarra extends MgModel
         return $this->hasMany(NotaFiscalProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
-    public function UnidadeMedida()
+    public function NotaFiscalTerceiroProdutoBarraS()
     {
-        if (!empty($this->codprodutoembalagem)) {
-            return $this->ProdutoEmbalagem->UnidadeMedida();
-        }
-        return $this->Produto->UnidadeMedida();
+        return $this->hasMany(NotaFiscalTerceiroProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
-    public function Marca()
+    public function ValeCompraModeloProdutoBarraS()
     {
-        if (!empty($this->ProdutoVariacao->codmarca)) {
-            return $this->ProdutoVariacao->Marca();
-        }
-        return $this->Produto->Marca();
+        return $this->hasMany(ValeCompraModeloProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
-    // Campos calculados
-    public function getPrecoProntoAttribute()
+    public function ValeCompraProdutoBarraS()
     {
-        if (!empty($this->codprodutoembalagem)) {
-            return $this->ProdutoEmbalagem->precopronto;
-        }
-        return $this->Produto->preco;
+        return $this->hasMany(ValeCompraProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
 }

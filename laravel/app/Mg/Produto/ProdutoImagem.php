@@ -1,66 +1,76 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 28/May/2021 15:03:14
+ */
 
 namespace Mg\Produto;
 
-/**
- * Campos
- * @property  bigint                         $codprodutoimagem                   NOT NULL DEFAULT nextval('tblprodutoimagem_codprodutoimagem_seq'::regclass)
- * @property  bigint                         $codproduto                         NOT NULL
- * @property  bigint                         $codimagem                          NOT NULL
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  integer                        $ordem                              NOT NULL DEFAULT 1
- *
- * Chaves Estrangeiras
- * @property  Produto                        $Produto
- * @property  Imagem                         $Imagem
- *
- * Tabelas Filhas
- * @property  ProdutoEmbalagem[]             $ProdutoEmbalagemS
- * @property  Produto[]                      $ProdutoS
- * @property  ProdutoVariacao[]              $ProdutoVariacaoS
- */
- use Mg\MgModel;
- use Mg\Imagem\Imagem;
+use Mg\MgModel;
+use Mg\Produto\Produto;
+use Mg\Produto\ProdutoEmbalagem;
+use Mg\Produto\ProdutoVariacao;
+use Mg\Imagem\Imagem;
+use Mg\Usuario\Usuario;
 
 class ProdutoImagem extends MgModel
 {
     protected $table = 'tblprodutoimagem';
     protected $primaryKey = 'codprodutoimagem';
+
+
     protected $fillable = [
-        'codproduto',
         'codimagem',
-        'ordem',
+        'codproduto',
+        'ordem'
     ];
+
     protected $dates = [
-        'criacao',
         'alteracao',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'codimagem' => 'integer',
+        'codproduto' => 'integer',
+        'codprodutoimagem' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'ordem' => 'integer'
     ];
 
 
     // Chaves Estrangeiras
-    public function Produto()
-    {
-        return $this->belongsTo(Produto::class, 'codproduto', 'codproduto');
-    }
-
     public function Imagem()
     {
         return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
     }
 
-
-    // Tabelas Filhas
-    public function ProdutoEmbalagemS()
+    public function Produto()
     {
-        return $this->hasMany(ProdutoEmbalagem::class, 'codprodutoimagem', 'codprodutoimagem');
+        return $this->belongsTo(Produto::class, 'codproduto', 'codproduto');
     }
 
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
     public function ProdutoS()
     {
         return $this->hasMany(Produto::class, 'codprodutoimagem', 'codprodutoimagem');
+    }
+
+    public function ProdutoEmbalagemS()
+    {
+        return $this->hasMany(ProdutoEmbalagem::class, 'codprodutoimagem', 'codprodutoimagem');
     }
 
     public function ProdutoVariacaoS()

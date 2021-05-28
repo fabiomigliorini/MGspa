@@ -1,78 +1,86 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 28/May/2021 15:27:32
+ */
 
 namespace Mg\Marca;
 
-/**
- * Campos
- * @property  bigint                         $codmarca                           NOT NULL DEFAULT nextval('tblmarca_codmarca_seq'::regclass)
- * @property  varchar(50)                    $marca
- * @property  boolean                        $site                               NOT NULL DEFAULT false
- * @property  varchar(1024)                  $descricaosite
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  timestamp                      $inativo
- * @property  bigint                         $codimagem
- * @property  bigint                         $codopencart
- * @property  smallint                       $abccategoria                       NOT NULL DEFAULT 4
- * @property  bigint                         $abcposicao
- * @property  numeric(14,2)                  $vendaanovalor
- * @property  numeric(14,2)                  $vendabimestrevalor
- * @property  numeric(14,2)                  $vendasemestrevalor
- * @property  date                           $dataultimacompra
- * @property  smallint                       $itensabaixominimo
- * @property  smallint                       $itensacimamaximo
- * @property  smallint                       $estoqueminimodias                  NOT NULL DEFAULT 15
- * @property  smallint                       $estoquemaximodias                  NOT NULL DEFAULT 30
- * @property  boolean                        $abcignorar                         NOT NULL DEFAULT false
- * @property  numeric(5,2)                   $vendaanopercentual
- *
- * Chaves Estrangeiras
- * @property  Imagem                         $Imagem
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  ProdutoVariacao[]              $ProdutoVariacaoS
- * @property  ProdutoBarra[]                 $ProdutoBarraS
- * @property  Produto[]                      $ProdutoS
- */
 use Mg\MgModel;
 use Mg\Produto\Produto;
+use Mg\Produto\ProdutoBarra;
+use Mg\Produto\ProdutoVariacao;
+use Mg\GrupoEconomico\GrupoEconomico;
 use Mg\Imagem\Imagem;
+use Mg\Usuario\Usuario;
 
-class Marca extends MGModel
+class Marca extends MgModel
 {
     protected $table = 'tblmarca';
     protected $primaryKey = 'codmarca';
+
+
     protected $fillable = [
-        'marca',
-        'site',
-        'descricaosite',
+        'abccategoria',
+        'abcignorar',
+        'abcposicao',
+        'codgrupoeconomico',
         'codimagem',
         'codopencart',
-        'abccategoria',
-        'abcposicao',
+        'controlada',
+        'dataultimacompra',
+        'descricaosite',
+        'estoquemaximodias',
+        'estoqueminimodias',
+        'inativo',
+        'itensabaixominimo',
+        'itensacimamaximo',
+        'marca',
+        'site',
+        'vendaanopercentual',
         'vendaanovalor',
         'vendabimestrevalor',
         'vendasemestrevalor',
-        'dataultimacompra',
-        'itensabaixominimo',
-        'itensacimamaximo',
-        'estoqueminimodias',
-        'estoquemaximodias',
-        'abcignorar',
-        'vendaanopercentual',
+        'vendaultimocalculo'
     ];
+
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo',
         'dataultimacompra',
+        'inativo',
+        'vendaultimocalculo'
     ];
 
+    protected $casts = [
+        'abccategoria' => 'integer',
+        'abcignorar' => 'boolean',
+        'abcposicao' => 'integer',
+        'codgrupoeconomico' => 'integer',
+        'codimagem' => 'integer',
+        'codmarca' => 'integer',
+        'codopencart' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'controlada' => 'boolean',
+        'estoquemaximodias' => 'integer',
+        'estoqueminimodias' => 'integer',
+        'itensabaixominimo' => 'integer',
+        'itensacimamaximo' => 'integer',
+        'site' => 'boolean',
+        'vendaanopercentual' => 'float',
+        'vendaanovalor' => 'float',
+        'vendabimestrevalor' => 'float',
+        'vendasemestrevalor' => 'float'
+    ];
+
+
     // Chaves Estrangeiras
+    public function GrupoEconomico()
+    {
+        return $this->belongsTo(GrupoEconomico::class, 'codgrupoeconomico', 'codgrupoeconomico');
+    }
+
     public function Imagem()
     {
         return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
@@ -88,10 +96,11 @@ class Marca extends MGModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
     // Tabelas Filhas
-    public function ProdutoVariacaoS()
+    public function ProdutoS()
     {
-        return $this->hasMany(ProdutoVariacao::class, 'codmarca', 'codmarca');
+        return $this->hasMany(Produto::class, 'codmarca', 'codmarca');
     }
 
     public function ProdutoBarraS()
@@ -99,10 +108,9 @@ class Marca extends MGModel
         return $this->hasMany(ProdutoBarra::class, 'codmarca', 'codmarca');
     }
 
-    public function ProdutoS()
+    public function ProdutoVariacaoS()
     {
-        return $this->hasMany(Produto::class, 'codmarca', 'codmarca');
+        return $this->hasMany(ProdutoVariacao::class, 'codmarca', 'codmarca');
     }
-
 
 }
