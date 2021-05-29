@@ -8,15 +8,79 @@
 
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
-      <div class="q-pa-sm">
+      <div class="q-pa-sm row">
+        <div class="col-4 q-pa-sm" v-for="i in (1, 2, 3, 4, 5)">
+          <q-card class="my-card">
+            <q-img v-if="produto.url" :src="produto.url" :ratio="1" />
+            <q-img v-else src="~assets/dummy.png" :ratio="1" />
+
+            <q-card-section :class="bgCor" class="q-pa-sm">
+              <q-btn
+                fab
+                :color="abcCor"
+                icon="star"
+                class="absolute"
+                style="top: 0; right: 12px; transform: translateY(-50%);"
+              >
+                {{produto.abc}}
+              </q-btn>
+
+              <div class="row no-wrap items-center">
+                <div class="col text-h6">
+                  {{produto.produto}}
+                </div>
+                <div class="col-auto text-grey text-caption q-pt-md row no-wrap items-center">
+                  <q-icon name="tag" />
+                  {{ numeral(parseFloat(codproduto)).format('000000') }}
+                </div>
+              </div>
+              <div v-if="produto.observacoes" class="col-12 text-caption text-grey" style="white-space: pre; word-wrap: break-word;">{{produto.observacoes}}</div>
+            </q-card-section>
+
+            <q-card-section class="q-pa-sm">
+              <div class="text-subtitle1">
+                <q-icon name="bookmark"/>
+                {{produto.referencia}}
+                ・
+                {{produto.marca}}
+              </div>
+            </q-card-section>
+
+            <q-separator />
+
+            <q-card-section class="q-pa-sm">
+              <div class="text-caption text-grey">
+                {{produto.secaoproduto}}
+                ・
+                {{produto.familiaproduto}}
+                ・
+                {{produto.grupoproduto}}
+                ・
+                {{produto.subgrupoproduto}}
+              </div>
+            </q-card-section>
+
+            <q-separator />
+
+            <q-card-actions>
+              <q-btn flat round icon="event" />
+              <q-btn flat color="primary">
+                Reserve
+              </q-btn>
+            </q-card-actions>
+          </q-card>
+        </div>
+
+
         <q-card class="shadow-6" bordered>
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">
-              #{{ numeral(parseFloat(codproduto)).format('000000') }} -
+
               {{produto.produto}}
             </div>
           </q-card-section>
           <q-card-section horizontal>
+
             <q-card-section class="col-xs-6 col-sm-3 col-md-2 col-lg-2 col-xl-1">
               <q-img :src="produto.url" :ratio="1"/>
               <div class="absolute-top text-subtitle2 text-right">
@@ -34,22 +98,44 @@
               </div>
             </q-card-section>
             <q-card-section class="col">
-              <q-chip icon="star" color="green" >
-                {{produto.abc}}
-              </q-chip>
-              <q-chip icon="bookmark" color="red" >
-                {{produto.marca}}
-              </q-chip>
-              <q-chip icon="bookmark" color="primary" >
-                {{produto.secaoproduto}} |
-                {{produto.familiaproduto}} |
-                {{produto.grupoproduto}} |
-                {{produto.subgrupoproduto}}
-              </q-chip>
+              <q-list>
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>
+                      <q-chip icon="local_offer" class="ellipsis">
+                        {{produto.referencia}}
+                      </q-chip>
+                      <q-chip icon="inventory" class="ellipsis">
+                      </q-chip>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>
+                      {{formataNcm(produto.Ncm.ncm)}}
+                    </q-item-label>
+                    <q-item-label caption lines="2">
+                      {{produto.Ncm.descricao}}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item v-if="produto.Cest">
+                  <q-item-section>
+                    <q-item-label>
+                      {{formataCest(produto.Cest.cest)}}
+                    </q-item-label>
+                    <q-item-label caption lines="2">
+                      {{produto.Cest.descricao}}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
               <q-list>
                 <!-- <q-item-label header>{{produto.produto}}</q-item-label> -->
                 <q-item>
                   <q-item-section>
+
                     <q-item-label>{{produto.produto}}</q-item-label>
                   </q-item-section>
                 </q-item>
@@ -273,8 +359,45 @@ export default {
     }
   },
   computed: {
+    abcCor: function () {
+      switch (this.produto.abc) {
+        case 'A':
+          return 'teal';
+        case 'B':
+          return 'orange';
+        default:
+          return 'red';
+      }
+    },
+    bgCor: function () {
+      switch (this.produto.abc) {
+        case 'A':
+          return 'bg-teal-1';
+        case 'B':
+          return 'bg-orange-1';
+        default:
+          return 'bg-red-1';
+      }
+    }
   },
   methods: {
+
+    formataCest(str) {
+      if (str == null) {
+        return str;
+      }
+      str = String(str).padStart(7, '0').replace(/(\d{2})(\d{3})(\d{2})/, "$1.$2.$3");
+      return str;
+    },
+
+    formataNcm(str) {
+      if (str == null) {
+        return str;
+      }
+      str = String(str).padStart(8, '0').replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3");
+      return str;
+    },
+
     // carrega registros da api
     loadData: debounce(function () {
       var vm = this;
