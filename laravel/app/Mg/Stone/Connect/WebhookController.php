@@ -28,7 +28,6 @@ class WebhookController extends MgController
     public function processedTransaction(Request $request)
     {
         $file = WebhookJsonService::salvarProcessedTransaction($request->getContent());
-
         if (isset($request->establishment_id) && isset($request->stone_transaction_id)) {
             StoneTransacaoProcessaJob::dispatch($request->establishment_id, $request->stone_transaction_id);
         }
