@@ -36,10 +36,20 @@ Route::group(['prefix' => 'v1'], function () {
 
     Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');
 
-    // Pre-Transacao
-    Route::group(['prefix' => 'stone-connect/pre-transacao'], function () {
-        Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');
-        Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
+    // Stone
+    Route::group(['prefix' => 'stone-connect'], function () {
+	// Pre Transacao
+        Route::group(['prefix' => 'pre-transacao'], function () {
+            Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');
+	    Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
+        });
+        // Webooks
+        Route::group(['prefix' => 'webhook'], function () {
+            Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
+            Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
+            Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
+            Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
+        });	
     });
 
     // Pix Cob
@@ -115,14 +125,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
 
         // Stone Connect
         Route::group(['prefix' => 'stone-connect'], function () {
-
-            // Webooks
-            Route::group(['prefix' => 'webhook'], function () {
-                Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
-                Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
-                Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
-                Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
-            });
 
             // Filial
             Route::group(['prefix' => 'filial'], function () {
