@@ -119,4 +119,24 @@ class ProdutoBarra extends MgModel
         return $this->hasMany(ValeCompraProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
+    // Atributo descricao
+    public function getDescricaoAttribute()
+    {
+        $descr = "{$this->Produto->produto} {$this->ProdutoVariacao->variacao}";
+        if ($this->codprodutoembalagem) {
+            $quant = formataNumero($this->ProdutoEmbalagem->quantidade, 0);
+            $descr = "{$descr} C/{$quant}";
+        }
+        return trim($descr);
+    }
+
+    // Unidade Medida
+    public function UnidadeMedida()
+    {
+        if (!empty($this->codprodutoembalagem)) {
+            return $this->ProdutoEmbalagem->UnidadeMedida();
+        }
+        return $this->Produto->UnidadeMedida();
+    }
+
 }
