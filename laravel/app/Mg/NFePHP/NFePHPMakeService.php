@@ -296,7 +296,10 @@ class NFePHPMakeService
             $std->xProd = Strings::replaceSpecialsChars($nfpb->descricaoalternativa??$nfpb->ProdutoBarra->descricao);
             $std->NCM = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->Ncm->ncm);
             $std->CFOP = $nfpb->codcfop;
-            $std->uCom = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->UnidadeMedida->sigla);
+            $std->uCom = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->UnidadeMedida->sigla);
+            if (!empty($nfpb->ProdutoBarra->codprodutoembalagem)) {
+                $std->uCom = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->ProdutoEmbalagem->UnidadeMedida->sigla);
+            }
             $std->qCom = number_format($nfpb->quantidade, 3, '.', '');
             $std->vUnCom = number_format($nfpb->valorunitario, 10, '.', '');
             $std->vProd = number_format($nfpb->valortotal, 2, '.', '');
