@@ -67,7 +67,9 @@ class StoneTransacaoService
                 ]);
             }
         }
-        $stoneTransacao->criacao = Carbon::parse($transaction['created_at']);
+        $created = Carbon::parse($transaction['created_at'], 'UTC');
+        $created->setTimezone(date_default_timezone_get());
+        $stoneTransacao->criacao = $created;
         $stoneTransacao->status = $transaction['transaction_status'];
         if ($stoneTransacao->status == StoneTransacao::STATUS_CANCELADA && empyt($stoneTransacao->inativo)) {
             $stoneTransacao->inativo = Carbon::now();

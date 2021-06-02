@@ -1,65 +1,82 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 28/May/2021 15:23:58
+ */
 
 namespace Mg\Produto;
 
-/**
- * Campos
- * @property  bigint                         $codprodutovariacao                 NOT NULL DEFAULT nextval('tblprodutovariacao_codprodutovariacao_seq'::regclass)
- * @property  bigint                         $codproduto                         NOT NULL
- * @property  varchar(100)                   $variacao
- * @property  varchar(50)                    $referencia
- * @property  bigint                         $codmarca
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  bigint                         $codopencart
- * @property  date                           $dataultimacompra
- * @property  numeric(14,6)                  $custoultimacompra
- * @property  numeric(14,3)                  $quantidadeultimacompra
- * @property  timestamp                      $inativo
- * @property  bigint                         $codprodutoimagem
- * @property  date                           $vendainicio
- *
- * Chaves Estrangeiras
- * @property  Marca                          $Marca
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- * @property  Produto                        $Produto
- * @property  ProdutoImagem                  $ProdutoImagem
- *
- * Tabelas Filhas
- * @property  EstoqueLocalProdutoVariacao[]  $EstoqueLocalProdutoVariacaoS
- * @property  ProdutoBarra[]                 $ProdutoBarraS
- */
- use Mg\MgModel;
- use Mg\Estoque\EstoqueLocalProdutoVariacao;
+use Mg\MgModel;
+use Mg\Estoque\EstoqueLocalProdutoVariacao;
+use Mg\Pedido\PedidoItem;
+use Mg\Produto\ProdutoBarra;
+use Mg\Marca\Marca;
+use Mg\Produto\Produto;
+use Mg\Produto\ProdutoImagem;
+use Mg\Usuario\Usuario;
 
 class ProdutoVariacao extends MgModel
 {
     protected $table = 'tblprodutovariacao';
     protected $primaryKey = 'codprodutovariacao';
+
+
     protected $fillable = [
-        'codproduto',
-        'variacao',
-        'referencia',
         'codmarca',
         'codopencart',
-        'dataultimacompra',
-        'custoultimacompra',
-        'quantidadeultimacompra',
+        'codproduto',
         'codprodutoimagem',
-        'vendainicio',
-        'estoqueminimo',
+        'custoultimacompra',
+        'dataultimacompra',
+        'descontinuado',
         'estoquemaximo',
+        'estoqueminimo',
+        'inativo',
         'lotecompra',
+        'quantidadeultimacompra',
+        'referencia',
+        'variacao',
+        'vendaanoquantidade',
+        'vendaanovalor',
+        'vendabimestrequantidade',
+        'vendabimestrevalor',
+        'vendadiaquantidadeprevisao',
+        'vendainicio',
+        'vendasemestrequantidade',
+        'vendasemestrevalor',
+        'vendaultimocalculo'
     ];
+
     protected $dates = [
         'alteracao',
         'criacao',
         'dataultimacompra',
+        'descontinuado',
         'inativo',
         'vendainicio',
+        'vendaultimocalculo'
+    ];
+
+    protected $casts = [
+        'codmarca' => 'integer',
+        'codopencart' => 'integer',
+        'codproduto' => 'integer',
+        'codprodutoimagem' => 'integer',
+        'codprodutovariacao' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'custoultimacompra' => 'float',
+        'estoquemaximo' => 'integer',
+        'estoqueminimo' => 'integer',
+        'lotecompra' => 'float',
+        'quantidadeultimacompra' => 'float',
+        'vendaanoquantidade' => 'float',
+        'vendaanovalor' => 'float',
+        'vendabimestrequantidade' => 'float',
+        'vendabimestrevalor' => 'float',
+        'vendadiaquantidadeprevisao' => 'float',
+        'vendasemestrequantidade' => 'float',
+        'vendasemestrevalor' => 'float'
     ];
 
 
@@ -67,16 +84,6 @@ class ProdutoVariacao extends MgModel
     public function Marca()
     {
         return $this->belongsTo(Marca::class, 'codmarca', 'codmarca');
-    }
-
-    public function UsuarioAlteracao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
-    }
-
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
     public function Produto()
@@ -89,6 +96,16 @@ class ProdutoVariacao extends MgModel
         return $this->belongsTo(ProdutoImagem::class, 'codprodutoimagem', 'codprodutoimagem');
     }
 
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
 
     // Tabelas Filhas
     public function EstoqueLocalProdutoVariacaoS()
@@ -96,10 +113,14 @@ class ProdutoVariacao extends MgModel
         return $this->hasMany(EstoqueLocalProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
     }
 
+    public function PedidoItemS()
+    {
+        return $this->hasMany(PedidoItem::class, 'codprodutovariacao', 'codprodutovariacao');
+    }
+
     public function ProdutoBarraS()
     {
         return $this->hasMany(ProdutoBarra::class, 'codprodutovariacao', 'codprodutovariacao');
     }
-
 
 }

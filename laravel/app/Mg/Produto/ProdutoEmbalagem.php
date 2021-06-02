@@ -1,85 +1,72 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 28/May/2021 15:32:03
+ */
 
 namespace Mg\Produto;
 
-/**
- * Campos
- * @property  bigint                         $codprodutoembalagem                NOT NULL DEFAULT nextval('tblprodutoembalagem_codprodutoembalagem_seq'::regclass)
- * @property  bigint                         $codproduto
- * @property  bigint                         $codunidademedida
- * @property  numeric(17,5)                  $quantidade
- * @property  numeric(14,2)                  $preco
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  numeric(7,4)                   $peso
- * @property  numeric(8,2)                   $altura
- * @property  numeric(8,2)                   $largura
- * @property  numeric(8,2)                   $profundidade
- * @property  boolean                        $vendesite                          NOT NULL DEFAULT false
- * @property  text                           $descricaosite
- * @property  bigint                         $codopencart
- * @property  bigint                         $codprodutoimagem
- *
- * Chaves Estrangeiras
- * @property  Produto                        $Produto
- * @property  UnidadeMedida                  $UnidadeMedida
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- * @property  ProdutoImagem                  $ProdutoImagem
- *
- * Tabelas Filhas
- * @property  ProdutoBarra[]                 $ProdutoBarraS
- * @property  ProdutoHistoricoPreco[]        $ProdutoHistoricoPrecoS
- */
- use Mg\MgModel;
+use Mg\MgModel;
+use Mg\Produto\ProdutoBarra;
+use Mg\Produto\ProdutoHistoricoPreco;
+use Mg\Produto\Produto;
+use Mg\Produto\ProdutoImagem;
+use Mg\Produto\UnidadeMedida;
+use Mg\Usuario\Usuario;
 
 class ProdutoEmbalagem extends MgModel
 {
     protected $table = 'tblprodutoembalagem';
     protected $primaryKey = 'codprodutoembalagem';
+
+
     protected $fillable = [
-        'codproduto',
-        'codunidademedida',
-        'quantidade',
-        'preco',
-        'peso',
         'altura',
-        'largura',
-        'profundidade',
-        'vendesite',
-        'descricaosite',
         'codopencart',
+        'codproduto',
         'codprodutoimagem',
+        'codunidademedida',
+        'descricaosite',
+        'largura',
+        'peso',
+        'preco',
+        'profundidade',
+        'quantidade',
+        'vendesite'
     ];
+
     protected $dates = [
         'alteracao',
-        'criacao',
+        'criacao'
     ];
 
-    public function getDescricaoAttribute()
-    {
-        if (floor($this->quantidade) == $this->quantidade)
-            $digitos = 0;
-        else
-            $digitos = 5;
+    protected $casts = [
+        'altura' => 'float',
+        'codopencart' => 'integer',
+        'codproduto' => 'integer',
+        'codprodutoembalagem' => 'integer',
+        'codprodutoimagem' => 'integer',
+        'codunidademedida' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'largura' => 'float',
+        'peso' => 'float',
+        'preco' => 'float',
+        'profundidade' => 'float',
+        'quantidade' => 'float',
+        'vendesite' => 'boolean'
+    ];
 
-        return $this->UnidadeMedida->sigla . ' C/' . formataNumero($this->quantidade, $digitos);
-    }
-
-    public function getPrecoCalculadoAttribute()
-    {
-        if ($this->Produto)
-            $preco_calculado = ($this->preco) ? $this->preco : $this->Produto->preco * $this->quantidade;
-
-        return $preco_calculado;
-    }
 
     // Chaves Estrangeiras
     public function Produto()
     {
         return $this->belongsTo(Produto::class, 'codproduto', 'codproduto');
+    }
+
+    public function ProdutoImagem()
+    {
+        return $this->belongsTo(ProdutoImagem::class, 'codprodutoimagem', 'codprodutoimagem');
     }
 
     public function UnidadeMedida()
@@ -97,11 +84,6 @@ class ProdutoEmbalagem extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
-    public function ProdutoImagem()
-    {
-        return $this->belongsTo(ProdutoImagem::class, 'codprodutoimagem', 'codprodutoimagem');
-    }
-
 
     // Tabelas Filhas
     public function ProdutoBarraS()
@@ -112,15 +94,6 @@ class ProdutoEmbalagem extends MgModel
     public function ProdutoHistoricoPrecoS()
     {
         return $this->hasMany(ProdutoHistoricoPreco::class, 'codprodutoembalagem', 'codprodutoembalagem');
-    }
-
-    // Campos calculados
-    public function getPrecoProntoAttribute()
-    {
-        if (!empty($this->preco)) {
-            return $this->preco;
-        }
-        return $this->quantidade * $this->Produto->preco;
     }
 
 }

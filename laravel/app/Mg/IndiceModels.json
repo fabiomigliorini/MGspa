@@ -1423,7 +1423,28 @@
         "namespace": "Mg\\ValeCompra",
         "classe": "ValeCompraProdutoBarra",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompraProdutoBarra.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codprodutobarra": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codvalecompra": {
+                "tabela": "tblvalecompra",
+                "coluna": "codvalecompra",
+                "metodo": "ValeCompra"
+            }
+        },
         "hasMany": []
     },
     "tblboletomotivoocorrencia": {
@@ -1877,8 +1898,90 @@
         "namespace": "Mg\\Produto",
         "classe": "Produto",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/Produto.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codcest": {
+                "tabela": "tblcest",
+                "coluna": "codcest",
+                "metodo": "Cest"
+            },
+            "codmarca": {
+                "tabela": "tblmarca",
+                "coluna": "codmarca",
+                "metodo": "Marca"
+            },
+            "codncm": {
+                "tabela": "tblncm",
+                "coluna": "codncm",
+                "metodo": "Ncm"
+            },
+            "codprodutoimagem": {
+                "tabela": "tblprodutoimagem",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoImagem"
+            },
+            "codsubgrupoproduto": {
+                "tabela": "tblsubgrupoproduto",
+                "coluna": "codsubgrupoproduto",
+                "metodo": "SubGrupoProduto"
+            },
+            "codtipoproduto": {
+                "tabela": "tbltipoproduto",
+                "coluna": "codtipoproduto",
+                "metodo": "TipoProduto"
+            },
+            "codtributacao": {
+                "tabela": "tbltributacao",
+                "coluna": "codtributacao",
+                "metodo": "Tributacao"
+            },
+            "codunidademedida": {
+                "tabela": "tblunidademedida",
+                "coluna": "codunidademedida",
+                "metodo": "UnidadeMedida"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpranchetaproduto.codproduto": {
+                "tabela": "tblpranchetaproduto",
+                "coluna": "codproduto",
+                "metodo": "PranchetaProdutoS"
+            },
+            "tblprodutobarra.codproduto": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codproduto",
+                "metodo": "ProdutoBarraS"
+            },
+            "tblprodutoembalagem.codproduto": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codproduto",
+                "metodo": "ProdutoEmbalagemS"
+            },
+            "tblprodutohistoricopreco.codproduto": {
+                "tabela": "tblprodutohistoricopreco",
+                "coluna": "codproduto",
+                "metodo": "ProdutoHistoricoPrecoS"
+            },
+            "tblprodutoimagem.codproduto": {
+                "tabela": "tblprodutoimagem",
+                "coluna": "codproduto",
+                "metodo": "ProdutoImagemS"
+            },
+            "tblprodutovariacao.codproduto": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codproduto",
+                "metodo": "ProdutoVariacaoS"
+            }
+        }
     },
     "tblncmtributacao": {
         "tabela": "tblncmtributacao",
@@ -1961,8 +2064,75 @@
         "namespace": "Mg\\Produto",
         "classe": "ProdutoBarra",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/ProdutoBarra.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codmarca": {
+                "tabela": "tblmarca",
+                "coluna": "codmarca",
+                "metodo": "Marca"
+            },
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codprodutoembalagem": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codprodutoembalagem",
+                "metodo": "ProdutoEmbalagem"
+            },
+            "codprodutovariacao": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codprodutovariacao",
+                "metodo": "ProdutoVariacao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcupomfiscalprodutobarra.codprodutobarra": {
+                "tabela": "tblcupomfiscalprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "CupomFiscalProdutoBarraS"
+            },
+            "tblnegocioprodutobarra.codprodutobarra": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "NegocioProdutoBarraS"
+            },
+            "tblnfeterceiroitem.codprodutobarra": {
+                "tabela": "tblnfeterceiroitem",
+                "coluna": "codprodutobarra",
+                "metodo": "NfeTerceiroItemS"
+            },
+            "tblnotafiscalprodutobarra.codprodutobarra": {
+                "tabela": "tblnotafiscalprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "NotaFiscalProdutoBarraS"
+            },
+            "tblnotafiscalterceiroprodutobarra.codprodutobarra": {
+                "tabela": "tblnotafiscalterceiroprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "NotaFiscalTerceiroProdutoBarraS"
+            },
+            "tblvalecompramodeloprodutobarra.codprodutobarra": {
+                "tabela": "tblvalecompramodeloprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ValeCompraModeloProdutoBarraS"
+            },
+            "tblvalecompraprodutobarra.codprodutobarra": {
+                "tabela": "tblvalecompraprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ValeCompraProdutoBarraS"
+            }
+        }
     },
     "tblcupomfiscalprodutobarra": {
         "tabela": "tblcupomfiscalprodutobarra",
@@ -2327,7 +2497,28 @@
         "namespace": "Mg\\NfeTerceiro",
         "classe": "NfeTerceiroItem",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NfeTerceiro\/NfeTerceiroItem.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codnfeterceiro": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnfeterceiro",
+                "metodo": "NfeTerceiro"
+            },
+            "codprodutobarra": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tbldistribuicaodfeevento": {
@@ -2746,15 +2937,6 @@
         "namespace": "Mg\\Pessoa",
         "classe": "Cargo",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Cargo.php",
-        "belongsTo": [],
-        "hasMany": []
-    },
-    "tblvalecompramodeloprodutobarra": {
-        "tabela": "tblvalecompramodeloprodutobarra",
-        "campocodigo": "codvalecompramodeloprodutobarra",
-        "namespace": "Mg\\Valecompramodeloprodutobarra",
-        "classe": "Valecompramodeloprodutobarra",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Valecompramodeloprodutobarra\/Valecompramodeloprodutobarra.php",
         "belongsTo": [],
         "hasMany": []
     },
@@ -3696,6 +3878,640 @@
                 "tabela": "tblstonepretransacao",
                 "coluna": "codstonepos",
                 "metodo": "StonePreTransacaoS"
+            }
+        }
+    },
+    "tblprodutoembalagem": {
+        "tabela": "tblprodutoembalagem",
+        "campocodigo": "codprodutoembalagem",
+        "namespace": "Mg\\Produto",
+        "classe": "ProdutoEmbalagem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/ProdutoEmbalagem.php",
+        "belongsTo": {
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codprodutoimagem": {
+                "tabela": "tblprodutoimagem",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoImagem"
+            },
+            "codunidademedida": {
+                "tabela": "tblunidademedida",
+                "coluna": "codunidademedida",
+                "metodo": "UnidadeMedida"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblprodutobarra.codprodutoembalagem": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutoembalagem",
+                "metodo": "ProdutoBarraS"
+            },
+            "tblprodutohistoricopreco.codprodutoembalagem": {
+                "tabela": "tblprodutohistoricopreco",
+                "coluna": "codprodutoembalagem",
+                "metodo": "ProdutoHistoricoPrecoS"
+            }
+        }
+    },
+    "tblprodutoimagem": {
+        "tabela": "tblprodutoimagem",
+        "campocodigo": "codprodutoimagem",
+        "namespace": "Mg\\Produto",
+        "classe": "ProdutoImagem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/ProdutoImagem.php",
+        "belongsTo": {
+            "codimagem": {
+                "tabela": "tblimagem",
+                "coluna": "codimagem",
+                "metodo": "Imagem"
+            },
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblproduto.codprodutoimagem": {
+                "tabela": "tblproduto",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoS"
+            },
+            "tblprodutoembalagem.codprodutoimagem": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoEmbalagemS"
+            },
+            "tblprodutovariacao.codprodutoimagem": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoVariacaoS"
+            }
+        }
+    },
+    "tblimagem": {
+        "tabela": "tblimagem",
+        "campocodigo": "codimagem",
+        "namespace": "Mg\\Imagem",
+        "classe": "Imagem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Imagem\/Imagem.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblprodutovariacao": {
+        "tabela": "tblprodutovariacao",
+        "campocodigo": "codprodutovariacao",
+        "namespace": "Mg\\Produto",
+        "classe": "ProdutoVariacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/ProdutoVariacao.php",
+        "belongsTo": {
+            "codmarca": {
+                "tabela": "tblmarca",
+                "coluna": "codmarca",
+                "metodo": "Marca"
+            },
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codprodutoimagem": {
+                "tabela": "tblprodutoimagem",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoImagem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblestoquelocalprodutovariacao.codprodutovariacao": {
+                "tabela": "tblestoquelocalprodutovariacao",
+                "coluna": "codprodutovariacao",
+                "metodo": "EstoqueLocalProdutoVariacaoS"
+            },
+            "tblpedidoitem.codprodutovariacao": {
+                "tabela": "tblpedidoitem",
+                "coluna": "codprodutovariacao",
+                "metodo": "PedidoItemS"
+            },
+            "tblprodutobarra.codprodutovariacao": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutovariacao",
+                "metodo": "ProdutoBarraS"
+            }
+        }
+    },
+    "tblprodutohistoricopreco": {
+        "tabela": "tblprodutohistoricopreco",
+        "campocodigo": "codprodutohistoricopreco",
+        "namespace": "Mg\\Produto",
+        "classe": "ProdutoHistoricoPreco",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/ProdutoHistoricoPreco.php",
+        "belongsTo": {
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codprodutoembalagem": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codprodutoembalagem",
+                "metodo": "ProdutoEmbalagem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblmarca": {
+        "tabela": "tblmarca",
+        "campocodigo": "codmarca",
+        "namespace": "Mg\\Marca",
+        "classe": "Marca",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Marca\/Marca.php",
+        "belongsTo": {
+            "codgrupoeconomico": {
+                "tabela": "tblgrupoeconomico",
+                "coluna": "codgrupoeconomico",
+                "metodo": "GrupoEconomico"
+            },
+            "codimagem": {
+                "tabela": "tblimagem",
+                "coluna": "codimagem",
+                "metodo": "Imagem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblproduto.codmarca": {
+                "tabela": "tblproduto",
+                "coluna": "codmarca",
+                "metodo": "ProdutoS"
+            },
+            "tblprodutobarra.codmarca": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codmarca",
+                "metodo": "ProdutoBarraS"
+            },
+            "tblprodutovariacao.codmarca": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codmarca",
+                "metodo": "ProdutoVariacaoS"
+            }
+        }
+    },
+    "tblsubgrupoproduto": {
+        "tabela": "tblsubgrupoproduto",
+        "campocodigo": "codsubgrupoproduto",
+        "namespace": "Mg\\Produto",
+        "classe": "SubGrupoProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/SubGrupoProduto.php",
+        "belongsTo": {
+            "codgrupoproduto": {
+                "tabela": "tblgrupoproduto",
+                "coluna": "codgrupoproduto",
+                "metodo": "GrupoProduto"
+            },
+            "codimagem": {
+                "tabela": "tblimagem",
+                "coluna": "codimagem",
+                "metodo": "Imagem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblproduto.codsubgrupoproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codsubgrupoproduto",
+                "metodo": "ProdutoS"
+            }
+        }
+    },
+    "tblpranchetaproduto": {
+        "tabela": "tblpranchetaproduto",
+        "campocodigo": "codpranchetaproduto",
+        "namespace": "Mg\\Prancheta",
+        "classe": "PranchetaProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Prancheta\/PranchetaProduto.php",
+        "belongsTo": {
+            "codprancheta": {
+                "tabela": "tblprancheta",
+                "coluna": "codprancheta",
+                "metodo": "Prancheta"
+            },
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblcest": {
+        "tabela": "tblcest",
+        "campocodigo": "codcest",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "Cest",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/Cest.php",
+        "belongsTo": {
+            "codncm": {
+                "tabela": "tblncm",
+                "coluna": "codncm",
+                "metodo": "Ncm"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblproduto.codcest": {
+                "tabela": "tblproduto",
+                "coluna": "codcest",
+                "metodo": "ProdutoS"
+            }
+        }
+    },
+    "tblncm": {
+        "tabela": "tblncm",
+        "campocodigo": "codncm",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "Ncm",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/Ncm.php",
+        "belongsTo": {
+            "codncmpai": {
+                "tabela": "tblncm",
+                "coluna": "codncmpai",
+                "metodo": "NcmPai"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcest.codncm": {
+                "tabela": "tblcest",
+                "coluna": "codncm",
+                "metodo": "CestS"
+            },
+            "tblibptax.codncm": {
+                "tabela": "tblibptax",
+                "coluna": "codncm",
+                "metodo": "IbptaxS"
+            },
+            "tblncm.codncmpai": {
+                "tabela": "tblncm",
+                "coluna": "codncmpai",
+                "metodo": "NcmS"
+            },
+            "tblproduto.codncm": {
+                "tabela": "tblproduto",
+                "coluna": "codncm",
+                "metodo": "ProdutoS"
+            },
+            "tblregulamentoicmsstmt.codncm": {
+                "tabela": "tblregulamentoicmsstmt",
+                "coluna": "codncm",
+                "metodo": "RegulamentoIcmsStMtS"
+            }
+        }
+    },
+    "tblibptax": {
+        "tabela": "tblibptax",
+        "campocodigo": "codibptax",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "Ibptax",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/Ibptax.php",
+        "belongsTo": {
+            "codncm": {
+                "tabela": "tblncm",
+                "coluna": "codncm",
+                "metodo": "Ncm"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblregulamentoicmsstmt": {
+        "tabela": "tblregulamentoicmsstmt",
+        "campocodigo": "codregulamentoicmsstmt",
+        "namespace": "Mg\\NaturezaOperacao",
+        "classe": "RegulamentoIcmsStMt",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/RegulamentoIcmsStMt.php",
+        "belongsTo": {
+            "codncm": {
+                "tabela": "tblncm",
+                "coluna": "codncm",
+                "metodo": "Ncm"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblgrupoproduto": {
+        "tabela": "tblgrupoproduto",
+        "campocodigo": "codgrupoproduto",
+        "namespace": "Mg\\Produto",
+        "classe": "GrupoProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/GrupoProduto.php",
+        "belongsTo": {
+            "codfamiliaproduto": {
+                "tabela": "tblfamiliaproduto",
+                "coluna": "codfamiliaproduto",
+                "metodo": "FamiliaProduto"
+            },
+            "codimagem": {
+                "tabela": "tblimagem",
+                "coluna": "codimagem",
+                "metodo": "Imagem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblsubgrupoproduto.codgrupoproduto": {
+                "tabela": "tblsubgrupoproduto",
+                "coluna": "codgrupoproduto",
+                "metodo": "SubGrupoProdutoS"
+            }
+        }
+    },
+    "tblsecaoproduto": {
+        "tabela": "tblsecaoproduto",
+        "campocodigo": "codsecaoproduto",
+        "namespace": "Mg\\Produto",
+        "classe": "SecaoProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/SecaoProduto.php",
+        "belongsTo": {
+            "codimagem": {
+                "tabela": "tblimagem",
+                "coluna": "codimagem",
+                "metodo": "Imagem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblfamiliaproduto.codsecaoproduto": {
+                "tabela": "tblfamiliaproduto",
+                "coluna": "codsecaoproduto",
+                "metodo": "FamiliaProdutoS"
+            }
+        }
+    },
+    "tblfamiliaproduto": {
+        "tabela": "tblfamiliaproduto",
+        "campocodigo": "codfamiliaproduto",
+        "namespace": "Mg\\Produto",
+        "classe": "FamiliaProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/FamiliaProduto.php",
+        "belongsTo": {
+            "codimagem": {
+                "tabela": "tblimagem",
+                "coluna": "codimagem",
+                "metodo": "Imagem"
+            },
+            "codsecaoproduto": {
+                "tabela": "tblsecaoproduto",
+                "coluna": "codsecaoproduto",
+                "metodo": "SecaoProduto"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblgrupoproduto.codfamiliaproduto": {
+                "tabela": "tblgrupoproduto",
+                "coluna": "codfamiliaproduto",
+                "metodo": "GrupoProdutoS"
+            }
+        }
+    },
+    "tblprancheta": {
+        "tabela": "tblprancheta",
+        "campocodigo": "codprancheta",
+        "namespace": "Mg\\Prancheta",
+        "classe": "Prancheta",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Prancheta\/Prancheta.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpranchetaproduto.codprancheta": {
+                "tabela": "tblpranchetaproduto",
+                "coluna": "codprancheta",
+                "metodo": "PranchetaProdutoS"
+            }
+        }
+    },
+    "tblestoquelocalprodutovariacao": {
+        "tabela": "tblestoquelocalprodutovariacao",
+        "campocodigo": "codestoquelocalprodutovariacao",
+        "namespace": "Mg\\Estoque",
+        "classe": "EstoqueLocalProdutoVariacao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Estoque\/EstoqueLocalProdutoVariacao.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblpedidoitem": {
+        "tabela": "tblpedidoitem",
+        "campocodigo": "codpedidoitem",
+        "namespace": "Mg\\Pedido",
+        "classe": "PedidoItem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pedido\/PedidoItem.php",
+        "belongsTo": [],
+        "hasMany": []
+    },
+    "tblvalecompramodeloprodutobarra": {
+        "tabela": "tblvalecompramodeloprodutobarra",
+        "campocodigo": "codvalecompramodeloprodutobarra",
+        "namespace": "Mg\\ValeCompra",
+        "classe": "ValeCompraModeloProdutoBarra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/ValeCompra\/ValeCompraModeloProdutoBarra.php",
+        "belongsTo": {
+            "codprodutobarra": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codvalecompramodelo": {
+                "tabela": "tblvalecompramodelo",
+                "coluna": "codvalecompramodelo",
+                "metodo": "ValeCompraModelo"
+            }
+        },
+        "hasMany": []
+    },
+    "tblunidademedida": {
+        "tabela": "tblunidademedida",
+        "campocodigo": "codunidademedida",
+        "namespace": "Mg\\Produto",
+        "classe": "UnidadeMedida",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/UnidadeMedida.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblproduto.codunidademedida": {
+                "tabela": "tblproduto",
+                "coluna": "codunidademedida",
+                "metodo": "ProdutoS"
+            },
+            "tblprodutoembalagem.codunidademedida": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codunidademedida",
+                "metodo": "ProdutoEmbalagemS"
             }
         }
     }

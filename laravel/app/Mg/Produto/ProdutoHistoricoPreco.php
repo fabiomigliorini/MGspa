@@ -1,44 +1,42 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 28/May/2021 15:03:49
+ */
 
 namespace Mg\Produto;
 
-/**
- * Campos
- * @property  bigint                         $codprodutohistoricopreco           NOT NULL DEFAULT nextval('tblprodutohistoricopreco_codprodutohistoricopreco_seq'::regclass)
- * @property  bigint                         $codproduto                         NOT NULL
- * @property  bigint                         $codprodutoembalagem
- * @property  numeric(14,2)                  $precoantigo
- * @property  numeric(14,2)                  $preconovo
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  timestamp                      $inativo
- *
- * Chaves Estrangeiras
- * @property  Produto                        $Produto
- * @property  ProdutoEmbalagem               $ProdutoEmbalagem
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- */
- use Mg\MgModel;
+use Mg\MgModel;
+use Mg\Produto\Produto;
+use Mg\Produto\ProdutoEmbalagem;
+use Mg\Usuario\Usuario;
 
 class ProdutoHistoricoPreco extends MgModel
 {
     protected $table = 'tblprodutohistoricopreco';
     protected $primaryKey = 'codprodutohistoricopreco';
+
+
     protected $fillable = [
         'codproduto',
         'codprodutoembalagem',
         'precoantigo',
-        'preconovo',
+        'preconovo'
     ];
+
     protected $dates = [
         'alteracao',
-        'criacao',
-        'inativo',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'codproduto' => 'integer',
+        'codprodutoembalagem' => 'integer',
+        'codprodutohistoricopreco' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'precoantigo' => 'float',
+        'preconovo' => 'float'
     ];
 
 
@@ -62,8 +60,5 @@ class ProdutoHistoricoPreco extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
-
-    // Tabelas Filhas
 
 }
