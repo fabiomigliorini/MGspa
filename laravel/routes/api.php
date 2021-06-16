@@ -34,7 +34,7 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
-    Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');
+    Route::post('titulo/{codtitulo}/boleto-bb', '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');
 
     // Stone
     Route::group(['prefix' => 'stone-connect'], function () {
@@ -49,10 +49,11 @@ Route::group(['prefix' => 'v1'], function () {
             Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
             Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
             Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
-        });	
+        });
     });
 
     // Pix Cob
+    Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');
     Route::post('pix/cob/criar-negocio/{codnegocio}', '\Mg\Pix\PixController@criarPixCobNegocio');
     Route::post('pix/cob/{codpixcob}/transmitir', '\Mg\Pix\PixController@transmitirPixCob');
     Route::post('pix/cob/{codpixcob}/consultar', '\Mg\Pix\PixController@consultarPixCob');
