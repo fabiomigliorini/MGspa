@@ -14,8 +14,8 @@ left join tblpessoa pv on (pv.codpessoa = n.codpessoavendedor)
 left join tblpessoa p on (p.codpessoa = n.codpessoa)
 left join tblgrupocliente gc on (gc.codgrupocliente = p.codgrupocliente)
 inner join tblnaturezaoperacao no on (no.codnaturezaoperacao = n.codnaturezaoperacao)
-where lancamento >= '2012-01-01 00:00:00.0'
-and lancamento <= '2021-03-31 23:59:59.9'
+where lancamento >= '2021-06-01 00:00:00.0'
+and lancamento <= '2021-06-10 23:59:59.9'
 and codnegociostatus = 2
 and n.codnaturezaoperacao in (1, 2, 5) -- venda, devolucao, cupom
 --and n.codnaturezaoperacao in (2) -- venda, devolucao, cupom

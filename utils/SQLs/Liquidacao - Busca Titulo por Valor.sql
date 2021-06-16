@@ -2,14 +2,14 @@ select p.fantasia, f.filial, t.numero, t.saldo, t.debito, t.credito, t.venciment
 from tbltitulo t
 inner join tblpessoa p on (p.codpessoa = t.codpessoa)
 inner join tblfilial f on (f.codfilial = t.codfilial)
-where t.DEBITO = 599.5
+where t.debito = 1750
 --where t.debito between 10300 and 10400
 --where t.credito = 369.98
 order by criacao desc nulls LAST
 
 select * 
 from tblliquidacaotitulo lt
-where lt.observacao ilike '%Jaiclea%'
+where lt.observacao ilike '%VEI%FABRICA%DE%'
 
 select * from tbltitulo where observacao ilike '%5419%'
 
@@ -36,4 +36,13 @@ select * from tblliquidacaotitulo where credito = 69.75 order by criacao desc
 select * from tblferiado t order by data
 
 update tblnegocio set codnegociostatus = 2 where codnegocio = 2232235
+
+select distinct codpessoa from tblnegocio t where lancamento >= '2020-01-01' 
+
+select 'wget https://api.mgspa.mgpapelaria.com.br/api/v1/stone-connect/pre-transacao/' || cast(spt.codstonepretransacao  as varchar), spt.criacao, st.codstonetransacao, spt.status 
+from tblstonepretransacao spt
+left join tblstonetransacao st on (st.codstonepretransacao = spt.codstonepretransacao)
+where st.codstonetransacao is null
+order by spt.criacao desc
+
 
