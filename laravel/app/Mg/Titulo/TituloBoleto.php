@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jun/2021 15:31:12
+ * Date: 16/Jun/2021 17:34:16
  */
 
 namespace Mg\Titulo;
@@ -44,7 +44,8 @@ class TituloBoleto extends MgModel
         'valoroutro',
         'valorpagamentoparcial',
         'valorpago',
-        'valorreajuste'
+        'valorreajuste',
+        'vencimento'
     ];
 
     protected $dates = [
@@ -54,7 +55,8 @@ class TituloBoleto extends MgModel
         'datacredito',
         'datarecebimento',
         'dataregistro',
-        'inativo'
+        'inativo',
+        'vencimento'
     ];
 
     protected $casts = [

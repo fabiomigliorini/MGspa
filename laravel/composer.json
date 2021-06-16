@@ -16,7 +16,10 @@
         "nfephp-org/sped-ibpt": "^2.0",
         "nfephp-org/sped-mdfe": "^4.1",
         "nfephp-org/sped-nfe": "^5.0",
+        "openboleto/openboleto": "dev-master",
         "phpoffice/phpspreadsheet": "^1.4",
+        "quilhasoft/jasperphp": "dev-master",
+        "quilhasoft/jasperphp-openboleto": "dev-master",
         "tymon/jwt-auth": "dev-develop"
     },
     "require-dev": {

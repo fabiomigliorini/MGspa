@@ -5,6 +5,15 @@ namespace Mg\Titulo\BoletoBb;
 use DB;
 use Carbon\Carbon;
 
+use Dompdf\Dompdf;
+
+use OpenBoleto\Banco\BancoDoBrasil;
+use OpenBoleto\Agente;
+
+use JasperPHP\Instructions;
+use JasperPHP\Report;
+use JasperPHP\PdfProcessor;
+
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
 use Mg\Portador\Portador;
@@ -135,6 +144,7 @@ class BoletoBbService
             'canalpagamento' => $ret['codigoCanalPagamento'],
             'estadotitulocobranca' => $ret['codigoEstadoTituloCobranca'],
             'dataregistro' => (!empty($ret['dataRegistroTituloCobranca']))?Carbon::parse($ret['dataRegistroTituloCobranca']):null,
+            'vencimento' => (!empty($ret['dataVencimentoTituloCobranca']))?Carbon::parse($ret['dataVencimentoTituloCobranca']):null,
             'valororiginal' => $ret['valorOriginalTituloCobranca'],
             'valoratual' => $ret['valorAtualTituloCobranca'],
             'valorpagamentoparcial' => $ret['valorPagamentoParcialTitulo'],
@@ -151,7 +161,26 @@ class BoletoBbService
             'valorreajuste' => $ret['valorReajuste'],
             'valoroutro' => $ret['valorOutroRecebido'],
         ]);
-        
+
         return $tituloBoleto;
+    }
+
+    public static function pdf (TituloBoleto $tituloBoleto)
+    {
+        // $report = new Report("/opt/www/MGspa/laravel/vendor/quilhasoft/jasperphp-openboleto/app.jrxml/bol01Files/boletoCarne.jrxml", []);
+        // $report = new Report("/opt/www/MGspa/laravel/app/Mg/jasperphp-openboleto/app.jrxml/bol01Files/boletoA4.jrxml", []);
+        $report = new Report("/opt/www/MGspa/laravel/app/Mg/Titulo/BoletoBb/boletoA4.jrxml", []);
+        Instructions::prepare($report); // prepara o relatorio lendo o arquivo
+        $data = [];
+        $data[] = new BoletoBbPdf($tituloBoleto);
+        $data[] = new BoletoBbPdf($tituloBoleto);
+        $data[] = new BoletoBbPdf($tituloBoleto);
+        $data[] = new BoletoBbPdf($tituloBoleto);
+        $report->dbData = $data; // aqui voce pode construir seu array de boletos em qualquer estrutura incluindo
+        $report->generate();                // gera o relatorio
+        $report->out();                     // gera o pdf
+        $pdf = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
+        $x = $pdf->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        return $x;
     }
 }
