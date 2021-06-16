@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:39:21
+ * Date: 16/Jun/2021 08:45:58
  */
 
 namespace Mg\Cidade;

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Jan/2021 11:02:06
+ * Date: 16/Jun/2021 08:44:54
  */
 
 namespace Mg\Pessoa;
@@ -82,6 +82,7 @@ class Pessoa extends MgModel
         'fisica',
         'fornecedor',
         'ie',
+        'inativo',
         'mensagemvenda',
         'notafiscal',
         'numero',
@@ -225,6 +226,11 @@ class Pessoa extends MgModel
     public function NegocioS()
     {
         return $this->hasMany(Negocio::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function NegocioTransportadorS()
+    {
+        return $this->hasMany(Negocio::class, 'codpessoatransportador', 'codpessoa');
     }
 
     public function NegocioVendedorS()

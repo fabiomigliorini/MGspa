@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Dec/2020 15:15:58
+ * Date: 16/Jun/2021 08:40:03
  */
 
 namespace Mg\Portador;
@@ -28,7 +28,10 @@ class Portador extends MgModel
     protected $fillable = [
         'agencia',
         'agenciadigito',
+        'bbtoken',
+        'bbtokenexpiracao',
         'carteira',
+        'carteiravariacao',
         'codbanco',
         'codfilial',
         'conta',
@@ -37,12 +40,14 @@ class Portador extends MgModel
         'diretorioremessa',
         'diretorioretorno',
         'emiteboleto',
+        'inativo',
         'pixdict',
         'portador'
     ];
 
     protected $dates = [
         'alteracao',
+        'bbtokenexpiracao',
         'criacao',
         'inativo'
     ];
@@ -51,6 +56,7 @@ class Portador extends MgModel
         'agencia' => 'integer',
         'agenciadigito' => 'integer',
         'carteira' => 'integer',
+        'carteiravariacao' => 'integer',
         'codbanco' => 'integer',
         'codfilial' => 'integer',
         'codportador' => 'integer',

@@ -5321,8 +5321,11 @@ Peso em KG]]></comment>
 			<column name="diretorioremessa" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="diretorioretorno" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="carteira" type="integer" length="10" decimal="0" jt="4" />
-			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="carteiravariacao" type="smallint" jt="5" />
 			<column name="pixdict" prior="dict" type="varchar" length="77" jt="12" />
+			<column name="bbtoken" type="text" jt="12" />
+			<column name="bbtokenexpiracao" type="timestamp" length="22" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
@@ -6616,6 +6619,31 @@ Pode mudar apos conciliacao]]></comment>
 			</fk>
 			<fk name="tbltituloagrupamento_codusuariocriacao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tbltituloboleto" >
+			<column name="codtituloboleto" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codtitulo" type="bigint" jt="-5" mandatory="y" />
+			<column name="linhadigitavel" type="varchar" length="100" jt="12" />
+			<column name="barras" type="varchar" length="100" jt="12" />
+			<column name="qrcodeurl" prior="pixurl" type="varchar" length="100" jt="12" />
+			<column name="qrcodetxid" prior="pixtxid" type="varchar" length="100" jt="12" />
+			<column name="qrcodeemv" type="text" jt="12" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tbltituloboleto_codtituloboleto" unique="PRIMARY_KEY" >
+				<column name="codtituloboleto" />
+			</index>
+			<fk name="fk_tbltituloboleto_tbltitulo" to_schema="mgsis.mgsis" to_table="tbltitulo" update_action="cascade" >
+				<fk_column name="codtitulo" pk="codtitulo" />
+			</fk>
+			<fk name="fk_tbltituloboleto_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tbltituloboleto_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tbltitulonfeterceiro" >
@@ -10258,6 +10286,14 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 ))]]></string>
 		</script>
 	</layout>
+	<layout name="Layout_BB" id="Layout_7e0" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblcidade" color="3986C1" x="1024" y="48" />
+		<entity schema="mgsis.mgsis" name="tblestado" color="3986C1" x="1040" y="320" />
+		<entity schema="mgsis.mgsis" name="tblpessoa" color="3986C1" x="720" y="48" />
+		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="48" y="48" />
+		<entity schema="mgsis.mgsis" name="tbltitulo" color="3986C1" x="336" y="48" />
+		<entity schema="mgsis.mgsis" name="tbltituloboleto" color="C1D8EE" x="80" y="496" />
+	</layout>
 	<layout name="Layout_Boletos" id="Layout_22f77b0" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblboletomotivoocorrencia" color="3986C1" x="384" y="48" />
 		<entity schema="mgsis.mgsis" name="tblboletoretorno" color="3986C1" x="48" y="48" />
@@ -10290,8 +10326,11 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codportador" />
 			<column name="codbanco" />
 			<column name="codfilial" />
-			<column name="inativo" />
+			<column name="carteiravariacao" />
 			<column name="pixdict" />
+			<column name="bbtoken" />
+			<column name="bbtokenexpiracao" />
+			<column name="inativo" />
 			<column name="codusuariocriacao" />
 			<column name="codusuarioalteracao" />
 		</entity>

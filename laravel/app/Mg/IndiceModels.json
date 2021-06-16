@@ -553,6 +553,16 @@
                 "tabela": "tblvalecompra",
                 "coluna": "codtitulo",
                 "metodo": "ValeCompraS"
+            },
+            "tbltituloboleto.codtitulo": {
+                "tabela": "tbltituloboleto",
+                "coluna": "codtitulo",
+                "metodo": "TituloBoletoS"
+            },
+            "tbltitulonfeterceiro.codtitulo": {
+                "tabela": "tbltitulonfeterceiro",
+                "coluna": "codtitulo",
+                "metodo": "TituloNfeTerceiroS"
             }
         }
     },
@@ -770,6 +780,11 @@
                 "tabela": "tblmdfeveiculo",
                 "coluna": "codpessoacondutor",
                 "metodo": "MdfeVeiculoCondutorS"
+            },
+            "tblnegocio.codpessoatransportador": {
+                "tabela": "tblnegocio",
+                "coluna": "codpessoatransportador",
+                "metodo": "NegocioTransportadorS"
             }
         }
     },
@@ -4514,5 +4529,60 @@
                 "metodo": "ProdutoEmbalagemS"
             }
         }
+    },
+    "tbltituloboleto": {
+        "tabela": "tbltituloboleto",
+        "campocodigo": "codtituloboleto",
+        "namespace": "Mg\\Titulo",
+        "classe": "TituloBoleto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/TituloBoleto.php",
+        "belongsTo": {
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tbltitulonfeterceiro": {
+        "tabela": "tbltitulonfeterceiro",
+        "campocodigo": "codtitulonfeterceiro",
+        "namespace": "Mg\\Titulo",
+        "classe": "TituloNfeTerceiro",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Titulo\/TituloNfeTerceiro.php",
+        "belongsTo": {
+            "codnfeterceiro": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnfeterceiro",
+                "metodo": "NfeTerceiro"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }

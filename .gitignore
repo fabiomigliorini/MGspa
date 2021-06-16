@@ -12,3 +12,5 @@
 /Pix
 
 .php_cs.cache
+
+/utils/DB/*.pdf
