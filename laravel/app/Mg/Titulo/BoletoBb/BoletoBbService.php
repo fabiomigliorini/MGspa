@@ -6,6 +6,7 @@ use DB;
 use Carbon\Carbon;
 
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloBoleto;
 use Mg\Portador\Portador;
 
 class BoletoBbService
@@ -100,11 +101,17 @@ class BoletoBbService
         if (isset($ret['erros'])) {
             throw new \Exception("{$ret['erros'][0]['mensagem']} - {$ret['erros'][0]['codigo']}", 0);
         }
-        return [
-            'codtitulo' => $titulo->codtitulo,
-            'bbtoken' => $bbtoken,
-            'ret' => $ret,
-            'status' => 'Boleto Registrado'
-        ];
+        $tituloBoleto = TituloBoleto::firstOrNew([
+            'nossonumero' => $nossonumero,
+            'codportador' => $titulo->codportador
+        ]);
+        $tituloBoleto->codtitulo = $titulo->codtitulo;
+        $tituloBoleto->linhadigitavel = $ret['linhaDigitavel'];
+        $tituloBoleto->barras = $ret['codigoBarraNumerico'];
+        $tituloBoleto->qrcodeurl = $ret['qrCode']['url'];
+        $tituloBoleto->qrcodetxid = $ret['qrCode']['txId'];
+        $tituloBoleto->qrcodeemv = $ret['qrCode']['emv'];
+        $tituloBoleto->save();
+        return $tituloBoleto;
     }
 }
