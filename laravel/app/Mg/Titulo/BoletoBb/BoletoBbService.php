@@ -66,6 +66,9 @@ class BoletoBbService
     }
 
 
+    /**
+     * Registra Boleto na API do BB
+     */
     public static function registrar(Titulo $titulo)
     {
         $bbtoken = static::verificaTokenValido($titulo->Portador);
@@ -112,6 +115,43 @@ class BoletoBbService
         $tituloBoleto->qrcodetxid = $ret['qrCode']['txId'];
         $tituloBoleto->qrcodeemv = $ret['qrCode']['emv'];
         $tituloBoleto->save();
+        return $tituloBoleto;
+    }
+
+    /**
+     * Consulta Boleto na API do BB e persiste retorno na tbltituloboleto
+     */
+    public static function consultar(TituloBoleto $tituloBoleto)
+    {
+        $bbtoken = static::verificaTokenValido($tituloBoleto->Portador);
+        $ret = BoletoBbApiService::consultar(
+            $bbtoken,
+            $tituloBoleto->Portador->convenio,
+            $tituloBoleto->nossonumero
+        );
+
+        $tituloBoleto->update([
+            'linhadigitavel' => $ret['codigoLinhaDigitavel'],
+            'canalpagamento' => $ret['codigoCanalPagamento'],
+            'estadotitulocobranca' => $ret['codigoEstadoTituloCobranca'],
+            'dataregistro' => (!empty($ret['dataRegistroTituloCobranca']))?Carbon::parse($ret['dataRegistroTituloCobranca']):null,
+            'valororiginal' => $ret['valorOriginalTituloCobranca'],
+            'valoratual' => $ret['valorAtualTituloCobranca'],
+            'valorpagamentoparcial' => $ret['valorPagamentoParcialTitulo'],
+            'valorabatimento' => $ret['valorAbatimentoTituloCobranca'],
+            'databaixaautomatica' => (!empty($ret['dataBaixaAutomaticoTitulo']))?Carbon::parse($ret['dataBaixaAutomaticoTitulo']):null,
+            'valorjuromora' => $ret['valorJuroMoraRecebido'],
+            'valordesconto' => $ret['valorDescontoUtilizado'],
+            'valorpago' => $ret['valorPagoSacado'],
+            'valorliquido' => $ret['valorCreditoCedente'],
+            'datarecebimento' => (!empty($ret['dataRecebimentoTitulo']))?Carbon::parse($ret['dataRecebimentoTitulo']):null,
+            'datacredito' => (!empty($ret['dataCreditoLiquidacao']))?Carbon::parse($ret['dataCreditoLiquidacao']):null,
+            'tipobaixatitulo' => $ret['codigoTipoBaixaTitulo'],
+            'valormulta' => $ret['valorMultaRecebido'],
+            'valorreajuste' => $ret['valorReajuste'],
+            'valoroutro' => $ret['valorOutroRecebido'],
+        ]);
+        
         return $tituloBoleto;
     }
 }

@@ -38,10 +38,10 @@ class BoletoBbApiService
         ];
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
-        curl_close($curl);
         if ($response === false) {
             throw new \Exception(curl_error($curl), curl_errno($curl));
         }
+        curl_close($curl);
         return json_decode($response, true);
     }
 
@@ -136,25 +136,28 @@ class BoletoBbApiService
         ];
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
-        curl_close($curl);
         if ($response === false) {
             throw new \Exception(curl_error($curl), curl_errno($curl));
         }
+        curl_close($curl);
         return json_decode($response, true);
     }
 
-    /*
-    public static function EstablishmentGetAll ($token)
+    public static function consultar ($bbtoken, $numeroConvenio, $nossoNumero)
     {
         $curl = curl_init();
-        $url = env('STONE_CONNECT_URL') . '/establishment/get-all';
-        $auth = "Authorization: Bearer {$token}";
+        $url = env('BB_URL_COBRANCA') . '/boletos/' . $nossoNumero;
+        $url .= '?gw-dev-app-key=' . env('BB_DEVELOPER_APPLICATION_KEY');
+        $url .= '&numeroConvenio=' . $numeroConvenio;
+        $auth = "Authorization: Bearer {$bbtoken}";
         $opt = [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            // CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
@@ -165,12 +168,11 @@ class BoletoBbApiService
         ];
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
-        curl_close($curl);
         if ($response === false) {
-            throw new \Exception('Falha ao acessar API da Stone Connect!', 1);
+            throw new \Exception(curl_error($curl), curl_errno($curl));
         }
+        curl_close($curl);
         return json_decode($response, true);
     }
-    */
 
 }
