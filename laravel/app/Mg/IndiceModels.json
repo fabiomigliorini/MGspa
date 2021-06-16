@@ -72,6 +72,11 @@
                 "tabela": "tblpix",
                 "coluna": "codportador",
                 "metodo": "PixS"
+            },
+            "tbltituloboleto.codportador": {
+                "tabela": "tbltituloboleto",
+                "coluna": "codportador",
+                "metodo": "TituloBoletoS"
             }
         }
     },
@@ -4551,6 +4556,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
             }
         },
         "hasMany": []

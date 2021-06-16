@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jun/2021 08:40:55
+ * Date: 16/Jun/2021 14:11:23
  */
 
 namespace Mg\Titulo;
@@ -9,6 +9,7 @@ namespace Mg\Titulo;
 use Mg\MgModel;
 use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
+use Mg\Portador\Portador;
 
 class TituloBoleto extends MgModel
 {
@@ -18,8 +19,10 @@ class TituloBoleto extends MgModel
 
     protected $fillable = [
         'barras',
+        'codportador',
         'codtitulo',
         'linhadigitavel',
+        'nossonumero',
         'qrcodeemv',
         'qrcodetxid',
         'qrcodeurl'
@@ -31,6 +34,7 @@ class TituloBoleto extends MgModel
     ];
 
     protected $casts = [
+        'codportador' => 'integer',
         'codtitulo' => 'integer',
         'codtituloboleto' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -39,6 +43,11 @@ class TituloBoleto extends MgModel
 
 
     // Chaves Estrangeiras
+    public function Portador()
+    {
+        return $this->belongsTo(Portador::class, 'codportador', 'codportador');
+    }
+
     public function Titulo()
     {
         return $this->belongsTo(Titulo::class, 'codtitulo', 'codtitulo');
