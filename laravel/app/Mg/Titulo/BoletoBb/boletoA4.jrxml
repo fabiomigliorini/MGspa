@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.17.0.final using JasperReports Library version 6.17.0-6d93193241dd8cc42629e188b94f9e0bc5722efd  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="boleto-default" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="10" bottomMargin="0" uuid="ff653490-88f9-4546-aaa6-53f137c26ccc">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="boleto-default" language="javascript" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="10" bottomMargin="0" uuid="ff653490-88f9-4546-aaa6-53f137c26ccc">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="387"/>
@@ -1127,13 +1127,22 @@
 				<textFieldExpression><![CDATA[$F{cedente_endereco1}+" "+$F{cedente_endereco2}]]></textFieldExpression>
 			</textField>
 			<componentElement>
-				<reportElement x="288" y="620" width="162" height="51" uuid="582c7966-a5c2-47f5-b556-c4f72000de06">
-					<property name="com.jaspersoft.studio.unit.moduleWidth" value="pixel"/>
-				</reportElement>
-				<jr:Interleaved2Of5 xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" moduleWidth="1.0" textPosition="none">
-					<jr:codeExpression><![CDATA[$F{numero_febraban}]]></jr:codeExpression>
-				</jr:Interleaved2Of5>
+				<reportElement x="265" y="290" width="106" height="94" uuid="4307603d-a8c0-4727-9755-d2032f5e78fd"/>
+				<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<jr:codeExpression><![CDATA[$F{qrcode}]]></jr:codeExpression>
+				</jr:QRCode>
 			</componentElement>
+			<staticText>
+				<reportElement x="266" y="281" width="106" height="45" uuid="429cc507-e5c8-44f1-b1a3-ee140b841b2f"/>
+				<textElement textAlignment="Center">
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Pague com PIX!]]></text>
+			</staticText>
+			<image scaleImage="RealHeight">
+				<reportElement x="2" y="10" width="110" height="26" uuid="c1e677a1-5499-4ff2-b5f5-ba5d153abcd4"/>
+				<imageExpression><![CDATA[$F{logo_banco}]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 </jasperReport>

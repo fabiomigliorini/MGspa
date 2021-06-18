@@ -35,7 +35,6 @@ class BoletoBbController extends MgController
     {
         $tituloBoleto = TituloBoleto::findOrFail($codtituloboleto);
         $pdf = BoletoBbService::pdf($tituloBoleto);
-        // return $pdf;
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="Boleto'.$codtituloboleto.'.pdf"'

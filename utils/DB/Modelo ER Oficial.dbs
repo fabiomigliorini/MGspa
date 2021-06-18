@@ -5324,7 +5324,7 @@ Peso em KG]]></comment>
 			<column name="carteiravariacao" type="smallint" jt="5" />
 			<column name="pixdict" prior="dict" type="varchar" length="77" jt="12" />
 			<column name="bbtoken" type="text" jt="12" />
-			<column name="bbtokenexpiracao" type="timestamp" length="22" jt="93" />
+			<column name="bbtokenexpiracao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -6662,6 +6662,7 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 21 - TITULO AGENDADO COMPE 
 80 - EM PROCESSAMENTO (ESTADO TRANSITÓRIO)]]></comment>
 			</column>
+			<column name="vencimento" type="date" jt="91" />
 			<column name="dataregistro" prior="registro" type="date" jt="91" />
 			<column name="databaixaautomatica" prior="baixaautomatica" type="date" jt="91" />
 			<column name="valororiginal" type="numeric" length="14" decimal="2" jt="2" />
@@ -6696,10 +6697,10 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 51 - REGISTRADO INDEVIDAMENTE 
 90 - BAIXA AUTOMATICA]]></comment>
 			</column>
-			<column name="inativo" type="timestamp" length="22" jt="93" />
-			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tbltituloboleto_codtituloboleto" unique="PRIMARY_KEY" >
 				<column name="codtituloboleto" />

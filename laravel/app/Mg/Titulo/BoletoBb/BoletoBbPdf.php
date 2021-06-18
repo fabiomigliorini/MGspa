@@ -134,6 +134,8 @@ class BoletoBbPdf
         ]);
         $boleto->getOutput();
         $this->data = array_merge($this->data,$boleto->getData());
+        $this->data['qrcode'] = $tituloBoleto->qrcodeurl;
+
     }
 
     /* método para interceptar  a requisição e adicionar o codigo html necessario para correta exibição do demostrativo    */

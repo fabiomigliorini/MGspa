@@ -167,20 +167,16 @@ class BoletoBbService
 
     public static function pdf (TituloBoleto $tituloBoleto)
     {
-        // $report = new Report("/opt/www/MGspa/laravel/vendor/quilhasoft/jasperphp-openboleto/app.jrxml/bol01Files/boletoCarne.jrxml", []);
-        // $report = new Report("/opt/www/MGspa/laravel/app/Mg/jasperphp-openboleto/app.jrxml/bol01Files/boletoA4.jrxml", []);
-        $report = new Report("/opt/www/MGspa/laravel/app/Mg/Titulo/BoletoBb/boletoA4.jrxml", []);
+        $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
         Instructions::prepare($report); // prepara o relatorio lendo o arquivo
-        $data = [];
-        $data[] = new BoletoBbPdf($tituloBoleto);
-        $data[] = new BoletoBbPdf($tituloBoleto);
-        $data[] = new BoletoBbPdf($tituloBoleto);
-        $data[] = new BoletoBbPdf($tituloBoleto);
+        $data = [
+            new BoletoBbPdf($tituloBoleto),
+        ];
         $report->dbData = $data; // aqui voce pode construir seu array de boletos em qualquer estrutura incluindo
         $report->generate();                // gera o relatorio
         $report->out();                     // gera o pdf
-        $pdf = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
-        $x = $pdf->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
-        return $x;
+        $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
+        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        return $pdf;
     }
 }

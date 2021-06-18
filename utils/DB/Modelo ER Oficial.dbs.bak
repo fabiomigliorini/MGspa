@@ -8715,6 +8715,7 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 		<sequence name="tbltitulo_nossonumero_3940_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_3941_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_3943_seq" options="START WITH 1" />
+		<sequence name="tbltitulo_nossonumero_4_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_559_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_remessa_105_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_remessa_210_seq" options="START WITH 1" />
@@ -8724,6 +8725,7 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 		<sequence name="tbltitulo_remessa_3943_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_remessa_559_seq" options="START WITH 1" />
 		<sequence name="tbltituloagrupamento_codtituloagrupamento_seq" options="START WITH 1" />
+		<sequence name="tbltituloboleto_codtituloboleto_seq" options="START WITH 1" />
 		<sequence name="tbltitulonfeterceiro_codtitulonfeterceiro_seq" options="START WITH 1" />
 		<sequence name="tbltributacao_codtributacao_seq" options="START WITH 1" />
 		<sequence name="tbltributacaonaturezaoperacao_codtributacaonaturezaoperacao_seq" options="START WITH 1" />
