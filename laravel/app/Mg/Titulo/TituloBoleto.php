@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jun/2021 17:34:16
+ * Date: 18/Jun/2021 17:15:36
  */
 
 namespace Mg\Titulo;

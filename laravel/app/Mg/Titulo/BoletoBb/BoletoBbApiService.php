@@ -2,17 +2,15 @@
 
 namespace Mg\Titulo\BoletoBb;
 
-// use Mg\Stone\StoneFilial;
+use Mg\Portador\Portador;
 
 class BoletoBbApiService
 {
-    public static function token ()
+    public static function token (Portador $portador)
     {
         $curl = curl_init();
         $url = env('BB_URL_OAUTH') . '/token';
-        $client_id = env('BB_CLIENT_ID');
-        $client_secret = env('BB_CLIENT_SECRET');
-        $authorization = base64_encode("{$client_id}:{$client_secret}");
+        $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
         $auth = "Authorization: Basic {$authorization}";
         $body = json_encode([
             'grant_type' => 'client_credentials',
@@ -47,6 +45,7 @@ class BoletoBbApiService
 
     public static function registrar (
         $token,
+        $gwDevAppKey,
         $numeroConvenio,
         $numeroCarteira,
         $numeroVariacaoCarteira,
@@ -115,7 +114,7 @@ class BoletoBbApiService
         // dd($arr);
         $body = json_encode($arr);
         $curl = curl_init();
-        $url = env('BB_URL_COBRANCA') . '/boletos?gw-dev-app-key=' . env('BB_DEVELOPER_APPLICATION_KEY');
+        $url = env('BB_URL_COBRANCA') . '/boletos?gw-dev-app-key=' . $gwDevAppKey;
         $auth = "Authorization: Bearer {$token}";
         $opt = [
             CURLOPT_URL => $url,
@@ -143,11 +142,11 @@ class BoletoBbApiService
         return json_decode($response, true);
     }
 
-    public static function consultar ($bbtoken, $numeroConvenio, $nossoNumero)
+    public static function consultar ($bbtoken, $gwDevAppKey, $numeroConvenio, $nossoNumero)
     {
         $curl = curl_init();
         $url = env('BB_URL_COBRANCA') . '/boletos/' . $nossoNumero;
-        $url .= '?gw-dev-app-key=' . env('BB_DEVELOPER_APPLICATION_KEY');
+        $url .= '?gw-dev-app-key=' . $gwDevAppKey;
         $url .= '&numeroConvenio=' . $numeroConvenio;
         $auth = "Authorization: Bearer {$bbtoken}";
         $opt = [

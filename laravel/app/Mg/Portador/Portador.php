@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jun/2021 14:11:11
+ * Date: 18/Jun/2021 17:15:29
  */
 
 namespace Mg\Portador;
@@ -29,6 +29,9 @@ class Portador extends MgModel
     protected $fillable = [
         'agencia',
         'agenciadigito',
+        'bbclientid',
+        'bbclientsecret',
+        'bbdevappkey',
         'bbtoken',
         'bbtokenexpiracao',
         'carteira',

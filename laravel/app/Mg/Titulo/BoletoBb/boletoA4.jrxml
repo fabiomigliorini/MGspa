@@ -1133,11 +1133,11 @@
 				</jr:QRCode>
 			</componentElement>
 			<staticText>
-				<reportElement x="266" y="281" width="106" height="45" uuid="429cc507-e5c8-44f1-b1a3-ee140b841b2f"/>
+				<reportElement x="266" y="260" width="106" height="45" uuid="429cc507-e5c8-44f1-b1a3-ee140b841b2f"/>
 				<textElement textAlignment="Center">
-					<font size="11"/>
+					<font size="10"/>
 				</textElement>
-				<text><![CDATA[Pague com PIX!]]></text>
+				<text><![CDATA[Novidade: até o vencimento você pode pagar com PIX!]]></text>
 			</staticText>
 			<image scaleImage="RealHeight">
 				<reportElement x="2" y="10" width="110" height="26" uuid="c1e677a1-5499-4ff2-b5f5-ba5d153abcd4"/>

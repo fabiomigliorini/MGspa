@@ -32,7 +32,7 @@ class BoletoBbService
                 return $portador->bbtoken;
             }
         }
-        $token = BoletoBbApiService::token();
+        $token = BoletoBbApiService::token($portador);
         $expiracao = Carbon::now()->addSeconds($token['expires_in']);
         $portador->update([
             'bbtoken' => $token['access_token'],
@@ -92,6 +92,7 @@ class BoletoBbService
         $nossonumero = static::atribuirNossoNumero($titulo);
         $ret = BoletoBbApiService::registrar(
             $bbtoken,
+            $titulo->Portador->bbdevappkey,
             (int)$titulo->Portador->convenio,
             $titulo->Portador->carteira,
             $titulo->Portador->carteiravariacao,
@@ -135,6 +136,7 @@ class BoletoBbService
         $bbtoken = static::verificaTokenValido($tituloBoleto->Portador);
         $ret = BoletoBbApiService::consultar(
             $bbtoken,
+            $tituloBoleto->Portador->bbdevappkey,
             $tituloBoleto->Portador->convenio,
             $tituloBoleto->nossonumero
         );
