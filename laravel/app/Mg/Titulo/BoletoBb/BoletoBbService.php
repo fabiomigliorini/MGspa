@@ -51,9 +51,9 @@ class BoletoBbService
     public static function atribuirNossoNumero (Titulo $titulo)
     {
         // Caso ja tenha numero atribuido, aborta
-        if (!empty($titulo->nossonumero)) {
-            return $titulo->nossonumero;
-        }
+        // if (!empty($titulo->nossonumero)) {
+        //     return $titulo->nossonumero;
+        // }
 
         // Monta nome da Sequence
         $sequence = "tbltitulo_nossonumero_{$titulo->codportador}_seq";
@@ -131,7 +131,7 @@ class BoletoBbService
         if (!empty($titulo->Pessoa->complementocobranca)) {
             $endereco .= " - {$titulo->Pessoa->complementocobranca}";
         }
-        $numeroTituloBeneficiario = preg_replace("/\//", '-', $titulo->numero);
+        $numeroTituloBeneficiario = strtoupper(preg_replace('(/|\s)', '-', $titulo->numero));
 
         // monta "nossonumero"
         $nossonumero = static::atribuirNossoNumero($titulo);
@@ -258,7 +258,7 @@ class BoletoBbService
         $report->generate();                // gera o relatorio
         $report->out();                     // gera o pdf
         $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
-        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        $pdf = $pdfProcessor->Output('bolasdasdaseto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
         return $pdf;
     }
 }
