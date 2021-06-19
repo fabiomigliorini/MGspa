@@ -24,8 +24,8 @@ class TituloBoletoResource extends Resource
                 'codbanco',
                 'agencia',
                 'agenciadigito',
-                'conta'
-                'contadigito'
+                'conta',
+                'contadigito',
             ]);
         }
         return $ret;

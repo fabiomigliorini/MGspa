@@ -224,6 +224,29 @@ class BoletoBbService
         return $tituloBoleto;
     }
 
+    /**
+     * Solicita Baixa do Boleto na API do BB e persiste retorno no campo tbltituloboleto.inativo
+     */
+    public static function baixar(TituloBoleto $tituloBoleto)
+    {
+        $bbtoken = static::verificaTokenValido($tituloBoleto->Portador);
+        $ret = BoletoBbApiService::baixar(
+            $bbtoken,
+            $tituloBoleto->Portador->bbdevappkey,
+            $tituloBoleto->Portador->convenio,
+            $tituloBoleto->nossonumero
+        );
+
+        if (isset($ret['errors'][0])) {
+            throw new \Exception($ret['errors'][0]['message'], $ret['errors'][0]['code']);
+        }
+        $inativo = Carbon::parse($ret['dataBaixa'] . ' ' . $ret['horarioBaixa'] . ' America/Sao_Paulo')->timezone(config('app.timezone'));
+        $tituloBoleto->update([
+            'inativo' => $inativo,
+        ]);
+        return $tituloBoleto;
+    }
+
     public static function pdf (TituloBoleto $tituloBoleto)
     {
         $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);

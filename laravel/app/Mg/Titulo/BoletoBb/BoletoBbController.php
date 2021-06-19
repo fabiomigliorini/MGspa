@@ -32,6 +32,13 @@ class BoletoBbController extends MgController
         return new TituloBoletoResource($tituloBoleto);
     }
 
+    public function baixar(Request $request, $codtitulo, $codtituloboleto)
+    {
+        $tituloBoleto = TituloBoleto::findOrFail($codtituloboleto);
+        $tituloBoleto = BoletoBbService::baixar($tituloBoleto);
+        return new TituloBoletoResource($tituloBoleto);
+    }
+
     public function pdf(Request $request, $codtitulo, $codtituloboleto)
     {
         $tituloBoleto = TituloBoleto::findOrFail($codtituloboleto);

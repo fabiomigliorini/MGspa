@@ -115,7 +115,6 @@ class BoletoBbApiService
             ],
             'indicadorPix' => 'S'
         ];
-        // dd($arr);
         $body = json_encode($arr);
         $curl = curl_init();
         $url = env('BB_URL_COBRANCA') . '/boletos?gw-dev-app-key=' . $gwDevAppKey;
@@ -164,6 +163,41 @@ class BoletoBbApiService
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_HTTPHEADER => [
+                $auth,
+                "Content-Type: application/json"
+            ],
+        ];
+        curl_setopt_array($curl, $opt);
+        $response = curl_exec($curl);
+        if ($response === false) {
+            throw new \Exception(curl_error($curl), curl_errno($curl));
+        }
+        curl_close($curl);
+        return json_decode($response, true);
+    }
+
+    public static function baixar ($bbtoken, $gwDevAppKey, $numeroConvenio, $nossoNumero)
+    {
+        $curl = curl_init();
+        $url = env('BB_URL_COBRANCA') . '/boletos/' . $nossoNumero . '/baixar';
+        $url .= '?gw-dev-app-key=' . $gwDevAppKey;
+        $body = json_encode([
+            'numeroConvenio' => $numeroConvenio
+        ]);
+        $auth = "Authorization: Bearer {$bbtoken}";
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            // CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $body,
             CURLOPT_HTTPHEADER => [
                 $auth,
                 "Content-Type: application/json"
