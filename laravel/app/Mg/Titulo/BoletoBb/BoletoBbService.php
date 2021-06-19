@@ -33,7 +33,7 @@ class BoletoBbService
             }
         }
         $token = BoletoBbApiService::token($portador);
-        $expiracao = Carbon::now()->addSeconds($token['expires_in']);
+        $expiracao = Carbon::now()->addSeconds($token['expires_in'] * 0.5);
         $portador->update([
             'bbtoken' => $token['access_token'],
             'bbtokenexpiracao' => $expiracao,
@@ -69,6 +69,7 @@ class BoletoBbService
         $nossonumero .= str_pad((int)$titulo->Portador->convenio, 7,  '0', STR_PAD_LEFT);
         $nossonumero .= str_pad((int)$res[0]->numero, 10,  '0', STR_PAD_LEFT);
         $titulo->update([
+            'boleto' => true,
             'nossonumero' => $nossonumero
         ]);
         return $nossonumero;
@@ -80,7 +81,49 @@ class BoletoBbService
      */
     public static function registrar(Titulo $titulo)
     {
+
+        // se tem portador de outro banco
+        if (empty($titulo->codportador) || $titulo->Portador->codbanco != 1) {
+
+            // se ja tem boleto registrado em outro banco
+            if ($titulo->boleto) {
+                throw new \Exception('Já existe boleto registrado em outro banco!');
+            }
+
+            //procura portador do BB pra filial com convenio
+            $portador = Portador::where('codfilial', $titulo->codfilial)
+                ->whereNull('inativo')
+                ->where('codbanco', 1)
+                ->whereNotNull('convenio')
+                ->orderBy('codportador')
+                ->first();
+
+            //procura portador do BB sem filial com convenio
+            if ($portador === null) {
+                $portador = Portador::whereNull('codfilial')
+                    ->whereNull('inativo')
+                    ->where('codbanco', 1)
+                    ->whereNotNull('convenio')
+                    ->orderBy('codportador')
+                    ->first();
+            }
+
+            // se nao localizou nenhum portador
+            if ($portador === null) {
+                throw new \Exception('Nenhum portador disponível para a filial');
+            }
+
+            // associa o portador ao titulo
+            $titulo->update([
+                'codportador' => $portador->codportador,
+                'nossonumero' => null
+            ]);
+        }
+
+        // verifica se tem token valido
         $bbtoken = static::verificaTokenValido($titulo->Portador);
+
+        // monta variaveis com dados da cobranca
         $endereco = $titulo->Pessoa->enderecocobranca;
         if (!empty($titulo->Pessoa->numerocobranca)) {
             $endereco .= ", {$titulo->Pessoa->numerocobranca}";
@@ -89,7 +132,11 @@ class BoletoBbService
             $endereco .= " - {$titulo->Pessoa->complementocobranca}";
         }
         $numeroTituloBeneficiario = preg_replace("/\//", '-', $titulo->numero);
+
+        // monta "nossonumero"
         $nossonumero = static::atribuirNossoNumero($titulo);
+
+        // registra o boleto no BB
         $ret = BoletoBbApiService::registrar(
             $bbtoken,
             $titulo->Portador->bbdevappkey,
@@ -111,9 +158,13 @@ class BoletoBbService
             $titulo->Pessoa->CidadeCobranca->Estado->sigla,
             $titulo->Pessoa->telefone1??$titulo->Pessoa->telefone2
         );
+
+        // verifica se houve erro
         if (isset($ret['erros'])) {
             throw new \Exception("{$ret['erros'][0]['mensagem']} - {$ret['erros'][0]['codigo']}", 0);
         }
+
+        // armazena dados do registro
         $tituloBoleto = TituloBoleto::firstOrNew([
             'nossonumero' => $nossonumero,
             'codportador' => $titulo->codportador
@@ -124,6 +175,12 @@ class BoletoBbService
         $tituloBoleto->qrcodeurl = $ret['qrCode']['url'];
         $tituloBoleto->qrcodetxid = $ret['qrCode']['txId'];
         $tituloBoleto->qrcodeemv = $ret['qrCode']['emv'];
+        $tituloBoleto->estadotitulocobranca = $tituloBoleto->estadotitulocobranca??1; //Normal
+        $tituloBoleto->vencimento = $tituloBoleto->vencimento??$titulo->vencimento;
+        $tituloBoleto->dataregistro = $tituloBoleto->dataregistro??Carbon::now();
+        $tituloBoleto->databaixaautomatica = $tituloBoleto->databaixaautomatica??$titulo->vencimento->addDays(95);
+        $tituloBoleto->valororiginal = $tituloBoleto->valororiginal??$titulo->saldo;
+        $tituloBoleto->valoratual = $tituloBoleto->valoratual??$titulo->saldo;
         $tituloBoleto->save();
         return $tituloBoleto;
     }

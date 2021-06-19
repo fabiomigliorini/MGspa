@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
+use Mg\Titulo\TituloBoletoResource;
 
 class BoletoBbController extends MgController
 {
@@ -15,20 +16,20 @@ class BoletoBbController extends MgController
     {
         $titulo = Titulo::findOrFail($codtitulo);
         $tituloBoleto = BoletoBbService::registrar($titulo);
-        return $tituloBoleto;
+        return new TituloBoletoResource($tituloBoleto);
     }
 
     public function show(Request $request, $codtitulo, $codtituloboleto)
     {
         $tituloBoleto = TituloBoleto::findOrFail($codtituloboleto);
-        return $tituloBoleto;
+        return new TituloBoletoResource($tituloBoleto);
     }
 
     public function consultar(Request $request, $codtitulo, $codtituloboleto)
     {
         $tituloBoleto = TituloBoleto::findOrFail($codtituloboleto);
         $tituloBoleto = BoletoBbService::consultar($tituloBoleto);
-        return $tituloBoleto;
+        return new TituloBoletoResource($tituloBoleto);
     }
 
     public function pdf(Request $request, $codtitulo, $codtituloboleto)

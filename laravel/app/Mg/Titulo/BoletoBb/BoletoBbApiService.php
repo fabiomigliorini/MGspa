@@ -39,6 +39,10 @@ class BoletoBbApiService
         if ($response === false) {
             throw new \Exception(curl_error($curl), curl_errno($curl));
         }
+        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        if ($httpcode == 401) {
+            throw new \Exception("Erro {$httpcode} - {$response} ao Autenticar na API do BB!", $httpcode);
+        }
         curl_close($curl);
         return json_decode($response, true);
     }
