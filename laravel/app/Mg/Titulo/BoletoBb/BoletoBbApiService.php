@@ -12,11 +12,7 @@ class BoletoBbApiService
         $url = env('BB_URL_OAUTH') . '/token';
         $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
         $auth = "Authorization: Basic {$authorization}";
-        $body = json_encode([
-            'grant_type' => 'client_credentials',
-            'scope' => 'cobrancas.boletos-info+cobrancas.boletos-requisicao',
-        ]);
-
+	$body = 'grant_type=client_credentials&scope=cobrancas.boletos-info+cobrancas.boletos-requisicao';
         $opt = [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
@@ -31,7 +27,7 @@ class BoletoBbApiService
             CURLOPT_POSTFIELDS => $body,
             CURLOPT_HTTPHEADER => [
                 $auth,
-                "Content-Type: application/json"
+                'Content-Type: application/x-www-form-urlencoded'
             ],
         ];
         curl_setopt_array($curl, $opt);

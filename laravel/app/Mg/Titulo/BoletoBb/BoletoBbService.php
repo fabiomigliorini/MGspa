@@ -136,6 +136,9 @@ class BoletoBbService
         // monta "nossonumero"
         $nossonumero = static::atribuirNossoNumero($titulo);
 
+	$telefone = ($titulo->Pessoa->telefone1??$titulo->Pessoa->telefone2)??$titulo->Pessoa->telefone3; 
+	$telefone = preg_replace('/\D/', '', $telefone);
+
         // registra o boleto no BB
         $ret = BoletoBbApiService::registrar(
             $bbtoken,
@@ -156,7 +159,7 @@ class BoletoBbService
             $titulo->Pessoa->CidadeCobranca->cidade,
             $titulo->Pessoa->bairrocobranca,
             $titulo->Pessoa->CidadeCobranca->Estado->sigla,
-            $titulo->Pessoa->telefone1??$titulo->Pessoa->telefone2
+            $telefone
         );
 
         // verifica se houve erro
