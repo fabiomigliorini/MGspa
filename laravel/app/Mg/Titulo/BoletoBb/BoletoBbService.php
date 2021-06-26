@@ -16,6 +16,8 @@ use JasperPHP\PdfProcessor;
 
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
+use Mg\Titulo\MovimentoTitulo;
+use Mg\Titulo\TipoMovimentoTitulo;
 use Mg\Portador\Portador;
 
 class BoletoBbService
@@ -224,6 +226,12 @@ class BoletoBbService
             'valoroutro' => $ret['valorOutroRecebido'],
         ]);
 
+        $tituloBoleto = static::liquidar($tituloBoleto);
+
+        if ($tituloBoleto == false) {
+            throw new \Exception('Falha ao processar liquidação do Boleto');
+        }
+
         return $tituloBoleto;
     }
 
@@ -273,5 +281,90 @@ class BoletoBbService
      */
     public static function liquidar (TituloBoleto $tituloBoleto)
     {
+
+        /*
+        // TODO: Decidir o que fazer com esses 4 campos
+        if ($tituloBoleto->valorpagamentoparcial > 0) { }
+        if ($tituloBoleto->valorabatimento > 0) { }
+        if ($tituloBoleto->valorreajuste > 0) { }
+        if ($tituloBoleto->valoroutro > 0) { }
+        */
+
+        // acumula cod dos movimentos gerados
+        $codmovimentotitulos = [];
+
+        // lanca juros
+        if ($tituloBoleto->valorjuromora > 0) {
+            $mov = MovimentoTitulo::firstOrNew([
+                'codtituloboleto' => $tituloBoleto->codtituloboleto,
+                'codtipomovimentotitulo' => TipoMovimentoTitulo::JUROS,
+            ]);
+            $mov->codtitulo = $tituloBoleto->codtitulo;
+            $mov->codportador = $tituloBoleto->codportador;
+            $mov->transacao = $tituloBoleto->datarecebimento;
+            $mov->debito = $tituloBoleto->valorjuromora;
+            if (!$mov->save()) {
+                return false;
+            }
+            $codmovimentotitulos[] = $mov->codmovimentotitulo;
+        }
+
+        // lanca Multa
+        if ($tituloBoleto->valormulta > 0) {
+            $mov = MovimentoTitulo::firstOrNew([
+                'codtituloboleto' => $tituloBoleto->codtituloboleto,
+                'codtipomovimentotitulo' => TipoMovimentoTitulo::MULTA,
+            ]);
+            $mov->codtitulo = $tituloBoleto->codtitulo;
+            $mov->codportador = $tituloBoleto->codportador;
+            $mov->transacao = $tituloBoleto->datarecebimento;
+            $mov->debito = $tituloBoleto->valormulta;
+            if (!$mov->save()) {
+                return false;
+            }
+            $codmovimentotitulos[] = $mov->codmovimentotitulo;
+        }
+
+        // lanca desconto
+        if ($tituloBoleto->valordesconto > 0) {
+            $mov = MovimentoTitulo::firstOrNew([
+                'codtituloboleto' => $tituloBoleto->codtituloboleto,
+                'codtipomovimentotitulo' => TipoMovimentoTitulo::DESCONTO,
+            ]);
+            $mov->codtitulo = $tituloBoleto->codtitulo;
+            $mov->codportador = $tituloBoleto->codportador;
+            $mov->transacao = $tituloBoleto->datarecebimento;
+            $mov->credito = $tituloBoleto->valordesconto;
+            if (!$mov->save()) {
+                return false;
+            }
+            $codmovimentotitulos[] = $mov->codmovimentotitulo;
+        }
+
+        // lanca valor do pagamento
+        if ($tituloBoleto->valorpago > 0) {
+            $mov = MovimentoTitulo::firstOrNew([
+                'codtituloboleto' => $tituloBoleto->codtituloboleto,
+                'codtipomovimentotitulo' => TipoMovimentoTitulo::LIQUIDACAO,
+            ]);
+            $mov->codtitulo = $tituloBoleto->codtitulo;
+            $mov->codportador = $tituloBoleto->codportador;
+            $mov->transacao = $tituloBoleto->datarecebimento;
+            $mov->credito = $tituloBoleto->valorpago;
+            if (!$mov->save()) {
+                return false;
+            }
+            $codmovimentotitulos[] = $mov->codmovimentotitulo;
+        }
+
+        // apaga movimentos que sobraram
+        MovimentoTitulo::
+            where('codtituloboleto', $tituloBoleto->codtituloboleto)
+            ->whereNotIn('codmovimentotitulo', $codmovimentotitulos)
+            ->delete();
+
+        // retorna o mesmo objeto que recebeu
+        return $tituloBoleto;
+
     }
 }

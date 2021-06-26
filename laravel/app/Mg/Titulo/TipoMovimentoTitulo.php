@@ -14,6 +14,7 @@ use Mg\Usuario\Usuario;
 class TipoMovimentoTitulo extends MgModel
 {
     const JUROS = 400;
+    const MULTA = 401;
     const DESCONTO = 500;
     const LIQUIDACAO = 600;
     const ESTORNOLIQUIDACAO = 930;
