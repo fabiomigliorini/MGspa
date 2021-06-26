@@ -456,6 +456,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codtituloboleto": {
+                "tabela": "tbltituloboleto",
+                "coluna": "codtituloboleto",
+                "metodo": "TituloBoleto"
             }
         },
         "hasMany": []
@@ -4563,7 +4568,13 @@
                 "metodo": "Portador"
             }
         },
-        "hasMany": []
+        "hasMany": {
+            "tblmovimentotitulo.codtituloboleto": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codtituloboleto",
+                "metodo": "MovimentoTituloS"
+            }
+        }
     },
     "tbltitulonfeterceiro": {
         "tabela": "tbltitulonfeterceiro",

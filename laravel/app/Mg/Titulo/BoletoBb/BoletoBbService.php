@@ -136,8 +136,8 @@ class BoletoBbService
         // monta "nossonumero"
         $nossonumero = static::atribuirNossoNumero($titulo);
 
-	$telefone = ($titulo->Pessoa->telefone1??$titulo->Pessoa->telefone2)??$titulo->Pessoa->telefone3; 
-	$telefone = preg_replace('/\D/', '', $telefone);
+        $telefone = ($titulo->Pessoa->telefone1??$titulo->Pessoa->telefone2)??$titulo->Pessoa->telefone3;
+        $telefone = preg_replace('/\D/', '', $telefone);
 
         // registra o boleto no BB
         $ret = BoletoBbApiService::registrar(
@@ -250,6 +250,9 @@ class BoletoBbService
         return $tituloBoleto;
     }
 
+    /**
+     * Gera o arquivo PDF do Boleto
+     */
     public static function pdf (TituloBoleto $tituloBoleto)
     {
         $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
@@ -263,5 +266,12 @@ class BoletoBbService
         $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
         $pdf = $pdfProcessor->Output('bolasdasdaseto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
         return $pdf;
+    }
+
+    /**
+     * Processa gera o registro da liquidacao do Boleto caso status 6 - Liquidado
+     */
+    public static function liquidar (TituloBoleto $tituloBoleto)
+    {
     }
 }

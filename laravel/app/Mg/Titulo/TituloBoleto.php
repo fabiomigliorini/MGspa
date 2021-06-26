@@ -1,12 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jun/2021 17:15:36
+ * Date: 26/Jun/2021 08:50:14
  */
 
 namespace Mg\Titulo;
 
 use Mg\MgModel;
+use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
 use Mg\Portador\Portador;
@@ -101,6 +102,13 @@ class TituloBoleto extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
+    public function MovimentoTituloS()
+    {
+        return $this->hasMany(MovimentoTitulo::class, 'codtituloboleto', 'codtituloboleto');
     }
 
 }
