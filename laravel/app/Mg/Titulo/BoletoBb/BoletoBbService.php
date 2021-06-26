@@ -2,6 +2,8 @@
 
 namespace Mg\Titulo\BoletoBb;
 
+use Illuminate\Support\Facades\Log;
+
 use DB;
 use Carbon\Carbon;
 
@@ -277,7 +279,7 @@ class BoletoBbService
     }
 
     /**
-     * Processa gera o registro da liquidacao do Boleto caso status 6 - Liquidado
+     * Gera o registro da liquidacao do Boleto caso estado 6 - Liquidado
      */
     public static function liquidar (TituloBoleto $tituloBoleto)
     {
@@ -367,4 +369,101 @@ class BoletoBbService
         return $tituloBoleto;
 
     }
+
+    /**
+     * Consulta listagem de titulos liquidados e processa os novos
+     */
+    public static function consultarLiquidados ()
+    {
+
+        // busca todos os portadores com bbdevappkey
+        $portadores = Portador::
+            whereNull('inativo')
+            ->whereNotNull('bbdevappkey')
+            ->orderBy('codportador')
+            ->get();
+
+        // consulta de 15 dias atras ate hoje
+        $dataFimMovimento = Carbon::now();
+        $dataInicioMovimento = Carbon::now()->subDays(15);
+
+        // percorre portadores
+        foreach ($portadores as $portador) {
+
+            // inicializa indice de consulta
+            $indice = 0;
+
+            // percorre enquanto indicador de continuidade = 'S'
+            do {
+
+                // loga pesquisa
+                Log::info("Boleto BB - Consultando Liquidados - Portador #{$portador->codportador} - Indice {$indice}");
+
+                // autentica na API
+                $bbtoken = static::verificaTokenValido($portador);
+
+                // pega listagem dos boletos baixados / pagos
+                $listagem = BoletoBbApiService::consultarListagem (
+                    $bbtoken,
+                    $portador->bbdevappkey,
+                    'B',
+                    $portador->agencia,
+                    $portador->conta,
+                    $dataInicioMovimento,
+                    $dataFimMovimento,
+                    $indice
+                );
+
+                // se listagem vazia  cai fora
+                if ($listagem == null) {
+                    break;
+                }
+
+                // precorre lsitagem de boletos
+                foreach ($listagem['boletos'] as $bol) {
+
+                    // procura registro pelo nosso numero
+                    $tituloBoleto = TituloBoleto::where([
+                        'nossonumero' => $bol['numeroBoletoBB'],
+                        'codportador' => $portador->codportador
+                    ])->first();
+
+                    // se nao encontrou ignora
+                    if (!$tituloBoleto) {
+                        continue;
+                    }
+
+                    // se tem valor pago != do registrado no banco
+                    // ou se o estado do boleto e diferente
+                    if ($tituloBoleto->valorpago != $bol['valorPago'] ||
+                        $tituloBoleto->estadotitulocobranca != $bol['codigoEstadoTituloCobranca']) {
+                        // consulta o boleto
+                        Log::info("Boleto BB - Consultando TituloBoleto #{$tituloBoleto->codtituloboleto}");
+                        $tituloBoleto = static::consultar($tituloBoleto);
+                    } else {
+                        // persiste os dados que api retornou
+                        $dataCredito = $bol['dataCredito'];
+                        if ($dataCredito == '01.01.0001') {
+                            $dataCredito = null;
+                        } else {
+                            $dataCredito = Carbon::parse($dataCredito);
+                        }
+                        $tituloBoleto = $tituloBoleto->update([
+                            'dataregistro' => Carbon::parse($bol['dataRegistro']),
+                            'vencimento' => Carbon::parse($bol['dataVencimento']),
+                            'valororiginal' => $bol['valorOriginal'],
+                            'valoratual' => $bol['valorAtual'],
+                            'datacredito' => $dataCredito,
+                        ]);
+                    }
+                }
+
+                // pega o indice para continuar consulta
+                $indice = $listagem['proximoIndice'];
+
+            // repete enquanto api retornar indicadorContinuidade
+            } while ($listagem['indicadorContinuidade'] == 'S');
+        }
+    }
+
 }
