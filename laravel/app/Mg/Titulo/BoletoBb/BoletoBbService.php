@@ -256,6 +256,7 @@ class BoletoBbService
         $inativo = Carbon::parse($ret['dataBaixa'] . ' ' . $ret['horarioBaixa'] . ' America/Sao_Paulo')->timezone(config('app.timezone'));
         $tituloBoleto->update([
             'inativo' => $inativo,
+            'estadotitulocobranca' => 7, // Baixado
         ]);
         return $tituloBoleto;
     }
