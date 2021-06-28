@@ -90,7 +90,7 @@ class BoletoBbService
         if (empty($titulo->codportador) || $titulo->Portador->codbanco != 1) {
 
             // se ja tem boleto registrado em outro banco
-            if ($titulo->boleto) {
+            if ($titulo->boleto && !empty($titulo->nossonumero)) {
                 throw new \Exception('Já existe boleto registrado em outro banco!');
             }
 
