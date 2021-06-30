@@ -1,23 +1,21 @@
 ﻿--select * from tblportador order by codportador
 
 -- Cria Repasse
-insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (1, '2021-06-14', null, '2021-06-14 11:41', 1);
+insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (1, '2021-06-25', null, '2021-06-25 11:41', 1);
 
 select * from tblchequerepasse order by codchequerepasse desc limit 50;
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2549, '2021-06-14 10:00', 1
+select codcheque, 2553, '2021-06-25 10:00', 1
 from tblcheque where cmc7 in (
-	'<74880037<0180000105>000007693096:',
-	'<74881192<0180025165>400004675963:',
-	'<13623042<0180008255>600001228741:',
-	'<10408541<0189003895>000100088608:',
+	'<74881226<0180004825>800004126017:',
 	'NIL'
 	);
 
 -- Marca Cheque como repassado
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc);
+
 
 -- Consulta Total Cheques do Repasse
 with totais as (
@@ -34,8 +32,8 @@ inner join tblchequerepasse cr on (cr.codchequerepasse = t.codchequerepasse)
 
 --update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
---update tblchequerepasse set data = '2021-06-14', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2021-06-14 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = '2021-06-25', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = '2021-06-25 11:41' where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 

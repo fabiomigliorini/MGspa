@@ -57,6 +57,9 @@ select sum(vprod) from tblnfeterceiroitem t where codnfeterceiro in (32388)
 -- Brindes Coelho (Ex Lumasol)
 -- update tblnfeterceiroitem set complemento = (vprod * 1.014355021), margem = 40 where codnfeterceiro in (30001) 
 
+update tblnfeterceiroitem set complemento = (vprod * 1.5), margem = 40 where codnfeterceiro in (33950)
+
+
 update tblnfeterceiroitem set complemento = (vprod - vdesc), margem = 40 where codnfeterceiro in (32832)
 
 
