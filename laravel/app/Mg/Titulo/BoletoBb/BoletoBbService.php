@@ -122,6 +122,8 @@ class BoletoBbService
                 'codportador' => $portador->codportador,
                 'nossonumero' => null
             ]);
+
+            $titulo = $titulo->fresh();
         }
 
         // verifica se tem token valido
