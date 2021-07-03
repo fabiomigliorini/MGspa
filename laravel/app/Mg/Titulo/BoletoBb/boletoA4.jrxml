@@ -125,7 +125,7 @@
 				<textElement textAlignment="Left">
 					<font size="6"/>
 				</textElement>
-				<text><![CDATA[Autenticaçao mecanica - Ficah de compensação]]></text>
+				<text><![CDATA[Autenticação mecânica - Ficha de compensação]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="457" y="741" width="71" height="10" uuid="06419243-6715-4ef6-b599-eebc0c37832b"/>
