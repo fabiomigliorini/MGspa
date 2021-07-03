@@ -196,6 +196,24 @@ class BoletoBbService
     }
 
     /**
+     * Registra boleto de todos os titulos do Negocio
+     */
+    public static function registrarPeloNegocio (Negocio $negocio)
+    {
+        $tituloBoletos = collect();
+        foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
+            if (!$nfp->FormaPagamento->boleto) {
+                continue;
+            }
+            foreach ($nfp->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
+                $tituloBoletos[] = static::registrar($titulo);
+            }
+        }
+        return $tituloBoletos;
+    }
+
+
+    /**
      * Consulta Boleto na API do BB e persiste retorno na tbltituloboleto
      */
     public static function consultar(TituloBoleto $tituloBoleto)
