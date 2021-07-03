@@ -13,7 +13,7 @@ class NegocioComandaService
 {
     public static function pdf (Negocio $negocio)
     {
-        $report = new Report(app_path('/Mg/Negocio/comanda1.jrxml'), []);
+        $report = new Report(app_path('/Mg/Negocio/comanda.jrxml'), []);
         Instructions::prepare($report); // prepara o relatorio lendo o arquivo
         $data = [
             new NegocioComanda($negocio),
