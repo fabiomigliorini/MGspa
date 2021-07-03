@@ -34,6 +34,11 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    // Negocio
+    Route::post('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
+    Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');
+
+    // Boletos BB
     Route::post('titulo/{codtitulo}/boleto-bb', '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');
     Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}', '\Mg\Titulo\BoletoBb\BoletoBbController@show');
     Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/consultar', '\Mg\Titulo\BoletoBb\BoletoBbController@consultar');

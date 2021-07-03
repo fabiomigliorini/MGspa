@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.17.0.final using JasperReports Library version 6.17.0-6d93193241dd8cc42629e188b94f9e0bc5722efd  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="comanda" language="javascript" pageWidth="226" pageHeight="283" columnWidth="222" leftMargin="2" rightMargin="2" topMargin="2" bottomMargin="2" uuid="ff653490-88f9-4546-aaa6-53f137c26ccc">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="387"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="mm"/>
+	<parameter name="boletos_codigo" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="cedente_cpf_cnpj" class="java.lang.String"/>
+	<field name="cedente" class="java.lang.String"/>
+	<field name="linha_digitavel" class="java.lang.String"/>
+	<field name="cedente_endereco1" class="java.lang.String"/>
+	<field name="cedente_endereco2" class="java.lang.String"/>
+	<field name="logo_banco" class="java.lang.String"/>
+	<field name="logotipo" class="java.lang.String"/>
+	<field name="numero_febraban" class="java.lang.String"/>
+	<field name="codigo_banco_com_dv" class="java.lang.String"/>
+	<field name="especie" class="java.lang.String"/>
+	<field name="quantidade" class="java.lang.String"/>
+	<field name="data_vencimento" class="java.lang.String"/>
+	<field name="data_processamento" class="java.lang.String"/>
+	<field name="data_documento" class="java.lang.String"/>
+	<field name="pagamento_minimo" class="java.lang.String"/>
+	<field name="valor_documento" class="java.lang.String"/>
+	<field name="desconto_abatimento" class="java.lang.String"/>
+	<field name="outras_deducoes" class="java.lang.String"/>
+	<field name="mora_multa" class="java.lang.String"/>
+	<field name="outros_acrescimos" class="java.lang.String"/>
+	<field name="valor_cobrado" class="java.lang.String"/>
+	<field name="valor_unitario" class="java.lang.String"/>
+	<field name="sacadorAvalista" class="java.lang.String"/>
+	<field name="sacadorAvalista_cpf_cnpj" class="java.lang.String"/>
+	<field name="sacadorAvalista_endereco1" class="java.lang.String"/>
+	<field name="sacadorAvalista_endereco2" class="java.lang.String"/>
+	<field name="sacado" class="java.lang.String"/>
+	<field name="sacado_documento" class="java.lang.String"/>
+	<field name="sacado_endereco1" class="java.lang.String"/>
+	<field name="sacado_endereco2" class="java.lang.String"/>
+	<field name="demonstrativo" class="java.lang.String"/>
+	<field name="instrucoes" class="java.lang.String"/>
+	<field name="local_pagamento" class="java.lang.String"/>
+	<field name="numero_documento" class="java.lang.String"/>
+	<field name="agencia_codigo_cedente" class="java.lang.String"/>
+	<field name="nosso_numero" class="java.lang.String"/>
+	<field name="carteira" class="java.lang.String"/>
+	<field name="especie_doc" class="java.lang.String"/>
+	<field name="aceite" class="java.lang.String"/>
+	<field name="uso_banco" class="java.lang.String"/>
+	<field name="codigo_barras" class="java.lang.String"/>
+	<variable name="recordObj" class="java.lang.String">
+		<initialValueExpression><![CDATA[Boleto]]></initialValueExpression>
+	</variable>
+	<detail>
+		<band height="255">
+			<textField>
+				<reportElement x="0" y="92" width="194" height="30" uuid="e9202014-76c2-440e-90ab-4ab64b9e729a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{codnegocio}]]></textFieldExpression>
+			</textField>
+			<image scaleImage="RealHeight">
+				<reportElement x="0" y="6" width="199" height="44" uuid="c1e677a1-5499-4ff2-b5f5-ba5d153abcd4"/>
+				<imageExpression><![CDATA[$F{logo}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="0" y="60" width="194" height="40" uuid="5a68a765-db90-45fd-8e87-04048427c6eb"/>
+				<textElement textAlignment="Center">
+					<font size="26" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Comanda]]></text>
+			</staticText>
+			<componentElement>
+				<reportElement x="20" y="128" width="179" height="73" uuid="9834af32-f5da-4e10-b3ca-799864fe31db"/>
+				<jr:barbecue xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" type="Code128" drawText="false" checksumRequired="false">
+					<jr:codeExpression><![CDATA[$F{barras}]]></jr:codeExpression>
+				</jr:barbecue>
+			</componentElement>
+			<textField>
+				<reportElement x="2" y="220" width="194" height="30" uuid="c022500f-ab9c-4cb8-8b95-84049d793180"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="18" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{valortotal}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

@@ -35,4 +35,27 @@ class NegocioController extends MgController
        return response()->json($request->all(), 204);
     }
 
+    public function comanda (Request $request, $codnegocio)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $pdf = NegocioComandaService::pdf($negocio);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Comanda'.$codnegocio.'.pdf"'
+        ]);
+    }
+
+    public function comandaImprimir (Request $request, $codnegocio)
+    {
+        $request->validate([
+            'impressora' => ['required', 'string']
+        ]);
+        $negocio = Negocio::findOrFail($codnegocio);
+        $pdf = NegocioComandaService::imprimir($negocio, $request->impressora);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Comanda'.$codnegocio.'.pdf"'
+        ]);
+    }
+
 }
