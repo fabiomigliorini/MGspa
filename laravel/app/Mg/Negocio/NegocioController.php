@@ -58,4 +58,14 @@ class NegocioController extends MgController
         ]);
     }
 
+    public function unificar (Request $request, $codnegocio, $codnegociocomanda)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $negocioComanda = Negocio::findOrFail($codnegociocomanda);
+        $negocio = NegocioComandaService::unificar($negocio, $negocioComanda);
+        return [
+            'codnegocio' => $negocio->codnegocio
+        ];
+    }
+
 }

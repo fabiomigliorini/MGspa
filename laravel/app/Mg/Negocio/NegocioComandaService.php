@@ -38,4 +38,75 @@ class NegocioComandaService
         return $pdf;
     }
 
+    public static function unificar (Negocio $negocio, Negocio $negocioComanda)
+    {
+        // verifica se nao está tentando unificar a comanda nela mesma
+        if ($negocioComanda->codnegocio == $negocio->codnegocio) {
+            throw new \Exception("Negócio e Comanda são o mesmo código!", 1);
+        }
+
+        // verifica se a comanda está aberta
+        if ($negocioComanda->codnegociostatus != 1) {
+            throw new \Exception("Comanda não está mais aberta!", 1);
+        }
+
+        // verifica se o negocio "destino" está aberto
+        if ($negocio->codnegociostatus != 1) {
+            throw new \Exception("Negócio não está aberto!", 1);
+        }
+
+        // verifica se tem item pra "puxar"
+        if ($negocioComanda->NegocioProdutoBarras()->count() == 0) {
+            throw new \Exception("Comanda não tem nenhum item!", 1);
+        }
+
+        // se o negocio "destino" não tem nenhum item, "inverte" os papeis
+        // a "comanda" vira o negocio "destino"
+        if ($negocio->NegocioProdutoBarras()->count() == 0) {
+            // puxa pro usuario
+            $negocioComanda->update([
+                'codusuario' => $negocio->codusuario
+            ]);
+            $negocioComanda->fresh();
+            return $negocioComanda;
+        }
+
+        // duplica os itens da comanda pro destino
+        foreach ($negocioComanda->NegocioProdutoBarras as $pbComanda) {
+            $pb = $pbComanda->replicate();
+            $pb->codnegocio = $negocio->codnegocio;
+            $pb->save();
+        }
+
+        // monta observacoes
+        $observacoes = [];
+        if (!empty($negocioComanda->observacoes)) {
+            $observacoes[] = $negocioComanda->observacoes;
+        }
+        $observacoes[] = 'Unificado no negócio #' . $negocio->codnegocio;
+        $observacoes = implode(" - ", $observacoes);
+
+        // marca a comanda como cancelada
+        $negocioComanda->update([
+            'codnegociostatus' => 3,
+            'observacoes' => $observacoes
+        ]);
+
+        // junta desconto
+        if (!empty($negocioComanda->valordesconto)) {
+            $negocio->update([
+                'valordesconto' => $negocio->valordesconto + $negocioComanda->valordesconto
+            ]);
+        }
+
+        // junta frete
+        if (!empty($negocioComanda->valorfrete)) {
+            $negocio->update([
+                'valorfrete' => $negocio->valorfrete + $negocioComanda->valorfrete
+            ]);
+        }
+
+        return $negocio;
+    }
+
 }
