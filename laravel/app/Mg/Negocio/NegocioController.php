@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Mg\Titulo\BoletoBb\BoletoBbService;
 
 class NegocioController extends MgController
 {
@@ -66,6 +67,16 @@ class NegocioController extends MgController
         return [
             'codnegocio' => $negocio->codnegocio
         ];
+    }
+
+    public function boletoBbPdf (Request $request, $codnegocio)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $pdf = BoletoBbService::pdfPeloNegocio($negocio);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="BoletosNegocio'.$codnegocio.'.pdf"'
+        ]);
     }
 
 }

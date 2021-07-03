@@ -21,6 +21,7 @@ use Mg\Titulo\TituloBoleto;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\TipoMovimentoTitulo;
 use Mg\Portador\Portador;
+use Mg\Negocio\Negocio;
 
 class BoletoBbService
 {
@@ -277,7 +278,33 @@ class BoletoBbService
         $report->generate();                // gera o relatorio
         $report->out();                     // gera o pdf
         $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
-        $pdf = $pdfProcessor->Output('bolasdasdaseto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        return $pdf;
+    }
+
+    /**
+     * Gera o arquivo PDF dos Boleto do Negocio
+     */
+    public static function pdfPeloNegocio (Negocio $negocio)
+    {
+        $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
+        Instructions::prepare($report); // prepara o relatorio lendo o arquivo
+        $data = [];
+        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
+            foreach ($nfp->TituloS()->where('saldo', '>', 0)->get() as $titulo) {
+                foreach ($titulo->TituloBoletoS()->whereNull('inativo')->get() as $tituloBoleto) {
+                    $data[] = new BoletoBbPdf($tituloBoleto);
+                }
+            }
+        }
+        if (count($data) == 0) {
+            throw new \Exception("Nenhum boleto para o Negócio!");
+        }
+        $report->dbData = $data; // aqui voce pode construir seu array de boletos em qualquer estrutura incluindo
+        $report->generate();                // gera o relatorio
+        $report->out();                     // gera o pdf
+        $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
+        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
         return $pdf;
     }
 
