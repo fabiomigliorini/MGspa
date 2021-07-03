@@ -290,9 +290,9 @@ class BoletoBbService
         $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
         Instructions::prepare($report); // prepara o relatorio lendo o arquivo
         $data = [];
-        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
-            foreach ($nfp->TituloS()->where('saldo', '>', 0)->get() as $titulo) {
-                foreach ($titulo->TituloBoletoS()->whereNull('inativo')->get() as $tituloBoleto) {
+        foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
+            foreach ($nfp->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
+                foreach ($titulo->TituloBoletoS()->whereNull('inativo')->orderBy('codtituloboleto')->get() as $tituloBoleto) {
                     $data[] = new BoletoBbPdf($tituloBoleto);
                 }
             }
