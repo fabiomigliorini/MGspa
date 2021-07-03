@@ -65,7 +65,7 @@ class NegocioComanda
     {
         $this->data['codnegocio'] = '#' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
         $this->data['valortotal'] = 'R$ ' . number_format($negocio->valortotal, 2, ',', '.');
-        $this->data['barras'] = "NEG{$negocio->codnegocio}";
+        $this->data['barras'] = "NEG" . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
         $this->data['logo'] = 'data:image/jpg;base64,' . base64_encode(file_get_contents(public_path('MGPapelariaLogoPretoBranco.jpeg')));
     }
 

@@ -35,13 +35,13 @@
 				<text><![CDATA[Comanda]]></text>
 			</staticText>
 			<componentElement>
-				<reportElement x="20" y="135" width="179" height="73" uuid="9834af32-f5da-4e10-b3ca-799864fe31db"/>
+				<reportElement x="27" y="135" width="179" height="73" uuid="9834af32-f5da-4e10-b3ca-799864fe31db"/>
 				<jr:barbecue xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" type="Code128" drawText="false" checksumRequired="false">
 					<jr:codeExpression><![CDATA[$F{barras}]]></jr:codeExpression>
 				</jr:barbecue>
 			</componentElement>
 			<textField>
-				<reportElement x="2" y="220" width="194" height="30" uuid="c022500f-ab9c-4cb8-8b95-84049d793180"/>
+				<reportElement x="0" y="220" width="194" height="30" uuid="c022500f-ab9c-4cb8-8b95-84049d793180"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="26" isBold="true"/>
 				</textElement>
