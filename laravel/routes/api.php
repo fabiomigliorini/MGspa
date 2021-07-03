@@ -35,7 +35,7 @@ Route::group(['prefix' => 'v1/auth'], function () {
 Route::group(['prefix' => 'v1'], function () {
 
     // Negocio
-    Route::post('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
+    Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
     Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');
 
     // Boletos BB
