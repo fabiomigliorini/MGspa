@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Mg\Titulo\BoletoBb\BoletoBbService;
+use Mg\Titulo\TituloBoletoResource;
 
 class NegocioController extends MgController
 {
@@ -56,6 +58,33 @@ class NegocioController extends MgController
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="Comanda'.$codnegocio.'.pdf"'
         ]);
+    }
+
+    public function unificar (Request $request, $codnegocio, $codnegociocomanda)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $negocioComanda = Negocio::findOrFail($codnegociocomanda);
+        $negocio = NegocioComandaService::unificar($negocio, $negocioComanda);
+        return [
+            'codnegocio' => $negocio->codnegocio
+        ];
+    }
+
+    public function boletoBbPdf (Request $request, $codnegocio)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $pdf = BoletoBbService::pdfPeloNegocio($negocio);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="BoletosNegocio'.$codnegocio.'.pdf"'
+        ]);
+    }
+
+    public function boletoBbRegistrar (Request $request, $codnegocio)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $tituloBoletos = BoletoBbService::registrarPeloNegocio($negocio);
+        return TituloBoletoResource::collection($tituloBoletos);
     }
 
 }
