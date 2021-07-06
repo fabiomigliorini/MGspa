@@ -34,6 +34,9 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    // NFeTerceiro
+    Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
+
     // Negocio
     Route::post('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
     Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');
@@ -80,17 +83,17 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
 
     // NotaFiscalTerceiro
-    Route::get('nfe-terceiro/ultima-nsu', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@ultimaNSU');
-    Route::get('nfe-terceiro/manifestacao', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@manifestacao');
-    Route::get('nfe-terceiro/atualiza-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaItem');
-    Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaNFe');
-
-    Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@consultaSefaz');
-    Route::get('nfe-terceiro/armazena-dados', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosConsulta');
-    Route::get('nfe-terceiro/lista-notas', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaNotas');
-    Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@buscaNfeTerceiro');
-    Route::get('nfe-terceiro/lista-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaItem');
-    Route::get('nfe-terceiro/download-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@downloadNotaFiscalTerceiro');
+    // Route::get('nfe-terceiro/ultima-nsu', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@ultimaNSU');
+    // Route::get('nfe-terceiro/manifestacao', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@manifestacao');
+    // Route::get('nfe-terceiro/atualiza-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaItem');
+    // Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaNFe');
+    //
+    // Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@consultaSefaz');
+    // Route::get('nfe-terceiro/armazena-dados', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosConsulta');
+    // Route::get('nfe-terceiro/lista-notas', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaNotas');
+    // Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@buscaNfeTerceiro');
+    // Route::get('nfe-terceiro/lista-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaItem');
+    // Route::get('nfe-terceiro/download-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@downloadNotaFiscalTerceiro');
     // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@carregarXml');
     // Route::get('nfe-terceiro/armazena-evento', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosEvento');
 
