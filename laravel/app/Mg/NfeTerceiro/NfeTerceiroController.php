@@ -21,12 +21,14 @@ class NfeTerceiroController
                     '210220', // OPERACAO DESOCNHECIDA
                     '210240', // OPERACAO NAO REALIZADA
                 ])
-            ],
-            'justificativa' => [
-                'string',
-                // 'required_if' => 'indmanifestacao,210220', // Nao funciona
             ]
         ]);
+
+        if ($request->indmanifestacao == 210240) {
+            $request->validate([
+                'justificativa' => 'string|required|min:15'
+            ]);
+        }
 
         $nfeTerceiro = NfeTerceiro::findOrFail($codnfeterceiro);
         $ret = NfeTerceiroService::manifestacao($nfeTerceiro, $request->indmanifestacao, $request->justificativa);
