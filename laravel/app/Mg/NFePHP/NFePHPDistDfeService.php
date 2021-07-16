@@ -36,18 +36,10 @@ class NFePHPDistDfeService
         // $tools->setEnvironment($filial->nfeambiente);
         $tools->setEnvironment(1);
 
-        // $dd = DistribuicaoDfe::findOrFail(21262);
-        // $path = NFePHPPathService::pathDfeGz($dd, true);
-        // $gz = file_get_contents($path);
-        // static::processarProcNFe($dd, $gz);
-        // dd($gz);
-        // dd($dd);
-
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
         $resp = $tools->sefazDistDFe($nsu);
-        // dd($resp);
 
         $st = (new Standardize($resp))->toStd();
         switch ($st->cStat) {
@@ -190,6 +182,9 @@ class NFePHPDistDfeService
             }
         }
         $nft->save();
+
+        // emite o ciencia da operacao para a nota nfe de terceiro
+        $ret = NfeTerceiroService::manifestacao($nfeTerceiro, '210210');
 
         // vincula dfe na nota fiscal de terceiro
         $dd->codnfeterceiro = $nft->codnfeterceiro;
