@@ -185,7 +185,7 @@ class NFePHPDistDfeService
         $nft->save();
 
         // emite o ciencia da operacao para a nota nfe de terceiro
-        $ret = NfeTerceiroService::manifestacao($nfeTerceiro, '210210');
+        $ret = NfeTerceiroService::manifestacao($nft, '210210');
 
         // vincula dfe na nota fiscal de terceiro
         $dd->codnfeterceiro = $nft->codnfeterceiro;
