@@ -1,6 +1,6 @@
 ﻿update tblliquidacaotitulo 
-set codportador = (select p.codportador from tblportador p where p.portador ilike '%gere%') 
-where codliquidacaotitulo = 80852
+set codportador = (select p.codportador from tblportador p where p.portador ilike '%387%') 
+where codliquidacaotitulo = 81366
 
 update tblmovimentotitulo
 set codportador = lt.codportador

@@ -2,14 +2,14 @@ select p.fantasia, f.filial, t.numero, t.saldo, t.debito, t.credito, t.venciment
 from tbltitulo t
 inner join tblpessoa p on (p.codpessoa = t.codpessoa)
 inner join tblfilial f on (f.codfilial = t.codfilial)
-where t.debito = 2954.5
+where t.debito = 5857
 --where t.debito between 10300 and 10400
 --where t.credito = 369.98
 order by criacao desc nulls LAST
 
 select * 
 from tblliquidacaotitulo lt
-where lt.observacao ilike '%pedr%sant%'
+where lt.observacao ilike '%POLIANE%'
 
 select * from tbltitulo where observacao ilike '%5419%'
 
