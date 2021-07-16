@@ -14,8 +14,8 @@ class NFePHPManifestacaoService
         $tools = NFePHPConfigService::instanciaTools($filial);
         $tools->model(55);
         //este serviço somente opera em ambiente de produção
-        $tools->setEnvironment($filial->nfeambiente);
-        // $tools->setEnvironment(1);
+        // $tools->setEnvironment($filial->nfeambiente);
+        $tools->setEnvironment(1);
         $response = $tools->sefazManifesta($chNFe, $tpEvento, $justificativa, $nSeqEvento);
         $st = (new Standardize($response))->toStd();
         return $st;

@@ -11,11 +11,12 @@ use Mg\Dfe\DfeEvento;
 use Mg\Dfe\DistribuicaoDfe;
 use Mg\Dfe\DistribuicaoDfeEvento;
 use Mg\Dfe\DfeTipo;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroGrupo;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroItem;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroDuplicata;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroPagamento;
+use Mg\NfeTerceiro\NfeTerceiro;
+use Mg\NfeTerceiro\NfeTerceiroGrupo;
+use Mg\NfeTerceiro\NfeTerceiroItem;
+use Mg\NfeTerceiro\NfeTerceiroDuplicata;
+use Mg\NfeTerceiro\NfeTerceiroPagamento;
+use Mg\NfeTerceiro\NfeTerceiroItemService;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\PessoaService;
 use Mg\Pessoa\Pessoa;
@@ -32,13 +33,34 @@ class NFePHPDistDfeService
         $tools->model('55');
 
         // mesmo em teste utilizar na producao
+        // $tools->setEnvironment($filial->nfeambiente);
         $tools->setEnvironment(1);
+
+        // $dd = DistribuicaoDfe::findOrFail(21262);
+        // $path = NFePHPPathService::pathDfeGz($dd, true);
+        // $gz = file_get_contents($path);
+        // static::processarProcNFe($dd, $gz);
+        // dd($gz);
+        // dd($dd);
 
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
         $resp = $tools->sefazDistDFe($nsu);
-        // file_put_contents("/opt/www/MGspa/laravel/app/Mg/NFePHP/exemplos/{$filial->codfilial}-{$nsu}.xml", $resp);
+        // dd($resp);
+
+        $st = (new Standardize($resp))->toStd();
+        switch ($st->cStat) {
+            case '137': // Nenhum documento localizado
+                return;
+
+            case '138': // Documento(s) localizado(s)
+                break;
+
+            default:
+                throw new \Exception($st->cStat . ' - ' . $st->xMotivo, 1);
+                break;
+        }
 
         $domResp = new \DOMDocument();
         $domResp->loadXML($resp);
@@ -142,14 +164,13 @@ class NFePHPDistDfeService
         $dom->loadXML(gzdecode($gz));
 
         // procura se tem a nota no banco ja
-        $nft = NotaFiscalTerceiro::firstOrNew([
+        $nft = NfeTerceiro::firstOrNew([
             'nfechave' => $dom->getElementsByTagName('chNFe')->item(0)->nodeValue
         ]);
 
         // associa valores recebidos pelo xml
         $nft->codfilial = $nft->codfilial??$dd->codfilial;
-        $nft->cnpj = $nft->cnpj??@$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue;
-        $nft->cpf = $nft->cpf??@$dom->getElementsByTagName('CPF')->item(0)->nodeValue;
+        $nft->cnpj = $nft->cnpj??@$dom->getElementsByTagName('CPF')->item(0)->nodeValue??@$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue;
         $nft->emitente = $nft->emitente??@$dom->getElementsByTagName('xNome')->item(0)->nodeValue;
         $nft->ie = $nft->ie??@$dom->getElementsByTagName('IE')->item(0)->nodeValue;
         if ($pessoa = PessoaService::buscarPorCnpjIe($nft->cnpj??$nft->cpf, $nft->ie)) {
@@ -157,8 +178,6 @@ class NFePHPDistDfeService
         }
         $nft->emissao = $nft->emissao??@Carbon::parse($dom->getElementsByTagName('dhEmi')->item(0)->nodeValue);
         $nft->valortotal = $nft->valortotal??@$dom->getElementsByTagName('vNF')->item(0)->nodeValue;
-        $nft->recebimento = @Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue);
-        $nft->protocolo = @$dom->getElementsByTagName('nProt')->item(0)->nodeValue;
         $nft->indsituacao = @$dom->getElementsByTagName('cSitNFe')->item(0)->nodeValue;
         if (!empty($nft->codoperacao)) {
             switch ((int)$dom->getElementsByTagName('tpNF')->item(0)->nodeValue) {
@@ -173,9 +192,8 @@ class NFePHPDistDfeService
         $nft->save();
 
         // vincula dfe na nota fiscal de terceiro
-        $dd->codnotafiscalterceiro = $nft->codnotafiscalterceiro;
+        $dd->codnfeterceiro = $nft->codnfeterceiro;
         $dd->nfechave = $nft->nfechave;
-        $dd->data = $nft->recebimento??$nft->emissao;
         $dd->save();
     }
 
@@ -228,19 +246,13 @@ class NFePHPDistDfeService
         $dom->loadXML(gzdecode($gz));
 
         // procura se tem a nota no banco ja
-        $nft = NotaFiscalTerceiro::firstOrNew([
+        $nft = NfeTerceiro::firstOrNew([
             'nfechave' => numeroLimpo($dom->getElementsByTagName('chNFe')->item(0)->nodeValue)
         ]);
 
         // dados da Nfe
         $nft->codfilial = $nft->codfilial??$dd->codfilial;
-        $nft->natop = $nft->natop??@$dom->getElementsByTagName('natOp')->item(0)->nodeValue;
-        $nft->modelo = $nft->modelo??@$dom->getElementsByTagName('mod')->item(0)->nodeValue;
-        $nft->serie = $nft->serie??@$dom->getElementsByTagName('serie')->item(0)->nodeValue;
-        $nft->numero = $nft->numero??@$dom->getElementsByTagName('nNF')->item(0)->nodeValue;
-        $nft->emissao = $nft->emissao??@Carbon::parse($dom->getElementsByTagName('dhEmi')->item(0)->nodeValue);
-        $nft->tipo = $nft->tipo??@$dom->getElementsByTagName('tpNF')->item(0)->nodeValue;
-        $nft->finalidade = $nft->finalidade??@$dom->getElementsByTagName('finNFe')->item(0)->nodeValue;
+        $nft->natureza = $nft->natureza??@$dom->getElementsByTagName('natOp')->item(0)->nodeValue;
         switch ((int)$dom->getElementsByTagName('tpNF')->item(0)->nodeValue) {
             case 1:
                 $nft->codoperacao = Operacao::ENTRADA;
@@ -249,9 +261,17 @@ class NFePHPDistDfeService
                 $nft->codoperacao = Operacao::SAIDA;
                 break;
         }
-        $nft->indsituacao = $nft->indsituacao??NotaFiscalTerceiro::INDSITUACAO_AUTORIZADA;
-        $nft->observacoes = $nft->observacoes??@$dom->getElementsByTagName('infCpl')->item(0)->nodeValue;
-        // $nft->indmanifestacao = $nft->indmanifestacao??NotaFiscalTerceiro::INDMANIFESTACAO_SEM;
+        $nft->modelo = $nft->modelo??@$dom->getElementsByTagName('mod')->item(0)->nodeValue;
+        $nft->serie = $nft->serie??@$dom->getElementsByTagName('serie')->item(0)->nodeValue;
+        $nft->numero = $nft->numero??@$dom->getElementsByTagName('nNF')->item(0)->nodeValue;
+        $nft->tipo = $nft->tipo??@$dom->getElementsByTagName('tpNF')->item(0)->nodeValue;
+        $nft->emissao = $nft->emissao??@Carbon::parse($dom->getElementsByTagName('dhEmi')->item(0)->nodeValue);
+        $nft->finalidade = $nft->finalidade??@$dom->getElementsByTagName('finNFe')->item(0)->nodeValue;
+        $nft->indsituacao = $nft->indsituacao??NfeTerceiro::INDSITUACAO_AUTORIZADA;
+        $nft->informacoes = $nft->observacoes??@$dom->getElementsByTagName('infCpl')->item(0)->nodeValue;
+        //$nft->indmanifestacao = $nft->indmanifestacao??NfeTerceiro::INDMANIFESTACAO_SEM;
+        $nft->nsu = $dd->nsu;
+        $nft->nfedataautorizacao = $nft->nfedataautorizacao??@Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue);
 
         // valores
         $icmstot = $dom->getElementsByTagName('ICMSTot')->item(0);
@@ -269,8 +289,7 @@ class NFePHPDistDfeService
 
         // emitente
         $emit = $dom->getElementsByTagName('emit')->item(0);
-        $nft->cnpj = $nft->cnpj??@$emit->getElementsByTagName('CNPJ')->item(0)->nodeValue;
-        $nft->cpf = $nft->cpf??@$emit->getElementsByTagName('CPF')->item(0)->nodeValue;
+        $nft->cnpj = $nft->cnpj??@$emit->getElementsByTagName('CPF')->item(0)->nodeValue??@$emit->getElementsByTagName('CNPJ')->item(0)->nodeValue;
         $nft->emitente = $nft->emitente??@$emit->getElementsByTagName('xNome')->item(0)->nodeValue;
         $nft->ie = $nft->ie??@$emit->getElementsByTagName('IE')->item(0)->nodeValue;
 
@@ -305,6 +324,7 @@ class NFePHPDistDfeService
             $pessoa->fornecedor = true;
             $pessoa->notafiscal = 0;
             $pessoa->save();
+            $nft->codpessoa = $pessoa->codpessoa;
         }
 
         // atualiza CRT da pessoa
@@ -320,80 +340,76 @@ class NFePHPDistDfeService
             $nft->codfilial = $filial->codfilial;
         }
 
-        // salva NotaFiscalTerceiro
+        // salva NfeTerceiro
         $nft->save();
-
-        // Verifica todos os grupos de itens criados
-        $nfts = $nft->NotaFiscalTerceiroGrupoS;
-        $codnotafiscalterceirogrupos = $nfts->pluck('codnotafiscalterceirogrupo');
 
         // percorre todos os itens (det) da nfe
         $dets = $dom->getElementsByTagName('det');
         foreach ($dets as $det) {
 
             // verifica se o item ja estava importado
-            $numero = $det->getAttribute('nItem');
-            if ($nfti = NotaFiscalTerceiroItem::whereIn('codnotafiscalterceirogrupo', $codnotafiscalterceirogrupos)->where('numero', $numero)->first()) {
-                $nftg = $nfti->NotaFiscalTerceiroGrupo;
-            } else {
-                $nftg = NotaFiscalTerceiroGrupo::create([
-                    'codnotafiscalterceiro' => $nft->codnotafiscalterceiro
-                ]);
-                $nfti = new NotaFiscalTerceiroItem();
-                $nfti->codnotafiscalterceirogrupo = $nftg->codnotafiscalterceirogrupo;
-                $nfti->numero = $numero;
+            $nfti = NfeTerceiroItem::firstOrNew([
+                'codnfeterceiro' => $nft->codnfeterceiro,
+                'nitem' => $det->getAttribute('nItem'),
+            ]);
+
+            // dados do produto
+            $nfti->cprod = @$det->getElementsByTagName('cProd')->item(0)->nodeValue;
+            $nfti->xprod = @$det->getElementsByTagName('xProd')->item(0)->nodeValue;
+            $nfti->infadprod = @$det->getElementsByTagName('infAdProd')->item(0)->nodeValue;
+            $nfti->cean = @$det->getElementsByTagName('cEAN')->item(0)->nodeValue;
+            $nfti->ceantrib = @$det->getElementsByTagName('cEANTrib')->item(0)->nodeValue;
+            if (empty($nfti->codprodutobarra)) {
+                $nfti = NfeTerceiroItemService::copiaDadosUltimaOcorrencia($nfti);
             }
 
-            $nfti->referencia = @$det->getElementsByTagName('cProd')->item(0)->nodeValue;
-            $nfti->barras = @$det->getElementsByTagName('cEAN')->item(0)->nodeValue;
-            $nfti->produto = @$det->getElementsByTagName('xProd')->item(0)->nodeValue;
-            $nfti->adicional = @$det->getElementsByTagName('infAdProd')->item(0)->nodeValue;
+            // dados fiscais
             $nfti->ncm = @$det->getElementsByTagName('NCM')->item(0)->nodeValue;
             $nfti->cest = @$det->getElementsByTagName('CEST')->item(0)->nodeValue;
+            $nfti->orig = @$det->getElementsByTagName('orig')->item(0)->nodeValue;
             $nfti->cfop = @$det->getElementsByTagName('CFOP')->item(0)->nodeValue;
-
-            $nfti->barras = @$det->getElementsByTagName('cEAN')->item(0)->nodeValue;
-            $nfti->unidademedida = @$det->getElementsByTagName('uCom')->item(0)->nodeValue;
-            $nfti->quantidade = @$det->getElementsByTagName('qCom')->item(0)->nodeValue;
-            $nfti->valorunitario = @$det->getElementsByTagName('vUnCom')->item(0)->nodeValue;
-
-            $nfti->barrastributavel = @$det->getElementsByTagName('cEANTrib')->item(0)->nodeValue;
-            $nfti->unidademedidatributavel = @$det->getElementsByTagName('uTrib')->item(0)->nodeValue;
-            $nfti->quantidadetributavel = @$det->getElementsByTagName('qTrib')->item(0)->nodeValue;
-            $nfti->valorunitariotributavel = @$det->getElementsByTagName('vUnTrib')->item(0)->nodeValue;
-
-            $nfti->valorproduto = @$det->getElementsByTagName('vProd')->item(0)->nodeValue;
-            $nfti->valorfrete = @$det->getElementsByTagName('vFrete')->item(0)->nodeValue;
-            $nfti->valorseguro = @$det->getElementsByTagName('vSeg')->item(0)->nodeValue;
-            $nfti->valordesconto = @$det->getElementsByTagName('vDesc')->item(0)->nodeValue;
-            $nfti->valoroutras = @$det->getElementsByTagName('vOutro')->item(0)->nodeValue;
-
             $nfti->compoetotal = @boolval($det->getElementsByTagName('indTot')->item(0)->nodeValue);
+
+            // valor e quantidade comercial
+            $nfti->ucom = @$det->getElementsByTagName('uCom')->item(0)->nodeValue;
+            $nfti->qcom = @$det->getElementsByTagName('qCom')->item(0)->nodeValue;
+            $nfti->vuncom = @$det->getElementsByTagName('vUnCom')->item(0)->nodeValue;
+            $nfti->vprod = @$det->getElementsByTagName('vProd')->item(0)->nodeValue;
+            $nfti->vdesc = @$det->getElementsByTagName('vDesc')->item(0)->nodeValue;
+            $nfti->vfrete = @$det->getElementsByTagName('vFrete')->item(0)->nodeValue;
+            $nfti->vseg = @$det->getElementsByTagName('vSeg')->item(0)->nodeValue;
+            $nfti->voutro = @$det->getElementsByTagName('vOutro')->item(0)->nodeValue;
+
+            // valor e quantidade tributavel
+            $nfti->utrib = @$det->getElementsByTagName('uTrib')->item(0)->nodeValue;
+            $nfti->qtrib = @$det->getElementsByTagName('qTrib')->item(0)->nodeValue;
+            $nfti->vuntrib = @$det->getElementsByTagName('vUnTrib')->item(0)->nodeValue;
 
             // ICMS
             foreach ($det->getElementsByTagName('ICMS') as $icms) {
 
                 // CST
+                $nfti->cst = @$icms->getElementsByTagName('CST')->item(0)->nodeValue;
                 $nfti->csosn = @$icms->getElementsByTagName('CSOSN')->item(0)->nodeValue;
-                $nfti->icmscst = @$icms->getElementsByTagName('CST')->item(0)->nodeValue;
 
                 // ICMS Normal
-                $nfti->icmsbasemodalidade = @(int) $icms->getElementsByTagName('modBC')->item(0)->nodeValue;
-                $nfti->icmsbase = @$icms->getElementsByTagName('vBC')->item(0)->nodeValue;
-                $nfti->icmspercentual = @$icms->getElementsByTagName('pICMS')->item(0)->nodeValue;
-                $nfti->icmsvalor = @$icms->getElementsByTagName('vICMS')->item(0)->nodeValue;
+                $nfti->vbc = @$icms->getElementsByTagName('vBC')->item(0)->nodeValue;
+                $nfti->modbc = @(int) $icms->getElementsByTagName('modBC')->item(0)->nodeValue;
+                $nfti->predbc = @$icms->getElementsByTagName('pRedBC')->item(0)->nodeValue;
+                $nfti->picms = @$icms->getElementsByTagName('pICMS')->item(0)->nodeValue;
+                $nfti->vicms = @$icms->getElementsByTagName('vICMS')->item(0)->nodeValue;
 
                 // ICMS Diferido
                 // $nfti-> = @$icms->getElementsByTagName('pDif')->item(0)->nodeValue;
                 // $nfti-> = @$icms->getElementsByTagName('vICMSDif')->item(0)->nodeValue;
 
                 // ICMS ST
-                $nfti->icmsstbasemodalidade = @$icms->getElementsByTagName('modBCST')->item(0)->nodeValue;
-                $nfti->icmsstbasepercentualreducao = @$icms->getElementsByTagName('pRedBCST')->item(0)->nodeValue;
-                $nfti->icmsstbase = @$icms->getElementsByTagName('vBCST')->item(0)->nodeValue;
-                $nfti->icmsstmva = @$icms->getElementsByTagName('pMVAST')->item(0)->nodeValue;
-                $nfti->icmsstpercentual = @$icms->getElementsByTagName('pICMSST')->item(0)->nodeValue;
-                $nfti->icmsstvalor = @$icms->getElementsByTagName('vICMSST')->item(0)->nodeValue;
+                $nfti->vbcst = @$icms->getElementsByTagName('vBCST')->item(0)->nodeValue;
+                $nfti->modbcst = @$icms->getElementsByTagName('modBCST')->item(0)->nodeValue;
+                $nfti->predbcst = @$icms->getElementsByTagName('pRedBCST')->item(0)->nodeValue;
+                $nfti->pmvast = @$icms->getElementsByTagName('pMVAST')->item(0)->nodeValue;
+                $nfti->picmsst = @$icms->getElementsByTagName('pICMSST')->item(0)->nodeValue;
+                $nfti->vicmsst = @$icms->getElementsByTagName('vICMSST')->item(0)->nodeValue;
 
                 // ICMS Desonerado
                 // $nfti-> = @$icms->getElementsByTagName('vICMSDeson')->item(0)->nodeValue;
@@ -404,61 +420,63 @@ class NFePHPDistDfeService
             // IPI
             foreach ($det->getElementsByTagName('IPITrib') as $ipi) {
                 $nfti->ipicst = @$ipi->getElementsByTagName('CST')->item(0)->nodeValue;
-                $nfti->ipibase = @$ipi->getElementsByTagName('vBC')->item(0)->nodeValue;
-                $nfti->ipipercentual = @$ipi->getElementsByTagName('pIPI')->item(0)->nodeValue;
-                $nfti->ipivalor = @$ipi->getElementsByTagName('vIPI')->item(0)->nodeValue;
+                $nfti->ipivbc = @$ipi->getElementsByTagName('vBC')->item(0)->nodeValue;
+                $nfti->ipipipi = @$ipi->getElementsByTagName('pIPI')->item(0)->nodeValue;
+                $nfti->ipivipi = @$ipi->getElementsByTagName('vIPI')->item(0)->nodeValue;
             }
 
             // PIS
             foreach ($det->getElementsByTagName('PIS') as $pis) {
                 $nfti->piscst = @$pis->getElementsByTagName('CST')->item(0)->nodeValue;
-                $nfti->pisbase = @$pis->getElementsByTagName('vBC')->item(0)->nodeValue;
-                $nfti->pispercentual = @$pis->getElementsByTagName('pPIS')->item(0)->nodeValue;
-                $nfti->pisvalor = @$pis->getElementsByTagName('vPIS')->item(0)->nodeValue;
+                $nfti->pisvbc = @$pis->getElementsByTagName('vBC')->item(0)->nodeValue;
+                $nfti->pisppis = @$pis->getElementsByTagName('pPIS')->item(0)->nodeValue;
+                $nfti->pisvpis = @$pis->getElementsByTagName('vPIS')->item(0)->nodeValue;
             }
 
             // COFINS
             foreach ($det->getElementsByTagName('COFINS') as $pis) {
                 $nfti->cofinscst = @$pis->getElementsByTagName('CST')->item(0)->nodeValue;
-                $nfti->cofinsbase = @$pis->getElementsByTagName('vBC')->item(0)->nodeValue;
-                $nfti->cofinspercentual = @$pis->getElementsByTagName('pCOFINS')->item(0)->nodeValue;
-                $nfti->cofinsvalor = @$pis->getElementsByTagName('vCOFINS')->item(0)->nodeValue;
+                $nfti->cofinsvbc = @$pis->getElementsByTagName('vBC')->item(0)->nodeValue;
+                $nfti->cofinspcofins = @$pis->getElementsByTagName('pCOFINS')->item(0)->nodeValue;
+                $nfti->cofinsvcofins = @$pis->getElementsByTagName('vCOFINS')->item(0)->nodeValue;
             }
 
-            // salva NotaFiscalTerceiroItem
+            // salva NfeTerceiroItem
             $nfti->save();
+
         }
 
         // Duplicatas
         $dups = $dom->getElementsByTagName('dup');
         foreach ($dups as $dup) {
-            $nfd = NotaFiscalTerceiroDuplicata::firstOrNew([
-                'codnotafiscalterceiro' => $nft->codnotafiscalterceiro,
-                'numero' => $dup->getElementsByTagName('nDup')->item(0)->nodeValue,
+            $nfd = NfeTerceiroDuplicata::firstOrNew([
+                'codnfeterceiro' => $nft->codnfeterceiro,
+                'ndup' => $dup->getElementsByTagName('nDup')->item(0)->nodeValue,
             ]);
-            $nfd->valor = $dup->getElementsByTagName('vDup')->item(0)->nodeValue;
-            $nfd->vencimento = @Carbon::parse($dup->getElementsByTagName('dVenc')->item(0)->nodeValue);
+            $nfd->vdup = $dup->getElementsByTagName('vDup')->item(0)->nodeValue;
+            $nfd->dvenc = @Carbon::parse($dup->getElementsByTagName('dVenc')->item(0)->nodeValue);
             $nfd->save();
         }
 
         // Formas de Pagamento
         $pags = $dom->getElementsByTagName('pag');
         foreach ($pags as $pag) {
-            $nftp = NotaFiscalTerceiroPagamento::firstOrNew([
-                'codnotafiscalterceiro' => $nft->codnotafiscalterceiro,
-                'forma' => $pag->getElementsByTagName('tPag')->item(0)->nodeValue,
+            $nftp = NfeTerceiroPagamento::firstOrNew([
+                'codnfeterceiro' => $nft->codnfeterceiro,
+                'tpag' => $pag->getElementsByTagName('tPag')->item(0)->nodeValue,
             ]);
-            $nftp->valor = @$pag->getElementsByTagName('vPag')->item(0)->nodeValue;
+            $nftp->indpag = @$pag->getElementsByTagName('indPag')->item(0)->nodeValue;
+            $nftp->vpag = @$pag->getElementsByTagName('vPag')->item(0)->nodeValue;
             $nftp->cnpj = @$pag->getElementsByTagName('CNPJ')->item(0)->nodeValue;
-            $nftp->bandeira = @$pag->getElementsByTagName('tBand')->item(0)->nodeValue;
-            $nftp->autorizacao = @$pag->getElementsByTagName('cAut')->item(0)->nodeValue;
+            $nftp->tband = @$pag->getElementsByTagName('tBand')->item(0)->nodeValue;
+            $nftp->caut = @$pag->getElementsByTagName('cAut')->item(0)->nodeValue;
             $nftp->save();
         }
 
         // vincula dfe na nota fiscal de terceiro
-        $dd->codnotafiscalterceiro = $nft->codnotafiscalterceiro;
+        $dd->codnfeterceiro = $nft->codnfeterceiro;
         $dd->nfechave = $nft->nfechave;
-        $dd->data = $nft->recebimento??$nft->emissao??Carbon::now();
+        $dd->data = $nft->nfedataautorizacao??$nft->emissao??Carbon::now();
         $dd->save();
     }
 
@@ -467,6 +485,5 @@ class NFePHPDistDfeService
         $path = NFePHPPathService::pathDfeGz($dd, true);
         return gzdecode(file_get_contents($path));
     }
-
 
 }

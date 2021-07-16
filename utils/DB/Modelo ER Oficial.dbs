@@ -4053,9 +4053,12 @@ Peso em KG]]></comment>
 		<table name="tblnfeterceiropagamento" >
 			<column name="codnfeterceiropagamento" type="bigserial" jt="-5" mandatory="y" />
 			<column name="codnfeterceiro" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="indpag" type="smallint" jt="5" >
+				<comment><![CDATA[0=Pagamento à Vista
+1= Pagamento a Prazo]]></comment>
+			</column>
 			<column name="tpag" prior="forma" type="smallint" jt="5" >
-				<comment><![CDATA[tPag
-01=Dinheiro
+				<comment><![CDATA[01=Dinheiro
 02=Cheque
 03=Cartão de Crédito
 04=Cartão de Débito
@@ -4064,6 +4067,12 @@ Peso em KG]]></comment>
 11=Vale Refeição
 12=Vale Presente
 13=Vale Combustível
+15=Boleto Bancário
+16=Depósito Bancário
+17=Pagamento Instantâneo (PIX)
+18=Transferência bancária, Carteira Digital
+19=Programa de fidelidade, Cashback, Crédito Virtual
+90=Sem pagamento
 99=Outros]]></comment>
 			</column>
 			<column name="vpag" prior="valor" type="numeric" length="15" decimal="2" jt="2" >

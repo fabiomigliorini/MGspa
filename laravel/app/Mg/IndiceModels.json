@@ -1391,6 +1391,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codusuariorevisao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariorevisao",
+                "metodo": "UsuarioRevisao"
             }
         },
         "hasMany": {
@@ -1403,6 +1408,21 @@
                 "tabela": "tblnfeterceiroitem",
                 "coluna": "codnfeterceiro",
                 "metodo": "NfeTerceiroItemS"
+            },
+            "tbldistribuicaodfe.codnfeterceiro": {
+                "tabela": "tbldistribuicaodfe",
+                "coluna": "codnfeterceiro",
+                "metodo": "DistribuicaoDfeS"
+            },
+            "tblnfeterceiropagamento.codnfeterceiro": {
+                "tabela": "tblnfeterceiropagamento",
+                "coluna": "codnfeterceiro",
+                "metodo": "NfeTerceiroPagamentoS"
+            },
+            "tbltitulonfeterceiro.codnfeterceiro": {
+                "tabela": "tbltitulonfeterceiro",
+                "coluna": "codnfeterceiro",
+                "metodo": "TituloNfeTerceiroS"
             }
         }
     },
@@ -2655,6 +2675,11 @@
                 "tabela": "tbldistribuicaodfeevento",
                 "coluna": "coddistribuicaodfeevento",
                 "metodo": "DistribuicaoDfeEvento"
+            },
+            "codnfeterceiro": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnfeterceiro",
+                "metodo": "NfeTerceiro"
             }
         },
         "hasMany": []
@@ -4592,6 +4617,31 @@
                 "tabela": "tbltitulo",
                 "coluna": "codtitulo",
                 "metodo": "Titulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblnfeterceiropagamento": {
+        "tabela": "tblnfeterceiropagamento",
+        "campocodigo": "codnfeterceiropagamento",
+        "namespace": "Mg\\NfeTerceiro",
+        "classe": "NfeTerceiroPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NfeTerceiro\/NfeTerceiroPagamento.php",
+        "belongsTo": {
+            "codnfeterceiro": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnfeterceiro",
+                "metodo": "NfeTerceiro"
             },
             "codusuarioalteracao": {
                 "tabela": "tblusuario",

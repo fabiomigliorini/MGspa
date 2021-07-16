@@ -1093,6 +1093,9 @@
 			<index name="idx_fk_tbldistribuicaodfe_tblnotafiscalterceiro" unique="NORMAL" >
 				<column name="codnotafiscalterceiro" />
 			</index>
+			<index name="idx_fk_tbldistribuicaodfe_tblnfeterceiro" unique="NORMAL" >
+				<column name="codnfeterceiro" />
+			</index>
 			<fk name="fk_tbldistribuicaodfe_tblfilial" to_schema="mgsis.mgsis" to_table="tblfilial" >
 				<fk_column name="codfilial" pk="codfilial" />
 			</fk>
@@ -3229,6 +3232,9 @@ Peso em KG]]></comment>
 			<index name="idx_tblmovimentotitulo_codusuariocriacao_fkey" unique="NORMAL" >
 				<column name="codusuariocriacao" />
 			</index>
+			<index name="idx_fk_tblmovimentotitulo_tbltituloboleto" unique="NORMAL" >
+				<column name="codtituloboleto" />
+			</index>
 			<fk name="tblmovimentotitulo_codboletoretorno_fkey" to_schema="mgsis.mgsis" to_table="tblboletoretorno" >
 				<fk_column name="codboletoretorno" pk="codboletoretorno" />
 			</fk>
@@ -3825,7 +3831,7 @@ Peso em KG]]></comment>
 			<column name="ignorada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="revisao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="revisao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariorevisao" type="bigint" jt="-5" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
@@ -3857,6 +3863,9 @@ Peso em KG]]></comment>
 			</index>
 			<index name="idx_tblnfeterceiro_codusuariocriacao_fkey" unique="NORMAL" >
 				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnfeterceiro_tblusuario" unique="NORMAL" >
+				<column name="codusuariorevisao" />
 			</index>
 			<fk name="tblnfeterceiro_codfilial_fkey" to_schema="mgsis.mgsis" to_table="tblfilial" update_action="cascade" >
 				<fk_column name="codfilial" pk="codfilial" />
@@ -4072,15 +4081,30 @@ Peso em KG]]></comment>
 			<column name="caut" prior="autorizacao" type="varchar" length="30" jt="12" >
 				<comment><![CDATA[cAut]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblnfeterceiropagamento_codnfeterceiropagamento" unique="PRIMARY_KEY" >
 				<column name="codnfeterceiropagamento" />
 			</index>
+			<index name="idx_fk_tblnfeterceiropagamento_tblnfeterceiro" unique="NORMAL" >
+				<column name="codnfeterceiro" />
+			</index>
+			<index name="idx_fk_tblnfeterceiropagamento_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tblnfeterceiropagamento_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tblnfeterceiropagamento_tblnfeterceiro" to_schema="mgsis.mgsis" to_table="tblnfeterceiro" >
 				<fk_column name="codnfeterceiro" pk="codnfeterceiro" />
+			</fk>
+			<fk name="fk_tblnfeterceiropagamento_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblnfeterceiropagamento_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
 			</fk>
 		</table>
 		<table name="tblnotafiscal" >
@@ -6100,11 +6124,11 @@ Peso em KG]]></comment>
 			<column name="bandeira" type="varchar" length="100" jt="12" mandatory="y" >
 				<comment><![CDATA[card_brand]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblstonebandeira_codstonebandeira" unique="PRIMARY_KEY" >
 				<column name="codstonebandeira" />
 			</index>
@@ -6129,7 +6153,7 @@ Peso em KG]]></comment>
 			<column name="codfilial" type="bigint" jt="-5" mandatory="y" />
 			<column name="chaveprivada" type="varchar" length="100" jt="12" />
 			<column name="token" type="varchar" length="500" jt="12" />
-			<column name="datatoken" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="datatoken" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="stonecode" type="numeric" length="20" decimal="0" jt="2" />
 			<column name="establishmentid" type="uuid" jt="1111" >
 				<comment><![CDATA[establishment.id]]></comment>
@@ -6138,11 +6162,11 @@ Peso em KG]]></comment>
 				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[mamba_released]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblfilialstone_codfilialstone" unique="PRIMARY_KEY" >
 				<column name="codstonefilial" />
 			</index>
@@ -6181,11 +6205,11 @@ Peso em KG]]></comment>
 			<column name="islinked" type="boolean" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblstonepos_codstonepos" unique="PRIMARY_KEY" >
 				<column name="codstonepos" />
 			</index>
@@ -6264,13 +6288,13 @@ available - disponivel na listagem da maquininha
 processing - selecionada para ser paga
 undone - desfeita, cancelada, desistiu]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" >
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[created_at]]></comment>
 			</column>
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codnegocio" type="bigint" jt="-5" />
 			<index name="pk_tblstonepretransacao_codstonepretransacao" unique="PRIMARY_KEY" >
 				<column name="codstonepretransacao" />
@@ -6359,13 +6383,13 @@ undone - desfeita, cancelada, desistiu]]></comment>
 				<defo><![CDATA[false]]></defo>
 				<comment><![CDATA[conciliation - se foi conciliada com a adquirente]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" >
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[created_at]]></comment>
 			</column>
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblstonetransacao_codstonetransacao" unique="PRIMARY_KEY" >
 				<column name="codstonetransacao" />
 			</index>
@@ -6423,13 +6447,13 @@ numero da parcela]]></comment>
 				<comment><![CDATA[prevision_liquidation_date
 Pode mudar apos conciliacao]]></comment>
 			</column>
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" >
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[created_at]]></comment>
 			</column>
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
-			<column name="inativo" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="inativo" type="timestamp" length="22" decimal="0" jt="93" />
 			<index name="pk_tblstonetransacaoparcela_codstonetransacaoparcela" unique="PRIMARY_KEY" >
 				<column name="codstonetransacaoparcela" />
 			</index>
@@ -6835,6 +6859,15 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 				<column name="codportador" />
 				<column name="nossonumero" />
 			</index>
+			<index name="idx_fk_tbltituloboleto_tbltitulo" unique="NORMAL" >
+				<column name="codtitulo" />
+			</index>
+			<index name="idx_fk_tbltituloboleto_tblusuario" unique="NORMAL" >
+				<column name="codusuariocriacao" />
+			</index>
+			<index name="idx_fk_tbltituloboleto_tblusuario_0" unique="NORMAL" >
+				<column name="codusuarioalteracao" />
+			</index>
 			<fk name="fk_tbltituloboleto_tbltitulo" to_schema="mgsis.mgsis" to_table="tbltitulo" update_action="cascade" >
 				<fk_column name="codtitulo" pk="codtitulo" />
 			</fk>
@@ -6852,9 +6885,9 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 			<column name="codtitulonfeterceiro" type="bigserial" jt="-5" mandatory="y" />
 			<column name="codtitulo" type="bigint" jt="-5" mandatory="y" />
 			<column name="codnfeterceiro" type="bigint" jt="-5" mandatory="y" />
-			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" jt="-5" />
-			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" jt="-5" />
 			<index name="pk_tbltitulonfeterceiro_codtitulonfeterceiro" unique="PRIMARY_KEY" >
 				<column name="codtitulonfeterceiro" />
