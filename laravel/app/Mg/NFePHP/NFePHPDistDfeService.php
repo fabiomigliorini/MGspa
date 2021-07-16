@@ -17,6 +17,7 @@ use Mg\NfeTerceiro\NfeTerceiroItem;
 use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\NfeTerceiro\NfeTerceiroPagamento;
 use Mg\NfeTerceiro\NfeTerceiroItemService;
+use Mg\NfeTerceiro\NfeTerceiroService;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\PessoaService;
 use Mg\Pessoa\Pessoa;
