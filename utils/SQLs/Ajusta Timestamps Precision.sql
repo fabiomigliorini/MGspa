@@ -19,4 +19,3 @@ order by col.table_schema,
          col.table_name,
          col.ordinal_position;
          
-        

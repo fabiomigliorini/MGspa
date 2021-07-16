@@ -1063,6 +1063,7 @@
 			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="coddistribuicaodfeevento" type="bigint" jt="-5" />
 			<column name="codnotafiscalterceiro" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codnfeterceiro" type="bigint" jt="-5" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
@@ -1103,6 +1104,9 @@
 			</fk>
 			<fk name="fk_tbldistribuicaodfe_tbldistribuicaodfeevento" to_schema="mgsis.mgsis" to_table="tbldistribuicaodfeevento" delete_action="cascade" update_action="cascade" >
 				<fk_column name="coddistribuicaodfeevento" pk="coddistribuicaodfeevento" />
+			</fk>
+			<fk name="fk_tbldistribuicaodfe_tblnfeterceiro" to_schema="mgsis.mgsis" to_table="tblnfeterceiro" >
+				<fk_column name="codnfeterceiro" pk="codnfeterceiro" />
 			</fk>
 		</table>
 		<table name="tbldistribuicaodfeevento" >
@@ -2355,7 +2359,7 @@
 			<column name="referencia" type="varchar" length="100" jt="12" >
 				<comment><![CDATA[reference]]></comment>
 			</column>
-			<column name="uuid" type="uuid" jt="102" mandatory="y" />
+			<column name="uuid" type="uuid" jt="1111" mandatory="y" />
 			<column name="codliopedidostatus" type="bigint" length="1" jt="-5" mandatory="y" />
 			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" >
 				<comment><![CDATA[createdAt]]></comment>
@@ -2411,7 +2415,7 @@
 			<column name="codliobandeiracartao" type="bigint" jt="-5" >
 				<comment><![CDATA[payments.brand]]></comment>
 			</column>
-			<column name="uuid" type="uuid" jt="102" >
+			<column name="uuid" type="uuid" jt="1111" >
 				<comment><![CDATA[payments.id]]></comment>
 			</column>
 			<column name="nome" type="varchar" length="100" jt="12" >
@@ -3770,43 +3774,63 @@ Peso em KG]]></comment>
 		</table>
 		<table name="tblnfeterceiro" >
 			<column name="codnfeterceiro" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="nsu" type="varchar" length="20" decimal="0" jt="12" />
-			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="codnegocio" type="bigint" jt="-5" />
+			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
+			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="natureza" type="varchar" length="100" jt="12" >
+				<comment><![CDATA[natop]]></comment>
+			</column>
+			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
 			<column name="ie" type="varchar" length="20" decimal="0" jt="12" />
-			<column name="emitente" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
-			<column name="codpessoa" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="emissao" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="nfedataautorizacao" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="codoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="indsituacao" type="smallint" length="5" decimal="0" jt="5" />
 			<column name="indmanifestacao" type="integer" length="10" decimal="0" jt="4" />
-			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codfilial" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" />
-			<column name="codnotafiscal" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="codnaturezaoperacao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="serie" type="integer" length="10" decimal="0" jt="4" />
+			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
+			<column name="nfechave" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="nsu" type="varchar" length="20" decimal="0" jt="12" />
+			<column name="nfedataautorizacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="modelo" type="smallint" jt="5" />
+			<column name="serie" type="smallint" jt="5" />
 			<column name="numero" type="integer" length="10" decimal="0" jt="4" />
 			<column name="entrada" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="icmsbase" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsvalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsstbase" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="icmsstvalor" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="ipivalor" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valorprodutos" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valorfrete" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valorseguro" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valordesconto" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="valoroutras" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="justificativa" type="varchar" length="200" decimal="0" jt="12" />
+			<column name="valortotal" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsbase" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsvalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsstbase" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="icmsstvalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="ipivalor" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="finalidade" type="smallint" jt="5" >
+				<comment><![CDATA[finNFe
+1=NF-e normal;
+2=NF-e complementar;
+3=NF-e de ajuste;
+4=Devolução/Retorno.]]></comment>
+			</column>
+			<column name="informacoes" prior="complemento" type="text" jt="12" >
+				<comment><![CDATA[infCpl]]></comment>
+			</column>
+			<column name="observacoes" type="text" jt="12" />
+			<column name="tipo" type="smallint" jt="5" >
+				<comment><![CDATA[tpNF]]></comment>
+			</column>
 			<column name="ignorada" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="codnegocio" type="bigint" jt="-5" />
+			<column name="revisao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuariorevisao" type="bigint" jt="-5" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnfeterceiro_pkey" unique="PRIMARY_KEY" >
 				<column name="codnfeterceiro" />
 			</index>
@@ -3858,6 +3882,9 @@ Peso em KG]]></comment>
 			<fk name="tblnfeterceiro_codusuariocriacao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
 			</fk>
+			<fk name="fk_tblnfeterceiro_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariorevisao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tblnfeterceiroduplicata" >
 			<column name="codnfeterceiroduplicata" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -3906,7 +3933,11 @@ Peso em KG]]></comment>
 			<column name="xprod" type="varchar" length="200" decimal="0" jt="12" />
 			<column name="infadprod" type="varchar" length="1000" jt="12" />
 			<column name="cean" type="varchar" length="30" decimal="0" jt="12" />
+			<column name="ceantrib" type="varchar" length="30" decimal="0" jt="12" />
+			<column name="codprodutobarra" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="ncm" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="cest" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="orig" prior="origem" type="smallint" jt="5" />
 			<column name="cfop" type="smallint" length="5" decimal="0" jt="5" />
 			<column name="ucom" type="varchar" length="10" decimal="0" jt="12" />
 			<column name="qcom" type="numeric" length="14" decimal="2" jt="2" />
@@ -3916,32 +3947,72 @@ Peso em KG]]></comment>
 			<column name="vfrete" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vseg" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="voutro" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="ceantrib" type="varchar" length="30" decimal="0" jt="12" />
 			<column name="utrib" type="varchar" length="10" decimal="0" jt="12" />
 			<column name="qtrib" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vuntrib" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="cst" type="varchar" length="10" decimal="0" jt="12" />
 			<column name="csosn" type="varchar" length="10" decimal="0" jt="12" />
 			<column name="vbc" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="modbc" prior="icmsbasemodalidade" type="smallint" jt="5" >
+				<comment><![CDATA[modBC]]></comment>
+			</column>
+			<column name="predbc" type="numeric" length="5" decimal="2" jt="2" />
 			<column name="picms" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vicms" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vbcst" type="numeric" length="14" decimal="2" jt="2" />
+			<column name="modbcst" prior="icmsstbasemodalidade" type="smallint" jt="5" >
+				<comment><![CDATA[modBCST]]></comment>
+			</column>
+			<column name="predbcst" prior="icmsstbasepercentualreducao" type="numeric" length="5" decimal="2" jt="2" >
+				<comment><![CDATA[pRedBCST]]></comment>
+			</column>
+			<column name="pmvast" prior="icmsstmva" type="numeric" length="5" decimal="2" jt="2" >
+				<comment><![CDATA[pMVAST]]></comment>
+			</column>
 			<column name="picmsst" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="vicmsst" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="ipivbc" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="ipipipi" type="numeric" length="14" decimal="2" jt="2" />
 			<column name="ipivipi" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="codprodutobarra" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="ipicst" type="smallint" length="2" jt="5" >
+				<comment><![CDATA[CST]]></comment>
+			</column>
+			<column name="piscst" type="smallint" jt="5" >
+				<comment><![CDATA[CST]]></comment>
+			</column>
+			<column name="pisvbc" prior="pisbase" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vBC]]></comment>
+			</column>
+			<column name="pisppis" prior="pispercentual" type="numeric" length="7" decimal="4" jt="2" >
+				<comment><![CDATA[pPIS]]></comment>
+			</column>
+			<column name="pisvpis" prior="pisvalor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vPIS]]></comment>
+			</column>
+			<column name="cofinscst" type="smallint" jt="5" >
+				<comment><![CDATA[CST]]></comment>
+			</column>
+			<column name="cofinsvbc" prior="cofinsbase" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vBC]]></comment>
+			</column>
+			<column name="cofinspcofins" prior="cofinspercentual" type="numeric" length="7" decimal="4" jt="2" >
+				<comment><![CDATA[pCOFINS]]></comment>
+			</column>
+			<column name="cofinsvcofins" prior="cofinsvalor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vCOFINS]]></comment>
+			</column>
+			<column name="compoetotal" type="boolean" jt="-7" mandatory="y" >
+				<defo><![CDATA[true]]></defo>
+			</column>
 			<column name="margem" type="numeric" length="6" decimal="2" jt="2" />
 			<column name="complemento" type="numeric" length="14" decimal="2" jt="2" />
-			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
-			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
-			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="modalidadeicmsgarantido" type="boolean" length="1" decimal="0" jt="-7" mandatory="y" >
 				<defo><![CDATA[false]]></defo>
 			</column>
-			<column name="cest" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="criacao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="22" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="tblnfeterceiroitem_pkey" unique="PRIMARY_KEY" >
 				<column name="codnfeterceiroitem" />
 			</index>
@@ -3968,6 +4039,48 @@ Peso em KG]]></comment>
 			</fk>
 			<fk name="tblnfeterceiroitem_codusuariocriacao_fkey" to_schema="mgsis.mgsis" to_table="tblusuario" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+		</table>
+		<table name="tblnfeterceiropagamento" >
+			<column name="codnfeterceiropagamento" type="bigserial" jt="-5" mandatory="y" />
+			<column name="codnfeterceiro" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="tpag" prior="forma" type="smallint" jt="5" >
+				<comment><![CDATA[tPag
+01=Dinheiro
+02=Cheque
+03=Cartão de Crédito
+04=Cartão de Débito
+05=Crédito Loja
+10=Vale Alimentação
+11=Vale Refeição
+12=Vale Presente
+13=Vale Combustível
+99=Outros]]></comment>
+			</column>
+			<column name="vpag" prior="valor" type="numeric" length="15" decimal="2" jt="2" >
+				<comment><![CDATA[vPag]]></comment>
+			</column>
+			<column name="cnpj" type="numeric" length="14" decimal="0" jt="2" />
+			<column name="tband" prior="bandeira" type="smallint" jt="5" >
+				<comment><![CDATA[tBand
+01=Visa
+02=Mastercard
+03=American Express
+04=Sorocred
+99=Outros]]></comment>
+			</column>
+			<column name="caut" prior="autorizacao" type="varchar" length="30" jt="12" >
+				<comment><![CDATA[cAut]]></comment>
+			</column>
+			<column name="criacao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="0" decimal="6" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblnfeterceiropagamento_codnfeterceiropagamento" unique="PRIMARY_KEY" >
+				<column name="codnfeterceiropagamento" />
+			</index>
+			<fk name="fk_tblnfeterceiropagamento_tblnfeterceiro" to_schema="mgsis.mgsis" to_table="tblnfeterceiro" >
+				<fk_column name="codnfeterceiro" pk="codnfeterceiro" />
 			</fk>
 		</table>
 		<table name="tblnotafiscal" >
@@ -6018,7 +6131,7 @@ Peso em KG]]></comment>
 			<column name="token" type="varchar" length="500" jt="12" />
 			<column name="datatoken" type="timestamp" length="0" decimal="6" jt="93" />
 			<column name="stonecode" type="numeric" length="20" decimal="0" jt="2" />
-			<column name="establishmentid" type="uuid" jt="102" >
+			<column name="establishmentid" type="uuid" jt="1111" >
 				<comment><![CDATA[establishment.id]]></comment>
 			</column>
 			<column name="disponivelloja" type="boolean" jt="-7" mandatory="y" >
@@ -8651,6 +8764,7 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 		<sequence name="tblnfeterceiro_codnfeterceiro_seq" options="START WITH 1" />
 		<sequence name="tblnfeterceiroduplicata_codnfeterceiroduplicata_seq" options="START WITH 1" />
 		<sequence name="tblnfeterceiroitem_codnfeterceiroitem_seq" options="START WITH 1" />
+		<sequence name="tblnfeterceiropagamento_codnfeterceiropagamento_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_codnotafiscal_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_numero_101_1_55_seq" options="START WITH 1" />
 		<sequence name="tblnotafiscal_numero_101_1_65_seq" options="START WITH 1" />
@@ -8724,12 +8838,16 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 		<sequence name="tbltipotitulo_codtipotitulo_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_codtitulo_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_105_seq" options="START WITH 1" />
+		<sequence name="tbltitulo_nossonumero_1_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_210_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_2222_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_3940_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_3941_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_3943_seq" options="START WITH 1" />
+		<sequence name="tbltitulo_nossonumero_4_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_nossonumero_559_seq" options="START WITH 1" />
+		<sequence name="tbltitulo_nossonumero_5_seq" options="START WITH 1" />
+		<sequence name="tbltitulo_nossonumero_6_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_remessa_105_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_remessa_210_seq" options="START WITH 1" />
 		<sequence name="tbltitulo_remessa_2222_seq" options="START WITH 1" />
@@ -10376,7 +10494,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 ))]]></string>
 		</script>
 	</layout>
-	<layout name="Layout_BB" id="Layout_7e0" show_relation="columns" >
+	<layout name="Layout_BB" id="Layout_7e0" confirmed="y" show_relation="columns" >
 		<comment><![CDATA[PostgreSQL]]></comment>
 		<entity schema="mgsis.mgsis" name="tblcidade" color="3986C1" x="1232" y="48" />
 		<entity schema="mgsis.mgsis" name="tblestado" color="3986C1" x="1184" y="320" />
@@ -10443,13 +10561,23 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codvalecompraformapagamento" />
 		</entity>
 	</layout>
-	<layout name="Layout_DFe_Terceiros" id="Layout_4f5c1dd" confirmed="y" show_relation="columns" >
+	<layout name="Layout_DFe_Terceiros" id="Layout_1c1c" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tbldfeevento" color="008000" x="64" y="880" />
+		<entity schema="mgsis.mgsis" name="tbldfetipo" color="008000" x="64" y="48" />
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="008000" x="48" y="272" />
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfeevento" color="008000" x="48" y="576" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiro" color="3986C1" x="352" y="304" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiroduplicata" color="3986C1" x="352" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiroitem" color="3986C1" x="640" y="320" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiropagamento" color="C1D8EE" x="656" y="48" />
+	</layout>
+	<layout name="Layout_DFe_Terceiros_Antigo" id="Layout_4f5c1dd" confirmed="y" show_relation="columns" >
 		<comment><![CDATA[PostgreSQL]]></comment>
-		<entity schema="mgsis.mgsis" name="tbldfeevento" color="C1D8EE" x="336" y="320" />
-		<entity schema="mgsis.mgsis" name="tbldfetipo" color="C1D8EE" x="288" y="48" />
-		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1D8EE" x="544" y="80" />
-		<entity schema="mgsis.mgsis" name="tbldistribuicaodfeevento" color="C1D8EE" x="48" y="96" />
-		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="48" y="400" >
+		<entity schema="mgsis.mgsis" name="tbldfeevento" color="C1EEC3" x="48" y="400" />
+		<entity schema="mgsis.mgsis" name="tbldfetipo" color="C1EEC3" x="304" y="48" />
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfe" color="C1EEC3" x="544" y="80" />
+		<entity schema="mgsis.mgsis" name="tbldistribuicaodfeevento" color="C1EEC3" x="48" y="96" />
+		<entity schema="mgsis.mgsis" name="tblfilial" color="C1D8EE" x="288" y="336" >
 			<column name="codfilial" />
 			<column name="codempresa" />
 			<column name="codpessoa" />
@@ -10458,7 +10586,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codusuariocriacao" />
 			<column name="dfe" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="112" y="608" >
+		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="C1D8EE" x="48" y="592" >
 			<column name="codnaturezaoperacao" />
 			<column name="codestoquemovimentotipo" />
 			<column name="codusuarioalteracao" />
@@ -10467,12 +10595,12 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 			<column name="codtipotitulo" />
 			<column name="codcontacontabil" />
 		</entity>
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="C1D8EE" x="816" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="C1D8EE" x="1056" y="64" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="C1D8EE" x="1088" y="608" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="C1D8EE" x="1376" y="96" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiropagamento" color="C1D8EE" x="1072" y="336" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroprodutobarra" color="C1D8EE" x="1088" y="832" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiro" color="EEC3C1" x="816" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroduplicata" color="EEC3C1" x="1088" y="64" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceirogrupo" color="EEC3C1" x="1088" y="608" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroitem" color="EEC3C1" x="1408" y="96" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiropagamento" color="EEC3C1" x="1072" y="336" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalterceiroprodutobarra" color="EEC3C1" x="1056" y="832" />
 		<entity schema="mgsis.mgsis" name="tblpessoa" color="C1D8EE" x="560" y="368" >
 			<column name="codpessoa" />
 			<column name="codsexo" />
@@ -11063,22 +11191,22 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 	</layout>
 	<layout name="Layout_Nfe_Terceiro" id="Layout462291" confirmed="y" show_relation="columns" >
 		<comment><![CDATA[PostgreSQL]]></comment>
-		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="368" y="48" />
-		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="656" y="176" />
-		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="704" y="1488" />
-		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="416" y="752" />
-		<entity schema="mgsis.mgsis" name="tblnegociostatus" color="B2CDF7" x="704" y="768" />
-		<entity schema="mgsis.mgsis" name="tblnfeterceiro" color="B2CDF7" x="144" y="128" />
-		<entity schema="mgsis.mgsis" name="tblnfeterceiroduplicata" color="B2CDF7" x="384" y="448" />
-		<entity schema="mgsis.mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="160" y="768" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="880" y="160" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="B2CDF7" x="1168" y="560" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="B2CDF7" x="1168" y="336" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="1152" y="832" />
-		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="1136" y="144" />
-		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B2CDF7" x="560" y="1216" />
-		<entity schema="mgsis.mgsis" name="tbltitulo" color="B2CDF7" x="320" y="1504" />
-		<entity schema="mgsis.mgsis" name="tbltitulonfeterceiro" color="C1D8EE" x="48" y="1552" />
+		<entity schema="mgsis.mgsis" name="tblnaturezaoperacao" color="B2CDF7" x="352" y="64" />
+		<entity schema="mgsis.mgsis" name="tblnegocio" color="B2CDF7" x="672" y="80" />
+		<entity schema="mgsis.mgsis" name="tblnegocioformapagamento" color="B2CDF7" x="704" y="1504" />
+		<entity schema="mgsis.mgsis" name="tblnegocioprodutobarra" color="B2CDF7" x="416" y="768" />
+		<entity schema="mgsis.mgsis" name="tblnegociostatus" color="B2CDF7" x="704" y="784" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiro" color="B2CDF7" x="96" y="48" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiroduplicata" color="B2CDF7" x="384" y="496" />
+		<entity schema="mgsis.mgsis" name="tblnfeterceiroitem" color="B2CDF7" x="128" y="736" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscal" color="B2CDF7" x="928" y="80" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalcartacorrecao" color="B2CDF7" x="1168" y="576" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalduplicatas" color="B2CDF7" x="1168" y="352" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalprodutobarra" color="B2CDF7" x="1152" y="848" />
+		<entity schema="mgsis.mgsis" name="tblnotafiscalreferenciada" color="B2CDF7" x="1136" y="160" />
+		<entity schema="mgsis.mgsis" name="tblprodutobarra" color="B2CDF7" x="560" y="1232" />
+		<entity schema="mgsis.mgsis" name="tbltitulo" color="B2CDF7" x="320" y="1520" />
+		<entity schema="mgsis.mgsis" name="tbltitulonfeterceiro" color="C1D8EE" x="48" y="1568" />
 	</layout>
 	<layout name="Layout_Nota_Fiscal" id="Layout_364e738" confirmed="y" show_relation="columns" >
 		<entity schema="mgsis.mgsis" name="tblcidade" color="C1D8EE" x="1152" y="752" />

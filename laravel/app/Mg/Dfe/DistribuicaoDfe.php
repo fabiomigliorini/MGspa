@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Jul/2020 07:23:04
+ * Date: 16/Jul/2021 11:29:03
  */
 
 namespace Mg\Dfe;
@@ -11,6 +11,7 @@ use Mg\Dfe\DfeTipo;
 use Mg\Filial\Filial;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\Dfe\DistribuicaoDfeEvento;
+use Mg\NfeTerceiro\NfeTerceiro;
 
 class DistribuicaoDfe extends MgModel
 {
@@ -22,6 +23,7 @@ class DistribuicaoDfe extends MgModel
         'coddfetipo',
         'coddistribuicaodfeevento',
         'codfilial',
+        'codnfeterceiro',
         'codnotafiscalterceiro',
         'data',
         'nfechave',
@@ -39,6 +41,7 @@ class DistribuicaoDfe extends MgModel
         'coddistribuicaodfe' => 'integer',
         'coddistribuicaodfeevento' => 'integer',
         'codfilial' => 'integer',
+        'codnfeterceiro' => 'integer',
         'codnotafiscalterceiro' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
@@ -59,6 +62,11 @@ class DistribuicaoDfe extends MgModel
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function NfeTerceiro()
+    {
+        return $this->belongsTo(NfeTerceiro::class, 'codnfeterceiro', 'codnfeterceiro');
     }
 
     public function NotaFiscalTerceiro()

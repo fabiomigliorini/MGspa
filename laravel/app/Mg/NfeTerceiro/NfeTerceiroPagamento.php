@@ -1,43 +1,44 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 11:29:52
+ * Date: 16/Jul/2021 11:31:20
  */
 
 namespace Mg\NfeTerceiro;
 
 use Mg\MgModel;
 use Mg\NfeTerceiro\NfeTerceiro;
-use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
 
-class NfeTerceiroDuplicata extends MgModel
+class NfeTerceiroPagamento extends MgModel
 {
-    protected $table = 'tblnfeterceiroduplicata';
-    protected $primaryKey = 'codnfeterceiroduplicata';
+    protected $table = 'tblnfeterceiropagamento';
+    protected $primaryKey = 'codnfeterceiropagamento';
 
 
     protected $fillable = [
+        'caut',
+        'cnpj',
         'codnfeterceiro',
-        'codtitulo',
-        'dvenc',
-        'ndup',
-        'vdup'
+        'tband',
+        'tpag',
+        'vpag'
     ];
 
     protected $dates = [
         'alteracao',
-        'criacao',
-        'dvenc'
+        'criacao'
     ];
 
     protected $casts = [
+        'cnpj' => 'float',
         'codnfeterceiro' => 'integer',
-        'codnfeterceiroduplicata' => 'integer',
-        'codtitulo' => 'integer',
+        'codnfeterceiropagamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'vdup' => 'float'
+        'tband' => 'integer',
+        'tpag' => 'integer',
+        'vpag' => 'float'
     ];
 
 
@@ -45,11 +46,6 @@ class NfeTerceiroDuplicata extends MgModel
     public function NfeTerceiro()
     {
         return $this->belongsTo(NfeTerceiro::class, 'codnfeterceiro', 'codnfeterceiro');
-    }
-
-    public function Titulo()
-    {
-        return $this->belongsTo(Titulo::class, 'codtitulo', 'codtitulo');
     }
 
     public function UsuarioAlteracao()

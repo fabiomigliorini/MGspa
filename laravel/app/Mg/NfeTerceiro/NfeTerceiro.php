@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2020 15:30:02
+ * Date: 16/Jul/2021 11:31:28
  */
 
 namespace Mg\NfeTerceiro;
@@ -9,6 +9,9 @@ namespace Mg\NfeTerceiro;
 use Mg\MgModel;
 use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\NfeTerceiro\NfeTerceiroItem;
+use Mg\Dfe\DistribuicaoDfe;
+use Mg\NfeTerceiro\NfeTerceiroPagamento;
+use Mg\Titulo\TituloNfeTerceiro;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
@@ -31,9 +34,11 @@ class NfeTerceiro extends MgModel
         'codnotafiscal',
         'codoperacao',
         'codpessoa',
+        'codusuariorevisao',
         'emissao',
         'emitente',
         'entrada',
+        'finalidade',
         'icmsbase',
         'icmsstbase',
         'icmsstvalor',
@@ -42,13 +47,19 @@ class NfeTerceiro extends MgModel
         'ignorada',
         'indmanifestacao',
         'indsituacao',
+        'informacoes',
         'ipivalor',
         'justificativa',
+        'modelo',
+        'natureza',
         'nfechave',
         'nfedataautorizacao',
         'nsu',
         'numero',
+        'observacoes',
+        'revisao',
         'serie',
+        'tipo',
         'valordesconto',
         'valorfrete',
         'valoroutras',
@@ -62,7 +73,8 @@ class NfeTerceiro extends MgModel
         'criacao',
         'emissao',
         'entrada',
-        'nfedataautorizacao'
+        'nfedataautorizacao',
+        'revisao'
     ];
 
     protected $casts = [
@@ -76,6 +88,8 @@ class NfeTerceiro extends MgModel
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'codusuariorevisao' => 'integer',
+        'finalidade' => 'integer',
         'icmsbase' => 'float',
         'icmsstbase' => 'float',
         'icmsstvalor' => 'float',
@@ -84,8 +98,10 @@ class NfeTerceiro extends MgModel
         'indmanifestacao' => 'integer',
         'indsituacao' => 'integer',
         'ipivalor' => 'float',
+        'modelo' => 'integer',
         'numero' => 'integer',
         'serie' => 'integer',
+        'tipo' => 'integer',
         'valordesconto' => 'float',
         'valorfrete' => 'float',
         'valoroutras' => 'float',
@@ -136,8 +152,18 @@ class NfeTerceiro extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+    public function UsuarioRevisao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariorevisao', 'codusuario');
+    }
+
 
     // Tabelas Filhas
+    public function DistribuicaoDfeS()
+    {
+        return $this->hasMany(DistribuicaoDfe::class, 'codnfeterceiro', 'codnfeterceiro');
+    }
+
     public function NfeTerceiroDuplicataS()
     {
         return $this->hasMany(NfeTerceiroDuplicata::class, 'codnfeterceiro', 'codnfeterceiro');
@@ -146,6 +172,16 @@ class NfeTerceiro extends MgModel
     public function NfeTerceiroItemS()
     {
         return $this->hasMany(NfeTerceiroItem::class, 'codnfeterceiro', 'codnfeterceiro');
+    }
+
+    public function NfeTerceiroPagamentoS()
+    {
+        return $this->hasMany(NfeTerceiroPagamento::class, 'codnfeterceiro', 'codnfeterceiro');
+    }
+
+    public function TituloNfeTerceiroS()
+    {
+        return $this->hasMany(TituloNfeTerceiro::class, 'codnfeterceiro', 'codnfeterceiro');
     }
 
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Jul/2020 07:21:06
+ * Date: 16/Jul/2021 11:29:23
  */
 
 namespace Mg\Dfe;
