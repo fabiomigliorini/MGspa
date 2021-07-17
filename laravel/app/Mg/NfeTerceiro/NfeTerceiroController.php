@@ -35,15 +35,7 @@ class NfeTerceiroController
         $danfe = new Danfe($xml);
         $danfe->debugMode(false);
         $danfe->setDefaultFont('helvetica');
-        //$danfce->creditsIntegratorFooter('MGsis - Powered by NFePHP');
-        // Caso queira mudar a configuracao padrao de impressao
-        /*  $this->printParameters( $orientacao = '', $papel = 'A4', $margSup = 2, $margEsq = 2 ); */
-        //Informe o numero DPEC
-        /*  $danfe->depecNumber('123456789'); */
-        //Configura a posicao da logo
-        /*  $danfe->logoParameters($logo, 'C', false);  */
-        //Gera o PDF
-        $pdf = $danfe->render($logo);
+        $pdf = $danfe->render();
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="NfeTerceiro'.$codnfeterceiro.'.pdf"'
