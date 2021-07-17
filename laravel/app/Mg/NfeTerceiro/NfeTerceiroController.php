@@ -5,9 +5,50 @@ namespace Mg\NfeTerceiro;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+use NFePHP\DA\NFe\Danfe;
+
+use Mg\Dfe\DfeTipo;
+use Mg\NFePHP\NFePHPPathService;
 
 class NfeTerceiroController
 {
+
+    public function xml (Request $request, $codnfeterceiro)
+    {
+        $nfeTerceiro = NfeTerceiro::findOrFail($codnfeterceiro);
+        $dfeTipo = DfeTipo::where(['schemaxml' => 'procNFe_v4.00.xsd'])->firstOrFail();
+        $dd = $nfeTerceiro->DistribuicaoDfeS()->where('coddfetipo', $dfeTipo->coddfetipo)->first();
+        $path = NFePHPPathService::pathDfeGz($dd);
+        $gz = file_get_contents($path);
+        $xml = gzdecode($gz);
+        return response($xml, 200)->header('Content-Type', 'text/xml');
+    }
+
+    public function danfe (Request $request, $codnfeterceiro)
+    {
+        $nfeTerceiro = NfeTerceiro::findOrFail($codnfeterceiro);
+        $dfeTipo = DfeTipo::where(['schemaxml' => 'procNFe_v4.00.xsd'])->firstOrFail();
+        $dd = $nfeTerceiro->DistribuicaoDfeS()->where('coddfetipo', $dfeTipo->coddfetipo)->first();
+        $path = NFePHPPathService::pathDfeGz($dd);
+        $gz = file_get_contents($path);
+        $xml = gzdecode($gz);
+        $danfe = new Danfe($xml);
+        $danfe->debugMode(false);
+        $danfe->setDefaultFont('helvetica');
+        //$danfce->creditsIntegratorFooter('MGsis - Powered by NFePHP');
+        // Caso queira mudar a configuracao padrao de impressao
+        /*  $this->printParameters( $orientacao = '', $papel = 'A4', $margSup = 2, $margEsq = 2 ); */
+        //Informe o numero DPEC
+        /*  $danfe->depecNumber('123456789'); */
+        //Configura a posicao da logo
+        /*  $danfe->logoParameters($logo, 'C', false);  */
+        //Gera o PDF
+        $pdf = $danfe->render($logo);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="NfeTerceiro'.$codnfeterceiro.'.pdf"'
+        ]);
+    }
 
     public function manifestacao (Request $request, $codnfeterceiro)
     {
