@@ -3,6 +3,8 @@
 namespace Mg\NfeTerceiro;
 
 use Mg\NFePHP\NFePHPManifestacaoService;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 
 class NfeTerceiroService
 {
@@ -33,6 +35,36 @@ class NfeTerceiroService
             }
         }
         return $ret;
+    }
+
+    public static function vincularNotaFiscal (NfeTerceiro $nfeTerceiro)
+    {
+        if (!empty($nfeTerceiro->codnotafiscal)) {
+            return $nfeTerceiro;
+        }
+        $notaFiscal = NotaFiscal::where('emitida', false)->where('nfechave', $nfeTerceiro->nfechave)->first();
+        if ($notaFiscal) {
+            $nfeTerceiro->codnotafiscal = $notaFiscal->codnotafiscal;
+        }
+        return $nfeTerceiro;
+    }
+
+    public static function vincularNegocio (NfeTerceiro $nfeTerceiro)
+    {
+        if (!empty($nfeTerceiro->codnegocio)) {
+            return $nfeTerceiro;
+        }
+        if (empty($nfeTerceiro->codnotafiscal)) {
+            return $nfeTerceiro;
+        }
+        $notaFiscalProdutoBarra = NotaFiscalProdutoBarra::where('codnotafiscal', $nfeTerceiro->codnotafiscal)
+            ->whereNotNull('codnegocioprodutobarra')
+            ->orderBy('codnotafiscalprodutobarra')
+            ->first();
+        if ($notaFiscalProdutoBarra) {
+            $nfeTerceiro->codnegocio = $notaFiscalProdutoBarra->NegocioProdutoBarra->codnegocio;
+        }
+        return $nfeTerceiro;
     }
 
 }

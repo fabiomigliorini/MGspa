@@ -182,6 +182,12 @@ class NFePHPDistDfeService
                 break;
             }
         }
+
+        // vinclua com nota ou negocio ja existente
+        $nft = NfeTerceiroService::vincularNotaFiscal($nft);
+        // $nft = NfeTerceiroService::vincularNegocio($nft);
+
+        // salva NfeTerceiro
         $nft->save();
 
         // emite o ciencia da operacao para a nota nfe de terceiro
@@ -335,6 +341,10 @@ class NFePHPDistDfeService
         if ($filial = FilialService::buscarPorCnpjIe($cnpj??$cpf, $ie)) {
             $nft->codfilial = $filial->codfilial;
         }
+
+        // vinclua com nota ou negocio ja existente
+        $nft = NfeTerceiroService::vincularNotaFiscal($nft);
+        // $nft = NfeTerceiroService::vincularNegocio($nft);
 
         // salva NfeTerceiro
         $nft->save();
