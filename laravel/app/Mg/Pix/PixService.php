@@ -62,6 +62,32 @@ class PixService
 
         // Portador Hardcoded por enquanto
         $cob->codportador = env('PIX_GERENCIANET_CODPORTADOR');
+        /*
+        //procura portador do BB pra filial com convenio
+        $portador = Portador::where('codfilial', $negocio->codfilial)
+            ->whereNull('inativo')
+            ->where('codbanco', 1)
+            ->whereNotNull('pixdict')
+            ->orderBy('codportador')
+            ->first();
+
+        //procura portador do BB sem filial com convenio
+        if ($portador === null) {
+            $portador = Portador::whereNull('codfilial')
+                ->whereNull('inativo')
+                ->where('codbanco', 1)
+                ->whereNotNull('pixdict')
+                ->orderBy('codportador')
+                ->first();
+        }
+
+        // se nao localizou nenhum portador
+        if ($portador === null) {
+            throw new \Exception('Nenhum portador disponível para a filial');
+        }
+
+        $cob->codportador = $portador->codportador;
+        */
         $cob->save();
 
         $cob->txid = 'PIXCOB' . str_pad($cob->codpixcob, 29, '0', STR_PAD_LEFT);
@@ -75,10 +101,19 @@ class PixService
         if (empty($cob->Portador->pixdict)) {
             throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
         }
-        if ($cob->Portador->Banco->numerobanco == 364) {
-            return GerenciaNetService::transmitirPixCob($cob);
+        switch ($cob->Portador->Banco->numerobanco) {
+            case 1:
+                return PixBbService::transmitirPixCob($cob);
+                break;
+
+            case 364:
+                return GerenciaNetService::transmitirPixCob($cob);
+                break;
+
+            default:
+                throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+                break;
         }
-        throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
     }
 
     public static function consultarPixCob(PixCob $cob)
