@@ -5,11 +5,10 @@ delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup gro
 select 'lara', queue, count(*), min(id), max(id) from tbljobs group by queue union all
 select 'spa', queue, count(*), min(id), max(id) from tbljobsspa group by queue order by queue
 
-
 /*
 
 select * from tbljobs
-delete from tbljobs;
+delete from tbljobs where id = 6144778;
 ALTER SEQUENCE tbljobs_id_seq RESTART;
 
 delete from tbljobsspa;
