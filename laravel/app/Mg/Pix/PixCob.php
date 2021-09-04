@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/May/2021 10:18:51
+ * Date: 04/Sep/2021 10:12:40
  */
 
 namespace Mg\Pix;
@@ -31,6 +31,7 @@ class PixCob extends MgModel
         'locationid',
         'nome',
         'solicitacaopagador',
+        'textoimagemqrcode',
         'txid',
         'valororiginal'
     ];

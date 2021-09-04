@@ -50,8 +50,9 @@ class PixBbApiService
             $arr['devedor']['cnpj'] = str_pad(number_format($cnpj, 0, '.', ''), 14, '0', STR_PAD_LEFT);
         }
         $body = json_encode($arr);
-        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
+        $url = env('BB_URL_PIX') . '/cobqrcode/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
         // $url = env('BB_URL_PIX') . '/cob/?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
+        // dd($url);
         $auth = "Authorization: Bearer {$token}";
         $curl = curl_init();
         $opt = [

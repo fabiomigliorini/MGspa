@@ -61,8 +61,7 @@ class PixService
         $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio}!";
 
         // Portador Hardcoded por enquanto
-        $cob->codportador = env('PIX_GERENCIANET_CODPORTADOR');
-        /*
+        // $cob->codportador = env('PIX_GERENCIANET_CODPORTADOR');
         //procura portador do BB pra filial com convenio
         $portador = Portador::where('codfilial', $negocio->codfilial)
             ->whereNull('inativo')
@@ -87,7 +86,6 @@ class PixService
         }
 
         $cob->codportador = $portador->codportador;
-        */
         $cob->save();
 
         $cob->txid = 'PIXCOB' . str_pad($cob->codpixcob, 29, '0', STR_PAD_LEFT);

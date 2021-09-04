@@ -51,7 +51,8 @@ class PixBbService
         ]);
         $ret = $pixCob->update([
             'location' => $dadosPix['location'],
-            // 'txid' => $dadosPix['txid'],
+            'textoimagemqrcode' => $dadosPix['textoImagemQRcode'],
+            'txid' => $dadosPix['txid'],
             // 'locationid' => $dadosPix['loc']['id']??null,
             'codpixcobstatus' => $status->codpixcobstatus
         ]);
