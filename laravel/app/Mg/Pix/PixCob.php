@@ -31,7 +31,7 @@ class PixCob extends MgModel
         'locationid',
         'nome',
         'solicitacaopagador',
-        'textoimagemqrcode',
+        'qrcode',
         'txid',
         'valororiginal'
     ];

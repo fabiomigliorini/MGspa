@@ -5314,7 +5314,7 @@ Peso em KG]]></comment>
 			</column>
 			<column name="location" type="varchar" length="200" jt="12" />
 			<column name="locationid" type="bigint" jt="-5" />
-			<column name="textoimagemqrcode" type="text" jt="12" />
+			<column name="qrcode" prior="textoimagemqrcode" type="text" jt="12" />
 			<column name="expiracao" type="bigint" jt="-5" >
 				<comment><![CDATA[Tempo de vida da cobrança em Segundos]]></comment>
 			</column>

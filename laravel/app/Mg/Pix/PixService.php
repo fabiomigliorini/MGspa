@@ -228,10 +228,10 @@ class PixService
     {
         switch ($cob->Portador->Banco->numerobanco) {
             case 1:
-                if (empty($cob->textoimagemqrcode)) {
-                    throw new \Exception('Sem textoImagemQRcode registrado!', 1);
+                if (empty($cob->qrcode)) {
+                    throw new \Exception('Sem QRcode registrado!', 1);
                 }
-                $qrcode = PixBbApiService::qrCode($cob->textoimagemqrcode);
+                $qrcode = PixBbApiService::qrCode($cob->qrcode);
                 $qrcode = 'data:image/png;base64,' . base64_encode($qrcode);
                 break;
 

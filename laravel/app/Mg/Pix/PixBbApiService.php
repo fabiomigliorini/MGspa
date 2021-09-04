@@ -195,11 +195,11 @@ class PixBbApiService
         // return $cob;
     }
 
-    public static function qrCode($textoImagemQRcode)
+    public static function qrCode($qrcode)
     {
 
         $url = 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=' .
-            urlencode($textoImagemQRcode);
+            urlencode($qrcode);
         $curl = curl_init();
         $opt = [
             CURLOPT_URL => $url,
