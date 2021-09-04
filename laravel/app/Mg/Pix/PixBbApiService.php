@@ -51,8 +51,6 @@ class PixBbApiService
         }
         $body = json_encode($arr);
         $url = env('BB_URL_PIX') . '/cobqrcode/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
-        // $url = env('BB_URL_PIX') . '/cob/?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
-        // dd($url);
         $auth = "Authorization: Bearer {$token}";
         $curl = curl_init();
         $opt = [
@@ -85,56 +83,39 @@ class PixBbApiService
     /*
     * Esta rotina consome um endpoid GET da Gerencianet para consultar uma cobrança
     */
-    public static function consultarPixCob(PixCob $cob)
+    public static function consultarPixCob(
+        $token,
+        $gwDevAppKey,
+        $txid
+    )
     {
-
-        // Busca informações do token de autenticação de acordo com suas credencias e certificado
-        $dadosToken = static::getAccessToken();
-        $tokenType = $dadosToken['token_type'];
-        $accessToken = $dadosToken['access_token'];
-
-        $pix_url_cob = env('PIX_GERENCIANET_URL_COB') . '/' . $cob->txid; // Monta a url para a requisição que gera a cobrança
+        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
+        $auth = "Authorization: Bearer {$token}";
 
         $curl = curl_init();
         $opt = [
-            CURLOPT_URL => $pix_url_cob,
+            CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
-            CURLOPT_SSLCERT => env('PIX_GERENCIANET_CERTIFICADO'),
-            CURLOPT_SSLCERTPASSWD => "",
             CURLOPT_HTTPHEADER => [
-                "authorization: $tokenType $accessToken",
+                $auth,
                 "Content-Type: application/json"
             ],
         ];
         curl_setopt_array($curl, $opt);
-        $dadosPix = curl_exec($curl);
-        $dadosPix = json_decode($dadosPix, true);
-        curl_close($curl);
-        static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
-
-        $status = PixCobStatus::firstOrCreate([
-            'pixcobstatus' => $dadosPix['status']
-        ]);
-
-        $ret = $cob->update([
-            'location' => $dadosPix['location'],
-            'codpixcobstatus' => $status->codpixcobstatus
-        ]);
-
-        if (isset($dadosPix['pix'])) {
-            foreach ($dadosPix['pix'] as $pix) {
-                PixService::importarPix($cob->Portador, $pix, $cob);
-            }
+        $response = curl_exec($curl);
+        if ($response === false) {
+            throw new \Exception(curl_error($curl), curl_errno($curl));
         }
-
-        $cob = $cob->fresh();
-        return $cob;
+        curl_close($curl);
+        $ret = json_decode($response, true);
+        return $ret;
     }
 
     /*
@@ -214,19 +195,14 @@ class PixBbApiService
         // return $cob;
     }
 
-    public static function qrCode($locationid)
+    public static function qrCode($textoImagemQRcode)
     {
 
-        // Busca informações do token de autenticação de acordo com suas credencias e certificado
-        $dadosToken = static::getAccessToken();
-        $tokenType = $dadosToken['token_type'];
-        $accessToken = $dadosToken['access_token'];
-
-        $pix_url_cob = env('PIX_GERENCIANET_URL_LOC') . '/' . $locationid . '/qrcode'; // Monta a url para a requisição que gera a cobrança
-
+        $url = 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=' .
+            urlencode($textoImagemQRcode);
         $curl = curl_init();
         $opt = [
-            CURLOPT_URL => $pix_url_cob,
+            CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
@@ -234,19 +210,10 @@ class PixBbApiService
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
-            CURLOPT_SSLCERT => env('PIX_GERENCIANET_CERTIFICADO'),
-            CURLOPT_SSLCERTPASSWD => "",
-            CURLOPT_HTTPHEADER => [
-                "authorization: $tokenType $accessToken",
-                "Content-Type: application/json"
-            ],
         ];
         curl_setopt_array($curl, $opt);
-        $dadosPix = curl_exec($curl);
-        $dadosPix = json_decode($dadosPix, true);
-        curl_close($curl);
-        static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
-        return $dadosPix;
+        $img = curl_exec($curl);
+        return $img;
     }
 
 }

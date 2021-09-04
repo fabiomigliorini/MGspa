@@ -119,11 +119,20 @@ class PixService
         if (empty($cob->Portador->pixdict)) {
             throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
         }
-        if ($cob->Portador->Banco->numerobanco == 364) {
-            $cob = GerenciaNetService::consultarPixCob($cob);
-            return $cob;
+        switch ($cob->Portador->Banco->numerobanco) {
+            case 1:
+                $cob = PixBbService::consultarPixCob($cob);
+                break;
+
+            case 364:
+                $cob = GerenciaNetService::consultarPixCob($cob);
+                break;
+
+            default:
+                throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+                break;
         }
-        throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+        return $cob;
     }
 
     public static function importarPix(Portador $portador, array $arrPix, PixCob $pixCob = null)
@@ -222,7 +231,7 @@ class PixService
                 if (empty($cob->textoimagemqrcode)) {
                     throw new \Exception('Sem textoImagemQRcode registrado!', 1);
                 }
-                $qrcode = PixBbService::qrCode($cob->textoimagemqrcode);
+                $qrcode = PixBbApiService::qrCode($cob->textoimagemqrcode);
                 $qrcode = 'data:image/png;base64,' . base64_encode($qrcode);
                 break;
 
