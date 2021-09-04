@@ -21,7 +21,7 @@
     </div>
 
     <div style="text-align:center">
-        <img src="{{$qrcode['imagemQrcode']}}" />
+        <img src="{{$qrcode}}" style="width: 270px" />
     </div>
 
     <h1 style="text-align:center; margin: 10px">

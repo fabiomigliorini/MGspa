@@ -59,6 +59,27 @@ class PixBbService
         return $pixCob;
     }
 
+    public static function qrCode($textoImagemQRcode)
+    {
+
+        $url = 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=' .
+            urlencode($textoImagemQRcode);
+        $curl = curl_init();
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+        ];
+        curl_setopt_array($curl, $opt);
+        $img = curl_exec($curl);
+        return $img;
+    }
+
     /***
      * Verifica se o Token do Portador ainda não expirou
      * se expirou renova o token

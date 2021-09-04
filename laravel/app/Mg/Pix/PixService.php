@@ -217,12 +217,28 @@ class PixService
 
     public static function imprimirQrCode(PixCob $cob, $impressora)
     {
-        if (empty($cob->locationid)) {
-            return;
+        switch ($cob->Portador->Banco->numerobanco) {
+            case 1:
+                if (empty($cob->textoimagemqrcode)) {
+                    throw new \Exception('Sem textoImagemQRcode registrado!', 1);
+                }
+                $qrcode = PixBbService::qrCode($cob->textoimagemqrcode);
+                $qrcode = 'data:image/png;base64,' . base64_encode($qrcode);
+                break;
+
+            case 364:
+                if (empty($cob->locationid)) {
+                    throw new \Exception('Sem LocationID registrado!', 1);
+                }
+                $qrcode = GerenciaNetService::qrCode($cob->locationid);
+                $qrcode = $qrcode['imagemQrcode'];
+                break;
+
+            default:
+                throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+                break;
         }
 
-        $qrcode = GerenciaNetService::qrCode($cob->locationid);
-        $imagem = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrcode['imagemQrcode']));
 
         $html = view('pix/imprimir', ['cob' => $cob, 'qrcode' => $qrcode])->render();
         $dompdf = new Dompdf();
