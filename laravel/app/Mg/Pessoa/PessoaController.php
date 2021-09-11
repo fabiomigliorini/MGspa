@@ -46,4 +46,35 @@ class PessoaController extends MgController
         //return response()->json($qry, 206);
     }
 
+    public function comandaVendedor (Request $request, $codpessoa)
+    {
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        if (!$pessoa->vendedor) {
+            throw new \Exception("\"{$pessoa->fantasia}\" não é vendedor!", 1);
+        }
+        $pdf = PessoaComandaVendedorService::pdf($pessoa);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Comanda'.$codpessoa.'.pdf"'
+        ]);
+    }
+
+    public function comandaVendedorImprimir (Request $request, $codpessoa)
+    {
+        $request->validate([
+            'impressora' => ['required', 'string'],
+            'copias' => ['required', 'integer']
+        ]);
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        if (!$pessoa->vendedor) {
+            throw new \Exception("\"{$pessoa->fantasia}\" não é vendedor!", 1);
+        }
+        $pdf = PessoaComandaVendedorService::imprimir($pessoa, $request->impressora, $request->copias);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Comanda'.$codpessoa.'.pdf"'
+        ]);
+    }
+
+
 }
