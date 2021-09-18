@@ -5,6 +5,18 @@ delete from tbljobs where tbljobs.id not in (select min(id) from tbljobs dup gro
 select 'lara', queue, count(*), min(id), max(id) from tbljobs group by queue union all
 select 'spa', queue, count(*), min(id), max(id) from tbljobsspa group by queue order by queue
 
+update tbljobsspa set queue = 'default' where id in (select j.id from tbljobsspa j where queue = 'parado' order by j.id limit 10)
+
+
+select * from tbljobs
+
+update tbljobsspa set queue = 'parado'
+
+update tbljobsspa set queue = 'default' where payload ilike '%NFePHPResolver%'
+
+
+select * from tbljobsspa
+
 
 /*
 

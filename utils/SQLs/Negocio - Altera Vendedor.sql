@@ -6,5 +6,5 @@ set codpessoavendedor =
 	where p.vendedor = true
 	and inativo is null
 	and p.pessoa ilike '%jaqueline%') 
-where codnegocio = 02281693
+where codnegocio = 2305262
 

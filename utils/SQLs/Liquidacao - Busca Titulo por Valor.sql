@@ -2,14 +2,33 @@ select p.fantasia, f.filial, t.numero, t.saldo, t.debito, t.credito, t.venciment
 from tbltitulo t
 inner join tblpessoa p on (p.codpessoa = t.codpessoa)
 inner join tblfilial f on (f.codfilial = t.codfilial)
-where t.debito = 5857
---where t.debito between 10300 and 10400
+--where t.debito = 20
+where t.debito = 268.75
 --where t.credito = 369.98
+and saldo > 0
 order by criacao desc nulls LAST
+
+select p.fantasia, f.filial, t.numero, t.saldo, t.debito, t.credito, t.vencimento, t.criacao, t.codtitulo 
+from tbltitulo t
+inner join tblpessoa p on (p.codpessoa = t.codpessoa)
+inner join tblfilial f on (f.codfilial = t.codfilial)
+where t.observacao ilike '%poço%'
+order by criacao desc nulls LAST
+
+
+select valortotal, valoraprazo, * 
+from tblnegocio n 
+where n.valortotal = 330
+and criacao >= '2021-07-22'
+order by criacao desc
+
+select criacao, * from tblpixcob where valororiginal = 20
+
+update tblnegocio set codnegociostatus  =   1 where codnegocio = 2350905
 
 select * 
 from tblliquidacaotitulo lt
-where lt.observacao ilike '%POLIANE%'
+where lt.observacao ilike '%FELIPPE%'
 
 select * from tbltitulo where observacao ilike '%5419%'
 
@@ -44,5 +63,7 @@ from tblstonepretransacao spt
 left join tblstonetransacao st on (st.codstonepretransacao = spt.codstonepretransacao)
 where st.codstonetransacao is null
 order by spt.criacao desc
+
+update tblnotafiscal set nfeautorizacao = null, nfedataautorizacao =null where codnotafiscal = 1959590
 
 
