@@ -36,6 +36,8 @@ Route::group(['prefix' => 'v1'], function () {
 
     // NFeTerceiro
     Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
+    Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
+    Route::get('nfe-terceiro/{codnfeterceiro}/danfe', '\Mg\NfeTerceiro\NfeTerceiroController@danfe');
 
     // Negocio
     Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
@@ -43,6 +45,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Negocio\NegocioController@unificar');
     Route::get('negocio/{codnegocio}/boleto-bb/pdf', '\Mg\Negocio\NegocioController@BoletoBbPdf');
     Route::post('negocio/{codnegocio}/boleto-bb/registrar', '\Mg\Negocio\NegocioController@BoletoBbRegistrar');
+    Route::post('negocio/{codnegocio}/identificar-vendedor/{codpessoavendedor}', '\Mg\Negocio\NegocioController@identificarVendedor');
 
     // Boletos BB
     Route::post('titulo/{codtitulo}/boleto-bb', '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');
@@ -84,6 +87,8 @@ Route::group(['prefix' => 'v1'], function () {
 
     // Pessoa autocomplete
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
+    Route::get('pessoa/{codpessoa}/comanda-vendedor', '\Mg\Pessoa\PessoaController@comandaVendedor');
+    Route::post('pessoa/{codnegocio}/comanda-vendedor/imprimir', '\Mg\Pessoa\PessoaController@comandaVendedorImprimir');
 
     // NotaFiscalTerceiro
     // Route::get('nfe-terceiro/ultima-nsu', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@ultimaNSU');

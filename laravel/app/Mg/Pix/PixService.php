@@ -61,7 +61,31 @@ class PixService
         $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio}!";
 
         // Portador Hardcoded por enquanto
-        $cob->codportador = env('PIX_GERENCIANET_CODPORTADOR');
+        // $cob->codportador = env('PIX_GERENCIANET_CODPORTADOR');
+        //procura portador do BB pra filial com convenio
+        $portador = Portador::where('codfilial', $negocio->codfilial)
+            ->whereNull('inativo')
+            ->where('codbanco', 1)
+            ->whereNotNull('pixdict')
+            ->orderBy('codportador')
+            ->first();
+
+        //procura portador do BB sem filial com convenio
+        if ($portador === null) {
+            $portador = Portador::whereNull('codfilial')
+                ->whereNull('inativo')
+                ->where('codbanco', 1)
+                ->whereNotNull('pixdict')
+                ->orderBy('codportador')
+                ->first();
+        }
+
+        // se nao localizou nenhum portador
+        if ($portador === null) {
+            throw new \Exception('Nenhum portador disponível para a filial');
+        }
+
+        $cob->codportador = $portador->codportador;
         $cob->save();
 
         $cob->txid = 'PIXCOB' . str_pad($cob->codpixcob, 29, '0', STR_PAD_LEFT);
@@ -75,10 +99,19 @@ class PixService
         if (empty($cob->Portador->pixdict)) {
             throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
         }
-        if ($cob->Portador->Banco->numerobanco == 364) {
-            return GerenciaNetService::transmitirPixCob($cob);
+        switch ($cob->Portador->Banco->numerobanco) {
+            case 1:
+                return PixBbService::transmitirPixCob($cob);
+                break;
+
+            case 364:
+                return GerenciaNetService::transmitirPixCob($cob);
+                break;
+
+            default:
+                throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+                break;
         }
-        throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
     }
 
     public static function consultarPixCob(PixCob $cob)
@@ -86,11 +119,20 @@ class PixService
         if (empty($cob->Portador->pixdict)) {
             throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
         }
-        if ($cob->Portador->Banco->numerobanco == 364) {
-            $cob = GerenciaNetService::consultarPixCob($cob);
-            return $cob;
+        switch ($cob->Portador->Banco->numerobanco) {
+            case 1:
+                $cob = PixBbService::consultarPixCob($cob);
+                break;
+
+            case 364:
+                $cob = GerenciaNetService::consultarPixCob($cob);
+                break;
+
+            default:
+                throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+                break;
         }
-        throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+        return $cob;
     }
 
     public static function importarPix(Portador $portador, array $arrPix, PixCob $pixCob = null)
@@ -184,12 +226,28 @@ class PixService
 
     public static function imprimirQrCode(PixCob $cob, $impressora)
     {
-        if (empty($cob->locationid)) {
-            return;
+        switch ($cob->Portador->Banco->numerobanco) {
+            case 1:
+                if (empty($cob->qrcode)) {
+                    throw new \Exception('Sem QRcode registrado!', 1);
+                }
+                $qrcode = PixBbApiService::qrCode($cob->qrcode);
+                $qrcode = 'data:image/png;base64,' . base64_encode($qrcode);
+                break;
+
+            case 364:
+                if (empty($cob->locationid)) {
+                    throw new \Exception('Sem LocationID registrado!', 1);
+                }
+                $qrcode = GerenciaNetService::qrCode($cob->locationid);
+                $qrcode = $qrcode['imagemQrcode'];
+                break;
+
+            default:
+                throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
+                break;
         }
 
-        $qrcode = GerenciaNetService::qrCode($cob->locationid);
-        $imagem = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrcode['imagemQrcode']));
 
         $html = view('pix/imprimir', ['cob' => $cob, 'qrcode' => $qrcode])->render();
         $dompdf = new Dompdf();

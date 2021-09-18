@@ -64,9 +64,8 @@ class PixController
     {
         $cob = PixCob::findOrFail($codpixcob);
         $ret = new PixCobResource($cob);
-        $ret['qrcode'] = null;
         $ret['qrcodeimagem'] = null;
-        if (!empty($cob->locationid)) {
+        if (!empty($cob->locationid) && $cob->Portador->Banco->numerobanco == 364) {
             $qrcode = GerenciaNetService::qrCode($cob->locationid);
             $ret['qrcode'] = $qrcode['qrcode'];
             $ret['qrcodeimagem'] = $qrcode['imagemQrcode'];

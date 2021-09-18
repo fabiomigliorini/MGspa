@@ -14,7 +14,7 @@ class BoletoBbApiService
         $url = env('BB_URL_OAUTH') . '/token';
         $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
         $auth = "Authorization: Basic {$authorization}";
-        $body = 'grant_type=client_credentials&scope=cobrancas.boletos-info+cobrancas.boletos-requisicao';
+        $body = 'grant_type=client_credentials&scope=cobrancas.boletos-info+cobrancas.boletos-requisicao+cob.read+cob.write+pix.read+pix.write';
         $opt = [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
@@ -42,7 +42,8 @@ class BoletoBbApiService
             throw new \Exception("Erro {$httpcode} - {$response} ao Autenticar na API do BB!", $httpcode);
         }
         curl_close($curl);
-        return json_decode($response, true);
+        $ret = json_decode($response, true);
+        return $ret;
     }
 
     public static function registrar (

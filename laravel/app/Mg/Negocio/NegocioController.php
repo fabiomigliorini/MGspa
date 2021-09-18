@@ -87,4 +87,23 @@ class NegocioController extends MgController
         return TituloBoletoResource::collection($tituloBoletos);
     }
 
+    public function identificarVendedor (Request $request, $codnegocio, $codpessoavendedor)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $pessoaVendedor = \Mg\Pessoa\Pessoa::findOrFail($codpessoavendedor);
+        if (!$pessoaVendedor->vendedor) {
+            throw new \Exception("\"{$pessoaVendedor->fantasia}\" não é vendedor!", 1);
+        }
+        $negocio->update([
+            'codpessoavendedor' => $codpessoavendedor
+        ]);
+        return [
+            'codnegocio' => $negocio->codnegocio,
+            'codpessoavendedor' => $negocio->codpessoavendedor,
+            'vendedor' => $pessoaVendedor->fantasia,
+        ];
+    }
+
+
+
 }
