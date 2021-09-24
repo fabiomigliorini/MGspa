@@ -77,6 +77,11 @@
                 "tabela": "tbltituloboleto",
                 "coluna": "codportador",
                 "metodo": "TituloBoletoS"
+            },
+            "tblextratobancario.codportador": {
+                "tabela": "tblextratobancario",
+                "coluna": "codportador",
+                "metodo": "ExtratoBancarioS"
             }
         }
     },
@@ -4642,6 +4647,62 @@
                 "tabela": "tblnfeterceiro",
                 "coluna": "codnfeterceiro",
                 "metodo": "NfeTerceiro"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblextratobancariotipomovimento": {
+        "tabela": "tblextratobancariotipomovimento",
+        "campocodigo": "codextratobancariotipomovimento",
+        "namespace": "Mg\\Portador",
+        "classe": "ExtratoBancarioTipoMovimento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Portador\/ExtratoBancarioTipoMovimento.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblextratobancario.codextratobancariotipomovimento": {
+                "tabela": "tblextratobancario",
+                "coluna": "codextratobancariotipomovimento",
+                "metodo": "ExtratoBancarioS"
+            }
+        }
+    },
+    "tblextratobancario": {
+        "tabela": "tblextratobancario",
+        "campocodigo": "codextratobancario",
+        "namespace": "Mg\\Portador",
+        "classe": "ExtratoBancario",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Portador\/ExtratoBancario.php",
+        "belongsTo": {
+            "codextratobancariotipomovimento": {
+                "tabela": "tblextratobancariotipomovimento",
+                "coluna": "codextratobancariotipomovimento",
+                "metodo": "ExtratoBancarioTipoMovimento"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
             },
             "codusuarioalteracao": {
                 "tabela": "tblusuario",

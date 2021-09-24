@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jun/2021 17:15:29
+ * Date: 24/Sep/2021 15:12:22
  */
 
 namespace Mg\Portador;
@@ -17,6 +17,7 @@ use Mg\Usuario\Usuario;
 use Mg\Pix\PixCob;
 use Mg\Pix\Pix;
 use Mg\Titulo\TituloBoleto;
+use Mg\Portador\ExtratoBancario;
 use Mg\Banco\Banco;
 use Mg\Filial\Filial;
 
@@ -109,6 +110,11 @@ class Portador extends MgModel
     public function CobrancaS()
     {
         return $this->hasMany(Cobranca::class, 'codportador', 'codportador');
+    }
+
+    public function ExtratoBancarioS()
+    {
+        return $this->hasMany(ExtratoBancario::class, 'codportador', 'codportador');
     }
 
     public function LiquidacaoTituloS()
