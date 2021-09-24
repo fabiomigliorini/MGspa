@@ -31,9 +31,7 @@ class PessoaComandaVendedorService
         $pdf = static::pdf($pessoa);
         $tmpfname = tempnam(sys_get_temp_dir(), 'comandaImpressao') . '.pdf';
         file_put_contents($tmpfname, $pdf);
-        for ($i=0; $i < $copias; $i++) {
-            exec("lp \"{$tmpfname}\" -d \"$impressora\"");
-        }
+	exec("lp \"{$tmpfname}\" -n {$copias} -d \"$impressora\"");
         unlink($tmpfname);
         return $pdf;
     }
