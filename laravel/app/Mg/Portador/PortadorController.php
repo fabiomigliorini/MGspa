@@ -25,9 +25,10 @@ class PortadorController extends MgController
             'arquivos.*.required' => 'Envie um arquivo!',
             'arquivos.*.mimes' => 'Somente arquivos OFX aceitos!',
         ]);
+        $ret = [];
         foreach ($request->arquivos as $key => $arquivo) {
             $ofx = file_get_contents($arquivo->getRealPath());
-            $ret = PortadorService::importarOfx($ofx);
+            $ret[$arquivo->getClientOriginalName()] = PortadorService::importarOfx($ofx);
         }
         return $ret;
     }
