@@ -1744,13 +1744,16 @@
 			<column name="codextratobancariotipomovimento" type="bigserial" jt="-5" mandatory="y" />
 			<column name="tipo" type="varchar" length="30" jt="12" mandatory="y" />
 			<column name="sigla" type="varchar" length="3" jt="12" mandatory="y" />
-			<column name="tipoofx" type="varchar" length="20" jt="12" />
+			<column name="trntype" prior="tipoofx" type="varchar" length="20" jt="12" />
 			<column name="criacao" type="timestamp" length="0" decimal="0" jt="93" />
 			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="alteracao" type="timestamp" length="0" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblextratobancariotipomovimento_codextratobancariotipomovime" unique="PRIMARY_KEY" >
 				<column name="codextratobancariotipomovimento" />
+			</index>
+			<index name="unq_tblextratobancariotipomovimento" unique="UNIQUE_KEY" >
+				<column name="trntype" />
 			</index>
 			<fk name="fk_tblextratobancariotipomovimento_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
 				<fk_column name="codusuariocriacao" pk="codusuario" />
@@ -11344,6 +11347,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="1040" y="64" />
 	</layout>
 	<layout name="Layout_Portador" id="Layout_91c" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblbanco" color="3986C1" x="384" y="304" />
 		<entity schema="mgsis.mgsis" name="tblextratobancario" color="C1D8EE" x="368" y="48" />
 		<entity schema="mgsis.mgsis" name="tblextratobancariotipomovimento" color="C1D8EE" x="752" y="48" />
 		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="48" y="48" />

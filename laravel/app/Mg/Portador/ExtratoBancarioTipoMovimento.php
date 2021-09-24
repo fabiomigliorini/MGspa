@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2021 15:12:40
+ * Date: 24/Sep/2021 16:24:48
  */
 
 namespace Mg\Portador;
@@ -19,7 +19,7 @@ class ExtratoBancarioTipoMovimento extends MgModel
     protected $fillable = [
         'sigla',
         'tipo',
-        'tipoofx'
+        'trntype'
     ];
 
     protected $dates = [

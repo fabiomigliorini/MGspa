@@ -1716,6 +1716,10 @@
 			<column name="fitid" type="varchar" length="100" jt="12" />
 			<column name="numero" type="varchar" length="20" jt="12" />
 			<column name="observacoes" type="text" jt="12" />
+			<column name="criacao" type="timestamp" length="0" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="0" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<index name="pk_tblextratobancario_codextratobancario" unique="PRIMARY_KEY" >
 				<column name="codextratobancario" />
 			</index>
@@ -1729,15 +1733,31 @@
 			<fk name="fk_tblextratobancario_tblextratobancariotipomovimento" to_schema="mgsis.mgsis" to_table="tblextratobancariotipomovimento" >
 				<fk_column name="codextratobancariotipomovimento" pk="codextratobancariotipomovimento" />
 			</fk>
+			<fk name="fk_tblextratobancario_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblextratobancario_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tblextratobancariotipomovimento" >
 			<column name="codextratobancariotipomovimento" type="bigserial" jt="-5" mandatory="y" />
 			<column name="tipo" type="varchar" length="30" jt="12" mandatory="y" />
 			<column name="sigla" type="varchar" length="3" jt="12" mandatory="y" />
-			<column name="tipoofx" type="varchar" length="20" jt="12" />
-			<index name="pk_tblextratobancariotipomovimento_codextratobancariotipomovimento" unique="PRIMARY_KEY" >
+			<column name="trntype" prior="tipoofx" type="varchar" length="20" jt="12" />
+			<column name="criacao" type="timestamp" length="0" decimal="0" jt="93" />
+			<column name="codusuariocriacao" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="alteracao" type="timestamp" length="0" decimal="0" jt="93" />
+			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
+			<index name="pk_tblextratobancariotipomovimento_codextratobancariotipomovime" unique="PRIMARY_KEY" >
 				<column name="codextratobancariotipomovimento" />
 			</index>
+			<fk name="fk_tblextratobancariotipomovimento_tblusuario" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuariocriacao" pk="codusuario" />
+			</fk>
+			<fk name="fk_tblextratobancariotipomovimento_tblusuario_0" to_schema="mgsis.mgsis" to_table="tblusuario" update_action="cascade" >
+				<fk_column name="codusuarioalteracao" pk="codusuario" />
+			</fk>
 		</table>
 		<table name="tblfamiliaproduto" >
 			<column name="codfamiliaproduto" type="bigserial" length="19" decimal="0" jt="-5" mandatory="y" />
@@ -8785,6 +8805,8 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 		<sequence name="tblestoquemovimentotipo_codestoquemovimentotipo_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblestoquesaldo_codestoquesaldo_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblestoquesaldoconferencia_codestoquesaldoconferencia_seq" options="START WITH 1 INCREMENT BY 1" />
+		<sequence name="tblextratobancario_codextratobancario_seq" options="START WITH 1 INCREMENT BY 1" />
+		<sequence name="tblextratobancariotipomovimen_codextratobancariotipomovimen_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblfamiliaproduto_codfamiliaproduto_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblferiado_codferiado_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblfilial_codfilial_seq" options="START WITH 1 INCREMENT BY 1" />
@@ -11322,6 +11344,7 @@ where codcheque in(select codcheque from tblcheque where cmc7 in (
 		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="1040" y="64" />
 	</layout>
 	<layout name="Layout_Portador" id="Layout_91c" show_relation="columns" >
+		<entity schema="mgsis.mgsis" name="tblbanco" color="3986C1" x="384" y="304" />
 		<entity schema="mgsis.mgsis" name="tblextratobancario" color="C1D8EE" x="368" y="48" />
 		<entity schema="mgsis.mgsis" name="tblextratobancariotipomovimento" color="C1D8EE" x="752" y="48" />
 		<entity schema="mgsis.mgsis" name="tblportador" color="3986C1" x="48" y="48" />
