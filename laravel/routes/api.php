@@ -34,6 +34,9 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
+    Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
+
     // NFeTerceiro
     Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
     Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
@@ -195,18 +198,17 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('boleto/retorno/{codportador}/{arquivo}/{dataretorno}', '\Mg\Boleto\BoletoController@retorno');
         Route::post('boleto/processar-retorno', '\Mg\Boleto\BoletoController@processarRetorno');
         Route::post('boleto/reprocessar-retorno', '\Mg\Boleto\BoletoController@reprocessarRetorno');
+        Route::get('boleto/remessa-pendente', '\Mg\Boleto\BoletoController@remessaPendente');
+        Route::get('boleto/remessa-enviada', '\Mg\Boleto\BoletoController@remessaEnviada');
+        Route::get('boleto/remessa/{codportador}/{remessa}', '\Mg\Boleto\BoletoController@remessa');
+        Route::post('boleto/arquivar-remessa/{codportador}/{arquivo}', '\Mg\Boleto\BoletoController@arquivarRemessa');
+        Route::post('boleto/gerar-remessa/{codportador}', '\Mg\Boleto\BoletoController@gerarRemessa');
 
         // Dominio
         Route::post('dominio/estoque', '\Mg\Dominio\DominioController@estoque');
         Route::post('dominio/produto', '\Mg\Dominio\DominioController@produto');
         Route::post('dominio/pessoa', '\Mg\Dominio\DominioController@pessoa');
         Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
-
-        Route::get('boleto/remessa-pendente', '\Mg\Boleto\BoletoController@remessaPendente');
-        Route::get('boleto/remessa-enviada', '\Mg\Boleto\BoletoController@remessaEnviada');
-        Route::get('boleto/remessa/{codportador}/{remessa}', '\Mg\Boleto\BoletoController@remessa');
-        Route::post('boleto/arquivar-remessa/{codportador}/{arquivo}', '\Mg\Boleto\BoletoController@arquivarRemessa');
-        Route::post('boleto/gerar-remessa/{codportador}', '\Mg\Boleto\BoletoController@gerarRemessa');
 
         // Pedidos
         Route::apiResource('pedido', '\Mg\Pedido\PedidoController');
