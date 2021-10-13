@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Dec/2020 15:15:44
+ * Date: 13/Oct/2021 14:31:20
  */
 
 namespace Mg\Pix;
 
 use Mg\MgModel;
 use Mg\Pix\PixDevolucao;
+use Mg\Portador\PortadorMovimento;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
@@ -75,6 +76,11 @@ class Pix extends MgModel
     public function PixDevolucaoS()
     {
         return $this->hasMany(PixDevolucao::class, 'codpix', 'codpix');
+    }
+
+    public function PortadorMovimentoS()
+    {
+        return $this->hasMany(PortadorMovimento::class, 'codpix', 'codpix');
     }
 
 }

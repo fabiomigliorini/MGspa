@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Apr/2021 16:42:42
+ * Date: 13/Oct/2021 14:31:48
  */
 
 namespace Mg\Negocio;
 
 use Mg\MgModel;
 use Mg\Titulo\Titulo;
+use Mg\Portador\PortadorMovimento;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
@@ -86,6 +87,11 @@ class NegocioFormaPagamento extends MgModel
 
 
     // Tabelas Filhas
+    public function PortadorMovimentoS()
+    {
+        return $this->hasMany(PortadorMovimento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+    }
+
     public function TituloS()
     {
         return $this->hasMany(Titulo::class, 'codnegocioformapagamento', 'codnegocioformapagamento');

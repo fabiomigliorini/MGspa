@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:48:30
+ * Date: 13/Oct/2021 14:31:10
  */
 
 namespace Mg\Titulo;
@@ -21,6 +21,7 @@ class TipoMovimentoTitulo extends MgModel
 
     protected $table = 'tbltipomovimentotitulo';
     protected $primaryKey = 'codtipomovimentotitulo';
+
 
     protected $fillable = [
         'ajuste',

@@ -82,6 +82,21 @@
                 "tabela": "tblextratobancario",
                 "coluna": "codportador",
                 "metodo": "ExtratoBancarioS"
+            },
+            "tblportadormovimento.codportador": {
+                "tabela": "tblportadormovimento",
+                "coluna": "codportador",
+                "metodo": "PortadorMovimentoS"
+            },
+            "tblportadortransferencia.codportadordestino": {
+                "tabela": "tblportadortransferencia",
+                "coluna": "codportadordestino",
+                "metodo": "PortadorTransferenciaDestinoS"
+            },
+            "tblportadortransferencia.codportadororigem": {
+                "tabela": "tblportadortransferencia",
+                "coluna": "codportadororigem",
+                "metodo": "PortadorTransferenciaOrigemS"
             }
         }
     },
@@ -468,7 +483,13 @@
                 "metodo": "TituloBoleto"
             }
         },
-        "hasMany": []
+        "hasMany": {
+            "tblportadormovimento.codmovimentotitulo": {
+                "tabela": "tblportadormovimento",
+                "coluna": "codmovimentotitulo",
+                "metodo": "PortadorMovimentoS"
+            }
+        }
     },
     "tbltitulo": {
         "tabela": "tbltitulo",
@@ -900,6 +921,11 @@
                 "tabela": "tbltitulo",
                 "coluna": "codnegocioformapagamento",
                 "metodo": "TituloS"
+            },
+            "tblportadormovimento.codnegocioformapagamento": {
+                "tabela": "tblportadormovimento",
+                "coluna": "codnegocioformapagamento",
+                "metodo": "PortadorMovimentoS"
             }
         }
     },
@@ -3285,6 +3311,11 @@
                 "tabela": "tblpixdevolucao",
                 "coluna": "codpix",
                 "metodo": "PixDevolucaoS"
+            },
+            "tblportadormovimento.codpix": {
+                "tabela": "tblportadormovimento",
+                "coluna": "codpix",
+                "metodo": "PortadorMovimentoS"
             }
         }
     },
@@ -4713,6 +4744,99 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblextratobancarioportadormovimento.codextratobancario": {
+                "tabela": "tblextratobancarioportadormovimento",
+                "coluna": "codextratobancario",
+                "metodo": "ExtratoBancarioPortadorMovimentoS"
+            }
+        }
+    },
+    "tblportadormovimento": {
+        "tabela": "tblportadormovimento",
+        "campocodigo": "codportadormovimento",
+        "namespace": "Mg\\Portador",
+        "classe": "PortadorMovimento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Portador\/PortadorMovimento.php",
+        "belongsTo": {
+            "codmovimentotitulo": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codmovimentotitulo",
+                "metodo": "MovimentoTitulo"
+            },
+            "codnegocioformapagamento": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codnegocioformapagamento",
+                "metodo": "NegocioFormaPagamento"
+            },
+            "codpix": {
+                "tabela": "tblpix",
+                "coluna": "codpix",
+                "metodo": "Pix"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            },
+            "codportadortransferencia": {
+                "tabela": "tblportadortransferencia",
+                "coluna": "codportadortransferencia",
+                "metodo": "PortadorTransferencia"
+            }
+        },
+        "hasMany": {
+            "tblextratobancarioportadormovimento.codportadormovimento": {
+                "tabela": "tblextratobancarioportadormovimento",
+                "coluna": "codportadormovimento",
+                "metodo": "ExtratoBancarioPortadorMovimentoS"
+            }
+        }
+    },
+    "tblportadortransferencia": {
+        "tabela": "tblportadortransferencia",
+        "campocodigo": "codportadortransferencia",
+        "namespace": "Mg\\Portador",
+        "classe": "PortadorTransferencia",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Portador\/PortadorTransferencia.php",
+        "belongsTo": {
+            "codportadordestino": {
+                "tabela": "tblportador",
+                "coluna": "codportadordestino",
+                "metodo": "PortadorDestino"
+            },
+            "codportadororigem": {
+                "tabela": "tblportador",
+                "coluna": "codportadororigem",
+                "metodo": "PortadorOrigem"
+            }
+        },
+        "hasMany": {
+            "tblportadormovimento.codportadortransferencia": {
+                "tabela": "tblportadormovimento",
+                "coluna": "codportadortransferencia",
+                "metodo": "PortadorMovimentoS"
+            }
+        }
+    },
+    "tblextratobancarioportadormovimento": {
+        "tabela": "tblextratobancarioportadormovimento",
+        "campocodigo": "codextratobancarioportadormovimento",
+        "namespace": "Mg\\Portador",
+        "classe": "ExtratoBancarioPortadorMovimento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Portador\/ExtratoBancarioPortadorMovimento.php",
+        "belongsTo": {
+            "codextratobancario": {
+                "tabela": "tblextratobancario",
+                "coluna": "codextratobancario",
+                "metodo": "ExtratoBancario"
+            },
+            "codportadormovimento": {
+                "tabela": "tblportadormovimento",
+                "coluna": "codportadormovimento",
+                "metodo": "PortadorMovimento"
             }
         },
         "hasMany": []

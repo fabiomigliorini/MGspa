@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2021 15:12:22
+ * Date: 13/Oct/2021 14:28:58
  */
 
 namespace Mg\Portador;
@@ -18,6 +18,8 @@ use Mg\Pix\PixCob;
 use Mg\Pix\Pix;
 use Mg\Titulo\TituloBoleto;
 use Mg\Portador\ExtratoBancario;
+use Mg\Portador\PortadorMovimento;
+use Mg\Portador\PortadorTransferencia;
 use Mg\Banco\Banco;
 use Mg\Filial\Filial;
 
@@ -135,6 +137,21 @@ class Portador extends MgModel
     public function PixCobS()
     {
         return $this->hasMany(PixCob::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorMovimentoS()
+    {
+        return $this->hasMany(PortadorMovimento::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorTransferenciaDestinoS()
+    {
+        return $this->hasMany(PortadorTransferencia::class, 'codportadordestino', 'codportador');
+    }
+
+    public function PortadorTransferenciaOrigemS()
+    {
+        return $this->hasMany(PortadorTransferencia::class, 'codportadororigem', 'codportador');
     }
 
     public function TituloS()

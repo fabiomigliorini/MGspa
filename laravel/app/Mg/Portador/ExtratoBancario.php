@@ -1,12 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2021 15:12:31
+ * Date: 13/Oct/2021 14:25:44
  */
 
 namespace Mg\Portador;
 
 use Mg\MgModel;
+use Mg\Portador\ExtratoBancarioPortadorMovimento;
 use Mg\Portador\ExtratoBancarioTipoMovimento;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
@@ -20,6 +21,7 @@ class ExtratoBancario extends MgModel
     protected $fillable = [
         'codextratobancariotipomovimento',
         'codportador',
+        'conciliado',
         'fitid',
         'lancamento',
         'numero',
@@ -39,6 +41,7 @@ class ExtratoBancario extends MgModel
         'codportador' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'conciliado' => 'boolean',
         'valor' => 'float'
     ];
 
@@ -62,6 +65,13 @@ class ExtratoBancario extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
+    public function ExtratoBancarioPortadorMovimentoS()
+    {
+        return $this->hasMany(ExtratoBancarioPortadorMovimento::class, 'codextratobancario', 'codextratobancario');
     }
 
 }

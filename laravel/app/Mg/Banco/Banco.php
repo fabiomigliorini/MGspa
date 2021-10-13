@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:22:56
+ * Date: 13/Oct/2021 14:31:37
  */
 
 namespace Mg\Banco;
@@ -19,6 +19,7 @@ class Banco extends MgModel
 
     protected $fillable = [
         'banco',
+        'inativo',
         'numerobanco',
         'sigla'
     ];

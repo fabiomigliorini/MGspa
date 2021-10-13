@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2021 16:24:48
+ * Date: 13/Oct/2021 14:25:11
  */
 
 namespace Mg\Portador;
