@@ -3,9 +3,9 @@ from tbltitulo t
 inner join tblpessoa p on (p.codpessoa = t.codpessoa)
 inner join tblfilial f on (f.codfilial = t.codfilial)
 --where t.debito = 20
-where t.debito = 268.75
---where t.credito = 369.98
-and saldo > 0
+--where t.debito = 268.75
+where t.credito = 1193.72
+--and saldo > 0
 order by criacao desc nulls LAST
 
 select p.fantasia, f.filial, t.numero, t.saldo, t.debito, t.credito, t.vencimento, t.criacao, t.codtitulo 
@@ -18,7 +18,7 @@ order by criacao desc nulls LAST
 
 select valortotal, valoraprazo, * 
 from tblnegocio n 
-where n.valortotal = 330
+where n.valortotal = 219.3
 and criacao >= '2021-07-22'
 order by criacao desc
 

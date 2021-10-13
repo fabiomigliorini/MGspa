@@ -10,9 +10,9 @@ inner join tblusuario u on (u.codusuario = n.codusuario)
 inner join tblnegocioprodutobarra npb on (npb.codnegocio = n.codnegocio)
 inner join tblfilial f ON (f.codfilial = n.codfilial)
 where n.codnegociostatus = 2
-and n.lancamento between '2021-08-01' and '2021-08-31 23:59:59'
+and n.lancamento between '2021-09-01' and '2021-09-30 23:59:59'
 and nat.venda = 1
-and n.codfilial = 102
+--and n.codfilial = 102
 group by
 	date_trunc('month', n.lancamento),
 	f.filial,
