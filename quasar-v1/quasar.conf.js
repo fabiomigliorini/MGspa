@@ -90,6 +90,7 @@ module.exports = function (ctx) {
         'QSplitter',
         'QCarousel',
         'QCarouselSlide',
+        'QBadge',
       ],
       config: {
         notify: { /* Notify defaults */ }

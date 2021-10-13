@@ -32,6 +32,9 @@ export default [
   { path: '/boleto/retorno/:codportador/:arquivo/:dataretorno', component: () => import('components/views/boleto/retorno') },
   { path: '/boleto/remessa/:codportador/:remessa', component: () => import('components/views/boleto/remessa') },
 
+  // Portadores
+  { path: '/portador/:codportador?/:ano?/:mes?', component: () => import('components/views/portador/Index') },
+
   // Marca
   { path: '/marca', component: () => import('components/views/marca/Index') },
   { path: '/marca/create', component: () => import('components/views/marca/Create') },

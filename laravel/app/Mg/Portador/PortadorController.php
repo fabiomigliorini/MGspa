@@ -9,6 +9,12 @@ use Mg\MgController;
 class PortadorController extends MgController
 {
 
+    public function index(Request $request)
+    {
+        $portadores = Portador::ativo()->orderBy('portador')->get();
+        return PortadorResource::collection($portadores);
+    }
+
     public function show(Request $request, $codportador)
     {
         $portador = Portador::findOrFail($codportador);

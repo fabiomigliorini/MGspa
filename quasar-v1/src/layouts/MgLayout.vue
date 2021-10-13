@@ -102,8 +102,8 @@ export default {
   name: 'mg-layout',
   data () {
     return {
-      leftDrawer: false,
-      rightDrawer: false,
+      // leftDrawer: false,
+      // rightDrawer: false,
     }
   },
   components: {
@@ -128,6 +128,14 @@ export default {
     backPath: {
       type: String,
       default: null
+    },
+    leftDrawer: {
+      type: Boolean,
+      default: false,
+    },
+    rightDrawer: {
+      type: Boolean,
+      default: false,
     }
   },
   methods: {

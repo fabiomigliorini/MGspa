@@ -67,6 +67,11 @@ export default {
       title: 'Stone Connect',
       path: '/stone-connect'
     },
+    {
+      icon: 'fas fa-wallet',
+      title: 'Portadores',
+      path: '/portador'
+    },
     /*
     {
       icon: 'add_shopping_cart',

@@ -34,6 +34,7 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    Route::get('portador', '\Mg\Portador\PortadorController@index');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
