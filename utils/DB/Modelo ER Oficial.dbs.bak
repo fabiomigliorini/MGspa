@@ -1721,7 +1721,7 @@
 			<column name="alteracao" type="timestamp" length="0" decimal="0" jt="93" />
 			<column name="codusuarioalteracao" type="bigint" length="19" decimal="0" jt="-5" />
 			<column name="conciliado" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 			</column>
 			<index name="pk_tblextratobancario_codextratobancario" unique="PRIMARY_KEY" >
 				<column name="codextratobancario" />
@@ -1747,7 +1747,7 @@
 			<column name="codextratobancarioportadormovimento" prior="tblextratobancarioportadormovimento" type="bigserial" jt="-5" mandatory="y" />
 			<column name="codextratobancario" type="bigint" jt="-5" mandatory="y" />
 			<column name="codportadormovimento" type="bigint" jt="-5" mandatory="y" />
-			<index name="pk_tblportadormovimentoextratobancario_tblextratobancarioportadormovimento" unique="PRIMARY_KEY" >
+			<index name="pk_tblportadormovimentoextratobancario_tblextratobancarioportad" unique="PRIMARY_KEY" >
 				<column name="codextratobancarioportadormovimento" />
 			</index>
 			<fk name="fk_tblextratobancarioportadormovimento_tblextratobancario" to_schema="mgsis.mgsis" to_table="tblextratobancario" delete_action="cascade" update_action="cascade" >
@@ -5597,10 +5597,10 @@ Peso em KG]]></comment>
 			<column name="valor" type="numeric" length="14" decimal="2" jt="2" mandatory="y" />
 			<column name="observacoes" type="varchar" length="300" jt="12" />
 			<column name="conciliado" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="manual" type="boolean" jt="-7" mandatory="y" >
-				<defo><![CDATA[FALSE]]></defo>
+				<defo><![CDATA[false]]></defo>
 			</column>
 			<column name="codportadortransferencia" type="bigint" jt="-5" />
 			<column name="codpix" type="bigint" jt="-5" />
@@ -8887,6 +8887,7 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 		<sequence name="tblestoquesaldo_codestoquesaldo_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblestoquesaldoconferencia_codestoquesaldoconferencia_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblextratobancario_codextratobancario_seq" options="START WITH 1 INCREMENT BY 1" />
+		<sequence name="tblextratobancarioportadormov_codextratobancarioportadormov_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblextratobancariotipomovimen_codextratobancariotipomovimen_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblfamiliaproduto_codfamiliaproduto_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblferiado_codferiado_seq" options="START WITH 1 INCREMENT BY 1" />
@@ -8990,6 +8991,8 @@ Os dois últimos: 01 Agencias - Postos tradicionais 02 Terminal de Auto-atendime
 		<sequence name="tblpixdevolucao_codpixdevolucao_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblpixdevolucaostatus_codpixdevolucaostatus_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblportador_codportador_seq" options="START WITH 1 INCREMENT BY 1" />
+		<sequence name="tblportadormovimento_codportadormovimento_seq" options="START WITH 1 INCREMENT BY 1" />
+		<sequence name="tblportadortransferencia_codportadortransferencia_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblportaria195_codportaria195_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblprancheta_codprancheta_seq" options="START WITH 1 INCREMENT BY 1" />
 		<sequence name="tblpranchetaproduto_codpranchetaproduto_seq" options="START WITH 1 INCREMENT BY 1" />

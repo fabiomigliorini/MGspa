@@ -5614,7 +5614,7 @@ Peso em KG]]></comment>
 			<index name="pk_tblportadormovimento_codportadormovimento" unique="PRIMARY_KEY" >
 				<column name="codportadormovimento" />
 			</index>
-			<fk name="fk_tblportadormovimento_tblportador" to_schema="mgsis.mgsis" to_table="tblportador" >
+			<fk name="fk_tblportadormovimento_tblportador" to_schema="mgsis.mgsis" to_table="tblportador" delete_action="cascade" update_action="cascade" >
 				<fk_column name="codportador" pk="codportador" />
 			</fk>
 			<fk name="fk_tblportadormovimento_tblpix" to_schema="mgsis.mgsis" to_table="tblpix" delete_action="cascade" update_action="cascade" >
