@@ -8,6 +8,11 @@
 
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
+      <!--
+      <div class="row q-pa-md q-gutter-md">
+        <q-btn icon="cloud_upload" class="col-12" label="Importar OFX" color="primary" @click="dialogImportarOfx = !dialogImportarOfx" />
+      </div>
+      -->
       <!-- Ordena por Vendas -->
       <q-item dense v-for="p in portadores" clickable v-ripple @click="codportador = p.codportador" :key="p.codportador">
         <q-item-section side>
@@ -27,6 +32,21 @@
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
 
+      <!-- Arquivos OFX -->
+      <q-dialog v-model="dialogImportarOfx" position="bottom">
+        <q-uploader
+        :url="urlUploadOfx"
+        field-name="arquivos[]"
+        accept=".ofx"
+        label="Importar Arquivos OFX"
+        @finish="finalImportacaoOfx"
+        @uploaded="ofxImportado"
+        @failed="ofxFalha"
+        multiple
+        flat
+        />
+      </q-dialog>
+
       <!-- Anos -->
       <q-tabs v-model="ano" dense >
         <q-tab v-for="i in anos" :name="i" :label="i" :key="i"/>
@@ -39,9 +59,9 @@
         </q-tab>
       </q-tabs>
 
-
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="add" color="primary" :to="{ path: '/marca/create' }"/>
+        <!-- <q-btn fab icon="add" color="primary" :to="{ path: '/marca/create' }"/> -->
+        <q-btn fab icon="cloud_upload" color="primary" @click="dialogImportarOfx = !dialogImportarOfx" />
       </q-page-sticky>
 
     </div>
@@ -89,7 +109,8 @@ export default {
         {mes:11, descricao:'Nov'},
         {mes:12, descricao:'Dez'},
       ],
-      arquivos: [],
+      dialogImportarOfx: false,
+      falhaImportacaoOfx: false,
       data: [],
       page: 1,
       filter: {}, // Vem do Store
@@ -109,6 +130,9 @@ export default {
     mes: function() {
       this.atualizarUrl();
     },
+    dialogImportarOfx() {
+      this.falhaImportacaoOfx = false;
+    },
     filter: {
       handler: function (val, oldVal) {
         this.page = 1
@@ -117,6 +141,12 @@ export default {
       deep: true
     },
 
+  },
+
+  computed: {
+    urlUploadOfx: function () {
+      return process.env.API_URL + 'portador/importar-ofx';
+    },
   },
 
   methods: {
@@ -152,11 +182,50 @@ export default {
       this.atualizarUrl();
     },
 
-    trocarMes: function (m) {
-      // this.mes = m.mes;
-      // this.ano = m.ano;
-      console.log(m);
-    }
+    finalImportacaoOfx: function() {
+      if (!this.falhaImportacaoOfx) {
+        this.dialogImportarOfx = false;
+      }
+      this.loadPortadores();
+    },
+
+    ofxImportado: function(info) {
+      const vm = this;
+      const resp = JSON.parse(info.xhr.response);
+      Object.keys(resp).forEach(arquivo => {
+        var mensagem =
+          'Importados ' +
+          resp[arquivo].registros +
+          ' registros no portador "' +
+          resp[arquivo].portador +
+          '" com ' +
+          resp[arquivo].falhas +
+          ' falhas!'
+          ;
+        vm.$q.notify({
+          message: mensagem,
+          color: 'positive',
+          // position: 'top',
+        })
+      });
+    },
+
+    ofxFalha: function(info) {
+      this.falhaImportacaoOfx = true;
+      const vm = this;
+      info.files.forEach((arquivo, i) => {
+        var mensagem =
+          'Falha ao importar o arquivo "' +
+          arquivo.name +
+          '"!'
+          ;
+        vm.$q.notify({
+          message: mensagem,
+          color: 'negative',
+          // position: 'top',
+        })
+      });
+    },
 
   },
 
@@ -168,7 +237,6 @@ export default {
     this.anos = Array(anoCorrente - anoInicial + 1)
       .fill(anoInicial)
       .map((ano, index) => ano + index);
-    console.log(this.anos);
 
     // codportador
     var param = this.$route.params.codportador;
