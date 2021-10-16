@@ -3,14 +3,13 @@
     <!-- Título da Página -->
     <template slot="title">
       {{portador.portador}}
-      -
-      {{mes}}/{{ano}}
+      - {{mes}}/{{ano}}
     </template>
 
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
       <!-- Ordena por Vendas -->
-      <q-item dense v-for="p in portadores" clickable v-ripple @click="codportador = p.codportador">
+      <q-item dense v-for="p in portadores" clickable v-ripple @click="codportador = p.codportador" :key="p.codportador">
         <q-item-section side>
           <q-radio v-model="codportador" :val="p.codportador" />
         </q-item-section>
@@ -27,96 +26,19 @@
 
     <!-- Conteúdo Princial (Meio) -->
     <div slot="content">
+
+      <!-- Anos -->
       <q-tabs v-model="ano" dense >
-        <q-tab v-for="i in [2021, 2022]" :name="i" :label="i" />
+        <q-tab v-for="i in anos" :name="i" :label="i" :key="i"/>
       </q-tabs>
+
+      <!-- Meses -->
       <q-tabs v-model="mes" dense >
-        <q-tab v-for="i in meses" :name="i.mes" :label="i.descricao">
-          <q-badge small rounded color="red" floating></q-badge>
+        <q-tab v-for="i in meses" :name="i.mes" :label="i.descricao" :key="i.mes">
+          <!-- <q-badge small rounded color="red" floating></q-badge> -->
         </q-tab>
       </q-tabs>
 
-
-      <!-- Se tiver registros -->
-      <q-list v-if="data.length > 0">
-
-        <!-- Scroll infinito -->
-        <q-infinite-scroll @load="loadMore" ref="infiniteScroll">
-
-          <!-- Percorre registros  -->
-          <template v-for="item in data">
-
-            <!-- Link para detalhes -->
-            <q-item :to="'/marca/' + item.codmarca" >
-
-              <!-- Imagem -->
-              <q-item-section avatar>
-                <q-avatar square>
-                  <img :src="item.imagem.url" v-if="item.imagem">
-                  <img src="/statics/no-image-4-4.svg" v-else/>
-                </q-avatar>
-              </q-item-section>
-
-              </q-item-section>
-
-              <!-- Coluna 1 -->
-              <q-item-section >
-                <q-item-label>
-                  {{ item.marca }}
-                  <q-chip tag square pointing="left" color="negative" v-if="item.inativo">Inativo</q-chip>
-                </q-item-label>
-                <q-item-label caption>
-                  #{{ numeral(item.codmarca).format('00000000') }}
-                </q-item-label>
-              </q-item-section>
-
-              <q-item-section class="gt-xs">
-                <q-item-label class="row" caption>
-                  <div class="col-6">
-                    <template v-if="item.itensabaixominimo > 0">
-                      {{ numeral(item.itensabaixominimo).format('0,0') }} <q-icon name="arrow_downward" />
-                    </template>
-                    <template v-if="item.itensacimamaximo > 0">
-                      <q-icon name="arrow_upward" /> {{ numeral(item.itensacimamaximo).format('0,0') }}
-                    </template>
-                  </div>
-                  <div class="col-6 text-center">
-                    <template v-if="item.dataultimacompra" class="text-grey">
-                      <q-icon name="add_shopping_cart" />
-                      {{ moment(item.dataultimacompra).fromNow() }}
-                    </template>
-                  </div>
-                </q-item-label>
-
-                <q-item-label caption >
-                  <q-icon name="date_range" />
-                  {{ item.estoqueminimodias }} à
-                  {{ item.estoquemaximodias }} Dias
-                </q-item-label>
-              </q-item-section>
-
-              <!-- Direita (Estrelas) -->
-              <q-item-section avatar>
-                <q-item-label v-if="!item.abcignorar">
-                  <q-rating readonly v-model="item.abccategoria" :max="3" size="1.7rem" />
-                </q-item-label>
-                <q-item-label caption>
-                  {{ numeral(parseFloat(item.vendaanopercentual)).format('0,0.0000') }}%
-                  <template v-if="item.abcposicao">
-                    ({{ numeral(item.abcposicao).format('0,0') }}&deg;)
-                  </template>
-                </q-item-label>
-              </q-item-section>
-
-            </q-item>
-            <q-separator />
-
-          </template>
-        </q-infinite-scroll>
-      </q-list>
-
-      <!-- Se não tiver registros -->
-      <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
         <q-btn fab icon="add" color="primary" :to="{ path: '/marca/create' }"/>
@@ -149,20 +71,10 @@ export default {
         codportador: null,
         portador: 'Portador',
       },
-      meses: [
-        {
-          descricao: 'Jan/2021',
-          mes: 1,
-          ano: 2021,
-        },
-        {
-          descricao: 'Fev/2021',
-          mes: 2,
-          ano: 2021,
-        }
-      ],
       mes: null,
       ano: null,
+      anos: [
+      ],
       meses: [
         {mes:1, descricao:'Jan'},
         {mes:2, descricao:'Fev'},
@@ -177,6 +89,7 @@ export default {
         {mes:11, descricao:'Nov'},
         {mes:12, descricao:'Dez'},
       ],
+      arquivos: [],
       data: [],
       page: 1,
       filter: {}, // Vem do Store
@@ -225,14 +138,14 @@ export default {
     }, 500),
 
     atualizarUrl: function() {
-      this.$router.replace({ path: '/portador/' + this.codportador + '/' + this.ano + '/' + this.mes});
+      this.$router.replace({ path: '/portador/' + this.codportador + '/' + this.ano + '/' + this.mes}).catch(err => {});
     },
 
     parsePortador: function() {
       const portador = this.portadores.find(item => item.codportador == this.codportador);
       if (portador != undefined) {
         this.portador = portador;
-      } else {
+      } else if (this.portadores.length > 0) {
         this.portador = this.portadores[0];
         this.codportador = this.portador.codportador;
       }
@@ -249,6 +162,13 @@ export default {
 
   // na criacao, busca filtro do Vuex
   created () {
+
+    const anoCorrente = new Date().getFullYear();
+    const anoInicial = 2015;
+    this.anos = Array(anoCorrente - anoInicial + 1)
+      .fill(anoInicial)
+      .map((ano, index) => ano + index);
+    console.log(this.anos);
 
     // codportador
     var param = this.$route.params.codportador;
