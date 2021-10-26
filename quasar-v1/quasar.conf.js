@@ -91,6 +91,8 @@ module.exports = function (ctx) {
         'QCarousel',
         'QCarouselSlide',
         'QBadge',
+        'QFile',
+        'QUploader',
       ],
       config: {
         notify: { /* Notify defaults */ }
