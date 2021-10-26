@@ -1,4 +1,4 @@
-﻿select criacao, * from tblnfeterceiroitem where '7898119103865' in (cean, ceantrib) order by criacao desc nulls last
+﻿select criacao, * from tblnfeterceiroitem where '7891169081176' in (cean, ceantrib) order by criacao desc nulls last
 
 select * from tblproduto where codusuariocriacao  = 1 and criacao >= '2020-12-02' and produto  ilike '@ %'
 

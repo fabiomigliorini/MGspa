@@ -1,15 +1,4 @@
-﻿/*
-select substring(ncm from 1 for 7), ncm
-from tblncm
-where char_length(ncm) = 8
-
-select * from tblncm where codncmpai is null
-select * from tblncm where ncm = '85363090'
-
-*/
-
-
-update tblncm set codncmpai = null;
+﻿update tblncm set codncmpai = null;
 
 update tblncm 
 set codncmpai = (select n2.codncm from tblncm n2 where n2.ncm = substring(tblncm.ncm from 1 for 7) and char_length(n2.ncm) = 7)
@@ -46,4 +35,9 @@ set codncmpai = (select n2.codncm from tblncm n2 where n2.ncm = substring(tblncm
 where codncmpai is null
 and char_length(ncm) > 1;
 
+update tblcest set codncm = null;
+
+update tblcest set codncm = (select n.codncm from tblncm n where n.ncm = tblcest.ncm);
+
+select * from tblncm where ncm = descricao order by ncm
 

@@ -2,9 +2,9 @@ select p.fantasia, f.filial, t.numero, t.saldo, t.debito, t.credito, t.venciment
 from tbltitulo t
 inner join tblpessoa p on (p.codpessoa = t.codpessoa)
 inner join tblfilial f on (f.codfilial = t.codfilial)
---where t.debito = 20
+where t.debito = 89
 --where t.debito = 268.75
-where t.credito = 1193.72
+--where t.credito = 89
 --and saldo > 0
 order by criacao desc nulls LAST
 
