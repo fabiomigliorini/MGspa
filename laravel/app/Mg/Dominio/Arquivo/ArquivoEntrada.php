@@ -93,6 +93,7 @@ class ArquivoEntrada extends Arquivo
             and tblnotafiscal.saida between :inicio and :fim
             and tblnotafiscal.codoperacao = 1 -- ignora notas de entrada emitidas pela filial
             and tblnotafiscal.emitida = false
+            and tblnotafiscal.codnotafiscal = 2003433
             --limit 5
         ";
 
