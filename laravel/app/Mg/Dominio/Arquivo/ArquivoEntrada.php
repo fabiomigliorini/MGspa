@@ -345,9 +345,9 @@ class ArquivoEntrada extends Arquivo
         }
         // $reg->valorUnitario = (float) $prod->valorunitario;
         if ($prod->quantidade > 0) {
-            $reg->valorUnitario = (float) $prod->valortotal / (float)$prod->quantidade;
+            $reg->valorUnitario = $valorTotalProduto / (float)$prod->quantidade;
         } else {
-            $reg->valorUnitario = (float) $prod->valortotal;            
+            $reg->valorUnitario = $valorTotalProduto;            
         }
         $reg->aliquotaIcmsSt = 0;
         $reg->aliquotaIpi = (float) $prod->ipipercentual;
