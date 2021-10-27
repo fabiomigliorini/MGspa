@@ -34,6 +34,13 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    // Dominio
+    Route::post('dominio/estoque', '\Mg\Dominio\DominioController@estoque');
+    Route::post('dominio/produto', '\Mg\Dominio\DominioController@produto');
+    Route::post('dominio/pessoa', '\Mg\Dominio\DominioController@pessoa');
+    Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
+
+    // Portador
     Route::get('portador', '\Mg\Portador\PortadorController@index');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
@@ -204,12 +211,6 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::get('boleto/remessa/{codportador}/{remessa}', '\Mg\Boleto\BoletoController@remessa');
         Route::post('boleto/arquivar-remessa/{codportador}/{arquivo}', '\Mg\Boleto\BoletoController@arquivarRemessa');
         Route::post('boleto/gerar-remessa/{codportador}', '\Mg\Boleto\BoletoController@gerarRemessa');
-
-        // Dominio
-        Route::post('dominio/estoque', '\Mg\Dominio\DominioController@estoque');
-        Route::post('dominio/produto', '\Mg\Dominio\DominioController@produto');
-        Route::post('dominio/pessoa', '\Mg\Dominio\DominioController@pessoa');
-        Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
 
         // Pedidos
         Route::apiResource('pedido', '\Mg\Pedido\PedidoController');
