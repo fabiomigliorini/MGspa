@@ -343,7 +343,12 @@ class ArquivoEntrada extends Arquivo
         } else {
             $reg->valorOutrasIpi = (float) $prod->valortotal;
         }
-        $reg->valorUnitario = (float) $prod->valorunitario;
+        // $reg->valorUnitario = (float) $prod->valorunitario;
+        if ($prod->quantidade > 0) {
+            $reg->valorUnitario = (float) $prod->valortotal / (float)$prod->quantidade;
+        } else {
+            $reg->valorUnitario = (float) $prod->valortotal;            
+        }
         $reg->aliquotaIcmsSt = 0;
         $reg->aliquotaIpi = (float) $prod->ipipercentual;
         $reg->cfop = $seg->codcfop;
