@@ -346,7 +346,7 @@ class ArquivoEntrada extends Arquivo
         }
         // $reg->valorUnitario = (float) $prod->valorunitario;
         if ($prod->quantidade > 0) {
-            $reg->valorUnitario = $valorTotalProduto / (float)$prod->quantidade;
+            $reg->valorUnitario = round($valorTotalProduto / (float)$prod->quantidade, 3);
         } else {
             $reg->valorUnitario = $valorTotalProduto;
         }
