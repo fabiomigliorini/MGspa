@@ -25,7 +25,7 @@ class Registro
                 switch ($detalhes['tipo'])
                 {
                     case 'decimal':
-                        $valor = (int) ($valor * pow(10, $detalhes['casas']));
+                        $valor = round((float)$valor * pow(10, $detalhes['casas']), 0);
                     case 'numeric':
                         $valor = preg_replace('/[^0-9]/', '', $valor);
                         $padChar = '0';
