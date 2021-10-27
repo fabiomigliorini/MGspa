@@ -120,11 +120,11 @@ class ArquivoEntrada extends Arquivo
         $sql = "
             select count(nf.codnotafiscal) as quantidade
             from tblnotafiscal nf
-            where nfechave = :codnotafiscal
+            where nfechave = :nfechave
             and emitida = true
         ";
         $params = [
-            'codnotafiscal' => $doc->codnotafiscal,
+            'nfechave' => $doc->nfechave,
         ];
         $ret = DB::select($sql, $params);
         if ($ret[0]->quantidade > 0) {
