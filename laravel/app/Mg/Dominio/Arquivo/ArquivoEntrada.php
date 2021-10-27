@@ -93,7 +93,7 @@ class ArquivoEntrada extends Arquivo
             and tblnotafiscal.saida between :inicio and :fim
             and tblnotafiscal.codoperacao = 1 -- ignora notas de entrada emitidas pela filial
             and tblnotafiscal.emitida = false
-            and tblnotafiscal.codnotafiscal = 2003433
+            --and tblnotafiscal.codnotafiscal = 2007569
             --limit 5
         ";
 
@@ -135,7 +135,12 @@ class ArquivoEntrada extends Arquivo
         // busca segmentos da nota fiscal
         $sql = "
             select
-                tblnotafiscalprodutobarra.codcfop, tblnotafiscalprodutobarra.csosn, tblnotafiscalprodutobarra.icmscst, tblproduto.codtipoproduto, tblproduto.codtributacao
+                tblnotafiscalprodutobarra.codcfop
+                , tblnotafiscalprodutobarra.csosn
+                , tblnotafiscalprodutobarra.icmscst
+                , tblnotafiscalprodutobarra.icmspercentual
+                , tblproduto.codtipoproduto
+                , tblproduto.codtributacao
                 , sum(tblnotafiscalprodutobarra.valortotal) as valortotal
                 , sum(tblnotafiscalprodutobarra.icmsbase) as icmsbase
                 , sum(tblnotafiscalprodutobarra.icmsvalor) as icmsvalor
@@ -152,7 +157,12 @@ class ArquivoEntrada extends Arquivo
             left join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnotafiscalprodutobarra.codprodutobarra)
             left join tblproduto on (tblproduto.codproduto = tblprodutobarra.codproduto)
             where tblnotafiscal.codnotafiscal = :codnotafiscal
-            group by tblnotafiscalprodutobarra.codcfop, tblnotafiscalprodutobarra.csosn, tblnotafiscalprodutobarra.icmscst, tblproduto.codtipoproduto, tblproduto.codtributacao
+            group by tblnotafiscalprodutobarra.codcfop
+                , tblnotafiscalprodutobarra.csosn
+                , tblnotafiscalprodutobarra.icmscst
+                , tblnotafiscalprodutobarra.icmspercentual
+                , tblproduto.codtipoproduto
+                , tblproduto.codtributacao
         ";
 
         $params = [
@@ -178,13 +188,13 @@ class ArquivoEntrada extends Arquivo
                 $valorTotalSegmento = 0;
                 if (empty($doc->nfeinutilizacao) && empty($doc->nfecancelamento)) {
                     $valorTotalSegmento =
-                    $seg->valortotal
-                    + $seg->icmsstvalor
-                    + $seg->ipivalor
-                    + $seg->valorfrete
-                    + $seg->valorseguro
-                    + $seg->valoroutras
-                    - $seg->valordesconto;
+                        $seg->valortotal
+                        + $seg->icmsstvalor
+                        + $seg->ipivalor
+                        + $seg->valorfrete
+                        + $seg->valorseguro
+                        + $seg->valoroutras
+                        - $seg->valordesconto;
                 }
 
                 // busca dados da tributacao
@@ -257,6 +267,7 @@ class ArquivoEntrada extends Arquivo
                 where tblnotafiscalprodutobarra.codnotafiscal = :codnotafiscal
                 and tblnotafiscalprodutobarra.codcfop = :codcfop
                 and (tblnotafiscalprodutobarra.csosn = :csosn OR tblnotafiscalprodutobarra.icmscst = :icmscst)
+                and tblnotafiscalprodutobarra.icmspercentual = :icmspercentual
                 and tblproduto.codtipoproduto = :codtipoproduto
                 and tblproduto.codtributacao = :codtributacao
             ';
@@ -266,6 +277,7 @@ class ArquivoEntrada extends Arquivo
                 'codcfop' => $seg->codcfop,
                 'csosn' => $seg->csosn,
                 'icmscst' => $seg->icmscst,
+                'icmspercentual' => $seg->icmspercentual,
                 'codtipoproduto' => $seg->codtipoproduto,
                 'codtributacao' => $seg->codtributacao,
             ];
@@ -356,7 +368,14 @@ class ArquivoEntrada extends Arquivo
         $reg->custoTotal = round($valorTotalProduto, 2);
         $reg->quantidadeProduto = $prod->quantidade;
         $reg->movimentacaoFisica = $trib->movimentacaofisica?'S':'N';
-        $reg->valorContabil = round($valorTotalProduto, 2);
+        $reg->valorContabil = 
+            round(
+                $valorTotalProduto 
+                - $reg->valorDesconto 
+                + $reg->valorFrete 
+                + $reg->valorSeguro 
+                + $reg->valorOutras
+            , 2);
         if ($seg->codtipoproduto == 8) {
             $reg->baseCredito = 10;
         } else {
