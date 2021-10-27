@@ -91,7 +91,8 @@ class ArquivoEntrada extends Arquivo
             where tblnotafiscal.codfilial = :codfilial
             and tblnotafiscal.modelo != 65
             and tblnotafiscal.saida between :inicio and :fim
-            and tblnotafiscal.codoperacao = 1
+            and tblnotafiscal.codoperacao = 1 -- ignora notas de entrada emitidas pela filial
+            and tblnotafiscal.emitida = false
             --limit 5
         ";
 
@@ -114,6 +115,23 @@ class ArquivoEntrada extends Arquivo
 
     public function processaDocumento ($doc, $nSeq)
     {
+
+        // ignora notas de entrada emitida por uma outra filial
+        $sql = "
+            select count(nf.codnotafiscal) as quantidade
+            from tblnotafiscal nf
+            where nfechave = :codnotafiscal
+            and emitida = true
+        ";
+        $params = [
+            'codnotafiscal' => $doc->codnotafiscal,
+        ];
+        $ret = DB::select($sql, $params);
+        if ($ret[0]->quantidade > 0) {
+            return;
+        }
+
+        // busca segmentos da nota fiscal
         $sql = "
             select
                 tblnotafiscalprodutobarra.codcfop, tblnotafiscalprodutobarra.csosn, tblnotafiscalprodutobarra.icmscst, tblproduto.codtipoproduto, tblproduto.codtributacao
