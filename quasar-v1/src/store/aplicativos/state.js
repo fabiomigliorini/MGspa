@@ -72,6 +72,11 @@ export default {
       title: 'Portadores',
       path: '/portador'
     },
+    {
+      icon: 'share',
+      title: 'Exportação Domínio',
+      path: '/dominio'
+    },
     /*
     {
       icon: 'add_shopping_cart',

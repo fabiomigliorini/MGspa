@@ -88,4 +88,7 @@ export default [
   // Stone Connect
   { path: '/stone-connect/', component: () => import('components/views/stone-connect/Index') },
 
+  // Exportacao Dominio
+  { path: '/dominio/', component: () => import('components/views/dominio/Index') },
+
 ]

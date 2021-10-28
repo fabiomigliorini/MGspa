@@ -34,12 +34,6 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
-    // Dominio
-    Route::post('dominio/estoque', '\Mg\Dominio\DominioController@estoque');
-    Route::post('dominio/produto', '\Mg\Dominio\DominioController@produto');
-    Route::post('dominio/pessoa', '\Mg\Dominio\DominioController@pessoa');
-    Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
-
     // Portador
     Route::get('portador', '\Mg\Portador\PortadorController@index');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
@@ -316,6 +310,13 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::delete('veiculo-tipo/{id}/inativo', '\Mg\Veiculo\VeiculoTipoController@ativar');
         Route::delete('veiculo-tipo/{id}', '\Mg\Veiculo\VeiculoTipoController@delete');
         Route::post('veiculo-tipo', '\Mg\Veiculo\VeiculoTipoController@store');
+
+        // Dominio
+        Route::get('dominio/empresas', '\Mg\Dominio\DominioController@empresas');
+        Route::post('dominio/estoque', '\Mg\Dominio\DominioController@estoque');
+        Route::post('dominio/produto', '\Mg\Dominio\DominioController@produto');
+        Route::post('dominio/pessoa', '\Mg\Dominio\DominioController@pessoa');
+        Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
 
     });
 });
