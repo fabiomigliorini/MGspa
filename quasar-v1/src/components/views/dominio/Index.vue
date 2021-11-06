@@ -7,6 +7,22 @@
 
     <div slot="content">
       <div class="row q-ma-md">
+
+        <div class="q-pa-md col-6">
+          <q-card class="col-6" flat bordered >
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">Mês de Exportação: {{moment(mes).format('MMMM YYYY')}}</div>
+            </q-card-section>
+            <center>
+              <q-date
+              mask="YYYY-MM-DD"
+              v-model="mes"
+              minimal
+              />
+            </center>
+          </q-card>
+        </div>
+
         <div class="q-pa-md col-6" v-for="empresa in empresas">
           <q-card class="col-6" flat bordered >
             <q-card-section class="bg-primary text-white">
@@ -207,6 +223,7 @@ export default {
   },
   created () {
     this.loadEmpresas();
+    this.mes = this.moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
   }
 }
 </script>
