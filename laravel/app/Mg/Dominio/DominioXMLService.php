@@ -99,7 +99,7 @@ class DominioXMLService
 
         // Monta Caminho e nome do Arquivo ZIP
         $pathZip = Storage::disk('dominio')->getDriver()->getAdapter()->getPathPrefix();
-        $arquivoZip = $mes->format('Ym') . '-' . str_pad($filial->empresadominio, 4, '0', STR_PAD_LEFT) . '-Entradas.zip';
+        $arquivoZip = $mes->format('Ym') . '-' . str_pad($filial->empresadominio, 4, '0', STR_PAD_LEFT) . '-NFe-Entradas.zip';
 
         // Busca Notas de Entrada Aprovadas emitidas pela própria Filial
         // mais as notas de saida emitidas por outra filial,
