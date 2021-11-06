@@ -75,4 +75,19 @@ class DominioController extends MgController
         return DominioService::entrada($codfilial, $mes);
     }
 
+    public function nfeSaida(DominioXMLRequest $request)
+    {
+        $codfilial = (int) $request->codfilial;
+        $modelo = (int) $request->modelo;
+        $mes = Carbon::parse($request->mes);
+        return DominioXMLService::nfeSaida($codfilial, $mes, $modelo);
+    }
+
+    public function nfeEntrada(DominioRequest $request)
+    {
+        $codfilial = (int) $request->codfilial;
+        $mes = Carbon::parse($request->mes);
+        return DominioXMLService::nfeEntrada($codfilial, $mes);
+    }
+
 }
