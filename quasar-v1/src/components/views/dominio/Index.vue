@@ -16,7 +16,7 @@
               <!-- </div> -->
             </q-card-section>
             <q-list>
-              <q-item v-for="filial in empresa.filiais">
+              <q-item v-for="filial in empresa.filiais" :key="filial.codfilial">
                 <q-item-section avatar>
                   <q-avatar color="primary" text-color="white">
                     {{filial.filial.charAt(0)}}
@@ -88,7 +88,7 @@ export default {
   data () {
     return {
       empresas: [],
-      mes: '2021-10-01',
+      mes: null,
       dialogPos: false,
       pos: {
         codstonefilial: null,

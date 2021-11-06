@@ -7,7 +7,7 @@
 
     <div slot="content">
       <div class="q-pa-md row items-start q-gutter-md">
-        <q-card class="my-card col-3" flat bordered v-for="filial in filiais">
+        <q-card class="my-card col-3" flat bordered v-for="filial in filiais" :key="filial.codfilial">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">{{ filial.filial }}</div>
             <div class="ellipsis">
@@ -45,7 +45,7 @@
               </q-item-section>
             </q-item>
 
-            <q-item v-for="pos in filial.StonePosS" >
+            <q-item v-for="pos in filial.StonePosS" :key="pos.codstonepos">
               <q-item-section side>
                 <q-icon name="point_of_sale" />
               </q-item-section>
