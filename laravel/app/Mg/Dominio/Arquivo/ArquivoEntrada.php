@@ -267,7 +267,7 @@ class ArquivoEntrada extends Arquivo
                 where tblnotafiscalprodutobarra.codnotafiscal = :codnotafiscal
                 and tblnotafiscalprodutobarra.codcfop = :codcfop
                 and (tblnotafiscalprodutobarra.csosn = :csosn OR tblnotafiscalprodutobarra.icmscst = :icmscst)
-                and tblnotafiscalprodutobarra.icmspercentual = :icmspercentual
+                and coalesce(tblnotafiscalprodutobarra.icmspercentual, 0) = :icmspercentual
                 and tblproduto.codtipoproduto = :codtipoproduto
                 and tblproduto.codtributacao = :codtributacao
             ';
@@ -277,7 +277,7 @@ class ArquivoEntrada extends Arquivo
                 'codcfop' => $seg->codcfop,
                 'csosn' => $seg->csosn,
                 'icmscst' => $seg->icmscst,
-                'icmspercentual' => $seg->icmspercentual,
+                'icmspercentual' => floatval($seg->icmspercentual),
                 'codtipoproduto' => $seg->codtipoproduto,
                 'codtributacao' => $seg->codtributacao,
             ];
@@ -368,12 +368,12 @@ class ArquivoEntrada extends Arquivo
         $reg->custoTotal = round($valorTotalProduto, 2);
         $reg->quantidadeProduto = $prod->quantidade;
         $reg->movimentacaoFisica = $trib->movimentacaofisica?'S':'N';
-        $reg->valorContabil = 
+        $reg->valorContabil =
             round(
-                $valorTotalProduto 
-                - $reg->valorDesconto 
-                + $reg->valorFrete 
-                + $reg->valorSeguro 
+                $valorTotalProduto
+                - $reg->valorDesconto
+                + $reg->valorFrete
+                + $reg->valorSeguro
                 + $reg->valorOutras
             , 2);
         if ($seg->codtipoproduto == 8) {
