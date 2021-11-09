@@ -343,6 +343,22 @@ class BoletoBbService
         // acumula cod dos movimentos gerados
         $codmovimentotitulos = [];
 
+        // lanca outros como juro
+        if ($tituloBoleto->valoroutro > 0) {
+            $mov = MovimentoTitulo::firstOrNew([
+                'codtituloboleto' => $tituloBoleto->codtituloboleto,
+                'codtipomovimentotitulo' => TipoMovimentoTitulo::JUROS,
+            ]);
+            $mov->codtitulo = $tituloBoleto->codtitulo;
+            $mov->codportador = $tituloBoleto->codportador;
+            $mov->transacao = $tituloBoleto->datarecebimento;
+            $mov->debito = $tituloBoleto->valoroutro;
+            if (!$mov->save()) {
+                return false;
+            }
+            $codmovimentotitulos[] = $mov->codmovimentotitulo;
+        }
+
         // lanca juros
         if ($tituloBoleto->valorjuromora > 0) {
             $mov = MovimentoTitulo::firstOrNew([
