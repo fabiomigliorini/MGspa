@@ -32,7 +32,7 @@
               <!-- </div> -->
             </q-card-section>
             <q-list>
-              <q-item v-for="filial in empresa.filiais">
+              <q-item v-for="filial in empresa.filiais" :key="filial.codfilial">
                 <q-item-section avatar>
                   <q-avatar color="primary" text-color="white">
                     {{filial.filial.charAt(0)}}
@@ -48,16 +48,25 @@
                 </q-item-section>
                 <q-item-section top side>
                   <div class="text-grey-8 q-gutter-xs">
-                    <q-btn icon="groups" flat dense round @click="gerarArquivoPessoa(filial.codfilial)">
+                    <q-btn icon="fa fa-shipping-fast" flat dense round @click="gerarArquivoNFeEntrada(filial.codfilial)">
+                      <q-tooltip>Gerar arquivo compactado com os XMLs das NFe-s de Entrada emitidas por nós, como transferências e devoluções!</q-tooltip>
+                    </q-btn>
+                    <q-btn icon="fa fa-receipt" flat dense round @click="gerarArquivoNFeSaida(filial.codfilial, 65)">
+                      <q-tooltip>Gerar arquivo compactado com os XMLs das NFCe-s de Saidas!</q-tooltip>
+                    </q-btn>
+                    <q-btn icon="fa fa-file-invoice" flat dense round @click="gerarArquivoNFeSaida(filial.codfilial, 55)">
+                      <q-tooltip>Gerar arquivo compactado com os XMLs das NFe-s de Saidas!</q-tooltip>
+                    </q-btn>
+                    <q-btn icon="fa fa-people-carry" flat dense round @click="gerarArquivoPessoa(filial.codfilial)">
                       <q-tooltip>Gerar arquivo com cadastro de Fornecedores!</q-tooltip>
                     </q-btn>
-                    <q-btn icon="inventory" flat dense round @click="gerarArquivoProduto(filial.codfilial)">
+                    <q-btn icon="fa fa-cube" flat dense round @click="gerarArquivoProduto(filial.codfilial)">
                       <q-tooltip>Gerar arquivo com cadastro de Produtos!</q-tooltip>
                     </q-btn>
-                    <q-btn icon="receipt" flat dense round @click="gerarArquivoEntrada(filial.codfilial)">
+                    <q-btn icon="far fa-file-alt" flat dense round @click="gerarArquivoEntrada(filial.codfilial)">
                       <q-tooltip>Gerar arquivo com Notas Fiscais de Entrada!</q-tooltip>
                     </q-btn>
-                    <q-btn icon="assignment" flat dense round @click="gerarArquivoEstoque(filial.codfilial)">
+                    <q-btn icon="fa fa-cubes" flat dense round @click="gerarArquivoEstoque(filial.codfilial)">
                       <q-tooltip>Gerar arquivo com saldos de Estoque (Anual)!</q-tooltip>
                     </q-btn>
                   </div>
@@ -104,7 +113,7 @@ export default {
   data () {
     return {
       empresas: [],
-      mes: '2021-10-01',
+      mes: null,
       dialogPos: false,
       pos: {
         codstonefilial: null,
@@ -124,6 +133,61 @@ export default {
       })
     }, 500),
 
+    gerarArquivoNFeEntrada: debounce(function (codfilial) {
+      var vm = this;
+      var params = {
+        codfilial: codfilial,
+        mes: this.mes
+      };
+      vm.$axios.post('dominio/nfe-entrada', params).then(response => {
+        var type = 'warning';
+        if (response.data.registrosNaoLocalizados == 0) {
+          type = 'positive';
+        }
+        vm.$q.notify({
+          message: 'Arquivo ' + response.data.arquivo + ' criado com ' + response.data.registrosCompactados  + ' registros! ' + response.data.registrosNaoLocalizados  + ' não localizados!',
+          type: type,
+        });
+      }).catch(function(error) {
+        vm.$q.notify({
+          message: 'Falha ao gerar arquivo!',
+          type: 'negative',
+        });
+        vm.$q.notify({
+          message: error.response.data.message,
+          type: 'negative',
+        });
+      });
+    }, 500),
+
+    gerarArquivoNFeSaida: debounce(function (codfilial, modelo) {
+      var vm = this;
+      var params = {
+        codfilial: codfilial,
+        modelo: modelo,
+        mes: this.mes
+      };
+      vm.$axios.post('dominio/nfe-saida', params).then(response => {
+        var type = 'warning';
+        if (response.data.registrosNaoLocalizados == 0) {
+          type = 'positive';
+        }
+        vm.$q.notify({
+          message: 'Arquivo ' + response.data.arquivo + ' criado com ' + response.data.registrosCompactados  + ' registros! ' + response.data.registrosNaoLocalizados  + ' não localizados!',
+          type: type,
+        });
+      }).catch(function(error) {
+        vm.$q.notify({
+          message: 'Falha ao gerar arquivo!',
+          type: 'negative',
+        });
+        vm.$q.notify({
+          message: error.response.data.message,
+          type: 'negative',
+        });
+      });
+    }, 500),
+
     gerarArquivoPessoa: debounce(function (codfilial) {
       var vm = this;
       var params = {
@@ -131,7 +195,6 @@ export default {
         mes: this.mes
       };
       vm.$axios.post('dominio/pessoa', params).then(response => {
-        console.log(response);
         vm.$q.notify({
           message: 'Arquivo ' + response.data.arquivo + ' criado com ' + response.data.registros  + ' registros!',
           type: 'positive',
@@ -155,7 +218,6 @@ export default {
         mes: this.mes
       };
       vm.$axios.post('dominio/produto', params).then(response => {
-        console.log(response);
         vm.$q.notify({
           message: 'Arquivo ' + response.data.arquivo + ' criado com ' + response.data.registros  + ' registros!',
           type: 'positive',
@@ -179,7 +241,6 @@ export default {
         mes: this.mes
       };
       vm.$axios.post('dominio/entrada', params).then(response => {
-        console.log(response);
         vm.$q.notify({
           message: 'Arquivo ' + response.data.arquivo + ' criado com ' + response.data.registros  + ' registros!',
           type: 'positive',
@@ -203,7 +264,6 @@ export default {
         mes: this.mes
       };
       vm.$axios.post('dominio/estoque', params).then(response => {
-        console.log(response);
         vm.$q.notify({
           message: 'Arquivo ' + response.data.arquivo + ' criado com ' + response.data.registros  + ' registros!',
           type: 'positive',

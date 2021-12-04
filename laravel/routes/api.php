@@ -317,6 +317,8 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('dominio/produto', '\Mg\Dominio\DominioController@produto');
         Route::post('dominio/pessoa', '\Mg\Dominio\DominioController@pessoa');
         Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
+        Route::post('dominio/nfe-saida', '\Mg\Dominio\DominioController@nfeSaida');
+        Route::post('dominio/nfe-entrada', '\Mg\Dominio\DominioController@nfeEntrada');
 
     });
 });
