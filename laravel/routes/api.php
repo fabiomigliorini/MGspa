@@ -64,7 +64,7 @@ Route::group(['prefix' => 'v1'], function () {
 	// Pre Transacao
         Route::group(['prefix' => 'pre-transacao'], function () {
             Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');
-	    Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
+            Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
         });
         // Webooks
         Route::group(['prefix' => 'webhook'], function () {
