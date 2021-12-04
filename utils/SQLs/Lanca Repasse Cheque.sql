@@ -1,17 +1,16 @@
 ﻿--select * from tblportador order by codportador
 
 -- Cria Repasse
-insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (1, '2021-10-25', null, '2021-10-25 11:41', 1);
+insert into tblchequerepasse (codportador, data, observacoes, criacao, codusuariocriacao) values (1, :data, null, :data, 1);
 
 select * from tblchequerepasse order by codchequerepasse desc limit 50;
 
 -- Vincula Cheques ao repasse
 insert into tblchequerepassecheque (codcheque, codchequerepasse, criacao, codusuariocriacao)
-select codcheque, 2580, '2021-10-25 10:00', 1
+select codcheque, :codchequerepasse, :data, 1
 from tblcheque where cmc7 in (
-	'<23702349<0180026755>331213852168:',
-	'NIL'
-	);
+	:cmc7
+);
 
 -- Marca Cheque como repassado
 update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select crc.codcheque from tblchequerepassecheque crc);
@@ -32,8 +31,8 @@ inner join tblchequerepasse cr on (cr.codchequerepasse = t.codchequerepasse)
 
 --update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
---update tblchequerepasse set data = '2021-10-25', criacao = '2019-04-08 11:41' where codchequerepasse = 2336
---update tblchequerepassecheque set criacao = '2021-10-25 11:41' where codchequerepasse = 2286
+--update tblchequerepasse set data = :data, criacao = '2019-04-08 11:41' where codchequerepasse = 2336
+--update tblchequerepassecheque set criacao = :data where codchequerepasse = 2286
 
 --select * from tblchequerepassecheque where codchequerepasse = 2398
 

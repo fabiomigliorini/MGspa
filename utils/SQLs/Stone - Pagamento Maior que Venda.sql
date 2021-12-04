@@ -10,6 +10,13 @@ where not processada
 and ativa
 order by criacao desc
 
+select count(*)
+from tblstonepretransacao t 
+where not processada 
+and ativa
+
+select * from tblstonefilial t 
+
 -- fechado a vista e a prazo
 with c as (
 	select spt.codnegocio, st.status, sum(st.valor) as valorcartao  
