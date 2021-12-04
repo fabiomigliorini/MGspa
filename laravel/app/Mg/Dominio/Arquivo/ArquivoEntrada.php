@@ -91,8 +91,8 @@ class ArquivoEntrada extends Arquivo
             where tblnotafiscal.codfilial = :codfilial
             and tblnotafiscal.modelo != 65
             and tblnotafiscal.saida between :inicio and :fim
-            and tblnotafiscal.codoperacao = 1 -- ignora notas de entrada emitidas pela filial
-            and tblnotafiscal.emitida = false
+            and tblnotafiscal.codoperacao = 1
+            --and tblnotafiscal.emitida = false -- ignora notas de entrada emitidas pela filial
             --and tblnotafiscal.codnotafiscal = 2007569
             --limit 5
         ";
@@ -117,6 +117,7 @@ class ArquivoEntrada extends Arquivo
     public function processaDocumento ($doc, $nSeq)
     {
 
+        /*
         // ignora notas de entrada emitida por uma outra filial
         $sql = "
             select count(nf.codnotafiscal) as quantidade
@@ -130,7 +131,8 @@ class ArquivoEntrada extends Arquivo
         $ret = DB::select($sql, $params);
         if ($ret[0]->quantidade > 0) {
             return;
-        }
+	}
+        */
 
         // busca segmentos da nota fiscal
         $sql = "
@@ -141,6 +143,7 @@ class ArquivoEntrada extends Arquivo
                 , tblnotafiscalprodutobarra.icmspercentual
                 , tblproduto.codtipoproduto
                 , tblproduto.codtributacao
+                , tblncm.bit
                 , sum(tblnotafiscalprodutobarra.valortotal) as valortotal
                 , sum(tblnotafiscalprodutobarra.icmsbase) as icmsbase
                 , sum(tblnotafiscalprodutobarra.icmsvalor) as icmsvalor
@@ -156,6 +159,7 @@ class ArquivoEntrada extends Arquivo
             left join tblnotafiscalprodutobarra on (tblnotafiscalprodutobarra.codnotafiscal = tblnotafiscal.codnotafiscal)
             left join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnotafiscalprodutobarra.codprodutobarra)
             left join tblproduto on (tblproduto.codproduto = tblprodutobarra.codproduto)
+            left join tblncm on (tblncm.codncm = tblproduto.codncm)
             where tblnotafiscal.codnotafiscal = :codnotafiscal
             group by tblnotafiscalprodutobarra.codcfop
                 , tblnotafiscalprodutobarra.csosn
@@ -163,6 +167,7 @@ class ArquivoEntrada extends Arquivo
                 , tblnotafiscalprodutobarra.icmspercentual
                 , tblproduto.codtipoproduto
                 , tblproduto.codtributacao
+                , tblncm.bit
         ";
 
         $params = [
@@ -200,6 +205,7 @@ class ArquivoEntrada extends Arquivo
                 // busca dados da tributacao
                 $trib = TributacaoNaturezaOperacao::
                     where('codtributacao', $seg->codtributacao)
+                    ->where('bit', $seg->bit)
                     ->where('codnaturezaoperacao', $doc->codnaturezaoperacao)
                     ->where('codtipoproduto', $seg->codtipoproduto)
                     ->where('codestado', $doc->codestado)
@@ -209,6 +215,7 @@ class ArquivoEntrada extends Arquivo
                 if (!$trib) {
                     $trib = TributacaoNaturezaOperacao::
                         where('codtributacao', $seg->codtributacao)
+                        ->where('bit', $seg->bit)                    
                         ->where('codnaturezaoperacao', $doc->codnaturezaoperacao)
                         ->where('codtipoproduto', $seg->codtipoproduto)
                         ->whereNull('codestado')
@@ -219,7 +226,7 @@ class ArquivoEntrada extends Arquivo
 
             // se mesmo assim nao achou, nao pode continuar
             if (!$trib) {
-                throw new \Exception("Falha ao localizar TributacaoNaturezaOperacao (codtributacao:{$seg->codtributacao} codnaturezaoperacao:{$doc->codnaturezaoperacao} codtipoproduto:{$seg->codtipoproduto} codestado:{$doc->codestado})", 1);
+                throw new \Exception("Falha ao localizar TributacaoNaturezaOperacao (codtributacao:{$seg->codtributacao} bit:{$seg->bit} codnaturezaoperacao:{$doc->codnaturezaoperacao} codtipoproduto:{$seg->codtipoproduto} codestado:{$doc->codestado})", 1);
             }
 
             // se for nota inutilizada ou cancelada utiliza valor 0
@@ -264,12 +271,14 @@ class ArquivoEntrada extends Arquivo
                 left join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnotafiscalprodutobarra.codprodutobarra)
                 left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
                 left join tblproduto on (tblproduto.codproduto = tblprodutobarra.codproduto)
+                left join tblncm on (tblncm.codncm = tblproduto.codncm)
                 where tblnotafiscalprodutobarra.codnotafiscal = :codnotafiscal
                 and tblnotafiscalprodutobarra.codcfop = :codcfop
                 and (tblnotafiscalprodutobarra.csosn = :csosn OR tblnotafiscalprodutobarra.icmscst = :icmscst)
                 and coalesce(tblnotafiscalprodutobarra.icmspercentual, 0) = :icmspercentual
                 and tblproduto.codtipoproduto = :codtipoproduto
                 and tblproduto.codtributacao = :codtributacao
+                and tblncm.bit = :bit
             ';
 
             $params = [
@@ -280,6 +289,7 @@ class ArquivoEntrada extends Arquivo
                 'icmspercentual' => floatval($seg->icmspercentual),
                 'codtipoproduto' => $seg->codtipoproduto,
                 'codtributacao' => $seg->codtributacao,
+                'bit' => $seg->bit,
             ];
             $prods = DB::select($sql, $params);
 
@@ -411,7 +421,11 @@ class ArquivoEntrada extends Arquivo
             $reg->aliquota = round(($seg->icmsvalor / $seg->icmsbase) * 100, 2);
             $reg->valorImposto = (float) $seg->icmsvalor;
         }
-        $reg->valorOutras = $valorTotalSegmento - $reg->bc;
+        if ($seg->codtributacao == 2) {
+            $reg->valorIsento = $valorTotalSegmento - $reg->bc;
+        } else {
+            $reg->valorOutras = $valorTotalSegmento - $reg->bc;
+        }
         $reg->valorContabil = $valorTotalSegmento;
         $this->registros[] = $reg;
     }

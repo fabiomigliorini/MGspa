@@ -80,6 +80,7 @@ class DominioController extends MgController
         $codfilial = (int) $request->codfilial;
         $modelo = (int) $request->modelo;
         $mes = Carbon::parse($request->mes);
+        ini_set('max_execution_time', '120');
         return DominioXMLService::nfeSaida($codfilial, $mes, $modelo);
     }
 

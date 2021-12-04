@@ -86,7 +86,6 @@ and nf.numero between :numero_inicial and :numero_final
 order by numero
 limit 200
 
-*/
 -- marca nota ja autorizada como nao autorizada
 update tblnotafiscal 
 set nfeautorizacao = null, nfedataautorizacao = null 
@@ -96,9 +95,8 @@ and modelo = :modelo
 and serie = :serie
 and nfeautorizacao is not null
 --and numero between 197949 and 197949
-and numero in (
-586067
-)
+and numero = :numero 
+
 /*
 -- verifica quais nao foram inutilizadas na faixa
 select *
