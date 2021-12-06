@@ -824,7 +824,13 @@ class NFePHPService extends MgService
 
     public static function xml(NotaFiscal $nf)
     {
-        $path = NFePHPPathService::pathNFeAutorizada($nf);
+        $path = null;
+        if (!empty($nf->nfecancelamento)) {
+            $path = NFePHPPathService::pathNFeCancelada($nf);
+        }
+        if ($path == null || !file_exists($path)) {
+            $path = NFePHPPathService::pathNFeAutorizada($nf);
+        }
         if (!file_exists($path)) {
             $path = NFePHPPathService::pathNFeAssinada($nf);
         }

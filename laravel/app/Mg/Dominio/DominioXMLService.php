@@ -10,6 +10,7 @@ use Carbon\Carbon;
 
 use Mg\Filial\Filial;
 use Mg\NFePHP\NFePHPPathService;
+use Mg\NotaFiscal\NotaFiscal;
 
 class DominioXMLService
 {
@@ -36,9 +37,10 @@ class DominioXMLService
         }
         $arquivoZip .= '-Saidas.zip';
 
-        // Busca Notas de Saída Aprovadas
+        // Busca Notas de Saída Aprovadas e Canceladas
+        /*
         $sql = '
-            select nf.codnotafiscal, nf.nfechave
+            select nf.codnotafiscal, nf.nfechave, nf.nfecancelamento
             from tblnotafiscal nf
             where nf.codfilial = :codfilial
             and nf.emissao between :inicio and :fim
@@ -46,33 +48,51 @@ class DominioXMLService
             and nf.codoperacao  = 2 -- SAIDAS
             and nf.modelo = :modelo
             and nf.nfeinutilizacao is null
-            and nf.nfecancelamento is null
+            -- and nf.nfecancelamento is null -- Deve incluir as canceladas tambem
             and nf.nfeautorizacao is not null
         ';
-        $notas = DB::select($sql, [
+        $nfs = DB::select($sql, [
             'codfilial' => $codfilial,
             'inicio' => $mes->startOfMonth()->format('Y-m-d H:i:s'),
             'fim' => $mes->endOfMonth()->format('Y-m-d H:i:s'),
             'modelo' => $modelo,
         ]);
+         */
+        $nfs = NotaFiscal::where('codfilial', $codfilial)
+                ->where('emissao', '>=', $mes->startOfMonth()->format('Y-m-d H:i:s'))
+                ->where('emissao', '<=', $mes->endOfMonth()->format('Y-m-d H:i:s'))
+                ->where('emitida', 'true')
+                ->where('codoperacao', 2) // saidas
+                ->where('modelo', $modelo)
+                ->whereNull('nfeinutilizacao')
+                ->whereNotNull('nfeautorizacao')
+                ->get();
 
         // Cria o Arquivo ZIP
         $za = new ZipArchive();
         $za->open($pathZip . $arquivoZip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
-        // Monta Path dos XML
-        $pathXml = NFePHPPathService::pathNFe($filial) . "enviadas/aprovadas/" . $mes->format('Ym');
-
         // Percorre todas as notas
         $registros = 0;
-        foreach ($notas as $nota) {
-
-            // tenta adicionar o XML no arquivo ZIP
-            $pattern = $pathXml . '/*' . $nota->nfechave . '*.[xX][mM][lL]';
-            if ($adicionados = $za->addGlob($pattern, 0, ['remove_all_path' => true])) {
+        foreach ($nfs as $nf) {
+            // Dominio nao consegue importar XML Cancelado
+            // Entao vamos jogar somente o XML Autorizado
+            /*
+            $path = null;
+            if (!empty($nf->nfecancelamento)) {
+                $path = NFePHPPathService::pathNFeCancelada($nf);
+            }
+            if ($path == null || !file_exists($path)) {
+                $path = NFePHPPathService::pathNFeAutorizada($nf);
+            }
+            */
+            $path = NFePHPPathService::pathNFeAutorizada($nf);
+            if (!file_exists($path)) {
+                $path = NFePHPPathService::pathNFeAssinada($nf);
+            }
+            if ($adicionados = $za->addGlob($path, 0, ['remove_all_path' => true])) {
                 $registros += 1;
             }
-
         }
 
         // Fecha o ZIP
@@ -83,7 +103,7 @@ class DominioXMLService
         }
 
         // Retorna total de registros
-        $total = count($notas);
+        $total = count($nfs);
         return [
             'arquivo' => $arquivoZip,
             'registrosCompactados' => $registros,
