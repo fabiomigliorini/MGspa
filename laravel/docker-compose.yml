@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+    api-mgspa:
+        build: ./
+        restart: always        
+        volumes:
+            - /opt/www:/opt/www
+            - /tmp:/tmp/host
+            - ./php.ini:/usr/local/etc/php/php.ini
+            - /media/publico:/media/publico                
+        extra_hosts:
+            - "host.docker.internal:host-gateway"              
+        ports:
+            - "9003:9000"
