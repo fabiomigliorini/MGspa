@@ -7,6 +7,9 @@ services:
             - /opt/www:/opt/www
             - /tmp:/tmp/host
             - /media/publico:/media/publico                
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+            - /usr/share/zoneinfo:/usr/share/zoneinfo              
         extra_hosts:
             - "host.docker.internal:host-gateway"              
         ports:
