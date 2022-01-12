@@ -224,7 +224,7 @@ class PixService
         throw new \Exception("Sem integração definida para o Banco {$portador->Banco->numerobanco}!", 1);
     }
 
-    public static function imprimirQrCode(PixCob $cob, $impressora)
+    public static function pdf(PixCob $cob)
     {
         switch ($cob->Portador->Banco->numerobanco) {
             case 1:
@@ -261,13 +261,14 @@ class PixService
         // $dompdf->set_option('dpi', 72);
         $dompdf->render();
         $pdf = $dompdf->output();
-        $tmpfname = tempnam(sys_get_temp_dir(), 'pixImpressaoQrCode') . '.pdf';
-        file_put_contents($tmpfname, $pdf);
-
-        exec("lp \"{$tmpfname}\" -d \"$impressora\"");
-        unlink($tmpfname);
         return $pdf;
 
+    }
+
+    public static function imprimirQrCode(PixCob $cob, $impressora)
+    {
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/pix/cob/' . $cob->codpixcob . '/pdf\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
+        exec($cmd);
     }
 
 }

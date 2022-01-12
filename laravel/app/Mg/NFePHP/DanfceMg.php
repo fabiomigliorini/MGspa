@@ -12,6 +12,7 @@ class DanfceMg extends Danfce
     protected function monta(
         $logo = ''
     ) {
+	$this->paperwidth = 75;
         if (!empty($logo)) {
             $this->logomarca = $this->adjustImage($logo, true);
         }

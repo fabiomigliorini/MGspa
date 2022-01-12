@@ -58,4 +58,15 @@ class EtiquetaController extends MgController
         ]);
         return EtiquetaService::imprimir($request->impressora, $request->modelo, $request->etiquetas);
     }
+
+    public function arquivo(Request $request, $arquivo)
+    {
+	$path = sys_get_temp_dir() . '/' . $arquivo;
+	$conteudo = file_get_contents($path);
+	unlink($path);
+        return response()->make($conteudo, 200, [
+            'Content-Type' => 'text/plain',
+            'Content-Disposition' => 'inline; filename="'.$arquivo.'"'
+        ]);
+    }
 }

@@ -34,6 +34,8 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');
+
     // Portador
     Route::get('portador', '\Mg\Portador\PortadorController@index');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
@@ -83,6 +85,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pix/cob/{codpixcob}/brcode', '\Mg\Pix\PixController@brCodePixCob');
     Route::get('pix/cob/{codpixcob}', '\Mg\Pix\PixController@show');
     Route::post('pix/cob/{codpixcob}/imprimir-qr-code', '\Mg\Pix\PixController@imprimirQrCode');
+    Route::get('pix/cob/{codpixcob}/pdf', '\Mg\Pix\PixController@pdf');
 
     // Pix
     Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPix');

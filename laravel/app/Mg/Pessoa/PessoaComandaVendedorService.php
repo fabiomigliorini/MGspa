@@ -28,12 +28,8 @@ class PessoaComandaVendedorService
 
     public static function imprimir (Pessoa $pessoa, $impressora, $copias)
     {
-        $pdf = static::pdf($pessoa);
-        $tmpfname = tempnam(sys_get_temp_dir(), 'comandaImpressao') . '.pdf';
-        file_put_contents($tmpfname, $pdf);
-	exec("lp \"{$tmpfname}\" -n {$copias} -d \"$impressora\"");
-        unlink($tmpfname);
-        return $pdf;
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/pessoa/' . $pessoa->codpessoa . '/comanda-vendedor\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": ' . $copias . '}" }\'';
+        exec($cmd);
     }
 
 }

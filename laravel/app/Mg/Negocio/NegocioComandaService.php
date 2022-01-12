@@ -28,14 +28,8 @@ class NegocioComandaService
 
     public static function imprimir (Negocio $negocio, $impressora)
     {
-        $pdf = NegocioComandaService::pdf($negocio);
-
-        $tmpfname = tempnam(sys_get_temp_dir(), 'comandaImpressao') . '.pdf';
-        file_put_contents($tmpfname, $pdf);
-
-        exec("lp \"{$tmpfname}\" -d \"$impressora\"");
-        unlink($tmpfname);
-        return $pdf;
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/negocio/' . $negocio->codnegocio . '/comanda\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
+        exec($cmd); 
     }
 
     public static function unificar (Negocio $negocio, Negocio $negocioComanda)

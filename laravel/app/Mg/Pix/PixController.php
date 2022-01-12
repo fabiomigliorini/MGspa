@@ -86,4 +86,15 @@ class PixController
         ]);
     }
 
+    public function pdf (Request $request, $codpixcob)
+    {
+        $cob = PixCob::findOrFail($codpixcob);
+        $pdf = PixService::pdf($cob);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="PixCob'.$codpixcob.'.pdf"'
+        ]);
+    }
+
+
 }

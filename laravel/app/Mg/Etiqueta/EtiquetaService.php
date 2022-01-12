@@ -145,8 +145,8 @@ class EtiquetaService
 
         // fecha arquivo e imprime
         fclose($handle);
-        exec("lp -d {$impressora} {$arquivo}");
-        unlink($arquivo);
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/etiqueta/arquivo/' . basename($arquivo) . '\", \"method\": \"get\", \"options\": [\"raw\"], \"copies\": 1}" }\'';
+        exec($cmd);
 
         // retornar quantidade de etiquetas
         return [

@@ -9,18 +9,15 @@ class SelectImpressoraController extends Controller
 {
     public static function index(Request $request)
     {
-        $o = shell_exec("lpstat -d -p");
-        $res = explode("\n", $o);
-        foreach ($res as $r) {
-            if (strpos($r, "printer") !== false) {
-                $r = str_replace("printer ", "", $r);
-                $r = explode(" ", $r);
-                $printers[] = [
-                    'label' => $r[0],
-                    'value' => $r[0]
-                ];
-            }
+        $printers = json_decode(file_get_contents(base_path('printers.json')), true);
+        $printers = array_merge([''=>''], $printers);
+        $ret = [];
+        foreach ($printers as $value => $label) {
+            $ret[] = [
+                'label' => $label,
+                'value' => $value
+            ];
         }
-        return $printers;
+        return $ret;
     }
 }
