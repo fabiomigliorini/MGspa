@@ -1,6 +1,23 @@
 {
-	"teste": "teste",
-	"bema": "Bematech do Fabio",
-	"deposito-escritorio-epson-jato-tinta-fabio": "Jato de Tinta do fabio",
-	"argox-depmig01": "Etiquetas do Depósito"
+    "argox-depmig01": "Etiquetas Depósito 1",
+    "argox-depmig02": "Etiquetas Depósito 2",
+    "bematech-cxabot01": "Térmica Botânico Caixa 1",
+    "bematech-cxabot02": "Térmica Botânico Caixa 2",
+    "bematech-cxabot03": "Térmica Botânico Caixa 3",
+    "bematech-cxabot04": "Térmica Botânico Caixa 4",
+    "elgin-i9-cxabot05": "Térmica Botânico Caixa 5",
+    "argox-blcbot02": "Etiquetas Botânico",
+    "tmt20-blcbot02": "Térmica Botânico Xerox",
+    "tmt20-cxacen01": "Térmica Centro Caixa 1",
+    "tmt20-cxacen02": "Térmica Centro Caixa 2",
+    "tmt20-cxacen03": "Térmica Centro Caixa 3",
+    "tmt20-cxacen04": "Térmica Centro Caixa 4",
+    "tmt20-cxacen05": "Térmica Centro Caixa 5",
+    "elgin-i9-cxacen06": "Térmica Centro Caixa 6",
+    "argox-blccen02": "Etiquetas Centro",
+    "elgin-i9-blccen02": "Térmica Centro Xerox",
+    "tmt20-cxaing01": "Térmica Imperial Caixa 1",
+    "bematech-cxaing02": "Térmica Imperial Caixa 2",
+    "tmt20-cxaing03": "Térmica Imperial Caixa 3",
+    "argox-blcing02": "Etiquetas Imperial"
 }

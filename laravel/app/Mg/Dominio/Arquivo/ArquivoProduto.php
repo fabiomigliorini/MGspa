@@ -52,7 +52,7 @@ class ArquivoProduto extends Arquivo
               WHERE tblNotaFiscal.codfilial =  :codfilial
               and tblNotaFiscal.saida >= :inicio
               and tblNotaFiscal.saida <= :fim
-              and tblNotaFiscal.codoperacao = 1
+              -- and tblNotaFiscal.codoperacao = 1
               -- limit 10
             )
             SELECT distinct
