@@ -13,5 +13,8 @@ services:
             - /usr/share/zoneinfo:/usr/share/zoneinfo              
         extra_hosts:
             - "host.docker.internal:host-gateway"              
+            - "sistema.mgpapelaria.com.br:host-gateway"
+            - "api.mgspa.mgpapelaria.com.br:host-gateway"
+            - "mgspa.mgpapelaria.com.br:host-gateway"              
         ports:
             - "9003:9000"

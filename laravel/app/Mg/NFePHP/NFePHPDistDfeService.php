@@ -3,6 +3,7 @@
 namespace Mg\NFePHP;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 use NFePHP\NFe\Common\Standardize;
 
@@ -40,6 +41,7 @@ class NFePHPDistDfeService
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
+        Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");
         $resp = $tools->sefazDistDFe($nsu);
 
         $st = (new Standardize($resp))->toStd();
