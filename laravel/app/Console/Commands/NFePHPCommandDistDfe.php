@@ -49,10 +49,16 @@ class NFePHPCommandDistDfe extends Command
         foreach ($filiais as $filial) {
             $nsu = null;
             do {
+                $continuar = false;
                 Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");
-                $resp = NFePHPDistDfeService::consultar($filial, $nsu);
-                $nsu = $resp['ultNSU'];
-            } while ($resp['ultNSU'] < $resp['maxNSU']);
+                try {
+                    $resp = NFePHPDistDfeService::consultar($filial, $nsu);
+                    $nsu = $resp['ultNSU'];
+                    $continuar = ($resp['ultNSU'] < $resp['maxNSU']);
+                } catch (\Exception $e) {
+                    Log::error($e);
+                }
+            } while ($continuar);
         }
     }
 }
