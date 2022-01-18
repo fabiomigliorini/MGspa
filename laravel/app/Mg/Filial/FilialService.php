@@ -31,17 +31,33 @@ class FilialService extends MgService
 
     public static function buscarPorCnpjIe ($cnpj, $ie)
     {
-        $ie = (int) numeroLimpo($ie);
-        $sql = "
-            SELECT codpessoa
-            FROM tblpessoa
-            WHERE cnpj = :cnpj
-            AND cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric) = :ie
-        ";
-        $codpessoas = collect(DB::select($sql, [
-            'cnpj' => $cnpj,
-            'ie' => $ie
-        ]))->pluck('codpessoa');
+        // Se nao tem IE
+        if (empty($ie)) {
+            $sql = "
+                SELECT codpessoa
+                FROM tblpessoa
+                WHERE cnpj = :cnpj
+                AND ie is null
+            ";
+            $codpessoas = collect(DB::select($sql, [
+                'cnpj' => $cnpj
+            ]))->pluck('codpessoa');
+
+        // Se tem IE
+        } else {
+            $ie = (int) numeroLimpo($ie);
+            $sql = "
+                SELECT codpessoa
+                FROM tblpessoa
+                WHERE cnpj = :cnpj
+                AND cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric) = :ie
+            ";
+            $codpessoas = collect(DB::select($sql, [
+                'cnpj' => $cnpj,
+                'ie' => $ie
+            ]))->pluck('codpessoa');
+        }
+        
         return Filial::whereIn('codpessoa', $codpessoas)->first();
     }
 

@@ -339,7 +339,13 @@ class NFePHPDistDfeService
         $dest = $dom->getElementsByTagName('dest')->item(0);
         $cnpj = @$dest->getElementsByTagName('CNPJ')->item(0)->nodeValue;
         $cpf = @$dest->getElementsByTagName('CPF')->item(0)->nodeValue;
-        $ie = @$dest->getElementsByTagName('IE')->item(0)->nodeValue;
+        $elementIe = @$dest->getElementsByTagName('IE');
+        // Se nao tem IE - Ex Filial Pessoa Fisica (Arquitetura, Fabio, Mari, Etc)
+        if ($elementIe->length == 0) {
+            $ie = null;
+        } else {
+            $ie = @$dest->getElementsByTagName('IE')->item(0)->nodeValue;
+        }
         if ($filial = FilialService::buscarPorCnpjIe($cnpj??$cpf, $ie)) {
             $nft->codfilial = $filial->codfilial;
         }
