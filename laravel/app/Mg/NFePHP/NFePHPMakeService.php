@@ -640,8 +640,8 @@ class NFePHPMakeService
                 Strings::replaceSpecialsChars($nf->PessoaTransportador->bairro),
             ];
             $std->xEnder = implode(
-                array_filter($end),
-                ', '
+                ', ',
+                array_filter($end)
             );
             $std->xMun = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->cidade);
             $std->UF = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->Estado->sigla);
