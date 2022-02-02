@@ -51,12 +51,13 @@ class MdfeNfePhpService
         $std->tpAmb = $mdfe->Filial->nfeambiente;
         $std->tpEmit = $mdfe->tipoemitente;
         // 458 - Rejeição: Tipo de Transportador não deve ser informado para Emitente de Carga Própria proprietário do veículo
-        foreach ($mdfe->MdfeVeiculoS as $mdfeVeiculo) {
+        //foreach ($mdfe->MdfeVeiculoS as $mdfeVeiculo) {
             //if ($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj != $mdfe->Filial->Pessoa->cnpj) {
-            if (!$mdfeVeiculo->Veiculo->PessoaProprietario->fisica) {
-                $std->tpTransp = $mdfe->tipotransportador;
-            }
-        }
+            //if (!$mdfeVeiculo->Veiculo->PessoaProprietario->fisica) {
+                //$std->tpTransp = $mdfe->tipotransportador;
+            //}
+        //}
+	//$std->tpTransp = $mdfe->tipotransportador;
         $std->mod = $mdfe->modelo;
         $std->serie = $mdfe->serie;
         $std->nMDF = $mdfe->numero;
@@ -191,6 +192,7 @@ class MdfeNfePhpService
                 }
 
                 // Proprietario
+                /*
                 if (!empty($mdfeVeiculo->Veiculo->codpessoaproprietario)) {
                     $prop = new \stdClass();
                     if ($mdfeVeiculo->Veiculo->PessoaProprietario->fisica) {
@@ -204,7 +206,8 @@ class MdfeNfePhpService
                     $prop->UF = $mdfeVeiculo->Veiculo->PessoaProprietario->Cidade->Estado->sigla;
                     $prop->tpProp = $mdfeVeiculo->Veiculo->tipoproprietario??2;
                     $veicTracao->prop = $prop;
-                }
+		}
+                */
 
                 $make->tagveicTracao($veicTracao);
                 /* fim veicTracao */
