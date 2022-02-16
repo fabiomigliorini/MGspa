@@ -231,7 +231,8 @@ class VendaMensalService
                     101001 => 0,
                     102001 => 0,
                     103001 => 100,
-                    104001 => 0
+		    104001 => 0,
+		    105001 => 0
                 ];
 
             case 2:
@@ -239,7 +240,8 @@ class VendaMensalService
                     101001 => 0,
                     102001 => 50,
                     103001 => 50,
-                    104001 => 0
+                    104001 => 0,
+		    105001 => 0
                 ];
 
             case 3:
@@ -247,23 +249,26 @@ class VendaMensalService
                     101001 => 0,
                     102001 => 33.3,
                     103001 => 33.4,
-                    104001 => 33.3
+                    104001 => 33.3,
+		    105001 => 0
                 ];
 
             case 4:
                 return [
                     101001 => 0,
                     102001 => 25,
-                    103001 => 50,
-                    104001 => 25
+                    103001 => 25,
+                    104001 => 25,
+		    105001 => 25
                 ];
 
             case 5:
                 return [
                     101001 => 0,
-                    102001 => 40,
+                    102001 => 20,
                     103001 => 40,
-                    104001 => 20
+                    104001 => 20,
+		    105001 => 20
                 ];
 
             default:
@@ -278,9 +283,10 @@ class VendaMensalService
                 // determina um padrao de distribuicao de acordo com faturamento
                 $ret = [
                     $codestoquelocal_deposito => $deposito,
-                    102001 => ($lojas * 38)/100,
-                    103001 => ($lojas * 50)/100,
-                    104001 => ($lojas * 12)/100
+                    102001 => ($lojas * 35)/100,
+                    103001 => ($lojas * 46)/100,
+                    104001 => ($lojas * 12)/100,
+		    105001 => ($lojas * 7)/100
                 ];
 
                 return $ret;

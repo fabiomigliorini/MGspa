@@ -508,21 +508,21 @@ class DistribuicaoService
         $sheet->getStyle("A{$linhaInicial}:A{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("D{$linhaInicial}:I{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        // Fundo Azul no Botanico
+        // Fundo Amarelo no Botanico
         $sheet->getStyle("E{$linhaInicial}:E{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-        $sheet->getStyle("E{$linhaInicial}:E{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFDCE8F2');
+        $sheet->getStyle("E{$linhaInicial}:E{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFFAFB9C');
 
-        // Fundo Vermelho no Centro
+        // Fundo Cinza no Centro
         $sheet->getStyle("F{$linhaInicial}:F{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-        $sheet->getStyle("F{$linhaInicial}:F{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFF2DCDB');
+        $sheet->getStyle("F{$linhaInicial}:F{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFF0F0F0');
 
-        // Fundo Amarelo no Imperial
+        // Fundo Vermelho no Imperial
         $sheet->getStyle("G{$linhaInicial}:G{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-        $sheet->getStyle("G{$linhaInicial}:G{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFFAFB9C');
+        $sheet->getStyle("G{$linhaInicial}:G{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFF8E0E0');
 
-        // Fundo Verde na Andre Maggi
+        // Fundo Azul na Andre Maggi
         $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-        $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFDDFFCC');	
+        $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFDCE8F2');	
 
         // Quebra automatica para descricao do produto e barras
         $sheet->getStyle("B{$linhaInicial}:B{$linhaFinal}")->getAlignment()->setShrinkToFit(true);
