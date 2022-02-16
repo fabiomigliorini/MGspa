@@ -327,7 +327,7 @@ class DistribuicaoService
         $linhaTitulo = $linha;
         $titulo = "{$marca->marca} - " . Carbon::now()->format('d/m/Y');
         $sheet->setCellValue("A{$linhaTitulo}", $titulo);
-        $sheet->mergeCells("A{$linhaTitulo}:H{$linhaTitulo}");
+        $sheet->mergeCells("A{$linhaTitulo}:I{$linhaTitulo}");
         $sheet->getStyle("A{$linhaTitulo}")->getFont()->setSize(20);
         $sheet->getStyle("A{$linhaTitulo}")->getFont()->setBold(true);
         $sheet->getStyle("A{$linhaTitulo}")->getFont()->getColor()->setARGB('FFFF3333');
@@ -347,13 +347,14 @@ class DistribuicaoService
         $sheet->setCellValue("E{$linhaCabecalho}", 'Bot');
         $sheet->setCellValue("F{$linhaCabecalho}", 'Cen');
         $sheet->setCellValue("G{$linhaCabecalho}", 'Imp');
-        $sheet->setCellValue("H{$linhaCabecalho}", 'Dep');
+	$sheet->setCellValue("H{$linhaCabecalho}", 'Ama');
+        $sheet->setCellValue("I{$linhaCabecalho}", 'Dep');
         $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd($linhaCabecalho, $linhaCabecalho);
-        $sheet->getStyle("A{$linhaCabecalho}:H{$linhaCabecalho}")->getFont()->setBold(true);
-        $sheet->getStyle("A{$linhaCabecalho}:H{$linhaCabecalho}")->getFont()->getColor()->setARGB('FF000000');
-        $sheet->getStyle("A{$linhaCabecalho}:H{$linhaCabecalho}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("A{$linhaCabecalho}:H{$linhaCabecalho}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-        $sheet->getStyle("A{$linhaCabecalho}:H{$linhaCabecalho}")->getFill()->getStartColor()->setARGB("FF999999");
+        $sheet->getStyle("A{$linhaCabecalho}:I{$linhaCabecalho}")->getFont()->setBold(true);
+        $sheet->getStyle("A{$linhaCabecalho}:I{$linhaCabecalho}")->getFont()->getColor()->setARGB('FF000000');
+        $sheet->getStyle("A{$linhaCabecalho}:I{$linhaCabecalho}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("A{$linhaCabecalho}:I{$linhaCabecalho}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $sheet->getStyle("A{$linhaCabecalho}:I{$linhaCabecalho}")->getFill()->getStartColor()->setARGB("FF999999");
         $linha++;
 
         // Ajusta Largura Colunas
@@ -365,6 +366,7 @@ class DistribuicaoService
         $sheet->getColumnDimension('F')->setWidth(6.5);
         $sheet->getColumnDimension('G')->setWidth(6.5);
         $sheet->getColumnDimension('H')->setWidth(6.5);
+	$sheet->getColumnDimension('I')->setWidth(6.5);
 
         // congela paineis
         $sheet->freezePane("A{$linha}");
@@ -374,6 +376,7 @@ class DistribuicaoService
             102001 => 'E',
             103001 => 'F',
             104001 => 'G',
+	    105001 => 'H',
         ];
 
         // linha onde comeca os produtos
@@ -451,24 +454,24 @@ class DistribuicaoService
             }
 
             // formata quantidades dos estoques das filiais
-            $sheet->getStyle("E{$linha}:H{$linha}")->getFont()->setSize(12);
-            $sheet->getStyle("E{$linha}:H{$linha}")->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("E{$linha}:H{$linha}")->getFont()->setBold(true);
+            $sheet->getStyle("E{$linha}:I{$linha}")->getFont()->setSize(12);
+            $sheet->getStyle("E{$linha}:I{$linha}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("E{$linha}:I{$linha}")->getFont()->setBold(true);
 
             // formata percentuais dos estoques das filiais
-            $sheet->getStyle("E{$linha2}:H{$linha3}")->getFont()->setSize(8);
-            $sheet->getStyle("E{$linha2}:H{$linha3}")->getFont()->getColor()->setARGB('FF999999');
+            $sheet->getStyle("E{$linha2}:I{$linha3}")->getFont()->setSize(8);
+            $sheet->getStyle("E{$linha2}:I{$linha3}")->getFont()->getColor()->setARGB('FF999999');
 
 	    // Alinhamento Vertical
-	    $sheet->getStyle("E{$linha3}:H{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+	    $sheet->getStyle("E{$linha3}:I{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
             $sheet->getStyle("A{$linha}:D{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-            $sheet->getStyle("H{$linha}:H{$linha2}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("I{$linha}:I{$linha2}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
             // Saldo Final Deposito
-	    $sheet->mergeCells("H{$linha}:H{$linha2}");
-            $str = "=D{$linha}-E{$linha}-F{$linha}-G{$linha}";
-            $sheet->setCellValue("H{$linha}", $str);
-            $sheet->getStyle("D{$linha}:H{$linha3}")->getNumberFormat()->setFormatCode('#,##0');
+	    $sheet->mergeCells("I{$linha}:I{$linha2}");
+            $str = "=D{$linha}-E{$linha}-F{$linha}-G{$linha}-H{$linha}";
+            $sheet->setCellValue("I{$linha}", $str);
+            $sheet->getStyle("D{$linha}:I{$linha3}")->getNumberFormat()->setFormatCode('#,##0');
 
             // Percentual Deposito
             if (!empty($prod->estoquemaximo)) {
@@ -476,7 +479,7 @@ class DistribuicaoService
             } else {
                 $str = 'nada';
             }
-            $sheet->setCellValue("H{$linha3}", $str);
+            $sheet->setCellValue("I{$linha3}", $str);
 
 
             $linha += 3;
@@ -484,7 +487,7 @@ class DistribuicaoService
         $linhaFinal = $linha-1;
 
         // Filtro
-        $spreadsheet->getActiveSheet()->setAutoFilter("A{$linhaCabecalho}:H{$linhaFinal}");
+        $spreadsheet->getActiveSheet()->setAutoFilter("A{$linhaCabecalho}:I{$linhaFinal}");
 
         // Desenha Grade ao redor da tabela
         $styleArray = [
@@ -495,7 +498,7 @@ class DistribuicaoService
                 ],
             ],
         ];
-        $sheet->getStyle("A{$linhaCabecalho}:H{$linhaFinal}")->applyFromArray($styleArray);
+        $sheet->getStyle("A{$linhaCabecalho}:I{$linhaFinal}")->applyFromArray($styleArray);
 
         // Cores das Colunas de Codigo e Barras
         $sheet->getStyle("A{$linhaInicial}:A{$linhaFinal}")->getFont()->getColor()->setARGB('FF999999');
@@ -503,7 +506,7 @@ class DistribuicaoService
 
         // Alinhamento dos dados Centralizados e no topo da celula
         $sheet->getStyle("A{$linhaInicial}:A{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle("D{$linhaInicial}:H{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("D{$linhaInicial}:I{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         // Fundo Azul no Botanico
         $sheet->getStyle("E{$linhaInicial}:E{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
@@ -516,6 +519,10 @@ class DistribuicaoService
         // Fundo Amarelo no Imperial
         $sheet->getStyle("G{$linhaInicial}:G{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
         $sheet->getStyle("G{$linhaInicial}:G{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFFAFB9C');
+
+        // Fundo Verde na Andre Maggi
+        $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFDDFFCC');	
 
         // Quebra automatica para descricao do produto e barras
         $sheet->getStyle("B{$linhaInicial}:B{$linhaFinal}")->getAlignment()->setShrinkToFit(true);
