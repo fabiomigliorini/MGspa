@@ -1,6 +1,5 @@
 {
     "argox-depmig01": "Etiquetas Depósito 1",
-    "argox-depmig02": "Etiquetas Depósito 2",
     "bematech-cxabot01": "Térmica Botânico Caixa 1",
     "bematech-cxabot02": "Térmica Botânico Caixa 2",
     "bematech-cxabot03": "Térmica Botânico Caixa 3",
@@ -21,6 +20,6 @@
     "tmt20-cxaing03": "Térmica Imperial Caixa 3",
     "argox-blcing02": "Etiquetas Imperial",
     "argox-cxaama02": "Etiquetas Andre Maggi",
-    "tmt20-cxaama02": "Térmica Andre Maggi Xerox",
+    "tmt20-blcama01": "Térmica Andre Maggi Xerox",
     "elgin-i9-cxaama02": "Térmica Andre Maggi Caixa 2"
 }

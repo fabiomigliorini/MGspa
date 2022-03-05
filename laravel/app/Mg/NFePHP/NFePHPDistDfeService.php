@@ -198,6 +198,7 @@ class NFePHPDistDfeService
         // vincula dfe na nota fiscal de terceiro
         $dd->codnfeterceiro = $nft->codnfeterceiro;
         $dd->nfechave = $nft->nfechave;
+        $dd->data = @Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue);
         $dd->save();
     }
 
