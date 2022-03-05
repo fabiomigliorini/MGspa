@@ -5,6 +5,6 @@ set codpessoavendedor =
 	from tblpessoa p 
 	where p.vendedor = true
 	and inativo is null
-	and p.pessoa ilike '%gustavo%marq%') 
-where codnegocio = 2428467
+	and p.pessoa ilike '%iara%') 
+where codnegocio = 02508677
 

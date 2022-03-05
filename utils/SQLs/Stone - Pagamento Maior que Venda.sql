@@ -2,7 +2,7 @@
 select 
 	codnegocio, 
 	codstonepretransacao, 
-	'wget https://api.mgspa.mgpapelaria.com.br/api/v1/stone-connect/pre-transacao/' || codstonepretransacao, 
+	'curl https://api.mgspa.mgpapelaria.com.br/api/v1/stone-connect/pre-transacao/' || codstonepretransacao, 
 	criacao,
 	* 
 from tblstonepretransacao t 
@@ -38,6 +38,10 @@ inner join c on (c.codnegocio = n.codnegocio)
 where n.codnegociostatus = 2
 and coalesce(c.valorcartao, 0) + coalesce(p.valorpagamento, 0) > coalesce(n.valortotal, 0)
 --and n.codnegocio = 2381383
+
+select * from tblnegocioformapagamento t where codnegocio = 2449702
+
+select * from tblnegocio t where codnegocio = 2449361
 
 
 /*

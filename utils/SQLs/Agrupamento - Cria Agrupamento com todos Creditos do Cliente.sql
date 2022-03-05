@@ -2,7 +2,7 @@ with creditos as (
 	select * 
 	from tbltitulo t 
 	where t.saldo < 0 
-	and t.codpessoa = 108
+	and t.codpessoa = :codpessoa
 	--and t.codtipotitulo = 3
 )
 INSERT INTO 
@@ -69,11 +69,11 @@ INSERT INTO tbltitulo (
 )
 select 
 	911 as codtipotitulo, --Agrupamento Credito
-	101 as codfilial, -- Deposito
+	:codfilial as codfilial, -- Deposito
 	null as codportador, 
 	codpessoa, 
 	7 as codcontacontabil, -- Agrupamento
-	'A00026507-1/1' as numero, 
+	:numero as numero, 
 	null as fatura, 
 	date_trunc('second', now()) as transacao, 
 	date_trunc('second', now()) as sistema, 
@@ -102,7 +102,7 @@ select
 	codusuariocriacao, 
 	null as codvalecompraformapagamento
 from tbltituloagrupamento ta 
-where ta.codtituloagrupamento = 26507
+where ta.codtituloagrupamento = :codtituloagrupamento 
 
 
 
@@ -110,7 +110,7 @@ with creditos as (
 	select * 
 	from tbltitulo t 
 	where t.saldo < 0 
-	and t.codpessoa = 108
+	and t.codpessoa = :codpessoa 
 	--and t.codtipotitulo = 3
 )
 INSERT INTO mgsis.tblmovimentotitulo (
@@ -152,7 +152,7 @@ select
 	ta.codusuariocriacao, 
 	null as codtituloboleto
 from creditos c
-inner join tbltituloagrupamento ta on (ta.codtituloagrupamento = 26507)
+inner join tbltituloagrupamento ta on (ta.codtituloagrupamento = :codtituloagrupamento)
 where coalesce(c.codtituloagrupamento, 0) != ta.codtituloagrupamento
 
 
