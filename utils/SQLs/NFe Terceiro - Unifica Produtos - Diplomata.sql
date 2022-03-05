@@ -48,3 +48,13 @@ SELECT
 FROM TBLNFETERCEIROITEM 
 WHERE CODNFETERCEIRO = 26761
 ;
+
+
+
+
+select nextval('tblnfeterceiroitem_codnfeterceiroitem_seq')
+
+update tblnfeterceiroitem set nitem = nitem * 100 where codnfeterceiro = 36204
+
+select * from tblnfeterceiroitem t where codnfeterceiro = 36493 order by nitem
+

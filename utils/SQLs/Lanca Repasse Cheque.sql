@@ -18,7 +18,7 @@ update tblcheque set indstatus = 2 where indstatus = 1 and codcheque in (select 
 
 -- Consulta Total Cheques do Repasse
 with totais as (
-	select crc.codchequerepasse, sum(c.valor), count(crc.codchequerepassecheque)
+select crc.codchequerepasse, sum(c.valor), count(crc.codchequerepassecheque)
 	from tblchequerepassecheque crc
 	inner join tblcheque c on (c.codcheque = crc.codcheque)
 	where crc.codchequerepasse >= 1900
@@ -28,6 +28,7 @@ with totais as (
 select * 
 from totais t
 inner join tblchequerepasse cr on (cr.codchequerepasse = t.codchequerepasse)
+order by 1 desc
 
 --update tblcheque set valor = 390 where cmc7 = '<74880036<0180040885>000007622962:'
 
@@ -103,10 +104,9 @@ inner join tblchequerepasse cr on (cr.codchequerepasse = crc.codchequerepasse)
 where crc.codcheque = 8836
 
 
-update tblchequerepassecheque set codchequerepasse = 2295
+update tblchequerepassecheque set codchequerepasse = :codchequerepasse 
 where codcheque in(select codcheque from tblcheque where cmc7 in (
-'<23755815<0180000535>272500343479:',
-'<10432634<0189000635>100300031358:'
+	:cmc7
 ))
 
 select codcheque , codchequerepasse , count(*), max(codchequerepassecheque)
@@ -115,3 +115,5 @@ group by codcheque , codchequerepasse
 having count(*) > 1
 
 delete from tblchequerepassecheque where codchequerepassecheque in (17644, 17645)
+
+delete from tblchequerepassecheque where codchequerepasse = :codchequerepasse 

@@ -124,7 +124,7 @@ and nf.numero between :numero_inicial and :numero_final
 
 
 
--- update tblnotafiscal set nfeautorizacao = null, nfedataautorizacao = null where codnotafiscal = :codnotafiscal
+update tblnotafiscal set nfeautorizacao = null, nfedataautorizacao = null where codnotafiscal = :codnotafiscal
 
-
+update tblnegocio set codfilial = :codfilial, codestoquelocal = :codestoquelocal where codnegocio = :codnegocio 
 

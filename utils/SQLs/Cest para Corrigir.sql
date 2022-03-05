@@ -37,7 +37,8 @@ update tblproduto set codcest = (
 		) ilike c.ncm || '%' 
 		order by length(c.ncm) DESC, c.cest
 		limit 1
-	);
+	)
+where codproduto between 54855 and 62021;
 
 update tblproduto set codtributacao = 3 where codcest is not null;
 

@@ -1,9 +1,9 @@
 with nota as (
 	select 
 		elpv.codestoquelocalprodutovariacao,
-		p.produto,
-		pv.variacao,		
-		p.codproduto || coalesce(' ' || pv.codprodutovariacao, '') as produto,
+		p.codproduto,
+		pv.codprodutovariacao,		
+		p.produto || coalesce(' ' || pv.variacao, '') as produto,
 		(select pb.codprodutobarra from tblprodutobarra pb where pb.codprodutovariacao = pv.codprodutovariacao and pb.codprodutoembalagem is null order by (case when barras ilike '234%' then 1 else 0 end), barras limit 1) as codprodutobarra,
 		fiscal.saldoquantidade as saldofiscal, 
 		fisico.saldoquantidade as saldofisico, 
@@ -18,7 +18,18 @@ with nota as (
 	--and p.codmarca != :codmarcaignorar
 	and fiscal.saldoquantidade < 0
 )
-select nota.*, saldocobrir * valorunitario as valortotal, pb.barras
+select 
+	nota.*, 
+	saldocobrir * valorunitario as valortotal, 
+	pb.barras,
+	(
+		select string_agg(to_char(codigo_conv, '00000'), ', ') 
+		from tblestoqueverao t
+		where trim(codbar) = pb.barras
+		group by trim(codbar)
+		having count(*) > 0
+		limit 1
+	) as codverao
 from nota
 inner join tblprodutobarra pb on (pb.codprodutobarra = nota.codprodutobarra)
-order by nota.produto, barras
+order by nota.produto, pb.barras
