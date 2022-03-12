@@ -1,5 +1,5 @@
 ﻿
---update tblnotafiscal set numero = 0, emitida = true, nfechave = null where codnotafiscal = 1639508
+update tblnotafiscal set numero = 0, emitida = true, nfechave = null where codnotafiscal = 2090080
 
 --select * from tblfilial
 

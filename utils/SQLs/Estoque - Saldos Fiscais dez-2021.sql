@@ -90,7 +90,8 @@ order by 2, 1
 select *, preco * quant
 from mvwestoque2021  e
 where e.quant < 0
-and codproduto = :codproduto 
+--and codproduto = :codproduto
+--and produto ilike :produto 
 order by produto, codproduto, codfilial
 --order by preco * quant
 

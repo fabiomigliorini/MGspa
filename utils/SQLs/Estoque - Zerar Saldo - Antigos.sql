@@ -1,4 +1,4 @@
-﻿drop table tmpestoquezerar
+drop table tmpestoquezerar
 
 -- 1) Seleciona Produtos para zerar (negativos)
 create table tmpestoquezerar as 
@@ -25,13 +25,19 @@ inner join tblestoquelocalprodutovariacao elpv on (elpv.codprodutovariacao = pv.
 inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal and el.codfilial = e.codfilial)
 inner join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = true)
 inner join tblestoquemes mes on (mes.codestoquemes = (select iq.codestoquemes from tblestoquemes iq where iq.codestoquesaldo = es.codestoquesaldo and iq.mes <= '2021-12-31' order by iq.mes desc limit 1) )
-where e.quant < 0
-and mes.saldoquantidade < 0
---and e.codproduto = 35771
+where mes.mes <= '2018-12-31'
+and mes.saldoquantidade > 0
+
+-- adiciona mes para zerar
+alter table tmpestoquezerar add codestoquemeszerar bigint
+
+-- seta valor pra coluna
+update tmpestoquezerar set codestoquemeszerar = nextval('tblestoquemes_codestoquemes_seq') where mes != '2021-12-01'
 
 -- 2) Cria o Mes de dez/2021 caso nao exista
-insert into tblestoquemes (codestoquesaldo, mes, codusuariocriacao, codusuarioalteracao, criacao, alteracao)
+insert into tblestoquemes (codestoquemes, codestoquesaldo, mes, codusuariocriacao, codusuarioalteracao, criacao, alteracao)
 select 
+    codestoquemeszerar,
 	codestoquesaldo,
 	'2021-12-01' as mes,
 	1 as codusuariocriacao,
@@ -41,29 +47,19 @@ select
 from tmpestoquezerar 
 where mes != '2021-12-01'
 
--- 3) Calcula o saldo dos meses criados
-select 
-	codestoquemes, 
-	'curl https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/' || codestoquemes 
-from tblestoquemes 
-where saldoquantidade is null order by mes
-
-
--- 4) repetir o Passo 1 para pegar o codigo do mes correto
-
 
 -- 5) Criar o movimento do estoque
 insert into tblestoquemovimento 
 	(codestoquemes, codestoquemovimentotipo, entradaquantidade, entradavalor, saidaquantidade, saidavalor, manual, data, criacao, codusuariocriacao, alteracao, codusuarioalteracao, observacoes)
 select 
-	z.codestoquemes, 
+	z.codestoquemeszerar, 
 	1002 as codestoquemovimentotipo,
 	case when z.saldoquantidade < 0 then abs(z.saldoquantidade) else null end as entradaquantidade,
 	case when z.saldoquantidade < 0 then abs(z.saldoquantidade) * z.custoutilizar else null end as entradavalor,
 	case when z.saldoquantidade > 0 then abs(z.saldoquantidade) else null end as saidaquantidade,
 	case when z.saldoquantidade > 0 then abs(z.saldoquantidade) * z.custoutilizar else null end as saidavalor,
 	true as manual,
-	(date_trunc('month', z.mes) + interval '1 month' - interval '1 second') as data,
+	'2021-12-31 23:59:59' as data,
 	date_trunc('second', now()) as criacao,
 	1 as codusuariocriacao,
 	date_trunc('second', now()) as alteracao,
@@ -75,6 +71,16 @@ select 'curl https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-med
 from tblestoquemovimento 
 where observacoes = 'Zeramento automatico dos produtos inativos do estoque fiscal de dezembro de 2021.' 
 order by codestoquemes desc
+
+select saldoquantidade * custoutilizar, codestoquemeszerar, * from tmpestoquezerar order by saldoquantidade * custoutilizar desc
+
+-- 3) Calcula o saldo dos meses criados
+select 
+	codestoquemes, 
+	'curl https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/' || codestoquemes --|| '&'
+from tblestoquemes 
+where saldoquantidade is null order by codestoquemes asc
+
 
 
 -- 6) Recalcular movimento mes para o que nao bate com o movimento 
@@ -92,9 +98,9 @@ with tot as (
 select 	'curl https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/' || mes.codestoquemes || '&', *
 from tblestoquemes mes
 left join tot on (mes.codestoquemes = tot.codestoquemes)
-where coalesce(tot.entradaquantidade, 0) != coalesce(mes.entradaquantidade, 0)
+--where coalesce(tot.entradaquantidade, 0) != coalesce(mes.entradaquantidade, 0)
 --where coalesce(tot.entradavalor, 0) != coalesce(mes.entradavalor, 0)
---where coalesce(tot.saidaquantidade, 0) != coalesce(mes.saidaquantidade, 0)
+where coalesce(tot.saidaquantidade, 0) != coalesce(mes.saidaquantidade, 0)
 --where coalesce(tot.saidavalor, 0) != coalesce(mes.saidavalor, 0)
 --and mes.codestoquemes = 3405118
 order by mes.codestoquemes 

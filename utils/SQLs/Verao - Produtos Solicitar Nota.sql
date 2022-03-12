@@ -16,7 +16,8 @@ with nota as (
 	inner join tblproduto p on (p.codproduto = pv.codproduto)
 	where elpv.codestoquelocal  = :codestoquelocaldest
 	--and p.codmarca != :codmarcaignorar
-	and fiscal.saldoquantidade < 0
+	and coalesce(fiscal.saldoquantidade, 0) <= 0
+	and fisico.saldoquantidade >= 0
 )
 select 
 	nota.*, 
@@ -32,4 +33,6 @@ select
 	) as codverao
 from nota
 inner join tblprodutobarra pb on (pb.codprodutobarra = nota.codprodutobarra)
+where pb.barras not ilike '234%'
+and nota.saldocobrir > 0
 order by nota.produto, pb.barras
