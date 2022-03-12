@@ -5,7 +5,10 @@ select 'lara', queue, count(*), min(id), max(id) from tbljobs group by queue uni
 select 'spa', queue, count(*), min(id), max(id) from tbljobsspa group by queue order by queue
 
 
+
 /*
+
+delete from tbljobsspa where attempts > 100;
 
 ALTER SEQUENCE tbljobs_id_seq RESTART WITH 1;
 
