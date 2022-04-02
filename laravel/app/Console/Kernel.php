@@ -24,8 +24,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('nfe-php:resolver-pendente')->everyMinute();
-        $schedule->command('nfe-php:dist-dfe')->everyTenMinutes();
+        $schedule->command('nfe-php:resolver-pendente')->everyFiveMinutes();
+        $schedule->command('nfe-php:dist-dfe')->hourly();
         $schedule->command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt('00:01');
         $schedule->command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);
     }

@@ -15,7 +15,7 @@ class NFePHPCommandDistDfe extends Command
      *
      * @var string
      */
-    protected $signature = 'nfe-php:dist-dfe {--codfilial=}';
+    protected $signature = 'nfe-php:dist-dfe {--codfilial=} {--nsu=}';
 
     /**
      * The console command description.
@@ -47,7 +47,8 @@ class NFePHPCommandDistDfe extends Command
         }
         $filiais = $qry->get();
         foreach ($filiais as $filial) {
-            $nsu = null;
+            //$nsu = null;
+            $nsu = $this->option('nsu');
             do {
                 $continuar = false;
                 //Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");

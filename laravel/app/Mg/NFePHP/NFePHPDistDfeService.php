@@ -42,6 +42,7 @@ class NFePHPDistDfeService
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
         Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");
+        //$resp = $tools->sefazDistDFe($nsu, $nsu);
         $resp = $tools->sefazDistDFe($nsu);
 
         $st = (new Standardize($resp))->toStd();
@@ -308,6 +309,7 @@ class NFePHPDistDfeService
             $pessoa->fisica = $emit->getElementsByTagName('CPF')->item(0)?true:false;
             $pessoa->pessoa = $emit->getElementsByTagName('xNome')->item(0)->nodeValue;
             $pessoa->fantasia = $emit->getElementsByTagName('xFant')->item(0)->nodeValue??$pessoa->pessoa;
+	    $pessoa->fantasia = substr(trim($pessoa->fantasia), 0, 50);
 
             $pessoa->endereco = $emit->getElementsByTagName('xLgr')->item(0)->nodeValue;
             $pessoa->numero = $emit->getElementsByTagName('nro')->item(0)->nodeValue;
@@ -321,7 +323,7 @@ class NFePHPDistDfeService
             $pessoa->codcidadecobranca = $pessoa->codcidade;
             $pessoa->cepcobranca = $pessoa->cep;
 
-            $pessoa->telefone1 = $emit->getElementsByTagName('fone')->item(0)->nodeValue;
+            $pessoa->telefone1 = $emit->getElementsByTagName('fone')->item(0)->nodeValue??'0';
             $pessoa->ie = $emit->getElementsByTagName('IE')->item(0)->nodeValue;
 
             $pessoa->email = 'nfe@mgpapelaria.com.br';
