@@ -226,6 +226,10 @@ class BoletoBbService
             $tituloBoleto->nossonumero
         );
 
+        if (isset($ret['errors'])) {
+            throw new \Exception ($ret['errors'][0]['message']);
+        }
+
         $tituloBoleto->update([
             'linhadigitavel' => $ret['codigoLinhaDigitavel'],
             'canalpagamento' => $ret['codigoCanalPagamento'],
