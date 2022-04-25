@@ -40,10 +40,11 @@ class NFePHPDistDfeService
 
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
-        $nsu = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
+        $nsuInicial = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
+        $nsuFinal = $nsu;
         Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");
-        //$resp = $tools->sefazDistDFe($nsu, $nsu);
-        $resp = $tools->sefazDistDFe($nsu);
+        $resp = $tools->sefazDistDFe($nsuInicial, $nsuFinal);
+        //$resp = $tools->sefazDistDFe($nsu);
 
         $st = (new Standardize($resp))->toStd();
         switch ($st->cStat) {

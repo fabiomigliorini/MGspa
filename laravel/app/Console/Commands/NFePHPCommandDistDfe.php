@@ -54,8 +54,10 @@ class NFePHPCommandDistDfe extends Command
                 //Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");
                 try {
                     $resp = NFePHPDistDfeService::consultar($filial, $nsu);
-                    $nsu = $resp['ultNSU'];
-                    $continuar = ($resp['ultNSU'] < $resp['maxNSU']);
+                    if (empty($nsu)) {
+                        $nsu = $resp['ultNSU'];
+                        $continuar = ($resp['ultNSU'] < $resp['maxNSU']);
+                    }
                 } catch (\Exception $e) {
                     Log::error($e->getMessage());
                 }
