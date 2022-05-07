@@ -70,6 +70,10 @@ class PixBbService
             $pixCob->txid
         );
 
+        if (isset($dadosPix['erros'])) {
+            throw new \Exception($dadosPix['erros'][0]['mensagem']);
+        }
+
         $status = PixCobStatus::firstOrCreate([
             'pixcobstatus' => $dadosPix['status']
         ]);
