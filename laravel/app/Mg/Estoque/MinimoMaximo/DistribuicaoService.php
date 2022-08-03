@@ -460,7 +460,7 @@ class DistribuicaoService
 
             // formata percentuais dos estoques das filiais
             $sheet->getStyle("E{$linha2}:I{$linha3}")->getFont()->setSize(8);
-            $sheet->getStyle("E{$linha2}:I{$linha3}")->getFont()->getColor()->setARGB('FF999999');
+            //$sheet->getStyle("E{$linha2}:I{$linha3}")->getFont()->getColor()->setARGB('FF999999');
 
 	    // Alinhamento Vertical
 	    $sheet->getStyle("E{$linha3}:I{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
@@ -501,8 +501,8 @@ class DistribuicaoService
         $sheet->getStyle("A{$linhaCabecalho}:I{$linhaFinal}")->applyFromArray($styleArray);
 
         // Cores das Colunas de Codigo e Barras
-        $sheet->getStyle("A{$linhaInicial}:A{$linhaFinal}")->getFont()->getColor()->setARGB('FF999999');
-        $sheet->getStyle("C{$linhaInicial}:C{$linhaFinal}")->getFont()->getColor()->setARGB('FF999999');
+        //$sheet->getStyle("A{$linhaInicial}:A{$linhaFinal}")->getFont()->getColor()->setARGB('FF999999');
+        //$sheet->getStyle("C{$linhaInicial}:C{$linhaFinal}")->getFont()->getColor()->setARGB('FF999999');
 
         // Alinhamento dos dados Centralizados e no topo da celula
         $sheet->getStyle("A{$linhaInicial}:A{$linhaFinal}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
