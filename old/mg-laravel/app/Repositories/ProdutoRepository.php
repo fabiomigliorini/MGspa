@@ -298,14 +298,14 @@ class ProdutoRepository extends MGRepositoryStatic
                 if ($mes->movimentos) {
 
                     // recalcula Custo Médio para origem
-                    $url = "http://localhost/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
+                    $url = "https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
                     $res = json_decode(file_get_contents($url));
                     if ($res->response != "Agendado") {
                         dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesorigem}.. $url");
                     }
 
                     // recalcula Custo Médio para destino
-                    $url = "http://localhost/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
+                    $url = "https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
                     $res = json_decode(file_get_contents($url));
                     if ($res->response != "Agendado") {
                         dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesdestino}.. $url");
@@ -362,6 +362,12 @@ class ProdutoRepository extends MGRepositoryStatic
             'codprodutobarra' => $codprodutobarradestino
         ]);
         $regs = $pb_origem->NfeTerceiroItemS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+            'codprodutobarra' => $codprodutobarradestino
+        ]);
+        $regs = $pb_origem->ValeCompraModeloProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+            'codprodutobarra' => $codprodutobarradestino
+        ]);
+        $regs = $pb_origem->ValeCompraProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
             'codprodutobarra' => $codprodutobarradestino
         ]);
         $pb_origem->delete();
