@@ -141,6 +141,7 @@ Route::group(['prefix' => 'v1'], function () {
 
     Route::get('dfe/distribuicao', '\Mg\Dfe\DfeController@distribuicao');
     Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
+    Route::get('dfe/distribuicao/{coddistribuicaodfe}/processar', '\Mg\Dfe\DfeController@processar');    
     Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
 
 });

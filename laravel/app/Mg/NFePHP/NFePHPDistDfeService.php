@@ -118,6 +118,38 @@ class NFePHPDistDfeService
         ];
     }
 
+    public static function processar($dd)
+    {
+        $dt = $dd->dfeTipo;
+        $path = NFePHPPathService::pathDfeGz($dd, true);
+        $gz = file_get_contents($path);
+        switch ($dt->schemaxml) {
+            case 'resEvento_v1.01.xsd':
+                $res = static::processarResEvento($dd, $gz);
+                break;
+
+            case 'resNFe_v1.01.xsd':
+                $res = static::processarResNFe($dd, $gz);
+                break;
+
+            case 'procEventoNFe_v1.00.xsd':
+                $res = static::processarProcEventoNFe($dd, $gz);
+                break;
+
+            case 'procNFe_v4.00.xsd':
+                $res = static::processarProcNFe($dd, $gz);
+                break;
+
+            default:
+                throw new \Exception("Impossível determinar acao para Schema '{$dt->schemaxml}'", 1);
+                break;
+        }
+        return [
+            'coddistribuicaodfe' => $dd->coddistribuicaodfe,
+            'resultado' => $res
+        ];
+    }
+
     public static function processarResEvento(DistribuicaoDfe $dd, $gz)
     {
         // Carrega XML
@@ -151,7 +183,7 @@ class NFePHPDistDfeService
         $dd->coddistribuicaodfeevento = $dde->coddistribuicaodfeevento;
         $dd->nfechave = @$dom->getElementsByTagName('chNFe')->item(0)->nodeValue;
         $dd->data = @Carbon::parse($dom->getElementsByTagName('dhEvento')->item(0)->nodeValue);
-        $dd->save();
+        return $dd->save();
     }
 
     public static function processarResNFe(DistribuicaoDfe $dd, $gz)
@@ -201,7 +233,7 @@ class NFePHPDistDfeService
         $dd->codnfeterceiro = $nft->codnfeterceiro;
         $dd->nfechave = $nft->nfechave;
         $dd->data = @Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue);
-        $dd->save();
+        return $dd->save();
     }
 
     public static function processarProcEventoNFe(DistribuicaoDfe $dd, $gz)
@@ -241,10 +273,9 @@ class NFePHPDistDfeService
         $dd->coddistribuicaodfeevento = $dde->coddistribuicaodfeevento;
         $dd->nfechave = @$dom->getElementsByTagName('chNFe')->item(0)->nodeValue;
         $dd->data = @Carbon::parse($dom->getElementsByTagName('dhEvento')->item(0)->nodeValue);
-        $dd->save();
+        return $dd->save();
 
     }
-
 
     public static function processarProcNFe(DistribuicaoDfe $dd, $gz)
     {
@@ -495,7 +526,7 @@ class NFePHPDistDfeService
         $dd->codnfeterceiro = $nft->codnfeterceiro;
         $dd->nfechave = $nft->nfechave;
         $dd->data = $nft->nfedataautorizacao??$nft->emissao??Carbon::now();
-        $dd->save();
+        return $dd->save();
     }
 
     public static function carregarXml(DistribuicaoDfe $dd)

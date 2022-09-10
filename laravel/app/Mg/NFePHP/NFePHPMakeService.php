@@ -390,6 +390,33 @@ class NFePHPMakeService
                 $cest = $nfe->tagCEST($std);
             }
 
+            if (in_array(substr($nfpb->ProdutoBarra->Produto->Ncm->ncm, 0, 4), [
+                "3001",
+                "3002",
+                "3003",
+                "3004",
+                "3005",
+                "3006"
+            ])) {
+            	//NOTA: Ajustado conforme NT 2018.005 Node com o detalhamento de Medicamentos e de matérias-primas farmacêuticas
+                $std = new \stdClass();
+                $std->item = $nItem;
+                $std->cProdANVISA = 'ISENTO'; //incluido no layout 4.00
+                //$std->xMotivoIsencao = 'ISENTO';
+                $std->vPMC = number_format($nfpb->valorunitario, 10, '.', '');
+                $nfe->tagmed($std);
+                
+                //Node com os dados de rastreabilidade do item da NFe
+                $std = new \stdClass();
+                $std->item = $nItem; //item da NFe
+                $std->nLote = '1';
+                $std->qLote = number_format($nfpb->quantidade, 3, '.', '');;
+                $std->dFab = date("Y-m-d");
+                $std->dVal = date("Y-m-d");
+                //$std->cAgreg = '1234';
+		$nfe->tagRastro($std);                
+            }
+
             // Se natureza de operacao esta marcada para destacar IBPT
             $vTotTrib = 0;
             if ($nf->NaturezaOperacao->ibpt) {

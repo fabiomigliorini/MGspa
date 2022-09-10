@@ -45,6 +45,11 @@ class DfeController extends MgController
         ]);
     }
 
+    public function processar(Request $request, int $coddistribuicaodfe)
+    {
+        return DfeService::processar($coddistribuicaodfe);
+    }
+
     public function filiaisHabilitadas (Request $request)
     {
         $filiais = Filial::select([

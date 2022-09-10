@@ -53,5 +53,12 @@ class DfeService
         $xml = NFePHPDistDfeService::carregarXml($dd);
         return $xml;
     }
+    
+    public static function processar($coddistribuicaodfe)
+    {
+        $dd = DistribuicaoDfe::findOrFail($coddistribuicaodfe);
+        return NFePHPDistDfeService::processar($dd);
+    }
+
 
 }
