@@ -421,26 +421,29 @@ class NFePHPMakeService
             $vTotTrib = 0;
             if ($nf->NaturezaOperacao->ibpt) {
 
-              // Faz consulta ao WebService do IBPT
-                $tax = $ibpt->pesquisar($nfpb);
+                try {
+                    // Faz consulta ao WebService do IBPT
+                    $tax = $ibpt->pesquisar($nfpb);
 
-                // Se nao houve erro ao consultar
-                if (!isset($tax->error)) {
+                    // Se nao houve erro ao consultar
+                    if (!isset($tax->error)) {
 
-                  // monta string com fonte do IBPT para utilizar nos Dados Adicionais
-                    $ibptFonte = "{$tax->fonte} {$tax->chave} {$tax->versao}";
+                        // monta string com fonte do IBPT para utilizar nos Dados Adicionais
+                        $ibptFonte = "{$tax->fonte} {$tax->chave} {$tax->versao}";
 
-                    // Valcula valor dos tributos
-                    $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado)?$tax->importado:$tax->nacional)) / 100;
-                    $vTotTribEstadual = ($nfpb->valortotal * $tax->estadual) / 100;
-                    $vTotTribMunicipal = ($nfpb->valortotal * $tax->municipal) / 100;
-                    $vTotTrib = round($vTotTribFederal + $vTotTribEstadual + $vTotTribMunicipal, 2);
+                        // Valcula valor dos tributos
+                        $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado)?$tax->importado:$tax->nacional)) / 100;
+                        $vTotTribEstadual = ($nfpb->valortotal * $tax->estadual) / 100;
+                        $vTotTribMunicipal = ($nfpb->valortotal * $tax->municipal) / 100;
+                        $vTotTrib = round($vTotTribFederal + $vTotTribEstadual + $vTotTribMunicipal, 2);
 
-                    // Acumula totais dos tributos da nota
-                    $totalTribFederal += $vTotTribFederal;
-                    $totalTribEstadual += $vTotTribEstadual;
-                    $totalTribMunicipal += $vTotTribMunicipal;
-                    $totalTrib += $vTotTrib;
+                        // Acumula totais dos tributos da nota
+                        $totalTribFederal += $vTotTribFederal;
+                        $totalTribEstadual += $vTotTribEstadual;
+                        $totalTribMunicipal += $vTotTribMunicipal;
+                        $totalTrib += $vTotTrib;
+                    }                        
+                } catch (Exception $e) {
                 }
             }
 

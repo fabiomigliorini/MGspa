@@ -77,6 +77,9 @@ Route::group(['prefix' => 'v1'], function () {
         });
     });
 
+    // PagarMe
+    Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');
+
     // Pix Cob
     Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');
     Route::post('pix/cob/criar-negocio/{codnegocio}', '\Mg\Pix\PixController@criarPixCobNegocio');

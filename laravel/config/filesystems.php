@@ -75,6 +75,12 @@ return [
             'root' => env('STONE_PATH'),
         ],
 
+        'pagar-me' => [
+            'driver' => 'local',
+            'root' => env('PAGAR_ME_PATH'),
+        ],
+
+
         /*
         's3' => [
             'driver' => 's3',

@@ -44,41 +44,47 @@ class MgIbpt extends Ibpt
             'extarif' => $extarif,
         ]);
 
-
         // Se estiver com data de vigencia inferior na tabela de cache
         // E Não estiver operando em modo OFFLINE
         if ($nfpb->NotaFiscal->Filial->Empresa->modoemissaonfce != 9 && $emissao->gt($reg->vigenciafim)) {
 
             // Consulta no Web Service do IBPT
-            $consulta = $this->productTaxes(
-                $nfpb->NotaFiscal->Pessoa->Cidade->Estado->sigla,
-                $nfpb->ProdutoBarra->Produto->Ncm->ncm,
-		0,
-		$nfpb->ProdutoBarra->Produto->produto,
-		$nfpb->ProdutoBarra->UnidadeMedida->sigla,
-		$nfpb->valorunitario,
-		$nfpb->ProdutoBarra->barras,
-		$nfpb->ProdutoBarra->codproduto
-            );
 
-            if (isset($consulta->httpcode) && ($consulta->httpcode == 404 || $consulta->httpcode == 403)) {
-                // throw new \Exception("Produto não localizado na consulta IBPT (Produto #{$nfpb->ProdutoBarra->codproduto} - '{$nfpb->ProdutoBarra->Produto->produto}' - NCM {$nfpb->ProdutoBarra->Produto->Ncm->ncm}).", 1);
-                $reg->descricao = 'Nao Localizado';
+            try {
+                $consulta = $this->productTaxes(
+                    $nfpb->NotaFiscal->Pessoa->Cidade->Estado->sigla,
+                    $nfpb->ProdutoBarra->Produto->Ncm->ncm,
+                    0,
+                    $nfpb->ProdutoBarra->Produto->produto,
+                    $nfpb->ProdutoBarra->UnidadeMedida->sigla,
+                    $nfpb->valorunitario,
+                    $nfpb->ProdutoBarra->barras,
+                    $nfpb->ProdutoBarra->codproduto
+                );
+
+                if (isset($consulta->httpcode) && ($consulta->httpcode == 404 || $consulta->httpcode == 403)) {
+                    // throw new \Exception("Produto não localizado na consulta IBPT (Produto #{$nfpb->ProdutoBarra->codproduto} - '{$nfpb->ProdutoBarra->Produto->produto}' - NCM {$nfpb->ProdutoBarra->Produto->Ncm->ncm}).", 1);
+                    $reg->descricao = 'Nao Localizado';
+                    $reg->vigenciainicio = Carbon::today();
+                    $reg->vigenciafim = Carbon::today();
+                } elseif (isset($consulta->Descricao)) {
+                    // Salva na Tabela de cache
+                    $reg->descricao = $consulta->Descricao;
+                    $reg->nacional = $consulta->Nacional;
+                    $reg->estadual = $consulta->Estadual;
+                    $reg->importado = $consulta->Importado;
+                    $reg->municipal = $consulta->Municipal;
+                    $reg->tipo = $consulta->Tipo;
+                    $reg->vigenciainicio = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaInicio);
+                    $reg->vigenciafim = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaFim);
+                    $reg->chave = $consulta->Chave;
+                    $reg->versao = $consulta->Versao;
+                    $reg->fonte = $consulta->Fonte;
+                }
+            } catch (Exception $e) {
+                $reg->descricao = 'Falha Consulta';
                 $reg->vigenciainicio = Carbon::today();
                 $reg->vigenciafim = Carbon::today();
-            } elseif (isset($consulta->Descricao)) {
-                // Salva na Tabela de cache
-                $reg->descricao = $consulta->Descricao;
-                $reg->nacional = $consulta->Nacional;
-                $reg->estadual = $consulta->Estadual;
-                $reg->importado = $consulta->Importado;
-                $reg->municipal = $consulta->Municipal;
-                $reg->tipo = $consulta->Tipo;
-                $reg->vigenciainicio = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaInicio);
-                $reg->vigenciafim = Carbon::createFromFormat('d/m/Y', $consulta->VigenciaFim);
-                $reg->chave = $consulta->Chave;
-                $reg->versao = $consulta->Versao;
-                $reg->fonte = $consulta->Fonte;
             }
 
             $reg->save();
