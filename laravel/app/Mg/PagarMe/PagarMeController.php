@@ -3,7 +3,7 @@
 namespace Mg\PagarMe;
 
 use Illuminate\Http\Request;
-use Mg\Stone\StoneTransacaoProcessaJob;
+// use Mg\Stone\StoneTransacaoProcessaJob;
 use Illuminate\Support\Facades\Log;
 //use Illuminate\Support\Facades\Auth;
 //use App\Http\Requests;
@@ -16,11 +16,12 @@ class PagarMeController extends MgController
 
     public function webhook(Request $request)
     {
-        Log::info('Recebendo Webhook PagarMe');            
-        $file = WebhookJsonService::salvar($request->getContent());
+        Log::info('Recebendo Webhook PagarMe');
+        $arquivo = PagarMeJsonService::salvar($request->getContent());
+        PagarMeWebhookJob::dispatch($arquivo);
         return response()->json([
             'success'=>true,
-            'file'=>$file
+            'arquivo'=>$arquivo
         ], 200);
     }
 

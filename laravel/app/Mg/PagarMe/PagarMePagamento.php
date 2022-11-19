@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 12:05:13
+ * Date: 19/Nov/2022 18:40:38
  */
 
 namespace Mg\PagarMe;
@@ -28,9 +28,9 @@ class PagarMePagamento extends MgModel
         'identificador',
         'idtransacao',
         'jurosloja',
+        'nome',
         'nsu',
         'parcelas',
-        'portador',
         'tipo',
         'transacao',
         'valorcancelamento',

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 12:14:07
+ * Date: 19/Nov/2022 17:56:02
  */
 
 namespace Mg\Filial;
@@ -63,6 +63,7 @@ class Filial extends MgModel
         'nfeambiente',
         'nfeserie',
         'odbcnumeronotafiscal',
+        'pagarmeid',
         'pagarmesk',
         'senhacertificado',
         'tokenibpt',

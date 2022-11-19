@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 12:05:24
+ * Date: 19/Nov/2022 18:19:14
  */
 
 namespace Mg\PagarMe;
@@ -17,7 +17,8 @@ class PagarMeBandeira extends MgModel
 
 
     protected $fillable = [
-        'bandeira'
+        'bandeira',
+        'scheme'
     ];
 
     protected $dates = [

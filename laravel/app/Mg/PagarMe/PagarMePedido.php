@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 12:05:03
+ * Date: 19/Nov/2022 18:40:59
  */
 
 namespace Mg\PagarMe;
@@ -26,6 +26,7 @@ class PagarMePedido extends MgModel
         'codpessoa',
         'descricao',
         'fechado',
+        'idpedido',
         'jurosloja',
         'parcelas',
         'tipo',
