@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Apr/2021 16:38:23
+ * Date: 19/Nov/2022 12:14:07
  */
 
 namespace Mg\Filial;
@@ -24,6 +24,9 @@ use Mg\ValeCompra\ValeCompra;
 use Mg\Lio\LioTerminal;
 use Mg\Mdfe\Mdfe;
 use Mg\Stone\StoneFilial;
+use Mg\PagarMe\PagarMePagamento;
+use Mg\PagarMe\PagarMePedido;
+use Mg\PagarMe\PagarMePos;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -60,6 +63,7 @@ class Filial extends MgModel
         'nfeambiente',
         'nfeserie',
         'odbcnumeronotafiscal',
+        'pagarmesk',
         'senhacertificado',
         'tokenibpt',
         'ultimonsu',
@@ -178,6 +182,21 @@ class Filial extends MgModel
     public function NotaFiscalTerceiroS()
     {
         return $this->hasMany(NotaFiscalTerceiro::class, 'codfilial', 'codfilial');
+    }
+
+    public function PagarMePagamentoS()
+    {
+        return $this->hasMany(PagarMePagamento::class, 'codfilial', 'codfilial');
+    }
+
+    public function PagarMePedidoS()
+    {
+        return $this->hasMany(PagarMePedido::class, 'codfilial', 'codfilial');
+    }
+
+    public function PagarMePosS()
+    {
+        return $this->hasMany(PagarMePos::class, 'codfilial', 'codfilial');
     }
 
     public function PortadorS()

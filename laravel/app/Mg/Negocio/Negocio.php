@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Apr/2021 16:40:48
+ * Date: 19/Nov/2022 12:14:47
  */
 
 namespace Mg\Negocio;
@@ -14,6 +14,8 @@ use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\Pix\PixCob;
 use Mg\Stone\StonePreTransacao;
+use Mg\Mercos\MercosPedido;
+use Mg\PagarMe\PagarMePedido;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -163,6 +165,11 @@ class Negocio extends MgModel
 
 
     // Tabelas Filhas
+    public function MercosPedidoS()
+    {
+        return $this->hasMany(MercosPedido::class, 'codnegocio', 'codnegocio');
+    }
+
     public function NegocioCaixaMercadoriaS()
     {
         return $this->hasMany(NegocioCaixaMercadoria::class, 'codnegocio', 'codnegocio');
@@ -186,6 +193,11 @@ class Negocio extends MgModel
     public function NotaFiscalTerceiroS()
     {
         return $this->hasMany(NotaFiscalTerceiro::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function PagarMePedidoS()
+    {
+        return $this->hasMany(PagarMePedido::class, 'codnegocio', 'codnegocio');
     }
 
     public function PixCobS()

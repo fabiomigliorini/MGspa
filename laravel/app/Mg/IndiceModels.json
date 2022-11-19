@@ -249,6 +249,21 @@
                 "tabela": "tblstonefilial",
                 "coluna": "codfilial",
                 "metodo": "StoneFilialS"
+            },
+            "tblpagarmepagamento.codfilial": {
+                "tabela": "tblpagarmepagamento",
+                "coluna": "codfilial",
+                "metodo": "PagarMePagamentoS"
+            },
+            "tblpagarmepedido.codfilial": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codfilial",
+                "metodo": "PagarMePedidoS"
+            },
+            "tblpagarmepos.codfilial": {
+                "tabela": "tblpagarmepos",
+                "coluna": "codfilial",
+                "metodo": "PagarMePosS"
             }
         }
     },
@@ -821,6 +836,16 @@
                 "tabela": "tblnegocio",
                 "coluna": "codpessoatransportador",
                 "metodo": "NegocioTransportadorS"
+            },
+            "tblmercoscliente.codpessoa": {
+                "tabela": "tblmercoscliente",
+                "coluna": "codpessoa",
+                "metodo": "MercosClienteS"
+            },
+            "tblpagarmepedido.codpessoa": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codpessoa",
+                "metodo": "PagarMePedidoS"
             }
         }
     },
@@ -1342,6 +1367,16 @@
                 "tabela": "tblstonepretransacao",
                 "coluna": "codnegocio",
                 "metodo": "StonePreTransacaoS"
+            },
+            "tblmercospedido.codnegocio": {
+                "tabela": "tblmercospedido",
+                "coluna": "codnegocio",
+                "metodo": "MercosPedidoS"
+            },
+            "tblpagarmepedido.codnegocio": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codnegocio",
+                "metodo": "PagarMePedidoS"
             }
         }
     },
@@ -4837,6 +4872,241 @@
                 "tabela": "tblportadormovimento",
                 "coluna": "codportadormovimento",
                 "metodo": "PortadorMovimento"
+            }
+        },
+        "hasMany": []
+    },
+    "tblpagarmebandeira": {
+        "tabela": "tblpagarmebandeira",
+        "campocodigo": "codpagarmebandeira",
+        "namespace": "Mg\\PagarMe",
+        "classe": "PagarMeBandeira",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/PagarMe\/PagarMeBandeira.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpagarmepagamento.codpagarmebandeira": {
+                "tabela": "tblpagarmepagamento",
+                "coluna": "codpagarmebandeira",
+                "metodo": "PagarMePagamentoS"
+            }
+        }
+    },
+    "tblpagarmepagamento": {
+        "tabela": "tblpagarmepagamento",
+        "campocodigo": "codpagarmepagamento",
+        "namespace": "Mg\\PagarMe",
+        "classe": "PagarMePagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/PagarMe\/PagarMePagamento.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codpagarmebandeira": {
+                "tabela": "tblpagarmebandeira",
+                "coluna": "codpagarmebandeira",
+                "metodo": "PagarMeBandeira"
+            },
+            "codpagarmepedido": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codpagarmepedido",
+                "metodo": "PagarMePedido"
+            },
+            "codpagarmepos": {
+                "tabela": "tblpagarmepos",
+                "coluna": "codpagarmepos",
+                "metodo": "PagarMePos"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblpagarmepedido": {
+        "tabela": "tblpagarmepedido",
+        "campocodigo": "codpagarmepedido",
+        "namespace": "Mg\\PagarMe",
+        "classe": "PagarMePedido",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/PagarMe\/PagarMePedido.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codpagarmepos": {
+                "tabela": "tblpagarmepos",
+                "coluna": "codpagarmepos",
+                "metodo": "PagarMePos"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            }
+        },
+        "hasMany": {
+            "tblpagarmepagamento.codpagarmepedido": {
+                "tabela": "tblpagarmepagamento",
+                "coluna": "codpagarmepedido",
+                "metodo": "PagarMePagamentoS"
+            }
+        }
+    },
+    "tblpagarmepos": {
+        "tabela": "tblpagarmepos",
+        "campocodigo": "codpagarmepos",
+        "namespace": "Mg\\PagarMe",
+        "classe": "PagarMePos",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/PagarMe\/PagarMePos.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpagarmepagamento.codpagarmepos": {
+                "tabela": "tblpagarmepagamento",
+                "coluna": "codpagarmepos",
+                "metodo": "PagarMePagamentoS"
+            },
+            "tblpagarmepedido.codpagarmepos": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codpagarmepos",
+                "metodo": "PagarMePedidoS"
+            }
+        }
+    },
+    "tblmercoscliente": {
+        "tabela": "tblmercoscliente",
+        "campocodigo": "codmercoscliente",
+        "namespace": "Mg\\Mercos",
+        "classe": "MercosCliente",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mercos\/MercosCliente.php",
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmercospedido.codmercoscliente": {
+                "tabela": "tblmercospedido",
+                "coluna": "codmercoscliente",
+                "metodo": "MercosPedidoS"
+            }
+        }
+    },
+    "tblmercospedido": {
+        "tabela": "tblmercospedido",
+        "campocodigo": "codmercospedido",
+        "namespace": "Mg\\Mercos",
+        "classe": "MercosPedido",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mercos\/MercosPedido.php",
+        "belongsTo": {
+            "codmercoscliente": {
+                "tabela": "tblmercoscliente",
+                "coluna": "codmercoscliente",
+                "metodo": "MercosCliente"
+            },
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmercospedidoitem.codmercospedido": {
+                "tabela": "tblmercospedidoitem",
+                "coluna": "codmercospedido",
+                "metodo": "MercosPedidoItemS"
+            }
+        }
+    },
+    "tblmercospedidoitem": {
+        "tabela": "tblmercospedidoitem",
+        "campocodigo": "codmercospedidoitem",
+        "namespace": "Mg\\Mercos",
+        "classe": "MercosPedidoItem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mercos\/MercosPedidoItem.php",
+        "belongsTo": {
+            "codmercospedido": {
+                "tabela": "tblmercospedido",
+                "coluna": "codmercospedido",
+                "metodo": "MercosPedido"
+            },
+            "codnegocioprodutobarra": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NegocioProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": []
