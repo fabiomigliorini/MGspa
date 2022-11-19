@@ -4,5 +4,5 @@ BASEDIR=$(dirname "$0")
 IMAGENSDIR=./$BASEDIR/../MGLara/public/imagens/
 
 sudo mkdir $IMAGENSDIR -p
-sudo rsync -uva --delete super@netuno.mgpapelaria.com.br:/opt/www/MGLara/public/imagens/ $IMAGENSDIR
+sudo rsync -uva --delete super@mercurio.mgpapelaria.com.br:/opt/www/MGLara/public/imagens/ $IMAGENSDIR
 sudo chmod a+w $IMAGENSDIR -R
