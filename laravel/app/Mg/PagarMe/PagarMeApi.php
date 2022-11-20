@@ -14,145 +14,123 @@ use Carbon\Carbon;
  */
 class PagarMeApi {
 
-    protected $debug = false;
     protected $url;
-    protected $user;
-    protected $password;
-    protected $languagePTBR;
+    protected $secretKey;
 
-    public $token;
-
+    public $responseText;
     public $response;
-    public $responseObject;
-    protected $status;
+    public $header;
+    public $status;
+
+    public $error;
+    public $errno;
+
+    public $type_description = [
+        1 => 'debit',
+        2 => 'credit',
+        3 => 'voucher',
+        4 => 'prepaid',
+    ];
 
     /**
      * Construtor
      */
-    public function __construct($debug = false, $url = null, $user = null, $password = null, $language_ptbr = null)
+    public function __construct($secret_key)
     {
         // Traz variaves de ambiente
-        $this->debug = $debug;
-        $this->url = (!empty($url))?$url:env('MERCOS_BASEURL');
-        $this->applicationToken = (!empty($user))?$user:env('MERCOS_APPLICATION_TOKEN');
-        $this->companyToken = (!empty($password))?$password:env('MERCOS_COMPANY_TOKEN');
-        // $this->languagePTBR = (!empty($language_ptbr))?$language_ptbr:env('MERCOS_LANGUAGE_PTBR');
+        $this->url = env('PAGAR_ME_API_BASE_URL');
+        $this->secretKey = $secret_key;
     }
 
-    public function get($url, $data = [], $http_header = null, $data_as_json = true)
+    public function get($url, $data = [])
     {
-        return $this->curl('GET', $url, $data, $http_header, $data_as_json);
+        return $this->curl('GET', $url, $data);
     }
 
-    public function post($url, $data = [], $http_header = null, $data_as_json = true)
+    public function post($url, $data = [])
     {
-        return $this->curl('POST', $url, $data, $http_header, $data_as_json);
+        return $this->curl('POST', $url, $data);
     }
 
-    public function put($url, $data = [], $http_header = null, $data_as_json = true)
+    public function put($url, $data = [])
     {
-        return $this->curl('PUT', $url, $data, $http_header, $data_as_json);
+        return $this->curl('PUT', $url, $data);
     }
 
-    public function delete($url, $data = [], $http_header = null, $data_as_json = true)
+    public function delete($url, $data = [])
     {
-        return $this->curl('DELETE', $url, $data, $http_header, $data_as_json);
+        return $this->curl('DELETE', $url, $data);
     }
 
-    public function curl($request, $url, $data = [], $http_header = null, $data_as_json = true)
+    public function curl($request, $url, $data = [])
     {
-        // Padrao de autorizacao como Bearer $this->token
-        if (empty($http_header)) {
-            $http_header = [
-                'Content-Type: application/json',
-                'ApplicationToken: '. $this->applicationToken,
-                'CompanyToken: '. $this->companyToken
-            ];
-        }
+        // Autorizacao
+        $http_header = [
+            'Content-Type: application/json',
+            'Authorization: Basic '. base64_encode("{$this->secretKey}:") // <---
+        ];
 
         // codifica como json os dados
-        $data_string = null;
-        if (!empty($data)) {
-            $data_string = ($data_as_json)?json_encode($data):$data;
-        } else {
-            $url = $url . '?' . http_build_query($data);
-            // curl_setopt($ch, CURLOPT_URL, $url);
-        }
 
         // Loga Execucao
-        if ($this->debug) {
-            Log::debug(class_basename($this) . " - $request - $url - " . ($data_as_json?"$data_string - ":'') . json_encode($http_header));
-        }
+        // Log::debug(class_basename($this) . " - $request - $url - " . ($data_as_json?"$data_string - ":'') . json_encode($http_header));
 
         // Monta Chamada CURL
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request);
+        $data_string = null;
         if ($request == 'GET') {
             $url = $url . '?' . http_build_query($data);
             curl_setopt($ch, CURLOPT_URL, $url);
-        }
-        if (!empty($data_string)) {
+        } else {
+            $data_string = json_encode($data);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-            if ($data_as_json) {
-                $http_header[] = 'Content-Length: ' . strlen($data_string);
-            }
+            $http_header[] = 'Content-Length: ' . strlen($data_string);
         }
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $http_header);
         curl_setopt($ch, CURLOPT_TIMEOUT, 90);
 
+        // inicializa variaveis do resultado da execucao
+        $this->error = null;
+        $this->errno = null;
+        $this->status = null;
+        $this->headers = null;
+        $this->response = null;
+
         // Executa
-        do {
-            $this->error = null;
-            $this->errno = null;
-            $this->status = null;
-            $this->headers = null;
-            $this->response = curl_exec($ch);
-            if ($this->response === false) {
-                $this->error = curl_error($ch);
-                $this->errno = curl_errno($ch);
-            } else {
-                $this->status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            }
-            $headerSize = curl_getinfo($ch , CURLINFO_HEADER_SIZE);
+        $this->responseText = curl_exec($ch);
 
-            $headerStr = substr($this->response , 0 , $headerSize );
-            $this->headers = $this->parseHeader($headerStr);
+        // se erro pega codigo e descricao de erro
+        if ($this->responseText === false) {
+            $this->error = curl_error($ch);
+            $this->errno = curl_errno($ch);
+        } else {
+            $this->status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        }
 
-            // Loga Reotrno
-            if ($this->debug) {
-                Log::debug(class_basename($this) . " - $this->status - $this->response");
-            }
+        // monta objeto do header
+        $headerSize = curl_getinfo($ch , CURLINFO_HEADER_SIZE);
+        $headerStr = substr($this->responseText , 0 , $headerSize);
+        $this->headers = $this->parseHeader($headerStr);
 
-            // Limpa responseObject
-            $this->responseObject = null;
-            $ret = true;
-
-            // decodifica Json
-            if (!empty($this->response)) {
-                $bodyStr = substr($this->response, $headerSize);
-                $this->responseObject = json_decode($bodyStr);
-            }
-
-            // Caso de Throttle espera os segundos que o
-            if ($this->status == 429) {
-                $segundos = isset($this->headers['retry-after'])?$this->headers['retry-after']:5;
-                sleep($segundos);
-            }
-
-        // Enquanto nao der Throttle
-        } while ($this->status == 429);
+        // monta objeto do response
+        $bodyStr = substr($this->responseText, $headerSize);
+        $this->response = json_decode($bodyStr);
 
         curl_close($ch);
 
+        // Loga Reotrno
+        // Log::debug(class_basename($this) . " - $this->status - $this->responseText");
+
         // Se nao retornou 200 retorna erro
         if (!in_array($this->status, [200, 201])) {
-            $ret = false;
+            return false;
         }
 
         // retorna
-        return $ret;
+        return true;
 
     }
 
@@ -167,6 +145,59 @@ class PagarMeApi {
             $headers[trim($key)] = trim($matches[2][$index]);
         }
         return $headers;
+    }
+
+    public function postOrders (
+        string $name,
+        string $email,
+        float $amount,
+        string $description,
+        int $quantity,
+        bool $closed,
+        bool $visible,
+        string $serial_number,
+        string $type,
+        int $installments,
+        string $installment_type
+    ) {
+
+        $data = [
+            'customer' => [
+                 'name' => $name,
+                 'email' => $email
+            ],
+            'items' => [[
+                'amount' => (int) round($amount * 100, 0),
+                'description' => $description,
+                'quantity' => $quantity
+            ]],
+            'closed'=> $closed,
+            'poi_payment_settings' => [
+                 'visible' => $visible,
+                 'devices_serial_number' => [
+                      $serial_number
+                 ],
+                 'payment_setup' => [
+                      'type' => $type,
+                      'installments' => $installments,
+                      'installment_type' => $installment_type
+                 ],
+            ]
+        ];
+
+        // monta URL
+        $url = $this->url . "v5/orders";
+
+        // aborta caso erro no put
+        if (!$this->post($url, $data)) {
+            throw new \Exception($this->response, 1);
+        }
+
+        return $this->status == 201;
+
+
+        //
+
     }
 
     // public function postProdutos (

@@ -79,6 +79,7 @@ Route::group(['prefix' => 'v1'], function () {
 
     // PagarMe
     Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');
+    Route::post('pagar-me/pedido/', '\Mg\PagarMe\PagarMeController@pedido');
 
     // Pix Cob
     Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');
@@ -144,7 +145,7 @@ Route::group(['prefix' => 'v1'], function () {
 
     Route::get('dfe/distribuicao', '\Mg\Dfe\DfeController@distribuicao');
     Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
-    Route::get('dfe/distribuicao/{coddistribuicaodfe}/processar', '\Mg\Dfe\DfeController@processar');    
+    Route::get('dfe/distribuicao/{coddistribuicaodfe}/processar', '\Mg\Dfe\DfeController@processar');
     Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
 
 });

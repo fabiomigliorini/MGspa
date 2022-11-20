@@ -5,6 +5,8 @@ namespace Mg\PagarMe;
 use Illuminate\Support\Facades\Storage;
 
 use Mg\Filial\Filial;
+use Mg\Negocio\Negocio;
+use Mg\Pessoa\Pessoa;
 
 use Carbon\Carbon;
 
@@ -103,5 +105,66 @@ class PagarMeService
         return true;
     }
 
+    public static function criarPedido (
+        ?int $codfilial,
+        int $codpagarmepos,
+        int $tipo,
+        float $valor,
+        int $parcelas,
+        bool $jurosloja,
+        ?string $descricao,
+        ?int $codnegocio,
+        ?int $codpessoa
+    ) {
+
+        // Traz Pessoa e Filial do Negocio
+        if (!empty($codnegocio)) {
+            $neg = Negocio::findOrFail($codnegocio);
+            $codpessoa = $neg->codpessoa;
+            $codfilial = $neg->codfilial;
+            if (empty($descricao)) {
+                $descricao = 'Negocio ' . formataCodigo($codnegocio);
+            }
+        }
+
+        // Se nao tiver pessoa, usa o COnsumidor
+        if (empty($codpessoa)) {
+            $codpessoa = 1;
+        }
+        $pes = Pessoa::findOrFail($codpessoa);
+
+        // Monta uma descricao caso seja branca
+        if (empty($descricao)) {
+            $descricao = 'Valor Avulso';
+        }
+
+        // Busca POS e Filial
+        $pos = PagarMePos::findOrFail($codpagarmepos);
+        if (!empty($pos->codfilial)) {
+            $codfilial = $pos->codfilial;
+        }
+
+        // Pega Secret da Filial
+        $fil = Filial::findOrFail($codfilial);
+        $api = new PagarMeApi($fil->pagarmesk);
+
+        $ret = $api->postOrders(
+            $pes->pessoa,
+            $pes->email,
+            $valor,
+            $descricao,
+            1,
+            false,
+            true,
+            $pos->serial,
+            $api->type_description[$tipo],
+            $parcelas,
+            $jurosloja?'merchant':'issuer'
+        );
+        dd($api->response);
+        dd($api->header);
+
+        dd($ret);
+    }
 
 }
