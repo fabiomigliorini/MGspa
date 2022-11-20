@@ -94,7 +94,7 @@ class PagarMeService
         }
         $canc = $ped->PagarMePagamentoS()->sum('valorcancelamento');
         if ($canc > $ped->valorcancelado) {
-            $ped->valorcancelado = $pag;
+            $ped->valorcancelado = $canc;
             $ped->valorpagoliquido = $ped->valorpago - $ped->valorcancelado;
         }
         if ($ped->isDirty()) {
