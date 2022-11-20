@@ -37,8 +37,8 @@ class PagarMeWebhookService
 
         // Busca na filial transacao com aquele id
         $pp = PagarMePagamento::firstOrNew([
-            'idtransacao' => $obj->data->last_transaction->id
-            'codfilial' => $filial->codfilial;
+            'idtransacao' => $obj->data->last_transaction->id,
+            'codfilial' => $filial->codfilial
         ]);
 
         // POS
