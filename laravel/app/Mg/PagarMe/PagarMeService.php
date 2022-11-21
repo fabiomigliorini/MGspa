@@ -150,7 +150,7 @@ class PagarMeService
 
         $ret = $api->postOrders(
             $pes->pessoa,
-            $pes->email,
+            $pes->email??'nfe@mgpapelaria.com.br',
             $valor,
             $descricao,
             1,
