@@ -80,6 +80,7 @@ Route::group(['prefix' => 'v1'], function () {
     // PagarMe
     Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');
     Route::post('pagar-me/pedido/', '\Mg\PagarMe\PagarMeController@pedido');
+    Route::delete('pagar-me/pedido/{codpagarmepdido}', '\Mg\PagarMe\PagarMeController@cancelarPedido');
 
     // Pix Cob
     Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');

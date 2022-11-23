@@ -25,16 +25,7 @@ class PagarMeApi {
     public $error;
     public $errno;
 
-    public $type_description = [
-        1 => 'debit',
-        2 => 'credit',
-        3 => 'voucher',
-        4 => 'prepaid',
-    ];
 
-    /**
-     * Construtor
-     */
     public function __construct($secret_key)
     {
         // Traz variaves de ambiente
@@ -55,6 +46,11 @@ class PagarMeApi {
     public function put($url, $data = [])
     {
         return $this->curl('PUT', $url, $data);
+    }
+
+    public function patch($url, $data = [])
+    {
+        return $this->curl('PATCH', $url, $data);
     }
 
     public function delete($url, $data = [])
@@ -190,322 +186,38 @@ class PagarMeApi {
 
         // aborta caso erro no put
         if (!$this->post($url, $data)) {
-            throw new \Exception($this->response, 1);
+            if (isset($this->response->message)) {
+                throw new \Exception("Status {$this->status}: {$this->response->message}");
+            }
+            throw new \Exception("Status {$this->status}: {$this->responseText}");
         }
 
         return $this->status == 201;
 
-
-        //
-
     }
 
-    // public function postProdutos (
-    //     $nome,
-    //     $preco_tabela,
-    //     $preco_minimo,
-    //     $codigo,
-    //     $comissao = null,
-    //     $ipi = null,
-    //     $tipo_ipi = 'P',
-    //     $st = null,
-    //     $moeda = 0,
-    //     $unidade,
-    //     $saldo_estoque,
-    //     $observacoes,
-    //     $grade_cores = null,
-    //     $grade_tamanhos = null,
-    //     $excluido = false,
-    //     $ativo = true,
-    //     // $categoria_id = null,
-    //     $codigo_ncm,
-    //     $multiplo = null,
-    //     $peso_bruto = null,
-    //     $largura = null,
-    //     $altura = null,
-    //     $comprimento = null,
-    //     $peso_dimensoes_unitario = true,
-    //     $exibir_no_b2b = true)
-    // {
-    //     // monta Array com dados
-    //     $data = (object) [
-    //         'nome' => $nome,
-    //         'preco_tabela' => $preco_tabela,
-    //         'preco_minimo' => $preco_minimo,
-    //         'codigo' => $codigo,
-    //         'comissao' => $comissao,
-    //         'ipi' => $ipi,
-    //         'tipo_ipi' => $tipo_ipi,
-    //         'st' => $st,
-    //         'moeda' => $moeda,
-    //         'unidade' => $unidade,
-    //         'saldo_estoque' => $saldo_estoque,
-    //         'observacoes' => $observacoes,
-    //         'grade_cores' => $grade_cores,
-    //         'grade_tamanhos' => $grade_tamanhos,
-    //         'excluido' => $excluido,
-    //         'ativo' => $ativo,
-    //         // 'categoria_id' => $categoria_id,
-    //         'codigo_ncm' => $codigo_ncm,
-    //         'multiplo' => $multiplo,
-    //         'peso_bruto' => $peso_bruto,
-    //         'largura' => $largura,
-    //         'altura' => $altura,
-    //         'comprimento' => $comprimento,
-    //         'peso_dimensoes_unitario' => $peso_dimensoes_unitario,
-    //         'exibir_no_b2b' => $exibir_no_b2b
-    //     ];
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/produtos";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->post($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     return $this->status == 201;
-    // }
-    //
-    // public function putProdutos (
-    //     $id,
-    //     $nome,
-    //     $preco_tabela,
-    //     $preco_minimo,
-    //     $codigo,
-    //     $comissao = null,
-    //     $ipi = null,
-    //     $tipo_ipi = 'P',
-    //     $st = null,
-    //     $moeda = 0,
-    //     $unidade,
-    //     $saldo_estoque,
-    //     $observacoes,
-    //     $grade_cores = null,
-    //     $grade_tamanhos = null,
-    //     $excluido = false,
-    //     $ativo = true,
-    //     // $categoria_id = null,
-    //     $codigo_ncm,
-    //     $multiplo = null,
-    //     $peso_bruto = null,
-    //     $largura = null,
-    //     $altura = null,
-    //     $comprimento = null,
-    //     $peso_dimensoes_unitario = true,
-    //     $exibir_no_b2b = true)
-    // {
-    //     // monta Array com dados
-    //     $data = (object) [
-    //         'id' => $id,
-    //         'nome' => $nome,
-    //         'preco_tabela' => $preco_tabela,
-    //         'preco_minimo' => $preco_minimo,
-    //         'codigo' => $codigo,
-    //         'comissao' => $comissao,
-    //         'ipi' => $ipi,
-    //         'tipo_ipi' => $tipo_ipi,
-    //         'st' => $st,
-    //         'moeda' => $moeda,
-    //         'unidade' => $unidade,
-    //         'saldo_estoque' => $saldo_estoque,
-    //         'observacoes' => $observacoes,
-    //         'grade_cores' => $grade_cores,
-    //         'grade_tamanhos' => $grade_tamanhos,
-    //         'excluido' => $excluido,
-    //         'ativo' => $ativo,
-    //         // 'categoria_id' => $categoria_id,
-    //         'codigo_ncm' => $codigo_ncm,
-    //         'multiplo' => $multiplo,
-    //         'peso_bruto' => $peso_bruto,
-    //         'largura' => $largura,
-    //         'altura' => $altura,
-    //         'comprimento' => $comprimento,
-    //         'peso_dimensoes_unitario' => $peso_dimensoes_unitario,
-    //         'exibir_no_b2b' => $exibir_no_b2b
-    //     ];
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/produtos/{$id}";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->put($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     return $this->status == 201;
-    // }
-    //
-    // public function getProdutos (Carbon $alterado_apos)
-    // {
-    //
-    //     $data = [];
-    //     if (!empty($alterado_apos)) {
-    //         $alt = clone $alterado_apos;
-    //         $alt->setTimezone('America/Sao_Paulo');
-    //         $data ['alterado_apos'] = $alt->format('Y-m-d H:i:s');
-    //     }
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/produtos";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->get($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     if ($this->status != 200) {
-    //         return false;
-    //     }
-    //
-    //     return $this->responseObject;
-    // }
-    //
-    // public function postImagensProduto (
-    //     $produto_id,
-    //     $ordem,
-    //     $imagem_base64)
-    // {
-    //     // monta Array com dados
-    //     $data = (object) [
-    //         'produto_id' => $produto_id,
-    //         'ordem' => $ordem,
-    //         'imagem_base64' => $imagem_base64,
-    //     ];
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/imagens_produto";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->post($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     return $this->status == 201;
-    // }
-    //
-    // public function getPedidos (Carbon $alterado_apos)
-    // {
-    //
-    //     $data = [];
-    //     if (!empty($alterado_apos)) {
-    //         $alt = clone $alterado_apos;
-    //         $alt->setTimezone('America/Sao_Paulo');
-    //         $data ['alterado_apos'] = $alt->format('Y-m-d H:i:s');
-    //     }
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/pedidos";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->get($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     if ($this->status != 200) {
-    //         return false;
-    //     }
-    //
-    //     return $this->responseObject;
-    // }
-    //
-    // public function postFaturamento (
-    //     $pedido_id,
-    //     $valor_faturado,
-    //     Carbon $data_faturamento,
-    //     $numero_nf,
-    //     $informacoes_adicionais)
-    // {
-    //     // monta Array com dados
-    //     $data = (object) [
-    //         "pedido_id" => $pedido_id,
-    //         "valor_faturado" => $valor_faturado,
-    //         "data_faturamento" => $data_faturamento->format('Y-m-d'),
-    //         "numero_nf" => $numero_nf,
-    //         "informacoes_adicionais" => $informacoes_adicionais,
-    //     ];
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/faturamento";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->post($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     return $this->status == 201;
-    // }
-    //
-    // public function putFaturamento (
-    //     $faturamento_id,
-    //     $pedido_id,
-    //     $valor_faturado,
-    //     Carbon $data_faturamento,
-    //     $numero_nf,
-    //     $informacoes_adicionais)
-    // {
-    //     // monta Array com dados
-    //     $data = (object) [
-    //         "pedido_id" => $pedido_id,
-    //         "valor_faturado" => $valor_faturado,
-    //         "data_faturamento" => $data_faturamento->format('Y-m-d'),
-    //         "numero_nf" => $numero_nf,
-    //         "informacoes_adicionais" => $informacoes_adicionais,
-    //     ];
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/faturamento/{$faturamento_id}";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->put($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     return $this->status == 201;
-    // }
-    //
-    // public function getClientes (Carbon $alterado_apos)
-    // {
-    //
-    //     $data = [];
-    //     if (!empty($alterado_apos)) {
-    //         $alt = clone $alterado_apos;
-    //         $alt->setTimezone('America/Sao_Paulo');
-    //         $data ['alterado_apos'] = $alt->format('Y-m-d H:i:s');
-    //     }
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/clientes";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->get($url, $data)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     if ($this->status != 200) {
-    //         return false;
-    //     }
-    //
-    //     return $this->responseObject;
-    // }
-    //
-    // public function getCliente ($cliente_id)
-    // {
-    //
-    //     // monta URL
-    //     $url = $this->url . "api/v1/clientes/{$cliente_id}";
-    //
-    //     // aborta caso erro no put
-    //     if (!$this->get($url)) {
-    //         throw new \Exception($this->response, 1);
-    //     }
-    //
-    //     if ($this->status != 200) {
-    //         return false;
-    //     }
-    //
-    //     return $this->responseObject;
-    // }
+    public function patchOrdersClosed (
+        string $id,
+        string $status
+    ) {
 
+        $data = [
+            'status' => $status
+        ];
+
+        // monta URL
+        $url = $this->url . "v5/orders/{$id}/closed";
+
+        // aborta caso erro no put
+        if (!$this->patch($url, $data)) {
+            if (isset($this->response->message)) {
+                throw new \Exception("Status {$this->status}: {$this->response->message}");
+            }
+            throw new \Exception("Status {$this->status}: {$this->responseText}");
+        }
+
+        return $this->status == 200;
+
+    }
 
 }

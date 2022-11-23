@@ -89,6 +89,7 @@ class PagarMeWebhookService
         $ped = PagarMeService::alteraOuCriaPedido(
             $filial->codfilial,
             $obj->data->order->id,
+            PagarMeService::STATUS_NUMBER[$obj->data->status],
             null,
             $pos->codpagarmepos,
             null,

@@ -39,10 +39,20 @@ class PagarMeController extends MgController
             $data->codnegocio,
             $data->codpessoa
         );
-        PagarMeWebhookJob::dispatch($arquivo);
+        // PagarMeWebhookJob::dispatch($arquivo);
         return response()->json([
             'success'=>true,
-            'arquivo'=>$arquivo
+            'pedido'=>$ped->getAttributes()
+        ], 201);
+    }
+
+    public function cancelarPedido(request $request, $codpagarmepedido)
+    {
+        $ped = PagarMePedido::findOrFail($codpagarmepedido);
+        PagarMeService::cancelarPedido($ped);
+        return response()->json([
+            'success'=>true,
+            'pedido'=>$ped->getAttributes()
         ], 200);
     }
 

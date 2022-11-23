@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 18:40:59
+ * Date: 23/Nov/2022 09:44:44
  */
 
 namespace Mg\PagarMe;
@@ -29,6 +29,7 @@ class PagarMePedido extends MgModel
         'idpedido',
         'jurosloja',
         'parcelas',
+        'status',
         'tipo',
         'valor',
         'valorcancelado',
@@ -52,6 +53,7 @@ class PagarMePedido extends MgModel
         'fechado' => 'boolean',
         'jurosloja' => 'boolean',
         'parcelas' => 'integer',
+        'status' => 'integer',
         'tipo' => 'integer',
         'valor' => 'float',
         'valorcancelado' => 'float',

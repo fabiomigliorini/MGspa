@@ -13,6 +13,34 @@ use Carbon\Carbon;
 class PagarMeService
 {
 
+    const TYPE_DESCRIPTION = [
+        1 => 'debit',
+        2 => 'credit',
+        3 => 'voucher',
+        4 => 'prepaid',
+    ];
+
+    const TYPE_NUMBER = [
+        'debit' => 1,
+        'credit' => 2,
+        'voucher' => 3,
+        'prepaid' => 4,
+    ];
+
+    const STATUS_DESCRIPTION = [
+        1 => 'pending',
+        2 => 'paid',
+        3 => 'canceled',
+        4 => 'failed'
+    ];
+
+    const STATUS_NUMBER = [
+        'pending' => 1,
+        'paid' => 2,
+        'canceled' => 3,
+        'failed' => 4
+    ];
+
     public static function buscaFilial (string $id)
     {
         $reg = Filial::where('pagarmeid', $id)->first();
@@ -51,6 +79,7 @@ class PagarMeService
     public static function alteraOuCriaPedido (
         int $codfilial,
         string $idpedido,
+        int $status,
         ?int $codnegocio,
         int $codpagarmepos,
         ?int $codpessoa,
@@ -67,6 +96,7 @@ class PagarMeService
             'codfilial' => $codfilial,
             'idpedido' => $idpedido,
         ]);
+        $reg->status = $status;
         $reg->codnegocio = $codnegocio;
         $reg->codpagarmepos = $codpagarmepos;
         $reg->codpessoa = $codpessoa;
@@ -157,14 +187,51 @@ class PagarMeService
             false,
             true,
             $pos->serial,
-            $api->type_description[$tipo],
+            static::TYPE_DESCRIPTION[$tipo],
             $parcelas,
             $jurosloja?'merchant':'issuer'
         );
-        dd($api->response);
-        dd($api->header);
 
-        dd($ret);
+        $ped = static::alteraOuCriaPedido (
+            $codfilial,
+            $api->response->id,
+            static::STATUS_NUMBER[$api->response->status],
+            $codnegocio,
+            $codpagarmepos,
+            $codpessoa,
+            $descricao,
+            $api->response->closed,
+            $jurosloja,
+            $parcelas,
+            $tipo,
+            $valor,
+            0,
+            0
+        );
+
+        return $ped;
+
     }
 
+    public static function cancelarPedido (PagarmePedido $ped)
+    {
+        $api = new PagarMeApi($ped->Filial->pagarmesk);
+
+        // Opcoes Disponiveis: paid, canceled ou failed.
+        if (!$api->patchOrdersClosed($ped->idpedido, 'canceled')) {
+            return false;
+        }
+
+        // dd($api->response->closed);
+        // dd(static::STATUS_NUMBER[$api->response->status]);
+
+        $ret = $ped->update([
+            'fechado' => $api->response->closed,
+            'status' => static::STATUS_NUMBER[$api->response->status]
+        ]);
+
+        // dd($ret);
+
+        return $ped->fresh();
+    }
 }
