@@ -136,6 +136,8 @@ class PagarMeWebhookService
         // exemplo quando o json de cancelamento chega antes do json de pagamento
         PagarMeService::confereTotaisPedido($ped);
 
+        PagarMeService::vincularNegocioFormaPagamento($ped);
+
         // retorna o pagamento
         return $pp;
     }

@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Storage;
 use Mg\Filial\Filial;
 use Mg\Negocio\Negocio;
 use Mg\Pessoa\Pessoa;
+use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Negocio\NegocioService;
+use Mg\FormaPagamento\FormaPagamento;
 
 use Carbon\Carbon;
 
@@ -252,4 +255,31 @@ class PagarMeService
 
         return $ped->fresh();
     }
+
+
+    public static function vincularNegocioFormaPagamento(PagarMePedido $ped)
+    {
+        if (empty($ped->codnegocio)) {
+            return;
+        }
+        $nfp = NegocioFormaPagamento::firstOrNew([
+            'codpagarmepedido' => $ped->codpagarmepedido
+        ]);
+        $nfp->codnegocio = $ped->codnegocio;
+        $fp = FormaPagamento::firstOrNew(['stone' => true, 'integracao' => true]);
+        if (!$fp->exists) {
+            $fp->formapagamento = 'Stone PagarMe';
+            $fp->avista = true;
+            $fp->integracao = true;
+            $fp->save();
+        }
+        $nfp->codformapagamento = $fp->codformapagamento;
+        $nfp->valorpagamento = $ped->valorpagoliquido;
+        $nfp->save();
+
+        $fechado = NegocioService::fecharSePago($ped->Negocio);
+
+        $nfp->save();
+    }
+
 }

@@ -940,10 +940,10 @@
                 "coluna": "codstonetransacao",
                 "metodo": "StoneTransacao"
             },
-            "codpagarmepagamento": {
-                "tabela": "tblpagarmepagamento",
-                "coluna": "codpagarmepagamento",
-                "metodo": "PagarMePagamento"
+            "codpagarmepedido": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codpagarmepedido",
+                "metodo": "PagarMePedido"
             }
         },
         "hasMany": {
@@ -4945,13 +4945,7 @@
                 "metodo": "UsuarioCriacao"
             }
         },
-        "hasMany": {
-            "tblnegocioformapagamento.codpagarmepagamento": {
-                "tabela": "tblnegocioformapagamento",
-                "coluna": "codpagarmepagamento",
-                "metodo": "NegocioFormaPagamentoS"
-            }
-        }
+        "hasMany": []
     },
     "tblpagarmepedido": {
         "tabela": "tblpagarmepedido",
@@ -4979,6 +4973,16 @@
                 "tabela": "tblpessoa",
                 "coluna": "codpessoa",
                 "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": {
@@ -4986,6 +4990,11 @@
                 "tabela": "tblpagarmepagamento",
                 "coluna": "codpagarmepedido",
                 "metodo": "PagarMePagamentoS"
+            },
+            "tblnegocioformapagamento.codpagarmepedido": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codpagarmepedido",
+                "metodo": "NegocioFormaPagamentoS"
             }
         }
     },
