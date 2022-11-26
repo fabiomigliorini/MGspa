@@ -97,17 +97,31 @@ class PagarMeService
             'idpedido' => $idpedido,
         ]);
         $reg->status = $status;
-        $reg->codnegocio = $codnegocio;
+        if (!empty($codnegocio)) {
+            $reg->codnegocio = $codnegocio;
+        }
         $reg->codpagarmepos = $codpagarmepos;
-        $reg->codpessoa = $codpessoa;
-        $reg->descricao = $descricao;
+        if (!empty($codpessoa)) {
+            $reg->codpessoa = $codpessoa;
+        }
+        if (!empty($descricao)) {
+            $reg->descricao = $descricao;
+        }
         $reg->fechado = $fechado;
-        $reg->jurosloja = $jurosloja;
-        $reg->parcelas = $parcelas;
+        if (!empty($jurosloja)) {
+            $reg->jurosloja = $jurosloja;
+        }
+        if (!empty($parcelas)) {
+            $reg->parcelas = $parcelas;
+        }
         $reg->tipo = $tipo;
         $reg->valor = $valor;
-        $reg->valorpago = $valorpago;
-        $reg->valorcancelado = $valorcancelado;
+        if (!empty($valorpago)) {
+            $reg->valorpago = $valorpago;
+        }
+        if (!empty($valorcancelado)) {
+            $reg->valorcancelado = $valorcancelado;
+        }
         $reg->valorpagoliquido = $reg->valorpago - $reg->valorcancelado;
         $reg->save();
         return $reg;
@@ -215,6 +229,10 @@ class PagarMeService
 
     public static function cancelarPedido (PagarmePedido $ped)
     {
+        if ($ped->status != 1) {
+            throw new \Exception("Pedido não consta como pendente! Status {$ped->status}!", 1);
+        }
+
         $api = new PagarMeApi($ped->Filial->pagarmesk);
 
         // Opcoes Disponiveis: paid, canceled ou failed.

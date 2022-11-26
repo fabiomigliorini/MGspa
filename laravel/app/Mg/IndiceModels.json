@@ -939,6 +939,11 @@
                 "tabela": "tblstonetransacao",
                 "coluna": "codstonetransacao",
                 "metodo": "StoneTransacao"
+            },
+            "codpagarmepagamento": {
+                "tabela": "tblpagarmepagamento",
+                "coluna": "codpagarmepagamento",
+                "metodo": "PagarMePagamento"
             }
         },
         "hasMany": {
@@ -4940,7 +4945,13 @@
                 "metodo": "UsuarioCriacao"
             }
         },
-        "hasMany": []
+        "hasMany": {
+            "tblnegocioformapagamento.codpagarmepagamento": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codpagarmepagamento",
+                "metodo": "NegocioFormaPagamentoS"
+            }
+        }
     },
     "tblpagarmepedido": {
         "tabela": "tblpagarmepedido",

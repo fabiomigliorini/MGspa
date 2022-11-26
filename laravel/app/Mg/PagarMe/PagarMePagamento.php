@@ -1,12 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 18:40:38
+ * Date: 26/Nov/2022 16:10:02
  */
 
 namespace Mg\PagarMe;
 
 use Mg\MgModel;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Filial\Filial;
 use Mg\PagarMe\PagarMeBandeira;
 use Mg\PagarMe\PagarMePedido;
@@ -51,7 +52,6 @@ class PagarMePagamento extends MgModel
         'codpagarmepos' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'identificador' => 'integer',
         'jurosloja' => 'boolean',
         'parcelas' => 'integer',
         'tipo' => 'integer',
@@ -89,6 +89,13 @@ class PagarMePagamento extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
+    public function NegocioFormaPagamentoS()
+    {
+        return $this->hasMany(NegocioFormaPagamento::class, 'codpagarmepagamento', 'codpagarmepagamento');
     }
 
 }
