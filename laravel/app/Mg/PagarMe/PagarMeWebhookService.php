@@ -136,6 +136,10 @@ class PagarMeWebhookService
         // exemplo quando o json de cancelamento chega antes do json de pagamento
         PagarMeService::confereTotaisPedido($ped);
 
+        // caso PagarMePedido totalmente pago, marca ele como "paid"
+        PagarMeService::fecharPedidoSePago($ped);
+
+        // cria forma de pagamento e atrela ao negocio
         PagarMeService::vincularNegocioFormaPagamento($ped);
 
         // retorna o pagamento

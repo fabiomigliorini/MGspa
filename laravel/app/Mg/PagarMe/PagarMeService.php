@@ -243,15 +243,43 @@ class PagarMeService
             return false;
         }
 
-        // dd($api->response->closed);
-        // dd(static::STATUS_NUMBER[$api->response->status]);
-
         $ret = $ped->update([
             'fechado' => $api->response->closed,
             'status' => static::STATUS_NUMBER[$api->response->status]
         ]);
 
-        // dd($ret);
+        return $ped->fresh();
+    }
+
+    public static function fecharPedidoSePago (PagarmePedido $ped)
+    {
+
+        if ($ped->valorpagoliquido < $ped->valor) {
+            return false;
+        }
+
+        if ($ped->fechado) {
+            return true;
+        }
+
+        $api = new PagarMeApi($ped->Filial->pagarmesk);
+
+        // tenta marcar "paid"
+        // trata o erro, pq se webhook vier fora de ordem
+        // api retorna erro: 404: This order is closed.
+        try {
+            // Opcoes Disponiveis: paid, canceled ou failed.
+            if (!$api->patchOrdersClosed($ped->idpedido, 'paid')) {
+                return false;
+            }
+        } catch (\Exception $e) {
+        }
+            return false;
+
+        $ret = $ped->update([
+            'fechado' => $api->response->closed,
+            'status' => static::STATUS_NUMBER[$api->response->status]
+        ]);
 
         return $ped->fresh();
     }
@@ -260,7 +288,7 @@ class PagarMeService
     public static function vincularNegocioFormaPagamento(PagarMePedido $ped)
     {
         if (empty($ped->codnegocio)) {
-            return;
+            return false;
         }
         $nfp = NegocioFormaPagamento::firstOrNew([
             'codpagarmepedido' => $ped->codpagarmepedido
