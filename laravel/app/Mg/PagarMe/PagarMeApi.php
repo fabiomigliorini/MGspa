@@ -220,4 +220,22 @@ class PagarMeApi {
 
     }
 
+    public function getOrdersId (string $id)
+    {
+
+        // monta URL
+        $url = $this->url . "v5/orders/{$id}";
+
+        // aborta caso erro no put
+        if (!$this->get($url)) {
+            if (isset($this->response->message)) {
+                throw new \Exception("Status {$this->status}: {$this->response->message}");
+            }
+            throw new \Exception("Status {$this->status}: {$this->responseText}");
+        }
+
+        return $this->status == 200;
+
+    }
+
 }

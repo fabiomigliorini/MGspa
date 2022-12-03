@@ -56,4 +56,14 @@ class PagarMeController extends MgController
         ], 200);
     }
 
+    public function consultarPedido(request $request, $codpagarmepedido)
+    {
+        $ped = PagarMePedido::findOrFail($codpagarmepedido);
+        PagarMeService::consultarPedido($ped);
+        return response()->json([
+            'success'=>true,
+            'pedido'=>$ped->getAttributes()
+        ], 200);
+    }
+
 }

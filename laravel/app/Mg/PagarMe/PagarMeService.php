@@ -303,11 +303,142 @@ class PagarMeService
         }
         $nfp->codformapagamento = $fp->codformapagamento;
         $nfp->valorpagamento = $ped->valorpagoliquido;
-        $nfp->save();
+        if ($nfp->valorpagamento > 0) {
+            $nfp->save();
+        } elseif (!empty($nfp->codnegocioformapagamento)) {
+            $nfp->delete();
+        }
 
         $fechado = NegocioService::fecharSePago($ped->Negocio);
 
-        $nfp->save();
+        return true;
     }
+
+    public static function alteraOuCriaPagamento (
+        string $idtransacao,
+        int $codfilial,
+        ?string $codpagarmepos,
+        ?string $bandeira,
+        ?bool $jurosloja,
+        ?int $parcelas,
+        ?int $tipo,
+        ?int $codpagarmepedido,
+        ?string $autorizacao,
+        ?string $identificador,
+        ?string $nsu,
+        ?string $nome,
+        ?string $transacao,
+        ?string $status,
+        ?float $valor
+    ){
+
+        // Busca na filial transacao com aquele id
+        $pp = PagarMePagamento::firstOrNew([
+            'idtransacao' => $idtransacao,
+            'codfilial' => $codfilial
+        ]);
+
+
+        // Bandeira
+        $band = PagarMeService::buscaOuCriaBandeira($bandeira);
+        $pp->codpagarmebandeira = $band->codpagarmebandeira;
+
+        $pp->codpagarmepos = $codpagarmepos;
+        $pp->jurosloja = $jurosloja;
+        $pp->parcelas = $parcelas;
+        $pp->tipo = $tipo;
+        $pp->codpagarmepedido = $codpagarmepedido;
+        $pp->autorizacao = $autorizacao;
+        $pp->identificador = $identificador;
+        $pp->nsu = $nsu;
+        $pp->nome = $nome;
+
+        // data da transacao - covnerte Timezone de UTC pra America/Cuiaba
+        $transacao = Carbon::parse($transacao);
+        $transacao->setTimezone(config('app.timezone'));
+        $pp->transacao = $transacao;
+
+        // decide se é pagamento ou cancelamento pelo status da transacao
+        switch (strtolower($status)) {
+            case 'paid':
+                $pp->valorpagamento = $valor;
+                $pp->valorcancelamento = null;
+                break;
+
+            case 'canceled':
+                $pp->valorpagamento = null;
+                $pp->valorcancelamento = $valor;
+                break;
+
+        }
+
+        // salva
+        $pp->save();
+
+        return $pp;
+
+    }
+
+    public static function consultarPedido (PagarmePedido $ped)
+    {
+
+        $api = new PagarMeApi($ped->Filial->pagarmesk);
+
+        // Opcoes Disponiveis: paid, canceled ou failed.
+        if (!$api->getOrdersId($ped->idpedido)) {
+            return false;
+        }
+
+        $ped->valor = $api->response->amount / 100;
+        $valorpago = null;
+        $valorcancelado = null;
+        foreach ($api->response->charges??[] as $charge) {
+            if (isset($charge->paid_amount)) {
+                $valorpago += $charge->paid_amount / 100;
+            }
+            if (isset($charge->canceled_amount)) {
+                $valorcancelado += $charge->canceled_amount / 100;
+            }
+            if (isset($charge->last_transaction)) {
+
+                // POS
+                $pos = PagarMeService::buscaOuCriaPos(
+                    $ped->codfilial,
+                    $charge->metadata->terminal_serial_number
+                );
+
+                $pp = PagarMeService::alteraOuCriaPagamento(
+                    $charge->last_transaction->id,
+                    $ped->codfilial,
+                    $pos->codpagarmepos,
+                    $charge->metadata->scheme_name,
+                    ($charge->metadata->installment_type == 'MerchantFinanced'),
+                    $charge->metadata->installment_quantity??1,
+                    static::TYPE_NUMBER[strtolower($charge->metadata->account_funding_source)]??1,
+                    $ped->codpagarmepedido,
+                    $charge->metadata->authorization_code,
+                    $charge->metadata->initiator_transaction_key,
+                    $charge->code,
+                    $charge->metadata->account_holder_name,
+                    $charge->metadata->transaction_timestamp,
+                    $charge->last_transaction->status,
+                    $charge->last_transaction->amount / 100
+                );
+            }
+        }
+        $ped->valorpago = $valorpago;
+        $ped->valorcancelado = $valorcancelado;
+        $ped->valorpagoliquido = $valorpago - $valorcancelado;
+        $ped->fechado = $api->response->closed;
+        $ped->status = static::STATUS_NUMBER[$api->response->status];
+        $ped->save();
+
+        // cria forma de pagamento e atrela ao negocio
+        static::vincularNegocioFormaPagamento($ped);
+
+        return $ped->fresh();
+    }
+
+
 
 }
