@@ -84,7 +84,7 @@ class PagarMeService
         string $idpedido,
         int $status,
         ?int $codnegocio,
-        int $codpagarmepos,
+        ?int $codpagarmepos,
         ?int $codpessoa,
         ?string $descricao,
         bool $fechado,
@@ -340,8 +340,10 @@ class PagarMeService
 
 
         // Bandeira
-        $band = PagarMeService::buscaOuCriaBandeira($bandeira);
-        $pp->codpagarmebandeira = $band->codpagarmebandeira;
+        if (!empty($bandeira)) {
+            $band = PagarMeService::buscaOuCriaBandeira($bandeira);
+            $pp->codpagarmebandeira = $band->codpagarmebandeira;
+        }
 
         $pp->codpagarmepos = $codpagarmepos;
         $pp->jurosloja = $jurosloja;

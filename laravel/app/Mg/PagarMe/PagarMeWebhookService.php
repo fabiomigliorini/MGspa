@@ -36,7 +36,9 @@ class PagarMeWebhookService
         }
 
         // POS
-        $pos = PagarMeService::buscaOuCriaPos($filial->codfilial, $obj->data->metadata->terminal_serial_number);
+        if (!empty($obj->data->metadata->terminal_serial_number)) {
+            $pos = PagarMeService::buscaOuCriaPos($filial->codfilial, $obj->data->metadata->terminal_serial_number);
+        }
 
         // valor total do pedido
         $valor = $obj->data->order->amount??null;
@@ -68,13 +70,13 @@ class PagarMeWebhookService
             $obj->data->order->id,
             PagarMeService::STATUS_NUMBER[$obj->data->status],
             null,
-            $pos->codpagarmepos,
+            $pos->codpagarmepos??null,
             null,
             null,
             $obj->data->order->closed,
-            ($obj->data->metadata->installment_type == 'MerchantFinanced'),
+            ($obj->data->metadata->installment_type??null == 'MerchantFinanced'),
             $obj->data->metadata->installment_quantity??1,
-            PagarMeService::TYPE_NUMBER[strtolower($obj->data->metadata->account_funding_source)]??1,
+            PagarMeService::TYPE_NUMBER[strtolower($obj->data->metadata->account_funding_source??null)]??1,
             $valor,
             $valorpago,
             $valorcancelado
@@ -83,17 +85,17 @@ class PagarMeWebhookService
         $pp = PagarMeService::alteraOuCriaPagamento(
             $obj->data->last_transaction->id,
             $filial->codfilial,
-            $pos->codpagarmepos,
-            $obj->data->metadata->scheme_name,
+            $pos->codpagarmepos??null,
+            $obj->data->metadata->scheme_name??null,
             $ped->jurosloja,
             $ped->parcelas,
             $ped->tipo,
             $ped->codpagarmepedido,
-            $obj->data->metadata->authorization_code,
-            $obj->data->metadata->initiator_transaction_key,
+            $obj->data->metadata->authorization_code??null,
+            $obj->data->metadata->initiator_transaction_key??null,
             $obj->data->code,
-            $obj->data->metadata->account_holder_name,
-            $obj->data->metadata->transaction_timestamp,
+            $obj->data->metadata->account_holder_name??null,
+            $obj->data->metadata->transaction_timestamp??null,
             $obj->data->last_transaction->status,
             $obj->data->last_transaction->amount / 100
         );
