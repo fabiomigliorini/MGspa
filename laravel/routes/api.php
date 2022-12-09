@@ -79,7 +79,7 @@ Route::group(['prefix' => 'v1'], function () {
 
     // PagarMe
     Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');
-    Route::post('pagar-me/pedido/', '\Mg\PagarMe\PagarMeController@pedido');
+    Route::post('pagar-me/pedido/', '\Mg\PagarMe\PagarMeController@criarPedido');
     Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\PagarMe\PagarMeController@consultarPedido');
     Route::delete('pagar-me/pedido/{codpagarmepdido}', '\Mg\PagarMe\PagarMeController@cancelarPedido');
 

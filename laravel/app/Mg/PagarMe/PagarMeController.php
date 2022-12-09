@@ -25,7 +25,7 @@ class PagarMeController extends MgController
         ], 200);
     }
 
-    public function pedido(PagarMePostPedidoRequest $request)
+    public function criarPedido(PagarMePostPedidoRequest $request)
     {
         $data = (object) $request->all();
         $ped = PagarMeService::criarPedido(
