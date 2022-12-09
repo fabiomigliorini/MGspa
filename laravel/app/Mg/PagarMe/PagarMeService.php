@@ -251,6 +251,18 @@ class PagarMeService
         return $ped->fresh();
     }
 
+    public static function cancelarPedidosAbertosPos (int $codpagarmepos)
+    {
+        $peds = PagarMePedido::where([
+            'codpagarmepos' => $codpagarmepos,
+            'status' => 1,
+        ])->get();
+        foreach ($peds as $ped) {
+            static::cancelarPedido($ped);
+        }
+        return true;
+    }
+
     public static function fecharPedidoSePago (PagarmePedido $ped)
     {
 
