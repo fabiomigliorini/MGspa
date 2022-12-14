@@ -3,6 +3,7 @@
 namespace Mg\Pix;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 use Mg\Negocio\Negocio;
 use Mg\Portador\Portador;
@@ -80,6 +81,18 @@ class PixController
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="PixCob'.$codpixcob.'.pdf"'
         ]);
+    }
+
+
+    public function webhook(Request $request)
+    {
+        Log::info('Recebendo Webhook PIX');
+        $arquivo = PixJsonService::salvar($request->getContent());
+        PixWebhookJob::dispatch($arquivo);
+        return response()->json([
+            'success'=>true,
+            'arquivo'=>$arquivo
+        ], 200);
     }
 
 

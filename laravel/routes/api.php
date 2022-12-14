@@ -92,6 +92,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pix/cob/{codpixcob}', '\Mg\Pix\PixController@show');
     Route::post('pix/cob/{codpixcob}/imprimir-qr-code', '\Mg\Pix\PixController@imprimirQrCode');
     Route::get('pix/cob/{codpixcob}/pdf', '\Mg\Pix\PixController@pdf');
+    Route::post('pix/webhook', '\Mg\Pix\PixController@webhook');
 
     // Pix
     Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPix');

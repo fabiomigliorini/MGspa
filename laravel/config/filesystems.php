@@ -80,6 +80,11 @@ return [
             'root' => env('PAGAR_ME_PATH'),
         ],
 
+        'pix' => [
+            'driver' => 'local',
+            'root' => env('PIX_PATH'),
+        ],
+
 
         /*
         's3' => [
