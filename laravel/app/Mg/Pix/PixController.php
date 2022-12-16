@@ -51,10 +51,16 @@ class PixController
     public function consultarPix (Request $request, $codportador)
     {
         $portador = Portador::findOrFail($codportador);
+        if ($inicio = $request->inicio) {
+            $inicio = Carbon::parse($inicio);
+        }
+        if ($fim = $request->fim) {
+            $fim = Carbon::parse($fim);
+        }
         $ret = PixService::consultarPix(
             $portador,
-            Carbon::parse($request->inicio)??null,
-            Carbon::parse($request->fim)??null,
+            $inicio,
+            $fim,
             $request->pagina??0
         );
         return response()->json([

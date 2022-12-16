@@ -85,11 +85,19 @@ class PixBbService
 
         $bbtoken = BoletoBbService::verificaTokenValido($portador);
 
+        $strInicio = null;
+        if (!empty($inicio)) {
+            $strInicio = $inicio->toIso8601String();
+        }
+        $strFim = null;
+        if (!empty($fim)) {
+            $strFim = $fim->toIso8601String();
+        }
         $ret = PixBbApiService::consultarPix(
             $bbtoken,
             $portador->bbdevappkey,
-            $inicio->toIso8601String()??null,
-            $fim->toIso8601String()??null,
+            $strInicio,
+            $strFim,
             $pagina
         );
 
@@ -98,8 +106,10 @@ class PixBbService
         }
 
         $processados = collect([]);
-        foreach ($ret['pix'] as $item) {
-            $processados[] = PixService::importarPix($portador, $item);
+        if (isset($ret['pix'])) {
+            foreach ($ret['pix'] as $item) {
+                $processados[] = PixService::importarPix($portador, $item);
+            }
         }
 
         $ret['processados'] = $processados;
