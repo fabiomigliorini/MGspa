@@ -212,16 +212,34 @@ class PixService
         $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
     }
 
-    public static function consultarPix(Portador $portador)
-    {
+    public static function consultarPix(
+        Portador $portador,
+        Carbon $inicio = null,
+        Carbon $fim = null,
+        int $pagina = 0
+    ){
         if (empty($portador->pixdict)) {
             throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
         }
-        if ($portador->Banco->numerobanco == 364) {
-            $pixRecebidos = GerenciaNetService::consultarPix($portador);
-            return $pixRecebidos;
+        switch ($portador->Banco->numerobanco) {
+            case 1:
+                $pixRecebidos = PixBbService::consultarPix(
+                    $portador,
+                    $inicio,
+                    $fim,
+                    $pagina
+                );
+                break;
+
+            case 364:
+                $pixRecebidos = GerenciaNetService::consultarPix($portador);
+                break;
+
+            default:
+                throw new \Exception("Sem integração definida para o Banco {$portador->Banco->numerobanco}!", 1);
+                break;
         }
-        throw new \Exception("Sem integração definida para o Banco {$portador->Banco->numerobanco}!", 1);
+        return $pixRecebidos;
     }
 
     public static function pdf(PixCob $cob)

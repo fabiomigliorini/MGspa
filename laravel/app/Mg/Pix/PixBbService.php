@@ -4,26 +4,10 @@ namespace Mg\Pix;
 
 use Illuminate\Support\Facades\Log;
 
-use Mg\Titulo\BoletoBb\BoletoBbService;
+use Carbon\Carbon;
 
-// use DB;
-// use Carbon\Carbon;
-//
-// use Dompdf\Dompdf;
-//
-// use OpenBoleto\Banco\BancoDoBrasil;
-// use OpenBoleto\Agente;
-//
-// use JasperPHP\Instructions;
-// use JasperPHP\Report;
-// use JasperPHP\PdfProcessor;
-//
-// use Mg\Titulo\Titulo;
-// use Mg\Titulo\TituloBoleto;
-// use Mg\Titulo\MovimentoTitulo;
-// use Mg\Titulo\TipoMovimentoTitulo;
-// use Mg\Portador\Portador;
-// use Mg\Negocio\Negocio;
+use Mg\Titulo\BoletoBb\BoletoBbService;
+use Mg\Portador\Portador;
 
 class PixBbService
 {
@@ -59,7 +43,6 @@ class PixBbService
         return $pixCob;
     }
 
-
     public static function consultarPixCob(PixCob $pixCob)
     {
 
@@ -91,6 +74,36 @@ class PixBbService
 
         $pixCob = $pixCob->fresh();
         return $pixCob;
+    }
+
+    public static function consultarPix(
+        Portador $portador,
+        Carbon $inicio = null,
+        Carbon $fim = null,
+        int $pagina = 0
+    ){
+
+        $bbtoken = BoletoBbService::verificaTokenValido($portador);
+
+        $ret = PixBbApiService::consultarPix(
+            $bbtoken,
+            $portador->bbdevappkey,
+            $inicio->toIso8601String()??null,
+            $fim->toIso8601String()??null,
+            $pagina
+        );
+
+        if (isset($ret['erros'][0])) {
+            throw new \Exception($ret['erros'][0]['mensagem'], 1);
+        }
+
+        $processados = collect([]);
+        foreach ($ret['pix'] as $item) {
+            $processados[] = PixService::importarPix($portador, $item);
+        }
+
+        $ret['processados'] = $processados;
+        return $ret;
     }
 
 

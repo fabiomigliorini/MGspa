@@ -5,6 +5,8 @@ namespace Mg\Pix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+use Carbon\Carbon;
+
 use Mg\Negocio\Negocio;
 use Mg\Portador\Portador;
 use Mg\Pix\GerenciaNet\GerenciaNetService;
@@ -46,12 +48,20 @@ class PixController
         return new PixCobResource($cob);
     }
 
-    public function consultarPix (Request $request)
+    public function consultarPix (Request $request, $codportador)
     {
-        $portador = Portador::findOrFail(env('PIX_GERENCIANET_CODPORTADOR'));
-        $pixRecebidos = PixService::consultarPix($portador);
-        // dd($pixRecebidos);
-        return PixResource::collection($pixRecebidos);
+        $portador = Portador::findOrFail($codportador);
+        $ret = PixService::consultarPix(
+            $portador,
+            Carbon::parse($request->inicio)??null,
+            Carbon::parse($request->fim)??null,
+            $request->pagina??0
+        );
+        return response()->json([
+            'success'=>true,
+            'pix'=>PixResource::collection($ret['processados']),
+            'parametros'=>$ret['parametros'],
+        ], 200);
     }
 
     public function detalhes (Request $request, $codpixcob)

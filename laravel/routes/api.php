@@ -95,7 +95,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::match(['POST', 'PUT', 'PATCH'], 'pix/webhook', '\Mg\Pix\PixController@webhook');
 
     // Pix
-    Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPix');
+    Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
 
     // NATUREZA DA OPERACAO
     Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');

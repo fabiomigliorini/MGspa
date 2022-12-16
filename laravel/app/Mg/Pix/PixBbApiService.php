@@ -119,80 +119,62 @@ class PixBbApiService
     }
 
     /*
-    * Esta rotina consome um endpoid GET da Gerencianet para consultar os pix recebidos nos ultimos 7 dias
+    * Esta rotina consome um endpoid GET da BB para consultar os pix recebidos
+    * nos periodo de 5 dias no maximo entre o inicio e fim
     */
-    public static function consultarPix(Portador $portador, Carbon $inicio = null, Carbon $fim = null)
-    {
+    public static function consultarPix(
+        string $token,
+        string $gwDevAppKey,
+        string $inicio = null,
+        string $fim = null,
+        int $paginaAtual = 0
+    ){
 
-        // Busca informações do token de autenticação de acordo com suas credencias e certificado
-        $dadosToken = static::getAccessToken();
-        $tokenType = $dadosToken['token_type'];
-        $accessToken = $dadosToken['access_token'];
+        // monta parametros da URL
+        $data = [
+            'gw-dev-app-key' => $gwDevAppKey
+        ];
+        if (!empty($inicio)) {
+            $data['inicio'] = $inicio;
+        }
+        if (!empty($fim)) {
+            $data['fim'] = $fim;
+        }
+        if (!empty($paginaAtual)) {
+            $data['paginaAtual'] = $paginaAtual;
+        }
 
-        $pix_url = env('PIX_GERENCIANET_URL'); // Monta a url para a requisição que gera a cobrança
-        $inicio = $inicio??new Carbon('-1 week');
-        $pix_url .= '?inicio=' . $inicio->toIso8601ZuluString();
-        $fim = $fim??new Carbon();
-        $pix_url .= '&fim=' . $fim->toIso8601ZuluString();
-        $pix_url .= '&paginacao.itensPorPagina=100';
+        // monta URL
+        $url = env('BB_URL_PIX') . '/?' . http_build_query($data); // Monta a url para a requisição que gera a cobrança
 
-        $paginaAtual = 0;
-        $pixRecebidos = [];
-        do {
-            $pix_url_pagina = $pix_url . '&paginacao.paginaAtual=' . $paginaAtual;
-            $curl = curl_init();
-            $opt = [
-                CURLOPT_URL => $pix_url_pagina,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "GET",
-                CURLOPT_SSLCERT => env('PIX_GERENCIANET_CERTIFICADO'),
-                CURLOPT_SSLCERTPASSWD => "",
-                CURLOPT_HTTPHEADER => [
-                    "authorization: $tokenType $accessToken",
-                    "Content-Type: application/json"
-                ],
-            ];
-            curl_setopt_array($curl, $opt);
-            $dadosPix = curl_exec($curl);
-            $dadosPix = json_decode($dadosPix, true);
-            curl_close($curl);
-            static::verficarFalhas($dadosPix); // Se encontrar falhas, apresentará a mensagem de erro e encerrará a execução
-            if (isset($dadosPix['pix'])) {
-                foreach ($dadosPix['pix'] as $pix) {
-                    $pixRecebidos[] = PixService::importarPix($portador, $pix);
-                }
-            }
-            $paginaAtual = $dadosPix['parametros']['paginacao']['paginaAtual'] + 1;
-            $quantidadeDePaginas = $dadosPix['parametros']['paginacao']['quantidadeDePaginas'];
-            if ($paginaAtual > 10) {
-                throw new \Exception("Abortando Looping Infinito", 1);
-            }
-        } while ($paginaAtual < $quantidadeDePaginas);
+        // Token Auth
+        $auth = "Authorization: Bearer {$token}";
 
-        return collect($pixRecebidos);
+        $curl = curl_init();
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_HTTPHEADER => [
+                $auth,
+                "Content-Type: application/json"
+            ],
+        ];
 
-        // $status = PixCobStatus::firstOrCreate([
-        //     'pixcobstatus' => $dadosPix['status']
-        // ]);
-        //
-        // $ret = $cob->update([
-        //     'location' => $dadosPix['location'],
-        //     'codpixcobstatus' => $status->codpixcobstatus
-        // ]);
-        //
-        // if (isset($dadosPix['pix'])) {
-        //     foreach ($dadosPix['pix'] as $pix) {
-        //         PixService::importarPix($cob->Portador, $pix, $cob);
-        //     }
-        // }
-        //
-        // $cob = $cob->fresh();
-        // return $cob;
+        curl_setopt_array($curl, $opt);
+        $response = curl_exec($curl);
+        if ($response === false) {
+            throw new \Exception(curl_error($curl), curl_errno($curl));
+        }
+        curl_close($curl);
+        $ret = json_decode($response, true);
+        return $ret;
     }
 
     public static function qrCode($qrcode)
