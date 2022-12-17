@@ -65,26 +65,30 @@ class PixConsultar extends Command
         }
         $portadores = $qry->get();
         foreach ($portadores as $portador) {
-            Log::info("Consultando PIX Recebidos Portador {$portador->codportador} ({$portador->portador})");
-            $processados = 0;
-            $paginaAtual = $pagina;
-            do {
-                $ret = PixService::consultarPix(
-                    $portador,
-                    $inicio,
-                    $fim,
-                    $paginaAtual
-                );
-                if ($pagina != null) {
-                    $continuar = false;
-                } else {
-                    $pag = $ret['parametros']['paginacao'];
-                    $continuar = ($pag['paginaAtual'] < ($pag['quantidadeDePaginas'] - 1));
-                }
-                $paginaAtual = $pag['paginaAtual'] + 1;
-                $processados += count($ret['processados']);
-            } while ($continuar);
-            Log::info("Processados {$processados} PIX Recebidos do Portador {$portador->codportador} ({$portador->portador})");
+            try {
+                Log::info("Consultando PIX Recebidos Portador {$portador->codportador} ({$portador->portador})");
+                $processados = 0;
+                $paginaAtual = $pagina;
+                do {
+                    $ret = PixService::consultarPix(
+                        $portador,
+                        $inicio,
+                        $fim,
+                        $paginaAtual
+                    );
+                    if ($pagina != null) {
+                        $continuar = false;
+                    } else {
+                        $pag = $ret['parametros']['paginacao'];
+                        $continuar = ($pag['paginaAtual'] < ($pag['quantidadeDePaginas'] - 1));
+                    }
+                    $paginaAtual = $pag['paginaAtual'] + 1;
+                    $processados += count($ret['processados']);
+                } while ($continuar);
+                Log::info("Processados {$processados} PIX Recebidos do Portador {$portador->codportador} ({$portador->portador})");
+            } catch (\Exception $e) {
+                Log::info("Erro {$e->getMessage()} {$portador->codportador} ({$portador->portador})");
+            }
         }
     }
 }
