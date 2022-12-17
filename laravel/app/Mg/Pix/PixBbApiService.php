@@ -175,7 +175,7 @@ class PixBbApiService
             throw new \Exception(curl_error($curl), curl_errno($curl));
         }
         curl_close($curl);
-        file_put_contents('/tmp/host/ret.json', $response);
+        // file_put_contents('/tmp/host/ret.json', $response);
         $response = preg_replace('/[\x00-\x1F\x7F]/', '', $response);
         $ret = json_decode($response, true);
         return $ret;
