@@ -17,7 +17,7 @@ class PixConsultar extends Command
      *
      * @var string
      */
-    protected $signature = 'pix:consultar {--codportador=} {--inicio=} {--fim=} {--pagina=}';
+    protected $signature = 'pix:consultar {--codportador=} {--inicio=} {--fim=} {--pagina=} {--horas=}';
 
     /**
      * The console command description.
@@ -47,6 +47,11 @@ class PixConsultar extends Command
         $inicio = $this->option('inicio')??null;
         if (!empty($inicio)) {
             $inicio = Carbon::parse($inicio);
+        } else {
+            $horas = $this->option('horas')??null;
+            if (!empty($horas)) {
+                $inicio = Carbon::now()->subHours($horas);
+            }
         }
         $fim = $this->option('fim')??null;
         if (!empty($fim)) {
