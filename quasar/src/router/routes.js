@@ -91,4 +91,7 @@ export default [
   // Exportacao Dominio
   { path: '/dominio/', component: () => import('components/views/dominio/Index') },
 
+  // PIX
+  { path: '/pix/', component: () => import('components/views/pix/Index') },
+
 ]

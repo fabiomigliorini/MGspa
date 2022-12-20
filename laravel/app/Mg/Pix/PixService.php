@@ -12,6 +12,7 @@ use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Portador\Portador;
 use Mg\Pix\GerenciaNet\GerenciaNetService;
 use Mg\FormaPagamento\FormaPagamento;
+use DB;
 
 class PixService
 {
@@ -287,6 +288,60 @@ class PixService
     {
         $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/pix/cob/' . $cob->codpixcob . '/pdf\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
         exec($cmd);
+    }
+
+    public static function listagem (
+        $page = 1,
+        $per_page = 50
+    ) {
+
+        if (empty($page)) {
+            $page = 1;
+        }
+
+        $sql = '
+            select
+        		coalesce(pix.horario, cob.criacao) as horario,
+        		coalesce(pix.valor, cob.valororiginal) as valor,
+                pix.codpix,
+        		pix.nome,
+        		pix.cpf,
+        		pix.cnpj,
+                cob.codpixcob,
+        		cob.codnegocio,
+                u.codusuario,
+        		u.usuario,
+                port.codportador,
+        		port.portador,
+        		pix.e2eid,
+        		pix.txid,
+        		pix.infopagador
+        	from tblpix pix
+        	full join tblpixcob cob on (cob.codpixcob = pix.codpixcob)
+        	left join tblportador port on (port.codportador = coalesce(pix.codportador, cob.codportador))
+        	left join tblnegocio n on (n.codnegocio = cob.codnegocio)
+        	left join tblusuario u on (u.codusuario = n.codusuario)
+        	order by coalesce(pix.horario, cob.criacao) desc
+            limit :limit
+            offset :offset
+        ';
+        $from = $per_page * ($page - 1);
+        $data = DB::select($sql, [
+            'limit' => $per_page,
+            'offset' => $from
+        ]);
+
+        foreach ($data as $reg) {
+            $reg->valor = doubleval($reg->valor);
+        }
+
+        return [
+            'data' => $data,
+            'current_page' => $page,
+            'per_page' => $per_page,
+            'from' => $from,
+            'to' => $from + count($data),
+        ];
     }
 
 }

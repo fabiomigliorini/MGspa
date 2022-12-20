@@ -77,6 +77,11 @@ export default {
       title: 'Exportação Domínio',
       path: '/dominio'
     },
+    {
+      icon: 'fas fa-money-bill-wave',
+      title: 'PIX',
+      path: '/pix'
+    },
     /*
     {
       icon: 'add_shopping_cart',

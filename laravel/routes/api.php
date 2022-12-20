@@ -96,6 +96,8 @@ Route::group(['prefix' => 'v1'], function () {
 
     // Pix
     Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
+    Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
+    Route::get('pix/', '\Mg\Pix\PixController@index');
 
     // NATUREZA DA OPERACAO
     Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');

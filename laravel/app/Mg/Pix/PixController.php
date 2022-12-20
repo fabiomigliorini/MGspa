@@ -70,6 +70,31 @@ class PixController
         ], 200);
     }
 
+    public function consultarPixTodos (Request $request)
+    {
+        $portadores = Portador::ativo()->whereNotNull('pixdict')->get();
+        foreach ($portadores as $portador) {
+            if ($inicio = $request->inicio) {
+                $inicio = Carbon::parse($inicio);
+            }
+            if ($fim = $request->fim) {
+                $fim = Carbon::parse($fim);
+            }
+            $ret = PixService::consultarPix(
+                $portador,
+                $inicio,
+                $fim,
+                $request->pagina??0
+            );
+            $resp[] = [
+                'success'=>true,
+                'pix'=>PixResource::collection($ret['processados']),
+                'parametros'=>$ret['parametros'],
+            ];
+        }
+        return response()->json($resp, 200);
+    }
+
     public function detalhes (Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
@@ -110,6 +135,17 @@ class PixController
             'arquivo'=>$arquivo
         ], 200);
     }
+
+    public function index(Request $request)
+    {
+
+        $res = PixService::listagem(
+            $request->page??1,
+            $request->per_page??50
+        );
+        return response()->json($res, 200);
+    }
+
 
 
 }
