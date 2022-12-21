@@ -258,7 +258,11 @@ class PagarMeService
             'status' => 1,
         ])->get();
         foreach ($peds as $ped) {
-            static::cancelarPedido($ped);
+            try {
+                static::cancelarPedido($ped);
+            } catch (\Exception $e) {
+                static::consultarPedido($ped);
+            }
         }
         return true;
     }
