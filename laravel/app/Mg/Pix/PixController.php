@@ -139,9 +139,25 @@ class PixController
     public function index(Request $request)
     {
 
+        $horarioinicial = null;
+        if (!empty($request->horarioinicial)) {
+            $horarioinicial = Carbon::createFromFormat('d/m/Y H:i', $request->horarioinicial);
+        }
+
+        $horariofinal = null;
+        if (!empty($request->horariofinal)) {
+            $horariofinal = Carbon::createFromFormat('d/m/Y H:i', $request->horariofinal);
+        }
+
         $res = PixService::listagem(
             $request->page??1,
-            $request->per_page??50
+            $request->per_page??50,
+            $request->sort??'horario',
+            $request->nome??null,
+            $request->cpf??null,
+            $request->negocio??todos,
+            $horarioinicial,
+            $horariofinal
         );
         return response()->json($res, 200);
     }

@@ -1,11 +1,8 @@
 export default {
-  pix: null,
-  sort: 'abcposicao',
-  inativo: 1,
-  sobrando: false,
-  faltando: false,
-  abccategoria: {
-    min: 0,
-    max: 3
-  }
+  nome: null,
+  sort: 'horario',
+  negocio: 'todos',
+  horarioinicial: null,
+  horariofinal: null,
+  cpf: null
 }

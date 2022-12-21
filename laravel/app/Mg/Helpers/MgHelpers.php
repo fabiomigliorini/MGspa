@@ -495,3 +495,36 @@ if (!function_exists('numeroLimpo')) {
         return preg_replace('/[^0-9]|\s+/', '', $numero);
     }
 }
+
+if (!function_exists('primeiraLetraMaiuscula')) {
+    function primeiraLetraMaiuscula($string)
+    {
+        // Isso irá forçar tudo para minusculo, afim de entrar no regex e quebrar os espaços.
+        $minusculas = [
+            'da',
+            'de',
+            'do',
+            'dos',
+            'e',
+        ];
+        $string = str_replace('.', '. ', $string);
+        $string = str_replace('  ', ' ', $string);
+        $explodes = explode(' ', strtolower( $string ) );
+        $palavra = '';
+        // Cria loop finito para cada palavra
+        $primeira = true;
+        foreach($explodes as $explode){
+            if (!$primeira && in_array($explode, $minusculas)) {
+                $palavra .= strtolower($explode).' ';
+            }elseif(!preg_match("/^m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})(.?)$/", $explode)){
+               // Se não houver número romano a primeira letra é passada para maiúsculo.
+                $palavra .= ucfirst($explode).' ';
+           }else{
+               // Se houver número romano tudo é passado para maiúsculo.
+                $palavra .= strtoupper($explode).' ';
+           }
+           $primeira = false;
+        }
+        return rtrim($palavra, ' ');
+    }
+}

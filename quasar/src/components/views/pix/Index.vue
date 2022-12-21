@@ -8,10 +8,23 @@
     <!-- Menu Drawer (Esquerda) -->
     <template slot="drawer">
 
+      <q-item-label header>Pessoa</q-item-label>
+
       <!-- Filtro de Descricao -->
       <q-item>
         <q-item-section>
-          <q-input outlined v-model="filter.pix" label="Descrição" >
+          <q-input outlined v-model="filter.nome" label="Nome" >
+            <template v-slot:prepend>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </q-item-section>
+      </q-item>
+
+      <!-- Filtro de Descricao -->
+      <q-item>
+        <q-item-section>
+          <q-input outlined v-model="filter.cpf" label="CPF/CNPJ" >
             <template v-slot:prepend>
               <q-icon name="search" />
             </template>
@@ -22,14 +35,25 @@
       <q-item-label header>Ordenar Por</q-item-label>
       <q-separator/>
 
-      <!-- Ordena por Vendas -->
+      <!-- Ordena Cronologicamente -->
       <q-item dense>
         <q-item-section avatar>
-          <q-icon name="trending_up" />
+          <q-icon name="schedule" />
         </q-item-section>
-        <q-item-section>Vendas</q-item-section>
+        <q-item-section>Data</q-item-section>
         <q-item-section side>
-          <q-radio v-model="filter.sort" val="abcposicao" />
+          <q-radio v-model="filter.sort" val="horario" />
+        </q-item-section>
+      </q-item>
+
+      <!-- Ordena por Valor -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="attach_money" />
+        </q-item-section>
+        <q-item-section>Valor</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.sort" val="valor" />
         </q-item-section>
       </q-item>
 
@@ -38,85 +62,92 @@
         <q-item-section avatar>
           <q-icon name="sort_by_alpha" />
         </q-item-section>
-        <q-item-section>Descrição</q-item-section>
+        <q-item-section>Nome</q-item-section>
         <q-item-section side>
-          <q-radio v-model="filter.sort" val="pix" />
+          <q-radio v-model="filter.sort" val="nome" />
         </q-item-section>
       </q-item>
 
-      <q-item-label header>Estoque</q-item-label>
+       <!-- NEGOCIO -->
+      <q-item-label header>Vinculo Com Negócio</q-item-label>
       <q-separator/>
 
-      <!-- Filtra Estoque Sobrando -->
       <q-item dense>
         <q-item-section avatar>
-          <q-icon name="arrow_upward" />
+          <q-icon name="done" />
         </q-item-section>
-        <q-item-section>Sobrando</q-item-section>
+        <q-item-section>Com Vínculo</q-item-section>
         <q-item-section side>
-          <q-toggle v-model="filter.sobrando" />
+          <q-radio v-model="filter.negocio" val="com" />
         </q-item-section>
       </q-item>
 
-      <!-- Filtra Estoque Faltando -->
       <q-item dense>
         <q-item-section avatar>
-          <q-icon name="arrow_downward" />
+          <q-icon name="close" />
         </q-item-section>
-        <q-item-section>Faltando</q-item-section>
+        <q-item-section>Sem Vínculo</q-item-section>
         <q-item-section side>
-          <q-toggle v-model="filter.faltando" />
+          <q-radio v-model="filter.negocio" val="sem" />
         </q-item-section>
       </q-item>
 
-      <q-item-label header>Curva ABC</q-item-label>
-      <q-separator/>
-
-      <!-- Filtra Pela Classificação da CURVA ABC -->
       <q-item dense>
         <q-item-section avatar>
-          <q-icon name="star" />
+          <q-icon name="all_inclusive" />
         </q-item-section>
+        <q-item-section>todos</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.negocio" val="todos" />
+        </q-item-section>
+      </q-item>
+
+      <q-item-label header>Data</q-item-label>
+
+      <q-item>
         <q-item-section>
-          <q-range v-model="filter.abccategoria" label markers snap :min="0" :max="3" :step="1"/>
+          <q-input outlined v-model="filter.horarioinicial" mask="##/##/#### ##:##" input-class="text-center" label="De">
+            <template v-slot:prepend>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy transition-show="scale" transition-hide="scale">
+                  <q-date v-model="filter.horarioinicial" mask="DD/MM/YYYY HH:mm" />
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+            <template v-slot:append>
+              <q-icon name="access_time" class="cursor-pointer">
+                <q-popup-proxy transition-show="scale" transition-hide="scale">
+                  <q-time v-model="filter.horarioinicial" mask="DD/MM/YYYY HH:mm" format24h />
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
         </q-item-section>
       </q-item>
 
-      <q-item-label header>Ativos</q-item-label>
-      <q-separator/>
-
-      <!-- Filtra Ativos -->
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="thumb_up" />
-        </q-item-section>
-        <q-item-section>Ativos</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.inativo" :val='1' />
-        </q-item-section>
-      </q-item>
-
-      <!-- Filtra Inativos -->
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="thumb_down" />
-        </q-item-section>
-        <q-item-section>Inativos</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.inativo" :val="2" />
+      <q-item>
+        <q-item-section>
+          <q-input outlined v-model="filter.horariofinal" mask="##/##/#### ##:##" input-class="text-center" label="Ate">
+            <template v-slot:prepend>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy transition-show="scale" transition-hide="scale">
+                  <q-date v-model="filter.horariofinal" mask="DD/MM/YYYY HH:mm" />
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+            <template v-slot:append>
+              <q-icon name="access_time" class="cursor-pointer">
+                <q-popup-proxy transition-show="scale" transition-hide="scale">
+                  <q-time v-model="filter.horariofinal" mask="DD/MM/YYYY HH:mm" format24h />
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
         </q-item-section>
       </q-item>
 
-      <!-- Filtra Ativos e Inativos -->
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="thumbs_up_down" />
-        </q-item-section>
-        <q-item-section>Ativos e Inativos</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.inativo" :val="9" />
-        </q-item-section>
-      </q-item>
+
+
 
 
     </template>
@@ -139,7 +170,6 @@
 
               <!-- Imagem -->
               <q-item-section avatar>
-                <!-- <q-avatar icon="hourglass_empty" color="red"  text-color="white" v-if="(item.codpix == null)" /> -->
                 <q-avatar icon="hourglass_empty" color="red"  text-color="white" v-if="(item.codpix == null)" />
                 <q-avatar icon="done" text-color="white" color="green" v-else />
               </q-item-section>
@@ -150,6 +180,13 @@
               <q-item-section >
                 <q-item-label>
                   {{ item.nome }}
+                  <template v-if="item.nome == null">
+                    Aguardando Pagamento
+                  </template>
+                </q-item-label>
+                <q-item-label caption>
+                  {{ formataCPF(item.cpf) }}
+                  {{ formataCNPJ(item.cnpj) }}
                 </q-item-label>
                 <q-item-label caption>
                   {{ item.portador }}
@@ -157,30 +194,27 @@
               </q-item-section>
 
               <q-item-section class="gt-xs">
-                <q-item-label class="row" caption>
-                  <div class="col-6">
-                  </div>
+                <q-item-label caption v-if="item.codnegocio" @click="abrirNegocio(item.codnegocio)" class="cursor-pointer">
+                  <!-- <q-icon name="label" /> -->
+                  Negócio #{{ numeral(item.codnegocio).format('00000000') }}
                 </q-item-label>
-
-                <q-item-label caption>
-
-                  <!-- <q-icon name="bookmark" /> -->
-                  <!-- PIX #{{ numeral(item.codpix).format('00000000') }} -->
-
-                  <!-- <q-icon name="bookmark" /> -->
-                  <!-- COB #{{ numeral(item.codpixcob).format('00000000') }} -->
-
-                  <template v-if="item.codnegocio">
-                    <q-icon name="bookmark" />
-                    Negócio #{{ numeral(item.codnegocio).format('00000000') }}
-                  </template>
+                <q-item-label caption v-if="item.txid">
+                  <!-- <q-icon name="label" /> -->
+                  {{ item.txid }}
+                </q-item-label>
+                <q-item-label caption v-if="item.e2eid">
+                  <!-- <q-icon name="label" /> -->
+                  {{ item.e2eid }}
                 </q-item-label>
               </q-item-section>
 
               <!-- Direita (Estrelas) -->
               <q-item-section avatar>
                 <q-item-label>
-                  <small class="text-grey">R$</small> {{ numeral(item.valor).format('0,0.00') }}
+                  <small class="text-grey">R$</small>
+                  <b>
+                    {{ numeral(item.valor).format('0,0.00') }}
+                  </b>
                 </q-item-label>
                 <q-item-label caption>
                   <abbr :title="moment(item.horario).format('LLL')">
@@ -194,7 +228,12 @@
 
           </template>
         </q-infinite-scroll>
+        <div class="row" style="margin: 25px">
+          Fim dos Registros
+        </div>
       </q-list>
+
+
 
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
@@ -245,6 +284,34 @@ export default {
   },
 
   methods: {
+
+    formataCPF(cpf) {
+      if (cpf == null) {
+        return cpf
+      }
+      cpf = cpf.toString().padStart(11, '0')
+      return cpf.slice(0,3) + "." +
+        cpf.slice(3,6) + "." +
+        cpf.slice(6,9) + "-" +
+        cpf.slice(9, 11)
+    },
+
+    formataCNPJ(cnpj) {
+      if (cnpj == null) {
+        return cnpj
+      }
+      cnpj = cnpj.toString().padStart(14, '0')
+      return cnpj.slice(0,2) + "." +
+        cnpj.slice(2,5) + "." +
+        cnpj.slice(5,8) + "/" +
+        cnpj.slice(8, 12) + "-" +
+        cnpj.slice(12, 14)
+    },
+
+    abrirNegocio (codnegocio) {
+      console.log(codnegocio)
+      var win = window.open(process.env.MGSIS_URL + '/index.php?r=negocio/view&id=' + codnegocio, '_blank');
+    },
 
     refresh: debounce(function () {
       // inicializa variaveis

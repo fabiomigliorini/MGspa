@@ -151,11 +151,18 @@ class PixService
             $pix->codpixcob = $pixCob->codpixcob;
         }
         $pix->valor = $arrPix['valor']??null;
-        $pix->horario = Carbon::parse($arrPix['horario']??null);
+
+        $horario = Carbon::parse($arrPix['horario']??null);
+        $horario->setTimezone(config('app.timezone'));
+        $pix->horario = $horario;
+
         if (isset($arrPix['pagador'])) {
             $pix->nome = $arrPix['pagador']['nome']??null;
             $pix->cpf = $arrPix['pagador']['cpf']??null;
             $pix->cnpj = $arrPix['pagador']['cnpj']??null;
+        }
+        if (!empty($pix->nome)) {
+            $pix->nome = primeiraLetraMaiuscula($pix->nome);
         }
         $pix->infopagador = $arrPix['infoPagador']??null;
         $pix->save();
@@ -292,12 +299,24 @@ class PixService
 
     public static function listagem (
         $page = 1,
-        $per_page = 50
+        $per_page = 50,
+        $sort = 'horario',
+        $nome = null,
+        $cpf = null,
+        $negocio = 'todos',
+        Carbon $horarioinicial = null,
+        Carbon $horariofinal = null
     ) {
 
         if (empty($page)) {
             $page = 1;
         }
+
+        $from = $per_page * ($page - 1);
+        $params = [
+            'limit' => $per_page,
+            'offset' => $from
+        ];
 
         $sql = '
             select
@@ -317,19 +336,83 @@ class PixService
         		pix.txid,
         		pix.infopagador
         	from tblpix pix
-        	full join tblpixcob cob on (cob.codpixcob = pix.codpixcob)
+        ';
+
+        switch ($negocio) {
+            case 'com':
+                $sql .= ' inner join tblpixcob cob on (cob.codpixcob = pix.codpixcob) ';
+                break;
+            case 'sem':
+            case 'todos':
+            default:
+                $sql .= ' full join tblpixcob cob on (cob.codpixcob = pix.codpixcob) ';
+                break;
+        }
+
+        $sql .= '
         	left join tblportador port on (port.codportador = coalesce(pix.codportador, cob.codportador))
         	left join tblnegocio n on (n.codnegocio = cob.codnegocio)
         	left join tblusuario u on (u.codusuario = n.codusuario)
-        	order by coalesce(pix.horario, cob.criacao) desc
+        ';
+
+        $where = 'where';
+
+        if (!empty($nome)) {
+            $sql .= " {$where}  pix.nome ilike :nome ";
+            $params['nome'] = '%' . str_replace(' ', '%', $nome) . '%';
+            $where = 'and';
+        }
+
+        switch ($negocio) {
+            case 'sem':
+                $sql .= " {$where} cob.codnegocio is null ";
+                $where = 'and';
+                break;
+            case 'todos':
+            case 'com':
+            default:
+                break;
+        }
+
+        if (!empty($horarioinicial)) {
+            $sql .= " {$where} coalesce(pix.horario, cob.criacao) >= :horarioinicial ";
+            $params['horarioinicial'] = $horarioinicial->format('Y-m-d H:i:s');
+            $where = 'and';
+        }
+
+        if (!empty($horariofinal)) {
+            $sql .= " {$where} coalesce(pix.horario, cob.criacao) <= :horariofinal ";
+            $params['horariofinal'] = $horariofinal->format('Y-m-d H:i:s');
+            $where = 'and';
+        }
+
+        if (!empty($cpf)) {
+            $cpf = numeroLimpo($cpf);
+            if (!empty($cpf)) {
+                $sql .= " {$where} coalesce(to_char(pix.cpf, '00000000000'), to_char(pix.cnpj, '00000000000000')) ilike :cpf ";
+                $params['cpf'] = "%{$cpf}%";
+                $where = 'and';
+            }
+        }
+
+        switch ($sort) {
+            case 'nome':
+                $sql .= ' order by pix.nome asc, coalesce(pix.horario, cob.criacao) desc ';
+                break;
+            case 'valor':
+                $sql .= ' order by coalesce(pix.valor, cob.valororiginal) desc, coalesce(pix.horario, cob.criacao) desc ';
+                break;
+            case 'horario':
+            default:
+                $sql .= ' order by coalesce(pix.horario, cob.criacao) desc ';
+                break;
+        }
+
+        $sql .= '
             limit :limit
             offset :offset
         ';
-        $from = $per_page * ($page - 1);
-        $data = DB::select($sql, [
-            'limit' => $per_page,
-            'offset' => $from
-        ]);
+        $data = DB::select($sql, $params);
 
         foreach ($data as $reg) {
             $reg->valor = doubleval($reg->valor);
