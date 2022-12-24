@@ -149,6 +149,16 @@ class PixController
             $horariofinal = Carbon::createFromFormat('d/m/Y H:i', $request->horariofinal);
         }
 
+        $valorinicial = null;
+        if (!empty($request->valorinicial)) {
+            $valorinicial = floatval($request->valorinicial);
+        }
+
+        $valorfinal = null;
+        if (!empty($request->valorfinal)) {
+            $valorfinal = floatval($request->valorfinal);
+        }
+
         $res = PixService::listagem(
             $request->page??1,
             $request->per_page??50,
@@ -156,6 +166,8 @@ class PixController
             $request->nome??null,
             $request->cpf??null,
             $request->negocio??todos,
+            $valorinicial,
+            $valorfinal,
             $horarioinicial,
             $horariofinal
         );

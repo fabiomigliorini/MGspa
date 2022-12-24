@@ -304,6 +304,8 @@ class PixService
         $nome = null,
         $cpf = null,
         $negocio = 'todos',
+        float $valorinicial = null,
+        float $valorfinal = null,
         Carbon $horarioinicial = null,
         Carbon $horariofinal = null
     ) {
@@ -383,6 +385,18 @@ class PixService
         if (!empty($horariofinal)) {
             $sql .= " {$where} coalesce(pix.horario, cob.criacao) <= :horariofinal ";
             $params['horariofinal'] = $horariofinal->format('Y-m-d H:i:s');
+            $where = 'and';
+        }
+
+        if (!empty($valorinicial)) {
+            $sql .= " {$where} coalesce(pix.valor, cob.valororiginal) >= :valorinicial ";
+            $params['valorinicial'] = $valorinicial;
+            $where = 'and';
+        }
+
+        if (!empty($valorfinal)) {
+            $sql .= " {$where} coalesce(pix.valor, cob.valororiginal) <= :valorfinal ";
+            $params['valorfinal'] = $valorfinal;
             $where = 'and';
         }
 

@@ -4,5 +4,7 @@ export default {
   negocio: 'todos',
   horarioinicial: null,
   horariofinal: null,
+  valorinicial: null,
+  valorfinal: null,
   cpf: null
 }

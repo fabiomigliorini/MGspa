@@ -102,6 +102,37 @@
         </q-item-section>
       </q-item>
 
+      <q-item-label header>Valor</q-item-label>
+
+      <!-- Filtros de Valor -->
+      <q-item>
+        <q-item-section>
+          <div class="row">
+            <div class="col-6 q-pr-sm">
+              <q-input
+                outlined
+                v-model="filter.valorinicial"
+                label="De R$"
+                input-class="text-right"
+                type="number"
+                step="0.01"
+                />
+            </div>
+            <div class="col-6 q-pl-sm">
+              <q-input
+                outlined
+                v-model="filter.valorfinal"
+                label="Até R$"
+                input-class="text-right"
+                type="number"
+                step="0.01"
+                />
+            </div>
+          </div>
+        </q-item-section>
+      </q-item>
+
+
       <q-item-label header>Data</q-item-label>
 
       <q-item>
