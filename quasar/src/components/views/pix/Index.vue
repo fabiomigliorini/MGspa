@@ -258,13 +258,15 @@
             <q-separator />
 
           </template>
+          <template v-slot:loading>
+            <div class="row justify-center q-my-md">
+              <q-spinner-dots color="primary" size="40px" />
+            </div>
+          </template>
         </q-infinite-scroll>
-        <div class="row" style="margin: 25px">
-          Fim dos Registros
+        <div class="row" style="margin: 40px">
         </div>
       </q-list>
-
-
 
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
@@ -283,12 +285,14 @@
 import MgLayout from '../../../layouts/MgLayout'
 import MgNoData from '../../utils/MgNoData'
 import { debounce } from 'quasar'
+import { QSpinnerDots } from 'quasar'
 
 export default {
 
   components: {
     MgLayout,
-    MgNoData
+    MgNoData,
+    QSpinnerDots
   },
 
   data () {
