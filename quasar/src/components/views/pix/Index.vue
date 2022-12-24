@@ -32,76 +32,6 @@
         </q-item-section>
       </q-item>
 
-      <q-item-label header>Ordenar Por</q-item-label>
-      <q-separator/>
-
-      <!-- Ordena Cronologicamente -->
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="schedule" />
-        </q-item-section>
-        <q-item-section>Data</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.sort" val="horario" />
-        </q-item-section>
-      </q-item>
-
-      <!-- Ordena por Valor -->
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="attach_money" />
-        </q-item-section>
-        <q-item-section>Valor</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.sort" val="valor" />
-        </q-item-section>
-      </q-item>
-
-      <!-- Ordena Alfabeticamente -->
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="sort_by_alpha" />
-        </q-item-section>
-        <q-item-section>Nome</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.sort" val="nome" />
-        </q-item-section>
-      </q-item>
-
-       <!-- NEGOCIO -->
-      <q-item-label header>Vinculo Com Negócio</q-item-label>
-      <q-separator/>
-
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="done" />
-        </q-item-section>
-        <q-item-section>Com Vínculo</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.negocio" val="com" />
-        </q-item-section>
-      </q-item>
-
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="close" />
-        </q-item-section>
-        <q-item-section>Sem Vínculo</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.negocio" val="sem" />
-        </q-item-section>
-      </q-item>
-
-      <q-item dense>
-        <q-item-section avatar>
-          <q-icon name="all_inclusive" />
-        </q-item-section>
-        <q-item-section>todos</q-item-section>
-        <q-item-section side>
-          <q-radio v-model="filter.negocio" val="todos" />
-        </q-item-section>
-      </q-item>
-
       <q-item-label header>Valor</q-item-label>
 
       <!-- Filtros de Valor -->
@@ -177,6 +107,76 @@
         </q-item-section>
       </q-item>
 
+
+       <!-- NEGOCIO -->
+      <q-item-label header>Vinculo Com Negócio</q-item-label>
+      <q-separator/>
+
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="done" />
+        </q-item-section>
+        <q-item-section>Com Vínculo</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.negocio" val="com" />
+        </q-item-section>
+      </q-item>
+
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="close" />
+        </q-item-section>
+        <q-item-section>Sem Vínculo</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.negocio" val="sem" />
+        </q-item-section>
+      </q-item>
+
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="all_inclusive" />
+        </q-item-section>
+        <q-item-section>todos</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.negocio" val="todos" />
+        </q-item-section>
+      </q-item>
+
+      <q-item-label header>Ordenar Por</q-item-label>
+      <q-separator/>
+
+      <!-- Ordena Cronologicamente -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="schedule" />
+        </q-item-section>
+        <q-item-section>Data</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.sort" val="horario" />
+        </q-item-section>
+      </q-item>
+
+      <!-- Ordena por Valor -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="attach_money" />
+        </q-item-section>
+        <q-item-section>Valor</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.sort" val="valor" />
+        </q-item-section>
+      </q-item>
+
+      <!-- Ordena Alfabeticamente -->
+      <q-item dense>
+        <q-item-section avatar>
+          <q-icon name="sort_by_alpha" />
+        </q-item-section>
+        <q-item-section>Nome</q-item-section>
+        <q-item-section side>
+          <q-radio v-model="filter.sort" val="nome" />
+        </q-item-section>
+      </q-item>
 
 
 
