@@ -186,6 +186,9 @@ class PagarMeApi {
 
         // aborta caso erro no put
         if (!$this->post($url, $data)) {
+            if (!empty($this->errno)) {
+                throw new \Exception("Error {$this->errno}: {$this->error}");
+            }
             if (isset($this->response->message)) {
                 throw new \Exception("Status {$this->status}: {$this->response->message}");
             }
@@ -210,6 +213,9 @@ class PagarMeApi {
 
         // aborta caso erro no put
         if (!$this->patch($url, $data)) {
+            if (!empty($this->errno)) {
+                throw new \Exception("Error {$this->errno}: {$this->error}");
+            }                
             if (isset($this->response->message)) {
                 throw new \Exception("Status {$this->status}: {$this->response->message}");
             }
@@ -228,6 +234,9 @@ class PagarMeApi {
 
         // aborta caso erro no put
         if (!$this->get($url)) {
+            if (!empty($this->errno)) {
+                throw new \Exception("Error {$this->errno}: {$this->error}");
+            }                
             if (isset($this->response->message)) {
                 throw new \Exception("Status {$this->status}: {$this->response->message}");
             }
