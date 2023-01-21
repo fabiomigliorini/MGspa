@@ -28,12 +28,16 @@ class PagarMeController extends MgController
     public function criarPedido(PagarMePostPedidoRequest $request)
     {
         $data = (object) $request->all();
+        // return response()->json($data, 201);
         $ret = PagarMeService::cancelarPedidosAbertosPos($data->codpagarmepos);
         $ped = PagarMeService::criarPedido(
             $data->codfilial,
             $data->codpagarmepos,
             $data->tipo,
             $data->valor,
+            $data->valorjuros,
+            $data->valorjuros + $data->valor,
+            $data->valorparcela,
             $data->parcelas,
             $data->jurosloja,
             $data->descricao,

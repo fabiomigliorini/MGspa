@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Nov/2022 16:55:58
+ * Date: 20/Jan/2023 10:05:52
  */
 
 namespace Mg\PagarMe;
@@ -35,8 +35,11 @@ class PagarMePedido extends MgModel
         'tipo',
         'valor',
         'valorcancelado',
+        'valorjuros',
         'valorpago',
-        'valorpagoliquido'
+        'valorpagoliquido',
+        'valorparcela',
+        'valortotal'
     ];
 
     protected $dates = [
@@ -59,8 +62,11 @@ class PagarMePedido extends MgModel
         'tipo' => 'integer',
         'valor' => 'float',
         'valorcancelado' => 'float',
+        'valorjuros' => 'float',
         'valorpago' => 'float',
-        'valorpagoliquido' => 'float'
+        'valorpagoliquido' => 'float',
+        'valorparcela' => 'float',
+        'valortotal' => 'float'
     ];
 
 

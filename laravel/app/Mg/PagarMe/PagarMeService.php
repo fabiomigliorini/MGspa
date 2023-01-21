@@ -91,7 +91,10 @@ class PagarMeService
         ?bool $jurosloja,
         ?int $parcelas,
         int $tipo,
-        float $valor,
+        ?float $valor,
+        ?float $valorjuros,
+        float $valortotal,
+        ?float $valorparcela,
         ?float $valorpago,
         ?float $valorcancelado
     ){
@@ -118,7 +121,19 @@ class PagarMeService
             $reg->parcelas = $parcelas;
         }
         $reg->tipo = $tipo;
-        $reg->valor = $valor;
+        if (!empty($valor)) {
+            $reg->valor = $valor;
+        }
+        if (empty($reg->valor)) {
+            $reg->valor = $valortotal - $valorjuros;
+        }
+        if (!empty($valorjuros)) {
+            $reg->valorjuros = $valorjuros;
+        }
+        $reg->valortotal = $valortotal;
+        if (!empty($valorparcela)) {
+            $reg->valorparcela = $valorparcela;
+        }
         if (!empty($valorpago)) {
             $reg->valorpago = $valorpago;
         }
@@ -157,6 +172,9 @@ class PagarMeService
         int $codpagarmepos,
         int $tipo,
         float $valor,
+        float $valorjuros,
+        float $valortotal,
+        float $valorparcela,
         int $parcelas,
         bool $jurosloja,
         ?string $descricao,
@@ -198,7 +216,7 @@ class PagarMeService
         $ret = $api->postOrders(
             $pes->pessoa,
             $pes->email??'nfe@mgpapelaria.com.br',
-            $valor,
+            $valortotal,
             $descricao,
             1,
             false,
@@ -222,6 +240,9 @@ class PagarMeService
             $parcelas,
             $tipo,
             $valor,
+            $valorjuros,
+            $valortotal,
+            $valorparcela,
             0,
             0
         );
@@ -289,8 +310,8 @@ class PagarMeService
                 return false;
             }
         } catch (\Exception $e) {
-        }
             return false;
+        }
 
         $ret = $ped->update([
             'fechado' => $api->response->closed,
@@ -319,6 +340,7 @@ class PagarMeService
         }
         $nfp->codformapagamento = $fp->codformapagamento;
         $nfp->valorpagamento = $ped->valorpagoliquido;
+        $nfp->valorjuros = $ped->valorjuros;
         if ($nfp->valorpagamento > 0) {
             $nfp->save();
         } elseif (!empty($nfp->codnegocioformapagamento)) {
@@ -353,7 +375,6 @@ class PagarMeService
             'idtransacao' => $idtransacao,
             'codfilial' => $codfilial
         ]);
-
 
         // Bandeira
         if (!empty($bandeira)) {
@@ -407,7 +428,8 @@ class PagarMeService
             return false;
         }
 
-        $ped->valor = $api->response->amount / 100;
+        $ped->valortotal = $api->response->amount / 100;
+        $ped->valor = $ped->valortotal - $ped->valorjuros;
         $valorpago = null;
         $valorcancelado = null;
         foreach ($api->response->charges??[] as $charge) {

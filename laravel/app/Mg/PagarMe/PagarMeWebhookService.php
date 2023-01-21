@@ -41,15 +41,9 @@ class PagarMeWebhookService
         }
 
         // valor total do pedido
-        $valor = $obj->data->order->amount??null;
-        if ($valor) {
-            $valor /=  100;
-        }
-
-        // valor total do pedido
-        $valor = $obj->data->order->amount??null;
-        if ($valor) {
-            $valor /= 100;
+        $valortotal = $obj->data->order->amount??null;
+        if ($valortotal) {
+            $valortotal /=  100;
         }
 
         // valor total pago do pedido
@@ -77,7 +71,10 @@ class PagarMeWebhookService
             ($obj->data->metadata->installment_type??null == 'MerchantFinanced'),
             $obj->data->metadata->installment_quantity??1,
             PagarMeService::TYPE_NUMBER[strtolower($obj->data->metadata->account_funding_source??null)]??1,
-            $valor,
+            null,
+            null,
+            $valortotal,
+            null,
             $valorpago,
             $valorcancelado
         );
