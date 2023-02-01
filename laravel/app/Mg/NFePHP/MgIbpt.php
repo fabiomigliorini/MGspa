@@ -46,7 +46,8 @@ class MgIbpt extends Ibpt
 
         // Se estiver com data de vigencia inferior na tabela de cache
         // E Não estiver operando em modo OFFLINE
-        if ($nfpb->NotaFiscal->Filial->Empresa->modoemissaonfce != 9 && $emissao->gt($reg->vigenciafim)) {
+	//if (1==0) {
+        if ($nfpb->NotaFiscal->Filial->Empresa->modoemissaonfce != 9 && $emissao->gt($reg->vigenciafim->endOfDay())) {
 
             // Consulta no Web Service do IBPT
 
