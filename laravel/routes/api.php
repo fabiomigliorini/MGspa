@@ -23,7 +23,6 @@ Route::group(['prefix' => 'v1/cielo-lio'], function () {
     Route::post('', '\Mg\Lio\LioController@callback');
 });
 
-
 Route::group(['prefix' => 'v1/auth'], function () {
     Route::post('login', 'Auth\LoginController@authenticate');
     Route::get('logout', 'Auth\LoginController@logout');
@@ -35,11 +34,6 @@ Route::group(['prefix' => 'v1/auth'], function () {
 Route::group(['prefix' => 'v1'], function () {
 
     Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');
-
-    // Portador
-    Route::get('portador', '\Mg\Portador\PortadorController@index');
-    Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
-    Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
     // NFeTerceiro
     Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
@@ -94,11 +88,6 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pix/cob/{codpixcob}/pdf', '\Mg\Pix\PixController@pdf');
     Route::match(['POST', 'PUT', 'PATCH'], 'pix/webhook', '\Mg\Pix\PixController@webhook');
 
-    // Pix
-    Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
-    Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
-    Route::get('pix/', '\Mg\Pix\PixController@index');
-
     // NATUREZA DA OPERACAO
     Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
 
@@ -106,21 +95,6 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
     Route::get('pessoa/{codpessoa}/comanda-vendedor', '\Mg\Pessoa\PessoaController@comandaVendedor');
     Route::post('pessoa/{codnegocio}/comanda-vendedor/imprimir', '\Mg\Pessoa\PessoaController@comandaVendedorImprimir');
-
-    // NotaFiscalTerceiro
-    // Route::get('nfe-terceiro/ultima-nsu', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@ultimaNSU');
-    // Route::get('nfe-terceiro/manifestacao', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@manifestacao');
-    // Route::get('nfe-terceiro/atualiza-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaItem');
-    // Route::get('nfe-terceiro/atualiza-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@atualizaNFe');
-    //
-    // Route::get('nfe-terceiro/consulta-sefaz', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@consultaSefaz');
-    // Route::get('nfe-terceiro/armazena-dados', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosConsulta');
-    // Route::get('nfe-terceiro/lista-notas', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaNotas');
-    // Route::get('nfe-terceiro/busca-nfeterceiro', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@buscaNfeTerceiro');
-    // Route::get('nfe-terceiro/lista-item', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@listaItem');
-    // Route::get('nfe-terceiro/download-nfe', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@downloadNotaFiscalTerceiro');
-    // Route::get('nfe-terceiro/{filial}/{chave}/carregar-xml', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@carregarXml');
-    // Route::get('nfe-terceiro/armazena-evento', '\Mg\NotaFiscalTerceiro\NotaFiscalTerceiroController@armazenaDadosEvento');
 
     // NFePHP
     Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
@@ -332,6 +306,16 @@ Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
         Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
         Route::post('dominio/nfe-saida', '\Mg\Dominio\DominioController@nfeSaida');
         Route::post('dominio/nfe-entrada', '\Mg\Dominio\DominioController@nfeEntrada');
+
+        // Pix
+        Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
+        Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
+        Route::get('pix/', '\Mg\Pix\PixController@index');
+
+        // Portador
+        Route::get('portador', '\Mg\Portador\PortadorController@index');
+        Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
+        Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
     });
 });
