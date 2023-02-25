@@ -1,10 +1,18 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 25/Feb/2023 12:41:16
+ */
 
 namespace Mg\Pedido;
 
 use Mg\MgModel;
+use Mg\Pedido\PedidoItem;
+use Mg\Estoque\EstoqueLocal;
+use Mg\GrupoEconomico\GrupoEconomico;
+use Mg\Usuario\Usuario;
 
-class Pedido extends MGModel
+class Pedido extends MgModel
 {
     const STATUS_PENDENTE         = 10;
     const STATUS_ATENDIDO         = 20;
@@ -28,22 +36,48 @@ class Pedido extends MGModel
 
     protected $table = 'tblpedido';
     protected $primaryKey = 'codpedido';
+
+
     protected $fillable = [
-        'indtipo',
-        'observacoes',
         'codestoquelocal',
         'codestoquelocalorigem',
-        'codgrupoeconomico'
+        'codgrupoeconomico',
+        'indstatus',
+        'indtipo',
+        'observacoes'
     ];
+
     protected $dates = [
         'alteracao',
         'criacao'
     ];
 
+    protected $casts = [
+        'codestoquelocal' => 'integer',
+        'codestoquelocalorigem' => 'integer',
+        'codgrupoeconomico' => 'integer',
+        'codpedido' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'indstatus' => 'integer',
+        'indtipo' => 'integer'
+    ];
+
+
     // Chaves Estrangeiras
     public function EstoqueLocal()
     {
-        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocalorigem');
+        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
+    }
+
+    public function EstoqueLocalOrigem()
+    {
+        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocalorigem', 'codestoquelocal');
+    }
+
+    public function GrupoEconomico()
+    {
+        return $this->belongsTo(GrupoEconomico::class, 'codgrupoeconomico', 'codgrupoeconomico');
     }
 
     public function UsuarioAlteracao()
@@ -56,11 +90,11 @@ class Pedido extends MGModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
     // Tabelas Filhas
     public function PedidoItemS()
     {
         return $this->hasMany(PedidoItem::class, 'codpedido', 'codpedido');
     }
-
 
 }

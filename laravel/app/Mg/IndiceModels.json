@@ -846,6 +846,26 @@
                 "tabela": "tblpagarmepedido",
                 "coluna": "codpessoa",
                 "metodo": "PagarMePedidoS"
+            },
+            "tblpessoaconta.codpessoa": {
+                "tabela": "tblpessoaconta",
+                "coluna": "codpessoa",
+                "metodo": "PessoaContaS"
+            },
+            "tblpessoaemail.codpessoa": {
+                "tabela": "tblpessoaemail",
+                "coluna": "codpessoa",
+                "metodo": "PessoaEmailS"
+            },
+            "tblpessoaendereco.codpessoa": {
+                "tabela": "tblpessoaendereco",
+                "coluna": "codpessoa",
+                "metodo": "PessoaEnderecoS"
+            },
+            "tblpessoatelefone.codpessoa": {
+                "tabela": "tblpessoatelefone",
+                "coluna": "codpessoa",
+                "metodo": "PessoaTelefoneS"
             }
         }
     },
@@ -1879,6 +1899,11 @@
                 "tabela": "tblmdfenfe",
                 "coluna": "codcidadedescarga",
                 "metodo": "MdfeNfeDescargaS"
+            },
+            "tblpessoaendereco.codcidade": {
+                "tabela": "tblpessoaendereco",
+                "coluna": "codcidade",
+                "metodo": "PessoaEnderecoS"
             }
         }
     },
@@ -2954,8 +2979,35 @@
         "namespace": "Mg\\GrupoEconomico",
         "classe": "GrupoEconomico",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/GrupoEconomico\/GrupoEconomico.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmarca.codgrupoeconomico": {
+                "tabela": "tblmarca",
+                "coluna": "codgrupoeconomico",
+                "metodo": "MarcaS"
+            },
+            "tblpedido.codgrupoeconomico": {
+                "tabela": "tblpedido",
+                "coluna": "codgrupoeconomico",
+                "metodo": "PedidoS"
+            },
+            "tblpessoa.codgrupoeconomico": {
+                "tabela": "tblpessoa",
+                "coluna": "codgrupoeconomico",
+                "metodo": "PessoaS"
+            }
+        }
     },
     "tblsexo": {
         "tabela": "tblsexo",
@@ -5130,5 +5182,151 @@
             }
         },
         "hasMany": []
+    },
+    "tblpessoatelefone": {
+        "tabela": "tblpessoatelefone",
+        "campocodigo": "codpessoatelefone",
+        "namespace": "Mg\\Pessoa",
+        "classe": "PessoaTelefone",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/PessoaTelefone.php",
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblpessoaemail": {
+        "tabela": "tblpessoaemail",
+        "campocodigo": "codpessoatelefone",
+        "namespace": "Mg\\Pessoa",
+        "classe": "PessoaEmail",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/PessoaEmail.php",
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblpessoaendereco": {
+        "tabela": "tblpessoaendereco",
+        "campocodigo": "codpessoaendereco",
+        "namespace": "Mg\\Pessoa",
+        "classe": "PessoaEndereco",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/PessoaEndereco.php",
+        "belongsTo": {
+            "codcidade": {
+                "tabela": "tblcidade",
+                "coluna": "codcidade",
+                "metodo": "Cidade"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblpessoaconta": {
+        "tabela": "tblpessoaconta",
+        "campocodigo": "codpessoaconta",
+        "namespace": "Mg\\Pessoa",
+        "classe": "PessoaConta",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/PessoaConta.php",
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblpedido": {
+        "tabela": "tblpedido",
+        "campocodigo": "codpedido",
+        "namespace": "Mg\\Pedido",
+        "classe": "Pedido",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pedido\/Pedido.php",
+        "belongsTo": {
+            "codestoquelocal": {
+                "tabela": "tblestoquelocal",
+                "coluna": "codestoquelocal",
+                "metodo": "EstoqueLocal"
+            },
+            "codestoquelocalorigem": {
+                "tabela": "tblestoquelocal",
+                "coluna": "codestoquelocalorigem",
+                "metodo": "EstoqueLocalOrigem"
+            },
+            "codgrupoeconomico": {
+                "tabela": "tblgrupoeconomico",
+                "coluna": "codgrupoeconomico",
+                "metodo": "GrupoEconomico"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpedidoitem.codpedido": {
+                "tabela": "tblpedidoitem",
+                "coluna": "codpedido",
+                "metodo": "PedidoItemS"
+            }
+        }
     }
 }

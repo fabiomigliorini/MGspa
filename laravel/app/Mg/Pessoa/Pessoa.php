@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 12:13:27
+ * Date: 25/Feb/2023 12:42:06
  */
 
 namespace Mg\Pessoa;
@@ -31,6 +31,10 @@ use Mg\Veiculo\Veiculo;
 use Mg\Mdfe\MdfeVeiculo;
 use Mg\Mercos\MercosCliente;
 use Mg\PagarMe\PagarMePedido;
+use Mg\Pessoa\PessoaConta;
+use Mg\Pessoa\PessoaEmail;
+use Mg\Pessoa\PessoaEndereco;
+use Mg\Pessoa\PessoaTelefone;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -273,6 +277,26 @@ class Pessoa extends MgModel
     public function PessoaCertidaoS()
     {
         return $this->hasMany(PessoaCertidao::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function PessoaContaS()
+    {
+        return $this->hasMany(PessoaConta::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function PessoaEmailS()
+    {
+        return $this->hasMany(PessoaEmail::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function PessoaEnderecoS()
+    {
+        return $this->hasMany(PessoaEndereco::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function PessoaTelefoneS()
+    {
+        return $this->hasMany(PessoaTelefone::class, 'codpessoa', 'codpessoa');
     }
 
     public function RegistroSpcS()

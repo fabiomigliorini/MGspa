@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jun/2021 08:45:58
+ * Date: 25/Feb/2023 12:39:51
  */
 
 namespace Mg\Cidade;
@@ -10,6 +10,7 @@ use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
 use Mg\Mdfe\Mdfe;
 use Mg\Mdfe\MdfeNfe;
+use Mg\Pessoa\PessoaEndereco;
 use Mg\Cidade\Estado;
 use Mg\Usuario\Usuario;
 
@@ -76,6 +77,11 @@ class Cidade extends MgModel
     public function PessoaCobrancaS()
     {
         return $this->hasMany(Pessoa::class, 'codcidadecobranca', 'codcidade');
+    }
+
+    public function PessoaEnderecoS()
+    {
+        return $this->hasMany(PessoaEndereco::class, 'codcidade', 'codcidade');
     }
 
 }
