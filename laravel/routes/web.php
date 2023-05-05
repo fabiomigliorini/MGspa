@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -12,9 +14,10 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('login');
 });
 
-// Auth::routes();
-//
-// Route::get('/home', 'HomeController@index')->name('home');
+Auth::routes();
+Auth::routes(['register' => false, 'reset' => false ]);
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('logout', 'Auth\LoginController@logout');

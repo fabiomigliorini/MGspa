@@ -1,41 +1,57 @@
 {
     "name": "laravel/laravel",
-    "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
-    "license": "MIT",
     "type": "project",
+    "description": "The Laravel Framework.",
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
+    "license": "MIT",
     "require": {
-        "php": ">=7.0.0",
-        "asgrim/ofxparser": "^1.2",
-        "barryvdh/laravel-cors": "^0.11.0",
-        "dompdf/dompdf": "^1.0",
-        "fideloper/proxy": "~3.3",
-        "laravel/framework": "5.5.*",
-        "laravel/tinker": "~1.0",
-        "nfephp-org/sped-common": "^5.0",
-        "nfephp-org/sped-da": "^0.2",
+        "php": "^7.3|^8.0",
+        "dompdf/dompdf": "^2.0",
+        "fideloper/proxy": "^4.4",
+        "fruitcake/laravel-cors": "^2.0",
+        "guzzlehttp/guzzle": "^7.5",
+        "laravel/framework": "^8.12",
+        "laravel/helpers": "^1.6",
+        "laravel/passport": "^10.1",
+        "laravel/tinker": "^2.5",
+        "laravel/ui": "^3.2",
+        "nfephp-org/sped-common": "^5.1",
+        "nfephp-org/sped-da": "^1.1",
         "nfephp-org/sped-ibpt": "^2.0",
         "nfephp-org/sped-mdfe": "^4.1",
-        "nfephp-org/sped-nfe": "^5.0",
+        "nfephp-org/sped-nfe": "^5.1",
         "openboleto/openboleto": "dev-master",
-        "phpoffice/phpspreadsheet": "^1.4",
+        "phpoffice/phpspreadsheet": "^1.28",
         "quilhasoft/jasperphp": "dev-master",
-        "quilhasoft/jasperphp-openboleto": "dev-master",
-        "tymon/jwt-auth": "dev-develop"
+        "quilhasoft/jasperphp-openboleto": "dev-master"
     },
     "require-dev": {
-        "filp/whoops": "~2.0",
-        "fzaninotto/faker": "~1.4",
-        "mockery/mockery": "~1.0",
-        "phpunit/phpunit": "~6.0",
-        "symfony/thanks": "^1.0"
+        "facade/ignition": "^2.5",
+        "fakerphp/faker": "^1.9.1",
+        "laravel/sail": "^1.0.1",
+        "mockery/mockery": "^1.4.2",
+        "nunomaduro/collision": "^5.0",
+        "phpunit/phpunit": "^9.3.3"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
     },
     "autoload": {
         "files": [
             "app/Mg/Helpers/MgHelpers.php"
         ],
         "classmap": [
-            "database/seeds",
+            
             "database/factories"
         ],
         "psr-4": {
@@ -48,27 +64,18 @@
             "Tests\\": "tests/"
         }
     },
-    "extra": {
-        "laravel": {
-            "dont-discover": [
-            ]
-        }
-    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
         "post-create-project-cmd": [
-            "@php artisan key:generate"
+            "@php artisan key:generate --ansi"
         ]
-    },
-    "config": {
-        "preferred-install": "dist",
-        "sort-packages": true,
-        "optimize-autoloader": true,
-        "allow-plugins": {
-            "kylekatarnls/update-helper": true,
-            "symfony/thanks": true
-        }
     }
 }

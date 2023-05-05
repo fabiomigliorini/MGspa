@@ -2,7 +2,7 @@
 
 namespace Mg\Veiculo;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class VeiculoConjuntoResource extends Resource
 {

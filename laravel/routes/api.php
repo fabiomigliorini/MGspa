@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,23 +17,36 @@ use Illuminate\Http\Request;
 |
 */
 
+Route::middleware('auth:api')->get('v1/auth/user', function (Request $request) {
+    return $request->user();
+});
+Route::middleware('auth:api')->get('v1/auth/logout', function (Request $request) {
+    $user =  $request->user();
+    $accessToken = $user->token();
+    DB::table('oauth_refresh_tokens')
+    ->where('access_token_id', $accessToken->id)
+    ->delete();
+    $user->token()->delete();
+    return response()->json([
+        'message' => 'Logout Realizado com sucesso',
+        'session' => session()->all()
+    ]);
+});
+###################################################################################
 
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
+Route::get('quasar', 'Auth\SSOController@getLoginQuasar');
+Route::get('quasar/callback', 'Auth\SSOController@getCallback');
 
 Route::group(['prefix' => 'v1/cielo-lio'], function () {
-    Route::post('', '\Mg\Lio\LioController@callback');
+Route::post('', '\Mg\Lio\LioController@callback');
 });
 
-
 Route::group(['prefix' => 'v1/auth'], function () {
-    Route::post('login', 'Auth\LoginController@authenticate');
-    Route::get('logout', 'Auth\LoginController@logout');
-    Route::get('check', 'Auth\LoginController@check');
-    Route::get('refresh', 'Auth\LoginController@refreshToken');
-    Route::get('user', 'Auth\LoginController@getAuthenticatedUser');
+    Route::post('login', 'Auth\SSOController@login');
+   // Route::get('logout', 'Auth\LoginController@logoutt');
+   // Route::get('check', 'Auth\LoginController@check');
+  //  Route::get('refresh', 'Auth\LoginController@refreshToken');
+  //  Route::get('user', 'Auth\SSOController@getAuthenticatedUser');
 });
 
 Route::group(['prefix' => 'v1'], function () {
@@ -40,7 +57,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('portador', '\Mg\Portador\PortadorController@index');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
-
+    
     // NFeTerceiro
     Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
     Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
@@ -98,7 +115,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
     Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
     Route::get('pix/', '\Mg\Pix\PixController@index');
-
+    
     // NATUREZA DA OPERACAO
     Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
 
@@ -155,7 +172,7 @@ Route::group(['prefix' => 'v1'], function () {
 
 });
 
-Route::group(['middleware' => ['cors', 'api', 'jwt-auth']], function () {
+Route::group(['middleware' => ['auth:api']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
         Route::group(['prefix' => 'produto'], function () {

@@ -2,7 +2,7 @@
 
 namespace Mg\Stone;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class StoneFilialResource extends Resource
 {

@@ -3,11 +3,19 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Carbon\Carbon;
-
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        //
+    }
+
     /**
      * Bootstrap any application services.
      *
@@ -16,15 +24,5 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
-      $teste = setlocale(LC_TIME, 'pt_BR.utf8');
     }
 }

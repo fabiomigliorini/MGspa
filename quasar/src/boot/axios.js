@@ -1,5 +1,5 @@
 import axios from 'axios'
-import refresh from '../jwt/Refresh'
+
 
 export default ({ Vue }) => {
   Vue.prototype.$axios = axios.create({
@@ -24,6 +24,8 @@ export default ({ Vue }) => {
       if (error.response.status) {
         const originalRequest = error.config;
         if (error.response.status === 401 && !originalRequest._retry) {
+          //window.location="http://api-mgspa-dev.mgpapelaria.com.br/api/quasar"
+          window.location=process.env.OAUTH_URL
           refresh.handle(error.response)
         }
       }

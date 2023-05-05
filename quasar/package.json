@@ -16,6 +16,7 @@
     "moment": "^2.27.0",
     "numeral": "^2.0.6",
     "quasar": "^1.12.13",
+    "vue-axios": "^3.5.2",
     "vue-chartjs": "^3.5.0"
   },
   "devDependencies": {

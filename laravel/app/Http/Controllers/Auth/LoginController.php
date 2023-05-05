@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-
+use App\Providers\RouteServiceProvider;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
-use JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
@@ -21,102 +24,210 @@ class LoginController extends Controller
     |
     */
 
-    public function authenticate(Request $request)
-    {
-        // grab credentials from the request
-        $credentials = [
-          'usuario' => $request->usuario,
-          'password' => $request->senha,
-        ];
+    use AuthenticatesUsers;
 
-        try {
-            // attempt to verify the credentials and create a token for the user
-            if (! $token = JWTAuth::attempt($credentials)) {
-                return response()->json(['mensagem' => 'Usuário ou senha inválido(a)'], 401);
-            }
-        } catch (JWTException $e) {
-            // something went wrong whilst attempting to encode the token
-            return response()->json(['mensagem' => 'Erro ao cria Token'], 500);
-        }
-
-        // all good so return the token
-        return response()->json(compact('token'));
-    }
-
-    public function check()
-    {
-        try {
-            JWTAuth::parseToken()->authenticate();
-        } catch (JWTException $e) {
-
-            return response(['autenticado' => false]);
-        }
-
-        return response(['autenticado' => true]);
-    }
     /**
-     * Refresh JWT Token
+     * Where to redirect users after login.
      *
-     * @return mixed
-     * @throws AccessDeniedHttpException
-     * @throws BadRequestHttpException
+     * @var string
      */
-    public function refreshToken()
+    protected $redirectTo = RouteServiceProvider::HOME;
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
     {
-        $token = JWTAuth::getToken();
-        if (! $token) {
-            return response(['mensagem' => 'Token não existe']);
-        }
-
-        try {
-            $token = JWTAuth::refresh($token);
-        } catch (TokenInvalidException $e) {
-            return response(['mensagem' => 'Token inválido']);
-        }
-
-        return $token;
+        $this->middleware('guest')->except('logout');
     }
 
-    public function getAuthenticatedUser()
+
+    public function showLoginForm()
     {
-    	  try {
-        		if (! $user = JWTAuth::parseToken()->authenticate()) {
-        		    return response()->json(['user_not_found'], 404);
-            }
-
-            $user->avatar = $user->Imagem->url ?? '';
-
-      	} catch (Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
-
-      		return response()->json(['token_expired'], $e->getStatusCode());
-
-      	} catch (Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-
-      		return response()->json(['token_invalid'], $e->getStatusCode());
-
-      	} catch (Tymon\JWTAuth\Exceptions\JWTException $e) {
-
-      		return response()->json(['token_absent'], $e->getStatusCode());
-      	}
-
-      	// the token is valid and we have found the user via the sub claim
-      	return response()->json(compact('user'));
+        return view('auth.login');
     }
 
-    public function logout()
+    /**
+     * Handle a login request to the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function login(Request $request)
     {
+        $this->validateLogin($request);
 
-        try {
-            $token = JWTAuth::getToken();
+        // If the class is using the ThrottlesLogins trait, we can automatically throttle
+        // the login attempts for this application. We'll key this by the username and
+        // the IP address of the client making these requests into this application.
+        if (method_exists($this, 'hasTooManyLoginAttempts') &&
+            $this->hasTooManyLoginAttempts($request)) {
+            $this->fireLockoutEvent($request);
 
-            if ($token) {
-                JWTAuth::invalidate($token);
-            }
-
-        } catch (JWTException $e) {
-            return response()->json(['mensagem' => $e->getMessage()], 401);
+            return $this->sendLockoutResponse($request);
         }
 
-        return response()->json(['mensagem' => 'Logout realizado com sucesso!'], 200);
+        if ($this->attemptLogin($request)) {
+            if ($request->hasSession()) {
+                $request->session()->put('auth.password_confirmed_at', time());
+            }
+
+            return $this->sendLoginResponse($request);
+        }
+
+        // If the login attempt was unsuccessful we will increment the number of attempts
+        // to login and redirect the user back to the login form. Of course, when this
+        // user surpasses their maximum number of attempts they will get locked out.
+        $this->incrementLoginAttempts($request);
+
+        return $this->sendFailedLoginResponse($request);
+    }
+
+    /**
+     * Validate the user login request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return void
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function validateLogin(Request $request)
+    {
+        $request->validate([
+            $this->username() => 'required|string',
+            'password' => 'required|string',
+        ]);
+    }
+
+    /**
+     * Attempt to log the user into the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    protected function attemptLogin(Request $request)
+    {
+        return $this->guard()->attempt(
+            $this->credentials($request), $request->boolean('remember')
+        );
+    }
+
+    /**
+     * Get the needed authorization credentials from the request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    protected function credentials(Request $request)
+    {
+        return $request->only($this->username(), 'password');
+    }
+
+    /**
+     * Send the response after the user was authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    protected function sendLoginResponse(Request $request)
+    {
+        $request->session()->regenerate();
+
+        $this->clearLoginAttempts($request);
+
+        if ($response = $this->authenticated($request, $this->guard()->user())) {
+            return $response;
+        }
+
+        return $request->wantsJson()
+                    ? new JsonResponse([], 204)
+                    : redirect()->intended($this->redirectPath());
+    }
+
+    /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        //
+    }
+
+    /**
+     * Get the failed login response instance.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function sendFailedLoginResponse(Request $request)
+    {
+        throw ValidationException::withMessages([
+            $this->username() => [trans('auth.failed')],
+        ]);
+    }
+
+    /**
+     * Get the login username to be used by the controller.
+     *
+     * @return string
+     */
+    public function username()
+    {
+        return 'usuario';
+    }
+
+    /**
+     * Log the user out of the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+
+
+    public function logout(Request $request)
+    {
+        $user =  Auth::user();
+        DB::table('oauth_access_tokens')
+        ->where('user_id', $user->codusuario)
+        ->delete();
+        $this->guard()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        if ($response = $this->loggedOut($request)) {
+            return $response;
+        }
+        return $request->wantsJson()
+            ? new JsonResponse([], 204)
+            : redirect(env('MGLARA_URL').'auth/logout');
+    }
+
+    /**
+     * The user has logged out of the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return mixed
+     */
+    protected function loggedOut(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Get the guard to be used during authentication.
+     *
+     * @return \Illuminate\Contracts\Auth\StatefulGuard
+     */
+    protected function guard()
+    {
+        return Auth::guard();
     }
 }
