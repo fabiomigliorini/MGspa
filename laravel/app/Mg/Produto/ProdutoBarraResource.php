@@ -2,7 +2,7 @@
 
 namespace Mg\Produto;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class ProdutoBarraResource extends Resource
 {

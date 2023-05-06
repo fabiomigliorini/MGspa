@@ -152,7 +152,7 @@ export default {
           localStorage.removeItem('auth.usuario.usuario');
           localStorage.removeItem('auth.usuario.codusuario');
           localStorage.removeItem('auth.usuario.avatar');
-          vm.$router.push('/login');
+          window.location=process.env.LOGOUT_URL;
           vm.$q.notify({
             message: 'Até mais...',
             color: 'positive',

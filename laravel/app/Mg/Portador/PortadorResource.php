@@ -2,7 +2,7 @@
 
 namespace Mg\Portador;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class PortadorResource extends Resource
 {

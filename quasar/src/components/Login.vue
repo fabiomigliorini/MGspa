@@ -7,16 +7,21 @@
         <form @submit.prevent="login()">
 
           <div class="item-content">
-            <q-input v-model="usuario" label="Usuário" autofocus />
+            <q-input v-model="username" label="Usuário" autofocus />
           </div>
 
           <div class="item-content">
-            <q-input v-model="senha" type="password" label="Senha" />
+            <q-input v-model="password" type="password" label="Senha" />
           </div>
           <br>
           <q-btn color="primary" icon-right="send" type="submit">
             entrar
           </q-btn>
+          <q-btn color="red" style="margin-top: 10px;">
+          <a  href="http://api-mgspa-dev.mgpapelaria.com.br/api/quasar" style="color:white">
+            Login usando MGSpa
+          </a>
+        </q-btn>
         </form>
       </q-card-section>
     </q-card>
@@ -29,8 +34,8 @@ export default {
   name: 'login',
   data () {
     return {
-      usuario: null,
-      senha: null,
+      username: null,
+      password: null,
       erro: false,
       mensagem: 'mensagem'
     }
@@ -46,25 +51,29 @@ export default {
     login: function (e) {
       var vm = this
       let data = {
-        usuario: vm.usuario,
-        senha: vm.senha
+        username: vm.username,
+        password: vm.password
       }
       // Busca Autenticacao
       vm.$axios.post('auth/login', data).then(response => {
         // salva token no Local Storage
-        let token = response.data.token
+        let token = response.data.access_token
         localStorage.setItem('auth.token', token)
+      
 
+       
         vm.$axios.get('auth/user').then(response => {
+  
           // salva código da imagem avatar do usuário
-          localStorage.setItem('auth.usuario.avatar', response.data.user.avatar)
-          localStorage.setItem('auth.usuario.usuario', response.data.user.usuario)
-          localStorage.setItem('auth.usuario.codusuario', response.data.user.codusuario)
+          localStorage.setItem('auth.usuario.avatar', response.data.avatar)
+          localStorage.setItem('auth.usuario.usuario', response.data.usuario)
+          localStorage.setItem('auth.usuario.codusuario', response.data.codusuario)
           this.$store.commit('perfil/updatePerfil', {
             usuario: localStorage.getItem('auth.usuario.usuario'),
             avatar: localStorage.getItem('auth.usuario.avatar'),
             codusuario: localStorage.getItem('auth.usuario.codusuario')
           })
+         
         }).catch(error => {
           console.log(error.response)
         })
@@ -76,10 +85,11 @@ export default {
         this.mensagem = error.response.data.mensagem
       })
     }
-
+    
   }
 }
 </script>
+
 <style>
 #row-login {
   background-image: url("/statics/fundo-login.jpg");

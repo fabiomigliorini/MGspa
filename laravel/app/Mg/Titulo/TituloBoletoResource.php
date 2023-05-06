@@ -2,7 +2,7 @@
 
 namespace Mg\Titulo;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class TituloBoletoResource extends Resource
 {

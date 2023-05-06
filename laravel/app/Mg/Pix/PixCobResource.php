@@ -2,7 +2,7 @@
 
 namespace Mg\Pix;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class PixCobResource extends Resource
 {

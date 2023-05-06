@@ -4,7 +4,7 @@ namespace Mg\Dfe;
 
 use Mg\Pessoa\Pessoa;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class DistribuicaoDfeResource extends Resource
 {

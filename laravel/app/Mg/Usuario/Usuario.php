@@ -210,16 +210,17 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Laravel\Passport\HasApiTokens;
+
 
 use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
 use Mg\Filial\Filial;
 use Mg\Imagem\Imagem;
 
-class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswordContract, JWTSubject
+class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswordContract
 {
-    use Authenticatable, Authorizable, CanResetPassword;
+    use Authenticatable, Authorizable, CanResetPassword, HasApiTokens;
 
     protected $table = 'tblusuario';
     protected $primaryKey = 'codusuario';
@@ -247,26 +248,24 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
 
     // protected $hidden = ['senha', 'remember_token'];
 
+    public function findForPassport(string $username): Usuario
+    {
+        return $this->where('usuario', $username)->first();
+    }
+
+
+
     public function getAuthPassword() {
         return $this->senha;
     }
     /**
     * @return mixed
     */
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
+   
 
     /**
     * @return array
     */
-    public function getJWTCustomClaims()
-    {
-        return ['user' => ['codusuario' => $this->codusuario]];
-    }
-
-
     // Chaves Estrangeiras
 
     public function Filial()

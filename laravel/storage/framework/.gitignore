@@ -1,4 +1,5 @@
 config.php
+maintenance.php
 routes.php
 schedule-*
 compiled.php

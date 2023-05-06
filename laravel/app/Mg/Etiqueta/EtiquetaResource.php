@@ -2,7 +2,7 @@
 
 namespace Mg\Etiqueta;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
 class EtiquetaResource extends Resource
 {
