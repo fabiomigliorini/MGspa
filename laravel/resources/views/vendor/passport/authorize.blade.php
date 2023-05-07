@@ -89,12 +89,6 @@
                         <hr>
                         <div class="row">
                             <div class="col-12" style="text-align: center">
-                                <form method="post" action="{{ route('different-account') }}" style="display: inline-block">
-                                    @csrf
-
-                                    <input type="hidden" name="current_url" value="{{ $request->fullUrl() }}">
-                                    <button type="submit" class="btn btn-success btn-block" style="width: auto;">Not {{ auth()->user()->name}}? Login Again?</button>
-                                </form>
                             </div>
                         </div>
 

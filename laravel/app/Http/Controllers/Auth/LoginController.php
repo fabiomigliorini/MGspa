@@ -195,13 +195,15 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        $user =  Auth::user();
-        DB::table('oauth_access_tokens')
-        ->where('user_id', $user->codusuario)
-        ->delete();
-        $this->guard()->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $user = Auth::user();
+        if (!empty($user)) {
+            DB::table('oauth_access_tokens')
+                ->where('user_id', $user->codusuario)
+                ->delete();
+            $this->guard()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
         if ($response = $this->loggedOut($request)) {
             return $response;
         }

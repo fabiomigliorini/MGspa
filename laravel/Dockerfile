@@ -13,3 +13,6 @@ RUN docker-php-ext-install pgsql pdo pdo_pgsql soap gd zip
 RUN apk add libmemcached-dev gcc build-base
 RUN pecl install memcached
 RUN echo extension=memcached.so >> /usr/local/etc/php/conf.d/memcached.ini
+
+#CMD ["/usr/bin/memcached --user=memcached"]
+CMD /usr/bin/memcached --user=memcached & php-fpm

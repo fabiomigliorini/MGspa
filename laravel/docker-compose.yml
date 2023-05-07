@@ -11,6 +11,7 @@ services:
             - /etc/timezone:/etc/timezone:ro
             - /etc/localtime:/etc/localtime:ro
             - /usr/share/zoneinfo:/usr/share/zoneinfo              
+            - ./.docker/config/ssl/openssl.cnf:/etc/ssl/openssl.cnf
         extra_hosts:
             - "host.docker.internal:host-gateway"              
             - "sistema.mgpapelaria.com.br:host-gateway"

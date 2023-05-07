@@ -48,6 +48,11 @@ html {
   line-height: 1.15;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      background: url(../fundologin.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
 }
 
 article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
@@ -62,8 +67,19 @@ body {
   line-height: 1.6;
   color: #212529;
   text-align: left;
-  background-color: #f8fafc;
+  /*
+  background-color: #fdce3d;
   background-image: url(../fundologin.jpg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: 100%;
+  position: relative;
+  min-height: 100%;
+  */
+  /*background-size: 100% 100%;*/
+
+
 }
 
 [tabindex="-1"]:focus:not(:focus-visible) {

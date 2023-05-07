@@ -283,7 +283,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
         // Autocomplete / Select
-        Route::get('select/pessoa', '\Mg\Select\SelectPessoaController@index');
+        //Route::get('select/pessoa', '\Mg\Select\SelectPessoaController@index');
         Route::get('select/cidade', '\Mg\Select\SelectCidadeController@index');
         Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
