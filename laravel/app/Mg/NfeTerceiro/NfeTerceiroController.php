@@ -63,8 +63,10 @@ class NfeTerceiroController
             ]);
         }
 
+        $manif = $request->indmanifestacao;
+        $just = $request->justificativa??'';
         $nfeTerceiro = NfeTerceiro::findOrFail($codnfeterceiro);
-        $ret = NfeTerceiroService::manifestacao($nfeTerceiro, $request->indmanifestacao, $request->justificativa);
+        $ret = NfeTerceiroService::manifestacao($nfeTerceiro, $manif, $just);
         return $ret;
     }
 
