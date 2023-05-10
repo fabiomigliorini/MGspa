@@ -9,7 +9,7 @@ use NFePHP\NFe\Common\Standardize;
 
 class NFePHPManifestacaoService
 {
-    public static function manifestacao(Filial $filial, $chNFe, $tpEvento, $justificativa, $nSeqEvento)
+    public static function manifestacao(Filial $filial, $chNFe, $tpEvento, string $justificativa, $nSeqEvento)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
         $tools->model(55);

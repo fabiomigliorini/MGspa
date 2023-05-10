@@ -8,7 +8,7 @@ use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 
 class NfeTerceiroService
 {
-    public static function manifestacao(NfeTerceiro $nfeTerceiro, $indmanifestacao, $justificativa = null)
+    public static function manifestacao(NfeTerceiro $nfeTerceiro, $indmanifestacao, string $justificativa = '')
     {
         $resp = NFePHPManifestacaoService::manifestacao(
             $nfeTerceiro->Filial,

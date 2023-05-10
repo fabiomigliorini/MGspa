@@ -27,7 +27,7 @@ use Mg\Filial\FilialService;
 
 class NFePHPDistDfeService
 {
-    public static function consultar(Filial $filial, int $nsu = null)
+    public static function consultar(Filial $filial, int $nsuInicial = 0, int $nsuFinal = 0)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
 
@@ -40,11 +40,11 @@ class NFePHPDistDfeService
 
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
-        $nsuInicial = $nsu??DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
-        $nsuFinal = $nsu;
-        Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");
-        $resp = $tools->sefazDistDFe($nsuInicial, $nsuFinal);
-        //$resp = $tools->sefazDistDFe($nsu);
+        if ($nsuInicial == 0) {
+            $nsuInicial = DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
+        }
+        Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsuInicial} / {$nsuFinal}");
+        $resp = $tools->sefazDistDFe($nsuInicial);
 
         $st = (new Standardize($resp))->toStd();
         switch ($st->cStat) {
