@@ -3041,7 +3041,33 @@
         "namespace": "Mg\\Pessoa",
         "classe": "PessoaCertidao",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/PessoaCertidao.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codcertidaoemissor": {
+                "tabela": "tblcertidaoemissor",
+                "coluna": "codcertidaoemissor",
+                "metodo": "CertidaoEmissor"
+            },
+            "codcertidaotipo": {
+                "tabela": "tblcertidaotipo",
+                "coluna": "codcertidaotipo",
+                "metodo": "CertidaoTipo"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblregistrospc": {
@@ -5326,6 +5352,58 @@
                 "tabela": "tblpedidoitem",
                 "coluna": "codpedido",
                 "metodo": "PedidoItemS"
+            }
+        }
+    },
+    "tblcertidaoemissor": {
+        "tabela": "tblcertidaoemissor",
+        "campocodigo": "codcertidaoemissor",
+        "namespace": "Mg\\Certidao",
+        "classe": "CertidaoEmissor",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Certidao\/CertidaoEmissor.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoacertidao.codcertidaoemissor": {
+                "tabela": "tblpessoacertidao",
+                "coluna": "codcertidaoemissor",
+                "metodo": "PessoaCertidaoS"
+            }
+        }
+    },
+    "tblcertidaotipo": {
+        "tabela": "tblcertidaotipo",
+        "campocodigo": "codcertidaotipo",
+        "namespace": "Mg\\Certidao",
+        "classe": "CertidaoTipo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Certidao\/CertidaoTipo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoacertidao.codcertidaotipo": {
+                "tabela": "tblpessoacertidao",
+                "coluna": "codcertidaotipo",
+                "metodo": "PessoaCertidaoS"
             }
         }
     }
