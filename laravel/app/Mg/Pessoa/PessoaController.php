@@ -76,5 +76,11 @@ class PessoaController extends MgController
         ]);
     }
 
+    public function detalhes (Request $request, $codpessoa)
+    {
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        return new PessoaResource($pessoa);
+    }
+
 
 }
