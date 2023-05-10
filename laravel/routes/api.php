@@ -113,6 +113,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
     Route::get('pessoa/{codpessoa}/comanda-vendedor', '\Mg\Pessoa\PessoaController@comandaVendedor');
     Route::post('pessoa/{codnegocio}/comanda-vendedor/imprimir', '\Mg\Pessoa\PessoaController@comandaVendedorImprimir');
+    Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@detalhes');
 
     // NFePHP
     Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
