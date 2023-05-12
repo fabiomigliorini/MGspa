@@ -2,9 +2,13 @@
 
 namespace Mg\Pessoa;
 
+use Carbon\Carbon;
+use DB;
+
 use Mg\MgService;
 use Mg\Cidade\Cidade;
-use DB;
+use Mg\NFePHP\NFePHPService;
+use Mg\Filial\Filial;
 
 class PessoaService
 {
@@ -95,5 +99,73 @@ class PessoaService
 		return true;
 	}
 
+    public static function create ($data)
+    {
+        $pessoa = new Pessoa($data);
+        $pessoa->save();
+        return $pessoa->refresh();
+    }
+
+    public static function update (Pessoa $pessoa, $data)
+    {
+        $pessoa->fill($data);
+        $pessoa->save();
+        return $pessoa;
+    }
+
+    public static function delete (Pessoa $pessoa)
+    {
+        return $pessoa->delete();
+    }
+
+    public static function ativar (Pessoa $pessoa)
+    {
+        $pessoa->update(['inativo' => null]);
+        return $pessoa->refresh();
+    }
+
+    public static function inativar (Pessoa $pessoa)
+    {
+        $pessoa->update(['inativo' => Carbon::now()]);
+        return $pessoa->refresh();
+    }
+
+    public static function importarReceitaWs ($cnpj)
+    {
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+          CURLOPT_URL => "https://receitaws.com.br/v1/cnpj/{$cnpj}",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => "",
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => "GET",
+          CURLOPT_HTTPHEADER => [
+            "Accept: application/json",
+            "Authorization: Bearer " . env('RECEITA_WS_TOKEN')
+          ],
+        ]);
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        dd($response);
+        // CODIGO IMPORTAR E SALVAR UMA PESSOA
+        // $pessoa = new Pessoa($data);
+        $pessoa = Pessoa::findOrFail(1);
+        return $pessoa->refresh();
+    }
+
+    public static function importarSefaz ($uf, $cnpj, $cpf, $ie)
+    {
+        $filial = Filial::findOrFail(101);
+        $data = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
+        // dd($data->infCons->infCad->IE);
+        dd($data);
+        return $pessoa->refresh();
+    }
 
 }

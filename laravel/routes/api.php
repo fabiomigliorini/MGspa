@@ -112,8 +112,25 @@ Route::group(['prefix' => 'v1'], function () {
     // Pessoa autocomplete
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
     Route::get('pessoa/{codpessoa}/comanda-vendedor', '\Mg\Pessoa\PessoaController@comandaVendedor');
-    Route::post('pessoa/{codnegocio}/comanda-vendedor/imprimir', '\Mg\Pessoa\PessoaController@comandaVendedorImprimir');
-    Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@detalhes');
+    Route::post('pessoa/{codpessoa}/comanda-vendedor/imprimir', '\Mg\Pessoa\PessoaController@comandaVendedorImprimir');
+
+    // Allan - daqui pra baixo
+    Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
+    Route::post('pessoa/', '\Mg\Pessoa\PessoaController@create');
+    Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@show');
+    Route::put('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@update');
+    Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
+    Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
+    Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
+    Route::post('pessoa/importar-receita-ws', '\Mg\Pessoa\PessoaController@importarReceitaWs');
+    Route::post('pessoa/importar-sefaz', '\Mg\Pessoa\PessoaController@importarSefaz');
+
+    // Pessoa Telefone
+    Route::get('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@index');
+    Route::post('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@create');
+    Route::get('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@show');
+    Route::put('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@update');
+    Route::delete('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@delete');
 
     // NFePHP
     Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
@@ -247,10 +264,6 @@ Route::group(['middleware' => ['auth:api']], function () {
 
         // Filiais
         Route::apiResource('filial', '\Mg\Filial\FilialController');
-
-        // Pessoas
-        Route::apiResource('pessoa', '\Mg\Pessoa\PessoaController');
-        Route::post('pessoa/novapessoa', '\Mg\Pessoa\PessoaController@novaPessoa');
 
         // Permissões
         Route::apiResource('permissao', '\Mg\Permissao\PermissaoController');

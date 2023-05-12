@@ -19,8 +19,8 @@ class PessoaResource extends JsonResource
 
         // Chave Extrangeira
         $ret['GrupoCliente'] = [
-            'codgrupocliente' => $this->GrupoCliente->codgrupocliente,
-            'grupocliente' => $this->GrupoCliente->grupocliente,
+            'codgrupocliente' => @$this->GrupoCliente->codgrupocliente,
+            'grupocliente' => @$this->GrupoCliente->grupocliente,
         ];
 
         // Filhos

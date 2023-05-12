@@ -838,4 +838,17 @@ class NFePHPService extends MgService
         }
         return file_get_contents($path);
     }
+
+    public static function sefazCadastro(Filial $filial, $uf = 'MT', $cnpj = '', $cpf = '', $iest = '')
+    {
+        $tools = NFePHPConfigService::instanciaTools($filial);
+        $tools->model('55');
+        $uf = $uf;
+        $cnpj = $cnpj;
+        $iest = $iest;
+        $cpf = $cpf;
+        $response = $tools->sefazCadastro($uf, $cnpj, $iest, $cpf);
+        $stdCl = (new Standardize($response))->toStd();
+        return $stdCl;
+    }
 }
