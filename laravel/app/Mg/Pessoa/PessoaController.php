@@ -71,14 +71,16 @@ class PessoaController extends MgController
     public function importarSefaz (Request $request)
     {
         $request->validate([
+            'codfilial' => 'required',
             'uf' => 'required'
             // 'cnpj' => 'required'
         ]);
+        $codfilial = $request->codfilial;
         $uf = $request->uf;
         $cnpj = $request->cnpj??'';
         $cpf = $request->cpf??'';
         $ie = $request->ie??'';
-        $pessoa = PessoaService::importarSefaz($uf, $cnpj, $cpf, $ie);
+        $pessoa = PessoaService::importarSefaz($codfilial, $uf, $cnpj, $cpf, $ie);
         return new PessoaResource($pessoa);
     }
 

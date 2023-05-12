@@ -159,9 +159,9 @@ class PessoaService
         return $pessoa->refresh();
     }
 
-    public static function importarSefaz ($uf, $cnpj, $cpf, $ie)
+    public static function importarSefaz ($codfilial, $uf, $cnpj, $cpf, $ie)
     {
-        $filial = Filial::findOrFail(101);
+        $filial = Filial::findOrFail($codfilial);
         $data = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
         // dd($data->infCons->infCad->IE);
         dd($data);
