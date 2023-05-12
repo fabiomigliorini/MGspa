@@ -15,7 +15,7 @@ class NFePHPCommandDistDfe extends Command
      *
      * @var string
      */
-    protected $signature = 'nfe-php:dist-dfe {--codfilial=} {--nsu=}';
+    protected $signature = 'nfe-php:dist-dfe {--codfilial=} {--nsu-inicial=} {--nsu-final=}';
 
     /**
      * The console command description.
@@ -41,22 +41,27 @@ class NFePHPCommandDistDfe extends Command
      */
     public function handle()
     {
+        $loops = 0;
         $qry = Filial::ativo()->where('dfe', true)->orderBy('codempresa')->orderBy('codfilial');
         if ($codfilial = $this->option('codfilial')) {
             $qry->where('codfilial', $codfilial);
         }
         $filiais = $qry->get();
+        $nsuInicial = $this->option('nsu-inicial')??0;
+        $nsuFinal = $this->option('nsu-final')??0;
         foreach ($filiais as $filial) {
-            //$nsu = null;
-            $nsu = $this->option('nsu');
             do {
+                $loops++;
                 $continuar = false;
-                //Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsu}");
                 try {
-                    $resp = NFePHPDistDfeService::consultar($filial, $nsu);
-                    if (empty($nsu)) {
-                        $nsu = $resp['ultNSU'];
-                        $continuar = ($resp['ultNSU'] < $resp['maxNSU']);
+                    $resp = NFePHPDistDfeService::consultar($filial, $nsuInicial, $nsuFinal);
+                    $nsuInicial = $resp['ultNSU']+1;
+                    $continuar = ($resp['ultNSU'] < $resp['maxNSU']);
+                    if ($continuar) {
+                        $continuar = ($loops < 20);
+                    }
+                    if ($continuar && ($nsuFinal != 0)) {
+                        $continuar = ($nsuInicial <= $nsuFinal);
                     }
                 } catch (\Exception $e) {
                     Log::error($e->getMessage());

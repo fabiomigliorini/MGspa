@@ -288,7 +288,7 @@ class NFePHPMakeService
             $std->cEAN = 'SEM GTIN';
             try {
                 $gtin = new Gtin($nfpb->ProdutoBarra->barras);
-                if ($gtin->isValid()) {
+                if ($gtin->isValid() && $gtin->prefix != 610) {
                     $std->cEAN = $nfpb->ProdutoBarra->barras;
                 }
             } catch (\Exception $e) {
@@ -314,7 +314,7 @@ class NFePHPMakeService
                 foreach ($nfpb->ProdutoBarra->ProdutoVariacao->ProdutoBarraS()->whereNull('codprodutoembalagem')->get() as $pbUnidade) {
                     try {
                         $gtin = new Gtin($pbUnidade->barras);
-                        if ($gtin->isValid()) {
+                        if ($gtin->isValid() && $gtin->prefix != 610) {
                             $std->cEANTrib = $pbUnidade->barras;
                             if (empty($pbUnidade->codprodutoembalagem)) {
                                 $std->uTrib = Strings::replaceSpecialsChars($nfpb->ProdutoBarra->Produto->UnidadeMedida->sigla);
