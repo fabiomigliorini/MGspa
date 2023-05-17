@@ -9,41 +9,79 @@ use Illuminate\Validation\Rule;
 
 class PessoaController extends MgController
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function index(Request $request)
     {
-        list($filter, $sort, $fields) = $this->filtros($request);
-        $qry = PessoaService::pesquisar($filter, $sort, $fields);
-        $res = $qry->paginate()->appends($request->all());
-        return response()->json($res, 200);
+        $pessoas = Pessoa::orderBy('fantasia', 'asc')->paginate();
+        return PessoaResource::collection($pessoas);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, $id)
+    public function create (Request $request)
     {
-        $model = Pessoa::findOrFail($id, $request->get('fields'));
-        return response()->json($model, 200);
+        $data = $request->all();
+        $pessoa = PessoaService::create($data);
+        return new PessoaResource($pessoa);
     }
 
-    public function autocomplete (Request $request)
+    public function show (Request $request, $codpessoa)
     {
-        $qry = PessoaService::autocomplete($request->all());
-        return response()->json($qry, 200);
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        return new PessoaResource($pessoa);
     }
 
-    public function novaPessoa (Request $request)
+    public function update (Request $request, $codpessoa)
     {
-        return PessoaService::novaPessoa();
-        //return response()->json($qry, 206);
+        $data = $request->all();
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        $pessoa = PessoaService::update($pessoa, $data);
+        return new PessoaResource($pessoa);
+    }
+
+    public function delete (Request $request, $codpessoa)
+    {
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        $pessoa = PessoaService::delete($pessoa);
+        return new PessoaResource($pessoa);
+    }
+
+    public function ativar (Request $request, $codpessoa)
+    {
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        $pessoa = PessoaService::ativar($pessoa);
+        return new PessoaResource($pessoa);
+    }
+
+    public function inativar (Request $request, $codpessoa)
+    {
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        $pessoa = PessoaService::inativar($pessoa);
+        return new PessoaResource($pessoa);
+    }
+
+    public function importarReceitaWs (Request $request)
+    {
+        $request->validate([
+            'cnpj' => 'required'
+        ]);
+        $cnpj = $request->cnpj;
+        $pessoa = PessoaService::importarReceitaWs($cnpj);
+        return new PessoaResource($pessoa);
+    }
+
+    public function importarSefaz (Request $request)
+    {
+        $request->validate([
+            'codfilial' => 'required',
+            'uf' => 'required'
+            // 'cnpj' => 'required'
+        ]);
+        $codfilial = $request->codfilial;
+        $uf = $request->uf;
+        $cnpj = $request->cnpj??'';
+        $cpf = $request->cpf??'';
+        $ie = $request->ie??'';
+        $pessoa = PessoaService::importarSefaz($codfilial, $uf, $cnpj, $cpf, $ie);
+        return new PessoaResource($pessoa);
     }
 
     public function comandaVendedor (Request $request, $codpessoa)
@@ -76,11 +114,10 @@ class PessoaController extends MgController
         ]);
     }
 
-    public function detalhes (Request $request, $codpessoa)
+    public function autocomplete (Request $request)
     {
-        $pessoa = Pessoa::findOrFail($codpessoa);
-        return new PessoaResource($pessoa);
+        $qry = PessoaService::autocomplete($request->all());
+        return response()->json($qry, 200);
     }
-
 
 }
