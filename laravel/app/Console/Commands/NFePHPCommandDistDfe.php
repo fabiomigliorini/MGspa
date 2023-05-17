@@ -41,20 +41,23 @@ class NFePHPCommandDistDfe extends Command
      */
     public function handle()
     {
-        $loops = 0;
         $qry = Filial::ativo()->where('dfe', true)->orderBy('codempresa')->orderBy('codfilial');
         if ($codfilial = $this->option('codfilial')) {
             $qry->where('codfilial', $codfilial);
         }
         $filiais = $qry->get();
-        $nsuInicial = $this->option('nsu-inicial')??0;
-        $nsuFinal = $this->option('nsu-final')??0;
         foreach ($filiais as $filial) {
+            $nsuInicial = $this->option('nsu-inicial')??0;
+            $nsuFinal = $this->option('nsu-final')??0;
+            $loops = 0;
             do {
                 $loops++;
                 $continuar = false;
                 try {
                     $resp = NFePHPDistDfeService::consultar($filial, $nsuInicial, $nsuFinal);
+                    if ($resp === null) {
+                        break;
+                    }
                     $nsuInicial = $resp['ultNSU']+1;
                     $continuar = ($resp['ultNSU'] < $resp['maxNSU']);
                     if ($continuar) {
