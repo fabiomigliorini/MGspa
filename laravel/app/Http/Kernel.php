@@ -41,7 +41,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            'throttle:api',
+            'throttle:300,1', // 180 requisicoes por minuto
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             'cors' => \Fruitcake\Cors\HandleCors::class,
         ],
