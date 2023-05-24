@@ -262,7 +262,7 @@ class PessoaService
                     'codpessoa' => $pessoa->codpessoa,
                     'endereco' => $endIe->xLgr,
                     'numero' => $endIe->nro,
-                    'complemento' => $endIe->xCpl??null,
+                    'complemento' => substr(trim($endIe->xCpl??null), 0, 50),
                     'bairro' => $endIe->xBairro,
                     'codcidade' => $cidade->codcidade,
                     'cep'   => numeroLimpo($endIe->CEP)
@@ -328,7 +328,7 @@ class PessoaService
                     'endereco' => $retReceita['logradouro'],
                     'numero' => $retReceita['numero'],
                     'bairro' => $retReceita['bairro'],
-                    'complemento' => $retReceita['complemento'],
+                    'complemento' => substr(trim($retReceita['complemento']), 0, 50),
                     'codcidade' => $pessoa->codcidade,
                     'cep'   => numeroLimpo($retReceita['cep'])
                 ]);
