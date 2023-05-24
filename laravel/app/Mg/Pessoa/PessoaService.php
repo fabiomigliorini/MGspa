@@ -143,10 +143,10 @@ class PessoaService
             $cnpj = numeroLimpo($cnpj);
             $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
             $retReceita = static::buscarReceitaWs($cnpj);
-            if ($retReceita->status() != 200) {
-                throw new \Exception($retReceita->message, 1);
-            }
-            $uf = $retReceita['uf'];
+            if ($retReceita->status() != 200 || $retReceita['status'] == "ERROR") {
+                throw new \Exception($retReceita['message'], 1);
+	        }
+            $uf = $retReceita['uf']??null;
         } 
 
         // Consulta o CNPJ / CPF ou IE na Sefaz
