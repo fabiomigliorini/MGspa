@@ -341,7 +341,7 @@ class NFePHPDistDfeService
             $pessoa->fisica = $emit->getElementsByTagName('CPF')->item(0)?true:false;
             $pessoa->pessoa = $emit->getElementsByTagName('xNome')->item(0)->nodeValue;
             $pessoa->fantasia = $emit->getElementsByTagName('xFant')->item(0)->nodeValue??$pessoa->pessoa;
-	    $pessoa->fantasia = substr(trim($pessoa->fantasia), 0, 50);
+	        $pessoa->fantasia = substr(trim($pessoa->fantasia), 0, 50);
 
             $pessoa->endereco = $emit->getElementsByTagName('xLgr')->item(0)->nodeValue;
             $pessoa->numero = $emit->getElementsByTagName('nro')->item(0)->nodeValue;

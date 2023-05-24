@@ -40,8 +40,10 @@ class PessoaController extends MgController
     public function delete (Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
-        $pessoa = PessoaService::delete($pessoa);
-        return new PessoaResource($pessoa);
+        $res = PessoaService::delete($pessoa);
+        return response()->json([
+            'result' => $res
+        ], 200);
     }
 
     public function ativar (Request $request, $codpessoa)
@@ -58,30 +60,25 @@ class PessoaController extends MgController
         return new PessoaResource($pessoa);
     }
 
-    public function importarReceitaWs (Request $request)
+    public function importar (Request $request)
     {
         $request->validate([
-            'cnpj' => 'required'
-        ]);
-        $cnpj = $request->cnpj;
-        $pessoa = PessoaService::importarReceitaWs($cnpj);
-        return new PessoaResource($pessoa);
-    }
-
-    public function importarSefaz (Request $request)
-    {
-        $request->validate([
-            'codfilial' => 'required',
-            'uf' => 'required'
             // 'cnpj' => 'required'
         ]);
-        $codfilial = $request->codfilial;
-        $uf = $request->uf;
         $cnpj = $request->cnpj??'';
+        $codfilial = $request->codfilial;
         $cpf = $request->cpf??'';
         $ie = $request->ie??'';
-        $pessoa = PessoaService::importarSefaz($codfilial, $uf, $cnpj, $cpf, $ie);
-        return new PessoaResource($pessoa);
+        $uf = $request->uf??'';
+        $pessoas = PessoaService::importar($codfilial, $uf, $cnpj, $cpf, $ie);
+        return PessoaResource::collection($pessoas);
+    }
+
+
+    public function atualizaCampos($pessoa)
+    {   
+      $pessoa = PessoaService::atualizaCamposLegado($codpessoatelefone, $codpessoaemail, $codpessoaendereco);
+
     }
 
     public function comandaVendedor (Request $request, $codpessoa)
@@ -119,5 +116,7 @@ class PessoaController extends MgController
         $qry = PessoaService::autocomplete($request->all());
         return response()->json($qry, 200);
     }
+
+
 
 }

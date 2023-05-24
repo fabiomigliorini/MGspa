@@ -122,8 +122,8 @@ Route::group(['prefix' => 'v1'], function () {
     Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
     Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
     Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
-    Route::post('pessoa/importar-receita-ws', '\Mg\Pessoa\PessoaController@importarReceitaWs');
-    Route::post('pessoa/importar-sefaz', '\Mg\Pessoa\PessoaController@importarSefaz');
+    Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
+
 
     // Pessoa Telefone
     Route::get('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@index');
@@ -132,6 +132,72 @@ Route::group(['prefix' => 'v1'], function () {
     Route::put('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@update');
     Route::delete('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@delete');
 
+    // Pessoa Email
+    Route::get('pessoa/{codpessoa}/email/', '\Mg\Pessoa\PessoaEmailController@index');
+    Route::post('pessoa/{codpessoa}/email/', '\Mg\Pessoa\PessoaEmailController@create');
+    Route::get('pessoa/{codpessoa}/email/{codpessoatelefone}/', '\Mg\Pessoa\PessoaEmailController@show');
+    Route::put('pessoa/{codpessoa}/email/{codpessoatelefone}/', '\Mg\Pessoa\PessoaEmailController@update');
+    Route::delete('pessoa/{codpessoa}/email/{codpessoatelefone}/', '\Mg\Pessoa\PessoaEmailController@delete');
+
+    // Pessoa Endereço
+    Route::get('pessoa/{codpessoa}/endereco/', '\Mg\Pessoa\PessoaEnderecoController@index');
+    Route::post('pessoa/{codpessoa}/endereco/', '\Mg\Pessoa\PessoaEnderecoController@create');
+    Route::get('pessoa/{codpessoa}/endereco/{codpessoaendereco}/', '\Mg\Pessoa\PessoaEnderecoController@show');
+    Route::put('pessoa/{codpessoa}/endereco/{codpessoaendereco}/', '\Mg\Pessoa\PessoaEnderecoController@update');
+    Route::delete('pessoa/{codpessoa}/endereco/{codpessoaendereco}/', '\Mg\Pessoa\PessoaEnderecoController@delete');
+
+    // Pessoa Certidão
+    Route::get('pessoa/{codpessoa}/certidao/', '\Mg\Pessoa\PessoaCertidaoController@index');
+    Route::post('pessoa/{codpessoa}/certidao/', '\Mg\Pessoa\PessoaCertidaoController@create');
+    Route::get('pessoa/{codpessoa}/certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@show');
+    Route::put('pessoa/{codpessoa}/certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@update');
+    Route::delete('pessoa/{codpessoa}/certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@delete');
+
+    // Pessoa Conta
+    Route::get('pessoa/{codpessoa}/conta/', '\Mg\Pessoa\PessoaContaController@index');
+    Route::post('pessoa/{codpessoa}/conta/', '\Mg\Pessoa\PessoaContaController@create');
+    Route::get('pessoa/{codpessoa}/conta/{codpessoaconta}/', '\Mg\Pessoa\PessoaContaController@show');
+    Route::put('pessoa/{codpessoa}/conta/{codpessoaconta}/', '\Mg\Pessoa\PessoaContaController@update');
+    Route::delete('pessoa/{codpessoa}/conta/{codpessoaconta}/', '\Mg\Pessoa\PessoaContaController@delete');
+
+    // Grupo Economico
+    Route::get('pessoa/{codpessoa}/grupoeconomico/', '\Mg\Pessoa\GrupoEconomicoController@index');
+    Route::post('pessoa/{codpessoa}/grupoeconomico/', '\Mg\Pessoa\GrupoEconomicoController@create');
+    Route::get('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/', '\Mg\Pessoa\GrupoEconomicoController@show');
+    Route::put('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/', '\Mg\Pessoa\GrupoEconomicoController@update');
+    Route::delete('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/', '\Mg\Pessoa\GrupoEconomicoController@delete');
+
+    // Certidão Emissor
+    Route::get('certidao/{codpessoa}/certidaoemissor/', '\Mg\Certidao\CertidaoEmissorController@index');
+    Route::post('certidao/{codpessoa}/certidaoemissor/', '\Mg\Certidao\CertidaoEmissorController@create');
+    Route::get('certidao/{codpessoa}/certidaoemissor/{codcertidaoemissor}/', '\Mg\Certidao\CertidaoEmissorController@show');
+    Route::put('certidao/{codpessoa}/certidaoemissor/{codcertidaoemissor}/', '\Mg\Certidao\CertidaoEmissorController@update');
+    Route::delete('certidao/{codpessoa}/certidaoemissor/{codcertidaoemissor}/', '\Mg\Certidao\CertidaoEmissorController@delete');
+
+    // CertidaoTipo
+    Route::get('certidao/{codpessoa}/certidaotipo/', '\Mg\Certidao\CertidaoTipoController@index');
+    Route::post('certidao/{codpessoa}/certidaotipo/', '\Mg\Certidao\CertidaoTipoController@create');
+    Route::get('certidao/{codpessoa}/certidaotipo/{codcertidaotipo}/', '\Mg\Certidao\CertidaoTipoController@show');
+    Route::put('certidao/{codpessoa}/certidaotipo/{codcertidaotipo}/', '\Mg\Certidao\CertidaoTipoController@update');
+    Route::delete('certidao/{codpessoa}/certidaotipo/{codcertidaotipo}/', '\Mg\Certidao\CertidaoTipoController@delete');
+
+    // RegistroSpc
+    Route::get('pessoa/{codpessoa}/registrospc/', '\Mg\Pessoa\RegistroSpcController@index');
+    Route::post('pessoa/{codpessoa}/registrospc/', '\Mg\Pessoa\RegistroSpcController@create');
+    Route::get('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@show');
+    Route::put('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@update');
+    Route::delete('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@delete');
+    
+
+    // Pessoa Cobrança Historico
+    Route::get('pessoa/{codpessoa}/cobrancahistorico/', '\Mg\Cobranca\CobrancaHistoricoController@index');
+    Route::post('pessoa/{codpessoa}/cobrancahistorico/', '\Mg\Cobranca\CobrancaHistoricoController@create');
+    Route::get('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@show');
+    Route::put('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@update');
+    Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@delete');
+    
+    
+    
     // NFePHP
     Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
     Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');

@@ -2,11 +2,15 @@
 
 namespace Mg\Pessoa;
 
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use DB;
 
 use Mg\MgService;
+use Mg\Cidade\Estado;
 use Mg\Cidade\Cidade;
+use Mg\GrupoEconomico\GrupoEconomicoService;
+use Mg\Pessoa\GrupoClienteService;
 use Mg\NFePHP\NFePHPService;
 use Mg\Filial\Filial;
 
@@ -130,42 +134,317 @@ class PessoaService
         return $pessoa->refresh();
     }
 
-    public static function importarReceitaWs ($cnpj)
+    public static function importar ($codfilial, $uf, $cnpj, $cpf, $ie)
     {
+        $retReceita = null;
 
-        $curl = curl_init();
+        // Se veio um CNPJ, consulta a receita com esse CNPJ
+        if (!empty($cnpj)) {
+            $cnpj = numeroLimpo($cnpj);
+            $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
+            $retReceita = static::buscarReceitaWs($cnpj);
+            if ($retReceita->status() != 200) {
+                throw new \Exception($retReceita->message, 1);
+            }
+            $uf = $retReceita['uf'];
+        } 
 
-        curl_setopt_array($curl, [
-          CURLOPT_URL => "https://receitaws.com.br/v1/cnpj/{$cnpj}",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => "",
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => "GET",
-          CURLOPT_HTTPHEADER => [
-            "Accept: application/json",
-            "Authorization: Bearer " . env('RECEITA_WS_TOKEN')
-          ],
-        ]);
+        // Consulta o CNPJ / CPF ou IE na Sefaz
+        $retSefaz = null;
+        $retIes = [];
+        if (!empty($cnpj) || !empty($cpf) || (!empty($ie))) {
+            $filial = Filial::findOrFail($codfilial);
+            if (empty($uf)) {
+                $uf = $filial->Pessoa->Cidade->Estado->sigla;
+            }
+            $retSefaz = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
+            switch ($retSefaz->infCons->cStat) {
+                case '259': // Rejeição: CNPJ da consulta não cadastrado como contribuinte na UF
+                case '264': // Rejeicao: CPF da consulta nao cadastrado como contribuinte na UF
+                    break;
 
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
+                case '111': // Consulta cadastro com uma ocorrência
+                    $retIes = [$retSefaz->infCons->infCad];
+                    break;
 
-        dd($response);
-        // CODIGO IMPORTAR E SALVAR UMA PESSOA
-        // $pessoa = new Pessoa($data);
-        $pessoa = Pessoa::findOrFail(1);
-        return $pessoa->refresh();
+                case '112': // Consulta cadastro com mais de uma ocorrencia
+                    $retIes = $retSefaz->infCons->infCad;
+                    break;
+                            
+                default:
+                    break;
+            }
+            if (isset($retIes[0])) {
+                $cnpj = $retIes[0]->CNPJ??'';
+                $cpf = $retIes[0]->CPF??'';
+            }
+        }
+
+        // Caso a consulta da sefaz tenha retornado um CNPJ
+        // Faz a consulta na receita para esse CNPJ
+        if (!empty($cnpj) && empty($retReceita)) {
+            $retReceita = static::buscarReceitaWs($cnpj);
+        }
+
+        // Se nao estiver vazio o CNPJ/CPF, tenta descobrir Grupo Economico/Cliente de outros cadastros
+        // do mesmo CNPJ/CPF
+        if (!empty($cnpj)) {
+            $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(false, $cnpj);
+            $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(false, $cnpj);
+        
+        } elseif (!empty($cpf)) {
+            $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(true, $cpf);
+            $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(true, $cpf);
+        }
+        $codgrupoeconomico = @$grupo->codgrupoeconomico;
+        $codgrupocliente = @$grupocliente->codgrupocliente;
+
+        // Percorre todas as inscricoes da sefaz, criando uma tblPessoa para cada
+        $retPessoas = [];
+        foreach ($retIes as $retIe) {
+            
+            // Verifica se combinacao CPF/CNPJ/IE ja esta cadastrada
+            $pessoa = static::buscarPorCnpjIe($retIe->CNPJ??$retIe->CPF, $retIe->IE);
+            if ($pessoa == null) {
+                if ($retIe->cSit == 0) {
+                    continue;
+                }
+                $pessoa = new Pessoa();
+                $pessoa->fantasia = $retIe->xFant??$retIe->xNome; 
+                $pessoa->ie = $retIe->IE;
+            }
+
+            // Vincula ao GrupoEonomico/Cliente buscado anteriormente
+            $pessoa->codgrupocliente = $codgrupocliente;
+            $pessoa->codgrupoeconomico = $codgrupoeconomico;
+
+            // Marca se fisica ou juridica
+            if (isset($retIe->CNPJ)) {
+                $pessoa->fisica = false;
+                $pessoa->cnpj = $retIe->CNPJ;
+            } else {
+                $pessoa->fisica = true;
+                $pessoa->cnpj = $retIe->CPF;
+            }
+
+            // Se IE Ativa / Inativa
+            if ($retIe->cSit == 1) {
+                $pessoa->inativo = null;
+            } elseif (empty($pessoa->inativo)) {
+                $pessoa->inativo = Carbon::now();
+            }
+
+            // Vinclua razao social
+            $pessoa->pessoa = $retIe->xNome;
+            $pessoa->notafiscal = 0;
+
+            // Se veio somente um endereco, forca como array de enderecos pra simplificar logica
+            if (!is_array($retIe->ender)) {
+                $retIe->ender = [$retIe->ender];
+            }
+
+            // Descobre o codigo da cidade
+            $estado = Estado::firstWhere(['sigla' => $retIe->UF]);
+            $cidade = Cidade::where(
+                'codestado', $estado->codestado
+            )->where(
+                'cidade', 'ilike', trim(removeAcentos($retIe->ender[0]->xMun))
+            )->first();
+            $pessoa->codcidade = $cidade->codcidade;
+
+            // salva e acumula no array de pessoas criadas
+            $pessoa->save();
+            $retPessoas[] = $pessoa->fresh();
+
+            // cria os enderecos vinculados a pessoa 
+            foreach ($retIe->ender as $endIe) {
+                PessoaEnderecoService::createOrUpdate([
+                    'codpessoa' => $pessoa->codpessoa,
+                    'endereco' => $endIe->xLgr,
+                    'numero' => $endIe->nro,
+                    'complemento' => $endIe->xCpl??null,
+                    'bairro' => $endIe->xBairro,
+                    'codcidade' => $cidade->codcidade,
+                    'cep'   => numeroLimpo($endIe->CEP)
+                ]);                
+            }
+        }
+
+        // caso nao tenha achado nenhuma IE na sefaz
+        // cria a pessoa com base no array da receita ws
+        if (sizeof($retPessoas) == 0 && !empty($retReceita)) {
+            // dd($retReceita->json());
+
+            // verifica se a pessoa ja existe
+            $pessoa = static::buscarPorCnpjIe(numeroLimpo($retReceita['cnpj']), null);
+            if ($pessoa == null) {
+                $pessoa = new Pessoa();
+                $pessoa->fantasia = $retReceita['fantasia'];
+                if (empty($pessoa->fantasia)) {
+                    $pessoa->fantasia = $retReceita['nome'];
+                } 
+            }
+
+            // Vincula ao GrupoEonomico/Cliente buscado anteriormente
+            $pessoa->codgrupocliente = $codgrupocliente;
+            $pessoa->codgrupoeconomico = $codgrupoeconomico;
+
+            // vincula CNPJ
+            $pessoa->fisica = false;
+            $pessoa->cnpj = numeroLimpo($retReceita['cnpj']);
+            $pessoa->pessoa = $retReceita['nome'];
+            $pessoa->notafiscal = 0;
+
+            // Se CNPJ Ativa / Inativa
+            if ($retReceita['situacao'] == 'ATIVA') {
+                $pessoa->inativo = null;
+            } elseif (empty($pessoa->inativo)) {
+                $pessoa->inativo = Carbon::now();
+            }
+
+            // Descobre o codigo da cidade
+            $estado = Estado::firstWhere(['sigla' => $retReceita['uf']]);
+            $cidade = Cidade::where(
+                'codestado', $estado->codestado
+            )->where(
+                'cidade', 'ilike', removeAcentos($retReceita['municipio'])
+            )->first();
+            $pessoa->codcidade = $cidade->codcidade;
+
+            // salva e acumula no array de pessoas criadas
+            $pessoa->save();
+            $retPessoas[] = $pessoa->fresh();
+            
+        }
+ 
+        // Sempre cria o endereco, email e telefone retornado pela receita
+        // porque a sefaz nao retorna essas informacoes na api dela
+        if (!empty($retReceita)) {
+            foreach ($retPessoas as $pessoa) {
+
+                // Endereco
+                PessoaEnderecoService::createOrUpdate([
+                    'codpessoa' => $pessoa->codpessoa,
+                    'endereco' => $retReceita['logradouro'],
+                    'numero' => $retReceita['numero'],
+                    'bairro' => $retReceita['bairro'],
+                    'complemento' => $retReceita['complemento'],
+                    'codcidade' => $pessoa->codcidade,
+                    'cep'   => numeroLimpo($retReceita['cep'])
+                ]);
+
+                // Email 
+                if (!empty($retReceita['email'])) {
+                    PessoaEmailService::createOrUpdate([
+                        'codpessoa' => $pessoa->codpessoa,
+                        'email' => $retReceita['email']
+                    ]);
+                }
+    
+                // Telefone (Pode retornar string com vario separado por /)
+                // Ex. "(66) 3532-7678 / (66) 99999-9999"
+                $strtel = $retReceita['telefone']; 
+                $tels = explode("/", $strtel);
+                $telefones = [];
+                foreach ($tels as $tel) {
+                    $tel = (int) numeroLimpo($tel);
+                    if (empty($tel)) {
+                        continue;
+                    }
+                    $telefones[] = PessoaTelefoneService::createOrUpdate([
+                        'codpessoa' => $pessoa->codpessoa,
+                        'ddd'       => substr($tel, 0, 2),
+                        'telefone'  => substr($tel, 2)
+                    ]);
+                }              
+            }
+        }
+
+        // Atualiza campos legados de email/telefone/endereco
+        foreach ($retPessoas as $pessoa) {
+            static::atualizaCamposLegado($pessoa);
+        }
+
+        // retorna todas as pessoas criadas/atualizadas
+        return $retPessoas;
+
+     }
+
+   
+     public static function atualizaCamposLegado(Pessoa $pessoa)
+    {
+        $data = [];
+
+        $i = 0;
+        foreach ($pessoa->PessoaTelefoneS()->orderBy('ordem')->whereNull('inativo')->limit(3)->get() as $tel) {
+            $i++;
+            $data["telefone{$i}"] = "({$tel->ddd}) {$tel->telefone}";
+        }
+        if (empty($data["telefone"])) {
+            $data['telefone'] = '(66) 9999-9999';
+        }
+
+        $i = 0;
+        foreach ($pessoa->PessoaEmails()->orderBy('ordem')->whereNull('inativo')->limit(3)->get() as $email) {
+            $i++;
+            switch ($i) {
+                case 1:
+                    $data["email"] = $email->email;
+                    break;
+                
+                case 2:
+                    $data["emailnfe"] = $email->email;
+                    break;
+                    
+                case 3:
+                    $data["emailcobranca"] = $email->email;
+                    break;
+            }
+        }
+        if (empty($data["email"])) {
+            $data['email'] = 'nfe@mgpapelaria.com.br';
+        }
+
+        //TODO: adicionar complemento
+        if ($endereco = PessoaEndereco::where('codpessoa', $pessoa->codpessoa)->whereNull('inativo')->orderBy('ordem')->first()) {
+            $data['endereco'] = $endereco->endereco;
+            $data['numero'] = $endereco->numero;
+            $data['complemento'] = $endereco->complemento;
+            $data['bairro'] = $endereco->bairro;
+            $data['codcidade'] = $endereco->codcidade;
+            $data['cep'] = $endereco->cep;
+            $data['enderecocobranca'] = $endereco->endereco;
+            $data['numerocobranca'] = $endereco->numero;
+            $data['complementocobranca'] = $endereco->complemento;
+            $data['bairrocobranca'] = $endereco->bairro;
+            $data['codcidadecobranca'] = $endereco->codcidade;
+            $data['cepcobranca'] = $endereco->cep;
+        } else {
+            $data['endereco'] = 'Nao Informado';
+            $data['numero'] = 'S/N';
+            $data['complemento'] = Null;
+            $data['bairro'] = 'Nao Informado';
+            $data['codcidade'] = $pessoa->codcidade;
+            $data['cep'] = '78550000';
+            $data['enderecocobranca'] = 'Nao Informado';
+            $data['numerocobranca'] = 'S/N';
+            $data['complementocobranca'] = Null;
+            $data['bairrocobranca'] = 'Nao Informado';
+            $data['codcidadecobranca'] = $pessoa->codcidade;
+            $data['cepcobranca'] = '78550000';
+        }
+       
+        return PessoaService::update($pessoa, $data);  
     }
 
-    public static function importarSefaz ($codfilial, $uf, $cnpj, $cpf, $ie)
+    public static function buscarReceitaWs ($cnpj)
     {
-        $filial = Filial::findOrFail($codfilial);
-        $data = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
-        // dd($data->infCons->infCad->IE);
-        dd($data);
-        return $pessoa->refresh();
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer' . env('RECEITA_WS_TOKEN')
+        ])->get('https://receitaws.com.br/v1/cnpj/'. $cnpj);
+      
+        return $response;
     }
 
 }
