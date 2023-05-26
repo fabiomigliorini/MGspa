@@ -147,7 +147,7 @@ class PessoaService
                 throw new \Exception($retReceita['message'], 1);
 	        }
             $uf = $retReceita['uf']??null;
-        } 
+        }
 
         // Consulta o CNPJ / CPF ou IE na Sefaz
         $retSefaz = null;
@@ -157,23 +157,33 @@ class PessoaService
             if (empty($uf)) {
                 $uf = $filial->Pessoa->Cidade->Estado->sigla;
             }
-            $retSefaz = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
-            switch ($retSefaz->infCons->cStat) {
-                case '259': // Rejeição: CNPJ da consulta não cadastrado como contribuinte na UF
-                case '264': // Rejeicao: CPF da consulta nao cadastrado como contribuinte na UF
-                    break;
 
-                case '111': // Consulta cadastro com uma ocorrência
-                    $retIes = [$retSefaz->infCons->infCad];
-                    break;
+            try {
 
-                case '112': // Consulta cadastro com mais de uma ocorrencia
-                    $retIes = $retSefaz->infCons->infCad;
-                    break;
-                            
-                default:
-                    break;
+                $retSefaz = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
+                switch ($retSefaz->infCons->cStat) {
+                    case '259': // Rejeição: CNPJ da consulta não cadastrado como contribuinte na UF
+                    case '264': // Rejeicao: CPF da consulta nao cadastrado como contribuinte na UF
+                        break;
+                    case '111': // Consulta cadastro com uma ocorrência
+                        $retIes = [$retSefaz->infCons->infCad];
+                        break;
+                    case '112': // Consulta cadastro com mais de uma ocorrencia
+                        $retIes = $retSefaz->infCons->infCad;
+                        break;
+                    default:
+                        break;
+                }
+
+            } catch (\Exception $e) {
+
+                $message = $e->getMessage();
+                if (substr($message, 0, 45) != "Servico [NfeConsultaCadastro] indisponivel UF") {
+                    throw new \Exception($e->getMessage());
+                }
+                
             }
+
             if (isset($retIes[0])) {
                 $cnpj = $retIes[0]->CNPJ??'';
                 $cpf = $retIes[0]->CPF??'';
@@ -191,7 +201,7 @@ class PessoaService
         if (!empty($cnpj)) {
             $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(false, $cnpj);
             $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(false, $cnpj);
-        
+
         } elseif (!empty($cpf)) {
             $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(true, $cpf);
             $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(true, $cpf);
@@ -202,7 +212,7 @@ class PessoaService
         // Percorre todas as inscricoes da sefaz, criando uma tblPessoa para cada
         $retPessoas = [];
         foreach ($retIes as $retIe) {
-            
+
             // Verifica se combinacao CPF/CNPJ/IE ja esta cadastrada
             $pessoa = static::buscarPorCnpjIe($retIe->CNPJ??$retIe->CPF, $retIe->IE);
             if ($pessoa == null) {
@@ -210,7 +220,7 @@ class PessoaService
                     continue;
                 }
                 $pessoa = new Pessoa();
-                $pessoa->fantasia = $retIe->xFant??$retIe->xNome; 
+                $pessoa->fantasia = $retIe->xFant??$retIe->xNome;
                 $pessoa->ie = $retIe->IE;
             }
 
@@ -256,7 +266,7 @@ class PessoaService
             $pessoa->save();
             $retPessoas[] = $pessoa->fresh();
 
-            // cria os enderecos vinculados a pessoa 
+            // cria os enderecos vinculados a pessoa
             foreach ($retIe->ender as $endIe) {
                 PessoaEnderecoService::createOrUpdate([
                     'codpessoa' => $pessoa->codpessoa,
@@ -266,7 +276,7 @@ class PessoaService
                     'bairro' => $endIe->xBairro,
                     'codcidade' => $cidade->codcidade,
                     'cep'   => numeroLimpo($endIe->CEP)
-                ]);                
+                ]);
             }
         }
 
@@ -282,7 +292,7 @@ class PessoaService
                 $pessoa->fantasia = $retReceita['fantasia'];
                 if (empty($pessoa->fantasia)) {
                     $pessoa->fantasia = $retReceita['nome'];
-                } 
+                }
             }
 
             // Vincula ao GrupoEonomico/Cliente buscado anteriormente
@@ -314,9 +324,9 @@ class PessoaService
             // salva e acumula no array de pessoas criadas
             $pessoa->save();
             $retPessoas[] = $pessoa->fresh();
-            
+
         }
- 
+
         // Sempre cria o endereco, email e telefone retornado pela receita
         // porque a sefaz nao retorna essas informacoes na api dela
         if (!empty($retReceita)) {
@@ -333,17 +343,17 @@ class PessoaService
                     'cep'   => numeroLimpo($retReceita['cep'])
                 ]);
 
-                // Email 
+                // Email
                 if (!empty($retReceita['email'])) {
                     PessoaEmailService::createOrUpdate([
                         'codpessoa' => $pessoa->codpessoa,
                         'email' => $retReceita['email']
                     ]);
                 }
-    
+
                 // Telefone (Pode retornar string com vario separado por /)
                 // Ex. "(66) 3532-7678 / (66) 99999-9999"
-                $strtel = $retReceita['telefone']; 
+                $strtel = $retReceita['telefone'];
                 $tels = explode("/", $strtel);
                 $telefones = [];
                 foreach ($tels as $tel) {
@@ -356,7 +366,7 @@ class PessoaService
                         'ddd'       => substr($tel, 0, 2),
                         'telefone'  => substr($tel, 2)
                     ]);
-                }              
+                }
             }
         }
 
@@ -370,7 +380,7 @@ class PessoaService
 
      }
 
-   
+
      public static function atualizaCamposLegado(Pessoa $pessoa)
     {
         $data = [];
@@ -391,11 +401,11 @@ class PessoaService
                 case 1:
                     $data["email"] = $email->email;
                     break;
-                
+
                 case 2:
                     $data["emailnfe"] = $email->email;
                     break;
-                    
+
                 case 3:
                     $data["emailcobranca"] = $email->email;
                     break;
@@ -433,8 +443,8 @@ class PessoaService
             $data['codcidadecobranca'] = $pessoa->codcidade;
             $data['cepcobranca'] = '78550000';
         }
-       
-        return PessoaService::update($pessoa, $data);  
+
+        return PessoaService::update($pessoa, $data);
     }
 
     public static function buscarReceitaWs ($cnpj)
@@ -443,7 +453,7 @@ class PessoaService
             'Accept' => 'application/json',
             'Authorization' => 'Bearer' . env('RECEITA_WS_TOKEN')
         ])->get('https://receitaws.com.br/v1/cnpj/'. $cnpj);
-      
+
         return $response;
     }
 
