@@ -181,7 +181,7 @@ class PessoaService
                 if (substr($message, 0, 45) != "Servico [NfeConsultaCadastro] indisponivel UF") {
                     throw new \Exception($e->getMessage());
                 }
-                
+
             }
 
             if (isset($retIes[0])) {
@@ -254,12 +254,15 @@ class PessoaService
             }
 
             // Descobre o codigo da cidade
-            $estado = Estado::firstWhere(['sigla' => $retIe->UF]);
-            $cidade = Cidade::where(
-                'codestado', $estado->codestado
-            )->where(
-                'cidade', 'ilike', trim(removeAcentos($retIe->ender[0]->xMun))
-            )->first();
+            if (isset($retIe->ender[0]->cMun)) {
+                $cidade = Cidade::where('codigooficial', $retIe->ender[0]->cMun)->first();
+                $estado = $cidade->Estado;
+            } else {
+                $estado = Estado::firstWhere(['sigla' => $retIe->UF]);
+                $cidade = Cidade::where('codestado', $estado->codestado)
+                    ->where('cidade', 'ilike', trim(removeAcentos($retIe->ender[0]->xMun)))
+                    ->first();
+            }
             $pessoa->codcidade = $cidade->codcidade;
 
             // salva e acumula no array de pessoas criadas
