@@ -2,8 +2,6 @@
 
 namespace Mg\Produto;
 
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use DB;
 use Carbon\Carbon;
 
@@ -11,10 +9,6 @@ use Mg\Estoque\EstoqueMesService;
 use Mg\Estoque\EstoqueMovimento;
 use Mg\Estoque\EstoqueSaldoConferencia;
 
-/**
- * Description of ProdutoRepository
- *
- */
 class ProdutoVariacaoService
 {
 
@@ -24,10 +18,7 @@ class ProdutoVariacaoService
         $pv_destino = ProdutoVariacao::findOrFail($codprodutovariacaodestino);
 
         if ($pv_origem->codproduto != $pv_destino->codproduto) {
-            //throw \Illuminate\Validation\ValidationException::withMessages([
-            //    'Variações não são do mesmo produto'
-            //]);
-            dd('Variações não são do mesmo produto');
+            throw new \Exception('Variações não são do mesmo produto');
         }
 
         // Busca todos os meses que houve movimento de estoque
@@ -71,19 +62,17 @@ class ProdutoVariacaoService
                 ]);
 
                 if ($mes->movimentos) {
-
                     // recalcula Custo Médio para origem
-                    $url = "https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
+                    $url = env('MGLARA_URL') . "estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
                     $res = json_decode(file_get_contents($url));
                     if ($res->response != "Agendado") {
-                        dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesorigem}.. $url");
+                        throw new \Exception("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesorigem}.. $url");
                     }
-
                     // recalcula Custo Médio para destino
-                    $url = "https://sistema.mgpapelaria.com.br/MGLara/estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
+                    $url = env('MGLARA_URL') . "estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
                     $res = json_decode(file_get_contents($url));
                     if ($res->response != "Agendado") {
-                        dd("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesdestino}.. $url");
+                        throw new \Exception("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesdestino}.. $url");
                     }
                 }
                 $mes->codestoquesaldodestino = $novo_mes->codestoquesaldo;
@@ -115,6 +104,6 @@ class ProdutoVariacaoService
         // Apaga a variacao de origem
         $pv_origem->delete();
 
-        return true;
+        return $pv_destino;
     }
 }

@@ -15,30 +15,42 @@ class ProdutoController extends MgController
         return new ProdutoResource($produto);
     }
 
-
-    /*
-    public function store(Request $request)
+    public function unificaVariacoes(Request $request)
     {
         $request->validate([
-          'codfilial' => ['required', 'integer'],
-          'stonecode' => ['required', 'integer'],
-          'chaveprivada' => ['required', 'string'],
+            'codprodutovariacaoorigem' => 'int|required',
+            'codprodutovariacaodestino' => 'int|required',
         ]);
-        $stoneFilial = StoneFilialService::create($request->codfilial, $request->stonecode, $request->chaveprivada);
-        return new StoneFilialResource($stoneFilial);
+        $pv = ProdutoVariacaoService::unificaVariacoes(
+            $request->codprodutovariacaoorigem,
+            $request->codprodutovariacaodestino
+        );
+        return new ProdutoVariacaoResource($pv);
     }
 
-    public function showWebhook(Request $request, $codstonefilial)
+    public function unificaBarras(Request $request)
     {
-        $stoneFilial = StoneFilial::findOrFail($codstonefilial);
-        $weebhooks = StoneFilialService::consultaWebhook($stoneFilial);
-        return $weebhooks;
+        $request->validate([
+            'codprodutobarraorigem' => 'int|required',
+            'codprodutobarradestino' => 'int|required',
+        ]);
+        $pb = ProdutoBarraService::unificaBarras(
+            $request->codprodutobarraorigem,
+            $request->codprodutobarradestino
+        );
+        return new ProdutoBarraResource($pb);
     }
 
-    public function index(Request $request)
+    public function embalagemParaUnidade(Request $request)
     {
-        $stoneFiliais = StoneFilial::orderBy('codfilial')->get();
-        return StoneFilialResource::collection($stoneFiliais);
+        $request->validate([
+            'codprodutoembalagem' => 'int|required',
+        ]);
+        $pe = ProdutoEmbalagemService::embalagemParaUnidade(
+            $request->codprodutoembalagem
+        );
+        return new ProdutoEmbalagemResource($pe);
     }
-    */
+
+
 }
