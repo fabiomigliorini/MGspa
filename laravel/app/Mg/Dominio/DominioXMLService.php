@@ -58,6 +58,7 @@ class DominioXMLService
             'modelo' => $modelo,
         ]);
          */
+        ini_set('memory_limit', '256M');
         $nfs = NotaFiscal::where('codfilial', $codfilial)
                 ->where('emissao', '>=', $mes->startOfMonth()->format('Y-m-d H:i:s'))
                 ->where('emissao', '<=', $mes->endOfMonth()->format('Y-m-d H:i:s'))
