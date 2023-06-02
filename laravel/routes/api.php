@@ -51,6 +51,12 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    // Produto
+    Route::post('produto/unifica-variacoes', '\Mg\Produto\ProdutoController@unificaVariacoes');
+    Route::post('produto/unifica-barras', '\Mg\Produto\ProdutoController@unificaBarras');
+    Route::post('produto/embalagem-para-unidade', '\Mg\Produto\ProdutoController@embalagemParaUnidade');
+
+    // Etiqueta
     Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');
 
     // NFeTerceiro
@@ -187,7 +193,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@show');
     Route::put('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@update');
     Route::delete('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@delete');
-    
+
 
     // Pessoa Cobrança Historico
     Route::get('pessoa/{codpessoa}/cobrancahistorico/', '\Mg\Cobranca\CobrancaHistoricoController@index');
@@ -195,9 +201,9 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@show');
     Route::put('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@update');
     Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@delete');
-    
-    
-    
+
+
+
     // NFePHP
     Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
     Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');

@@ -2,19 +2,6 @@
 
 namespace Mg\Produto;
 
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use DB;
-use Carbon\Carbon;
-
-use Mg\Estoque\EstoqueMesService;
-use Mg\Estoque\EstoqueMovimento;
-use Mg\Estoque\EstoqueSaldoConferencia;
-
-/**
- * Description of ProdutoRepository
- *
- */
 class ProdutoBarraService
 {
     public static function unificaBarras ($codprodutobarraorigem, $codprodutobarradestino)
@@ -24,7 +11,10 @@ class ProdutoBarraService
         $pb_destino = ProdutoBarra::findOrFail($codprodutobarradestino);
 
         if ($pb_origem->codprodutovariacao != $pb_destino->codprodutovariacao) {
-            dd('Barras não são da mesma Variacao!');
+            throw new \Exception('Barras não são da mesma Variacao!');
+        }
+        if ($pb_origem->codprodutoembalagem != $pb_destino->codprodutoembalagem) {
+            throw new \Exception('Barras não são da mesma Embalagem!');
         }
         $regs = $pb_origem->NegocioProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
             'codprodutobarra' => $codprodutobarradestino
@@ -46,7 +36,7 @@ class ProdutoBarraService
         ]);
         $pb_origem->delete();
 
-        return true;
+        return $pb_destino;
 
     }
 }
