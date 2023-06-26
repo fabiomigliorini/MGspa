@@ -274,7 +274,7 @@ class PessoaService
                 PessoaEnderecoService::createOrUpdate([
                     'codpessoa' => $pessoa->codpessoa,
                     'endereco' => $endIe->xLgr,
-                    'numero' => $endIe->nro,
+                    'numero' => @$endIe->nro,
                     'complemento' => substr(trim($endIe->xCpl??null), 0, 50),
                     'bairro' => $endIe->xBairro,
                     'codcidade' => $cidade->codcidade,
