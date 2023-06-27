@@ -19,6 +19,8 @@ class ComprasService
                 select
                     elpv.codprodutovariacao
                     , sum(es.saldoquantidade) as estoque
+                    , sum(elpv.estoqueminimo) as estoqueminimo
+                    , sum(elpv.estoquemaximo) as estoquemaximo
                 from tblestoquelocalprodutovariacao elpv
                 inner join tblestoquelocal el on (el.codestoquelocal = elpv.codestoquelocal)
                 left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = false)
@@ -48,17 +50,18 @@ class ComprasService
                 , pv.dataultimacompra
                 , pv.custoultimacompra
                 , pv.quantidadeultimacompra
-                , pv.estoqueminimo
-                , pv.estoquemaximo
+                , e.estoqueminimo
+                , e.estoquemaximo
                 , e.estoque
                 , c.chegando
-                , pv.lotecompra
+                , coalesce(pe.quantidade, 1) as lotecompra
                 , pv.descontinuado
             from tblproduto p
             inner join tblmarca m on (m.codmarca = p.codmarca)
             inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
             left join estoque e on (e.codprodutovariacao = pv.codprodutovariacao)
             left join chegando c on (c.codprodutovariacao = pv.codprodutovariacao)
+            left join tblprodutoembalagem pe on (pe.codprodutoembalagem = p.codprodutoembalagemcompra)
             where p.inativo is null
             and pv.inativo is null
         ";
