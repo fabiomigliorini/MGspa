@@ -328,7 +328,12 @@ class NFePHPMakeService
             }
 
             // SE NAO ACHOU NENHUM CODIGO DE BARRAS DE UNIDADE, USA MESMO CODIGO DE BARRAS DA EMBALAGEM
-            $std->vUnTrib = number_format($std->vProd / $std->qTrib, 10, '.', '');
+            if ($std->qTrib == 0) {
+                $std->vUnTrib = 0;
+            } else {
+                $std->vUnTrib = number_format($std->vProd / $std->qTrib, 10, '.', '');
+            }
+
             if ($nfpb->valorfrete >= 0.01) {
                 $std->vFrete = number_format($nfpb->valorfrete, 2, '.', '');
             }
