@@ -367,6 +367,7 @@ class VendaMensalService
 
     public static function calcularMinimoMaximo(ProdutoVariacao $pv)
     {
+	return false;
 
         // se produto inativo, zera estoque minimo e maximo
         if (!empty($pv->inativo) || !empty($pv->Produto->inativo)) {
@@ -594,7 +595,7 @@ class VendaMensalService
         static::sumarizarVendaMensal($pv);
         static::atualizarPrimeiraVenda($pv);
         static::atualizarUltimaCompra($pv);
-        static::calcularMinimoMaximo($pv);
+        //static::calcularMinimoMaximo($pv);
         return true;
     }
 
