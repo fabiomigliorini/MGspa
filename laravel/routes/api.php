@@ -123,6 +123,7 @@ Route::group(['prefix' => 'v1'], function () {
     // Allan - daqui pra baixo
     Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
     Route::post('pessoa/', '\Mg\Pessoa\PessoaController@create');
+    Route::get('pessoa/search', '\Mg\Pessoa\PessoaController@search');
     Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@show');
     Route::put('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@update');
     Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
@@ -263,6 +264,17 @@ Route::group(['middleware' => ['auth:api']], function () {
 
         });
 
+
+        // NOTA FISCAL TRANSFERENCIA
+
+        Route::get('nota-fiscal/dashboard', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@index');
+        Route::get('nota-fiscal/gera-transferencias/{codfilial}', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@GerarNovaTransferencia');
+        Route::get('nota-fiscal/notas-por-emitir', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasPorEmitir');
+        Route::get('nota-fiscal/notas-nao-autorizadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasNaoAutorizadas');
+        Route::get('nota-fiscal/notas-emitidas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasEmitidas');
+        Route::get('nota-fiscal/notas-lancadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasLancadas');
+
+       
         // MDFe
         Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
         Route::post('mdfe/criar-da-nfechave/{nfechave}', '\Mg\Mdfe\MdfeController@criarDaNfeChave');

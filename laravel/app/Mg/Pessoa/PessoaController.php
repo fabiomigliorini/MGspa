@@ -23,6 +23,40 @@ class PessoaController extends MgController
         return new PessoaResource($pessoa);
     }
 
+    public function search (Request $request)
+    {
+        if($request->search){
+            $pesquisa = strtoupper($request->search);
+            $search = Pessoa::where('fantasia', 'ilike', "%{$pesquisa}%")
+            ->orWhere('pessoa', 'ilike', "%{$pesquisa}%")
+            ->paginate();
+    
+            if ($search->total() == 0){
+                $pesquisa = strtolower($request->search);  
+                $search = Pessoa::where('fantasia', 'ilike', "%{$pesquisa}%")
+                ->orWhere('pessoa', 'ilike', "%{$pesquisa}%")
+                ->paginate();
+            }
+            
+        }else if ($request->cnpj){
+            $search = Pessoa::where('cnpj', 'ilike', "%{$request->cnpj}%")
+            ->paginate();
+
+        }else if ($request->email){
+            $search = Pessoa::where('email', 'ilike', "%{$request->email}%")
+            ->paginate();
+
+        }else if ($request->codpessoa){
+            $search = Pessoa::where('codpessoa', 'ilike', "%{$request->codpessoa}%")
+            ->paginate();
+
+        }else{
+            return response()->json('Algo deu errado', 200);
+        }
+
+        return response()->json($search);
+    }
+
     public function show (Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
