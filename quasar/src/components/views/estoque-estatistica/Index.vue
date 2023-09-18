@@ -149,10 +149,10 @@
 
             <q-card-section v-if="item" class="text-center">
               <span class="text-green" v-if="item.estoquemaximo - item.saldoquantidade > 0">
-                Comprar <b>{{ numeral(item.estoquemaximo - item.saldoquantidade).format('0,0') }}</b> unidade(s)
+                Faltando <b>{{ numeral(item.estoquemaximo - item.saldoquantidade).format('0,0') }}</b> unidade(s)
               </span>
               <span class="text-red" v-else-if="item.estoquemaximo - item.saldoquantidade < 0">
-                <b>{{ numeral(item.saldoquantidade - item.estoquemaximo).format('0,0') }}</b> unidade(s) excedente(s)
+                Sobrando <b>{{ numeral(item.saldoquantidade - item.estoquemaximo).format('0,0') }}</b> unidade(s)
               </span>
               &nbsp
             </q-card-section>
