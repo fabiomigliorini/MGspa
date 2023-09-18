@@ -8,7 +8,7 @@ import { debounce } from 'quasar'
 export default {
   name: 'grafico-vendas-geral',
   extends: Line,
-  props: ['meses', 'vendas', 'saldoquantidade'],
+  props: ['meses', 'vendas', 'saldoquantidade', 'estoqueminimo', 'estoquemaximo'],
   data () {
     return {
       mesInicial: null,
@@ -30,7 +30,27 @@ export default {
             data: null,
             type: 'line',
             fill: false
-          }
+          },
+          {
+            label: 'Mín',
+            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+            data: null,
+            type: 'line',
+            borderWidth: 0,
+            borderColor: 'rgba(0, 0, 0, 0)',
+            pointRadius: 0,
+            pointHoverRadius: 0
+          },
+          {
+            label: 'Máx',
+            backgroundColor: 'rgba(63, 81, 181, 0.2)',
+            data: null,
+            type: 'line',
+            borderWidth: 0,
+            borderColor: 'rgba(0, 0, 0, 0)',
+            pointRadius: 0,
+            pointHoverRadius: 0
+          },
         ]
       },
       options: {
@@ -116,6 +136,8 @@ export default {
       let meses = []
       let vendaquantidade = []
       let saldoquantidade = []
+      let estoqueminimo = []
+      let estoquemaximo = []
       this.vendas.forEach(function (venda) {
         let mes = vm.moment(venda.mes)
 
@@ -130,6 +152,8 @@ export default {
         meses.push(mes)
         vendaquantidade.push(venda.vendaquantidade)
         saldoquantidade.push(venda.saldoquantidade)
+        estoqueminimo.push(vm.estoqueminimo)
+        estoquemaximo.push(vm.estoquemaximo)
       })
 
       // adiciona mais um mes pra barra de saldo do estoque não ficar cortada
@@ -138,6 +162,8 @@ export default {
       // passa para datasets os valores acumulados
       vm.data.datasets[0].data = vendaquantidade
       vm.data.datasets[1].data = saldoquantidade
+      vm.data.datasets[2].data = estoqueminimo
+      vm.data.datasets[3].data = estoquemaximo
       vm.data.labels = meses
 
       // atualiza grafico

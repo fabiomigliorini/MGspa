@@ -8,45 +8,43 @@ import { debounce } from 'quasar'
 export default {
   name: 'grafico-estatistica',
   extends: Bar,
-  props: ['estatistica', 'saldoquantidade', 'vendaquantidade'],
+  props: ['estoqueminimo', 'estoquemaximo', 'saldoquantidade', 'vendaquantidade'],
   data () {
     return {
       data: {
         labels: [
           'Venda Anual',
-          'Média Venda Mensal',
           'Saldo do Estoque',
-          'Recomendado',
         ],
         datasets: [
+          {
+            label: 'Mín',
+            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+            data: null,
+            type: 'line',
+            borderWidth: 0,
+            borderColor: 'rgba(0, 0, 0, 0)',
+            pointRadius: 0,
+            pointHoverRadius: 0
+          },
+          {
+            label: 'Máx',
+            backgroundColor: 'rgba(63, 81, 181, 0.2)',
+            data: null,
+            type: 'line',
+            borderWidth: 0,
+            borderColor: 'rgba(0, 0, 0, 0)',
+            pointRadius: 0,
+            pointHoverRadius: 0
+          },
           {
             label: 'Venda Anual',
             backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null
           },
           {
-            label: 'Média Venda Mensal',
-            backgroundColor: 'rgba(63, 81, 181, 0.7)',
-            data: null
-          },
-          {
             label: 'Saldo do Estoque',
             backgroundColor: '#f00',
-            data: null
-          },
-          {
-            label: 'Estoque de Segurança',
-            backgroundColor: '#f00',
-            data: null
-          },
-          {
-            label: 'Estoque Mínimo',
-            backgroundColor: '#FFEB3B',
-            data: null
-          },
-          {
-            label: 'Estoque Máximo',
-            backgroundColor: 'rgba(63, 81, 181, 0.7)',
             data: null
           },
         ]
@@ -64,7 +62,7 @@ export default {
 					}],
 					yAxes: [{
             display: false,
-						stacked: true,
+						stacked: false,
             ticks: {
               beginAtZero: true
             }
@@ -74,7 +72,25 @@ export default {
     }
   },
   watch: {
-    estatistica: {
+    vendaquantidade: {
+      handler: function (val, oldVal) {
+        this.atualizaGrafico()
+      },
+      deep: true
+    },
+    saldoquantidade: {
+      handler: function (val, oldVal) {
+        this.atualizaGrafico()
+      },
+      deep: true
+    },
+    estoqueminimo: {
+      handler: function (val, oldVal) {
+        this.atualizaGrafico()
+      },
+      deep: true
+    },
+    estoquemaximo: {
       handler: function (val, oldVal) {
         this.atualizaGrafico()
       },
@@ -91,45 +107,21 @@ export default {
     },
     atualizaGrafico: debounce(function () {
 
-      if (!this.estatistica) {
-        return
-      }
-
       this.data.datasets[0].data = [
-        this.vendaquantidade,
-        0,
-        0,
-        0
+        this.estoqueminimo,
+        this.estoqueminimo,
       ]
       this.data.datasets[1].data = [
-        0,
-        Math.floor(this.estatistica.demandamedia),
-        0,
-        0
+        this.estoquemaximo,
+        this.estoquemaximo,
       ]
       this.data.datasets[2].data = [
+        this.vendaquantidade,
         0,
-        0,
-        this.saldoquantidade,
-        0
       ]
       this.data.datasets[3].data = [
         0,
-        0,
-        0,
-        this.estatistica.estoqueseguranca
-      ]
-      this.data.datasets[4].data = [
-        0,
-        0,
-        0,
-        this.estatistica.estoqueminimo - this.estatistica.estoqueseguranca
-      ]
-      this.data.datasets[5].data = [
-        0,
-        0,
-        0,
-        this.estatistica.estoquemaximo - this.estatistica.estoqueminimo
+        this.saldoquantidade,
       ]
 
       // atualiza grafico

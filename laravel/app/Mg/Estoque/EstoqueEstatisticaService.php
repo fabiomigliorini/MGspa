@@ -391,8 +391,9 @@ class EstoqueEstatisticaService
             left join vendas v on (v.codestoquelocal = el.codestoquelocal)
             left join estoque e on (e.codestoquelocal = el.codestoquelocal)
             where el.inativo is null
-            or e.saldoquantidade is not null
-            or v.vendaquantidade is not null
+            and el.controlaestoque = true
+            --or e.saldoquantidade is not null
+            --or v.vendaquantidade is not null
             order by codestoquelocal
         ';
 
@@ -534,9 +535,30 @@ class EstoqueEstatisticaService
         $vendas_volta_aulas = static::sumarizaVendasVoltaAsAulas($vendas);
 
         // Calcula Minimo pelo Desvio Padrao
-        $tempo_minimo = ($p->Marca->estoqueminimodias / 30);
-        $tempo_maximo = ($p->Marca->estoquemaximodias / 30);
-        $estatistica = EstoqueEstatisticaService::calculaEstoqueMinimoPeloDesvioPadrao($vendas, $tempo_minimo, $tempo_maximo);
+        // $tempo_minimo = ($p->Marca->estoqueminimodias / 30);
+        // $tempo_maximo = ($p->Marca->estoquemaximodias / 30);
+
+        // Minimo e maximo
+        $sql = '
+            select
+            	sum(elpv.estoqueminimo) as estoqueminimo,
+            	sum(elpv.estoquemaximo) as estoquemaximo
+            from tblestoquelocalprodutovariacao elpv
+            inner join tblprodutovariacao pv on (pv.codprodutovariacao = elpv.codprodutovariacao)
+            where pv.codproduto = :codproduto
+        ';
+        $params = [
+            'codproduto' => $codproduto,
+        ];
+        if (!empty($codprodutovariacao)) {
+            $sql .= ' and elpv.codprodutovariacao = :codprodutovariacao ';
+            $params['codprodutovariacao'] = $codprodutovariacao;
+        }
+        if (!empty($codestoquelocal)) {
+            $sql .= ' and elpv.codestoquelocal = :codestoquelocal ';
+            $params['codestoquelocal'] = $codestoquelocal;
+        }
+        $minmax = DB::select($sql, $params);
 
         // Monta Array de Retorno
         $ret = [
@@ -554,7 +576,10 @@ class EstoqueEstatisticaService
             'locais' => $locais,
             'vendas' => $vendas,
             'vendas_volta_aulas' => $vendas_volta_aulas,
-            'estatistica' => $estatistica,
+            'estoqueminimo' => floatval($minmax[0]->estoqueminimo),
+            'estoquemaximo' => floatval($minmax[0]->estoquemaximo),
+            // 'estatistica' => $estatistica,
+            // 'estatistica' => [],
         ];
 
         return $ret;
