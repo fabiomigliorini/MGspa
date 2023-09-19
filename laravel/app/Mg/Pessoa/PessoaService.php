@@ -220,7 +220,7 @@ class PessoaService
                     continue;
                 }
                 $pessoa = new Pessoa();
-                $pessoa->fantasia = $retIe->xFant??$retIe->xNome;
+                $pessoa->fantasia = substr($retIe->xFant??$retIe->xNome, 0, 50);
                 $pessoa->ie = $retIe->IE;
             }
 
@@ -292,9 +292,9 @@ class PessoaService
             $pessoa = static::buscarPorCnpjIe(numeroLimpo($retReceita['cnpj']), null);
             if ($pessoa == null) {
                 $pessoa = new Pessoa();
-                $pessoa->fantasia = $retReceita['fantasia'];
+                $pessoa->fantasia = substr($retReceita['fantasia'], 0, 50);
                 if (empty($pessoa->fantasia)) {
-                    $pessoa->fantasia = $retReceita['nome'];
+                    $pessoa->fantasia = substr($retReceita['nome'], 0, 50);
                 }
             }
 
