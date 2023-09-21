@@ -34,12 +34,14 @@ class SSOController extends Controller
 
     public function getLoginQuasar(Request $request)
     {
+        $state = $request->state;
+        
         $query = http_build_query([
             "client_id" => env("SSO_CLIENT_ID_QUASAR"),
             "redirect_uri" => env("SSO_CALLBACK_QUASAR") ,
             "response_type" => "code",
             "scope" => env("SSO_SCOPES"),
-            "state" => 'HANCKA1kcjam1CKA018mcak1cffa',
+            "state" => $state,
             "prompt" => false
         ]);
         return redirect(env("SSO_HOST_QUASAR") .  "/oauth/authorize?" . $query);
@@ -62,7 +64,15 @@ class SSOController extends Controller
         } catch (\Throwable $th) {
             return redirect("login")->withError("Falha ao obter informações de login! Tente novamente.");
         }
-        return redirect(env("URL_REDIRECT_FRONTEND") .$accessToken);
+
+        if($request->state == 'quasar-v1'){
+            return redirect(env("URL_REDIRECT_FRONTEND") .$accessToken);
+        }else if($request->state == 'quasar-v2'){
+            return redirect(env("URL_REDIRECT_FRONTEND_V2") .$accessToken);
+        }else{
+            return redirect(env("SSO_HOST_QUASAR"));
+        }
+        
     }
 }
 
