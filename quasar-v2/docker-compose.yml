@@ -1,6 +1,6 @@
 version: '3.7'
 services:
-    quasar-mgspa:
+    quasar-v2-mgspa:
         build: ./
         tty: true
         volumes:
@@ -13,4 +13,4 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"              
         ports:
-            - "8080:8080"
+            - "8081:8080"
