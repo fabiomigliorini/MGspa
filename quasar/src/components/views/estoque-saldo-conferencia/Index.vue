@@ -1,5 +1,5 @@
 <template>
-  <mg-layout  back-path="/">
+  <mg-layout back-path="/">
     <template slot="title">
       Conferência de estoque
     </template>
@@ -11,26 +11,32 @@
 
           <!-- Codestoquelocal -->
           <div class="col-12">
-            <mg-select-estoque-local label="Local" v-model="data.codestoquelocal"/>
+            <mg-select-estoque-local label="Local" v-model="data.codestoquelocal" />
           </div>
 
           <!-- Tipo - Fisico/Fiscal -->
           <div class="col-12">
-            <q-select outlined label="Tipo" v-model="data.fiscal" :options="tipos" map-options/>
+            <q-select outlined label="Tipo" v-model="data.fiscal" :options="tipos" map-options />
           </div>
+
+
+          <!--Conferencia Periodica -->
+          <div class="col-12">
+            <q-select outlined label="Conferência Periodica" v-model="data.conferenciaperiodica"
+              :options="conferenciaperi" option-label="label" option-value="value" emit-value map-options />
+          </div>
+
 
           <!-- Codigo da Marca -->
           <div class="col-12">
-            <mg-autocomplete-marca
-              label="Marca"
-              v-model="data.codmarca"
-              :init="data.codmarca"
-              />
+            <mg-autocomplete-marca label="Marca" v-model="data.codmarca" :init="data.codmarca" />
           </div>
+
 
           <!-- Data para jogar o movimento do estoque -->
           <div class="col-12">
-            <q-input outlined v-model="data.data" mask="##/##/#### ##:##" input-class="text-center" label="Data de ajuste">
+            <q-input outlined v-model="data.data" mask="##/##/#### ##:##" input-class="text-center"
+              label="Data de ajuste">
               <template v-slot:prepend>
                 <q-icon name="event" class="cursor-pointer">
                   <q-popup-proxy transition-show="scale" transition-hide="scale">
@@ -70,18 +76,28 @@ export default {
     MgSelectEstoqueLocal,
     MgAutocompleteMarca
   },
-  data () {
+  data() {
     return {
       loadFields: false,
       tipos: [
-          {
-            label: 'Fisico',
-            value: 0
-          },
-          {
-            label: 'Fiscal',
-            value: 1
-          }
+        {
+          label: 'Fisico',
+          value: 0
+        },
+        {
+          label: 'Fiscal',
+          value: 1
+        }
+      ],
+      conferenciaperi: [
+        {
+          label: 'Não',
+          value: 0
+        },
+        {
+          label: 'Sim',
+          value: 1
+        }
       ],
       erros: {
         codestoquelocal: []
@@ -90,7 +106,7 @@ export default {
   },
   computed: {
     data: {
-      get () {
+      get() {
         return this.$store.state.estoqueSaldoConferencia.estoqueSaldoConferenciaState
       }
     }
@@ -108,10 +124,6 @@ export default {
         return false
       }
 
-      if (this.data.codmarca == null) {
-        this.mostrarErro('Selecione a Marca!')
-        return false
-      }
 
       if (this.data.fiscal == null) {
         this.mostrarErro('Selecione o Tipo!')
@@ -129,15 +141,18 @@ export default {
       if (this.validaCampos() == false) {
         return
       }
+
+      
       this.$router.push('/estoque-saldo-conferencia/listagem/'
         + this.data.codestoquelocal + '/'
         + this.data.codmarca + '/'
         + this.data.fiscal + '/'
+        + this.data.conferenciaperiodica + '/'
         + this.moment(this.data.data, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DDTHH:mm')
       )
     },
   },
-  mounted () {
+  mounted() {
     this.loadFields = true;
     if (this.data.data == null) {
       this.data.data = this.moment().format('DD/MM/YYYY HH:mm')
@@ -148,5 +163,4 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
-</style>
+<style></style>

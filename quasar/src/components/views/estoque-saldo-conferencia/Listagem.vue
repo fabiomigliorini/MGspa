@@ -2,7 +2,13 @@
   <mg-layout drawer back-path="/estoque-saldo-conferencia/">
 
     <template slot="title" v-if="carregado">
-      {{data.local.estoquelocal }} / {{ data.marca.marca }}
+      {{data.local.estoquelocal }} 
+      <template v-if="data.marca">
+        / {{ data.marca.marca }}
+      </template>
+      <template v-if="filter.conferenciaperiodica == true">
+        / Conferência Periódica
+      </template>
     </template>
 
     <!--DRAWER ESQUERDA-->
@@ -654,6 +660,7 @@ export default {
       filter: {
         codestoquelocal: null,
         codmarca: null,
+        conferenciaperiodica: 1,
         fiscal: 1,
         data: null,
         inativo: 0,
@@ -716,6 +723,7 @@ export default {
         codprodutovariacao: produto.codprodutovariacao,
         codestoquelocal: vm.filter.codestoquelocal,
         fiscal: parseInt(vm.filter.fiscal),
+        conferenciaperiodica: parseInt(vm.filter.conferenciaperiodica),
         data: vm.filter.data
       };
 
@@ -795,6 +803,7 @@ export default {
         codprodutovariacao: vm.produto.variacao.codprodutovariacao,
         codestoquelocal: vm.filter.codestoquelocal,
         fiscal: parseInt(vm.filter.fiscal),
+        conferenciaperiodica: parseInt(vm.filter.conferenciaperiodica),
         quantidadeinformada: vm.conferencia.quantidade,
         customedioinformado: vm.conferencia.customedio,
         data: vm.filter.data,
@@ -849,7 +858,7 @@ export default {
       if (this.page == 1) {
         vm.carregado = false
       }
-
+    
       // Monta Parametros da API
       let params = {
         codestoquelocal: vm.filter.codestoquelocal,
@@ -858,8 +867,13 @@ export default {
         inativo: vm.filter.inativo,
         dataCorte: vm.moment(vm.filter.dataCorte, 'DD/MM/YYYY').format('YYYY-MM-DD'),
         conferidos: (vm.filter.conferidos=='conferidos')?1:0,
+        conferenciaperiodica: vm.filter.conferenciaperiodica,
         page: vm.page
       };
+     
+      if(params.conferenciaperiodica == "undefined"){
+        params.conferenciaperiodica = 0
+      }
 
       vm.$axios.get('estoque-saldo-conferencia/busca-listagem', {
         params
@@ -976,7 +990,8 @@ export default {
         barras: null,
         codprodutovariacao: null,
         codestoquelocal: this.filter.codestoquelocal,
-        fiscal: this.filter.fiscal
+        fiscal: this.filter.fiscal,
+        conferenciaperiodica: this.filter.conferenciaperiodica
       };
       if (produto == null) {
         if (vm.buscaPorBarras == null) {
@@ -1030,8 +1045,10 @@ export default {
 
   },
   created() {
+   
     this.filter.codestoquelocal = this.$route.params.codestoquelocal;
     this.filter.codmarca = this.$route.params.codmarca;
+    this.filter.conferenciaperiodica = this.$route.params.conferenciaperiodica;
     this.filter.fiscal = this.$route.params.fiscal;
     this.filter.data = this.$route.params.data;
     this.filter.dataCorte = this.moment().startOf('day').subtract(15, 'days').format('DD-MM-YYYY')

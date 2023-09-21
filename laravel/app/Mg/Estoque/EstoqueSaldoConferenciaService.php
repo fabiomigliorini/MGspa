@@ -1,5 +1,7 @@
 <?php
+
 namespace Mg\Estoque;
+
 use Mg\MgService;
 use DB;
 use Carbon\Carbon;
@@ -8,19 +10,19 @@ class EstoqueSaldoConferenciaService extends MgService
 {
 
     public static function criaConferencia(
-                int $codprodutovariacao,
-                int $codestoquelocal,
-                bool $fiscal,
-                float $quantidadeinformada,
-                float $customedioinformado,
-                Carbon $data,
-                $observacoes,
-                $corredor,
-                $prateleira,
-                $coluna,
-                $bloco,
-                Carbon $vencimento = null
-            ) {
+        int $codprodutovariacao,
+        int $codestoquelocal,
+        bool $fiscal,
+        float $quantidadeinformada,
+        float $customedioinformado,
+        Carbon $data,
+        $observacoes,
+        $corredor,
+        $prateleira,
+        $coluna,
+        $bloco,
+        Carbon $vencimento = null
+    ) {
 
         // Atualiza dados da EstoqueLocalProdutoVariacao
         $es = EstoqueSaldoService::buscaOuCria($codestoquelocal, $codprodutovariacao, $fiscal);
@@ -55,11 +57,11 @@ class EstoqueSaldoConferenciaService extends MgService
     }
 
     public static function zerarProduto(
-                int $codprodutovariacao,
-                int $codestoquelocal,
-                bool $fiscal,
-                Carbon $data
-            ) {
+        int $codprodutovariacao,
+        int $codestoquelocal,
+        bool $fiscal,
+        Carbon $data
+    ) {
 
         // Atualiza dados da EstoqueLocalProdutoVariacao
         $es = EstoqueSaldoService::buscaOuCria($codestoquelocal, $codprodutovariacao, $fiscal);
@@ -70,7 +72,7 @@ class EstoqueSaldoConferenciaService extends MgService
         $model->quantidadesistema = $es->saldoquantidade;
         $model->quantidadeinformada = 0;
         $model->customediosistema = $es->customedio;
-        $model->customedioinformado = $es->customedio??0;
+        $model->customedioinformado = $es->customedio ?? 0;
         $model->data = $data;
         $model->save();
 
@@ -164,10 +166,10 @@ class EstoqueSaldoConferenciaService extends MgService
         // Caso exista mais de um movimento vinculado à conferência
         // Percorre os movimentos excedentes e apaga
         $movExcedente =
-             EstoqueMovimento
-             ::whereNotIn('codestoquemovimento', $codestoquemovimentoGerado)
-             ->where('codestoquesaldoconferencia', $conferencia->codestoquesaldoconferencia)
-             ->get();
+            EstoqueMovimento
+            ::whereNotIn('codestoquemovimento', $codestoquemovimentoGerado)
+            ->where('codestoquesaldoconferencia', $conferencia->codestoquesaldoconferencia)
+            ->get();
 
         foreach ($movExcedente as $excluir) {
 
@@ -183,50 +185,58 @@ class EstoqueSaldoConferenciaService extends MgService
 
             // apaga registro
             $excluir->delete();
-
         }
 
         // Recalcula custo Médio de todos Meses Afetados
-        foreach($codestoquemesRecalcular as $codestoquemes) {
+        foreach ($codestoquemesRecalcular as $codestoquemes) {
             EstoqueSaldoService::estoqueCalculaCustoMedio($codestoquemes);
         }
 
         return $mov;
     }
 
-    public static function buscaListagem (
+    public static function buscaListagem(
         int $codmarca,
         int $codestoquelocal,
         bool $fiscal,
         int $inativo,
         Carbon $dataCorte,
         bool $conferidos,
+        bool $conferenciaperiodica,
         int $page
-      )
-    {
+    ) {
 
-        $marca = \Mg\Marca\Marca::findOrFail($codmarca);
+        if(!empty($codmarca)){
+            $marca = \Mg\Marca\Marca::findOrFail($codmarca);
+        }
+        
         $estoquelocal = EstoqueLocal::findOrFail($codestoquelocal);
 
         // Monta query para buscar produtos
         $sql = '
-            select
-            	p.codproduto,
-            	pv.codprodutovariacao,
-            	p.produto,
-            	pv.variacao,
-            	es.saldoquantidade,
-            	coalesce(p.inativo, pv.inativo) as inativo,
-            	pv.descontinuado,
-            	es.ultimaconferencia,
-              p.codprodutoimagem,
-              pv.codprodutoimagem as codprodutoimagemvariacao
+            select   
+                p.codproduto,
+                pv.codprodutovariacao,
+                p.produto,
+                pv.variacao,
+                es.saldoquantidade,
+                coalesce(p.inativo, pv.inativo) as inativo,
+                pv.descontinuado,
+                es.ultimaconferencia,
+                p.codprodutoimagem,
+                pv.codprodutoimagem as codprodutoimagemvariacao
             from tblproduto p
             inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
             left join tblestoquelocalprodutovariacao elpv on (elpv.codestoquelocal = :codestoquelocal and elpv.codprodutovariacao = pv.codprodutovariacao)
             left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = :fiscal)
-            where p.codmarca = :codmarca
+            where p.estoque = true
         ';
+        
+        if (!empty($codmarca)){
+            $sql .= '
+                and p.codmarca = :codmarca
+            ';
+        }
 
         // filtra ativos / inativos
         switch ($inativo) {
@@ -249,7 +259,7 @@ class EstoqueSaldoConferenciaService extends MgService
                 ';
                 break;
         }
-
+        
         // filtra conferidos
         if ($conferidos) {
             $sql .= '
@@ -258,6 +268,17 @@ class EstoqueSaldoConferenciaService extends MgService
         } else {
             $sql .= '
                 and (es.ultimaconferencia < :dataCorte or es.ultimaconferencia is null)
+            ';
+        }
+
+         // filtra conferencia periodica
+         if ($conferenciaperiodica) {
+            $sql .= '
+                and p.conferenciaperiodica = true
+            ';
+        } else {
+            $sql .= '
+                and p.conferenciaperiodica = false
             ';
         }
 
@@ -278,23 +299,30 @@ class EstoqueSaldoConferenciaService extends MgService
         ';
 
         $limit = 50;
-        $offset = ($page -1) * $limit;
+        $offset = ($page - 1) * $limit;
 
-        $produtos = DB::select($sql, [
-          'codmarca' => $codmarca,
-          'codestoquelocal' => $codestoquelocal,
-          'fiscal' => $fiscal,
-          'dataCorte' => $dataCorte,
-          'limit' => $limit,
-          'offset' => $offset,
-        ]);
+        $params =  [
+            'codestoquelocal' => $codestoquelocal,
+            'fiscal' => $fiscal,
+            'dataCorte' => $dataCorte,
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
 
+        if(!empty($codmarca)){
+            $params['codmarca'] = $codmarca;
+           }
+
+        $produtos = DB::select($sql,$params);
+
+       
+        
         foreach ($produtos as $i => $produto) {
 
-            $produtos[$i]->saldoquantidade = (double)$produtos[$i]->saldoquantidade;
+            $produtos[$i]->saldoquantidade = (float)$produtos[$i]->saldoquantidade;
 
             // Busca Imagem Pincipal da Variacao ou do Produto
-            if ($codprodutoimagem = ($produto->codprodutoimagemvariacao??$produto->codprodutoimagem)) {
+            if ($codprodutoimagem = ($produto->codprodutoimagemvariacao ?? $produto->codprodutoimagem)) {
                 $pi = \Mg\Produto\ProdutoImagem::where('codprodutoimagem', $codprodutoimagem)->first();
                 $produtos[$i]->imagem = $pi->Imagem->url;
                 continue;
@@ -307,17 +335,21 @@ class EstoqueSaldoConferenciaService extends MgService
             }
         }
 
+        
         $res = [
             'local' => [
                 'codestoquelocal' => $estoquelocal->codestoquelocal,
                 'estoquelocal' => $estoquelocal->estoquelocal
             ],
-            'marca' => [
-                'marca' => $marca->marca,
-                'codmarca' => $marca->codmarca
-            ],
             'produtos' => $produtos,
         ];
+
+        if(!empty($codmarca)){
+            $res['marca'] =  [
+                    'marca' => $marca->marca,
+                    'codmarca' => $marca->codmarca
+            ];
+        }
 
         return $res;
     }
@@ -368,7 +400,7 @@ class EstoqueSaldoConferenciaService extends MgService
                 'codproduto' => $pv->Produto->codproduto,
                 'produto' => $pv->Produto->produto,
                 'referencia' => $pv->Produto->referencia,
-                'inativo' => ($pv->Produto->inativo)?$pv->Produto->inativo->toW3cString():null,
+                'inativo' => ($pv->Produto->inativo) ? $pv->Produto->inativo->toW3cString() : null,
                 'preco' => $pv->Produto->preco,
                 'siglaunidademedida' => $pv->Produto->UnidadeMedida->sigla,
                 'unidademedida' => $pv->Produto->UnidadeMedida->unidademedida,
@@ -378,24 +410,24 @@ class EstoqueSaldoConferenciaService extends MgService
                 'variacao' => $pv->variacao,
                 'referencia' => $pv->referencia,
                 'descontinuado' => $pv->descontinuado,
-                'inativo' => ($pv->inativo)?$pv->inativo->toW3cString():null,
-                'estoqueminimo' => $elpv->estoqueminimo??null,
-                'estoquemaximo' => $elpv->estoquemaximo??null,
+                'inativo' => ($pv->inativo) ? $pv->inativo->toW3cString() : null,
+                'estoqueminimo' => $elpv->estoqueminimo ?? null,
+                'estoquemaximo' => $elpv->estoquemaximo ?? null,
             ],
             'barras' => $barras,
             'localizacao' => [
-                'codestoquelocal' => $elpv->codestoquelocal??null,
-                'estoquelocal' => $elpv->EstoqueLocal->estoquelocal??null,
-                'corredor' => $elpv->corredor??null,
-                'prateleira' => $elpv->prateleira??null,
-                'coluna' => $elpv->coluna??null,
-                'bloco' => $elpv->bloco??null,
-                'vencimento' => (!empty($elpv->vencimento))?$elpv->vencimento->toW3cString():null,
+                'codestoquelocal' => $elpv->codestoquelocal ?? null,
+                'estoquelocal' => $elpv->EstoqueLocal->estoquelocal ?? null,
+                'corredor' => $elpv->corredor ?? null,
+                'prateleira' => $elpv->prateleira ?? null,
+                'coluna' => $elpv->coluna ?? null,
+                'bloco' => $elpv->bloco ?? null,
+                'vencimento' => (!empty($elpv->vencimento)) ? $elpv->vencimento->toW3cString() : null,
             ],
             'saldoatual' => [
-                'ultimaconferencia' => (!empty($es->ultimaconferencia))?$es->ultimaconferencia->toW3cString():null,
-                'quantidade' => $es->saldoquantidade??null,
-                'custo' => $es->customedio??null
+                'ultimaconferencia' => (!empty($es->ultimaconferencia)) ? $es->ultimaconferencia->toW3cString() : null,
+                'quantidade' => $es->saldoquantidade ?? null,
+                'custo' => $es->customedio ?? null
             ],
             'conferencias' => $conferencias,
 
@@ -404,7 +436,7 @@ class EstoqueSaldoConferenciaService extends MgService
         return $res;
     }
 
-    public static function inativar ($model, $date = null)
+    public static function inativar($model, $date = null)
     {
         // 1 - excluir o registro de movimento que foi gerado a partir
         // da conferencia
@@ -426,12 +458,10 @@ class EstoqueSaldoConferenciaService extends MgService
         // 4 - Recalcular data da ultima conferencia
         $ultimaconferencia = null;
         if ($conf = $model->EstoqueSaldo->EstoqueSaldoConferenciaS()->where('codestoquesaldoconferencia', '!=', $model->codestoquesaldoconferencia)->ativo()->orderBy('criacao', 'desc')->first()) {
-          $ultimaconferencia = $conf->criacao;
+            $ultimaconferencia = $conf->criacao;
         }
 
         $model->EstoqueSaldo->ultimaconferencia = $ultimaconferencia;
         $model->EstoqueSaldo->save();
-
     }
-
 }

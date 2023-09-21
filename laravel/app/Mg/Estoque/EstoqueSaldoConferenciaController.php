@@ -22,7 +22,7 @@ class EstoqueSaldoConferenciaController extends MgController
     {
 
         $request->validate([
-            'codmarca' => 'required|integer',
+            // 'codmarca' => 'required|integer',
             'codestoquelocal' => 'required|integer',
             'fiscal' => 'required|boolean',
             'inativo' => 'required|integer',
@@ -35,6 +35,7 @@ class EstoqueSaldoConferenciaController extends MgController
         $fiscal = boolval($request->fiscal);
         $inativo = intval($request->inativo);
         $conferidos = boolval($request->conferidos);
+        $conferenciaperiodica = boolval($request->conferenciaperiodica);
         $dataCorte = new \Carbon\Carbon($request->dataCorte);
 
         $res = EstoqueSaldoConferenciaService::buscaListagem(
@@ -44,6 +45,7 @@ class EstoqueSaldoConferenciaController extends MgController
             $inativo,
             $dataCorte,
             $conferidos,
+            $conferenciaperiodica,
             $request->page??1
         );
 
