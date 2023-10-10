@@ -25,7 +25,7 @@ export default ({ Vue }) => {
         const originalRequest = error.config;
         if (error.response.status === 401 && !originalRequest._retry) {
           //window.location="http://api-mgspa-dev.mgpapelaria.com.br/api/quasar"
-          window.location=process.env.OAUTH_URL
+          window.location=process.env.OAUTH_URL + '?state=quasar-v1'
           refresh.handle(error.response)
         }
       }

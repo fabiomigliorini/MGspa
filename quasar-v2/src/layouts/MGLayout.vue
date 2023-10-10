@@ -1,8 +1,8 @@
-<template>    
+<template>
   <q-layout view="hhh lpR fff">
     <q-header reveal elevated class="bg-yellow text-blue-grey">
       <q-toolbar>
-        
+
         <q-btn
           flat
           dense
@@ -11,7 +11,7 @@
           icon="menu"
           aria-label="Menu"
         />
-        
+
         <q-toolbar-title>
           MG Papelaria
         </q-toolbar-title>
@@ -34,18 +34,18 @@
 
           <!-- Renderiza o menu -->
           <mg-menu></mg-menu>
-          
+
             <!-- Usuario logout -->
           <q-btn-dropdown flat color="blue-grey" icon="person" :label="user">
           <div class="row no-wrap q-pa-md justify-center">
-   
+
             <div class="column items-center">
               <q-avatar size="72px">
               <img src="https://cdn.quasar.dev/img/boy-avatar.png">
               </q-avatar>
               <div class="text-subtitle1 q-mt-md q-mb-xs">{{user}}</div>
 
-              <q-btn 
+              <q-btn
               color="primary"
               label="Sair"
               push
@@ -66,17 +66,17 @@
         side="left"
         elevated
         >
-        
+
         <slot name="drawer"></slot>
       </q-drawer>
-      
+
     <q-page-container class="bg-grey-2">
       <router-view/>
       <slot name="content"></slot>
     </q-page-container>
     <q-footer elevated reveal class="bg-grey-8 text-white">
       <div class="q-ma-xs text-weight-light text-center">
-        MGspa - &copy; MG Papelaria
+        MGpwa - &copy; MG Papelaria
       </div>
     </q-footer>
   </q-layout>
@@ -105,8 +105,8 @@ export default defineComponent({
     const leftDrawerOpen = ref(false)
     const $q = useQuasar()
     const router = useRouter()
-    const user = ref(localStorage.getItem('usuario')) 
-   
+    const user = ref(localStorage.getItem('usuario'))
+
     const Deslogar = async () => {
       $q.dialog({
         title: 'Sair da conta',

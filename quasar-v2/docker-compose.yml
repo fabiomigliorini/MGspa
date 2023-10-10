@@ -1,16 +1,16 @@
 version: '3.7'
 services:
-    quasar-v2-mgspa:
+    quasar-mgpwa:
         build: ./
         tty: true
         volumes:
             - /opt/www:/opt/www
             - /tmp:/tmp/host
-            - /media/publico:/media/publico                
+            - /media/publico:/media/publico
             - /etc/timezone:/etc/timezone:ro
             - /etc/localtime:/etc/localtime:ro
-            - /usr/share/zoneinfo:/usr/share/zoneinfo              
+            - /usr/share/zoneinfo:/usr/share/zoneinfo
         extra_hosts:
-            - "host.docker.internal:host-gateway"              
+            - "host.docker.internal:host-gateway"
         ports:
             - "8081:8080"
