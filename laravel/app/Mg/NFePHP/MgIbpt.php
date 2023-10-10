@@ -30,7 +30,7 @@ class MgIbpt extends Ibpt
         // Monta Variaveis para Consulta
         $codfilial = $this->filial->codfilial;
         // TODO: Descobrir se e pra passar estado da filial ou do Cliente
-        $codestado = $nfpb->NotaFiscal->Pessoa->Cidade->codestado;
+        $codestado = $nfpb->NotaFiscal->Filial->Pessoa->Cidade->codestado;
         $uf = $nfpb->NotaFiscal->Pessoa->Cidade->Estado->sigla;
         $ncm = $nfpb->ProdutoBarra->Produto->Ncm->ncm;
         $emissao = $nfpb->NotaFiscal->emissao;
@@ -46,7 +46,7 @@ class MgIbpt extends Ibpt
 
         // Se estiver com data de vigencia inferior na tabela de cache
         // E Não estiver operando em modo OFFLINE
-	//if (1==0) {
+        //if (1==0) {
         if ($nfpb->NotaFiscal->Filial->Empresa->modoemissaonfce != 9 && $emissao->gt($reg->vigenciafim->endOfDay())) {
 
             // Consulta no Web Service do IBPT

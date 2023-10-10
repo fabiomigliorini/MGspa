@@ -255,7 +255,11 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
 
 
 
-    public function getAuthPassword() {
+    public function getAuthPassword() 
+    {
+        if (!empty($this->inativo)) {
+            return null;
+	}
         return $this->senha;
     }
     /**

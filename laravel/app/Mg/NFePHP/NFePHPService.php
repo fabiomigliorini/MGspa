@@ -147,6 +147,7 @@ class NFePHPService extends MgService
         $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
 
         // Envia Lote para Sefaz
+	//$tools->timeout(5);
         $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1);
         $st = new Standardize();
         $respStd = $st->toStd($resp);
