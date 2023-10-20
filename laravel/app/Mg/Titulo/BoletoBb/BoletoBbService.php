@@ -452,8 +452,8 @@ class BoletoBbService
             ->get();
 
         // consulta de 15 dias atras ate hoje
-        $dataFimMovimento = Carbon::now();
-        $dataInicioMovimento = Carbon::now()->subDays(15);
+        $dataFimMovimento = Carbon::now()->subDays(0);
+        $dataInicioMovimento = Carbon::now()->subDays(16);
 
         // percorre portadores
         foreach ($portadores as $portador) {
@@ -485,6 +485,23 @@ class BoletoBbService
                 // se listagem vazia  cai fora
                 if ($listagem == null) {
                     break;
+                }
+
+                // Formato novo listagem vazia -- Outubro/2020
+                //array:1 [
+                //  "erros" => array:1 [
+                //      0 => array:4 [
+                //          "codigoMensagem" => "4722678"
+                //          "versaoMensagem" => "1"
+                //          "codigoRetorno" => "1047"
+                //          "textoMensagem" => "Não existem boletos a serem listados."
+                //      ]
+                //  ]
+                //]
+                if (isset($listagem['erros'][0]['codigoRetorno'])) {
+                    if ($listagem['erros'][0]['codigoRetorno'] == '1047')  {
+                        break;
+                    }
                 }
 
                 // precorre lsitagem de boletos
