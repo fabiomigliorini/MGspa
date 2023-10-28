@@ -55,6 +55,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('produto/unifica-variacoes', '\Mg\Produto\ProdutoController@unificaVariacoes');
     Route::post('produto/unifica-barras', '\Mg\Produto\ProdutoController@unificaBarras');
     Route::post('produto/embalagem-para-unidade', '\Mg\Produto\ProdutoController@embalagemParaUnidade');
+    Route::get('produto/listagem-pdv', '\Mg\Produto\ProdutoController@listagemPdv');
 
     // Etiqueta
     Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');
@@ -274,7 +275,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('nota-fiscal/notas-emitidas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasEmitidas');
         Route::get('nota-fiscal/notas-lancadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasLancadas');
 
-       
+
         // MDFe
         Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
         Route::post('mdfe/criar-da-nfechave/{nfechave}', '\Mg\Mdfe\MdfeController@criarDaNfeChave');

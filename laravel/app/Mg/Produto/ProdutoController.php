@@ -52,5 +52,12 @@ class ProdutoController extends MgController
         return new ProdutoEmbalagemResource($pe);
     }
 
+    public function listagemPdv (Request $request)
+    {
+        $codprodutobarra = $request->codprodutobarra??0;
+        $limite = $request->limite??10000;
+        return ProdutoService::listagemPdv($codprodutobarra, $limite);
+    }
+
 
 }
