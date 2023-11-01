@@ -859,6 +859,11 @@ class NFePHPMakeService
         $nfe->taginfAdic($std);
 
         // Gera o XML
+        try {
+            $xml = $nfe->getXML(); // O conteúdo do XML fica armazenado na variável $xml
+        } catch (\RuntimeException $e) {
+            throw new \Exception(implode("\n", $nfe->getErrors()));
+        }
         $xml = $nfe->getXML(); // O conteúdo do XML fica armazenado na variável $xml
 
         // Salva no Banco de Dados a Chave da NFe
