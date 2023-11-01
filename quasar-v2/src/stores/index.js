@@ -14,20 +14,20 @@ import { createRouter, createWebHistory } from 'vue-router'
  */
 
 export default store(() => {
- 
+
   const pinia = createPinia()
   // You can add Pinia plugins here
   // pinia.use(SomePiniaPlugin)
-  
-return pinia;
+
+  return pinia;
 })
 
 export const router = createRouter({
   history: createWebHistory('/'),
   linkActiveClass: 'active',
   routes: [
-      { path: '/' },
-      { path: '/login'}
+    { path: '/' },
+    { path: '/login' }
   ]
 })
 
@@ -54,7 +54,7 @@ export const guardaToken = defineStore('auth', () => {
   })
 
   const token = ref(localStorage.getItem('access_token'))
-  const user = ref(localStorage.getItem('usuario'))  
+  const user = ref(localStorage.getItem('usuario'))
 
   function accessToken(tokenValue) {
 
@@ -66,22 +66,22 @@ export const guardaToken = defineStore('auth', () => {
 
     localStorage.setItem('usuario', userValue)
     user.value = userValue
- 
+
   }
-    
+
   // Acessa os dados do usuario como verificação se o token esta valido na API
   async function verificaToken() {
 
     try {
-      const tokenverificacao = 'Bearer ' +token.value
-      const {data} = await api.get('v1/auth/user', {
-        headers:{
+      const tokenverificacao = 'Bearer ' + token.value
+      const { data } = await api.get('v1/auth/user', {
+        headers: {
           Authorization: tokenverificacao
         }
       })
-      if (data.usuario){
+      if (data.usuario) {
         return data;
-      }else{
+      } else {
         localStorage.removeItem('access_token')
         localStorage.removeItem('usuario')
         return false
@@ -90,7 +90,7 @@ export const guardaToken = defineStore('auth', () => {
       localStorage.removeItem('access_token')
       localStorage.removeItem('usuario')
       console.log(error.response.data)
-    } 
+    }
   }
   return {
     token,

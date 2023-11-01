@@ -1,0 +1,483 @@
+<template>
+  <!-- DIALOG  NOVO/EDITAR TELEFONE  -->
+  <q-dialog v-model="dialogTel" @keyup.enter="telNovo == true ? novoTel(route.params.id) : salvarTel(route.params.id)">
+    <q-card style="min-width: 350px">
+      <q-card-section>
+        <div v-if="telNovo" class="text-h6">Novo Telefone</div>
+        <div v-else class="text-h6">Editar Telefone</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        <q-separator spaced></q-separator>
+        <small class="text-h8-grey">Tipo:</small>
+
+        <q-radio v-model="modelTel.tipo" checked-icon="task_alt" unchecked-icon="panorama_fish_eye" :val="1" label="Fixo"
+          outlined dense />
+        <q-radio v-model="modelTel.tipo" checked-icon="task_alt" unchecked-icon="panorama_fish_eye" :val="2"
+          label="Celular" outlined dense />
+
+        <q-separator spaced></q-separator>
+
+        <q-input outlined dense v-model="modelTel.pais" mask="(+##)" value="+55" label="País" unmasked-value :rules="[
+          val => val && val.length > 0 || 'Pais obrigatório'
+        ]" />
+
+        <q-input outlined dense v-model="modelTel.ddd" mask="(##)" autofocus label="DDD" unmasked-value :rules="[
+          val => val && val.length > 0 || 'DDD obrigatório'
+        ]" />
+        <q-input v-if="modelTel.tipo == '2'" outlined dense v-model="modelTel.telefone" mask="# ####-####" autofocus
+          label="Telefone" unmasked-value :rules="[
+            val => val && val.length > 0 || 'Telefone obrigatório'
+          ]" />
+
+        <q-input v-if="modelTel.tipo == '1'" outlined dense v-model="modelTel.telefone" mask="####-####" autofocus
+          label="Telefone" unmasked-value :rules="[
+            val => val && val.length > 0 || 'Telefone obrigatório'
+          ]" />
+
+        <q-input outlined dense v-model="modelTel.apelido" label="Apelido" :rules="[]" />
+      </q-card-section>
+
+      <q-card-actions align="right" class="text-primary">
+        <q-btn flat label="Cancelar" v-close-popup />
+        <q-btn v-if="telNovo" flat label="Salvar" type="button" @click="novoTel(route.params.id)" v-close-popup
+          @keyup.enter="novoTel(route.params.id)" />
+        <q-btn v-else flat label="Salvar" type="button" @click="salvarTel(route.params.id)" v-close-popup
+          @keyup.enter="salvarTel(route.params.id)" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+  <q-list bordered :dense="$q.screen.lt.md" class="q-ma-sm">
+    <q-item-label header>Telefone
+      <q-btn class="gt-xs" flat dense round icon="add"
+        @click="dialogTel = true, modelTel = { tipo: 2, pais: '+55' }, telNovo = true"></q-btn>
+    </q-item-label>
+
+    <!-- DRAG AND DROP TELEFONES -->
+    <draggable class="list-group" item-key="id" :component-data="{ tag: 'q-list', name: 'flip-list', type: 'transition' }"
+      :move="alteraOrdem" v-model="sPessoa.item.PessoaTelefoneS" v-bind="dragOptions" @start="isDragging = true"
+      @end="isDragging = false">
+
+      <template #item="{ element }">
+        <div>
+          <q-separator inset />
+
+          <q-item>
+            <q-item-section avatar top>
+              <q-avatar :icon="iconeFone(element.tipo)" color="grey-2" text-color="blue" />
+            </q-item-section>
+            <q-item-section class="cursor-pointer" lines="1" @click="linkTel(element.ddd, element.telefone)" clickable
+              v-ripple>
+              <q-item-label v-if="!element.inativo">
+                ({{ element.ddd }})
+                {{ formataFone(element.tipo, element.telefone) }}
+                <q-icon v-if="element.verificacao" color="blue" name="verified" />
+              </q-item-label>
+              <q-item-label v-else>
+                <s>({{ element.ddd }})
+                  {{ formataFone(element.tipo, element.telefone) }}</s>
+                <q-icon v-if="element.verificacao" color="blue" name="verified" />
+              </q-item-label>
+              <q-item-label caption>
+                {{ element.apelido }}
+                <span v-if="element.inativo" class="text-caption text-red-14">
+                  Inativo desde: {{ formataData(element.inativo) }}
+                </span>
+              </q-item-label>
+            </q-item-section>
+            <q-space />
+            <q-btn v-if="!element.verificacao && element.tipo === 2" label="Verificar" color="red"
+              @click="enviarSms(element.pais, element.ddd, element.telefone, element.codpessoatelefone)" dense round
+              flat />
+            <q-item-section side>
+              <q-btn-dropdown flat dense auto-close>
+                <q-btn flat dense icon="edit"
+                  @click="editarTel(element.codpessoatelefone, element.ddd, element.telefone, element.apelido, element.tipo, element.verificacao, telNovo = false)" />
+                <q-btn flat dense icon="delete" @click="excluirTel(element.codpessoatelefone)" />
+                <q-btn v-if="!element.inativo" flat dense icon="pause"
+                  @click="inativar(element.codpessoa, element.codpessoatelefone)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Inativar
+                  </q-tooltip>
+                </q-btn>
+                <q-btn v-else flat dense icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoatelefone)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Ativar
+                  </q-tooltip>
+                </q-btn>
+                <q-btn flat dense icon="info">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    <q-item-label class="row">Criado por {{ element.usuariocriacao }} em {{ formataData(element.criacao)
+                    }}</q-item-label>
+                    <q-item-label class="row">Alterado por {{ element.usuarioalteracao }} em {{
+                      formataData(element.alteracao) }}</q-item-label>
+                  </q-tooltip>
+                </q-btn>
+              </q-btn-dropdown>
+            </q-item-section>
+          </q-item>
+        </div>
+      </template>
+    </draggable>
+  </q-list>
+</template>
+
+<script>
+import { defineComponent } from 'vue'
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
+import draggable from 'vuedraggable'
+import moment from 'moment'
+import { pessoaStore } from 'stores/pessoa'
+
+const modelTel = ref({ ddd: '', telefone: '', pais: '', apelido: '', tipo: '', verificacao: '', codpessoa: '' })
+
+
+export default defineComponent({
+  name: "ItemTelefone",
+  components: {
+    draggable,
+  },
+  display: "Transition",
+  order: 6,
+
+  methods: {
+
+    confirmaSmsCel(ddd, telefone, codpessoatelefone) {
+
+      this.$q.dialog({
+        title: 'Verificação via SMS',
+        message: 'Digite o código enviado para o número ' + '(' + ddd + ') ' + this.formataCelular(telefone),
+        prompt: {
+          model: '',
+          type: 'number',
+          step: '1'
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(data => {
+        try {
+          this.sPessoa.telefoneConfirmaVerificacao(this.route.params.id, codpessoatelefone, data).then((resp) => {
+            if (resp.data.data) {
+              this.$q.notify({
+                color: 'green-5',
+                textColor: 'white',
+                icon: 'done',
+                message: 'Telefone Verificado!'
+              })
+              const i = this.sPessoa.item.PessoaTelefoneS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
+              this.sPessoa.item.PessoaTelefoneS[i] = resp.data.data
+            } else {
+              this.$q.notify({
+                color: 'red-5',
+                textColor: 'white',
+                icon: 'error',
+                message: resp.data
+              })
+              this.confirmaSmsCel(ddd, telefone, codpessoatelefone)
+            }
+          })
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: error.message
+          })
+          this.confirmaSmsCel(ddd, telefone, codpessoatelefone)
+        }
+      })
+    },
+
+    async enviarSms(pais, ddd, telefone, codpessoatelefone) {
+
+      this.$q.dialog({
+        title: 'Verificação via SMS',
+        message: 'Deseja enviar o código de verificação para o número ' + '(' + ddd + ') ' + this.formataCelular(telefone) + ' ?',
+        cancel: true,
+      }).onOk(() => {
+        this.sPessoa.telefoneVerificar(this.route.params.id, codpessoatelefone).then((resp) => {
+        
+          if (resp.data['situacao'] == 'OK') {
+            this.$q.notify({
+              color: 'green-5',
+              textColor: 'white',
+              icon: 'done',
+              message: 'Código SMS enviado'
+            })
+            this.confirmaSmsCel(ddd, telefone, codpessoatelefone)
+          } else {
+            this.$q.notify({
+              color: 'red-5',
+              textColor: 'white',
+              icon: 'error',
+              message: resp.data['descricao']
+            })
+          }
+        })
+      })
+    },
+
+    async salvarTel(codpessoa) {
+      this.dialogTel = false
+      try {
+        const ret = await this.sPessoa.telefoneAlterar(codpessoa, this.pessoatelefonecod, this.modelTel)
+
+        this.$q.notify({
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Telefone alterado'
+        })
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+      }
+    },
+
+    async novoTel(codpessoa) {
+      this.dialogTel = false
+      try {
+        const ret = await this.sPessoa.telefoneNovo(codpessoa, this.modelTel)
+        if (ret.data.data) {
+          this.telNovo = false
+          this.sPessoa.item.PessoaTelefoneS = ret.data.data
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Telefone criado.'
+          })
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+      }
+    },
+
+    editarTel(codpessoatelefone, ddd, telefone, apelido, tipo, verificacao) {
+      this.dialogTel = true
+      this.modelTel = { ddd: ddd, telefone: telefone, apelido: apelido, tipo: tipo, verificacao: verificacao, pais: '+55' }
+      this.pessoatelefonecod = codpessoatelefone
+    },
+
+    async inativar(codpessoa, codpessoatelefone) {
+      try {
+        const ret = await this.sPessoa.telefoneInativar(codpessoa, codpessoatelefone)
+
+        if (ret.data) {
+          const i = this.sPessoa.item.PessoaTelefoneS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
+          this.sPessoa.item.PessoaTelefoneS[i] = ret.data.data
+
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Inativado!'
+          })
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+      }
+    },
+
+    async ativar(codpessoa, codpessoatelefone) {
+
+      try {
+        const ret = await this.sPessoa.telefoneAtivar(codpessoa, codpessoatelefone)
+        if (ret.data) {
+          const i = this.sPessoa.item.PessoaTelefoneS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
+          this.sPessoa.item.PessoaTelefoneS[i] = ret.data.data
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Ativado!'
+          })
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+      }
+    },
+
+    async excluirTel(codpessoatelefone) {
+      this.$q.dialog({
+        title: 'Excluir Contato',
+        message: 'Tem certeza que deseja excluir esse telefone?',
+        cancel: true,
+      }).onOk(async () => {
+        try {
+          const ret = await this.sPessoa.telefoneExcluir(this.route.params.id, codpessoatelefone)
+          if (ret) {
+            this.$q.notify({
+              color: 'green-5',
+              textColor: 'white',
+              icon: 'done',
+              message: 'Telefone excluido'
+            })
+            this.sPessoa.get(this.route.params.id)
+          }
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: error.message
+          })
+        }
+      })
+    },
+
+    iconeFone(tipo) {
+      switch (tipo) {
+        case 2:
+          return 'smartphone'
+          break;
+        default:
+          return 'phone'
+          break;
+      }
+    },
+
+    formataFone(tipo, fone) {
+      switch (tipo) {
+        case 2:
+          return this.formataCelular(fone)
+          break;
+        default:
+          return this.formataFixo(fone)
+          break;
+      }
+    },
+
+    formataCelular(cel) {
+      if (cel == null) {
+        return cel
+      }
+      cel = cel.toString().padStart(9)
+      return cel.slice(0, 1) + " " +
+        cel.slice(1, 5) + "-" +
+        cel.slice(5, 9)
+    },
+
+    formataFixo(fixo) {
+      if (fixo == null) {
+        return fixo
+      }
+      fixo = fixo.toString().padStart(9)
+      return fixo.slice(0, 1) + "" +
+        fixo.slice(1, 5) + "-" +
+        fixo.slice(5, 9)
+    },
+
+    formataData(data) {
+      var dataformatada = moment(data).format('DD/MM/YYYY hh:mm')
+      return dataformatada
+    },
+
+    alteraOrdem: async function (e) {
+      try {
+        if (e.willInsertAfter === true) {
+          await this.sPessoa.telefoneParaBaixo(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
+        } else {
+          await this.sPessoa.telefoneParaCima(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+        this.sPessoa.get(e.draggedContext.element.codpessoa)
+        return
+      }
+    },
+
+    linkTel(ddd, telefone) {
+      var a = document.createElement('a');
+      a.href = "tel:" + ddd + telefone
+      a.click();
+    },
+  },
+
+  computed: {
+    dragOptions() {
+      return {
+        animation: 500,
+        group: "description",
+        disabled: false,
+        ghostClass: "ghost"
+      };
+    }
+  },
+
+  setup() {
+    const $q = useQuasar()
+    const route = useRoute()
+    const sPessoa = pessoaStore()
+    const pessoatelefonecod = ref('')
+
+    return {
+      sPessoa,
+      dialogTel: ref(false),
+      telNovo: ref(false),
+      modelTel,
+      route,
+      pessoatelefonecod,
+    }
+  },
+
+})
+</script>
+
+<style lang="scss">
+.button {
+  margin-top: 35px;
+}
+
+.flip-list-move {
+  transition: transform 0.5s;
+}
+
+.no-move {
+  transition: transform 0s;
+}
+
+.ghost {
+  opacity: 0.5;
+  background: #beff8a;
+}
+
+.list-group {
+  min-height: 20px;
+}
+
+.list-group-item {
+  cursor: move;
+}
+
+.list-group-item i {
+  cursor: pointer;
+}
+</style>

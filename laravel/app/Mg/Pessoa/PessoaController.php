@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Mg\FormaPagamento\FormaPagamento;
 
 class PessoaController extends MgController
 {
@@ -16,54 +17,67 @@ class PessoaController extends MgController
         return PessoaResource::collection($pessoas);
     }
 
-    public function create (Request $request)
+    public function create(Request $request)
     {
         $data = $request->all();
         $pessoa = PessoaService::create($data);
         return new PessoaResource($pessoa);
     }
 
-    public function search (Request $request)
+    public function search(Request $request)
     {
-        if($request->search){
+        if ($request->search) {
             $pesquisa = strtoupper($request->search);
             $search = Pessoa::where('fantasia', 'ilike', "%{$pesquisa}%")
-            ->orWhere('pessoa', 'ilike', "%{$pesquisa}%")
-            ->paginate();
-    
-            if ($search->total() == 0){
-                $pesquisa = strtolower($request->search);  
-                $search = Pessoa::where('fantasia', 'ilike', "%{$pesquisa}%")
                 ->orWhere('pessoa', 'ilike', "%{$pesquisa}%")
                 ->paginate();
+
+            if ($search->total() == 0) {
+                $pesquisa = strtolower($request->search);
+                $search = Pessoa::where('fantasia', 'ilike', "%{$pesquisa}%")
+                    ->orWhere('pessoa', 'ilike', "%{$pesquisa}%")
+                    ->paginate();
             }
-            
-        }else if ($request->cnpj){
+        } else if ($request->cnpj) {
             $search = Pessoa::where('cnpj', 'ilike', "%{$request->cnpj}%")
-            ->paginate();
-
-        }else if ($request->email){
+                ->paginate();
+        } else if ($request->email) {
             $search = Pessoa::where('email', 'ilike', "%{$request->email}%")
-            ->paginate();
-
-        }else if ($request->codpessoa){
+                ->paginate();
+        } else if ($request->codpessoa) {
             $search = Pessoa::where('codpessoa', 'ilike', "%{$request->codpessoa}%")
-            ->paginate();
-
-        }else{
+                ->paginate();
+        } else {
             return response()->json('Algo deu errado', 200);
         }
 
         return response()->json($search);
     }
 
-    public function show (Request $request, $codpessoa)
+    public function formapagamento(Request $request)
+    {
+        $codformapagamento = $request->codformapagamento;
+
+
+        if (!is_numeric($codformapagamento)) {
+            return response()->json('Forma de pagamento nao encontrada', 200);
+        }
+        $formapagamento = FormaPagamento::where('codformapagamento', $codformapagamento)->first();
+
+        if ($formapagamento) {
+            return response()->json($formapagamento['formapagamento'], 200);
+        } else {
+            return response()->json('Nada encontrado', 200);
+        }
+    }
+
+    public function show(Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
         return new PessoaResource($pessoa);
     }
 
-    public function update (Request $request, $codpessoa)
+    public function update(Request $request, $codpessoa)
     {
         $data = $request->all();
         $pessoa = Pessoa::findOrFail($codpessoa);
@@ -71,7 +85,7 @@ class PessoaController extends MgController
         return new PessoaResource($pessoa);
     }
 
-    public function delete (Request $request, $codpessoa)
+    public function delete(Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
         $res = PessoaService::delete($pessoa);
@@ -80,42 +94,41 @@ class PessoaController extends MgController
         ], 200);
     }
 
-    public function ativar (Request $request, $codpessoa)
+    public function ativar(Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::ativar($pessoa);
         return new PessoaResource($pessoa);
     }
 
-    public function inativar (Request $request, $codpessoa)
+    public function inativar(Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::inativar($pessoa);
         return new PessoaResource($pessoa);
     }
 
-    public function importar (Request $request)
+    public function importar(Request $request)
     {
         $request->validate([
             // 'cnpj' => 'required'
         ]);
-        $cnpj = $request->cnpj??'';
+        $cnpj = $request->cnpj ?? '';
         $codfilial = $request->codfilial;
-        $cpf = $request->cpf??'';
-        $ie = $request->ie??'';
-        $uf = $request->uf??'';
+        $cpf = $request->cpf ?? '';
+        $ie = $request->ie ?? '';
+        $uf = $request->uf ?? '';
         $pessoas = PessoaService::importar($codfilial, $uf, $cnpj, $cpf, $ie);
         return PessoaResource::collection($pessoas);
     }
 
 
     public function atualizaCampos($pessoa)
-    {   
-      $pessoa = PessoaService::atualizaCamposLegado($codpessoatelefone, $codpessoaemail, $codpessoaendereco);
-
+    {
+        $pessoa = PessoaService::atualizaCamposLegado($codpessoatelefone, $codpessoaemail, $codpessoaendereco);
     }
 
-    public function comandaVendedor (Request $request, $codpessoa)
+    public function comandaVendedor(Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
         if (!$pessoa->vendedor) {
@@ -124,11 +137,11 @@ class PessoaController extends MgController
         $pdf = PessoaComandaVendedorService::pdf($pessoa);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="Comanda'.$codpessoa.'.pdf"'
+            'Content-Disposition' => 'inline; filename="Comanda' . $codpessoa . '.pdf"'
         ]);
     }
 
-    public function comandaVendedorImprimir (Request $request, $codpessoa)
+    public function comandaVendedorImprimir(Request $request, $codpessoa)
     {
         $request->validate([
             'impressora' => ['required', 'string'],
@@ -141,16 +154,13 @@ class PessoaController extends MgController
         $pdf = PessoaComandaVendedorService::imprimir($pessoa, $request->impressora, $request->copias);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="Comanda'.$codpessoa.'.pdf"'
+            'Content-Disposition' => 'inline; filename="Comanda' . $codpessoa . '.pdf"'
         ]);
     }
 
-    public function autocomplete (Request $request)
+    public function autocomplete(Request $request)
     {
         $qry = PessoaService::autocomplete($request->all());
         return response()->json($qry, 200);
     }
-
-
-
 }

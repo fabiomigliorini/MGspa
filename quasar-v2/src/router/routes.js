@@ -16,7 +16,7 @@ const routes = [
       { path: '', name: 'inicio', component: () => import('pages/IndexPage.vue') },
       { path: '/pessoa', name: 'pessoa', component: () => import('pages/pessoa/Index') },
       { path: '/pessoa/nova', name: 'pessoanova', component: () => import('pages/pessoa/NovaPessoa') },
-      { path: '/pessoa/view/:id', name: 'pessoaview', component: () => import('pages/pessoa/PessoaView') },
+      { path: '/pessoa/:id', name: 'pessoaview', component: () => import('pages/pessoa/PessoaView') },
       { path: '/pessoa/edit/:id', name: 'pessoaedit', component: () => import('pages/pessoa/PessoaEditar') },
       { path: '/nota-fiscal/dashboard', name: 'notafiscaldash', component: () => import('pages/NotaFiscal/Index.vue') }
     ],
