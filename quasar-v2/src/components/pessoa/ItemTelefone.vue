@@ -157,38 +157,33 @@ export default defineComponent({
         },
         cancel: true,
         persistent: true
-      }).onOk(data => {
-        try {
-          this.sPessoa.telefoneConfirmaVerificacao(this.route.params.id, codpessoatelefone, data).then((resp) => {
-            if (resp.data.data) {
+      }).onOk(codverificacao => {
+        this.postTelefone(ddd, telefone, codpessoatelefone, codverificacao)
+      })
+    },
+
+    async postTelefone(ddd, telefone, codpessoatelefone, codverificacao) {
+
+      try {
+          const ret = await this.sPessoa.telefoneConfirmaVerificacao(this.route.params.id, codpessoatelefone, codverificacao)
+            if (ret.data.data) {
               this.$q.notify({
                 color: 'green-5',
                 textColor: 'white',
                 icon: 'done',
                 message: 'Telefone Verificado!'
               })
-              const i = this.sPessoa.item.PessoaTelefoneS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
-              this.sPessoa.item.PessoaTelefoneS[i] = resp.data.data
-            } else {
-              this.$q.notify({
-                color: 'red-5',
-                textColor: 'white',
-                icon: 'error',
-                message: resp.data
-              })
-              this.confirmaSmsCel(ddd, telefone, codpessoatelefone)
-            }
-          })
+            } 
         } catch (error) {
           this.$q.notify({
             color: 'red-5',
             textColor: 'white',
             icon: 'error',
-            message: error.message
+            message: error.response.data.message
           })
           this.confirmaSmsCel(ddd, telefone, codpessoatelefone)
         }
-      })
+
     },
 
     async enviarSms(pais, ddd, telefone, codpessoatelefone) {

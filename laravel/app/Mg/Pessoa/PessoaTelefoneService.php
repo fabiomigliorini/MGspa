@@ -4,6 +4,7 @@ namespace Mg\Pessoa;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Exception;
 
 use function PHPUnit\Framework\throwException;
 

@@ -5,19 +5,19 @@
                 <div class="row">
                     <div class="col-lg-4 q-pl-xs col-md-8 col-sm-12 col-xs-12">
                         <!-- IMPORTA CARD DETALHES PESSOA -->
-                        <!-- <card-detalhes-pessoa>
-                        </card-detalhes-pessoa> -->
+                        <card-detalhes-pessoa>
+                        </card-detalhes-pessoa>
                     </div>
                     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
                         <!-- TELEFONE/EMAIL/ENDEREÇOS -->
                         <item-telefone>
                         </item-telefone>
 
-                        <!-- <item-email>
-                        </item-email> -->
+                        <item-email>
+                        </item-email>
 
-                        <!-- <item-endereco>
-                        </item-endereco> -->
+                        <item-endereco>
+                        </item-endereco>
 
                     </div>
                 </div>
@@ -36,10 +36,10 @@ import { pessoaStore } from 'stores/pessoa'
 export default defineComponent({
     name: "PessoaView",
     components: {
-        // CardDetalhesPessoa: defineAsyncComponent(() => import('components/pessoa/CardDetalhesPessoa.vue')),
+        CardDetalhesPessoa: defineAsyncComponent(() => import('components/pessoa/CardDetalhesPessoa.vue')),
         ItemTelefone: defineAsyncComponent(() => import('components/pessoa/ItemTelefone.vue')),
-        // ItemEmail: defineAsyncComponent(() => import('components/pessoa/ItemEmail.vue')),
-        // ItemEndereco: defineAsyncComponent(() => import('components/pessoa/ItemEndereco.vue')),
+        ItemEmail: defineAsyncComponent(() => import('components/pessoa/ItemEmail.vue')),
+        ItemEndereco: defineAsyncComponent(() => import('components/pessoa/ItemEndereco.vue')),
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))
     },
 

@@ -61,7 +61,7 @@
   <br><br><br>
   <q-card class="no-shadow" bordered>
     <q-toolbar class="bg-primary text-white shadow-2">
-      <q-toolbar-title>Grupo Econômico</q-toolbar-title>
+      <q-toolbar-title>Cliente</q-toolbar-title>
     </q-toolbar>
 
     <q-separator></q-separator>

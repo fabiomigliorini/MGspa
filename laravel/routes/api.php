@@ -196,6 +196,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/baixo', '\Mg\Pessoa\PessoaEmailController@baixo');
     Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaEmailController@inativar');
     Route::delete('pessoa/{codpessoa}/email/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaEmailController@ativar');
+    Route::get('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@verificarEmail');
+    Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@confirmaEmail');
 
     // Pessoa Endereço
     Route::get('pessoa/{codpessoa}/endereco/', '\Mg\Pessoa\PessoaEnderecoController@index');

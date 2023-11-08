@@ -1,235 +1,128 @@
 <template>
-  <q-item-label header>Email
-    <q-btn class="gt-xs" flat dense round icon="add" @click="novoemail, promptnovoemail = true"></q-btn>
-  </q-item-label>
-  <!-- DIALOG NOVO EMAIL  -->
-  <q-dialog v-model="promptnovoemail" @keyup.enter="novoemail">
+  <!-- DIALOG NOVO EMAIL/EDITAR EMAIL  -->
+  <q-dialog v-model="dialogEmail"
+    @keyup.enter="emailNovo == true ? novoEmail(route.params.id) : salvarEmail(route.params.id)">
     <q-card style="min-width: 350px">
       <q-card-section>
-        <div class="text-h6">Novo Email</div>
+        <div v-if="emailNovo" class="text-h6">Novo Email</div>
+        <div v-else class="text-h6">Editar Email</div>
       </q-card-section>
       <q-card-section class="q-pt-none">
-        <q-input outlined dense v-model="modelnovoemail.email" autofocus label="Email"
-          @keyup.enter="promptnovoemail = false" />
-
-        <q-input outlined dense v-model="modelnovoemail.apelido" label="Apelido" @keyup.enter="promptnovoemail = false" />
-
-        <q-input outlined v-model="modelnovoemail.verificacao" mask="##-##-####" label="Verificação">
-          <template v-slot:append>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="modelnovoemail.verificacao" :locale="brasil" mask="DD-MM-YYYY">
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup label="Fechar" color="primary" flat />
-                  </div>
-                </q-date>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
-        <q-item-label class="q-pa-md">
-          Cobrança:
-          <q-btn-toggle v-model="modelnovoemail.cobranca" class="my-custom-toggle" no-caps rounded unelevated
-            toggle-color="primary" color="white" text-color="primary" :options="[
-              { label: 'Sim', value: true },
-              { label: 'Não', value: false }
-            ]" />
-        </q-item-label>
-        <q-separator />
-        <q-item-label class="q-pa-md">
-          Nota Fiscal:
-          <q-btn-toggle v-model="modelnovoemail.nfe" class="my-custom-toggle" no-caps rounded unelevated
-            toggle-color="primary" color="white" text-color="primary" :options="[
-              { label: 'Sim', value: true },
-              { label: 'Não', value: false }
-            ]" />
-        </q-item-label>
-        <q-separator />
+        <q-input outlined dense v-model="modelEmail.email" autofocus label="Email" @keyup.enter="dialogEmail = false"
+          :rules="[
+            val => val && val.length > 0 || 'Email obrigatório'
+          ]" 
+          class="q-mb-sm"
+          />
+        <q-input outlined dense v-model="modelEmail.apelido" label="Apelido" @keyup.enter="dialogEmail = false" 
+          class="q-mb-md"
+        />
+        <q-toggle v-model="modelEmail.cobranca" label="Cobrança" />
+        <q-toggle v-model="modelEmail.nfe" label="Envio de NFe" />
       </q-card-section>
 
       <q-card-actions align="right" class="text-primary">
         <q-btn flat label="Cancelar" v-close-popup />
-        <q-btn flat label="Salvar" @click="novoemail" v-close-popup />
+        <q-btn v-if="emailNovo" flat label="Salvar" @click="novoEmail(route.params.id)" v-close-popup />
+        <q-btn v-else flat label="Salvar" @click="salvarEmail(route.params.id)" v-close-popup />
       </q-card-actions>
     </q-card>
   </q-dialog>
 
-  <div v-for="detail, detail_index in detalhes_email" v-bind:key="detail_index">
 
+  <q-list bordered :dense="$q.screen.lt.md" class="q-ma-sm">
+    <q-item-label header>Email
+      <q-btn class="gt-xs" flat dense round icon="add"
+        @click="novoEmail, dialogEmail = true, modelEmail = { nfe: true, cobranca: true }, emailNovo = true"></q-btn>
+    </q-item-label>
+
+    <!-- DRAG AND DROP EMAILS -->
     <draggable class="list-group" item-key="id" :component-data="{ tag: 'q-list', name: 'flip-list', type: 'transition' }"
-      :move="alteraOrdem" v-model="detalhes_pessoa" v-bind="dragOptions" @start="isDragging = true"
+      :move="alteraOrdem" v-model="sPessoa.item.PessoaEmailS" v-bind="dragOptions" @start="isDragging = true"
       @end="isDragging = false">
 
       <template #item="{ element }">
 
-        <q-list bordered :dense="$q.screen.lt.md">
+        <div>
+          <q-separator inset />
           <q-item>
             <q-item-section avatar top>
-              <q-avatar :icon="detail.icon" color="grey-2" :text-color="detail.text_color" />
+              <q-avatar icon="email" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section>
-              <q-item-label class="cursor-pointer" lines="5" @click="linkemail(element.email)" clickable v-ripple>
+              <q-item-label class="cursor-pointer" lines="5" @click="linkEmail(element.email)" clickable v-ripple>
 
-                <div v-if="!element.inativo">
-                  {{ element.email }}
-                </div>
-                <div v-if="element.inativo">
-                  <s>{{ element.email }}</s>
-                </div>
+                <q-item-label>
+                  <s v-if="element.inativo">
+                    {{ element.email }}
+                  </s>
+                  <span v-else>
+                    {{ element.email }}
+                  </span>
+                  <q-icon v-if="element.verificacao" class="q-ml-xs" color="blue" name="verified" />
+                </q-item-label>
 
-                <q-btn v-if="!element.nfe" class="gt-xs float-right" size="10px" color="red" flat dense round
-                  icon="note"><small>Nota Fiscal <q-icon name="close" /> </small></q-btn>
-                <q-btn v-if="element.nfe" class="gt-xs float-right" size="10px" color="green" flat dense round
-                  icon="note"><small>Nota Fiscal <q-icon name="done" /> </small></q-btn>
-
-                <q-btn v-if="!element.cobranca" class="gt-xs float-right" size="10px" color="red" flat dense round
-                  icon="request_quote"><small>Cobrança <q-icon name="close" /> </small></q-btn>
-                <q-btn v-if="element.cobranca" class="gt-xs float-right" size="10px" color="green" flat dense round
-                  icon="request_quote"><small>Cobrança <q-icon name="done" /> </small></q-btn>
-
-
-                <div v-if="element.inativo" class="text-caption text-red-14">Inativo desde: {{
-                  formataData(element.inativo) }}</div>
-                <small v-if="element.apelido" class="row">{{ element.apelido }}</small>
-
-                <q-btn v-if="!element.verificacao" class="gt-xs float-right" size="10px" color="red" flat dense round
-                  icon="verified"><small>Não verificado</small></q-btn>
-                <q-btn v-if="element.verificacao" class="gt-xs float-right" size="10px" color="green" flat dense round
-                  icon="verified"><small>Verificado</small></q-btn>
-
+                <q-item-label caption>
+                  {{ element.apelido }}
+                  <span v-if="element.inativo" class="text-caption text-red-14">
+                    Inativo desde: {{ formataData(element.inativo) }}
+                  </span>
+                  <q-icon v-if="element.cobranca" class="q-ml-xs" color="green" name="paid" />
+                  <q-icon v-if="element.nfe" class="q-ml-xs" color="green" name="description" />
+                </q-item-label>
+                
               </q-item-label>
             </q-item-section>
+            <q-space />
+            <q-btn v-if="!element.verificacao" label="Verificar" color="blue" dense flat
+              @click="enviarEmail(element.email, element.codpessoatelefone)" />
+            <q-btn-dropdown flat dense auto-close>
+              <q-btn flat dense round icon="edit"
+                @click="editarEmail(element.codpessoatelefone, element.email, element.apelido, element.verificacao, element.nfe, element.cobranca), emailNovo = false">
+              </q-btn>
 
-            <q-btn v-if="!info" class="gt-xs" size="10px" flat round icon="navigate_next" @click="handleright">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                Ações
-              </q-tooltip>
-            </q-btn>
+              <q-btn flat dense round icon="delete" @click="excluirEmail(element.codpessoatelefone)">
+              </q-btn>
 
-            <q-btn v-if="info" class="gt-xs" size="10px" flat dense round icon="navigate_next" @click="handleleft">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                Ações
-              </q-tooltip>
-            </q-btn>
+              <q-btn v-if="!element.inativo" flat dense round icon="pause"
+                @click="inativar(element.codpessoa, element.codpessoatelefone)">
+                <q-tooltip transition-show="scale" transition-hide="scale">
+                  Inativar
+                </q-tooltip>
+              </q-btn>
 
-            <q-separator vertical></q-separator>
+              <q-btn v-if="element.inativo" flat dense round icon="play_arrow"
+                @click="ativar(element.codpessoa, element.codpessoatelefone)">
+                <q-tooltip transition-show="scale" transition-hide="scale">
+                  Ativar
+                </q-tooltip>
+              </q-btn>
 
-            <q-btn v-if="!element.inativo && info" class="gt-xs" size="10px" flat dense round icon="pause"
-              @click="inativar(element.codpessoatelefone)">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                Inativar
-              </q-tooltip>
-            </q-btn>
-
-            <q-btn v-if="element.inativo && info" class="gt-xs" size="10px" flat dense round icon="play_arrow"
-              @click="ativar(element.codpessoatelefone)">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                Ativar
-              </q-tooltip>
-            </q-btn>
-            <q-btn v-if="info" class="gt-xs" size="10px" flat dense round icon="info">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                <q-item-label class="row">Criado por: {{ element.usuariocriacao }}</q-item-label>
-                <q-item-label class="row">Alterado por: {{ element.usuarioalteracao }}</q-item-label>
-              </q-tooltip>
-            </q-btn>
-
-            <q-btn v-if="info" class="gt-xs" size="10px" flat dense round icon="delete"
-              @click="excluiremail(element.codpessoatelefone)">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                Excluir
-              </q-tooltip>
-            </q-btn>
-
-            <q-btn class="gt-xs" size="10px" flat dense round icon="edit"
-              @click="editaremail(element.codpessoatelefone, element.email, element.apelido, element.verificacao, element.nfe, element.cobranca), prompteditaremail = true">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                Editar
-              </q-tooltip>
-            </q-btn>
+              <q-btn flat dense round icon="info">
+                <q-tooltip transition-show="scale" transition-hide="scale">
+                  <q-item-label class="row">Criado por: {{ element.usuariocriacao }} em {{ formataData(element.criacao)
+                  }}</q-item-label>
+                  <q-item-label class="row">Alterado por: {{ element.usuarioalteracao }} em {{
+                    formataData(element.alteracao) }}</q-item-label>
+                </q-tooltip>
+              </q-btn>
+            </q-btn-dropdown>
           </q-item>
-        </q-list>
+        </div>
       </template>
     </draggable>
-
-    <q-separator spaced inset="item" v-if="detail_index != detalhes_email.length - 1"></q-separator>
-
-
-    <!-- DIALOG EDITAR EMAIL  -->
-    <q-dialog v-model="prompteditaremail" @keyup.enter="salvaremail">
-      <q-card style="min-width: 350px">
-        <q-card-section>
-          <div class="text-h6">Editar Email</div>
-        </q-card-section>
-        <q-card-section class="q-pt-none">
-          <q-input outlined dense v-model="modelemailupdate.email" autofocus label="Email"
-            @keyup.enter="prompteditaremail = false" />
-
-          <q-input outlined dense v-model="modelemailupdate.apelido" label="Apelido"
-            @keyup.enter="prompteditaremail = false" />
-
-          <q-input outlined v-model="modelemailupdate.verificacao" mask="##-##-####" label="Verificação">
-            <template v-slot:append>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date v-model="modelemailupdate.verificacao" :locale="brasil" mask="DD-MM-YYYY">
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Fechar" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-          <q-item-label class="q-pa-md">
-            Cobrança:
-            <q-btn-toggle v-model="modelemailupdate.cobranca" class="my-custom-toggle" no-caps rounded unelevated
-              toggle-color="primary" color="white" text-color="primary" :options="[
-                { label: 'Sim', value: true },
-                { label: 'Não', value: false }
-              ]" />
-          </q-item-label>
-          <q-separator />
-          <q-item-label class="q-pa-md">
-            Nota Fiscal:
-            <q-btn-toggle v-model="modelemailupdate.nfe" class="my-custom-toggle" no-caps rounded unelevated
-              toggle-color="primary" color="white" text-color="primary" :options="[
-                { label: 'Sim', value: true },
-                { label: 'Não', value: false }
-              ]" />
-          </q-item-label>
-          <q-separator />
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn flat label="Salvar" type="button" @click="salvaremail" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-  </div>
+  </q-list>
 </template>
 
 <script>
 import { defineComponent, onMounted } from 'vue'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 import draggable from 'vuedraggable'
 import moment from 'moment'
+import { pessoaStore } from 'stores/pessoa'
 
-const detalhes_email = [
-  {
-    icon: 'email',
-    label: '',
-    field: 'email',
-    text_color: 'blue'
-  }
-]
-
-const modelnovoemail = ref({ codpessoa: '', email: '', apelido: '', verificacao: '', nfe: '', cobranca: '' })
-const modelemailupdate = ref({ codpessoatelefone: '', email: '', apelido: '', verificacao: '', nfe: '', cobranca: '' })
 
 export default defineComponent({
   name: "ItemEmail",
@@ -257,157 +150,107 @@ export default defineComponent({
 
     alteraOrdem: async function (e) {
       try {
-
-        // SE FOR PRA BAIXO 
         if (e.willInsertAfter === true) {
-          const baixo = await api.post('v1/pessoa/' + e.draggedContext.element.codpessoa + '/email/' + e.draggedContext.element.codpessoatelefone + '/baixo')
-          if (baixo) {
-            this.$q.notify({
-              color: 'green-5',
-              textColor: 'white',
-              icon: 'done',
-              message: 'Ordem alterada'
-            })
-          }
-          this.DetalhesEmail()
-
-          // SE FOR PRA CIMA
-        } else if (e.willInsertAfter === false) {
-          const cima = await api.post('v1/pessoa/' + e.draggedContext.element.codpessoa + '/email/' + e.draggedContext.element.codpessoatelefone + '/cima')
-          if (cima) {
-            this.$q.notify({
-              color: 'green-5',
-              textColor: 'white',
-              icon: 'done',
-              message: 'Ordem alterada'
-            })
-          }
-          this.DetalhesEmail()
+          await this.sPessoa.emailParaBaixo(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
+        } else {
+          await this.sPessoa.emailParaCima(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
         }
-
       } catch (error) {
-        console.log(error)
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+        this.sPessoa.get(e.draggedContext.element.codpessoa)
+        return
       }
     },
-  },
 
-  setup() {
+    async novoEmail() {
 
-    const route = useRoute()
-    const $q = useQuasar()
-    const loading = ref(true)
-    const detalhes_pessoa = ref([])
-    const info = ref(null)
-    const infoleft = ref(null)
-
-
-    const novoemail = async () => {
-
-      if (modelnovoemail.value.email !== '') {
-        modelnovoemail.value.codpessoa = route.params.id
-
+      if (this.modelEmail.email !== '') {
+        this.modelEmail.codpessoa = this.route.params.id
         try {
-          const { data } = await api.post('v1/pessoa/' + route.params.id + '/email', modelnovoemail.value)
-
-          if (data) {
-            $q.notify({
+          this.emailNovo = false
+          const ret = await this.sPessoa.emailNovo(this.route.params.id, this.modelEmail)
+          if (ret.data.data) {
+            this.$q.notify({
               color: 'green-5',
               textColor: 'white',
               icon: 'done',
               message: 'Email criado.'
             })
-            DetalhesEmail()
           }
         } catch (error) {
-          $q.notify({
+          this.$q.notify({
             color: 'red-5',
             textColor: 'white',
             icon: 'error',
-            message: error
+            message: error.message
           })
         }
       } else {
-        $q.notify({
+        this.$q.notify({
           color: 'red-5',
           textColor: 'white',
           icon: 'error',
           message: 'Campo Email é obrigatório!'
         })
       }
-    }
 
-    const editaremail = async (codpessoatelefone, email, apelido, verificacao, nfe, cobranca) => {
+    },
 
-      modelemailupdate.value = { codpessoatelefone: codpessoatelefone, email: email, apelido: apelido, verificacao: verificacao, nfe: nfe, cobranca: cobranca }
-    }
+    async excluirEmail(codpessoatelefone) {
 
-    const DetalhesEmail = async () => {
-
-      $q.loading.show({
-      })
-      try {
-        const { data } = await api.get('v1/pessoa/' + route.params.id + '/email')
-        detalhes_pessoa.value = data.data
-        loading.value = false
-        $q.loading.hide()
-
-      } catch (error) {
-        $q.notify({
-          color: 'red-5',
-          textColor: 'white',
-          icon: 'error',
-          message: error
-        })
-      }
-
-    }
-
-    const excluiremail = async (codpessoatelefone) => {
-
-      $q.dialog({
+      this.$q.dialog({
         title: 'Excluir Email',
         message: 'Tem certeza que deseja excluir esse email?',
         cancel: true,
         persistent: true
       }).onOk(async () => {
         try {
-          const { data } = await api.delete('v1/pessoa/' + route.params.id + '/email/' + codpessoatelefone)
-          $q.notify({
-            color: 'green-5',
-            textColor: 'white',
-            icon: 'done',
-            message: 'Email excluido'
-          })
-          DetalhesEmail()
+          const ret = await this.sPessoa.emailExcluir(this.route.params.id, codpessoatelefone)
+          if (ret) {
+            this.$q.notify({
+              color: 'green-5',
+              textColor: 'white',
+              icon: 'done',
+              message: 'Email excluido'
+            })
+            this.sPessoa.get(this.route.params.id)
+          }
         } catch (error) {
-          $q.notify({
+          this.$q.notify({
             color: 'red-5',
             textColor: 'white',
             icon: 'error',
-            message: error
+            message: error.message
           })
         }
       })
-    }
 
-    const salvaremail = async () => {
+    },
 
+    editarEmail(codpessoatelefone, email, apelido, verificacao, nfe, cobranca) {
+      this.dialogEmail = true
+      this.modelEmail = { codpessoatelefone: codpessoatelefone, email: email, apelido: apelido, verificacao: verificacao, nfe: nfe, cobranca: cobranca }
+    },
+
+    async salvarEmail(codpessoa) {
+      this.dialogEmail = false
       try {
-        const data = await api.put('v1/pessoa/' + route.params.id + '/email/' + modelemailupdate.value.codpessoatelefone, {
-          email: modelemailupdate.value.email, apelido: modelemailupdate.value.apelido,
-          verificacao: modelemailupdate.value.verificacao, cobranca: modelemailupdate.value.cobranca, nfe: modelemailupdate.value.nfe
-        })
 
-        if (data) {
-          $q.notify({
+        const ret = this.sPessoa.emailSalvar(codpessoa, this.modelEmail.codpessoatelefone, this.modelEmail)
+        if (ret) {
+          this.$q.notify({
             color: 'green-5',
             textColor: 'white',
             icon: 'done',
             message: 'Email alterado'
           })
-          DetalhesEmail()
         } else {
-          $q.notify({
+          this.$q.notify({
             color: 'red-5',
             textColor: 'white',
             icon: 'error',
@@ -415,129 +258,142 @@ export default defineComponent({
           })
         }
       } catch (error) {
-        $q.notify({
+        this.$q.notify({
           color: 'red-5',
           textColor: 'white',
           icon: 'error',
-          message: error
+          message: error.message
         })
       }
+    },
 
-    }
-
-    const linkemail = async (email) => {
-
-      var a = document.createElement('a');
-      a.href = "mailto:" + email
-      a.click();
-    }
-
-    const inativar = async (codpessoatelefone) => {
-
-
-      var datainativar = moment().format('YYYY-MM-DD')
-
+    async inativar(codpessoa, codpessoatelefone) {
       try {
-        const data = await api.put('v1/pessoa/' + route.params.id + '/email/' + codpessoatelefone, { inativo: datainativar })
-
-        if (data) {
-          $q.notify({
+        const ret = await this.sPessoa.emailInativar(codpessoa, codpessoatelefone)
+        if (ret.data) {
+          this.$q.notify({
             color: 'green-5',
             textColor: 'white',
             icon: 'done',
             message: 'Inativado!'
           })
-          DetalhesEmail()
-        } else {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            icon: 'error',
-            message: 'Erro ao inativar'
-          })
         }
       } catch (error) {
-        $q.notify({
+        this.$q.notify({
           color: 'red-5',
           textColor: 'white',
           icon: 'error',
-          message: error
+          message: error.message
         })
       }
+    },
 
-    }
-
-    const ativar = async (codpessoatelefone) => {
+    async ativar(codpessoa, codpessoatelefone) {
 
       try {
-        const data = await api.put('v1/pessoa/' + route.params.id + '/email/' + codpessoatelefone, { inativo: null })
-
-        if (data) {
-          $q.notify({
+        const ret = await this.sPessoa.emailAtivar(codpessoa, codpessoatelefone)
+        if (ret.data) {
+          this.$q.notify({
             color: 'green-5',
             textColor: 'white',
             icon: 'done',
             message: 'Ativado!'
           })
-          DetalhesEmail()
-        } else {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            icon: 'error',
-            message: 'Erro ao ativar'
-          })
         }
       } catch (error) {
-        $q.notify({
+        this.$q.notify({
           color: 'red-5',
           textColor: 'white',
           icon: 'error',
-          message: error
+          message: error.message
         })
       }
+    },
 
+    linkEmail(email) {
+      var a = document.createElement('a');
+      a.href = "mailto:" + email
+      a.click();
+    },
+
+    enviarEmail(email, codpessoatelefone) {
+
+      this.$q.dialog({
+        title: 'Verificação de E-mail',
+        message: 'Deseja enviar o código de verificação para o e-mail  ' + email + ' ?',
+        cancel: true,
+      }).onOk(() => {
+        this.sPessoa.emailVerificar(this.route.params.id, codpessoatelefone).then((resp) => {
+          if (resp.data) {
+            this.$q.notify({
+              color: 'green-5',
+              textColor: 'white',
+              icon: 'done',
+              message: 'Código enviado para o e-mail'
+            })
+          }
+        })
+        this.confirmaEmail(email, codpessoatelefone)
+
+      })
+    },
+
+    confirmaEmail(email, codpessoatelefone) {
+
+      this.$q.dialog({
+        title: 'Verificação de E-mail',
+        message: 'Digite o código enviado para o e-mail ' + email,
+        prompt: {
+          model: '',
+          type: 'number',
+          step: '1'
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(codverificacao => {
+        this.postEmail(email, codpessoatelefone, codverificacao)
+      })
+    },
+
+
+    async postEmail(email, codpessoatelefone, codverificacao) {
+
+      try {
+        const ret = await this.sPessoa.emailConfirmaVerificacao(this.route.params.id, codpessoatelefone, codverificacao)
+        if (ret.data.data) {
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'E-mail Verificado!'
+          })
+
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.response.data.message
+        })
+        this.confirmaEmail(email, codpessoatelefone)
+      }
     }
+  },
 
-    onMounted(() => {
-      DetalhesEmail()
-    })
+  setup() {
+
+    const route = useRoute()
+    const $q = useQuasar()
+    const sPessoa = pessoaStore()
+    const modelEmail = ref({ codpessoa: '', email: '', apelido: '', verificacao: '', nfe: '', cobranca: '' })
 
     return {
-      detalhes_pessoa,
-      detalhes_email,
-      modelnovoemail,
-      modelemailupdate,
-      novoemail,
-      editaremail,
-      promptnovoemail: ref(false),
-      prompteditaremail: ref(false),
-      DetalhesEmail,
-      loading,
-      excluiremail,
-      salvaremail,
-      linkemail,
-      info,
-      infoleft,
-      inativar,
-      ativar,
-      handleright({ evt, ...newInfo }) {
-        info.value = newInfo
-      },
-      handleleft({ evt, ...newInfo }) {
-        infoleft.value = newInfo
-        info.value = ''
-
-      },
-      brasil: {
-        days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),
-        daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
-        months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
-        monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
-        firstDayOfWeek: 1,
-        format24h: true,
-        pluralDay: 'dias'
-      },
+      sPessoa,
+      route,
+      modelEmail,
+      emailNovo: ref(false),
+      dialogEmail: ref(false),
     }
   },
 })

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Mail;
 
 class PessoaEmailController extends MgController
 {
@@ -17,7 +18,7 @@ class PessoaEmailController extends MgController
     }
 
     public function create(Request $request, $codpessoa)
-    {   
+    {
         $request->validate([
             'email' => ['required'],
         ]);
@@ -40,7 +41,7 @@ class PessoaEmailController extends MgController
         $data = $request->all();
         $pessoa = PessoaEmail::findOrFail($codpessoatelefone);
         $pessoa = PessoaEmailService::update($pessoa, $data);
-        return new PessoaEmailResource($pessoa);       
+        return new PessoaEmailResource($pessoa);
     }
 
     public function delete(Request $request, $codpessoa, $codpessoatelefone)
@@ -69,17 +70,41 @@ class PessoaEmailController extends MgController
         return PessoaEmailResource::collection($pes);
     }
 
-    public function ativar(Request $request, $codpessoa, $codpessoatelefone) {
+    public function ativar(Request $request, $codpessoa, $codpessoatelefone)
+    {
         $pes = PessoaEmail::findOrFail($codpessoatelefone);
         $pes = PessoaEmailService::ativar($pes);
 
         return new PessoaEmailResource($pes);
     }
 
-    public function inativar(Request $request, $codpessoa, $codpessoatelefone) {
+    public function inativar(Request $request, $codpessoa, $codpessoatelefone)
+    {
         $pes = PessoaEmail::findOrFail($codpessoatelefone);
         $pes = PessoaEmailService::inativar($pes);
 
         return new PessoaEmailResource($pes);
+    }
+
+    public function verificarEmail($codpessoa, $codpessoatelefone)
+    {   
+        $email = PessoaEmail::findOrFail($codpessoatelefone);
+         $res = PessoaEmailService::verificaEmail($email);
+    
+        return $res;
+    }
+
+    public function confirmaEmail(Request $request, $codpessoa, $codpessoatelefone)
+    {   
+        
+        $request->validate([
+            'codverificacao' => ['required']
+        ]);
+
+        $email = PessoaEmail::findOrFail($codpessoatelefone);
+        $email = PessoaEmailService::confirmaVerificacao($email, $request->codverificacao);
+       
+        return new PessoaTelefoneResource($email);
+    
     }
 }
