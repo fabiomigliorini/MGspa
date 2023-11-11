@@ -6,10 +6,9 @@
     :href="link"
   >
     <q-item-section
-      v-if="icon"
       avatar
     >
-      <q-icon :name="icon" />
+      <q-icon name="delete" />
     </q-item-section>
 
     <q-item-section>
@@ -21,6 +20,7 @@
 
 <script>
 import { defineComponent } from 'vue'
+import { mainStore } from "stores/main";
 
 export default defineComponent({
   name: 'EssentialLink',
@@ -44,6 +44,12 @@ export default defineComponent({
       type: String,
       default: ''
     }
+  },
+  setup () {
+    const store = mainStore();
+    return {
+      store
+    };
   }
 })
 </script>

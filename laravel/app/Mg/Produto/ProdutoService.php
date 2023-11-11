@@ -44,10 +44,11 @@ class ProdutoService extends MgService
         $sql = '
             select
             	pb.codprodutobarra,
-            	p.codproduto,
+                p.codproduto,
             	pb.barras,
-            	p.produto,
-            	pv.variacao,
+                p.produto,
+                pv.variacao,
+                p.abc,
             	coalesce(ume.sigla, um.sigla) as sigla,
             	pe.quantidade,
             	pri.codimagem,
@@ -69,11 +70,20 @@ class ProdutoService extends MgService
             'codprodutobarra' => $codprodutobarra,
             'limite' => $limite
         ]);
-        return array_map(function ($item){
+        $sincronizado = date('Y-m-d');
+        return array_map(function ($item) use ($sincronizado){
             if ($item->quantidade) {
                 $item->quantidade = floatval($item->quantidade);
             }
             $item->preco = floatval($item->preco);
+            if (!empty($item->variacao)) {
+                $item->produto .= ' ' . $item->variacao;
+            }
+            $item->palavras = explode(' ', $item->produto);
+            if (!empty($item->quantidade)) {
+                $item->produto .= ' C/' . intval($item->quantidade);
+            }
+            $item->sincronizado = $sincronizado;
             return $item;
         }, $regs);
         // dd($regs);
