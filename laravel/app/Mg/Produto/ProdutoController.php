@@ -3,6 +3,7 @@
 namespace Mg\Produto;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 use Mg\MgController;
 
@@ -59,5 +60,9 @@ class ProdutoController extends MgController
         return ProdutoService::listagemPdv($codprodutobarra, $limite);
     }
 
+    public function listagemPdvCount (Request $request)
+    {
+        return ProdutoService::listagemPdvCount();
+    }
 
 }

@@ -56,6 +56,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('produto/unifica-barras', '\Mg\Produto\ProdutoController@unificaBarras');
     Route::post('produto/embalagem-para-unidade', '\Mg\Produto\ProdutoController@embalagemParaUnidade');
     Route::get('produto/listagem-pdv', '\Mg\Produto\ProdutoController@listagemPdv');
+    Route::get('produto/listagem-pdv-count', '\Mg\Produto\ProdutoController@listagemPdvCount');
 
     // Etiqueta
     Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');

@@ -39,8 +39,20 @@ class ProdutoService extends MgService
 
     }
 
+    public static function listagemPdvCount()
+    {
+        $sql = '
+            select
+            	count(pb.codprodutobarra) as count
+            from tblprodutobarra pb 
+        ';
+        $regs = DB::select($sql);
+        return $regs[0];
+    }
+
     public static function listagemPdv($codprodutobarra, $limite)
     {
+        $sincronizado = date('Y-m-d h:i:s');
         $sql = '
             select
             	pb.codprodutobarra,
@@ -53,7 +65,8 @@ class ProdutoService extends MgService
             	pe.quantidade,
             	pri.codimagem,
             	coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) as preco,
-            	coalesce(pv.inativo, p.inativo) as inativo
+            	coalesce(pv.inativo, p.inativo) as inativo,
+                :sincronizado as sincronizado
             from tblproduto p
             inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
             inner join tblprodutovariacao pv  on (pv.codproduto = p.codproduto)
@@ -61,17 +74,16 @@ class ProdutoService extends MgService
             left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
             left join tblunidademedida ume on (ume.codunidademedida = pe.codunidademedida)
             left join tblprodutoimagem pri on (pri.codprodutoimagem = pv.codprodutoimagem)
-            --left join tblimagem i on (i.codimagem = pri.codimagem)
             where pb.codprodutobarra >= :codprodutobarra
             order by pb.codprodutobarra
             limit :limite
         ';
         $regs = DB::select($sql,[
             'codprodutobarra' => $codprodutobarra,
-            'limite' => $limite
+            'limite' => $limite,
+            'sincronizado' => $sincronizado
         ]);
-        $sincronizado = date('Y-m-d');
-        return array_map(function ($item) use ($sincronizado){
+        return array_map(function ($item) {
             if ($item->quantidade) {
                 $item->quantidade = floatval($item->quantidade);
             }
@@ -83,10 +95,9 @@ class ProdutoService extends MgService
             if (!empty($item->quantidade)) {
                 $item->produto .= ' C/' . intval($item->quantidade);
             }
-            $item->sincronizado = $sincronizado;
             return $item;
         }, $regs);
-        // dd($regs);
         return $regs;
     }
+
 }
