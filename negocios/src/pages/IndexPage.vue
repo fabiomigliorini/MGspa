@@ -1,26 +1,36 @@
 <template>
   <q-page class="">
     <!-- Sincronizacao  -->
-
-    <q-dialog v-model="dialog.sincronizacao" seamless position="bottom">
+    <q-dialog
+      v-model="storeProduto.importacao.rodando"
+      seamless
+      position="bottom"
+    >
       <q-card style="width: 350px">
-        <q-linear-progress :value="importacao.progresso" color="pink" />
+        <q-linear-progress
+          :value="storeProduto.importacao.progresso"
+          color="pink"
+        />
 
         <q-card-section class="row items-center no-wrap">
           <div>
             <div class="text-weight-bold">
               {{
                 new Intl.NumberFormat("pt-BR").format(
-                  importacao.totalSincronizados
+                  storeProduto.importacao.totalSincronizados
                 )
               }}
               /
               {{
-                new Intl.NumberFormat("pt-BR").format(importacao.totalRegistros)
+                new Intl.NumberFormat("pt-BR").format(
+                  storeProduto.importacao.totalRegistros
+                )
               }}
               Produtos
             </div>
-            <div class="text-grey">{{ importacao.tempoTotal }} Segundos</div>
+            <div class="text-grey">
+              {{ storeProduto.importacao.tempoTotal }} Segundos
+            </div>
           </div>
 
           <q-space />
@@ -32,7 +42,7 @@
             round
             icon="close"
             v-close-popup
-            @click="dialog.sincronizacao = false"
+            @click="storeProduto.importacao.rodando = false"
           />
         </q-card-section>
       </q-card>
@@ -44,6 +54,8 @@
       maximized
       transition-show="slide-up"
       transition-hide="slide-down"
+      @show="$refs.refPesquisa.$el.focus()"
+      @hide="$refs.refBarras.$el.focus()"
     >
       <q-card>
         <!-- <q-bar class="bg-primary text-white">
@@ -57,13 +69,20 @@
           <!-- <div class="text-h6">Alert</div> -->
           <q-input
             outlined
-            v-model="texto"
+            v-model="storeProduto.textoPesquisa"
             label="Pesquisa"
+            ref="refPesquisa"
             bg-color="white"
-            @change="buscarTexto()"
+            @change="storeProduto.pesquisar()"
           >
             <template v-slot:append>
-              <q-btn round dense flat icon="search" @click="buscarTexto()" />
+              <q-btn
+                round
+                dense
+                flat
+                icon="search"
+                @click="storeProduto.pesquisar()"
+              />
               <q-btn
                 round
                 dense
@@ -78,7 +97,7 @@
         <q-card-section class="q-pt-none">
           <div class="row">
             <template
-              v-for="produto in store.pesquisa"
+              v-for="produto in storeProduto.resultadoPesquisa"
               v-bind:key="produto.codprodutobarra"
             >
               <div class="q-pa-sm col-xl-2 col-lg-2 col-md-3 col-sm-3 col-xs-6">
@@ -88,7 +107,7 @@
                   v-ripple
                   class="cursor-pointer q-hoverable"
                   @click="
-                    store.adicionarItem(
+                    storeNegocio.adicionarItem(
                       produto.codprodutobarra,
                       produto.barras,
                       produto.codproduto,
@@ -106,8 +125,7 @@
                   >
                     <!-- <div class="text-h6">Our Changing Planet</div> -->
                     <div class="text-subtitle1">
-                      <q-icon name="bar_chart" />
-                      {{ produto.barras }}
+                      <q-icon name="bar_chart" />{{ produto.barras }}
                     </div>
                   </q-card-section>
 
@@ -158,65 +176,82 @@
                 </q-card>
               </div>
             </template>
+            aqui no fim mostrar mensagem se pesquisa muito comprida
           </div>
         </q-card-section>
       </q-card>
     </q-dialog>
 
-    <div class="row">
-      <div class="col-md-3 col-sm-12 q-pa-md">
-        <q-btn
-          color="primary"
-          icon="check"
-          label="Sincronizar Produtos"
-          @click="sincronizarProdutos()"
-        />
-        <q-btn
-          label="Pesquisar Produtos"
-          icon="search"
-          color="primary"
-          class="q-ml-sm"
-          @click="dialog.pesquisa = true"
-        />
-      </div>
-      <div class="col-md-3 col-sm-12 q-pa-md">
+    <div class="row q-pa-md">
+      <div class="col-lg-10 q-sm-9 q-xs-12">
         <div class="row">
-          <div class="col-sm-2 q-pr-md">
+          <div class="col-sm-3 col-xs-12 q-pb-sm q-pr-sm">
             <q-input
               type="number"
               outlined
               step="0.001"
               label="Quantidade"
-              class="text-right"
+              input-class="text-right"
               :model-value="quantidade"
             >
             </q-input>
           </div>
-          <div class="col">
+          <div class="col-sm-4 col-xs-12 q-pb-sm q-pr-sm">
             <q-input
               type="text"
               outlined
+              ref="refBarras"
               v-model="barras"
               label="Barras"
+              input-class="text-right"
               @change="buscarBarras()"
             >
               <template v-slot:append>
-                <q-btn round dense flat icon="search" @click="buscarBarras()" />
+                <q-btn round dense flat icon="add" @click="buscarBarras()" />
+                <q-btn
+                  round
+                  dense
+                  flat
+                  icon="search"
+                  @click="dialog.pesquisa = true"
+                />
               </template>
             </q-input>
           </div>
+
+          <div class="col-sm-5 col-xs-12 q-pb-sm q-pr-sm">
+            <div class="row">
+              <div class="col q-pr-sm">
+                <q-btn
+                  :loading="storeProduto.importacao.rodando"
+                  :percentage="storeProduto.importacao.progresso * 100"
+                  stack
+                  color="primary"
+                  @click="storeProduto.sincronizar()"
+                  icon="refresh"
+                  label="Sincronizar"
+                  style="width: 100%"
+                  class="q-ml-sm"
+                >
+                  <template v-slot:loading>
+                    <q-spinner-dots />
+                  </template>
+                </q-btn>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-md-3 col-sm-12 q-pa-md"></div>
+      <div class="col-lg-2 q-sm-3 q-xs-12">DADOS NEGOCIO</div>
     </div>
 
-    <div class="row" v-if="store.negocio">
+    <div class="row" v-if="storeNegocio.negocio">
       <div class="col">
         <div class="q-pa-md">
-          <q-btn color="primary" icon="delete" label="Limpar" />
+          <!-- <q-btn color="primary" icon="delete" label="Limpar" /> -->
           <q-table
             title="Adicionados"
-            :rows="store.negocio.NegocioProdutoBarraS"
+            :rows="storeNegocio.negocio.NegocioProdutoBarraS"
             row-key="codprodutobarra"
           />
         </div>
@@ -226,41 +261,99 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, watch } from "vue";
-import { api } from "boot/axios";
+import {
+  defineComponent,
+  ref,
+  onMounted,
+  onUnmounted,
+  watch,
+  getCurrentInstance,
+} from "vue";
 import { mainStore } from "stores/main";
-import { db } from "boot/db";
-import { format } from "quasar";
+import { produtoStore } from "stores/produto";
+// import { db } from "boot/db";
+// import { api } from "boot/axios";
+// import { format } from "quasar";
+import { useQuasar } from "quasar";
+
+// export function useKeyDownEvent(handler) {
+//   onMounted(() => document.addEventListener("keydown", handler));
+//   onUnmounted(() => document.removeEventListener("keydown", handler));
+// }
 
 export default defineComponent({
   name: "IndexPage",
   setup() {
     onMounted(() => {
-      // store.pesquisa=[];
+      // storeProduto.resultadoPesquisa=[];
+
+      const inputBarras = getCurrentInstance().ctx.$refs.refBarras.$el;
+      inputBarras.focus();
+
+      document.addEventListener("keydown", (event) => {
+        switch (event.key) {
+          case "F11":
+            event.preventDefault();
+            console.log("capturei o F11");
+            break;
+
+          case "F12":
+            event.preventDefault();
+            console.log("capturei o F12");
+            break;
+
+          // Joga foco no codigo de barras
+          case "1":
+          case "2":
+          case "3":
+          case "4":
+          case "5":
+          case "6":
+          case "7":
+          case "8":
+          case "9":
+          case "0":
+            if (document.activeElement.tagName.toLowerCase() != "input") {
+              inputBarras.focus();
+            }
+            break;
+
+          default:
+            break;
+        }
+      });
     });
+    // useKeyDownEvent((event) => {
+    //   switch (event.key) {
+    //     case "F11":
+    //       event.preventDefault();
+    //       console.log("capturei o F11");
+    //       break;
+
+    //     case "F12":
+    //       event.preventDefault();
+    //       console.log("capturei o F12");
+    //       break;
+
+    //     default:
+    //       break;
+    //   }
+    // });
     const quantidade = ref("1");
-    const barras = ref("7891360503521");
-    const texto = ref("caneta braswu metal");
+    const barras = ref("");
     const indeterminado = ref(false);
     const dialog = ref({
       pesquisa: false,
-      sincronizacao: false,
     });
-    const importacao = ref({
-      totalRegistros: null,
-      totalSincronizados: null,
-      progresso: 0,
-      requisicoes: null,
-      maxRequisicoes: 1000,
-      // maxRequisicoes: 2,
-      limiteRequisicao: 3000,
-      tempoTotal: null,
-    });
-    const progressoApi = ref(0);
-    const store = mainStore();
+    const storeNegocio = mainStore();
+    const storeProduto = produtoStore();
+    const $q = useQuasar();
 
     //verifica se tem uma quantidade digitada nas barras
     watch(barras, (newValue, oldValue) => {
+      if (!barras.value instanceof String) {
+        return;
+      }
       if (barras.value.length < 2) {
         return;
       }
@@ -281,170 +374,53 @@ export default defineComponent({
 
     // adiciona produtos pelo codigo de barras ou codigo interno
     const buscarBarras = async () => {
-      let ret = await db.produtos.where({ barras: barras.value }).toArray();
-      if (ret.length == 0) {
-        if (barras.value.length == 6) {
-          const codproduto = parseInt(barras.value);
-          if (!isNaN(codproduto)) {
-            ret = await db.produtos
-              .where({ codproduto: codproduto })
-              .filter((produto) => produto.quantidade == null)
-              .toArray();
-          }
-        }
+      // $q.notify("Message");
+      const txt = barras.value;
+      const qtd = quantidade.value;
+      if (txt.length == 0) {
+        return;
       }
-      if (ret.length == 0) {
-        console.log("nada");
-      }
+      quantidade.value = 1;
+      barras.value = "";
+
+      let ret = await storeProduto.buscarBarras(txt);
+
       if (ret.length == 1) {
-        store.adicionarItem(
+        storeNegocio.adicionarItem(
           ret[0].codprodutobarra,
           ret[0].barras,
           ret[0].codproduto,
           ret[0].produto,
           ret[0].codimagem,
-          parseFloat(quantidade.value),
+          qtd,
           ret[0].preco
         );
-        barras.value = "";
-      }
-    };
-
-    const buscarTexto = async () => {
-      // verifica se tem texto de busca
-      const palavras = texto.value.trim().split(" ");
-      if (palavras.length == 0) {
-        return;
-      }
-      if (palavras[0].length == 0) {
-        return;
-      }
-
-      // mostra barra de pesquisa
-      indeterminado.value = true;
-
-      // Busca produtos baseados na primeira palavra de pesquisa
-      var colProdutos = await db.produtos
-        .where("palavras")
-        .startsWithIgnoreCase(palavras[0]);
-
-      // se estiver buscando por mais de uma palavra
-      if (palavras.length > 1) {
-        // monta expressoes regulares
-        var regexes = [];
-        for (let i = 1; i < palavras.length; i++) {
-          regexes.push(new RegExp(".*" + palavras[i] + ".*", "i"));
-        }
-
-        // percorre todos registros filtrando pelas expressoes regulares
-        const iMax = regexes.length;
-        colProdutos = await colProdutos.and(function (produto) {
-          for (let i = 0; i < iMax; i++) {
-            if (!regexes[i].test(produto.produto)) {
-              return false;
-            }
-          }
-          return true;
+        $q.notify({
+          type: "positive",
+          message: "Código " + txt + " adicionado.",
         });
-      }
-
-      // transforma colecao de produtos em array
-      var arrProdutos = await colProdutos.sortBy("preco");
-      // console.log(arrProdutos);
-      // var arrProdutos = await colProdutos;
-      indeterminado.value = false;
-      store.pesquisa = arrProdutos.slice(0, 50);
-    };
-
-    const sincronizarProdutos = async () => {
-      // inicializa progresso
-      importacao.value.progresso = 0;
-      importacao.value.totalRegistros = 0;
-      importacao.value.totalSincronizados = 0;
-      importacao.value.requisicoes = 0;
-      importacao.value.tempoTotal = 0;
-
-      // descobre o total de registros pra sincronizar
-      try {
-        let { data } = await api.get("/api/v1/produto/listagem-pdv-count");
-        importacao.value.totalRegistros = data.count;
-        importacao.value.limiteRequisicao = Math.round(
-          importacao.value.totalRegistros / 100
-        );
-      } catch (error) {
-        console.log(error);
-        console.log("Impossível acessar API");
-      }
-
-      // mostra janela de progresso
-      dialog.value.sincronizacao = true;
-
-      let sincronizado = null;
-      let inicio = performance.now();
-      let codprodutobarra = 0;
-
-      do {
-        // busca dados na api
-        var { data } = await api.get("/api/v1/produto/listagem-pdv", {
-          params: {
-            codprodutobarra: codprodutobarra,
-            limite: importacao.value.limiteRequisicao,
-          },
+        var audio = new Audio("done.m4a");
+        audio.play();
+      } else {
+        $q.notify({
+          type: "negative",
+          message: "Falha ao buscar código " + txt + "!",
+          timeout: 1200000,
+          actions: [{ icon: "close", color: "white" }],
         });
-        // incrementa numero de requisicoes
-        importacao.value.requisicoes++;
-
-        // incrementa progresso
-        // progressoApi.value += 0.05;
-
-        // insere dados no banco local indexeddb
-        try {
-          await db.produtos.bulkPut(data);
-        } catch (error) {
-          console.log(error.stack || error);
-        }
-
-        if (sincronizado == null) {
-          sincronizado = data[0].sincronizado;
-        }
-
-        // busca codigo do ultimo registro
-        codprodutobarra = data.slice(-1)[0].codprodutobarra;
-
-        //monta status de progresso
-        importacao.value.totalSincronizados += data.length;
-        importacao.value.progresso =
-          importacao.value.totalSincronizados / importacao.value.totalRegistros;
-        importacao.value.tempoTotal = Math.round(
-          (performance.now() - inicio) / 1000
-        );
-
-        // loop enquanto nao tiver buscado menos registros que o limite
-      } while (
-        data.length >= importacao.value.limiteRequisicao &&
-        importacao.value.requisicoes <= importacao.value.maxRequisicoes &&
-        dialog.value.sincronizacao
-      );
-
-      // exclui registros que nao vieram na importacao
-      db.produtos.where("sincronizado").below(sincronizado).delete();
-
-      // mostra progresso como completo
-      progressoApi.value = 1;
+        var audio = new Audio("error.m4a");
+        audio.play();
+      }
     };
+
     return {
-      store,
+      storeNegocio,
+      storeProduto,
       barras,
       quantidade,
-      texto,
-      progressoApi,
       indeterminado,
-      sincronizarProdutos,
       buscarBarras,
-      buscarTexto,
       dialog,
-      importacao,
-      // verificarQuantidade,
     };
   },
 });

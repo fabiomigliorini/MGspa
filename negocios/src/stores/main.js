@@ -3,14 +3,16 @@ import { defineStore } from "pinia";
 export const mainStore = defineStore("negocios", {
   state: () => ({
     pesquisa: [],
+    textoPesuisa: null,
     negocio: null,
     outros: [],
+    ultimaSincronizacaoProdutos: null,
     padrao: {
       codfilial: 101,
       codestoquelocal: 101001,
       codpessoa: 1,
       codnaturezaoperacao: 1,
-    }
+    },
   }),
 
   getters: {
@@ -62,26 +64,25 @@ export const mainStore = defineStore("negocios", {
       produto,
       codimagem,
       quantidade,
-      preco,
-      valortotal) {
-
+      preco
+    ) {
       if (this.negocio == null) {
         await this.criarNovoNegocio();
       }
 
-      console.log(codprodutobarra)
+      console.log(codprodutobarra);
       const index = this.negocio.NegocioProdutoBarraS.findIndex(function (npb) {
-        return npb.codprodutobarra === codprodutobarra;
+        return npb.inativo === null && npb.codprodutobarra === codprodutobarra;
       });
 
       if (index >= 0) {
-        console.log('achout');
+        console.log("achout");
         this.negocio.NegocioProdutoBarraS[index].quantidade += quantidade;
         this.negocio.NegocioProdutoBarraS[index].valortotal =
           this.negocio.NegocioProdutoBarraS[index].quantidade *
           this.negocio.NegocioProdutoBarraS[index].preco;
       } else {
-        console.log('nao achou');
+        console.log("nao achou");
         this.negocio.NegocioProdutoBarraS.push({
           codprodutobarra,
           barras,
@@ -91,10 +92,9 @@ export const mainStore = defineStore("negocios", {
           quantidade,
           preco,
           valortotal: quantidade * preco,
+          inativo: null,
         });
       }
-
-
     },
 
     atualizaValorTotal(iNegocio) {
