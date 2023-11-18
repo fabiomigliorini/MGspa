@@ -139,12 +139,10 @@ export const produtoStore = defineStore("produtos", {
       if (ret.length >= 1) {
         return ret;
       }
-      console.log(barras.length);
       if (barras.length != 6) {
         return ret;
       }
       const codproduto = parseInt(barras);
-      console.log(codproduto);
       if (isNaN(codproduto)) {
         return ret;
       }
@@ -152,7 +150,6 @@ export const produtoStore = defineStore("produtos", {
         .where({ codproduto: codproduto })
         .filter((produto) => produto.quantidade == null)
         .toArray();
-      console.log(ret);
       return ret;
     },
   },

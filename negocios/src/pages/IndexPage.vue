@@ -245,10 +245,213 @@
       <div class="col-lg-2 q-sm-3 q-xs-12">DADOS NEGOCIO</div>
     </div>
 
+    <div class="row q-pa-sm" v-if="storeNegocio.negocio">
+      <div
+        class="col-sm-2 q-pa-sm"
+        v-for="npb in storeNegocio.negocio.NegocioProdutoBarraS"
+        v-bind:key="npb.codprodutobarra"
+      >
+        <Transition enter-active-class="animated fadeIn">
+          <q-card :key="npb.valortotal">
+            <q-img
+              :src="
+                'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' +
+                npb.codimagem +
+                '.jpg'
+              "
+              v-if="npb.codimagem"
+              style="width: 100%"
+            >
+              <div class="absolute-top text-right">
+                <q-btn flat icon="edit" />
+                <q-btn flat icon="delete" />
+              </div>
+              <!-- leave-active-class="animated slide" -->
+              <div class="absolute-bottom text-right">
+                <div class="text-h6">
+                  <span>
+                    {{
+                      new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(npb.valortotal)
+                    }}
+                  </span>
+                </div>
+                <div class="text-subtitle2">
+                  {{ new Intl.NumberFormat("pt-BR").format(npb.quantidade) }} x
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(npb.preco)
+                  }}
+                </div>
+              </div>
+            </q-img>
+            <q-img
+              src="https://sistema.mgpapelaria.com.br/MGLara/public/imagens/semimagem.jpg"
+              style="width: 100%"
+              v-else
+            >
+              <div class="absolute-bottom">
+                <div class="text-h6">{{ npb.quantidade }}</div>
+                <div class="text-subtitle2">by John Doe</div>
+              </div>
+            </q-img>
+            <q-card-section class="q-pa-xs text-center bg-grey-2 text-primary">
+              <!-- <div class="text-h6">Our Changing Planet</div> -->
+              <div class="text-subtitle1">
+                <q-icon name="bar_chart" />{{ npb.barras }}
+              </div>
+              <div class="text-caption">
+                {{ npb.produto }}
+              </div>
+            </q-card-section>
+
+            <q-card-section class="q-pt-none"> </q-card-section>
+
+            <q-card-actions> </q-card-actions>
+          </q-card>
+        </Transition>
+      </div>
+    </div>
+    <!--
     <div class="row" v-if="storeNegocio.negocio">
       <div class="col">
         <div class="q-pa-md">
-          <!-- <q-btn color="primary" icon="delete" label="Limpar" /> -->
+          <q-list bordered class="rounded-borders">
+            <q-item-label header>Itens Adicionados</q-item-label>
+
+            <template
+              v-for="npb in storeNegocio.negocio.NegocioProdutoBarraS"
+              v-bind:key="npb.codprodutobarra"
+            >
+              <q-item>
+                <q-item-section class="col-1">
+                  <img
+                    :src="
+                      'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' +
+                      npb.codimagem +
+                      '.jpg'
+                    "
+                    v-if="npb.codimagem"
+                    style="width: 100%"
+                  />
+                  <img
+                    src="https://sistema.mgpapelaria.com.br/MGLara/public/imagens/semimagem.jpg"
+                    style="width: 100%"
+                    v-else
+                  />
+                </q-item-section>
+
+                <q-item-section top class="col-2 gt-sm">
+                  <q-item-label class="q-mt-sm">{{ npb.barras }}</q-item-label>
+                  <q-item-label caption class="q-mt-sm">
+                    #{{ String(npb.codproduto).padStart(6, "0") }}
+                  </q-item-label>
+                </q-item-section>
+
+                <q-item-section top>
+                  <q-item-label lines="1">
+                    <span class="text-weight-medium">
+                      {{ npb.produto }}
+                    </span>
+                  </q-item-label>
+                  <q-item-label caption lines="1">
+                    @rstoenescu in #3: > Generic type parameter for props
+                  </q-item-label>
+                  <q-item-label
+                    lines="1"
+                    class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase"
+                  >
+                    <span class="cursor-pointer">Open in GitHub</span>
+                  </q-item-label>
+                </q-item-section>
+
+                <q-item-section top side>
+                  <div class="text-grey-8 q-gutter-xs">
+                    <q-btn
+                      class="gt-xs"
+                      size="12px"
+                      flat
+                      dense
+                      round
+                      icon="delete"
+                    />
+                    <q-btn
+                      class="gt-xs"
+                      size="12px"
+                      flat
+                      dense
+                      round
+                      icon="done"
+                    />
+                    <q-btn size="12px" flat dense round icon="more_vert" />
+                  </div>
+                </q-item-section>
+              </q-item>
+
+              <q-separator inset />
+            </template>
+
+            <q-item>
+              <q-item-section avatar top>
+                <q-icon name="account_tree" color="black" size="34px" />
+              </q-item-section>
+
+              <q-item-section top class="col-2 gt-sm">
+                <q-item-label class="q-mt-sm">GitHub</q-item-label>
+              </q-item-section>
+
+              <q-item-section top>
+                <q-item-label lines="1">
+                  <span class="text-weight-medium"
+                    >[quasarframework/quasar]</span
+                  >
+                  <span class="text-grey-8"> - GitHub repository</span>
+                </q-item-label>
+                <q-item-label caption lines="1">
+                  @rstoenescu in #1: > The build system
+                </q-item-label>
+                <q-item-label
+                  lines="1"
+                  class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase"
+                >
+                  <span class="cursor-pointer">Open in GitHub</span>
+                </q-item-label>
+              </q-item-section>
+
+              <q-item-section top side>
+                <div class="text-grey-8 q-gutter-xs">
+                  <q-btn
+                    class="gt-xs"
+                    size="12px"
+                    flat
+                    dense
+                    round
+                    icon="delete"
+                  />
+                  <q-btn
+                    class="gt-xs"
+                    size="12px"
+                    flat
+                    dense
+                    round
+                    icon="done"
+                  />
+                  <q-btn size="12px" flat dense round icon="more_vert" />
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" v-if="storeNegocio.negocio">
+      <div class="col">
+        <div class="q-pa-md">
           <q-table
             title="Adicionados"
             :rows="storeNegocio.negocio.NegocioProdutoBarraS"
@@ -257,6 +460,7 @@
         </div>
       </div>
     </div>
+    -->
   </q-page>
 </template>
 
@@ -292,15 +496,20 @@ export default defineComponent({
 
       document.addEventListener("keydown", (event) => {
         switch (event.key) {
-          case "F11":
+          case "F1":
             event.preventDefault();
-            console.log("capturei o F11");
+            console.log("capturei o F1 pro Alan");
             break;
 
-          case "F12":
-            event.preventDefault();
-            console.log("capturei o F12");
-            break;
+          // case "F11":
+          //   event.preventDefault();
+          //   console.log("capturei o F11");
+          //   break;
+
+          // case "F12":
+          //   event.preventDefault();
+          //   console.log("capturei o F12");
+          //   break;
 
           // Joga foco no codigo de barras
           case "1":
@@ -376,16 +585,16 @@ export default defineComponent({
     const buscarBarras = async () => {
       // $q.notify("Message");
       const txt = barras.value;
-      const qtd = quantidade.value;
       if (txt.length == 0) {
         return;
       }
-      quantidade.value = 1;
       barras.value = "";
 
       let ret = await storeProduto.buscarBarras(txt);
 
       if (ret.length == 1) {
+        const qtd = parseFloat(quantidade.value);
+        quantidade.value = 1;
         storeNegocio.adicionarItem(
           ret[0].codprodutobarra,
           ret[0].barras,
@@ -398,6 +607,7 @@ export default defineComponent({
         $q.notify({
           type: "positive",
           message: "Código " + txt + " adicionado.",
+          timeout: 1500, // 1,5 segundos
         });
         var audio = new Audio("done.m4a");
         audio.play();
@@ -405,7 +615,7 @@ export default defineComponent({
         $q.notify({
           type: "negative",
           message: "Falha ao buscar código " + txt + "!",
-          timeout: 1200000,
+          timeout: 0, // 20 minutos
           actions: [{ icon: "close", color: "white" }],
         });
         var audio = new Audio("error.m4a");
