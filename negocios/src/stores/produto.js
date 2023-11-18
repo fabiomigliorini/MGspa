@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { api } from "boot/axios";
 import { db } from "boot/db";
+import { Notify, LoadingBar } from "quasar";
 
 export const produtoStore = defineStore("produtos", {
   state: () => ({
@@ -96,6 +97,8 @@ export const produtoStore = defineStore("produtos", {
       this.importacao.rodando = false;
     },
     async pesquisar() {
+      LoadingBar.start();
+
       // verifica se tem texto de busca
       const palavras = this.textoPesquisa.trim().split(" ");
       if (palavras.length == 0) {
@@ -108,7 +111,8 @@ export const produtoStore = defineStore("produtos", {
       // Busca produtos baseados na primeira palavra de pesquisa
       var colProdutos = await db.produtos
         .where("palavras")
-        .startsWithIgnoreCase(palavras[0]);
+        .startsWithIgnoreCase(palavras[0])
+        .and((p) => p.inativo == null);
 
       // se estiver buscando por mais de uma palavra
       if (palavras.length > 1) {
@@ -131,8 +135,38 @@ export const produtoStore = defineStore("produtos", {
       }
 
       // transforma colecao de produtos em array
-      var arrProdutos = await colProdutos.sortBy("preco");
-      this.resultadoPesquisa = arrProdutos.slice(0, 50);
+      // var arrProdutos = await colProdutos.sortBy("[quantidade]");
+      var arrProdutos = await colProdutos.toArray();
+      arrProdutos = arrProdutos.sort((a, b) => {
+        if (a.produto > b.produto) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+      LoadingBar.stop();
+      if (arrProdutos.length > 500) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Pesquisa encontrou " +
+            arrProdutos.length +
+            " itens. Mostrando apenas os 500 primeiros. Refine a sua pesquisa.",
+        });
+        arrProdutos = arrProdutos.slice(0, 1000);
+      } else if (arrProdutos.length == 0) {
+        Notify.create({
+          type: "negative",
+          message: "Nenhum item localizado. Melhore sua pesquisa.",
+        });
+      } else {
+        Notify.create({
+          type: "positive",
+          message: "Pesquisa encontrou " + arrProdutos.length + " itens.",
+        });
+      }
+      this.resultadoPesquisa = arrProdutos;
+      // this.resultadoPesquisa = arrProdutos;
     },
     async buscarBarras(barras) {
       let ret = await db.produtos.where({ barras }).toArray();

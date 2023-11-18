@@ -70,20 +70,17 @@ export const mainStore = defineStore("negocios", {
         await this.criarNovoNegocio();
       }
 
-      console.log(codprodutobarra);
       const index = this.negocio.NegocioProdutoBarraS.findIndex(function (npb) {
         return npb.inativo === null && npb.codprodutobarra === codprodutobarra;
       });
 
       if (index >= 0) {
-        console.log("achout");
-        this.negocio.NegocioProdutoBarraS[index].quantidade += quantidade;
-        this.negocio.NegocioProdutoBarraS[index].valortotal =
-          this.negocio.NegocioProdutoBarraS[index].quantidade *
-          this.negocio.NegocioProdutoBarraS[index].preco;
+        var item = this.negocio.NegocioProdutoBarraS.splice(index, 1);
+        item = item[0];
+        item.quantidade += quantidade;
+        item.valortotal = item.quantidade * item.preco;
       } else {
-        console.log("nao achou");
-        this.negocio.NegocioProdutoBarraS.push({
+        var item = {
           codprodutobarra,
           barras,
           codproduto,
@@ -93,8 +90,25 @@ export const mainStore = defineStore("negocios", {
           preco,
           valortotal: quantidade * preco,
           inativo: null,
-        });
+        };
       }
+      this.negocio.NegocioProdutoBarraS.unshift(item);
+    },
+
+    async adicionarQuantidade(index, quantidade) {
+      var item = this.negocio.NegocioProdutoBarraS[index];
+      if (item.quantidade + quantidade <= 0) {
+        return;
+      }
+      item.quantidade += quantidade;
+      item.valortotal = item.quantidade * item.preco;
+    },
+
+    inativar(index) {
+      var item = this.negocio.NegocioProdutoBarraS.splice(index, 1);
+      item = item[0];
+      item.inativo = Date();
+      this.negocio.NegocioProdutoBarraS.push(item);
     },
 
     atualizaValorTotal(iNegocio) {

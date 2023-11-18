@@ -35,8 +35,6 @@
 
           <q-space />
 
-          <!-- <q-btn flat round icon="play_arrow" /> -->
-          <!-- <q-btn flat round icon="pause" /> -->
           <q-btn
             flat
             round
@@ -58,22 +56,14 @@
       @hide="$refs.refBarras.$el.focus()"
     >
       <q-card>
-        <!-- <q-bar class="bg-primary text-white">
-          <q-space />
-          <q-btn dense flat icon="close" v-close-popup>
-            <q-tooltip class="bg-white text-primary">Close</q-tooltip>
-          </q-btn>
-        </q-bar> -->
-
         <q-card-section class="bg-primary text-white">
-          <!-- <div class="text-h6">Alert</div> -->
           <q-input
             outlined
             v-model="storeProduto.textoPesquisa"
             label="Pesquisa"
             ref="refPesquisa"
             bg-color="white"
-            @change="storeProduto.pesquisar()"
+            @keydown.enter.prevent="storeProduto.pesquisar()"
           >
             <template v-slot:append>
               <q-btn
@@ -120,68 +110,70 @@
                   "
                 >
                   <span class="q-focus-helper"></span>
-                  <q-card-section
-                    class="q-pa-xs text-center bg-grey-2 text-primary"
-                  >
-                    <!-- <div class="text-h6">Our Changing Planet</div> -->
-                    <div class="text-subtitle1">
-                      <q-icon name="bar_chart" />{{ produto.barras }}
-                    </div>
-                  </q-card-section>
+                  <img :src="urlImagem(produto.codimagem)" />
 
-                  <img
-                    :src="
-                      'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' +
-                      produto.codimagem +
-                      '.jpg'
-                    "
-                    v-if="produto.codimagem"
-                  />
-                  <img
-                    src="https://sistema.mgpapelaria.com.br/MGLara/public/imagens/semimagem.jpg"
-                    v-else
-                  />
-
-                  <q-card-section
-                    class="q-pa-xs text-center bg-grey-2 text-primary"
-                  >
-                    <q-chip
-                      size="md"
-                      class="absolute text-bold"
-                      square
-                      color="primary"
-                      text-color="white"
-                      style="top: 0; right: 5px; transform: translateY(-42px)"
+                  <q-card-section>
+                    <div
+                      class="absolute"
+                      style="top: 0; right: 5px; transform: translateY(-37px)"
                     >
+                      <q-chip color="grey-2" text-color="grey-7">
+                        {{ produto.sigla }}
+                        <template v-if="produto.quantidade > 0">
+                          C/{{
+                            new Intl.NumberFormat("pt-BR").format(
+                              produto.quantidade
+                            )
+                          }}
+                        </template>
+                      </q-chip>
+
+                      <!-- <q-btn color="white" text-color="grey-7" icon="edit">
+                        teste
+                      </q-btn> -->
+                      <!-- <q-btn
+                        round
+                        color="negative"
+                        icon="delete"
+                        class="q-ma-sm"
+                      /> -->
+                    </div>
+
+                    <div class="text-h5">
+                      <small class="text-grey-7">R$</small>
+                      {{
+                        new Intl.NumberFormat("pt-BR", {
+                          style: "decimal",
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(produto.preco)
+                      }}
+                    </div>
+
+                    <!-- <div class="text-overline text-grey-7">
                       {{ produto.sigla }}
-                      <template v-if="produto.quantidade > 1">
+                      <template v-if="produto.quantidade > 0">
                         C/{{
                           new Intl.NumberFormat("pt-BR").format(
                             produto.quantidade
                           )
                         }}
                       </template>
-                      {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(produto.preco)
-                      }}
-                    </q-chip>
-                    <div class="text-caption">
-                      #{{ String(produto.codproduto).padStart(6, "0") }} -
+                    </div> -->
+                    <div class="text-caption text-grey-7">
+                      {{ produto.barras }} |
                       {{ produto.produto }}
                     </div>
                   </q-card-section>
                 </q-card>
               </div>
             </template>
-            aqui no fim mostrar mensagem se pesquisa muito comprida
           </div>
         </q-card-section>
       </q-card>
     </q-dialog>
 
+    <!-- Cabecalho adicionar produtos -->
     <div class="row q-pa-md">
       <div class="col-lg-10 q-sm-9 q-xs-12">
         <div class="row">
@@ -196,7 +188,7 @@
             >
             </q-input>
           </div>
-          <div class="col-sm-4 col-xs-12 q-pb-sm q-pr-sm">
+          <div class="col q-pb-sm q-pr-sm">
             <q-input
               type="text"
               outlined
@@ -215,252 +207,114 @@
                   icon="search"
                   @click="dialog.pesquisa = true"
                 />
-              </template>
-            </q-input>
-          </div>
-
-          <div class="col-sm-5 col-xs-12 q-pb-sm q-pr-sm">
-            <div class="row">
-              <div class="col q-pr-sm">
                 <q-btn
+                  round
+                  dense
+                  flat
                   :loading="storeProduto.importacao.rodando"
                   :percentage="storeProduto.importacao.progresso * 100"
-                  stack
-                  color="primary"
                   @click="storeProduto.sincronizar()"
                   icon="refresh"
-                  label="Sincronizar"
-                  style="width: 100%"
-                  class="q-ml-sm"
                 >
                   <template v-slot:loading>
                     <q-spinner-dots />
                   </template>
                 </q-btn>
-              </div>
-            </div>
+              </template>
+            </q-input>
           </div>
         </div>
       </div>
       <div class="col-lg-2 q-sm-3 q-xs-12">DADOS NEGOCIO</div>
     </div>
 
+    <!-- listagem de produtos -->
     <div class="row q-pa-sm" v-if="storeNegocio.negocio">
       <div
-        class="col-sm-2 q-pa-sm"
-        v-for="npb in storeNegocio.negocio.NegocioProdutoBarraS"
-        v-bind:key="npb.codprodutobarra"
+        class="col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 q-pa-sm"
+        v-for="(npb, index) in storeNegocio.negocio.NegocioProdutoBarraS.filter(
+          (item) => {
+            return item.inativo == null;
+          }
+        )"
+        :key="npb.codprodutobarra"
       >
-        <Transition enter-active-class="animated fadeIn">
-          <q-card :key="npb.valortotal">
-            <q-img
-              :src="
-                'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' +
-                npb.codimagem +
-                '.jpg'
-              "
-              v-if="npb.codimagem"
-              style="width: 100%"
-            >
-              <div class="absolute-top text-right">
-                <q-btn flat icon="edit" />
-                <q-btn flat icon="delete" />
-              </div>
-              <!-- leave-active-class="animated slide" -->
-              <div class="absolute-bottom text-right">
-                <div class="text-h6">
-                  <span>
-                    {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(npb.valortotal)
-                    }}
-                  </span>
-                </div>
-                <div class="text-subtitle2">
-                  {{ new Intl.NumberFormat("pt-BR").format(npb.quantidade) }} x
-                  {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(npb.preco)
-                  }}
-                </div>
-              </div>
-            </q-img>
-            <q-img
-              src="https://sistema.mgpapelaria.com.br/MGLara/public/imagens/semimagem.jpg"
-              style="width: 100%"
-              v-else
-            >
-              <div class="absolute-bottom">
-                <div class="text-h6">{{ npb.quantidade }}</div>
-                <div class="text-subtitle2">by John Doe</div>
-              </div>
-            </q-img>
-            <q-card-section class="q-pa-xs text-center bg-grey-2 text-primary">
-              <!-- <div class="text-h6">Our Changing Planet</div> -->
-              <div class="text-subtitle1">
-                <q-icon name="bar_chart" />{{ npb.barras }}
-              </div>
-              <div class="text-caption">
-                {{ npb.produto }}
-              </div>
-            </q-card-section>
-
-            <q-card-section class="q-pt-none"> </q-card-section>
-
-            <q-card-actions> </q-card-actions>
-          </q-card>
-        </Transition>
-      </div>
-    </div>
-    <!--
-    <div class="row" v-if="storeNegocio.negocio">
-      <div class="col">
-        <div class="q-pa-md">
-          <q-list bordered class="rounded-borders">
-            <q-item-label header>Itens Adicionados</q-item-label>
-
-            <template
-              v-for="npb in storeNegocio.negocio.NegocioProdutoBarraS"
-              v-bind:key="npb.codprodutobarra"
-            >
-              <q-item>
-                <q-item-section class="col-1">
-                  <img
-                    :src="
-                      'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' +
-                      npb.codimagem +
-                      '.jpg'
-                    "
-                    v-if="npb.codimagem"
-                    style="width: 100%"
-                  />
-                  <img
-                    src="https://sistema.mgpapelaria.com.br/MGLara/public/imagens/semimagem.jpg"
-                    style="width: 100%"
-                    v-else
-                  />
-                </q-item-section>
-
-                <q-item-section top class="col-2 gt-sm">
-                  <q-item-label class="q-mt-sm">{{ npb.barras }}</q-item-label>
-                  <q-item-label caption class="q-mt-sm">
-                    #{{ String(npb.codproduto).padStart(6, "0") }}
-                  </q-item-label>
-                </q-item-section>
-
-                <q-item-section top>
-                  <q-item-label lines="1">
-                    <span class="text-weight-medium">
-                      {{ npb.produto }}
-                    </span>
-                  </q-item-label>
-                  <q-item-label caption lines="1">
-                    @rstoenescu in #3: > Generic type parameter for props
-                  </q-item-label>
-                  <q-item-label
-                    lines="1"
-                    class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase"
-                  >
-                    <span class="cursor-pointer">Open in GitHub</span>
-                  </q-item-label>
-                </q-item-section>
-
-                <q-item-section top side>
-                  <div class="text-grey-8 q-gutter-xs">
-                    <q-btn
-                      class="gt-xs"
-                      size="12px"
-                      flat
-                      dense
-                      round
-                      icon="delete"
-                    />
-                    <q-btn
-                      class="gt-xs"
-                      size="12px"
-                      flat
-                      dense
-                      round
-                      icon="done"
-                    />
-                    <q-btn size="12px" flat dense round icon="more_vert" />
-                  </div>
-                </q-item-section>
-              </q-item>
-
-              <q-separator inset />
-            </template>
-
-            <q-item>
-              <q-item-section avatar top>
-                <q-icon name="account_tree" color="black" size="34px" />
-              </q-item-section>
-
-              <q-item-section top class="col-2 gt-sm">
-                <q-item-label class="q-mt-sm">GitHub</q-item-label>
-              </q-item-section>
-
-              <q-item-section top>
-                <q-item-label lines="1">
-                  <span class="text-weight-medium"
-                    >[quasarframework/quasar]</span
-                  >
-                  <span class="text-grey-8"> - GitHub repository</span>
-                </q-item-label>
-                <q-item-label caption lines="1">
-                  @rstoenescu in #1: > The build system
-                </q-item-label>
-                <q-item-label
-                  lines="1"
-                  class="q-mt-xs text-body2 text-weight-bold text-primary text-uppercase"
-                >
-                  <span class="cursor-pointer">Open in GitHub</span>
-                </q-item-label>
-              </q-item-section>
-
-              <q-item-section top side>
-                <div class="text-grey-8 q-gutter-xs">
-                  <q-btn
-                    class="gt-xs"
-                    size="12px"
-                    flat
-                    dense
-                    round
-                    icon="delete"
-                  />
-                  <q-btn
-                    class="gt-xs"
-                    size="12px"
-                    flat
-                    dense
-                    round
-                    icon="done"
-                  />
-                  <q-btn size="12px" flat dense round icon="more_vert" />
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </div>
-      </div>
-    </div>
-
-    <div class="row" v-if="storeNegocio.negocio">
-      <div class="col">
-        <div class="q-pa-md">
-          <q-table
-            title="Adicionados"
-            :rows="storeNegocio.negocio.NegocioProdutoBarraS"
-            row-key="codprodutobarra"
+        <q-card>
+          <q-img
+            ratio="1"
+            :src="urlImagem(npb.codimagem)"
+            style="width: 100%"
           />
-        </div>
+          <q-separator />
+
+          <q-card-section>
+            <div
+              class="absolute"
+              style="top: 0; right: 5px; transform: translateY(-42px)"
+            >
+              <q-btn color="primary" round icon="edit" />
+              <q-btn
+                round
+                color="negative"
+                icon="delete"
+                class="q-ma-sm"
+                @click="storeNegocio.inativar(index)"
+              />
+            </div>
+
+            <Transition
+              mode="out-in"
+              :duration="{ enter: 300, leave: 300 }"
+              leave-active-class="animated bounceOut"
+              enter-active-class="animated bounceIn"
+            >
+              <!-- leave-active-class="animated flash" -->
+              <div class="text-h5" :key="npb.valortotal">
+                <small class="text-grey-7">R$</small>
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(npb.valortotal)
+                }}
+              </div>
+            </Transition>
+
+            <div class="text-overline text-grey-7">
+              <q-btn
+                size="xs"
+                label="-"
+                round
+                dense
+                flat
+                @click="storeNegocio.adicionarQuantidade(index, -1)"
+              />
+              {{ new Intl.NumberFormat("pt-BR").format(npb.quantidade) }}
+              <q-btn
+                size="xs"
+                label="+"
+                round
+                dense
+                flat
+                @click="storeNegocio.adicionarQuantidade(index, 1)"
+              />
+              de
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(npb.preco)
+              }}
+            </div>
+            <div class="text-caption text-grey-7">
+              {{ npb.barras }} |
+              {{ npb.produto }}
+            </div>
+          </q-card-section>
+        </q-card>
       </div>
     </div>
-    -->
   </q-page>
 </template>
 
@@ -498,6 +352,7 @@ export default defineComponent({
         switch (event.key) {
           case "F1":
             event.preventDefault();
+            dialog.value.pesquisa = true;
             console.log("capturei o F1 pro Alan");
             break;
 
@@ -550,7 +405,6 @@ export default defineComponent({
     // });
     const quantidade = ref("1");
     const barras = ref("");
-    const indeterminado = ref(false);
     const dialog = ref({
       pesquisa: false,
     });
@@ -580,6 +434,17 @@ export default defineComponent({
       quantidade.value = quant;
       barras.value = "";
     });
+
+    const urlImagem = (codimagem) => {
+      if (codimagem == null) {
+        return "https://sistema.mgpapelaria.com.br/MGLara/public/imagens/semimagem.jpg";
+      }
+      return (
+        "https://sistema.mgpapelaria.com.br/MGLara/public/imagens/" +
+        codimagem +
+        ".jpg"
+      );
+    };
 
     // adiciona produtos pelo codigo de barras ou codigo interno
     const buscarBarras = async () => {
@@ -628,7 +493,7 @@ export default defineComponent({
       storeProduto,
       barras,
       quantidade,
-      indeterminado,
+      urlImagem,
       buscarBarras,
       dialog,
     };
