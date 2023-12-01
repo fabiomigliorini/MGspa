@@ -55,6 +55,8 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('produto/unifica-variacoes', '\Mg\Produto\ProdutoController@unificaVariacoes');
     Route::post('produto/unifica-barras', '\Mg\Produto\ProdutoController@unificaBarras');
     Route::post('produto/embalagem-para-unidade', '\Mg\Produto\ProdutoController@embalagemParaUnidade');
+    Route::get('produto/listagem-pdv', '\Mg\Produto\ProdutoController@listagemPdv');
+    Route::get('produto/listagem-pdv-count', '\Mg\Produto\ProdutoController@listagemPdvCount');
 
     // Etiqueta
     Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');
@@ -120,10 +122,50 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/{codpessoa}/comanda-vendedor', '\Mg\Pessoa\PessoaController@comandaVendedor');
     Route::post('pessoa/{codpessoa}/comanda-vendedor/imprimir', '\Mg\Pessoa\PessoaController@comandaVendedorImprimir');
 
-    // Allan - daqui pra baixo
+    
+
+
+    // NFePHP
+    Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
+    Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
+    Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
+    Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
+    Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
+    Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
+    Route::get('nfe-php/{id}/imprimir', '\Mg\NFePHP\NFePHPController@imprimir');
+    Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
+    Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
+    Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
+
+    Route::get('nfe-php/{id}/mail', '\Mg\NFePHP\NFePHPController@mail');
+    Route::get('nfe-php/{id}/mail-cancelamento', '\Mg\NFePHP\NFePHPController@mailCancelamento');
+
+    Route::get('nfe-php/{id}/xml', '\Mg\NFePHP\NFePHPController@xml');
+
+    Route::get('nfe-php/{id}/resolver', '\Mg\NFePHP\NFePHPController@resolver');
+    Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
+    Route::get('nfe-php/resolver-pendentes', '\Mg\NFePHP\NFePHPController@resolverPendentes');
+
+    Route::post('nfe-php/dist-dfe/{codfilial}/{nsu?}', '\Mg\NFePHP\NFePHPController@distDfe');
+
+    Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
+    Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
+
+    Route::get('dfe/distribuicao', '\Mg\Dfe\DfeController@distribuicao');
+    Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
+    Route::get('dfe/distribuicao/{coddistribuicaodfe}/processar', '\Mg\Dfe\DfeController@processar');
+    Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
+
+});
+
+Route::group(['middleware' => ['auth:api', 'cors']], function () {
+    Route::group(['prefix' => 'v1'], function () {
+
+        // Allan - daqui pra baixo
     Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
     Route::post('pessoa/', '\Mg\Pessoa\PessoaController@create');
     Route::get('pessoa/search', '\Mg\Pessoa\PessoaController@search');
+    Route::get('pessoa/formadepagamento', '\Mg\Pessoa\PessoaController@formapagamento');
     Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@show');
     Route::put('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@update');
     Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
@@ -138,6 +180,12 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@show');
     Route::put('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@update');
     Route::delete('pessoa/{codpessoa}/telefone/{codpessoatelefone}/', '\Mg\Pessoa\PessoaTelefoneController@delete');
+    Route::post('pessoa/{codpessoa}/telefone/{codpessoatelefone}/cima', '\Mg\Pessoa\PessoaTelefoneController@cima');
+    Route::post('pessoa/{codpessoa}/telefone/{codpessoatelefone}/baixo', '\Mg\Pessoa\PessoaTelefoneController@baixo');
+    Route::post('pessoa/{codpessoa}/telefone/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaTelefoneController@inativar');
+    Route::delete('pessoa/{codpessoa}/telefone/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaTelefoneController@ativar');
+    Route::get('pessoa/{codpessoa}/telefone/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaTelefoneController@verificar');
+    Route::post('pessoa/{codpessoa}/telefone/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaTelefoneController@confirmaVerificacao');
 
     // Pessoa Email
     Route::get('pessoa/{codpessoa}/email/', '\Mg\Pessoa\PessoaEmailController@index');
@@ -145,6 +193,12 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/{codpessoa}/email/{codpessoatelefone}/', '\Mg\Pessoa\PessoaEmailController@show');
     Route::put('pessoa/{codpessoa}/email/{codpessoatelefone}/', '\Mg\Pessoa\PessoaEmailController@update');
     Route::delete('pessoa/{codpessoa}/email/{codpessoatelefone}/', '\Mg\Pessoa\PessoaEmailController@delete');
+    Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/cima', '\Mg\Pessoa\PessoaEmailController@cima');
+    Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/baixo', '\Mg\Pessoa\PessoaEmailController@baixo');
+    Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaEmailController@inativar');
+    Route::delete('pessoa/{codpessoa}/email/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaEmailController@ativar');
+    Route::get('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@verificarEmail');
+    Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@confirmaEmail');
 
     // Pessoa Endereço
     Route::get('pessoa/{codpessoa}/endereco/', '\Mg\Pessoa\PessoaEnderecoController@index');
@@ -152,6 +206,10 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pessoa/{codpessoa}/endereco/{codpessoaendereco}/', '\Mg\Pessoa\PessoaEnderecoController@show');
     Route::put('pessoa/{codpessoa}/endereco/{codpessoaendereco}/', '\Mg\Pessoa\PessoaEnderecoController@update');
     Route::delete('pessoa/{codpessoa}/endereco/{codpessoaendereco}/', '\Mg\Pessoa\PessoaEnderecoController@delete');
+    Route::post('pessoa/{codpessoa}/endereco/{codpessoaendereco}/cima', '\Mg\Pessoa\PessoaEnderecoController@cima');
+    Route::post('pessoa/{codpessoa}/endereco/{codpessoaendereco}/baixo', '\Mg\Pessoa\PessoaEnderecoController@baixo');
+    Route::post('pessoa/{codpessoa}/endereco/{codpessoaendereco}/inativo', '\Mg\Pessoa\PessoaEnderecoController@inativar');
+    Route::delete('pessoa/{codpessoa}/endereco/{codpessoaendereco}/inativo', '\Mg\Pessoa\PessoaEnderecoController@ativar');
 
     // Pessoa Certidão
     Route::get('pessoa/{codpessoa}/certidao/', '\Mg\Pessoa\PessoaCertidaoController@index');
@@ -204,43 +262,6 @@ Route::group(['prefix' => 'v1'], function () {
     Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@delete');
 
 
-
-    // NFePHP
-    Route::get('nfe-php/{id}/criar', '\Mg\NFePHP\NFePHPController@criar');
-    Route::get('nfe-php/{id}/enviar', '\Mg\NFePHP\NFePHPController@enviar');
-    Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
-    Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
-    Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
-    Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
-    Route::get('nfe-php/{id}/imprimir', '\Mg\NFePHP\NFePHPController@imprimir');
-    Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
-    Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
-    Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
-
-    Route::get('nfe-php/{id}/mail', '\Mg\NFePHP\NFePHPController@mail');
-    Route::get('nfe-php/{id}/mail-cancelamento', '\Mg\NFePHP\NFePHPController@mailCancelamento');
-
-    Route::get('nfe-php/{id}/xml', '\Mg\NFePHP\NFePHPController@xml');
-
-    Route::get('nfe-php/{id}/resolver', '\Mg\NFePHP\NFePHPController@resolver');
-    Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
-    Route::get('nfe-php/resolver-pendentes', '\Mg\NFePHP\NFePHPController@resolverPendentes');
-
-    Route::post('nfe-php/dist-dfe/{codfilial}/{nsu?}', '\Mg\NFePHP\NFePHPController@distDfe');
-
-    Route::get('nfe-php/{id}/sefaz-status', '\Mg\NFePHP\NFePHPController@sefazStatus');
-    Route::get('nfe-php/{id}/csc-consulta', '\Mg\NFePHP\NFePHPController@cscConsulta');
-
-    Route::get('dfe/distribuicao', '\Mg\Dfe\DfeController@distribuicao');
-    Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
-    Route::get('dfe/distribuicao/{coddistribuicaodfe}/processar', '\Mg\Dfe\DfeController@processar');
-    Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
-
-});
-
-Route::group(['middleware' => ['auth:api']], function () {
-    Route::group(['prefix' => 'v1'], function () {
-
         Route::group(['prefix' => 'produto'], function () {
             Route::get('{codproduto}', '\Mg\Produto\ProdutoController@show');
         });
@@ -274,7 +295,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('nota-fiscal/notas-emitidas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasEmitidas');
         Route::get('nota-fiscal/notas-lancadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasLancadas');
 
-       
+
         // MDFe
         Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
         Route::post('mdfe/criar-da-nfechave/{nfechave}', '\Mg\Mdfe\MdfeController@criarDaNfeChave');

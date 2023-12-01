@@ -30,31 +30,34 @@ export default route(function (/* { store, ssrContext } */) {
   })
 
   Router.beforeEach(async (to, from, next) => {
-  
+
     if (to.meta?.auth) {
       const auth = guardaToken()
-  
-      if (auth.token){
-       const EstaAutenticado = await auth.verificaToken()
-        
-        if(EstaAutenticado) {
-    
+
+      if (auth.token) {
+        const EstaAutenticado = await auth.verificaToken()
+
+        if (EstaAutenticado) {
+
           auth.username(EstaAutenticado.usuario)
           // Envia sempre o Token em todas as requisições
           api.defaults.headers.common['Authorization'] = 'Bearer ' + auth.token
+          // api.defaults.headers.put['Access-Control-Allow-Origin'] = '*'
+          // api.defaults.headers.put['Content-Type'] ='application/json;charset=utf-8'
+          // api.defaults.withCredentials = true
           next()
-        }else {
+        } else {
           api.defaults.headers.common['Authorization'] = ''
-          next({name: 'login'})
-        } 
-      }else {
+          next({ name: 'login' })
+        }
+      } else {
         api.defaults.headers.common['Authorization'] = ''
-        next({name: 'login'})
-      }   
-    }else {
+        next({ name: 'login' })
+      }
+    } else {
       next()
     }
-    
+
   })
   return Router
 })

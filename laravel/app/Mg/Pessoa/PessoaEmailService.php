@@ -4,109 +4,15 @@ namespace Mg\Pessoa;
 
 use Carbon\Carbon;
 use DB;
-
-use Mg\MgService;
-use Mg\Cidade\Cidade;
-use Mg\NFePHP\NFePHPService;
-use Mg\Filial\Filial;
+use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+
 class PessoaEmailService
 {
-    /**
-     * Busca Autocomplete Quasar
-     */
-    public static function autocomplete($params)
-    {
-        $qry = Pessoa::query();
-
-        $qry->select('codpessoa', 'pessoa', 'fantasia', 'cnpj', 'inativo', 'fisica', 'ie');
-
-        if (!empty($params['codpessoa'])) {
-            $qry->where('codpessoa', $params['codpessoa']);
-        } else if (isset($params['pessoa'])) {
-            $nome = $params['pessoa'];
-            $qry->where(function ($q) use ($nome) {
-                $q->palavras('pessoa', $nome);
-            });
-            $qry->orWhere(function ($q) use ($nome) {
-                $q->palavras('fantasia', $nome);
-            });
-            $num = preg_replace('/\D/', '', $nome);
-            if ($num == $nome) {
-                $qry->orWhere('cnpj', $num);
-            }
-        }
-
-        $qry->orderBy('fantasia', 'asc');
-        $ret = $qry->limit(100)->get();
-        
-        return $ret;
-    }
-
-
-    public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
-    {
-        $qry = Pessoa::query();
-        if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
-        }
-        if (!empty($filter['filial'])) {
-            $qry->palavras('filial', $filter['filial']);
-        }
-        $qry = self::qryOrdem($qry, $sort);
-        $qry = self::qryColunas($qry, $fields);
-        return $qry;
-    }
-
-    public static function buscarPorCnpjIe ($cnpj, $ie)
-    {
-        $qry = Pessoa::where('cnpj', $cnpj);
-        $ie = (int) numeroLimpo($ie);
-        if (!empty($ie)) {
-            $qry = $qry->where(DB::raw("cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric)"), $ie);
-        } else {
-            $qry = $qry->whereNull('ie');
-        }
-        return $qry->first();
-    }
-
-    public static function podeVenderAPrazo(Pessoa $pessoa, $valorAvaliar = 0)
-	{
-        // se nao esta vendendo a prazo
-        if ($valorAvaliar <= 0) {
-            return true;
-        }
-
-		// se esta com o credito marcado como bloqueado
-		if ($pessoa->creditobloqueado) {
-            return false;
-        }
-
-		// se tem valor limite definido
-        if (!empty($pessoa->credito)) {
-            // busca no banco total dos titulos
-    		$saldo = $pessoa->TituloS()->sum('saldo');
-    		$creditototal = $saldo + $valorAvaliar;
-            if ($creditototal > ($pessoa->credito * 1.05)) {
-                return false;
-            }
-        }
-
-        // Tolerancia de Atraso baseado no primeiro titulo
-        $titulo = $pessoa->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'asc')->first();
-        if ($titulo->vencimento->isPast()) {
-            if ($titulo->vencimento->diffInDays() > $pessoa->toleranciaatraso) {
-                return false;
-            }
-        }
-
-		return true;
-	}
-
-    public static function create ($data)
+    public static function create($data)
     {
 
-     
         if (empty($data['ordem'])) {
             $data['ordem'] = PessoaEmail::where('codpessoa', $data['codpessoa'])->max('ordem') + 1;
         }
@@ -115,12 +21,11 @@ class PessoaEmailService
         $emails->save();
 
         return $emails->refresh();
-
     }
 
-    public static function createOrUpdate ($data)
+    public static function createOrUpdate($data)
     {
-    
+
         $emails = PessoaEmail::where('codpessoa', $data['codpessoa'])
             ->whereNull('inativo')->orderBy('ordem')
             ->first();
@@ -132,19 +37,90 @@ class PessoaEmailService
         }
     }
 
-    public static function update ($pessoa, $data)
+    public static function update($pessoa, $data)
     {
-        
+
+        if ($pessoa->email != $data['email']) {
+            $data ['verificacao'] = null;
+        }
+       
         $pessoa->fill($data);
         $pessoa->save();
         return $pessoa;
     }
 
-    
-    public static function delete ($pessoa)
+
+    public static function delete($pessoa)
     {
         return $pessoa->delete();
     }
-  
+
+
+    public static function cima(PessoaEmail $pe)
+    {
+        $anterior = $pe->ordem - 1;
+        $ret = PessoaEmail::where('codpessoa', $pe->codpessoa)
+            ->where('ordem', $anterior)
+            ->update(['ordem' => $pe->ordem]);
+        if ($ret > 0) {
+            $pe->update(['ordem' => $anterior]);
+        }
+        return $pe;
+    }
+
+    public static function baixo(PessoaEmail $pe)
+    {
+        $posterior = $pe->ordem + 1;
+        $ret = PessoaEmail::where('codpessoa', $pe->codpessoa)
+            ->where('ordem', $posterior)
+            ->update(['ordem' => $pe->ordem]);
+        if ($ret > 0) {
+            $pe->update(['ordem' => $posterior]);
+        }
+        return $pe;
+    }
+
+    public static function ativar($model)
+    {
+        $model->inativo = null;
+        $model->update();
+        return $model;
+    }
+
+    public static function inativar($model, $date = null)
+    {
+        if (empty($date)) {
+            $date = Carbon::now();
+        }
+        $model->inativo = $date;
+        $model->update();
+        return $model;
+    }
+
+
+    public static function verificaEmail($email)
+    {
+        $random = rand(1000, 9999);
+        $email->codverificacao = $random;
+        $email->update();
+
+         Mail::to($email)->queue(new EmailVerificacao($email->email, $random));
+                    
+        return [
+          'mensagem' => 'Email enviado'
+        ];
+    }
+
+    public static function confirmaVerificacao($email, $codverificacao) 
+    {
+
+        if ($email->codverificacao != $codverificacao) {
+            throw new Exception("Código informado incorreto!", 1);
+        }
+        $email->verificacao = Carbon::now();
+        $email->update();
+        return $email;
+    }
 
 }
+

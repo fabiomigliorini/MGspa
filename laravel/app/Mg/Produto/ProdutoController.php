@@ -3,6 +3,7 @@
 namespace Mg\Produto;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 use Mg\MgController;
 
@@ -52,5 +53,16 @@ class ProdutoController extends MgController
         return new ProdutoEmbalagemResource($pe);
     }
 
+    public function listagemPdv (Request $request)
+    {
+        $codprodutobarra = $request->codprodutobarra??0;
+        $limite = $request->limite??10000;
+        return ProdutoService::listagemPdv($codprodutobarra, $limite);
+    }
+
+    public function listagemPdvCount (Request $request)
+    {
+        return ProdutoService::listagemPdvCount();
+    }
 
 }
