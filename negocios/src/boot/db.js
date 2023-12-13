@@ -2,7 +2,9 @@
 import Dexie from "dexie";
 
 export const db = new Dexie("negocios");
-db.version(1).stores({
+db.version(2).stores({
   produtos:
-    "++id, &codprodutobarra, codproduto, barras, produto, variacao, sigla, quantidade, codimagem, preco, inativo, sincronizado", // Primary key and indexed props
+    //"codprodutobarra, produto",
+    // Primary key and indexed props
+    "codprodutobarra, codproduto, abc, barras, produto, variacao, sigla, quantidade, codimagem, preco, inativo, sincronizado, *palavras",
 });

@@ -44,6 +44,10 @@ class MgIbpt extends Ibpt
             'extarif' => $extarif,
         ]);
 
+        if (empty($reg->vigenciafim)) {
+            $reg->vigenciafim = Carbon::yesterday();
+        }
+
         // Se estiver com data de vigencia inferior na tabela de cache
         // E Não estiver operando em modo OFFLINE
         //if (1==0) {
