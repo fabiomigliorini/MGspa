@@ -173,6 +173,11 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
 
 
+    //GrupoCliente
+    Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index');
+
+
+
     // Pessoa Telefone
     Route::get('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@index');
     Route::post('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@create');
@@ -225,11 +230,14 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::delete('pessoa/{codpessoa}/conta/{codpessoaconta}/', '\Mg\Pessoa\PessoaContaController@delete');
 
     // Grupo Economico
-    Route::get('pessoa/{codpessoa}/grupoeconomico/', '\Mg\Pessoa\GrupoEconomicoController@index');
-    Route::post('pessoa/{codpessoa}/grupoeconomico/', '\Mg\Pessoa\GrupoEconomicoController@create');
-    Route::get('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/', '\Mg\Pessoa\GrupoEconomicoController@show');
-    Route::put('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/', '\Mg\Pessoa\GrupoEconomicoController@update');
-    Route::delete('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/', '\Mg\Pessoa\GrupoEconomicoController@delete');
+    Route::get('grupoeconomico/', '\Mg\GrupoEconomico\GrupoEconomicoController@index');
+    Route::get('grupoeconomico/select', '\Mg\GrupoEconomico\GrupoEconomicoController@pesquisaGrupoEconomico');
+    Route::post('grupoeconomico/', '\Mg\GrupoEconomico\GrupoEconomicoController@create');
+    Route::delete('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/removerdogrupo', '\Mg\GrupoEconomico\GrupoEconomicoController@deletaPessoadoGrupo');
+
+    Route::get('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@show');
+    Route::put('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@update');
+    Route::delete('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@delete');
 
     // Certidão Emissor
     Route::get('certidao/{codpessoa}/certidaoemissor/', '\Mg\Certidao\CertidaoEmissorController@index');
