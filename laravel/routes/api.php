@@ -51,12 +51,19 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    Route::get('pdv/produto-count', '\Mg\Pdv\PdvController@produtoCount');
+    Route::get('pdv/produto', '\Mg\Pdv\PdvController@produto');
+    Route::get('pdv/pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
+    Route::get('pdv/pessoa', '\Mg\Pdv\PdvController@pessoa');
+    Route::get('pdv/natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
+    Route::get('pdv/estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
+    Route::get('pdv/forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
+    Route::get('pdv/impressora', '\Mg\Pdv\PdvController@impressora');
+
     // Produto
     Route::post('produto/unifica-variacoes', '\Mg\Produto\ProdutoController@unificaVariacoes');
     Route::post('produto/unifica-barras', '\Mg\Produto\ProdutoController@unificaBarras');
     Route::post('produto/embalagem-para-unidade', '\Mg\Produto\ProdutoController@embalagemParaUnidade');
-    Route::get('produto/listagem-pdv', '\Mg\Produto\ProdutoController@listagemPdv');
-    Route::get('produto/listagem-pdv-count', '\Mg\Produto\ProdutoController@listagemPdvCount');
 
     // Etiqueta
     Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');

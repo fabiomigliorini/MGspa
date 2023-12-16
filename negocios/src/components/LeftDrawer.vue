@@ -1,58 +1,65 @@
-<template>
-  <q-list>
-    <q-item-label header> Essential Links </q-item-label>
-    teste
-    <q-item clickable tag="a" target="_blank" :href="link">
-      <q-item-section avatar>
-        <q-icon name="delete" />
-      </q-item-section>
+<script setup>
+import { negocioStore } from "stores/negocio";
+import { useRouter } from "vue-router";
+import moment from "moment/min/moment-with-locales";
+moment.locale("pt-br");
 
-      <q-item-section>
-        <q-item-label>teste</q-item-label>
-        <q-item-label caption>caption</q-item-label>
-      </q-item-section>
-    </q-item>
+const sNegocio = negocioStore();
+const router = useRouter();
 
-    <!-- <EssentialLink
-      v-for="link in essentialLinks"
-      :key="link.title"
-      v-bind="link"
-    /> -->
-  </q-list>
-</template>
+const criar = async () => {
+  const n = await sNegocio.carregarPrimeiroVazioOuCriar();
+  router.push("/offline/" + n.id);
+  var audio = new Audio("registradora.mp3");
+  audio.play();
+};
 
-<script>
-import { defineComponent } from "vue";
-import { mainStore } from "stores/main";
-
-export default defineComponent({
-  name: "LeftDrawer",
-  props: {
-    title: {
-      type: String,
-      // required: true
-    },
-
-    caption: {
-      type: String,
-      default: "",
-    },
-
-    link: {
-      type: String,
-      default: "#",
-    },
-
-    icon: {
-      type: String,
-      default: "",
-    },
-  },
-  setup() {
-    const store = mainStore();
-    return {
-      store,
-    };
-  },
-});
+const formataTempoPercorridoDesde = (desde) => {
+  if (!desde) {
+    return null;
+  }
+  return moment(desde).fromNow();
+};
 </script>
+<template>
+  <q-item-label header>
+    Negocios Abertos
+    <q-btn
+      flat
+      label="F2"
+      color="primary"
+      @click="criar()"
+      icon="add"
+      size="md"
+      dense
+    />
+  </q-item-label>
+  <template v-if="sNegocio.negocios">
+    <template v-for="n in sNegocio.negocios" :key="n.id">
+      <q-item clickable tag="a" :to="'/offline/' + n.id" v-ripple>
+        <q-item-section avatar>
+          <q-avatar icon="shopping_cart" color="primary" text-color="white" />
+          <!-- <q-avatar color="primary" text-color="white">{{ n.uid }}</q-avatar> -->
+          <!-- <q-icon round color="primary" name="delete" /> -->
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label>
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(n.valortotal)
+            }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ formataTempoPercorridoDesde(n.lancamento) }}
+            <!-- {{ formataTempoPercorridoDesde(n.lancamento) }} -->
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side> {{ n.itens.length }} itens </q-item-section>
+      </q-item>
+    </template>
+  </template>
+</template>
