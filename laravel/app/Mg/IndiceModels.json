@@ -264,6 +264,11 @@
                 "tabela": "tblpagarmepos",
                 "coluna": "codfilial",
                 "metodo": "PagarMePosS"
+            },
+            "tblpdv.codfilial": {
+                "tabela": "tblpdv",
+                "coluna": "codfilial",
+                "metodo": "PdvS"
             }
         }
     },
@@ -5406,5 +5411,30 @@
                 "metodo": "PessoaCertidaoS"
             }
         }
+    },
+    "tblpdv": {
+        "tabela": "tblpdv",
+        "campocodigo": "codpdv",
+        "namespace": "Mg\\Pdv",
+        "classe": "Pdv",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pdv\/Pdv.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }

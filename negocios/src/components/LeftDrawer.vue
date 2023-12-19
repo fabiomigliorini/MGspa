@@ -60,6 +60,7 @@ const formataTempoPercorridoDesde = (desde) => {
         </q-item-section>
         <q-item-section side> {{ n.itens.length }} itens </q-item-section>
       </q-item>
+      <q-separator inset />
     </template>
   </template>
 </template>

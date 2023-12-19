@@ -7,6 +7,49 @@ use DB;
 class PdvService 
 {
 
+    public static function dispositivo(
+        $uuid,
+        $ip,
+        $latitude,
+        $longitude,
+        $precisao,
+        $desktop,
+        $navegador,
+        $versaonavegador,
+        $plataforma
+    ) {
+        $pdv = Pdv::firstOrNew(['uuid' => $uuid]);
+        $pdv->ip = $ip;
+        $pdv->latitude = $latitude;
+        $pdv->longitude = $longitude;
+        $pdv->precisao = $precisao;
+        $pdv->desktop = $desktop;
+        $pdv->navegador = $navegador;
+        $pdv->versaonavegador = $versaonavegador;
+        $pdv->plataforma = $plataforma;
+        $pdv->save();
+        return $pdv;
+    }
+
+    public static function podeAcessar($uuid) 
+    {
+        $pdv = Pdv::where('uuid', $uuid)->first();
+        if (!$pdv) {
+            return false;
+        }
+        if ($pdv->autorizado) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function autoriza ($uuid)
+    {
+        if (!static::podeAcessar($uuid)) {
+            abort(403, 'Dispositivo Não Autorizado!');
+        }
+    }
+
     public static function produtoCount()
     {
         $sql = '

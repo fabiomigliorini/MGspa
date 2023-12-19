@@ -1,7 +1,6 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { db } from "boot/db";
-import { is } from "quasar";
 import { LoadingBar } from "quasar";
 import { formataCnpjCpf } from "../../utils/formatador.js";
 
@@ -23,13 +22,22 @@ const alterar = (value) => {
   emit("update:modelValue", value);
 };
 
+const buscarPeloCod = async (codpessoa) => {
+  opcoes.value = await db.pessoa.where({ codpessoa: codpessoa }).toArray();
+};
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    buscarPeloCod(newValue);
+  }
+);
+
 onMounted(async () => {
   if (!props.modelValue) {
     return;
   }
-  opcoes.value = await db.pessoa
-    .where({ codpessoa: props.modelValue })
-    .toArray();
+  buscarPeloCod(props.modelValue);
 });
 
 const pesquisa = (textoPesquisa, update) => {
@@ -43,21 +51,8 @@ const pesquisa = (textoPesquisa, update) => {
     // monta array de palavras pra buscas
     LoadingBar.start();
     const palavras = texto.split(" ");
-    console.log(palavras);
-    // console.log(palavras);
 
     // Busca Pessoas baseados na primeira palavra de pesquisa
-    // console.log(palavras[0]);
-    // var colPessoas = await db.pessoa
-    //   .where("busca")
-    //   .startsWithIgnoreCase(palavras[0]);
-    // .and((p) => p.inativo == null)
-    // var regexes = [];
-    // for (let i = 1; i < palavras.length; i++) {
-    //   regexes.push(new RegExp(".*" + palavras[i] + ".*", "i"));
-    // }
-    // console.log(regexes);
-
     var colPessoas = await db.pessoa
       .where("buscaArr")
       .startsWithIgnoreCase(palavras[0])
@@ -107,8 +102,6 @@ const pesquisa = (textoPesquisa, update) => {
     option-value="codpessoa"
     option-label="fantasia"
     v-bind="$attrs"
-    options-cover
-    behavior="dialog"
     @update:model-value="(value) => alterar(value)"
   >
     <template v-slot:option="scope">

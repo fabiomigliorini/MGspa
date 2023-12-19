@@ -2,7 +2,15 @@
 import { ref } from "vue";
 import { negocioStore } from "stores/negocio";
 import { Dialog } from "quasar";
-import ComputerSettings from "components/ComputerSettings.vue";
+import { formataCpf } from "../utils/formatador.js";
+import { formataCnpjCpf } from "../utils/formatador.js";
+import moment from "moment/min/moment-with-locales";
+import SelectPessoa from "components/selects/SelectPessoa.vue";
+import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
+import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
+import { db } from "boot/db";
+import { LoadingBar } from "quasar";
+moment.locale("pt-br");
 
 const sNegocio = negocioStore();
 
@@ -16,7 +24,19 @@ const edicao = ref({
   valortotal: null,
 });
 
+const edicaoPessoa = ref({
+  codestoquelocal: null,
+  codnaturezaoperacao: null,
+  codpessoa: null,
+  cpf: null,
+  observacoes: null,
+});
+
+const vendedores = ref([]);
+
 const dialogValores = ref(false);
+const dialogPessoa = ref(false);
+const dialogVendedor = ref(false);
 
 const editarValores = () => {
   edicao.value.valorprodutos = sNegocio.negocio.valorprodutos;
@@ -34,6 +54,89 @@ const editarValores = () => {
   edicao.value.valoroutras = sNegocio.negocio.valoroutras;
   edicao.value.valortotal = sNegocio.negocio.valortotal;
   dialogValores.value = true;
+};
+
+function validarCPF(cpf) {
+  if (!cpf) {
+    return true;
+  }
+  cpf = cpf.replace(/[^\d]+/g, "");
+  if (cpf == "") {
+    return true;
+  }
+  // Elimina CPFs invalidos conhecidos
+  if (
+    cpf.length != 11 ||
+    cpf == "00000000000" ||
+    cpf == "11111111111" ||
+    cpf == "22222222222" ||
+    cpf == "33333333333" ||
+    cpf == "44444444444" ||
+    cpf == "55555555555" ||
+    cpf == "66666666666" ||
+    cpf == "77777777777" ||
+    cpf == "88888888888" ||
+    cpf == "99999999999"
+  ) {
+    return "CPF Inválido";
+  }
+  // Valida 1o digito
+  var add = 0;
+  for (var i = 0; i < 9; i++) {
+    add += parseInt(cpf.charAt(i)) * (10 - i);
+  }
+  var rev = 11 - (add % 11);
+  if (rev == 10 || rev == 11) {
+    rev = 0;
+  }
+  if (rev != parseInt(cpf.charAt(9))) {
+    return "CPF Inválido";
+  }
+  // Valida 2o digito
+  add = 0;
+  for (i = 0; i < 10; i++) {
+    add += parseInt(cpf.charAt(i)) * (11 - i);
+  }
+  rev = 11 - (add % 11);
+  if (rev == 10 || rev == 11) {
+    rev = 0;
+  }
+  if (rev != parseInt(cpf.charAt(10))) {
+    return "CPF Inválido";
+  }
+  return true;
+}
+
+const editarPessoa = () => {
+  edicaoPessoa.value.codestoquelocal = sNegocio.negocio.codestoquelocal;
+  edicaoPessoa.value.codnaturezaoperacao = sNegocio.negocio.codnaturezaoperacao;
+  edicaoPessoa.value.codpessoa = sNegocio.negocio.codpessoa;
+  edicaoPessoa.value.cpf = sNegocio.negocio.cpf;
+  edicaoPessoa.value.observacoes = sNegocio.negocio.observacoes;
+  dialogPessoa.value = true;
+};
+
+const buscarListagemVendedores = async () => {
+  LoadingBar.start();
+  vendedores.value = await db.pessoa
+    .filter((pessoa) => {
+      if (!pessoa.vendedor) {
+        return false;
+      }
+      if (pessoa.inativo) {
+        return false;
+      }
+      return true;
+    })
+    .sortBy("fantasia");
+  LoadingBar.stop();
+};
+
+const editarVendedor = async () => {
+  if (vendedores.value.length == 0) {
+    await buscarListagemVendedores();
+  }
+  dialogVendedor.value = true;
 };
 
 const maiorQueZeroRule = [
@@ -62,6 +165,39 @@ const salvar = async () => {
       parseFloat(edicao.value.valoroutras)
     );
     dialogValores.value = false;
+  });
+};
+
+const salvarPessoa = async () => {
+  Dialog.create({
+    title: "Salvar",
+    message: "Tem certeza que você deseja salvar?",
+    cancel: true,
+  }).onOk(() => {
+    sNegocio.informarPessoa(
+      edicaoPessoa.value.codestoquelocal,
+      edicaoPessoa.value.codnaturezaoperacao,
+      edicaoPessoa.value.codpessoa,
+      edicaoPessoa.value.cpf,
+      edicaoPessoa.value.observacoes
+    );
+    dialogPessoa.value = false;
+  });
+};
+
+const informarVendedor = async (codpessoavendedor) => {
+  if (!sNegocio.negocio.codpessoavendedor) {
+    sNegocio.informarVendedor(codpessoavendedor);
+    dialogVendedor.value = false;
+    return;
+  }
+  Dialog.create({
+    title: "Salvar",
+    message: "Tem certeza que você deseja alterar o vendedor?",
+    cancel: true,
+  }).onOk(() => {
+    sNegocio.informarVendedor(codpessoavendedor);
+    dialogVendedor.value = false;
   });
 };
 
@@ -110,10 +246,20 @@ const recalcularValorTotal = () => {
   }
   edicao.value.valortotal = Math.round(total * 100) / 100;
 };
+
+const formaPagamentoPadrao = () => {
+  Dialog.create({
+    title: "Pagamento",
+    message: "Adicionar a forma de pagamento padrão do Cliente?",
+    cancel: true,
+  }).onOk(() => {
+    // dialogVendedor.value = false;
+  });
+};
 </script>
 <template>
   <template v-if="sNegocio.negocio">
-    <!-- Editar Item -->
+    <!-- Editar Valores Desconto / Frete / etc -->
     <q-dialog v-model="dialogValores">
       <q-card style="width: 350px; max-width: 80vw">
         <q-form ref="formItem" @submit="salvar()">
@@ -243,27 +389,133 @@ const recalcularValorTotal = () => {
         </q-form>
       </q-card>
     </q-dialog>
-    <q-list dense class="q-mt-xs">
-      <q-item-label header>
-        Valores
-        <q-btn
-          flat
-          label="F3"
-          color="primary"
-          @click="editarValores()"
-          icon="add"
-          size="md"
-          dense
-        />
-      </q-item-label>
+
+    <!-- Editar Pessoa -->
+    <q-dialog v-model="dialogPessoa">
+      <q-card style="width: 500px; max-width: 80vw">
+        <q-form ref="formItem" @submit="salvarPessoa()">
+          <q-card-section>
+            <div class="row q-gutter-md q-pr-md">
+              <div class="col-12">
+                <select-estoque-local
+                  outlined
+                  v-model="edicaoPessoa.codestoquelocal"
+                  label="Local de Estoque"
+                />
+              </div>
+              <div class="col-12">
+                <select-natureza-operacao
+                  outlined
+                  v-model="edicaoPessoa.codnaturezaoperacao"
+                  label="Natureza de Operacao"
+                />
+              </div>
+              <div class="col-12">
+                <select-pessoa
+                  ref="selectPessoa"
+                  outlined
+                  autofocus
+                  v-model="edicaoPessoa.codpessoa"
+                  label="Pessoa"
+                  clearable
+                  @clear="edicaoPessoa.codpessoa = 1"
+                >
+                  <template v-slot:after>
+                    X
+                    <q-icon
+                      name="delete"
+                      @click.stop.prevent="model = null"
+                      class="cursor-pointer"
+                    />
+                  </template>
+                </select-pessoa>
+              </div>
+              <div class="col-12">
+                <q-input
+                  ref="codpessoa"
+                  v-if="edicaoPessoa.codpessoa == 1"
+                  :rules="[validarCPF]"
+                  outlined
+                  v-model="edicaoPessoa.cpf"
+                  label="CPF"
+                  mask="###.###.###-##"
+                />
+              </div>
+              <div class="col-12">
+                <q-input
+                  outlined
+                  autogrow
+                  v-model.number="edicaoPessoa.observacoes"
+                  label="Observações"
+                />
+              </div>
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              flat
+              label="Cancelar"
+              color="primary"
+              @click="dialogPessoa = false"
+              tabindex="-1"
+            />
+            <q-btn type="submit" flat label="Salvar" color="primary" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
+    <!-- Editar Vendedor -->
+    <q-dialog v-model="dialogVendedor">
+      <q-card style="width: 500px; max-width: 80vw">
+        <q-form ref="formItem" @submit="salvarPessoa()">
+          <q-card-section>
+            <q-list>
+              <q-item clickable v-ripple @click="informarVendedor(null)">
+                <q-item-section avatar>
+                  <q-avatar
+                    color="negative"
+                    icon="close"
+                    text-color="white"
+                  ></q-avatar>
+                </q-item-section>
+                <q-item-section> Sem Vendedor </q-item-section>
+              </q-item>
+              <q-item
+                v-for="vendedor in vendedores"
+                :key="vendedor.codpessoa"
+                clickable
+                v-ripple
+                @click="informarVendedor(vendedor.codpessoa)"
+              >
+                <q-item-section avatar>
+                  <q-avatar color="primary" text-color="white">
+                    {{ vendedor.fantasia.charAt(0) }}
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  {{ vendedor.fantasia }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card-section>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
+    <!-- TOTAIS -->
+    <q-list dense class="q-mt-md">
       <q-item
-        v-if="sNegocio.negocio.valorprodutos != sNegocio.negocio.valortotal"
+        v-if="
+          parseFloat(sNegocio.negocio.valorprodutos) -
+          parseFloat(sNegocio.negocio.valortotal)
+        "
       >
         <q-item-section avatar>
           <q-item-label caption>Produtos</q-item-label>
         </q-item-section>
-        <q-item-section class="text-right text-grey-7">
-          <q-item-label class="text-h6">
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
             {{
               new Intl.NumberFormat("pt-BR", {
                 style: "decimal",
@@ -279,8 +531,8 @@ const recalcularValorTotal = () => {
         <q-item-section avatar>
           <q-item-label caption>Desconto</q-item-label>
         </q-item-section>
-        <q-item-section class="text-right text-green">
-          <q-item-label class="text-h6">
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-weight-bolder text-green-8">
             {{
               new Intl.NumberFormat("pt-BR", {
                 style: "decimal",
@@ -296,8 +548,8 @@ const recalcularValorTotal = () => {
         <q-item-section avatar>
           <q-item-label caption>Frete</q-item-label>
         </q-item-section>
-        <q-item-section class="text-right text-grey-7">
-          <q-item-label class="text-h6">
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
             {{
               new Intl.NumberFormat("pt-BR", {
                 style: "decimal",
@@ -313,8 +565,8 @@ const recalcularValorTotal = () => {
         <q-item-section avatar>
           <q-item-label caption>Seguro</q-item-label>
         </q-item-section>
-        <q-item-section class="text-right text-grey-7">
-          <q-item-label class="text-h6">
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
             {{
               new Intl.NumberFormat("pt-BR", {
                 style: "decimal",
@@ -330,8 +582,8 @@ const recalcularValorTotal = () => {
         <q-item-section avatar>
           <q-item-label caption>Outras</q-item-label>
         </q-item-section>
-        <q-item-section class="text-right text-grey-7">
-          <q-item-label class="text-h6">
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
             {{
               new Intl.NumberFormat("pt-BR", {
                 style: "decimal",
@@ -347,8 +599,8 @@ const recalcularValorTotal = () => {
         <q-item-section avatar>
           <q-item-label caption>Juros</q-item-label>
         </q-item-section>
-        <q-item-section class="text-right text-grey-7">
-          <q-item-label class="text-h6">
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
             {{
               new Intl.NumberFormat("pt-BR", {
                 style: "decimal",
@@ -360,18 +612,19 @@ const recalcularValorTotal = () => {
         </q-item-section>
       </q-item>
 
-      <q-item>
-        <q-item-section avatar>
-          <q-item-label caption>Total </q-item-label>
-        </q-item-section>
-        <q-item-section class="text-right text-primary">
+      <q-item @click="editarValores()" v-ripple clickable>
+        <q-item-section class="text-right">
           <Transition
             mode="out-in"
             :duration="{ enter: 300, leave: 300 }"
             leave-active-class="animated bounceOut"
             enter-active-class="animated bounceIn"
           >
-            <q-item-label class="text-h3" :key="sNegocio.negocio.valortotal">
+            <q-item-label
+              class="text-h2 text-primary text-weight-bolder"
+              :key="sNegocio.negocio.valortotal"
+            >
+              <small class="text-h5 text-grey">R$ </small>
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -384,102 +637,176 @@ const recalcularValorTotal = () => {
         </q-item-section>
       </q-item>
     </q-list>
-    <q-separator spaced />
-    <q-list>
-      <q-item-label header>Detalhes</q-item-label>
+    <q-separator spaced inset />
 
+    <q-list>
+      <!-- <q-item-label header>Pessoa</q-item-label> -->
+
+      <!-- Filial -->
+      <q-item clickable v-ripple @click="editarPessoa()">
+        <q-item-section avatar top>
+          <q-avatar icon="store" color="grey" text-color="white" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label lines="1">
+            {{ sNegocio.negocio.estoquelocal }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ moment(sNegocio.negocio.lancamento).format("llll") }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- Natureza -->
+      <q-item clickable v-ripple @click="editarPessoa()">
+        <q-item-section avatar top>
+          <q-avatar icon="work" color="grey" text-color="white" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label lines="1">
+            {{ sNegocio.negocio.operacao }} -
+            {{ sNegocio.negocio.naturezaoperacao }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ sNegocio.negocio.negociostatus }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- PESSOA -->
+      <q-item clickable v-ripple @click="editarPessoa()">
+        <q-item-section avatar top>
+          <q-avatar icon="person" color="grey" text-color="white" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label lines="1">
+            {{ sNegocio.negocio.fantasia }}
+          </q-item-label>
+          <q-item-label caption v-if="sNegocio.negocio.cpf">
+            {{ formataCpf(sNegocio.negocio.cpf) }}
+          </q-item-label>
+          <template v-if="sNegocio.negocio.Pessoa">
+            <q-item-label caption v-if="sNegocio.negocio.Pessoa.cnpj">
+              {{
+                formataCnpjCpf(
+                  sNegocio.negocio.Pessoa.cnpj,
+                  sNegocio.negocio.Pessoa.fisica
+                )
+              }}
+            </q-item-label>
+            <q-item-label caption v-if="sNegocio.negocio.Pessoa.endereco">
+              {{ sNegocio.negocio.Pessoa.endereco }},
+              {{ sNegocio.negocio.Pessoa.numero }} -
+              <template v-if="sNegocio.negocio.Pessoa.complemento">
+                {{ sNegocio.negocio.Pessoa.complemento }} -
+              </template>
+              <template v-if="sNegocio.negocio.Pessoa.bairro">
+                {{ sNegocio.negocio.Pessoa.bairro }} -
+              </template>
+              {{ sNegocio.negocio.Pessoa.cidade }} /
+              {{ sNegocio.negocio.Pessoa.uf }}
+            </q-item-label>
+          </template>
+        </q-item-section>
+
+        <q-item-section
+          side
+          v-if="sNegocio.negocio.codpessoa == 1 && !sNegocio.negocio.cpf"
+        >
+          <q-icon name="info" color="warning" />
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="sNegocio.negocio.Pessoa.mensagemvenda">
+        <q-item-section>
+          <q-banner
+            inline-actions
+            rounded
+            class="bg-orange-8 text-white"
+            style="white-space: pre-line"
+          >
+            {{ sNegocio.negocio.Pessoa.mensagemvenda }}
+          </q-banner>
+        </q-item-section>
+      </q-item>
+
+      <!-- OBSERVACOES -->
+      <q-item
+        clickable
+        v-ripple
+        v-if="sNegocio.negocio.observacoes"
+        @click="editarPessoa()"
+      >
+        <q-item-section avatar top>
+          <q-avatar icon="notes" color="grey" text-color="white" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label lines="1" style="white-space: pre-line">
+            {{ sNegocio.negocio.observacoes }}
+          </q-item-label>
+          <q-item-label caption>Observações</q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item
+        clickable
+        v-ripple
+        v-if="sNegocio.negocio.Pessoa.codformapagamento"
+        @click="formaPagamentoPadrao()"
+      >
+        <q-item-section avatar top>
+          <q-avatar icon="attach_money" color="grey" text-color="white" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label lines="1">
+            {{ sNegocio.negocio.Pessoa.formapagamento }}
+          </q-item-label>
+          <q-item-label caption>Forma de Pagamento Padrão</q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset />
+
+      <!-- VENDEDOR -->
+      <q-item clickable v-ripple @click="editarVendedor()">
+        <q-item-section avatar top>
+          <q-avatar icon="escalator_warning" color="grey" text-color="white" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label lines="1" v-if="sNegocio.negocio.codpessoavendedor">
+            {{ sNegocio.negocio.fantasiavendedor }}
+          </q-item-label>
+          <q-item-label lines="1" v-else> Não Informado </q-item-label>
+          <q-item-label caption>Vendedor</q-item-label>
+        </q-item-section>
+
+        <q-item-section side v-if="!sNegocio.negocio.codpessoavendedor">
+          <q-icon name="error" color="warning" />
+        </q-item-section>
+      </q-item>
+
+      <q-separator spaced inset />
+
+      <!-- CODIGOS -->
       <q-item clickable v-ripple>
         <q-item-section avatar top>
           <q-avatar icon="fingerprint" color="grey" text-color="white" />
         </q-item-section>
 
         <q-item-section>
-          <q-item-label lines="1">#03386672</q-item-label>
+          <q-item-label lines="1" v-if="sNegocio.negocio.codnegocio">
+            {{ sNegocio.negocio.codnegocio.padStart(8, "0") }}
+          </q-item-label>
+          <q-item-label lines="1" v-else> Não Integrado </q-item-label>
           <q-item-label caption>{{ sNegocio.negocio.id }}</q-item-label>
-        </q-item-section>
-      </q-item>
-
-      <q-item clickable v-ripple>
-        <q-item-section avatar top>
-          <q-avatar icon="work" color="grey" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label lines="1">Saída - Venda</q-item-label>
-          <q-item-label caption>Aberto</q-item-label>
-        </q-item-section>
-
-        <q-item-section side>
-          <q-icon name="error" color="warning" />
-        </q-item-section>
-      </q-item>
-
-      <q-item clickable v-ripple>
-        <q-item-section avatar top>
-          <q-avatar icon="store" color="grey" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label lines="1">Botanico</q-item-label>
-          <q-item-label caption>February 22, 2019 18:15:33</q-item-label>
-          <q-item-label caption>fabio</q-item-label>
-        </q-item-section>
-
-        <q-item-section side>
-          <q-icon name="error" color="warning" />
-        </q-item-section>
-      </q-item>
-
-      <q-item clickable v-ripple>
-        <q-item-section avatar top>
-          <q-avatar icon="escalator_warning" color="grey" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label lines="1">Não Informado</q-item-label>
-          <q-item-label caption>Vendedor</q-item-label>
-        </q-item-section>
-
-        <q-item-section side>
-          <q-icon name="error" color="warning" />
-        </q-item-section>
-      </q-item>
-
-      <q-item clickable v-ripple>
-        <q-item-section avatar top>
-          <q-avatar icon="person" color="grey" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label lines="1">Consumidor</q-item-label>
-          <q-item-label caption>04.576.775/0001-60</q-item-label>
-          <q-item-label caption
-            >Rua das Paineiras, 995, Jardim Imperial, Sinop/MT</q-item-label
-          >
-        </q-item-section>
-
-        <q-item-section side>
-          <q-icon name="info" color="warning" />
-        </q-item-section>
-      </q-item>
-
-      <q-item clickable v-ripple>
-        <q-item-section avatar top>
-          <q-avatar icon="notes" color="grey" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label lines="1">Singing it all day</q-item-label>
-          <q-item-label caption>Observações</q-item-label>
         </q-item-section>
       </q-item>
     </q-list>
   </template>
 </template>
-
-<style lang="sass">
-.my-content
-  padding: 10px 15px
-  background: rgba(#999,.15)
-  border: 1px solid rgba(#999,.2)
-</style>

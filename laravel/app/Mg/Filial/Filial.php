@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 17:56:02
+ * Date: 19/Dec/2023 11:37:24
  */
 
 namespace Mg\Filial;
@@ -27,6 +27,7 @@ use Mg\Stone\StoneFilial;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
 use Mg\PagarMe\PagarMePos;
+use Mg\Pdv\Pdv;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -66,6 +67,7 @@ class Filial extends MgModel
         'pagarmeid',
         'pagarmesk',
         'senhacertificado',
+        'stonecode',
         'tokenibpt',
         'ultimonsu',
         'validadecertificado'
@@ -93,6 +95,7 @@ class Filial extends MgModel
         'empresadominio' => 'float',
         'nfeambiente' => 'integer',
         'nfeserie' => 'integer',
+        'stonecode' => 'float',
         'ultimonsu' => 'integer'
     ];
 
@@ -198,6 +201,11 @@ class Filial extends MgModel
     public function PagarMePosS()
     {
         return $this->hasMany(PagarMePos::class, 'codfilial', 'codfilial');
+    }
+
+    public function PdvS()
+    {
+        return $this->hasMany(Pdv::class, 'codfilial', 'codfilial');
     }
 
     public function PortadorS()

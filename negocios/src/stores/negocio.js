@@ -50,7 +50,7 @@ export const negocioStore = defineStore("negocio", {
         .where("codnegociostatus")
         .equals(1)
         .reverse()
-        .sortBy("lancamento");
+        .sortBy("criacao");
     },
 
     async carregar(id) {
@@ -58,6 +58,7 @@ export const negocioStore = defineStore("negocio", {
       if (negocio != undefined) {
         this.negocio = negocio;
       }
+      this.carregarChavesEstrangeiras();
       this.atualizarListagem();
       return negocio;
     },
@@ -182,10 +183,103 @@ export const negocioStore = defineStore("negocio", {
       if (negocio == false) {
         negocio = this.criar();
       }
+      await this.carregarChavesEstrangeiras();
+      this.salvar();
       return negocio;
     },
 
+    async carregarChavesEstrangeiras() {
+      var naturezaoperacao = null;
+      var codoperacao = null;
+      var operacao = null;
+      var negociostatus = null;
+      var estoquelocal = null;
+      var fantasia = null;
+      var fantasiavendedor = null;
+
+      //faker - apagar
+      // this.negocio.codpessoavendedor = 224;
+      // this.negocio.cpf = "80345271068";
+      // this.negocio.observacoes = "teste \n linha 2 \n linha 3";
+
+      // natureza
+      if (this.negocio.codnaturezaoperacao) {
+        const nat = await db.naturezaOperacao.get(
+          this.negocio.codnaturezaoperacao
+        );
+        naturezaoperacao = nat.naturezaoperacao;
+        codoperacao = nat.codoperacao;
+        if (nat.codoperacao == 1) {
+          operacao = "Entrada";
+        } else {
+          operacao = "Saída";
+        }
+      }
+
+      // status
+      switch (parseInt(this.negocio.codnegociostatus)) {
+        case 2:
+          negociostatus = "Fechado";
+          break;
+        case 3:
+          negociostatus = "Cancelado";
+          break;
+        case 1:
+        default:
+          negociostatus = "Aberto";
+          break;
+      }
+
+      // estoquelocal
+      if (this.negocio.codestoquelocal) {
+        const loc = await db.estoqueLocal.get(this.negocio.codestoquelocal);
+        estoquelocal = loc.estoquelocal;
+      }
+
+      // natureza
+      if (this.negocio.codnaturezaoperacao) {
+        const nat = await db.naturezaOperacao.get(
+          this.negocio.codnaturezaoperacao
+        );
+        naturezaoperacao = nat.naturezaoperacao;
+        codoperacao = nat.codoperacao;
+        if (nat.codoperacao == 1) {
+          operacao = "Entrada";
+        } else {
+          operacao = "Saída";
+        }
+      }
+
+      // Pessoa
+      if (this.negocio.codpessoa) {
+        const pes = await db.pessoa.get(this.negocio.codpessoa);
+        if (pes.codformapagamento) {
+          const fp = await db.formaPagamento.get(pes.codformapagamento);
+          pes.formapagamento = fp.formapagamento;
+        }
+        this.negocio.Pessoa = pes;
+        fantasia = pes.fantasia;
+      }
+
+      // Vendedor
+      if (this.negocio.codpessoavendedor) {
+        const vnd = await db.pessoa.get(this.negocio.codpessoavendedor);
+        fantasiavendedor = vnd.fantasia;
+      }
+
+      this.negocio.naturezaoperacao = naturezaoperacao;
+      this.negocio.codoperacao = codoperacao;
+      this.negocio.operacao = operacao;
+      this.negocio.negociostatus = negociostatus;
+      this.negocio.estoquelocal = estoquelocal;
+      this.negocio.fantasia = fantasia;
+      this.negocio.fantasiavendedor = fantasiavendedor;
+    },
+
     async salvar() {
+      // marca alteracao
+      this.negocio.alteracao = new Date();
+      this.negocio.lancamento = new Date();
       const ret = await db.negocio.put(toRaw(this.negocio));
       this.atualizarListagem();
       return ret;
@@ -237,14 +331,13 @@ export const negocioStore = defineStore("negocio", {
           criacao: new Date(),
           inativo: null,
         };
+        if (this.negocio.Pessoa.desconto) {
+          item.percentualdesconto = this.negocio.Pessoa.desconto;
+        }
       }
 
       // adiciona o item no inicio do array
       this.negocio.itens.unshift(item);
-
-      // marca alteracao
-      this.negocio.alteracao = new Date();
-      this.negocio.lancamento = new Date();
 
       // recalcula os totais
       this.itemRecalcularValorProdutos(item);
@@ -435,6 +528,42 @@ export const negocioStore = defineStore("negocio", {
       }
       await this.recalcularValorTotal();
       this.salvar();
+    },
+
+    async informarPessoa(
+      codestoquelocal,
+      codnaturezaoperacao,
+      codpessoa,
+      cpf,
+      observacoes
+    ) {
+      await this.recarregar();
+      this.negocio.codestoquelocal = codestoquelocal;
+      this.negocio.codnaturezaoperacao = codnaturezaoperacao;
+      this.negocio.codpessoa = codpessoa;
+      if (codpessoa == 1) {
+        this.negocio.cpf = cpf;
+      } else {
+        this.negocio.cpf = null;
+      }
+      this.negocio.observacoes = observacoes;
+      await this.carregarChavesEstrangeiras();
+
+      // desconto
+      const desconto = this.negocio.Pessoa.desconto;
+      this.negocio.itens.forEach((item) => {
+        item.percentualdesconto = desconto;
+        this.itemRecalcularValorProdutos(item);
+      });
+
+      await this.salvar();
+    },
+
+    async informarVendedor(codpessoavendedor) {
+      await this.recarregar();
+      this.negocio.codpessoavendedor = codpessoavendedor;
+      await this.carregarChavesEstrangeiras();
+      await this.salvar();
     },
   },
 });

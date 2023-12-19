@@ -47,10 +47,10 @@ const pesquisa = (val, update) => {
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.naturezaoperacao }}</q-item-label>
-          <q-item-label caption v-if="scope.opt.codoperacao == 1"
-            >Entradavenda</q-item-label
-          >
-          <q-item-label caption v-else>Saída</q-item-label>
+          <q-item-label caption v-if="scope.opt.codoperacao == 1">
+            Entradavenda
+          </q-item-label>
+          <q-item-label caption v-else> Saída </q-item-label>
         </q-item-section>
       </q-item>
     </template>

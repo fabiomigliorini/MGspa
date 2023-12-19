@@ -39,17 +39,22 @@ const toggleSettingsDialog = () => {
       <q-form ref="formItem" @submit="salvar()">
         <q-card-section>
           <div class="q-gutter-md">
-            <select-natureza-operacao
-              outlined
-              v-model="edicao.codnaturezaoperacao"
-              label="Natureza de Operacao"
-            />
             <select-estoque-local
               outlined
               v-model="edicao.codestoquelocal"
               label="Local de Estoque"
             />
-            <select-pessoa outlined v-model="edicao.codpessoa" label="Pessoa" />
+            <select-natureza-operacao
+              outlined
+              v-model="edicao.codnaturezaoperacao"
+              label="Natureza de Operacao"
+            />
+            <select-pessoa
+              outlined
+              v-model="edicao.codpessoa"
+              label="Pessoa"
+              disable
+            />
             <select-impressora
               outlined
               v-model="edicao.impressora"

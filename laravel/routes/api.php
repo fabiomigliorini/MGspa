@@ -51,6 +51,7 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    Route::put('pdv/dispositivo', '\Mg\Pdv\PdvController@dispositivo');
     Route::get('pdv/produto-count', '\Mg\Pdv\PdvController@produtoCount');
     Route::get('pdv/produto', '\Mg\Pdv\PdvController@produto');
     Route::get('pdv/pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');

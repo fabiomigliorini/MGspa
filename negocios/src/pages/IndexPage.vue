@@ -26,7 +26,12 @@ const hotkeys = (event) => {
     case "8":
     case "9":
     case "0":
-      if (document.activeElement.tagName.toLowerCase() != "input") {
+    case "V": // Comanda Vendedor (Ex VDD00010022)
+    case "N": // Comanda Negocio (Ex NEG03386672)
+      if (
+        document.activeElement.tagName.toLowerCase() != "input" &&
+        document.activeElement.tagName.toLowerCase() != "textarea"
+      ) {
         const element = document.getElementById("inputBarras");
         if (element) {
           element.focus();

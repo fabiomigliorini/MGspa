@@ -17,9 +17,30 @@ const labelQuantidade = computed({
     let lbl = new Intl.NumberFormat("pt-BR").format(quantidade.value);
     lbl += " x";
     return lbl;
-    return "este";
   },
 });
+
+const informarVendedor = async (codpessoavendedor) => {
+  await sNegocio.informarVendedor(codpessoavendedor);
+  $q.notify({
+    type: "positive",
+    message: "Vendedor '" + sNegocio.negocio.fantasiavendedor + "' informado.",
+    timeout: 1500, // 1,5 segundos
+  });
+  var audio = new Audio("successo.mp3");
+  audio.play();
+};
+
+const abrirComanda = (codnegocio) => {
+  $q.notify({
+    type: "negative",
+    message: "Precisa implementar busca da comanda " + codnegocio + "!",
+    timeout: 0, // 20 minutos
+    actions: [{ icon: "close", color: "white" }],
+  });
+  var audio = new Audio("erro.mp3");
+  audio.play();
+};
 
 watch(barras, (newValue, oldValue) => {
   if (!barras.value instanceof String) {
@@ -48,10 +69,25 @@ const buscarBarras = async () => {
     return;
   }
   const txt = barras.value;
-  // if (txt.length == 0) {
-  //   return;
-  // }
   barras.value = "";
+
+  if (txt.length == 11) {
+    const prefixo = txt.substring(0, 3);
+    const codigo = txt.substring(3, 11);
+    if (!isNaN(codigo)) {
+      switch (prefixo) {
+        // Comanda Vendedor (Ex  VDD00010022)
+        case "VDD":
+          informarVendedor(parseInt(codigo));
+          return;
+
+        // Comanda Negocio (Ex NEG03386672)
+        case "NEG":
+          abrirComanda(parseInt(codigo));
+          return;
+      }
+    }
+  }
 
   let ret = await sProduto.buscarBarras(txt);
 
@@ -253,19 +289,6 @@ const adicionarPelaListagem = (
                       }).format(produto.preco)
                     }}
                   </div>
-
-                  <!--
-                    <div class="text-overline text-grey-7">
-                      {{ produto.sigla }}
-                      <template v-if="produto.quantidade > 0">
-                        C/{{
-                          new Intl.NumberFormat("pt-BR").format(
-                            produto.quantidade
-                          )
-                        }}
-                      </template>
-                    </div>
-                  -->
                   <div class="text-caption text-grey-7">
                     {{ produto.barras }} |
                     {{ produto.produto }}

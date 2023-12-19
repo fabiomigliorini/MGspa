@@ -52,7 +52,7 @@ const pesquisa = (val, update) => {
     emit-value
     map-options
     option-value="codestoquelocal"
-    option-label="sigla"
+    option-label="estoquelocal"
     v-bind="$attrs"
     options-cover
   >
@@ -62,8 +62,15 @@ const pesquisa = (val, update) => {
           <q-icon name="warehouse" />
         </q-item-section>
         <q-item-section>
-          <q-item-label>{{ scope.opt.sigla }}</q-item-label>
-          <q-item-label caption>{{ scope.opt.estoquelocal }}</q-item-label>
+          <q-item-label>
+            {{ scope.opt.estoquelocal }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ scope.opt.codestoquelocal }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          {{ scope.opt.sigla }}
         </q-item-section>
       </q-item>
     </template>
