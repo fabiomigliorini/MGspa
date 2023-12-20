@@ -1,12 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Dec/2023 11:37:01
+ * Date: 20/Dec/2023 11:51:34
  */
 
 namespace Mg\Pdv;
 
 use Mg\MgModel;
+use Mg\Negocio\Negocio;
 use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 
@@ -65,6 +66,13 @@ class Pdv extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
+    public function NegocioS()
+    {
+        return $this->hasMany(Negocio::class, 'codpdv', 'codpdv');
     }
 
 }

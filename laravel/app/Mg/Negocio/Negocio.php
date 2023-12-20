@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2023 11:45:27
+ * Date: 20/Dec/2023 11:51:44
  */
 
 namespace Mg\Negocio;
@@ -23,6 +23,7 @@ use Mg\Negocio\NegocioStatus;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
+use Mg\Pdv\Pdv;
 
 class Negocio extends MgModel
 {
@@ -38,6 +39,7 @@ class Negocio extends MgModel
         'codnaturezaoperacao',
         'codnegociostatus',
         'codoperacao',
+        'codpdv',
         'codpessoa',
         'codpessoatransportador',
         'codpessoavendedor',
@@ -49,6 +51,7 @@ class Negocio extends MgModel
         'lancamento',
         'observacoes',
         'recebimento',
+        'uuid',
         'valoraprazo',
         'valoravista',
         'valordesconto',
@@ -74,6 +77,7 @@ class Negocio extends MgModel
         'codnegocio' => 'integer',
         'codnegociostatus' => 'integer',
         'codoperacao' => 'integer',
+        'codpdv' => 'integer',
         'codpessoa' => 'integer',
         'codpessoatransportador' => 'integer',
         'codpessoavendedor' => 'integer',
@@ -123,6 +127,11 @@ class Negocio extends MgModel
     public function Operacao()
     {
         return $this->belongsTo(Operacao::class, 'codoperacao', 'codoperacao');
+    }
+
+    public function Pdv()
+    {
+        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
     }
 
     public function Pessoa()
