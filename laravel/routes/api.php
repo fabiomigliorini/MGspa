@@ -17,9 +17,8 @@ use Illuminate\Support\Facades\Session;
 |
 */
 
-Route::middleware('auth:api')->get('v1/auth/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth:api')->get('v1/auth/user', '\Mg\Usuario\UsuarioController@permissoesUsuarios');
+
 Route::middleware('auth:api')->get('v1/auth/logout', function (Request $request) {
     $user =  $request->user();
     $accessToken = $user->token();
@@ -164,7 +163,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // Allan - daqui pra baixo
     Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
     Route::post('pessoa/', '\Mg\Pessoa\PessoaController@create');
-    Route::get('pessoa/search', '\Mg\Pessoa\PessoaController@search');
     Route::get('pessoa/formadepagamento', '\Mg\Pessoa\PessoaController@formapagamento');
     Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@show');
     Route::put('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@update');
