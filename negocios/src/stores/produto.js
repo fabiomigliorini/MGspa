@@ -1,116 +1,43 @@
 import { defineStore } from "pinia";
-import { api } from "boot/axios";
 import { db } from "boot/db";
 import { Notify, LoadingBar } from "quasar";
 
-export const produtoStore = defineStore("produtos", {
+export const produtoStore = defineStore("produto", {
+  persist: true,
+
   state: () => ({
     resultadoPesquisa: [],
     textoPesquisa: null,
-    ultimaSincronizacaoProdutos: null,
-    importacao: {
-      totalRegistros: null,
-      totalSincronizados: null,
-      progresso: 0,
-      rodando: false,
-      requisicoes: null,
-      maxRequisicoes: 1000,
-      limiteRequisicao: 3000,
-      tempoTotal: null,
-    },
+    dialogPesquisa: false,
   }),
 
   actions: {
-    async sincronizar() {
-      // inicializa progresso
-      this.importacao.progresso = 0;
-      this.importacao.totalRegistros = 0;
-      this.importacao.totalSincronizados = 0;
-      this.importacao.requisicoes = 0;
-      this.importacao.tempoTotal = 0;
-      this.importacao.rodando = true;
-
-      // descobre o total de registros pra sincronizar
-      try {
-        let { data } = await api.get("/api/v1/produto/listagem-pdv-count");
-        this.importacao.totalRegistros = data.count;
-        this.importacao.limiteRequisicao = Math.round(
-          this.importacao.totalRegistros / 100
-        );
-      } catch (error) {
-        console.log(error);
-        console.log("Impossível acessar API");
+    urlImagem(codimagem) {
+      // return "https://fakeimg.pl/300x300";
+      if (codimagem == null) {
+        return "https://sistema.mgpapelaria.com.br/MGLara/public/imagens/semimagem.jpg";
       }
-
-      // mostra janela de progresso
-      this.importacao.sincronizacao = true;
-
-      let sincronizado = null;
-      let inicio = performance.now();
-      let codprodutobarra = 0;
-
-      do {
-        // busca dados na api
-        var { data } = await api.get("/api/v1/produto/listagem-pdv", {
-          params: {
-            codprodutobarra: codprodutobarra,
-            limite: this.importacao.limiteRequisicao,
-          },
-        });
-        // incrementa numero de requisicoes
-        this.importacao.requisicoes++;
-
-        // insere dados no banco local indexeddb
-        try {
-          await db.produtos.bulkPut(data);
-        } catch (error) {
-          console.log(error.stack || error);
-        }
-
-        if (sincronizado == null) {
-          sincronizado = data[0].sincronizado;
-        }
-
-        // busca codigo do ultimo registro
-        codprodutobarra = data.slice(-1)[0].codprodutobarra;
-
-        //monta status de progresso
-        this.importacao.totalSincronizados += data.length;
-        this.importacao.progresso =
-          this.importacao.totalSincronizados / this.importacao.totalRegistros;
-        this.importacao.tempoTotal = Math.round(
-          (performance.now() - inicio) / 1000
-        );
-
-        // loop enquanto nao tiver buscado menos registros que o limite
-      } while (
-        data.length >= this.importacao.limiteRequisicao &&
-        this.importacao.requisicoes <= this.importacao.maxRequisicoes &&
-        this.importacao.rodando
+      return (
+        "https://sistema.mgpapelaria.com.br/MGLara/public/imagens/" +
+        codimagem +
+        ".jpg"
       );
-
-      // exclui registros que nao vieram na importacao
-      db.produtos.where("sincronizado").below(sincronizado).delete();
-      this.ultimaSincronizacaoProdutos = sincronizado;
-
-      // esconde janela de progresso
-      this.importacao.rodando = false;
     },
+
     async pesquisar() {
-      LoadingBar.start();
-
       // verifica se tem texto de busca
-      const palavras = this.textoPesquisa.trim().split(" ");
-      if (palavras.length == 0) {
-        return;
-      }
-      if (palavras[0].length == 0) {
+      const texto = this.textoPesquisa.trim();
+      if (texto.length == 0) {
         return;
       }
 
-      // Busca produtos baseados na primeira palavra de pesquisa
-      var colProdutos = await db.produtos
-        .where("palavras")
+      // monta array de palavras pra buscas
+      LoadingBar.start();
+      const palavras = texto.split(" ");
+
+      // Busca produto baseados na primeira palavra de pesquisa
+      var colProdutos = await db.produto
+        .where("buscaArr")
         .startsWithIgnoreCase(palavras[0])
         .and((p) => p.inativo == null);
 
@@ -126,7 +53,7 @@ export const produtoStore = defineStore("produtos", {
         const iMax = regexes.length;
         colProdutos = await colProdutos.and(function (produto) {
           for (let i = 0; i < iMax; i++) {
-            if (!regexes[i].test(produto.produto)) {
+            if (!regexes[i].test(produto.busca)) {
               return false;
             }
           }
@@ -134,8 +61,7 @@ export const produtoStore = defineStore("produtos", {
         });
       }
 
-      // transforma colecao de produtos em array
-      // var arrProdutos = await colProdutos.sortBy("[quantidade]");
+      // transforma colecao de produto em array
       var arrProdutos = await colProdutos.toArray();
       arrProdutos = arrProdutos.sort((a, b) => {
         if (a.produto > b.produto) {
@@ -145,15 +71,15 @@ export const produtoStore = defineStore("produtos", {
         }
       });
       LoadingBar.stop();
-      if (arrProdutos.length > 500) {
+      if (arrProdutos.length > 200) {
         Notify.create({
           type: "negative",
           message:
             "Pesquisa encontrou " +
             arrProdutos.length +
-            " itens. Mostrando apenas os 500 primeiros. Refine a sua pesquisa.",
+            " itens. Mostrando apenas os 200 primeiros. Refine a sua pesquisa.",
         });
-        arrProdutos = arrProdutos.slice(0, 1000);
+        arrProdutos = arrProdutos.slice(0, 200);
       } else if (arrProdutos.length == 0) {
         Notify.create({
           type: "negative",
@@ -168,8 +94,9 @@ export const produtoStore = defineStore("produtos", {
       this.resultadoPesquisa = arrProdutos;
       // this.resultadoPesquisa = arrProdutos;
     },
+
     async buscarBarras(barras) {
-      let ret = await db.produtos.where({ barras }).toArray();
+      let ret = await db.produto.where({ barras }).toArray();
       if (ret.length >= 1) {
         return ret;
       }
@@ -180,12 +107,11 @@ export const produtoStore = defineStore("produtos", {
       if (isNaN(codproduto)) {
         return ret;
       }
-      ret = await db.produtos
+      ret = await db.produto
         .where({ codproduto: codproduto })
         .filter((produto) => produto.quantidade == null)
         .toArray();
       return ret;
     },
   },
-  persist: true,
 });
