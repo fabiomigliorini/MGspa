@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2023 11:45:38
+ * Date: 21/Dec/2023 18:04:18
  */
 
 namespace Mg\Negocio;
@@ -16,6 +16,7 @@ use Mg\Lio\LioPedido;
 use Mg\Pix\PixCob;
 use Mg\Stone\StoneTransacao;
 use Mg\PagarMe\PagarMePedido;
+use Mg\Pessoa\Pessoa;
 
 class NegocioFormaPagamento extends MgModel
 {
@@ -24,14 +25,21 @@ class NegocioFormaPagamento extends MgModel
 
 
     protected $fillable = [
+        'autorizacao',
+        'avista',
+        'bandeira',
         'codformapagamento',
         'codliopedido',
         'codnegocio',
         'codpagarmepedido',
+        'codpessoa',
         'codpixcob',
         'codstonetransacao',
+        'integracao',
+        'tipo',
         'valorjuros',
-        'valorpagamento'
+        'valorpagamento',
+        'valortroco'
     ];
 
     protected $dates = [
@@ -40,17 +48,23 @@ class NegocioFormaPagamento extends MgModel
     ];
 
     protected $casts = [
+        'avista' => 'boolean',
+        'bandeira' => 'integer',
         'codformapagamento' => 'integer',
         'codliopedido' => 'integer',
         'codnegocio' => 'integer',
         'codnegocioformapagamento' => 'integer',
         'codpagarmepedido' => 'integer',
+        'codpessoa' => 'integer',
         'codpixcob' => 'integer',
         'codstonetransacao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'integracao' => 'boolean',
+        'tipo' => 'integer',
         'valorjuros' => 'float',
-        'valorpagamento' => 'float'
+        'valorpagamento' => 'float',
+        'valortroco' => 'float'
     ];
 
 
@@ -73,6 +87,11 @@ class NegocioFormaPagamento extends MgModel
     public function PagarMePedido()
     {
         return $this->belongsTo(PagarMePedido::class, 'codpagarmepedido', 'codpagarmepedido');
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
     public function PixCob()

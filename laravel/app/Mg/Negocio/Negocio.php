@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Dec/2023 11:51:44
+ * Date: 21/Dec/2023 18:03:48
  */
 
 namespace Mg\Negocio;
@@ -57,7 +57,9 @@ class Negocio extends MgModel
         'valordesconto',
         'valorfrete',
         'valorjuros',
+        'valoroutras',
         'valorprodutos',
+        'valorseguro',
         'valortotal'
     ];
 
@@ -93,7 +95,9 @@ class Negocio extends MgModel
         'valordesconto' => 'float',
         'valorfrete' => 'float',
         'valorjuros' => 'float',
+        'valoroutras' => 'float',
         'valorprodutos' => 'float',
+        'valorseguro' => 'float',
         'valortotal' => 'float'
     ];
 

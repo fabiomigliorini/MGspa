@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Jul/2020 15:53:42
+ * Date: 20/Dec/2023 18:28:08
  */
 
 namespace Mg\Negocio;
@@ -9,8 +9,10 @@ namespace Mg\Negocio;
 use Mg\MgModel;
 use Mg\CupomFiscal\CupomFiscalProdutoBarra;
 use Mg\Estoque\EstoqueMovimento;
+use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioProdutoBarraPedidoItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
+use Mg\Mercos\MercosPedidoItem;
 use Mg\Negocio\Negocio;
 use Mg\Produto\ProdutoBarra;
 use Mg\Usuario\Usuario;
@@ -27,7 +29,15 @@ class NegocioProdutoBarra extends MgModel
         'codprodutobarra',
         'codusuarioconferencia',
         'conferencia',
+        'inativo',
+        'percentualdesconto',
         'quantidade',
+        'uuid',
+        'valordesconto',
+        'valorfrete',
+        'valoroutras',
+        'valorprodutos',
+        'valorseguro',
         'valortotal',
         'valorunitario'
     ];
@@ -35,7 +45,8 @@ class NegocioProdutoBarra extends MgModel
     protected $dates = [
         'alteracao',
         'conferencia',
-        'criacao'
+        'criacao',
+        'inativo'
     ];
 
     protected $casts = [
@@ -46,7 +57,13 @@ class NegocioProdutoBarra extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuarioconferencia' => 'integer',
         'codusuariocriacao' => 'integer',
+        'percentualdesconto' => 'float',
         'quantidade' => 'float',
+        'valordesconto' => 'float',
+        'valorfrete' => 'float',
+        'valoroutras' => 'float',
+        'valorprodutos' => 'float',
+        'valorseguro' => 'float',
         'valortotal' => 'float',
         'valorunitario' => 'float'
     ];
@@ -93,6 +110,11 @@ class NegocioProdutoBarra extends MgModel
     public function EstoqueMovimentoS()
     {
         return $this->hasMany(EstoqueMovimento::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
+    }
+
+    public function MercosPedidoItemS()
+    {
+        return $this->hasMany(MercosPedidoItem::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
     }
 
     public function NegocioProdutoBarraDevolucaoS()
