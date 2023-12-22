@@ -1,17 +1,22 @@
 import { defineStore } from "pinia";
 import { toRaw } from "vue";
 import { db } from "boot/db";
-import { uid } from "quasar";
+import { Notify, uid } from "quasar";
+import { sincronizacaoStore } from "stores/sincronizacao";
+
+const sSinc = sincronizacaoStore();
 
 export const negocioStore = defineStore("negocio", {
-  persist: true,
+  persist: {
+    paths: ["padrao", "paginaAtual"],
+  },
 
   state: () => ({
-    pesquisa: [],
-    textoPesuisa: null,
     negocio: null,
     negocios: [],
-    outros: [],
+    dialog: {
+      valores: false,
+    },
     padrao: {
       codestoquelocal: 101001,
       codpessoa: 1,
@@ -90,7 +95,7 @@ export const negocioStore = defineStore("negocio", {
         recebimento: null,
         //valoraprazo: null,
         //valoravista: null,
-        valorprodutos: null,
+        valorprodutos: 0,
         percentualdesconto: null,
         valordesconto: null,
         valorfrete: null,
@@ -103,7 +108,7 @@ export const negocioStore = defineStore("negocio", {
         codusuarioalteracao: null,
         codusuariocriacao: null,
         itens: [],
-        sincronizado: null,
+        sincronizado: false,
         codnegociostatus: 1, //aberto
       };
       db.negocio.add(negocio, id);
@@ -197,11 +202,6 @@ export const negocioStore = defineStore("negocio", {
       var fantasia = null;
       var fantasiavendedor = null;
 
-      //faker - apagar
-      // this.negocio.codpessoavendedor = 224;
-      // this.negocio.cpf = "80345271068";
-      // this.negocio.observacoes = "teste \n linha 2 \n linha 3";
-
       // natureza
       if (this.negocio.codnaturezaoperacao) {
         const nat = await db.naturezaOperacao.get(
@@ -280,7 +280,9 @@ export const negocioStore = defineStore("negocio", {
       // marca alteracao
       this.negocio.alteracao = new Date();
       this.negocio.lancamento = new Date();
+      this.negocio.sincronizado = false;
       const ret = await db.negocio.put(toRaw(this.negocio));
+      this.sincronizar(this.negocio.id);
       this.atualizarListagem();
       return ret;
     },
@@ -292,7 +294,7 @@ export const negocioStore = defineStore("negocio", {
       produto,
       codimagem,
       quantidade,
-      preco
+      valorunitario
     ) {
       // busca versao do IndexedDB para
       // garantir que nao foi adicionado nada em outra aba
@@ -314,14 +316,15 @@ export const negocioStore = defineStore("negocio", {
         item.alteracao = new Date();
       } else {
         var item = {
+          id: uid(),
           codprodutobarra,
           barras,
           codproduto,
           produto,
           codimagem,
           quantidade: parseFloat(quantidade),
-          preco: parseFloat(preco),
-          valorprodutos: null,
+          valorunitario: parseFloat(valorunitario),
+          valorprodutos: 0,
           percentualdesconto: null,
           valordesconto: null,
           valorfrete: null,
@@ -370,7 +373,7 @@ export const negocioStore = defineStore("negocio", {
     async itemSalvar(
       codprodutobarra,
       quantidade,
-      preco,
+      valorunitario,
       valorprodutos,
       percentualdesconto,
       valordesconto,
@@ -390,7 +393,7 @@ export const negocioStore = defineStore("negocio", {
         return false;
       }
       item.quantidade = quantidade;
-      item.preco = preco;
+      item.valorunitario = valorunitario;
       item.valorprodutos = valorprodutos;
       item.percentualdesconto = percentualdesconto;
       item.valordesconto = valordesconto;
@@ -419,8 +422,9 @@ export const negocioStore = defineStore("negocio", {
 
     async itemRecalcularValorProdutos(item) {
       let total =
-        Math.round(parseFloat(item.quantidade) * parseFloat(item.preco) * 100) /
-        100;
+        Math.round(
+          parseFloat(item.quantidade) * parseFloat(item.valorunitario) * 100
+        ) / 100;
       item.valorprodutos = total;
       this.itemRecalcularValorDesconto(item);
     },
@@ -479,9 +483,9 @@ export const negocioStore = defineStore("negocio", {
         percentualoutras = valoroutras / this.negocio.valorprodutos;
       }
 
-      const ultimo = this.negocio.itens.length - 1;
+      const ultimo = this.itensAtivos.length - 1;
       for (let index = 0; index <= ultimo; index++) {
-        const item = this.negocio.itens[index];
+        const item = this.itensAtivos[index];
         if (!percentualdesconto) {
           item.valordesconto = null;
         } else if (index == ultimo) {
@@ -564,6 +568,40 @@ export const negocioStore = defineStore("negocio", {
       this.negocio.codpessoavendedor = codpessoavendedor;
       await this.carregarChavesEstrangeiras();
       await this.salvar();
+    },
+
+    async sincronizar(id) {
+      const negocio = await db.negocio.get(id);
+      try {
+        const ret = await sSinc.putNegocio(negocio);
+        if (!ret) {
+          return false;
+        }
+        db.negocio.update(ret.uuid, {
+          codnegocio: ret.codnegocio,
+          codnegociostatus: ret.codnegociostatus,
+        });
+        if ((this.negocio.id = ret.uuid)) {
+          this.negocio.codnegocio = ret.codnegocio;
+          this.negocio.codnegociostatus = ret.codnegociostatus;
+          if (
+            this.negocio.valortotal == ret.valortotal &&
+            this.negocio.valordesconto == ret.valordesconto &&
+            this.negocio.valorprodutos == ret.valorprodutos &&
+            this.negocio.valorjuros == ret.valorjuros &&
+            this.negocio.valoroutras == ret.valoroutras
+          ) {
+            this.negocio.sincronizado = true;
+            db.negocio.update(ret.uuid, {
+              sincronizado: true,
+            });
+          }
+        }
+        console.log(ret);
+      } catch (error) {
+        console.log(error);
+      }
+      this.atualizarListagem();
     },
   },
 });

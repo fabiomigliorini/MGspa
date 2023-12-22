@@ -38,7 +38,11 @@ const formataTempoPercorridoDesde = (desde) => {
     <template v-for="n in sNegocio.negocios" :key="n.id">
       <q-item clickable tag="a" :to="'/offline/' + n.id" v-ripple>
         <q-item-section avatar>
-          <q-avatar icon="shopping_cart" color="primary" text-color="white" />
+          <q-avatar
+            icon="shopping_cart"
+            :color="n.sincronizado == true ? 'green' : 'red'"
+            text-color="white"
+          />
           <!-- <q-avatar color="primary" text-color="white">{{ n.uid }}</q-avatar> -->
           <!-- <q-icon round color="primary" name="delete" /> -->
         </q-item-section>
