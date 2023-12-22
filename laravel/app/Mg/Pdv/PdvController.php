@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 use Mg\MgController;
+use Mg\Negocio\NegocioResource;
 
 class PdvController
 {
@@ -83,6 +84,13 @@ class PdvController
     {
         PdvService::autoriza($request->uuid);
         return PdvService::impressora();
+    }
+
+    public function negocio (PdvRequest $request)
+    {
+        PdvService::autoriza($request->uuid);
+        $negocio = PdvNegocioService::negocio($request->negocio);
+        return new NegocioResource($negocio);
     }
 
 }

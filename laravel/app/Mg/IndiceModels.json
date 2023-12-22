@@ -871,6 +871,11 @@
                 "tabela": "tblpessoatelefone",
                 "coluna": "codpessoa",
                 "metodo": "PessoaTelefoneS"
+            },
+            "tblnegocioformapagamento.codpessoa": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codpessoa",
+                "metodo": "NegocioFormaPagamentoS"
             }
         }
     },
@@ -969,6 +974,11 @@
                 "tabela": "tblpagarmepedido",
                 "coluna": "codpagarmepedido",
                 "metodo": "PagarMePedido"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
             }
         },
         "hasMany": {
@@ -1360,6 +1370,11 @@
                 "tabela": "tblpessoa",
                 "coluna": "codpessoatransportador",
                 "metodo": "PessoaTransportador"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -2201,6 +2216,11 @@
                 "tabela": "tblnotafiscalprodutobarra",
                 "coluna": "codnegocioprodutobarra",
                 "metodo": "NotaFiscalProdutoBarraS"
+            },
+            "tblmercospedidoitem.codnegocioprodutobarra": {
+                "tabela": "tblmercospedidoitem",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "MercosPedidoItemS"
             }
         }
     },
@@ -2536,8 +2556,55 @@
         "namespace": "Mg\\Estoque",
         "classe": "EstoqueLocal",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Estoque\/EstoqueLocal.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblestoquelocalprodutovariacao.codestoquelocal": {
+                "tabela": "tblestoquelocalprodutovariacao",
+                "coluna": "codestoquelocal",
+                "metodo": "EstoqueLocalProdutoVariacaoS"
+            },
+            "tblnegocio.codestoquelocal": {
+                "tabela": "tblnegocio",
+                "coluna": "codestoquelocal",
+                "metodo": "NegocioS"
+            },
+            "tblnegocio.codestoquelocaldestino": {
+                "tabela": "tblnegocio",
+                "coluna": "codestoquelocaldestino",
+                "metodo": "NegocioDestinoS"
+            },
+            "tblnotafiscal.codestoquelocal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codestoquelocal",
+                "metodo": "NotaFiscalS"
+            },
+            "tblpedido.codestoquelocal": {
+                "tabela": "tblpedido",
+                "coluna": "codestoquelocal",
+                "metodo": "PedidoS"
+            },
+            "tblpedido.codestoquelocalorigem": {
+                "tabela": "tblpedido",
+                "coluna": "codestoquelocalorigem",
+                "metodo": "PedidoOrigemS"
+            }
+        }
     },
     "tblgrupousuariousuario": {
         "tabela": "tblgrupousuariousuario",
@@ -5435,6 +5502,12 @@
                 "metodo": "UsuarioCriacao"
             }
         },
-        "hasMany": []
+        "hasMany": {
+            "tblnegocio.codpdv": {
+                "tabela": "tblnegocio",
+                "coluna": "codpdv",
+                "metodo": "NegocioS"
+            }
+        }
     }
 }

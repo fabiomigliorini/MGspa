@@ -84,7 +84,7 @@ const inativos = computed(() => {
 const edicao = ref({
   codprodutobarra: null,
   quantidade: null,
-  preco: null,
+  valorunitario: null,
   valorprodutos: null,
   percentualdesconto: null,
   valordesconto: null,
@@ -107,7 +107,7 @@ const editar = async (codprodutobarra) => {
   }
   edicao.value.codprodutobarra = codprodutobarra;
   edicao.value.quantidade = item.quantidade;
-  edicao.value.preco = item.preco;
+  edicao.value.valorunitario = item.valorunitario;
   edicao.value.valorprodutos = item.valorprodutos;
   edicao.value.percentualdesconto = item.percentualdesconto;
   edicao.value.valordesconto = item.valordesconto;
@@ -137,7 +137,7 @@ const salvar = async () => {
     sNegocio.itemSalvar(
       edicao.value.codprodutobarra,
       parseFloat(edicao.value.quantidade),
-      parseFloat(edicao.value.preco),
+      parseFloat(edicao.value.valorunitario),
       parseFloat(edicao.value.valorprodutos),
       parseFloat(edicao.value.percentualdesconto),
       parseFloat(edicao.value.valordesconto),
@@ -152,7 +152,8 @@ const salvar = async () => {
 
 const recalcularValorProdutos = () => {
   edicao.value.valorprodutos =
-    Math.round(edicao.value.quantidade * edicao.value.preco * 100) / 100;
+    Math.round(edicao.value.quantidade * edicao.value.valorunitario * 100) /
+    100;
   recalcularValorDesconto();
 };
 
@@ -229,7 +230,7 @@ const recalcularValorTotal = () => {
                     step="0.01"
                     min="0.01"
                     outlined
-                    v-model.number="edicao.preco"
+                    v-model.number="edicao.valorunitario"
                     prefix="R$"
                     label="Preço"
                     input-class="text-right"
@@ -447,7 +448,7 @@ const recalcularValorTotal = () => {
                 new Intl.NumberFormat("pt-BR", {
                   style: "currency",
                   currency: "BRL",
-                }).format(item.preco)
+                }).format(item.valorunitario)
               }}
               <template v-if="item.valordesconto">
                 <br />

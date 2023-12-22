@@ -383,5 +383,29 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       }
       this.ultimaSincronizacao.Produto = sincronizado;
     },
+
+    async putNegocio(negocio) {
+      const params = {
+        uuid: this.pdv.id,
+        negocio: negocio,
+      };
+      try {
+        const { data } = await api.put("/api/v1/pdv/negocio", params);
+        return data.data;
+      } catch (error) {
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+          console.log(error);
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
   },
 });

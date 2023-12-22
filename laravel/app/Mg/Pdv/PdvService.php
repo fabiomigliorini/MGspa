@@ -4,7 +4,7 @@ namespace Mg\Pdv;
 
 use DB;
 
-class PdvService 
+class PdvService
 {
 
     public static function dispositivo(
@@ -31,7 +31,7 @@ class PdvService
         return $pdv;
     }
 
-    public static function podeAcessar($uuid) 
+    public static function podeAcessar($uuid)
     {
         $pdv = Pdv::where('uuid', $uuid)->first();
         if (!$pdv) {
@@ -43,7 +43,7 @@ class PdvService
         return false;
     }
 
-    public static function autoriza ($uuid)
+    public static function autoriza($uuid)
     {
         if (!static::podeAcessar($uuid)) {
             abort(403, 'Dispositivo Não Autorizado!');
@@ -89,7 +89,7 @@ class PdvService
             order by pb.codprodutobarra
             limit :limite
         ';
-        $regs = DB::select($sql,[
+        $regs = DB::select($sql, [
             'codprodutobarra' => $codprodutobarra,
             'limite' => $limite,
             'sincronizado' => $sincronizado
@@ -123,7 +123,7 @@ class PdvService
         ';
         $regs = DB::select($sql);
         return $regs[0];
-    }    
+    }
 
     public static function pessoa($codpessoa, $limite)
     {
@@ -155,7 +155,7 @@ class PdvService
             order by codpessoa
             limit :limite
         ';
-        $regs = DB::select($sql,[
+        $regs = DB::select($sql, [
             'codpessoa' => $codpessoa,
             'limite' => $limite,
             'sincronizado' => $sincronizado
@@ -188,7 +188,7 @@ class PdvService
                 :sincronizado as sincronizado
             from tblnaturezaoperacao nat 
             ';
-        $regs = DB::select($sql,[
+        $regs = DB::select($sql, [
             'sincronizado' => $sincronizado
         ]);
         return $regs;
@@ -212,7 +212,7 @@ class PdvService
             from tblestoquelocal t 
             inner join tblfilial f on (f.codfilial = t.codfilial)
             ';
-        $regs = DB::select($sql,[
+        $regs = DB::select($sql, [
             'sincronizado' => $sincronizado
         ]);
         return $regs;
@@ -239,7 +239,7 @@ class PdvService
                 :sincronizado as sincronizado
             from tblformapagamento fp
             ';
-        $regs = DB::select($sql,[
+        $regs = DB::select($sql, [
             'sincronizado' => $sincronizado
         ]);
         return $regs;
