@@ -102,7 +102,7 @@
 
   <!-- start preheader -->
   <div class="preheader" style="display: none; max-width: 0; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #fff; opacity: 0;">
-    Seu código de confirmação de e-mail
+    Seu código de verificação de e-mail
   </div>
   <!-- end preheader -->
 

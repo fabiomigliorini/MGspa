@@ -1,12 +1,6 @@
 <template>
   <q-card class="no-shadow" bordered>
-    <q-card-section>
-      <div class="text-h6 text-grey-8">
-        Transferências Nota Fiscais
-      </div>
-    </q-card-section>
-    <q-separator></q-separator>
-
+ 
     <q-card-section class="q-pa-none">
       <q-table square class="no-shadow" title="" @row-click="linkscolunas" :rows="getvalues" :columns="columns"
         no-data-label="Nenhuma nota de transferência encontrada." :filter="filter" :loading="loading"

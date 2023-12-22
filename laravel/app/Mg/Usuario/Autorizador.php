@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\Permissao\Autorizador;
+namespace Mg\Usuario;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -8,26 +8,27 @@ use Illuminate\Support\Facades\Auth;
 class Autorizador 
 {
 
-    public static function pode($permissao, $codfilial = null, $codusuario = null) 
+    public static function pode(Array $gruposAutorizados, int $codfilial = null, int $codusuario = null) 
     {
         if (empty($codusuario)) {
             $codusuario = Auth::user()->codusuario;
         }
 
         $sql = '
-            select count(*) as count
-            from tblpermissao p
-            left join tblgrupousuariopermissao gup on (gup.codpermissao = p.codpermissao)
-            left join tblgrupousuariousuario guu on (guu.codgrupousuario = gup.codgrupousuario)
+            select count(guu.codgrupousuariousuario) 
+            from tblgrupousuariousuario guu
+            inner join tblgrupousuario gu on (gu.codgrupousuario = guu.codgrupousuario)
             where guu.codusuario = :codusuario
-            and p.permissao = :permissao
+            and gu.grupousuario in (:gruposAutorizados)
         ';
         
+
         $params = [
             'codusuario' => $codusuario,
-            'permissao' => $permissao
+            'gruposAutorizados' => implode(',', $gruposAutorizados)
         ];
 
+        
         if (!empty($codfilial)) {
             $sql .= 'and guu.codfilial = :codfilial';
             $params['codfilial'] = $codfilial;
@@ -37,12 +38,11 @@ class Autorizador
         return ($ret[0]->count > 0);
     }
 
-    public static function autoriza($permissao, $codfilial = null, $codusuario = null) 
+    public static function autoriza($gruposAutorizados, $codfilial = null, $codusuario = null) 
     {
-        if (!static::pode($permissao, $codfilial, $codusuario)) {
+        if (!static::pode($gruposAutorizados, $codfilial, $codusuario)) {
             abort('403', 'Não Autorizado!');
         }
         return true;
     }
-
 }

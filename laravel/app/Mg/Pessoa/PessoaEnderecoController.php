@@ -2,21 +2,21 @@
 
 namespace Mg\Pessoa;
 
+use Exception;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 use Mg\Pessoa\PessoaEndereco;
 
 class PessoaEnderecoController extends MgController
 {
 
-    public function index(Request $request, $codpessoa)
-    {
-        $pes = PessoaEndereco::where('codpessoa', $codpessoa)->orderBy('ordem', 'asc')->get();
-        return PessoaEnderecoResource::collection($pes);
-    }
 
+    // TODO: fazer o retornar sempre o resource de Pessoa e nao Pessoa Endereco
     public function create(Request $request, $codpessoa)
     {
+        Autorizador::autoriza(array('Pessoa'));
+
         $request->validate([
             'codcidade' => ['required'],
             'endereco' => ['required'],
@@ -28,7 +28,8 @@ class PessoaEnderecoController extends MgController
         $data['codpessoa'] = $codpessoa;
         $pe = PessoaEnderecoService::create($data);
         $pes = $pe->Pessoa->PessoaEnderecoS()->orderBy('ordem', 'asc')->get();
-        return PessoaEnderecoResource::collection($pes);
+        return new PessoaResource($pe->Pessoa);
+        // return new PessoaEnderecoResource($pe);
     }
 
     public function show($codpessoaendereco)
@@ -39,6 +40,8 @@ class PessoaEnderecoController extends MgController
 
     public function update(Request $request, $codpessoa, $codpessoaendereco)
     {
+        Autorizador::autoriza(array('Pessoa'));
+
         $data = $request->all();
         $pessoa = PessoaEndereco::findOrFail($codpessoaendereco);
         $pessoa = PessoaEnderecoService::update($pessoa, $data);
@@ -46,12 +49,13 @@ class PessoaEnderecoController extends MgController
     }
 
     public function delete(Request $request, $codpessoa, $codpessoaendereco)
-    {
+    {   
+        Autorizador::autoriza(array('Pessoa'));
 
-        $pessoa = PessoaEndereco::findOrFail($codpessoaendereco);
-        $pessoa = PessoaEnderecoService::delete($pessoa);
+        $pe = PessoaEndereco::findOrFail($codpessoaendereco);
+        $result = PessoaEnderecoService::delete($pe);
         return response()->json([
-            'result' => $pessoa
+            'result' => $result
         ], 200);
     }
 
@@ -72,14 +76,20 @@ class PessoaEnderecoController extends MgController
         return PessoaEnderecoResource::collection($pes);
     }
 
-    public function ativar(Request $request, $codpessoa, $codpessoaendereco) {
+    public function ativar(Request $request, $codpessoa, $codpessoaendereco)
+    {   
+        Autorizador::autoriza(array('Pessoa'));
+
         $pes = PessoaEndereco::findOrFail($codpessoaendereco);
         $pes = PessoaEnderecoService::ativar($pes);
 
         return new PessoaEnderecoResource($pes);
     }
 
-    public function inativar(Request $request, $codpessoa, $codpessoaendereco) {
+    public function inativar(Request $request, $codpessoa, $codpessoaendereco)
+    {   
+         Autorizador::autoriza(array('Pessoa'));
+        
         $pes = PessoaEndereco::findOrFail($codpessoaendereco);
         $pes = PessoaEnderecoService::inativar($pes);
 

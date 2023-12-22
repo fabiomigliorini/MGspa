@@ -19,7 +19,7 @@ class PessoaEmailService
 
         $emails = new PessoaEmail($data);
         $emails->save();
-
+        static::descobreEmailNfeCobranca($emails->Pessoa, $emails);
         return $emails->refresh();
     }
 
@@ -37,22 +37,29 @@ class PessoaEmailService
         }
     }
 
-    public static function update($pessoa, $data)
+    public static function update($email, $data)
     {
 
-        if ($pessoa->email != $data['email']) {
-            $data ['verificacao'] = null;
+        if ($email->email != $data['email']) {
+            $data['verificacao'] = null;
         }
-       
-        $pessoa->fill($data);
-        $pessoa->save();
-        return $pessoa;
+
+        $email->fill($data);
+        $email->save();
+        static::descobreEmailNfeCobranca($email->Pessoa, $email);
+        return $email;
     }
 
 
-    public static function delete($pessoa)
+    public static function delete(PessoaEmail $email)
     {
-        return $pessoa->delete();
+            if ($email->Pessoa->PessoaEmailS()->count() <= 1) {
+                throw new Exception("Não é possivel excluir todos os emails!", 1);
+            }
+            $pessoa = $email->Pessoa;
+            $ret = $email->delete();
+            static::descobreEmailNfeCobranca($email->Pessoa);
+            return $ret;
     }
 
 
@@ -97,6 +104,59 @@ class PessoaEmailService
         return $model;
     }
 
+    public static function descobreEmailNfeCobranca(Pessoa $pessoa, PessoaEmail $email = null)
+    {
+        
+        $codpessoaemailnfe = null;
+        $codpessoaemailcobranca = null;
+        if ($email) {
+            if ($email->nfe && empty($email->inativo)) {
+                $codpessoaemailnfe =  $email->codpessoatelefone;
+            }
+            if ($email->cobranca && empty($email->inativo)) {
+                $codpessoaemailcobranca =  $email->codpessoatelefone;
+            }
+        }
+        if ($codpessoaemailnfe) {
+            $pessoa->PessoaEmailS()
+                ->where('nfe', true)
+                ->where('codpessoatelefone', '!=', $codpessoaemailnfe)
+                ->whereNull('inativo')
+                ->update(['nfe' => false]);
+        }
+        if ($codpessoaemailcobranca) {
+            $pessoa->PessoaEmailS()
+                ->where('cobranca', true)
+                ->where('codpessoatelefone', '!=', $codpessoaemailcobranca)
+                ->whereNull('inativo')
+                ->update(['cobranca' => false]);
+        }
+
+        // caso nao tenha nenhum email de nfe
+        $nfe = $pessoa->PessoaEmailS()
+            ->where('nfe', true)
+            ->whereNull('inativo')
+            ->count();
+        if ($nfe == 0) {
+            $end = $pessoa->PessoaEmailS()
+                ->whereNull('inativo')
+                ->first()
+                ->update(['nfe' => true]);
+        }
+
+        // caso nao tenha nenhum email de cobranca
+        $cobranca = $pessoa->PessoaEmailS()
+            ->where('cobranca', true)
+            ->whereNull('inativo')
+            ->count();
+        if ($cobranca == 0) {
+            $pessoa->PessoaEmailS()
+                ->whereNull('inativo')
+                ->first()
+                ->update(['cobranca' => true]);
+        }
+    }
+
 
     public static function verificaEmail($email)
     {
@@ -104,14 +164,14 @@ class PessoaEmailService
         $email->codverificacao = $random;
         $email->update();
 
-         Mail::to($email)->queue(new EmailVerificacao($email->email, $random));
-                    
+        Mail::to($email)->queue(new EmailVerificacao($email->email, $random));
+
         return [
-          'mensagem' => 'Email enviado'
+            'mensagem' => 'Email enviado'
         ];
     }
 
-    public static function confirmaVerificacao($email, $codverificacao) 
+    public static function confirmaVerificacao($email, $codverificacao)
     {
 
         if ($email->codverificacao != $codverificacao) {
@@ -121,6 +181,4 @@ class PessoaEmailService
         $email->update();
         return $email;
     }
-
 }
-

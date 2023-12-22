@@ -4,9 +4,11 @@ namespace Mg\Pessoa;
 
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Exception;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Mail;
+use Mg\Usuario\Autorizador;
 
 class PessoaEmailController extends MgController
 {
@@ -19,12 +21,15 @@ class PessoaEmailController extends MgController
 
     public function create(Request $request, $codpessoa)
     {
+        Autorizador::autoriza(array('Pessoa'));
+
         $request->validate([
             'email' => ['required'],
         ]);
 
         $data = $request->all();
         $data['codpessoa'] = $codpessoa;
+
         $pemail = PessoaEmailService::create($data);
         $pemail = $pemail->Pessoa->PessoaEmailS()->orderBy('ordem', 'asc')->get();
         return PessoaEmailResource::collection($pemail);
@@ -37,8 +42,11 @@ class PessoaEmailController extends MgController
     }
 
     public function update(Request $request, $codpessoa, $codpessoatelefone)
-    {
+    {   
+        Autorizador::autoriza(array('Pessoa'));
+
         $data = $request->all();
+
         $pessoa = PessoaEmail::findOrFail($codpessoatelefone);
         $pessoa = PessoaEmailService::update($pessoa, $data);
         return new PessoaEmailResource($pessoa);
@@ -46,12 +54,14 @@ class PessoaEmailController extends MgController
 
     public function delete(Request $request, $codpessoa, $codpessoatelefone)
     {
+            Autorizador::autoriza(array('Pessoa'));
 
-        $pessoa = PessoaEmail::findOrFail($codpessoatelefone);
-        $pessoa = PessoaEmailService::delete($pessoa);
-        return response()->json([
-            'result' => $pessoa
-        ], 200);
+            $pessoa = PessoaEmail::findOrFail($codpessoatelefone);
+            $pessoa = PessoaEmailService::delete($pessoa);
+            return response()->json([
+                'result' => $pessoa
+            ], 200);
+       
     }
 
     public function cima(Request $request, $codpessoa, $codpessoatelefone)
@@ -72,6 +82,8 @@ class PessoaEmailController extends MgController
 
     public function ativar(Request $request, $codpessoa, $codpessoatelefone)
     {
+        Autorizador::autoriza(array('Pessoa'));
+
         $pes = PessoaEmail::findOrFail($codpessoatelefone);
         $pes = PessoaEmailService::ativar($pes);
 
@@ -79,7 +91,9 @@ class PessoaEmailController extends MgController
     }
 
     public function inativar(Request $request, $codpessoa, $codpessoatelefone)
-    {
+    {   
+        Autorizador::autoriza(array('Pessoa'));
+        
         $pes = PessoaEmail::findOrFail($codpessoatelefone);
         $pes = PessoaEmailService::inativar($pes);
 
@@ -104,7 +118,7 @@ class PessoaEmailController extends MgController
         $email = PessoaEmail::findOrFail($codpessoatelefone);
         $email = PessoaEmailService::confirmaVerificacao($email, $request->codverificacao);
        
-        return new PessoaTelefoneResource($email);
+        return new PessoaEmailResource($email);
     
     }
 }

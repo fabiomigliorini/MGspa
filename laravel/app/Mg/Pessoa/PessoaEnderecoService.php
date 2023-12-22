@@ -1,7 +1,9 @@
 <?php
 
 namespace Mg\Pessoa;
+
 use Carbon\Carbon;
+use Exception;
 
 class PessoaEnderecoService
 {
@@ -12,10 +14,10 @@ class PessoaEnderecoService
         if (empty($data['ordem'])) {
             $data['ordem'] = PessoaEndereco::where('codpessoa', $data['codpessoa'])->max('ordem') + 1;
         }
-
-        $endereco = new PessoaEndereco($data);
-        $endereco->save();
-        return $endereco->refresh();
+        $end = new PessoaEndereco($data);
+        $end->save();
+        static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa, $end);
+        return $end->refresh();
     }
 
     public static function createOrUpdate($data)
@@ -30,56 +32,134 @@ class PessoaEnderecoService
         }
     }
 
-    public static function update($pessoa, $data)
+    public static function update($end, $data)
     {
-        $pessoa->fill($data);
-        $pessoa->save();
-        return $pessoa;
+        $end->fill($data);
+        $end->save();
+        static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa, $end);
+        return $end;
     }
 
 
-    public static function delete($pessoa)
+    public static function delete(PessoaEndereco $end)
     {
-        return $pessoa->delete();
+        if ($end->Pessoa->PessoaEnderecos()->count() <= 1) {
+            throw new Exception("Não é possivel excluir todos os endereços!", 1);
+        }
+        $pessoa = $end->Pessoa;
+        $ret = $end->delete();
+        static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa);
+        return $ret;
     }
 
-
-    public static function cima(PessoaEndereco $pe)
+    public static function descobreEnderecoNfeCobrancaEntrega(Pessoa $pessoa, PessoaEndereco $end = null)
     {
-        $anterior = $pe->ordem - 1;
-        $ret = PessoaEndereco::where('codpessoa', $pe->codpessoa)
+        // verifica se tem um endereco preferido pra cobranca/nfe
+        $codpessoaendereconfe = null;
+        $codpessoaenderecocobranca = null;
+        if ($end) {
+            if ($end->nfe && empty($end->inativo)) {
+                $codpessoaendereconfe =  $end->codpessoaendereco;
+            }
+            if ($end->cobranca && empty($end->inativo)) {
+                $codpessoaenderecocobranca =  $end->codpessoaendereco;
+            }
+            if ($end->entrega && empty($end->inativo)) {
+                $codpessoaenderecoentrega =  $end->codpessoaendereco;
+            }
+        }
+        if ($codpessoaendereconfe) {
+            $pessoa->PessoaEnderecoS()
+                ->where('nfe', true)
+                ->where('codpessoaendereco', '!=', $codpessoaendereconfe)
+                ->whereNull('inativo')
+                ->update(['nfe' => false]);
+        }
+        if ($codpessoaenderecocobranca) {
+            $pessoa->PessoaEnderecoS()
+                ->where('cobranca', true)
+                ->where('codpessoaendereco', '!=', $codpessoaenderecocobranca)
+                ->whereNull('inativo')
+                ->update(['cobranca' => false]);
+        }
+
+        // caso nao tenha nenhum end de nfe
+        $nfe = $pessoa->PessoaEnderecoS()
+            ->where('nfe', true)
+            ->whereNull('inativo')
+            ->count();
+        if ($nfe == 0) {
+            $end = $pessoa->PessoaEnderecoS()
+                ->whereNull('inativo')
+                ->first()
+                ->update(['nfe' => true]);
+        }
+
+        // caso nao tenha nenhum end de cobranca
+        $cobranca = $pessoa->PessoaEnderecoS()
+            ->where('cobranca', true)
+            ->whereNull('inativo')
+            ->count();
+        if ($cobranca == 0) {
+            $pessoa->PessoaEnderecoS()
+                ->whereNull('inativo')
+                ->first()
+                ->update(['cobranca' => true]);
+        }
+
+        // caso nao tenha nenhum end de entrega
+        $entrega = $pessoa->PessoaEnderecoS()
+            ->where('entrega', true)
+            ->whereNull('inativo')
+            ->count();
+        if ($entrega == 0) {
+            $pessoa->PessoaEnderecoS()
+                ->whereNull('inativo')
+                ->first()
+                ->update(['entrega' => true]);
+        }
+    }
+
+    public static function cima(PessoaEndereco $end)
+    {
+        $anterior = $end->ordem - 1;
+        $ret = PessoaEndereco::where('codpessoa', $end->codpessoa)
             ->where('ordem', $anterior)
-            ->update(['ordem' => $pe->ordem]);
+            ->update(['ordem' => $end->ordem]);
         if ($ret > 0) {
-            $pe->update(['ordem' => $anterior]);
+            $end->update(['ordem' => $anterior]);
         }
-        return $pe;
+        return $end;
     }
 
-    public static function baixo(PessoaEndereco $pe)
+    public static function baixo(PessoaEndereco $end)
     {
-        $posterior = $pe->ordem + 1;
-        $ret = PessoaEndereco::where('codpessoa', $pe->codpessoa)
+        $posterior = $end->ordem + 1;
+        $ret = PessoaEndereco::where('codpessoa', $end->codpessoa)
             ->where('ordem', $posterior)
-            ->update(['ordem' => $pe->ordem]);
+            ->update(['ordem' => $end->ordem]);
         if ($ret > 0) {
-            $pe->update(['ordem' => $posterior]);
+            $end->update(['ordem' => $posterior]);
         }
-        return $pe;
+        return $end;
     }
 
-    public static function ativar ($model) {
-        $model->inativo = null;
-        $model->update();
-        return $model;
+    public static function ativar($end)
+    {
+        $end->inativo = null;
+        $end->update();
+        static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa, $end);
+        return $end;
     }
 
-    public static function inativar ($model, $date = null) {
+    public static function inativar($end, $date = null)
+    {
         if (empty($date)) {
             $date = Carbon::now();
         }
-        $model->inativo = $date;
-        $model->update();
-        return $model;
+        $end->inativo = $date;
+        $end->update();
+        static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa);
+        return $end;
     }
 }

@@ -17,6 +17,7 @@ class PessoaResource extends JsonResource
     {
         $ret = parent::toArray($request);
 
+
         // Chave Extrangeira
         $ret['GrupoCliente'] = [
             'codgrupocliente' => @$this->GrupoCliente->codgrupocliente,
@@ -25,6 +26,11 @@ class PessoaResource extends JsonResource
         $ret['GrupoEconomico'] = [
             'codgrupoeconomico' => @$this->GrupoEconomico->codgrupoeconomico,
             'grupoeconomico' => @$this->GrupoEconomico->grupoeconomico,
+            'observacoes' => @$this->GrupoEconomico->observacoes,
+        ];        
+        $ret['FormaPagamento'] = [
+            'codformapagamento' => @$this->FormaPagamento->codformapagamento,
+            'formapagamento' => @$this->FormaPagamento->formapagamento,
         ];
 
         // Filhos
@@ -34,21 +40,12 @@ class PessoaResource extends JsonResource
             $ret['PessoaCertidaoS'][] = $pc->toArray();
         }
 
-        $ret['PessoaTelefoneS'] = [];
-        foreach ($this->PessoaTelefoneS()->orderBy('ordem')->get() as $pt) {
-            $ret['PessoaTelefoneS'][] = $pt->toArray();
-        }
+        $ret['PessoaTelefoneS'] = PessoaTelefoneResource::collection($this->PessoaTelefoneS()->orderBy('ordem')->get());
 
-        $ret['PessoaEmailS'] = [];
-        foreach ($this->PessoaEmailS()->orderBy('ordem')->get() as $pe) {
-            $ret['PessoaEmailS'][] = $pe->toArray();
-        }
-
-        $ret['PessoaEnderecoS'] = [];
-        foreach ($this->PessoaEnderecoS()->orderBy('ordem')->get() as $pen) {
-            $ret['PessoaEnderecoS'][] = $pen->toArray();
-        }
-
+        $ret['PessoaEmailS'] = PessoaEmailResource::collection($this->PessoaEmailS()->orderBy('ordem')->get());
+    
+        $ret['PessoaEnderecoS'] = PessoaEnderecoResource::collection($this->PessoaEnderecoS()->orderBy('ordem')->get());
+        
         $ret['PessoaContaS'] = [];
         foreach ($this->PessoaContaS()->orderBy('alteracao')->get() as $pc) {
             $ret['PessoaContaS'][] = $pc->toArray();
