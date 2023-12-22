@@ -2,6 +2,7 @@
 
 namespace Mg\Pdv;
 
+use Illuminate\Support\Facades\Auth;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioProdutoBarra;
 
@@ -22,7 +23,7 @@ class PdvNegocioService
 
         $negocio->fill($data);
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
-        $negocio->codusuario = 1;
+        $negocio->codusuario = Auth::user()->codusuario;
         $negocio->entrega = false;
         $negocio->save();
 

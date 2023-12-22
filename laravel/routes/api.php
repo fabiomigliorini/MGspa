@@ -52,7 +52,6 @@ Route::group(['prefix' => 'v1'], function () {
 
     // PDV
     Route::put('pdv/dispositivo', '\Mg\Pdv\PdvController@dispositivo');
-    Route::put('pdv/negocio', '\Mg\Pdv\PdvController@negocio');
     Route::get('pdv/produto-count', '\Mg\Pdv\PdvController@produtoCount');
     Route::get('pdv/produto', '\Mg\Pdv\PdvController@produto');
     Route::get('pdv/pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
@@ -169,6 +168,8 @@ Route::group(['prefix' => 'v1'], function () {
 
 Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::group(['prefix' => 'v1'], function () {
+
+    Route::put('pdv/negocio', '\Mg\Pdv\PdvController@negocio');
 
         // Allan - daqui pra baixo
     Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');

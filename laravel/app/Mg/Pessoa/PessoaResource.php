@@ -17,7 +17,6 @@ class PessoaResource extends JsonResource
     {
         $ret = parent::toArray($request);
 
-
         // Chave Extrangeira
         $ret['GrupoCliente'] = [
             'codgrupocliente' => @$this->GrupoCliente->codgrupocliente,

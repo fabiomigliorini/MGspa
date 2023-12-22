@@ -3,8 +3,6 @@
 namespace Mg\Usuario;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 
 class UsuarioResource extends JsonResource
 {
@@ -16,10 +14,9 @@ class UsuarioResource extends JsonResource
      */
     public function toArray($request)
     {   
-        $ret = Auth::user();
-
-        $ret['permissoes'] = parent::toArray($request);
-
+        $ret = parent::toArray($request);
+        unset($ret['senha']);
+        $ret['permissoes'] = UsuarioService::buscaGrupoPermissoes($this->codusuario);
         return $ret;
     }
 }

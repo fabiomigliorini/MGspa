@@ -265,8 +265,7 @@ class UsuarioController extends MgController
 
     public function permissoesUsuarios() 
     {
-        $gruposPermissoes = UsuarioService::buscaGrupoPermissoes();
-
-        return new UsuarioResource($gruposPermissoes);
+        $usuario = Auth::user();
+        return new UsuarioResource($usuario);
     }
 }
