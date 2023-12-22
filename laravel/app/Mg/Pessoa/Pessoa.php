@@ -102,13 +102,15 @@ class Pessoa extends MgModel
         'telefone3',
         'tipotransportador',
         'toleranciaatraso',
-        'vendedor'
+        'vendedor',
+        'nascimento'
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo'
+        'inativo',
+        'nascimento'
     ];
 
     protected $casts = [
