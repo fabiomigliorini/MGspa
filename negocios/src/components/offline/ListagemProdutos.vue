@@ -389,12 +389,14 @@ const recalcularValorTotal = () => {
               style="top: 0; right: 5px; transform: translateY(-42px)"
             >
               <q-btn
+                v-if="sNegocio.podeEditar"
                 color="primary"
                 round
                 icon="edit"
                 @click="editar(item.codprodutobarra)"
               />
               <q-btn
+                v-if="sNegocio.podeEditar"
                 round
                 color="negative"
                 icon="delete"
@@ -423,6 +425,7 @@ const recalcularValorTotal = () => {
 
             <div class="text-overline text-grey-7">
               <q-btn
+                v-if="sNegocio.podeEditar"
                 size="xs"
                 label="-"
                 round
@@ -434,6 +437,7 @@ const recalcularValorTotal = () => {
               />
               {{ new Intl.NumberFormat("pt-BR").format(item.quantidade) }}
               <q-btn
+                v-if="sNegocio.podeEditar"
                 size="xs"
                 label="+"
                 round

@@ -7,11 +7,12 @@ use Carbon\Carbon;
 
 use Mg\MgController;
 use Mg\Negocio\NegocioResource;
+use Mg\Negocio\Negocio;
 
 class PdvController
 {
 
-    public function dispositivo (PdvRequest $request)
+    public function dispositivo (Request $request)
     {
         $request->validate([
             'uuid' => 'required|uuid',
@@ -86,11 +87,21 @@ class PdvController
         return PdvService::impressora();
     }
 
-    public function negocio (PdvRequest $request)
+    public function putNegocio (PdvRequest $request)
     {
         PdvService::autoriza($request->uuid);
         $negocio = PdvNegocioService::negocio($request->negocio);
         return new NegocioResource($negocio);
     }
 
+    public function getNegocio (PdvRequest $request, $id)
+    {
+        PdvService::autoriza($request->uuid);
+        if (preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}$/i', $id)) {
+            $negocio = Negocio::where(['uuid'=>$id])->firstOrFail();
+        } else {
+            $negocio = Negocio::findOrFail($id);
+        }
+        return new NegocioResource($negocio);
+    }
 }

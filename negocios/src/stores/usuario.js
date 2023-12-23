@@ -27,6 +27,8 @@ export const usuarioStore = defineStore("usuario", {
         let { data } = await api.post("/oauth/token", params);
         if (data.access_token) {
           this.token = data;
+          const miliseconds = data.expires_in * 1000;
+          this.token.expires_at = new Date(Date.now() + miliseconds);
           this.inicializar();
           this.getUsuario();
         }
@@ -85,6 +87,7 @@ export const usuarioStore = defineStore("usuario", {
           this.usuario = data.data;
         } catch (error) {
           this.usuario = {};
+          process.env.ACCESS_TOKEN = null;
         }
       }
       return this.usuario;

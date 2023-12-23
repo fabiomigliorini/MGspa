@@ -13,7 +13,7 @@ class PdvNegocioService
 
     public static function negocio($data)
     {
-        $negocio = Negocio::firstOrNew(['uuid' => $data['id']]);
+        $negocio = Negocio::firstOrNew(['uuid' => $data['uuid']]);
         if ($negocio->codnegociostatus == 2) {
             throw new \Exception("Tentando atualizar um negocio Fechado {$negocio->codnegocio}!", 1);
         }
@@ -28,7 +28,7 @@ class PdvNegocioService
         $negocio->save();
 
         foreach ($data['itens'] as $item) {
-            $npb = NegocioProdutoBarra::firstOrNew(['uuid' => $item['id']]);
+            $npb = NegocioProdutoBarra::firstOrNew(['uuid' => $item['uuid']]);
             if (!empty($npb->codnegocio) && $npb->codnegocio != $negocio->codnegocio) {
                 throw new \Exception("Tentando atualizar um item de outro negocio {$npb->codnegocio}/{$negocio->codnegocio}!", 1);
             }

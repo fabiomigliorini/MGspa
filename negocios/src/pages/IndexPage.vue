@@ -59,13 +59,13 @@ const vazioOuCriar = async () => {
     var audio = new Audio("registradora.mp3");
     audio.play();
   } catch (error) {}
-  router.push("/offline/" + sNegocio.negocio.id);
+  router.push("/offline/" + sNegocio.negocio.uuid);
 };
 
 const carregareOuCriarNegocio = async () => {
-  const id = route.params.id;
-  if (id) {
-    const ret = await sNegocio.carregar(id);
+  const uuid = route.params.uuid;
+  if (uuid) {
+    const ret = await sNegocio.carregar(uuid);
     if (ret != undefined) {
       return;
     }
@@ -84,7 +84,7 @@ onUnmounted(() => {
 
 <template>
   <q-page v-if="sNegocio.negocio">
-    <div class="q-pa-md row q-col-gutter-lg">
+    <div class="q-pa-md row q-col-gutter-lg" v-if="sNegocio.podeEditar">
       <div class="col-12">
         <input-barras></input-barras>
       </div>
