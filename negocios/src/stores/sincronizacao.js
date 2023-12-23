@@ -4,6 +4,9 @@ import { db } from "boot/db";
 import { uid } from "quasar";
 import { Platform } from "quasar";
 import { Notify } from "quasar";
+import { usuarioStore } from "./usuario";
+
+const sUsuario = usuarioStore();
 
 export const sincronizacaoStore = defineStore("sincronizacao", {
   persist: {
@@ -65,7 +68,6 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.message,
-          timeout: 0, // 20 minutos
           actions: [{ icon: "close", color: "white" }],
         });
         var audio = new Audio("erro.mp3");
@@ -102,9 +104,21 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message:
-            "PDV não autorizado! Solicite autorização para o TI! \n UUID: " +
-            this.pdv.id,
+            "Solicite autorização para o dispositivo UUID: " + this.pdv.id,
           timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        var audio = new Audio("erro.mp3");
+        audio.play();
+        return;
+      }
+
+      // verifica se Está logado
+      await sUsuario.getUsuario();
+      if (!process.env.ACCESS_TOKEN) {
+        Notify.create({
+          type: "negative",
+          message: "Antes de sincronizar você deve fazer Login!",
           actions: [{ icon: "close", color: "white" }],
         });
         var audio = new Audio("erro.mp3");
@@ -393,15 +407,14 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         const { data } = await api.put("/api/v1/pdv/negocio", params);
         return data.data;
       } catch (error) {
+        console.log(error);
         var message = error?.response?.data?.message;
         if (!message) {
           message = error?.message;
-          console.log(error);
         }
         Notify.create({
           type: "negative",
           message: message,
-          timeout: 0, // 20 minutos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;

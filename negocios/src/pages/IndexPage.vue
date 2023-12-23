@@ -7,7 +7,6 @@ import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
 import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
 
-// const el = ref();
 const route = useRoute();
 const router = useRouter();
 const sNegocio = negocioStore();
@@ -96,8 +95,8 @@ onUnmounted(() => {
         <div class="col q-pb-sm q-pr-sm"></div>
       </div>
     </div>
-    <listagem-produtos></listagem-produtos>
-    <dialog-sincronizacao></dialog-sincronizacao>
+    <listagem-produtos />
+    <dialog-sincronizacao />
 
     <q-page-scroller
       position="bottom-right"
