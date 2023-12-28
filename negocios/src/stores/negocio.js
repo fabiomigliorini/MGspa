@@ -47,6 +47,9 @@ export const negocioStore = defineStore("negocio", {
         return item.inativo != null;
       });
     },
+    podeEditar() {
+      return this.negocio?.codnegociostatus == 1;
+    },
   },
 
   actions: {
@@ -58,8 +61,8 @@ export const negocioStore = defineStore("negocio", {
         .sortBy("criacao");
     },
 
-    async carregar(id) {
-      const negocio = await db.negocio.get(id);
+    async carregar(uuid) {
+      const negocio = await db.negocio.get(uuid);
       if (negocio != undefined) {
         this.negocio = negocio;
       }
@@ -69,14 +72,14 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async recarregar() {
-      this.negocio = await db.negocio.get(this.negocio.id);
+      this.negocio = await db.negocio.get(this.negocio.uuid);
       return true;
     },
 
     criar() {
-      const id = uid();
+      const uuid = uid();
       const negocio = {
-        id: id,
+        uuid: uuid,
         codnegocio: null,
         codestoquelocal: this.padrao.codestoquelocal,
         codestoquelocaldestino: null,
@@ -111,7 +114,7 @@ export const negocioStore = defineStore("negocio", {
         sincronizado: false,
         codnegociostatus: 1, //aberto
       };
-      db.negocio.add(negocio, id);
+      db.negocio.add(negocio, uuid);
       this.atualizarListagem();
       this.negocio = negocio;
       return negocio;
@@ -282,7 +285,7 @@ export const negocioStore = defineStore("negocio", {
       this.negocio.lancamento = new Date();
       this.negocio.sincronizado = false;
       const ret = await db.negocio.put(toRaw(this.negocio));
-      this.sincronizar(this.negocio.id);
+      this.sincronizar(this.negocio.uuid);
       this.atualizarListagem();
       return ret;
     },
@@ -316,7 +319,7 @@ export const negocioStore = defineStore("negocio", {
         item.alteracao = new Date();
       } else {
         var item = {
-          id: uid(),
+          uuid: uid(),
           codprodutobarra,
           barras,
           codproduto,
@@ -570,8 +573,8 @@ export const negocioStore = defineStore("negocio", {
       await this.salvar();
     },
 
-    async sincronizar(id) {
-      const negocio = await db.negocio.get(id);
+    async sincronizar(uuid) {
+      const negocio = await db.negocio.get(uuid);
       try {
         const ret = await sSinc.putNegocio(negocio);
         if (!ret) {
@@ -581,7 +584,7 @@ export const negocioStore = defineStore("negocio", {
           codnegocio: ret.codnegocio,
           codnegociostatus: ret.codnegociostatus,
         });
-        if ((this.negocio.id = ret.uuid)) {
+        if ((this.negocio.uuid = ret.uuid)) {
           this.negocio.codnegocio = ret.codnegocio;
           this.negocio.codnegociostatus = ret.codnegociostatus;
           if (
@@ -597,11 +600,21 @@ export const negocioStore = defineStore("negocio", {
             });
           }
         }
-        console.log(ret);
       } catch (error) {
         console.log(error);
       }
       this.atualizarListagem();
+    },
+
+    async recarregarDaApi(codOrUuid) {
+      try {
+        const ret = await sSinc.getNegocio(codOrUuid);
+        this.negocio = ret;
+        db.negocio.put(ret);
+        this.atualizarListagem();
+      } catch (error) {
+        console.log(erro);
+      }
     },
   },
 });

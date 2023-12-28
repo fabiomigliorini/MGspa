@@ -3,6 +3,7 @@
 namespace Mg\Usuario;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Mg\Pessoa\PessoaResource;
 
 class UsuarioResource extends JsonResource
 {
@@ -16,6 +17,9 @@ class UsuarioResource extends JsonResource
     {   
         $ret = parent::toArray($request);
         unset($ret['senha']);
+        if ($this->codpessoa) {
+            $ret['Pessoa'] = new PessoaResource($this->Pessoa);
+        }
         $ret['permissoes'] = UsuarioService::buscaGrupoPermissoes($this->codusuario);
         return $ret;
     }

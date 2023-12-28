@@ -154,7 +154,32 @@ const formaPagamentoPadrao = () => {
 };
 
 const sincronizar = () => {
-  sNegocio.sincronizar(sNegocio.negocio.id);
+  sNegocio.sincronizar(sNegocio.negocio.uuid);
+};
+
+const recarregarDaApi = () => {
+  Dialog.create({
+    title: "Recarregar",
+    message:
+      "Tem certeza que você deseja recarregar os dados do servidor? Você poderá perder as informações alteradas deste negócio!",
+    cancel: true,
+    options: {
+      type: "toggle",
+      model: [],
+      items: [
+        {
+          label: "Sim, pode apagar o que eu alterei!",
+          value: "OK",
+          color: "negative",
+        },
+      ],
+    },
+  }).onOk((data) => {
+    if (data[0] == "OK") {
+      const cod = sNegocio.negocio.codnegocio || sNegocio.negocio.uuid;
+      sNegocio.recarregarDaApi(cod);
+    }
+  });
 };
 </script>
 <template>
@@ -240,7 +265,11 @@ const sincronizar = () => {
       <q-form ref="formItem" @submit="salvarPessoa()">
         <q-card-section>
           <q-list>
-            <q-item clickable v-ripple @click="informarVendedor(null)">
+            <q-item
+              :clickable="sNegocio.podeEditar"
+              v-ripple
+              @click="informarVendedor(null)"
+            >
               <q-item-section avatar>
                 <q-avatar
                   color="negative"
@@ -253,7 +282,7 @@ const sincronizar = () => {
             <q-item
               v-for="vendedor in vendedores"
               :key="vendedor.codpessoa"
-              clickable
+              :clickable="sNegocio.podeEditar"
               v-ripple
               @click="informarVendedor(vendedor.codpessoa)"
             >
@@ -276,7 +305,7 @@ const sincronizar = () => {
     <!-- <q-item-label header>Pessoa</q-item-label> -->
 
     <!-- Filial -->
-    <q-item clickable v-ripple @click="editarPessoa()">
+    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
         <q-avatar icon="store" color="grey" text-color="white" />
       </q-item-section>
@@ -292,7 +321,7 @@ const sincronizar = () => {
     </q-item>
 
     <!-- Natureza -->
-    <q-item clickable v-ripple @click="editarPessoa()">
+    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
         <q-avatar icon="work" color="grey" text-color="white" />
       </q-item-section>
@@ -309,7 +338,7 @@ const sincronizar = () => {
     </q-item>
 
     <!-- PESSOA -->
-    <q-item clickable v-ripple @click="editarPessoa()">
+    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
         <q-avatar icon="person" color="grey" text-color="white" />
       </q-item-section>
@@ -370,7 +399,7 @@ const sincronizar = () => {
 
     <!-- OBSERVACOES -->
     <q-item
-      clickable
+      :clickable="sNegocio.podeEditar"
       v-ripple
       v-if="sNegocio.negocio.observacoes"
       @click="editarPessoa()"
@@ -389,7 +418,7 @@ const sincronizar = () => {
 
     <template v-if="sNegocio.negocio.Pessoa != undefined">
       <q-item
-        clickable
+        :clickable="sNegocio.podeEditar"
         v-ripple
         v-if="sNegocio.negocio.Pessoa.codformapagamento"
         @click="formaPagamentoPadrao()"
@@ -410,7 +439,7 @@ const sincronizar = () => {
     <q-separator spaced inset />
 
     <!-- VENDEDOR -->
-    <q-item clickable v-ripple @click="editarVendedor()">
+    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarVendedor()">
       <q-item-section avatar top>
         <q-avatar icon="escalator_warning" color="grey" text-color="white" />
       </q-item-section>
@@ -431,11 +460,13 @@ const sincronizar = () => {
     <q-separator spaced inset />
 
     <!-- CODIGOS -->
-    <q-item clickable v-ripple @click="sincronizar()">
+    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="sincronizar()">
       <q-item-section avatar top>
         <q-avatar
           icon="fingerprint"
-          :color="sNegocio.negocio.sincronizado == true ? 'green' : 'red'"
+          :color="
+            sNegocio.negocio.sincronizado == true ? 'positive' : 'negative'
+          "
           text-color="white"
         />
       </q-item-section>
@@ -445,7 +476,16 @@ const sincronizar = () => {
           #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
         </q-item-label>
         <q-item-label lines="1" v-else> Não Integrado </q-item-label>
-        <q-item-label caption>{{ sNegocio.negocio.id }}</q-item-label>
+        <q-item-label caption>{{ sNegocio.negocio.uuid }}</q-item-label>
+      </q-item-section>
+
+      <q-item-section side>
+        <q-btn
+          @click="recarregarDaApi()"
+          flat
+          color="negative"
+          icon="file_download"
+        />
       </q-item-section>
     </q-item>
   </q-list>

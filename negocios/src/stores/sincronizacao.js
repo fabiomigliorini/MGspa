@@ -4,6 +4,9 @@ import { db } from "boot/db";
 import { uid } from "quasar";
 import { Platform } from "quasar";
 import { Notify } from "quasar";
+import { usuarioStore } from "./usuario";
+
+const sUsuario = usuarioStore();
 
 export const sincronizacaoStore = defineStore("sincronizacao", {
   persist: {
@@ -21,7 +24,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
     labelSincronizacao: "",
     pdv: {
       // envia para api
-      id: null,
+      uuid: null,
       latitude: null,
       longitude: null,
       precisao: null,
@@ -50,8 +53,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
   actions: {
     async dispositivo() {
-      if (!this.pdv.id) {
-        this.pdv.id = uid();
+      if (!this.pdv.uuid) {
+        this.pdv.uuid = uid();
       }
 
       try {
@@ -65,8 +68,6 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.message,
-          timeout: 0, // 20 minutos
-          actions: [{ icon: "close", color: "white" }],
         });
         var audio = new Audio("erro.mp3");
         audio.play();
@@ -78,7 +79,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       this.pdv.versaonavegador = plat.version;
       this.pdv.desktop = plat.desktop ? 1 : 0;
       const params = {
-        uuid: this.pdv.id,
+        uuid: this.pdv.uuid,
         latitude: this.pdv.latitude,
         longitude: this.pdv.longitude,
         precisao: this.pdv.precisao,
@@ -102,9 +103,21 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message:
-            "PDV não autorizado! Solicite autorização para o TI! \n UUID: " +
-            this.pdv.id,
+            "Solicite autorização para o dispositivo UUID: " + this.pdv.uuid,
           timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        var audio = new Audio("erro.mp3");
+        audio.play();
+        return;
+      }
+
+      // verifica se Está logado
+      await sUsuario.getUsuario();
+      if (!process.env.ACCESS_TOKEN) {
+        Notify.create({
+          type: "negative",
+          message: "Antes de sincronizar você deve fazer Login!",
           actions: [{ icon: "close", color: "white" }],
         });
         var audio = new Audio("erro.mp3");
@@ -116,12 +129,14 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       this.importacao.rodando = true;
 
       // roda as importacoes
-      await this.sincronizarImpressora();
-      await this.sincronizarFormaPagamento();
-      await this.sincronizarEstoqueLocal();
-      await this.sincronizarNaturezaOperacao();
-      await this.sincronizarPessoa();
-      await this.sincronizarProduto();
+      try {
+        await this.sincronizarImpressora();
+        await this.sincronizarFormaPagamento();
+        await this.sincronizarEstoqueLocal();
+        await this.sincronizarNaturezaOperacao();
+        await this.sincronizarPessoa();
+        await this.sincronizarProduto();
+      } catch (error) {}
 
       // esconde janela de progresso
       this.importacao.rodando = false;
@@ -148,7 +163,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/impressora", {
-          params: { uuid: this.pdv.id },
+          params: { uuid: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -163,6 +178,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Impressoras");
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
       }
     },
 
@@ -174,7 +193,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/forma-pagamento", {
-          params: { uuid: this.pdv.id },
+          params: { uuid: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -189,6 +208,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Formas de Pagamento");
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
       }
     },
 
@@ -200,7 +223,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/estoque-local", {
-          params: { uuid: this.pdv.id },
+          params: { uuid: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -215,6 +238,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Locais de Estoque");
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
       }
     },
 
@@ -226,7 +253,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/natureza-operacao", {
-          params: { uuid: this.pdv.id },
+          params: { uuid: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -241,6 +268,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Natureza Operacao");
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
       }
     },
 
@@ -251,7 +282,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       // descobre o total de registros pra sincronizar
       try {
         let { data } = await api.get("/api/v1/pdv/pessoa-count", {
-          params: { uuid: this.pdv.id },
+          params: { uuid: this.pdv.uuid },
         });
         this.importacao.totalRegistros = data.count;
         this.importacao.limiteRequisicao = Math.round(
@@ -260,6 +291,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       } catch (error) {
         console.log(error);
         console.log("Impossível acessar API");
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
       }
 
       let sincronizado = null;
@@ -270,7 +305,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         // busca dados na api
         var { data } = await api.get("/api/v1/pdv/pessoa", {
           params: {
-            uuid: this.pdv.id,
+            uuid: this.pdv.uuid,
             codpessoa: codpessoa,
             limite: this.importacao.limiteRequisicao,
           },
@@ -321,7 +356,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       // descobre o total de registros pra sincronizar
       try {
         let { data } = await api.get("/api/v1/pdv/produto-count", {
-          params: { uuid: this.pdv.id },
+          params: { uuid: this.pdv.uuid },
         });
         this.importacao.totalRegistros = data.count;
         this.importacao.limiteRequisicao = Math.round(
@@ -330,6 +365,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       } catch (error) {
         console.log(error);
         console.log("Impossível acessar API");
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
       }
 
       let sincronizado = null;
@@ -340,7 +379,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         // busca dados na api
         var { data } = await api.get("/api/v1/pdv/produto", {
           params: {
-            uuid: this.pdv.id,
+            uuid: this.pdv.uuid,
             codprodutobarra: codprodutobarra,
             limite: this.importacao.limiteRequisicao,
           },
@@ -386,22 +425,44 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
     async putNegocio(negocio) {
       const params = {
-        uuid: this.pdv.id,
+        uuid: this.pdv.uuid,
         negocio: negocio,
       };
       try {
         const { data } = await api.put("/api/v1/pdv/negocio", params);
         return data.data;
       } catch (error) {
+        console.log(error);
         var message = error?.response?.data?.message;
         if (!message) {
           message = error?.message;
-          console.log(error);
         }
         Notify.create({
           type: "negative",
           message: message,
-          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async getNegocio(codOrUuid) {
+      try {
+        const { data } = await api.get("/api/v1/pdv/negocio/" + codOrUuid, {
+          params: {
+            uuid: this.pdv.uuid,
+          },
+        });
+        return data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
           actions: [{ icon: "close", color: "white" }],
         });
         return false;

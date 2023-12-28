@@ -3,6 +3,7 @@ import { ref } from "vue";
 import LeftDrawer from "components/LeftDrawer.vue";
 import RightDrawer from "components/RightDrawer.vue";
 import ComputerSettings from "components/ComputerSettings.vue";
+import UsuarioConectado from "components/UsuarioConectado.vue";
 
 const leftDrawerOpen = ref(false);
 const rightDrawerOpen = ref(false);
@@ -27,32 +28,12 @@ const toggleRightDrawer = () => {
           </q-avatar>
           Negócios
         </q-toolbar-title>
-        <div class="gt-xs">Quasar v{{ $q.version }}</div>
+        <div class="gt-xs q-mr-sm">v0.1</div>
 
-        <!-- <q-btn dense flat round icon="settings" @click="toggleSettings" /> -->
-        <!--
-        <q-btn-dropdown dense flat icon="settings">
-          <computer-settings></computer-settings>
-          <div class="row no-wrap q-pa-md justify-center">
-            <div class="column items-center">
-              <q-avatar size="72px">
-                <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
-              </q-avatar>
-              <div class="text-subtitle1 q-mt-md q-mb-xs">{{ user }}</div>
-
-              <q-btn
-                color="primary"
-                label="Sair"
-                push
-                size="sm"
-                v-close-popup
-                @click="Deslogar"
-              />
-            </div>
-          </div>
-        </q-btn-dropdown>
--->
-        <ComputerSettings></ComputerSettings>
+        <usuario-conectado />
+        &nbsp;
+        <computer-settings />
+        &nbsp;
 
         <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
       </q-toolbar>

@@ -341,7 +341,7 @@ const recalcularValorTotal = () => {
       </q-item-section>
     </q-item>
 
-    <q-item @click="editarValores()" v-ripple clickable>
+    <q-item @click="editarValores()" v-ripple :clickable="sNegocio.podeEditar">
       <q-item-section class="text-right">
         <Transition
           mode="out-in"

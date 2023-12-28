@@ -99,19 +99,25 @@ class PdvService
                 $item->quantidade = floatval($item->quantidade);
             }
             $item->preco = floatval($item->preco);
-            if (!empty($item->variacao)) {
-                $item->produto .= ' ' . $item->variacao;
-            }
-            $item->produto .= ' ' . $item->sigla;
-            if (!empty($item->quantidade)) {
-                $item->produto .= ' C/' . intval($item->quantidade);
-            }
-            $item->produto .= ' ' . number_format($item->preco, 2, ',', '.');
-            $item->busca = $item->produto;
+            $item->produto = static::montarDescricaoProduto($item->produto, $item->variacao, $item->sigla, $item->quantidade);
+            $item->busca = $item->produto . ' ' . number_format($item->preco, 2, ',', '.');
             $item->buscaArr = array_values(array_unique(explode(' ', $item->busca)));
             return $item;
         }, $regs);
         return $regs;
+    }
+
+    public static function montarDescricaoProduto($produto, $variacao, $unidade, $quantidade)
+    {
+        $descricao = $produto;
+        if (!empty($variacao)) {
+            $descricao .= ' ' . $variacao;
+        }
+        $descricao .= ' ' . $unidade;
+        if (!empty($quantidade)) {
+            $descricao .= ' C/' . intval($quantidade);
+        }
+        return $descricao;
     }
 
     public static function pessoaCount()
