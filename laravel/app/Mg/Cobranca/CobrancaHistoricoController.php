@@ -29,7 +29,6 @@ class CobrancaHistoricoController extends MgController
     public function show(Request $request, $codpessoa, $codcobrancahistorico)
     {
         $pessoa = CobrancaHistorico::findOrFail($codcobrancahistorico);
-        dd($pessoa);
         return new PessoaResource($pessoa);
     }
 
