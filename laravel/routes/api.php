@@ -226,11 +226,19 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::delete('pessoa/{codpessoa}/endereco/{codpessoaendereco}/inativo', '\Mg\Pessoa\PessoaEnderecoController@ativar');
 
     // Pessoa Certidão
-    Route::get('pessoa/{codpessoa}/certidao/', '\Mg\Pessoa\PessoaCertidaoController@index');
-    Route::post('pessoa/{codpessoa}/certidao/', '\Mg\Pessoa\PessoaCertidaoController@create');
-    Route::get('pessoa/{codpessoa}/certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@show');
-    Route::put('pessoa/{codpessoa}/certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@update');
-    Route::delete('pessoa/{codpessoa}/certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@delete');
+    // Route::get('pessoa/{codpessoa}/certidao/', '\Mg\Pessoa\PessoaCertidaoController@index');
+    Route::post('certidao/', '\Mg\Pessoa\PessoaCertidaoController@create');
+    Route::get('certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@show');
+    Route::put('certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@update');
+    Route::delete('certidao/{codpessoacertidao}/', '\Mg\Pessoa\PessoaCertidaoController@delete');
+    Route::get('select/certidao/emissor', '\Mg\Pessoa\PessoaCertidaoController@selectCertidaoEmissor');
+    Route::get('select/certidao/tipo', '\Mg\Pessoa\PessoaCertidaoController@selectCertidaoTipo');
+    Route::post('certidao/{codpessoacertidao}/inativo', '\Mg\Pessoa\PessoaCertidaoController@inativar');
+    Route::delete('certidao/{codpessoacertidao}/inativo', '\Mg\Pessoa\PessoaCertidaoController@ativar');
+
+
+
+
 
     // Pessoa Conta
     Route::get('pessoa/{codpessoa}/conta/', '\Mg\Pessoa\PessoaContaController@index');
@@ -269,19 +277,19 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::delete('certidao/{codpessoa}/certidaotipo/{codcertidaotipo}/', '\Mg\Certidao\CertidaoTipoController@delete');
 
     // RegistroSpc
-    Route::get('pessoa/{codpessoa}/registrospc/', '\Mg\Pessoa\RegistroSpcController@index');
-    Route::post('pessoa/{codpessoa}/registrospc/', '\Mg\Pessoa\RegistroSpcController@create');
-    Route::get('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@show');
-    Route::put('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@update');
-    Route::delete('pessoa/{codpessoa}/registrospc/{codregistrospc}/', '\Mg\Pessoa\RegistroSpcController@delete');
+    Route::get('registrospc/{codpessoa}', '\Mg\RegistroSpc\RegistroSpcController@index');
+    Route::post('registrospc/', '\Mg\RegistroSpc\RegistroSpcController@create');
+    Route::get('registrospc/{codregistrospc}/', '\Mg\RegistroSpc\RegistroSpcController@show');
+    Route::put('registrospc/{codregistrospc}/', '\Mg\RegistroSpc\RegistroSpcController@update');
+    Route::delete('registrospc/{codregistrospc}/', '\Mg\RegistroSpc\RegistroSpcController@delete');
 
 
-    // Pessoa Cobrança Historico
-    Route::get('pessoa/{codpessoa}/cobrancahistorico/', '\Mg\Cobranca\CobrancaHistoricoController@index');
-    Route::post('pessoa/{codpessoa}/cobrancahistorico/', '\Mg\Cobranca\CobrancaHistoricoController@create');
-    Route::get('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@show');
-    Route::put('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@update');
-    Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@delete');
+    // Cobrança Historico
+    Route::get('cobrancahistorico/{codpessoa}', '\Mg\Cobranca\CobrancaHistoricoController@index');
+    Route::post('cobrancahistorico/', '\Mg\Cobranca\CobrancaHistoricoController@create');
+    Route::get('cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@show');
+    Route::put('cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@update');
+    Route::delete('cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@delete');
 
 
         Route::group(['prefix' => 'produto'], function () {
