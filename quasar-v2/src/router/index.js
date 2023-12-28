@@ -38,8 +38,9 @@ export default route(function (/* { store, ssrContext } */) {
         const EstaAutenticado = await auth.verificaToken()
 
         if (EstaAutenticado) {
-
+          auth.usuarioLogado = EstaAutenticado
           auth.username(EstaAutenticado.usuario)
+          
           // Envia sempre o Token em todas as requisições
           api.defaults.headers.common['Authorization'] = 'Bearer ' + auth.token
           // api.defaults.headers.put['Access-Control-Allow-Origin'] = '*'

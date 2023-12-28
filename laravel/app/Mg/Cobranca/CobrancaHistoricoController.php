@@ -11,43 +11,44 @@ use Mg\Pessoa\PessoaResource;
 class CobrancaHistoricoController extends MgController
 {
 
-    public function index(Request $request)
+    public function index($codpessoa)
     {
-        $pessoas = CobrancaHistorico::orderBy('historico', 'asc')->paginate();
-        dd($pessoas);
-        return PessoaResource::collection($pessoas);
+        $CobrancaHistorico = CobrancaHistorico::where('codpessoa', $codpessoa)
+            ->orderBy('criacao', 'desc')->paginate(25);
+
+        return CobrancaResource::collection($CobrancaHistorico);
     }
 
-    public function create (Request $request)
+    public function create(Request $request)
     {
         $data = $request->all();
-        $pessoa = CobrancaHistoricoService::create($data);
-         dd($pessoa);
-        return new PessoaResource($pessoa);
+        $cobranca = CobrancaHistoricoService::create($data);
+        return new CobrancaResource($cobranca);
     }
 
-    public function show (Request $request, $codpessoa, $codcobrancahistorico)
+    public function show(Request $request, $codpessoa, $codcobrancahistorico)
     {
         $pessoa = CobrancaHistorico::findOrFail($codcobrancahistorico);
         dd($pessoa);
         return new PessoaResource($pessoa);
     }
 
-    public function update (Request $request, $codpessoa, $codcobrancahistorico)
+    public function update(Request $request, $codpessoa, $codcobrancahistorico)
     {
         $data = $request->all();
         $pessoa = CobrancaHistorico::findOrFail($codcobrancahistorico);
         $pessoa = CobrancaHistoricoService::update($pessoa, $data);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        
+        return new CobrancaResource($pessoa);
     }
 
-    public function delete (Request $request, $codpessoa, $codcobrancahistorico)
-    {
-
-        $pessoa = CobrancaHistorico::findOrFail($codcobrancahistorico);
-        $pessoa = CobrancaHistoricoService::delete($pessoa);
-        return new PessoaResource($pessoa);
+    public function delete($codpessoa, $codcobrancahistorico)
+    {   
+        $historico = CobrancaHistorico::findOrFail($codcobrancahistorico);
+        $historico = CobrancaHistoricoService::delete($historico);
+        return response()->json([
+            'result' => $historico
+        ], 200);
     }
-
+    
 }

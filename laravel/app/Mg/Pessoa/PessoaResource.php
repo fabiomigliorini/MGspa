@@ -35,10 +35,13 @@ class PessoaResource extends JsonResource
         // Filhos
         $ret['PessoaCertidaoS'] = [];
         // foreach ($this->PessoaCertidaoS()->where('validade', '>=', Carbon::now()) as $pc)
-        foreach ($this->PessoaCertidaoS()->orderBy('validade', 'desc')->get() as $pc) {
-            $ret['PessoaCertidaoS'][] = $pc->toArray();
-        }
+       
+        // dd($this->RegistroSpcS()->orderBy('criacao', 'desc')->get());
 
+        $ret['RegistroSpc'] = RegistroSpcResource::collection($this->RegistroSpcS()->orderBy('criacao', 'desc')->get());
+
+        $ret['PessoaCertidaoS'] = PessoaCertidaoResource::collection($this->PessoaCertidaoS()->orderBy('validade', 'desc')->get());
+        
         $ret['PessoaTelefoneS'] = PessoaTelefoneResource::collection($this->PessoaTelefoneS()->orderBy('ordem')->get());
 
         $ret['PessoaEmailS'] = PessoaEmailResource::collection($this->PessoaEmailS()->orderBy('ordem')->get());

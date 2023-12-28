@@ -1,0 +1,294 @@
+<template>
+  <!-- <q-infinite-scroll @load="scrollRegistro" :disable="loading"> -->
+    <q-card bordered>
+      <q-list>
+        <q-item-label header>
+          Registro Spc
+          <q-btn flat round icon="add"
+            @click="dialogNovoRegistroSpc = true, editarRegistro = false, modelRegistroSpc = {}" />
+        </q-item-label>
+
+        <div v-for="registro in sPessoa.item.RegistroSpc" v-bind:key="registro.codregistrospc">
+          <q-separator inset />
+          <q-item>
+            <q-item-section avatar>
+              <q-avatar>
+                <q-icon name="money_off" color="blue" />
+              </q-avatar>
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label caption lines="5">
+                Registrado por:
+                <span class="text-weight-bold">{{ registro.usuariocriacao }} </span>
+
+                <span class="row">Inclusão:
+                  <span class="text-weight-bold">&nbsp;{{ Documentos.formataDatasemHr(registro.inclusao) }}</span>
+                </span>
+
+                <span v-if="registro.baixa" class="row">Baixa:
+                  <span class="text-weight-bold">&nbsp;{{ Documentos.formataDatasemHr(registro.baixa) }}</span>
+                </span>
+
+                <span class="text-weight-bold">{{ registro.valor.toLocaleString('pt-br', {
+                  style: 'currency', currency:
+                    'BRL'
+                }) }}</span>
+                <span class="row q-mt-sm" v-if="registro.observacoes">{{ registro.observacoes }}</span>
+              </q-item-label>
+            </q-item-section>
+
+            <q-item-section side top>
+              {{ Documentos.formataData(registro.criacao) }}
+            </q-item-section>
+
+            <q-btn-dropdown flat auto-close dense>
+              <q-btn flat round icon="edit"
+                @click="editarRegistroSpc(registro.codregistrospc, registro.valor, registro.inclusao, registro.baixa, registro.observacoes)" />
+
+              <q-btn flat round icon="delete" @click="excluirRegistro(registro.codregistrospc)" />
+
+            </q-btn-dropdown>
+          </q-item>
+        </div>
+        <q-separator inset="item" />
+      </q-list>
+    </q-card>
+  <!-- </q-infinite-scroll> -->
+
+  <!-- Dialog novo Registro Spc -->
+  <q-dialog v-model="dialogNovoRegistroSpc">
+    <q-card style="min-width: 350px">
+      <q-form @submit="editarRegistro == false ? novoRegistroSpc() : salvarRegistro()">
+        <q-card-section>
+          <div v-if="editarRegistro" class="text-h6">Editar Registro Spc</div>
+          <div v-else class="text-h6">Novo Registro Spc</div>
+        </q-card-section>
+        <q-card-section class="">
+          <div class="col-6">
+            <q-input outlined v-model="modelRegistroSpc.inclusao" mask="##-##-####" label="Inclusão"
+              :rules="[
+                val => val && val.length > 0 || 'Inclusão obrigatório'
+              ]">
+              <template v-slot:append>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date v-model="modelRegistroSpc.inclusao" :locale="brasil" mask="DD-MM-YYYY">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Fechar" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+            <q-input outlined v-model="modelRegistroSpc.baixa" mask="##-##-####" class="q-mb-md" label="Baixa">
+              <template v-slot:append>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date v-model="modelRegistroSpc.baixa" :locale="brasil" mask="DD-MM-YYYY">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Fechar" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+            <q-input outlined v-model="modelRegistroSpc.valor" step="any" label="Valor" type="number" mask="#.#" :rules="[
+              val => val && val.length > 0 || 'Valor obrigatório'
+            ]" />
+
+            <q-input outlined v-model="modelRegistroSpc.observacoes" label="Observações" borderless
+              autogrow type="textarea" />
+
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Salvar" type="submit" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
+</template>
+
+<script>
+import { defineComponent, defineAsyncComponent } from 'vue'
+import { useQuasar, debounce } from "quasar"
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import { guardaToken } from 'src/stores'
+import { formataDocumetos } from 'src/stores/formataDocumentos'
+
+export default defineComponent({
+  name: "CardRegistroSpc",
+
+  methods: {
+
+    async novoRegistroSpc() {
+      this.modelRegistroSpc.codpessoa = this.route.params.id
+      try {
+        const ret = await this.sPessoa.novoRegistroSpc(this.route.params.id, this.modelRegistroSpc)
+        if (ret.data.data) {
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Registro Spc criado!'
+          })
+          this.sPessoa.get(this.route.params.id)
+          this.dialogNovoRegistroSpc = false
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: error.response.data.message
+        })
+      }
+    },
+
+    editarRegistroSpc(codregistrospc, valor, inclusao, baixa, observacoes) {
+      this.dialogNovoRegistroSpc = true
+      this.editarRegistro = true
+
+      this.modelRegistroSpc = {
+        codregistrospc: codregistrospc, inclusao: inclusao ? this.Documentos.formataDataInput(inclusao) : null,
+        baixa: baixa ? this.Documentos.formataDataInput(baixa) : null, valor: valor, observacoes: observacoes
+      }
+    },
+
+    async salvarRegistro() {
+      try {
+        const ret = await this.sPessoa.salvarEdicaoRegistro(this.route.params.id, this.modelRegistroSpc.codregistrospc, this.modelRegistroSpc)
+        if (ret.data.data) {
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Registro Spc alterado!'
+          })
+          const i = this.sPessoa.item.RegistroSpc.findIndex(item => item.codregistrospc === this.modelRegistroSpc.codregistrospc)
+          this.sPessoa.item.RegistroSpc[i] = ret.data.data
+          this.dialogNovoRegistroSpc = false
+          this.editarRegistro = false
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.response.data.message
+        })
+      }
+    },
+
+    async excluirRegistro(codregistrospc) {
+
+      this.$q.dialog({
+        title: 'Excluir Registro Spc',
+        message: 'Tem certeza que deseja excluir esse registro?',
+        cancel: true,
+      }).onOk(async () => {
+        try {
+          const ret = await this.sPessoa.excluirRegistroSpc(this.route.params.id, codregistrospc)
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Registro excluido'
+          })
+          this.sPessoa.get(this.route.params.id)
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: error.response.data.message
+          })
+        }
+      })
+    }
+  },
+
+  setup() {
+
+    const $q = useQuasar()
+    const sPessoa = pessoaStore()
+    const loading = ref(true)
+    const route = useRoute()
+    const dialogNovoRegistroSpc = ref(false)
+    const modelRegistroSpc = ref({})
+    const editarRegistro = ref(false)
+    //   const user = guardaToken()
+    const Documentos = formataDocumetos()
+    const RegistroSpc = ref([])
+    const Paginas = ref({
+      page: 1
+    })
+
+    const buscarRegistroSpc = debounce(async () => {
+      try {
+        Paginas.value.page = 1;
+        const ret = await sPessoa.getRegistroSpc(route.params.id, Paginas.value)
+        RegistroSpc.value = ret.data.data;
+        loading.value = false
+        $q.loadingBar.stop()
+        if (ret.data.data.length == 0) {
+          loading.value = true
+        }
+      } catch (error) {
+        $q.loadingBar.stop()
+      }
+    }, 500)
+
+    return {
+      sPessoa,
+      RegistroSpc,
+      Documentos,
+      route,
+      Paginas,
+      loading,
+      buscarRegistroSpc,
+      dialogNovoRegistroSpc,
+      modelRegistroSpc,
+      editarRegistro,
+      brasil: {
+        days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),
+        daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
+        months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
+        monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
+        firstDayOfWeek: 1,
+        format24h: true,
+        pluralDay: 'dias'
+      },
+      // async scrollRegistro(index, done) {
+
+      //   loading.value = true;
+      //   $q.loadingBar.start()
+      //   Paginas.value.page++;
+      //   const ret = await sPessoa.getRegistroSpc(route.params.id, Paginas.value)
+      //   sPessoa.item.RegistroSpc.push(...ret.data.data);
+      //   loading.value = false;
+
+      //   if (ret.data.data.length == 0) {
+      //     loading.value = true
+      //   }
+      //   $q.loadingBar.stop()
+      //   done();
+      // },
+    }
+  },
+  // async mounted() {
+  //   this.buscarRegistroSpc()
+  // }
+})
+</script>
+
+<style scoped></style>

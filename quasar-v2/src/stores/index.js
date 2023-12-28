@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
 import { createRouter, createWebHistory } from 'vue-router'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 /*
  * If not building with SSR mode, you can
  * directly export the Store instantiation;
@@ -18,6 +19,7 @@ export default store(() => {
   const pinia = createPinia()
   // You can add Pinia plugins here
   // pinia.use(SomePiniaPlugin)
+  pinia.use(piniaPluginPersistedstate)
 
   return pinia;
 })
@@ -50,7 +52,8 @@ export const guardaToken = defineStore('auth', () => {
   state: () => ({
     // initialize state from local storage to enable user to stay logged in
     user: JSON.parse(localStorage.getItem('usuario')),
-    returnUrl: null
+    returnUrl: null,
+    usuarioLogado: {}
   })
 
   const token = ref(localStorage.getItem('access_token'))
@@ -71,7 +74,6 @@ export const guardaToken = defineStore('auth', () => {
 
   // Acessa os dados do usuario como verificação se o token esta valido na API
   async function verificaToken() {
-
     try {
       const tokenverificacao = 'Bearer ' + token.value
       const { data } = await api.get('v1/auth/user', {
@@ -79,8 +81,10 @@ export const guardaToken = defineStore('auth', () => {
           Authorization: tokenverificacao
         }
       })
-      if (data.usuario) {
-        return data;
+
+      if (data.data.usuario) {
+        this.usuarioLogado = data.data
+        return data.data;
       } else {
         localStorage.removeItem('access_token')
         localStorage.removeItem('usuario')
@@ -89,7 +93,6 @@ export const guardaToken = defineStore('auth', () => {
     } catch (error) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('usuario')
-      console.log(error.response.data)
     }
   }
   return {

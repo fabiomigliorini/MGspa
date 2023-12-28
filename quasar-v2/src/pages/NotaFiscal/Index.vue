@@ -1,5 +1,8 @@
 <template>
-    <MGLayout>
+    <MGLayout drawer>
+      <template #tituloPagina>
+        Transferências Nota Fiscais
+      </template>
         <template #content>
           <q-page class="q-pa-sm" >
           <tabela-notas-transf :date=modeldate></tabela-notas-transf>

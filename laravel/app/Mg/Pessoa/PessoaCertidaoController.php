@@ -6,47 +6,80 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Mg\Certidao\CertidaoEmissor;
+use Mg\Certidao\CertidaoTipo;
 
 class PessoaCertidaoController extends MgController
 {
 
-    public function index(Request $request)
-    {
-        $pessoas = PessoaCertidao::orderBy('numero', 'asc')->paginate();
-        dd($pessoas);
-        return PessoaResource::collection($pessoas);
-    }
-
-    public function create (Request $request)
+    public function create(Request $request)
     {
         $data = $request->all();
-        $pessoa = PessoaCertidaoService::create($data);
-         dd($pessoa);
-        return new PessoaResource($pessoa);
+
+        $this->validate($request, [
+            'codpessoa' => 'required',
+            'numero' => 'required',
+            'validade' => 'required',
+            'codcertidaotipo' => 'required',
+            'codcertidaoemissor' => 'required',
+
+        ]);
+
+        $pessoaCertidao = PessoaCertidaoService::create($data);
+        return new PessoaCertidaoResource($pessoaCertidao);
     }
 
-    public function show (Request $request, $codpessoa, $codpessoacertidao)
+    public function show($codpessoacertidao)
     {
-        $pessoa = PessoaCertidao::findOrFail($codpessoacertidao);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        $pessoaCertidao = PessoaCertidao::findOrFail($codpessoacertidao);
+        return new PessoaCertidaoResource($pessoaCertidao);
     }
 
-    public function update (Request $request, $codpessoa, $codpessoacertidao)
+    public function update(Request $request, $codpessoacertidao)
     {
         $data = $request->all();
-        $pessoa = PessoaCertidao::findOrFail($codpessoacertidao);
-        $pessoa = PessoaCertidaoService::update($pessoa, $data);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        $pessoaCertidao = PessoaCertidao::findOrFail($codpessoacertidao);
+        $pessoaCertidao = PessoaCertidaoService::update($pessoaCertidao, $data);
+        return new PessoaCertidaoResource($pessoaCertidao);
     }
 
-    public function delete (Request $request, $codpessoa, $codpessoacertidao)
+    public function delete($codpessoacertidao)
     {
 
-        $pessoa = PessoaCertidao::findOrFail($codpessoacertidao);
-        $pessoa = PessoaCertidaoService::delete($pessoa);
-        return new PessoaResource($pessoa);
+        $pessoaCertidao = PessoaCertidao::findOrFail($codpessoacertidao);
+        $pessoaCertidao = PessoaCertidaoService::delete($pessoaCertidao);
+        return response()->json([
+            'result' => $pessoaCertidao
+        ], 200);
     }
 
+
+    public function selectCertidaoEmissor()
+    {
+       $certidaoEmissor =  CertidaoEmissor::orderBy('certidaoemissor', 'desc')->get();
+
+       return response()->json($certidaoEmissor, 200);
+    }
+
+    public function selectCertidaoTipo()
+    {
+        $certidaoTipo = CertidaoTipo::orderBy('certidaotipo', 'desc')->get();
+        return response()->json($certidaoTipo, 200);
+    }
+
+    public function ativar($codpessoacertidao)
+    {
+        $certidao = PessoaCertidao::findOrFail($codpessoacertidao);
+        $certidao = PessoaCertidaoService::ativar($certidao);
+
+        return new PessoaCertidaoResource($certidao);
+    }
+
+    public function inativar($codpessoacertidao)
+    {
+        $certidao = PessoaCertidao::findOrFail($codpessoacertidao);
+        $certidao = PessoaCertidaoService::inativar($certidao);
+
+        return new PessoaCertidaoResource($certidao);
+    }
 }

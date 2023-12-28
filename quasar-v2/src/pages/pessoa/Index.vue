@@ -1,329 +1,375 @@
 
 <template>
-  <MGLayout>
+  <MGLayout drawer>
+
+    <template #tituloPagina>
+      Pessoas
+    </template>
+
     <template #content>
-      <div class="q-pa-md q-gutter-sm" style="text-align: left; padding-top: 40px;">
-        <!-- <q-btn :to="{ name: 'pessoanova' }" round color="primary" icon="add" dense /> -->
-        <q-btn round color="primary" icon="add" dense />
-        <q-btn color="primary" label="Importar" @click="dialogimportar = true" />
-      </div>
-      <q-separator></q-separator>
-      <div class="q-pa-md q-gutter-sm" style="padding-top: 20px;">
-        <div class="text-h6 text-grey-8">
-          Pessoas
+
+      <q-infinite-scroll @load="scrollInfinito" :disable="loading">
+        <div class="row q-pa-md q-col-gutter-md">
+          <div class="col-md-4 col-sm-6 col-xs-12 col-lg-3 col-xl-2" v-for="listagempessoas in sPessoa.arrPessoas"
+            v-bind:key="listagempessoas.codpessoa">
+
+            <!-- CARD AQUI -->
+            <card-pessoas :listagempessoas="listagempessoas"></card-pessoas>
+          </div>
         </div>
-      </div>
-      <q-separator></q-separator>
-      <!-- LISTAGEM DAS PESSOAS -->
-      <div class="col-md-3 items-start q-gutter-md text-left">
-        <q-infinite-scroll @load="onLoad" class="q-pa-md row items-start q-gutter-md text-left">
-          <q-card class="col-md-3 bg-primary text-white" v-for="(listagempessoas, index) in listapessoas"
-            v-bind:key="index">
-            <q-card-section>
-              <q-btn @click="urlviewpessoa(listagempessoas.codpessoa)" flat>
-                <div class="text-h5 ellipsis">{{ listagempessoas.fantasia }}</div>
-              </q-btn>
-              <div class="text-caption text-right">{{ listagempessoas.cnpj }}</div>
-              <div class="text-caption text-right">{{ listagempessoas.ie }}</div>
-              <div class="text-h8">{{ listagempessoas.telefone1 + '/' + listagempessoas.telefone2 }}</div>
-              <div class="text-caption">{{ listagempessoas.endereco }}</div>
-            </q-card-section>
-            <q-separator dark />
-            <!-- <q-card-actions>
-        <q-btn flat>Editar</q-btn>
-        <q-btn flat>Remover</q-btn>
-      </q-card-actions> -->
-          </q-card>
-          <template v-slot:loading>
-            <div class="q-pa-md row justify-center">
-              <q-spinner-dots color="primary" size="70px" />
-            </div>
-          </template>
-        </q-infinite-scroll>
-      </div>
-      <q-separator />
+      </q-infinite-scroll>
+
+      <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.usuarioLogado.permissoes.find
+        (item => item.grupo === 'Pessoa')">
+        <q-fab icon="add" direction="up" color="accent">
+          <q-fab-action @click="dialogNovaPessoa = true, novaPessoaModel.cliente = true, novaPessoaModel.notafiscal = 1"
+            color="primary" icon="person_add" label="Nova" />
+          <q-fab-action @click="dialogimportar = true" icon="import_contacts" color="primary" label="Importar" />
+        </q-fab>
+      </q-page-sticky>
+
       <!--  ABRE A JANELA PARA IMPORTAÇÃO DE CADASTRO SEFAZ -->
-      <q-dialog v-model="dialogimportar" @keyup.enter="ImportarSefaz">
+      <q-dialog v-model="dialogimportar">
         <q-card>
-          <q-card-section>
-            <div class="text-h6">Importar Pessoa</div>
-            <div class="text-caption">Importar cadastro da Receita Federal ou Sintegra</div>
-          </q-card-section>
+          <q-form @submit="ImportarSefaz">
+            <div class="q-pa-md">
+              <q-card-section>
+                <div class="text-h6">Importar Pessoa</div>
+                <div class="text-caption">Importar cadastro da Receita Federal ou Sintegra</div>
+              </q-card-section>
+              <q-card-section>
+                <div class="q-gutter-md">
+                  <q-input label="CNPJ" mask="##.###.###/####-##" outlined v-model="importarsefazmodel.cnpj" autofocus
+                    unmasked-value />
+                  <q-input label="CPF" mask="###.###.###-##" outlined v-model="importarsefazmodel.cpf" unmasked-value />
+                  <q-input label="IE" v-model="importarsefazmodel.ie" outlined />
+                  <q-select label="UF" v-model="importarsefazmodel.uf" :options="estados" autofocus outlined />
 
-          <q-card-section class="q-pt-none">
-            <q-input label="CNPJ" mask="##.###.###/####-##" dense v-model="importarsefazmodel.cnpj" autofocus
-              @keyup.enter="dialogimportar = false" unmasked-value />
-            <q-input label="CPF" mask="###.###.###-##" dense v-model="importarsefazmodel.cpf"
-              @keyup.enter="dialogimportar = false" unmasked-value />
-            <q-input label="IE" dense v-model="importarsefazmodel.ie" @keyup.enter="dialogimportar = false" />
-            <q-select label="UF" dense v-model="importarsefazmodel.uf" :options="[
-              { label: 'Acre', value: 'AC' },
-              { label: 'Alagoas', value: 'AL' },
-              { label: 'Amapá', value: 'AP' },
-              { label: 'Amazonas', value: 'AM' },
-              { label: 'Bahia', value: 'BA' },
-              { label: 'Espírito Santo', value: 'ES' },
-              { label: 'Goiás', value: 'GO' },
-              { label: 'Maranhão', value: 'MA' },
-              { label: 'Mato Grosso', value: 'MT' },
-              { label: 'Mato Grosso do Sul', value: 'MS' },
-              { label: 'Minas Gerais', value: 'MG' },
-              { label: 'Pará', value: 'PA' },
-              { label: 'Paraíba', value: 'PB' },
-              { label: 'Paraná', value: 'PR' },
-              { label: 'Pernambuco', value: 'PE' },
-              { label: 'Piauí', value: 'PI' },
-              { label: 'Rio de Janeiro', value: 'RJ' },
-              { label: 'Rio Grande do Norte', value: 'RN' },
-              { label: 'Rio Grande do Sul', value: 'RS' },
-              { label: 'Rondônia', value: 'RO' },
-              { label: 'Roraima', value: 'RR' },
-              { label: 'Santa Catarina', value: 'SC' },
-              { label: 'São Paulo', value: 'SP' },
-              { label: 'Sergipe', value: 'SE' },
-              { label: 'Tocantins', value: 'TO' },
-              { label: 'Distrito Federal', value: 'DF' },
-              { label: 'Pará', value: 'PA' }
-            ]" autofocus @keyup.enter="dialogimportar = false" />
-            <q-select label="Filial" v-model="importarsefazmodel.codfilial" dense autofocus
-              @keyup.enter="dialogimportar = false" />
-          </q-card-section>
-
-          <q-card-actions align="right" class="text-primary">
-            <q-btn flat label="Cancelar" v-close-popup />
-            <q-btn flat label="Importar" @click="ImportarSefaz" v-close-popup />
-          </q-card-actions>
+                  <SelectFilial v-model="importarsefazmodel.codfilial"></SelectFilial>
+                  <!-- <q-select label="Filial" v-model="importarsefazmodel.codfilial" autofocus outlined /> -->
+                </div>
+              </q-card-section>
+              <q-card-actions align="right" class="text-primary">
+                <q-btn flat label="Cancelar" v-close-popup />
+                <q-btn flat label="Importar" type="submit" />
+              </q-card-actions>
+            </div>
+          </q-form>
         </q-card>
       </q-dialog>
-      <!-- Menu Drawer personalizado filtro -->
-    </template>
-    <template #drawer>
-      <q-separator></q-separator>
-      <q-item-label header>Filtro Pessoa</q-item-label>
-      <q-separator></q-separator>
-      <br>
 
-      <div class="q-pa-md-float" @keyup.enter="filtropessoa">
-        <q-input filled v-model="filtro.codpessoa" label="#" />
-        <q-input filled v-model="filtro.nome" label="Nome" autofocus unmasked-value />
-        <q-input filled v-model="filtro.cnpj" label="Cnpj/Cpf" unmasked-value />
-        <q-input filled v-model="filtro.email" label="Email" />
-        <q-input filled v-model="filtro.fone" label="Fone" />
-      </div>
-      <q-separator></q-separator>
-      <br>
-      <q-separator></q-separator>
-      <div class="col-sm-4 col-lg-6 q-py-md text-center">
-        <q-btn color="primary" class="text-center" icon="search" label="Pesquisar" @click="filtropessoa" />
+      <!-- Dialog cadastro nova pessoa -->
+      <q-dialog v-model="dialogNovaPessoa">
+        <q-card>
+          <q-form @submit="novaPessoa()">
+            <div class="q-pa-md">
+              <q-card-section>
+                <div class="q-gutter-md">
+                  <q-input label="Nome Fantasia" outlined v-model="novaPessoaModel.fantasia" autofocus unmasked-value
+                    required />
+                  <q-input label="Razão Social" outlined v-model="novaPessoaModel.pessoa" unmasked-value required />
+                  <q-toggle outlined v-model="novaPessoaModel.fisica" label="Pessoa Física" />
+                  <q-toggle outlined v-model="novaPessoaModel.cliente" label="Cliente" />
+
+                  <q-input v-if="novaPessoaModel.fisica" label="CPF" mask="###.###.###-##" v-model="novaPessoaModel.cnpj"
+                    outlined unmasked-value required />
+                  <q-input v-if="novaPessoaModel.fisica" label="RG" v-model="novaPessoaModel.rg" outlined
+                    unmasked-value />
+
+                  <q-input v-else label="CNPJ" v-model="novaPessoaModel.cnpj" mask="##.###.###/####-##" outlined
+                    unmasked-value required />
+
+                  <div class="row">
+                    <div class="col-6">
+                      <q-input label="Inscrição Estadual" class="q-pr-md" v-model="novaPessoaModel.ie" outlined
+                        unmasked-value />
+                    </div>
+                    <div class="col-6">
+                      <q-select label="UF" v-model="novaPessoaModel.uf" :options="estados" option-label="value"
+                        option-value="value" emit-value outlined map-options />
+                    </div>
+                    <div class="col-6 q-pr-md q-mt-md">
+                      <q-select outlined v-model="novaPessoaModel.tipotransportador" label="Tipo Transportador" :options="[
+                        { label: 'Nenhum', value: 0 },
+                        { label: 'ETC - Empresa', value: 1 },
+                        { label: 'TAC - Autônomo', value: 2 },
+                        { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
+                    </div>
+
+                    <div class="col-6 q-mt-md">
+                      <q-select outlined v-model="novaPessoaModel.notafiscal" label="Nota Fiscal" :options="[
+                        { label: 'Tratamento Padrão', value: 0 },
+                        { label: 'Sempre', value: 1 },
+                        { label: 'Somente Fechamento', value: 2 },
+                        { label: 'Nunca', value: 9 }]" map-options emit-value clearable :rules="[
+    val => val >= 0 && val != null || 'Nota Fiscal Obrigátorio'
+  ]" />
+                    </div>
+
+                    <div class="col-6 q-pr-md">
+                      <q-input outlined v-model="novaPessoaModel.rntrc" label="RNTRC" mask="#########" unmasked-value />
+                    </div>
+                    <div class="col-6">
+                      <q-input outlined v-model="novaPessoaModel.nascimento" mask="##-##-####" class="q-mb-md"
+                        label="Nascimento / Fundação">
+                        <template v-slot:append>
+                          <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                              <q-date v-model="novaPessoaModel.nascimento" :locale="brasil" mask="DD-MM-YYYY">
+                                <div class="row items-center justify-end">
+                                  <q-btn v-close-popup label="Fechar" color="primary" flat />
+                                </div>
+                              </q-date>
+                            </q-popup-proxy>
+                          </q-icon>
+                        </template>
+                      </q-input>
+                    </div>
+                  </div>
+                </div>
+              </q-card-section>
+              <div class="col-6 q-pt-none">
+                <q-card-actions align="right" class="text-primary">
+                  <q-btn flat label="Cancelar" v-close-popup />
+                  <q-btn flat label="Salvar" type="submit" />
+                </q-card-actions>
+              </div>
+            </div>
+          </q-form>
+        </q-card>
+      </q-dialog>
+    </template>
+
+    <!-- Menu Drawer personalizado filtro -->
+    <template #drawer>
+      <div class="q-pa-none q-pt-sm">
+        <q-card flat>
+          <q-list>
+            <q-item-label header>
+              Filtro Pessoa
+              <q-btn icon="replay" @click="buscarPessoas()" flat round no-caps />
+            </q-item-label>
+          </q-list>
+        </q-card>
+        <q-form @change="buscarPessoas()">
+          <div class="q-pa-md q-gutter-md">
+            <q-input outlined v-model="sPessoa.filtroPesquisa.codpessoa" label="#" ref="codpessoa" type="number" />
+            <q-input outlined v-model="sPessoa.filtroPesquisa.pessoa" ref="pessoa" label="Pessoa" autofocus
+              unmasked-value />
+            <q-input outlined v-model="sPessoa.filtroPesquisa.cnpj" ref="cnpj" label="Cnpj/Cpf" unmasked-value />
+            <q-input outlined v-model="sPessoa.filtroPesquisa.email" ref="email" label="Email" />
+            <q-input outlined v-model="sPessoa.filtroPesquisa.fone" ref="fone" label="Fone" type="number" />
+            <SelectGrupoEconomico v-model="sPessoa.filtroPesquisa.codgrupoeconomico" label="Grupo Econômico">
+            </SelectGrupoEconomico>
+            <SelectCidade v-model="sPessoa.filtroPesquisa.codcidade" label="Cidade">
+            </SelectCidade>
+            <q-select outlined v-model="sPessoa.filtroPesquisa.inativo" label="Ativo / Inativo" :options="[
+              { label: 'Ativos', value: 'A' },
+              { label: 'Inativos', value: 'I' }]" map-options emit-value clearable />
+
+            <SelectFormaPagamento v-model="sPessoa.filtroPesquisa.codformapagamento" label="Forma Pagamento">
+            </SelectFormaPagamento>
+            <SelectGrupoCliente v-model="sPessoa.filtroPesquisa.codgrupocliente" label="Grupo Cliente">
+            </SelectGrupoCliente>
+          </div>
+        </q-form>
       </div>
     </template>
   </MGLayout>
 </template>
 
 <script>
-import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { ref, onMounted, defineAsyncComponent, watch, computed } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
-import { Notify } from 'quasar'
+import { formataDocumetos } from 'src/stores/formataDocumentos'
 import { useRouter } from 'vue-router'
 import { guardaToken } from 'src/stores'
+import { pessoaStore } from 'src/stores/pessoa'
+import { debounce } from 'quasar'
+
+
 
 export default {
-  components: { MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')) },
+  components: {
+    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
+    SelectGrupoEconomico: defineAsyncComponent(() => import('components/pessoa/SelectGrupoEconomico.vue')),
+    SelectCidade: defineAsyncComponent(() => import('components/pessoa/SelectCidade.vue')),
+    SelectFormaPagamento: defineAsyncComponent(() => import('components/pessoa/SelectFormaPagamento.vue')),
+    SelectGrupoCliente: defineAsyncComponent(() => import('components/pessoa/SelectGrupoCliente.vue')),
+    SelectFilial: defineAsyncComponent(() => import('components/pessoa/SelectFilial.vue')),
+    CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),
+
+  },
+
+  methods: {
+
+    async novaPessoa() {
+
+      if (this.novaPessoaModel.ie && !this.novaPessoaModel.uf) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: 'UF é obrigatória para validar Inscrição Estadual!'
+        })
+        return;
+      }
+
+      try {
+        const ret = await this.sPessoa.criarPessoa(this.novaPessoaModel)
+        if (ret.data.data) {
+          this.$q.notify({
+            color: 'green-4',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Pessoa criada!'
+          })
+          this.router.push('/pessoa/' + ret.data.data.codpessoa)
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: error.response.data.errors.cnpj ? error.response.data.errors.cnpj : error.response.data.errors.ie
+        })
+      }
+    },
+  },
 
   setup() {
 
     const loading = ref(true)
     const $q = useQuasar()
     const router = useRouter()
-    const auth = guardaToken()
-
+    const user = guardaToken()
+    const Documentos = formataDocumetos()
+    const sPessoa = pessoaStore()
+    const dialogimportar = ref(false)
+    const dialogNovaPessoa = ref(false)
+    const filtro = ref([])
+    const novaPessoaModel = ref([])
     const listapessoas = ref([])
-
-    const filtro = ref({
-
-    })
+    const estados = ref([
+      { label: 'Acre', value: 'AC' },
+      { label: 'Alagoas', value: 'AL' },
+      { label: 'Amapá', value: 'AP' },
+      { label: 'Amazonas', value: 'AM' },
+      { label: 'Bahia', value: 'BA' },
+      { label: 'Espírito Santo', value: 'ES' },
+      { label: 'Goiás', value: 'GO' },
+      { label: 'Maranhão', value: 'MA' },
+      { label: 'Mato Grosso', value: 'MT' },
+      { label: 'Mato Grosso do Sul', value: 'MS' },
+      { label: 'Minas Gerais', value: 'MG' },
+      { label: 'Pará', value: 'PA' },
+      { label: 'Paraíba', value: 'PB' },
+      { label: 'Paraná', value: 'PR' },
+      { label: 'Pernambuco', value: 'PE' },
+      { label: 'Piauí', value: 'PI' },
+      { label: 'Rio de Janeiro', value: 'RJ' },
+      { label: 'Rio Grande do Norte', value: 'RN' },
+      { label: 'Rio Grande do Sul', value: 'RS' },
+      { label: 'Rondônia', value: 'RO' },
+      { label: 'Roraima', value: 'RR' },
+      { label: 'Santa Catarina', value: 'SC' },
+      { label: 'São Paulo', value: 'SP' },
+      { label: 'Sergipe', value: 'SE' },
+      { label: 'Tocantins', value: 'TO' },
+      { label: 'Distrito Federal', value: 'DF' },
+      { label: 'Pará', value: 'PA' }
+    ])
 
     const importarsefazmodel = ref({
-      codfilial: '101'
+      // codfilial: '101'
     })
-
-    // Faz as listagem de todas as pessoas 
-    const getValores = async () => {
-      $q.loading.show({
-      })
-      try {
-        const { data } = await api.get('v1/pessoa')
-        loading.value = false
-        listapessoas.value = data.data
-        $q.loading.hide()
-      } catch (error) {
-        console.log(error)
-      }
-    }
-
-    //Monta a URL para vizualizar detalhes da pessoa
-    const urlviewpessoa = async (codpessoa) => {
-
-      if (codpessoa) {
-        var a = document.createElement('a');
-        a.href = "/#/pessoa/" + codpessoa
-        a.click();
-      }
-    }
 
     // Pega o código da filial pelo usuario logado
     const codfilial = async () => {
 
-      const codfilial = await auth.verificaToken()
-      // if(codfilial.codfilial){
-      //   importarsefazmodel.value.codfilial = codfilial.codfilial
-      // }
-
+      const usuario = user.usuarioLogado
+      if (usuario.codfilial) {
+        importarsefazmodel.value.codfilial = usuario.codfilial
+      }
     }
 
-
-    // Pesquisa de pessoa pelo filtro
-    const filtropessoa = async () => {
-
-      $q.loading.show({
-      })
-
+    const buscarPessoas = debounce(async () => {
+      $q.loadingBar.start()
+      sPessoa.filtroPesquisa.page = 1;
       try {
-        if (filtro.value.cnpj) {
-          filtro.value.cnpj = filtro.value.cnpj.replace(/[^\d]+/g, '')
-          const { data } = await api.get('v1/pessoa/search?cnpj=' + filtro.value.cnpj)
-
-          if (data.total > 0) {
-            listapessoas.value = data.data
-            $q.loading.hide()
-            return
-          } else {
-            $q.notify({
-              color: 'red-5',
-              textColor: 'white',
-              icon: 'warning',
-              message: 'Nenhum registro encontrado!'
-            })
-            $q.loading.hide()
-          }
-        }
-
-        if (filtro.value.codpessoa) {
-
-          const { data } = await api.get('v1/pessoa/search?codpessoa=' + filtro.value.codpessoa)
-
-          if (data.total > 0) {
-            listapessoas.value = data.data
-            $q.loading.hide()
-            return
-          } else {
-            $q.notify({
-              color: 'red-5',
-              textColor: 'white',
-              icon: 'warning',
-              message: 'Nenhum registro encontrado!'
-            })
-            $q.loading.hide()
-          }
-        }
-
-        if (filtro.value.email) {
-
-          const { data } = await api.get('v1/pessoa/search?email=' + filtro.value.email)
-
-          if (data.total > 0) {
-            listapessoas.value = data.data
-            $q.loading.hide()
-            return
-          } else {
-            $q.notify({
-              color: 'red-5',
-              textColor: 'white',
-              icon: 'warning',
-              message: 'Nenhum registro encontrado!'
-            })
-            $q.loading.hide()
-          }
-        }
-
-        const { data } = await api.get('v1/pessoa/search?search=' + filtro.value.nome)
-
-        if (data.total > 0) {
-          listapessoas.value = data.data
-          $q.loading.hide()
-          return
-        } else {
-          $q.notify({
+        const ret = await sPessoa.buscarPessoas();
+        loading.value = false;
+        $q.loadingBar.stop()
+        if (ret.data.data.length == 0) {
+          return $q.notify({
             color: 'red-5',
             textColor: 'white',
             icon: 'warning',
-            message: 'Nenhum registro encontrado!'
+            message: 'Nenhum Registro encontrado'
           })
-          $q.loading.hide()
         }
       } catch (error) {
-        console.log(error)
+        $q.loadingBar.stop()
       }
+    }, 500)
 
-      // setTimeout(async () => {
-      //     const paginapessoa = index++
-      //     const query = `?page=${paginapessoa}`
-      //     const {data} = await api.get('v1/pessoa' + query)
-      //     listapessoas.value.push(...data.data)
-      //     done()
-      //   }, 2000)
-    }
+    watch(
+      () => sPessoa.filtroPesquisa.codformapagamento,
+      () => buscarPessoas(),
+      { deep: true }
+    );
+
+    watch(
+      () => sPessoa.filtroPesquisa.inativo,
+      () => buscarPessoas(),
+      { deep: true }
+    );
+
+    watch(
+      () => sPessoa.filtroPesquisa.codgrupocliente,
+      () => buscarPessoas(),
+      { deep: true }
+    );
 
     // Importa cadastro da sefaz/receitaws
     const ImportarSefaz = async () => {
       $q.loading.show({
       })
       try {
-        const { data } = await api.post('v1/pessoa/importar', importarsefazmodel.value)
-
-        if (data.data && data.data.length > 0) {
+        const ret = await api.post('v1/pessoa/importar', importarsefazmodel.value)
+        if (ret.data.data && ret.data.data.length > 0) {
           $q.notify({
             color: 'green-4',
             textColor: 'white',
             icon: 'done',
-            message: data.data.length + ' cadastro(s) importados!'
+            message: ret.data.data.length + ' cadastro(s) importados!'
           })
-          listapessoas.value = data.data
-          $q.loading.hide()
-        } else {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            icon: 'warning',
-            message: 'Erro ao importar cadastro, verifique se o cnpj ou cpf está correto'
-          })
+          sPessoa.arrPessoas = ret.data.data
+          dialogimportar.value = false
           $q.loading.hide()
         }
       } catch (error) {
-        if (error.response.data.message) {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            icon: 'warning',
-            message: error.response.data.message ?? 'Erro ao importar cadastro'
-          })
-          $q.loading.hide()
-        } else {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            icon: 'warning',
-            message: 'Erro interno importar cadastro, por favor tente novamente mais tarde'
-          })
-          $q.loading.hide()
-        }
+        $q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: error.response.data.message ?? 'Erro ao importar cadastro'
+        })
+        $q.loading.hide()
       }
     }
 
-    onMounted(() => {
-      // getValores()
-      codfilial()
+    onMounted(async () => {
+      codfilial();
+      if (sPessoa.arrPessoas.length == 0) {
+        buscarPessoas();
+      }
+      if (sPessoa.filtroPesquisa.codcidade) {
+        const ret = await sPessoa.consultaCidade(sPessoa.filtroPesquisa.codcidade)
+        sPessoa.filtroPesquisa.codcidade = ret.data[0]
+
+      }
     })
 
     return {
@@ -332,19 +378,38 @@ export default {
       codfilial,
       importarsefazmodel,
       filtro,
+      Documentos,
+      user,
+      router,
+      estados,
+      buscarPessoas,
+      sPessoa,
       ImportarSefaz,
-      urlviewpessoa,
-      onLoad(index, done) {
-        setTimeout(async () => {
-          const paginapessoa = index++
-          const query = `?page=${paginapessoa}`
-          const { data } = await api.get('v1/pessoa' + query)
-          listapessoas.value.push(...data.data)
-          done()
-        }, 2000)
+      dialogimportar,
+      dialogNovaPessoa,
+      novaPessoaModel,
+      loading,
+      async scrollInfinito(index, done) {
+        loading.value = true;
+        $q.loadingBar.start()
+        sPessoa.filtroPesquisa.page++;
+        const ret = await sPessoa.buscarPessoas();
+        loading.value = false
+        $q.loadingBar.stop()
+        if (ret.data.data.length == 0) {
+          loading.value = true
+        }
+        await done();
       },
-      filtropessoa,
-      dialogimportar: ref(false)
+      brasil: {
+        days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),
+        daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
+        months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
+        monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
+        firstDayOfWeek: 1,
+        format24h: true,
+        pluralDay: 'dias'
+      },
     }
   },
 }
