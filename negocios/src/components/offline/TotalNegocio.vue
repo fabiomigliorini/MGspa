@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { Dialog } from "quasar";
 import { negocioStore } from "stores/negocio";
+import PagamentoDinheiro from "components/offline/PagamentoDinheiro.vue";
 
 const sNegocio = negocioStore();
 
@@ -101,6 +102,22 @@ const recalcularValorTotal = () => {
   }
   edicao.value.valortotal = Math.round(total * 100) / 100;
 };
+
+const dialogPagamentoDinheiro = () => {
+  sNegocio.dialog.pagamentoDinheiro = true;
+};
+
+const excluirPagamento = (pag) => {
+  sNegocio.excluirPagamento(pag.uuid);
+};
+
+const valorSaldoLabel = computed(() => {
+  return sNegocio.valorapagar > 0 ? "Faltando" : "Troco";
+});
+
+const valorSaldoClass = computed(() => {
+  return sNegocio.valorapagar > 0 ? "text-red" : "text-green";
+});
 </script>
 <template>
   <!-- Editar Valores Desconto / Frete / etc -->
@@ -233,6 +250,7 @@ const recalcularValorTotal = () => {
     </q-card>
   </q-dialog>
 
+  <pagamento-dinheiro />
   <q-list dense class="q-mt-md" v-if="sNegocio.negocio">
     <q-item
       v-if="
@@ -240,7 +258,7 @@ const recalcularValorTotal = () => {
         parseFloat(sNegocio.negocio.valortotal)
       "
     >
-      <q-item-section avatar>
+      <q-item-section>
         <q-item-label caption>Produtos</q-item-label>
       </q-item-section>
       <q-item-section class="text-right">
@@ -257,7 +275,7 @@ const recalcularValorTotal = () => {
     </q-item>
 
     <q-item v-if="sNegocio.negocio.valordesconto">
-      <q-item-section avatar>
+      <q-item-section>
         <q-item-label caption>Desconto</q-item-label>
       </q-item-section>
       <q-item-section class="text-right">
@@ -274,7 +292,7 @@ const recalcularValorTotal = () => {
     </q-item>
 
     <q-item v-if="sNegocio.negocio.valorfrete">
-      <q-item-section avatar>
+      <q-item-section>
         <q-item-label caption>Frete</q-item-label>
       </q-item-section>
       <q-item-section class="text-right">
@@ -291,7 +309,7 @@ const recalcularValorTotal = () => {
     </q-item>
 
     <q-item v-if="sNegocio.negocio.valorseguro">
-      <q-item-section avatar>
+      <q-item-section>
         <q-item-label caption>Seguro</q-item-label>
       </q-item-section>
       <q-item-section class="text-right">
@@ -308,7 +326,7 @@ const recalcularValorTotal = () => {
     </q-item>
 
     <q-item v-if="sNegocio.negocio.valoroutras">
-      <q-item-section avatar>
+      <q-item-section>
         <q-item-label caption>Outras</q-item-label>
       </q-item-section>
       <q-item-section class="text-right">
@@ -325,7 +343,7 @@ const recalcularValorTotal = () => {
     </q-item>
 
     <q-item v-if="sNegocio.negocio.valorjuros">
-      <q-item-section avatar>
+      <q-item-section>
         <q-item-label caption>Juros</q-item-label>
       </q-item-section>
       <q-item-section class="text-right">
@@ -365,5 +383,71 @@ const recalcularValorTotal = () => {
         </Transition>
       </q-item-section>
     </q-item>
+
+    <template v-if="sNegocio.negocio.pagamentos">
+      <template v-for="pag in sNegocio.negocio.pagamentos" :key="pag.uuid">
+        <q-item>
+          <q-item-section>
+            <q-item-label caption>{{ pag.formapagamento }}</q-item-label>
+          </q-item-section>
+          <q-item-section class="text-right">
+            <q-item-label class="text-h5 text-grey-6">
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(pag.valorpagamento)
+              }}
+              <q-btn
+                flat
+                round
+                @click="excluirPagamento(pag)"
+                icon="delete"
+                size="sm"
+              />
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+      <!-- <q-item v-if="1 == 1"> -->
+      <q-item v-if="sNegocio.negocio.pagamentos.length > 0">
+        <q-item-section>
+          <q-item-label caption>{{ valorSaldoLabel }}</q-item-label>
+        </q-item-section>
+        <q-item-section>
+          <q-item-label :class="valorSaldoClass" class="text-right text-h5">
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(Math.abs(sNegocio.valorapagar))
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
   </q-list>
+  <q-list class="q-pa-md q-gutter-sm text-right">
+    <q-btn
+      round
+      @click="dialogPagamentoDinheiro()"
+      icon="local_atm"
+      color="primary"
+    >
+      <q-tooltip class="bg-accent">Dinheiro</q-tooltip>
+    </q-btn>
+    <q-btn round icon="credit_card" color="primary">
+      <q-tooltip class="bg-accent">Cartão</q-tooltip>
+    </q-btn>
+    <q-btn round icon="pix" color="primary">
+      <q-tooltip class="bg-accent">PIX</q-tooltip>
+    </q-btn>
+  </q-list>
+  <!--
+  <pre v-if="sNegocio.negocio">
+    {{ sNegocio.negocio.pagamentos }}
+  </pre>
+  -->
 </template>

@@ -28,6 +28,7 @@ class NegocioResource extends Resource
         $ret['fantasia'] = $this->Pessoa->fantasia;
         $ret['fantasiavendedor'] = ($this->codpessoavendedor)?$this->PessoaVendedor->fantasia:null;
         $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS);
+        $ret['pagamentos'] = NegocioFormaPagamentoResource::collection($this->NegocioFormaPagamentoS);
         return $ret;
     }
 }

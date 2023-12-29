@@ -89,8 +89,8 @@ class PdvController
 
     public function putNegocio (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
-        $negocio = PdvNegocioService::negocio($request->negocio);
+        $pdv = PdvService::autoriza($request->uuid);
+        $negocio = PdvNegocioService::negocio($request->negocio, $pdv);
         return new NegocioResource($negocio);
     }
 

@@ -460,14 +460,15 @@ const recarregarDaApi = () => {
     <q-separator spaced inset />
 
     <!-- CODIGOS -->
-    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="sincronizar()">
+    <q-item>
       <q-item-section avatar top>
-        <q-avatar
-          icon="fingerprint"
+        <q-btn
+          @click="sincronizar()"
+          round
           :color="
             sNegocio.negocio.sincronizado == true ? 'positive' : 'negative'
           "
-          text-color="white"
+          icon="file_upload"
         />
       </q-item-section>
 
@@ -482,7 +483,7 @@ const recarregarDaApi = () => {
       <q-item-section side>
         <q-btn
           @click="recarregarDaApi()"
-          flat
+          round
           color="negative"
           icon="file_download"
         />

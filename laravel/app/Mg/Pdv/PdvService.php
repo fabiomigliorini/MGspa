@@ -38,16 +38,17 @@ class PdvService
             return false;
         }
         if ($pdv->autorizado) {
-            return true;
+            return $pdv;
         }
         return false;
     }
 
     public static function autoriza($uuid)
     {
-        if (!static::podeAcessar($uuid)) {
+        if (!$pdv = static::podeAcessar($uuid)) {
             abort(403, 'Dispositivo Não Autorizado!');
         }
+        return $pdv;
     }
 
     public static function produtoCount()

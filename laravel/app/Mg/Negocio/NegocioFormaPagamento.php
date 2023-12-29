@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Dec/2023 18:04:18
+ * Date: 29/Dec/2023 16:15:10
  */
 
 namespace Mg\Negocio;
@@ -37,6 +37,7 @@ class NegocioFormaPagamento extends MgModel
         'codstonetransacao',
         'integracao',
         'tipo',
+        'uuid',
         'valorjuros',
         'valorpagamento',
         'valortroco'

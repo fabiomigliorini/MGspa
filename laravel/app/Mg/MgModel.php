@@ -11,6 +11,8 @@ namespace Mg;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
+use DateTimeInterface;
+
 /**
  * Description of Model
  *
@@ -87,4 +89,9 @@ abstract class MgModel extends Model
             }
         }
     }
+
+    protected function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
+    }    
 }

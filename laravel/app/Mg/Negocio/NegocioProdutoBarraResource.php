@@ -18,6 +18,9 @@ class NegocioProdutoBarraResource extends Resource
         $ret = parent::toArray($request);
         $ret['barras'] = $this->ProdutoBarra->barras;
         $ret['codproduto'] = $this->ProdutoBarra->codproduto;
+        if (empty($ret['valorprodutos'])) {
+            $ret['valorprodutos'] = $ret['quantidade'] * $ret['valorunitario'];
+        }
         $sigla = $this->ProdutoBarra->Produto->UnidadeMedida->sigla;
         $quantidade = null;
         if (!empty($this->ProdutoBarra->codprodutoembalagem)) {

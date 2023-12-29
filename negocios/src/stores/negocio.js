@@ -3,6 +3,7 @@ import { toRaw } from "vue";
 import { db } from "boot/db";
 import { Notify, uid } from "quasar";
 import { sincronizacaoStore } from "stores/sincronizacao";
+import moment from "moment";
 
 const sSinc = sincronizacaoStore();
 
@@ -16,6 +17,7 @@ export const negocioStore = defineStore("negocio", {
     negocios: [],
     dialog: {
       valores: false,
+      pagamentoDinheiro: false,
     },
     padrao: {
       codestoquelocal: 101001,
@@ -49,6 +51,15 @@ export const negocioStore = defineStore("negocio", {
     },
     podeEditar() {
       return this.negocio?.codnegociostatus == 1;
+    },
+    valorapagar() {
+      var pagamentos = 0;
+      if (this.negocio.pagamentos) {
+        pagamentos = this.negocio.pagamentos
+          .map((item) => item.valorpagamento)
+          .reduce((prev, curr) => prev + curr, 0);
+      }
+      return this.negocio.valortotal - pagamentos;
     },
   },
 
@@ -92,12 +103,10 @@ export const negocioStore = defineStore("negocio", {
         codusuarioacertoentrega: null,
         codusuariorecebimento: null,
         cpf: null,
-        entrega: null,
-        lancamento: new Date(),
+        entrega: false,
+        lancamento: moment().format("YYYY-MM-DD HH:mm:ss"),
         observacoes: null,
         recebimento: null,
-        //valoraprazo: null,
-        //valoravista: null,
         valorprodutos: 0,
         percentualdesconto: null,
         valordesconto: null,
@@ -106,13 +115,14 @@ export const negocioStore = defineStore("negocio", {
         valoroutras: null,
         valorjuros: null,
         valortotal: 0,
-        criacao: new Date(),
-        alteracao: new Date(),
+        criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
+        alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
         codusuarioalteracao: null,
         codusuariocriacao: null,
-        itens: [],
         sincronizado: false,
         codnegociostatus: 1, //aberto
+        itens: [],
+        pagamentos: [],
       };
       db.negocio.add(negocio, uuid);
       this.atualizarListagem();
@@ -281,8 +291,8 @@ export const negocioStore = defineStore("negocio", {
 
     async salvar() {
       // marca alteracao
-      this.negocio.alteracao = new Date();
-      this.negocio.lancamento = new Date();
+      this.negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
+      this.negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
       this.negocio.sincronizado = false;
       const ret = await db.negocio.put(toRaw(this.negocio));
       this.sincronizar(this.negocio.uuid);
@@ -316,7 +326,7 @@ export const negocioStore = defineStore("negocio", {
         var item = this.negocio.itens.splice(index, 1);
         item = item[0];
         item.quantidade = parseFloat(item.quantidade) + parseFloat(quantidade);
-        item.alteracao = new Date();
+        item.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
       } else {
         var item = {
           uuid: uid(),
@@ -334,7 +344,7 @@ export const negocioStore = defineStore("negocio", {
           valorseguro: null,
           valoroutras: null,
           valortotal: null,
-          criacao: new Date(),
+          criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
           inativo: null,
         };
         if (this.negocio.Pessoa.desconto) {
@@ -417,7 +427,7 @@ export const negocioStore = defineStore("negocio", {
         );
       });
       if (inativar) {
-        inativar.inativo = new Date();
+        inativar.inativo = moment().format("YYYY-MM-DD HH:mm:ss");
         this.recalcularValorTotal();
         this.salvar();
       }
@@ -609,12 +619,63 @@ export const negocioStore = defineStore("negocio", {
     async recarregarDaApi(codOrUuid) {
       try {
         const ret = await sSinc.getNegocio(codOrUuid);
-        this.negocio = ret;
-        db.negocio.put(ret);
-        this.atualizarListagem();
+        if (ret.codnegocio) {
+          this.negocio = ret;
+          db.negocio.put(ret);
+          this.atualizarListagem();
+        }
       } catch (error) {
         console.log(erro);
       }
+    },
+
+    async adicionarPagamento(
+      codformapagamento,
+      tipo,
+      valorpagamento,
+      valorjuros,
+      valortroco,
+      integracao,
+      codpessoa,
+      bandeira,
+      autorizacao,
+      codpixcob,
+      codpagarmepedido
+    ) {
+      await this.recarregar();
+      const fp = await db.formaPagamento.get(codformapagamento);
+      const pagamento = {
+        codnegocioformapagamento: null,
+        codformapagamento: codformapagamento,
+        valorpagamento: valorpagamento,
+        alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
+        criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
+        codpixcob: codpixcob,
+        codpagarmepedido: codpagarmepedido,
+        valorjuros: valorjuros,
+        valortroco: valortroco,
+        avista: fp.avista,
+        tipo: tipo,
+        integracao: integracao,
+        codpessoa: codpessoa,
+        bandeira: bandeira,
+        autorizacao: autorizacao,
+        uuid: uid(),
+        formapagamento: fp.formapagamento,
+      };
+      this.negocio.pagamentos.push(pagamento);
+      this.salvar();
+    },
+
+    async excluirPagamento(uuid) {
+      await this.recarregar();
+      const index = this.negocio.pagamentos.findIndex(function (item) {
+        return item.uuid == uuid;
+      });
+      if (index > -1) {
+        this.negocio.pagamentos.splice(index, 1);
+      }
+      this.salvar();
     },
   },
 });
