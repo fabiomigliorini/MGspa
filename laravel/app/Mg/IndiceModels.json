@@ -1255,8 +1255,70 @@
         "namespace": "Mg\\NaturezaOperacao",
         "classe": "NaturezaOperacao",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/NaturezaOperacao.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codcontacontabil": {
+                "tabela": "tblcontacontabil",
+                "coluna": "codcontacontabil",
+                "metodo": "ContaContabil"
+            },
+            "codestoquemovimentotipo": {
+                "tabela": "tblestoquemovimentotipo",
+                "coluna": "codestoquemovimentotipo",
+                "metodo": "EstoqueMovimentoTipo"
+            },
+            "codnaturezaoperacaodevolucao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacaodevolucao",
+                "metodo": "NaturezaOperacaoDevolucao"
+            },
+            "codtipotitulo": {
+                "tabela": "tbltipotitulo",
+                "coluna": "codtipotitulo",
+                "metodo": "TipoTitulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnaturezaoperacao.codnaturezaoperacaodevolucao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacaodevolucao",
+                "metodo": "NaturezaOperacaoS"
+            },
+            "tblnegocio.codnaturezaoperacao": {
+                "tabela": "tblnegocio",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NegocioS"
+            },
+            "tblnfeterceiro.codnaturezaoperacao": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NfeTerceiroS"
+            },
+            "tblnotafiscal.codnaturezaoperacao": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NotaFiscalS"
+            },
+            "tblnotafiscalterceiro.codnaturezaoperacao": {
+                "tabela": "tblnotafiscalterceiro",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NotaFiscalTerceiroS"
+            },
+            "tbltributacaonaturezaoperacao.codnaturezaoperacao": {
+                "tabela": "tbltributacaonaturezaoperacao",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "TributacaoNaturezaOperacaoS"
+            }
+        }
     },
     "tblformapagamento": {
         "tabela": "tblformapagamento",
@@ -5507,6 +5569,47 @@
                 "tabela": "tblnegocio",
                 "coluna": "codpdv",
                 "metodo": "NegocioS"
+            }
+        }
+    },
+    "tblestoquemovimentotipo": {
+        "tabela": "tblestoquemovimentotipo",
+        "campocodigo": "codestoquemovimentotipo",
+        "namespace": "Mg\\Estoque",
+        "classe": "EstoqueMovimentoTipo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Estoque\/EstoqueMovimentoTipo.php",
+        "belongsTo": {
+            "codestoquemovimentotipoorigem": {
+                "tabela": "tblestoquemovimentotipo",
+                "coluna": "codestoquemovimentotipoorigem",
+                "metodo": "EstoqueMovimentoTipoOrigem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblestoquemovimento.codestoquemovimentotipo": {
+                "tabela": "tblestoquemovimento",
+                "coluna": "codestoquemovimentotipo",
+                "metodo": "EstoqueMovimentoS"
+            },
+            "tblestoquemovimentotipo.codestoquemovimentotipoorigem": {
+                "tabela": "tblestoquemovimentotipo",
+                "coluna": "codestoquemovimentotipoorigem",
+                "metodo": "EstoqueMovimentoTipoDestinoS"
+            },
+            "tblnaturezaoperacao.codestoquemovimentotipo": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codestoquemovimentotipo",
+                "metodo": "NaturezaOperacaoS"
             }
         }
     }

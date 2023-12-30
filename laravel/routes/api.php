@@ -162,6 +162,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('pdv/impressora', '\Mg\Pdv\PdvController@impressora');
         Route::put('pdv/negocio', '\Mg\Pdv\PdvController@putNegocio');
         Route::get('pdv/negocio/{id}', '\Mg\Pdv\PdvController@getNegocio');
+        Route::post('pdv/negocio/{id}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
 
         // Allan - daqui pra baixo
         Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');

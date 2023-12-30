@@ -466,7 +466,7 @@ const recarregarDaApi = () => {
           @click="sincronizar()"
           round
           :color="
-            sNegocio.negocio.sincronizado == true ? 'positive' : 'negative'
+            sNegocio.negocio.sincronizado == true ? 'secondary' : 'negative'
           "
           icon="file_upload"
         />

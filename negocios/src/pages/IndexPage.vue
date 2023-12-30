@@ -13,6 +13,7 @@ const sNegocio = negocioStore();
 const sProduto = produtoStore();
 
 const hotkeys = (event) => {
+  // TODO: Anexar F das formas de pagamentos
   switch (event.key) {
     // Joga foco no codigo de barras
     case "1":
@@ -48,6 +49,11 @@ const hotkeys = (event) => {
       vazioOuCriar();
       break;
 
+    case "F3":
+      event.preventDefault();
+      fechar();
+      break;
+
     default:
       break;
   }
@@ -71,6 +77,11 @@ const carregareOuCriarNegocio = async () => {
     }
   }
   vazioOuCriar();
+};
+
+// TODO: Oferecer pra Gerar Nota/Imprimir Romaneio/Etc
+const fechar = async () => {
+  sNegocio.fechar();
 };
 
 onMounted(() => {
@@ -101,9 +112,25 @@ onUnmounted(() => {
     <q-page-scroller
       position="bottom-right"
       :scroll-offset="150"
-      :offset="[18, 18]"
+      :offset="[80, 18]"
     >
       <q-btn fab icon="keyboard_arrow_up" color="secondary" />
     </q-page-scroller>
+
+    <q-page-sticky
+      position="bottom-right"
+      :offset="[18, 18]"
+      v-if="sNegocio.negocio"
+    >
+      <q-btn
+        fab
+        icon="send"
+        color="primary"
+        @click="fechar()"
+        v-if="sNegocio.negocio.codnegociostatus == 1"
+      >
+        <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
+      </q-btn>
+    </q-page-sticky>
   </q-page>
 </template>

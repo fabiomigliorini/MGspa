@@ -22,6 +22,7 @@ class NegocioResource extends Resource
         $ret['sincronizado'] = true;
         $ret['Pessoa'] = $this->Pessoa->toArray();
         $ret['naturezaoperacao'] = $this->NaturezaOperacao->naturezaoperacao;
+        $ret['financeiro'] = $this->NaturezaOperacao->financeiro;
         $ret['operacao'] = $this->Operacao->operacao;
         $ret['negociostatus'] = $this->NegocioStatus->negociostatus;
         $ret['estoquelocal'] = $this->EstoqueLocal->estoquelocal;

@@ -1,56 +1,54 @@
 <?php
-namespace Mg\Estoque;
-use Mg\MgModel;
-
 /**
- * Campos
- * @property  bigint                         $codestoquemovimentotipo            NOT NULL DEFAULT nextval('tblestoquemovimentotipo_codestoquemovimentotipo_seq'::regclass)
- * @property  varchar(100)                   $descricao                          NOT NULL
- * @property  varchar(3)                     $sigla                              NOT NULL
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  smallint                       $preco                              NOT NULL
- * @property  bigint                         $codestoquemovimentotipoorigem
- * @property  boolean                        $manual                             NOT NULL DEFAULT false
- * @property  boolean                        $atualizaultimaentrada              NOT NULL DEFAULT false
- * @property  boolean                        $transferencia                      NOT NULL DEFAULT false
- *
- * Chaves Estrangeiras
- * @property  EstoqueMovimentoTipo           $EstoqueMovimentoTipoOrigem
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  EstoqueMovimentoTipo[]         $EstoqueMovimentoTipoS
- * @property  NaturezaOperacao[]             $NaturezaOperacaoS
- * @property  EstoqueMovimento[]             $EstoqueMovimentoDestinoS
+ * Created by php artisan gerador:model.
+ * Date: 29/Dec/2023 20:33:45
  */
+
+namespace Mg\Estoque;
+
+use Mg\MgModel;
+use Mg\Estoque\EstoqueMovimento;
+use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\Usuario\Usuario;
 
 class EstoqueMovimentoTipo extends MgModel
 {
-    protected $table = 'tblestoquemovimentotipo';
-    protected $primaryKey = 'codestoquemovimentotipo';
-    protected $fillable = [
-          'descricao',
-         'sigla',
-             'preco',
-         'codestoquemovimentotipoorigem',
-         'manual',
-         'atualizaultimaentrada',
-         'transferencia',
-    ];
-    protected $dates = [
-        'alteracao',
-        'criacao',
-    ];
-
     const PRECO_INFORMADO = 1;
     const PRECO_MEDIO = 2;
     const PRECO_ORIGEM = 3;
 
     const AJUSTE = 1002;
+
+    protected $table = 'tblestoquemovimentotipo';
+    protected $primaryKey = 'codestoquemovimentotipo';
+
+
+    protected $fillable = [
+        'atualizaultimaentrada',
+        'codestoquemovimentotipoorigem',
+        'descricao',
+        'manual',
+        'preco',
+        'sigla',
+        'transferencia'
+    ];
+
+    protected $dates = [
+        'alteracao',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'atualizaultimaentrada' => 'boolean',
+        'codestoquemovimentotipo' => 'integer',
+        'codestoquemovimentotipoorigem' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'manual' => 'boolean',
+        'preco' => 'integer',
+        'transferencia' => 'boolean'
+    ];
+
 
     // Chaves Estrangeiras
     public function EstoqueMovimentoTipoOrigem()
@@ -70,6 +68,11 @@ class EstoqueMovimentoTipo extends MgModel
 
 
     // Tabelas Filhas
+    public function EstoqueMovimentoS()
+    {
+        return $this->hasMany(EstoqueMovimento::class, 'codestoquemovimentotipo', 'codestoquemovimentotipo');
+    }
+
     public function EstoqueMovimentoTipoDestinoS()
     {
         return $this->hasMany(EstoqueMovimentoTipo::class, 'codestoquemovimentotipoorigem', 'codestoquemovimentotipo');
@@ -79,11 +82,5 @@ class EstoqueMovimentoTipo extends MgModel
     {
         return $this->hasMany(NaturezaOperacao::class, 'codestoquemovimentotipo', 'codestoquemovimentotipo');
     }
-
-    public function EstoqueMovimentoS()
-    {
-        return $this->hasMany(EstoqueMovimento::class, 'codestoquemovimentotipo', 'codestoquemovimentotipo');
-    }
-
 
 }

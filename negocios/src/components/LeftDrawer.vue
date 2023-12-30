@@ -33,7 +33,7 @@ const criar = async () => {
         <q-item-section avatar>
           <q-avatar
             icon="shopping_cart"
-            :color="n.sincronizado == true ? 'positive' : 'negative'"
+            :color="n.sincronizado == true ? 'secondary' : 'negative'"
             text-color="white"
           />
           <!-- <q-avatar color="primary" text-color="white">{{ n.uid }}</q-avatar> -->

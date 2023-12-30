@@ -104,4 +104,12 @@ class PdvController
         }
         return new NegocioResource($negocio);
     }
+
+    public function fecharNegocio (PdvRequest $request, $id)
+    {
+        $pdv = PdvService::autoriza($request->uuid);
+        $negocio = Negocio::findOrFail($id);
+        $negocio = PdvNegocioService::fechar($negocio, $pdv);
+        return new NegocioResource($negocio);
+    }
 }

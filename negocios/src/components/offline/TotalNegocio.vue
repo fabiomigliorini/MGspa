@@ -251,203 +251,207 @@ const valorSaldoClass = computed(() => {
   </q-dialog>
 
   <pagamento-dinheiro />
-  <q-list dense class="q-mt-md" v-if="sNegocio.negocio">
-    <q-item
-      v-if="
-        parseFloat(sNegocio.negocio.valorprodutos) -
-        parseFloat(sNegocio.negocio.valortotal)
-      "
-    >
-      <q-item-section>
-        <q-item-label caption>Produtos</q-item-label>
-      </q-item-section>
-      <q-item-section class="text-right">
-        <q-item-label class="text-h5 text-grey-6">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sNegocio.negocio.valorprodutos)
-          }}
-        </q-item-label>
-      </q-item-section>
-    </q-item>
-
-    <q-item v-if="sNegocio.negocio.valordesconto">
-      <q-item-section>
-        <q-item-label caption>Desconto</q-item-label>
-      </q-item-section>
-      <q-item-section class="text-right">
-        <q-item-label class="text-h5 text-weight-bolder text-green-8">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sNegocio.negocio.valordesconto)
-          }}
-        </q-item-label>
-      </q-item-section>
-    </q-item>
-
-    <q-item v-if="sNegocio.negocio.valorfrete">
-      <q-item-section>
-        <q-item-label caption>Frete</q-item-label>
-      </q-item-section>
-      <q-item-section class="text-right">
-        <q-item-label class="text-h5 text-grey-6">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sNegocio.negocio.valorfrete)
-          }}
-        </q-item-label>
-      </q-item-section>
-    </q-item>
-
-    <q-item v-if="sNegocio.negocio.valorseguro">
-      <q-item-section>
-        <q-item-label caption>Seguro</q-item-label>
-      </q-item-section>
-      <q-item-section class="text-right">
-        <q-item-label class="text-h5 text-grey-6">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sNegocio.negocio.valorseguro)
-          }}
-        </q-item-label>
-      </q-item-section>
-    </q-item>
-
-    <q-item v-if="sNegocio.negocio.valoroutras">
-      <q-item-section>
-        <q-item-label caption>Outras</q-item-label>
-      </q-item-section>
-      <q-item-section class="text-right">
-        <q-item-label class="text-h5 text-grey-6">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sNegocio.negocio.valoroutras)
-          }}
-        </q-item-label>
-      </q-item-section>
-    </q-item>
-
-    <q-item v-if="sNegocio.negocio.valorjuros">
-      <q-item-section>
-        <q-item-label caption>Juros</q-item-label>
-      </q-item-section>
-      <q-item-section class="text-right">
-        <q-item-label class="text-h5 text-grey-6">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sNegocio.negocio.valorjuros)
-          }}
-        </q-item-label>
-      </q-item-section>
-    </q-item>
-
-    <q-item @click="editarValores()" v-ripple :clickable="sNegocio.podeEditar">
-      <q-item-section class="text-right">
-        <Transition
-          mode="out-in"
-          :duration="{ enter: 300, leave: 300 }"
-          leave-active-class="animated bounceOut"
-          enter-active-class="animated bounceIn"
-        >
-          <q-item-label
-            class="text-h2 text-primary text-weight-bolder"
-            :key="sNegocio.negocio.valortotal"
-          >
-            <small class="text-h5 text-grey">R$ </small>
+  <template v-if="sNegocio.negocio">
+    <q-list dense class="q-mt-md">
+      <q-item
+        v-if="
+          parseFloat(sNegocio.negocio.valorprodutos) -
+          parseFloat(sNegocio.negocio.valortotal)
+        "
+      >
+        <q-item-section>
+          <q-item-label caption>Produtos</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
             {{
               new Intl.NumberFormat("pt-BR", {
                 style: "decimal",
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
-              }).format(sNegocio.negocio.valortotal)
+              }).format(sNegocio.negocio.valorprodutos)
             }}
           </q-item-label>
-        </Transition>
-      </q-item-section>
-    </q-item>
+        </q-item-section>
+      </q-item>
 
-    <template v-if="sNegocio.negocio.pagamentos">
-      <template v-for="pag in sNegocio.negocio.pagamentos" :key="pag.uuid">
-        <q-item>
-          <q-item-section>
-            <q-item-label caption>{{ pag.formapagamento }}</q-item-label>
-          </q-item-section>
-          <q-item-section class="text-right">
-            <q-item-label class="text-h5 text-grey-6">
+      <q-item v-if="sNegocio.negocio.valordesconto">
+        <q-item-section>
+          <q-item-label caption>Desconto</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-weight-bolder text-green-8">
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(sNegocio.negocio.valordesconto)
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="sNegocio.negocio.valorfrete">
+        <q-item-section>
+          <q-item-label caption>Frete</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(sNegocio.negocio.valorfrete)
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="sNegocio.negocio.valorseguro">
+        <q-item-section>
+          <q-item-label caption>Seguro</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(sNegocio.negocio.valorseguro)
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="sNegocio.negocio.valoroutras">
+        <q-item-section>
+          <q-item-label caption>Outras</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(sNegocio.negocio.valoroutras)
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="sNegocio.negocio.valorjuros">
+        <q-item-section>
+          <q-item-label caption>Juros</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(sNegocio.negocio.valorjuros)
+            }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item
+        @click="editarValores()"
+        v-ripple
+        :clickable="sNegocio.podeEditar"
+      >
+        <q-item-section class="text-right">
+          <Transition
+            mode="out-in"
+            :duration="{ enter: 300, leave: 300 }"
+            leave-active-class="animated bounceOut"
+            enter-active-class="animated bounceIn"
+          >
+            <q-item-label
+              class="text-h2 text-primary text-weight-bolder"
+              :key="sNegocio.negocio.valortotal"
+            >
+              <small class="text-h5 text-grey">R$ </small>
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                }).format(pag.valorpagamento)
+                }).format(sNegocio.negocio.valortotal)
               }}
-              <q-btn
-                flat
-                round
-                @click="excluirPagamento(pag)"
-                icon="delete"
-                size="sm"
-              />
+            </q-item-label>
+          </Transition>
+        </q-item-section>
+      </q-item>
+
+      <template v-if="sNegocio.negocio.pagamentos">
+        <template v-for="pag in sNegocio.negocio.pagamentos" :key="pag.uuid">
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>{{ pag.formapagamento }}</q-item-label>
+            </q-item-section>
+            <q-item-section class="text-right">
+              <q-item-label class="text-h5 text-grey-6">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(pag.valorpagamento)
+                }}
+                <q-btn
+                  flat
+                  round
+                  @click="excluirPagamento(pag)"
+                  icon="delete"
+                  size="sm"
+                />
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+        <!-- <q-item v-if="1 == 1"> -->
+        <q-item v-if="sNegocio.negocio.pagamentos.length > 0">
+          <q-item-section>
+            <q-item-label caption>{{ valorSaldoLabel }}</q-item-label>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label :class="valorSaldoClass" class="text-right text-h5">
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(Math.abs(sNegocio.valorapagar))
+              }}
             </q-item-label>
           </q-item-section>
         </q-item>
       </template>
-      <!-- <q-item v-if="1 == 1"> -->
-      <q-item v-if="sNegocio.negocio.pagamentos.length > 0">
-        <q-item-section>
-          <q-item-label caption>{{ valorSaldoLabel }}</q-item-label>
-        </q-item-section>
-        <q-item-section>
-          <q-item-label :class="valorSaldoClass" class="text-right text-h5">
-            {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(Math.abs(sNegocio.valorapagar))
-            }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-    </template>
-  </q-list>
-  <q-list class="q-pa-md q-gutter-sm text-right">
-    <q-btn
-      round
-      @click="dialogPagamentoDinheiro()"
-      icon="local_atm"
-      color="primary"
+    </q-list>
+    <q-list
+      class="q-pa-md q-gutter-sm text-right"
+      v-if="sNegocio.negocio.financeiro"
     >
-      <q-tooltip class="bg-accent">Dinheiro</q-tooltip>
-    </q-btn>
-    <q-btn round icon="credit_card" color="primary">
-      <q-tooltip class="bg-accent">Cartão</q-tooltip>
-    </q-btn>
-    <q-btn round icon="pix" color="primary">
-      <q-tooltip class="bg-accent">PIX</q-tooltip>
-    </q-btn>
-  </q-list>
-  <!--
-  <pre v-if="sNegocio.negocio">
-    {{ sNegocio.negocio.pagamentos }}
-  </pre>
-  -->
+      <q-btn
+        round
+        @click="dialogPagamentoDinheiro()"
+        icon="local_atm"
+        color="primary"
+      >
+        <q-tooltip class="bg-accent">Dinheiro</q-tooltip>
+      </q-btn>
+      <q-btn round icon="credit_card" color="primary">
+        <q-tooltip class="bg-accent">Cartão</q-tooltip>
+      </q-btn>
+      <q-btn round icon="pix" color="primary">
+        <q-tooltip class="bg-accent">PIX</q-tooltip>
+      </q-btn>
+    </q-list>
+  </template>
 </template>

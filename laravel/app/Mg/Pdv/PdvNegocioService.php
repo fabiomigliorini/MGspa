@@ -64,4 +64,26 @@ class PdvNegocioService
         DB::commit();
         return $negocio;
     }
+
+    public static function fechar(Negocio $negocio, Pdv $pdv)
+    {
+        // TODO: Revisar todos procedimentos que o MGsis faz para fechar
+        // TODO: Validar Se aberto, etc e tal
+        // TODO: Validar Credito
+        // TODO: Validar tem pagamento
+        // TODO: Gerar movimentacao de estoque
+        if ($negocio->NaturezaOperacao->transferencia == true) {
+            $fil = substr(str_pad($negocio->Filial->Pessoa->cnpj, 14, "0", STR_PAD_LEFT), 0, 8);
+            $pes = substr(str_pad($negocio->Pessoa->cnpj, 14, "0", STR_PAD_LEFT), 0, 8);
+            if ($fil != $pes) {
+                throw new \Exception("A Pessoa destino precisa ser uma Filial!", 1);
+            }
+        }
+        $negocio->codnegociostatus = 2;
+        $negocio->codpdv = $pdv->codpdv;
+        $negocio->lancamento = Carbon::now();
+        $negocio->save();
+        return $negocio->fresh();
+    }
+
 }

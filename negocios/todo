@@ -1,0 +1,28 @@
+TODO:
+
+BUG
+- quando abre dialog pra selecionar pessoa, o foco esta no select ele não abre a caixa de pesquisa
+- quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
+
+MANDATORY
+- nao gerar nota com itens inativos
+- nao gerar fechamento com itens inativos
+- nao gerar transferencias com itens inativos
+- romaneio em impressora termica
+- bloquear baixar negocio somente para Gerente/Administrador
+- nao deixar fazer transferencia se raiz do cnpj da filial != cnpj do destino
+- dar permissoes para receber em dinheiro somente para grupo de Caixas/Gerente/Administrador
+- Cancelamento de Negocio
+- fazer geracao da NF normal
+- fazer geracao da NF de Transferencia
+- fazer devolucao
+- fazer baixa de vales automaticamente
+- fazer venda de vale compras
+- fazer liquidacao de negocios
+- fazer tela de fechamento de caixa
+- prancheta de pesquisa de produtos sem codigo (substituir pranchetas impressas)
+- nao gerar movimentacao de estoque para produtos excluidos do negocio
+
+DONE:
+
+- nao mostrar itens inativos no romaneio
