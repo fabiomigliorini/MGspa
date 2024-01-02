@@ -1,10 +1,12 @@
 TODO:
 
 BUG
+
 - quando abre dialog pra selecionar pessoa, o foco esta no select ele não abre a caixa de pesquisa
 - quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
 
 MANDATORY
+
 - nao gerar nota com itens inativos
 - nao gerar fechamento com itens inativos
 - nao gerar transferencias com itens inativos
@@ -26,3 +28,17 @@ MANDATORY
 DONE:
 
 - nao mostrar itens inativos no romaneio
+
+- Pedido
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido' --data-raw 'codnegocio=3304171&codpessoa=1&codpagarmepos=44&valor=0.75&valorparcela=0.75&valorjuros=0&tipo=1&parcelas=1&jurosloja=1&descricao=Negocio+3304171&codfilial=102'
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido/250674/consultar' -X 'POST'
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido/250674' -X 'DELETE'
+
+- QR Code
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/criar-negocio/3304171' -X 'POST'
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/transmitir' -X 'POST'
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/detalhes'
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/consultar' -X 'POST'
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/transmitir' -X 'POST'
+curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/imprimir-qr-code'
+curl 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=00020101021226850014br.gov.bcb.pix2563qrcodepix.bb.com.br/pix/v2/de2cc072-78aa-479c-86f1-fca7da1ac1b05204000053039865802BR5913M%20G%20PAPELARIA6005SINOP62070503***630452AD'

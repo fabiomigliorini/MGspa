@@ -194,6 +194,7 @@ const recarregarDaApi = () => {
                 outlined
                 v-model="edicaoPessoa.codestoquelocal"
                 label="Local de Estoque"
+                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
               />
             </div>
             <div class="col-12">
@@ -201,6 +202,7 @@ const recarregarDaApi = () => {
                 outlined
                 v-model="edicaoPessoa.codnaturezaoperacao"
                 label="Natureza de Operacao"
+                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
               />
             </div>
             <div class="col-12">
@@ -210,6 +212,7 @@ const recarregarDaApi = () => {
                 autofocus
                 v-model="edicaoPessoa.codpessoa"
                 label="Pessoa"
+                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
                 clearable
                 @clear="edicaoPessoa.codpessoa = 1"
               >

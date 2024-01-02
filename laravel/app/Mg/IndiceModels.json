@@ -3515,6 +3515,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -3556,6 +3561,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -5155,6 +5165,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": []
@@ -5195,6 +5210,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -5569,6 +5589,26 @@
                 "tabela": "tblnegocio",
                 "coluna": "codpdv",
                 "metodo": "NegocioS"
+            },
+            "tblpagarmepagamento.codpdv": {
+                "tabela": "tblpagarmepagamento",
+                "coluna": "codpdv",
+                "metodo": "PagarMePagamentoS"
+            },
+            "tblpagarmepedido.codpdv": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codpdv",
+                "metodo": "PagarMePedidoS"
+            },
+            "tblpix.codpdv": {
+                "tabela": "tblpix",
+                "coluna": "codpdv",
+                "metodo": "PixS"
+            },
+            "tblpixcob.codpdv": {
+                "tabela": "tblpixcob",
+                "coluna": "codpdv",
+                "metodo": "PixCobS"
             }
         }
     },
