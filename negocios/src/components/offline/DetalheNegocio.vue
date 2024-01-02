@@ -419,7 +419,9 @@ const recarregarDaApi = () => {
       </q-item-section>
     </q-item>
 
-    <template v-if="sNegocio.negocio.Pessoa != undefined">
+    <template
+      v-if="sNegocio.negocio.Pessoa != undefined && sNegocio.negocio.financeiro"
+    >
       <q-item
         :clickable="sNegocio.podeEditar"
         v-ripple
