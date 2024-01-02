@@ -1,13 +1,17 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Dec/2023 11:51:34
+ * Date: 02/Jan/2024 17:28:20
  */
 
 namespace Mg\Pdv;
 
 use Mg\MgModel;
 use Mg\Negocio\Negocio;
+use Mg\PagarMe\PagarMePagamento;
+use Mg\PagarMe\PagarMePedido;
+use Mg\Pix\Pix;
+use Mg\Pix\PixCob;
 use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 
@@ -73,6 +77,26 @@ class Pdv extends MgModel
     public function NegocioS()
     {
         return $this->hasMany(Negocio::class, 'codpdv', 'codpdv');
+    }
+
+    public function PagarMePagamentoS()
+    {
+        return $this->hasMany(PagarMePagamento::class, 'codpdv', 'codpdv');
+    }
+
+    public function PagarMePedidoS()
+    {
+        return $this->hasMany(PagarMePedido::class, 'codpdv', 'codpdv');
+    }
+
+    public function PixS()
+    {
+        return $this->hasMany(Pix::class, 'codpdv', 'codpdv');
+    }
+
+    public function PixCobS()
+    {
+        return $this->hasMany(PixCob::class, 'codpdv', 'codpdv');
     }
 
 }

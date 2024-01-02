@@ -24,7 +24,7 @@ class PdvRequest extends FormRequest
     public function rules()
     {
         return [
-            'uuid' => 'required|uuid',
+            'pdv' => 'required|uuid',
         ];
     }
 }

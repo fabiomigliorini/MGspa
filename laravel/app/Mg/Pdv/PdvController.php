@@ -37,13 +37,13 @@ class PdvController
 
     public function produtoCount (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         return PdvService::produtoCount();
     }
 
     public function produto (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         $codprodutobarra = $request->codprodutobarra??0;
         $limite = $request->limite??10000;
         return PdvService::produto($codprodutobarra, $limite);
@@ -51,13 +51,13 @@ class PdvController
 
     public function pessoaCount (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         return PdvService::pessoaCount();
     }
 
     public function pessoa (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         $codpessoa = $request->codpessoa??0;
         $limite = $request->limite??10000;
         return PdvService::pessoa($codpessoa, $limite);
@@ -65,38 +65,38 @@ class PdvController
 
     public function naturezaOperacao (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         return PdvService::naturezaOperacao();
     }
 
     public function estoqueLocal (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         return PdvService::estoqueLocal();
     }
     
     public function formaPagamento (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         return PdvService::formaPagamento();
     }
     
     public function impressora (PdvRequest $request)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         return PdvService::impressora();
     }
 
     public function putNegocio (PdvRequest $request)
     {
-        $pdv = PdvService::autoriza($request->uuid);
+        $pdv = PdvService::autoriza($request->pdv);
         $negocio = PdvNegocioService::negocio($request->negocio, $pdv);
         return new NegocioResource($negocio);
     }
 
     public function getNegocio (PdvRequest $request, $id)
     {
-        PdvService::autoriza($request->uuid);
+        PdvService::autoriza($request->pdv);
         if (preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}$/i', $id)) {
             $negocio = Negocio::where(['uuid'=>$id])->firstOrFail();
         } else {
@@ -107,7 +107,7 @@ class PdvController
 
     public function fecharNegocio (PdvRequest $request, $id)
     {
-        $pdv = PdvService::autoriza($request->uuid);
+        $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($id);
         $negocio = PdvNegocioService::fechar($negocio, $pdv);
         return new NegocioResource($negocio);

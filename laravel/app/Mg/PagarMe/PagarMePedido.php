@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2023 10:05:52
+ * Date: 02/Jan/2024 17:28:44
  */
 
 namespace Mg\PagarMe;
@@ -14,6 +14,7 @@ use Mg\Negocio\Negocio;
 use Mg\PagarMe\PagarMePos;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
+use Mg\Pdv\Pdv;
 
 class PagarMePedido extends MgModel
 {
@@ -25,6 +26,7 @@ class PagarMePedido extends MgModel
         'codfilial',
         'codnegocio',
         'codpagarmepos',
+        'codpdv',
         'codpessoa',
         'descricao',
         'fechado',
@@ -52,6 +54,7 @@ class PagarMePedido extends MgModel
         'codnegocio' => 'integer',
         'codpagarmepedido' => 'integer',
         'codpagarmepos' => 'integer',
+        'codpdv' => 'integer',
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -84,6 +87,11 @@ class PagarMePedido extends MgModel
     public function PagarMePos()
     {
         return $this->belongsTo(PagarMePos::class, 'codpagarmepos', 'codpagarmepos');
+    }
+
+    public function Pdv()
+    {
+        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
     }
 
     public function Pessoa()
