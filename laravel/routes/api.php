@@ -51,6 +51,8 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
+    Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
+
     // Produto
     Route::post('produto/unifica-variacoes', '\Mg\Produto\ProdutoController@unificaVariacoes');
     Route::post('produto/unifica-barras', '\Mg\Produto\ProdutoController@unificaBarras');
@@ -171,7 +173,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
     Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
     Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
-    Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
+    //Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
 
 
     // Pessoa Telefone
