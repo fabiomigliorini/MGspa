@@ -64,12 +64,18 @@ export const guardaToken = defineStore('auth', () => {
     localStorage.setItem('access_token', tokenValue)
     token.value = tokenValue
   }
+  
 
   function username(userValue) {
 
     localStorage.setItem('usuario', userValue)
     user.value = userValue
 
+  }
+
+  function verificaPermissaoUsuario(permissao) {
+   const verificaPermissao = this.usuarioLogado.permissoes.find(grupo => grupo.grupousuario === permissao)
+   return verificaPermissao;
   }
 
   // Acessa os dados do usuario como verificação se o token esta valido na API
@@ -99,6 +105,7 @@ export const guardaToken = defineStore('auth', () => {
     token,
     guardaToken,
     accessToken,
+    verificaPermissaoUsuario,
     username,
     verificaToken
   };

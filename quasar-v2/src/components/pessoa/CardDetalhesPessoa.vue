@@ -99,10 +99,9 @@
           <q-item-label>
             {{ sPessoa.item.fantasia }}
             <q-btn flat round icon="edit" @click="editarDetalhes()"
-              v-if="user.usuarioLogado.permissoes.find(grupo => grupo.grupousuario === 'Pessoa')" />
-
+              v-if="user.verificaPermissaoUsuario('Financeiro')" />
             <q-btn flat round icon="delete" @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
-              v-if="user.usuarioLogado.permissoes.find(grupo => grupo.grupousuario === 'Pessoa')" />
+              v-if="user.verificaPermissaoUsuario('Financeiro')" />
           </q-item-label>
           <q-item-label caption>
             {{ sPessoa.item.pessoa }}

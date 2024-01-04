@@ -19,8 +19,7 @@
         </div>
       </q-infinite-scroll>
 
-      <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.usuarioLogado.permissoes.find
-        (item => item.grupo === 'Pessoa')">
+      <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.verificaPermissaoUsuario('Financeiro')">
         <q-fab icon="add" direction="up" color="accent">
           <q-fab-action @click="dialogNovaPessoa = true, novaPessoaModel.cliente = true, novaPessoaModel.notafiscal = 1"
             color="primary" icon="person_add" label="Nova" />
@@ -187,7 +186,6 @@ import { useRouter } from 'vue-router'
 import { guardaToken } from 'src/stores'
 import { pessoaStore } from 'src/stores/pessoa'
 import { debounce } from 'quasar'
-
 
 
 export default {

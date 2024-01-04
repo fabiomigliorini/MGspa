@@ -4,8 +4,7 @@
       <q-item-label header>
         Dados do Cliente e Crédito
         <q-btn flat round icon="edit" @click="editarCliente()" 
-        v-if="user.usuarioLogado.permissoes.find
-             (item => item.grupo === 'Financeiro')" />
+        v-if="user.verificaPermissaoUsuario('Financeiro')" />
       </q-item-label>
 
       <q-separator inset />
@@ -241,8 +240,7 @@
 
           <div class="row" v-if="!modelEditar.creditobloqueado">
             <div class="col-9"
-             v-if="user.usuarioLogado.permissoes.find
-             (item => item.grupo === 'Financeiro')" >
+            v-if="user.verificaPermissaoUsuario('Financeiro')" >
               <q-input outlined v-model="modelEditar.credito" label="Limite de Crédito" type="number" step="0"
                 input-class="text-right" class="q-pr-md">
                 <template v-slot:prepend>
@@ -251,8 +249,7 @@
               </q-input>
 
             </div>
-            <div :class="user.usuarioLogado.permissoes.find
-             (item => item.grupo === 'Financeiro') ? 'col-3' : 'col-9 q-pr-md'">
+            <div :class="user.verificaPermissaoUsuario('Financeiro') ? 'col-3' : 'col-9 q-pr-md'">
               <q-input outlined v-model="modelEditar.toleranciaatraso" label="Tolerância a Atraso" type="number"
                 class="q-mb-md" step="0" input-class="text-right">
                 <template v-slot:append>

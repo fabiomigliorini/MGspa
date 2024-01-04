@@ -51,8 +51,7 @@
     <q-list>
       <q-item-label header>
         Telefone
-        <q-btn v-if="user.usuarioLogado.permissoes.find
-          (item => item.grupo === 'Pessoa')" flat round icon="add"
+        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="add"
           @click="dialogTel = true, modelTel = { tipo: 2, pais: '+55' }, telNovo = true" />
       </q-item-label>
 
@@ -90,26 +89,22 @@
               </q-item-section>
               <q-item-section side>
                 <div class="row">
-                  <q-btn flat size="sm" dense label="Verificar" color="blue"
-                    v-if="!element.verificacao && element.tipo === 2"
+                  <q-btn flat size="sm"  dense label="Verificar" color="blue"
+                    v-if="!element.verificacao && element.tipo === 2 && user.verificaPermissaoUsuario('Financeiro')"
                     @click="enviarSms(element.pais, element.ddd, element.telefone, element.codpessoatelefone)" />
 
-                  <q-btn-dropdown dense round flat auto-close>
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa')" flat icon="edit"
+                  <q-btn-dropdown dense round flat auto-close v-if="user.verificaPermissaoUsuario('Financeiro')">
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat icon="edit"
                       @click="editarTel(element.codpessoatelefone, element.ddd, element.telefone, element.apelido, element.tipo, element.verificacao, telNovo = false)" />
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa')" flat icon="delete"
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat icon="delete"
                       @click="excluirTel(element.codpessoatelefone)" />
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa') && !element.inativo" flat icon="pause"
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat icon="pause"
                       @click="inativar(element.codpessoa, element.codpessoatelefone)">
                       <q-tooltip transition-show="scale" transition-hide="scale">
                         Inativar
                       </q-tooltip>
                     </q-btn>
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa') && element.inativo" flat icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoatelefone)">
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoatelefone)">
                       <q-tooltip transition-show="scale" transition-hide="scale">
                         Ativar
                       </q-tooltip>

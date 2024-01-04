@@ -20,11 +20,13 @@
                             </card-cliente>
                         </div>
 
-                        <!-- Histórico de cobrança -->
+                       
                         <div class="q-pb-md">
-                            <card-historico-cobranca>
-                            </card-historico-cobranca>
+                <tabela-totais-negocios :totais-negocios="totalNegocioPessoa" v-on:update:totais-negocios="updateTabelaNegocio($event)">
+                </tabela-totais-negocios>
+
                         </div>
+
 
                     </div>
 
@@ -57,18 +59,28 @@
                         <div class="q-pb-md">
                             <card-certidoes></card-certidoes>
                         </div>
+
+                         <!-- Histórico de cobrança -->
+                         <div class="q-pb-md">
+                            <card-historico-cobranca>
+                            </card-historico-cobranca>
+                        </div>
                     </div>
                 </div>
+                
+
             </q-page>
         </template>
     </MGLayout>
 </template>
   
 <script>
-import { defineComponent, defineAsyncComponent, onMounted } from 'vue'
+import { defineComponent, defineAsyncComponent, onMounted, ref } from 'vue'
 import { useQuasar } from "quasar"
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
+import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
+
 
 
 export default defineComponent({
@@ -82,7 +94,14 @@ export default defineComponent({
         CardHistoricoCobranca: defineAsyncComponent(() => import('components/pessoa/CardHistoricoCobranca.vue')),
         CardRegistroSpc: defineAsyncComponent(() => import('components/pessoa/CardRegistroSpc.vue')),
         CardCertidoes: defineAsyncComponent(() => import('components/pessoa/CardCertidoes.vue')),
+        TabelaTotaisNegocios: defineAsyncComponent(() => import('components/pessoa/TabelaTotaisNegocios.vue')),
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))
+    },
+
+    methods: {
+        updateTabelaNegocio(event) {
+        this.totalNegocioPessoa = event
+        },
     },
 
     setup() {
@@ -90,15 +109,20 @@ export default defineComponent({
         const $q = useQuasar()
         const route = useRoute()
         const sPessoa = pessoaStore()
+        const totalNegocioPessoa = ref([])
+        const sGrupoEconomico = GrupoEconomicoStore()
 
-        onMounted(() => {
+        onMounted(async() => {
             //   $q.loading.show({})
             const get = sPessoa.get(route.params.id)
             //    $q.loading.hide()
+            const ret = await sPessoa.totaisNegocios(1, {codpessoa: route.params.id})
+            totalNegocioPessoa.value = ret.data
         })
 
         return {
             sPessoa,
+            totalNegocioPessoa,
         }
     },
 })

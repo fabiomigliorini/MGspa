@@ -63,8 +63,7 @@
     <q-list>
       <q-item-label header>
         Endereço
-        <q-btn v-if="user.usuarioLogado.permissoes.find
-          (item => item.grupo === 'Pessoa')" flat round icon="add"
+        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="add"
           @click="modalNovoEndereco()"></q-btn>
       </q-item-label>
 
@@ -109,27 +108,23 @@
                 </q-item-label>
               </q-item-section>
 
-              <q-btn-dropdown flat auto-close>
-                <q-btn flat round icon="edit" v-if="user.usuarioLogado.permissoes.find
-                  (item => item.grupo === 'Pessoa')"
+              <q-btn-dropdown flat auto-close v-if="user.verificaPermissaoUsuario('Financeiro')">
+                <q-btn flat round icon="edit" v-if="user.verificaPermissaoUsuario('Financeiro')"
                   @click="editarEndereco(element.codpessoaendereco, element.endereco, element.numero, element.cep, element.complemento, element.bairro,
                     element.codcidade, element.cobranca, element.nfe, element.entrega, element.apelido, element.cidade), enderecoNovo = false">
                 </q-btn>
 
-                <q-btn v-if="user.usuarioLogado.permissoes.find
-                  (item => item.grupo === 'Pessoa')" flat round icon="delete"
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="delete"
                   @click="excluirEndereco(element.codpessoaendereco)" />
 
-                <q-btn v-if="user.usuarioLogado.permissoes.find
-                  (item => item.permissoes === 'Pessoa') && !element.inativo" flat round icon="pause"
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat round icon="pause"
                   @click="inativar(element.codpessoaendereco)">
                   <q-tooltip transition-show="scale" transition-hide="scale">
                     Inativar
                   </q-tooltip>
                 </q-btn>
 
-                <q-btn v-if="user.usuarioLogado.permissoes.find
-                  (item => item.grupo === 'Pessoa') && element.inativo" flat round
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat round
                   icon="play_arrow" @click="ativar(element.codpessoaendereco)">
                   <q-tooltip transition-show="scale" transition-hide="scale">
                     Ativar

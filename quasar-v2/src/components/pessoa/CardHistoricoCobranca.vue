@@ -4,20 +4,21 @@
             <q-list>
                 <q-item-label header>
                     Histórico de Cobrança
-                    <q-btn flat round icon="add" @click="novaCobranca()" />
+                    <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Financeiro')" @click="dialogEditarHistorico = true, modelCobrancaHistorico = {},
+                        cobrancaNova = true" />
                 </q-item-label>
                 <div v-for="historico in HistoricosCobranca" v-bind:key="historico.codcobrancahistorico">
                     <q-separator inset />
                     <q-item>
                         <q-item-section avatar>
                             <q-avatar>
-                                <q-icon name="comment" color="blue"/>
+                                <q-icon name="comment" color="blue" />
                             </q-avatar>
                             <!-- <q-item-label caption>#0000{{ historico.codcobrancahistorico }}</q-item-label> -->
                         </q-item-section>
 
                         <q-item-section>
-                            <q-item-label caption lines="5">
+                            <q-item-label caption lines="10">
                                 <span class="text-weight-bold">{{ historico.usuariocriacao }} </span>
                                 -- {{ historico.historico }}
                             </q-item-label>
@@ -27,7 +28,7 @@
                             {{ Documentos.formataData(historico.criacao) }}
                         </q-item-section>
 
-                        <q-btn-dropdown flat auto-close>
+                        <q-btn-dropdown flat auto-close v-if="user.verificaPermissaoUsuario('Financeiro')">
                             <q-btn flat round icon="edit"
                                 @click="editarHistorico(historico.codcobrancahistorico, historico.historico)" />
                             <q-btn flat round icon="delete" @click="deletarHistorico(historico.codcobrancahistorico)" />
@@ -43,9 +44,11 @@
     <!-- Dialog Editar Histórico -->
     <q-dialog v-model="dialogEditarHistorico">
         <q-card style="min-width: 350px">
-            <q-form @submit="salvarHistorico()">
+            <q-form @submit="cobrancaNova == true ? novaCobranca() : salvarHistorico()">
                 <q-card-section>
-                    <div class="text-h6">Editar Histórico de cobrança</div>
+                    <div v-if="cobrancaNova == false" class="text-h6">Editar Histórico de cobrança</div>
+                    <div v-else class="text-h6">Novo Histórico de cobrança</div>
+
                 </q-card-section>
                 <q-card-section class="">
                     <q-input outlined v-model="modelCobrancaHistorico.historico" autofocus label="Histórico" :rules="[
@@ -76,36 +79,30 @@ export default defineComponent({
 
     methods: {
 
-        novaCobranca() {
-            this.$q.dialog({
-                title: 'Novo histórico de cobrança',
-                prompt: {
-                    model: '',
-                    type: 'text',
-                },
-                cancel: true,
-            }).onOk(async historico => {
-                const ret = await this.sPessoa.novoHistoricoCobranca(this.route.params.id, historico)
-                if (ret.data.data) {
-                    this.$q.notify({
-                        color: 'green-5',
-                        textColor: 'white',
-                        icon: 'done',
-                        message: 'Histórico criado!'
-                    })
-                    this.buscarCobrancas()
-                } else {
-                    this.$q.notify({
-                        color: 'red-5',
-                        textColor: 'white',
-                        icon: 'warning',
-                        message: 'Erro, tente novamente'
-                    })
-                }
-            })
+        async novaCobranca() {
+
+            const ret = await this.sPessoa.novoHistoricoCobranca(this.route.params.id, this.modelCobrancaHistorico.historico)
+            if (ret.data.data) {
+                this.$q.notify({
+                    color: 'green-5',
+                    textColor: 'white',
+                    icon: 'done',
+                    message: 'Histórico criado!'
+                })
+                this.buscarCobrancas()
+                this.dialogEditarHistorico = false
+            } else {
+                this.$q.notify({
+                    color: 'red-5',
+                    textColor: 'white',
+                    icon: 'warning',
+                    message: 'Erro, tente novamente'
+                })
+            }
         },
 
         editarHistorico(codcobrancahistorico, historico) {
+            this.cobrancaNova = false
             this.dialogEditarHistorico = true
             this.modelCobrancaHistorico = {
                 historico: historico,
@@ -174,7 +171,8 @@ export default defineComponent({
         const modelCobrancaHistorico = ref([])
         const loading = ref(true)
         const route = useRoute()
-        //   const user = guardaToken()
+        const cobrancaNova = ref(false)
+        const user = guardaToken()
         const Documentos = formataDocumetos()
         const HistoricosCobranca = ref([])
         const Paginas = ref({
@@ -202,7 +200,9 @@ export default defineComponent({
             Documentos,
             route,
             Paginas,
+            user,
             loading,
+            cobrancaNova,
             dialogEditarHistorico,
             buscarCobrancas,
             modelCobrancaHistorico,

@@ -297,10 +297,19 @@ export const formataDocumetos = defineStore('documentos', {
             return dataformatada
         },
 
-        formataDataInput(data) {
-            var dataformatada = moment(data).format('DD-MM-YYYY')
+        dataFormatoSql(data) {
+            var dataformatada = moment(data, "DD/MM/YYYY").format('YYYY-MM-DD')
             return dataformatada
         },
+
+        formataDataInput(data) {
+            var dataformatada = moment(data).format('DD/MM/YYYY')
+            return dataformatada
+        },
+
+        dataAtual() {
+            return moment().format('YYYY-MM-DD')
+        }
     }
 })
 

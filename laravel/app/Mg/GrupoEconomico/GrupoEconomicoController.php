@@ -82,7 +82,7 @@ class GrupoEconomicoController extends MgController
     public function inativar($codgrupoeconomico)
     {
 
-        // Autorizador::autoriza(array('Pessoa'));
+        // Autorizador::autoriza(array('Financeiro'));
         $pes = GrupoEconomico::findOrFail($codgrupoeconomico);
         $pes = GrupoEconomicoService::inativar($pes);
 
@@ -92,12 +92,42 @@ class GrupoEconomicoController extends MgController
 
     public function ativar($codgrupoeconomico)
     {
-        // Autorizador::autoriza(array('Pessoa'));
+        // Autorizador::autoriza(array('Financeiro'));
 
         $pes = GrupoEconomico::findOrFail($codgrupoeconomico);
         $pes = GrupoEconomicoService::ativar($pes);
 
         return new GrupoEconomicoResource($pes);
+    }
+
+
+    public function totaisNegocios(Request $request, $codgrupoeconomico)
+    {   
+        
+        $data = $request->all();
+        $grupoNegocios = GrupoEconomicoService::totaisNegocios($data, $codgrupoeconomico);
+        return response()->json($grupoNegocios, 200);
+
+    }
+
+
+    public function titulosAbertos(Request $request, $codgrupoeconomico)
+    {   
+        
+        $data = $request->all();
+        $titulos = GrupoEconomicoService::titulosAbertos($data, $codgrupoeconomico);
+        return response()->json($titulos, 200);
+
+    }
+
+
+    public function nfeTerceiro(Request $request, $codgrupoeconomico)
+    {   
+        
+        $data = $request->all();
+        $grupoNegocios = GrupoEconomicoService::nfeTerceiro($data, $codgrupoeconomico);
+        return response()->json($grupoNegocios, 200);
+
     }
 
 

@@ -1,5 +1,5 @@
-FROM node:lts-alpine
-RUN npm i --location=global @quasar/cli@latest
+FROM node:20.10.0-alpine
+RUN npm i --location=global @quasar/cli@2.3.0
 MAINTAINER mgpapelaria.com.br
 
 WORKDIR /opt/www/MGspa/quasar-v2

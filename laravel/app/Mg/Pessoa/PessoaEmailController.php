@@ -21,7 +21,7 @@ class PessoaEmailController extends MgController
 
     public function create(Request $request, $codpessoa)
     {
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
 
         $request->validate([
             'email' => ['required'],
@@ -43,7 +43,7 @@ class PessoaEmailController extends MgController
 
     public function update(Request $request, $codpessoa, $codpessoatelefone)
     {   
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
 
         $data = $request->all();
 
@@ -54,7 +54,7 @@ class PessoaEmailController extends MgController
 
     public function delete(Request $request, $codpessoa, $codpessoatelefone)
     {
-            Autorizador::autoriza(array('Pessoa'));
+            Autorizador::autoriza(array('Financeiro'));
 
             $pessoa = PessoaEmail::findOrFail($codpessoatelefone);
             $pessoa = PessoaEmailService::delete($pessoa);
@@ -82,7 +82,7 @@ class PessoaEmailController extends MgController
 
     public function ativar(Request $request, $codpessoa, $codpessoatelefone)
     {
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
 
         $pes = PessoaEmail::findOrFail($codpessoatelefone);
         $pes = PessoaEmailService::ativar($pes);
@@ -92,7 +92,7 @@ class PessoaEmailController extends MgController
 
     public function inativar(Request $request, $codpessoa, $codpessoatelefone)
     {   
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
         
         $pes = PessoaEmail::findOrFail($codpessoatelefone);
         $pes = PessoaEmailService::inativar($pes);

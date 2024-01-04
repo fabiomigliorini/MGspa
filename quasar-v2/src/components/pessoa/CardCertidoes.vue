@@ -3,7 +3,10 @@
         <q-list>
             <q-item-label header>
                 Certidões
-                <q-btn flat round icon="add" @click="dialogCertidao = true, modelCertidao = {}, editCertidao = false" />
+                <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Financeiro')" @click="dialogCertidao = true, modelCertidao = {}, editCertidao = false" />
+
+                <q-radio v-model="filtroCertidaomodel" val="todas" label="Todas" @click="filtroCertidao()" />
+                <q-radio v-model="filtroCertidaomodel" val="validas" label="Válidas" @click="filtroCertidao()" />
             </q-item-label>
             <div v-for="certidao in sPessoa.item.PessoaCertidaoS" v-bind:key="certidao.codpessoacertidao">
                 <q-separator inset />
@@ -15,20 +18,20 @@
                     </q-item-section>
 
                     <q-item-section>
-                        <q-item-label caption lines="6">
+                        <q-item-label lines="6">
+                            <span class="row">{{ certidao.certidaotipo }}&nbsp;{{ certidao.certidaoemissor }}</span>
+
                             <span :class="certidao.inativo ? 'text-strike text-red-14' : null"
-                                class="text-weight-bold row">{{ certidao.numero }} </span>
+                                class="text-weight-bold row">{{ certidao.numero }}</span>
                             <span :class="certidao.inativo ? 'text-strike text-red-14' : null">{{ certidao.autenticacao
                             }}</span>
-                            <span class="row">Tipo: {{ certidao.certidaotipo }}</span>
-                            <span class="row">Emissor: {{ certidao.certidaoemissor }}</span>
                         </q-item-label>
                     </q-item-section>
                     <q-item-section side top>
-                        Validade: {{ Documentos.formataDatasemHr(certidao.validade) }}
+                        {{ Documentos.formataDatasemHr(certidao.validade) }}
                     </q-item-section>
 
-                    <q-btn-dropdown flat auto-close dense>
+                    <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
                         <q-btn flat round icon="edit" @click="editarCertidao(certidao.codpessoacertidao, certidao.codcertidaoemissor,
                             certidao.numero, certidao.autenticacao, certidao.validade, certidao.codcertidaotipo)" />
                         <q-btn flat round icon="delete" @click="deletarCertidao(certidao.codpessoacertidao)" />
@@ -69,14 +72,14 @@
 
                     <q-input outlined v-model="modelCertidao.autenticacao" class="q-mb-md" label="Autenticação" />
 
-                    <q-input outlined v-model="modelCertidao.validade" mask="##-##-####" label="Validade" :rules="[
+                    <q-input outlined v-model="modelCertidao.validade" mask="##/##/####" label="Validade" :rules="[
                         val => val && val.length > 0 || 'Validade obrigatório'
                     ]">
 
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                                 <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                    <q-date v-model="modelCertidao.validade" :locale="brasil" mask="DD-MM-YYYY">
+                                    <q-date v-model="modelCertidao.validade" :locale="brasil" mask="DD/MM/YYYY">
                                         <div class="row items-center justify-end">
                                             <q-btn v-close-popup label="Fechar" color="primary" flat />
                                         </div>
@@ -116,8 +119,21 @@ export default defineComponent({
 
     methods: {
 
+        filtroCertidao() {
+            if (this.filtroCertidaomodel == 'validas') {
+                let validas = this.sPessoa.item.PessoaCertidaoS.filter(x => x.validade >= this.Documentos.dataAtual())
+                this.sPessoa.item.PessoaCertidaoS = validas
+            }
+            if (this.filtroCertidaomodel == 'todas') {
+                this.sPessoa.get(this.route.params.id)
+            }
+        },
+
         async novaCertidao() {
             this.modelCertidao.codpessoa = this.route.params.id
+            if (this.modelCertidao.validade) {
+             this.modelCertidao.validade = this.Documentos.dataFormatoSql(this.modelCertidao.validade)
+            }
             try {
                 const ret = await this.sPessoa.novaCertidao(this.modelCertidao)
                 if (ret.data.data) {
@@ -150,6 +166,9 @@ export default defineComponent({
         },
 
         async salvarCertidao() {
+            if (this.modelCertidao.validade) {
+             this.modelCertidao.validade = this.Documentos.dataFormatoSql(this.modelCertidao.validade)
+            }
             try {
                 const ret = await this.sPessoa.salvarEdicaoCertidao(this.modelCertidao.codpessoacertidao, this.modelCertidao)
                 if (ret.data.data) {
@@ -265,8 +284,9 @@ export default defineComponent({
         const route = useRoute()
         const dialogCertidao = ref(false)
         const modelCertidao = ref({})
+        const filtroCertidaomodel = ref('todas')
 
-        //   const user = guardaToken()
+        const user = guardaToken()
         const Documentos = formataDocumetos()
         const HistoricosCobranca = ref([])
         const Paginas = ref({
@@ -277,8 +297,10 @@ export default defineComponent({
             sPessoa,
             HistoricosCobranca,
             Documentos,
+            filtroCertidaomodel,
             route,
             Paginas,
+            user,
             dialogCertidao,
             editCertidao,
             loading,

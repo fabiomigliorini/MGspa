@@ -15,7 +15,7 @@ class PessoaEnderecoController extends MgController
     // TODO: fazer o retornar sempre o resource de Pessoa e nao Pessoa Endereco
     public function create(Request $request, $codpessoa)
     {
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
 
         $request->validate([
             'codcidade' => ['required'],
@@ -40,7 +40,7 @@ class PessoaEnderecoController extends MgController
 
     public function update(Request $request, $codpessoa, $codpessoaendereco)
     {
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
 
         $data = $request->all();
         $pessoa = PessoaEndereco::findOrFail($codpessoaendereco);
@@ -50,7 +50,7 @@ class PessoaEnderecoController extends MgController
 
     public function delete(Request $request, $codpessoa, $codpessoaendereco)
     {   
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
 
         $pe = PessoaEndereco::findOrFail($codpessoaendereco);
         $result = PessoaEnderecoService::delete($pe);
@@ -78,7 +78,7 @@ class PessoaEnderecoController extends MgController
 
     public function ativar(Request $request, $codpessoa, $codpessoaendereco)
     {   
-        Autorizador::autoriza(array('Pessoa'));
+        Autorizador::autoriza(array('Financeiro'));
 
         $pes = PessoaEndereco::findOrFail($codpessoaendereco);
         $pes = PessoaEnderecoService::ativar($pes);
@@ -88,7 +88,7 @@ class PessoaEnderecoController extends MgController
 
     public function inativar(Request $request, $codpessoa, $codpessoaendereco)
     {   
-         Autorizador::autoriza(array('Pessoa'));
+         Autorizador::autoriza(array('Financeiro'));
         
         $pes = PessoaEndereco::findOrFail($codpessoaendereco);
         $pes = PessoaEnderecoService::inativar($pes);

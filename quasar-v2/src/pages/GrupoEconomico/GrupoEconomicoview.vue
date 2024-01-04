@@ -25,22 +25,20 @@
                                 </q-item-label>
                             </q-item-section>
                         </q-item>
-                        <q-btn v-if="user.usuarioLogado.permissoes.find
-                             (item => item.grupo === 'Grupoeconomico')" round flat icon="edit" @click="editarGrupoEconomico(route.params.id)" />
-                        <q-btn v-if="user.usuarioLogado.permissoes.find
-                             (item => item.grupo === 'Grupoeconomico')" round flat icon="delete" @click="excluirGrupoEconomico(route.params.id)" />
+                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" round flat icon="edit"
+                            @click="editarGrupoEconomico(route.params.id)" />
+                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" round flat icon="delete"
+                            @click="excluirGrupoEconomico(route.params.id)" />
 
-                        <q-btn v-if="user.usuarioLogado.permissoes.find
-                            (item => item.grupo === 'Grupoeconomico') && !GrupoEconomico.inativo" round flat icon="pause"
-                            @click="inativarGrupo(route.params.id)">
+                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !GrupoEconomico.inativo" round flat
+                            icon="pause" @click="inativarGrupo(route.params.id)">
                             <q-tooltip>
                                 Inativar
                             </q-tooltip>
                         </q-btn>
 
-
-                        <q-btn v-if="user.usuarioLogado.permissoes.find
-                         (item => item.grupo === 'Grupoeconomico') && GrupoEconomico.inativo" @click="ativar(route.params.id)" round flat icon="play_arrow">
+                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && GrupoEconomico.inativo"
+                            @click="ativar(route.params.id)" round flat icon="play_arrow">
                             <q-tooltip>
                                 Ativar
                             </q-tooltip>
@@ -63,7 +61,15 @@
                     v-for="pessoa in CardPessoasGrupo" v-bind:key="pessoa.codpessoa">
                     <card-pessoas :listagempessoas="pessoa"></card-pessoas>
                 </div>
+
             </div>
+            <div class="q-pa-md">
+                <tabela-totais-negocios :totaisNegocios="totaisNegocios" v-on:update:totais-negocios="updateTabelaNegocio($event)">
+                </tabela-totais-negocios>
+            </div>
+            <!-- <div v-for="pessoa in CardPessoasGrupo" v-bind:key="pessoa.codpessoa">
+                
+            </div> -->
 
             <!-- DIALOG EDITAR GRUPO ECONOMICO -->
             <q-dialog v-model="DialogGrupoEconomico">
@@ -94,20 +100,41 @@ import { useRouter } from 'vue-router'
 import { formataDocumetos } from 'src/stores/formataDocumentos'
 import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
 import { guardaToken } from 'src/stores'
+import { pessoaStore } from 'src/stores/pessoa'
 
 export default defineComponent({
     name: "GrupoEconomico",
 
     components: {
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-        CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue'))
+        CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),
+        TabelaTotaisNegocios: defineAsyncComponent(() => import('components/pessoa/TabelaTotaisNegocios.vue')),
     },
 
     methods: {
 
+        updateTabelaNegocio(event) {
+        this.totaisNegocios = event
+        },
+
+        async totaisNegociosGrupo() {
+            try {
+                const ret = await this.sPessoa.totaisNegocios(this.route.params.id)
+                this.totaisNegocios = ret.data
+
+            } catch (error) {
+                this.$q.notify({
+                    color: 'red-5',
+                    textColor: 'white',
+                    icon: 'error',
+                    message: error.response.data.message ?? 'Erro ao carregar negócios'
+                })
+            }
+        },
+
         async inativarGrupo(codgrupoeconomico) {
             try {
-                const ret = await this.sPessoa.inativarGrupo(codgrupoeconomico)
+                const ret = await this.sGrupoEconomico.inativarGrupo(codgrupoeconomico)
                 if (ret.data) {
                     this.GrupoEconomico = ret.data.data
                     this.$q.notify({
@@ -129,7 +156,7 @@ export default defineComponent({
 
         async ativar(codgrupoeconomico) {
             try {
-                const ret = await this.sPessoa.ativarGrupo(codgrupoeconomico)
+                const ret = await this.sGrupoEconomico.ativarGrupo(codgrupoeconomico)
                 if (ret.data) {
                     this.GrupoEconomico = ret.data.data
                     this.$q.notify({
@@ -156,7 +183,7 @@ export default defineComponent({
                 message: 'Tem certeza que deseja excluir ' + pessoa + ' do grupo economico ' + grupoeconomico + '?',
                 cancel: true,
             }).onOk(async () => {
-                const ret = await this.sPessoa.removerdoGrupo(codpessoa, codgrupoeconomico)
+                const ret = await this.sGrupoEconomico.removerdoGrupo(codpessoa, codgrupoeconomico)
                 if (ret.data.message == true) {
                     this.$q.notify({
                         color: 'green-5',
@@ -164,7 +191,7 @@ export default defineComponent({
                         icon: 'done',
                         message: 'Removido'
                     })
-                    const get = await this.sPessoa.getGrupoEconomico(codgrupoeconomico)
+                    const get = await this.sGrupoEconomico.getGrupoEconomico(codgrupoeconomico)
                     this.CardPessoasGrupo = get.data.data.PessoasdoGrupo
                 }
             })
@@ -185,7 +212,7 @@ export default defineComponent({
                 message: 'Tem certeza que deseja excluir esse grupo econômico?',
                 cancel: true,
             }).onOk(async () => {
-                const ret = await this.sPessoa.excluirGrupoEconomico(codgrupoeconomico)
+                const ret = await this.sGrupoEconomico.excluirGrupoEconomico(codgrupoeconomico)
                 if (ret) {
                     this.$q.notify({
                         color: 'green-5',
@@ -201,7 +228,7 @@ export default defineComponent({
         async salvarGrupoEconomico(codgrupoeconomico) {
             this.DialogGrupoEconomico = false
             try {
-                const ret = await this.sPessoa.salvarGrupoEconomico(codgrupoeconomico, this.modelEditarGrupo)
+                const ret = await this.sGrupoEconomico.salvarGrupoEconomico(codgrupoeconomico, this.modelEditarGrupo)
                 if (ret.data.data) {
                     this.$q.notify({
                         color: 'green-5',
@@ -229,22 +256,26 @@ export default defineComponent({
         const route = useRoute()
         const GrupoEconomico = ref([])
         const router = useRouter()
-        const sPessoa = GrupoEconomicoStore()
+        const sGrupoEconomico = GrupoEconomicoStore()
+        const sPessoa = pessoaStore()
         const Documentos = formataDocumetos()
         const CardPessoasGrupo = ref([])
         const user = guardaToken()
+        const totaisNegocios = ref([])
 
         onMounted(async () => {
-            const ret = await sPessoa.getGrupoEconomico(route.params.id)
+            const ret = await sGrupoEconomico.getGrupoEconomico(route.params.id)
             CardPessoasGrupo.value = ret.data.data.PessoasdoGrupo
             GrupoEconomico.value = ret.data.data
         })
 
         return {
             route,
-            sPessoa,
+            sGrupoEconomico,
             router,
             user,
+            sPessoa,
+            totaisNegocios,
             Documentos,
             DialogGrupoEconomico: ref(false),
             modelEditarGrupo: ref([]),
@@ -255,7 +286,7 @@ export default defineComponent({
                     const nomeGrupo = val.toLowerCase()
                     try {
                         if (nomeGrupo.length > 3) {
-                            const ret = await sPessoa.selectGrupoEconomico(nomeGrupo)
+                            const ret = await sGrupoEconomico.selectGrupoEconomico(nomeGrupo)
                             GrupoEconomico.value = ret.data.data
                             return
                         }
@@ -271,6 +302,9 @@ export default defineComponent({
             },
         }
     },
+    mounted() {
+        this.totaisNegociosGrupo()
+    }
 })
 </script>
   

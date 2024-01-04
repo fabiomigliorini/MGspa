@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
 import { ref } from 'vue';
 
+
 export const pessoaStore = defineStore('pessoa', {
   persist: true,
 
@@ -341,6 +342,11 @@ export const pessoaStore = defineStore('pessoa', {
 
     async deletarCertidao(codpessoacertidao) {
       const ret = await api.delete('v1/certidao/' + codpessoacertidao)
+      return ret;
+    },
+
+    async totaisNegocios(codgrupoeconomico, Negocios) {
+      const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/totais-negocios', {params: Negocios})
       return ret;
     },
   }

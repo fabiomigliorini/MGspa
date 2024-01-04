@@ -28,8 +28,7 @@
   <q-card bordered>
     <q-list class="">
       <q-item-label header>Email
-        <q-btn v-if="user.usuarioLogado.permissoes.find
-          (item => item.grupo === 'Pessoa')" flat round icon="add" @click="modalNovoEmail()" />
+        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="add" @click="modalNovoEmail()" />
       </q-item-label>
 
       <!-- DRAG AND DROP EMAILS -->
@@ -70,30 +69,26 @@
               <q-item-section side>
                 <div class="row">
 
-                  <q-btn v-if="!element.verificacao" label="Verificar" color="blue" flat size="sm" dense
+                  <q-btn v-if="!element.verificacao && user.verificaPermissaoUsuario('Financeiro')" label="Verificar" color="blue" flat size="sm" dense
                     @click="enviarEmail(element.email, element.codpessoatelefone)" />
 
-                  <q-btn-dropdown flat auto-close dense>
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa')" flat round icon="edit"
+                  <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="edit"
                       @click="editarEmail(element.codpessoatelefone, element.email, element.apelido, element.verificacao, element.nfe, element.cobranca), emailNovo = false">
                     </q-btn>
 
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa')" flat round icon="delete"
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="delete"
                       @click="excluirEmail(element.codpessoatelefone)">
                     </q-btn>
 
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa') && !element.inativo" flat round
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat round
                       icon="pause" @click="inativar(element.codpessoa, element.codpessoatelefone)">
                       <q-tooltip transition-show="scale" transition-hide="scale">
                         Inativar
                       </q-tooltip>
                     </q-btn>
 
-                    <q-btn v-if="user.usuarioLogado.permissoes.find
-                      (item => item.grupo === 'Pessoa') && element.inativo" flat round
+                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat round
                       icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoatelefone)">
                       <q-tooltip transition-show="scale" transition-hide="scale">
                         Ativar
