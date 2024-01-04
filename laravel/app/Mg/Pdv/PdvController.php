@@ -111,14 +111,10 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-    public function romaneio(Request $request, $codnegocio)
+    public function romaneio($codnegocio)
     {
         $negocio = Negocio::findOrFail($codnegocio);
-        if (!empty($request->impressora)) {
-            $pdf = RomaneioService::imprimir($negocio, $request->impressora);
-        } else {
-            $pdf = RomaneioService::pdf($negocio);
-        }
+        $pdf = RomaneioService::pdf($negocio);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="Romaneio' . $codnegocio . '.pdf"'

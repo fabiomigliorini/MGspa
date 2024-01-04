@@ -1,6 +1,6 @@
 TODO:
 
-BUG
+BUG:
 
 - quando abre dialog pra selecionar pessoa, o foco esta no select ele não abre a caixa de pesquisa
 - quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
@@ -9,15 +9,13 @@ BUG
 - venda para Luiz Junior a vista está pedindo para liberar credito
 - quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
 
-MANDATORY
+MANDATORY:
 
 - validar se tem itens ativos > 0
 - nao gerar nota com itens inativos
 - nao gerar fechamento com itens inativos
 - nao gerar transferencias com itens inativos
-- romaneio em impressora termica
 - bloquear baixar negocio somente para Gerente/Administrador
-- nao deixar fazer transferencia se raiz do cnpj da filial != cnpj do destino
 - dar permissoes para receber em dinheiro somente para grupo de Caixas/Gerente/Administrador
 - Cancelamento de Negocio
 - fazer geracao da NF normal
@@ -34,6 +32,8 @@ MANDATORY
 
 DONE:
 
+- romaneio em impressora termica
+- nao deixar fazer transferencia se raiz do cnpj da filial != cnpj do destino
 - nao mostrar itens inativos no romaneio
 - nao gerar movimentacao de estoque para produtos excluidos do negocio
 
