@@ -163,7 +163,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/impressora", {
-          params: { uuid: this.pdv.uuid },
+          params: { pdv: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -193,7 +193,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/forma-pagamento", {
-          params: { uuid: this.pdv.uuid },
+          params: { pdv: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -223,7 +223,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/estoque-local", {
-          params: { uuid: this.pdv.uuid },
+          params: { pdv: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -253,7 +253,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         // busca registros na ApI
         let { data } = await api.get("/api/v1/pdv/natureza-operacao", {
-          params: { uuid: this.pdv.uuid },
+          params: { pdv: this.pdv.uuid },
         });
 
         // insere dados no banco local indexeddb
@@ -282,7 +282,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       // descobre o total de registros pra sincronizar
       try {
         let { data } = await api.get("/api/v1/pdv/pessoa-count", {
-          params: { uuid: this.pdv.uuid },
+          params: { pdv: this.pdv.uuid },
         });
         this.importacao.totalRegistros = data.count;
         this.importacao.limiteRequisicao = Math.round(
@@ -305,7 +305,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         // busca dados na api
         var { data } = await api.get("/api/v1/pdv/pessoa", {
           params: {
-            uuid: this.pdv.uuid,
+            pdv: this.pdv.uuid,
             codpessoa: codpessoa,
             limite: this.importacao.limiteRequisicao,
           },
@@ -356,7 +356,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       // descobre o total de registros pra sincronizar
       try {
         let { data } = await api.get("/api/v1/pdv/produto-count", {
-          params: { uuid: this.pdv.uuid },
+          params: { pdv: this.pdv.uuid },
         });
         this.importacao.totalRegistros = data.count;
         this.importacao.limiteRequisicao = Math.round(
@@ -379,7 +379,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         // busca dados na api
         var { data } = await api.get("/api/v1/pdv/produto", {
           params: {
-            uuid: this.pdv.uuid,
+            pdv: this.pdv.uuid,
             codprodutobarra: codprodutobarra,
             limite: this.importacao.limiteRequisicao,
           },
@@ -425,7 +425,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
     async putNegocio(negocio) {
       const params = {
-        uuid: this.pdv.uuid,
+        pdv: this.pdv.uuid,
         negocio: negocio,
       };
       try {
@@ -450,9 +450,33 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       try {
         const { data } = await api.get("/api/v1/pdv/negocio/" + codOrUuid, {
           params: {
-            uuid: this.pdv.uuid,
+            pdv: this.pdv.uuid,
           },
         });
+        return data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async fecharNegocio(codnegocio) {
+      try {
+        const { data } = await api.post(
+          "/api/v1/pdv/negocio/" + codnegocio + "/fechar",
+          {
+            pdv: this.pdv.uuid,
+          }
+        );
         return data.data;
       } catch (error) {
         console.log(error);

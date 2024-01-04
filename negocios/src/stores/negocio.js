@@ -95,8 +95,11 @@ export const negocioStore = defineStore("negocio", {
         codestoquelocal: this.padrao.codestoquelocal,
         codestoquelocaldestino: null,
         codnaturezaoperacao: this.padrao.codnaturezaoperacao,
+        naturezaoperacao: null,
+        financeiro: false,
         codnegociostatus: 1,
         codpessoa: this.padrao.codpessoa,
+        pessoa: null,
         codpessoatransportador: null,
         codpessoavendedor: null,
         codusuario: null,
@@ -214,6 +217,7 @@ export const negocioStore = defineStore("negocio", {
       var estoquelocal = null;
       var fantasia = null;
       var fantasiavendedor = null;
+      var financeiro = false;
 
       // natureza
       if (this.negocio.codnaturezaoperacao) {
@@ -221,6 +225,7 @@ export const negocioStore = defineStore("negocio", {
           this.negocio.codnaturezaoperacao
         );
         naturezaoperacao = nat.naturezaoperacao;
+        financeiro = nat.financeiro;
         codoperacao = nat.codoperacao;
         if (nat.codoperacao == 1) {
           operacao = "Entrada";
@@ -249,20 +254,6 @@ export const negocioStore = defineStore("negocio", {
         estoquelocal = loc.estoquelocal;
       }
 
-      // natureza
-      if (this.negocio.codnaturezaoperacao) {
-        const nat = await db.naturezaOperacao.get(
-          this.negocio.codnaturezaoperacao
-        );
-        naturezaoperacao = nat.naturezaoperacao;
-        codoperacao = nat.codoperacao;
-        if (nat.codoperacao == 1) {
-          operacao = "Entrada";
-        } else {
-          operacao = "Saída";
-        }
-      }
-
       // Pessoa
       if (this.negocio.codpessoa) {
         const pes = await db.pessoa.get(this.negocio.codpessoa);
@@ -281,6 +272,7 @@ export const negocioStore = defineStore("negocio", {
       }
 
       this.negocio.naturezaoperacao = naturezaoperacao;
+      this.negocio.financeiro = financeiro;
       this.negocio.codoperacao = codoperacao;
       this.negocio.operacao = operacao;
       this.negocio.negociostatus = negociostatus;
@@ -676,6 +668,32 @@ export const negocioStore = defineStore("negocio", {
         this.negocio.pagamentos.splice(index, 1);
       }
       this.salvar();
+    },
+
+    async fechar() {
+      if (!this.negocio.sincronizado) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Impossível fechar um negócio não sincronizado com o servidor!",
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      try {
+        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio);
+        if (ret.codnegocio) {
+          Notify.create({
+            type: "positive",
+            message: "Negócio Fechado!",
+          });
+          this.negocio = ret;
+          db.negocio.put(ret);
+          this.atualizarListagem();
+        }
+      } catch (error) {
+        console.log(erro);
+      }
     },
   },
 });

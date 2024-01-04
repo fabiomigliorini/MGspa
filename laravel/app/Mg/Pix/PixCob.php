@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Oct/2021 14:31:30
+ * Date: 02/Jan/2024 17:27:56
  */
 
 namespace Mg\Pix;
@@ -13,6 +13,7 @@ use Mg\Negocio\Negocio;
 use Mg\Pix\PixCobStatus;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
+use Mg\Pdv\Pdv;
 
 class PixCob extends MgModel
 {
@@ -23,6 +24,7 @@ class PixCob extends MgModel
     protected $fillable = [
         'cnpj',
         'codnegocio',
+        'codpdv',
         'codpixcobstatus',
         'codportador',
         'cpf',
@@ -44,6 +46,7 @@ class PixCob extends MgModel
     protected $casts = [
         'cnpj' => 'float',
         'codnegocio' => 'integer',
+        'codpdv' => 'integer',
         'codpixcob' => 'integer',
         'codpixcobstatus' => 'integer',
         'codportador' => 'integer',
@@ -60,6 +63,11 @@ class PixCob extends MgModel
     public function Negocio()
     {
         return $this->belongsTo(Negocio::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function Pdv()
+    {
+        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
     }
 
     public function PixCobStatus()

@@ -51,7 +51,10 @@ Route::group(['prefix' => 'v1/auth'], function () {
 Route::group(['prefix' => 'v1'], function () {
 
     // PDV
-    Route::put('pdv/dispositivo', '\Mg\Pdv\PdvController@dispositivo');
+    Route::group(['prefix' => 'pdv'], function () {
+        Route::put('dispositivo', '\Mg\Pdv\PdvController@dispositivo');
+        Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio');
+    });
 
     // Produto
     Route::post('produto/unifica-variacoes', '\Mg\Produto\ProdutoController@unificaVariacoes');
@@ -152,16 +155,20 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
         //PDV
-        Route::get('pdv/produto-count', '\Mg\Pdv\PdvController@produtoCount');
-        Route::get('pdv/produto', '\Mg\Pdv\PdvController@produto');
-        Route::get('pdv/pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
-        Route::get('pdv/pessoa', '\Mg\Pdv\PdvController@pessoa');
-        Route::get('pdv/natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
-        Route::get('pdv/estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
-        Route::get('pdv/forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
-        Route::get('pdv/impressora', '\Mg\Pdv\PdvController@impressora');
-        Route::put('pdv/negocio', '\Mg\Pdv\PdvController@putNegocio');
-        Route::get('pdv/negocio/{id}', '\Mg\Pdv\PdvController@getNegocio');
+        Route::group(['prefix' => 'pdv'], function () {
+            Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
+            Route::get('produto', '\Mg\Pdv\PdvController@produto');
+            Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
+            Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
+            Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
+            Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
+            Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
+            Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
+            Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
+            Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
+            Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
+            Route::post('negocio/{codnegocio}/romaneio/imprimir/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
+        });
 
         // Allan - daqui pra baixo
         Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');

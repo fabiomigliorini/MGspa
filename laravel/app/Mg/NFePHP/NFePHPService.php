@@ -119,7 +119,7 @@ class NFePHPService extends MgService
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
             'nfereciboenvio' => $nf->nfereciboenvio,
-            'nfedataenvio' => ($nf->nfedataenvio)?$nf->nfedataenvio->toW3cString():null,
+            'nfedataenvio' => ($nf->nfedataenvio) ? $nf->nfedataenvio->toW3cString() : null,
             'resp' => $resp,
         ];
     }
@@ -147,7 +147,7 @@ class NFePHPService extends MgService
         $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
 
         // Envia Lote para Sefaz
-	//$tools->timeout(5);
+        //$tools->timeout(5);
         $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1);
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -168,7 +168,7 @@ class NFePHPService extends MgService
             $cStat = $respStd->protNFe->infProt->cStat;
             $xMotivo = $respStd->protNFe->infProt->xMotivo;
 
-        // Se veio cStat na Raiz
+            // Se veio cStat na Raiz
         } elseif (isset($respStd->cStat)) {
             $cStat = $respStd->cStat;
             $xMotivo = $respStd->xMotivo;
@@ -176,12 +176,12 @@ class NFePHPService extends MgService
 
         // Retorna Resultado do processo
         return (object) [
-          'sucesso' => $sucesso,
-          'cStat' => $cStat,
-          'xMotivo' => $xMotivo,
-          'nfeautorizacao' => $nf->nfeautorizacao,
-          'nfedataautorizacao' => ($nf->nfedataautorizacao)?$nf->nfedataautorizacao->toW3cString():null,
-          'resp' => $resp
+            'sucesso' => $sucesso,
+            'cStat' => $cStat,
+            'xMotivo' => $xMotivo,
+            'nfeautorizacao' => $nf->nfeautorizacao,
+            'nfedataautorizacao' => ($nf->nfedataautorizacao) ? $nf->nfedataautorizacao->toW3cString() : null,
+            'resp' => $resp
         ];
     }
 
@@ -197,8 +197,8 @@ class NFePHPService extends MgService
 
         // Guarda no Banco de Dados informação da Autorização
         $ret = NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'nfeautorizacao' => $infProt->nProt,
-          'nfedataautorizacao' => Carbon::parse($infProt->dhRecbto)
+            'nfeautorizacao' => $infProt->nProt,
+            'nfedataautorizacao' => Carbon::parse($infProt->dhRecbto)
         ]);
 
         // Carrega o Arquivo com o XML Assinado
@@ -228,9 +228,9 @@ class NFePHPService extends MgService
 
         // Guarda no Banco de Dados informação da Autorização
         NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'justificativa' => $infProt->xMotivo,
-          'nfeinutilizacao' => $infProt->nProt,
-          'nfedatainutilizacao' => Carbon::parse($infProt->dhRecbto)
+            'justificativa' => $infProt->xMotivo,
+            'nfeinutilizacao' => $infProt->nProt,
+            'nfedatainutilizacao' => Carbon::parse($infProt->dhRecbto)
         ]);
 
         // Carrega o Arquivo com o XML Assinado
@@ -263,9 +263,9 @@ class NFePHPService extends MgService
 
         // Guarda no Banco de Dados informação da Autorização
         NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'justificativa' => $justificativa,
-          'nfecancelamento' => $infEvento->nProt,
-          'nfedatacancelamento' => Carbon::parse($infEvento->dhRegEvento)
+            'justificativa' => $justificativa,
+            'nfecancelamento' => $infEvento->nProt,
+            'nfedatacancelamento' => Carbon::parse($infEvento->dhRegEvento)
         ]);
 
         // Pega XML do Cancelamento
@@ -295,9 +295,9 @@ class NFePHPService extends MgService
 
         // Guarda no Banco de Dados informação da Autorização
         NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-          'justificativa' => $justificativa,
-          'nfeinutilizacao' => $infInut->nProt,
-          'nfedatainutilizacao' => Carbon::parse($infInut->dhRecbto)
+            'justificativa' => $justificativa,
+            'nfeinutilizacao' => $infInut->nProt,
+            'nfedatainutilizacao' => Carbon::parse($infInut->dhRecbto)
         ]);
 
         return true;
@@ -342,7 +342,7 @@ class NFePHPService extends MgService
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
             'nfeautorizacao' => $nf->nfeautorizacao,
-            'nfedataautorizacao' => ($nf->nfedataautorizacao)?$nf->nfedataautorizacao->toW3cString():null,
+            'nfedataautorizacao' => ($nf->nfedataautorizacao) ? $nf->nfedataautorizacao->toW3cString() : null,
             'resp' => $resp
         ];
     }
@@ -409,7 +409,7 @@ class NFePHPService extends MgService
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
             'nfecancelamento' => $nf->nfecancelamento,
-            'nfedatanfecancelamento' => ($nf->nfedatanfecancelamento)?$nf->nfedatanfecancelamento->toW3cString():null,
+            'nfedatanfecancelamento' => ($nf->nfedatanfecancelamento) ? $nf->nfedatanfecancelamento->toW3cString() : null,
             'resp' => $resp
         ];
     }
@@ -479,7 +479,7 @@ class NFePHPService extends MgService
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
             'nfeinutilizacao' => $nf->nfeinutilizacao,
-            'nfedatainutilizacao' => ($nf->nfedatainutilizacao)?$nf->nfedatainutilizacao->toW3cString():null,
+            'nfedatainutilizacao' => ($nf->nfedatainutilizacao) ? $nf->nfedatainutilizacao->toW3cString() : null,
             'resp' => $resp
         ];
     }
@@ -540,13 +540,13 @@ class NFePHPService extends MgService
 
                 // Salva Carta de Correcao no Banco de Dados
                 NotaFiscalCartaCorrecao::create([
-                  'codnotafiscal' => $nf->codnotafiscal,
-                  'sequencia' => $respStd->retEvento->infEvento->nSeqEvento,
-                  'lote' => $respStd->retEvento->infEvento->nSeqEvento,
-                  'data' => Carbon::parse($respStd->retEvento->infEvento->dhRegEvento),
-                  'texto' => $texto,
-                  'protocolo' => $respStd->retEvento->infEvento->nProt,
-                  'protocolodata' => Carbon::parse($respStd->retEvento->infEvento->dhRegEvento),
+                    'codnotafiscal' => $nf->codnotafiscal,
+                    'sequencia' => $respStd->retEvento->infEvento->nSeqEvento,
+                    'lote' => $respStd->retEvento->infEvento->nSeqEvento,
+                    'data' => Carbon::parse($respStd->retEvento->infEvento->dhRegEvento),
+                    'texto' => $texto,
+                    'protocolo' => $respStd->retEvento->infEvento->nProt,
+                    'protocolodata' => Carbon::parse($respStd->retEvento->infEvento->dhRegEvento),
                 ]);
 
                 // Salva arquivo XML com retorno
@@ -664,11 +664,13 @@ class NFePHPService extends MgService
 
             foreach ($respStd->procEventoNFe as $procEventoNFe) {
 
-              // Cancelamento
-                if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
-              $procEventoNFe->evento->infEvento->tpEvento == 110111) {
+                // Cancelamento
+                if (
+                    isset($procEventoNFe->evento->infEvento->tpEvento) &&
+                    $procEventoNFe->evento->infEvento->tpEvento == 110111
+                ) {
 
-                // Processa Protocolo para saber se foi autorizada
+                    // Processa Protocolo para saber se foi autorizada
                     $sucesso = static::processarEventoCancelamento($nf, $procEventoNFe, $resp);
                     $nf = $nf->fresh();
 
@@ -679,12 +681,14 @@ class NFePHPService extends MgService
                 }
 
                 // Carta de Correcao
-                if (isset($procEventoNFe->evento->infEvento->tpEvento) &&
-              $procEventoNFe->evento->infEvento->tpEvento == 110110) {
+                if (
+                    isset($procEventoNFe->evento->infEvento->tpEvento) &&
+                    $procEventoNFe->evento->infEvento->tpEvento == 110110
+                ) {
                     $nfcc = NotaFiscalCartaCorrecao::firstOrNew([
-                  'codnotafiscal' => $nf->codnotafiscal,
-                  'sequencia' => $procEventoNFe->evento->infEvento->nSeqEvento
-                ]);
+                        'codnotafiscal' => $nf->codnotafiscal,
+                        'sequencia' => $procEventoNFe->evento->infEvento->nSeqEvento
+                    ]);
                     $nfcc->lote = $procEventoNFe->evento->infEvento->nSeqEvento;
                     $nfcc->data = Carbon::parse($procEventoNFe->retEvento->infEvento->dhRegEvento);
                     $nfcc->texto = $procEventoNFe->evento->infEvento->detEvento->xCorrecao;
@@ -701,11 +705,11 @@ class NFePHPService extends MgService
             'xMotivo' => $xMotivo,
             'tpEvento' => $tpEvento,
             'nfeautorizacao' => $nf->nfeautorizacao,
-            'nfedataautorizacao' => ($nf->nfedataautorizacao)?$nf->nfedataautorizacao->toW3cString():null,
+            'nfedataautorizacao' => ($nf->nfedataautorizacao) ? $nf->nfedataautorizacao->toW3cString() : null,
             'nfecancelamento' => $nf->nfecancelamento,
-            'nfedatacancelamento' => ($nf->nfedatacancelamento)?$nf->nfedatacancelamento->toW3cString():null,
+            'nfedatacancelamento' => ($nf->nfedatacancelamento) ? $nf->nfedatacancelamento->toW3cString() : null,
             'nfeinutilizacao' => $nf->nfeinutilizacao,
-            'nfedatainutilizacao' => ($nf->nfedatainutilizacao)?$nf->nfedatainutilizacao->toW3cString():null,
+            'nfedatainutilizacao' => ($nf->nfedatainutilizacao) ? $nf->nfedatainutilizacao->toW3cString() : null,
             'justificativa' => $nf->justificativa,
             'resp' => $resp
         ];
@@ -737,7 +741,7 @@ class NFePHPService extends MgService
         } elseif (!file_exists($path)) {
             throw new \Exception("Não foi Localizado o arquivo da NFe ($path)");
 
-        // Carrega XML Autorizado
+            // Carrega XML Autorizado
         } else {
             $xml = file_get_contents($path);
         }
@@ -746,7 +750,7 @@ class NFePHPService extends MgService
 
             // Logo somente na Migliorini
             if ($nf->Filial->codempresa == 1) {
-                $logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(public_path('MGPapelariaLogo.jpeg')));
+                $logo = 'data://text/plain;base64,' . base64_encode(file_get_contents(public_path('MGPapelariaLogo.jpeg')));
             } else {
                 $logo = null;
             }
@@ -767,7 +771,7 @@ class NFePHPService extends MgService
 
             // Logo somente na Migliorini
             if ($nf->Filial->codempresa == 1) {
-                $logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(public_path('MGPapelariaLogoSeloPretoBranco.jpeg')));
+                $logo = 'data://text/plain;base64,' . base64_encode(file_get_contents(public_path('MGPapelariaLogoSeloPretoBranco.jpeg')));
             } else {
                 $logo = null;
             }
@@ -775,8 +779,8 @@ class NFePHPService extends MgService
             $danfce = new DanfceMg($xml);
             // $danfce->debugMode(true);//seta modo debug, deve ser false em produção
             $danfce->setPaperWidth(80); //seta a largura do papel em mm max=80 e min=58
-            $danfce->setMargins(2);//seta as margens
-            $danfce->setDefaultFont('helvetica');//altera o font pode ser 'times' ou 'arial'
+            $danfce->setMargins(2); //seta as margens
+            $danfce->setDefaultFont('helvetica'); //altera o font pode ser 'times' ou 'arial'
             $danfce->setOffLineDoublePrint(false); //ativa ou desativa a impressão conjunta das via do consumidor e da via do estabelecimento qnado a nfce for emitida em contingência OFFLINE
             //$danfce->setPrintResume(true); //ativa ou desativa a impressao apenas do resumo
             //$danfce->setViaEstabelecimento(); //altera a via do consumidor para a via do estabelecimento, quando a NFCe for emitida em contingência OFFLINE
@@ -811,14 +815,14 @@ class NFePHPService extends MgService
         }
 
         // Executa comando de impressao
-	$cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/nfe-php/' . $nf->codnotafiscal . '/danfe\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/nfe-php/' . $nf->codnotafiscal . '/danfe\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
         exec($cmd);
 
         // retorna
         return [
-          "sucesso" => true,
-          "mensagem" => "Danfe enviada para '$impressora'!",
-          "commando" => $cmd
+            "sucesso" => true,
+            "mensagem" => "Danfe enviada para '$impressora'!",
+            "commando" => $cmd
         ];
     }
 

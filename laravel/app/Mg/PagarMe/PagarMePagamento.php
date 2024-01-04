@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Nov/2022 16:59:38
+ * Date: 02/Jan/2024 17:28:29
  */
 
 namespace Mg\PagarMe;
@@ -12,6 +12,7 @@ use Mg\PagarMe\PagarMeBandeira;
 use Mg\PagarMe\PagarMePedido;
 use Mg\PagarMe\PagarMePos;
 use Mg\Usuario\Usuario;
+use Mg\Pdv\Pdv;
 
 class PagarMePagamento extends MgModel
 {
@@ -25,6 +26,7 @@ class PagarMePagamento extends MgModel
         'codpagarmebandeira',
         'codpagarmepedido',
         'codpagarmepos',
+        'codpdv',
         'identificador',
         'idtransacao',
         'jurosloja',
@@ -49,6 +51,7 @@ class PagarMePagamento extends MgModel
         'codpagarmepagamento' => 'integer',
         'codpagarmepedido' => 'integer',
         'codpagarmepos' => 'integer',
+        'codpdv' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'jurosloja' => 'boolean',
@@ -78,6 +81,11 @@ class PagarMePagamento extends MgModel
     public function PagarMePos()
     {
         return $this->belongsTo(PagarMePos::class, 'codpagarmepos', 'codpagarmepos');
+    }
+
+    public function Pdv()
+    {
+        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
     }
 
     public function UsuarioAlteracao()

@@ -194,6 +194,7 @@ const recarregarDaApi = () => {
                 outlined
                 v-model="edicaoPessoa.codestoquelocal"
                 label="Local de Estoque"
+                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
               />
             </div>
             <div class="col-12">
@@ -201,6 +202,7 @@ const recarregarDaApi = () => {
                 outlined
                 v-model="edicaoPessoa.codnaturezaoperacao"
                 label="Natureza de Operacao"
+                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
               />
             </div>
             <div class="col-12">
@@ -210,6 +212,7 @@ const recarregarDaApi = () => {
                 autofocus
                 v-model="edicaoPessoa.codpessoa"
                 label="Pessoa"
+                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
                 clearable
                 @clear="edicaoPessoa.codpessoa = 1"
               >
@@ -416,7 +419,9 @@ const recarregarDaApi = () => {
       </q-item-section>
     </q-item>
 
-    <template v-if="sNegocio.negocio.Pessoa != undefined">
+    <template
+      v-if="sNegocio.negocio.Pessoa != undefined && sNegocio.negocio.financeiro"
+    >
       <q-item
         :clickable="sNegocio.podeEditar"
         v-ripple
@@ -466,7 +471,7 @@ const recarregarDaApi = () => {
           @click="sincronizar()"
           round
           :color="
-            sNegocio.negocio.sincronizado == true ? 'positive' : 'negative'
+            sNegocio.negocio.sincronizado == true ? 'secondary' : 'negative'
           "
           icon="file_upload"
         />

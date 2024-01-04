@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Oct/2021 14:31:20
+ * Date: 02/Jan/2024 17:27:45
  */
 
 namespace Mg\Pix;
@@ -12,6 +12,7 @@ use Mg\Portador\PortadorMovimento;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
+use Mg\Pdv\Pdv;
 
 class Pix extends MgModel
 {
@@ -21,6 +22,7 @@ class Pix extends MgModel
 
     protected $fillable = [
         'cnpj',
+        'codpdv',
         'codpixcob',
         'codportador',
         'cpf',
@@ -40,6 +42,7 @@ class Pix extends MgModel
 
     protected $casts = [
         'cnpj' => 'float',
+        'codpdv' => 'integer',
         'codpix' => 'integer',
         'codpixcob' => 'integer',
         'codportador' => 'integer',
@@ -51,6 +54,11 @@ class Pix extends MgModel
 
 
     // Chaves Estrangeiras
+    public function Pdv()
+    {
+        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
+    }
+
     public function PixCob()
     {
         return $this->belongsTo(PixCob::class, 'codpixcob', 'codpixcob');

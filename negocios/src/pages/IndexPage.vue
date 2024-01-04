@@ -1,18 +1,22 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { negocioStore } from "stores/negocio";
 import { produtoStore } from "stores/produto";
 import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
 import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
+import { api } from "boot/axios";
+import { Notify } from "quasar";
 
 const route = useRoute();
 const router = useRouter();
 const sNegocio = negocioStore();
 const sProduto = produtoStore();
+const dialogRomaneio = ref(false);
 
 const hotkeys = (event) => {
+  // TODO: Anexar F das formas de pagamentos
   switch (event.key) {
     // Joga foco no codigo de barras
     case "1":
@@ -48,6 +52,11 @@ const hotkeys = (event) => {
       vazioOuCriar();
       break;
 
+    case "F3":
+      event.preventDefault();
+      fechar();
+      break;
+
     default:
       break;
   }
@@ -71,6 +80,40 @@ const carregareOuCriarNegocio = async () => {
     }
   }
   vazioOuCriar();
+};
+
+// TODO: Oferecer pra Gerar Nota/Imprimir Romaneio/Etc
+const fechar = async () => {
+  sNegocio.fechar();
+};
+
+const urlRomaneio = computed({
+  get() {
+    return (
+      process.env.API_BASE_URL +
+      "/api/v1/pdv/negocio/" +
+      sNegocio.negocio.codnegocio +
+      "/romaneio"
+    );
+  },
+});
+
+const romaneio = async () => {
+  dialogRomaneio.value = true;
+};
+
+const imprimirRomaneio = async () => {
+  await api.post(
+    "/api/v1/pdv/negocio/" +
+      sNegocio.negocio.codnegocio +
+      "/romaneio/imprimir/" +
+      sNegocio.padrao.impressora
+  );
+  Notify.create({
+    type: "positive",
+    message: "Impressão Solicitada!",
+  });
+  dialogRomaneio.value = false;
 };
 
 onMounted(() => {
@@ -98,12 +141,65 @@ onUnmounted(() => {
     <listagem-produtos />
     <dialog-sincronizacao />
 
+    <q-dialog v-model="dialogRomaneio" full-height full-width>
+      <q-card style="height: 100%">
+        <!-- <q-card-section>
+          <div class="text-h6">Romaneio</div>
+        </q-card-section> -->
+
+        <q-card-section style="height: 91%" class="q-pb-none">
+          <iframe
+            style="width: 100%; height: 100%; border: none"
+            :src="urlRomaneio"
+          ></iframe>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            color="primary"
+            flat
+            label="Imprimir"
+            @click="imprimirRomaneio()"
+            :disable="sNegocio.padrao.impressora == null"
+          />
+          <q-btn color="primary" flat label="Fechar" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-page-scroller
-      position="bottom-right"
+      position="bottom-left"
       :scroll-offset="150"
       :offset="[18, 18]"
     >
       <q-btn fab icon="keyboard_arrow_up" color="secondary" />
     </q-page-scroller>
+
+    <q-page-sticky
+      position="bottom-right"
+      :offset="[18, 18]"
+      v-if="sNegocio.negocio"
+    >
+      <div class="q-gutter-sm">
+        <q-btn
+          fab
+          icon="print"
+          color="primary"
+          @click="romaneio()"
+          v-if="sNegocio.negocio.codnegociostatus == 2"
+        >
+          <q-tooltip class="bg-accent">Romaneio</q-tooltip>
+        </q-btn>
+        <q-btn
+          fab
+          icon="send"
+          color="primary"
+          @click="fechar()"
+          v-if="sNegocio.negocio.codnegociostatus == 1"
+        >
+          <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
+        </q-btn>
+      </div>
+    </q-page-sticky>
   </q-page>
 </template>

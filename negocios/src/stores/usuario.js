@@ -74,10 +74,14 @@ export const usuarioStore = defineStore("usuario", {
     },
 
     async logout() {
-      let { data } = await api.get("/api/v1/auth/logout");
-      this.usuario = {};
-      this.token = {};
-      this.inicializar();
+      try {
+        let { data } = await api.get("/api/v1/auth/logout");
+        this.usuario = {};
+        this.token = {};
+        this.inicializar();
+      } catch (error) {
+        console.log(error);
+      }
     },
 
     async getUsuario() {
