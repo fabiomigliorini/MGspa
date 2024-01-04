@@ -71,7 +71,7 @@ if (!function_exists('mascarar')) {
         // Percorre mascara adicionando caracteres
         $mascarado = '';
         $k = 0;
-        for ($i = 0; $i<=strlen($mascara)-1; $i++) {
+        for ($i = 0; $i <= strlen($mascara) - 1; $i++) {
             if ($mascara[$i] == '#') {
                 $mascarado .= $numero[$k++];
             } else {
@@ -102,12 +102,65 @@ if (!function_exists('formataCpfCnpj')) {
     {
         $numero = numeroLimpo('/[^0-9]/', '', $numero);
         if ($fisica == 9) {
-            $fisica = strlen($numero)<=11;
+            $fisica = strlen($numero) <= 11;
         }
         if ($fisica) {
             return formataCnpj($numero);
         } else {
             return formataCpf($numero);
+        }
+    }
+}
+
+
+if (!function_exists('formataValorPorExtenso')) {
+
+    function formataValorPorExtenso($valor = 0, $maiusculas = false)
+    {
+
+        $singular = array("centavo", "real", "mil", "milhao", "bilhao", "trilhao", "quatrilhao");
+        $plural = array("centavos", "reais", "mil", "milhoes", "bilhoes", "trilhoes", "quatrilhoes");
+
+        $c = array("", "cem", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos");
+        $d = array("", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa");
+        $d10 = array("dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezesete", "dezoito", "dezenove");
+        $u = array("", "um", "dois", "tres", "quatro", "cinco", "seis",    "sete", "oito", "nove");
+
+        $z = 0;
+        $rt = "";
+
+        $valor = number_format($valor, 2, ".", ".");
+        $inteiro = explode(".", $valor);
+        for ($i = 0; $i < count($inteiro); $i++)
+            for ($ii = strlen($inteiro[$i]); $ii < 3; $ii++)
+                $inteiro[$i] = "0" . $inteiro[$i];
+
+        $fim = count($inteiro) - ($inteiro[count($inteiro) - 1] > 0 ? 1 : 2);
+        for ($i = 0; $i < count($inteiro); $i++) {
+            $valor = $inteiro[$i];
+            $rc = (($valor > 100) && ($valor < 200)) ? "cento" : $c[$valor[0]];
+            $rd = ($valor[1] < 2) ? "" : $d[$valor[1]];
+            $ru = ($valor > 0) ? (($valor[1] == 1) ? $d10[$valor[2]] : $u[$valor[2]]) : "";
+
+            $r = $rc . (($rc && ($rd || $ru)) ? " e " : "") . $rd . (($rd &&
+                $ru) ? " e " : "") . $ru;
+            $t = count($inteiro) - 1 - $i;
+            $r .= $r ? " " . ($valor > 1 ? $plural[$t] : $singular[$t]) : "";
+            if ($valor == "000") $z++;
+            elseif ($z > 0) $z--;
+            if (($t == 1) && ($z > 0) && ($inteiro[0] > 0)) $r .= (($z > 1) ? " de " : "") . $plural[$t];
+            if ($r) $rt = $rt . ((($i > 0) && ($i <= $fim) &&
+                ($inteiro[0] > 0) && ($z < 1)) ? (($i < $fim) ? ", " : " e ") : " ") . $r;
+        }
+
+        $rt = trim($rt);
+
+        if (!$maiusculas) {
+            return ($rt ? $rt : "zero");
+        } else {
+
+            if ($rt) $rt = str_replace(" E ", " e ", ucwords($rt));
+            return (($rt) ? ($rt) : "Zero");
         }
     }
 }
@@ -149,8 +202,8 @@ if (!function_exists('formataPorMascara')) {
         $caracteres = substr_count($mascara, '#');
         $string = str_pad($string, $caracteres, "0", STR_PAD_LEFT);
         $indice = -1;
-        for ($i=0; $i < strlen($mascara); $i++):
-            if ($mascara[$i]=='#') {
+        for ($i = 0; $i < strlen($mascara); $i++) :
+            if ($mascara[$i] == '#') {
                 $mascara[$i] = $string[++$indice];
             }
         endfor;
@@ -196,7 +249,7 @@ if (!function_exists('checkPermissao')) {
 if (!function_exists('linkRel')) {
     function linkRel($text, $url, $id)
     {
-        $link = url($url.'/'.$id);
+        $link = url($url . '/' . $id);
         return "<a href='$link'>$text</a>";
     }
 }
@@ -231,8 +284,8 @@ if (!function_exists('formataPorMascara')) {
         $caracteres = substr_count($mascara, '#');
         $string = str_pad($string, $caracteres, "0", STR_PAD_LEFT);
         $indice = -1;
-        for ($i=0; $i < strlen($mascara); $i++):
-            if ($mascara[$i]=='#') {
+        for ($i = 0; $i < strlen($mascara); $i++) :
+            if ($mascara[$i] == '#') {
                 $mascara[$i] = $string[++$indice];
             }
         endfor;
@@ -320,7 +373,7 @@ if (!function_exists('formataEndereco')) {
             $retorno = str_replace(" - ", "<br>", $retorno);
         }
 
-        return "<a href='http://maps.google.com/maps?q=$q' target='_blank'>". $retorno."</a>";
+        return "<a href='http://maps.google.com/maps?q=$q' target='_blank'>" . $retorno . "</a>";
     }
 }
 
@@ -348,7 +401,7 @@ if (!function_exists('formataLocalEstoque')) {
 if (!function_exists('formataNumeroNota')) {
     function formataNumeroNota($emitida, $serie, $numero, $modelo)
     {
-        return (($emitida)?"N-":"T-") . $serie . "-" . (!empty($modelo)?$modelo . "-":"") . formataPorMascara($numero, "########");
+        return (($emitida) ? "N-" : "T-") . $serie . "-" . (!empty($modelo) ? $modelo . "-" : "") . formataPorMascara($numero, "########");
     }
 }
 
@@ -410,16 +463,15 @@ if (!function_exists('titulo')) {
                 $url = null;
             }
 
-            $html .= ' <li class="' . (empty($url)?'active':'') . '">';
-            $html .= (empty($url))?'':"<a href='$url'>";
-            $html .= (empty($inativo))?'':'<del>';
+            $html .= ' <li class="' . (empty($url) ? 'active' : '') . '">';
+            $html .= (empty($url)) ? '' : "<a href='$url'>";
+            $html .= (empty($inativo)) ? '' : '<del>';
             if ($i === 1 && !empty($codigo)) {
                 $html .= '<small>' . formataCodigo($codigo, $digitos_codigo) . '</small> - ';
             }
             $html .= $titulo;
-            $html .= (empty($inativo))?'':'</del>';
-            ;
-            $html .= (empty($url))?'':"</a>";
+            $html .= (empty($inativo)) ? '' : '</del>';;
+            $html .= (empty($url)) ? '' : "</a>";
             $html .= '</li>';
 
             $i++;
@@ -437,7 +489,7 @@ if (!function_exists('inativo')) {
     function inativo($inativo)
     {
         if (!empty($inativo)) {
-            return "<span class='label label-danger'>Inativo desde ". formataData($inativo, 'L'). "</span>";
+            return "<span class='label label-danger'>Inativo desde " . formataData($inativo, 'L') . "</span>";
         }
     }
 }
@@ -459,12 +511,12 @@ if (!function_exists('formataEstoqueMinimoMaximo')) {
     {
         $html = '';
         if (!empty($minimo)) {
-            $class = ($saldo !== 'Vazio' && $saldo < $minimo)?'text-danger':'';
+            $class = ($saldo !== 'Vazio' && $saldo < $minimo) ? 'text-danger' : '';
             $html .= " <span class='$class'>" . formataNumero($minimo, 0) . " <span class='glyphicon glyphicon-arrow-down'></span></span> ";
         }
 
         if (!empty($maximo)) {
-            $class = ($saldo !== 'Vazio' && $saldo > $maximo)?'text-danger':'';
+            $class = ($saldo !== 'Vazio' && $saldo > $maximo) ? 'text-danger' : '';
             $html .= " <span class='$class'>" . formataNumero($maximo, 0) . " <span class='glyphicon glyphicon-arrow-up'></span></span> ";
         }
 
@@ -509,21 +561,21 @@ if (!function_exists('primeiraLetraMaiuscula')) {
         ];
         $string = str_replace('.', '. ', $string);
         $string = str_replace('  ', ' ', $string);
-        $explodes = explode(' ', strtolower( $string ) );
+        $explodes = explode(' ', strtolower($string));
         $palavra = '';
         // Cria loop finito para cada palavra
         $primeira = true;
-        foreach($explodes as $explode){
+        foreach ($explodes as $explode) {
             if (!$primeira && in_array($explode, $minusculas)) {
-                $palavra .= strtolower($explode).' ';
-            }elseif(!preg_match("/^m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})(.?)$/", $explode)){
-               // Se não houver número romano a primeira letra é passada para maiúsculo.
-                $palavra .= ucfirst($explode).' ';
-           }else{
-               // Se houver número romano tudo é passado para maiúsculo.
-                $palavra .= strtoupper($explode).' ';
-           }
-           $primeira = false;
+                $palavra .= strtolower($explode) . ' ';
+            } elseif (!preg_match("/^m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})(.?)$/", $explode)) {
+                // Se não houver número romano a primeira letra é passada para maiúsculo.
+                $palavra .= ucfirst($explode) . ' ';
+            } else {
+                // Se houver número romano tudo é passado para maiúsculo.
+                $palavra .= strtoupper($explode) . ' ';
+            }
+            $primeira = false;
         }
         return rtrim($palavra, ' ');
     }

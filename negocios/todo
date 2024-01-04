@@ -4,9 +4,14 @@ BUG
 
 - quando abre dialog pra selecionar pessoa, o foco esta no select ele não abre a caixa de pesquisa
 - quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
+- na devolucao botao "marcar todos" está selecionando os itens excluidos do negocio
+- quando altera o cliente, esta limpando o desconto
+- venda para Luiz Junior a vista está pedindo para liberar credito
+- quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
 
 MANDATORY
 
+- validar se tem itens ativos > 0
 - nao gerar nota com itens inativos
 - nao gerar fechamento com itens inativos
 - nao gerar transferencias com itens inativos
@@ -23,11 +28,14 @@ MANDATORY
 - fazer liquidacao de negocios
 - fazer tela de fechamento de caixa
 - prancheta de pesquisa de produtos sem codigo (substituir pranchetas impressas)
-- nao gerar movimentacao de estoque para produtos excluidos do negocio
+- Orcamento em PDF
+- fazer controle das entregas tanto para clientes quanto para transferencias
+- fazer tela para gerenciar cadastro dos PDVs autorizados
 
 DONE:
 
 - nao mostrar itens inativos no romaneio
+- nao gerar movimentacao de estoque para produtos excluidos do negocio
 
 - Pedido
 curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido' --data-raw 'codnegocio=3304171&codpessoa=1&codpagarmepos=44&valor=0.75&valorparcela=0.75&valorjuros=0&tipo=1&parcelas=1&jurosloja=1&descricao=Negocio+3304171&codfilial=102'
