@@ -5,7 +5,7 @@ namespace Mg\Pessoa;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use DB;
-
+use Illuminate\Http\Request;
 use Mg\MgService;
 use Mg\Cidade\Estado;
 use Mg\Cidade\Cidade;
@@ -13,6 +13,7 @@ use Mg\GrupoEconomico\GrupoEconomicoService;
 use Mg\Pessoa\GrupoClienteService;
 use Mg\NFePHP\NFePHPService;
 use Mg\Filial\Filial;
+use Mg\Permissao\Autorizador\Autorizador;
 
 class PessoaService
 {
@@ -44,21 +45,109 @@ class PessoaService
     }
 
 
-    public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
-    {
-        $qry = Pessoa::query();
-        if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
+    public static function index(
+        $limit,
+        $offset,
+        $codpessoa,
+        $pessoa,
+        $cnpj,
+        $email,
+        $fone,
+        $codgrupoeconomico,
+        $codcidade,
+        $inativo,
+        $codformapagamento,
+        $codgrupocliente
+    ) {
+
+        $sql = '
+            select p.* 
+            from tblpessoa p 
+            left join tblgrupoeconomico ge on (ge.codgrupoeconomico = p.codgrupoeconomico)
+        ';
+
+        $where = [];
+        if ($pessoa) {
+            $where[] = '(p.pessoa || p.fantasia || coalesce(ge.grupoeconomico, \'\')) ilike :pessoa';
+            $params['pessoa'] = "%{$pessoa}%";
         }
-        if (!empty($filter['filial'])) {
-            $qry->palavras('filial', $filter['filial']);
+
+        if ($codgrupoeconomico) {
+            $where[] = 'p.codgrupoeconomico = :codgrupoeconomico';
+            $params['codgrupoeconomico'] = $codgrupoeconomico;
         }
-        $qry = self::qryOrdem($qry, $sort);
-        $qry = self::qryColunas($qry, $fields);
-        return $qry;
+
+        if (!empty($fone)) {
+            $where[] = ' 
+                p.codpessoa in (
+                    select pt.codpessoa
+                    from tblpessoatelefone pt
+                    where cast(pt.telefone as varchar) ilike :fone
+                )';
+            $params['fone'] = "%{$fone}%";
+        }
+
+        if (!empty($email)) {
+            $where[] = ' 
+                p.codpessoa in (
+                    select pe.codpessoa
+                    from tblpessoaemail pe
+                    where pe.email ilike :email
+                )';
+            $params['email'] = "%{$email}%";
+        }
+
+        if (!empty($cnpj)) {
+            $where[] = 'to_char(p.cnpj, \'00000000000000\') ilike :cnpj';
+            $params['cnpj'] = "%{$cnpj}%";
+        }
+
+        if (!empty($codpessoa)) {
+            $where[] = 'p.codpessoa = :codpessoa';
+            $params['codpessoa'] = $codpessoa;
+        }
+
+        if (!empty($codcidade)) {
+            $where[] = 'p.codcidade = :codcidade';
+            $params['codcidade'] = $codcidade;
+        }
+
+        if (!empty($codformapagamento)) {
+            $where[] = 'p.codformapagamento = :codformapagamento';
+            $params['codformapagamento'] = $codformapagamento;
+        }
+
+        if (!empty($codgrupocliente)) {
+            $where[] = 'p.codgrupocliente = :codgrupocliente';
+            $params['codgrupocliente'] = $codgrupocliente;
+        }
+
+        switch ($inativo) {
+            case 'A':
+                $where[] = 'p.inativo is null';
+                break;
+            
+            case 'I':
+                $where[] = 'p.inativo is not null';
+                break;
+        }
+
+        if (sizeof($where) > 0) {
+            $sql .= ' where ' . implode(' and ', $where);
+        }
+
+        $sql .= ' order by p.fantasia limit :limit offset :offset ';
+
+        $params['limit'] = $limit;
+        $params['offset'] = $offset;
+        
+        $regs = DB::select($sql, $params);
+        $result = Pessoa::hydrate($regs);
+        return $result;
     }
 
-    public static function buscarPorCnpjIe ($cnpj, $ie)
+
+    public static function buscarPorCnpjIe($cnpj, $ie)
     {
         $qry = Pessoa::where('cnpj', $cnpj);
         $ie = (int) numeroLimpo($ie);
@@ -71,22 +160,22 @@ class PessoaService
     }
 
     public static function podeVenderAPrazo(Pessoa $pessoa, $valorAvaliar = 0)
-	{
+    {
         // se nao esta vendendo a prazo
         if ($valorAvaliar <= 0) {
             return true;
         }
 
-		// se esta com o credito marcado como bloqueado
-		if ($pessoa->creditobloqueado) {
+        // se esta com o credito marcado como bloqueado
+        if ($pessoa->creditobloqueado) {
             return false;
         }
 
-		// se tem valor limite definido
+        // se tem valor limite definido
         if (!empty($pessoa->credito)) {
             // busca no banco total dos titulos
-    		$saldo = $pessoa->TituloS()->sum('saldo');
-    		$creditototal = $saldo + $valorAvaliar;
+            $saldo = $pessoa->TituloS()->sum('saldo');
+            $creditototal = $saldo + $valorAvaliar;
             if ($creditototal > ($pessoa->credito * 1.05)) {
                 return false;
             }
@@ -100,41 +189,89 @@ class PessoaService
             }
         }
 
-		return true;
-	}
+        return true;
+    }
 
-    public static function create ($data)
+    public static function create($data)
     {
         $pessoa = new Pessoa($data);
         $pessoa->save();
         return $pessoa->refresh();
     }
 
-    public static function update (Pessoa $pessoa, $data)
+    public static function update(Pessoa $pessoa, $data)
     {
+
+        if (!empty($data['creditobloqueado'])) {
+            $creditobloqueado = filter_var($data['creditobloqueado'], FILTER_VALIDATE_BOOLEAN);
+            $consumidor = filter_var($data['consumidor'], FILTER_VALIDATE_BOOLEAN);
+
+            $pessoa->fill($data);
+            $pessoa->creditobloqueado = $creditobloqueado;
+            $pessoa->consumidor = $consumidor;
+            $pessoa->save();
+            return $pessoa;
+        }
+        if (!empty($data['cliente'])) {
+            if (empty($data['codgrupoeconomico'])) {
+                $pessoa->codgrupoeconomico = null;
+            }
+            $fisica = filter_var($data['fisica'], FILTER_VALIDATE_BOOLEAN);
+            $cliente = filter_var($data['cliente'], FILTER_VALIDATE_BOOLEAN);
+            $fornecedor = filter_var($data['fornecedor'], FILTER_VALIDATE_BOOLEAN);
+            $vendedor = filter_var($data['vendedor'], FILTER_VALIDATE_BOOLEAN);
+
+            $pessoa->fill($data);
+            $pessoa->fisica = $fisica;
+            $pessoa->cliente = $cliente;
+            $pessoa->fornecedor = $fornecedor;
+            $pessoa->vendedor = $vendedor;
+            $pessoa->save();
+            return $pessoa;
+        }
+
+
+
         $pessoa->fill($data);
         $pessoa->save();
         return $pessoa;
     }
 
-    public static function delete (Pessoa $pessoa)
+    public static function buscaSigla($codcidade)
+    {
+        $sql = "
+        select c.codcidade, e.sigla
+        from tblcidade c
+        inner join tblestado e on (e.codestado = c.codestado)  where c.codcidade = :codcidade
+        ";
+
+        $params['codcidade'] = $codcidade;
+
+        $ret = DB::select($sql, $params);
+
+        return $ret;
+    }
+
+
+
+    public static function delete(Pessoa $pessoa)
     {
         return $pessoa->delete();
     }
 
-    public static function ativar (Pessoa $pessoa)
+    public static function ativar(Pessoa $pessoa)
     {
         $pessoa->update(['inativo' => null]);
         return $pessoa->refresh();
     }
 
-    public static function inativar (Pessoa $pessoa)
+    public static function inativar(Pessoa $pessoa)
     {
         $pessoa->update(['inativo' => Carbon::now()]);
         return $pessoa->refresh();
     }
 
-    public static function importar ($codfilial, $uf, $cnpj, $cpf, $ie)
+    public static function importar($codfilial, $uf, $cnpj, $cpf, $ie)
     {
         $retReceita = null;
 
@@ -145,8 +282,8 @@ class PessoaService
             $retReceita = static::buscarReceitaWs($cnpj);
             if ($retReceita->status() != 200 || $retReceita['status'] == "ERROR") {
                 throw new \Exception($retReceita['message'], 1);
-	        }
-            $uf = $retReceita['uf']??null;
+            }
+            $uf = $retReceita['uf'] ?? null;
         }
 
         // Consulta o CNPJ / CPF ou IE na Sefaz
@@ -174,19 +311,17 @@ class PessoaService
                     default:
                         break;
                 }
-
             } catch (\Exception $e) {
 
                 $message = $e->getMessage();
                 if (substr($message, 0, 45) != "Servico [NfeConsultaCadastro] indisponivel UF") {
                     throw new \Exception($e->getMessage());
                 }
-
             }
 
             if (isset($retIes[0])) {
-                $cnpj = $retIes[0]->CNPJ??'';
-                $cpf = $retIes[0]->CPF??'';
+                $cnpj = $retIes[0]->CNPJ ?? '';
+                $cpf = $retIes[0]->CPF ?? '';
             }
         }
 
@@ -201,7 +336,6 @@ class PessoaService
         if (!empty($cnpj)) {
             $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(false, $cnpj);
             $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(false, $cnpj);
-
         } elseif (!empty($cpf)) {
             $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(true, $cpf);
             $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(true, $cpf);
@@ -214,13 +348,13 @@ class PessoaService
         foreach ($retIes as $retIe) {
 
             // Verifica se combinacao CPF/CNPJ/IE ja esta cadastrada
-            $pessoa = static::buscarPorCnpjIe($retIe->CNPJ??$retIe->CPF, $retIe->IE);
+            $pessoa = static::buscarPorCnpjIe($retIe->CNPJ ?? $retIe->CPF, $retIe->IE);
             if ($pessoa == null) {
                 if ($retIe->cSit == 0) {
                     continue;
                 }
                 $pessoa = new Pessoa();
-                $pessoa->fantasia = substr($retIe->xFant??$retIe->xNome, 0, 50);
+                $pessoa->fantasia = substr($retIe->xFant ?? $retIe->xNome, 0, 50);
                 $pessoa->ie = $retIe->IE;
             }
 
@@ -275,7 +409,7 @@ class PessoaService
                     'codpessoa' => $pessoa->codpessoa,
                     'endereco' => $endIe->xLgr,
                     'numero' => @$endIe->nro,
-                    'complemento' => substr(trim($endIe->xCpl??null), 0, 50),
+                    'complemento' => substr(trim($endIe->xCpl ?? null), 0, 50),
                     'bairro' => $endIe->xBairro,
                     'codcidade' => $cidade->codcidade,
                     'cep'   => numeroLimpo($endIe->CEP)
@@ -318,16 +452,18 @@ class PessoaService
             // Descobre o codigo da cidade
             $estado = Estado::firstWhere(['sigla' => $retReceita['uf']]);
             $cidade = Cidade::where(
-                'codestado', $estado->codestado
+                'codestado',
+                $estado->codestado
             )->where(
-                'cidade', 'ilike', removeAcentos($retReceita['municipio'])
+                'cidade',
+                'ilike',
+                removeAcentos($retReceita['municipio'])
             )->first();
             $pessoa->codcidade = $cidade->codcidade;
 
             // salva e acumula no array de pessoas criadas
             $pessoa->save();
             $retPessoas[] = $pessoa->fresh();
-
         }
 
         // Sempre cria o endereco, email e telefone retornado pela receita
@@ -380,11 +516,10 @@ class PessoaService
 
         // retorna todas as pessoas criadas/atualizadas
         return $retPessoas;
+    }
 
-     }
 
-
-     public static function atualizaCamposLegado(Pessoa $pessoa)
+    public static function atualizaCamposLegado(Pessoa $pessoa)
     {
         $data = [];
 
@@ -450,14 +585,13 @@ class PessoaService
         return PessoaService::update($pessoa, $data);
     }
 
-    public static function buscarReceitaWs ($cnpj)
+    public static function buscarReceitaWs($cnpj)
     {
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Authorization' => 'Bearer' . env('RECEITA_WS_TOKEN')
-        ])->get('https://receitaws.com.br/v1/cnpj/'. $cnpj);
+        ])->get('https://receitaws.com.br/v1/cnpj/' . $cnpj);
 
         return $response;
     }
-
 }

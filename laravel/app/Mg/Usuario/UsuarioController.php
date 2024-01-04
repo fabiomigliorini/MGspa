@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class UsuarioController extends MgController
@@ -259,5 +260,12 @@ class UsuarioController extends MgController
         $model = Usuario::findOrFail($id);
         $model->GrupoUsuarioUsuarioS()->where('codgrupousuario', $request->get('codgrupousuario'))->where('codfilial', $request->get('codfilial'))->delete();
         return response()->json($model, 204);
+    }
+
+
+    public function permissoesUsuarios() 
+    {
+        $usuario = Auth::user();
+        return new UsuarioResource($usuario);
     }
 }

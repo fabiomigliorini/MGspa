@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Oct/2021 14:28:58
+ * Date: 02/Jan/2024 18:07:42
  */
 
 namespace Mg\Portador;
@@ -25,9 +25,10 @@ use Mg\Filial\Filial;
 
 class Portador extends MgModel
 {
+    const CARTEIRA = 999;
+
     protected $table = 'tblportador';
     protected $primaryKey = 'codportador';
-
 
     protected $fillable = [
         'agencia',

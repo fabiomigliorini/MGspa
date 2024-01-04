@@ -1,52 +1,134 @@
 <?php
 
-namespace Mg\Pessoa;
+namespace Mg\GrupoEconomico;
 
 use Illuminate\Http\Request;
 use Mg\MgController;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Validation\Rule;
+use Mg\Pessoa\Pessoa;
+use Mg\Pessoa\PessoaResource;
 
 class GrupoEconomicoController extends MgController
 {
 
-    public function index(Request $request)
+    public function index (Request $request)
     {
-        $pessoas = GrupoEconomico::orderBy('alteracao')->paginate();
-        dd($pessoas);
-        return PessoaResource::collection($pessoas);
+        $pesquisa = "%$request->nome%"??null;
+
+        $grupos = GrupoEconomicoService::index($pesquisa);
+        return GrupoEconomicoResource::collection($grupos);
     }
 
     public function create (Request $request)
     {
         $data = $request->all();
-        $pessoa = GrupoEconomicoService::create($data);
-         dd($pessoa);
-        return new PessoaResource($pessoa);
+        $criargrupo = GrupoEconomicoService::create($data);
+        
+         return new GrupoEconomicoResource($criargrupo);
     }
 
-    public function show (Request $request, $codpessoa, $codpessoaendereco)
-    {
-        $pessoa = GrupoEconomico::findOrFail($codpessoaendereco);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+    public function show (Request $request, $codgrupoeconomico)
+    {   
+        $pessoasGrupo = GrupoEconomico::findOrFail($codgrupoeconomico);
+        return new GrupoEconomicoResource($pessoasGrupo);
     }
 
-    public function update (Request $request, $codpessoa, $codpessoaendereco)
+    public function update (Request $request, $codgrupoeconomico)
     {
         $data = $request->all();
-        $pessoa = GrupoEconomico::findOrFail($codpessoaendereco);
-        $pessoa = GrupoEconomicoService::update($pessoa, $data);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        $grupo = GrupoEconomico::findOrFail($codgrupoeconomico);
+        $grupo = GrupoEconomicoService::update($grupo, $data);
+        
+        return new GrupoEconomicoResource($grupo);
     }
 
-    public function delete (Request $request, $codpessoa, $codpessoaendereco)
+    public function delete (Request $request, $codgrupoeconomico)
+    {
+       
+        $grupo = GrupoEconomico::findOrFail($codgrupoeconomico);
+        $grupo = GrupoEconomicoService::delete($grupo);
+        
+        return response()->json([
+            'result' => true
+        ], 200);
+    }
+
+    public function pesquisaGrupoEconomico(Request $request)
+    {
+        if ($request->grupoeconomico) {
+            $search = GrupoEconomico::where('grupoeconomico', 'ilike', "%$request->grupoeconomico%")->get();
+            return response()->json($search);
+        }
+
+        if($request->codgrupoeconomico) {
+            $search = GrupoEconomico::where('codgrupoeconomico', $request->codgrupoeconomico)->get();
+            return response()->json($search);
+        }
+       
+        return response()->json('Nenhum resultado encontrado');
+    }
+
+
+    public function deletaPessoadoGrupo(Request $request, $codpessoa, $codgrupoeconomico) 
+    {
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        $pessoa = GrupoEconomicoService::removerDoGrupo($pessoa);
+
+        return ['message' => true];
+    }
+
+    public function inativar($codgrupoeconomico)
     {
 
-        $pessoa = GrupoEconomico::findOrFail($codpessoaendereco);
-        $pessoa = GrupoEconomicoService::delete($pessoa);
-        return new PessoaResource($pessoa);
+        // Autorizador::autoriza(array('Financeiro'));
+        $pes = GrupoEconomico::findOrFail($codgrupoeconomico);
+        $pes = GrupoEconomicoService::inativar($pes);
+
+        return new GrupoEconomicoResource($pes);
     }
+
+
+    public function ativar($codgrupoeconomico)
+    {
+        // Autorizador::autoriza(array('Financeiro'));
+
+        $pes = GrupoEconomico::findOrFail($codgrupoeconomico);
+        $pes = GrupoEconomicoService::ativar($pes);
+
+        return new GrupoEconomicoResource($pes);
+    }
+
+
+    public function totaisNegocios(Request $request, $codgrupoeconomico)
+    {   
+        
+        $data = $request->all();
+        $grupoNegocios = GrupoEconomicoService::totaisNegocios($data, $codgrupoeconomico);
+        return response()->json($grupoNegocios, 200);
+
+    }
+
+
+    public function titulosAbertos(Request $request, $codgrupoeconomico)
+    {   
+        
+        $data = $request->all();
+        $titulos = GrupoEconomicoService::titulosAbertos($data, $codgrupoeconomico);
+        return response()->json($titulos, 200);
+
+    }
+
+
+    public function nfeTerceiro(Request $request, $codgrupoeconomico)
+    {   
+        
+        $data = $request->all();
+        $grupoNegocios = GrupoEconomicoService::nfeTerceiro($data, $codgrupoeconomico);
+        return response()->json($grupoNegocios, 200);
+
+    }
+
 
 }

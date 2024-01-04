@@ -1,44 +1,47 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 22/Dec/2023 09:58:16
+ */
 
 namespace Mg\Estoque;
 
-/**
- * Campos
- * @property  bigint                         $codestoquelocal                    NOT NULL DEFAULT nextval('tblestoquelocal_codestoquelocal_seq'::regclass)
- * @property  varchar(50)                    $estoquelocal                       NOT NULL
- * @property  bigint                         $codfilial                          NOT NULL
- * @property  timestamp                      $inativo
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  varchar(3)                     $sigla                              NOT NULL
- *
- * Chaves Estrangeiras
- * @property  Filial                         $Filial
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  EstoqueLocalProdutoVariacao[]  $EstoqueLocalProdutoVariacaoS
- * @property  Negocio[]                      $NegocioS
- * @property  NotaFiscal[]                   $NotaFiscalS
- */
- use Mg\MgModel;
+use Mg\MgModel;
+use Mg\Estoque\EstoqueLocalProdutoVariacao;
+use Mg\Negocio\Negocio;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\Pedido\Pedido;
+use Mg\Filial\Filial;
+use Mg\Usuario\Usuario;
 
 class EstoqueLocal extends MgModel
 {
     protected $table = 'tblestoquelocal';
     protected $primaryKey = 'codestoquelocal';
+
+
     protected $fillable = [
-          'estoquelocal',
-         'codfilial',
-              'sigla',
-    ];
-    protected $dates = [
+        'codfilial',
+        'controlaestoque',
+        'deposito',
+        'estoquelocal',
         'inativo',
+        'sigla'
+    ];
+
+    protected $dates = [
         'alteracao',
         'criacao',
+        'inativo'
+    ];
+
+    protected $casts = [
+        'codestoquelocal' => 'integer',
+        'codfilial' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'controlaestoque' => 'boolean',
+        'deposito' => 'boolean'
     ];
 
 
@@ -70,10 +73,24 @@ class EstoqueLocal extends MgModel
         return $this->hasMany(Negocio::class, 'codestoquelocal', 'codestoquelocal');
     }
 
+    public function NegocioDestinoS()
+    {
+        return $this->hasMany(Negocio::class, 'codestoquelocaldestino', 'codestoquelocal');
+    }
+
     public function NotaFiscalS()
     {
         return $this->hasMany(NotaFiscal::class, 'codestoquelocal', 'codestoquelocal');
     }
 
+    public function PedidoS()
+    {
+        return $this->hasMany(Pedido::class, 'codestoquelocal', 'codestoquelocal');
+    }
+
+    public function PedidoOrigemS()
+    {
+        return $this->hasMany(Pedido::class, 'codestoquelocalorigem', 'codestoquelocal');
+    }
 
 }

@@ -221,9 +221,9 @@ class VendaMensalService
 
     public static function determinarPercentualEstoqueLocal($quantidade = null)
     {
-        if (empty($quantidade)) {
-            $quantidade = $pv->estoquemaximo;
-        }
+        // if (empty($quantidade)) {
+        //     $quantidade = $pv->estoquemaximo;
+        // }
 
         switch ($quantidade) {
             case 1:

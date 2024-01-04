@@ -5,6 +5,8 @@ namespace Mg\Pessoa;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Exception;
+use Mg\Usuario\Autorizador;
 
 class PessoaTelefoneController extends MgController
 {
@@ -18,6 +20,8 @@ class PessoaTelefoneController extends MgController
 
     public function create(Request $request, $codpessoa)
     {
+
+        Autorizador::autoriza(['Financeiro']);
 
         $request->validate([
             'tipo' => ['required'],
@@ -42,6 +46,9 @@ class PessoaTelefoneController extends MgController
 
     public function update(Request $request, $codpessoa, $codpessoatelefone)
     {
+        Autorizador::autoriza(array('Financeiro'));
+
+
         $data = $request->all();
         $telefone = PessoaTelefone::findOrFail($codpessoatelefone);
         $telefone = PessoaTelefoneService::update($telefone, $data);
@@ -50,12 +57,18 @@ class PessoaTelefoneController extends MgController
 
     public function delete(Request $request, $codpessoa, $codpessoatelefone)
     {
+        Autorizador::autoriza(array('Financeiro'));
 
-        $pessoa = PessoaTelefone::findOrFail($codpessoatelefone);
-        $pessoa = PessoaTelefoneService::delete($pessoa);
-        return response()->json([
-            'result' => $pessoa
-        ], 200);
+        $telefones = PessoaTelefone::where('codpessoa', $codpessoa)->get()->count();
+        if ($telefones > 1) {
+            $pessoa = PessoaTelefone::findOrFail($codpessoatelefone);
+            $pessoa = PessoaTelefoneService::delete($pessoa);
+            return response()->json([
+                'result' => $pessoa
+            ], 200);
+        }
+
+        throw new Exception("Não é possivel excluir todos os telefones", 1);
     }
 
     public function cima(Request $request, $codpessoa, $codpessoatelefone)
@@ -77,6 +90,8 @@ class PessoaTelefoneController extends MgController
 
     public function ativar(Request $request, $codpessoa, $codpessoatelefone)
     {
+        Autorizador::autoriza(array('Financeiro'));
+
         $pes = PessoaTelefone::findOrFail($codpessoatelefone);
         $pes = PessoaTelefoneService::ativar($pes);
 
@@ -85,6 +100,9 @@ class PessoaTelefoneController extends MgController
 
     public function inativar(Request $request, $codpessoa, $codpessoatelefone)
     {
+
+        Autorizador::autoriza(array('Financeiro'));
+        
         $pes = PessoaTelefone::findOrFail($codpessoatelefone);
         $pes = PessoaTelefoneService::inativar($pes);
 

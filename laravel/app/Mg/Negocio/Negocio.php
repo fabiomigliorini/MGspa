@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2023 11:45:27
+ * Date: 21/Dec/2023 18:03:48
  */
 
 namespace Mg\Negocio;
@@ -23,6 +23,7 @@ use Mg\Negocio\NegocioStatus;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
+use Mg\Pdv\Pdv;
 
 class Negocio extends MgModel
 {
@@ -38,6 +39,7 @@ class Negocio extends MgModel
         'codnaturezaoperacao',
         'codnegociostatus',
         'codoperacao',
+        'codpdv',
         'codpessoa',
         'codpessoatransportador',
         'codpessoavendedor',
@@ -49,12 +51,15 @@ class Negocio extends MgModel
         'lancamento',
         'observacoes',
         'recebimento',
+        'uuid',
         'valoraprazo',
         'valoravista',
         'valordesconto',
         'valorfrete',
         'valorjuros',
+        'valoroutras',
         'valorprodutos',
+        'valorseguro',
         'valortotal'
     ];
 
@@ -74,6 +79,7 @@ class Negocio extends MgModel
         'codnegocio' => 'integer',
         'codnegociostatus' => 'integer',
         'codoperacao' => 'integer',
+        'codpdv' => 'integer',
         'codpessoa' => 'integer',
         'codpessoatransportador' => 'integer',
         'codpessoavendedor' => 'integer',
@@ -89,7 +95,9 @@ class Negocio extends MgModel
         'valordesconto' => 'float',
         'valorfrete' => 'float',
         'valorjuros' => 'float',
+        'valoroutras' => 'float',
         'valorprodutos' => 'float',
+        'valorseguro' => 'float',
         'valortotal' => 'float'
     ];
 
@@ -123,6 +131,11 @@ class Negocio extends MgModel
     public function Operacao()
     {
         return $this->belongsTo(Operacao::class, 'codoperacao', 'codoperacao');
+    }
+
+    public function Pdv()
+    {
+        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
     }
 
     public function Pessoa()

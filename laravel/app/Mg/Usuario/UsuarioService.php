@@ -2,11 +2,14 @@
 
 namespace Mg\Usuario;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Mg\MgService;
 
 class UsuarioService extends MgService
 {
-    public static function detalhes($id) {
+    public static function detalhes($id)
+    {
 
         $model = Usuario::findOrFail($id);
         $model['pessoa'] = [
@@ -78,4 +81,16 @@ class UsuarioService extends MgService
         return $qry;
     }
 
+
+    public static function buscaGrupoPermissoes($codusuario)
+    {
+        $sql = '
+            select guu.codgrupousuariousuario, gu.grupousuario, guu.codfilial
+            from tblgrupousuariousuario guu
+            inner join tblgrupousuario gu on (gu.codgrupousuario = guu.codgrupousuario)
+            where guu.codusuario = :codusuario
+        ';
+        $params['codusuario'] = $codusuario;
+        return DB::select($sql, $params);
+    }
 }

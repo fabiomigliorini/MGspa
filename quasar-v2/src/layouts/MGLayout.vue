@@ -1,23 +1,18 @@
 <template>
-  <q-layout view="hhh lpR fff">
+  <q-layout view="Hhh lpR fff">
     <q-header reveal elevated class="bg-yellow text-blue-grey">
       <q-toolbar>
 
-        <q-btn
-          flat
-          dense
-          round
-          @click="toggleLeftDrawer"
-          icon="menu"
-          aria-label="Menu"
-        />
+        <q-btn flat dense round @click="toggleLeftDrawer" icon="menu" aria-label="Menu" v-if="drawer" />
+
+        <q-btn flat dense round @click="$router.go(-1)" icon="arrow_back" aria-label="Voltar" v-if="backButton" />
 
         <q-toolbar-title>
-          MG Papelaria
+          <slot name="tituloPagina"></slot>
         </q-toolbar-title>
-        <q-space/>
+        <q-space />
 
-          <!-- <q-btn round dense flat color="white" icon="notifications">
+        <!-- <q-btn round dense flat color="white" icon="notifications">
             <q-badge color="red" text-color="white" floating>
               0
             </q-badge>
@@ -32,46 +27,33 @@
             </q-menu>
           </q-btn> -->
 
-          <!-- Renderiza o menu -->
-          <mg-menu></mg-menu>
+        <!-- Renderiza o menu -->
+        <mg-menu></mg-menu>
 
-            <!-- Usuario logout -->
-          <q-btn-dropdown flat color="blue-grey" icon="person" :label="user">
+        <!-- Usuario logout -->
+        <q-btn-dropdown flat color="blue-grey" icon="person" :label="user">
           <div class="row no-wrap q-pa-md justify-center">
 
             <div class="column items-center">
               <q-avatar size="72px">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
               </q-avatar>
-              <div class="text-subtitle1 q-mt-md q-mb-xs">{{user}}</div>
+              <div class="text-subtitle1 q-mt-md q-mb-xs">{{ user }}</div>
 
-              <q-btn
-              color="primary"
-              label="Sair"
-              push
-              size="sm"
-              v-close-popup
-              @click="Deslogar"
-              />
+              <q-btn color="primary" label="Sair" push size="sm" v-close-popup @click="Deslogar" />
             </div>
           </div>
-      </q-btn-dropdown>
+        </q-btn-dropdown>
       </q-toolbar>
     </q-header>
 
     <!-- Drawer padrão MG Layout -->
-    <q-drawer
-        show-if-above
-        v-model="leftDrawerOpen"
-        side="left"
-        elevated
-        >
-
-        <slot name="drawer"></slot>
-      </q-drawer>
+    <q-drawer show-if-above v-model="leftDrawerOpen" side="left" elevated v-if="drawer">
+      <slot name="drawer"></slot>
+    </q-drawer>
 
     <q-page-container class="bg-grey-2">
-      <router-view/>
+      <router-view />
       <slot name="content"></slot>
     </q-page-container>
     <q-footer elevated reveal class="bg-grey-8 text-white">
@@ -84,7 +66,7 @@
 
 <script>
 
-import {defineComponent, ref, defineAsyncComponent} from 'vue'
+import { defineComponent, ref, defineAsyncComponent } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 
@@ -92,14 +74,18 @@ export default defineComponent({
   name: 'MGLayout',
 
   components: {
-      MgMenu: defineAsyncComponent(() => import('layouts/MGMenu.vue'))
-    },
-    props:{
-      drawer: {
+    MgMenu: defineAsyncComponent(() => import('layouts/MGMenu.vue'))
+  },
+  props: {
+    drawer: {
+      type: Boolean,
+      default: false
+    },    
+    backButton: {
       type: Boolean,
       default: false
     }
-    },
+  },
 
   setup() {
     const leftDrawerOpen = ref(false)
@@ -116,7 +102,7 @@ export default defineComponent({
       }).onOk(async () => {
         localStorage.removeItem('access_token')
         localStorage.removeItem('usuario')
-        window.location=process.env.LOGOUT_URL
+        window.location = process.env.LOGOUT_URL
         // router.replace({name: 'login'})
       })
     }
@@ -134,7 +120,6 @@ export default defineComponent({
 </script>
 
 <style>
-
 /* FONT AWESOME GENERIC BEAT */
 .fa-beat {
   animation: fa-beat 5s ease infinite;
@@ -144,27 +129,33 @@ export default defineComponent({
   0% {
     transform: scale(1);
   }
+
   5% {
     transform: scale(1.25);
   }
+
   20% {
     transform: scale(1);
   }
+
   30% {
     transform: scale(1);
   }
+
   35% {
     transform: scale(1.25);
   }
+
   50% {
     transform: scale(1);
   }
+
   55% {
     transform: scale(1.25);
   }
+
   70% {
     transform: scale(1);
   }
 }
-
 </style>

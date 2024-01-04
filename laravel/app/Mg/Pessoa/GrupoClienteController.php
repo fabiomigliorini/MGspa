@@ -12,9 +12,8 @@ class GrupoClienteController extends MgController
 
     public function index(Request $request)
     {
-        $pessoas = GrupoCliente::orderBy('alteracao')->paginate();
-        dd($pessoas);
-        return PessoaResource::collection($pessoas);
+        $grupos = GrupoCliente::orderBy('alteracao')->paginate();
+        return response()->json($grupos, 200);
     }
 
     public function create (Request $request)
@@ -47,8 +46,5 @@ class GrupoClienteController extends MgController
         $pessoa = GrupoClienteService::delete($pessoa);
         return new PessoaResource($pessoa);
     }
-
-
    
-
 }

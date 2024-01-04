@@ -1,112 +1,205 @@
 <template>
-  <q-card class="no-shadow q-ma-sm" bordered>
-    <q-toolbar class="text-black ">
-      <q-btn round flat class="q-pa-sm">
-        <q-avatar color="primary" size="80px" text-color="white">{{ primeiraletra }}</q-avatar>
-      </q-btn>
+  <!-- DIALOG EDITAR DETALHES -->
+  <q-dialog v-model="DialogDetalhes">
+    <q-card>
+      <q-form @submit="salvarDetalhes()">
+        <q-card-section>
+          <q-input outlined v-model="modelEditarDetalhes.fantasia" label="Fantasia" class="" :rules="[
+            val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
+          ]" />
 
-      <q-item class="q-subtitle-1 q-pl-md">
-        <q-item-section>
-          <q-item-label lines="1">{{ detalhes_pessoa.pessoa }}</q-item-label>
-          <q-item-label caption lines="2">
-            <span class="text-weight-bold">{{ detalhes_pessoa.fantasia }}</span>
+          <q-input outlined v-model="modelEditarDetalhes.pessoa" label="Razão Social" :rules="[
+            val => val && val.length > 0 || 'Razão Social é Obrigatório'
+          ]" />
+
+          <select-grupo-economico v-model="modelEditarDetalhes.codgrupoeconomico" label="Grupo Econômico" class="q-mb-md"
+            :permite-adicionar="true" />
+
+          <div class="row">
+            <q-toggle class="" outlined v-model="modelEditarDetalhes.fisica" label="Pessoa Física" />
+          </div>
+
+          <div class="row">
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == false" label="Cnpj"
+                mask="##.###.###/####-##" class="q-pr-md" unmasked-value />
+              <q-input outlined v-model="modelEditarDetalhes.cnpj" class="q-pr-md"
+                v-if="modelEditarDetalhes.fisica == true" label="CPF" mask="###.###.###-##" unmasked-value />
+            </div>
+            <div class="col-6">
+              <input-ie v-model="modelEditarDetalhes.ie">
+              </input-ie>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.rg" v-if="modelEditarDetalhes.fisica == true" label="RG"
+                class="q-pr-md q-mb-md" unmasked-value />
+            </div>
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##-##-####" class="q-mb-md"
+                label="Nascimento / Fundação">
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="modelEditarDetalhes.nascimento" :locale="brasil" mask="DD-MM-YYYY">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Fechar" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+          </div>
+
+
+
+          <div class="row">
+            <div class="col-6">
+              <q-select outlined v-model="modelEditarDetalhes.tipotransportador" class="q-pr-md"
+                label="Tipo Transportador" :options="[
+                  { label: 'Nenhum', value: 0 },
+                  { label: 'ETC - Empresa', value: 1 },
+                  { label: 'TAC - Autônomo', value: 2 },
+                  { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
+            </div>
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.rntrc" label="RNTRC" class="q-mb-md" mask="#########"
+                unmasked-value />
+            </div>
+          </div>
+
+          <q-input outlined borderless autogrow v-model="modelEditarDetalhes.observacoes" label="Observações"
+            type="textarea" class="q-mb-md" />
+
+          <q-toggle class="" outlined v-model="modelEditarDetalhes.cliente" label="Cliente" /> &nbsp;
+          <q-toggle class="" outlined v-model="modelEditarDetalhes.fornecedor" label="Fornecedor" /> &nbsp;
+          <q-toggle class="" outlined v-model="modelEditarDetalhes.vendedor" label="Vendedor" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="primary" v-close-popup />
+          <q-btn flat label="Salvar" color="primary" type="submit" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
+
+  <q-card bordered>
+    <q-list>
+      <q-item>
+        <q-item-section avatar>
+          <q-avatar color="primary" class="q-my-md" size="70px" text-color="white" v-if="sPessoa.item.fantasia">
+            {{ primeiraLetra(sPessoa.item.fantasia) }}
+          </q-avatar>
+        </q-item-section>
+        <q-item-label header>
+          <q-item-label>
+            {{ sPessoa.item.fantasia }}
+            <q-btn flat round icon="edit" @click="editarDetalhes()"
+              v-if="user.verificaPermissaoUsuario('Financeiro')" />
+            <q-btn flat round icon="delete" @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
+              v-if="user.verificaPermissaoUsuario('Financeiro')" />
           </q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-space />
-      <q-btn round flat icon="edit" />
-
-    </q-toolbar>
-    <q-separator></q-separator>
-
-    <div v-for="detail, detail_index in detalhes_lista" v-bind:key="detail_index">
-      <q-item v-ripple>
-        <!-- ITEMS DA COLUNA 1 -->
-        <q-item-section avatar top>
-          <q-avatar :icon="detail.icon" color="grey-2" :text-color="detail.text_color" />
-        </q-item-section>
-
-        <q-item-section>
-
-          <q-item-label lines="1" v-if="detail['field'] === 'cnpj' && detalhes_pessoa.fisica == true">{{
-            formataCPF(detalhes_pessoa[detail['field']]) }}</q-item-label>
-          <q-item-label lines="1" v-if="detail['field'] === 'cnpj' && detalhes_pessoa.fisica == false">{{
-            formataCNPJ(detalhes_pessoa[detail['field']]) }}</q-item-label>
-          <q-item-label lines="1" v-if="detail['field'] === 'ie'">{{ formataie(detalhes_pessoa[detail['field']])
-          }}</q-item-label>
-
-          <q-item-label lines="5"
-            v-if="detalhes_pessoa[detail['field']] !== null && detalhes_pessoa[detail['field']] !== false
-              && detalhes_pessoa[detail['field']] !== true && detail['field'] !== 'codformapagamento' && detail['field'] !== 'cnpj' && detail['field'] !== 'ie'">{{
-    detalhes_pessoa[detail['field']] }}
+          <q-item-label caption>
+            {{ sPessoa.item.pessoa }}
           </q-item-label>
-
-          <q-item-label lines="1" v-if="detalhes_pessoa[detail['field']] === null">Vazio</q-item-label>
-
-          <q-item-label lines="1" v-if="detail['field'] === 'codformapagamento'">{{ formapagamento }}</q-item-label>
-
-          <q-item-label lines="1" v-if="detalhes_pessoa[detail['field']] === false">Não</q-item-label>
-
-          <q-item-label lines="1" v-if="detalhes_pessoa[detail['field']] === true">Sim</q-item-label>
-
-          <q-item-label caption class="text-grey-8">{{ detail.label }}</q-item-label>
-
-        </q-item-section>
+        </q-item-label>
 
       </q-item>
-      <q-separator inset="item" v-if="detail_index != detalhes_lista.length - 1"></q-separator>
-    </div>
-  </q-card>
-  <q-separator />
-  <br><br><br>
-  <q-card class="no-shadow" bordered>
-    <q-toolbar class="bg-primary text-white shadow-2">
-      <q-toolbar-title>Cliente</q-toolbar-title>
-    </q-toolbar>
+      <q-separator inset />
 
-    <q-separator></q-separator>
+      <div class="row">
+        <div class="col-6">
+          <q-item>
+            <q-item-section avatar top>
+              <q-avatar icon="fingerprint" color="grey-2" text-color="blue" />
+            </q-item-section>
+            <q-item-section top>
+              <q-item-label>
+                {{ sPessoa.item.fisica == true ? Documentos.formataCPF(sPessoa.item.cnpj) :
+                  Documentos.formataCNPJ(sPessoa.item.cnpj) }}
+                <span v-if="sPessoa.item.ie">/ {{ Documentos.formataIePorSigla(sPessoa.item.ie) }}</span>
+                <span v-if="sPessoa.item.rg">/ {{ sPessoa.item.rg }}</span>
+              </q-item-label>
+              <q-item-label caption>
+                <span>Documentos</span>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-separator inset />
 
-    <div v-for="detail, detail_index in detalhes_lista" v-bind:key="detail_index">
-      <q-item v-ripple>
+          <q-item v-if="sPessoa.item.nascimento">
+            <q-item-section avatar top>
+              <q-avatar icon="celebration" color="grey-2" text-color="blue" />
+            </q-item-section>
+            <q-item-section top>
+              <q-item-label>
+                {{ Documentos.formataDatasemHr(sPessoa.item.nascimento) }}
+              </q-item-label>
+              <q-item-label caption class="text-grey-8">Nascimento / Fundação</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-separator inset />
 
-        <!-- ITENS DA COLUNA 2 -->
-        <q-item-section avatar top>
-          <q-avatar :icon="detalhes_coluna2[detail_index].icon" color="grey-2" :text-color="detail.text_color" />
-        </q-item-section>
-        <q-item-section>
+          <q-item v-if="sPessoa.item.observacoes">
+            <q-item-section avatar top>
+              <q-avatar icon="notes" color="grey-2" text-color="blue" />
+            </q-item-section>
+            <q-item-section top>
+              <q-item-label style="white-space: pre-line">
+                {{ sPessoa.item.observacoes }}
+              </q-item-label>
+              <q-item-label caption class="text-grey-8">Observações</q-item-label>
+            </q-item-section>
+          </q-item>
 
-          <q-item-label lines="2"
-            v-if="detalhes_coluna2[detail_index].field === 'notafiscal' && detalhes_pessoa.notafiscal === 0">Tratamento
-            Padrão</q-item-label>
-          <q-item-label lines="2"
-            v-if="detalhes_coluna2[detail_index].field === 'notafiscal' && detalhes_pessoa.notafiscal === 1">Sempre</q-item-label>
-          <q-item-label lines="2"
-            v-if="detalhes_coluna2[detail_index].field === 'notafiscal' && detalhes_pessoa.notafiscal === 2">Somente
-            Fechamento</q-item-label>
-          <q-item-label lines="2"
-            v-if="detalhes_coluna2[detail_index].field === 'notafiscal' && detalhes_pessoa.notafiscal === 9">Nunca</q-item-label>
+        </div>
+        <div class="col-6">
+          <template v-if="sPessoa.item.rntrc || sPessoa.item.tipotransportador">
+            <q-item class="col-6">
+              <q-item-section avatar top>
+                <q-avatar icon="local_shipping" color="grey-2" text-color="blue" />
+              </q-item-section>
+              <q-item-section top>
+                <q-item-label lines="2" v-if="sPessoa.item.rntrc">
+                  <template v-if="sPessoa.item.tipotransportador">
+                    <span v-if="sPessoa.item.tipotransportador == 1">ETC - Empresa</span>
+                    <span v-if="sPessoa.item.tipotransportador == 2">TAC - Autônomo</span>
+                    <span v-if="sPessoa.item.tipotransportador == 3">CTC - Cooperativa</span>
+                    |
+                  </template>
+                  {{ sPessoa.item.rntrc }}
+                </q-item-label>
+                <q-item-label caption>
+                  RNTRC
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
+          </template>
 
-          <q-item-label lines="1"
-            v-if="detalhes_pessoa[detalhes_coluna2[detail_index].field] === false">Não</q-item-label>
-          <q-item-label lines="1"
-            v-if="detalhes_pessoa[detalhes_coluna2[detail_index].field] === null">Vazio</q-item-label>
-
-          <q-item-label lines="1" v-if="detalhes_pessoa[detalhes_coluna2[detail_index].field] === true">Sim</q-item-label>
-
-          <q-item-label lines="1" v-if="detalhes_coluna2[detail_index].field === 'toleranciaatraso'">{{
-            detalhes_pessoa[detalhes_coluna2[detail_index].field] }} Dias</q-item-label>
-
-          <q-item-label lines="5"
-            v-if="detalhes_pessoa[detalhes_coluna2[detail_index].field] !== true && detalhes_pessoa[detalhes_coluna2[detail_index].field] !== false
-              && detalhes_coluna2[detail_index].field !== 'toleranciaatraso' && detalhes_coluna2[detail_index].field !== 'notafiscal'">
-            {{ detalhes_pessoa[detalhes_coluna2[detail_index].field] }}
-          </q-item-label>
-
-          <q-item-label caption class="text-grey-8">{{ detalhes_coluna2[detail_index].label }}</q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-separator inset="item" v-if="detail_index != detalhes_lista.length - 1"></q-separator>
-    </div>
+          <template v-if="sPessoa.item.codgrupoeconomico">
+            <q-item class="col-6" :to="'/grupoeconomico/' + this.sPessoa.item.codgrupoeconomico"
+              style="text-decoration: none;" v-ripple clickable>
+              <q-item-section avatar top>
+                <q-avatar icon="groups" color="grey-2" text-color="blue" />
+              </q-item-section>
+              <q-item-section top>
+                <q-item-label lines="2">
+                  {{ sPessoa.item.GrupoEconomico.grupoeconomico }}
+                </q-item-label>
+                <q-item-label caption>
+                  Grupo Econômico
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+        </div>
+      </div>
+    </q-list>
   </q-card>
 </template>
 
@@ -114,106 +207,158 @@
 import { defineComponent, defineAsyncComponent } from 'vue'
 import { useQuasar } from "quasar"
 import { ref } from 'vue'
+import { pessoaStore } from 'stores/pessoa'
 import { useRoute } from 'vue-router'
-import { api } from 'boot/axios'
+import { formataDocumetos } from 'src/stores/formataDocumentos'
+import { guardaToken } from 'stores/index'
+import moment from 'moment'
 
-const primeiraletra = ref('')
-
-const detalhes_lista = [
-  { icon: 'label', label: '#', field: 'codpessoa', text_color: 'blue' },
-  { icon: 'local_mall', label: 'CNPJ', field: 'cnpj', text_color: 'blue' },
-  { icon: 'local_shipping', label: 'RNTRC', field: 'rntrc', text_color: 'blue' },
-  { icon: 'app_registration', label: 'Inscrição Estadual', field: 'ie', text_color: 'blue' },
-  { icon: 'local_shipping', label: 'Tipo Transportador', field: 'tipotransportador', text_color: 'blue' },
-  { icon: 'mark_email_unread', label: 'Mensagem de Venda', field: 'mensagemvenda', text_color: 'blue' },
-  { icon: 'attach_money', label: 'Forma de Pagamento', field: 'codformapagamento', text_color: 'blue' },
-  { icon: 'money_off', label: 'Desconto', field: 'desconto', text_color: 'blue' },
-  { icon: 'sell', label: 'Vendedor', field: 'vendedor', text_color: 'blue' },
-  { icon: 'comment', label: 'Observações', field: 'observacoes', text_color: 'blue' },
-];
-
-const detalhes_coluna2 = [
-  { icon: 'person_pin_circle', label: 'Cliente', field: 'cliente', text_color: 'blue' },
-  { icon: 'groups', label: 'Grupo Cliente', field: 'GrupoCliente', text_color: 'blue' },
-  { icon: 'shopping_cart', label: 'Consumidor Final', field: 'consumidor', text_color: 'blue' },
-  { icon: 'receipt_long', label: 'Nota Fiscal', field: 'notafiscal', text_color: 'blue' },
-  { icon: 'money_off', label: 'Crédito Bloqueado', field: 'creditobloqueado', text_color: 'blue' },
-  { icon: 'payments', label: 'Saldo em Aberto', field: 'teste', text_color: 'blue' },
-  { icon: 'price_change', label: 'Limite de Crédito', field: 'credito', text_color: 'blue' },
-  { icon: 'calendar_month', label: 'Primeiro Vencimento', field: 'testess', text_color: 'blue' },
-  { icon: 'schedule_send', label: 'Tolerância de Atraso', field: 'toleranciaatraso', text_color: 'blue' },
-  { icon: 'switch_account', label: 'Fornecedor', field: 'fornecedor', text_color: 'blue' },
-]
 
 export default defineComponent({
   name: "CardDetalhesPessoa",
-  props: ['icon', 'text_color', 'value', 'label'],
+
+  components: {
+    SelectGrupoEconomico: defineAsyncComponent(() => import('components/pessoa/SelectGrupoEconomico.vue')),
+    InputIe: defineAsyncComponent(() => import('components/pessoa/InputIe.vue')),
+  },
 
   methods: {
 
-    formataCPF(cpf) {
-      if (cpf == null) {
-        return cpf
-      }
-      cpf = cpf.toString().padStart(11, '0')
-      return cpf.slice(0, 3) + "." +
-        cpf.slice(3, 6) + "." +
-        cpf.slice(6, 9) + "-" +
-        cpf.slice(9, 11)
+    removerPessoa(codpessoa, pessoa) {
+
+      this.$q.dialog({
+        title: 'Excluir pessoa',
+        message: 'Tem certeza que deseja excluir ' + pessoa + '?',
+        cancel: true,
+      }).onOk(async () => {
+        try {
+          const ret = await this.sPessoa.removePessoa(codpessoa)
+          if (ret.data.result == true) {
+            this.$q.notify({
+              color: 'green-5',
+              textColor: 'white',
+              icon: 'done',
+              message: 'Removido'
+            })
+            this.$router.push('/pessoa')
+          }
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'warning',
+            message: error.response.data.message
+          })
+        }
+      })
     },
 
-    formataie(ie) {
-      if (ie == null) {
-        return ie
+    editarDetalhes() {
+      this.DialogDetalhes = true
+      this.modelEditarDetalhes = {
+        cnpj: this.Documentos.formataCnpjCpf(this.sPessoa.item.cnpj, this.sPessoa.item.fisica),
+        rntrc: this.sPessoa.item.rntrc,
+        ie: this.sPessoa.item.ie,
+        fantasia: this.sPessoa.item.fantasia,
+        pessoa: this.sPessoa.item.pessoa,
+        tipotransportador: this.sPessoa.item.tipotransportador,
+        fisica: this.sPessoa.item.fisica,
+        cliente: this.sPessoa.item.cliente,
+        fornecedor: this.sPessoa.item.fornecedor,
+        vendedor: this.sPessoa.item.vendedor,
+        observacoes: this.sPessoa.item.observacoes,
+        codgrupoeconomico: this.sPessoa.item.codgrupoeconomico,
+        codcidade: this.sPessoa.item.PessoaEnderecoS.find(item => item.nfe === true)?.codcidade ?? null,
+        rg: this.sPessoa.item.rg,
+        nascimento: this.sPessoa.item.nascimento ? moment(this.sPessoa.item.nascimento).format('DD-MM-YYYY') : null
       }
-      ie = ie.toString().padStart(9, '0')
-      return ie.slice(0, 2) + "." +
-        ie.slice(2, 5) + "." +
-        ie.slice(5, 8) + "-" +
-        ie.slice(8, 9)
     },
 
-    formataCNPJ(cnpj) {
-      if (cnpj == null) {
-        return cnpj
+
+    async salvarDetalhes() {
+      if (!this.sPessoa.item.PessoaEnderecoS.find(item => item.nfe === true) && this.modelEditarDetalhes.ie) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: 'Cadastre um endereço para verificar a Inscrição Estadual'
+        })
+        return
       }
-      cnpj = cnpj.toString().padStart(14, '0')
-      return cnpj.slice(0, 2) + "." +
-        cnpj.slice(2, 5) + "." +
-        cnpj.slice(5, 8) + "/" +
-        cnpj.slice(8, 12) + "-" +
-        cnpj.slice(12, 14)
+
+      try {
+        const ret = await this.sPessoa.clienteSalvar(this.sPessoa.item.codpessoa, this.modelEditarDetalhes)
+        this.sPessoa.item = ret.data.data
+        if (ret.data.data) {
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Alterado'
+          })
+          this.DialogDetalhes = false
+        }
+      } catch (error) {
+        if (error.response.data.errors.cnpj) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: error.response.data.errors.cnpj
+          })
+        } else if (error.response.data.errors.ie) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: error.response.data.errors.ie
+          })
+        } else {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: error.message
+          })
+        }
+      }
+    },
+
+    primeiraLetra(fantasia) {
+      if (fantasia.charAt(0) == ' ') {
+        return fantasia.charAt(1)
+      }
+      return fantasia.charAt(0)
     },
   },
 
   setup() {
 
     const $q = useQuasar()
+    const sPessoa = pessoaStore()
+    const route = useRoute()
+    const GrupoEconomico = ref([])
+    const Documentos = formataDocumetos()
+    const user = guardaToken()
 
     return {
-      detalhes_pessoa: ref({}),
       formapagamento: ref({}),
-      detalhes_lista,
-      primeiraletra,
-      detalhes_coluna2,
-    }
-  },
-  async mounted() {
-
-    const route = useRoute()
-    const { data } = await api.get('v1/pessoa/' + route.params.id)
-    const consultaformapagamento = await api.get('v1/pessoa/formadepagamento?codformapagamento=' + data.data.codformapagamento)
-
-
-    this.detalhes_pessoa = data.data
-    this.detalhes_pessoa.GrupoCliente = data.data.GrupoCliente.grupocliente
-    this.formapagamento = consultaformapagamento.data
-
-    // PEGA A PRIMEIRA LETRA DO NOME PARA PREENCHER NO AVATAR
-    if (data.data.fantasia.charAt(0) == ' ') {
-      primeiraletra.value = data.data.fantasia.charAt(1)
-    } else {
-      primeiraletra.value = data.data.fantasia.charAt(0)
+      sPessoa,
+      route,
+      Documentos,
+      user,
+      DialogDetalhes: ref(false),
+      modelEditarDetalhes: ref([]),
+      GrupoEconomico,
+      brasil: {
+        days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),
+        daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
+        months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
+        monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
+        firstDayOfWeek: 1,
+        format24h: true,
+        pluralDay: 'dias'
+      },
     }
   },
 })

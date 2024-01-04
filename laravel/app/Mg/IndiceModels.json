@@ -264,6 +264,11 @@
                 "tabela": "tblpagarmepos",
                 "coluna": "codfilial",
                 "metodo": "PagarMePosS"
+            },
+            "tblpdv.codfilial": {
+                "tabela": "tblpdv",
+                "coluna": "codfilial",
+                "metodo": "PdvS"
             }
         }
     },
@@ -866,6 +871,11 @@
                 "tabela": "tblpessoatelefone",
                 "coluna": "codpessoa",
                 "metodo": "PessoaTelefoneS"
+            },
+            "tblnegocioformapagamento.codpessoa": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codpessoa",
+                "metodo": "NegocioFormaPagamentoS"
             }
         }
     },
@@ -964,6 +974,11 @@
                 "tabela": "tblpagarmepedido",
                 "coluna": "codpagarmepedido",
                 "metodo": "PagarMePedido"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
             }
         },
         "hasMany": {
@@ -1240,8 +1255,70 @@
         "namespace": "Mg\\NaturezaOperacao",
         "classe": "NaturezaOperacao",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/NaturezaOperacao.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codcontacontabil": {
+                "tabela": "tblcontacontabil",
+                "coluna": "codcontacontabil",
+                "metodo": "ContaContabil"
+            },
+            "codestoquemovimentotipo": {
+                "tabela": "tblestoquemovimentotipo",
+                "coluna": "codestoquemovimentotipo",
+                "metodo": "EstoqueMovimentoTipo"
+            },
+            "codnaturezaoperacaodevolucao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacaodevolucao",
+                "metodo": "NaturezaOperacaoDevolucao"
+            },
+            "codtipotitulo": {
+                "tabela": "tbltipotitulo",
+                "coluna": "codtipotitulo",
+                "metodo": "TipoTitulo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnaturezaoperacao.codnaturezaoperacaodevolucao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacaodevolucao",
+                "metodo": "NaturezaOperacaoS"
+            },
+            "tblnegocio.codnaturezaoperacao": {
+                "tabela": "tblnegocio",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NegocioS"
+            },
+            "tblnfeterceiro.codnaturezaoperacao": {
+                "tabela": "tblnfeterceiro",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NfeTerceiroS"
+            },
+            "tblnotafiscal.codnaturezaoperacao": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NotaFiscalS"
+            },
+            "tblnotafiscalterceiro.codnaturezaoperacao": {
+                "tabela": "tblnotafiscalterceiro",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NotaFiscalTerceiroS"
+            },
+            "tbltributacaonaturezaoperacao.codnaturezaoperacao": {
+                "tabela": "tbltributacaonaturezaoperacao",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "TributacaoNaturezaOperacaoS"
+            }
+        }
     },
     "tblformapagamento": {
         "tabela": "tblformapagamento",
@@ -1355,6 +1432,11 @@
                 "tabela": "tblpessoa",
                 "coluna": "codpessoatransportador",
                 "metodo": "PessoaTransportador"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -2196,6 +2278,11 @@
                 "tabela": "tblnotafiscalprodutobarra",
                 "coluna": "codnegocioprodutobarra",
                 "metodo": "NotaFiscalProdutoBarraS"
+            },
+            "tblmercospedidoitem.codnegocioprodutobarra": {
+                "tabela": "tblmercospedidoitem",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "MercosPedidoItemS"
             }
         }
     },
@@ -2531,8 +2618,55 @@
         "namespace": "Mg\\Estoque",
         "classe": "EstoqueLocal",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Estoque\/EstoqueLocal.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblestoquelocalprodutovariacao.codestoquelocal": {
+                "tabela": "tblestoquelocalprodutovariacao",
+                "coluna": "codestoquelocal",
+                "metodo": "EstoqueLocalProdutoVariacaoS"
+            },
+            "tblnegocio.codestoquelocal": {
+                "tabela": "tblnegocio",
+                "coluna": "codestoquelocal",
+                "metodo": "NegocioS"
+            },
+            "tblnegocio.codestoquelocaldestino": {
+                "tabela": "tblnegocio",
+                "coluna": "codestoquelocaldestino",
+                "metodo": "NegocioDestinoS"
+            },
+            "tblnotafiscal.codestoquelocal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codestoquelocal",
+                "metodo": "NotaFiscalS"
+            },
+            "tblpedido.codestoquelocal": {
+                "tabela": "tblpedido",
+                "coluna": "codestoquelocal",
+                "metodo": "PedidoS"
+            },
+            "tblpedido.codestoquelocalorigem": {
+                "tabela": "tblpedido",
+                "coluna": "codestoquelocalorigem",
+                "metodo": "PedidoOrigemS"
+            }
+        }
     },
     "tblgrupousuariousuario": {
         "tabela": "tblgrupousuariousuario",
@@ -3381,6 +3515,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -3422,6 +3561,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -5021,6 +5165,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": []
@@ -5061,6 +5210,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
             }
         },
         "hasMany": {
@@ -5404,6 +5558,98 @@
                 "tabela": "tblpessoacertidao",
                 "coluna": "codcertidaotipo",
                 "metodo": "PessoaCertidaoS"
+            }
+        }
+    },
+    "tblpdv": {
+        "tabela": "tblpdv",
+        "campocodigo": "codpdv",
+        "namespace": "Mg\\Pdv",
+        "classe": "Pdv",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pdv\/Pdv.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnegocio.codpdv": {
+                "tabela": "tblnegocio",
+                "coluna": "codpdv",
+                "metodo": "NegocioS"
+            },
+            "tblpagarmepagamento.codpdv": {
+                "tabela": "tblpagarmepagamento",
+                "coluna": "codpdv",
+                "metodo": "PagarMePagamentoS"
+            },
+            "tblpagarmepedido.codpdv": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codpdv",
+                "metodo": "PagarMePedidoS"
+            },
+            "tblpix.codpdv": {
+                "tabela": "tblpix",
+                "coluna": "codpdv",
+                "metodo": "PixS"
+            },
+            "tblpixcob.codpdv": {
+                "tabela": "tblpixcob",
+                "coluna": "codpdv",
+                "metodo": "PixCobS"
+            }
+        }
+    },
+    "tblestoquemovimentotipo": {
+        "tabela": "tblestoquemovimentotipo",
+        "campocodigo": "codestoquemovimentotipo",
+        "namespace": "Mg\\Estoque",
+        "classe": "EstoqueMovimentoTipo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Estoque\/EstoqueMovimentoTipo.php",
+        "belongsTo": {
+            "codestoquemovimentotipoorigem": {
+                "tabela": "tblestoquemovimentotipo",
+                "coluna": "codestoquemovimentotipoorigem",
+                "metodo": "EstoqueMovimentoTipoOrigem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblestoquemovimento.codestoquemovimentotipo": {
+                "tabela": "tblestoquemovimento",
+                "coluna": "codestoquemovimentotipo",
+                "metodo": "EstoqueMovimentoS"
+            },
+            "tblestoquemovimentotipo.codestoquemovimentotipoorigem": {
+                "tabela": "tblestoquemovimentotipo",
+                "coluna": "codestoquemovimentotipoorigem",
+                "metodo": "EstoqueMovimentoTipoDestinoS"
+            },
+            "tblnaturezaoperacao.codestoquemovimentotipo": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codestoquemovimentotipo",
+                "metodo": "NaturezaOperacaoS"
             }
         }
     }

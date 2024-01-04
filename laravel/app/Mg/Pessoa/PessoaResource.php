@@ -25,30 +25,29 @@ class PessoaResource extends JsonResource
         $ret['GrupoEconomico'] = [
             'codgrupoeconomico' => @$this->GrupoEconomico->codgrupoeconomico,
             'grupoeconomico' => @$this->GrupoEconomico->grupoeconomico,
+            'observacoes' => @$this->GrupoEconomico->observacoes,
+        ];        
+        $ret['FormaPagamento'] = [
+            'codformapagamento' => @$this->FormaPagamento->codformapagamento,
+            'formapagamento' => @$this->FormaPagamento->formapagamento,
         ];
 
         // Filhos
         $ret['PessoaCertidaoS'] = [];
         // foreach ($this->PessoaCertidaoS()->where('validade', '>=', Carbon::now()) as $pc)
-        foreach ($this->PessoaCertidaoS()->orderBy('validade', 'desc')->get() as $pc) {
-            $ret['PessoaCertidaoS'][] = $pc->toArray();
-        }
+       
+        // dd($this->RegistroSpcS()->orderBy('criacao', 'desc')->get());
 
-        $ret['PessoaTelefoneS'] = [];
-        foreach ($this->PessoaTelefoneS()->orderBy('ordem')->get() as $pt) {
-            $ret['PessoaTelefoneS'][] = $pt->toArray();
-        }
+        $ret['RegistroSpc'] = RegistroSpcResource::collection($this->RegistroSpcS()->orderBy('criacao', 'desc')->get());
 
-        $ret['PessoaEmailS'] = [];
-        foreach ($this->PessoaEmailS()->orderBy('ordem')->get() as $pe) {
-            $ret['PessoaEmailS'][] = $pe->toArray();
-        }
+        $ret['PessoaCertidaoS'] = PessoaCertidaoResource::collection($this->PessoaCertidaoS()->orderBy('validade', 'desc')->get());
+        
+        $ret['PessoaTelefoneS'] = PessoaTelefoneResource::collection($this->PessoaTelefoneS()->orderBy('ordem')->get());
 
-        $ret['PessoaEnderecoS'] = [];
-        foreach ($this->PessoaEnderecoS()->orderBy('ordem')->get() as $pen) {
-            $ret['PessoaEnderecoS'][] = $pen->toArray();
-        }
-
+        $ret['PessoaEmailS'] = PessoaEmailResource::collection($this->PessoaEmailS()->orderBy('ordem')->get());
+    
+        $ret['PessoaEnderecoS'] = PessoaEnderecoResource::collection($this->PessoaEnderecoS()->orderBy('ordem')->get());
+        
         $ret['PessoaContaS'] = [];
         foreach ($this->PessoaContaS()->orderBy('alteracao')->get() as $pc) {
             $ret['PessoaContaS'][] = $pc->toArray();

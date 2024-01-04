@@ -6,58 +6,84 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use DB;
+use Illuminate\Support\Facades\Auth;
+use Mg\Cidade\Cidade;
 use Mg\FormaPagamento\FormaPagamento;
+use Mg\Usuario\Autorizador;
 
 class PessoaController extends MgController
 {
 
-    public function index(Request $request)
-    {
-        $pessoas = Pessoa::orderBy('fantasia', 'asc')->paginate();
-        return PessoaResource::collection($pessoas);
-    }
-
     public function create(Request $request)
     {
+
+        Autorizador::autoriza(array('Financeiro'));
+
+
         $data = $request->all();
+
+        if ($request->ie) {
+            $ie = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
+            $request['ie'] = $ie;
+            $this->validate($request, [
+                'cnpj' => 'required|cpf_cnpj',
+                'ie' => 'required|inscricao_estadual:' . $request->uf,
+            ]);
+        }
+
+        $this->validate($request, [
+            'cnpj' => 'required|cpf_cnpj'
+        ]);
+
         $pessoa = PessoaService::create($data);
         return new PessoaResource($pessoa);
     }
 
-    public function search(Request $request)
+    public function index(Request $request)
     {
-        if ($request->search) {
-            $pesquisa = strtoupper($request->search);
-            $search = Pessoa::where('fantasia', 'ilike', "%{$pesquisa}%")
-                ->orWhere('pessoa', 'ilike', "%{$pesquisa}%")
-                ->paginate();
 
-            if ($search->total() == 0) {
-                $pesquisa = strtolower($request->search);
-                $search = Pessoa::where('fantasia', 'ilike', "%{$pesquisa}%")
-                    ->orWhere('pessoa', 'ilike', "%{$pesquisa}%")
-                    ->paginate();
-            }
-        } else if ($request->cnpj) {
-            $search = Pessoa::where('cnpj', 'ilike', "%{$request->cnpj}%")
-                ->paginate();
-        } else if ($request->email) {
-            $search = Pessoa::where('email', 'ilike', "%{$request->email}%")
-                ->paginate();
-        } else if ($request->codpessoa) {
-            $search = Pessoa::where('codpessoa', 'ilike', "%{$request->codpessoa}%")
-                ->paginate();
-        } else {
-            return response()->json('Algo deu errado', 200);
-        }
+        $codpessoa = $request->codpessoa ?? null;
+        $pessoa = $request->pessoa ?? null;
+        $cnpj = $request->cnpj ?? null;
+        $email = $request->email ?? null;
+        $fone = $request->fone ?? null;
+        $codgrupoeconomico = $request->codgrupoeconomico ?? null;
+        $codcidade = $request->codcidade ?? null;
+        $inativo = $request->inativo ?? null;
+        $codformapagamento = $request->codformapagamento ?? null;
+        $codgrupocliente = $request->codgrupocliente ?? null;
 
-        return response()->json($search);
+        $limit = $request->per_page ?? 108;
+        $offset = (($request->page ?? 1) - 1) * $limit;
+
+        $pessoas = PessoaService::index(
+            $limit,
+            $offset,
+            $codpessoa,
+            $pessoa,
+            $cnpj,
+            $email,
+            $fone,
+            $codgrupoeconomico,
+            $codcidade,
+            $inativo,
+            $codformapagamento,
+            $codgrupocliente,
+        );
+
+        return PessoaResource::collection($pessoas);
     }
 
     public function formapagamento(Request $request)
     {
         $codformapagamento = $request->codformapagamento;
 
+        if (!$request->codformapagamento) {
+            $consultaformapagamento =  DB::table('tblformapagamento')->select('codformapagamento', 'formapagamento')->get();
+
+            return response()->json($consultaformapagamento, 200);
+        }
 
         if (!is_numeric($codformapagamento)) {
             return response()->json('Forma de pagamento nao encontrada', 200);
@@ -79,7 +105,29 @@ class PessoaController extends MgController
 
     public function update(Request $request, $codpessoa)
     {
+
+
+        Autorizador::autoriza(array('Financeiro'));
+
         $data = $request->all();
+
+        if ($request->ie) {
+            $buscaSigla = PessoaService::buscaSigla($request->codcidade);
+            $uf = $buscaSigla[0]->sigla;
+            $ie = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
+            $request['ie'] = $ie;
+
+            $this->validate($request, [
+                'cnpj' => 'required|cpf_cnpj',
+                'ie' => 'required|inscricao_estadual:' . $uf,
+            ]);
+        }
+        
+        $this->validate($request, [
+            'cnpj' => 'required|cpf_cnpj'
+        ]);
+
+
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::update($pessoa, $data);
         return new PessoaResource($pessoa);
@@ -87,6 +135,9 @@ class PessoaController extends MgController
 
     public function delete(Request $request, $codpessoa)
     {
+         Autorizador::autoriza(array('Financeiro'));
+
+
         $pessoa = Pessoa::findOrFail($codpessoa);
         $res = PessoaService::delete($pessoa);
         return response()->json([
@@ -95,7 +146,10 @@ class PessoaController extends MgController
     }
 
     public function ativar(Request $request, $codpessoa)
-    {
+    {   
+
+        Autorizador::autoriza(array('Financeiro'));
+
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::ativar($pessoa);
         return new PessoaResource($pessoa);
@@ -103,6 +157,9 @@ class PessoaController extends MgController
 
     public function inativar(Request $request, $codpessoa)
     {
+
+        Autorizador::autoriza(array('Financeiro'));
+
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::inativar($pessoa);
         return new PessoaResource($pessoa);
@@ -125,7 +182,7 @@ class PessoaController extends MgController
 
     public function atualizaCampos($pessoa)
     {
-        $pessoa = PessoaService::atualizaCamposLegado($codpessoatelefone, $codpessoaemail, $codpessoaendereco);
+        // $pessoa = PessoaService::atualizaCamposLegado($codpessoatelefone, $codpessoaemail, $codpessoaendereco);
     }
 
     public function comandaVendedor(Request $request, $codpessoa)

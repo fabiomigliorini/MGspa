@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Feb/2023 12:42:06
+ * Date: 22/Dec/2023 09:58:30
  */
 
 namespace Mg\Pessoa;
@@ -35,6 +35,7 @@ use Mg\Pessoa\PessoaConta;
 use Mg\Pessoa\PessoaEmail;
 use Mg\Pessoa\PessoaEndereco;
 use Mg\Pessoa\PessoaTelefone;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -102,13 +103,15 @@ class Pessoa extends MgModel
         'telefone3',
         'tipotransportador',
         'toleranciaatraso',
-        'vendedor'
+        'vendedor',
+        'nascimento'
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo'
+        'inativo',
+        'nascimento'
     ];
 
     protected $casts = [
@@ -137,7 +140,7 @@ class Pessoa extends MgModel
         'vendedor' => 'boolean'
     ];
 
-    public function certidaoSefazMT()
+public function certidaoSefazMT()
     {
         return $this->PessoaCertidaoS()->where('validade', '>=', Carbon::createMidnightDate())
             ->ativo()
@@ -247,6 +250,11 @@ class Pessoa extends MgModel
     public function NegocioVendedorS()
     {
         return $this->hasMany(Negocio::class, 'codpessoavendedor', 'codpessoa');
+    }
+
+    public function NegocioFormaPagamentoS()
+    {
+        return $this->hasMany(NegocioFormaPagamento::class, 'codpessoa', 'codpessoa');
     }
 
     public function NfeTerceiroS()

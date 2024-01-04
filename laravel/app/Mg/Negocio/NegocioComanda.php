@@ -2,11 +2,6 @@
 
 namespace Mg\Negocio;
 
-use Mg\Titulo\TituloBoleto;
-
-//use JasperPHP\ado\TTransaction;
-//use JasperPHP\ado\TLoggerHTML;
-
 class NegocioComanda
 {
     /* Variavel que armazenara os dados do boleto
