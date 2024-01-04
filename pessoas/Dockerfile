@@ -2,7 +2,7 @@ FROM node:20.10.0-alpine
 RUN npm i --location=global @quasar/cli@2.3.0
 MAINTAINER mgpapelaria.com.br
 
-WORKDIR /opt/www/MGspa/quasar-v2
+WORKDIR /opt/www/MGspa/pessoas
 
 RUN apk upgrade --update --no-cache
 RUN apk add --no-cache bash-completion coreutils autoconf
