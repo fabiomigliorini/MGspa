@@ -241,9 +241,12 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // Grupo Economico
         Route::get('grupoeconomico/', '\Mg\GrupoEconomico\GrupoEconomicoController@index');
         Route::get('grupoeconomico/select', '\Mg\GrupoEconomico\GrupoEconomicoController@pesquisaGrupoEconomico');
-        Route::get('grupoeconomico/select', '\Mg\GrupoEconomico\GrupoEconomicoController@pesquisaGrupoEconomico');
         Route::post('grupoeconomico/', '\Mg\GrupoEconomico\GrupoEconomicoController@create');
         Route::delete('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/removerdogrupo', '\Mg\GrupoEconomico\GrupoEconomicoController@deletaPessoadoGrupo');
+        Route::get('grupo-economico/{codgrupoeconomico}/totais-negocios', '\Mg\GrupoEconomico\GrupoEconomicoController@totaisNegocios');
+        Route::get('grupo-economico/{codgrupoeconomico}/titulos-abertos', '\Mg\GrupoEconomico\GrupoEconomicoController@titulosAbertos');
+        Route::get('grupo-economico/{codgrupoeconomico}/nfe-terceiro', '\Mg\GrupoEconomico\GrupoEconomicoController@nfeTerceiro');
+
 
         Route::get('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@show');
         Route::post('grupoeconomico/{codgrupoeconomico}/inativo', '\Mg\GrupoEconomico\GrupoEconomicoController@inativar');
