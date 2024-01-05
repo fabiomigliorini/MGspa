@@ -209,7 +209,6 @@ const recarregarDaApi = () => {
               <select-pessoa
                 ref="selectPessoa"
                 outlined
-                autofocus
                 v-model="edicaoPessoa.codpessoa"
                 label="Pessoa"
                 :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
