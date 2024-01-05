@@ -11,6 +11,7 @@ BUG:
 
 MANDATORY:
 
+- colocar link para cadastro do produto
 - validar se tem itens ativos > 0
 - nao gerar nota com itens inativos
 - nao gerar fechamento com itens inativos
