@@ -69,6 +69,7 @@ class NegocioComandaService
         foreach ($negocioComanda->NegocioProdutoBarras as $pbComanda) {
             $pb = $pbComanda->replicate();
             $pb->codnegocio = $negocio->codnegocio;
+            $pb->uuid = null;
             $pb->save();
         }
 
