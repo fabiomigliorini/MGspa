@@ -114,7 +114,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
       // verifica se Está logado
       await sUsuario.getUsuario();
-      if (!process.env.ACCESS_TOKEN) {
+      if (!sUsuario.token.access_token) {
         Notify.create({
           type: "negative",
           message: "Antes de sincronizar você deve fazer Login!",

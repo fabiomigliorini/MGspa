@@ -29,7 +29,6 @@ export const usuarioStore = defineStore("usuario", {
           this.token = data;
           const miliseconds = data.expires_in * 1000;
           this.token.expires_at = new Date(Date.now() + miliseconds);
-          this.inicializar();
           this.getUsuario();
         }
         return true;
@@ -41,13 +40,6 @@ export const usuarioStore = defineStore("usuario", {
         console.log(error);
         return false;
       }
-    },
-
-    async inicializar() {
-      if (!this.token.access_token) {
-        return;
-      }
-      process.env.ACCESS_TOKEN = this.token.access_token;
     },
 
     async refreshToken() {
@@ -62,7 +54,6 @@ export const usuarioStore = defineStore("usuario", {
         if (data.access_token) {
           this.token = data;
           this.getUsuario();
-          this.inicializar();
         }
       } catch (error) {
         Notify.create({
@@ -78,20 +69,19 @@ export const usuarioStore = defineStore("usuario", {
         let { data } = await api.get("/api/v1/auth/logout");
         this.usuario = {};
         this.token = {};
-        this.inicializar();
       } catch (error) {
         console.log(error);
       }
     },
 
     async getUsuario() {
-      if (process.env.ACCESS_TOKEN) {
+      if (this.token.access_token) {
         try {
           let { data } = await api.get("/api/v1/auth/user");
           this.usuario = data.data;
         } catch (error) {
+          console.log(error);
           this.usuario = {};
-          process.env.ACCESS_TOKEN = null;
         }
       }
       return this.usuario;

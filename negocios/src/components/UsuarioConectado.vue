@@ -43,7 +43,6 @@ const formataTempoPercorridoDesde = (desde) => {
 };
 
 onMounted(() => {
-  sUsuario.inicializar();
   sUsuario.getUsuario();
 });
 </script>

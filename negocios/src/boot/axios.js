@@ -1,5 +1,7 @@
 import { boot } from "quasar/wrappers";
 import axios from "axios";
+import { usuarioStore } from "stores/usuario";
+const sUsuario = usuarioStore();
 
 // Be careful when using SSR for cross-request state pollution
 // due to creating a Singleton instance here;
@@ -12,8 +14,8 @@ const api = axios.create({ baseURL: process.env.API_BASE_URL });
 api.interceptors.request.use(
   (config) => {
     // Autorizacao
-    if (process.env.ACCESS_TOKEN) {
-      config.headers["Authorization"] = "Bearer " + process.env.ACCESS_TOKEN;
+    if (sUsuario.token.access_token) {
+      config.headers["Authorization"] = "Bearer " + sUsuario.token.access_token;
     }
     return config;
   },
