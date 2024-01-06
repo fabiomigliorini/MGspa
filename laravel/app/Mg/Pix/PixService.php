@@ -13,6 +13,7 @@ use Mg\Portador\Portador;
 use Mg\Pix\GerenciaNet\GerenciaNetService;
 use Mg\FormaPagamento\FormaPagamento;
 use DB;
+use Mg\Pdv\Pdv;
 
 class PixService
 {
@@ -63,6 +64,74 @@ class PixService
 
         // Portador Hardcoded por enquanto
         // $cob->codportador = env('PIX_GERENCIANET_CODPORTADOR');
+        //procura portador do BB pra filial com convenio
+        $portador = Portador::where('codfilial', $negocio->codfilial)
+            ->whereNull('inativo')
+            ->where('codbanco', 1)
+            ->whereNotNull('pixdict')
+            ->orderBy('codportador')
+            ->first();
+
+        //procura portador do BB sem filial com convenio
+        if ($portador === null) {
+            $portador = Portador::whereNull('codfilial')
+                ->whereNull('inativo')
+                ->where('codbanco', 1)
+                ->whereNotNull('pixdict')
+                ->orderBy('codportador')
+                ->first();
+        }
+
+        // se nao localizou nenhum portador
+        if ($portador === null) {
+            throw new \Exception('Nenhum portador disponível para a filial');
+        }
+
+        $cob->codportador = $portador->codportador;
+        $cob->save();
+
+        $cob->txid = 'PIXCOB' . str_pad($cob->codpixcob, 29, '0', STR_PAD_LEFT);
+        $cob->save();
+
+        return $cob;
+    }
+
+    public static function criarPixCobPdv(Float $valor, Pdv $pdv, Negocio $negocio)
+    {
+        // procura ou cria registro
+        $cob = new PixCob([
+            'codnegocio' => $negocio->codnegocio,
+            'codpdv' => $pdv->codpdv,
+            'valororiginal' => $valor
+        ]);
+
+        // 3 dias = 3 * 24 * 60 * 60
+        $cob->expiracao = 259200;
+
+        // Status NOVA
+        $status = PixCobStatus::firstOrCreate([
+            'pixcobstatus' => 'NOVA'
+        ]);
+        $cob->codpixcobstatus = $status->codpixcobstatus;
+
+        // CNPJ ou CPF
+        if (!empty($negocio->Pessoa->cnpj)) {
+            $cob->nome = $negocio->Pessoa->pessoa;
+            if ($negocio->Pessoa->fisica) {
+                $cob->cpf = $negocio->Pessoa->cnpj;
+            } else {
+                $cob->cnpj = $negocio->Pessoa->cnpj;
+            }
+        }
+
+        if (empty($cob->cpf) && !empty($negocio->cpf)) {
+            $cob->cpf = $negocio->cpf;
+        }
+
+        // Texto para ser apresentado pro cliente
+        $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
+        $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
+
         //procura portador do BB pra filial com convenio
         $portador = Portador::where('codfilial', $negocio->codfilial)
             ->whereNull('inativo')
@@ -215,6 +284,8 @@ class PixService
             $fp->integracao = true;
             $fp->save();
         }
+        $nfp->tipo = 17;
+        $nfp->integracao = true;
         $nfp->codformapagamento = $fp->codformapagamento;
         $nfp->save();
         $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
@@ -283,8 +354,7 @@ class PixService
         $dompdf->setOptions($options);
 
         $dompdf->loadHtml($html);
-        $dompdf->set_paper(array(0,0,204,650));
-        // $dompdf->set_option('dpi', 72);
+        $dompdf->setPaper([0, 0, 204, 650]);
         $dompdf->render();
         $pdf = $dompdf->output();
         return $pdf;

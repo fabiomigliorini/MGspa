@@ -18,6 +18,7 @@ export const negocioStore = defineStore("negocio", {
     dialog: {
       valores: false,
       pagamentoDinheiro: false,
+      pagamentoPix: false,
     },
     padrao: {
       codestoquelocal: 101001,
@@ -281,13 +282,17 @@ export const negocioStore = defineStore("negocio", {
       this.negocio.fantasiavendedor = fantasiavendedor;
     },
 
-    async salvar() {
+    async salvar(sincronizar = true) {
       // marca alteracao
-      this.negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
-      this.negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
-      this.negocio.sincronizado = false;
+      if (sincronizar) {
+        this.negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
+        this.negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
+        this.negocio.sincronizado = false;
+      }
       const ret = await db.negocio.put(toRaw(this.negocio));
-      this.sincronizar(this.negocio.uuid);
+      if (sincronizar) {
+        this.sincronizar(this.negocio.uuid);
+      }
       this.atualizarListagem();
       return ret;
     },
@@ -692,6 +697,33 @@ export const negocioStore = defineStore("negocio", {
           this.negocio = ret;
           db.negocio.put(ret);
           this.atualizarListagem();
+        }
+      } catch (error) {
+        console.log(erro);
+      }
+    },
+
+    async criarPixCob(valor) {
+      if (!this.negocio.sincronizado) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Impossível criar Cobrança PIX em um negócio não sincronizado com o servidor!",
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      try {
+        const ret = await sSinc.criarPixCob(valor, this.negocio.codnegocio);
+        if (ret.codnegocio) {
+          Notify.create({
+            type: "positive",
+            message: "Cobrança PIX Criada!",
+          });
+          this.negocio = ret;
+          db.negocio.put(ret);
+          this.atualizarListagem();
+          return ret.pixCob[0];
         }
       } catch (error) {
         console.log(erro);

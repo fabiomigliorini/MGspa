@@ -2,9 +2,12 @@
 import { ref, computed } from "vue";
 import { Dialog } from "quasar";
 import { negocioStore } from "stores/negocio";
+import { pixStore } from "stores/pix";
 import PagamentoDinheiro from "components/offline/PagamentoDinheiro.vue";
+import PagamentoPix from "components/offline/PagamentoPix.vue";
 
 const sNegocio = negocioStore();
+const sPix = pixStore();
 
 const edicao = ref({
   valorprodutos: null,
@@ -105,6 +108,15 @@ const recalcularValorTotal = () => {
 
 const dialogPagamentoDinheiro = () => {
   sNegocio.dialog.pagamentoDinheiro = true;
+};
+
+const dialogPagamentoPix = () => {
+  sNegocio.dialog.pagamentoPix = true;
+};
+
+const dialogDetalhesPixCob = (pixCob) => {
+  sPix.pixCob = pixCob;
+  sPix.dialog.detalhesPixCob = true;
 };
 
 const excluirPagamento = (pag) => {
@@ -251,6 +263,7 @@ const valorSaldoClass = computed(() => {
   </q-dialog>
 
   <pagamento-dinheiro />
+  <pagamento-pix />
   <template v-if="sNegocio.negocio">
     <q-list dense class="q-mt-md">
       <q-item
@@ -410,6 +423,7 @@ const valorSaldoClass = computed(() => {
                   @click="excluirPagamento(pag)"
                   icon="delete"
                   size="sm"
+                  v-if="!pag.integracao"
                 />
               </q-item-label>
             </q-item-section>
@@ -449,9 +463,38 @@ const valorSaldoClass = computed(() => {
       <q-btn round icon="credit_card" color="primary">
         <q-tooltip class="bg-accent">Cartão</q-tooltip>
       </q-btn>
-      <q-btn round icon="pix" color="primary">
+      <q-btn round icon="pix" @click="dialogPagamentoPix()" color="primary">
         <q-tooltip class="bg-accent">PIX</q-tooltip>
       </q-btn>
+    </q-list>
+    <q-list>
+      <q-item v-for="cob in sNegocio.negocio.pixCob" :key="cob.codpixcob">
+        <q-item-section avatar top>
+          <q-btn
+            round
+            color="secondary"
+            icon="qr_code"
+            @click="dialogDetalhesPixCob(cob)"
+          />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label lines="1">
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(cob.valororiginal)
+            }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ cob.status }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-btn round color="primary" icon="refresh" />
+        </q-item-section>
+      </q-item>
     </q-list>
   </template>
 </template>

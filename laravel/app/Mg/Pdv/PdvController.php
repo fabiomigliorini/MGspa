@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use Mg\Negocio\NegocioResource;
 use Mg\Negocio\Negocio;
+use Mg\Pix\PixService;
 
 class PdvController
 {
@@ -124,5 +125,13 @@ class PdvController
     public function imprimirRomaneio($codnegocio, $impressora)
     {
         RomaneioService::imprimir($codnegocio, $impressora);
+    }
+
+    public function criarPixCob(PdvRequest $request)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        $negocio = Negocio::findOrFail($request->codnegocio);
+        PixService::criarPixCobPdv($request->valor, $pdv, $negocio);
+        return new NegocioResource($negocio);
     }
 }
