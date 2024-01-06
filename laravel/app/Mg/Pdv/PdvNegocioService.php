@@ -99,7 +99,7 @@ class PdvNegocioService
         }
 
         // validacao de itens informados
-        if (sizeof($negocio->NegocioProdutoBarras) == 0) {
+        if ($negocio->NegocioProdutoBarras()->whereNull('inativo')->count() == 0) {
             throw new Exception('Não foi informado nenhum produto neste negócio!', 1);
         }
 

@@ -33,7 +33,7 @@ const maiorQueZeroRule = [
 const salvar = () => {
   var valortroco = null;
   if (valorSaldo.value < 0) {
-    valortroco = Math.abs(valorSaldo);
+    valortroco = Math.round(Math.abs(valorSaldo.value * 100)) / 100;
   }
   sNegocio.dialog.pagamentoDinheiro = false;
   sNegocio.adicionarPagamento(

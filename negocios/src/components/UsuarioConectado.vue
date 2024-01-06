@@ -15,6 +15,10 @@ const logout = async () => {
   sUsuario.logout();
 };
 
+const refresh = async () => {
+  sUsuario.refreshToken();
+};
+
 const abrirLogin = () => {
   usuario.value = null;
   senha.value = null;
@@ -114,15 +118,24 @@ onMounted(() => {
             {{ moment(sUsuario.token.expires_at).fromNow() }}
           </div>
         </div>
-
-        <q-btn
-          color="primary"
-          label="Sair"
-          push
-          size="sm"
-          v-close-popup
-          @click="logout()"
-        />
+        <q-btn-group>
+          <q-btn
+            color="primary"
+            label="Renovar"
+            push
+            size="sm"
+            v-close-popup
+            @click="refresh()"
+          />
+          <q-btn
+            color="primary"
+            label="Sair"
+            push
+            size="sm"
+            v-close-popup
+            @click="logout()"
+          />
+        </q-btn-group>
       </div>
     </div>
   </q-btn-dropdown>

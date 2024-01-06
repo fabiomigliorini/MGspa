@@ -559,11 +559,13 @@ export const negocioStore = defineStore("negocio", {
       await this.carregarChavesEstrangeiras();
 
       // desconto
-      const desconto = this.negocio.Pessoa.desconto;
-      this.negocio.itens.forEach((item) => {
-        item.percentualdesconto = desconto;
-        this.itemRecalcularValorProdutos(item);
-      });
+      const desconto = parseFloat(this.negocio.Pessoa.desconto);
+      if (desconto > 0) {
+        this.negocio.itens.forEach((item) => {
+          item.percentualdesconto = desconto;
+          this.itemRecalcularValorProdutos(item);
+        });
+      }
 
       await this.salvar();
     },
