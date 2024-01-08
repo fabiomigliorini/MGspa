@@ -22,7 +22,8 @@ class PixCobResource extends Resource
                 $ret['pessoa'] = $this->Negocio->Pessoa->fantasia;
             }
         }
-        unset($ret['portador']);
+        unset($ret['Portador']);
+        $ret['portador'] = $this->Portador->portador;
         $ret['PixS'] = [];
         foreach ($this->PixS as $pix) {
             $retPix = $pix->toArray();

@@ -31,6 +31,10 @@ export const pixStore = defineStore("pix", {
         );
         this.pixCob = data.data;
         this.atualizarPixCobNegocio();
+        Notify.create({
+          type: "positive",
+          message: "Cobrança PIX Transmitida ao Banco!",
+        });
       } catch (error) {
         console.log(error);
         var message = error?.response?.data?.message;
@@ -53,6 +57,45 @@ export const pixStore = defineStore("pix", {
         );
         this.pixCob = data.data;
         this.atualizarPixCobNegocio();
+        Notify.create({
+          type: "positive",
+          message: "Consulta Efetuada!",
+        });
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async imprimirPixCob() {
+      if (!sNegocio.padrao.impressora) {
+        Notify.create({
+          type: "negative",
+          message: "Nenhuma impressora térmica selecionada!",
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      try {
+        const { data } = await api.post(
+          "/api/v1/pix/cob/" + this.pixCob.codpixcob + "/imprimir-qr-code",
+          {
+            impressora: sNegocio.padrao.impressora,
+          }
+        );
+        Notify.create({
+          type: "positive",
+          message: "Impressão solicitada!",
+        });
       } catch (error) {
         console.log(error);
         var message = error?.response?.data?.message;
@@ -105,7 +148,3 @@ export const pixStore = defineStore("pix", {
     },
   },
 });
-
-/*
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/imprimir-qr-code'
-*/

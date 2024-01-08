@@ -5,6 +5,10 @@ import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
 import PagamentoDinheiro from "components/offline/PagamentoDinheiro.vue";
 import PagamentoPix from "components/offline/PagamentoPix.vue";
+import { formataCpf } from "../../utils/formatador.js";
+import { formataCnpj } from "../../utils/formatador.js";
+import moment from "moment/min/moment-with-locales";
+moment.locale("pt-br");
 
 const sNegocio = negocioStore();
 const sPix = pixStore();
@@ -130,6 +134,13 @@ const valorSaldoLabel = computed(() => {
 const valorSaldoClass = computed(() => {
   return sNegocio.valorapagar > 0 ? "text-red" : "text-green";
 });
+
+const qrCodeColor = (cob) => {
+  if (cob.status == "CONCLUIDA") {
+    return "secondary";
+  }
+  return "warning";
+};
 </script>
 <template>
   <!-- Editar Valores Desconto / Frete / etc -->
@@ -468,16 +479,17 @@ const valorSaldoClass = computed(() => {
       </q-btn>
     </q-list>
     <q-list>
-      <q-item v-for="cob in sNegocio.negocio.pixCob" :key="cob.codpixcob">
+      <q-item
+        v-for="cob in sNegocio.negocio.pixCob"
+        :key="cob.codpixcob"
+        clickable
+        v-ripple
+        @click="dialogDetalhesPixCob(cob)"
+      >
         <q-item-section avatar top>
-          <q-btn
-            round
-            color="secondary"
-            icon="qr_code"
-            @click="dialogDetalhesPixCob(cob)"
-          />
+          <q-btn round :color="qrCodeColor(cob)" icon="qr_code" />
         </q-item-section>
-        <q-item-section>
+        <q-item-section v-if="cob.status != 'CONCLUIDA'">
           <q-item-label lines="1">
             {{
               new Intl.NumberFormat("pt-BR", {
@@ -488,12 +500,32 @@ const valorSaldoClass = computed(() => {
             }}
           </q-item-label>
           <q-item-label caption>
-            {{ cob.status }}
+            {{ cob.status }} {{ moment(cob.criacao).fromNow() }}
           </q-item-label>
         </q-item-section>
-        <q-item-section side>
-          <q-btn round color="primary" icon="refresh" />
-        </q-item-section>
+        <template v-else>
+          <q-item-section v-for="pix in cob.PixS" :key="pix.codpix">
+            <q-item-label lines="1">
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(pix.valor)
+              }}
+            </q-item-label>
+            <q-item-label caption>
+              {{ pix.nome }}
+              <br />
+              <template v-if="pix.cpf">
+                {{ formataCpf(pix.cpf) }}
+              </template>
+              <template v-if="pix.cnpj">
+                {{ formataCnpj(pix.cnpj) }}
+              </template>
+            </q-item-label>
+          </q-item-section>
+        </template>
       </q-item>
     </q-list>
   </template>

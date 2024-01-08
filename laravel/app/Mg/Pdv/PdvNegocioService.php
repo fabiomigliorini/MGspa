@@ -50,10 +50,16 @@ class PdvNegocioService
 
         // importa os pagamentos
         foreach ($data['pagamentos'] as $pagto) {
+            // ignora pagamentos criados por integracao de algum sistema
+            if ($pagto['integracao']) {
+                continue;
+            }
+            // procura se pagamento já existe
             $nfp = NegocioFormaPagamento::firstOrNew(['uuid' => $pagto['uuid']]);
             if (!empty($nfp->codnegocio) && $nfp->codnegocio != $negocio->codnegocio) {
                 throw new \Exception("Tentando atualizar um pagamento de outro negocio {$nfp->codnegocio}/{$negocio->codnegocio}!", 1);
             }
+            // vincula pagamento
             $nfp->fill($pagto);
             $nfp->codnegocio = $negocio->codnegocio;
             $nfp->save();
@@ -61,7 +67,7 @@ class PdvNegocioService
 
         // exclui pagamentos que nao vieram no post
         $uuids = array_column($data['pagamentos'], 'uuid');
-        NegocioFormaPagamento::where('codnegocio', $negocio->codnegocio)->whereNotIn('uuid', $uuids)->delete();
+        NegocioFormaPagamento::where('codnegocio', $negocio->codnegocio)->where('integracao', false)->whereNotIn('uuid', $uuids)->delete();
 
         // salva no banco
         DB::commit();
