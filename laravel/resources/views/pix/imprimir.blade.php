@@ -16,12 +16,12 @@
     </h3>
     @endif
 
-    <div style="font-size: 0.6em; text-align:center">
+    <div style="font-size: 0.6em; text-align:center; margin-bottom: 0.5cm">
         {{ $cob->criacao->format('d/m/Y H:i:s') }}
     </div>
 
     <div style="text-align:center">
-        <img src="{{$qrcode}}" style="width: 270px" />
+        <img src="{{$qrcode}}" style="width: 220px" />
     </div>
 
     <h1 style="text-align:center; margin: 10px">
