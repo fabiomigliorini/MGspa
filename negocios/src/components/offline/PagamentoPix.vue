@@ -8,8 +8,6 @@ import { formataCnpj } from "../../utils/formatador.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
-const textAreaMensagem = ref("textAreaMensagem");
-
 const sNegocio = negocioStore();
 const sPix = pixStore();
 
@@ -188,7 +186,6 @@ const whatsapp = () => {
 
   <!-- DETALHES DO PIX -->
   <q-dialog v-model="sPix.dialog.detalhesPixCob" @show="transmitirSeNovo()">
-    <textarea ref="textAreaMensagem" hidden>teste da mensagem</textarea>
     <q-card>
       <q-card-section>
         <div class="text-h6">

@@ -3,6 +3,7 @@
 namespace Mg\Pdv;
 
 use DB;
+use Mg\PagarMe\PagarMePos;
 
 class PdvService
 {
@@ -222,6 +223,9 @@ class PdvService
         $regs = DB::select($sql, [
             'sincronizado' => $sincronizado
         ]);
+        foreach ($regs as $reg) {
+            $reg->PagarMePosS = PagarMePos::select(['codpagarmepos', 'serial', 'apelido'])->where('codfilial', $reg->codfilial)->whereNull('inativo')->get();
+        }
         return $regs;
     }
 

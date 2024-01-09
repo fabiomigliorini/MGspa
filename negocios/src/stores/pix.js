@@ -6,22 +6,12 @@ import { Notify } from "quasar";
 const sNegocio = negocioStore();
 
 export const pixStore = defineStore("pix", {
-  // persist: {
-  //   paths: ["padrao", "paginaAtual"],
-  // },
-
   state: () => ({
     pixCob: {},
     dialog: {
       detalhesPixCob: false,
     },
   }),
-
-  getters: {
-    quantidadeProdutosAtivos() {
-      // return this.itensAtivos.length;
-    },
-  },
 
   actions: {
     async transmitirPixCob() {
