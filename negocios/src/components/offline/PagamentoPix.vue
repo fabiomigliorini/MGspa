@@ -88,7 +88,7 @@ const imprimir = () => {
   sPix.imprimirPixCob();
 };
 
-const mensagem = () => {
+const textoMensagem = () => {
   var mensagem = "Olá,\n\n";
   mensagem +=
     "Você está recebendo um link para pagamento via PIX de sua compra na *MG Papelaria* no valor de R$ *" +
@@ -101,12 +101,21 @@ const mensagem = () => {
     sPix.pixCob.codpixcob +
     " e siga as instruções:\n\n";
   mensagem += "*Obrigado* pela confiança!";
+  return mensagem;
+};
+const mensagem = () => {
+  const mensagem = textoMensagem();
   navigator.clipboard.writeText(mensagem).then(() => {
     Notify.create({
       type: "positive",
       message: "Mensagem copiada para a área de transferência!",
     });
   });
+};
+
+const whatsapp = () => {
+  const mensagem = textoMensagem();
+  window.open("whatsapp://send?text=" + encodeURI(mensagem));
 };
 </script>
 <template>
@@ -334,10 +343,19 @@ const mensagem = () => {
           />
           <q-btn
             flat
+            label="whatsapp"
+            color="primary"
+            @click="whatsapp()"
+            tabindex="-1"
+            class="mobile-only"
+          />
+          <q-btn
+            flat
             label="Mensagem"
             color="primary"
             @click="mensagem()"
             tabindex="-1"
+            class="desktop-only"
           />
           <q-btn
             flat
