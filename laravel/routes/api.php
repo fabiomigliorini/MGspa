@@ -251,6 +251,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('grupo-economico/{codgrupoeconomico}/totais-negocios', '\Mg\GrupoEconomico\GrupoEconomicoController@totaisNegocios');
         Route::get('grupo-economico/{codgrupoeconomico}/titulos-abertos', '\Mg\GrupoEconomico\GrupoEconomicoController@titulosAbertos');
         Route::get('grupo-economico/{codgrupoeconomico}/nfe-terceiro', '\Mg\GrupoEconomico\GrupoEconomicoController@nfeTerceiro');
+        Route::get('grupo-economico/{codgrupoeconomico}/negocios', '\Mg\GrupoEconomico\GrupoEconomicoController@negocios');
+        Route::get('grupo-economico/{codgrupoeconomico}/top-produtos', '\Mg\GrupoEconomico\GrupoEconomicoController@topProdutos');
 
 
         Route::get('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@show');
