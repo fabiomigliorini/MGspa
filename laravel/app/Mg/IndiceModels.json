@@ -5390,7 +5390,7 @@
     },
     "tblpessoaemail": {
         "tabela": "tblpessoaemail",
-        "campocodigo": "codpessoatelefone",
+        "campocodigo": "codpessoaemail",
         "namespace": "Mg\\Pessoa",
         "classe": "PessoaEmail",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/PessoaEmail.php",
