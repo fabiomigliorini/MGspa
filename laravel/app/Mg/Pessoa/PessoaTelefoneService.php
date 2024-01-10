@@ -23,17 +23,25 @@ class PessoaTelefoneService
 
     public static function update($telefone, $data)
     {
-        if ($telefone->tipo != $data['tipo']) {
-            $data ['verificacao'] = null;
+        if (isset($data['tipo'])) {
+            if ($telefone->tipo != $data['tipo']) {
+                $data ['verificacao'] = null;
+            }
         }
-        if ($telefone->pais != $data['pais']) {
-            $data ['verificacao'] = null;
+        if (isset($data['pais'])) {
+            if ($telefone->pais != $data['pais']) {
+                $data ['verificacao'] = null;
+            }
         }
-        if ($telefone->ddd != $data['ddd']) {
-            $data ['verificacao'] = null;
+        if (isset($data['ddd'])) {
+            if ($telefone->ddd != $data['ddd']) {
+                $data ['verificacao'] = null;
+            }
         }
-        if ($telefone->telefone != $data['telefone']) {
-            $data ['verificacao'] = null;
+        if (isset($data['telefone'])) {
+            if ($telefone->telefone != $data['telefone']) {
+                $data ['verificacao'] = null;
+            }
         }
         $telefone->fill($data);
         $telefone->save();
