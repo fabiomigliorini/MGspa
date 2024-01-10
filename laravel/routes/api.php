@@ -47,6 +47,8 @@ Route::group(['prefix' => 'v1/auth'], function () {
 });
 
 Route::group(['prefix' => 'v1'], function () {
+    // Pessoa
+    Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
 
     // PDV
     Route::group(['prefix' => 'pdv'], function () {
@@ -167,6 +169,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
             Route::post('negocio/{codnegocio}/romaneio/imprimir/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
+            Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
         });
 
         // Allan - daqui pra baixo
@@ -178,8 +181,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
         Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
         Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
-        Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
-
 
         //GrupoCliente
         Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index');
