@@ -48,7 +48,8 @@ class PdvNegocioPrazoService
     {
         $sql = '
             SELECT SUM(saldo) AS saldo,
-                MIN(vencimento) AS vencimento
+                MIN(vencimento) AS vencimento,
+                COUNT(codtitulo) as quantidade
             FROM tbltitulo
             WHERE codpessoa = :codpessoa
             AND saldo <> 0

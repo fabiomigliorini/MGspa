@@ -3,7 +3,7 @@
 namespace Mg\Pessoa;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
+use Mg\Pdv\PdvNegocioPrazoService;
 
 class PessoaResource extends JsonResource
 {
@@ -16,6 +16,9 @@ class PessoaResource extends JsonResource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
+
+        // Saldo em Aberto
+        $ret['aberto'] = PdvNegocioPrazoService::emAberto($this->resource);
 
         // Chave Extrangeira
         $ret['GrupoCliente'] = [
