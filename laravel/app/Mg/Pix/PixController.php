@@ -165,7 +165,7 @@ class PixController
             $request->sort??'horario',
             $request->nome??null,
             $request->cpf??null,
-            $request->negocio??todos,
+            $request->negocio??'todos',
             $valorinicial,
             $valorfinal,
             $horarioinicial,

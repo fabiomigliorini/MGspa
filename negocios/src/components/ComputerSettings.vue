@@ -4,6 +4,7 @@ import { negocioStore } from "stores/negocio";
 import { Dialog } from "quasar";
 import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
 import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
+import SelectPagarMePos from "components/selects/SelectPagarMePos.vue";
 import SelectImpressora from "components/selects/SelectImpressora.vue";
 import SelectPessoa from "components/selects/SelectPessoa.vue";
 
@@ -43,6 +44,12 @@ const toggleSettingsDialog = () => {
               outlined
               v-model="edicao.codestoquelocal"
               label="Local de Estoque"
+            />
+            <select-pagar-me-pos
+              outlined
+              v-model="edicao.codpagarmepos"
+              label="POS Stone/PagarMe"
+              :codestoquelocal="edicao.codestoquelocal"
             />
             <select-natureza-operacao
               outlined

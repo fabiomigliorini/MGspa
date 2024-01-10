@@ -1,52 +1,42 @@
-TODO:
-
-BUG:
-
-- quando abre dialog pra selecionar pessoa, o foco esta no select ele não abre a caixa de pesquisa
-- quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
-- na devolucao botao "marcar todos" está selecionando os itens excluidos do negocio
-- quando altera o cliente, esta limpando o desconto
-- venda para Luiz Junior a vista está pedindo para liberar credito
-- quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
-
 MANDATORY:
 
-- validar se tem itens ativos > 0
-- nao gerar nota com itens inativos
-- nao gerar fechamento com itens inativos
-- nao gerar transferencias com itens inativos
-- bloquear baixar negocio somente para Gerente/Administrador
-- dar permissoes para receber em dinheiro somente para grupo de Caixas/Gerente/Administrador
-- Cancelamento de Negocio
-- fazer geracao da NF normal
-- fazer geracao da NF de Transferencia
-- fazer devolucao
-- fazer baixa de vales automaticamente
-- fazer venda de vale compras
-- fazer liquidacao de negocios
-- fazer tela de fechamento de caixa
-- prancheta de pesquisa de produtos sem codigo (substituir pranchetas impressas)
-- Orcamento em PDF
-- fazer controle das entregas tanto para clientes quanto para transferencias
-- fazer tela para gerenciar cadastro dos PDVs autorizados
+FIXME nao gerar fechamento com itens inativos
+FIXME nao gerar transferencias com itens inativos
+FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
+FIXME Quando expira o token ele precisa dar o refresh automaticamente
 
-DONE:
+TODO Integracao PagarMe
+TODO fazer geracao da NF normal
+TODO fazer geracao da NF de Transferencia
+TODO bloquear baixar negocio somente para Gerente/Administrador
+TODO dar permissoes para receber em dinheiro somente para grupo de Caixas/Gerente/Administrador
+TODO quando entrar na tela, verificar a data da sincronizacao e forcar sincronizacao caso seja muito antiga (1 dia)
+TODO Cancelamento de Negocio
+TODO fazer devolucao
+TODO fazer baixa de vales automaticamente
+TODO fazer venda de vale compras
+TODO fazer liquidacao de negocios
+TODO fazer tela de fechamento de caixa
+TODO prancheta de pesquisa de produtos sem codigo (substituir pranchetas impressas)
+TODO Orcamento em PDF
+TODO fazer controle das entregas tanto para clientes quanto para transferencias
+TODO fazer tela para gerenciar cadastro dos PDVs autorizados
+TODO quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
 
-- romaneio em impressora termica
-- nao deixar fazer transferencia se raiz do cnpj da filial != cnpj do destino
-- nao mostrar itens inativos no romaneio
-- nao gerar movimentacao de estoque para produtos excluidos do negocio
+[X] romaneio em impressora termica
+[X] colocar link para cadastro do produto
+[X] nao deixar fazer transferencia se raiz do cnpj da filial != cnpj do destino
+[X] nao mostrar itens inativos no romaneio
+[X] nao gerar movimentacao de estoque para produtos excluidos do negocio
+[X] BUG quando abre dialog pra selecionar pessoa, o foco esta no select ele não abre a caixa de pesquisa
+[X] BUG na devolucao botao "marcar todos" está selecionando os itens excluidos do negocio
+[X] BUG quando altera o cliente, esta limpando o desconto
+[X] BUG venda para Luiz Junior a vista está pedindo para liberar credito
+[X] FIXME validar se tem itens ativos > 0
+[X] FIXME nao gerar nota com itens inativos
+[X] TODO Integracao PIX
 
 - Pedido
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido' --data-raw 'codnegocio=3304171&codpessoa=1&codpagarmepos=44&valor=0.75&valorparcela=0.75&valorjuros=0&tipo=1&parcelas=1&jurosloja=1&descricao=Negocio+3304171&codfilial=102'
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido/250674/consultar' -X 'POST'
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido/250674' -X 'DELETE'
-
-- QR Code
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/criar-negocio/3304171' -X 'POST'
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/transmitir' -X 'POST'
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/detalhes'
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/consultar' -X 'POST'
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/transmitir' -X 'POST'
-curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pix/cob/72504/imprimir-qr-code'
-curl 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=00020101021226850014br.gov.bcb.pix2563qrcodepix.bb.com.br/pix/v2/de2cc072-78aa-479c-86f1-fca7da1ac1b05204000053039865802BR5913M%20G%20PAPELARIA6005SINOP62070503***630452AD'
+  curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido' --data-raw 'codnegocio=3304171&codpessoa=1&codpagarmepos=44&valor=0.75&valorparcela=0.75&valorjuros=0&tipo=1&parcelas=1&jurosloja=1&descricao=Negocio+3304171&codfilial=102'
+  curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido/250674/consultar' -X 'POST'
+  curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido/250674' -X 'DELETE'

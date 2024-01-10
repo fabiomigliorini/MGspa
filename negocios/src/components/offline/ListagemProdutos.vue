@@ -196,6 +196,10 @@ const recalcularValorTotal = () => {
   }
   edicao.value.valortotal = Math.round(total * 100) / 100;
 };
+
+const linkProduto = (codproduto) => {
+  return process.env.MGLARA_URL + "produto/" + codproduto;
+};
 </script>
 
 <template>
@@ -383,7 +387,7 @@ const recalcularValorTotal = () => {
           <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
           <q-separator />
 
-          <q-card-section>
+          <q-card-section class="q-pb-none">
             <div
               class="absolute"
               style="top: 0; right: 5px; transform: translateY(-42px)"
@@ -496,11 +500,18 @@ const recalcularValorTotal = () => {
                 (Outras)
               </template>
             </div>
-            <div class="text-caption text-grey-7">
-              {{ item.barras }} |
-              {{ item.produto }}
-            </div>
           </q-card-section>
+          <q-item
+            clickable
+            v-ripple
+            :href="linkProduto(item.codproduto)"
+            target="_blank"
+          >
+            <q-item-section class="text-caption text-grey-7">
+              <q-item-label overline>{{ item.barras }}</q-item-label>
+              <q-item-label>{{ item.produto }}</q-item-label>
+            </q-item-section>
+          </q-item>
         </q-card>
       </div>
       <div></div>

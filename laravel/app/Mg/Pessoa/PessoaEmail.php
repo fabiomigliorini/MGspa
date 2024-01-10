@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Feb/2023 12:39:09
+ * Date: 10/Jan/2024 11:31:19
  */
 
 namespace Mg\Pessoa;
@@ -13,13 +13,14 @@ use Mg\Usuario\Usuario;
 class PessoaEmail extends MgModel
 {
     protected $table = 'tblpessoaemail';
-    protected $primaryKey = 'codpessoatelefone';
+    protected $primaryKey = 'codpessoaemail';
 
 
     protected $fillable = [
         'apelido',
         'cobranca',
         'codpessoa',
+        'codverificacao',
         'email',
         'inativo',
         'nfe',
@@ -37,9 +38,10 @@ class PessoaEmail extends MgModel
     protected $casts = [
         'cobranca' => 'boolean',
         'codpessoa' => 'integer',
-        'codpessoatelefone' => 'integer',
+        'codpessoaemail' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'codverificacao' => 'integer',
         'nfe' => 'boolean',
         'ordem' => 'integer'
     ];

@@ -2,7 +2,7 @@
 
 namespace Mg\Negocio;
 
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 use JasperPHP\Instructions;
 use JasperPHP\Report;
@@ -69,6 +69,7 @@ class NegocioComandaService
         foreach ($negocioComanda->NegocioProdutoBarras as $pbComanda) {
             $pb = $pbComanda->replicate();
             $pb->codnegocio = $negocio->codnegocio;
+            $pb->uuid = Str::uuid();
             $pb->save();
         }
 

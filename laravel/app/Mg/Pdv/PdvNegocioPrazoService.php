@@ -15,6 +15,10 @@ class PdvNegocioPrazoService
 
     public static function avaliaLimiteCredito(Pessoa $pessoa, $valor)
     {
+        if ($valor == 0) {
+            return true;
+        }
+
         // se esta com o credito marcado como bloqueado
         if ($pessoa->creditobloqueado) {
             return false;

@@ -39,7 +39,7 @@ class PixBbApiService
           ],
           "chave" => $chave, // [obrigatório] Determina a chave Pix registrada no DICT que será utilizada para a cobrança.
         ];
-        if (!empty($cob->solicitacaopagador)) {
+        if (!empty($solicitacaopagador)) {
             $arr['solicitacaoPagador'] = $solicitacaoPagador;
         }
         if (!empty($cpf)) {
@@ -184,8 +184,12 @@ class PixBbApiService
     public static function qrCode($qrcode)
     {
 
-        $url = 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=' .
-            urlencode($qrcode);
+        // $url = 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=' .
+        //     urlencode($qrcode);
+
+        $url = 'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' .
+        urlencode($qrcode);
+
         $curl = curl_init();
         $opt = [
             CURLOPT_URL => $url,

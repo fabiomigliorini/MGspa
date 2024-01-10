@@ -33,11 +33,11 @@ const maiorQueZeroRule = [
 const salvar = () => {
   var valortroco = null;
   if (valorSaldo.value < 0) {
-    valortroco = Math.abs(valorSaldo);
+    valortroco = Math.round(Math.abs(valorSaldo.value * 100)) / 100;
   }
   sNegocio.dialog.pagamentoDinheiro = false;
   sNegocio.adicionarPagamento(
-    1010, // codformapagamento Dinheiro
+    parseInt(process.env.CODFORMAPAGAMENTO_DINHEIRO), // codformapagamento Dinheiro
     1, // tipo Dinheiro
     valorPagamento.value,
     null, // valorjuros
@@ -120,7 +120,6 @@ const salvar = () => {
                   :class="valorSaldoClass"
                   class="text-h2 text-weight-bolder text-right"
                 >
-                  <small class="text-h5 text-grey">R$ </small>
                   {{
                     new Intl.NumberFormat("pt-BR", {
                       style: "decimal",
