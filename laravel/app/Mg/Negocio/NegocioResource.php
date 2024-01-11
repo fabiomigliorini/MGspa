@@ -3,6 +3,7 @@
 namespace Mg\Negocio;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
+use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 
 class NegocioResource extends Resource
@@ -32,6 +33,7 @@ class NegocioResource extends Resource
         $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS);
         $ret['pagamentos'] = NegocioFormaPagamentoResource::collection($this->NegocioFormaPagamentoS);
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());
+        $ret['PagarMePedidoS'] = PagarMePedidoResource::collection($this->PagarMePedidoS()->orderBy('criacao', 'desc')->get());
         return $ret;
     }
 }

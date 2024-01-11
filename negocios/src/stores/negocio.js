@@ -19,11 +19,12 @@ export const negocioStore = defineStore("negocio", {
       valores: false,
       pagamentoDinheiro: false,
       pagamentoPix: false,
+      pagamentoPagarMe: false,
     },
     padrao: {
-      codestoquelocal: 101001,
+      codestoquelocal: null,
       codpessoa: 1,
-      codnaturezaoperacao: 1,
+      codnaturezaoperacao: null,
       impressora: null,
       codpagarmepos: null,
     },
@@ -60,7 +61,7 @@ export const negocioStore = defineStore("negocio", {
           .map((item) => item.valorpagamento)
           .reduce((prev, curr) => prev + curr, 0);
       }
-      return this.negocio.valortotal - pagamentos;
+      return Math.round((this.negocio.valortotal - pagamentos) * 100) / 100;
     },
   },
 
@@ -724,6 +725,53 @@ export const negocioStore = defineStore("negocio", {
           db.negocio.put(ret);
           this.atualizarListagem();
           return ret.pixCob[0];
+        }
+      } catch (error) {
+        console.log(erro);
+      }
+    },
+
+    async criarPagarMePedido(
+      codpagarmepos,
+      valor,
+      valorparcela,
+      valorjuros,
+      tipo,
+      parcelas,
+      jurosloja
+    ) {
+      if (!this.negocio.sincronizado) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Impossível criar Cobrança Stone/PagarMe em um negócio não sincronizado com o servidor!",
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      try {
+        const descricao = "Negocio " + this.negocio.codnegocio;
+        const ret = await sSinc.criarPagarMePedido(
+          this.negocio.codnegocio,
+          this.negocio.codpessoa,
+          codpagarmepos,
+          valor,
+          valorparcela,
+          valorjuros,
+          tipo,
+          parcelas,
+          jurosloja,
+          descricao
+        );
+        if (ret.codnegocio) {
+          Notify.create({
+            type: "positive",
+            message: "Cobrança Pagar Me/Stone Criada!",
+          });
+          this.negocio = ret;
+          db.negocio.put(ret);
+          this.atualizarListagem();
+          return ret.PagarMePedidoS[0];
         }
       } catch (error) {
         console.log(erro);

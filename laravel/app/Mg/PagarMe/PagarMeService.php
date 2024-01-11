@@ -44,14 +44,14 @@ class PagarMeService
         'failed' => 4
     ];
 
-    public static function buscaFilial (string $id)
+    public static function buscaFilial(string $id)
     {
         $reg = Filial::where('pagarmeid', $id)->first();
         return $reg;
     }
 
     // Cadastra se POS novo
-    public static function buscaOuCriaPos (int $codfilial, string $serial)
+    public static function buscaOuCriaPos(int $codfilial, string $serial)
     {
         $reg = PagarMePos::firstOrNew([
             'codfilial' => $codfilial,
@@ -66,7 +66,7 @@ class PagarMeService
     }
 
     // Cadastra se Bandeira nova
-    public static function buscaOuCriaBandeira (string $scheme)
+    public static function buscaOuCriaBandeira(string $scheme)
     {
         $reg = PagarMeBandeira::firstOrNew([
             'scheme' => $scheme
@@ -79,11 +79,12 @@ class PagarMeService
     }
 
     // Altera ou Cadastra pedido
-    public static function alteraOuCriaPedido (
+    public static function alteraOuCriaPedido(
         int $codfilial,
         string $idpedido,
         int $status,
         ?int $codnegocio,
+        ?int $codpdv,
         ?int $codpagarmepos,
         ?int $codpessoa,
         ?string $descricao,
@@ -97,7 +98,7 @@ class PagarMeService
         ?float $valorparcela,
         ?float $valorpago,
         ?float $valorcancelado
-    ){
+    ) {
         $reg = PagarMePedido::firstOrNew([
             'codfilial' => $codfilial,
             'idpedido' => $idpedido,
@@ -105,6 +106,9 @@ class PagarMeService
         $reg->status = $status;
         if (!empty($codnegocio)) {
             $reg->codnegocio = $codnegocio;
+        }
+        if (!empty($codpdv)) {
+            $reg->codpdv = $codpdv;
         }
         $reg->codpagarmepos = $codpagarmepos;
         if (!empty($codpessoa)) {
@@ -148,7 +152,7 @@ class PagarMeService
     // Confere Totais do pedido
     // Vale o maior entre o que veio no objeto order do WebHook e a soma dos PagarMePagamentoS
     // E executado pra corrigir BUG quando webhook do cancelamento chega antes do webhook do pagamento
-    public static function confereTotaisPedido (PagarMePedido $ped)
+    public static function confereTotaisPedido(PagarMePedido $ped)
     {
         $ped = $ped->fresh();
         $pag = $ped->PagarMePagamentoS()->sum('valorpagamento');
@@ -167,7 +171,7 @@ class PagarMeService
         return true;
     }
 
-    public static function criarPedido (
+    public static function criarPedido(
         ?int $codfilial,
         int $codpagarmepos,
         int $tipo,
@@ -179,6 +183,7 @@ class PagarMeService
         bool $jurosloja,
         ?string $descricao,
         ?int $codnegocio,
+        ?int $codpdv,
         ?int $codpessoa
     ) {
 
@@ -215,7 +220,7 @@ class PagarMeService
 
         $ret = $api->postOrders(
             $pes->pessoa,
-            $pes->email??'nfe@mgpapelaria.com.br',
+            $pes->email ?? 'nfe@mgpapelaria.com.br',
             $valortotal,
             $descricao,
             1,
@@ -224,14 +229,15 @@ class PagarMeService
             $pos->serial,
             static::TYPE_DESCRIPTION[$tipo],
             $parcelas,
-            $jurosloja?'merchant':'issuer'
+            $jurosloja ? 'merchant' : 'issuer'
         );
 
-        $ped = static::alteraOuCriaPedido (
+        $ped = static::alteraOuCriaPedido(
             $codfilial,
             $api->response->id,
             static::STATUS_NUMBER[$api->response->status],
             $codnegocio,
+            $codpdv,
             $codpagarmepos,
             $codpessoa,
             $descricao,
@@ -248,10 +254,9 @@ class PagarMeService
         );
 
         return $ped;
-
     }
 
-    public static function cancelarPedido (PagarmePedido $ped)
+    public static function cancelarPedido(PagarmePedido $ped)
     {
         if ($ped->status != 1) {
             throw new \Exception("Pedido não consta como pendente! Status {$ped->status}!", 1);
@@ -272,7 +277,7 @@ class PagarMeService
         return $ped->fresh();
     }
 
-    public static function cancelarPedidosAbertosPos (int $codpagarmepos)
+    public static function cancelarPedidosAbertosPos(int $codpagarmepos)
     {
         $peds = PagarMePedido::where([
             'codpagarmepos' => $codpagarmepos,
@@ -288,7 +293,7 @@ class PagarMeService
         return true;
     }
 
-    public static function fecharPedidoSePago (PagarmePedido $ped)
+    public static function fecharPedidoSePago(PagarmePedido $ped)
     {
 
         if ($ped->valorpagoliquido < $ped->valor) {
@@ -339,8 +344,38 @@ class PagarMeService
             $fp->save();
         }
         $nfp->codformapagamento = $fp->codformapagamento;
+        $nfp->avista = true;
         $nfp->valorpagamento = $ped->valorpagoliquido;
         $nfp->valorjuros = $ped->valorjuros;
+        $nfp->valortroco = null;
+        foreach ($ped->PagarMePagamentoS as $pag) {
+            if ($pag->valorcancelamento) {
+                continue;
+            }
+            switch ($pag->tipo) {
+                case 1: //debit
+                    $nfp->tipo = 4; //Cartão de Débito
+                    break;
+                case 2: //credit
+                    $nfp->tipo = 3; //Cartão de Crédito
+                    break;
+                case 3: //voucher
+                    $nfp->tipo = 3; //Cartão de Crédito
+                    break;
+                case 4: //prepaid
+                    $nfp->tipo = 3; //Cartão de Crédito
+                    break;
+                default:
+                    $nfp->tipo = 99; //Outros
+                    break;
+            }
+            $nfp->autorizacao = $pag->autorizacao;
+            $nfp->bandeira = static::converteBandeiraPagarMeParaBandeiraNfe(
+                $pag->PagarMeBandeira->bandeira
+            );
+        }
+        $nfp->integracao = true;
+        $nfp->codpessoa = env('PAGAR_ME_CODPESSOA');
         if ($nfp->valorpagamento > 0) {
             $nfp->save();
         } elseif (!empty($nfp->codnegocioformapagamento)) {
@@ -352,7 +387,34 @@ class PagarMeService
         return true;
     }
 
-    public static function alteraOuCriaPagamento (
+    public static function converteBandeiraPagarMeParaBandeiraNfe($bandeiraPagarMe)
+    {
+        switch (strtoupper($bandeiraPagarMe)) {
+            case 'VISA':
+                return 1; // Visa
+            case 'MASTERCARD':
+                return 2; // Mastercard
+            case 'AMERICANEXPRESS':
+                return 3; // American Express
+            case 'SOROCRED':
+                return 4; // Sorocred
+            case 'DINERSCLUB':
+                return 5; // Diners Club
+            case 'ELO':
+                return 6; // Elo
+            case 'HIPERCARD':
+                return 7; // Hipercard
+            case 'AURA':
+                return 8; // Aura
+            case 'CABAL':
+                return 9; // Cabal
+            case 'TICKET':
+            default:
+                return 99; //Outros
+        }
+    }
+
+    public static function alteraOuCriaPagamento(
         string $idtransacao,
         int $codfilial,
         ?string $codpagarmepos,
@@ -368,7 +430,7 @@ class PagarMeService
         ?string $transacao,
         ?string $status,
         ?float $valor
-    ){
+    ) {
 
         // Busca na filial transacao com aquele id
         $pp = PagarMePagamento::firstOrNew([
@@ -408,17 +470,15 @@ class PagarMeService
                 $pp->valorpagamento = null;
                 $pp->valorcancelamento = $valor;
                 break;
-
         }
 
         // salva
         $pp->save();
 
         return $pp;
-
     }
 
-    public static function consultarPedido (PagarmePedido $ped)
+    public static function consultarPedido(PagarmePedido $ped)
     {
 
         $api = new PagarMeApi($ped->Filial->pagarmesk);
@@ -432,7 +492,7 @@ class PagarMeService
         $ped->valor = $ped->valortotal - $ped->valorjuros;
         $valorpago = null;
         $valorcancelado = null;
-        foreach ($api->response->charges??[] as $charge) {
+        foreach ($api->response->charges ?? [] as $charge) {
             if (isset($charge->paid_amount)) {
                 $valorpago += $charge->paid_amount / 100;
             }
@@ -453,8 +513,8 @@ class PagarMeService
                     $pos->codpagarmepos,
                     $charge->metadata->scheme_name,
                     ($charge->metadata->installment_type == 'MerchantFinanced'),
-                    $charge->metadata->installment_quantity??1,
-                    static::TYPE_NUMBER[strtolower($charge->metadata->account_funding_source)]??1,
+                    $charge->metadata->installment_quantity ?? 1,
+                    static::TYPE_NUMBER[strtolower($charge->metadata->account_funding_source)] ?? 1,
                     $ped->codpagarmepedido,
                     $charge->metadata->authorization_code,
                     $charge->metadata->initiator_transaction_key,
@@ -478,7 +538,4 @@ class PagarMeService
 
         return $ped->fresh();
     }
-
-
-
 }

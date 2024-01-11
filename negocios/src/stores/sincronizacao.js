@@ -515,5 +515,47 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         return false;
       }
     },
+
+    async criarPagarMePedido(
+      codnegocio,
+      codpessoa,
+      codpagarmepos,
+      valor,
+      valorparcela,
+      valorjuros,
+      tipo,
+      parcelas,
+      jurosloja,
+      descricao
+    ) {
+      try {
+        const { data } = await api.post("/api/v1/pdv/pagar-me/pedido/", {
+          pdv: this.pdv.uuid,
+          codnegocio,
+          codpessoa,
+          codpagarmepos,
+          valor,
+          valorparcela,
+          valorjuros,
+          tipo,
+          parcelas,
+          jurosloja,
+          descricao,
+        });
+        return data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
   },
 });

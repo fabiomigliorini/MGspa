@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 
 use Mg\Negocio\NegocioResource;
 use Mg\Negocio\Negocio;
+use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixService;
+use Mg\PagarMe\PagarMeService;
+use Mg\PagarMe\PagarMePedido;
 
 class PdvController
 {
@@ -134,4 +137,35 @@ class PdvController
         PixService::criarPixCobPdv($request->valor, $pdv, $negocio);
         return new NegocioResource($negocio);
     }
+
+    public function criarPagarMePedido(PdvRequest $request)
+    {
+        $data = (object) $request->all();
+        $pdv = PdvService::autoriza($request->pdv);
+        $negocio = Negocio::findOrFail($request->codnegocio);
+        PagarMeService::cancelarPedidosAbertosPos($data->codpagarmepos);
+        PagarMeService::criarPedido(
+            null,
+            $data->codpagarmepos,
+            $data->tipo,
+            $data->valor,
+            $data->valorjuros??0,
+            ($data->valorjuros??0) + ($data->valor??0),
+            $data->valorparcela??0,
+            $data->parcelas,
+            $data->jurosloja,
+            $data->descricao,
+            $data->codnegocio,
+            $pdv->codpdv,
+            $data->codpessoa
+        );
+        return new NegocioResource($negocio);
+    }
+
+    public function consultarPagarMePedido($codpagarmepedido)
+    {
+        $pedido = PagarMePedido::findOrFail($codpagarmepedido);
+        $pedido = PagarMeService::consultarPedido($pedido);
+        return new PagarMePedidoResource($pedido);
+    }    
 }

@@ -42,6 +42,7 @@ class PagarMeController extends MgController
             $data->jurosloja,
             $data->descricao,
             $data->codnegocio,
+            null,
             $data->codpessoa
         );
         // PagarMeWebhookJob::dispatch($arquivo);

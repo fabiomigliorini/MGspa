@@ -3,8 +3,10 @@ import { ref, computed } from "vue";
 import { Dialog } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
+import { pagarMeStore } from "stores/pagar-me";
 import PagamentoDinheiro from "components/offline/PagamentoDinheiro.vue";
 import PagamentoPix from "components/offline/PagamentoPix.vue";
+import PagamentoPagarMe from "components/offline/PagamentoPagarMe.vue";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpj } from "../../utils/formatador.js";
 import moment from "moment/min/moment-with-locales";
@@ -12,6 +14,7 @@ moment.locale("pt-br");
 
 const sNegocio = negocioStore();
 const sPix = pixStore();
+const sPagarMe = pagarMeStore();
 
 const edicao = ref({
   valorprodutos: null,
@@ -118,9 +121,18 @@ const dialogPagamentoPix = () => {
   sNegocio.dialog.pagamentoPix = true;
 };
 
+const dialogPagamentoPagarMe = () => {
+  sNegocio.dialog.pagamentoPagarMe = true;
+};
+
 const dialogDetalhesPixCob = (pixCob) => {
   sPix.pixCob = pixCob;
   sPix.dialog.detalhesPixCob = true;
+};
+
+const dialogDetalhesPagarMePedido = (ped) => {
+  sPagarMe.pedido = ped;
+  sPagarMe.dialog.detalhesPedido = true;
 };
 
 const excluirPagamento = (pag) => {
@@ -141,8 +153,28 @@ const qrCodeColor = (cob) => {
   }
   return "warning";
 };
+
+const creditCardColor = (ped) => {
+  // paid
+  if (ped.status == 2) {
+    return "secondary";
+  }
+  if (ped.status == 3) {
+    return "grey";
+  }
+  return "warning";
+};
+
+const creditCardColorPagamento = (pag) => {
+  // cancelamento
+  if (pag.valorcancelamento) {
+    return "negative";
+  }
+  return "secondary";
+};
 </script>
 <template>
+  <!-- <pre>{{ sNegocio.negocio }}</pre> -->
   <!-- Editar Valores Desconto / Frete / etc -->
   <q-dialog v-model="sNegocio.dialog.valores">
     <q-card style="width: 350px; max-width: 80vw">
@@ -275,6 +307,8 @@ const qrCodeColor = (cob) => {
 
   <pagamento-dinheiro />
   <pagamento-pix />
+  <pagamento-pagar-me />
+
   <template v-if="sNegocio.negocio">
     <q-list dense class="q-mt-md">
       <q-item
@@ -384,6 +418,7 @@ const qrCodeColor = (cob) => {
         </q-item-section>
       </q-item>
 
+      <!-- TOTAL -->
       <q-item
         @click="editarValores()"
         v-ripple
@@ -396,18 +431,17 @@ const qrCodeColor = (cob) => {
             leave-active-class="animated bounceOut"
             enter-active-class="animated bounceIn"
           >
-            <q-item-label
-              class="text-h2 text-primary text-weight-bolder"
-              :key="sNegocio.negocio.valortotal"
-            >
-              <small class="text-h5 text-grey">R$ </small>
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valortotal)
-              }}
+            <q-item-label class="" :key="sNegocio.negocio.valortotal">
+              <span class="float-left text-grey">R$ </span>
+              <span class="text-h3 text-primary text-weight-bolder">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(sNegocio.negocio.valortotal)
+                }}
+              </span>
             </q-item-label>
           </Transition>
         </q-item-section>
@@ -434,14 +468,16 @@ const qrCodeColor = (cob) => {
                   @click="excluirPagamento(pag)"
                   icon="delete"
                   size="sm"
-                  v-if="!pag.integracao"
+                  v-if="
+                    !pag.integracao && sNegocio.negocio.codnegociostatus == 1
+                  "
                 />
               </q-item-label>
             </q-item-section>
           </q-item>
         </template>
         <!-- <q-item v-if="1 == 1"> -->
-        <q-item v-if="sNegocio.negocio.pagamentos.length > 0">
+        <q-item v-if="sNegocio.valorapagar != 0">
           <q-item-section>
             <q-item-label caption>{{ valorSaldoLabel }}</q-item-label>
           </q-item-section>
@@ -461,7 +497,9 @@ const qrCodeColor = (cob) => {
     </q-list>
     <q-list
       class="q-pa-md q-gutter-sm text-right"
-      v-if="sNegocio.negocio.financeiro"
+      v-if="
+        sNegocio.negocio.financeiro && sNegocio.negocio.codnegociostatus == 1
+      "
     >
       <q-btn
         round
@@ -471,13 +509,19 @@ const qrCodeColor = (cob) => {
       >
         <q-tooltip class="bg-accent">Dinheiro</q-tooltip>
       </q-btn>
-      <q-btn round icon="credit_card" color="primary">
+      <q-btn
+        round
+        icon="credit_card"
+        @click="dialogPagamentoPagarMe()"
+        color="primary"
+      >
         <q-tooltip class="bg-accent">Cartão</q-tooltip>
       </q-btn>
       <q-btn round icon="pix" @click="dialogPagamentoPix()" color="primary">
         <q-tooltip class="bg-accent">PIX</q-tooltip>
       </q-btn>
     </q-list>
+
     <q-list>
       <q-item
         v-for="cob in sNegocio.negocio.pixCob"
@@ -527,6 +571,115 @@ const qrCodeColor = (cob) => {
           </q-item-section>
         </template>
       </q-item>
+
+      <template
+        v-for="ped in sNegocio.negocio.PagarMePedidoS"
+        :key="ped.codpagarmepedido"
+      >
+        <template v-if="ped.status != 2">
+          <q-item clickable v-ripple @click="dialogDetalhesPagarMePedido(ped)">
+            <q-item-section avatar top>
+              <q-btn round :color="creditCardColor(ped)" icon="credit_card" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label lines="1">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valor)
+                }}
+              </q-item-label>
+              <q-item-label caption>
+                <span class="text-uppercase">
+                  {{ ped.tipodescricao }}
+                </span>
+                <span v-if="ped.parcelas > 1">
+                  em {{ ped.parcelas }}
+                  parcelas de R$
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "decimal",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(ped.valorparcela)
+                  }}
+                  <span v-if="ped.valorjuros"> (C/Juros) </span>
+                </span>
+                | POS {{ ped.apelido }} |
+                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
+                {{ moment(ped.criacao).fromNow() }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+        <template v-else>
+          <q-item
+            clickable
+            v-ripple
+            @click="dialogDetalhesPagarMePedido(ped)"
+            v-for="pag in ped.PagarMePagamentoS"
+            :key="pag.codpagarmepagamento"
+          >
+            <q-item-section avatar top>
+              <q-btn
+                round
+                :color="creditCardColorPagamento(pag)"
+                icon="credit_card"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label lines="1" v-if="pag.valorpagamento">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(pag.valorpagamento)
+                }}
+              </q-item-label>
+              <q-item-label
+                lines="1"
+                v-if="pag.valorcancelamento"
+                class="text-negative"
+              >
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(pag.valorcancelamento)
+                }}
+                Cancelamento
+              </q-item-label>
+              <q-item-label caption>
+                <span>
+                  {{ pag.nome }}
+                  {{ pag.tipodescricao }}
+                  <template v-if="pag.parcelas > 1">
+                    {{ pag.parcelas }} Parcelas
+                  </template>
+                  <q-tooltip>
+                    {{ pag.bandeira }}
+                    Autorização {{ pag.autorizacao }}
+                  </q-tooltip>
+                </span>
+                <span>
+                  {{ moment(pag.transacao).fromNow() }}
+                  <q-tooltip>
+                    {{ moment(pag.transacao).format("LLLL") }}
+                  </q-tooltip>
+                </span>
+                <span>
+                  {{ pag.apelido }}
+                  <q-tooltip> Serial {{ pag.pos }} </q-tooltip>
+                </span>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </template>
     </q-list>
   </template>
 </template>

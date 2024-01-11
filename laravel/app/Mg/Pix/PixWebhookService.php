@@ -36,6 +36,7 @@ class PixWebhookService
         */
     }
 
+    /*
     public static function parseChargePaid(object $obj)
     {
         // Filial
@@ -122,4 +123,5 @@ class PixWebhookService
         // retorna o pagamento
         return $pp;
     }
+    */
 }

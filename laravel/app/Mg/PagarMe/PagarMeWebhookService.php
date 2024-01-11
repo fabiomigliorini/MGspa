@@ -64,6 +64,7 @@ class PagarMeWebhookService
             $obj->data->order->id,
             PagarMeService::STATUS_NUMBER[$obj->data->status],
             null,
+            null,
             $pos->codpagarmepos??null,
             null,
             null,
