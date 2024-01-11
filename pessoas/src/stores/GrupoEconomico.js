@@ -79,5 +79,16 @@ export const GrupoEconomicoStore = defineStore('grupoeconomico', {
       const ret = await api.delete('v1/grupoeconomico/' + codgrupoeconomico + '/inativo');
       return ret;
     },
+
+    async getNegocios(codgrupoeconomico, codpessoa) {
+      const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/negocios', {params: codpessoa});
+      return ret;
+    },
+
+    async getTopProdutos(codgrupoeconomico, codpessoa) {
+      const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/top-produtos', {params: codpessoa});
+      return ret;
+    },
+
   }
 })

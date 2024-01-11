@@ -6,7 +6,8 @@
         <template #content>
             <q-page class="bg-white ">
                 <div class="row q-py-md q-pr-md">
-                    <div class="col-lg-4 col-md-8 col-sm-12 col-xs-12 q-pl-md">
+                    <!-- <div class="col-lg-4 col-md-8 col-sm-12 col-xs-12 q-pl-md"> -->
+                    <div class="col-md-8 col-sm-12 col-xs-12 q-pl-md">
 
                         <!--  DETALHES PESSOA -->
                         <div class="q-pb-md">
@@ -20,14 +21,12 @@
                             </card-cliente>
                         </div>
 
-                       
-                        <div class="q-pb-md">
-                <tabela-totais-negocios :totais-negocios="totalNegocioPessoa" v-on:update:totais-negocios="updateTabelaNegocio($event)">
-                </tabela-totais-negocios>
-
+                          <!-- Histórico de cobrança -->
+                          <div class="q-pb-md">
+                            <card-historico-cobranca>
+                            </card-historico-cobranca>
                         </div>
-
-
+                        
                     </div>
 
                     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 q-pl-md">
@@ -60,14 +59,10 @@
                             <card-certidoes></card-certidoes>
                         </div>
 
-                         <!-- Histórico de cobrança -->
-                         <div class="q-pb-md">
-                            <card-historico-cobranca>
-                            </card-historico-cobranca>
-                        </div>
+                      
                     </div>
                 </div>
-                
+
 
             </q-page>
         </template>
@@ -94,13 +89,12 @@ export default defineComponent({
         CardHistoricoCobranca: defineAsyncComponent(() => import('components/pessoa/CardHistoricoCobranca.vue')),
         CardRegistroSpc: defineAsyncComponent(() => import('components/pessoa/CardRegistroSpc.vue')),
         CardCertidoes: defineAsyncComponent(() => import('components/pessoa/CardCertidoes.vue')),
-        TabelaTotaisNegocios: defineAsyncComponent(() => import('components/pessoa/TabelaTotaisNegocios.vue')),
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))
     },
 
     methods: {
         updateTabelaNegocio(event) {
-        this.totalNegocioPessoa = event
+            this.totalNegocioPessoa = event
         },
     },
 
@@ -112,11 +106,11 @@ export default defineComponent({
         const totalNegocioPessoa = ref([])
         const sGrupoEconomico = GrupoEconomicoStore()
 
-        onMounted(async() => {
+        onMounted(async () => {
             //   $q.loading.show({})
             const get = sPessoa.get(route.params.id)
             //    $q.loading.hide()
-            const ret = await sPessoa.totaisNegocios(1, {codpessoa: route.params.id})
+            const ret = await sPessoa.totaisNegocios(1, { codpessoa: route.params.id })
             totalNegocioPessoa.value = ret.data
         })
 

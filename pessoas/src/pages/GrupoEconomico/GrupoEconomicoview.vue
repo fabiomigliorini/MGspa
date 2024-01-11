@@ -56,20 +56,46 @@
                     </q-toolbar>
                 </q-item>
             </q-card>
-            <div class="row q-pl-md">
-                <div class="col-md-3 col-sm-6 col-xs-12 col-lg-3 col-xl-2 q-pr-md q-pb-md"
+
+            <div class="row">
+
+                <div class="q-pa-md col-md-12 col-lg-12 col-xs-12">
+                    <grafico-negocios>
+
+                    </grafico-negocios>
+                </div>
+
+                <div class="col-md-3 col-sm-6 col-xs-12 col-lg-3 col-xl-2 q-pr-md q-pb-md q-pl-md"
                     v-for="pessoa in CardPessoasGrupo" v-bind:key="pessoa.codpessoa">
                     <card-pessoas :listagempessoas="pessoa"></card-pessoas>
                 </div>
 
             </div>
-            <div class="q-pa-md">
-                <tabela-totais-negocios :totaisNegocios="totaisNegocios" v-on:update:totais-negocios="updateTabelaNegocio($event)">
-                </tabela-totais-negocios>
+
+            <div class="row">
+                <div class="q-pa-md col-md-8 col-xl-8 col-xs-12 q-pt-md">
+                    <tabela-totais-negocios :totaisNegocios="totaisNegocios"
+                        v-on:update:totais-negocios="updateTabelaNegocio($event)">
+                    </tabela-totais-negocios>
+                </div>
+                <div class="q-pa-md col-md-4 col-lg-4 col-xs-12 q-pt-md">
+                    <grafico-top-10-produtos>
+
+                    </grafico-top-10-produtos>
+                </div>
             </div>
-            <!-- <div v-for="pessoa in CardPessoasGrupo" v-bind:key="pessoa.codpessoa">
-                
-            </div> -->
+
+
+            <div class="q-pa-md">
+                <tabela-titulos-abertos :titulos-abertos="titulosAbertos"
+                    v-on:update:titulos-abertos="updateTitulosAbertos($event)">
+                </tabela-titulos-abertos>
+            </div>
+
+            <div class="q-pa-md">
+                <tabela-nfe-terceiro :nfe-terceiro="nfeTerceiro" v-on:update:nfe-terceiro="updateNfeTerceiro($event)">
+                </tabela-nfe-terceiro>
+            </div>
 
             <!-- DIALOG EDITAR GRUPO ECONOMICO -->
             <q-dialog v-model="DialogGrupoEconomico">
@@ -108,28 +134,27 @@ export default defineComponent({
     components: {
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
         CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),
-        TabelaTotaisNegocios: defineAsyncComponent(() => import('components/pessoa/TabelaTotaisNegocios.vue')),
+        TabelaTotaisNegocios: defineAsyncComponent(() => import('components/grupoEconomico/TabelaTotaisNegocios.vue')),
+        TabelaTitulosAbertos: defineAsyncComponent(() => import('components/grupoEconomico/TabelaTitulosAbertos.vue')),
+        TabelaNfeTerceiro: defineAsyncComponent(() => import('components/grupoEconomico/TabelaNfeTerceiro.vue')),
+        GraficoNegocios: defineAsyncComponent(() => import('components/grupoEconomico/GraficoNegocios.vue')),
+        GraficoTop10Produtos: defineAsyncComponent(() => import('components/grupoEconomico/GraficoTop10Produtos.vue')),
+
+
     },
 
     methods: {
 
         updateTabelaNegocio(event) {
-        this.totaisNegocios = event
+            this.totaisNegocios = event
         },
 
-        async totaisNegociosGrupo() {
-            try {
-                const ret = await this.sPessoa.totaisNegocios(this.route.params.id)
-                this.totaisNegocios = ret.data
+        updateTitulosAbertos(event) {
+            this.titulosAbertos = event
+        },
 
-            } catch (error) {
-                this.$q.notify({
-                    color: 'red-5',
-                    textColor: 'white',
-                    icon: 'error',
-                    message: error.response.data.message ?? 'Erro ao carregar negócios'
-                })
-            }
+        updateNfeTerceiro(event) {
+            this.nfeTerceiro = event
         },
 
         async inativarGrupo(codgrupoeconomico) {
@@ -262,11 +287,33 @@ export default defineComponent({
         const CardPessoasGrupo = ref([])
         const user = guardaToken()
         const totaisNegocios = ref([])
+        const titulosAbertos = ref([])
+        const nfeTerceiro = ref([])
+
+        const totaisNegociosGrupo = async () => {
+            try {
+                // const ret = await sPessoa.totaisNegocios(route.params.id)
+                // totaisNegocios.value = ret.data
+
+                const retTitulos = await sPessoa.titulosAbertos(route.params.id)
+                titulosAbertos.value = retTitulos.data
+
+            } catch (error) {
+                $q.notify({
+                    color: 'red-5',
+                    textColor: 'white',
+                    icon: 'error',
+                    message: error.response.data.message ?? 'Erro ao carregar nfe Terceiro'
+                })
+            }
+
+        }
 
         onMounted(async () => {
             const ret = await sGrupoEconomico.getGrupoEconomico(route.params.id)
             CardPessoasGrupo.value = ret.data.data.PessoasdoGrupo
             GrupoEconomico.value = ret.data.data
+            totaisNegociosGrupo()
         })
 
         return {
@@ -275,7 +322,9 @@ export default defineComponent({
             router,
             user,
             sPessoa,
+            titulosAbertos,
             totaisNegocios,
+            nfeTerceiro,
             Documentos,
             DialogGrupoEconomico: ref(false),
             modelEditarGrupo: ref([]),
@@ -302,9 +351,6 @@ export default defineComponent({
             },
         }
     },
-    mounted() {
-        this.totaisNegociosGrupo()
-    }
 })
 </script>
   

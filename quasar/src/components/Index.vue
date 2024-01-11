@@ -53,8 +53,8 @@ export default {
       }
         vm.$axios.get('auth/user').then(response => {
           // salva código da imagem avatar do usuário
-          localStorage.setItem('auth.usuario.usuario', response.data.usuario)
-          localStorage.setItem('auth.usuario.codusuario', response.data.codusuario)
+          localStorage.setItem('auth.usuario.usuario', response.data.data.usuario)
+          localStorage.setItem('auth.usuario.codusuario', response.data.data.codusuario)
           this.$store.commit('perfil/updatePerfil', {
             usuario: localStorage.getItem('auth.usuario.usuario'),
             avatar: localStorage.getItem('auth.usuario.avatar'),

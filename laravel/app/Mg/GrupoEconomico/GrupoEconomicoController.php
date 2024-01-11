@@ -130,5 +130,25 @@ class GrupoEconomicoController extends MgController
 
     }
 
+    public function negocios(Request $request, $codgrupoeconomico)
+    {
+
+        $codpessoa = $request->codpessoa??null;
+        $negocios = GrupoEconomicoService::negocios($codpessoa, $codgrupoeconomico);
+        return response()->json($negocios, 200);
+
+    }
+
+    public function topProdutos(Request $request, $codgrupoeconomico)
+    {
+
+    $codpessoa = $request->codpessoa??null;
+    $desde = $request->desde??null;
+
+    $topProdutos = GrupoEconomicoService::topProdutos($codpessoa, $codgrupoeconomico, $desde);
+
+    return response()->json($topProdutos, 200);
+
+    }
 
 }

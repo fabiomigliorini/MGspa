@@ -123,9 +123,9 @@ class PessoaController extends MgController
             ]);
         }
         
-        $this->validate($request, [
-            'cnpj' => 'required|cpf_cnpj'
-        ]);
+        // $this->validate($request, [
+        //     'cnpj' => 'required|cpf_cnpj'
+        // ]);
 
 
         $pessoa = Pessoa::findOrFail($codpessoa);

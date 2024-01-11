@@ -32,7 +32,7 @@ class PessoaEnderecoController extends MgController
         // return new PessoaEnderecoResource($pe);
     }
 
-    public function show($codpessoaendereco)
+    public function show($codpessoa, $codpessoaendereco)
     {
         $pe = PessoaEndereco::findOrFail($codpessoaendereco);
         return PessoaEnderecoResource::collection($pe);

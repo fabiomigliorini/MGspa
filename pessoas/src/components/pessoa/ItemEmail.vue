@@ -70,26 +70,26 @@
                 <div class="row">
 
                   <q-btn v-if="!element.verificacao && user.verificaPermissaoUsuario('Financeiro')" label="Verificar" color="blue" flat size="sm" dense
-                    @click="enviarEmail(element.email, element.codpessoatelefone)" />
+                    @click="enviarEmail(element.email, element.codpessoaemail)" />
 
                   <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
                     <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="edit"
-                      @click="editarEmail(element.codpessoatelefone, element.email, element.apelido, element.verificacao, element.nfe, element.cobranca), emailNovo = false">
+                      @click="editarEmail(element.codpessoaemail, element.email, element.apelido, element.verificacao, element.nfe, element.cobranca), emailNovo = false">
                     </q-btn>
 
                     <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="delete"
-                      @click="excluirEmail(element.codpessoatelefone)">
+                      @click="excluirEmail(element.codpessoaemail)">
                     </q-btn>
 
                     <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat round
-                      icon="pause" @click="inativar(element.codpessoa, element.codpessoatelefone)">
+                      icon="pause" @click="inativar(element.codpessoa, element.codpessoaemail)">
                       <q-tooltip transition-show="scale" transition-hide="scale">
                         Inativar
                       </q-tooltip>
                     </q-btn>
 
                     <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat round
-                      icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoatelefone)">
+                      icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoaemail)">
                       <q-tooltip transition-show="scale" transition-hide="scale">
                         Ativar
                       </q-tooltip>
@@ -154,9 +154,9 @@ export default defineComponent({
     alteraOrdem: async function (e) {
       try {
         if (e.willInsertAfter === true) {
-          await this.sPessoa.emailParaBaixo(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
+          await this.sPessoa.emailParaBaixo(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoaemail)
         } else {
-          await this.sPessoa.emailParaCima(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
+          await this.sPessoa.emailParaCima(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoaemail)
         }
       } catch (error) {
         this.$q.notify({
@@ -216,7 +216,7 @@ export default defineComponent({
 
     },
 
-    async excluirEmail(codpessoatelefone) {
+    async excluirEmail(codpessoaemail) {
 
       this.$q.dialog({
         title: 'Excluir Email',
@@ -225,7 +225,7 @@ export default defineComponent({
         persistent: true
       }).onOk(async () => {
         try {
-          const ret = await this.sPessoa.emailExcluir(this.route.params.id, codpessoatelefone)
+          const ret = await this.sPessoa.emailExcluir(this.route.params.id, codpessoaemail)
           if (ret) {
             this.$q.notify({
               color: 'green-5',
@@ -247,15 +247,15 @@ export default defineComponent({
 
     },
 
-    editarEmail(codpessoatelefone, email, apelido, verificacao, nfe, cobranca) {
+    editarEmail(codpessoaemail, email, apelido, verificacao, nfe, cobranca) {
       this.dialogEmail = true
-      this.modelEmail = { codpessoatelefone: codpessoatelefone, email: email, apelido: apelido, verificacao: verificacao, nfe: nfe, cobranca: cobranca }
+      this.modelEmail = { codpessoaemail: codpessoaemail, email: email, apelido: apelido, verificacao: verificacao, nfe: nfe, cobranca: cobranca }
     },
 
     async salvarEmail(codpessoa) {
 
       try {
-        const ret = await this.sPessoa.emailSalvar(codpessoa, this.modelEmail.codpessoatelefone, this.modelEmail)
+        const ret = await this.sPessoa.emailSalvar(codpessoa, this.modelEmail.codpessoaemail, this.modelEmail)
         if (ret.data) {
           this.$q.notify({
             color: 'green-5',
@@ -276,9 +276,9 @@ export default defineComponent({
       }
     },
 
-    async inativar(codpessoa, codpessoatelefone) {
+    async inativar(codpessoa, codpessoaemail) {
       try {
-        const ret = await this.sPessoa.emailInativar(codpessoa, codpessoatelefone)
+        const ret = await this.sPessoa.emailInativar(codpessoa, codpessoaemail)
         if (ret.data) {
           this.$q.notify({
             color: 'green-5',
@@ -297,10 +297,10 @@ export default defineComponent({
       }
     },
 
-    async ativar(codpessoa, codpessoatelefone) {
+    async ativar(codpessoa, codpessoaemail) {
 
       try {
-        const ret = await this.sPessoa.emailAtivar(codpessoa, codpessoatelefone)
+        const ret = await this.sPessoa.emailAtivar(codpessoa, codpessoaemail)
         if (ret.data) {
           this.$q.notify({
             color: 'green-5',
@@ -325,14 +325,14 @@ export default defineComponent({
       a.click();
     },
 
-    enviarEmail(email, codpessoatelefone) {
+    enviarEmail(email, codpessoaemail) {
 
       this.$q.dialog({
         title: 'Verificação de E-mail',
         message: 'Deseja enviar o código de verificação para o e-mail  ' + email + ' ?',
         cancel: true,
       }).onOk(() => {
-        this.sPessoa.emailVerificar(this.route.params.id, codpessoatelefone).then((resp) => {
+        this.sPessoa.emailVerificar(this.route.params.id, codpessoaemail).then((resp) => {
           if (resp.data) {
             this.$q.notify({
               color: 'green-5',
@@ -342,12 +342,12 @@ export default defineComponent({
             })
           }
         })
-        this.confirmaEmail(email, codpessoatelefone)
+        this.confirmaEmail(email, codpessoaemail)
 
       })
     },
 
-    confirmaEmail(email, codpessoatelefone) {
+    confirmaEmail(email, codpessoaemail) {
 
       this.$q.dialog({
         title: 'Verificação de E-mail',
@@ -360,15 +360,15 @@ export default defineComponent({
         cancel: true,
         persistent: true
       }).onOk(codverificacao => {
-        this.postEmail(email, codpessoatelefone, codverificacao)
+        this.postEmail(email, codpessoaemail, codverificacao)
       })
     },
 
 
-    async postEmail(email, codpessoatelefone, codverificacao) {
+    async postEmail(email, codpessoaemail, codverificacao) {
 
       try {
-        const ret = await this.sPessoa.emailConfirmaVerificacao(this.route.params.id, codpessoatelefone, codverificacao)
+        const ret = await this.sPessoa.emailConfirmaVerificacao(this.route.params.id, codpessoaemail, codverificacao)
         if (ret.data.data) {
           this.$q.notify({
             color: 'green-5',
@@ -385,7 +385,7 @@ export default defineComponent({
           icon: 'error',
           message: error.response.data.message
         })
-        this.confirmaEmail(email, codpessoatelefone)
+        this.confirmaEmail(email, codpessoaemail)
       }
     }
   },

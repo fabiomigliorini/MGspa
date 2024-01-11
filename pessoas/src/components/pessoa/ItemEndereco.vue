@@ -203,7 +203,7 @@ export default defineComponent({
           icon: 'error',
           message: error.message
         })
-        this.sPessoa.getEndereco(e.draggedContext.element.codpessoa)
+        this.sPessoa.get(e.draggedContext.element.codpessoa)
         return
       }
     },
@@ -289,8 +289,9 @@ export default defineComponent({
             icon: 'done',
             message: 'Endereço excluido'
           })
-          this.sPessoa.getEndereco(this.route.params.id)
+          this.sPessoa.get(this.route.params.id)
         } catch (error) {
+          console.log(error)
           this.$q.notify({
             color: 'red-5',
             textColor: 'white',

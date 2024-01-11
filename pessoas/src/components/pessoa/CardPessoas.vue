@@ -66,7 +66,7 @@
             </template>
             <template v-if="listagempessoas.PessoaEmailS">
                 <q-item v-for="email in listagempessoas.PessoaEmailS.filter(email => email.nfe == true)"
-                    :key="email.codpessoatelefone" :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
+                    :key="email.codpessoaemail" :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
                     <q-item-section avatar>
                         <q-icon color="primary" name="email" />
                     </q-item-section>

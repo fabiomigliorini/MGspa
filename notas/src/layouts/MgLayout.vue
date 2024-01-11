@@ -1,0 +1,140 @@
+<template>
+  <q-layout view="Hhh lpR fff">
+    <q-header reveal elevated>
+      <q-toolbar>
+
+        <q-btn flat dense round @click="toggleLeftDrawer" icon="menu" aria-label="Menu" v-if="drawer" />
+
+        <q-btn flat dense round @click="$router.go(-1)" icon="arrow_back" aria-label="Voltar" v-if="backButton" />
+
+        <q-toolbar-title>
+          <slot name="tituloPagina"></slot>
+        </q-toolbar-title>
+        <q-space />
+        <!-- Renderiza o menu -->
+        <!-- <mg-menu></mg-menu> -->
+
+        <!-- Usuario logout -->
+        <q-btn-dropdown flat color="white" icon="person" :label="user">
+          <div class="row no-wrap q-pa-md justify-center">
+
+            <div class="column items-center">
+              <q-btn color="primary" label="Sair" push size="sm" v-close-popup @click="Deslogar" />
+            </div>
+          </div>
+        </q-btn-dropdown>
+      </q-toolbar>
+    </q-header>
+
+    <!-- Drawer padrão MG Layout -->
+    <q-drawer show-if-above v-model="leftDrawerOpen" side="left" elevated v-if="drawer">
+      <slot name="drawer"></slot>
+    </q-drawer>
+
+    <q-page-container class="bg-grey-2">
+      <router-view />
+      <slot name="content"></slot>
+    </q-page-container>
+    <q-footer elevated reveal class="bg-grey-8 text-white">
+      <div class="q-ma-xs text-weight-light text-center">
+        NotasFiscais - &copy; MG Papelaria
+      </div>
+    </q-footer>
+  </q-layout>
+</template>
+
+<script>
+
+import { defineComponent, ref, defineAsyncComponent } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
+
+export default defineComponent({
+  name: 'MGLayout',
+
+  components: {
+    // MgMenu: defineAsyncComponent(() => import('layouts/MGMenu.vue'))
+  },
+  props: {
+    drawer: {
+      type: Boolean,
+      default: false
+    },    
+    backButton: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  setup() {
+    const leftDrawerOpen = ref(false)
+    const $q = useQuasar()
+    const router = useRouter()
+    const user = ref(localStorage.getItem('usuario'))
+
+    const Deslogar = async () => {
+      $q.dialog({
+        title: 'Sair da conta',
+        message: 'Tem certeza que deseja sair?',
+        cancel: true,
+        persistent: true
+      }).onOk(async () => {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('usuario')
+        window.location = process.env.LOGOUT_URL
+        // router.replace({name: 'login'})
+      })
+    }
+
+    return {
+      user,
+      leftDrawerOpen,
+      toggleLeftDrawer() {
+        leftDrawerOpen.value = !leftDrawerOpen.value
+      },
+      Deslogar
+    }
+  }
+})
+</script>
+
+<style>
+/* FONT AWESOME GENERIC BEAT */
+.fa-beat {
+  animation: fa-beat 5s ease infinite;
+}
+
+@keyframes fa-beat {
+  0% {
+    transform: scale(1);
+  }
+
+  5% {
+    transform: scale(1.25);
+  }
+
+  20% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1);
+  }
+
+  35% {
+    transform: scale(1.25);
+  }
+
+  50% {
+    transform: scale(1);
+  }
+
+  55% {
+    transform: scale(1.25);
+  }
+
+  70% {
+    transform: scale(1);
+  }
+}
+</style>

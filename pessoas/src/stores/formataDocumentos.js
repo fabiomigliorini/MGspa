@@ -309,7 +309,23 @@ export const formataDocumetos = defineStore('documentos', {
 
         dataAtual() {
             return moment().format('YYYY-MM-DD')
-        }
+        },
+
+        formataMes(data) {
+            var pegaMes = moment(data).locale('Pt-Br').format('MMM/YYYY')
+            return pegaMes;
+        },
+
+        formataFromNow(data) {
+            var dataformatada = moment(data).locale('Pt-Br').fromNow()
+            return dataformatada
+        },
+
+        verificaPassadoFuturo(data) {
+            //Se for true é passado, se não é futuro
+            var dataformatada = moment(data).isBefore()
+            return dataformatada
+        },
     }
 })
 

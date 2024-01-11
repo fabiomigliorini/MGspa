@@ -19,6 +19,9 @@
 
                         <q-item-section>
                             <q-item-label caption lines="10">
+                                <q-tooltip>
+                                    {{ historico.historico }}
+                                </q-tooltip>
                                 <span class="text-weight-bold">{{ historico.usuariocriacao }} </span>
                                 -- {{ historico.historico }}
                             </q-item-label>

@@ -64,8 +64,8 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-    async getEndereco(codpessoa) {
-      const { data } = await api.get('v1/pessoa/' + codpessoa + '/endereco')
+    async getEndereco(codpessoa, codpessoaendereco) {
+      const { data } = await api.get('v1/pessoa/' + codpessoa + '/endereco/' + codpessoaendereco)
       this.item.PessoaEnderecoS = data.data
       return data
     },
@@ -120,13 +120,13 @@ export const pessoaStore = defineStore('pessoa', {
 
     // PESSOA EMAIL
 
-    async emailParaCima(codpessoa, codpessoatelefone) {
-      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone + '/cima')
+    async emailParaCima(codpessoa, codpessoaemail) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail + '/cima')
       return ret;
     },
 
-    async emailParaBaixo(codpessoa, codpessoatelefone) {
-      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone + '/baixo')
+    async emailParaBaixo(codpessoa, codpessoaemail) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail + '/baixo')
       return ret;
     },
 
@@ -136,40 +136,40 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-    async emailExcluir(codpessoa, codpessoatelefone) {
-      const ret = await api.delete('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone)
+    async emailExcluir(codpessoa, codpessoaemail) {
+      const ret = await api.delete('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail)
       return ret;
     },
 
-    async emailSalvar(codpessoa, codpessoatelefone, modelalteraremail) {
-      const ret = await api.put('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone, modelalteraremail)
+    async emailSalvar(codpessoa, codpessoaemail, modelalteraremail) {
+      const ret = await api.put('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail, modelalteraremail)
       // const i = this.item.PessoaEmailS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
       // this.item.PessoaEmailS[i] = ret.data.data
       return ret;
     },
 
-    async emailInativar(codpessoa, codpessoatelefone) {
-      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone + '/inativo')
-      const i = this.item.PessoaEmailS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
+    async emailInativar(codpessoa, codpessoaemail) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail + '/inativo')
+      const i = this.item.PessoaEmailS.findIndex(item => item.codpessoaemail === codpessoaemail)
       this.item.PessoaEmailS[i] = ret.data.data
       return ret;
     },
 
-    async emailAtivar(codpessoa, codpessoatelefone) {
-      const ret = await api.delete('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone + '/inativo')
-      const i = this.item.PessoaEmailS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
+    async emailAtivar(codpessoa, codpessoaemail) {
+      const ret = await api.delete('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail + '/inativo')
+      const i = this.item.PessoaEmailS.findIndex(item => item.codpessoaemail === codpessoaemail)
       this.item.PessoaEmailS[i] = ret.data.data
       return ret;
     },
 
-    async emailVerificar(codpessoa, codpessoatelefone) {
-      const ret = await api.get('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone + '/verificar')
+    async emailVerificar(codpessoa, codpessoaemail) {
+      const ret = await api.get('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail + '/verificar')
       return ret;
     },
 
-    async emailConfirmaVerificacao(codpessoa, codpessoatelefone, codverificacao) {
-      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoatelefone + '/verificar', { codverificacao: codverificacao })
-      const i = this.item.PessoaEmailS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
+    async emailConfirmaVerificacao(codpessoa, codpessoaemail, codverificacao) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail + '/verificar', { codverificacao: codverificacao })
+      const i = this.item.PessoaEmailS.findIndex(item => item.codpessoaemail === codpessoaemail)
       this.item.PessoaEmailS[i] = ret.data.data
       return ret
     },
@@ -270,28 +270,28 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
     async getCobrancaHistorico(codpessoa, page) {
-      const ret = await api.get('v1/pessoa/'+ codpessoa +'/cobrancahistorico/',  {params: page})
+      const ret = await api.get('v1/pessoa/' + codpessoa + '/cobrancahistorico/', { params: page })
       return ret;
     },
 
     async novoHistoricoCobranca(codpessoa, historico) {
-      const ret = await api.post('v1/pessoa/'+ codpessoa +'/cobrancahistorico/', {historico: historico, codpessoa: codpessoa})
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/cobrancahistorico/', { historico: historico, codpessoa: codpessoa })
       return ret;
     },
 
     async deletaCobrancaHistorico(codpessoa, codcobrancahistorico) {
-      const ret = await api.delete('v1/pessoa/'+ codpessoa +'/cobrancahistorico/' + codcobrancahistorico)
+      const ret = await api.delete('v1/pessoa/' + codpessoa + '/cobrancahistorico/' + codcobrancahistorico)
       return ret;
     },
 
     //TEM QUE POR O CODPESSOA
     async salvarHistoricoCobranca(codpessoa, codcobrancahistorico, modelCobrancaHistorico) {
-      const ret = await api.put('v1/pessoa/'+ codpessoa +'/cobrancahistorico/' + codcobrancahistorico, modelCobrancaHistorico)
+      const ret = await api.put('v1/pessoa/' + codpessoa + '/cobrancahistorico/' + codcobrancahistorico, modelCobrancaHistorico)
       return ret;
     },
 
     async getRegistroSpc(codpessoa, page) {
-      const ret = await api.get('v1/pessoa/' + codpessoa + '/registrospc/', {params: page})
+      const ret = await api.get('v1/pessoa/' + codpessoa + '/registrospc/', { params: page })
       return ret;
     },
 
@@ -346,7 +346,17 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
     async totaisNegocios(codgrupoeconomico, Negocios) {
-      const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/totais-negocios', {params: Negocios})
+      const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/totais-negocios', { params: Negocios })
+      return ret;
+    },
+
+    async titulosAbertos(codgrupoeconomico, model) {
+      const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/titulos-abertos', { params: model })
+      return ret;
+    },
+
+    async nfeTerceiro(codgrupoeconomico, model) {
+      const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/nfe-terceiro', { params: model })
       return ret;
     },
   }

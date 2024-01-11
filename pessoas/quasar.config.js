@@ -67,7 +67,11 @@ module.exports = configure(function (ctx) {
 
          LOGOUT_URL: ctx.dev
          ? 'http://api-mgspa-dev.mgpapelaria.com.br/logout'
-         : 'https://api-mgspa.mgpapelaria.com.br/logout'
+         : 'https://api-mgspa.mgpapelaria.com.br/logout',
+
+         MGLARA_URL: ctx.dev
+         ? 'http://sistema-dev.mgpapelaria.com.br/MGLara/'
+         : 'https://sistema.mgpapelaria.com.br/MGLara/'
         },
       // transpile: false,
       // publicPath: '/',

@@ -13,18 +13,26 @@
         <div class="col-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="people" color="grey-2" text-color="blue" />
+              <q-avatar icon="payments" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
-                <span v-if="sPessoa.item.cliente">Sim </span>
-                <span v-else>Não</span>
+                {{ sPessoa.item.aberto.quantidade }} Titulos totalizando
+                <br>
+                {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sPessoa.item.aberto.saldo) }}
               </q-item-label>
-              <q-item-label caption class="text-grey-8">Cliente</q-item-label>
+              <q-item-label>
+                <span v-if="Documentos.verificaPassadoFuturo(sPessoa.item.aberto.vencimento)" class="text-red-14">Mais atrasado vencido {{ Documentos.formataFromNow(sPessoa.item.aberto.vencimento) }}</span>
+                <span v-else>
+                  Primeiro Vencimento {{ Documentos.formataFromNow(sPessoa.item.aberto.vencimento) }}
+                </span>
+              </q-item-label>
+              <q-item-label caption class="text-grey-8">Saldo em aberto</q-item-label>
             </q-item-section>
           </q-item>
 
           <q-separator inset />
+          
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="credit_card" color="grey-2" text-color="blue" />
@@ -52,7 +60,9 @@
               <q-item-label caption class="text-grey-8">Consumidor Final</q-item-label>
             </q-item-section>
           </q-item>
+
           <q-separator inset />
+
           <q-item>
             <q-item-section avatar top v-if="sPessoa.item.GrupoCliente">
               <q-avatar icon="groups" color="grey-2" text-color="blue" />
@@ -70,27 +80,27 @@
         <div class="col-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="switch_account" color="grey-2" text-color="blue" />
+              <q-avatar icon="schedule_send" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
-                <span v-if="sPessoa.item.fornecedor">Sim</span>
-                <span v-else>Não</span>
+                {{ sPessoa.item.toleranciaatraso }} Dia(s)
               </q-item-label>
-              <q-item-label caption class="text-grey-8">Fornecedor</q-item-label>
+              <q-item-label caption class="text-grey-8">Tolerância Atraso</q-item-label>
             </q-item-section>
           </q-item>
           <q-separator inset />
           
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="payments" color="grey-2" text-color="blue" />
+              <q-avatar icon="people" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
-                <!-- {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format('500') }} -->
+                <span v-if="sPessoa.item.cliente">Sim </span>
+                <span v-else>Não</span>
               </q-item-label>
-              <q-item-label caption class="text-grey-8">Saldo em aberto</q-item-label>
+              <q-item-label caption class="text-grey-8">Cliente</q-item-label>
             </q-item-section>
           </q-item>
           <q-separator inset />
@@ -175,18 +185,19 @@
           </q-item>
           <q-separator inset />
 
-
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="schedule_send" color="grey-2" text-color="blue" />
+              <q-avatar icon="switch_account" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
-                {{ sPessoa.item.toleranciaatraso }} Dia(s)
+                <span v-if="sPessoa.item.fornecedor">Sim</span>
+                <span v-else>Não</span>
               </q-item-label>
-              <q-item-label caption class="text-grey-8">Tolerância Atraso</q-item-label>
+              <q-item-label caption class="text-grey-8">Fornecedor</q-item-label>
             </q-item-section>
           </q-item>
+  
           <q-separator inset />
         </div>
 
@@ -285,6 +296,7 @@ import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { guardaToken } from 'src/stores'
+import { formataDocumetos } from 'src/stores/formataDocumentos'
 
 export default defineComponent({
   name: "CardDetalhesPessoa",
@@ -349,6 +361,7 @@ export default defineComponent({
     const modelEditar = ref([])
     const route = useRoute()
     const user = guardaToken()
+    const Documentos = formataDocumetos()
 
     return {
       formapagamento: ref({}),
@@ -357,8 +370,9 @@ export default defineComponent({
       modelDialogCliente: ref(false),
       modelEditar,
       route,
+      Documentos,
     }
-  },
+  }
 })
 </script>
 

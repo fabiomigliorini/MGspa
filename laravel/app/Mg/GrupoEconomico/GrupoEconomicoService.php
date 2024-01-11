@@ -150,6 +150,7 @@ class GrupoEconomicoService
     {
 
         $sql = 'select 
+        t.codtitulo,
         t.numero,
         t.fatura,
         tipo.tipotitulo,
@@ -213,6 +214,76 @@ class GrupoEconomicoService
         }
 
         $sql .= ' order by nft.emissao, nft.numero  desc';
+
+        $result = DB::select($sql, $params);
+
+        return $result;
+    }
+
+
+    public static function negocios($codpessoa, $codgrupoeconomico)
+    {
+
+        $sql = '
+        select nat.naturezaoperacao, date_trunc(\'month\', n.lancamento) as mes, sum(n.valortotal * case when n.codoperacao = 1 then -1 else 1 end) as valortotal
+        from tblpessoa p
+        inner join tblnegocio n on (p.codpessoa = n.codpessoa)
+        inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
+        where p.codgrupoeconomico = :codgrupoeconomico
+        and n.codnegociostatus = 2';
+
+
+        $params['codgrupoeconomico'] = $codgrupoeconomico;
+
+        if (!empty($codpessoa)) {
+
+            $sql .= ' and p.codpessoa = :codpessoa';
+            $params['codpessoa'] = $codpessoa;
+        }
+
+
+        $sql .= ' group by nat.naturezaoperacao, date_trunc(\'month\', n.lancamento) 
+        order by 1, 2';
+
+        $result = DB::select($sql, $params);
+
+
+        return $result;
+    }
+
+    public static function topProdutos($codpessoa, $codgrupoeconomico, $desde)
+    {
+
+        $sql = '
+        select prod.codproduto, prod.produto, sum(npb.valortotal * case when nat.vendadevolucao = \'1\' then -1 else 1 end) as valortotal
+        from tblpessoa p
+        inner join tblnegocio n on (p.codpessoa = n.codpessoa)
+        inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
+        inner join tblnegocioprodutobarra npb on (npb.codnegocio = n.codnegocio)
+        inner join tblprodutobarra pb on (pb.codprodutobarra = npb.codprodutobarra)
+        inner join tblproduto prod on (prod.codproduto  = pb.codproduto)
+        where n.codnegociostatus = 2
+        and (nat.venda = true or nat.compra = true or nat.vendadevolucao = true)
+        and p.codgrupoeconomico = :codgrupoeconomico';
+
+        $params['codgrupoeconomico'] = $codgrupoeconomico;
+
+        if (!empty($codpessoa)) {
+
+            $sql .= ' and p.codpessoa = :codpessoa';
+            $params['codpessoa'] = $codpessoa;
+        }
+
+        if (!empty($desde)) {
+            $sql .= ' and lancamento >= :desde';
+            $params['desde'] = $desde;
+        }
+
+        $sql .= ' group by prod.codproduto, prod.produto 
+        order by 3 desc
+        limit 10';
+
+
 
         $result = DB::select($sql, $params);
 
