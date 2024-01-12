@@ -144,8 +144,7 @@ const consultar = async () => {
 };
 </script>
 <template>
-  <!-- DIALOG -->
-
+  <!-- DIALOG NOVO PEDIDO -->
   <q-dialog
     v-model="sNegocio.dialog.pagamentoPagarMe"
     @before-show="inicializarValores()"
@@ -156,7 +155,7 @@ const consultar = async () => {
       <q-form @submit="salvar()" ref="formPagarMe">
         <q-card-section>
           <q-list>
-            <!-- TIPO  -->
+            <!-- POS  -->
             <q-item>
               <q-item-section>
                 <select-pagar-me-pos
@@ -164,6 +163,8 @@ const consultar = async () => {
                   v-model="pagamento.codpagarmepos"
                   label="POS Stone/PagarMe"
                   :codestoquelocal="sNegocio.negocio.codestoquelocal"
+                  :rules="[(value) => value || 'Selecione a Maquineta!']"
+                  clearable
                 />
               </q-item-section>
             </q-item>
@@ -260,7 +261,7 @@ const consultar = async () => {
     </q-card>
   </q-dialog>
 
-  <!-- DETALHES DO PEDIDO PAGARME -->
+  <!-- DIALOG DETALHES PEDIDO -->
   <q-dialog v-model="sPagarMe.dialog.detalhesPedido">
     <q-card>
       <q-card-section>

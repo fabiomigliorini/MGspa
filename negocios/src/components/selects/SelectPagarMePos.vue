@@ -10,7 +10,6 @@ const props = defineProps({
   codestoquelocal: {
     type: Number,
     default: null,
-    required: true,
   },
 });
 
@@ -24,6 +23,9 @@ const alterar = (value) => {
 };
 
 const buscarOpcoes = async () => {
+  if (!props.codestoquelocal) {
+    return;
+  }
   const loc = await db.estoqueLocal.get(props.codestoquelocal);
   loc.PagarMePosS.sort((a, b) => {
     if (a.apelido > b.apelido) {

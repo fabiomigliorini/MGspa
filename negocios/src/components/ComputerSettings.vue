@@ -44,17 +44,20 @@ const toggleSettingsDialog = () => {
               outlined
               v-model="edicao.codestoquelocal"
               label="Local de Estoque"
+              clearable
             />
             <select-pagar-me-pos
               outlined
               v-model="edicao.codpagarmepos"
               label="POS Stone/PagarMe"
               :codestoquelocal="edicao.codestoquelocal"
+              clearable
             />
             <select-natureza-operacao
               outlined
               v-model="edicao.codnaturezaoperacao"
               label="Natureza de Operacao"
+              clearable
             />
             <select-pessoa
               outlined
@@ -66,6 +69,7 @@ const toggleSettingsDialog = () => {
               outlined
               v-model="edicao.impressora"
               label="Impressora"
+              clearable
             />
           </div>
         </q-card-section>
