@@ -119,17 +119,26 @@ const abrirDocumentoSeFechado = async () => {
 };
 
 const fechar = async () => {
+  if (sNegocio.negocio.codnegociostatus != 1) {
+    return;
+  }
   await fecharDialogs();
   await sNegocio.fechar();
   abrirDocumentoSeFechado();
 };
 
 const dinheiro = async () => {
+  if (sNegocio.negocio.codnegociostatus != 1) {
+    return;
+  }
   await fecharDialogs();
   sNegocio.dialog.pagamentoDinheiro = true;
 };
 
 const pagarMe = async () => {
+  if (sNegocio.negocio.codnegociostatus != 1) {
+    return;
+  }
   if (sPagarMe.dialog.detalhesPedido) {
     await sPagarMe.consultarPedido();
     if (sPagarMe.pedido.status == 2) {
@@ -144,6 +153,9 @@ const pagarMe = async () => {
 };
 
 const pix = async () => {
+  if (sNegocio.negocio.codnegociostatus != 1) {
+    return;
+  }
   await fecharDialogs();
   sNegocio.dialog.pagamentoPix = true;
 };
