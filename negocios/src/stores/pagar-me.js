@@ -22,7 +22,7 @@ export const pagarMeStore = defineStore("pagarMe", {
             "/consultar"
         );
         this.pedido = data.data;
-        this.atualizarPagarMePedido();
+        await this.atualizarPagarMePedido();
         Notify.create({
           type: "positive",
           message: "Consulta Efetuada!",
@@ -42,7 +42,7 @@ export const pagarMeStore = defineStore("pagarMe", {
       }
     },
 
-    atualizarPagarMePedido() {
+    async atualizarPagarMePedido() {
       // se nao estiver com o mesmo negocio desiste
       if (this.pedido.codnegocio != sNegocio.negocio.codnegocio) {
         return;
@@ -54,7 +54,7 @@ export const pagarMeStore = defineStore("pagarMe", {
       }
 
       // recarrega negocio da api
-      sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio);
+      await sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio);
     },
   },
 });

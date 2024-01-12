@@ -501,24 +501,29 @@ const creditCardColorPagamento = (pag) => {
         sNegocio.negocio.financeiro && sNegocio.negocio.codnegociostatus == 1
       "
     >
+      <!-- BOTAO DINHEIRO -->
       <q-btn
         round
         @click="dialogPagamentoDinheiro()"
         icon="local_atm"
         color="primary"
       >
-        <q-tooltip class="bg-accent">Dinheiro</q-tooltip>
+        <q-tooltip class="bg-accent">Dinheiro (F6)</q-tooltip>
       </q-btn>
+
+      <!-- BOTAO CARTAO -->
       <q-btn
         round
         icon="credit_card"
         @click="dialogPagamentoPagarMe()"
         color="primary"
       >
-        <q-tooltip class="bg-accent">Cartão</q-tooltip>
+        <q-tooltip class="bg-accent">Cartão (F7)</q-tooltip>
       </q-btn>
+
+      <!-- BOTAO PIX -->
       <q-btn round icon="pix" @click="dialogPagamentoPix()" color="primary">
-        <q-tooltip class="bg-accent">PIX</q-tooltip>
+        <q-tooltip class="bg-accent">PIX (F8)</q-tooltip>
       </q-btn>
     </q-list>
 
@@ -588,24 +593,31 @@ const creditCardColorPagamento = (pag) => {
                     style: "decimal",
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
+                  }).format(ped.valortotal)
+                }}
+              </q-item-label>
+              <q-item-label caption v-if="ped.parcelas > 1">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
                   }).format(ped.valor)
                 }}
+                em {{ ped.parcelas }}
+                parcelas de R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valorparcela)
+                }}
+                <span v-if="ped.valorjuros"> C/Juros </span>
               </q-item-label>
               <q-item-label caption>
                 <span class="text-uppercase">
                   {{ ped.tipodescricao }}
-                </span>
-                <span v-if="ped.parcelas > 1">
-                  em {{ ped.parcelas }}
-                  parcelas de R$
-                  {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(ped.valorparcela)
-                  }}
-                  <span v-if="ped.valorjuros"> (C/Juros) </span>
                 </span>
                 | POS {{ ped.apelido }} |
                 <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
@@ -653,28 +665,35 @@ const creditCardColorPagamento = (pag) => {
                 }}
                 Cancelamento
               </q-item-label>
+              <q-item-label caption v-if="pag.parcelas > 1">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valor)
+                }}
+                em {{ pag.parcelas }}
+                parcelas de R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valorparcela)
+                }}
+                <span v-if="ped.valorjuros"> C/Juros </span>
+              </q-item-label>
               <q-item-label caption>
-                <span>
-                  {{ pag.nome }}
+                {{ pag.nome }}
+
+                <span class="text-uppercase">
+                  {{ pag.bandeira }}
                   {{ pag.tipodescricao }}
-                  <template v-if="pag.parcelas > 1">
-                    {{ pag.parcelas }} Parcelas
-                  </template>
-                  <q-tooltip>
-                    {{ pag.bandeira }}
-                    Autorização {{ pag.autorizacao }}
-                  </q-tooltip>
                 </span>
-                <span>
-                  {{ moment(pag.transacao).fromNow() }}
-                  <q-tooltip>
-                    {{ moment(pag.transacao).format("LLLL") }}
-                  </q-tooltip>
-                </span>
-                <span>
-                  {{ pag.apelido }}
-                  <q-tooltip> Serial {{ pag.pos }} </q-tooltip>
-                </span>
+                | POS {{ pag.apelido }} |
+                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
+                {{ moment(pag.transacao).fromNow() }}
               </q-item-label>
             </q-item-section>
           </q-item>

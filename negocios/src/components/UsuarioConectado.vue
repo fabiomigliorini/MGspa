@@ -5,7 +5,6 @@ import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const sUsuario = usuarioStore();
-const dialogLogin = ref(false);
 const usuario = ref(null);
 const senha = ref(null);
 const mostrarSenha = ref(false);
@@ -22,13 +21,13 @@ const refresh = async () => {
 const abrirLogin = () => {
   usuario.value = null;
   senha.value = null;
-  dialogLogin.value = true;
+  sUsuario.dialog.login = true;
 };
 
 const login = async () => {
   const ret = await sUsuario.login(usuario.value, senha.value);
   if (ret) {
-    dialogLogin.value = false;
+    sUsuario.dialog.login = false;
   }
 };
 
@@ -51,7 +50,7 @@ onMounted(() => {
 });
 </script>
 <template>
-  <q-dialog v-model="dialogLogin">
+  <q-dialog v-model="sUsuario.dialog.login">
     <q-card style="width: 350px; max-width: 80vw">
       <q-form @submit="login()">
         <q-card-section>
@@ -88,7 +87,7 @@ onMounted(() => {
             label="Cancelar"
             color="primary"
             class="q-ml-sm"
-            @click="dialogLogin = false"
+            @click="sUsuario.dialog.login = false"
             tabindex="-1"
           />
           <q-btn flat label="Entrar" type="submit" color="primary" />

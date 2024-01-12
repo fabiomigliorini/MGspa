@@ -1,11 +1,15 @@
 MANDATORY:
 
+BUG nao deixar criar cobraca cartao quando nao tem nenhum POS selecionado
+
 FIXME nao gerar fechamento com itens inativos
 FIXME nao gerar transferencias com itens inativos
 FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
 FIXME Quando expira o token ele precisa dar o refresh automaticamente
 
-TODO Integracao PagarMe
+TODO Pagamento Cartao Manual
+TODO Pagarmento Prazo
+TODO Fazer webhook avisar fronted quando recebeu um pagamento Stone
 TODO fazer geracao da NF normal
 TODO fazer geracao da NF de Transferencia
 TODO bloquear baixar negocio somente para Gerente/Administrador
@@ -35,6 +39,7 @@ TODO quando codigo de barras nao existir offline, pesquisar primeiro no online a
 [X] FIXME validar se tem itens ativos > 0
 [X] FIXME nao gerar nota com itens inativos
 [X] TODO Integracao PIX
+[X] TODO Integracao PagarMe
 
 - Pedido
   curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido' --data-raw 'codnegocio=3304171&codpessoa=1&codpagarmepos=44&valor=0.75&valorparcela=0.75&valorjuros=0&tipo=1&parcelas=1&jurosloja=1&descricao=Negocio+3304171&codfilial=102'

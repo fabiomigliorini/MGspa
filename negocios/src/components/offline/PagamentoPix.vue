@@ -127,32 +127,19 @@ const whatsapp = () => {
         <q-card-section>
           <q-list>
             <q-item>
-              <q-item-section side class="text-h5 text-grey">
-                R$
-              </q-item-section>
               <q-item-section>
-                <q-item-label
-                  class="text-h2 text-primary text-weight-bolder text-right"
-                >
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    :max="sNegocio.valorapagar"
-                    borderless
-                    v-model.number="valorPagamento"
-                    :rules="valorRule"
-                    autofocus
-                    input-class="text-h2 text-weight-bolder text-right text-primary"
-                  >
-                    <template v-slot:error>
-                      <div class="text-right">Valor inválido!</div>
-                    </template>
-                  </q-input>
-                </q-item-label>
-                <q-item-label caption class="text-right">
-                  valor do PIX
-                </q-item-label>
+                <q-input
+                  prefix="R$"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  :max="sNegocio.valorapagar"
+                  borderless
+                  v-model.number="valorPagamento"
+                  :rules="valorRule"
+                  autofocus
+                  input-class="text-h2 text-weight-bolder text-right text-primary"
+                />
               </q-item-section>
             </q-item>
           </q-list>

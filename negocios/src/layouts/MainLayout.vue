@@ -28,7 +28,7 @@ const toggleRightDrawer = () => {
           </q-avatar>
           Negócios
         </q-toolbar-title>
-        <div class="gt-xs q-mr-sm">v0.2</div>
+        <div class="gt-xs q-mr-sm">v0.3</div>
 
         <usuario-conectado />
         &nbsp;

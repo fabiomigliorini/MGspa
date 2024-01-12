@@ -114,7 +114,6 @@ const calcularJuros = () => {
   );
   pagamento.value.valorjuros = parc.valorjuros;
   pagamento.value.valorparcela = parc.valorparcela;
-  console.log(parc);
 };
 
 const salvar = async () => {
@@ -130,7 +129,6 @@ const salvar = async () => {
   if (pedido == false) {
     return;
   }
-  console.log(pedido);
   sPagarMe.pedido = pedido;
   sPagarMe.dialog.detalhesPedido = true;
   sNegocio.dialog.pagamentoPagarMe = false;
@@ -171,13 +169,9 @@ const consultar = async () => {
 
             <!-- VALOR -->
             <q-item>
-              <q-item-section side class="text-h5 text-grey">
-                R$
-              </q-item-section>
-              <q-item-section
-                class="text-h2 text-primary text-weight-bolder text-right"
-              >
+              <q-item-section>
                 <q-input
+                  prefix="R$"
                   type="number"
                   step="0.01"
                   min="0.01"
@@ -186,12 +180,8 @@ const consultar = async () => {
                   v-model.number="pagamento.valor"
                   :rules="valorRule"
                   autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary"
-                >
-                  <template v-slot:error>
-                    <div class="text-right">Valor inválido!</div>
-                  </template>
-                </q-input>
+                  input-class="text-h2 text-weight-bolder text-right text-primary "
+                />
               </q-item-section>
             </q-item>
 
@@ -254,6 +244,7 @@ const consultar = async () => {
             label="Cartão Manual"
             @click="manual()"
             color="primary"
+            tabindex="-1"
           />
           <q-btn type="submit" flat label="Enviar Maquineta" color="primary" />
         </q-card-actions>

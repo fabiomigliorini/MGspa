@@ -3,6 +3,8 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { negocioStore } from "stores/negocio";
 import { produtoStore } from "stores/produto";
+import { usuarioStore } from "stores/usuario";
+import { pagarMeStore } from "stores/pagar-me";
 import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
 import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
@@ -13,10 +15,11 @@ const route = useRoute();
 const router = useRouter();
 const sNegocio = negocioStore();
 const sProduto = produtoStore();
+const sUsuario = usuarioStore();
+const sPagarMe = pagarMeStore();
 const dialogRomaneio = ref(false);
 
 const hotkeys = (event) => {
-  // TODO: Anexar F das formas de pagamentos
   switch (event.key) {
     // Joga foco no codigo de barras
     case "1":
@@ -42,19 +45,34 @@ const hotkeys = (event) => {
       }
       break;
 
-    case "F1":
+    case "F1": // Pesquisa
       event.preventDefault();
       sProduto.dialogPesquisa = true;
       break;
 
-    case "F2":
+    case "F2": // Novo
       event.preventDefault();
       vazioOuCriar();
       break;
 
-    case "F3":
+    case "F3": // Fechar
       event.preventDefault();
       fechar();
+      break;
+
+    case "F6": // Dinheiro
+      event.preventDefault();
+      dinheiro();
+      break;
+
+    case "F7": // PagarMe
+      event.preventDefault();
+      pagarMe();
+      break;
+
+    case "F8": // PIX
+      event.preventDefault();
+      pix();
       break;
 
     default:
@@ -63,6 +81,7 @@ const hotkeys = (event) => {
 };
 
 const vazioOuCriar = async () => {
+  await fecharDialogs();
   const neg = await sNegocio.carregarPrimeiroVazioOuCriar();
   try {
     var audio = new Audio("registradora.mp3");
@@ -82,9 +101,51 @@ const carregareOuCriarNegocio = async () => {
   vazioOuCriar();
 };
 
+const fecharDialogs = async () => {
+  sNegocio.dialog.pagamentoDinheiro = false;
+  sNegocio.dialog.valores = false;
+  sNegocio.dialog.pagamentoPix = false;
+  sNegocio.dialog.pagamentoPagarMe = false;
+  sUsuario.dialog.login = false;
+  sPagarMe.dialog.detalhesPedido = false;
+  dialogRomaneio.value = false;
+};
+
 // TODO: Oferecer pra Gerar Nota/Imprimir Romaneio/Etc
+const abrirDocumentoSeFechado = async () => {
+  if (sNegocio.negocio.codnegociostatus == 2) {
+    romaneio();
+  }
+};
+
 const fechar = async () => {
-  sNegocio.fechar();
+  await fecharDialogs();
+  await sNegocio.fechar();
+  abrirDocumentoSeFechado();
+};
+
+const dinheiro = async () => {
+  await fecharDialogs();
+  sNegocio.dialog.pagamentoDinheiro = true;
+};
+
+const pagarMe = async () => {
+  if (sPagarMe.dialog.detalhesPedido) {
+    await sPagarMe.consultarPedido();
+    if (sPagarMe.pedido.status == 2) {
+      sPagarMe.dialog.detalhesPedido = false;
+    }
+    abrirDocumentoSeFechado();
+    return;
+  }
+  await fecharDialogs();
+  sNegocio.dialog.pagamentoPagarMe = true;
+  return;
+};
+
+const pix = async () => {
+  await fecharDialogs();
+  sNegocio.dialog.pagamentoPix = true;
 };
 
 const urlRomaneio = computed({
@@ -99,6 +160,7 @@ const urlRomaneio = computed({
 });
 
 const romaneio = async () => {
+  fecharDialogs();
   dialogRomaneio.value = true;
 };
 
@@ -141,7 +203,7 @@ onUnmounted(() => {
     <listagem-produtos />
     <dialog-sincronizacao />
 
-    <q-dialog v-model="dialogRomaneio" full-height full-width>
+    <q-dialog v-model="dialogRomaneio" full-height>
       <q-card style="height: 100%">
         <!-- <q-card-section>
           <div class="text-h6">Romaneio</div>

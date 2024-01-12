@@ -13,6 +13,7 @@ class NegocioService
 {
     public static function fecharSePago (Negocio $negocio)
     {
+        static::recalcularTotal($negocio);
         if ($negocio->codnegociostatus != NegocioStatus::ABERTO) {
             return false;
         }
@@ -21,6 +22,19 @@ class NegocioService
             return false;
         }
         return static::fechar($negocio);
+    }
+
+    public static function recalcularTotal(Negocio $negocio)
+    {
+        $negocio->valorjuros = $negocio->NegocioFormaPagamentoS()->sum('valorjuros');
+        $negocio->valortotal = 
+            $negocio->valorprodutos 
+            - $negocio->valordesconto
+            + $negocio->valorfrete
+            + $negocio->valorseguro
+            + $negocio->valoroutras
+            + $negocio->valorjuros;
+        $negocio->save();
     }
 
     public static function fechar (Negocio $negocio)
@@ -67,8 +81,6 @@ class NegocioService
                 return false;
             }
         }
-
-
 
         //atualiza status
         $negocio->update([

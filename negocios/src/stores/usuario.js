@@ -10,6 +10,9 @@ export const usuarioStore = defineStore("usuario", {
   state: () => ({
     usuario: {},
     token: {},
+    dialog: {
+      login: false,
+    },
   }),
 
   getters: {},
