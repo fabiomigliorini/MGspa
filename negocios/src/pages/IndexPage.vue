@@ -5,6 +5,7 @@ import { negocioStore } from "stores/negocio";
 import { produtoStore } from "stores/produto";
 import { usuarioStore } from "stores/usuario";
 import { pagarMeStore } from "stores/pagar-me";
+import { pixStore } from "stores/pix";
 import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
 import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
@@ -17,6 +18,7 @@ const sNegocio = negocioStore();
 const sProduto = produtoStore();
 const sUsuario = usuarioStore();
 const sPagarMe = pagarMeStore();
+const sPix = pixStore();
 const dialogRomaneio = ref(false);
 
 const hotkeys = (event) => {
@@ -154,6 +156,14 @@ const pagarMe = async () => {
 
 const pix = async () => {
   if (sNegocio.negocio.codnegociostatus != 1) {
+    return;
+  }
+  if (sPix.dialog.detalhesPixCob) {
+    await sPix.consultarPixCob();
+    if (sPix.pixCob.status == "CONCLUIDA") {
+      sPix.dialog.detalhesPixCob = false;
+    }
+    abrirDocumentoSeFechado();
     return;
   }
   await fecharDialogs();
