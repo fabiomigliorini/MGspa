@@ -108,6 +108,7 @@ const fecharDialogs = async () => {
   sNegocio.dialog.valores = false;
   sNegocio.dialog.pagamentoPix = false;
   sNegocio.dialog.pagamentoPagarMe = false;
+  sNegocio.dialog.pagamentoCartaoManual = false;
   sUsuario.dialog.login = false;
   sPagarMe.dialog.detalhesPedido = false;
   dialogRomaneio.value = false;

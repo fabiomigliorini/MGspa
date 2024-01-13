@@ -1,0 +1,120 @@
+[
+  {
+    "codpessoa": 15319,
+    "apelido": "Brasil Card",
+    "logo": "/public/logo-cartoes/BrasilCard.jpg",
+    "tipos": [
+      {
+        "tpag": 3,
+        "tipo": 2,
+        "apelido": "Crédito"
+      }
+    ],
+    "bandeiras": [
+      {
+        "bandeira": 99,
+        "apelido": "Brasil Card"
+      }
+    ]
+  },
+  {
+    "codpessoa": 15320,
+    "apelido": "Le Card",
+    "logo": "/public/logo-cartoes/LeCard.jpg",
+    "tipos": [
+      {
+        "tpag": 3,
+        "tipo": 2,
+        "apelido": "Crédito"
+      }
+    ],
+    "bandeiras": [
+      {
+        "bandeira": 99,
+        "apelido": "Le Card"
+      }
+    ]
+  },
+  {
+    "codpessoa": 10000650,
+    "apelido": "MultVale",
+    "logo": "/public/logo-cartoes/MultVale.jpg",
+    "tipos": [
+      {
+        "tpag": 3,
+        "tipo": 2,
+        "apelido": "Crédito"
+      }
+    ],
+    "bandeiras": [
+      {
+        "bandeira": 99,
+        "apelido": "MultVale"
+      }
+    ]
+  },
+  {
+    "codpessoa": 9993,
+    "apelido": "Stone",
+    "logo": "/public/logo-cartoes/Stone.jpg",
+    "tipos": [
+      {
+        "tpag": 4,
+        "tipo": 1,
+        "apelido": "Débito"
+      },
+      {
+        "tpag": 3,
+        "tipo": 2,
+        "apelido": "Crédito"
+      },
+      {
+        "tpag": 99,
+        "tipo": 3,
+        "apelido": "Voucher"
+      }
+    ],
+    "bandeiras": [
+      {
+        "bandeira": 1,
+        "apelido": "Visa"
+      },
+      {
+        "bandeira": 2,
+        "apelido": "Mastercard"
+      },
+      {
+        "bandeira": 3,
+        "apelido": "American Express"
+      },
+      {
+        "bandeira": 4,
+        "apelido": "Sorocred"
+      },
+      {
+        "bandeira": 5,
+        "apelido": "Diners Club"
+      },
+      {
+        "bandeira": 6,
+        "apelido": "Elo"
+      },
+      {
+        "bandeira": 7,
+        "apelido": "Hipercard"
+      },
+      {
+        "bandeira": 8,
+        "apelido": "Aura"
+      },
+      {
+        "bandeira": 9,
+        "apelido": "Cabal"
+      },
+      {
+        "bandeira": 99,
+        "apelido": "Outros"
+      }
+    ]
+  }
+]

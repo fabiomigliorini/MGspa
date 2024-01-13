@@ -1,10 +1,11 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pagarMeStore } from "stores/pagar-me";
 import moment from "moment/min/moment-with-locales";
 import SelectPagarMePos from "../selects/SelectPagarMePos.vue";
+import cartoesManuais from "../../cartoes-manuais.json";
 
 moment.locale("pt-br");
 
@@ -16,6 +17,8 @@ const pagamento = ref({});
 const parcelamentoDisponivel = ref([]);
 const formPagarMe = ref(null);
 
+const step = ref(1);
+
 const inicializarValores = () => {
   const padrao = {
     codpagarmepos: sNegocio.padrao.codpagarmepos,
@@ -25,6 +28,7 @@ const inicializarValores = () => {
     tipo: "1",
     parcelas: 1,
     jurosloja: true,
+    codpessoa: null,
   };
   if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
     padrao.codpagarmepos = null;
@@ -66,6 +70,18 @@ watch(
   () => pagamento.value.parcelas,
   () => {
     calcularJuros();
+  }
+);
+
+watch(
+  () => pagamento.value.codpessoa,
+  () => {
+    pagamento.value.bandeira = null;
+    return;
+    if (!pagamento.value.codpessoa) {
+      return;
+    }
+    pagamento.value.bandeira = bandeirasManuais.value[0].bandeira;
   }
 );
 
@@ -134,12 +150,46 @@ const salvar = async () => {
   sNegocio.dialog.pagamentoPagarMe = false;
 };
 
+const salvarManual = async () => {
+  console.log(pagamento.value);
+};
+
 const consultar = async () => {
   await sPagarMe.consultarPedido();
   if (sPagarMe.pedido.status == 2) {
     sPagarMe.dialog.detalhesPedido = false;
   }
 };
+
+const fechar = async () => {
+  sNegocio.dialog.pagamentoPagarMe = false;
+  sNegocio.dialog.pagamentoCartaoManual = false;
+};
+
+const manual = async () => {
+  sNegocio.dialog.pagamentoPagarMe = false;
+  sNegocio.dialog.pagamentoCartaoManual = true;
+};
+
+const tiposManuais = computed(() => {
+  if (!pagamento.value.codpessoa) {
+    return [];
+  }
+  const pes = cartoesManuais.find((el) => {
+    return pagamento.value.codpessoa == el.codpessoa;
+  });
+  return pes.tipos;
+});
+
+const bandeirasManuais = computed(() => {
+  if (!pagamento.value.codpessoa) {
+    return [];
+  }
+  const pes = cartoesManuais.find((el) => {
+    return pagamento.value.codpessoa == el.codpessoa;
+  });
+  return pes.bandeiras;
+});
 </script>
 <template>
   <!-- DIALOG NOVO PEDIDO -->
@@ -148,8 +198,6 @@ const consultar = async () => {
     @before-show="inicializarValores()"
   >
     <q-card>
-      <!-- {{ pagamento }} -->
-      <!-- {{ parcelamentoDisponivel }} -->
       <q-form @submit="salvar()" ref="formPagarMe">
         <q-card-section>
           <q-list>
@@ -189,9 +237,9 @@ const consultar = async () => {
             <q-item>
               <q-item-section>
                 <q-item-label>
-                  <q-radio v-model="pagamento.tipo" val="1" label="Débito" />
-                  <q-radio v-model="pagamento.tipo" val="2" label="Crédito" />
-                  <q-radio v-model="pagamento.tipo" val="3" label="Voucher" />
+                  <q-radio v-model="pagamento.tipo" :val="1" label="Débito" />
+                  <q-radio v-model="pagamento.tipo" :val="2" label="Crédito" />
+                  <q-radio v-model="pagamento.tipo" :val="3" label="Voucher" />
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -235,7 +283,7 @@ const consultar = async () => {
             flat
             label="Cancelar"
             color="primary"
-            @click="sNegocio.dialog.pagamentoPagarMe = false"
+            @click="fechar()"
             tabindex="-1"
           />
           <q-btn
@@ -250,6 +298,179 @@ const consultar = async () => {
         </q-card-actions>
       </q-form>
     </q-card>
+  </q-dialog>
+
+  <!-- DIALOG CARTAO MANUAL -->
+  <q-dialog v-model="sNegocio.dialog.pagamentoCartaoManual">
+    <q-stepper v-model="step" vertical color="primary" animated>
+      <!-- PESSOA  -->
+      <q-step :name="1" title="Parceiros" icon="person" :done="step > 1">
+        <div class="row">
+          <q-radio
+            class="col-xs-12 col-sm-6 q-pa-sm"
+            v-model="pagamento.codpessoa"
+            v-for="pes in cartoesManuais"
+            :val="pes.codpessoa"
+            :key="pes.codpessoa"
+          >
+            <q-avatar>
+              <img :src="pes.logo" />
+            </q-avatar>
+            {{ pes.apelido }}
+          </q-radio>
+        </div>
+        <q-stepper-navigation>
+          <q-btn @click="step = 2" color="primary" label="Continuar" />
+        </q-stepper-navigation>
+      </q-step>
+
+      <!-- TIPO  -->
+      <q-step :name="2" title="Tipo" icon="create_new_folder" :done="step > 2">
+        <q-radio
+          class="q-pa-sm"
+          v-model="pagamento.tipo"
+          :val="tipo.tipo"
+          v-for="tipo in tiposManuais"
+          :key="tipo.tipo"
+          :label="tipo.apelido"
+        />
+        <q-stepper-navigation>
+          <q-btn @click="step = 3" color="primary" label="Continuar" />
+          <q-btn
+            flat
+            @click="step = 1"
+            color="primary"
+            label="Voltar"
+            class="q-ml-sm"
+          />
+        </q-stepper-navigation>
+      </q-step>
+
+      <q-step :name="3" title="Parcelamento" icon="add_comment">
+        <div class="row">
+          <q-radio
+            v-model="pagamento.parcelas"
+            v-for="parc in parcelamentoDisponivel"
+            :val="parc.parcelas"
+            :key="parc.parcelas"
+            class="col-xs-12 col-sm-6"
+          >
+            <b>{{ parc.parcelas }}</b>
+            <span class="text-grey"> x R$ </span>
+            <b>
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(parc.valorparcela)
+              }}
+            </b>
+            <span v-if="parc.valorjuros"> C/Juros </span>
+          </q-radio>
+        </div>
+
+        <q-stepper-navigation>
+          <q-btn @click="step = 4" color="primary" label="Continuar" />
+          <q-btn
+            flat
+            @click="step = 2"
+            color="primary"
+            label="Voltar"
+            class="q-ml-sm"
+          />
+        </q-stepper-navigation>
+      </q-step>
+
+      <q-step :name="4" title="Bandeira" icon="add_comment">
+        <div class="row">
+          <q-radio
+            v-for="band in bandeirasManuais"
+            :key="band.bandeira"
+            v-model="pagamento.bandeira"
+            :val="band.bandeira"
+            :label="band.apelido"
+            class="col-xs-12 col-sm-6"
+          />
+        </div>
+        <q-stepper-navigation>
+          <q-btn @click="step = 5" color="primary" label="Continuar" />
+          <q-btn
+            flat
+            @click="step = 3"
+            color="primary"
+            label="Voltar"
+            class="q-ml-sm"
+          />
+        </q-stepper-navigation>
+      </q-step>
+
+      <q-step :name="5" title="Autorização" icon="add_comment">
+        <template v-if="pagamento.valorjuros">
+          <!-- JUROS -->
+          <q-item>
+            <q-item-section class="q-pr-lg">
+              <q-item-label class="text-right">
+                R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(Math.abs(pagamento.valorjuros))
+                }}
+              </q-item-label>
+              <q-item-label class="text-right" caption> Juros </q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <!-- VALOR TOTAL -->
+          <q-item>
+            <q-item-section class="q-pr-lg">
+              <q-item-label class="text-right">
+                R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(Math.abs(pagamento.valorjuros + pagamento.valor))
+                }}
+              </q-item-label>
+              <q-item-label class="text-right" caption>
+                Valor Total
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+
+        <!-- AUTORIZACAO  -->
+        <q-item>
+          <q-item-section>
+            <q-input
+              outlined
+              v-model="pagamento.autorizacao"
+              :rules="[
+                (value) =>
+                  value.length > 6 || 'Preencha o número de Atorização!',
+              ]"
+              label="Autorização"
+            />
+          </q-item-section>
+        </q-item>
+
+        <q-stepper-navigation>
+          <q-btn color="primary" @click="salvarManual()" label="Salvar" />
+          <q-btn
+            flat
+            @click="step = 4"
+            color="primary"
+            label="Voltar"
+            class="q-ml-sm"
+          />
+        </q-stepper-navigation>
+      </q-step>
+    </q-stepper>
   </q-dialog>
 
   <!-- DIALOG DETALHES PEDIDO -->
