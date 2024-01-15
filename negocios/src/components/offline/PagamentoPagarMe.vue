@@ -17,7 +17,7 @@ const pagamento = ref({});
 const parcelamentoDisponivel = ref([]);
 const formPagarMe = ref(null);
 
-const step = ref(1);
+const stepManual = ref(1);
 
 const inicializarValores = () => {
   const padrao = {
@@ -28,6 +28,9 @@ const inicializarValores = () => {
     tipo: "1",
     parcelas: 1,
     jurosloja: true,
+    codpessoa: null,
+    autorizacao: null,
+    bandeira: null,
     codpessoa: null,
   };
   if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
@@ -76,12 +79,13 @@ watch(
 watch(
   () => pagamento.value.codpessoa,
   () => {
-    pagamento.value.bandeira = null;
-    return;
-    if (!pagamento.value.codpessoa) {
-      return;
+    if (bandeirasManuais.value.length == 1) {
+      pagamento.value.bandeira = bandeirasManuais.value[0].bandeira;
     }
-    pagamento.value.bandeira = bandeirasManuais.value[0].bandeira;
+    if (tiposManuais.value.length == 1) {
+      pagamento.value.tipo = tiposManuais.value[0].tipo;
+    }
+    return;
   }
 );
 
@@ -118,10 +122,7 @@ const calcularParcelas = () => {
       break;
     }
   }
-
-  if (tipo != 2) {
-    pagamento.value.parcelas = 1;
-  }
+  pagamento.value.parcelas = 1;
 };
 
 const calcularJuros = () => {
@@ -151,6 +152,26 @@ const salvar = async () => {
 };
 
 const salvarManual = async () => {
+  if (!pagamento.value.codpessoa) {
+    stepManual.value = 1;
+    Notify.create({
+      type: "negative",
+      message: "Selecione um parceiro!",
+      actions: [{ icon: "close", color: "white" }],
+    });
+    return;
+  }
+
+  if (!pagamento.value.valor) {
+    stepManual.value = 1;
+    Notify.create({
+      type: "negative",
+      message: "Preencha o valor!",
+      actions: [{ icon: "close", color: "white" }],
+    });
+    return;
+  }
+
   console.log(pagamento.value);
 };
 
@@ -167,6 +188,7 @@ const fechar = async () => {
 };
 
 const manual = async () => {
+  stepManual.value = 1;
   sNegocio.dialog.pagamentoPagarMe = false;
   sNegocio.dialog.pagamentoCartaoManual = true;
 };
@@ -190,6 +212,60 @@ const bandeirasManuais = computed(() => {
   });
   return pes.bandeiras;
 });
+
+const labelParceiro = computed(() => {
+  if (!pagamento.value.codpessoa) {
+    return [];
+  }
+  let ret = "";
+  const pes = cartoesManuais.find((el) => {
+    return pagamento.value.codpessoa == el.codpessoa;
+  });
+  ret += pes.apelido;
+  if (tiposManuais.value.length > 1) {
+    const tipo = tiposManuais.value.find((el) => {
+      return pagamento.value.tipo == el.tipo;
+    });
+    ret += "\n" + tipo.apelido;
+  }
+  if (bandeirasManuais.value.length > 1) {
+    const band = bandeirasManuais.value.find((el) => {
+      return pagamento.value.bandeira == el.bandeira;
+    });
+    ret += "\n" + band.apelido;
+  }
+  return ret;
+});
+
+const vaiParaStepManual = async (step) => {
+  switch (step) {
+    case 1: // Parceiros
+      break;
+    case 2: // Tipo
+      if (tiposManuais.value.length == 1) {
+        vaiParaStepManual(step + 1);
+        return;
+      }
+      break;
+    case 3: // Parcelamento
+      if (parcelamentoDisponivel.value.length == 1) {
+        vaiParaStepManual(step + 1);
+        return;
+      }
+      break;
+    case 4: // Bandeira
+      if (bandeirasManuais.value.length == 1) {
+        vaiParaStepManual(step + 1);
+        return;
+      }
+      break;
+    // case 5: // Finalizacao
+    //   break;
+    // default:
+    //   break;
+  }
+  stepManual.value = step;
+};
 </script>
 <template>
   <!-- DIALOG NOVO PEDIDO -->
@@ -197,7 +273,7 @@ const bandeirasManuais = computed(() => {
     v-model="sNegocio.dialog.pagamentoPagarMe"
     @before-show="inicializarValores()"
   >
-    <q-card>
+    <q-card style="width: 600px">
       <q-form @submit="salvar()" ref="formPagarMe">
         <q-card-section>
           <q-list>
@@ -221,7 +297,7 @@ const bandeirasManuais = computed(() => {
                 <q-input
                   prefix="R$"
                   type="number"
-                  step="0.01"
+                  stepManual="0.01"
                   min="0.01"
                   :max="sNegocio.valorapagar"
                   borderless
@@ -302,180 +378,282 @@ const bandeirasManuais = computed(() => {
 
   <!-- DIALOG CARTAO MANUAL -->
   <q-dialog v-model="sNegocio.dialog.pagamentoCartaoManual">
-    <q-stepper v-model="step" vertical color="primary" animated>
-      <!-- PESSOA  -->
-      <q-step :name="1" title="Parceiros" icon="person" :done="step > 1">
-        <div class="row">
-          <q-radio
-            class="col-xs-12 col-sm-6 q-pa-sm"
-            v-model="pagamento.codpessoa"
-            v-for="pes in cartoesManuais"
-            :val="pes.codpessoa"
-            :key="pes.codpessoa"
+    <q-card style="width: 600px">
+      <q-stepper
+        v-model="stepManual"
+        vertical
+        color="primary"
+        animated
+        header-nav
+      >
+        <q-form @submit="salvarManual()" ref="formManual">
+          <!-- PESSOA  -->
+          <q-step
+            :name="1"
+            title="Parceiro"
+            icon="account_balance"
+            :done="stepManual > 1"
           >
-            <q-avatar>
-              <img :src="pes.logo" />
-            </q-avatar>
-            {{ pes.apelido }}
-          </q-radio>
-        </div>
-        <q-stepper-navigation>
-          <q-btn @click="step = 2" color="primary" label="Continuar" />
-        </q-stepper-navigation>
-      </q-step>
+            <div class="row q-mb-md">
+              <q-radio
+                class="col-xs-12 col-sm-6 q-pa-sm"
+                v-model="pagamento.codpessoa"
+                v-for="pes in cartoesManuais"
+                :val="pes.codpessoa"
+                :key="pes.codpessoa"
+                @update:model-value="vaiParaStepManual(2)"
+              >
+                <q-avatar>
+                  <img :src="pes.logo" />
+                </q-avatar>
+                {{ pes.apelido }}
+              </q-radio>
+            </div>
+            <q-btn
+              @click="vaiParaStepManual(2)"
+              color="primary"
+              label="Continuar"
+            />
+          </q-step>
 
-      <!-- TIPO  -->
-      <q-step :name="2" title="Tipo" icon="create_new_folder" :done="step > 2">
-        <q-radio
-          class="q-pa-sm"
-          v-model="pagamento.tipo"
-          :val="tipo.tipo"
-          v-for="tipo in tiposManuais"
-          :key="tipo.tipo"
-          :label="tipo.apelido"
-        />
-        <q-stepper-navigation>
-          <q-btn @click="step = 3" color="primary" label="Continuar" />
-          <q-btn
-            flat
-            @click="step = 1"
-            color="primary"
-            label="Voltar"
-            class="q-ml-sm"
-          />
-        </q-stepper-navigation>
-      </q-step>
-
-      <q-step :name="3" title="Parcelamento" icon="add_comment">
-        <div class="row">
-          <q-radio
-            v-model="pagamento.parcelas"
-            v-for="parc in parcelamentoDisponivel"
-            :val="parc.parcelas"
-            :key="parc.parcelas"
-            class="col-xs-12 col-sm-6"
+          <!-- TIPO  -->
+          <q-step
+            :name="2"
+            title="Tipo"
+            icon="account_balance_wallet"
+            :done="stepManual > 2"
           >
-            <b>{{ parc.parcelas }}</b>
-            <span class="text-grey"> x R$ </span>
-            <b>
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(parc.valorparcela)
-              }}
-            </b>
-            <span v-if="parc.valorjuros"> C/Juros </span>
-          </q-radio>
-        </div>
+            <div class="row q-mb-md">
+              <q-radio
+                class="col-xs-12 col-sm-4"
+                v-model="pagamento.tipo"
+                :val="tipo.tipo"
+                v-for="tipo in tiposManuais"
+                :key="tipo.tipo"
+                :label="tipo.apelido"
+                @update:model-value="vaiParaStepManual(3)"
+              />
+            </div>
+            <q-btn
+              @click="vaiParaStepManual(3)"
+              color="primary"
+              label="Continuar"
+            />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
+          </q-step>
 
-        <q-stepper-navigation>
-          <q-btn @click="step = 4" color="primary" label="Continuar" />
-          <q-btn
-            flat
-            @click="step = 2"
-            color="primary"
-            label="Voltar"
-            class="q-ml-sm"
-          />
-        </q-stepper-navigation>
-      </q-step>
+          <q-step
+            :name="3"
+            title="Valor e Parcelamento"
+            icon="calendar_month"
+            :done="stepManual > 3"
+          >
+            <q-input
+              prefix="R$"
+              type="number"
+              stepManual="0.01"
+              min="0.01"
+              outlined
+              :max="sNegocio.valorapagar"
+              borderless
+              v-model.number="pagamento.valor"
+              autofocus
+              input-class="text-h3 text-weight-bolder text-right text-primary"
+              class="q-mb-md"
+            />
+            <div class="row q-mb-md" v-if="parcelamentoDisponivel.length > 1">
+              <q-radio
+                v-model="pagamento.parcelas"
+                v-for="parc in parcelamentoDisponivel"
+                :val="parc.parcelas"
+                :key="parc.parcelas"
+                class="col-xs-12 col-sm-6"
+                @update:model-value="vaiParaStepManual(4)"
+              >
+                <b>{{ parc.parcelas }}</b>
+                <span class="text-grey"> x R$ </span>
+                <b>
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "decimal",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(parc.valorparcela)
+                  }}
+                </b>
+                <span v-if="parc.valorjuros"> C/Juros </span>
+              </q-radio>
+            </div>
+            <q-btn
+              @click="vaiParaStepManual(4)"
+              color="primary"
+              label="Continuar"
+            />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
+          </q-step>
 
-      <q-step :name="4" title="Bandeira" icon="add_comment">
-        <div class="row">
-          <q-radio
-            v-for="band in bandeirasManuais"
-            :key="band.bandeira"
-            v-model="pagamento.bandeira"
-            :val="band.bandeira"
-            :label="band.apelido"
-            class="col-xs-12 col-sm-6"
-          />
-        </div>
-        <q-stepper-navigation>
-          <q-btn @click="step = 5" color="primary" label="Continuar" />
-          <q-btn
-            flat
-            @click="step = 3"
-            color="primary"
-            label="Voltar"
-            class="q-ml-sm"
-          />
-        </q-stepper-navigation>
-      </q-step>
+          <q-step
+            :name="4"
+            title="Bandeira"
+            icon="style"
+            :done="stepManual > 4"
+          >
+            <div class="row q-mb-md">
+              <q-radio
+                v-for="band in bandeirasManuais"
+                :key="band.bandeira"
+                v-model="pagamento.bandeira"
+                :val="band.bandeira"
+                :label="band.apelido"
+                class="col-xs-12 col-sm-4"
+                @update:model-value="vaiParaStepManual(5)"
+              />
+            </div>
+            <q-btn
+              @click="vaiParaStepManual(5)"
+              color="primary"
+              label="Continuar"
+            />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
+          </q-step>
 
-      <q-step :name="5" title="Autorização" icon="add_comment">
-        <template v-if="pagamento.valorjuros">
-          <!-- JUROS -->
-          <q-item>
-            <q-item-section class="q-pr-lg">
-              <q-item-label class="text-right">
-                R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(Math.abs(pagamento.valorjuros))
-                }}
-              </q-item-label>
-              <q-item-label class="text-right" caption> Juros </q-item-label>
-            </q-item-section>
-          </q-item>
+          <q-step :name="5" title="Autorização" icon="task_alt">
+            <q-list bordered class="rounded-borders q-mb-md">
+              <!-- Cartão -->
+              <q-item>
+                <q-item-section>
+                  <q-item-label caption> Parceiro </q-item-label>
+                  <q-item-label style="white-space: break-spaces">
+                    {{ labelParceiro }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
 
-          <!-- VALOR TOTAL -->
-          <q-item>
-            <q-item-section class="q-pr-lg">
-              <q-item-label class="text-right">
-                R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(Math.abs(pagamento.valorjuros + pagamento.valor))
-                }}
-              </q-item-label>
-              <q-item-label class="text-right" caption>
-                Valor Total
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
+              <!-- VALOR -->
+              <q-separator inset />
+              <q-item>
+                <q-item-section bordered>
+                  <q-item-label caption> Valor </q-item-label>
+                  <q-item-label>
+                    R$
+                    {{
+                      new Intl.NumberFormat("pt-BR", {
+                        style: "decimal",
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(Math.abs(pagamento.valor))
+                    }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
 
-        <!-- AUTORIZACAO  -->
-        <q-item>
-          <q-item-section>
+              <template v-if="pagamento.valorjuros">
+                <!-- JUROS -->
+                <q-separator inset />
+                <q-item>
+                  <q-item-section>
+                    <q-item-label caption> Juros </q-item-label>
+                    <q-item-label>
+                      R$
+                      {{
+                        new Intl.NumberFormat("pt-BR", {
+                          style: "decimal",
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(Math.abs(pagamento.valorjuros))
+                      }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <!-- VALOR TOTAL -->
+                <q-separator inset />
+                <q-item>
+                  <q-item-section>
+                    <q-item-label caption> Valor Total </q-item-label>
+                    <q-item-label>
+                      R$
+                      {{
+                        new Intl.NumberFormat("pt-BR", {
+                          style: "decimal",
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(
+                          Math.abs(pagamento.valorjuros + pagamento.valor)
+                        )
+                      }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <!-- VALOR -->
+              <template v-if="pagamento.parcelas > 1">
+                <q-separator inset />
+                <q-item>
+                  <q-item-section bordered>
+                    <q-item-label caption> Parcelas </q-item-label>
+                    <q-item-label>
+                      {{ pagamento.parcelas }}
+                      de R$
+                      {{
+                        new Intl.NumberFormat("pt-BR", {
+                          style: "decimal",
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }).format(Math.abs(pagamento.valorparcela))
+                      }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-list>
+            <!-- AUTORIZACAO  -->
             <q-input
               outlined
               v-model="pagamento.autorizacao"
               :rules="[
                 (value) =>
-                  value.length > 6 || 'Preencha o número de Atorização!',
+                  value.length >= 4 || 'Preencha o número de Atorização!',
               ]"
-              label="Autorização"
+              label="Código de Autorização"
+              class="q-mb-md"
             />
-          </q-item-section>
-        </q-item>
-
-        <q-stepper-navigation>
-          <q-btn color="primary" @click="salvarManual()" label="Salvar" />
-          <q-btn
-            flat
-            @click="step = 4"
-            color="primary"
-            label="Voltar"
-            class="q-ml-sm"
-          />
-        </q-stepper-navigation>
-      </q-step>
-    </q-stepper>
+            <q-btn color="primary" type="submit" label="Salvar" />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
+          </q-step>
+        </q-form>
+      </q-stepper>
+    </q-card>
   </q-dialog>
 
   <!-- DIALOG DETALHES PEDIDO -->
   <q-dialog v-model="sPagarMe.dialog.detalhesPedido">
-    <q-card>
+    <q-card style="width: 600px">
       <q-card-section>
         <div class="text-h6">
           Cobrança Stone/PagarMe de R$
