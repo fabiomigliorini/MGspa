@@ -89,7 +89,7 @@ watch(
   }
 );
 
-const calcularParcelas = () => {
+const calcularParcelas = async () => {
   const valorMinimoParcela = 30.0;
   const taxa = 1.5;
   const valor = pagamento.value.valor;
@@ -151,7 +151,10 @@ const salvar = async () => {
   sNegocio.dialog.pagamentoPagarMe = false;
 };
 
-const salvarManual = async () => {
+const inputAutorizacao = ref();
+const inputValor = ref();
+
+const validarManual = async () => {
   if (!pagamento.value.codpessoa) {
     stepManual.value = 1;
     Notify.create({
@@ -159,11 +162,21 @@ const salvarManual = async () => {
       message: "Selecione um parceiro!",
       actions: [{ icon: "close", color: "white" }],
     });
+    return false;
+  }
+
+  if (!pagamento.value.tipo) {
+    stepManual.value = 2;
+    Notify.create({
+      type: "negative",
+      message: "Preencha o Tipo!",
+      actions: [{ icon: "close", color: "white" }],
+    });
     return;
   }
 
   if (!pagamento.value.valor) {
-    stepManual.value = 1;
+    stepManual.value = 3;
     Notify.create({
       type: "negative",
       message: "Preencha o valor!",
@@ -172,7 +185,56 @@ const salvarManual = async () => {
     return;
   }
 
-  console.log(pagamento.value);
+  if (!pagamento.value.parcelas) {
+    stepManual.value = 3;
+    Notify.create({
+      type: "negative",
+      message: "Selecione a quantidade de Parcelas!",
+      actions: [{ icon: "close", color: "white" }],
+    });
+    return;
+  }
+
+  if (!pagamento.value.bandeira) {
+    stepManual.value = 4;
+    Notify.create({
+      type: "negative",
+      message: "Selecione a Bandeira!",
+      actions: [{ icon: "close", color: "white" }],
+    });
+    return;
+  }
+
+  if (!pagamento.value.autorizacao) {
+    stepManual.value = 5;
+    Notify.create({
+      type: "negative",
+      message: "Preencha o número de Autorização!",
+      actions: [{ icon: "close", color: "white" }],
+    });
+    return;
+  }
+
+  return true;
+};
+
+const salvarManual = async () => {
+  if (!validarManual()) {
+    return;
+  }
+  const tipo = tiposManuais.value.find((el) => {
+    return pagamento.value.tipo == el.tipo;
+  });
+  await sNegocio.adicionarPagamento(
+    parseInt(process.env.CODFORMAPAGAMENTO_CARTAOMANUAL), // codformapagamento Dinheiro
+    tipo.tpag, // tipo Dinheiro
+    pagamento.value.valor,
+    pagamento.value.valorjuros, // valorjuros
+    pagamento.value.codpessoa, // codpessoa
+    pagamento.value.bandeira, // bandeira
+    pagamento.value.autorizacao // autorizacao
+  );
+  sNegocio.dialog.pagamentoCartaoManual = false;
 };
 
 const consultar = async () => {
@@ -241,28 +303,42 @@ const vaiParaStepManual = async (step) => {
   switch (step) {
     case 1: // Parceiros
       break;
+
     case 2: // Tipo
-      if (tiposManuais.value.length == 1) {
-        vaiParaStepManual(step + 1);
-        return;
+      if (pagamento.value.codpessoa) {
+        const pes = cartoesManuais.find((el) => {
+          return pagamento.value.codpessoa == el.codpessoa;
+        });
+        // se só tem um tipo vai para próximo step
+        if (pes.tipos.length == 1) {
+          vaiParaStepManual(step + 1);
+          return;
+        }
       }
       break;
+
+    /*
     case 3: // Parcelamento
+      await calcularParcelas();
+      // se só tem uma opcao de parcelamento vai para próximo step
       if (parcelamentoDisponivel.value.length == 1) {
         vaiParaStepManual(step + 1);
         return;
       }
       break;
+    */
+
     case 4: // Bandeira
-      if (bandeirasManuais.value.length == 1) {
-        vaiParaStepManual(step + 1);
-        return;
+      if (pagamento.value.codpessoa) {
+        const pes = cartoesManuais.find((el) => {
+          return pagamento.value.codpessoa == el.codpessoa;
+        });
+        if (pes.bandeiras.length == 1) {
+          vaiParaStepManual(step + 1);
+          return;
+        }
       }
       break;
-    // case 5: // Finalizacao
-    //   break;
-    // default:
-    //   break;
   }
   stepManual.value = step;
 };
@@ -457,13 +533,14 @@ const vaiParaStepManual = async (step) => {
             <q-input
               prefix="R$"
               type="number"
-              stepManual="0.01"
+              step="0.01"
               min="0.01"
-              outlined
               :max="sNegocio.valorapagar"
+              outlined
               borderless
               v-model.number="pagamento.valor"
               autofocus
+              @keydown.enter.prevent="vaiParaStepManual(4)"
               input-class="text-h3 text-weight-bolder text-right text-primary"
               class="q-mb-md"
             />
@@ -630,12 +707,10 @@ const vaiParaStepManual = async (step) => {
             <q-input
               outlined
               v-model="pagamento.autorizacao"
-              :rules="[
-                (value) =>
-                  value.length >= 4 || 'Preencha o número de Atorização!',
-              ]"
               label="Código de Autorização"
               class="q-mb-md"
+              ref="inputAutorizacao"
+              autofocus
             />
             <q-btn color="primary" type="submit" label="Salvar" />
             <q-btn

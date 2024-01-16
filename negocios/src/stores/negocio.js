@@ -636,12 +636,9 @@ export const negocioStore = defineStore("negocio", {
       valorpagamento,
       valorjuros,
       valortroco,
-      integracao,
       codpessoa,
       bandeira,
-      autorizacao,
-      codpixcob,
-      codpagarmepedido
+      autorizacao
     ) {
       await this.recarregar();
       const fp = await db.formaPagamento.get(codformapagamento);
@@ -651,13 +648,11 @@ export const negocioStore = defineStore("negocio", {
         valorpagamento: valorpagamento,
         alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
         criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
-        codpixcob: codpixcob,
-        codpagarmepedido: codpagarmepedido,
         valorjuros: valorjuros,
         valortroco: valortroco,
         avista: fp.avista,
         tipo: tipo,
-        integracao: integracao,
+        integracao: false,
         codpessoa: codpessoa,
         bandeira: bandeira,
         autorizacao: autorizacao,

@@ -55,12 +55,9 @@ const pixChave = async () => {
     valorPagamento.value,
     null, // valorjuros
     null, // valor
-    false, // integracao
     null, // codpessoa
     null, // bandeira
-    null, // autorizacao
-    null, // codpixcob
-    null // codpagarmepedido
+    null // autorizacao
   );
 };
 

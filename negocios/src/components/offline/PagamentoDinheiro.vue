@@ -42,12 +42,9 @@ const salvar = () => {
     valorPagamento.value,
     null, // valorjuros
     valortroco,
-    false, // integracao
     null, // codpessoa
     null, // bandeira
-    null, // autorizacao
-    null, // codpixcob
-    null // codpagarmepedido
+    null // autorizacao
   );
 };
 </script>
