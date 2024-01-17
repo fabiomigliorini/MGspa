@@ -433,9 +433,18 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         return data.data;
       } catch (error) {
         console.log(error);
-        var message = error?.response?.data?.message;
-        if (!message) {
-          message = error?.message;
+        let message = "";
+        switch (error.code) {
+          case "ERR_NETWORK":
+            message = "Erro ao comunicar com Servidor. Operando Offline!";
+            break;
+
+          default:
+            message = error?.response?.data?.message;
+            if (!message) {
+              message = error?.message;
+            }
+            break;
         }
         Notify.create({
           type: "negative",

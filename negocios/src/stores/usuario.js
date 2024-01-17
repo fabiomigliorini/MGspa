@@ -36,11 +36,33 @@ export const usuarioStore = defineStore("usuario", {
         }
         return true;
       } catch (error) {
+        console.log(error);
+        let message = "";
+        switch (error.code) {
+          case "ERR_NETWORK":
+            message = "Falha ao comunicar com o Servidor!";
+            break;
+
+          case "ERR_BAD_RESPONSE":
+            message = "Usuário Incorreto!";
+            break;
+
+          case "ERR_BAD_REQUEST":
+            message = "Senha Incorreta!";
+            break;
+
+          default:
+            message = error?.response?.data?.message;
+            if (!message) {
+              message = error?.message;
+            }
+            break;
+        }
         Notify.create({
           type: "negative",
-          message: "Usuário ou Senha inválidos!",
+          message: message,
+          actions: [{ icon: "close", color: "white" }],
         });
-        console.log(error);
         return false;
       }
     },
