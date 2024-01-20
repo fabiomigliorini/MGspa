@@ -549,34 +549,81 @@ if (!function_exists('numeroLimpo')) {
 }
 
 if (!function_exists('primeiraLetraMaiuscula')) {
-    function primeiraLetraMaiuscula($string)
-    {
-        // Isso irá forçar tudo para minusculo, afim de entrar no regex e quebrar os espaços.
-        $minusculas = [
-            'da',
-            'de',
-            'do',
-            'dos',
-            'e',
-        ];
-        $string = str_replace('.', '. ', $string);
-        $string = str_replace('  ', ' ', $string);
-        $explodes = explode(' ', strtolower($string));
-        $palavra = '';
-        // Cria loop finito para cada palavra
-        $primeira = true;
-        foreach ($explodes as $explode) {
-            if (!$primeira && in_array($explode, $minusculas)) {
-                $palavra .= strtolower($explode) . ' ';
-            } elseif (!preg_match("/^m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})(.?)$/", $explode)) {
-                // Se não houver número romano a primeira letra é passada para maiúsculo.
-                $palavra .= ucfirst($explode) . ' ';
-            } else {
-                // Se houver número romano tudo é passado para maiúsculo.
-                $palavra .= strtoupper($explode) . ' ';
+    function primeiraLetraMaiuscula(
+        $str, 
+        $delimiters = [
+            " ",
+            "-",
+            ".",
+            "'",
+            "O'",
+            "Mc",
+        ], 
+        $exceptions = [
+            "de",
+            "do",
+            "da",
+            "dos",
+            "das",
+            "AC",
+            "AL",
+            "AM",
+            "RO",
+            "RR",
+            "PA",
+            "AP",
+            "TO",
+            "MA",
+            "PI",
+            "CE",
+            "RN",
+            "PB",
+            "PE",
+            "SE",
+            "BA",
+            "MG",
+            "ES",
+            "RJ",
+            "SP",
+            "PR",
+            "SC",
+            "RS",
+            "MS",
+            "MT",
+            "GO",
+            "DF",
+            "HGR",
+        ]
+    ) {
+        $result = '';
+
+        foreach ($delimiters as $delimiter) {
+            # If string has a delimiter
+            if (strstr($str, $delimiter)) {
+
+                $ucfirst = array();
+                # Apply ucfirst to every word
+                foreach (explode($delimiter, mb_strtolower($str)) as $word) {
+                    $word = mb_convert_case($word, MB_CASE_TITLE);
+
+                    # Working with exceptions
+                    if (in_array(mb_strtoupper($word), $exceptions)) {
+                        $word = mb_strtoupper($word);
+                    } elseif (in_array(mb_strtolower($word), $exceptions)) {
+                        $word = mb_strtolower($word);
+                    } elseif (preg_match('/^M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/', mb_strtoupper($word))) {
+                        # Is roman numerals? # http://stackoverflow.com/a/267405/437459
+                        $word = mb_strtoupper($word);
+                    }
+
+                    $ucfirst[] = $word;
+                }
+
+                # string's first character uppercased
+                $result = implode($delimiter, $ucfirst);
             }
-            $primeira = false;
         }
-        return rtrim($palavra, ' ');
-    }
+
+        return $result;
+    }    
 }
