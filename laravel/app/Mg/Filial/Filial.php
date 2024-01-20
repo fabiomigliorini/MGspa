@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Dec/2023 11:37:24
+ * Date: 20/Jan/2024 15:01:39
  */
 
 namespace Mg\Filial;
@@ -28,6 +28,8 @@ use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
 use Mg\PagarMe\PagarMePos;
 use Mg\Pdv\Pdv;
+use Mg\Colaborador\Colaborador;
+use Mg\Colaborador\ColaboradorCargo;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -128,6 +130,16 @@ class Filial extends MgModel
 
 
     // Tabelas Filhas
+    public function ColaboradorS()
+    {
+        return $this->hasMany(Colaborador::class, 'codfilial', 'codfilial');
+    }
+
+    public function ColaboradorCargoS()
+    {
+        return $this->hasMany(ColaboradorCargo::class, 'codfilial', 'codfilial');
+    }
+
     public function DistribuicaoDfeS()
     {
         return $this->hasMany(DistribuicaoDfe::class, 'codfilial', 'codfilial');

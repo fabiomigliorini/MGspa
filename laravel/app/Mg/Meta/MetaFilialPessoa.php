@@ -1,13 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jul/2020 11:57:56
+ * Date: 20/Jan/2024 15:01:19
  */
 
 namespace Mg\Meta;
 
 use Mg\MgModel;
-use Mg\Pessoa\Cargo;
+use Mg\Colaborador\Cargo;
 use Mg\Meta\MetaFilial;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;

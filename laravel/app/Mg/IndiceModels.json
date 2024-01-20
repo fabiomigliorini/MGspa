@@ -269,6 +269,16 @@
                 "tabela": "tblpdv",
                 "coluna": "codfilial",
                 "metodo": "PdvS"
+            },
+            "tblcolaborador.codfilial": {
+                "tabela": "tblcolaborador",
+                "coluna": "codfilial",
+                "metodo": "ColaboradorS"
+            },
+            "tblcolaboradorcargo.codfilial": {
+                "tabela": "tblcolaboradorcargo",
+                "coluna": "codfilial",
+                "metodo": "ColaboradorCargoS"
             }
         }
     },
@@ -876,6 +886,11 @@
                 "tabela": "tblnegocioformapagamento",
                 "coluna": "codpessoa",
                 "metodo": "NegocioFormaPagamentoS"
+            },
+            "tblcolaborador.codpessoa": {
+                "tabela": "tblcolaborador",
+                "coluna": "codpessoa",
+                "metodo": "ColaboradorS"
             }
         }
     },
@@ -3267,11 +3282,33 @@
     "tblcargo": {
         "tabela": "tblcargo",
         "campocodigo": "codcargo",
-        "namespace": "Mg\\Pessoa",
+        "namespace": "Mg\\Colaborador",
         "classe": "Cargo",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Cargo.php",
-        "belongsTo": [],
-        "hasMany": []
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Colaborador\/Cargo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcolaboradorcargo.codcargo": {
+                "tabela": "tblcolaboradorcargo",
+                "coluna": "codcargo",
+                "metodo": "ColaboradorCargoS"
+            },
+            "tblmetafilialpessoa.codcargo": {
+                "tabela": "tblmetafilialpessoa",
+                "coluna": "codcargo",
+                "metodo": "MetaFilialPessoaS"
+            }
+        }
     },
     "tblliopedidostatus": {
         "tabela": "tblliopedidostatus",
@@ -5652,5 +5689,106 @@
                 "metodo": "NaturezaOperacaoS"
             }
         }
+    },
+    "tblferias": {
+        "tabela": "tblferias",
+        "campocodigo": "codferias",
+        "namespace": "Mg\\Colaborador",
+        "classe": "Ferias",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Colaborador\/Ferias.php",
+        "belongsTo": {
+            "codcolaborador": {
+                "tabela": "tblcolaborador",
+                "coluna": "codcolaborador",
+                "metodo": "Colaborador"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblcolaborador": {
+        "tabela": "tblcolaborador",
+        "campocodigo": "codcolaborador",
+        "namespace": "Mg\\Colaborador",
+        "classe": "Colaborador",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Colaborador\/Colaborador.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcolaboradorcargo.codcolaborador": {
+                "tabela": "tblcolaboradorcargo",
+                "coluna": "codcolaborador",
+                "metodo": "ColaboradorCargoS"
+            },
+            "tblferias.codcolaborador": {
+                "tabela": "tblferias",
+                "coluna": "codcolaborador",
+                "metodo": "FeriasS"
+            }
+        }
+    },
+    "tblcolaboradorcargo": {
+        "tabela": "tblcolaboradorcargo",
+        "campocodigo": "codcolaboradorcargo",
+        "namespace": "Mg\\Colaborador",
+        "classe": "ColaboradorCargo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Colaborador\/ColaboradorCargo.php",
+        "belongsTo": {
+            "codcargo": {
+                "tabela": "tblcargo",
+                "coluna": "codcargo",
+                "metodo": "Cargo"
+            },
+            "codcolaborador": {
+                "tabela": "tblcolaborador",
+                "coluna": "codcolaborador",
+                "metodo": "Colaborador"
+            },
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }

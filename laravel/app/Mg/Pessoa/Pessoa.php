@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Dec/2023 09:58:30
+ * Date: 20/Jan/2024 15:02:16
  */
 
 namespace Mg\Pessoa;
@@ -36,6 +36,7 @@ use Mg\Pessoa\PessoaEmail;
 use Mg\Pessoa\PessoaEndereco;
 use Mg\Pessoa\PessoaTelefone;
 use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Colaborador\Colaborador;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -91,6 +92,7 @@ class Pessoa extends MgModel
         'ie',
         'inativo',
         'mensagemvenda',
+        'nascimento',
         'notafiscal',
         'numero',
         'numerocobranca',
@@ -103,8 +105,7 @@ class Pessoa extends MgModel
         'telefone3',
         'tipotransportador',
         'toleranciaatraso',
-        'vendedor',
-        'nascimento'
+        'vendedor'
     ];
 
     protected $dates = [
@@ -140,7 +141,7 @@ class Pessoa extends MgModel
         'vendedor' => 'boolean'
     ];
 
-public function certidaoSefazMT()
+    public function certidaoSefazMT()
     {
         return $this->PessoaCertidaoS()->where('validade', '>=', Carbon::createMidnightDate())
             ->ativo()
@@ -205,6 +206,11 @@ public function certidaoSefazMT()
     public function CobrancaHistoricoS()
     {
         return $this->hasMany(CobrancaHistorico::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function ColaboradorS()
+    {
+        return $this->hasMany(Colaborador::class, 'codpessoa', 'codpessoa');
     }
 
     public function CupomFiscalS()
