@@ -7,6 +7,7 @@ import { pagarMeStore } from "stores/pagar-me";
 import PagamentoDinheiro from "components/offline/PagamentoDinheiro.vue";
 import PagamentoPix from "components/offline/PagamentoPix.vue";
 import PagamentoPagarMe from "components/offline/PagamentoPagarMe.vue";
+import PagamentoPrazo from "components/offline/PagamentoPrazo.vue";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpj } from "../../utils/formatador.js";
 import moment from "moment/min/moment-with-locales";
@@ -119,6 +120,10 @@ const dialogPagamentoDinheiro = () => {
 
 const dialogPagamentoPix = () => {
   sNegocio.dialog.pagamentoPix = true;
+};
+
+const dialogPagamentoPrazo = () => {
+  sNegocio.dialog.pagamentoPrazo = true;
 };
 
 const dialogPagamentoPagarMe = () => {
@@ -304,11 +309,14 @@ const creditCardColorPagamento = (pag) => {
     </q-card>
   </q-dialog>
 
+  <!-- DIALOGS DE PAGAMENTOS -->
   <pagamento-dinheiro />
   <pagamento-pix />
   <pagamento-pagar-me />
+  <pagamento-prazo />
 
   <template v-if="sNegocio.negocio">
+    <!-- TOTAIS -->
     <q-list dense class="q-mt-md">
       <q-item
         v-if="
@@ -452,6 +460,7 @@ const creditCardColorPagamento = (pag) => {
           <q-item>
             <q-item-section>
               <q-item-label caption>
+                {{ pag.formapagamento }}
                 {{ pag.nometipo }}
                 <template v-if="pag.parceiro"> | {{ pag.parceiro }} </template>
               </q-item-label>
@@ -465,9 +474,6 @@ const creditCardColorPagamento = (pag) => {
                     maximumFractionDigits: 2,
                   }).format(pag.valortotal)
                 }}
-                <!-- <div v-if="pag.parcelas > 1" class="text-caption">
-                  {{ pag.parcelas }} Parcelas
-                </div> -->
                 <q-btn
                   flat
                   round
@@ -484,6 +490,17 @@ const creditCardColorPagamento = (pag) => {
                   {{ pag.nomebandeira }}:
                 </template>
                 {{ pag.autorizacao }}
+              </q-item-label>
+              <q-item-label caption v-if="pag.parcelas > 1">
+                {{ pag.parcelas }}
+                x de R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(pag.valorparcela)
+                }}
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -508,6 +525,8 @@ const creditCardColorPagamento = (pag) => {
         </q-item>
       </template>
     </q-list>
+
+    <!-- BOTOES DE ADICIONAR PAGAMENTO -->
     <q-list
       class="q-pa-md q-gutter-sm text-right"
       v-if="
@@ -539,12 +558,18 @@ const creditCardColorPagamento = (pag) => {
         <q-tooltip class="bg-accent">PIX (F8)</q-tooltip>
       </q-btn>
 
-      <!-- BOTAO Prazo -->
-      <q-btn round icon="receipt" @click="dialogPrazo()" color="primary">
+      <!-- BOTAO PRAZO -->
+      <q-btn
+        round
+        icon="receipt"
+        @click="dialogPagamentoPrazo()"
+        color="primary"
+      >
         <q-tooltip class="bg-accent">À Prazo (F9)</q-tooltip>
       </q-btn>
     </q-list>
 
+    <!-- LISTAGEM DE PAGAMENTOS -->
     <q-list>
       <q-item
         v-for="cob in sNegocio.negocio.pixCob"

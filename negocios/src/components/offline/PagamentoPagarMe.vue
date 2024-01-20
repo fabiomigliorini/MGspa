@@ -21,7 +21,7 @@ const inicializarValores = () => {
     valor: sNegocio.valorapagar,
     valorparcela: null,
     valorjuros: null,
-    tipo: "1",
+    tipo: 1,
     parcelas: 1,
     jurosloja: true,
     codpessoa: null,
@@ -171,7 +171,17 @@ const validarManual = async () => {
     stepManual.value = 3;
     Notify.create({
       type: "negative",
-      message: "Preencha o valor!",
+      message: "Preencha o Valor!",
+      actions: [{ icon: "close", color: "white" }],
+    });
+    return false;
+  }
+
+  if (pagamento.value.valor > sNegocio.valorapagar) {
+    stepManual.value = 3;
+    Notify.create({
+      type: "negative",
+      message: "O Valor não pode ser maior que o saldo a pagar do Negócio!",
       actions: [{ icon: "close", color: "white" }],
     });
     return false;
@@ -211,7 +221,7 @@ const validarManual = async () => {
 };
 
 const salvarManual = async () => {
-  if (!validarManual()) {
+  if (!(await validarManual())) {
     return;
   }
   const tipo = tiposManuais.value.find((el) => {

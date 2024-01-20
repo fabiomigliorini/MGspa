@@ -23,6 +23,7 @@ export const negocioStore = defineStore("negocio", {
       pagamentoPix: false,
       pagamentoPagarMe: false,
       pagamentoCartaoManual: false,
+      pagamentoPrazo: false,
     },
     padrao: {
       codestoquelocal: null,
