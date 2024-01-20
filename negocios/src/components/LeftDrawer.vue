@@ -10,7 +10,7 @@ const router = useRouter();
 const criar = async () => {
   const n = await sNegocio.carregarPrimeiroVazioOuCriar();
   router.push("/offline/" + n.uuid);
-  var audio = new Audio("registradora.mp3");
+  var audio = new Audio("novo.mp3");
   audio.play();
 };
 </script>
