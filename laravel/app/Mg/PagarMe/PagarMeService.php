@@ -347,6 +347,7 @@ class PagarMeService
         $nfp->avista = true;
         $nfp->valorpagamento = $ped->valorpagoliquido;
         $nfp->valorjuros = $ped->valorjuros;
+        $nfp->valortotal = $nfp->valorpagamento + $nfp->valorjuros;
         $nfp->valortroco = null;
         foreach ($ped->PagarMePagamentoS as $pag) {
             if ($pag->valorcancelamento) {

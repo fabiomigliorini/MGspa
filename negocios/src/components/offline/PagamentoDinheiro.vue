@@ -44,7 +44,9 @@ const salvar = () => {
     valortroco,
     null, // codpessoa
     null, // bandeira
-    null // autorizacao
+    null, // autorizacao
+    null, // parcelas
+    null // valorparcela
   );
 };
 </script>

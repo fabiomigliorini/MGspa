@@ -17,6 +17,9 @@ class NegocioFormaPagamentoResource extends Resource
     {
         $ret = parent::toArray($request);
         $ret['formapagamento'] = $this->FormaPagamento->formapagamento;
+        $ret['parceiro'] = $this->Pessoa->fantasia??null;
+        $ret['nomebandeira'] = NegocioFormaPagamentoService::BANDEIRAS[$ret['bandeira']]?? null;
+        $ret['nometipo'] = NegocioFormaPagamentoService::TIPOS[$ret['tipo']]?? null;
         return $ret;
     }
 }

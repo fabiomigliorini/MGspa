@@ -1,0 +1,42 @@
+[
+  {
+    "bandeira": 1,
+    "nome": "Visa"
+  },
+  {
+    "bandeira": 2,
+    "nome": "Mastercard"
+  },
+  {
+    "bandeira": 3,
+    "nome": "American Express"
+  },
+  {
+    "bandeira": 4,
+    "nome": "Sorocred"
+  },
+  {
+    "bandeira": 5,
+    "nome": "Diners Club"
+  },
+  {
+    "bandeira": 6,
+    "nome": "Elo"
+  },
+  {
+    "bandeira": 7,
+    "nome": "Hipercard"
+  },
+  {
+    "bandeira": 8,
+    "nome": "Aura"
+  },
+  {
+    "bandeira": 9,
+    "nome": "Cabal"
+  },
+  {
+    "bandeira": 99,
+    "nome": "Outros"
+  }
+]

@@ -4,6 +4,8 @@ import { db } from "boot/db";
 import { Notify, uid } from "quasar";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import moment from "moment";
+import tiposPagamento from "../tipos-pagamento.json";
+import bandeirasCartao from "../bandeiras-cartao.json";
 
 const sSinc = sincronizacaoStore();
 
@@ -59,7 +61,7 @@ export const negocioStore = defineStore("negocio", {
       var pagamentos = 0;
       if (this.negocio.pagamentos) {
         pagamentos = this.negocio.pagamentos
-          .map((item) => item.valorpagamento)
+          .map((item) => item.valortotal)
           .reduce((prev, curr) => prev + curr, 0);
       }
       return Math.round((this.negocio.valortotal - pagamentos) * 100) / 100;
@@ -142,6 +144,8 @@ export const negocioStore = defineStore("negocio", {
       let valorfrete = 0;
       let valorseguro = 0;
       let valoroutras = 0;
+
+      // soma totais dos itens
       this.negocio.itens
         .filter((item) => {
           return item.inativo == null;
@@ -161,16 +165,26 @@ export const negocioStore = defineStore("negocio", {
             valoroutras += parseFloat(item.valoroutras);
           }
         });
+
+      // soma os juros dos pagamentos
+      const valorjuros = this.negocio.pagamentos.reduce((acumulador, pag) => {
+        return acumulador + pag.valorjuros;
+      }, 0);
+
       let valortotal =
-        valorprodutos - valordesconto + valorfrete + valorseguro + valoroutras;
-      if (this.negocio.valorjuros > 0) {
-        valortotal += parseFloat(this.negocio.valorjuros);
-      }
+        valorprodutos -
+        valordesconto +
+        valorfrete +
+        valorseguro +
+        valoroutras +
+        valorjuros;
+
       this.negocio.valorprodutos = Math.round(valorprodutos * 100) / 100;
       this.negocio.valordesconto = Math.round(valordesconto * 100) / 100;
       this.negocio.valorfrete = Math.round(valorfrete * 100) / 100;
       this.negocio.valorseguro = Math.round(valorseguro * 100) / 100;
       this.negocio.valoroutras = Math.round(valoroutras * 100) / 100;
+      this.negocio.valorjuros = Math.round(valorjuros * 100) / 100;
       this.negocio.valortotal = Math.round(valortotal * 100) / 100;
     },
 
@@ -638,28 +652,70 @@ export const negocioStore = defineStore("negocio", {
       valortroco,
       codpessoa,
       bandeira,
-      autorizacao
+      autorizacao,
+      parcelas,
+      valorparcela
     ) {
       await this.recarregar();
+
+      // descricao forma de pagamento
       const fp = await db.formaPagamento.get(codformapagamento);
+
+      // nome parceiro
+      let parceiro = null;
+      if (codpessoa) {
+        const pes = await db.pessoa.get(codpessoa);
+        parceiro = pes.fantasia;
+      }
+
+      // nome bandeira
+      let nomebandeira = null;
+      if (bandeira) {
+        const band = bandeirasCartao.find((el) => {
+          return el.bandeira == bandeira;
+        });
+        nomebandeira = band.nome;
+      }
+
+      // nome Tipo
+      let nometipo = null;
+      if (tipo) {
+        const tp = tiposPagamento.find((el) => {
+          return el.tipo == tipo;
+        });
+        nometipo = tp.nome;
+      }
+
+      // objeto do pagamento
       const pagamento = {
         codnegocioformapagamento: null,
+        uuid: uid(),
         codformapagamento: codformapagamento,
-        valorpagamento: valorpagamento,
+        formapagamento: fp.formapagamento,
         alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
         criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
+        valorpagamento: valorpagamento,
         valorjuros: valorjuros,
+        valortotal: valorpagamento + valorjuros,
         valortroco: valortroco,
         avista: fp.avista,
         tipo: tipo,
+        nometipo: nometipo,
         integracao: false,
         codpessoa: codpessoa,
+        parceiro: parceiro,
         bandeira: bandeira,
+        nomebandeira: nomebandeira,
         autorizacao: autorizacao,
-        uuid: uid(),
-        formapagamento: fp.formapagamento,
+        parcelas: parcelas,
+        valorparcela: valorparcela,
       };
       this.negocio.pagamentos.push(pagamento);
+
+      // recalcula total por causa dos juros
+      this.recalcularValorTotal();
+
+      // salva
       this.salvar();
     },
 
@@ -670,6 +726,8 @@ export const negocioStore = defineStore("negocio", {
       });
       if (index > -1) {
         this.negocio.pagamentos.splice(index, 1);
+        // recalcula total por causa dos juros
+        this.recalcularValorTotal();
       }
       this.salvar();
     },

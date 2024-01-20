@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Dec/2023 16:15:10
+ * Date: 19/Jan/2024 17:10:58
  */
 
 namespace Mg\Negocio;
@@ -36,10 +36,13 @@ class NegocioFormaPagamento extends MgModel
         'codpixcob',
         'codstonetransacao',
         'integracao',
+        'parcelas',
         'tipo',
         'uuid',
         'valorjuros',
         'valorpagamento',
+        'valorparcela',
+        'valortotal',
         'valortroco'
     ];
 
@@ -62,9 +65,12 @@ class NegocioFormaPagamento extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'integracao' => 'boolean',
+        'parcelas' => 'integer',
         'tipo' => 'integer',
         'valorjuros' => 'float',
         'valorpagamento' => 'float',
+        'valorparcela' => 'float',
+        'valortotal' => 'float',
         'valortroco' => 'float'
     ];
 

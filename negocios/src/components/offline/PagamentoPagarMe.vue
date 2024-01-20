@@ -6,17 +6,13 @@ import { pagarMeStore } from "stores/pagar-me";
 import moment from "moment/min/moment-with-locales";
 import SelectPagarMePos from "../selects/SelectPagarMePos.vue";
 import cartoesManuais from "../../cartoes-manuais.json";
-
 moment.locale("pt-br");
 
 const sNegocio = negocioStore();
 const sPagarMe = pagarMeStore();
-
 const pagamento = ref({});
-
 const parcelamentoDisponivel = ref([]);
 const formPagarMe = ref(null);
-
 const stepManual = ref(1);
 
 const inicializarValores = () => {
@@ -104,7 +100,6 @@ const calcularParcelas = async () => {
       valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100;
       valorjuros = Math.round((valorparcela * i - valor) * 100) / 100;
     }
-
     let habilitado = false;
     if (i == 1) {
       habilitado = true;
@@ -151,9 +146,6 @@ const salvar = async () => {
   sNegocio.dialog.pagamentoPagarMe = false;
 };
 
-const inputAutorizacao = ref();
-const inputValor = ref();
-
 const validarManual = async () => {
   if (!pagamento.value.codpessoa) {
     stepManual.value = 1;
@@ -172,7 +164,7 @@ const validarManual = async () => {
       message: "Preencha o Tipo!",
       actions: [{ icon: "close", color: "white" }],
     });
-    return;
+    return false;
   }
 
   if (!pagamento.value.valor) {
@@ -182,7 +174,7 @@ const validarManual = async () => {
       message: "Preencha o valor!",
       actions: [{ icon: "close", color: "white" }],
     });
-    return;
+    return false;
   }
 
   if (!pagamento.value.parcelas) {
@@ -192,7 +184,7 @@ const validarManual = async () => {
       message: "Selecione a quantidade de Parcelas!",
       actions: [{ icon: "close", color: "white" }],
     });
-    return;
+    return false;
   }
 
   if (!pagamento.value.bandeira) {
@@ -202,7 +194,7 @@ const validarManual = async () => {
       message: "Selecione a Bandeira!",
       actions: [{ icon: "close", color: "white" }],
     });
-    return;
+    return false;
   }
 
   if (!pagamento.value.autorizacao) {
@@ -212,7 +204,7 @@ const validarManual = async () => {
       message: "Preencha o número de Autorização!",
       actions: [{ icon: "close", color: "white" }],
     });
-    return;
+    return false;
   }
 
   return true;
@@ -227,12 +219,15 @@ const salvarManual = async () => {
   });
   await sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_CARTAOMANUAL), // codformapagamento Dinheiro
-    tipo.tpag, // tipo Dinheiro
+    tipo.tpag, // tipo
     pagamento.value.valor,
     pagamento.value.valorjuros, // valorjuros
+    null, // valortroco
     pagamento.value.codpessoa, // codpessoa
     pagamento.value.bandeira, // bandeira
-    pagamento.value.autorizacao // autorizacao
+    pagamento.value.autorizacao, // autorizacao
+    pagamento.value.parcelas,
+    pagamento.value.valorparcela
   );
   sNegocio.dialog.pagamentoCartaoManual = false;
 };
@@ -316,17 +311,6 @@ const vaiParaStepManual = async (step) => {
         }
       }
       break;
-
-    /*
-    case 3: // Parcelamento
-      await calcularParcelas();
-      // se só tem uma opcao de parcelamento vai para próximo step
-      if (parcelamentoDisponivel.value.length == 1) {
-        vaiParaStepManual(step + 1);
-        return;
-      }
-      break;
-    */
 
     case 4: // Bandeira
       if (pagamento.value.codpessoa) {
@@ -709,7 +693,6 @@ const vaiParaStepManual = async (step) => {
               v-model="pagamento.autorizacao"
               label="Código de Autorização"
               class="q-mb-md"
-              ref="inputAutorizacao"
               autofocus
             />
             <q-btn color="primary" type="submit" label="Salvar" />

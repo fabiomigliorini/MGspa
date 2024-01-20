@@ -1,0 +1,66 @@
+[
+  {
+    "tipo": 1,
+    "nome": "Dinheiro"
+  },
+  {
+    "tipo": 2,
+    "nome": "Cheque"
+  },
+  {
+    "tipo": 3,
+    "nome": "Cartão Crédito"
+  },
+  {
+    "tipo": 4,
+    "nome": "Cartão Débito"
+  },
+  {
+    "tipo": 5,
+    "nome": "Crédito Loja"
+  },
+  {
+    "tipo": 10,
+    "nome": "Vale Alimentação"
+  },
+  {
+    "tipo": 11,
+    "nome": "Vale Refeição"
+  },
+  {
+    "tipo": 12,
+    "nome": "Vale Presente"
+  },
+  {
+    "tipo": 13,
+    "nome": "Vale Combustível"
+  },
+  {
+    "tipo": 15,
+    "nome": "Boleto Bancário"
+  },
+  {
+    "tipo": 16,
+    "nome": "Depósito Bancário"
+  },
+  {
+    "tipo": 17,
+    "nome": "PIX"
+  },
+  {
+    "tipo": 18,
+    "nome": "Transferência Bancária"
+  },
+  {
+    "tipo": 19,
+    "nome": "Fidelidade"
+  },
+  {
+    "tipo": 90,
+    "nome": "Sem Pagamento"
+  },
+  {
+    "tipo": 99,
+    "nome": "Outros"
+  }
+]

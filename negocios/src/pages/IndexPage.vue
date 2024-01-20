@@ -86,7 +86,7 @@ const vazioOuCriar = async () => {
   await fecharDialogs();
   const neg = await sNegocio.carregarPrimeiroVazioOuCriar();
   try {
-    var audio = new Audio("registradora.mp3");
+    var audio = new Audio("novo.mp3");
     audio.play();
   } catch (error) {}
   router.push("/offline/" + sNegocio.negocio.uuid);
@@ -117,6 +117,8 @@ const fecharDialogs = async () => {
 // TODO: Oferecer pra Gerar Nota/Imprimir Romaneio/Etc
 const abrirDocumentoSeFechado = async () => {
   if (sNegocio.negocio.codnegociostatus == 2) {
+    var audio = new Audio("registradora.mp3");
+    audio.play();
     romaneio();
   }
 };

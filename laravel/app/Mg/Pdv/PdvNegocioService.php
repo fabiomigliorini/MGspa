@@ -121,7 +121,7 @@ class PdvNegocioService
             $valorPagamentos = 0;
             $valorPagamentosPrazo = 0;
             foreach ($negocio->NegocioFormaPagamentos as $nfp) {
-                $valorPagamentos += $nfp->valorpagamento;
+                $valorPagamentos += $nfp->valortotal;
                 if (!$nfp->FormaPagamento->avista) {
                     $valorPagamentosPrazo += $nfp->valorpagamento;
                 }

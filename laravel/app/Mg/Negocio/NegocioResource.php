@@ -29,7 +29,7 @@ class NegocioResource extends Resource
         $ret['negociostatus'] = $this->NegocioStatus->negociostatus;
         $ret['estoquelocal'] = $this->EstoqueLocal->estoquelocal;
         $ret['fantasia'] = $this->Pessoa->fantasia;
-        $ret['fantasiavendedor'] = ($this->codpessoavendedor)?$this->PessoaVendedor->fantasia:null;
+        $ret['fantasiavendedor'] = $this->PessoaVendedor->fantasia ?? null;
         $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS);
         $ret['pagamentos'] = NegocioFormaPagamentoResource::collection($this->NegocioFormaPagamentoS);
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());

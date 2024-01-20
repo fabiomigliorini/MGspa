@@ -174,7 +174,6 @@ const creditCardColorPagamento = (pag) => {
 };
 </script>
 <template>
-  <!-- <pre>{{ sNegocio.negocio }}</pre> -->
   <!-- Editar Valores Desconto / Frete / etc -->
   <q-dialog v-model="sNegocio.dialog.valores">
     <q-card style="width: 350px; max-width: 80vw">
@@ -447,11 +446,15 @@ const creditCardColorPagamento = (pag) => {
         </q-item-section>
       </q-item>
 
+      <!-- PAGAMENTOS -->
       <template v-if="sNegocio.negocio.pagamentos">
         <template v-for="pag in sNegocio.negocio.pagamentos" :key="pag.uuid">
           <q-item>
             <q-item-section>
-              <q-item-label caption>{{ pag.formapagamento }}</q-item-label>
+              <q-item-label caption>
+                {{ pag.nometipo }}
+                <template v-if="pag.parceiro"> | {{ pag.parceiro }} </template>
+              </q-item-label>
             </q-item-section>
             <q-item-section class="text-right">
               <q-item-label class="text-h5 text-grey-6">
@@ -460,8 +463,11 @@ const creditCardColorPagamento = (pag) => {
                     style: "decimal",
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
-                  }).format(pag.valorpagamento)
+                  }).format(pag.valortotal)
                 }}
+                <!-- <div v-if="pag.parcelas > 1" class="text-caption">
+                  {{ pag.parcelas }} Parcelas
+                </div> -->
                 <q-btn
                   flat
                   round
@@ -473,9 +479,16 @@ const creditCardColorPagamento = (pag) => {
                   "
                 />
               </q-item-label>
+              <q-item-label caption v-if="pag.autorizacao">
+                <template v-if="pag.nomebandeira">
+                  {{ pag.nomebandeira }}:
+                </template>
+                {{ pag.autorizacao }}
+              </q-item-label>
             </q-item-section>
           </q-item>
         </template>
+
         <!-- <q-item v-if="1 == 1"> -->
         <q-item v-if="sNegocio.valorapagar != 0">
           <q-item-section>
@@ -524,6 +537,11 @@ const creditCardColorPagamento = (pag) => {
       <!-- BOTAO PIX -->
       <q-btn round icon="pix" @click="dialogPagamentoPix()" color="primary">
         <q-tooltip class="bg-accent">PIX (F8)</q-tooltip>
+      </q-btn>
+
+      <!-- BOTAO Prazo -->
+      <q-btn round icon="receipt" @click="dialogPrazo()" color="primary">
+        <q-tooltip class="bg-accent">À Prazo (F9)</q-tooltip>
       </q-btn>
     </q-list>
 

@@ -58,9 +58,9 @@ class NegocioService
         $valorPagamentos = 0;
         $valorPagamentosPrazo = 0;
         foreach ($negocio->NegocioFormaPagamentoS()->get() as $nfp) {
-            $valorPagamentos += $nfp->valorpagamento;
+            $valorPagamentos += $nfp->valortotal;
             if (!$nfp->FormaPagamento->avista) {
-                $valorPagamentosPrazo += $nfp->valorpagamento;
+                $valorPagamentosPrazo += $nfp->valortotal;
             }
         }
 
