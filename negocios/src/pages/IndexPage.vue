@@ -9,6 +9,7 @@ import { pixStore } from "stores/pix";
 import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
 import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
+import ListagemTitulos from "src/components/offline/ListagemTitulos.vue";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
 
@@ -220,13 +221,10 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div class="col-lg-10 q-sm-9 q-xs-12">
-      <div class="row">
-        <div class="col q-pb-sm q-pr-sm"></div>
-      </div>
-    </div>
     <listagem-produtos />
     <dialog-sincronizacao />
+    <listagem-titulos />
+    <div style="padding-bottom: 75px"></div>
 
     <q-dialog v-model="dialogRomaneio" full-height>
       <q-card style="height: 100%">

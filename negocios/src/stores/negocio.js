@@ -132,6 +132,7 @@ export const negocioStore = defineStore("negocio", {
         codnegociostatus: 1, //aberto
         itens: [],
         pagamentos: [],
+        titulos: [],
       };
       db.negocio.add(negocio, uuid);
       this.atualizarListagem();

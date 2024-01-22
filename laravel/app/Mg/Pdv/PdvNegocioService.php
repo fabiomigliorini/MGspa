@@ -145,7 +145,7 @@ class PdvNegocioService
 
             // valida total à prazo
             if ($valorPagamentosPrazo > $negocio->valortotal) {
-                throw new Exception('O valor à Prazo é superior ao Total!', 1);
+                throw new Exception('O valor dos Pagamentos é superior ao Total!', 1);
             }
 
             // valida se tem limite de credito
