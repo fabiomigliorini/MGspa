@@ -58,8 +58,8 @@ const pixChave = async () => {
     null, // codpessoa
     null, // bandeira
     null, // autorizacao
-    null, // parcelas
-    null // valorparcela
+    1, // parcelas
+    valorPagamento.value // valorparcela
   );
 };
 

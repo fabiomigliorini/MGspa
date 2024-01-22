@@ -9,6 +9,7 @@ use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
 use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
+use Mg\Titulo\TipoTituloService;
 
 class PdvNegocioPrazoService
 {
@@ -64,44 +65,84 @@ class PdvNegocioPrazoService
 
     public static function gerarTitulos(Negocio $negocio)
     {
-        // percorre pagamentos
-        foreach ($negocio->NegocioFormaPagamentos as $nfp) {
+        // busca pagamentos a prazo
+        $nfps = $negocio
+            ->NegocioFormaPagamentos()
+            ->where('avista', false)
+            ->orderBy('codnegocioformapagamento')
+            ->get();
 
-            // se a vista, continua
-            if (!$nfp->FormaPagamento->avista) {
-                continue;
-            }
+        // verifica se precisa de sufixo
+        // quando tem mais de um pagamento a Prazo
+        $qtdPrazo = $nfps->count();
+        if ($qtdPrazo > 1) {
+            $sufixo = '-A';
+        } else {
+            $sufixo = '';
+        }
+        $sufixos = [$sufixo];
 
-            // //se ja tem titulos gerados gera erro
-            // if (count($nfp->Titulos) != 0) {
-            //     $nfp->addError("codformapagamento", "Já existem Títulos gerados para a forma de pagamento, impossível gerar novos!");
-            //     return false;
-            // }
+        // Percorre todas as formas
+        foreach ($nfps as $nfp) {
+
+            // inicializa um acumulador para controlar quanto deve ser a diferenca da ultima parcela
             $total = 0;
+            $parcelas = ($nfp->parcelas > 0)?$nfp->parcelas:1;
 
             // faz um looping para gerar duplicatas
-            for ($i = 1; $i <= $nfp->FormaPagamento->parcelas; $i++) {
+            for ($i = 1; $i <= $parcelas; $i++) {
 
-                //Joga diferença no último titulo gerado
-                if ($i == $nfp->FormaPagamento->parcelas) {
-                    $valor = $nfp->valorpagamento - $total;
+                // usa o valor da parcela informado ou 
+                // joga diferença do total no último titulo gerado
+                if ($i == $parcelas) {
+                    $valor = $nfp->valortotal - $total;
                 } else {
-                    $valor = floor($nfp->valorpagamento / $nfp->FormaPagamento->parcelas);
+                    $valor = $nfp->valorparcela;
                 }
                 $total += $valor;
 
+                // calcula data de vencimento
+                if ($nfp->FormaPagamento->fechamento) {
+                    $vencimento = Carbon::now()->addMonths($i)->addDays(7)->endOfMonth();
+                } else {
+                    $vencimento = Carbon::now()->addMonths($i);
+                }
+
+                // calcula o tipo de titulo
+                if ($nfp->FormaPagamento->pix) {
+                    if ($nfp->Negocio->codoperacao == 2) {
+                        $tipo = TipoTituloService::TIPO_PIX_RECEBER;
+                    } else {
+                        $tipo = TipoTituloService::TIPO_PIX_PAGAR;
+                    }    
+                } elseif ($nfp->FormaPagamento->entrega) {
+                    if ($nfp->Negocio->codoperacao == 2) {
+                        $tipo = TipoTituloService::TIPO_ENTREGA_RECEBER;
+                    } else {
+                        $tipo = TipoTituloService::TIPO_ENTREGA_PAGAR;
+                    }    
+                } else {
+                    $tipo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
+                }
+
+                // Cria Registro de Titulo
                 $titulo = new Titulo();
                 $titulo->codnegocioformapagamento = $nfp->codnegocioformapagamento;
                 $titulo->codfilial = $nfp->Negocio->codfilial;
-                $titulo->codtipotitulo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
+                $titulo->codtipotitulo = $tipo;
                 $titulo->codcontacontabil = $nfp->Negocio->NaturezaOperacao->codcontacontabil;
-                $titulo->valor = $valor;
+                if ($nfp->Negocio->codoperacao == 2) {
+                    $titulo->debito = $valor;
+                } else {
+                    $titulo->credito = $valor;
+                }
                 $titulo->boleto = false;
                 $titulo->codpessoa = $nfp->Negocio->codpessoa;
-                $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "-$i/{$nfp->FormaPagamento->parcelas}";
-                $titulo->emissao = Cabon::now();
-                $titulo->transacao = Cabon::now();
-                $titulo->vencimento = Carbon::now()->addDays($i * $nfp->FormaPagamento->diasentreparcelas);
+                $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "$sufixo-$i/{$parcelas}";
+                $titulo->emissao = Carbon::now();
+                $titulo->transacao = $titulo->emissao;
+                $titulo->sistema = $titulo->emissao;
+                $titulo->vencimento = $vencimento;
                 $titulo->vencimentooriginal = $titulo->vencimento;
                 $titulo->gerencial = true;
                 $titulo->codportador = Portador::CARTEIRA;
@@ -110,6 +151,12 @@ class PdvNegocioPrazoService
                 if (!$titulo->save()) {
                     throw new Exception('Falha ao Gerar Títulos do Negócio!', 1);
                 }
+            }
+
+            // monta sufixo da proxima forma de pagamento
+            if ($qtdPrazo > 1) {
+                $sufixo = '-' . chr(ord(substr($sufixo, -1))+1);
+                $sufixos[] = $sufixo;
             }
         }
 

@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
 use Mg\NaturezaOperacao\Operacao;
+use Mg\Pdv\PdvNegocioService;
 
 class NegocioService
 {
@@ -39,6 +40,10 @@ class NegocioService
 
     public static function fechar (Negocio $negocio)
     {
+        // se for PDV, utiliza rotina de fechamento daquela classe
+        if (!empty($negocio->codpdv)) {
+            return PdvNegocioService::fechar($negocio, $negocio->Pdv);
+        }
 
         if ($negocio->codnegociostatus != NegocioStatus::ABERTO) {
             throw new \Exception("O Status do Negócio não permite Fechamento!", 1);
