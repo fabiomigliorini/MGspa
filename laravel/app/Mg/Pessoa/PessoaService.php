@@ -17,6 +17,13 @@ use Mg\Permissao\Autorizador\Autorizador;
 
 class PessoaService
 {
+	const NOTAFISCAL_TRATAMENTOPADRAO = 0;
+	const NOTAFISCAL_SEMPRE = 1;
+	const NOTAFISCAL_SOMENTE_FECHAMENTO = 2;
+	const NOTAFISCAL_NUNCA = 9;
+
+	const CONSUMIDOR = 1;
+
     /**
      * Busca Autocomplete Quasar
      */

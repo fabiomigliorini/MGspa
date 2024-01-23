@@ -171,6 +171,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
             Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
             Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\Pdv\PdvController@consultarPagarMePedido');
+            Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
         });
 
         // Allan - daqui pra baixo
