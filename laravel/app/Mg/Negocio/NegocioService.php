@@ -12,6 +12,10 @@ use Mg\Pdv\PdvNegocioService;
 
 class NegocioService
 {
+    const STATUS_ABERTO = 1;
+    const STATUS_FECHADO = 2;
+    const STATUS_CANCELADO = 3;
+
     public static function fecharSePago (Negocio $negocio)
     {
         static::recalcularTotal($negocio);
