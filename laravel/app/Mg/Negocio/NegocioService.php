@@ -66,8 +66,8 @@ class NegocioService
         //Calcula total pagamentos à vista e à prazo
         $valorPagamentos = 0;
         $valorPagamentosPrazo = 0;
-        foreach ($negocio->NegocioFormaPagamentoS()->get() as $nfp) {
-            $valorPagamentos += $nfp->valortotal;
+        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
+            $valorPagamentos += ($nfp->valortotal)?$nfp->valortotal:$nfp->valorpagamento;
             if (!$nfp->FormaPagamento->avista) {
                 $valorPagamentosPrazo += $nfp->valortotal;
             }
