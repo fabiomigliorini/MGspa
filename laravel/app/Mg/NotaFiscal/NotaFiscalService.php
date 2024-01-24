@@ -19,9 +19,22 @@ use Mg\Negocio\NegocioProdutoBarraService;
 
 class NotaFiscalService
 {
+    const MODELO_NFE              = 55;
+    const MODELO_NFCE             = 65;
 
-    const MODELO_NFE = 55;
-    const MODELO_NFCE = 65;
+    const FRETE_EMITENTE          = 0;
+    const FRETE_DESTINATARIO      = 1;
+    const FRETE_TERCEIROS         = 2;
+    const FRETE_SEM               = 9;
+
+    const TPEMIS_NORMAL           = 1; // Emissão normal (não em contingência);
+    const TPEMIS_FS_IA            = 2; // Contingência FS-IA, com impressão do DANFE em formulário de segurança;
+    const TPEMIS_SCAN             = 3; // Contingência SCAN (Sistema de Contingência do Ambiente Nacional) Desativação prevista para 30/06/2014;
+    const TPEMIS_DPEC             = 4; // Contingência DPEC (Declaração Prévia da Emissão em Contingência);
+    const TPEMIS_FS_DA            = 5; // Contingência FS-DA, com impressão do DANFE em formulário de segurança;
+    const TPEMIS_SVC_AN           = 6; // Contingência SVC-AN (SEFAZ Virtual de Contingência do AN);
+    const TPEMIS_SVC_RS           = 7; // Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
+    const TPEMIS_OFFLINE          = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
 
     public static function isAtiva(NotaFiscal $nota)
     {
@@ -84,7 +97,7 @@ class NotaFiscalService
             $nota->observacoes = "";
             $nota->observacoes .= $negocio->NaturezaOperacao->mensagemprocom;
 
-            if ($nota->modelo == NotaFiscal::MODELO_NFE && $nota->Filial->crt != Filial::CRT_SIMPLES_EXCESSO) {
+            if ($nota->modelo == static::MODELO_NFE && $nota->Filial->crt != Filial::CRT_SIMPLES_EXCESSO) {
                 if (!empty($nota->observacoes)) {
                     $nota->observacoes .= "\n";
                 }
@@ -92,12 +105,12 @@ class NotaFiscalService
                 $nota->observacoes .= $negocio->NaturezaOperacao->observacoesnf;
             }
 
-            $nota->frete = NotaFiscal::FRETE_SEM;
-            if ($nota->modelo == NotaFiscal::MODELO_NFE) {
+            $nota->frete = static::FRETE_SEM;
+            if ($nota->modelo == static::MODELO_NFE) {
                 if ($negocio->valorfrete > 0) {
-                    $nota->frete = NotaFiscal::FRETE_EMITENTE;
+                    $nota->frete = static::FRETE_EMITENTE;
                 } elseif (!empty($negocio->codpessoatransportador)) {
-                    $nota->frete = NotaFiscal::FRETE_DESTINATARIO;
+                    $nota->frete = static::FRETE_DESTINATARIO;
                 }
                 $nota->codpessoatransportador = $negocio->codpessoatransportador;
             }

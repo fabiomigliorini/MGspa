@@ -7,6 +7,7 @@ use DB;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Pessoa\Pessoa;
 use Mg\Filial\Empresa;
+use Mg\NotaFiscal\NotaFiscalService;
 
 class NFePHPValidacaoService
 {
@@ -29,7 +30,7 @@ class NFePHPValidacaoService
 
     public static function validarPessoaNFCe(NotaFiscal $nf)
     {
-        if ($nf->modelo != NotaFiscal::MODELO_NFCE) {
+        if ($nf->modelo != NotaFiscalService::MODELO_NFCE) {
             return true;
         }
         if (!empty($nf->Pessoa->ie)) {
@@ -40,7 +41,7 @@ class NFePHPValidacaoService
 
     public static function validarPessoaNFe(NotaFiscal $nf)
     {
-        if ($nf->modelo != NotaFiscal::MODELO_NFE) {
+        if ($nf->modelo != NotaFiscalService::MODELO_NFE) {
             return true;
         }
         if ($nf->codpessoa == Pessoa::CONSUMIDOR) {
@@ -51,7 +52,7 @@ class NFePHPValidacaoService
 
     public static function validarOffLine(NotaFiscal $nf)
     {
-        if ($nf->modelo != NotaFiscal::MODELO_NFCE) {
+        if ($nf->modelo != NotaFiscalService::MODELO_NFCE) {
             return true;
         }
         if ($nf->Filial->Empresa->modoemissaonfce != Empresa::MODOEMISSAONFCE_OFFLINE) {

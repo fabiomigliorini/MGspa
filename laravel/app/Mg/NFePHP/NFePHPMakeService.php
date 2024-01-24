@@ -12,7 +12,7 @@ use Mg\Pessoa\Pessoa;
 use Mg\Produto\Barras;
 use Mg\Filial\Filial;
 use Mg\Filial\Empresa;
-
+use Mg\NotaFiscal\NotaFiscalService;
 use NFePHP\NFe\Make;
 use NFePHP\Common\Strings;
 use NFePHP\Gtin\Gtin;
@@ -109,7 +109,7 @@ class NFePHPMakeService
         $std->verProc = 1; //versão do aplicativo emissor
 
         // NFe
-        if ($nf->modelo == NotaFiscal::MODELO_NFE) {
+        if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
 
             // 0=Sem geração de DANFE;
             // 1=DANFE normal, Retrato;
@@ -145,7 +145,7 @@ class NFePHPMakeService
             if ($std->tpEmis == Empresa::MODOEMISSAONFCE_OFFLINE) {
 
                 // Salva Informacao de NFCe Offline na tabela
-                $nf->tpemis = NotaFiscal::TPEMIS_OFFLINE;
+                $nf->tpemis = NotaFiscalService::TPEMIS_OFFLINE;
                 $nf->save();
 
                 // $aRetorno['tpEmis'] = $nf->tpemis;
@@ -726,7 +726,7 @@ class NFePHPMakeService
 
         // caso total das parcelas seja maior que o total da nota, calcula vTroco
         // para casos de dizima como por exemplo NF #00830316
-        if ($nf->modelo == NotaFiscal::MODELO_NFE) {
+        if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
             $prazo = $nf->NotaFiscalDuplicatass()->where('vencimento', '>', Carbon::today())->sum('valor');
             if ($prazo > $nf->valortotal) {
                 $std->vTroco = number_format($prazo - $nf->valortotal, 2, '.', '');
@@ -745,7 +745,7 @@ class NFePHPMakeService
         } else {
 
             // Duplicatas - Somente quando NFE
-            if ($nf->modelo == NotaFiscal::MODELO_NFE) {
+            if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
                 $dups = [];
                 $nDup = 0;
                 foreach ($nf->NotaFiscalDuplicatass()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {

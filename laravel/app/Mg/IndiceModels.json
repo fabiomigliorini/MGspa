@@ -1941,8 +1941,55 @@
         "namespace": "Mg\\NotaFiscal",
         "classe": "NotaFiscalProdutoBarra",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalProdutoBarra.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codcfop": {
+                "tabela": "tblcfop",
+                "coluna": "codcfop",
+                "metodo": "Cfop"
+            },
+            "codnegocioprodutobarra": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NegocioProdutoBarra"
+            },
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
+            },
+            "codnotafiscalprodutobarraorigem": {
+                "tabela": "tblnotafiscalprodutobarra",
+                "coluna": "codnotafiscalprodutobarraorigem",
+                "metodo": "NotaFiscalProdutoBarraOrigem"
+            },
+            "codprodutobarra": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ProdutoBarra"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblestoquemovimento.codnotafiscalprodutobarra": {
+                "tabela": "tblestoquemovimento",
+                "coluna": "codnotafiscalprodutobarra",
+                "metodo": "EstoqueMovimentoS"
+            },
+            "tblnotafiscalprodutobarra.codnotafiscalprodutobarraorigem": {
+                "tabela": "tblnotafiscalprodutobarra",
+                "coluna": "codnotafiscalprodutobarraorigem",
+                "metodo": "NotaFiscalProdutoBarraS"
+            }
+        }
     },
     "tblpais": {
         "tabela": "tblpais",
@@ -2127,6 +2174,11 @@
                 "tabela": "tblnotafiscalterceiro",
                 "coluna": "codnotafiscal",
                 "metodo": "NotaFiscalTerceiroS"
+            },
+            "tblnotafiscalpagamento.codnotafiscal": {
+                "tabela": "tblnotafiscalpagamento",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscalPagamentoS"
             }
         }
     },
@@ -3995,7 +4047,23 @@
         "namespace": "Mg\\NotaFiscal",
         "classe": "NotaFiscalCartaCorrecao",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalCartaCorrecao.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblnotafiscalcreditoicmssimples": {
@@ -4019,7 +4087,23 @@
         "namespace": "Mg\\NotaFiscal",
         "classe": "NotaFiscalDuplicatas",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalDuplicatas.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblnotafiscalreferenciada": {
@@ -4028,7 +4112,23 @@
         "namespace": "Mg\\NotaFiscal",
         "classe": "NotaFiscalReferenciada",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalReferenciada.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblmdfeenviosefaz": {
@@ -5777,6 +5877,31 @@
                 "tabela": "tblfilial",
                 "coluna": "codfilial",
                 "metodo": "Filial"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblnotafiscalpagamento": {
+        "tabela": "tblnotafiscalpagamento",
+        "campocodigo": "codnotafiscalpagamento",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscalPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalPagamento.php",
+        "belongsTo": {
+            "codnotafiscal": {
+                "tabela": "tblnotafiscal",
+                "coluna": "codnotafiscal",
+                "metodo": "NotaFiscal"
             },
             "codusuarioalteracao": {
                 "tabela": "tblusuario",

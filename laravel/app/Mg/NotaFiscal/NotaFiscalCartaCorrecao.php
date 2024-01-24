@@ -1,29 +1,47 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 24/Jan/2024 14:49:56
+ */
 
 namespace Mg\NotaFiscal;
 
 use Mg\MgModel;
+use Mg\NotaFiscal\NotaFiscal;
 use Mg\Usuario\Usuario;
 
-class NotaFiscalCartaCorrecao extends MGModel
+class NotaFiscalCartaCorrecao extends MgModel
 {
     protected $table = 'tblnotafiscalcartacorrecao';
     protected $primaryKey = 'codnotafiscalcartacorrecao';
+
+
     protected $fillable = [
         'codnotafiscal',
-        'lote',
         'data',
-        'sequencia',
-        'texto',
+        'lote',
         'protocolo',
         'protocolodata',
+        'sequencia',
+        'texto'
     ];
+
     protected $dates = [
-        'data',
-        'protocolodata',
         'alteracao',
         'criacao',
+        'data',
+        'protocolodata'
     ];
+
+    protected $casts = [
+        'codnotafiscal' => 'integer',
+        'codnotafiscalcartacorrecao' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'lote' => 'integer',
+        'sequencia' => 'integer'
+    ];
+
 
     // Chaves Estrangeiras
     public function NotaFiscal()
@@ -40,7 +58,5 @@ class NotaFiscalCartaCorrecao extends MGModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
-    // Tabelas Filhas
 
 }
