@@ -811,6 +811,7 @@ class NFePHPMakeService
             if ($nf->valortotal > $totalpagamentos) {
                 $std = new stdClass();
                 $std->tPag = '05'; // 05=Crédito Loja
+                $std->vPag = $nf->valortotal - $totalpagamentos;
                 $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
                 $nfe->tagdetPag($std);
             }
