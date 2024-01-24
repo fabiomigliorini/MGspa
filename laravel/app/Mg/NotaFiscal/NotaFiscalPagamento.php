@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Jan/2024 14:50:17
+ * Date: 24/Jan/2024 15:40:53
  */
 
 namespace Mg\NotaFiscal;
@@ -9,6 +9,7 @@ namespace Mg\NotaFiscal;
 use Mg\MgModel;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Usuario\Usuario;
+use Mg\Pessoa\Pessoa;
 
 class NotaFiscalPagamento extends MgModel
 {
@@ -52,6 +53,11 @@ class NotaFiscalPagamento extends MgModel
     public function NotaFiscal()
     {
         return $this->belongsTo(NotaFiscal::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
     public function UsuarioAlteracao()

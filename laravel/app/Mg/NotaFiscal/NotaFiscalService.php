@@ -61,7 +61,7 @@ class NotaFiscalService
     public static function gerarNotaFiscalDoNegocio(
         Negocio $negocio,
         $modelo = self::MODELO_NFCE,
-        $gerarPagamento = true,
+        $incluirPagamentos = true,
         NotaFiscal $nota = null
     ) {
 
@@ -77,7 +77,7 @@ class NotaFiscalService
         DB::beginTransaction();
 
         if (empty($nota)) {
-            $nota = new NotaFiscal();
+            $nota = new NotaFiscal;
             $nota->codpessoa = $negocio->codpessoa;
             if (empty($nota->codpessoa)) {
                 $nota->codpessoa = Pessoa::CONSUMIDOR;
@@ -246,7 +246,6 @@ class NotaFiscalService
             throw new Exception('Não existe nenhum produto para gerar Nota neste Negócio', 1);
         }
 
-
         // se sobrou uma diferenca no valor dos juros, joga no ultimo item da NF
         $juros = $negocio->valorjuros - $totalJuros;
         if ($juros != 0) {
@@ -254,44 +253,49 @@ class NotaFiscalService
             $notaItem->save();
         }
 
-
+        // adiciona as chaves de nfes referenciadas
         foreach ($chavesReferenciadas as $cod => $chave) {
-            $nfr = new NotaFiscalReferenciada();
-            $nfr->codnotafiscal = $nota->codnotafiscal;
-            $nfr->nfechave = $chave;
+            $nfr = new NotaFiscalReferenciada([
+                'codnotafiscal' => $nota->codnotafiscal,
+                'nfechave' => $chave,
+            ]);
             $nfr->save();
         }
 
+        // se nao for pra incluir os pagamentos finaliza aqui
+        if (!$incluirPagamentos) {
+            DB::commit();
+            return $nota;
+        }
 
-
-        DB::commit();
-        dd($nota);
-
-
-        /*
-
-
-
-
-
-        if ($geraDuplicatas) {
-            foreach ($this->NegocioFormaPagamentos as $forma) {
-                foreach ($forma->Titulos as $titulo) {
-                    $duplicata = new NotaFiscalDuplicatas;
-                    $duplicata->codnotafiscal = $nota->codnotafiscal;
-                    $duplicata->fatura = $titulo->numero;
-                    $duplicata->valor = $titulo->valor;
-                    $duplicata->vencimento = $titulo->vencimento;
-                    if (!$duplicata->save()) {
-                        $this->addErrors($duplicata->getErrors());
-                        return false;
-                    }
-                }
+        // adiciona as duplicatas
+        foreach ($negocio->NegocioFormaPagamentos as $forma) {
+            $pag = new NotaFiscalPagamento([
+                'codnotafiscal' => $nota->codnotafiscal,
+                'avista' => $forma->avista,
+                'tipo' => $forma->tipo,
+                'valorpagamento' => $forma->valortotal,
+                'troco' => $forma->valortroco,
+                'integracao' => $forma->integracao,
+                'codpessoa' => $forma->codpessoa,
+                'bandeira' => $forma->bandeira,
+                'autorizacao' => $forma->autorizacao,
+            ]);
+            $pag->save();
+            foreach ($forma->Titulos as $titulo) {
+                $duplicata = new NotaFiscalDuplicatas([
+                    'codnotafiscal' => $nota->codnotafiscal,
+                    'fatura' => $titulo->numero,
+                    'valor' => $titulo->valor,
+                    'vencimento' => $titulo->vencimento,
+                ]);
+                $duplicata->save();
             }
         }
 
-        //retorna codigo da nota gerada
-        return $nota->codnotafiscal;
-        */
+        // salva no Banco e retorna
+        DB::commit();
+        return $nota;
+
     }
 }

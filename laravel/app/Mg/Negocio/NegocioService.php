@@ -177,8 +177,4 @@ class NegocioService
         return true;
     }
 
-    public static function gerarNotaFiscal (Negocio $negocio, NotaFiscal $notaFiscal = null)
-    {
-    }
-
 }

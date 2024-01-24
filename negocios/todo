@@ -7,6 +7,8 @@ FIXME nao gerar transferencias com itens inativos
 FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
 FIXME Quando expira o token ele precisa dar o refresh automaticamente
 
+BUG Limitar o input da Autorizacao pra 20 chars
+BUG Gerando valor item errado negocio 03386452
 TODO Mostrar Espaco acima paginacao superior
 TODO Mostrar se titulo Estornado
 TODO Pagarmento Vale
