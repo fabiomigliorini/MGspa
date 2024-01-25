@@ -706,116 +706,83 @@ class NFePHPMakeService
             $nfe->tagveicTransp($std);
         }
 
-        // Faturas
-        // $std = new stdClass();
-        // $std->nFat = '100';
-        // $std->vOrig = 100;
-        // $std->vLiq = 100;
-        // $nfe->tagfat($std);
-
+        // Adiciona Duplicatas - Somente quando NFE
         $totalPrazo = 0;
+        if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
 
-        // $std = new stdClass();
-        // $std->vTroco = null;
-        // // caso total das parcelas seja maior que o total da nota, calcula vTroco
-        // // para casos de dizima como por exemplo NF #00830316
-        // if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
-        //     $prazo = $nf->NotaFiscalDuplicatass()->where('vencimento', '>', Carbon::today())->sum('valor');
-        //     if ($prazo > $nf->valortotal) {
-        //         $std->vTroco = number_format($prazo - $nf->valortotal, 2, '.', '');
-        //     }
-        // }
-        // $nfe->tagpag($std);
-
-        // Informacoes de pagamento somente devem ser enviadas quando nao
-        // for ajuste ou devolucao para evitar a Rejeicao:
-        // 871 - Rejeicao: O campo Forma de Pagamento deve ser preenchido com a opcao Sem Pagamento
-        if (in_array($nf->NaturezaOperacao->finnfe, [NaturezaOperacao::FINNFE_AJUSTE, NaturezaOperacao::FINNFE_DEVOLUCAO_RETORNO])) {
-            $std = new stdClass();
-            $std->tPag = '90';
-            $std->vPag = number_format($nf->valortotal, 2, '.', '');
-            $nfe->tagdetPag($std);
-        } else {
-
-            // Adiciona Duplicatas - Somente quando NFE
-            if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
-
-                $dups = [];
-                $nDup = 0;
-                foreach ($nf->NotaFiscalDuplicatasS()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
-                    // Duplicatas
-                    $std = new stdClass();
-                    $nDup++;
-                    $std->nDup = mascarar($nDup, '###');
-                    $nFat = Strings::replaceSpecialsChars($nfd->fatura);
-                    // Se duplicata tiver vencimento <= hoje ocorre Rejeicao
-                    // 898 - Rejeicao: Data de vencimento da parcela nao informada ou menor que Data de Autorizacao
-                    if ($nfd->vencimento->isPast()) {
-                        $std->dVenc = date('Y-m-d');
-                    } else {
-                        $std->dVenc = $nfd->vencimento->format('Y-m-d');
-                    }
-                    $std->vDup = number_format($nfd->valor, 2, '.', '');
-                    $totalPrazo += $nfd->valor;
-                    $dups[] = $std;
-                }
-
-                if (!empty($totalPrazo)) {
-                    $std = new stdClass();
-                    $std->nFat = $nFat;
-                    $std->vOrig = number_format($totalPrazo, 2, '.', '');
-                    $std->vDesc = null;
-                    $std->vLiq = number_format($totalPrazo, 2, '.', '');
-                    $nfe->tagfat($std);
-                    foreach ($dups as $dup) {
-                        $nfe->tagdup($dup);
-                    }
-                }
-            }
-
-            // informa troco
-            $troco = $nf->NotaFiscalPagamentoS()->sum('troco');
-            if ($troco > 0) {
+            $dups = [];
+            $nDup = 0;
+            foreach ($nf->NotaFiscalDuplicatasS()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
+                // Duplicatas
                 $std = new stdClass();
-                $std->vTroco = $troco; //aqui pode ter troco
-                $nfe->tagpag($std);
+                $nDup++;
+                $std->nDup = mascarar($nDup, '###');
+                $nFat = Strings::replaceSpecialsChars($nfd->fatura);
+                // Se duplicata tiver vencimento <= hoje ocorre Rejeicao
+                // 898 - Rejeicao: Data de vencimento da parcela nao informada ou menor que Data de Autorizacao
+                if ($nfd->vencimento->isPast()) {
+                    $std->dVenc = date('Y-m-d');
+                } else {
+                    $std->dVenc = $nfd->vencimento->format('Y-m-d');
+                }
+                $std->vDup = number_format($nfd->valor, 2, '.', '');
+                $totalPrazo += $nfd->valor;
+                $dups[] = $std;
             }
+
+            if (!empty($totalPrazo)) {
+                $std = new stdClass();
+                $std->nFat = $nFat;
+                $std->vOrig = number_format($totalPrazo, 2, '.', '');
+                $std->vDesc = null;
+                $std->vLiq = number_format($totalPrazo, 2, '.', '');
+                $nfe->tagfat($std);
+                foreach ($dups as $dup) {
+                    $nfe->tagdup($dup);
+                }
+            }
+        }
+
+        // tag pag(obrigatoria)
+        $std = new stdClass();
+        $troco = $nf->NotaFiscalPagamentoS()->sum('troco');
+        if ($troco > 0) {
+            $std->vTroco = $troco; 
+        }
+        $nfe->tagpag($std);
+        
+        // adiciona formas de pagamento
+        $totalpagamentos = 0;
+        foreach ($nf->NotaFiscalPagamentoS as $nfp) {
             
-            // adiciona formas de pagamento
-            $totalpagamentos = 0;
-            foreach ($nf->NotaFiscalPagamentoS as $nfp) {
-                
-                $totalpagamentos += $nfp->valorpagamento;
+            $totalpagamentos += $nfp->valorpagamento;
 
-                // Pagamento
-                $std = new stdClass();
-                $std->indPag = $nfp->avista?0:1; //pagamento a vista
-                $std->tPag = str_pad($nfp->tipo, 2, '0', STR_PAD_LEFT);
-                $std->vPag = $nfp->valorpagamento;
+            // Pagamento
+            $std = new stdClass();
+            $std->indPag = $nfp->avista?0:1; //pagamento a vista
+            $std->tPag = str_pad($nfp->tipo, 2, '0', STR_PAD_LEFT);
+            $std->vPag = $nfp->valorpagamento;
 
-                // Se Cartao Debito/Credito
-                if (in_array($nfp->tipo, [3, 4])) {
-                    $std->tpIntegra = $nfp->integracao?1:2;
-                    if (!empty($nfp->codpessoa)) {
-                        $std->CNPJ = str_pad($nfp->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
-                    }
-                    $std->tBand = str_pad($nfp->bandeira, 2, '0', STR_PAD_LEFT);
-                    $std->cAut = $nfp->autorizacao;
+            // Se Cartao Debito/Credito
+            if (in_array($nfp->tipo, [3, 4])) {
+                $std->tpIntegra = $nfp->integracao?1:2;
+                if (!empty($nfp->codpessoa)) {
+                    $std->CNPJ = str_pad($nfp->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
                 }
-
-                // adiciona pagamento
-                $nfe->tagdetPag($std); 
+                $std->tBand = str_pad($nfp->bandeira, 2, '0', STR_PAD_LEFT);
+                $std->cAut = $nfp->autorizacao;
             }
 
-            // Pagamento a Vista
-            if ($nf->valortotal > $totalpagamentos) {
-                $std = new stdClass();
-                $std->tPag = '05'; // 05=Crédito Loja
-                $std->vPag = $nf->valortotal - $totalpagamentos;
-                $std->indPag = 1; //0= Pagamento à Vista 1= Pagamento à Prazo
-                $nfe->tagdetPag($std);
-            }
+            // adiciona pagamento
+            $nfe->tagdetPag($std); 
+        }
 
+        // Pagamento a Vista
+        if ($nf->valortotal > $totalpagamentos) {
+            $std = new stdClass();
+            $std->tPag = '99'; // Outros
+            $std->vPag = $nf->valortotal - $totalpagamentos;
+            $nfe->tagdetPag($std);
         }
 
         $infCpl = '';
