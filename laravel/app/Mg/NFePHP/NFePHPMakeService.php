@@ -782,6 +782,7 @@ class NFePHPMakeService
             $std = new stdClass();
             $std->tPag = '99'; // Outros
             $std->vPag = $nf->valortotal - $totalpagamentos;
+            $std->indPag = 1; // A Prazo
             $nfe->tagdetPag($std);
         }
 
