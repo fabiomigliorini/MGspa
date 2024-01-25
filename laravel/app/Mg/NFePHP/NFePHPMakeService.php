@@ -779,12 +779,19 @@ class NFePHPMakeService
 
         // Pagamento a Vista
         if ($nf->valortotal > $totalpagamentos) {
-            $std = new stdClass();
-            $std->tPag = '99'; // Outros
-            $std->vPag = $nf->valortotal - $totalpagamentos;
-            $std->xPag = 'Forma de Pagamento sera definida apos emissao da NFe!';
-            $std->indPag = 1; // A Prazo
-            $nfe->tagdetPag($std);
+            if (in_array($nf->NaturezaOperacao->finnfe, [NaturezaOperacao::FINNFE_AJUSTE, NaturezaOperacao::FINNFE_DEVOLUCAO_RETORNO])) {
+                $std = new stdClass();
+                $std->tPag = '90'; // Sem Pagamento
+                $std->vPag = $nf->valortotal - $totalpagamentos;
+                $nfe->tagdetPag($std);
+            } else {
+                $std = new stdClass();
+                $std->tPag = '99'; // Outros
+                $std->vPag = $nf->valortotal - $totalpagamentos;
+                $std->xPag = 'Forma de Pagamento sera definida apos emissao da NFe!';
+                $std->indPag = 1; // A Prazo
+                $nfe->tagdetPag($std);
+            }
         }
 
         $infCpl = '';
