@@ -7,9 +7,9 @@ FIXME nao gerar transferencias com itens inativos
 FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
 FIXME Quando expira o token ele precisa dar o refresh automaticamente
 
+BUG "Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!" para cartao credito parcelado
 BUG Limitar o input da Autorizacao pra 20 chars
-BUG Gerando valor item errado negocio 03386452
-TODO Mostrar Espaco acima paginacao superior
+BUG Gerando NF valor item errado negocio 03386452
 TODO Mostrar se titulo Estornado
 TODO Pagarmento Vale
 TODO Fazer webhook avisar fronted quando recebeu um pagamento Stone
@@ -25,10 +25,11 @@ TODO fazer venda de vale compras
 TODO fazer liquidacao de negocios
 TODO fazer tela de fechamento de caixa
 TODO prancheta de pesquisa de produtos sem codigo (substituir pranchetas impressas)
-TODO Orcamento em PDF
+TODO Orcamento em PDF usando dados OffLine
 TODO fazer controle das entregas tanto para clientes quanto para transferencias
 TODO fazer tela para gerenciar cadastro dos PDVs autorizados
 TODO quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
+TODO fazer uma tela de consulta de preços tipo Kiosque pra substitiur kioske atual
 
 [X] romaneio em impressora termica
 [X] colocar link para cadastro do produto
@@ -45,6 +46,7 @@ TODO quando codigo de barras nao existir offline, pesquisar primeiro no online a
 [X] TODO Integracao PagarMe
 [X] TODO Pagamento Cartao Manual
 [X] TODO Pagarmento Prazo
+[X] TODO Mostrar Espaco acima paginacao superior
 
 - Pedido
   curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido' --data-raw 'codnegocio=3304171&codpessoa=1&codpagarmepos=44&valor=0.75&valorparcela=0.75&valorjuros=0&tipo=1&parcelas=1&jurosloja=1&descricao=Negocio+3304171&codfilial=102'

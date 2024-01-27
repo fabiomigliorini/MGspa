@@ -11,6 +11,7 @@ const sNegocio = negocioStore();
 const sSinc = sincronizacaoStore();
 const quantidade = ref(1);
 const barras = ref(null);
+const barcodeVideo = ref(null);
 
 const labelQuantidade = computed({
   get() {
@@ -70,7 +71,10 @@ const buscarBarras = async () => {
   }
   const txt = barras.value;
   barras.value = "";
+  adicionarPeloCodigoBarras(txt);
+};
 
+const adicionarPeloCodigoBarras = async (txt) => {
   if (txt.length == 11) {
     const prefixo = txt.substring(0, 3);
     const codigo = txt.substring(3, 11);
@@ -146,6 +150,189 @@ const adicionarPelaListagem = (
   var audio = new Audio("successo.mp3");
   audio.play();
 };
+
+const leitor = async () => {
+  console.log("entrou");
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: {
+      height: { exact: barcodeVideo.value.offsetWidth * 5 },
+      width: { exact: barcodeVideo.value.offsetHeight * 5 },
+      // aspectRatio: 0.33333,
+      // frameRate: 200,
+      facingMode: {
+        ideal: "environment",
+        // ideal: "user",
+      },
+    },
+    audio: false,
+  });
+  // const videoEl = document.querySelector("#stream");
+  barcodeVideo.value.srcObject = stream;
+  await barcodeVideo.value.play();
+  /*
+  window.setInterval(async () => {
+    try {
+      const barcodes = await barcodeDetector.detect(barcodeVideo.value);
+      if (barcodes.length <= 0) return;
+      // console.log(barcodes);
+      barcodes.forEach((barcode) => {
+        console.log(barcode);
+        console.log(barcode.rawValue);
+        adicionarPeloCodigoBarras(barcode.rawValue);
+      });
+    } catch (error) {}
+  }, 1000);
+  */
+};
+
+const lerCodigoBarras = async () => {
+  console.log("lercodigoBarras");
+  const barcodeDetector = new BarcodeDetector({
+    formats: [
+      // "aztec",
+      // "code_128",
+      // "code_39",
+      // "code_93",
+      // "codabar",
+      // "data_matrix",
+      "ean_13",
+      "ean_8",
+      // "itf",
+      // "pdf417",
+      // "qr_code",
+      // "upc_a",
+      // "upc_e",
+    ],
+  });
+  var barras = null;
+  var barcodes = [];
+  var tentativas = 0;
+  do {
+    tentativas++;
+    console.log(tentativas);
+    try {
+      barcodes = await barcodeDetector.detect(barcodeVideo.value);
+      if (barcodes.length <= 0) {
+        continue;
+      }
+      barcodes.forEach((barcode) => {
+        barras = barcode.rawValue;
+      });
+    } catch (error) {}
+  } while (!barras && tentativas < 20);
+  if (barras) {
+    adicionarPeloCodigoBarras(barras);
+  }
+};
+
+const leitorOld = async () => {
+  if (
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia ||
+    !window.BarcodeDetector
+  ) {
+    $q.notify({
+      type: "negative",
+      message: "Dispositivo não suporta leitura de Códigos de Barras!",
+    });
+    return;
+  }
+
+  let stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" },
+  });
+  video.value.srcObject = stream;
+  video.value.play();
+
+  /*
+  let barcodeDetector = new BarcodeDetector({
+    formats: [
+      "aztec",
+      "code_128",
+      "code_39",
+      "code_93",
+      "codabar",
+      "data_matrix",
+      "ean_13",
+      "ean_8",
+      "itf",
+      "pdf417",
+      "qr_code",
+      "upc_a",
+      "upc_e",
+    ],
+  });
+  */
+  let barcodeDetector = new BarcodeDetector({ formats: ["qr_code"] });
+
+  video.value.addEventListener("loadedmetadata", async function () {
+    let canvas = document.createElement("canvas");
+    canvas.width = video.value.videoWidth;
+    canvas.height = video.value.videoHeight;
+    let context = canvas.getContext("2d");
+
+    let checkForQrCode = async function () {
+      //we draw the current view from the camera on a canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      //then we pass that canvas to the barcode detector
+      let barcodes = await barcodeDetector.detect(canvas);
+
+      if (barcodes.length > 0) {
+        let barcodeData = barcodes[0].rawValue;
+        alert("Detected QR code with the following content: " + barcodeData);
+      }
+
+      requestAnimationFrame(checkForQrCode);
+    };
+
+    checkForQrCode();
+  });
+
+  /*
+  if ("BarcodeDetector" in window) {
+    console.log("Barcode Detector supported!");
+  } else {
+    console.log("Barcode Detector is not supported in this browser");
+  }
+
+  const barcodeDetector = new BarcodeDetector({
+    formats: [
+      "aztec",
+      "code_128",
+      "code_39",
+      "code_93",
+      "codabar",
+      "data_matrix",
+      "ean_13",
+      "ean_8",
+      "itf",
+      "pdf417",
+      "qr_code",
+      "upc_a",
+      "upc_e",
+    ],
+  });
+
+  try {
+    const barcodes = await barcodeDetector.detect(image);
+    barcodes.forEach((barcode) => console.log(barcode));
+  } catch (e) {
+    // if the imageElement is invalid, the DOMException will be thrown
+    console.error("Barcode detection failed:", e);
+  }
+  */
+  /*
+  barcodeDetector
+    .detect(imageEl)
+    .then((barcodes) => {
+      barcodes.forEach((barcode) => console.log(barcode.rawValue));
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+    */
+};
 </script>
 
 <template>
@@ -171,6 +358,9 @@ const adicionarPelaListagem = (
       >
         <q-tooltip class="bg-accent">Adicionar</q-tooltip>
       </q-btn>
+      <q-btn round dense flat icon="mdi-barcode-scan" @click="leitor()">
+        <q-tooltip class="bg-accent">Leitor de Codigo de Barras</q-tooltip>
+      </q-btn>
       <q-btn
         round
         dense
@@ -192,12 +382,30 @@ const adicionarPelaListagem = (
         <template v-slot:loading>
           <q-spinner-dots />
         </template>
-        <q-tooltip class="bg-accent"
-          >Sincronizar Cadastro de Produtos</q-tooltip
-        >
+        <q-tooltip class="bg-accent">
+          Sincronizar Cadastro de Produtos
+        </q-tooltip>
       </q-btn>
     </template>
   </q-input>
+  <!-- <video ref="video" style="width: 60vh; height: 60vh"></video> -->
+  <div>
+    <div
+      style="
+        border-top: 2px solid red;
+        position: relative;
+        top: 0;
+        right: 0;
+        transform: translateY(50px);
+        width: 100%;
+      "
+    ></div>
+    <video ref="barcodeVideo" style="width: 100%; height: 100px"></video>
+    <!-- <video ref="barcodeVideo" height="100" width="300" /> -->
+  </div>
+  <q-btn color="primary" icon="mdi-barcode" @click="lerCodigoBarras()">
+    Ler código de Barras!
+  </q-btn>
 
   <!-- Pesquisa de Produto -->
   <q-dialog v-model="sProduto.dialogPesquisa" maximized>

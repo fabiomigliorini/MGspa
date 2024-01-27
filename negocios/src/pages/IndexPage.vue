@@ -10,6 +10,7 @@ import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
 import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
 import ListagemTitulos from "src/components/offline/ListagemTitulos.vue";
+import ListagemNotas from "src/components/offline/ListagemNotas.vue";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
 
@@ -215,15 +216,13 @@ onUnmounted(() => {
 
 <template>
   <q-page v-if="sNegocio.negocio">
-    <div class="q-pa-md row q-col-gutter-lg" v-if="sNegocio.podeEditar">
-      <div class="col-12">
-        <input-barras></input-barras>
-      </div>
+    <div class="q-pa-md q-col-gutter-md">
+      <input-barras v-if="sNegocio.podeEditar" />
+      <listagem-notas />
+      <listagem-produtos />
+      <dialog-sincronizacao />
+      <listagem-titulos />
     </div>
-
-    <listagem-produtos />
-    <dialog-sincronizacao />
-    <listagem-titulos />
     <div style="padding-bottom: 75px"></div>
 
     <q-dialog v-model="dialogRomaneio" full-height>

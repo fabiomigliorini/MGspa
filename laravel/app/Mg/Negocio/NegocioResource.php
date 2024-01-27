@@ -3,6 +3,7 @@
 namespace Mg\Negocio;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
+
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
@@ -42,6 +43,8 @@ class NegocioResource extends Resource
         foreach ($this->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
             $ret['titulos'] = $ret['titulos']->concat(TituloResource::collection($nfp->TituloS()->orderBy('vencimento')->get()));
         }
+        $ret['notas'] = new NegocioNotaFiscalResource($this);
         return $ret;
     }
+
 }

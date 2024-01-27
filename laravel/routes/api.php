@@ -172,6 +172,12 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
             Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\Pdv\PdvController@consultarPagarMePedido');
             Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
+            Route::post('nota-fiscal/{codnotafiscal}/criar', '\Mg\Pdv\PdvNotaFiscalController@criar');
+            Route::post('nota-fiscal/{codnotafiscal}/enviar', '\Mg\Pdv\PdvNotaFiscalController@enviar');
+            Route::post('nota-fiscal/{codnotafiscal}/consultar', '\Mg\Pdv\PdvNotaFiscalController@consultar');
+            Route::post('nota-fiscal/{codnotafiscal}/cancelar', '\Mg\Pdv\PdvNotaFiscalController@cancelar');
+            Route::post('nota-fiscal/{codnotafiscal}/inutilizar', '\Mg\Pdv\PdvNotaFiscalController@inutilizar');
+            Route::post('nota-fiscal/{codnotafiscal}/imprimir', '\Mg\Pdv\PdvNotaFiscalController@imprimir');
         });
 
         // Allan - daqui pra baixo
