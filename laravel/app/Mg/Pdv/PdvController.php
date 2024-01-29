@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use Mg\Negocio\NegocioResource;
 use Mg\Negocio\Negocio;
+use Mg\NotaFiscal\NotaFiscalService;
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixService;
 use Mg\PagarMe\PagarMeService;
@@ -149,9 +150,9 @@ class PdvController
             $data->codpagarmepos,
             $data->tipo,
             $data->valor,
-            $data->valorjuros??0,
-            ($data->valorjuros??0) + ($data->valor??0),
-            $data->valorparcela??0,
+            $data->valorjuros ?? 0,
+            ($data->valorjuros ?? 0) + ($data->valor ?? 0),
+            $data->valorparcela ?? 0,
             $data->parcelas,
             $data->jurosloja,
             $data->descricao,
@@ -167,5 +168,15 @@ class PdvController
         $pedido = PagarMePedido::findOrFail($codpagarmepedido);
         $pedido = PagarMeService::consultarPedido($pedido);
         return new PagarMePedidoResource($pedido);
-    }    
+    }
+
+    public function  notaFiscal(PdvRequest $request, $codnegocio) 
+    {
+        PdvService::autoriza($request->pdv);
+        $modelo = intval($request->modelo??65);
+        $negocio = Negocio::findOrFail($request->codnegocio);
+        NotaFiscalService::gerarNotaFiscalDoNegocio($negocio, $modelo);
+        return new NegocioResource($negocio);
+    }
+
 }

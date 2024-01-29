@@ -143,16 +143,6 @@ const informarVendedor = async (codpessoavendedor) => {
   });
 };
 
-const formaPagamentoPadrao = () => {
-  Dialog.create({
-    title: "Pagamento",
-    message: "Adicionar a forma de pagamento padrão do Cliente?",
-    cancel: true,
-  }).onOk(() => {
-    // dialogVendedor.value = false;
-  });
-};
-
 const sincronizar = () => {
   sNegocio.sincronizar(sNegocio.negocio.uuid);
 };
@@ -423,9 +413,7 @@ const recarregarDaApi = () => {
     >
       <q-item
         :clickable="sNegocio.podeEditar"
-        v-ripple
         v-if="sNegocio.negocio.Pessoa.codformapagamento"
-        @click="formaPagamentoPadrao()"
       >
         <q-item-section avatar top>
           <q-avatar icon="attach_money" color="grey" text-color="white" />

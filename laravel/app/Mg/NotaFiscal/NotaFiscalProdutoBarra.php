@@ -1,57 +1,151 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 24/Jan/2024 14:45:06
+ */
 
 namespace Mg\NotaFiscal;
 
 use Mg\MgModel;
+use Mg\Estoque\EstoqueMovimento;
+use Mg\NaturezaOperacao\Cfop;
+use Mg\Negocio\NegocioProdutoBarra;
+use Mg\NotaFiscal\NotaFiscal;
 use Mg\Produto\ProdutoBarra;
+use Mg\Usuario\Usuario;
 
-class NotaFiscalProdutoBarra extends MGModel
+class NotaFiscalProdutoBarra extends MgModel
 {
     protected $table = 'tblnotafiscalprodutobarra';
     protected $primaryKey = 'codnotafiscalprodutobarra';
+
+
     protected $fillable = [
+        'certidaosefazmt',
+        'codcfop',
+        'codnegocioprodutobarra',
         'codnotafiscal',
         'codnotafiscalprodutobarraorigem',
         'codprodutobarra',
-        'codcfop',
-        'quantidade',
-        'valorunitario',
-        'valortotal',
-        'csosn',
-        'icmscst',
-        'icmsbase',
-        'icmspercentual',
-        'icmsvalor',
-        'icmsstbase',
-        'icmsstpercentual',
-        'icmsstvalor',
-        'ipicst',
-        'ipibase',
-        'ipipercentual',
-        'ipivalor',
-        'piscst',
-        'pisbase',
-        'pispercentual',
-        'pisvalor',
-        'cofinscst',
         'cofinsbase',
+        'cofinscst',
         'cofinspercentual',
         'cofinsvalor',
         'csllbase',
         'csllpercentual',
         'csllvalor',
+        'csosn',
+        'descricaoalternativa',
+        'fethabkg',
+        'fethabvalor',
+        'funruralpercentual',
+        'funruralvalor',
+        'iagrokg',
+        'iagrovalor',
+        'icmsbase',
+        'icmsbasepercentual',
+        'icmscst',
+        'icmspercentual',
+        'icmsstbase',
+        'icmsstpercentual',
+        'icmsstvalor',
+        'icmsvalor',
+        'ipibase',
+        'ipicst',
+        'ipipercentual',
+        'ipivalor',
         'irpjbase',
         'irpjpercentual',
         'irpjvalor',
-        'descricaoalternativa',
-        'codnegocioprodutobarra',
-    ];
-    protected $dates = [
-        'criacao',
-        'alteracao',
+        'observacoes',
+        'pedido',
+        'pedidoitem',
+        'pisbase',
+        'piscst',
+        'pispercentual',
+        'pisvalor',
+        'quantidade',
+        'senarpercentual',
+        'senarvalor',
+        'valordesconto',
+        'valorfrete',
+        'valoroutras',
+        'valorseguro',
+        'valortotal',
+        'valorunitario'
     ];
 
+    protected $dates = [
+        'alteracao',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'certidaosefazmt' => 'boolean',
+        'codcfop' => 'integer',
+        'codnegocioprodutobarra' => 'integer',
+        'codnotafiscal' => 'integer',
+        'codnotafiscalprodutobarra' => 'integer',
+        'codnotafiscalprodutobarraorigem' => 'integer',
+        'codprodutobarra' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'cofinsbase' => 'float',
+        'cofinscst' => 'float',
+        'cofinspercentual' => 'float',
+        'cofinsvalor' => 'float',
+        'csllbase' => 'float',
+        'csllpercentual' => 'float',
+        'csllvalor' => 'float',
+        'fethabkg' => 'float',
+        'fethabvalor' => 'float',
+        'funruralpercentual' => 'float',
+        'funruralvalor' => 'float',
+        'iagrokg' => 'float',
+        'iagrovalor' => 'float',
+        'icmsbase' => 'float',
+        'icmsbasepercentual' => 'float',
+        'icmscst' => 'float',
+        'icmspercentual' => 'float',
+        'icmsstbase' => 'float',
+        'icmsstpercentual' => 'float',
+        'icmsstvalor' => 'float',
+        'icmsvalor' => 'float',
+        'ipibase' => 'float',
+        'ipicst' => 'float',
+        'ipipercentual' => 'float',
+        'ipivalor' => 'float',
+        'irpjbase' => 'float',
+        'irpjpercentual' => 'float',
+        'irpjvalor' => 'float',
+        'pedidoitem' => 'integer',
+        'pisbase' => 'float',
+        'piscst' => 'float',
+        'pispercentual' => 'float',
+        'pisvalor' => 'float',
+        'quantidade' => 'float',
+        'senarpercentual' => 'float',
+        'senarvalor' => 'float',
+        'valordesconto' => 'float',
+        'valorfrete' => 'float',
+        'valoroutras' => 'float',
+        'valorseguro' => 'float',
+        'valortotal' => 'float',
+        'valorunitario' => 'float'
+    ];
+
+
     // Chaves Estrangeiras
+    public function Cfop()
+    {
+        return $this->belongsTo(Cfop::class, 'codcfop', 'codcfop');
+    }
+
+    public function NegocioProdutoBarra()
+    {
+        return $this->belongsTo(NegocioProdutoBarra::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
+    }
+
     public function NotaFiscal()
     {
         return $this->belongsTo(NotaFiscal::class, 'codnotafiscal', 'codnotafiscal');
@@ -67,11 +161,6 @@ class NotaFiscalProdutoBarra extends MGModel
         return $this->belongsTo(ProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
-    public function Cfop()
-    {
-        return $this->belongsTo(Cfop::class, 'codcfop', 'codcfop');
-    }
-
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -82,102 +171,16 @@ class NotaFiscalProdutoBarra extends MGModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
     // Tabelas Filhas
-    public function NotaFiscalProdutoBarraOrigemS()
+    public function EstoqueMovimentoS()
     {
-        return $this->belongsTo(NotaFiscalProdutoBarra::class, 'codnotafiscalprodutobarraorigem', 'codnotafiscalprodutobarra');
+        return $this->hasMany(EstoqueMovimento::class, 'codnotafiscalprodutobarra', 'codnotafiscalprodutobarra');
     }
 
-    public function calculaTributacao()
+    public function NotaFiscalProdutoBarraS()
     {
-        $trib = TributacaoNaturezaOperacao
-                ::where('codtributacao', $this->ProdutoBarra->Produto->codtributacao)
-                ->where('codtipoproduto', $this->ProdutoBarra->Produto->codtipoproduto)
-                ->where('bit', $this->ProdutoBarra->Produto->Ncm->bit)
-                ->where('codnaturezaoperacao', $this->NotaFiscal->codnaturezaoperacao)
-                ->whereRaw("('{$this->ProdutoBarra->Produto->Ncm->ncm}' ilike ncm || '%' or ncm is null)");
-
-        if ($this->NotaFiscal->Pessoa->Cidade->codestado == $this->NotaFiscal->Filial->Pessoa->Cidade->codestado) {
-            $trib->where('codestado', $this->NotaFiscal->Pessoa->Cidade->codestado);
-            $filtroEstado = 'codestado = :codestado';
-        } else {
-            $trib->whereNull('codestado');
-        }
-
-        if (!($trib = $trib->first())) {
-            echo '<h1>Erro Ao Calcular Tributacao</h1>';
-            dd($this);
-            return false;
-        }
-
-        //Traz codigos de tributacao
-        $this->codcfop = $trib->codcfop;
-
-        if ($this->NotaFiscal->Filial->crt == Filial::CRT_REGIME_NORMAL) {
-
-            //CST's
-            $this->icmscst = $trib->icmscst;
-            $this->ipicst = $trib->ipicst;
-            $this->piscst = $trib->piscst;
-            $this->cofinscst = $trib->cofinscst;
-
-            if (!empty($this->valortotalfinal) && ($this->NotaFiscal->emitida)) {
-                //Calcula ICMS
-                if (!empty($trib->icmslpbase)) {
-                    $this->icmsbasepercentual = $trib->icmslpbase;
-                    $this->icmsbase = round(($this->icmsbasepercentual * $this->valortotalfinal)/100, 2);
-                }
-                
-                $this->icmspercentual = $trib->icmslppercentual;
-
-                if ((!empty($this->icmsbase)) and (!empty($this->icmspercentual))) {
-                    $this->icmsvalor = round(($this->icmsbase * $this->icmspercentual)/100, 2);
-                }
-
-                //Calcula PIS
-                if ($trib->pispercentual > 0) {
-                    $this->pisbase = $this->valortotalfinal;
-                    $this->pispercentual = $trib->pispercentual;
-                    $this->pisvalor = round(($this->pisbase * $this->pispercentual)/100, 2);
-                }
-
-                //Calcula Cofins
-                if ($trib->cofinspercentual > 0) {
-                    $this->cofinsbase = $this->valortotalfinal;
-                    $this->cofinspercentual = $trib->cofinspercentual;
-                    $this->cofinsvalor = round(($this->cofinsbase * $this->cofinspercentual)/100, 2);
-                }
-
-                //Calcula CSLL
-                if ($trib->csllpercentual > 0) {
-                    $this->csllbase = $this->valortotalfinal;
-                    $this->csllpercentual = $trib->csllpercentual;
-                    $this->csllvalor = round(($this->csllbase * $this->csllpercentual)/100, 2);
-                }
-
-                //Calcula IRPJ
-                if ($trib->irpjpercentual > 0) {
-                    $this->irpjbase = $this->valortotalfinal;
-                    $this->irpjpercentual = $trib->irpjpercentual;
-                    $this->irpjvalor = round(($this->irpjbase * $this->irpjpercentual)/100, 2);
-                }
-            }
-        } else {
-            $this->csosn = $trib->csosn;
-
-            //Calcula ICMSs
-            if (!empty($this->valortotalfinal) && ($this->NotaFiscal->emitida)) {
-                if (!empty($trib->icmsbase)) {
-                    $this->icmsbase = round(($trib->icmsbase * $this->valortotalfinal)/100, 2);
-                }
-
-                $this->icmspercentual = $trib->icmspercentual;
-
-                if ((!empty($this->icmsbase)) and (!empty($this->icmspercentual))) {
-                    $this->icmsvalor = round(($this->icmsbase * $this->icmspercentual)/100, 2);
-                }
-            }
-        }
+        return $this->hasMany(NotaFiscalProdutoBarra::class, 'codnotafiscalprodutobarraorigem', 'codnotafiscalprodutobarra');
     }
 
 }

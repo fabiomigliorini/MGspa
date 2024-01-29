@@ -1,21 +1,38 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 24/Jan/2024 14:51:26
+ */
 
 namespace Mg\NotaFiscal;
 
 use Mg\MgModel;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\Usuario\Usuario;
 
-class NotaFiscalReferenciada extends MGModel
+class NotaFiscalReferenciada extends MgModel
 {
     protected $table = 'tblnotafiscalreferenciada';
     protected $primaryKey = 'codnotafiscalreferenciada';
+
+
     protected $fillable = [
         'codnotafiscal',
-        'nfechave',
+        'nfechave'
     ];
+
     protected $dates = [
         'alteracao',
-        'criacao',
+        'criacao'
     ];
+
+    protected $casts = [
+        'codnotafiscal' => 'integer',
+        'codnotafiscalreferenciada' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer'
+    ];
+
 
     // Chaves Estrangeiras
     public function NotaFiscal()
@@ -32,7 +49,5 @@ class NotaFiscalReferenciada extends MGModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
-    // Tabelas Filhas
 
 }

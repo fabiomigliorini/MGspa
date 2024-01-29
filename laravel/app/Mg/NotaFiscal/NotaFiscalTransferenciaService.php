@@ -205,7 +205,7 @@ class NotaFiscalTransferenciaService extends MGModel
                 $nf = new NotaFiscal;
                 $nf->codfilial = $reg->codfilial;
                 $nf->codestoquelocal = $reg->codestoquelocal;
-                $nf->modelo = NotaFiscal::MODELO_NFE;
+                $nf->modelo = NotaFiscalService::MODELO_NFE;
                 $nf->codpessoa = $reg->codpessoa;
                 $nf->emitida = true;
                 $nf->codnaturezaoperacao = $reg->codnaturezaoperacao;
@@ -240,8 +240,7 @@ class NotaFiscalTransferenciaService extends MGModel
             $nfpb->valortotal = $nfpb->valorunitario * $npb->quantidade;
             $nfpb->codnegocioprodutobarra = $npb->codnegocioprodutobarra;
 
-            //TODO: criar servico pro NotaFiscalProdutoBarra, e tirar  essa funcao de dentro do model
-            $nfpb->calculaTributacao();
+            NotaFiscalProdutoBarraService::calcularTributacao($nfpb);
 
             $nfpb->save();
 

@@ -3,8 +3,10 @@
 namespace Mg\Negocio;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
+
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
+use Mg\Titulo\TituloResource;
 
 class NegocioResource extends Resource
 {
@@ -23,6 +25,9 @@ class NegocioResource extends Resource
         }
         $ret['sincronizado'] = true;
         $ret['Pessoa'] = $this->Pessoa->toArray();
+        $ret['Pessoa']['formapagamento'] = $this->Pessoa->FormaPagamento->formapagamento??null;
+        $ret['Pessoa']['cidade'] = $this->Pessoa->Cidade->cidade??null;
+        $ret['Pessoa']['uf'] = $this->Pessoa->Cidade->Estado->sigla??null;
         $ret['naturezaoperacao'] = $this->NaturezaOperacao->naturezaoperacao;
         $ret['financeiro'] = $this->NaturezaOperacao->financeiro;
         $ret['operacao'] = $this->Operacao->operacao;
@@ -34,6 +39,12 @@ class NegocioResource extends Resource
         $ret['pagamentos'] = NegocioFormaPagamentoResource::collection($this->NegocioFormaPagamentoS);
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());
         $ret['PagarMePedidoS'] = PagarMePedidoResource::collection($this->PagarMePedidoS()->orderBy('criacao', 'desc')->get());
+        $ret['titulos'] = collect([]);
+        foreach ($this->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
+            $ret['titulos'] = $ret['titulos']->concat(TituloResource::collection($nfp->TituloS()->orderBy('vencimento')->get()));
+        }
+        $ret['notas'] = new NegocioNotaFiscalResource($this);
         return $ret;
     }
+
 }

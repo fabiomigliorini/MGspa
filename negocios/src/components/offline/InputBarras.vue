@@ -4,6 +4,7 @@ import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import { useQuasar } from "quasar";
+import { falar } from "../../utils/falar.js";
 
 const $q = useQuasar();
 const sProduto = produtoStore();
@@ -11,6 +12,10 @@ const sNegocio = negocioStore();
 const sSinc = sincronizacaoStore();
 const quantidade = ref(1);
 const barras = ref(null);
+const barcodeVideo = ref(null);
+
+var stream = null;
+var leitorLigado = ref(false);
 
 const labelQuantidade = computed({
   get() {
@@ -27,6 +32,9 @@ const informarVendedor = async (codpessoavendedor) => {
     message: "Vendedor '" + sNegocio.negocio.fantasiavendedor + "' informado.",
     timeout: 1500, // 1,5 segundos
   });
+  if (sNegocio.negocio.codpessoavendedor) {
+    falar("Vendedor " + sNegocio.negocio.fantasiavendedor.split(" ")[0]);
+  }
   var audio = new Audio("successo.mp3");
   audio.play();
 };
@@ -70,7 +78,10 @@ const buscarBarras = async () => {
   }
   const txt = barras.value;
   barras.value = "";
+  adicionarPeloCodigoBarras(txt);
+};
 
+const adicionarPeloCodigoBarras = async (txt) => {
   if (txt.length == 11) {
     const prefixo = txt.substring(0, 3);
     const codigo = txt.substring(3, 11);
@@ -120,6 +131,7 @@ const buscarBarras = async () => {
     });
     var audio = new Audio("erro.mp3");
     audio.play();
+    falar("Não encontrei o código!");
   }
 };
 
@@ -146,6 +158,88 @@ const adicionarPelaListagem = (
   var audio = new Audio("successo.mp3");
   audio.play();
 };
+
+const leitor = async () => {
+  if (leitorLigado.value) {
+    desligarLeitor();
+  } else {
+    ligarLeitor();
+  }
+};
+
+const ligarLeitor = async () => {
+  leitorLigado.value = true;
+  setTimeout(async () => {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        height: { exact: barcodeVideo.value.offsetWidth * 2 },
+        width: { exact: barcodeVideo.value.offsetHeight * 2 },
+        focusMode: "continuous",
+        focusDistance: 0.03,
+        colorTemperature: 5000,
+        zoom: 1.2,
+        facingMode: {
+          ideal: "environment",
+        },
+      },
+      audio: false,
+    });
+    barcodeVideo.value.srcObject = stream;
+    await barcodeVideo.value.play();
+  }, 200);
+};
+
+const desligarLeitor = async () => {
+  if (stream) {
+    stream.getTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+  barcodeVideo.value.srcObject = null;
+  leitorLigado.value = false;
+};
+
+const lerCodigoBarras = async () => {
+  console.log("lercodigoBarras");
+  const barcodeDetector = new BarcodeDetector({
+    formats: [
+      // "aztec",
+      "code_128",
+      "code_39",
+      "code_93",
+      "codabar",
+      // "data_matrix",
+      "ean_13",
+      "ean_8",
+      "itf",
+      // "pdf417",
+      // "qr_code",
+      "upc_a",
+      "upc_e",
+    ],
+  });
+  var barras = null;
+  var barcodes = [];
+  var tentativas = 0;
+  do {
+    tentativas++;
+    console.log(tentativas);
+    try {
+      barcodes = await barcodeDetector.detect(barcodeVideo.value);
+      if (barcodes.length <= 0) {
+        continue;
+      }
+      barcodes.forEach((barcode) => {
+        barras = barcode.rawValue;
+      });
+    } catch (error) {}
+  } while (!barras && tentativas < 20);
+  if (barras) {
+    adicionarPeloCodigoBarras(barras);
+  } else {
+    falar("Não consigo ler!");
+  }
+};
 </script>
 
 <template>
@@ -159,6 +253,7 @@ const adicionarPelaListagem = (
     input-class="text-right"
     @change="buscarBarras()"
     :prefix="labelQuantidade"
+    inputmode="decimal"
   >
     <template v-slot:append>
       <q-btn
@@ -170,6 +265,9 @@ const adicionarPelaListagem = (
         :disable="barras == null || barras == ''"
       >
         <q-tooltip class="bg-accent">Adicionar</q-tooltip>
+      </q-btn>
+      <q-btn round dense flat icon="mdi-barcode-scan" @click="leitor()">
+        <q-tooltip class="bg-accent">Leitor de Codigo de Barras</q-tooltip>
       </q-btn>
       <q-btn
         round
@@ -192,12 +290,35 @@ const adicionarPelaListagem = (
         <template v-slot:loading>
           <q-spinner-dots />
         </template>
-        <q-tooltip class="bg-accent"
-          >Sincronizar Cadastro de Produtos</q-tooltip
-        >
+        <q-tooltip class="bg-accent">
+          Sincronizar Cadastro de Produtos
+        </q-tooltip>
       </q-btn>
     </template>
   </q-input>
+
+  <!-- Leitor de Codigo de Barras -->
+  <div v-if="leitorLigado">
+    <div
+      style="
+        border-top: 2px solid red;
+        position: relative;
+        top: 0;
+        right: 0;
+        transform: translateY(50px);
+        width: 100%;
+      "
+    ></div>
+    <video ref="barcodeVideo" style="width: 100%; height: 100px"></video>
+    <q-btn
+      color="primary"
+      icon="mdi-barcode"
+      @click="lerCodigoBarras()"
+      style="width: 100%"
+    >
+      Ler código de Barras!
+    </q-btn>
+  </div>
 
   <!-- Pesquisa de Produto -->
   <q-dialog v-model="sProduto.dialogPesquisa" maximized>

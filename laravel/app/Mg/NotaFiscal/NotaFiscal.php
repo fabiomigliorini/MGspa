@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:52:09
+ * Date: 24/Jan/2024 14:52:06
  */
 
 namespace Mg\NotaFiscal;
@@ -15,6 +15,7 @@ use Mg\NotaFiscal\NotaFiscalDuplicatas;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\NotaFiscal\NotaFiscalReferenciada;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\NotaFiscal\NotaFiscalPagamento;
 use Mg\Cidade\Estado;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
@@ -25,23 +26,6 @@ use Mg\Usuario\Usuario;
 
 class NotaFiscal extends MgModel
 {
-    const MODELO_NFE              = 55;
-    const MODELO_NFCE             = 65;
-
-    const FRETE_EMITENTE          = 0;
-    const FRETE_DESTINATARIO      = 1;
-    const FRETE_TERCEIROS         = 2;
-    const FRETE_SEM               = 9;
-
-    const TPEMIS_NORMAL           = 1; // Emissão normal (não em contingência);
-    const TPEMIS_FS_IA            = 2; // Contingência FS-IA, com impressão do DANFE em formulário de segurança;
-    const TPEMIS_SCAN             = 3; // Contingência SCAN (Sistema de Contingência do Ambiente Nacional) Desativação prevista para 30/06/2014;
-    const TPEMIS_DPEC             = 4; // Contingência DPEC (Declaração Prévia da Emissão em Contingência);
-    const TPEMIS_FS_DA            = 5; // Contingência FS-DA, com impressão do DANFE em formulário de segurança;
-    const TPEMIS_SVC_AN           = 6; // Contingência SVC-AN (SEFAZ Virtual de Contingência do AN);
-    const TPEMIS_SVC_RS           = 7; // Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
-    const TPEMIS_OFFLINE          = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
-
     protected $table = 'tblnotafiscal';
     protected $primaryKey = 'codnotafiscal';
 
@@ -215,6 +199,11 @@ class NotaFiscal extends MgModel
     public function NotaFiscalDuplicatasS()
     {
         return $this->hasMany(NotaFiscalDuplicatas::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
+    public function NotaFiscalPagamentoS()
+    {
+        return $this->hasMany(NotaFiscalPagamento::class, 'codnotafiscal', 'codnotafiscal');
     }
 
     public function NotaFiscalProdutoBarraS()

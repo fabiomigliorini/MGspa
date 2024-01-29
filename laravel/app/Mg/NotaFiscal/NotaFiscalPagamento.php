@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Jan/2024 14:49:40
+ * Date: 24/Jan/2024 15:40:53
  */
 
 namespace Mg\NotaFiscal;
@@ -9,32 +9,43 @@ namespace Mg\NotaFiscal;
 use Mg\MgModel;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Usuario\Usuario;
+use Mg\Pessoa\Pessoa;
 
-class NotaFiscalDuplicatas extends MgModel
+class NotaFiscalPagamento extends MgModel
 {
-    protected $table = 'tblnotafiscalduplicatas';
-    protected $primaryKey = 'codnotafiscalduplicatas';
+    protected $table = 'tblnotafiscalpagamento';
+    protected $primaryKey = 'codnotafiscalpagamento';
 
 
     protected $fillable = [
+        'autorizacao',
+        'avista',
+        'bandeira',
         'codnotafiscal',
-        'fatura',
-        'valor',
-        'vencimento'
+        'codpessoa',
+        'integracao',
+        'tipo',
+        'troco',
+        'valorpagamento'
     ];
 
     protected $dates = [
         'alteracao',
-        'criacao',
-        'vencimento'
+        'criacao'
     ];
 
     protected $casts = [
+        'avista' => 'boolean',
+        'bandeira' => 'integer',
         'codnotafiscal' => 'integer',
-        'codnotafiscalduplicatas' => 'integer',
+        'codnotafiscalpagamento' => 'integer',
+        'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'valor' => 'float'
+        'integracao' => 'boolean',
+        'tipo' => 'integer',
+        'troco' => 'float',
+        'valorpagamento' => 'float'
     ];
 
 
@@ -42,6 +53,11 @@ class NotaFiscalDuplicatas extends MgModel
     public function NotaFiscal()
     {
         return $this->belongsTo(NotaFiscal::class, 'codnotafiscal', 'codnotafiscal');
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
     public function UsuarioAlteracao()

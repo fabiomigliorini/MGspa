@@ -8,9 +8,14 @@ use Carbon\Carbon;
 use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
 use Mg\NaturezaOperacao\Operacao;
+use Mg\Pdv\PdvNegocioService;
 
 class NegocioService
 {
+    const STATUS_ABERTO = 1;
+    const STATUS_FECHADO = 2;
+    const STATUS_CANCELADO = 3;
+
     public static function fecharSePago (Negocio $negocio)
     {
         static::recalcularTotal($negocio);
@@ -39,6 +44,10 @@ class NegocioService
 
     public static function fechar (Negocio $negocio)
     {
+        // se for PDV, utiliza rotina de fechamento daquela classe
+        if (!empty($negocio->codpdv)) {
+            return PdvNegocioService::fechar($negocio, $negocio->Pdv);
+        }
 
         if ($negocio->codnegociostatus != NegocioStatus::ABERTO) {
             throw new \Exception("O Status do Negócio não permite Fechamento!", 1);
@@ -57,8 +66,8 @@ class NegocioService
         //Calcula total pagamentos à vista e à prazo
         $valorPagamentos = 0;
         $valorPagamentosPrazo = 0;
-        foreach ($negocio->NegocioFormaPagamentoS()->get() as $nfp) {
-            $valorPagamentos += $nfp->valortotal;
+        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
+            $valorPagamentos += ($nfp->valortotal)?$nfp->valortotal:$nfp->valorpagamento;
             if (!$nfp->FormaPagamento->avista) {
                 $valorPagamentosPrazo += $nfp->valortotal;
             }
@@ -166,10 +175,6 @@ class NegocioService
             }
         }
         return true;
-    }
-
-    public static function gerarNotaFiscal (Negocio $negocio, NotaFiscal $notaFiscal = null)
-    {
     }
 
 }

@@ -9,7 +9,7 @@ use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalCartaCorrecao;
 use Mg\Filial\Filial;
 use Mg\Filial\Empresa;
-
+use Mg\NotaFiscal\NotaFiscalService;
 use NFePHP\NFe\Complements;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\NFe\Factories\Protocol;
@@ -493,7 +493,7 @@ class NFePHPService extends MgService
         }
 
         // Valida Inutilizacao
-        if ($nf->modelo == NotaFiscal::MODELO_NFCE) {
+        if ($nf->modelo == NotaFiscalService::MODELO_NFCE) {
             throw new \Exception('Não é permitido Carta de Correção para NFCe!');
         }
 
@@ -746,7 +746,7 @@ class NFePHPService extends MgService
             $xml = file_get_contents($path);
         }
 
-        if ($nf->modelo == NotaFiscal::MODELO_NFE) {
+        if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
 
             // Logo somente na Migliorini
             if ($nf->Filial->codempresa == 1) {
