@@ -19,21 +19,22 @@
 
           <q-separator spaced></q-separator>
 
-          <q-input outlined v-model="modelTel.pais" mask="(+##)" value="+55" label="País" unmasked-value :rules="[
+          <q-input outlined v-model="modelTel.pais" mask="(+##)" value="+55" label="País" :rules="[
             val => val && val.length > 0 || 'Pais obrigatório'
-          ]" />
+          ]" unmasked-value/>
 
-          <q-input outlined v-model="modelTel.ddd" mask="(##)" autofocus label="DDD" unmasked-value :rules="[
-            val => val && val.length > 0 || 'DDD obrigatório'
-          ]" />
-          <q-input v-if="modelTel.tipo == '2'" outlined v-model="modelTel.telefone" mask="# ####-####" autofocus
+          <q-input outlined v-model="modelTel.ddd" mask="(##)" label="DDD" :rules="[
+          telNovo == false ? null : val => val && val.length > 0 || 'DDD obrigatório'
+          ]" unmasked-value/>
+          
+          <q-input v-if="modelTel.tipo == '2'" outlined v-model="modelTel.telefone" mask="# ####-####"
             label="Telefone" unmasked-value :rules="[
-              val => val && val.length > 0 || 'Telefone obrigatório'
+              telNovo == false ? null : val => val && val.length > 0 || 'Telefone obrigatório'
             ]" />
 
-          <q-input v-if="modelTel.tipo == '1'" outlined v-model="modelTel.telefone" mask="####-####" autofocus
+          <q-input v-if="modelTel.tipo == '1'" outlined v-model="modelTel.telefone" mask="####-####"
             label="Telefone" unmasked-value :rules="[
-              val => val && val.length > 0 || 'Telefone obrigatório'
+              telNovo == false ? null : val => val && val.length > 0 || 'Telefone obrigatório'
             ]" />
 
           <q-input outlined v-model="modelTel.apelido" label="Apelido" :rules="[]" />
@@ -55,77 +56,83 @@
           @click="dialogTel = true, modelTel = { tipo: 2, pais: '+55' }, telNovo = true" />
       </q-item-label>
 
-      <!-- DRAG AND DROP TELEFONES -->
-      <draggable class="list-group" item-key="id"
-        :component-data="{ tag: 'q-list', name: 'flip-list', type: 'transition' }" :move="alteraOrdem"
-        v-model="sPessoa.item.PessoaTelefoneS" v-bind="dragOptions" @start="isDragging = true" @end="isDragging = false">
 
-        <template #item="{ element }">
-          <div>
-            <q-separator inset />
+      <div v-for="element in sPessoa.item.PessoaTelefoneS" v-bind:key="element.codpessoatelefone">
+        <q-separator inset />
+        <q-item>
+          <q-item-section avatar top>
+            <q-avatar :icon="iconeFone(element.tipo)" color="grey-2" text-color="blue" />
+          </q-item-section>
+          <q-item-section class="cursor-pointer" lines="1" @click="linkTel(element.ddd, element.telefone)" clickable
+            v-ripple>
+            <q-item-label v-if="!element.inativo">
+              ({{ element.ddd }})
+              {{ formataFone(element.tipo, element.telefone) }}
+              <q-icon v-if="element.verificacao" color="blue" name="verified" />
+            </q-item-label>
+            <q-item-label v-else>
+              <s>({{ element.ddd }})
+                {{ formataFone(element.tipo, element.telefone) }}</s>
+              <q-icon v-if="element.verificacao" color="blue" name="verified" />
+            </q-item-label>
+            <q-item-label caption>
+              {{ element.apelido }}
+              <span v-if="element.inativo" class="text-caption text-red-14">
+                Inativo desde: {{ formataData(element.inativo) }}
+              </span>
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <div class="row">
+              <q-btn flat size="sm" dense label="Verificar" color="blue"
+                v-if="!element.verificacao && element.tipo === 2 && user.verificaPermissaoUsuario('Financeiro')"
+                @click="enviarSms(element.pais, element.ddd, element.telefone, element.codpessoatelefone)" />
 
-            <q-item>
-              <q-item-section avatar top>
-                <q-avatar :icon="iconeFone(element.tipo)" color="grey-2" text-color="blue" />
-              </q-item-section>
-              <q-item-section class="cursor-pointer" lines="1" @click="linkTel(element.ddd, element.telefone)" clickable
-                v-ripple>
-                <q-item-label v-if="!element.inativo">
-                  ({{ element.ddd }})
-                  {{ formataFone(element.tipo, element.telefone) }}
-                  <q-icon v-if="element.verificacao" color="blue" name="verified" />
-                </q-item-label>
-                <q-item-label v-else>
-                  <s>({{ element.ddd }})
-                    {{ formataFone(element.tipo, element.telefone) }}</s>
-                  <q-icon v-if="element.verificacao" color="blue" name="verified" />
-                </q-item-label>
-                <q-item-label caption>
-                  {{ element.apelido }}
-                  <span v-if="element.inativo" class="text-caption text-red-14">
-                    Inativo desde: {{ formataData(element.inativo) }}
-                  </span>
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <div class="row">
-                  <q-btn flat size="sm"  dense label="Verificar" color="blue"
-                    v-if="!element.verificacao && element.tipo === 2 && user.verificaPermissaoUsuario('Financeiro')"
-                    @click="enviarSms(element.pais, element.ddd, element.telefone, element.codpessoatelefone)" />
+              <q-btn-dropdown dense round flat auto-close v-if="user.verificaPermissaoUsuario('Financeiro')">
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat icon="edit"
+                  @click="editarTel(element.codpessoatelefone, element.ddd, element.telefone, element.apelido, element.tipo, element.verificacao), telNovo = false" />
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat icon="delete"
+                  @click="excluirTel(element.codpessoatelefone)" />
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat icon="pause"
+                  @click="inativar(element.codpessoa, element.codpessoatelefone)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Inativar
+                  </q-tooltip>
+                </q-btn>
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat icon="play_arrow"
+                  @click="ativar(element.codpessoa, element.codpessoatelefone)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Ativar
+                  </q-tooltip>
+                </q-btn>
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="expand_less"
+                  @click="cima(element.codpessoa, element.codpessoatelefone)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Mover para cima
+                  </q-tooltip>
+                </q-btn>
 
-                  <q-btn-dropdown dense round flat auto-close v-if="user.verificaPermissaoUsuario('Financeiro')">
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat icon="edit"
-                      @click="editarTel(element.codpessoatelefone, element.ddd, element.telefone, element.apelido, element.tipo, element.verificacao, telNovo = false)" />
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat icon="delete"
-                      @click="excluirTel(element.codpessoatelefone)" />
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat icon="pause"
-                      @click="inativar(element.codpessoa, element.codpessoatelefone)">
-                      <q-tooltip transition-show="scale" transition-hide="scale">
-                        Inativar
-                      </q-tooltip>
-                    </q-btn>
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoatelefone)">
-                      <q-tooltip transition-show="scale" transition-hide="scale">
-                        Ativar
-                      </q-tooltip>
-                    </q-btn>
-                    <q-btn flat icon="info">
-                      <q-tooltip transition-show="scale" transition-hide="scale">
-                        <q-item-label class="row">Criado por {{ element.usuariocriacao }} em {{
-                          formataData(element.criacao)
-                        }}</q-item-label>
-                        <q-item-label class="row">Alterado por {{ element.usuarioalteracao }} em {{
-                          formataData(element.alteracao) }}</q-item-label>
-                      </q-tooltip>
-                    </q-btn>
-                  </q-btn-dropdown>
-                </div>
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="expand_more"
+                  @click="baixo(element.codpessoa, element.codpessoatelefone)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Mover para baixo
+                  </q-tooltip>
+                </q-btn>
+                <q-btn flat icon="info">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    <q-item-label class="row">Criado por {{ element.usuariocriacao }} em {{
+                      formataData(element.criacao)
+                    }}</q-item-label>
+                    <q-item-label class="row">Alterado por {{ element.usuarioalteracao }} em {{
+                      formataData(element.alteracao) }}</q-item-label>
+                  </q-tooltip>
+                </q-btn>
+              </q-btn-dropdown>
+            </div>
 
-              </q-item-section>
-            </q-item>
-          </div>
-        </template>
-      </draggable>
+          </q-item-section>
+        </q-item>
+      </div>
     </q-list>
   </q-card>
 </template>
@@ -135,24 +142,64 @@ import { defineComponent } from 'vue'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-import draggable from 'vuedraggable'
 import moment from 'moment'
 import { pessoaStore } from 'stores/pessoa'
 import { guardaToken } from 'src/stores'
 
 
-const modelTel = ref({ ddd: '', telefone: '', pais: '', apelido: '', tipo: '', verificacao: '', codpessoa: '' })
+const modelTel = ref({})
 
 
 export default defineComponent({
   name: "ItemTelefone",
-  components: {
-    draggable,
-  },
+ 
   display: "Transition",
   order: 6,
 
   methods: {
+
+    async cima(codpessoa, codpessoatelefone) {
+      try {
+        await this.sPessoa.telefoneParaCima(codpessoa, codpessoatelefone)
+
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Movido para cima'
+        })
+        this.sPessoa.get(codpessoa)
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+        this.sPessoa.get(codpessoa)
+      }
+    },
+
+    async baixo(codpessoa, codpessoatelefone) {
+      try {
+        await this.sPessoa.telefoneParaBaixo(codpessoa, codpessoatelefone)
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Movido para baixo'
+        })
+        this.sPessoa.get(codpessoa)
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+        this.sPessoa.get(codpessoa)
+      }
+    },
 
     confirmaSmsCel(ddd, telefone, codpessoatelefone) {
 
@@ -397,25 +444,6 @@ export default defineComponent({
     formataData(data) {
       var dataformatada = moment(data).format('DD/MM/YYYY hh:mm')
       return dataformatada
-    },
-
-    alteraOrdem: async function (e) {
-      try {
-        if (e.willInsertAfter === true) {
-          await this.sPessoa.telefoneParaBaixo(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
-        } else {
-          await this.sPessoa.telefoneParaCima(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoatelefone)
-        }
-      } catch (error) {
-        this.$q.notify({
-          color: 'red-5',
-          textColor: 'white',
-          icon: 'error',
-          message: error.message
-        })
-        this.sPessoa.get(e.draggedContext.element.codpessoa)
-        return
-      }
     },
 
     linkTel(ddd, telefone) {

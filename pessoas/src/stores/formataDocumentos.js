@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { pessoaStore } from './pessoa'
-import moment from 'moment'
+import moment from 'moment';
+import 'moment/min/locales';
+moment.locale("pt-br")
 
 const sPessoa = pessoaStore();
 
@@ -234,10 +236,10 @@ export const formataDocumetos = defineStore('documentos', {
             if (cnpj == null) {
                 return cnpj
             }
-    
-            if(fisica){
+
+            if (fisica) {
                 cnpj = cnpj.toString().padStart(11, '0')
-            return cnpj;
+                return cnpj;
             }
 
             cnpj = cnpj.toString().padStart(14, '0')
@@ -277,6 +279,16 @@ export const formataDocumetos = defineStore('documentos', {
                 cel.slice(5, 9)
         },
 
+        formataCelularComDDD(cel) {
+            if (cel == null) {
+                return cel
+            }
+            cel = cel.toString().padStart(11)
+            return cel.slice(0, 0) + "(" + cel.slice(0, 2) + ") " +
+                cel.slice(2, 3) + " " +  cel.slice(3, 7) + "-" +
+                cel.slice(7, 11)
+        },
+
         formataFixo(fixo) {
             if (fixo == null) {
                 return fixo
@@ -292,9 +304,16 @@ export const formataDocumetos = defineStore('documentos', {
             return dataformatada
         },
 
+        formataDataLonga(data) {
+            return moment(data).startOf('day').format('llll')
+        },
+
         formataDatasemHr(data) {
-            var dataformatada = moment(data).format('DD/MM/YYYY')
-            return dataformatada
+            if (data) {
+                var dataformatada = moment(data).format('DD/MM/YYYY')
+                return dataformatada
+            }
+            return data;
         },
 
         dataFormatoSql(data) {
@@ -325,6 +344,23 @@ export const formataDocumetos = defineStore('documentos', {
             //Se for true é passado, se não é futuro
             var dataformatada = moment(data).isBefore()
             return dataformatada
+        },
+
+        verificaIdade(data) {
+            var dataFormatada = moment().diff(data, "years", false)
+            return dataFormatada
+        },
+
+        formataCnpjEcpf(cnpjcpf) {
+            if (cnpjcpf == null) {
+                return cnpjcpf
+            }
+            if (cnpjcpf.toString().length <= 11) {
+                cnpjcpf = this.formataCPF(cnpjcpf.toString().padStart(11, '0'))
+                return cnpjcpf;
+            }
+            cnpjcpf = this.formataCNPJ(cnpjcpf.toString().padStart(14, '0'))
+            return cnpjcpf;
         },
     }
 })

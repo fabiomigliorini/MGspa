@@ -10,11 +10,11 @@
       </div>
 
       <div class="col-md-6 q-pl-md q-pr-md">
-        <q-select outlined v-model="filtroPessoa.date" :options="[
-          'Este ano', '1 Ano', '2 Anos', 'Tudo']" label="Data" dense />
+        <q-select outlined v-model="filtroPessoa.desde" :options="opcoesDesde" label="Data" dense map-options
+          emit-value />
       </div>
     </div>
-    <canvas id="graficoNegocios" :height="$q.screen.width > '1000' ? '50' : '200'" width="200">
+    <canvas id="graficoNegocios" class="q-pl-md" :height="$q.screen.width > '1000' ? '50' : '200'" width="200">
     </canvas>
   </q-card>
 </template>
@@ -30,97 +30,89 @@ import { useQuasar } from 'quasar';
 
 export default defineComponent({
   name: "GraficoNegocios",
-
   components: {
     SelectPessoas: defineAsyncComponent(() => import('components/pessoa/SelectPessoas.vue')),
-
   },
 
   methods: {
 
-    async montaGrafico() {
-      let valortotal = []
-      let label = []
-      this.meses = []
+    async montaOpcoesDesde() {
+      this.opcoesDesde = [
+        {
+          label: 'Este Ano',
+          value: moment().startOf('year').format('YYYY-MM-DD')
+        },
+        {
+          label: '1 Ano',
+          value: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
+        },
+        {
+          label: '2 Anos',
+          value: moment().subtract(2, 'year').startOf('month').format('YYYY-MM-DD')
+        },
+        {
+          label: 'Tudo',
+          value: null
+        },
+      ]
+    },
 
+    async montaGrafico() {
+
+      // busca negocios na api
       const ret = await this.sGrupoEconomico.getNegocios(this.$route.params.id, this.filtroPessoa);
 
-      ret.data.forEach(valores => {
-        valortotal.push(valores.valortotal)
-        label.push(valores.naturezaoperacao)
-        this.meses.push(this.Documentos.formataMes(valores.mes))
+      // monta array de meses
+      let mes = moment().startOf('month');
+      let primeiroMes = this.filtroPessoa.desde;
+      if (primeiroMes == null) {
+        primeiroMes = (ret.data.map(item => item.mes).sort())[0];
+      }
+      let meses = [];
+      do {
+        meses.unshift(mes.format('YYYY-MM-DD 00:00:00'));
+        mes = mes.subtract(1, 'month').startOf('month');
+      } while (mes.format('YYYY-MM-DD') > primeiroMes);
+      this.meses = meses
+
+      // pega todas as naturezas operação e remove os nomes duplicados
+      const naturezas = Array.from(new Set(Object.values(ret.data.slice(1).map(element => element.naturezaoperacao))))
+
+      let datasets = [];
+
+      naturezas.forEach(natureza => {
+        let negocios = ret.data.filter(item => item.naturezaoperacao === natureza);
+        let serie = [];
+        meses.forEach(mes => {
+          const registro = negocios.filter(item => item.mes === mes);
+          if (registro.length > 0) {
+            serie.push(registro[0].valortotal);
+          } else {
+            serie.push(0);
+          }
+        });
+
+        let dataset = {
+          label: natureza,
+          data: serie,
+          tension: 0.2
+        };
+
+        datasets.push(dataset);
+
+      });
+      
+      // const formataMes = moment(this.meses, 'YYYY-MM-DD 00:00:00').format('YYYY-MM-DD')
+      // console.log(formataMes)
+      let mesesFormatado = []
+
+      this.meses.forEach(mesFormat => {
+        mesesFormatado.push(moment(mesFormat, 'YYYY-MM-DD 00:00:00').locale('Pt-Br').format('MMM/YYYY'))
       });
 
-      if (this.filtroPessoa.date !== undefined) {
-
-        if (this.filtroPessoa.date == 'Este ano') {
-
-          var anoAtual = moment().year();
-          var inicio = new Date("1/1/" + anoAtual);
-          var primeiroDia = moment(inicio.valueOf()).format('YYYY-MM-DD');
-
-          var arrayEsteAno = ret.data.filter(a => {
-            return (a.mes >= primeiroDia);
-          });
-
-          valortotal = []
-          label = []
-          this.meses = []
-
-          arrayEsteAno.forEach(valores => {
-            valortotal.push(valores.valortotal)
-            label.push(valores.naturezaoperacao)
-            this.meses.push(this.Documentos.formataMes(valores.mes))
-          });
-        }
-
-        if (this.filtroPessoa.date == '1 Ano') {
-          var inicio = moment().subtract(1, 'year').format('YYYY-MM-DD')
-          var arrayAnoAtras = ret.data.filter(a => {
-            return (a.mes >= inicio);
-          });
-
-          valortotal = []
-          label = []
-          this.meses = []
-
-          arrayAnoAtras.forEach(valores => {
-            valortotal.push(valores.valortotal)
-            label.push(valores.naturezaoperacao)
-            this.meses.push(this.Documentos.formataMes(valores.mes))
-          });
-        }
-
-
-        if (this.filtroPessoa.date == '2 Anos') {
-          var inicio = moment().subtract(2, 'year').format('YYYY-MM-DD')
-          var arrayDoisAnosAtras = ret.data.filter(a => {
-            return (a.mes >= inicio);
-          });
-
-          valortotal = []
-          label = []
-          this.meses = []
-
-          arrayDoisAnosAtras.forEach(valores => {
-            valortotal.push(valores.valortotal)
-            label.push(valores.naturezaoperacao)
-            this.meses.push(this.Documentos.formataMes(valores.mes))
-          });
-        }
-
-      }
-
       const data = {
-        labels: this.meses,
-        datasets: [
-          {
-            label: 'Valor Total',
-            data: null,
-            borderColor: 'rgb(54, 162, 235)',
-            backgroundColor: 'rgb(255, 99, 132)',
-          },
-        ]
+        labels: mesesFormatado,
+        datasets: datasets,
       };
 
       const config = {
@@ -129,27 +121,48 @@ export default defineComponent({
         options: {
           responsive: true,
           plugins: {
-            legend: {
-              position: 'top',
-            },
-            tooltip: {
-              mode: 'index',
-              intersect: false
-            },
             title: {
               display: true,
-              // text: 'Chart.js Line Chart'
             },
-            hover: {
-            mode: 'nearest',
-            intersect: true
           },
+          interaction: {
+            intersect: false,
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                // text: 'Value'
+              },
+              suggestedMin: -10,
+              suggestedMax: 200
+            }
           }
         },
       };
 
-      data.datasets[0].data = valortotal
-      // data.datasets[0].label = ['Negócios']
+      // console.log('Os Data Sets:', data.datasets)
+
+
+
+      // // separa os valores que estao no dataset
+      // data.datasets.forEach(dataset => {
+      //   const valores = dataset.data.map(valor => valor.valortotal)
+
+      //   data.labels = Array.from(new Set(this.meses))
+      //   this.arrayNegocios = []
+      //   dataset.data = []
+      //   dataset.data = valores
+      //   // console.log(dataset.data)
+      // });
+
       this.graficoNegocios = new Chart(document.getElementById('graficoNegocios'), config)
     },
 
@@ -157,18 +170,13 @@ export default defineComponent({
       this.graficoNegocios.destroy()
       this.montaGrafico()
     },
+
   },
 
   data() {
 
     watch(
-      () => this.filtroPessoa.codpessoa,
-      () => this.atualizaGrafico(),
-      { deep: true }
-    );
-
-    watch(
-      () => this.filtroPessoa.date,
+      () => this.filtroPessoa,
       () => this.atualizaGrafico(),
       { deep: true }
     );
@@ -179,22 +187,28 @@ export default defineComponent({
   },
 
   async mounted() {
-    this.montaGrafico()
+    this.montaOpcoesDesde();
+    this.montaGrafico();
   },
 
   setup() {
 
     const sGrupoEconomico = GrupoEconomicoStore()
-    const filtroPessoa = ref({ date: '1 Ano' })
+    const filtroPessoa = ref({
+      desde: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD'),
+      codpessoa: null,
+    })
     const graficoNegocios = ref('')
     const meses = ref([])
     const Documentos = formataDocumetos()
     const $q = useQuasar()
+    const opcoesDesde = ref([]);
 
     return {
       sGrupoEconomico,
       filtroPessoa,
       graficoNegocios,
+      opcoesDesde,
       meses,
       Documentos
     }

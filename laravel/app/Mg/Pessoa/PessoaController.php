@@ -111,17 +111,17 @@ class PessoaController extends MgController
 
         $data = $request->all();
 
-        if ($request->ie) {
-            $buscaSigla = PessoaService::buscaSigla($request->codcidade);
-            $uf = $buscaSigla[0]->sigla;
-            $ie = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
-            $request['ie'] = $ie;
+        // if ($request->ie) {
+        //     $buscaSigla = PessoaService::buscaSigla($request->codcidade);
+        //     $uf = $buscaSigla[0]->sigla;
+        //     $ie = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
+        //     $request['ie'] = $ie;
 
-            $this->validate($request, [
-                'cnpj' => 'required|cpf_cnpj',
-                'ie' => 'required|inscricao_estadual:' . $uf,
-            ]);
-        }
+        //     $this->validate($request, [
+        //         'cnpj' => 'required|cpf_cnpj',
+        //         'ie' => 'required|inscricao_estadual:' . $uf,
+        //     ]);
+        // }
         
         // $this->validate($request, [
         //     'cnpj' => 'required|cpf_cnpj'

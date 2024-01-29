@@ -10,22 +10,25 @@
       <q-separator inset />
 
       <div class="row">
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="payments" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>
+              <q-item-label v-if="sPessoa.item.aberto.quantidade > 0">
                 {{ sPessoa.item.aberto.quantidade }} Titulos totalizando
                 <br>
                 {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sPessoa.item.aberto.saldo) }}
               </q-item-label>
-              <q-item-label>
+              <q-item-label v-if="sPessoa.item.aberto.quantidade > 0">
                 <span v-if="Documentos.verificaPassadoFuturo(sPessoa.item.aberto.vencimento)" class="text-red-14">Mais atrasado vencido {{ Documentos.formataFromNow(sPessoa.item.aberto.vencimento) }}</span>
                 <span v-else>
                   Primeiro Vencimento {{ Documentos.formataFromNow(sPessoa.item.aberto.vencimento) }}
                 </span>
+              </q-item-label>
+              <q-item-label v-if="sPessoa.item.aberto.quantidade == 0">
+                Nenhum titulo em aberto
               </q-item-label>
               <q-item-label caption class="text-grey-8">Saldo em aberto</q-item-label>
             </q-item-section>
@@ -47,7 +50,7 @@
           <q-separator inset />
         </div>
 
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="shopping_cart" color="grey-2" text-color="blue" />
@@ -77,7 +80,7 @@
           <q-separator inset />
         </div>
 
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="schedule_send" color="grey-2" text-color="blue" />
@@ -106,7 +109,7 @@
           <q-separator inset />
         </div>
 
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="credit_card_off" color="grey-2" text-color="blue" />
@@ -137,7 +140,7 @@
           <q-separator inset />
         </div>
 
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="sell" color="grey-2" text-color="blue" />
@@ -167,7 +170,7 @@
           <q-separator inset />
         </div>
 
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="receipt_long" color="grey-2" text-color="blue" />
@@ -201,14 +204,17 @@
           <q-separator inset />
         </div>
 
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="schedule_send" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section>
-              <q-item-label lines="5" style="white-space: pre">
+              <q-item-label lines="10" style="white-space: pre">
                 {{ sPessoa.item.mensagemvenda }}
+                <q-tooltip>
+                  {{ sPessoa.item.mensagemvenda }}
+                </q-tooltip>
               </q-item-label>
               <q-item-label caption class="text-grey-8">Mensagem de Venda</q-item-label>
             </q-item-section>

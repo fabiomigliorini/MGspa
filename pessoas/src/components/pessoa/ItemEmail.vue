@@ -32,85 +32,94 @@
       </q-item-label>
 
       <!-- DRAG AND DROP EMAILS -->
-      <draggable class="list-group" item-key="id"
-        :component-data="{ tag: 'q-list', name: 'flip-list', type: 'transition' }" :move="alteraOrdem"
-        v-model="sPessoa.item.PessoaEmailS" v-bind="dragOptions" @start="isDragging = true" @end="isDragging = false">
 
-        <template #item="{ element }">
 
-          <div>
-            <q-separator inset />
-            <q-item>
-              <q-item-section avatar top>
-                <q-avatar icon="email" color="grey-2" text-color="blue" />
-              </q-item-section>
-              <q-item-section>
 
-                <q-item-label lines="2" @click="linkEmail(element.email)" clickable v-ripple class="cursor-pointer">
-                  <s v-if="element.inativo">
-                    {{ element.email }}
-                  </s>
-                  <span v-else>
-                    {{ element.email }}
-                  </span>
-                  <q-icon v-if="element.verificacao" class="" color="blue" name="verified" />
-                </q-item-label>
+      <div v-for="element in sPessoa.item.PessoaEmailS" v-bind:key="element.codpessoaemail">
+        <q-separator inset />
+        <q-item>
+          <q-item-section avatar top>
+            <q-avatar icon="email" color="grey-2" text-color="blue" />
+          </q-item-section>
+          <q-item-section>
 
-                <q-item-label caption>
-                  {{ element.apelido }}
-                  <span v-if="element.inativo" class="text-caption text-red-14">
-                    Inativo desde: {{ formataData(element.inativo) }}
-                  </span>
-                  <q-icon v-if="element.cobranca" class="" color="green" name="paid" />
-                  <q-icon v-if="element.nfe" class="" color="green" name="description" />
-                </q-item-label>
+            <q-item-label lines="2" @click="linkEmail(element.email)" clickable v-ripple class="cursor-pointer">
+              <s v-if="element.inativo">
+                {{ element.email }}
+              </s>
+              <span v-else>
+                {{ element.email }}
+              </span>
+              <q-icon v-if="element.verificacao" class="" color="blue" name="verified" />
+            </q-item-label>
 
-              </q-item-section>
-              <q-item-section side>
-                <div class="row">
+            <q-item-label caption>
+              {{ element.apelido }}
+              <span v-if="element.inativo" class="text-caption text-red-14">
+                Inativo desde: {{ formataData(element.inativo) }}
+              </span>
+              <q-icon v-if="element.cobranca" class="" color="green" name="paid" />
+              <q-icon v-if="element.nfe" class="" color="green" name="description" />
+            </q-item-label>
 
-                  <q-btn v-if="!element.verificacao && user.verificaPermissaoUsuario('Financeiro')" label="Verificar" color="blue" flat size="sm" dense
-                    @click="enviarEmail(element.email, element.codpessoaemail)" />
+          </q-item-section>
+          <q-item-section side>
+            <div class="row">
 
-                  <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="edit"
-                      @click="editarEmail(element.codpessoaemail, element.email, element.apelido, element.verificacao, element.nfe, element.cobranca), emailNovo = false">
-                    </q-btn>
+              <q-btn v-if="!element.verificacao && user.verificaPermissaoUsuario('Financeiro')" label="Verificar"
+                color="blue" flat size="sm" dense @click="enviarEmail(element.email, element.codpessoaemail)" />
 
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="delete"
-                      @click="excluirEmail(element.codpessoaemail)">
-                    </q-btn>
+              <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="edit"
+                  @click="editarEmail(element.codpessoaemail, element.email, element.apelido, element.verificacao, element.nfe, element.cobranca), emailNovo = false">
+                </q-btn>
 
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat round
-                      icon="pause" @click="inativar(element.codpessoa, element.codpessoaemail)">
-                      <q-tooltip transition-show="scale" transition-hide="scale">
-                        Inativar
-                      </q-tooltip>
-                    </q-btn>
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="delete"
+                  @click="excluirEmail(element.codpessoaemail)">
+                </q-btn>
 
-                    <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat round
-                      icon="play_arrow" @click="ativar(element.codpessoa, element.codpessoaemail)">
-                      <q-tooltip transition-show="scale" transition-hide="scale">
-                        Ativar
-                      </q-tooltip>
-                    </q-btn>
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !element.inativo" flat round icon="pause"
+                  @click="inativar(element.codpessoa, element.codpessoaemail)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Inativar
+                  </q-tooltip>
+                </q-btn>
 
-                    <q-btn flat round icon="info">
-                      <q-tooltip transition-show="scale" transition-hide="scale">
-                        <q-item-label class="row">Criado por: {{ element.usuariocriacao }} em {{
-                          formataData(element.criacao)
-                        }}</q-item-label>
-                        <q-item-label class="row">Alterado por: {{ element.usuarioalteracao }} em {{
-                          formataData(element.alteracao) }}</q-item-label>
-                      </q-tooltip>
-                    </q-btn>
-                  </q-btn-dropdown>
-                </div>
-              </q-item-section>
-            </q-item>
-          </div>
-        </template>
-      </draggable>
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && element.inativo" flat round icon="play_arrow"
+                  @click="ativar(element.codpessoa, element.codpessoaemail)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Ativar
+                  </q-tooltip>
+                </q-btn>
+
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="expand_less"
+                  @click="cima(element.codpessoa, element.codpessoaemail)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Mover para cima
+                  </q-tooltip>
+                </q-btn>
+
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="expand_more"
+                  @click="baixo(element.codpessoa, element.codpessoaemail)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Mover para baixo
+                  </q-tooltip>
+                </q-btn>
+
+                <q-btn flat round icon="info">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    <q-item-label class="row">Criado por: {{ element.usuariocriacao }} em {{
+                      formataData(element.criacao)
+                    }}</q-item-label>
+                    <q-item-label class="row">Alterado por: {{ element.usuarioalteracao }} em {{
+                      formataData(element.alteracao) }}</q-item-label>
+                  </q-tooltip>
+                </q-btn>
+              </q-btn-dropdown>
+            </div>
+          </q-item-section>
+        </q-item>
+      </div>
     </q-list>
   </q-card>
 </template>
@@ -130,10 +139,6 @@ import { guardaToken } from 'src/stores'
 export default defineComponent({
   name: "ItemEmail",
 
-  components: {
-    draggable,
-  },
-
   computed: {
     dragOptions() {
       return {
@@ -151,13 +156,17 @@ export default defineComponent({
       return dataformatada
     },
 
-    alteraOrdem: async function (e) {
+
+    async cima(codpessoa, codpessoaemail) {
       try {
-        if (e.willInsertAfter === true) {
-          await this.sPessoa.emailParaBaixo(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoaemail)
-        } else {
-          await this.sPessoa.emailParaCima(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoaemail)
-        }
+        const ret = await this.sPessoa.emailParaCima(codpessoa, codpessoaemail)
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Movido para cima'
+        })
+        this.sPessoa.get(codpessoa)
       } catch (error) {
         this.$q.notify({
           color: 'red-5',
@@ -165,8 +174,30 @@ export default defineComponent({
           icon: 'error',
           message: error.message
         })
-        this.sPessoa.get(e.draggedContext.element.codpessoa)
-        return
+        this.sPessoa.get(codpessoa)
+      }
+
+
+    },
+
+    async baixo(codpessoa, codpessoaemail) {
+      try {
+        await this.sPessoa.emailParaBaixo(codpessoa, codpessoaemail)
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Movido para baixo'
+        })
+        this.sPessoa.get(codpessoa)
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+        this.sPessoa.get(codpessoa)
       }
     },
 

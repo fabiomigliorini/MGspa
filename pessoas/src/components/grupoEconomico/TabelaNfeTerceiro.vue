@@ -29,7 +29,7 @@ const columns = [
     { name: 'serie', label: 'Série', field: 'serie', align: 'top-left', sortable: true },
     { name: 'numero', label: 'Número', field: 'numero', align: 'top-left', sortable: true },
     { name: 'emissao', label: 'Emissão', field: 'emissao', align: 'top-left', format: (val, row) => Documentos.formataDatasemHr(val), sortable: true },
-    { name: 'entrada', label: 'Entrada', field: 'entrada', align: 'top-left', sortable: true },
+    { name: 'entrada', label: 'Entrada', field: 'entrada', align: 'top-left', format: (val, row) => Documentos.formataDatasemHr(val), sortable: true },
     { name: 'indsituacao', label: 'indsituacao', field: 'indsituacao', align: 'top-left', sortable: true },
     { name: 'indmanifestacao', label: 'indmanifestacao', field: 'indmanifestacao', align: 'top-left', sortable: true },
     { name: 'valortotal', label: 'Valor Total', field: 'valortotal', align: 'top-left', format: (val, row) => `${parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sortable: true },
@@ -43,7 +43,7 @@ const loading = ref(true)
 const sPessoa = pessoaStore()
 const Documentos = formataDocumetos()
 const modelPessoas = ref({
-    date: '1 Ano'
+    desde: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD'),
 })
 const filter = ref('')
 const separator = ref('cell')
@@ -53,13 +53,10 @@ const pagination = ref({
     descending: true
 })
 
+const opcoesDesde = ref([])
 
 const filtroNfeTerceiro = debounce(async () => {
-    var date = modelPessoas.value.desde
-    // if (modelPessoas.value.desde) {
-    //     modelPessoas.value.desde = Documentos.dataFormatoSql(modelPessoas.value.desde)
-    // }
-
+   
     if (!modelPessoas.value.codpessoa && route.path.search("pessoa") == 1) {
         modelPessoas.value.codpessoa = route.params.id
     }
@@ -67,9 +64,7 @@ const filtroNfeTerceiro = debounce(async () => {
     try {
         const ret = await sPessoa.nfeTerceiro(route.params.id, modelPessoas.value)
         emit('update:nfeTerceiro', ret.data)
-        modelPessoas.value.desde = date
     } catch (error) {
-        modelPessoas.value.desde = date
         $q.notify({
             color: 'red-5',
             textColor: 'white',
@@ -78,12 +73,6 @@ const filtroNfeTerceiro = debounce(async () => {
         })
     }
 }, 500)
-
-watch(
-    () => modelPessoas.value.codpessoa,
-    () => filtroNfeTerceiro(),
-    { deep: true }
-);
 
 const linkMgSis = async (event, row) => {
     var a = document.createElement('a');
@@ -94,37 +83,35 @@ const linkMgSis = async (event, row) => {
 
 const filtroDesde = async () => {
 
-    if (modelPessoas.value.date === 'Este ano') {
-        var anoAtual = moment().year();
-        var inicio = new Date("1/1/" + anoAtual);
-        var primeiroDia = moment(inicio.valueOf()).format('YYYY-MM-DD');
-        modelPessoas.value.desde = primeiroDia
-        filtroNfeTerceiro()
-    }
-    if (modelPessoas.value.date === '1 Ano') {
-        let desde = moment().subtract(1, 'year').format('YYYY-MM-DD')
-        modelPessoas.value.desde = desde
-        filtroNfeTerceiro()
-    }
-    if (modelPessoas.value.date === '2 Anos') {
-        let desde = moment().subtract(2, 'year').format('YYYY-MM-DD')
-        modelPessoas.value.desde = desde
-        filtroNfeTerceiro()
-    }
-    if (modelPessoas.value.date === 'Tudo') {
-        modelPessoas.value.desde = null
-        filtroNfeTerceiro()
-    }
+    opcoesDesde.value = [
+        {
+          label: 'Este Ano',
+          value: moment().startOf('year').format('YYYY-MM-DD')
+        },
+        {
+          label: '1 Ano',
+          value: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
+        },
+        {
+          label: '2 Anos',
+          value: moment().subtract(2, 'year').startOf('month').format('YYYY-MM-DD')
+        },
+        {
+          label: 'Tudo',
+          value: null
+        },
+      ]
 }
 
 watch(
-    () => modelPessoas.value.date,
-    () => filtroDesde(),
+    () => modelPessoas.value,
+    () => filtroNfeTerceiro(),
     { deep: true }
 );
 
 onMounted(() => {
     filtroDesde()
+    filtroNfeTerceiro()
 })
 
 </script>
@@ -141,8 +128,7 @@ onMounted(() => {
                     </select-pessoas>
 
                     <div class="col-md-6 q-pl-md q-pr-md">
-                        <q-select outlined v-model="modelPessoas.date" :options="[
-                            'Este ano', '1 Ano', '2 Anos', 'Tudo']" label="Data" dense />
+                        <q-select outlined v-model="modelPessoas.desde" map-options emit-value :options="opcoesDesde" label="Data" dense />
                     </div>
 
                     <q-input v-if="show_filter" outlined dense debounce="300" class="q-pa-sm" v-model="filter"

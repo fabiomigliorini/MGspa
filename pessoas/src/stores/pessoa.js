@@ -64,6 +64,16 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
+    async inativarPessoa(codpessoa) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/inativo')
+      return ret;
+    },
+
+    async ativarPessoa(codpessoa) {
+      const ret = await api.delete('v1/pessoa/' + codpessoa + '/inativo')
+      return ret;
+    },
+
     async getEndereco(codpessoa, codpessoaendereco) {
       const { data } = await api.get('v1/pessoa/' + codpessoa + '/endereco/' + codpessoaendereco)
       this.item.PessoaEnderecoS = data.data
@@ -251,6 +261,11 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
+    async selectBanco(banco) {
+      const ret = await api.get('v1/pessoa/conta/banco/select', {params: banco})
+      return ret;
+    },
+
     async selectFilial() {
       const ret = await api.get('v1/select/filial')
       return ret;
@@ -359,6 +374,111 @@ export const pessoaStore = defineStore('pessoa', {
       const ret = await api.get('v1/grupo-economico/' + codgrupoeconomico + '/nfe-terceiro', { params: model })
       return ret;
     },
+
+    async salvarEdicaoContaBancaria(codpessoa, codpessoaconta, modelContaBancaria) {
+      const ret = await api.put('v1/pessoa/' + codpessoa + '/conta/' + codpessoaconta, modelContaBancaria)
+      return ret;
+    },
+
+    async novaContaBancaria(codpessoa, modelContaBancaria) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/conta/', modelContaBancaria)
+      return ret;
+    },
+
+    async excluirContaBancaria(codpessoa, codpessoaconta) {
+      const ret = await api.delete('v1/pessoa/' + codpessoa + '/conta/' + codpessoaconta)
+      return ret;
+    },
+
+    async contaBancariaInativar(codpessoaconta) {
+      const ret = await api.post('v1/pessoa/conta/' + codpessoaconta + '/inativo')
+      const i = this.item.PessoaContaS.findIndex(item => item.codpessoaconta === codpessoaconta)
+      this.item.PessoaContaS[i] = ret.data.data
+      return ret;
+    },
+
+    async contaBancariaAtivar(codpessoaconta) {
+      const ret = await api.delete('v1/pessoa/conta/' + codpessoaconta + '/inativo')
+      const i = this.item.PessoaContaS.findIndex(item => item.codpessoaconta === codpessoaconta)
+      this.item.PessoaContaS[i] = ret.data.data
+      return ret;
+    },
+
+    async getColaborador(codpessoa) {
+      const ret = await api.get('v1/pessoa/' + codpessoa + '/colaborador')
+      // const i = this.item.PessoaContaS.findIndex(item => item.codpessoaconta === codpessoaconta)
+      // this.item.PessoaContaS[i] = ret.data.data
+      return ret;
+    },
+
+
+    async novoColaborador(modelNovoColaborador) {
+      const ret = await api.post('v1/colaborador/', modelNovoColaborador)
+      // const i = this.item.PessoaContaS.findIndex(item => item.codpessoaconta === codpessoaconta)
+      // this.item.PessoaContaS[i] = ret.data.data
+      return ret;
+    },
+
+
+    async deletarColaborador(codcolaborador) {
+      const ret = await api.delete('v1/colaborador/' + codcolaborador)
+      return ret;
+    },
+
+
+    async novoColaboradorCargo(modelnovoColaboradorCargo) {
+      const ret = await api.post('v1/colaborador/cargo/', modelnovoColaboradorCargo)
+      return ret;
+    },
+
+    async novoCargo(modelNovoCargo) {
+      const ret = await api.post('v1/cargo/', modelNovoCargo)
+      return ret;
+    },
+
+    async selectCargo() {
+      const ret = await api.get('v1/cargo/')
+      return ret;
+    },
+
+    async deletarColaboradorCargo(codcolaboradorcargo) {
+      const ret = await api.delete('v1/colaborador/cargo/' + codcolaboradorcargo)
+      return ret;
+    },
+
+
+    async novoColaboradorFerias(modelnovoColaboradorFerias) {
+      const ret = await api.post('v1/colaborador/' + modelnovoColaboradorFerias.codcolaborador + '/ferias', modelnovoColaboradorFerias)
+      return ret;
+    },
+
+
+    async deletarFerias(codferias) {
+      const ret = await api.delete('v1/colaborador/ferias/' + codferias)
+      return ret;
+    },
+
+
+    async salvarColaborador(modelEditColaborador) {
+      const ret = await api.put('v1/colaborador/' + modelEditColaborador.codcolaborador, modelEditColaborador)
+      return ret;
+    },
+
+    async salvarColaboradorCargo(modelColaboradorCargo) {
+      const ret = await api.put('v1/colaborador/' + modelColaboradorCargo.codcolaborador +
+       '/cargo/' + modelColaboradorCargo.codcolaboradorcargo, modelColaboradorCargo)
+       
+      return ret;
+    },
+
+    async salvarColaboradorFerias(modelColaboradorFerias) {
+      const ret = await api.put('v1/colaborador/' + modelColaboradorFerias.codcolaborador +
+      '/ferias/' + modelColaboradorFerias.codferias, modelColaboradorFerias)
+      
+     return ret;
+
+    }
+
   }
 })
 

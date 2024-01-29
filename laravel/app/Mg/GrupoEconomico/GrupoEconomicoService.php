@@ -221,35 +221,42 @@ class GrupoEconomicoService
     }
 
 
-    public static function negocios($codpessoa, $codgrupoeconomico)
+    public static function negocios($codpessoa, $codgrupoeconomico, $desde)
     {
 
         $sql = '
-        select nat.naturezaoperacao, date_trunc(\'month\', n.lancamento) as mes, sum(n.valortotal * case when n.codoperacao = 1 then -1 else 1 end) as valortotal
-        from tblpessoa p
-        inner join tblnegocio n on (p.codpessoa = n.codpessoa)
-        inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
-        where p.codgrupoeconomico = :codgrupoeconomico
-        and n.codnegociostatus = 2';
-
+            select 
+                nat.naturezaoperacao,
+                date_trunc(\'month\', n.lancamento) as mes, 
+                sum(n.valortotal) as valortotal
+            from tblpessoa p
+            inner join tblnegocio n on (p.codpessoa = n.codpessoa)
+            inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
+            where n.codnegociostatus = 2
+            and p.codgrupoeconomico = :codgrupoeconomico
+        ';
 
         $params['codgrupoeconomico'] = $codgrupoeconomico;
 
-        if (!empty($codpessoa)) {
+        if(!empty($desde)) {
+            $params['desde'] = $desde;
+            $sql .= ' and n.lancamento >= :desde';
+        }
 
+        if (!empty($codpessoa)) {
             $sql .= ' and p.codpessoa = :codpessoa';
             $params['codpessoa'] = $codpessoa;
         }
 
-
-        $sql .= ' group by nat.naturezaoperacao, date_trunc(\'month\', n.lancamento) 
-        order by 1, 2';
+        $sql .= ' group by 1, 2 ';
 
         $result = DB::select($sql, $params);
 
-
         return $result;
     }
+
+
+   
 
     public static function topProdutos($codpessoa, $codgrupoeconomico, $desde)
     {
@@ -282,8 +289,6 @@ class GrupoEconomicoService
         $sql .= ' group by prod.codproduto, prod.produto 
         order by 3 desc
         limit 10';
-
-
 
         $result = DB::select($sql, $params);
 

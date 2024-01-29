@@ -26,7 +26,7 @@ class Ferias extends MgModel
         'diasgozo',
         'gozofim',
         'gozoinicio',
-        'obsevacoes',
+        'observacoes',
         'prevista'
     ];
 

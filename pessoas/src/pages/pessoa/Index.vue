@@ -101,8 +101,8 @@
                         { label: 'Sempre', value: 1 },
                         { label: 'Somente Fechamento', value: 2 },
                         { label: 'Nunca', value: 9 }]" map-options emit-value clearable :rules="[
-    val => val >= 0 && val != null || 'Nota Fiscal Obrigátorio'
-  ]" />
+                        val => val >= 0 && val != null || 'Nota Fiscal Obrigátorio'
+                        ]" />
                     </div>
 
                     <div class="col-6 q-pr-md">

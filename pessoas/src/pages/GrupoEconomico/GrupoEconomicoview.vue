@@ -1,5 +1,12 @@
 <template>
     <MGLayout back-button>
+
+        <template #botaoVoltar>
+            <q-btn flat dense round  :to="{ name: 'grupoeconomicoindex' }"
+            icon="arrow_back" aria-label="Voltar">
+            </q-btn>
+        </template>
+        
         <template #tituloPagina>
             Grupo Econômico
         </template>
@@ -10,7 +17,8 @@
                         <q-avatar color="primary" size="100px" text-color="white" icon="groups"></q-avatar>
                         <q-item class="q-subtitle-1 q-pl-md">
                             <q-item-section>
-                                <q-item-label lines="1" :class="GrupoEconomico.inativo ? 'text-strike text-red-14' : null">
+                                <q-item-label header lines="1" class="text-h4 text-weight-bold"
+                                    :class="GrupoEconomico.inativo ? 'text-strike text-red-14' : null">
                                     {{ GrupoEconomico.grupoeconomico }}
                                     <span v-if="GrupoEconomico.inativo" class="row text-caption text-red-14">
                                         Inativo desde: {{ Documentos.formataData(GrupoEconomico.inativo) }}

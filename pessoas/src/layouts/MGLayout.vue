@@ -5,7 +5,9 @@
 
         <q-btn flat dense round @click="toggleLeftDrawer" icon="menu" aria-label="Menu" v-if="drawer" />
 
-        <q-btn flat dense round @click="$router.go(-1)" icon="arrow_back" aria-label="Voltar" v-if="backButton" />
+        <q-btn flat dense round v-if="backButton">
+          <slot name="botaoVoltar"></slot>
+        </q-btn>
 
         <q-toolbar-title>
           <slot name="tituloPagina"></slot>
@@ -80,7 +82,7 @@ export default defineComponent({
     drawer: {
       type: Boolean,
       default: false
-    },    
+    },
     backButton: {
       type: Boolean,
       default: false
