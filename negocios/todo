@@ -10,6 +10,7 @@ FIXME Quando expira o token ele precisa dar o refresh automaticamente
 BUG "Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!" para cartao credito parcelado
 BUG Limitar o input da Autorizacao pra 20 chars
 BUG Gerando NF valor item errado negocio 03386452
+TODO Comanda
 TODO Mostrar se titulo Estornado
 TODO Pagarmento Vale
 TODO Fazer webhook avisar fronted quando recebeu um pagamento Stone

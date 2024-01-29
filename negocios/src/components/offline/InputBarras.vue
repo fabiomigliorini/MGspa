@@ -4,6 +4,7 @@ import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import { useQuasar } from "quasar";
+import { falar } from "../../utils/falar.js";
 
 const $q = useQuasar();
 const sProduto = produtoStore();
@@ -31,6 +32,9 @@ const informarVendedor = async (codpessoavendedor) => {
     message: "Vendedor '" + sNegocio.negocio.fantasiavendedor + "' informado.",
     timeout: 1500, // 1,5 segundos
   });
+  if (sNegocio.negocio.codpessoavendedor) {
+    falar("Vendedor " + sNegocio.negocio.fantasiavendedor.split(" ")[0]);
+  }
   var audio = new Audio("successo.mp3");
   audio.play();
 };
@@ -127,6 +131,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
     });
     var audio = new Audio("erro.mp3");
     audio.play();
+    falar("Não encontrei o código!");
   }
 };
 
@@ -163,35 +168,22 @@ const leitor = async () => {
 };
 
 const ligarLeitor = async () => {
-  console.log("entrou");
   leitorLigado.value = true;
   setTimeout(async () => {
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
         height: { exact: barcodeVideo.value.offsetWidth * 2 },
         width: { exact: barcodeVideo.value.offsetHeight * 2 },
-        // aspectRatio: 0.33333,
-        // frameRate: 200,
         focusMode: "continuous",
         focusDistance: 0.03,
         colorTemperature: 5000,
-        zoom: 1.5,
+        zoom: 1.2,
         facingMode: {
           ideal: "environment",
-          // ideal: "user",
         },
       },
       audio: false,
     });
-    const track = stream.getVideoTracks()[0];
-    const capabilities = track.getCapabilities();
-    console.log(capabilities.focusDistance.min);
-    // track.applyConstraints({ focusMode: "manual", focusDistance: 0.33 });
-    const settings = track.getSettings();
-    console.log(settings);
-    console.log(capabilities);
-
-    // const videoEl = document.querySelector("#stream");
     barcodeVideo.value.srcObject = stream;
     await barcodeVideo.value.play();
   }, 200);
@@ -219,7 +211,7 @@ const lerCodigoBarras = async () => {
       // "data_matrix",
       "ean_13",
       "ean_8",
-      // "itf",
+      "itf",
       // "pdf417",
       // "qr_code",
       "upc_a",
@@ -244,6 +236,8 @@ const lerCodigoBarras = async () => {
   } while (!barras && tentativas < 20);
   if (barras) {
     adicionarPeloCodigoBarras(barras);
+  } else {
+    falar("Não consigo ler!");
   }
 };
 </script>
@@ -316,7 +310,6 @@ const lerCodigoBarras = async () => {
       "
     ></div>
     <video ref="barcodeVideo" style="width: 100%; height: 100px"></video>
-    <!-- <video ref="barcodeVideo" height="100" width="300" /> -->
     <q-btn
       color="primary"
       icon="mdi-barcode"

@@ -6,6 +6,7 @@ import { sincronizacaoStore } from "stores/sincronizacao";
 import moment from "moment";
 import tiposPagamento from "../tipos-pagamento.json";
 import bandeirasCartao from "../bandeiras-cartao.json";
+import { falar } from "../utils/falar.js";
 
 const sSinc = sincronizacaoStore();
 
@@ -367,6 +368,15 @@ export const negocioStore = defineStore("negocio", {
           item.percentualdesconto = this.negocio.Pessoa.desconto;
         }
       }
+
+      const palavras = item.produto.split(" ");
+      var texto = "";
+      if (palavras.length >= 2) {
+        texto = palavras[0] + " " + palavras[1];
+      } else {
+        texto = palavras[0];
+      }
+      falar(texto);
 
       // adiciona o item no inicio do array
       this.negocio.itens.unshift(item);
