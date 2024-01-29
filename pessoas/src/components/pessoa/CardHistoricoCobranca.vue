@@ -18,17 +18,20 @@
                         </q-item-section>
 
                         <q-item-section>
-                            <q-item-label caption lines="10">
+                            <q-item-label>
+                                {{ historico.historico }}
+                            </q-item-label>
+                            <q-item-label caption>
+                                {{ historico.usuariocriacao }}
+                                {{ Documentos.formataFromNow(historico.criacao) }}
                                 <q-tooltip>
-                                    {{ historico.historico }}
+                                    {{ Documentos.formataData(historico.criacao) }}
                                 </q-tooltip>
-                                <span class="text-weight-bold">{{ historico.usuariocriacao }} </span>
-                                -- {{ historico.historico }}
                             </q-item-label>
                         </q-item-section>
 
-                        <q-item-section side top>
-                            {{ Documentos.formataData(historico.criacao) }}
+                        <q-item-section side top class="gt-xs">
+                            
                         </q-item-section>
 
                         <q-btn-dropdown flat auto-close v-if="user.verificaPermissaoUsuario('Financeiro')">
@@ -76,6 +79,7 @@ import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { guardaToken } from 'src/stores'
 import { formataDocumetos } from 'src/stores/formataDocumentos'
+import moment from 'moment'
 
 export default defineComponent({
     name: "CardHistoricoCobranca",

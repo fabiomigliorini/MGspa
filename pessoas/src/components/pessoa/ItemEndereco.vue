@@ -67,12 +67,7 @@
           @click="modalNovoEndereco()"></q-btn>
       </q-item-label>
 
-      <draggable class="list-group" item-key="id"
-        :component-data="{ tag: 'q-list', name: 'flip-list', type: 'transition' }" v-model="sPessoa.item.PessoaEnderecoS"
-        v-bind="dragOptions" @start="isDragging = true" :move="alteraOrdem" @end="isDragging = false">
-
-        <template #item="{ element }">
-          <div>
+          <div v-for="element in sPessoa.item.PessoaEnderecoS" v-bind:key="element.codpessoaendereco">
             <q-separator inset />
             <q-item>
               <q-item-section avatar top>
@@ -131,6 +126,21 @@
                   </q-tooltip>
                 </q-btn>
 
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="expand_less"
+                  @click="cima(element.codpessoa, element.codpessoaendereco)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Mover para cima
+                  </q-tooltip>
+                </q-btn>
+
+                <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" flat round icon="expand_more"
+                  @click="baixo(element.codpessoa, element.codpessoaendereco)">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    Mover para baixo
+                  </q-tooltip>
+                </q-btn>
+
+
                 <q-btn flat round icon="info">
                   <q-tooltip transition-show="scale" transition-hide="scale">
                     <q-item-label class="row">Criado por: {{ element.usuariocriacao }}
@@ -143,8 +153,6 @@
               </q-btn-dropdown>
             </q-item>
           </div>
-        </template>
-      </draggable>
     </q-list>
   </q-card>
 </template>
@@ -155,7 +163,6 @@ import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
-import draggable from 'vuedraggable'
 import moment from 'moment'
 import { pessoaStore } from 'stores/pessoa'
 import { guardaToken } from 'src/stores'
@@ -183,19 +190,21 @@ export default defineComponent({
     }
   },
   components: {
-    draggable,
     SelectCidade: defineAsyncComponent(() => import('components/pessoa/SelectCidade.vue')),
   },
 
   methods: {
 
-    alteraOrdem: async function (e) {
+    async cima(codpessoa, codpessoaendereco) {
       try {
-        if (e.willInsertAfter === true) {
-          await this.sPessoa.enderecoParaBaixo(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoaendereco)
-        } else {
-          await this.sPessoa.enderecoParaCima(e.draggedContext.element.codpessoa, e.draggedContext.element.codpessoaendereco)
-        }
+        await this.sPessoa.enderecoParaCima(codpessoa, codpessoaendereco)
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Movido para cima'
+        })
+        this.sPessoa.get(codpessoa)
       } catch (error) {
         this.$q.notify({
           color: 'red-5',
@@ -203,8 +212,30 @@ export default defineComponent({
           icon: 'error',
           message: error.message
         })
-        this.sPessoa.get(e.draggedContext.element.codpessoa)
-        return
+        this.sPessoa.get(codpessoa)
+      }
+
+
+    },
+
+    async baixo(codpessoa, codpessoaendereco) {
+      try {
+        await this.sPessoa.enderecoParaBaixo(codpessoa, codpessoaendereco)
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Movido para baixo'
+        })
+        this.sPessoa.get(codpessoa)
+      } catch (error) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.message
+        })
+        this.sPessoa.get(codpessoa)
       }
     },
 

@@ -3,6 +3,13 @@
         <template #tituloPagina>
             <span class="q-pl-sm">Pessoa - Detalhes</span>
         </template>
+
+        <template #botaoVoltar>
+            <q-btn flat dense round  :to="{ name: 'pessoa' }"
+            icon="arrow_back" aria-label="Voltar">
+            </q-btn>
+        </template>
+
         <template #content>
             <q-page class="bg-white ">
                 <div class="row q-py-md q-pr-md">
@@ -26,6 +33,12 @@
                             <card-historico-cobranca>
                             </card-historico-cobranca>
                         </div>
+
+                          <!-- Card Colaborador -->
+                          <div class="q-pb-md">
+                            <card-colaborador>
+                            </card-colaborador>
+                        </div>
                         
                     </div>
 
@@ -48,6 +61,13 @@
                             <item-endereco>
                             </item-endereco>
                         </div>
+
+                        <!-- ENDERECO -->
+                        <div class="q-pb-md">
+                            <card-pessoa-conta>
+                            </card-pessoa-conta>
+                        </div>
+
 
                         <!-- Registro Spc -->
                         <div class="q-pb-md">
@@ -89,6 +109,8 @@ export default defineComponent({
         CardHistoricoCobranca: defineAsyncComponent(() => import('components/pessoa/CardHistoricoCobranca.vue')),
         CardRegistroSpc: defineAsyncComponent(() => import('components/pessoa/CardRegistroSpc.vue')),
         CardCertidoes: defineAsyncComponent(() => import('components/pessoa/CardCertidoes.vue')),
+        CardPessoaConta: defineAsyncComponent(() => import('components/pessoa/CardPessoaConta.vue')),
+        CardColaborador: defineAsyncComponent(() => import('components/pessoa/CardColaborador.vue')),
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))
     },
 

@@ -242,9 +242,38 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('certidao/{codpessoacertidao}/inativo', '\Mg\Pessoa\PessoaCertidaoController@inativar');
         Route::delete('certidao/{codpessoacertidao}/inativo', '\Mg\Pessoa\PessoaCertidaoController@ativar');
 
+        // Colaborador
+        Route::post('colaborador/', '\Mg\Colaborador\ColaboradorController@create');
+        
+        Route::get('pessoa/{codpessoa}/colaborador/', '\Mg\Colaborador\ColaboradorController@show');
+
+        Route::put('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@update');
+        Route::delete('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@delete');
 
 
+        // Colaborador Cargo
+        Route::post('colaborador/cargo/', '\Mg\Colaborador\ColaboradorCargoController@create');
+        Route::get('colaborador/{codcolaborador}/cargo/{codcolaboradorcargo}/', '\Mg\Colaborador\ColaboradorCargoController@show');
+        Route::put('colaborador/{codcolaborador}/cargo/{codcolaboradorcargo}/', '\Mg\Colaborador\ColaboradorCargoController@update');
+        Route::delete('colaborador/cargo/{codcolaboradorcargo}/', '\Mg\Colaborador\ColaboradorCargoController@delete');
 
+
+        // Ferias
+        // Route::get('colaborador/{codcolaborador}/ferias/', '\Mg\Colaborador\FeriasController@index');
+        Route::post('colaborador/{codcolaborador}/ferias/', '\Mg\Colaborador\FeriasController@create');
+        Route::get('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@show');
+        Route::put('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@update');
+        Route::delete('colaborador/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@delete');
+
+                 
+        // Cargos
+        Route::get('cargo/', '\Mg\Colaborador\CargoController@index');
+        Route::post('cargo/', '\Mg\Colaborador\CargoController@create');
+        Route::get('cargo/{codcargo}/', '\Mg\Colaborador\CargoController@show');
+        Route::put('cargo/{codcargo}/', '\Mg\Colaborador\CargoController@update');
+        Route::delete('cargo/{codcargo}/', '\Mg\Colaborador\CargoController@delete');
+
+       
 
         // Pessoa Conta
         Route::get('pessoa/{codpessoa}/conta/', '\Mg\Pessoa\PessoaContaController@index');
@@ -252,6 +281,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('pessoa/{codpessoa}/conta/{codpessoaconta}/', '\Mg\Pessoa\PessoaContaController@show');
         Route::put('pessoa/{codpessoa}/conta/{codpessoaconta}/', '\Mg\Pessoa\PessoaContaController@update');
         Route::delete('pessoa/{codpessoa}/conta/{codpessoaconta}/', '\Mg\Pessoa\PessoaContaController@delete');
+        Route::get('pessoa/conta/banco/select', '\Mg\Pessoa\PessoaContaController@selectBanco');
+        Route::post('pessoa/conta/{codpessoaconta}/inativo', '\Mg\Pessoa\PessoaContaController@inativar');
+        Route::delete('pessoa/conta/{codpessoaconta}/inativo', '\Mg\Pessoa\PessoaContaController@ativar');
 
         // Grupo Economico
         Route::get('grupoeconomico/', '\Mg\GrupoEconomico\GrupoEconomicoController@index');

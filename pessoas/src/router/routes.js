@@ -13,7 +13,7 @@ const routes = [
     path: '/',
     // component: () => import('layouts/MGLayout.vue'),
     children: [
-      { path: '', name: 'inicio', component: () => import('pages/IndexPage.vue') },
+      { path: '', name: 'inicio', component: () => import('pages/pessoa/Index') },
       { path: '/pessoa', name: 'pessoa', component: () => import('pages/pessoa/Index') },
       { path: '/pessoa/nova', name: 'pessoanova', component: () => import('pages/pessoa/NovaPessoa') },
       { path: '/pessoa/:id', name: 'pessoaview', component: () => import('pages/pessoa/PessoaView') },

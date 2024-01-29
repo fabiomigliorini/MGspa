@@ -166,6 +166,21 @@ class PessoaService
         return $qry->first();
     }
 
+    public static function buscaRaizCnpj($cnpj)
+    {   
+
+        $cnpj = substr($cnpj, 0, 8);
+        $pessoas = Pessoa::where('cnpj', 'ilike', "%$cnpj%")->get();
+        
+        foreach ($pessoas as $pessoa) {
+           if($pessoa->codgrupoeconomico) {
+            return $pessoa;
+           }else{
+            $pessoa = null;
+           }
+        }
+    }
+
     public static function podeVenderAPrazo(Pessoa $pessoa, $valorAvaliar = 0)
     {
         // se nao esta vendendo a prazo
@@ -202,6 +217,11 @@ class PessoaService
     public static function create($data)
     {
         $pessoa = new Pessoa($data);
+        $buscaRaizGrupoEconomico = static::buscaRaizCnpj($data['cnpj']);
+    
+        if(!empty($buscaRaizGrupoEconomico)) {
+            $pessoa->codgrupoeconomico = $buscaRaizGrupoEconomico->codgrupoeconomico;
+        }
         $pessoa->save();
         return $pessoa->refresh();
     }
@@ -356,6 +376,8 @@ class PessoaService
 
             // Verifica se combinacao CPF/CNPJ/IE ja esta cadastrada
             $pessoa = static::buscarPorCnpjIe($retIe->CNPJ ?? $retIe->CPF, $retIe->IE);
+            $buscaRaizGrupoEconomico = static::buscaRaizCnpj($retIe->CNPJ ?? $retIe->CPF);
+
             if ($pessoa == null) {
                 if ($retIe->cSit == 0) {
                     continue;
@@ -363,6 +385,10 @@ class PessoaService
                 $pessoa = new Pessoa();
                 $pessoa->fantasia = substr($retIe->xFant ?? $retIe->xNome, 0, 50);
                 $pessoa->ie = $retIe->IE;
+                //verifica se tem alguma raiz com grupoeconomico e add na pessoa
+                if(!empty($buscaRaizGrupoEconomico)){
+                    $pessoa->codgrupoeconomico = $buscaRaizGrupoEconomico->codgrupoeconomico;
+                }
             }
 
             // Vincula ao GrupoEonomico/Cliente buscado anteriormente

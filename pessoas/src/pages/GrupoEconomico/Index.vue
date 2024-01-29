@@ -45,11 +45,9 @@
                         </q-item-label>
                     </q-list>
                 </q-card>
-                <q-form @change="buscarGrupos()">
-                    <div class="q-pa-md q-gutter-md">
-                        <q-input outlined v-model="sPessoa.filtroGrupoPesquisa.nome" label="Nome" />
-                    </div>
-                </q-form>
+                <div class="q-pa-md q-gutter-md">
+                    <q-input outlined v-model="sPessoa.filtroGrupoPesquisa.nome" label="Nome" @change="buscarGrupos()" />
+                </div>
             </div>
         </template>
     </MGLayout>

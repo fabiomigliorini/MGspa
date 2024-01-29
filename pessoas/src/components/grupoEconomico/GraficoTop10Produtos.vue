@@ -10,8 +10,7 @@
             </div>
 
             <div class="col-md-6 q-pl-md q-pr-md">
-                <q-select outlined v-model="filtroPessoa.date" :options="[
-                    'Este ano', '1 Ano', '2 Anos', 'Tudo']" label="Data" dense />
+                <q-select outlined v-model="filtroPessoa.desde" emit-value map-options :options="opcoesDesde" label="Data" dense />
             </div>
         </div>
         <canvas id="graficoTopProdutos" height="200" width="200">
@@ -42,11 +41,6 @@ export default defineComponent({
             let label = []
             this.produtos = []
 
-            if (this.filtroPessoa.date === '1 Ano') { 
-                let desde = moment().subtract(1, 'year').format('YYYY-MM-DD')
-                this.filtroPessoa.desde = desde
-            }
-
             const ret = await this.sGrupoEconomico.getTopProdutos(this.$route.params.id, this.filtroPessoa);
 
             ret.data.forEach(valores => {
@@ -55,26 +49,12 @@ export default defineComponent({
                 this.produtos.push(valores.produto)
             });
 
-
-            const Cores = [
-                'rgb(255, 99, 132)',
-                'rgb(255, 159, 64)',
-                'rgb(255, 205, 86)',
-                'rgb(75, 192, 192)',
-                'rgb(54, 162, 235)',
-                'rgb(153, 102, 255)',
-                'rgb(201, 203, 207)',
-                'rgb(150, 75, 0)',
-                'rgb(50, 205, 50)',
-                'rgb(127, 0, 255)']
-
             const data = {
                 labels: this.produtos,
                 datasets: [
                     {
                         label: 'Valor Total',
                         data: null,
-                        backgroundColor: Cores,
                     },
                 ]
             };
@@ -90,7 +70,6 @@ export default defineComponent({
                         },
                         title: {
                             display: true,
-                            // text: 'Chart.js Line Chart'
                         }
                     }
                 },
@@ -105,42 +84,34 @@ export default defineComponent({
             this.montaGrafico()
         },
 
-        filtroDesde() {
-            if (this.filtroPessoa.date === 'Este ano') {
-                var anoAtual = moment().year();
-                var inicio = new Date("1/1/" + anoAtual);
-                var primeiroDia = moment(inicio.valueOf()).format('YYYY-MM-DD');
-                this.filtroPessoa.desde = primeiroDia
-                this.atualizaGrafico()
-            }
-            if (this.filtroPessoa.date === '1 Ano') {
-                let desde = moment().subtract(1, 'year').format('YYYY-MM-DD')
-                this.filtroPessoa.desde = desde
-                this.atualizaGrafico()
-            }
-            if (this.filtroPessoa.date === '2 Anos') {
-                let desde = moment().subtract(2, 'year').format('YYYY-MM-DD')
-                this.filtroPessoa.desde = desde
-                this.atualizaGrafico()
-            }
-            if (this.filtroPessoa.date === 'Tudo') {
-                this.filtroPessoa.desde = null
-                this.atualizaGrafico()
-            }
-        }
+
+        async filtroDesde() {
+            this.opcoesDesde = [
+                {
+                    label: 'Este Ano',
+                    value: moment().startOf('year').format('YYYY-MM-DD')
+                },
+                {
+                    label: '1 Ano',
+                    value: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
+                },
+                {
+                    label: '2 Anos',
+                    value: moment().subtract(2, 'year').startOf('month').format('YYYY-MM-DD')
+                },
+                {
+                    label: 'Tudo',
+                    value: null
+                },
+            ]
+        },
     },
 
     data() {
 
         watch(
-            () => this.filtroPessoa.codpessoa,
+            () => this.filtroPessoa,
             () => this.atualizaGrafico(),
-            { deep: true }
-        );
-
-        watch(
-            () => this.filtroPessoa.date,
-            () => this.filtroDesde(),
             { deep: true }
         );
 
@@ -150,6 +121,7 @@ export default defineComponent({
     },
 
     async mounted() {
+        this.filtroDesde()
         this.montaGrafico()
     },
 
@@ -157,18 +129,19 @@ export default defineComponent({
 
         const sGrupoEconomico = GrupoEconomicoStore()
         const filtroPessoa = ref({
-            date: '1 Ano'
+            desde: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
         })
         const graficoTopProdutos = ref('')
         const produtos = ref([])
         const Documentos = formataDocumetos()
+        const opcoesDesde = ref([])
 
-       
 
         return {
             sGrupoEconomico,
             filtroPessoa,
             graficoTopProdutos,
+            opcoesDesde,
             produtos,
             Documentos
         }

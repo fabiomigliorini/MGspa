@@ -51,11 +51,8 @@ class PessoaResource extends JsonResource
     
         $ret['PessoaEnderecoS'] = PessoaEnderecoResource::collection($this->PessoaEnderecoS()->orderBy('ordem')->get());
         
-        $ret['PessoaContaS'] = [];
-        foreach ($this->PessoaContaS()->orderBy('alteracao')->get() as $pc) {
-            $ret['PessoaContaS'][] = $pc->toArray();
-        }
-
+        $ret['PessoaContaS'] = PessoaContaResource::collection($this->PessoaContaS()->orderBy('alteracao')->get());
+       
         return $ret;
     }
 }

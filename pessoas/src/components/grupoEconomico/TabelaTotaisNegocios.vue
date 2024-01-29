@@ -27,11 +27,11 @@ const totaisNegocios = computed({
 const columns = [
     { name: 'produto', label: 'Produto', field: 'produto', align: 'top-left', sortable: true },
     { name: 'variacao', label: 'Variação', field: 'variacao', align: 'top-left', sortable: true },
-    { name: 'lancamento', label: 'Data', field: 'lancamento', align: 'top-left', format: (val, row) => Documentos.formataData(val), sortable: true },
+    { name: 'lancamento', label: 'Data', field: 'lancamento', align: 'center', format: (val, row) => Documentos.formataDatasemHr(val), sortable: true },
     // { name: 'codnegocio', label: 'Cod Negócio', field: 'codnegocio', align: 'top-left' },
-    { name: 'negocios', label: 'Negócios', field: 'negocios', align: 'top-left', sortable: true },
-    { name: 'quantidade', label: 'Quantidade', field: 'quantidade', align: 'top-left', format: (val, row) => `${parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sortable: true },
-    { name: 'valortotal', label: 'Valor Total', field: 'valortotal', align: 'top-left', format: (val, row) => `${parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sortable: true },
+    { name: 'negocios', label: 'Negócios', field: 'negocios', align: 'right', sortable: true },
+    { name: 'quantidade', label: 'Quantidade', field: 'quantidade', align: 'right', format: (val, row) => `${parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sortable: true },
+    { name: 'valortotal', label: 'Valor Total', field: 'valortotal', align: 'right', format: (val, row) => `${parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sortable: true },
 
 ];
 
@@ -42,19 +42,18 @@ const loading = ref(true)
 const sPessoa = pessoaStore()
 const Documentos = formataDocumetos()
 const modelPessoas = ref({
-    desde: '1 Ano',
-    date: '1 Ano'
+   desde: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
 })
 const filter = ref('')
 const separator = ref('cell')
 const pagination = ref({
     rowsPerPage: 7,
-    sortBy: 'valortotal',
+    sortBy: 'negocios',
     descending: true
 })
+const opcoesDesde = ref([])
 
 const filtroTotaisNegocioPessoa = debounce(async () => {
-    var date = modelPessoas.value.desde
 
     if (!modelPessoas.value.codpessoa && route.path.search("pessoa") == 1) {
         modelPessoas.value.codpessoa = route.params.id
@@ -63,9 +62,7 @@ const filtroTotaisNegocioPessoa = debounce(async () => {
     try {
         const ret = await sPessoa.totaisNegocios(route.params.id, modelPessoas.value)
         emit('update:totaisNegocios', ret.data)
-        modelPessoas.value.desde = date
     } catch (error) {
-        modelPessoas.value.desde = date
         $q.notify({
             color: 'red-5',
             textColor: 'white',
@@ -76,43 +73,35 @@ const filtroTotaisNegocioPessoa = debounce(async () => {
 }, 500)
 
 const filtroDesde = async () => {
-    if (modelPessoas.value.date === 'Este ano') {
-        var anoAtual = moment().year();
-        var inicio = new Date("1/1/" + anoAtual);
-        var primeiroDia = moment(inicio.valueOf()).format('YYYY-MM-DD');
-        modelPessoas.value.desde = primeiroDia
-        filtroTotaisNegocioPessoa()
-    }
-    if (modelPessoas.value.date === '1 Ano') {
-        let desde = moment().subtract(1, 'year').format('YYYY-MM-DD')
-        modelPessoas.value.desde = desde
-        filtroTotaisNegocioPessoa()
-    }
-    if (modelPessoas.value.date === '2 Anos') {
-        let desde = moment().subtract(2, 'year').format('YYYY-MM-DD')
-        modelPessoas.value.desde = desde
-        filtroTotaisNegocioPessoa()
-    }
-    if (modelPessoas.value.date === 'Tudo') {
-        modelPessoas.value.desde = null
-        filtroTotaisNegocioPessoa()
-    }
+    opcoesDesde.value = [
+        {
+          label: 'Este Ano',
+          value: moment().startOf('year').format('YYYY-MM-DD')
+        },
+        {
+          label: '1 Ano',
+          value: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
+        },
+        {
+          label: '2 Anos',
+          value: moment().subtract(2, 'year').startOf('month').format('YYYY-MM-DD')
+        },
+        {
+          label: 'Tudo',
+          value: null
+        },
+      ]
 }
 
 watch(
-    () => modelPessoas.value.codpessoa,
+    () => modelPessoas.value,
     () => filtroTotaisNegocioPessoa(),
-    { deep: true }
-);
-
-watch(
-    () => modelPessoas.value.date,
-    () => filtroDesde(),
     { deep: true }
 );
 
 onMounted(() => {
     filtroDesde()
+    filtroTotaisNegocioPessoa()
 })
 
 const linkMgLara = async (event, row) => {
@@ -134,8 +123,7 @@ const linkMgLara = async (event, row) => {
                     </select-pessoas>
 
                     <div class="col-md-6 q-pl-md q-pr-md">
-                        <q-select outlined v-model="modelPessoas.date" :options="[
-                            'Este ano', '1 Ano', '2 Anos', 'Tudo']" label="Data" dense />
+                        <q-select outlined v-model="modelPessoas.desde" map-options emit-value :options="opcoesDesde" label="Data" dense />
                     </div>
 
                     <q-input v-if="show_filter" outlined dense debounce="300" class="q-pa-sm" v-model="filter"

@@ -1,11 +1,12 @@
 <script setup>
 
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'src/stores/pessoa'
 import { formataDocumetos } from 'src/stores/formataDocumentos'
 import SelectPessoas from 'src/components/pessoa/SelectPessoas.vue'
+import moment from 'moment'
 
 const props = defineProps({
     titulosAbertos: {}
@@ -28,9 +29,9 @@ const columns = [
     { name: 'fatura', label: 'Fatura', field: 'fatura', align: 'top-left', sortable: true },
     { name: 'tipotitulo', label: 'Tipo Titulo', field: 'tipotitulo', align: 'top-left', sortable: true },
     { name: 'contacontabil', label: 'Conta Contabil', field: 'contacontabil', align: 'top-left', sortable: true },
-    { name: 'saldo', label: 'Saldo', field: 'saldo', align: 'top-left', format: (val, row) => `${parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sortable: true },
-    { name: 'emissao', label: 'Emissão', field: 'emissao', align: 'top-left', format: (val, row) => Documentos.formataDatasemHr(val), sortable: true },
-    { name: 'vencimento', label: 'Vencimento', field: 'vencimento', align: 'top-left', format: (val, row) => Documentos.formataDatasemHr(val), sortable: true },
+    { name: 'saldo', label: 'Saldo', field: 'saldo', align: 'right', format: (val, row) => `${parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sortable: true },
+    { name: 'emissao', label: 'Emissão', field: 'emissao', align: 'center', format: (val, row) => Documentos.formataDatasemHr(val), sortable: true },
+    { name: 'vencimento', label: 'Vencimento', field: 'vencimento', align: 'center', format: (val, row) => Documentos.formataDatasemHr(val), sortable: true },
 ];
 
 const $q = useQuasar()
@@ -72,17 +73,41 @@ watch(
     { deep: true }
 );
 
-const linkMgSis = async (event, row) => {
+const linkMgSis = async (codtitulo) => {
     var a = document.createElement('a');
     a.target = "_blank";
-    a.href = process.env.MGSIS_URL + "index.php?r=titulo/view&id=" + row.codtitulo
+    a.href = process.env.MGSIS_URL + "index.php?r=titulo/view&id=" + codtitulo
     a.click();
 }
 
+
+const coresVencimento = (vencimento) => {
+    if (vencimento >= moment().format('YYYY-MM-DD')) {
+        return 'text-green'
+    }
+    if (vencimento >= moment().subtract(5, 'day').startOf('day').format('YYYY-MM-DD')) {
+        return 'text-orange'
+    } else {
+        return 'text-red'
+    }
+}
+
+const coresSaldo = (saldo) =>  {
+    if(saldo > 0) {
+        return 'text-blue'
+    }else{
+        return 'text-orange'
+    }
+
+}
+
+// onMounted(() => {
+//     console.log(titulosAbertos)
+// })
 </script>
 
 <template>
-    <q-card class="no-shadow" bordered>
+    <q-card class="no-shadow cursor-pointer q-hoverable" bordered v-ripple>
         <q-card-section class="q-pa-none">
             <q-table title="Titulos Abertos" :filter="filter" @row-click="linkMgSis" :rows="titulosAbertos"
                 :columns="columns" no-data-label="Nenhum titulo encontrado" :separator="separator" emit-value
@@ -99,6 +124,37 @@ const linkMgSis = async (event, row) => {
                         </template>
                     </q-input>
                     <q-btn class="q-ml-sm" icon="filter_list" @click="show_filter = !show_filter" flat />
+                </template>
+
+                <template v-slot:body="titulosAbertos">
+                    <q-tr :props="titulosAbertos" @click="linkMgSis(titulosAbertos.row.codtitulo)">
+                        <q-td key="numero" :props="titulosAbertos">
+                            {{ titulosAbertos.row.numero }}
+                        </q-td>
+                        <q-td key="fatura" :props="titulosAbertos">
+                            {{ titulosAbertos.row.fatura }}
+                        </q-td>
+                        <q-td key="tipotitulo" :props="titulosAbertos">
+                            {{ titulosAbertos.row.tipotitulo }}
+                        </q-td>
+                        <q-td key="contacontabil" :props="titulosAbertos">
+                            {{ titulosAbertos.row.contacontabil }}
+                        </q-td>
+                        <q-td key="saldo" :props="titulosAbertos" :class="coresSaldo(titulosAbertos.row.saldo)">
+                          {{ Math.abs(parseFloat(titulosAbertos.row.saldo)).toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }) }}
+                        </q-td>
+                        <q-td key="emissao" :props="titulosAbertos">
+                            {{ Documentos.formataDatasemHr(titulosAbertos.row.emissao) }}
+                        </q-td>
+                        <q-td key="vencimento" :class="coresVencimento(titulosAbertos.row.vencimento)" :props="titulosAbertos">
+                            <!-- <q-badge :color="Documentos.verificaPassadoFuturo(titulosAbertos.row.vencimento) == true ? 'red' : 'green'"> -->
+                            {{ Documentos.formataDatasemHr(titulosAbertos.row.vencimento) }}
+                            <!-- </q-badge> -->
+                        </q-td>
+                    </q-tr>
                 </template>
             </q-table>
         </q-card-section>

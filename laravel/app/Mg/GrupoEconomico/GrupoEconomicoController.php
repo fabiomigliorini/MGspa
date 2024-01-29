@@ -9,12 +9,14 @@ use Exception;
 use Illuminate\Validation\Rule;
 use Mg\Pessoa\Pessoa;
 use Mg\Pessoa\PessoaResource;
+use Mg\Usuario\Autorizador;
 
 class GrupoEconomicoController extends MgController
 {
 
     public function index (Request $request)
     {
+
         $pesquisa = "%$request->nome%"??null;
 
         $grupos = GrupoEconomicoService::index($pesquisa);
@@ -23,6 +25,7 @@ class GrupoEconomicoController extends MgController
 
     public function create (Request $request)
     {
+         Autorizador::autoriza(['Financeiro']);
         $data = $request->all();
         $criargrupo = GrupoEconomicoService::create($data);
         
@@ -37,6 +40,7 @@ class GrupoEconomicoController extends MgController
 
     public function update (Request $request, $codgrupoeconomico)
     {
+         Autorizador::autoriza(['Financeiro']);
         $data = $request->all();
         $grupo = GrupoEconomico::findOrFail($codgrupoeconomico);
         $grupo = GrupoEconomicoService::update($grupo, $data);
@@ -46,7 +50,7 @@ class GrupoEconomicoController extends MgController
 
     public function delete (Request $request, $codgrupoeconomico)
     {
-       
+        Autorizador::autoriza(['Financeiro']);
         $grupo = GrupoEconomico::findOrFail($codgrupoeconomico);
         $grupo = GrupoEconomicoService::delete($grupo);
         
@@ -57,6 +61,7 @@ class GrupoEconomicoController extends MgController
 
     public function pesquisaGrupoEconomico(Request $request)
     {
+        
         if ($request->grupoeconomico) {
             $search = GrupoEconomico::where('grupoeconomico', 'ilike', "%$request->grupoeconomico%")->get();
             return response()->json($search);
@@ -73,6 +78,7 @@ class GrupoEconomicoController extends MgController
 
     public function deletaPessoadoGrupo(Request $request, $codpessoa, $codgrupoeconomico) 
     {
+         Autorizador::autoriza(['Financeiro']);
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = GrupoEconomicoService::removerDoGrupo($pessoa);
 
@@ -82,7 +88,7 @@ class GrupoEconomicoController extends MgController
     public function inativar($codgrupoeconomico)
     {
 
-        // Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(['Financeiro']);
         $pes = GrupoEconomico::findOrFail($codgrupoeconomico);
         $pes = GrupoEconomicoService::inativar($pes);
 
@@ -92,7 +98,7 @@ class GrupoEconomicoController extends MgController
 
     public function ativar($codgrupoeconomico)
     {
-        // Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(['Financeiro']);
 
         $pes = GrupoEconomico::findOrFail($codgrupoeconomico);
         $pes = GrupoEconomicoService::ativar($pes);
@@ -103,40 +109,33 @@ class GrupoEconomicoController extends MgController
 
     public function totaisNegocios(Request $request, $codgrupoeconomico)
     {   
-        
         $data = $request->all();
         $grupoNegocios = GrupoEconomicoService::totaisNegocios($data, $codgrupoeconomico);
         return response()->json($grupoNegocios, 200);
-
     }
 
 
     public function titulosAbertos(Request $request, $codgrupoeconomico)
     {   
-        
         $data = $request->all();
         $titulos = GrupoEconomicoService::titulosAbertos($data, $codgrupoeconomico);
         return response()->json($titulos, 200);
-
     }
 
 
     public function nfeTerceiro(Request $request, $codgrupoeconomico)
     {   
-        
         $data = $request->all();
         $grupoNegocios = GrupoEconomicoService::nfeTerceiro($data, $codgrupoeconomico);
         return response()->json($grupoNegocios, 200);
-
     }
 
     public function negocios(Request $request, $codgrupoeconomico)
     {
-
         $codpessoa = $request->codpessoa??null;
-        $negocios = GrupoEconomicoService::negocios($codpessoa, $codgrupoeconomico);
+        $desde = $request->desde??null;
+        $negocios = GrupoEconomicoService::negocios($codpessoa, $codgrupoeconomico, $desde);
         return response()->json($negocios, 200);
-
     }
 
     public function topProdutos(Request $request, $codgrupoeconomico)

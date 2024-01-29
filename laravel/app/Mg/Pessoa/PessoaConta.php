@@ -6,6 +6,7 @@
 
 namespace Mg\Pessoa;
 
+use Mg\Banco\Banco;
 use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
@@ -28,7 +29,9 @@ class PessoaConta extends MgModel
         'pixcpf',
         'pixemail',
         'pixtelefone',
-        'tipo'
+        'tipo',
+        'titular',
+        'observacoes'
     ];
 
     protected $dates = [
@@ -43,6 +46,7 @@ class PessoaConta extends MgModel
         'codpessoa' => 'integer',
         'codpessoaconta' => 'integer',
         'codusuarioalteracao' => 'integer',
+        'codbanco' => 'integer',
         'codusuariocriacao' => 'integer',
         'pixcnpj' => 'integer',
         'pixcpf' => 'integer',
@@ -67,4 +71,8 @@ class PessoaConta extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+    public function Banco()
+    {
+        return $this->belongsTo(Banco::class, 'banco', 'codbanco');
+    }
 }

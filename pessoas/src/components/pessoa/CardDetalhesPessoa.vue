@@ -22,12 +22,12 @@
           <div class="row">
             <div class="col-6">
               <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == false" label="Cnpj"
-                mask="##.###.###/####-##" class="q-pr-md" unmasked-value />
+                mask="##.###.###/####-##" class="q-pr-md" unmasked-value disable/>
               <q-input outlined v-model="modelEditarDetalhes.cnpj" class="q-pr-md"
-                v-if="modelEditarDetalhes.fisica == true" label="CPF" mask="###.###.###-##" unmasked-value />
+                v-if="modelEditarDetalhes.fisica == true" label="CPF" mask="###.###.###-##" unmasked-value disable/>
             </div>
             <div class="col-6">
-              <input-ie v-model="modelEditarDetalhes.ie">
+              <input-ie v-model="modelEditarDetalhes.ie" disable>
               </input-ie>
             </div>
           </div>
@@ -97,11 +97,29 @@
         </q-item-section>
         <q-item-label header>
           <q-item-label>
-            {{ sPessoa.item.fantasia }}
-            <q-btn flat round icon="edit" @click="editarDetalhes()"
-              v-if="user.verificaPermissaoUsuario('Financeiro')" />
+            <span class="text-h4 text-weight-bold" :class="sPessoa.item.inativo ? 'text-strike text-red-14' : null">{{ sPessoa.item.fantasia }}</span>
+            <q-btn flat round icon="edit" @click="editarDetalhes()" v-if="user.verificaPermissaoUsuario('Financeiro')" />
             <q-btn flat round icon="delete" @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
               v-if="user.verificaPermissaoUsuario('Financeiro')" />
+
+            <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !sPessoa.item.inativo" flat round icon="pause"
+              @click="inativar(sPessoa.item.codpessoa)">
+              <q-tooltip transition-show="scale" transition-hide="scale">
+                Inativar
+              </q-tooltip>
+            </q-btn>
+
+            <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && sPessoa.item.inativo" flat round icon="play_arrow"
+              @click="ativar(sPessoa.item.codpessoa)">
+              <q-tooltip transition-show="scale" transition-hide="scale">
+                Ativar
+              </q-tooltip>
+            </q-btn>
+
+          </q-item-label>
+          <q-item-label v-if="sPessoa.item.inativo">
+            Inativo 
+            {{ Documentos.formataFromNow(sPessoa.item.inativo) }}
           </q-item-label>
           <q-item-label caption>
             {{ sPessoa.item.pessoa }}
@@ -112,7 +130,7 @@
       <q-separator inset />
 
       <div class="row">
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="fingerprint" color="grey-2" text-color="blue" />
@@ -137,9 +155,9 @@
             </q-item-section>
             <q-item-section top>
               <q-item-label>
-                {{ Documentos.formataDatasemHr(sPessoa.item.nascimento) }}
+                  {{ Documentos.verificaIdade(sPessoa.item.nascimento) }} Anos de idade
               </q-item-label>
-              <q-item-label caption class="text-grey-8">Nascimento / Fundação</q-item-label>
+              <q-item-label caption class="text-grey-8">{{ Documentos.formataDataLonga(sPessoa.item.nascimento) }}</q-item-label>
             </q-item-section>
           </q-item>
           <q-separator inset />
@@ -151,13 +169,16 @@
             <q-item-section top>
               <q-item-label style="white-space: pre-line">
                 {{ sPessoa.item.observacoes }}
+                <q-tooltip>
+                {{ sPessoa.item.observacoes }}
+                </q-tooltip>
               </q-item-label>
               <q-item-label caption class="text-grey-8">Observações</q-item-label>
             </q-item-section>
           </q-item>
 
         </div>
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <template v-if="sPessoa.item.rntrc || sPessoa.item.tipotransportador">
             <q-item class="col-6">
               <q-item-section avatar top>
@@ -223,6 +244,52 @@ export default defineComponent({
   },
 
   methods: {
+
+    async inativar(codpessoa) {
+      try {
+        const ret = await this.sPessoa.inativarPessoa(codpessoa)
+        if (ret.data) {
+          this.sPessoa.item = ret.data.data
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Inativado!'
+          })
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: error.response.data
+        })
+      }
+
+    },
+
+    async ativar(codpessoa) {
+      try {
+        const ret = await this.sPessoa.ativarPessoa(codpessoa)
+        if (ret.data) {
+          this.sPessoa.item = ret.data.data
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Ativado!'
+          })
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: error.response.data
+        })
+      }
+
+    },
 
     removerPessoa(codpessoa, pessoa) {
 
