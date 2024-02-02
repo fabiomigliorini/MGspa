@@ -17,12 +17,12 @@ use Mg\Permissao\Autorizador\Autorizador;
 
 class PessoaService
 {
-	const NOTAFISCAL_TRATAMENTOPADRAO = 0;
-	const NOTAFISCAL_SEMPRE = 1;
-	const NOTAFISCAL_SOMENTE_FECHAMENTO = 2;
-	const NOTAFISCAL_NUNCA = 9;
+    const NOTAFISCAL_TRATAMENTOPADRAO = 0;
+    const NOTAFISCAL_SEMPRE = 1;
+    const NOTAFISCAL_SOMENTE_FECHAMENTO = 2;
+    const NOTAFISCAL_NUNCA = 9;
 
-	const CONSUMIDOR = 1;
+    const CONSUMIDOR = 1;
 
     /**
      * Busca Autocomplete Quasar
@@ -133,7 +133,7 @@ class PessoaService
             case 'A':
                 $where[] = 'p.inativo is null';
                 break;
-            
+
             case 'I':
                 $where[] = 'p.inativo is not null';
                 break;
@@ -147,7 +147,7 @@ class PessoaService
 
         $params['limit'] = $limit;
         $params['offset'] = $offset;
-        
+
         $regs = DB::select($sql, $params);
         $result = Pessoa::hydrate($regs);
         return $result;
@@ -167,17 +167,17 @@ class PessoaService
     }
 
     public static function buscaRaizCnpj($cnpj)
-    {   
+    {
 
         $cnpj = substr($cnpj, 0, 8);
         $pessoas = Pessoa::where('cnpj', 'ilike', "%$cnpj%")->get();
-        
+
         foreach ($pessoas as $pessoa) {
-           if($pessoa->codgrupoeconomico) {
-            return $pessoa;
-           }else{
-            $pessoa = null;
-           }
+            if ($pessoa->codgrupoeconomico) {
+                return $pessoa;
+            } else {
+                $pessoa = null;
+            }
         }
     }
 
@@ -218,8 +218,8 @@ class PessoaService
     {
         $pessoa = new Pessoa($data);
         $buscaRaizGrupoEconomico = static::buscaRaizCnpj($data['cnpj']);
-    
-        if(!empty($buscaRaizGrupoEconomico)) {
+
+        if (!empty($buscaRaizGrupoEconomico)) {
             $pessoa->codgrupoeconomico = $buscaRaizGrupoEconomico->codgrupoeconomico;
         }
         $pessoa->save();
@@ -386,7 +386,7 @@ class PessoaService
                 $pessoa->fantasia = substr($retIe->xFant ?? $retIe->xNome, 0, 50);
                 $pessoa->ie = $retIe->IE;
                 //verifica se tem alguma raiz com grupoeconomico e add na pessoa
-                if(!empty($buscaRaizGrupoEconomico)){
+                if (!empty($buscaRaizGrupoEconomico)) {
                     $pessoa->codgrupoeconomico = $buscaRaizGrupoEconomico->codgrupoeconomico;
                 }
             }
@@ -566,7 +566,7 @@ class PessoaService
         }
 
         $i = 0;
-        foreach ($pessoa->PessoaEmails()->orderBy('ordem')->whereNull('inativo')->limit(3)->get() as $email) {
+        foreach ($pessoa->PessoaEmails()->whereNull('inativo')->orderBy('nfe', 'desc')->orderBy('ordem')->limit(3)->get() as $email) {
             $i++;
             switch ($i) {
                 case 1:
@@ -587,7 +587,7 @@ class PessoaService
         }
 
         //TODO: adicionar complemento
-        if ($endereco = PessoaEndereco::where('codpessoa', $pessoa->codpessoa)->whereNull('inativo')->orderBy('ordem')->first()) {
+        if ($endereco = PessoaEndereco::where('codpessoa', $pessoa->codpessoa)->whereNull('inativo')->orderBy('nfe', 'desc')->orderBy('ordem')->first()) {
             $data['endereco'] = $endereco->endereco;
             $data['numero'] = $endereco->numero;
             $data['complemento'] = $endereco->complemento;

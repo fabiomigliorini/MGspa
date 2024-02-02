@@ -1,12 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Dec/2023 20:34:02
+ * Date: 30/Jan/2024 18:04:28
  */
 
 namespace Mg\NaturezaOperacao;
 
 use Mg\MgModel;
+use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
@@ -19,10 +20,6 @@ use Mg\Usuario\Usuario;
 
 class NaturezaOperacao extends MgModel
 {
-    const FINNFE_NORMAL = 1;
-    const FINNFE_COMPLEMENTAR = 2;
-    const FINNFE_AJUSTE = 3;
-    const FINNFE_DEVOLUCAO_RETORNO = 4;
     protected $table = 'tblnaturezaoperacao';
     protected $primaryKey = 'codnaturezaoperacao';
 
@@ -42,6 +39,8 @@ class NaturezaOperacao extends MgModel
         'mensagemprocom',
         'naturezaoperacao',
         'observacoesnf',
+        'preco',
+        'transferencia',
         'venda',
         'vendadevolucao'
     ];
@@ -66,6 +65,8 @@ class NaturezaOperacao extends MgModel
         'financeiro' => 'boolean',
         'finnfe' => 'integer',
         'ibpt' => 'boolean',
+        'preco' => 'integer',
+        'transferencia' => 'boolean',
         'venda' => 'boolean',
         'vendadevolucao' => 'boolean'
     ];

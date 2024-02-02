@@ -8,10 +8,10 @@ use stdClass;
 
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NaturezaOperacao\Operacao;
-use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Filial\Filial;
 use Mg\Filial\Empresa;
+use Mg\NaturezaOperacao\NaturezaOperacaoService;
 use Mg\NotaFiscal\NotaFiscalService;
 use NFePHP\NFe\Make;
 use NFePHP\Common\Strings;
@@ -779,7 +779,7 @@ class NFePHPMakeService
 
         // Pagamento a Vista
         if ($nf->valortotal > $totalpagamentos) {
-            if (in_array($nf->NaturezaOperacao->finnfe, [NaturezaOperacao::FINNFE_AJUSTE, NaturezaOperacao::FINNFE_DEVOLUCAO_RETORNO])) {
+            if (in_array($nf->NaturezaOperacao->finnfe, [NaturezaOperacaoService::FINNFE_AJUSTE, NaturezaOperacaoService::FINNFE_DEVOLUCAO_RETORNO])) {
                 $std = new stdClass();
                 $std->tPag = '90'; // Sem Pagamento
                 $std->vPag = $nf->valortotal - $totalpagamentos;

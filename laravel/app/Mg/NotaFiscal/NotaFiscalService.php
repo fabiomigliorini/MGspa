@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use Mg\Negocio\Negocio;
 use Mg\Pessoa\PessoaService;
 use Mg\Negocio\NegocioProdutoBarraService;
+use Mg\Filial\Filial;
+use Mg\NaturezaOperacao\NaturezaOperacaoService;
 
 // use Illuminate\Support\Facades\Auth;
 
@@ -211,27 +213,34 @@ class NotaFiscalService
             // busca restante dos dados do negocio
             $notaItem->codprodutobarra = $item->codprodutobarra;
             $notaItem->quantidade = $quantidade;
-            $notaItem->valorunitario = $item->valorunitario;
 
-            // se quantidade nao for igual do negocio traz valores rateados
-            if ($item->quantidade != $quantidade) {
-                $perc = ($quantidade / $item->quantidade);
-                $notaItem->valortotal = round($item->valortotal * $perc, 2);
-                $notaItem->valordesconto = round($item->valordesconto * $perc, 2);
-                $notaItem->valorfrete = round($item->valorfrete * $perc, 2);
-                $notaItem->valoroutras = round($item->valoroutras * $perc, 2);
+            if ($negocio->NaturezaOperacao->preco == NaturezaOperacaoService::PRECO_TRANSFERENCIA) {
+                $notaItem->valorunitario = round($item->valorunitario * 0.7, 2);
+                $notaItem->valortotal = $quantidade * $notaItem->valorunitario;
             } else {
-                $notaItem->valortotal = $item->valortotal;
-                $notaItem->valordesconto = $item->valordesconto;
-                $notaItem->valorfrete = $item->valorfrete;
-                $notaItem->valoroutras = $item->valoroutras;
-            }
+                $notaItem->valorunitario = $item->valorunitario;
 
-            // verifica se tem juros pra jogar no outras
-            if ($percJuros > 0) {
-                $juros = round($item->valortotal * $percJuros, 2);
-                $notaItem->valoroutras += $juros;
-                $totalJuros += $juros;
+                // se quantidade nao for igual do negocio traz valores rateados
+                if ($item->quantidade != $quantidade) {
+                    $perc = ($quantidade / $item->quantidade);
+                    $notaItem->valortotal = round($item->valortotal * $perc, 2);
+                    $notaItem->valordesconto = round($item->valordesconto * $perc, 2);
+                    $notaItem->valorfrete = round($item->valorfrete * $perc, 2);
+                    $notaItem->valoroutras = round($item->valoroutras * $perc, 2);
+                } else {
+                    $notaItem->valortotal = $item->valortotal;
+                    $notaItem->valordesconto = $item->valordesconto;
+                    $notaItem->valorfrete = $item->valorfrete;
+                    $notaItem->valoroutras = $item->valoroutras;
+                }
+    
+                // verifica se tem juros pra jogar no outras
+                if ($percJuros > 0) {
+                    $juros = round($item->valortotal * $percJuros, 2);
+                    $notaItem->valoroutras += $juros;
+                    $totalJuros += $juros;
+                }
+    
             }
 
             // calcula tributacao
@@ -247,10 +256,12 @@ class NotaFiscalService
         }
 
         // se sobrou uma diferenca no valor dos juros, joga no ultimo item da NF
-        $juros = $negocio->valorjuros - $totalJuros;
-        if ($juros != 0) {
-            $notaItem->valoroutras += $juros;
-            $notaItem->save();
+        if ($negocio->NaturezaOperacao->preco != NaturezaOperacaoService::PRECO_TRANSFERENCIA) {
+            $juros = $negocio->valorjuros - $totalJuros;
+            if ($juros != 0) {
+                $notaItem->valoroutras += $juros;
+                $notaItem->save();
+            }
         }
 
         // adiciona as chaves de nfes referenciadas
@@ -297,5 +308,15 @@ class NotaFiscalService
         DB::commit();
         return $nota;
 
+    }
+
+    public static function excluir(NotaFiscal $nf) 
+    {
+        if ($nf->emitida) {
+            if (!empty($nf->numero)) {
+                throw new Exception("Nota Fiscal já possui atribuição de um Número. Ao invés de excluir tente Inutilizar!", 1);
+            }
+        }
+        return $nf->delete();
     }
 }

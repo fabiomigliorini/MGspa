@@ -18,6 +18,7 @@ class PessoaTelefoneService
         }
         $telefone = new PessoaTelefone($data);
         $telefone->save();
+        PessoaService::atualizaCamposLegado($telefone->Pessoa);
         return $telefone->refresh();
     }
 
@@ -45,6 +46,7 @@ class PessoaTelefoneService
         }
         $telefone->fill($data);
         $telefone->save();
+        PessoaService::atualizaCamposLegado($telefone->Pessoa);
         return $telefone;
     }
 
@@ -55,16 +57,21 @@ class PessoaTelefoneService
             ->where('telefone', $data['telefone'])
             ->first();
         if ($telefone) {
-            return static::update($telefone, $data);
+            $telefone = static::update($telefone, $data);
         } else {
-            return static::create($data);
+            $telefone = static::create($data);
         }
+        PessoaService::atualizaCamposLegado($telefone->Pessoa);
+        return $telefone;
     }
 
 
-    public static function delete($pessoa)
+    public static function delete($telefone)
     {
-        return $pessoa->delete();
+        $pessoa = $telefone->Pessoa;
+        $ret = $telefone->delete();
+        PessoaService::atualizaCamposLegado($pessoa);
+        return $ret;
     }
 
 
@@ -77,6 +84,7 @@ class PessoaTelefoneService
         if ($ret > 0) {
             $pe->update(['ordem' => $anterior]);
         }
+        PessoaService::atualizaCamposLegado($pe->Pessoa);
         return $pe;
     }
 
@@ -89,6 +97,7 @@ class PessoaTelefoneService
         if ($ret > 0) {
             $pe->update(['ordem' => $posterior]);
         }
+        PessoaService::atualizaCamposLegado($pe->Pessoa);
         return $pe;
     }
 
@@ -96,6 +105,7 @@ class PessoaTelefoneService
     {
         $model->inativo = null;
         $model->update();
+        PessoaService::atualizaCamposLegado($model->Pessoa);
         return $model;
     }
 
@@ -106,6 +116,7 @@ class PessoaTelefoneService
         }
         $model->inativo = $date;
         $model->update();
+        PessoaService::atualizaCamposLegado($model->Pessoa);
         return $model;
     }
 
@@ -134,6 +145,5 @@ class PessoaTelefoneService
         $tel->verificacao = Carbon::now();
         $tel->update();
         return $tel;
-
     }
 }

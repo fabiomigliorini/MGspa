@@ -5,6 +5,7 @@ namespace Mg\Pdv;
 use Illuminate\Http\Request;
 use Mg\Negocio\NegocioNotaFiscalResource;
 use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NFePHP\NFePHPService;
 
 // use Mg\Negocio\NegocioResource;
@@ -56,16 +57,22 @@ class PdvNotaFiscalController
     {
         PdvService::autoriza($request->pdv);
         $nf = NotaFiscal::findOrFail($codnotafiscal);
-        NFePHPService::cancelar($nf, $request->justificativa);
-        return new NegocioNotaFiscalResource($nf);
+        $res = NFePHPService::cancelar($nf, $request->justificativa);
+        return response()->json([
+            'respostaSefaz' =>  $res,
+            'nota' => new NegocioNotaFiscalResource($nf),
+        ], 200);
     }
 
     public function inutilizar(PdvRequest $request, $codnotafiscal)
     {
         PdvService::autoriza($request->pdv);
         $nf = NotaFiscal::findOrFail($codnotafiscal);
-        NFePHPService::inutilizar($nf, $request->justificativa);
-        return new NegocioNotaFiscalResource($nf);
+        $res = NFePHPService::inutilizar($nf, $request->justificativa);
+        return response()->json([
+            'respostaSefaz' =>  $res,
+            'nota' => new NegocioNotaFiscalResource($nf),
+        ], 200);
     }
 
     public function imprimir(Request $request, $codnotafiscal)
@@ -73,6 +80,14 @@ class PdvNotaFiscalController
         PdvService::autoriza($request->pdv);
         $nf = NotaFiscal::findOrFail($codnotafiscal);
         $res = NFePHPService::imprimir($nf, $request->impressora);
+        return response()->json($res, 200);
+    }    
+
+    public function excluir(Request $request, $codnotafiscal)
+    {
+        PdvService::autoriza($request->pdv);
+        $nf = NotaFiscal::findOrFail($codnotafiscal);
+        $res = NotaFiscalService::excluir($nf);
         return response()->json($res, 200);
     }    
 

@@ -20,6 +20,7 @@ class PessoaEmailService
         $emails = new PessoaEmail($data);
         $emails->save();
         static::descobreEmailNfeCobranca($emails->Pessoa, $emails);
+        PessoaService::atualizaCamposLegado($emails->Pessoa);
         return $emails->refresh();
     }
 
@@ -31,10 +32,12 @@ class PessoaEmailService
             ->first();
 
         if ($emails) {
-            return static::update($emails, $data);
+            $emails = static::update($emails, $data);
         } else {
-            return static::create($data);
+            $emails = static::create($data);
         }
+        PessoaService::atualizaCamposLegado($emails->Pessoa);
+        return $emails;
     }
 
     public static function update($email, $data)
@@ -47,19 +50,21 @@ class PessoaEmailService
         $email->fill($data);
         $email->save();
         static::descobreEmailNfeCobranca($email->Pessoa, $email);
+        PessoaService::atualizaCamposLegado($email->Pessoa);
         return $email;
     }
 
 
     public static function delete(PessoaEmail $email)
     {
-            if ($email->Pessoa->PessoaEmailS()->count() <= 1) {
-                throw new Exception("Não é possivel excluir todos os emails!", 1);
-            }
-            $pessoa = $email->Pessoa;
-            $ret = $email->delete();
-            static::descobreEmailNfeCobranca($email->Pessoa);
-            return $ret;
+        if ($email->Pessoa->PessoaEmailS()->count() <= 1) {
+            throw new Exception("Não é possivel excluir todos os emails!", 1);
+        }
+        $pessoa = $email->Pessoa;
+        $ret = $email->delete();
+        static::descobreEmailNfeCobranca($pessoa);
+        PessoaService::atualizaCamposLegado($pessoa);
+        return $ret;
     }
 
 
@@ -72,6 +77,7 @@ class PessoaEmailService
         if ($ret > 0) {
             $pe->update(['ordem' => $anterior]);
         }
+        PessoaService::atualizaCamposLegado($pe->Pessoa);
         return $pe;
     }
 
@@ -84,6 +90,7 @@ class PessoaEmailService
         if ($ret > 0) {
             $pe->update(['ordem' => $posterior]);
         }
+        PessoaService::atualizaCamposLegado($pe->Pessoa);
         return $pe;
     }
 
@@ -91,6 +98,7 @@ class PessoaEmailService
     {
         $model->inativo = null;
         $model->update();
+        PessoaService::atualizaCamposLegado($model->Pessoa);
         return $model;
     }
 
@@ -101,12 +109,13 @@ class PessoaEmailService
         }
         $model->inativo = $date;
         $model->update();
+        PessoaService::atualizaCamposLegado($model->Pessoa);
         return $model;
     }
 
     public static function descobreEmailNfeCobranca(Pessoa $pessoa, PessoaEmail $email = null)
     {
-        
+
         $codpessoaemailnfe = null;
         $codpessoaemailcobranca = null;
         if ($email) {

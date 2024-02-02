@@ -17,6 +17,7 @@ class PessoaEnderecoService
         $end = new PessoaEndereco($data);
         $end->save();
         static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa, $end);
+        PessoaService::atualizaCamposLegado($end->Pessoa);
         return $end->refresh();
     }
 
@@ -26,10 +27,12 @@ class PessoaEnderecoService
             ->whereNull('inativo')->orderBy('ordem')
             ->first();
         if ($end) {
-            return static::update($end, $data);
+            $end = static::update($end, $data);
         } else {
-            return static::create($data);
+            $end = static::create($data);
         }
+        PessoaService::atualizaCamposLegado($end->Pessoa);
+        return $end;
     }
 
     public static function update($end, $data)
@@ -37,6 +40,7 @@ class PessoaEnderecoService
         $end->fill($data);
         $end->save();
         static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa, $end);
+        PessoaService::atualizaCamposLegado($end->Pessoa);
         return $end;
     }
 
@@ -48,7 +52,8 @@ class PessoaEnderecoService
         }
         $pessoa = $end->Pessoa;
         $ret = $end->delete();
-        static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa);
+        static::descobreEnderecoNfeCobrancaEntrega($pessoa);
+        PessoaService::atualizaCamposLegado($pessoa);
         return $ret;
     }
 
@@ -129,6 +134,7 @@ class PessoaEnderecoService
         if ($ret > 0) {
             $end->update(['ordem' => $anterior]);
         }
+        PessoaService::atualizaCamposLegado($end->Pessoa);
         return $end;
     }
 
@@ -141,6 +147,7 @@ class PessoaEnderecoService
         if ($ret > 0) {
             $end->update(['ordem' => $posterior]);
         }
+        PessoaService::atualizaCamposLegado($end->Pessoa);
         return $end;
     }
 
@@ -149,6 +156,7 @@ class PessoaEnderecoService
         $end->inativo = null;
         $end->update();
         static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa, $end);
+        PessoaService::atualizaCamposLegado($end->Pessoa);
         return $end;
     }
 
@@ -160,6 +168,7 @@ class PessoaEnderecoService
         $end->inativo = $date;
         $end->update();
         static::descobreEnderecoNfeCobrancaEntrega($end->Pessoa);
+        PessoaService::atualizaCamposLegado($end->Pessoa);
         return $end;
     }
 }
