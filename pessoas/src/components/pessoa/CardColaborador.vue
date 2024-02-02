@@ -3,7 +3,8 @@
         <q-list>
             <q-item-label header>
                 Registro de Colaborador
-                <q-btn flat round icon="add" @click="dialogNovoColaborador = true" />
+                <q-btn flat round icon="add"
+                    @click="dialogNovoColaborador = true, modelNovoColaborador = {}, editColaborador = false" />
             </q-item-label>
         </q-list>
     </q-card>
@@ -13,10 +14,11 @@
             <q-list>
                 <q-item>
                     <q-item-label header>
+                        <span v-if="colaborador.vinculo == 1">CLT</span>
                         <span v-if="colaborador.vinculo == 2">Menor Aprendiz</span>
-                            <span v-if="colaborador.vinculo == 90">Terceirizado</span>
-                            <span v-if="colaborador.vinculo == 91">Diarista</span> no
-                        {{colaborador.Filial}}
+                        <span v-if="colaborador.vinculo == 90">Terceirizado</span>
+                        <span v-if="colaborador.vinculo == 91">Diarista</span> no
+                        {{ colaborador.Filial }}
                         <q-btn flat round icon="edit" @click="editarColaborador(colaborador.codcolaborador, colaborador.codfilial,
                             colaborador.contratacao, colaborador.vinculo, colaborador.experiencia,
                             colaborador.renovacaoexperiencia, colaborador.rescisao, colaborador.numeroponto,
@@ -24,10 +26,12 @@
                         <q-btn flat round icon="delete" @click="deletarColaborador(colaborador.codcolaborador)" />
 
                         Cargo
-                        <q-btn flat round icon="add" @click="novoColaboradorCargo(colaborador.codcolaborador)" />
+                        <q-btn flat round icon="add"
+                            @click="novoColaboradorCargo(colaborador.codcolaborador), modelnovoColaboradorCargo = {}" />
 
                         Férias
-                        <q-btn flat round icon="add" @click="novoColaboradorFerias(colaborador.codcolaborador)" />
+                        <q-btn flat round icon="add"
+                            @click="novoColaboradorFerias(colaborador.codcolaborador), dateRange = {}" />
 
                     </q-item-label>
                 </q-item>
@@ -38,111 +42,84 @@
                     </q-item-section>
                     <q-item-section>
                         <q-item-label v-if="!colaborador.rescisao">
-                           {{ moment(colaborador.contratacao).fromNow() }}
+                            {{ moment(colaborador.contratacao).format('DD/MMM') }} ({{
+                                moment(colaborador.contratacao).fromNow() }})
                         </q-item-label>
                         <q-item-label v-else>
-                           {{ moment(colaborador.contratacao).format('DD/MMM') }} a
-                           {{ moment(colaborador.rescisao).format('DD/MMM/YYYY') }}
+                            {{ moment(colaborador.contratacao).format('DD/MMM') }} a
+                            {{ moment(colaborador.rescisao).format('DD/MMM/YYYY') }}
                         </q-item-label>
-                       <q-item-label caption>
-                        Contratação / Rescisão
-                       </q-item-label>
+                        <q-item-label caption>
+                            Contratação / Rescisão
+                        </q-item-label>
                     </q-item-section>
                 </q-item>
-                <q-separator  inset/>
 
+                <q-separator inset />
                 <q-item>
                     <q-item-section avatar>
                         <q-icon name="event" color="blue"></q-icon>
                     </q-item-section>
                     <q-item-section>
                         <q-item-label>
-                          {{ moment(colaborador.experiencia).format('DD/MMM/YYYY') }}  
-                            / {{ moment(colaborador.renovacaoexperiencia).format('DD/MMM/YYYY') }}
+                            {{ moment(colaborador.experiencia).format('DD/MMM/YYYY') }} ({{
+                                moment(colaborador.experiencia).fromNow() }})
+                            / {{ moment(colaborador.renovacaoexperiencia).format('DD/MMM/YYYY') }} ({{
+                                moment(colaborador.renovacaoexperiencia).fromNow() }})
                         </q-item-label>
-                       <q-item-label caption>
-                         Experiência / Renovação
-                       </q-item-label>
+                        <q-item-label caption>
+                            Experiência / Renovação
+                        </q-item-label>
 
                     </q-item-section>
                 </q-item>
 
-               
-                <q-separator inset />
-
-                <q-item v-if="colaborador.numeroponto || colaborador.numerocontabilidade">
-                    <q-item-section avatar>
-                        <q-icon name="timer" color="blue"></q-icon>
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label v-if="colaborador.numeroponto || colaborador.numerocontabilidade">
-                            <span v-if="colaborador.numeroponto">{{ colaborador.numeroponto }}</span>
-                            <span v-if="colaborador.numerocontabilidade"> / {{
-                                colaborador.numerocontabilidade }} </span>
-                        </q-item-label>
-                        <q-item-label caption v-if="colaborador.numeroponto || colaborador.numerocontabilidade">
-                            Ponto / Contabilidade
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>
-
-                <q-separator inset />
-
-                <q-item>
-                    <q-item-section avatar>
-                        <q-icon name="comment" color="blue"></q-icon>
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label v-if="colaborador.observacoes" style="white-space: pre-line">
-                                {{ colaborador.observacoes }}
-                            </q-item-label>
-                        <q-item-label caption v-if="colaborador.observacoes">
-                            Observações
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>
-
-                <!-- <q-item>
-                    <q-item-section>
-
-                        <q-item-section class="q-pa-sm">
-                            <q-item-label>
-                                <q-icon name="corporate_fare" color="blue"></q-icon>&nbsp;
-                                {{ colaborador.Filial }} - <span v-if="colaborador.vinculo == 1">CLT</span>
-                                <span v-if="colaborador.vinculo == 2">Menor Aprendiz</span>
-                                <span v-if="colaborador.vinculo == 90">Terceirizado</span>
-                                <span v-if="colaborador.vinculo == 91">Diarista</span> -
-                                {{ Documentos.formataFromNow(colaborador.contratacao) }}
-                            </q-item-label>
-
+                <template v-if="colaborador.numeroponto || colaborador.numerocontabilidade">
+                    <q-separator inset />
+                    <q-item>
+                        <q-item-section avatar>
+                            <q-icon name="timer" color="blue"></q-icon>
+                        </q-item-section>
+                        <q-item-section>
                             <q-item-label v-if="colaborador.numeroponto || colaborador.numerocontabilidade">
-                                <q-icon v-if="colaborador.numeroponto" name="timer" color="blue"></q-icon>&nbsp;
-                                <span v-if="colaborador.numeroponto">Ponto: {{ colaborador.numeroponto }}</span>
-                                <span class="q-pl-md" v-if="colaborador.numerocontabilidade"> <q-icon name="receipt"
-                                        color="blue" />&nbsp;Contabilidade: {{
-                                            colaborador.numerocontabilidade }} </span>
+                                <span v-if="colaborador.numeroponto">{{ colaborador.numeroponto }}</span>
+                                <span v-if="colaborador.numerocontabilidade"> / {{
+                                    colaborador.numerocontabilidade }} </span>
                             </q-item-label>
-
-                            <q-item-label v-if="colaborador.observacoes" style="white-space: pre-line">
-                                <q-icon name="comment" color="blue"></q-icon>&nbsp;
-                                {{ colaborador.observacoes }}
+                            <q-item-label caption v-if="colaborador.numeroponto || colaborador.numerocontabilidade">
+                                Ponto / Contabilidade
                             </q-item-label>
                         </q-item-section>
-                        </q-card> -->
-                <!-- </q-item-section> -->
-                <!-- </q-item> -->
+                    </q-item>
+                </template>
 
-                <q-separator inset/>
+                <template v-if="colaborador.observacoes">
+                    <q-separator inset />
+                    <q-item>
+                        <q-item-section avatar>
+                            <q-icon name="comment" color="blue"></q-icon>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-item-label v-if="colaborador.observacoes" style="white-space: pre-line">
+                                {{ colaborador.observacoes }}
+                            </q-item-label>
+                            <q-item-label caption v-if="colaborador.observacoes">
+                                Observações
+                            </q-item-label>
+                        </q-item-section>
+                    </q-item>
+                </template>
+
                 <q-item>
                     <q-item-section>
-                        <card-colaborador-cargo :colaboradorCargos="colaborador.ColaboradorCargo"
+                        <card-colaborador-cargo :colaboradorCargos="colaborador"
                             v-on:update:colaboradorCargos="updateColaboradorCargo($event)" />
                     </q-item-section>
                 </q-item>
 
                 <q-item>
                     <q-item-section>
-                        <card-ferias :feriasS="colaborador.Ferias" v-on:update:feriasS="updateFerias($event)"></card-ferias>
+                        <card-ferias :feriasS="colaborador" v-on:update:feriasS="updateFerias($event)"></card-ferias>
                     </q-item-section>
                 </q-item>
             </q-list>
@@ -176,15 +153,13 @@
                     <div class="row">
                         <div class="col-6">
                             <q-input outlined v-model="modelNovoColaborador.contratacao" class="q-pr-md" mask="##/##/####"
-                                label="Contratação" :rules="[
-                                    val => val && val.length > 0 || 'Contratação obrigatório'
-                                ]" @change="preencheDataExp()">
+                                label="Contratação" :rules="[validaObrigatorio, validaData, validaContratacao]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
                                         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                                             <q-date v-model="modelNovoColaborador.contratacao" :locale="brasil"
-                                                mask="DD/MM/YYYY" @update:model-value="preencheDataExp()">
+                                                mask="DD/MM/YYYY">
                                                 <div class="row items-center justify-end">
                                                     <q-btn v-close-popup label="Fechar" color="primary" flat />
                                                 </div>
@@ -196,9 +171,7 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelNovoColaborador.experiencia" mask="##/##/####"
-                                label="Experiência" :rules="[
-                                    val => val && val.length > 0 || 'Experiência obrigatório'
-                                ]">
+                                label="Experiência" :rules="[validaObrigatorio, validaData, validaExperiencia]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -216,9 +189,8 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelNovoColaborador.renovacaoexperiencia" mask="##/##/####"
-                                label="Renovação Experiência" :rules="[
-                                    val => val && val.length > 0 || 'Renovação Experiência obrigatório'
-                                ]" class="q-pr-md">
+                                label="Renovação Experiência"
+                                :rules="[validaObrigatorio, validaData, validaRenovacaoExperiencia]" class="q-pr-md">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -236,7 +208,8 @@
                         </div>
 
                         <div class="col-6">
-                            <q-input outlined v-model="modelNovoColaborador.rescisao" mask="##/##/####" label="Rescisão">
+                            <q-input outlined v-model="modelNovoColaborador.rescisao" mask="##/##/####" label="Rescisão"
+                                :rules="[validaData, validaRescisao]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -299,9 +272,7 @@
                     <div class="row">
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.inicio" mask="##/##/####" label="Início"
-                                :rules="[
-                                    val => val && val.length > 0 || 'Início obrigatório'
-                                ]">
+                                :rules="[validaData, validaInicio, validaObrigatorio]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -319,7 +290,7 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.fim" class="q-pl-md" mask="##/##/####"
-                                label="Fim">
+                                label="Fim" :rules="[validaData, validaFim]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -336,20 +307,37 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorCargo.comissaoloja" label="Comissão Loja" />
+                            <q-input outlined v-model="modelnovoColaboradorCargo.comissaoloja" label="Comissão Loja">
+                                <template v-slot:append>
+                                    %
+                                </template>
+
+                            </q-input>
 
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.comissaovenda" label="Comissão Venda"
-                                class="q-pl-md" />
+                                class="q-pl-md">
+                                <template v-slot:append>
+                                    %
+                                </template>
+                            </q-input>
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.comissaoxerox" label="Comissão Xerox"
-                                class="q-pt-md" />
+                                class="q-pt-md">
+                                <template v-slot:append>
+                                    %
+                                </template>
+                            </q-input>
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.gratificacao" label="Gratificação"
-                                class="q-pl-md q-pt-md" />
+                                class="q-pl-md q-pt-md">
+                                <template v-slot:prepend>
+                                    R$
+                                </template>
+                            </q-input>
                         </div>
                     </div>
 
@@ -369,17 +357,37 @@
     <!-- Dialog novo Colaborador Ferias -->
     <q-dialog v-model="dialogNovoColaboradorFerias">
         <q-card style="min-width: 350px">
-            <q-form @submit="novoColaboradorFerias()">
+            <q-form @submit="getApiNovaFerias()">
                 <q-card-section>
                     <div class="text-h6">Nova Férias</div>
                 </q-card-section>
                 <q-card-section>
                     <div class="row">
                         <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.dias" label="Dias" class="q-pr-md"
+                                @change="calculaDias()" />
+
+                        </div>
+
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasgozo" label="Dias Gozo" :rules="[
+                                val => val !== null && val !== '' && val !== undefined || 'Dias Gozo Obrigatório'
+                            ]" @change="calculaDias()" />
+                        </div>
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
+                                val => val !== null && val !== '' && val !== undefined || 'Dias Abono obrigatório'
+                            ]" label="Dias Abono" class="q-pr-md" @change="calculaDias()" />
+                        </div>
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" label="Dias Descontados"
+                                @change="calculaDias()" />
+                        </div>
+
+                        <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorFerias.aquisitivoinicio" mask="##/##/####"
-                                label="Aquisitivo Início" :rules="[
-                                    val => val && val.length > 0 || 'Aquisitivo Início obrigatório'
-                                ]" class="q-pr-md">
+                                label="Aquisitivo Início" :rules="[validaObrigatorio, validaData, validaAqInicio]"
+                                class="q-pr-md">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -397,9 +405,7 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorFerias.aquisitivofim" mask="##/##/####"
-                                label="Aquisitivo Fim" :rules="[
-                                    val => val && val.length > 0 || 'Aquisitivo Fim obrigatório'
-                                ]">
+                                label="Aquisitivo Fim" :rules="[validaObrigatorio, validaData, validaAqFim]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -416,16 +422,16 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.gozoinicio" mask="##/##/####"
-                                label="Gozo Início" :rules="[
-                                    val => val && val.length > 0 || 'Gozo Início obrigatório'
-                                ]" class="q-pr-md">
+                            <q-input outlined
+                                :model-value="`${dateRange.from ? dateRange.from : ''} - ${dateRange.to ? dateRange.to : ''}`"
+                                label="Periodo de Gozo" :rules="[validaObrigatorio, validaData, validaGozoInicio]"
+                                class="q-pr-md" mask="##/##/#### - ##/##/####">
+
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
                                         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                            <q-date v-model="modelnovoColaboradorFerias.gozoinicio" :locale="brasil"
-                                                mask="DD/MM/YYYY">
+                                            <q-date v-model="dateRange" :locale="brasil" range mask="DD/MM/YYYY">
                                                 <div class="row items-center justify-end">
                                                     <q-btn v-close-popup label="Fechar" color="primary" flat />
                                                 </div>
@@ -436,51 +442,7 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.gozofim" mask="##/##/####"
-                                label="Gozo Fim" :rules="[
-                                    val => val && val.length > 0 || 'Gozo Fim obrigatório'
-                                ]">
-
-                                <template v-slot:append>
-                                    <q-icon name="event" class="cursor-pointer">
-                                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                            <q-date v-model="modelnovoColaboradorFerias.gozofim" :locale="brasil"
-                                                mask="DD/MM/YYYY">
-                                                <div class="row items-center justify-end">
-                                                    <q-btn v-close-popup label="Fechar" color="primary" flat />
-                                                </div>
-                                            </q-date>
-                                        </q-popup-proxy>
-                                    </q-icon>
-                                </template>
-                            </q-input>
-                        </div>
-
-                        <div class="col-12">
-                            <q-select outlined v-model="modelnovoColaboradorFerias.prevista" map-options emit-value
-                                :options="[
-                                    { label: 'Sim', value: true },
-                                    { label: 'Não', value: false }
-                                ]" label="Prevista" />
-                        </div>
-
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasgozo" label="Dias Gozo" :rules="[
-                                val => val && val.length > 0 || 'Dias Gozo obrigatório'
-                            ]" class="q-pr-md q-pt-md" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
-                                val => val && val.length > 0 || 'Dias Abono obrigatório'
-                            ]" label="Dias Abono" class="q-pt-md" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" label="Dias Descontados"
-                                class="q-pr-md" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.dias" label="Dias" />
-
+                            <q-toggle outlined v-model="modelnovoColaboradorFerias.prevista" label="Prevista" />
                         </div>
                     </div>
 
@@ -541,15 +503,6 @@ export default defineComponent({
     name: "CardColaborador",
 
     methods: {
-        preencheDataExp() {
-
-            var diasExperiencia = moment(this.modelNovoColaborador.contratacao, "DD/MM/YYYY").add(45, 'days').format('DD/MM/YYYY')
-            var renovacaoExperiencia = moment(diasExperiencia, "DD/MM/YYYY").add(45, 'days').format('DD/MM/YYYY')
-
-            this.modelNovoColaborador.experiencia = diasExperiencia
-            this.modelNovoColaborador.renovacaoexperiencia = renovacaoExperiencia
-
-        },
 
         updateColaboradorCargo(event) {
 
@@ -577,6 +530,7 @@ export default defineComponent({
         },
 
         async novoColaborador() {
+
             this.modelNovoColaborador.codpessoa = this.route.params.id
 
             if (this.modelNovoColaborador.contratacao) {
@@ -618,22 +572,24 @@ export default defineComponent({
 
         async salvarColaborador() {
 
-            if (this.modelNovoColaborador.contratacao) {
-                this.modelNovoColaborador.contratacao = this.Documentos.dataFormatoSql(this.modelNovoColaborador.contratacao)
+            const colab = { ...this.modelNovoColaborador };
+
+            if (colab.contratacao) {
+                colab.contratacao = this.Documentos.dataFormatoSql(colab.contratacao)
             }
 
-            if (this.modelNovoColaborador.experiencia) {
-                this.modelNovoColaborador.experiencia = this.Documentos.dataFormatoSql(this.modelNovoColaborador.experiencia)
+            if (colab.experiencia) {
+                colab.experiencia = this.Documentos.dataFormatoSql(colab.experiencia)
             }
-            if (this.modelNovoColaborador.renovacaoexperiencia) {
-                this.modelNovoColaborador.renovacaoexperiencia = this.Documentos.dataFormatoSql(this.modelNovoColaborador.renovacaoexperiencia)
+            if (colab.renovacaoexperiencia) {
+                colab.renovacaoexperiencia = this.Documentos.dataFormatoSql(colab.renovacaoexperiencia)
             }
-            if (this.modelNovoColaborador.rescisao) {
-                this.modelNovoColaborador.rescisao = this.Documentos.dataFormatoSql(this.modelNovoColaborador.rescisao)
+            if (colab.rescisao) {
+                colab.rescisao = this.Documentos.dataFormatoSql(colab.rescisao)
             }
 
             try {
-                const ret = await this.sPessoa.salvarColaborador(this.modelNovoColaborador)
+                const ret = await this.sPessoa.salvarColaborador(colab)
 
                 if (ret.data.data) {
                     this.$q.notify({
@@ -657,24 +613,30 @@ export default defineComponent({
         },
 
         async novoColaboradorCargo(codcolaborador) {
-            if (!this.modelnovoColaboradorCargo.codcolaborador) {
-                this.modelnovoColaboradorCargo.codcolaborador = codcolaborador
+
+
+            if (!this.modelnovoColaboradorCargo.codcolaborador || this.modelnovoColaboradorCargo.codcolaborador == undefined) {
+                this.modelnovoColaboradorCargo.codcolaborador = this.codcolaborador
             }
 
-            if (this.modelnovoColaboradorCargo.inicio) {
-                this.modelnovoColaboradorCargo.inicio = this.Documentos.dataFormatoSql(this.modelnovoColaboradorCargo.inicio)
+            const colabCargo = { ...this.modelnovoColaboradorCargo }
+
+            if (colabCargo.inicio) {
+                colabCargo.inicio = this.Documentos.dataFormatoSql(colabCargo.inicio)
             }
 
-            if (this.modelnovoColaboradorCargo.fim) {
-                this.modelnovoColaboradorCargo.fim = this.Documentos.dataFormatoSql(this.modelnovoColaboradorCargo.fim)
+            if (colabCargo.fim) {
+                colabCargo.fim = this.Documentos.dataFormatoSql(colabCargo.fim)
             }
 
             this.dialogNovoColaboradorCargo = true
+            this.codcolaborador = codcolaborador
+
 
             if (this.modelnovoColaboradorCargo.codcargo) {
 
                 try {
-                    const ret = await this.sPessoa.novoColaboradorCargo(this.modelnovoColaboradorCargo)
+                    const ret = await this.sPessoa.novoColaboradorCargo(colabCargo)
                     if (ret.data.data) {
                         this.$q.notify({
                             color: 'green-5',
@@ -684,7 +646,7 @@ export default defineComponent({
                         })
                         this.dialogNovoColaboradorCargo = false
                         const i = this.colaboradores.findIndex(item => item.codcolaborador === this.modelnovoColaboradorCargo.codcolaborador)
-                        this.colaboradores[i].ColaboradorCargo.push(ret.data.data)
+                        this.colaboradores[i].ColaboradorCargo.unshift(ret.data.data)
                         this.modelnovoColaboradorCargo = {}
                     }
                 } catch (error) {
@@ -696,51 +658,76 @@ export default defineComponent({
                     })
                 }
             }
+
         },
 
         async novoColaboradorFerias(codcolaborador) {
             this.dialogNovoColaboradorFerias = true
-            if (!this.modelnovoColaboradorFerias.codcolaborador) {
-                this.modelnovoColaboradorFerias.codcolaborador = codcolaborador
-            }
-            if (this.modelnovoColaboradorFerias.aquisitivoinicio) {
-                this.modelnovoColaboradorFerias.aquisitivoinicio = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.aquisitivoinicio)
-            }
-            if (this.modelnovoColaboradorFerias.aquisitivofim) {
-                this.modelnovoColaboradorFerias.aquisitivofim = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.aquisitivofim)
-            }
-            if (this.modelnovoColaboradorFerias.gozoinicio) {
-                this.modelnovoColaboradorFerias.gozoinicio = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.gozoinicio)
+
+            if (codcolaborador !== undefined) {
+                this.codcolaborador = codcolaborador
             }
 
-            if (this.modelnovoColaboradorFerias.gozofim) {
-                this.modelnovoColaboradorFerias.gozofim = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.gozofim)
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+            if (colaborador.Ferias[0] && colaborador.Ferias[0].dias !== undefined) {
+                this.modelnovoColaboradorFerias.dias = colaborador.Ferias[0].dias
+                this.modelnovoColaboradorFerias.diasgozo = colaborador.Ferias[0].dias
             }
 
-            if (this.modelnovoColaboradorFerias.aquisitivoinicio) {
+            if (colaborador.Ferias[0] && colaborador.Ferias[0].aquisitivofim !== undefined) {
 
-                try {
-                    const ret = await this.sPessoa.novoColaboradorFerias(this.modelnovoColaboradorFerias)
-                    if (ret.data.data) {
-                        this.$q.notify({
-                            color: 'green-5',
-                            textColor: 'white',
-                            icon: 'done',
-                            message: 'Colaborador Férias criado!'
-                        })
-                        this.dialogNovoColaboradorFerias = false
-                        const i = this.colaboradores.findIndex(item => item.codcolaborador === this.modelnovoColaboradorFerias.codcolaborador)
-                        this.colaboradores[i].Ferias.push(ret.data.data)
-                        this.modelnovoColaboradorFerias = {}
-                    }
-                } catch (error) {
+                const sugestaoAqInicio = moment(colaborador.Ferias[0].aquisitivofim).add(1, 'days').format('DD/MM/YYYY')
+                const sugestaoAqFim = moment(sugestaoAqInicio, 'DD/MM/YYYY').add(1, 'year').subtract(1, 'days').format('DD/MM/YYYY')
+                this.modelnovoColaboradorFerias.aquisitivoinicio = sugestaoAqInicio
+                this.modelnovoColaboradorFerias.aquisitivofim = sugestaoAqFim
+            }
+
+            this.modelnovoColaboradorFerias.diasabono = '0'
+            this.modelnovoColaboradorFerias.diasdescontados = '0'
+
+            if (!this.modelnovoColaboradorFerias.codcolaborador && this.codcolaborador !== undefined) {
+                this.modelnovoColaboradorFerias.codcolaborador = this.codcolaborador
+            }
+
+        },
+
+        async getApiNovaFerias() {
+
+                const colabFerias = {...this.modelnovoColaboradorFerias}    
+            
+            if (colabFerias.aquisitivoinicio) {
+                colabFerias.aquisitivoinicio = this.Documentos.dataFormatoSql(colabFerias.aquisitivoinicio)
+            }
+
+            if (this.dateRange) {
+                colabFerias.gozoinicio = this.Documentos.dataFormatoSql(this.dateRange.from)
+                colabFerias.gozofim = this.Documentos.dataFormatoSql(this.dateRange.to)
+            }
+
+            if (colabFerias.aquisitivofim) {
+                colabFerias.aquisitivofim = this.Documentos.dataFormatoSql(colabFerias.aquisitivofim)
+            }
+            try {
+                const ret = await this.sPessoa.novoColaboradorFerias(colabFerias)
+                if (ret.data.data) {
                     this.$q.notify({
-                        color: 'red-5',
+                        color: 'green-5',
                         textColor: 'white',
-                        icon: 'error',
-                        message: error.response.data.message
+                        icon: 'done',
+                        message: 'Colaborador Férias criado!'
                     })
+                    this.dialogNovoColaboradorFerias = false
+                    const i = this.colaboradores.findIndex(item => item.codcolaborador === this.modelnovoColaboradorFerias.codcolaborador)
+                    this.colaboradores[i].Ferias.unshift(ret.data.data)
+                    this.modelnovoColaboradorFerias = {}
                 }
+            } catch (error) {
+                this.$q.notify({
+                    color: 'red-5',
+                    textColor: 'white',
+                    icon: 'error',
+                    message: error.response.data.message
+                })
             }
 
         },
@@ -813,7 +800,227 @@ export default defineComponent({
                 rescisao: rescisao !== null ? this.Documentos.formataDatasemHr(rescisao) : null,
                 numeroponto: numeroponto, numerocontabilidade: numerocontabilidade, observacoes: observacoes
             }
-        }
+        },
+
+        validaObrigatorio(value) {
+            if (!value) {
+                return "Preenchimento Obrigatório!";
+            }
+            return true;
+        },
+
+        validaData(value) {
+            if (!value) {
+                return true;
+            }
+            const data = moment(value, 'DD/MM/YYYY');
+            if (!data.isValid()) {
+                return 'Data Inválida!';
+            }
+            return true;
+        },
+
+        validaContratacao(value) {
+            const maximo = moment().add(7, 'days');
+            const cont = moment(value, 'DD/MM/YYYY');
+            if (maximo.isBefore(cont)) {
+                return 'Data Muito no Futuro!';
+            }
+            this.modelNovoColaborador.experiencia = moment(this.modelNovoColaborador.contratacao, 'DD/MM/YYYY').add(44, 'days').format('DD/MM/YYYY')
+            this.modelNovoColaborador.renovacaoexperiencia = moment(this.modelNovoColaborador.experiencia, 'DD/MM/YYYY').add(44, 'days').format('DD/MM/YYYY')
+
+            return true;
+        },
+
+        validaExperiencia(value) {
+            const minimo = moment(this.modelNovoColaborador.contratacao, 'DD/MM/YYYY');
+            const maximo = moment(this.modelNovoColaborador.contratacao, 'DD/MM/YYYY').add(44, 'days');
+            const exp = moment(value, 'DD/MM/YYYY');
+            if (maximo.isBefore(exp)) {
+                return 'Data Muito no Futuro!';
+            }
+            if (minimo.isAfter(exp)) {
+                return 'Experiencia não pode ser anterior á Constratação!';
+            }
+            return true;
+        },
+
+        validaRenovacaoExperiencia(value) {
+            const minimo = moment(this.modelNovoColaborador.experiencia, 'DD/MM/YYYY');
+            const maximo = moment(this.modelNovoColaborador.experiencia, 'DD/MM/YYYY').add(44, 'days');
+            const exp = moment(value, 'DD/MM/YYYY');
+            if (maximo.isBefore(exp)) {
+                return 'Data Muito no Futuro!';
+            }
+            if (minimo.isAfter(exp)) {
+                return 'Renovação não pode ser anterior a experiência';
+            }
+            return true;
+        },
+
+        validaRescisao(value) {
+            if (!value) {
+                return true;
+            }
+            const res = moment(value, 'DD/MM/YYYY');
+            const contratacao = moment(this.modelNovoColaborador.contratacao, 'DD/MM/YYYY');
+            if (contratacao.isAfter(res)) {
+                return 'Rescisão não pode ser anterior à Contratação!';
+            }
+            if (this.editColaborador == true) {
+                const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.modelNovoColaborador.codcolaborador)
+                let min = contratacao;
+                colaborador.ColaboradorCargo.forEach((cc) => {
+                    min = moment.max(min, moment(cc.inicio));
+                    if (cc.fim) {
+                        min = moment.max(min, moment(cc.fim));
+                    }
+                })
+                if (min.isAfter(res)) {
+                    return 'Existe cargo com data inicial/final posterior à Recisão!';
+                }
+            }
+            return true;
+        },
+
+        validaInicio(value) {
+            const inicio = moment(value, 'DD/MM/YYYY');
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+            const contratacao = moment(colaborador.contratacao);
+
+            // const fimCargo = moment(colaborador.ColaboradorCargo)
+
+            const fim = moment(this.modelnovoColaboradorCargo.fim, 'DD/MM/YYYY');
+
+            if (contratacao.isAfter(inicio)) {
+                return 'Inicio não pode ser anterior á Contratação!';
+            }
+
+            if (colaborador.ColaboradorCargo[0]) {
+                const fimCargo = moment(colaborador.ColaboradorCargo[0].fim)
+                if (fimCargo.isAfter(inicio)) {
+                    return 'Início não pode ser anterior a data final do cargo!'
+                }
+                if (!colaborador.ColaboradorCargo[0].fim) {
+                    return 'O ultimo cargo precisa de uma data final para criar um novo!'
+                }
+            }
+
+            return true;
+
+        },
+
+        validaFim(value) {
+
+            const fim = moment(value, 'DD/MM/YYYY');
+            const inicio = moment(this.modelnovoColaboradorCargo.inicio, 'DD/MM/YYYY');
+
+            if (inicio.isAfter(fim)) {
+                return 'Fim não pode ser anterior ao inicio!'
+            }
+            return true;
+        },
+
+        validaAqInicio(value) {
+
+            const AqInicio = moment(value, 'DD/MM/YYYY');
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+            const contratacao = moment(colaborador.contratacao);
+
+
+            if (contratacao.isAfter(AqInicio)) {
+                return 'Aquisitivo início não pode ser anterior a contratação!'
+            }
+
+            if (colaborador.Ferias[0] && colaborador.Ferias[0].aquisitivofim !== undefined && moment(colaborador.Ferias[0].aquisitivofim).isAfter(AqInicio)) {
+                return 'Aquisitivo início não pode ser anterior ao aquisitivo fim da última férias'
+            }
+
+
+            if (!this.modelnovoColaboradorFerias.aquisitivofim) {
+                const Aq1Ano = moment(AqInicio).add(1, 'year').subtract(1, 'days').format('DD/MM/YYYY')
+                this.modelnovoColaboradorFerias.aquisitivofim = Aq1Ano
+            }
+
+            return true;
+        },
+
+        validaAqFim(value) {
+
+            const aqFim = moment(value, 'DD/MM/YYYY');
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+            const rescisao = moment(colaborador.rescisao);
+
+            const inicio = moment(this.modelnovoColaboradorFerias.aquisitivoinicio, 'DD/MM/YYYY')
+
+
+            if (rescisao.isBefore(aqFim)) {
+                return 'Aquisitivo fim tem que ser anterior a rescisão!'
+            }
+
+            if (inicio.isAfter(aqFim)) {
+                return 'Aquisitivo fim tem que ser depois do inicio!'
+            }
+
+            return true;
+        },
+
+        validaGozoInicio(value) {
+
+            value = value.split('-')
+
+            const gozoInicio = moment(value[0], 'DD/MM/YYYY')
+            const gozoFim = moment(value[1], 'DD/MM/YYYY')
+
+            var diasGozo = gozoFim.diff(gozoInicio, 'days')
+
+            this.modelnovoColaboradorFerias.diasgozo = diasGozo
+            this.modelnovoColaboradorFerias.diasabono = '0'
+            this.modelnovoColaboradorFerias.diasdescontados = '0'
+            this.modelnovoColaboradorFerias.dias = diasGozo
+
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+            const contratacao = moment(colaborador.contratacao);
+            if (contratacao.isAfter(gozoInicio)) {
+                return 'Gozo Inicio não pode ser anterior a contratação!'
+            }
+
+            return true;
+        },
+        validaGozoFim(value) {
+
+            const gozoFim = moment(value, 'DD/MM/YYYY');
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+            const rescisao = moment(colaborador.rescisao);
+            const inicio = moment(this.modelnovoColaboradorFerias.gozoinicio, 'DD/MM/YYYY')
+
+            if (rescisao.isBefore(gozoFim)) {
+                return 'Gozo fim tem que ser anterior a rescisão!'
+            }
+
+            if (inicio.isAfter(gozoFim)) {
+                return 'Gozo fim tem que ser depois do inicio!'
+            }
+
+            return true;
+        },
+
+        calculaDias() {
+
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+
+            if (!this.modelnovoColaboradorFerias.diasabono || !this.modelnovoColaboradorFerias.diasdescontados) {
+                this.modelnovoColaboradorFerias.diasabono = '0'
+                this.modelnovoColaboradorFerias.diasdescontados = '0'
+            }
+
+
+            var calculadias = (this.modelnovoColaboradorFerias.dias -
+                this.modelnovoColaboradorFerias.diasabono - this.modelnovoColaboradorFerias.diasdescontados)
+
+            this.modelnovoColaboradorFerias.diasgozo = calculadias
+
+        },
     },
 
     components: {
@@ -841,13 +1048,17 @@ export default defineComponent({
         const colaboradores = ref([])
         const dialogNovoColaboradorFerias = ref(false)
         const dialogNovoCargo = ref(false)
+        const codcolaborador = ref('')
+        const dateRange = ref({ from: '', to: '' })
         return {
             sPessoa,
             Documentos,
             route,
             user,
+            dateRange,
             colaboradores,
             editColaborador,
+            codcolaborador,
             modelnovoColaboradorCargo,
             dialogNovoColaboradorCargo,
             dialogNovoColaborador,
@@ -872,6 +1083,7 @@ export default defineComponent({
     async mounted() {
         const ret = await this.sPessoa.getColaborador(this.route.params.id)
         this.colaboradores = ret.data.data
+
     }
 })
 </script>

@@ -75,6 +75,11 @@ export const guardaToken = defineStore('auth', () => {
 
   function verificaPermissaoUsuario(permissao) {
    const verificaPermissao = this.usuarioLogado.permissoes.find(grupo => grupo.grupousuario === permissao)
+
+   const admin = this.usuarioLogado.permissoes.find(grupo => grupo.grupousuario === 'Administrador')
+   if(admin){
+    return admin;
+   }
    return verificaPermissao;
   }
 

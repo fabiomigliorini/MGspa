@@ -3,7 +3,7 @@
       <q-list>
         <q-item-label header>
           Registro Spc
-          <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Financeiro')"
+          <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Publico')"
             @click="dialogNovoRegistroSpc = true, editarRegistro = false, modelRegistroSpc = {}" />
 
             <q-radio v-model="filtroRegistroSpc" val="todos" label="Todos" @click="filtroSpc()"/>
@@ -39,11 +39,11 @@
               {{ Documentos.formataDatasemHr(registro.inclusao) }}
             </q-item-section>
 
-            <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
-              <q-btn flat round icon="edit" v-if="user.verificaPermissaoUsuario('Financeiro')"
+            <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Publico')">
+              <q-btn flat round icon="edit" v-if="user.verificaPermissaoUsuario('Publico')"
                 @click="editarRegistroSpc(registro.codregistrospc, registro.valor, registro.inclusao, registro.baixa, registro.observacoes)" />
 
-              <q-btn flat round icon="delete" v-if="user.verificaPermissaoUsuario('Financeiro')" @click="excluirRegistro(registro.codregistrospc)" />
+              <q-btn flat round icon="delete" v-if="user.verificaPermissaoUsuario('Publico')" @click="excluirRegistro(registro.codregistrospc)" />
 
             </q-btn-dropdown>
           </q-item>

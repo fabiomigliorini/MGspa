@@ -3,7 +3,7 @@
     <q-list>
       <q-item-label header>
         Contas Bancárias
-        <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Financeiro')"
+        <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Publico')"
           @click="dialogNovaConta = true, editarConta = false, modelContaBancaria = {}" />
 
       </q-item-label>
@@ -49,22 +49,22 @@
               {{ Documentos.formataFromNow(contas.inativo) }}
             </q-item-label>
           </q-item-section>
-          <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
-            <q-btn flat round icon="edit" v-if="user.verificaPermissaoUsuario('Financeiro')" @click="editarContaBancaria(contas.codpessoaconta, contas.banco, contas.cnpj, contas.agencia,
+          <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-btn flat round icon="edit" v-if="user.verificaPermissaoUsuario('Publico')" @click="editarContaBancaria(contas.codpessoaconta, contas.banco, contas.cnpj, contas.agencia,
               contas.conta, contas.pixcpf, contas.pixcnpj, contas.pixtelefone, contas.pixemail,
               contas.pixaleatoria, contas.tipo, contas.titular, contas.observacoes)" />
 
-            <q-btn flat round icon="delete" v-if="user.verificaPermissaoUsuario('Financeiro')"
+            <q-btn flat round icon="delete" v-if="user.verificaPermissaoUsuario('Publico')"
               @click="excluirConta(contas.codpessoaconta)" />
 
-            <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !contas.inativo" flat round icon="pause"
+            <q-btn v-if="user.verificaPermissaoUsuario('Publico') && !contas.inativo" flat round icon="pause"
               @click="inativar(contas.codpessoaconta)">
               <q-tooltip transition-show="scale" transition-hide="scale">
                 Inativar
               </q-tooltip>
             </q-btn>
 
-            <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && contas.inativo" flat round icon="play_arrow"
+            <q-btn v-if="user.verificaPermissaoUsuario('Publico') && contas.inativo" flat round icon="play_arrow"
               @click="ativar(contas.codpessoaconta)">
               <q-tooltip transition-show="scale" transition-hide="scale">
                 Ativar

@@ -98,23 +98,33 @@
         <q-item-label header>
           <q-item-label>
             <span class="text-h4 text-weight-bold" :class="sPessoa.item.inativo ? 'text-strike text-red-14' : null">{{ sPessoa.item.fantasia }}</span>
-            <q-btn flat round icon="edit" @click="editarDetalhes()" v-if="user.verificaPermissaoUsuario('Financeiro')" />
+            <q-btn flat round icon="edit" @click="editarDetalhes()" v-if="user.verificaPermissaoUsuario('Publico')" />
             <q-btn flat round icon="delete" @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
               v-if="user.verificaPermissaoUsuario('Financeiro')" />
 
-            <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !sPessoa.item.inativo" flat round icon="pause"
+            <q-btn v-if="user.verificaPermissaoUsuario('Publico') && !sPessoa.item.inativo" flat round icon="pause"
               @click="inativar(sPessoa.item.codpessoa)">
               <q-tooltip transition-show="scale" transition-hide="scale">
                 Inativar
               </q-tooltip>
             </q-btn>
 
-            <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && sPessoa.item.inativo" flat round icon="play_arrow"
+            <q-btn v-if="user.verificaPermissaoUsuario('Publico') && sPessoa.item.inativo" flat round icon="play_arrow"
               @click="ativar(sPessoa.item.codpessoa)">
               <q-tooltip transition-show="scale" transition-hide="scale">
                 Ativar
               </q-tooltip>
             </q-btn>
+
+            <q-btn flat icon="info">
+                  <q-tooltip transition-show="scale" transition-hide="scale">
+                    <q-item-label class="row">Criado por {{ sPessoa.item.usuariocriacao }} em {{
+                      Documentos.formataData(sPessoa.item.criacao)
+                    }}</q-item-label>
+                    <q-item-label class="row">Alterado por {{ sPessoa.item.usuarioalteracao }} em {{
+                      Documentos.formataData(sPessoa.item.alteracao) }}</q-item-label>
+                  </q-tooltip>
+                </q-btn>
 
           </q-item-label>
           <q-item-label v-if="sPessoa.item.inativo">
@@ -131,6 +141,21 @@
 
       <div class="row">
         <div class="col-xs-12 col-sm-6">
+          <q-item>
+            <q-item-section avatar top>
+              <q-avatar icon="badge" color="grey-2" text-color="blue" />
+            </q-item-section>
+            <q-item-section top>
+              <q-item-label>
+                #0000{{ sPessoa.item.codpessoa }}
+              </q-item-label>
+              <q-item-label caption>
+               Cliente
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-separator inset />
+          
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="fingerprint" color="grey-2" text-color="blue" />

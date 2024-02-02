@@ -1,7 +1,9 @@
 <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-    <div class="row q-col-gutter-md" >
-        <div v-for="colaboradorCargo in colaboradorCargos" v-bind:key="colaboradorCargo.codcolaboradorcargo" class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3">
+    <div class="row q-col-gutter-md">
+        <div v-for="colaboradorCargo in colaboradorCargos.ColaboradorCargo"
+            v-bind:key="colaboradorCargo.codcolaboradorcargo" class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3">
             <q-card bordered>
+
                 <q-item-label header>
                     {{ colaboradorCargo.Cargo }}
                     <q-btn flat round icon="edit" @click="editarColaboradorCargo(colaboradorCargo.codcolaboradorcargo, colaboradorCargo.codcolaborador,
@@ -11,9 +13,8 @@
                     <q-btn flat round icon="delete"
                         @click="deletarColaboradorCargo(colaboradorCargo.codcolaboradorcargo)" />
                 </q-item-label>
+
                 <q-separator inset />
-
-
                 <q-item>
                     <q-item-section avatar>
                         <q-icon name="corporate_fare" color="blue"></q-icon>
@@ -23,18 +24,19 @@
                             {{ colaboradorCargo.Filial }}
                         </q-item-label>
                         <q-item-label caption v-if="!colaboradorCargo.fim">
-                            {{ Documentos.formataFromNow(colaboradorCargo.inicio) }}
+                            {{ moment(colaboradorCargo.inicio).format('DD/MMM/YYYY') }} a
+                            ({{ Documentos.formataFromNow(colaboradorCargo.inicio) }})
                         </q-item-label>
                         <q-item-label caption v-else>
-                            {{ moment(colaboradorCargo.inicio).format('DD/MMM') }} a 
+                            {{ moment(colaboradorCargo.inicio).format('DD/MMM') }} a
                             {{ moment(colaboradorCargo.fim).format('DD/MMM/YYYY') }}
                         </q-item-label>
                     </q-item-section>
                 </q-item>
 
                 <q-separator inset />
-
-                <q-item v-if="colaboradorCargo.comissaoloja || colaboradorCargo.comissaovenda || colaboradorCargo.comissaoxerox">
+                <q-item
+                    v-if="colaboradorCargo.comissaoloja || colaboradorCargo.comissaovenda || colaboradorCargo.comissaoxerox">
                     <q-item-section avatar>
                         <q-icon name="money" color="blue"></q-icon>
                     </q-item-section>
@@ -50,42 +52,41 @@
                     </q-item-section>
                 </q-item>
 
+                <template v-if="colaboradorCargo.gratificacao">
+                    <q-separator inset />
+                    <q-item>
+                        <q-item-section avatar>
+                            <q-icon name="payments" color="blue"></q-icon>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-item-label>
+                                {{ new Intl.NumberFormat('pt-BR', {
+                                    style: 'currency', currency: 'BRL'
+                                }).format(colaboradorCargo.gratificacao) }}
+                            </q-item-label>
+                            <q-item-label caption>
+                                Gratificação
+                            </q-item-label>
+                        </q-item-section>
+                    </q-item>
+                </template>
 
-                <q-separator inset />
-
-
-                <q-item v-if="colaboradorCargo.gratificacao">
-                    <q-item-section avatar>
-                        <q-icon name="payments" color="blue"></q-icon>
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label>
-                            {{ new Intl.NumberFormat('pt-BR', {
-                            style: 'currency', currency: 'BRL'
-                        }).format(colaboradorCargo.gratificacao) }}
-                        </q-item-label>
-                        <q-item-label caption>
-                            Gratificação
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>   
-
-                <q-separator inset />
-
-
-                <q-item v-if="colaboradorCargo.observacoes">
-                    <q-item-section avatar>
-                        <q-icon name="comment" color="blue"></q-icon>
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label>
-                          {{ colaboradorCargo.observacoes }}
-                        </q-item-label>
-                        <q-item-label caption>
-                            Observações
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>
+                <template v-if="colaboradorCargo.observacoes">
+                    <q-separator inset />
+                    <q-item>
+                        <q-item-section avatar>
+                            <q-icon name="comment" color="blue"></q-icon>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-item-label>
+                                {{ colaboradorCargo.observacoes }}
+                            </q-item-label>
+                            <q-item-label caption>
+                                Observações
+                            </q-item-label>
+                        </q-item-section>
+                    </q-item>
+                </template>
             </q-card>
         </div>
     </div>
@@ -112,9 +113,7 @@
                     <div class="row">
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.inicio" mask="##/##/####" label="Início"
-                                :rules="[
-                                    val => val && val.length > 0 || 'Início obrigatório'
-                                ]">
+                                :rules="[validaDataValida, validaInicio, validaObrigatorio]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -132,7 +131,7 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.fim" class="q-pl-md" mask="##/##/####"
-                                label="Fim">
+                                label="Fim" :rules="[validaDataValida, validaFim]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -149,20 +148,37 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorCargo.comissaoloja" label="Comissão Loja" />
+                            <q-input outlined v-model="modelnovoColaboradorCargo.comissaoloja" label="Comissão Loja">
+                                <template v-slot:append>
+                                    %
+                                </template>
+
+                            </q-input>
 
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.comissaovenda" label="Comissão Venda"
-                                class="q-pl-md" />
+                                class="q-pl-md">
+                                <template v-slot:append>
+                                    %
+                                </template>
+                            </q-input>
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.comissaoxerox" label="Comissão Xerox"
-                                class="q-pt-md" />
+                                class="q-pt-md">
+                                <template v-slot:append>
+                                    %
+                                </template>
+                            </q-input>
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorCargo.gratificacao" label="Gratificação"
-                                class="q-pl-md q-pt-md" />
+                                class="q-pl-md q-pt-md">
+                                <template v-slot:prepend>
+                                    R$
+                                </template>
+                            </q-input>
                         </div>
                     </div>
 
@@ -196,7 +212,6 @@ export default defineComponent({
     name: "CardColaboradorCargo",
 
     methods: {
-
 
         async deletarColaboradorCargo(codcolaboradorcargo) {
             this.$q.dialog({
@@ -240,19 +255,20 @@ export default defineComponent({
         },
 
 
-
         async salvarColaboradorCargo() {
 
-            if (this.modelnovoColaboradorCargo.inicio) {
-                this.modelnovoColaboradorCargo.inicio = this.Documentos.dataFormatoSql(this.modelnovoColaboradorCargo.inicio)
+            const colabCargo = { ...this.modelnovoColaboradorCargo };
+
+            if (colabCargo.inicio) {
+                colabCargo.inicio = this.Documentos.dataFormatoSql(colabCargo.inicio)
             }
 
-            if (this.modelnovoColaboradorCargo.fim) {
-                this.modelnovoColaboradorCargo.fim = this.Documentos.dataFormatoSql(this.modelnovoColaboradorCargo.fim)
+            if (colabCargo.fim) {
+                colabCargo.fim = this.Documentos.dataFormatoSql(colabCargo.fim)
             }
 
             try {
-                const ret = await this.sPessoa.salvarColaboradorCargo(this.modelnovoColaboradorCargo)
+                const ret = await this.sPessoa.salvarColaboradorCargo(colabCargo)
                 if (ret.data.data) {
                     this.$q.notify({
                         color: 'green-5',
@@ -273,7 +289,50 @@ export default defineComponent({
                 })
             }
 
-        }
+        },
+
+        validaObrigatorio(value) {
+            if (!value) {
+                return "Preenchimento Obrigatório!";
+            }
+            return true;
+        },
+
+        validaDataValida(value) {
+            if (!value) {
+                return true;
+            }
+            const data = moment(value, 'DD/MM/YYYY');
+            if (!data.isValid()) {
+                return 'Data Inválida!';
+            }
+            return true;
+        },
+
+        validaInicio(value) {
+            const inicio = moment(value, 'DD/MM/YYYY');
+            const contratacao = moment(this.colaboradorCargos.contratacao);
+
+            if (contratacao.isAfter(inicio)) {
+                return 'Inicio não pode ser anterior á Contratação!';
+            }
+
+
+            return true;
+
+        },
+
+        validaFim(value) {
+
+            const fim = moment(value, 'DD/MM/YYYY');
+            const inicio = moment(this.modelnovoColaboradorCargo.inicio, 'DD/MM/YYYY');
+
+            if (inicio.isAfter(fim)) {
+                return 'Fim não pode ser anterior ao inicio!'
+            }
+            return true;
+
+        },
 
     },
 
@@ -283,7 +342,7 @@ export default defineComponent({
     },
 
     props: ['colaboradorCargos'],
-    emits: ['colaboradorCargo'],
+    emits: ['colaboradorCargo', 'colaboradorCargos'],
 
     setup(props, ctx) {
 

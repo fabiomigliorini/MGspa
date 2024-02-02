@@ -1,6 +1,7 @@
 <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
     <div class="row q-col-gutter-md">
-        <div v-for="ferias in feriasS" v-bind:key="ferias.codferias" class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3">
+        <div v-for="ferias in feriasS.Ferias" v-bind:key="ferias.codferias"
+            class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3">
             <q-card bordered :class="ferias.prevista == true ? 'bg-orange' : null">
                 <q-item>
                     <q-item-label header>
@@ -12,8 +13,8 @@
                         <q-btn flat round icon="delete" @click="deletarFerias(ferias.codferias)" />
                     </q-item-label>
                 </q-item>
-                <q-separator inset />
 
+                <q-separator inset />
                 <q-item>
                     <q-item-section avatar>
                         <q-icon name="celebration" color="blue"></q-icon>
@@ -39,14 +40,12 @@
                 </q-item>
 
                 <q-separator inset />
-
-
                 <q-item>
                     <q-item-section avatar>
                         <q-icon name="event" color="blue"></q-icon>
                     </q-item-section>
                     <q-item-section>
-                        <q-item-label >
+                        <q-item-label>
                             {{ moment(ferias.aquisitivoinicio).format('DD/MMM') }} a
                             {{ moment(ferias.aquisitivofim).format('DD/MMM/YYYY') }}
                         </q-item-label>
@@ -56,22 +55,22 @@
                     </q-item-section>
                 </q-item>
 
-                <q-separator inset />
-
-
-                <q-item v-if="ferias.observacoes">
-                    <q-item-section avatar>
-                        <q-icon name="comment" color="blue"></q-icon>
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label >
-                            {{ ferias.observacoes }}
-                        </q-item-label>
-                        <q-item-label caption>
-                            Observações
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>
+                <template v-if="ferias.observacoes">
+                    <q-separator inset />
+                    <q-item>
+                        <q-item-section avatar>
+                            <q-icon name="comment" color="blue"></q-icon>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-item-label>
+                                {{ ferias.observacoes }}
+                            </q-item-label>
+                            <q-item-label caption>
+                                Observações
+                            </q-item-label>
+                        </q-item-section>
+                    </q-item>
+                </template>
             </q-card>
         </div>
     </div>
@@ -84,13 +83,31 @@
                     <div class="text-h6">Editar Férias</div>
                 </q-card-section>
                 <q-card-section>
-
                     <div class="row">
                         <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.dias" label="Dias" class="q-pr-md" @change="calculaDias()" />
+
+                        </div>
+
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasgozo" label="Dias Gozo" :rules="[
+                                val => val !== null && val !== '' && val !== undefined || 'Dias Gozo Obrigatório'
+                            ]" @change="calculaDias()" />
+                        </div>
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
+                                val => val !== null && val !== '' && val !== undefined || 'Dias Abono obrigatório'
+                            ]" label="Dias Abono" class="q-pr-md" @change="calculaDias()" />
+                        </div>
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" label="Dias Descontados"
+                             @change="calculaDias()"/>
+                        </div>
+
+                        <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorFerias.aquisitivoinicio" mask="##/##/####"
-                                label="Aquisitivo Início" :rules="[
-                                    val => val && val.length > 0 || 'Aquisitivo Início obrigatório'
-                                ]" class="q-pr-md">
+                                label="Aquisitivo Início" :rules="[validaObrigatorio, validaDataValida, validaAqInicio]"
+                                class="q-pr-md">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -108,9 +125,7 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorFerias.aquisitivofim" mask="##/##/####"
-                                label="Aquisitivo Fim" :rules="[
-                                    val => val && val.length > 0 || 'Aquisitivo Fim obrigatório'
-                                ]">
+                                label="Aquisitivo Fim" :rules="[validaObrigatorio, validaDataValida, validaAqFim]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -127,16 +142,16 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.gozoinicio" mask="##/##/####"
-                                label="Gozo Início" :rules="[
-                                    val => val && val.length > 0 || 'Gozo Início obrigatório'
-                                ]" class="q-pr-md">
+                            <q-input outlined
+                                :model-value="`${dateRange.from == null ? '' : dateRange.from} - ${dateRange.to == null ? '' : dateRange.to}`"
+                                label="Periodo de Gozo" :rules="[validaObrigatorio, validaDataValida, validaGozoInicio]"
+                                class="q-pr-md" mask="##/##/#### - ##/##/####">
+
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
                                         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                            <q-date v-model="modelnovoColaboradorFerias.gozoinicio" :locale="brasil"
-                                                mask="DD/MM/YYYY">
+                                            <q-date v-model="dateRange" :locale="brasil" range mask="DD/MM/YYYY">
                                                 <div class="row items-center justify-end">
                                                     <q-btn v-close-popup label="Fechar" color="primary" flat />
                                                 </div>
@@ -147,57 +162,12 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.gozofim" mask="##/##/####"
-                                label="Gozo Fim" :rules="[
-                                    val => val && val.length > 0 || 'Gozo Fim obrigatório'
-                                ]">
-
-                                <template v-slot:append>
-                                    <q-icon name="event" class="cursor-pointer">
-                                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                            <q-date v-model="modelnovoColaboradorFerias.gozofim" :locale="brasil"
-                                                mask="DD/MM/YYYY">
-                                                <div class="row items-center justify-end">
-                                                    <q-btn v-close-popup label="Fechar" color="primary" flat />
-                                                </div>
-                                            </q-date>
-                                        </q-popup-proxy>
-                                    </q-icon>
-                                </template>
-                            </q-input>
-                        </div>
-
-                        <div class="col-12">
-                            <q-select outlined v-model="modelnovoColaboradorFerias.prevista" map-options emit-value
-                                :options="[
-                                    { label: 'Sim', value: true },
-                                    { label: 'Não', value: false }
-                                ]" label="Prevista" />
-                        </div>
-
-
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasgozo" label="Dias Gozo" :rules="[
-                                val => val !== null && val !== '' && val !== undefined || 'Dias Gozo Obrigatório'
-                            ]" class="q-pr-md q-pt-md" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
-                                val => val !== null && val !== '' && val !== undefined || 'Dias Abono obrigatório'
-                            ]" label="Dias Abono" class="q-pt-md" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" label="Dias Descontados"
-                                class="q-pr-md" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.dias" label="Dias" />
-
+                            <q-toggle outlined v-model="modelnovoColaboradorFerias.prevista" label="Prevista" />
                         </div>
                     </div>
 
                     <q-input outlined autogrow bordeless v-model="modelnovoColaboradorFerias.observacoes"
-                        label="Observações" type="textarea" class="q-pt-md" />
+                        label="Observações" type="textarea" />
 
                 </q-card-section>
 
@@ -257,7 +227,8 @@ export default defineComponent({
         },
 
         editarFerias(codferias, codcolaborador, aquisitivoinicio, aquisitivofim, gozoinicio, gozofim, diasgozo,
-            diasabono, diasdescontados, dias, observacoes, prevista) {
+           
+        diasabono, diasdescontados, dias, observacoes, prevista) {
             this.dialogNovoColaboradorFerias = true
             this.modelnovoColaboradorFerias = {
                 codferias: codferias, codcolaborador: codcolaborador, aquisitivoinicio:
@@ -269,28 +240,28 @@ export default defineComponent({
                 prevista: prevista
             }
 
+            this.dateRange = {from: this.Documentos.formataDatasemHr(gozoinicio), to: this.Documentos.formataDatasemHr(gozofim)}
         },
 
         async salvarColaboradorFerias() {
 
-            if (this.modelnovoColaboradorFerias.aquisitivoinicio) {
-                this.modelnovoColaboradorFerias.aquisitivoinicio = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.aquisitivoinicio)
+            const colabFerias = { ...this.modelnovoColaboradorFerias };
+
+            if (colabFerias.aquisitivoinicio) {
+                colabFerias.aquisitivoinicio = this.Documentos.dataFormatoSql(colabFerias.aquisitivoinicio)
             }
 
-            if (this.modelnovoColaboradorFerias.aquisitivofim) {
-                this.modelnovoColaboradorFerias.aquisitivofim = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.aquisitivofim)
+            if (colabFerias.aquisitivofim) {
+                colabFerias.aquisitivofim = this.Documentos.dataFormatoSql(colabFerias.aquisitivofim)
             }
 
-            if (this.modelnovoColaboradorFerias.gozoinicio) {
-                this.modelnovoColaboradorFerias.gozoinicio = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.gozoinicio)
+            if (this.dateRange) {
+                colabFerias.gozoinicio = this.Documentos.dataFormatoSql(this.dateRange.from)
+                colabFerias.gozofim = this.Documentos.dataFormatoSql(this.dateRange.to)
             }
-
-            if (this.modelnovoColaboradorFerias.gozofim) {
-                this.modelnovoColaboradorFerias.gozofim = this.Documentos.dataFormatoSql(this.modelnovoColaboradorFerias.gozofim)
-            }
-
+            
             try {
-                const ret = await this.sPessoa.salvarColaboradorFerias(this.modelnovoColaboradorFerias)
+                const ret = await this.sPessoa.salvarColaboradorFerias(colabFerias)
                 if (ret.data.data) {
                     this.$q.notify({
                         color: 'green-5',
@@ -310,7 +281,111 @@ export default defineComponent({
                     message: error.response.data.message
                 })
             }
-        }
+        },
+        validaObrigatorio(value) {
+            if (!value) {
+                return "Preenchimento Obrigatório!";
+            }
+            return true;
+        },
+
+        validaDataValida(value) {
+            if (!value) {
+                return true;
+            }
+            const data = moment(value, 'DD/MM/YYYY');
+            if (!data.isValid()) {
+                return 'Data Inválida!';
+            }
+            return true;
+        },
+
+        validaAqInicio(value) {
+
+            const AqInicio = moment(value, 'DD/MM/YYYY');
+            const contratacao = moment(this.feriasS.contratacao);
+
+            if (contratacao.isAfter(AqInicio)) {
+                return 'Aquisitivo início não pode ser anterior a contratação!'
+            }
+
+            return true;
+        },
+
+        validaAqFim(value) {
+
+            const aqFim = moment(value, 'DD/MM/YYYY');
+            const rescisao = moment(this.feriasS.rescisao);
+            const inicio = moment(this.modelnovoColaboradorFerias.aquisitivoinicio, 'DD/MM/YYYY')
+
+            if (rescisao.isBefore(aqFim)) {
+                return 'Aquisitivo fim tem que ser anterior a rescisão!'
+            }
+
+            if (inicio.isAfter(aqFim)) {
+                return 'Aquisitivo fim tem que ser depois do inicio!'
+            }
+
+            return true;
+        },
+
+        validaGozoInicio(value) {
+
+            const contratacao = moment(this.feriasS.contratacao);
+            value = value.split('-')
+
+            const gozoInicio = moment(value[0], 'DD/MM/YYYY')
+            const gozoFim = moment(value[1], 'DD/MM/YYYY')
+
+            var diasGozo = gozoFim.diff(gozoInicio, 'days')
+
+            // this.modelnovoColaboradorFerias.diasgozo = diasGozo
+            // this.modelnovoColaboradorFerias.diasabono = '0'
+            // this.modelnovoColaboradorFerias.diasdescontados = '0'
+            // this.modelnovoColaboradorFerias.dias = diasGozo
+
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+            if (contratacao.isAfter(gozoInicio)) {
+                return 'Gozo Inicio não pode ser anterior a contratação!'
+            }
+
+            return true;
+        },
+        validaGozoFim(value) {
+
+            const gozoFim = moment(value, 'DD/MM/YYYY');
+            const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
+
+            const rescisao = moment(this.feriasS.rescisao);
+            const inicio = moment(this.modelnovoColaboradorFerias.gozoinicio, 'DD/MM/YYYY')
+
+            if (rescisao.isBefore(gozoFim)) {
+                return 'Gozo fim tem que ser anterior a rescisão!'
+            }
+
+            if (inicio.isAfter(gozoFim)) {
+                return 'Gozo fim tem que ser depois do inicio!'
+            }
+
+            return true;
+        },
+
+        calculaDias() {
+
+            if (!this.modelnovoColaboradorFerias.diasabono || !this.modelnovoColaboradorFerias.diasdescontados) {
+                this.modelnovoColaboradorFerias.diasabono = '0'
+                this.modelnovoColaboradorFerias.diasdescontados = '0'
+            }
+
+
+            var calculadias = (this.modelnovoColaboradorFerias.dias -
+                this.modelnovoColaboradorFerias.diasabono - this.modelnovoColaboradorFerias.diasdescontados)
+
+            this.modelnovoColaboradorFerias.diasgozo = calculadias
+
+        },
+
+
     },
 
     props: ['feriasS'],
@@ -326,6 +401,7 @@ export default defineComponent({
         const dialogNovoColaboradorFerias = ref(false)
         const user = guardaToken()
         const Documentos = formataDocumetos()
+        const dateRange = ref({ from: '', to: '' })
 
 
         const emit = async (ret) => {
@@ -340,6 +416,7 @@ export default defineComponent({
             Documentos,
             route,
             emit,
+            dateRange,
             dialogNovoColaboradorFerias,
             user,
             colaboradores,

@@ -3,7 +3,7 @@
         <q-list>
             <q-item-label header>
                 Certidões
-                <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Financeiro')" @click="dialogCertidao = true, modelCertidao = {}, editCertidao = false" />
+                <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Publico')" @click="dialogCertidao = true, modelCertidao = {}, editCertidao = false" />
 
                 <q-radio v-model="filtroCertidaomodel" val="todas" label="Todas" @click="filtroCertidao()" />
                 <q-radio v-model="filtroCertidaomodel" val="validas" label="Válidas" @click="filtroCertidao()" />
@@ -31,7 +31,7 @@
                         {{ Documentos.formataDatasemHr(certidao.validade) }}
                     </q-item-section>
 
-                    <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Financeiro')">
+                    <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Publico')">
                         <q-btn flat round icon="edit" @click="editarCertidao(certidao.codpessoacertidao, certidao.codcertidaoemissor,
                             certidao.numero, certidao.autenticacao, certidao.validade, certidao.codcertidaotipo)" />
                         <q-btn flat round icon="delete" @click="deletarCertidao(certidao.codpessoacertidao)" />

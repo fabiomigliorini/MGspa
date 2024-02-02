@@ -35,6 +35,8 @@ class PessoaResource extends JsonResource
             'formapagamento' => @$this->FormaPagamento->formapagamento,
         ];
 
+        $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
+        $ret['usuarioalteracao'] = @$this->UsuarioAlteracao->usuario;
         // Filhos
         $ret['PessoaCertidaoS'] = [];
         // foreach ($this->PessoaCertidaoS()->where('validade', '>=', Carbon::now()) as $pc)
