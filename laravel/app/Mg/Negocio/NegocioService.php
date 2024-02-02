@@ -22,8 +22,8 @@ class NegocioService
         if ($negocio->codnegociostatus != NegocioStatus::ABERTO) {
             return false;
         }
-        $valorpagamento = $negocio->NegocioFormaPagamentoS()->sum('valorpagamento');
-        if ($valorpagamento < $negocio->valortotal) {
+        $valorpagamento = floatval($negocio->NegocioFormaPagamentoS()->sum('valorpagamento'));
+        if (($negocio->valortotal - $valorpagamento) > 0.01) {
             return false;
         }
         return static::fechar($negocio);
