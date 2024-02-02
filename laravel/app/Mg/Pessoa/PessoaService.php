@@ -107,7 +107,7 @@ class PessoaService
 
         if (!empty($cnpj)) {
             $cnpj = numerolimpo($cnpj);
-            $where[] = 'to_char(p.cnpj, \'FM00000000000000\') ilike :cnpj';
+            $where[] = 'to_char(p.cnpj, case when fisica then \'FM00000000000\' else \'FM00000000000000\' end) ilike :cnpj';
             $params['cnpj'] = "{$cnpj}%";
         }
 
