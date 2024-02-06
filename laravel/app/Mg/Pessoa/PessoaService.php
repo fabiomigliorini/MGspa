@@ -75,6 +75,7 @@ class PessoaService
 
         $where = [];
         if ($pessoa) {
+            $pessoa = str_replace(' ', '%', preg_replace('/\s\s+/', ' ', $pessoa));
             $where[] = '(p.pessoa || p.fantasia || coalesce(ge.grupoeconomico, \'\')) ilike :pessoa';
             $params['pessoa'] = "%{$pessoa}%";
         }
@@ -105,8 +106,9 @@ class PessoaService
         }
 
         if (!empty($cnpj)) {
-            $where[] = 'to_char(p.cnpj, \'00000000000000\') ilike :cnpj';
-            $params['cnpj'] = "%{$cnpj}%";
+            $cnpj = numerolimpo($cnpj);
+            $where[] = 'to_char(p.cnpj, case when fisica then \'FM00000000000\' else \'FM00000000000000\' end) ilike :cnpj';
+            $params['cnpj'] = "{$cnpj}%";
         }
 
         if (!empty($codpessoa)) {
