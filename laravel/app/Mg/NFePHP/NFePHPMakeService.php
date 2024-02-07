@@ -753,6 +753,7 @@ class NFePHPMakeService
         
         // adiciona formas de pagamento
         $totalpagamentos = 0;
+        $pagamentos = 0;
         foreach ($nf->NotaFiscalPagamentoS as $nfp) {
             
             $totalpagamentos += $nfp->valorpagamento;
@@ -775,10 +776,11 @@ class NFePHPMakeService
 
             // adiciona pagamento
             $nfe->tagdetPag($std); 
+            $pagamentos++;
         }
 
         // Pagamento a Vista
-        if ($nf->valortotal > $totalpagamentos) {
+        if ($nf->valortotal > $totalpagamentos || $pagamentos == 0) {
             if (in_array($nf->NaturezaOperacao->finnfe, [NaturezaOperacaoService::FINNFE_AJUSTE, NaturezaOperacaoService::FINNFE_DEVOLUCAO_RETORNO])) {
                 $std = new stdClass();
                 $std->tPag = '90'; // Sem Pagamento
