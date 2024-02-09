@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { Notify, Platform } from "quasar";
+import { Dialog, Notify, Platform } from "quasar";
 import { api } from "boot/axios";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
@@ -50,12 +50,12 @@ const status = (nota) => {
 //   "\Mg\Pdv\PdvController@notaFiscal"
 // );
 
-const nova = async (nota) => {
+const nova = async (modelo) => {
   try {
     // busca registros na ApI
     const { data } = await api.post(
       `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/nota-fiscal`,
-      { pdv: sSinc.pdv.uuid }
+      { pdv: sSinc.pdv.uuid, modelo }
     );
     Notify.create({
       type: "positive",
@@ -63,6 +63,7 @@ const nova = async (nota) => {
     });
     sNegocio.negocio.notas = data.data.notas;
     sNegocio.salvar(false);
+    return data.data.notas.slice(-1)[0];
   } catch (error) {
     console.log(error);
     Notify.create({
@@ -102,6 +103,12 @@ const enviar = async (nota) => {
       type: "positive",
       message: `${retEnviar.data.respostaSefaz.cStat} - ${retEnviar.data.respostaSefaz.xMotivo}`,
     });
+    if (retEnviar.data.nota.nfeautorizacao) {
+      abrirPdf(nota);
+      if (nota.modelo == 65) {
+        imprimir(nota.codnotafiscal);
+      }
+    }
     atualizarListagemNotas(retEnviar.data.nota);
   } catch (error) {
     console.log(error);
@@ -132,9 +139,112 @@ const consultar = async (nota) => {
   }
 };
 
+const excluir = async (nota) => {
+  try {
+    console.log(sSinc.pdv.uuid);
+    await api.delete(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}`, {
+      params: { pdv: sSinc.pdv.uuid },
+    });
+    Notify.create({
+      type: "positive",
+      message: "Nota Fiscal Exlcuída!",
+    });
+    var i = sNegocio.negocio.notas.findIndex((item) => {
+      return item.codnotafiscal == nota.codnotafiscal;
+    });
+    sNegocio.negocio.notas.splice(i, 1);
+    sNegocio.salvar(false);
+  } catch (error) {
+    console.log(error);
+    Notify.create({
+      type: "negative",
+      message: error.response.data.message,
+    });
+  }
+};
+
+const cancelar = (nota) => {
+  Dialog.create({
+    title: "Justificativa de Cancelamento",
+    message:
+      "Esse texto será enviado à SEFAZ justificando o cancelamento. Precisa conter no mínimo 15 caracteres!",
+    prompt: {
+      model: "",
+      isValid: (val) => val.length > 14,
+      outlined: true,
+      type: "text", // optional
+    },
+    cancel: true,
+  }).onOk(async (justificativa) => {
+    try {
+      var { data } = await api.post(
+        `/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/cancelar`,
+        {
+          pdv: sSinc.pdv.uuid,
+          justificativa: justificativa,
+        }
+      );
+      Notify.create({
+        type: "positive",
+        message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
+      });
+      atualizarListagemNotas(data.nota);
+    } catch (error) {
+      console.log(error);
+      Notify.create({
+        type: "negative",
+        message: error.response.data.message,
+      });
+    }
+  });
+};
+
+const inutilizar = (nota) => {
+  Dialog.create({
+    title: "Justificativa de Inutilização",
+    message:
+      "Esse texto será enviado à SEFAZ justificando a inutilização. Precisa conter no mínimo 15 caracteres!",
+    prompt: {
+      model: "",
+      isValid: (val) => val.length > 14,
+      outlined: true,
+      type: "text", // optional
+    },
+    cancel: true,
+  }).onOk(async (justificativa) => {
+    try {
+      var { data } = await api.post(
+        `/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/inutilizar`,
+        {
+          pdv: sSinc.pdv.uuid,
+          justificativa: justificativa,
+        }
+      );
+      Notify.create({
+        type: "positive",
+        message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
+      });
+      atualizarListagemNotas(data.nota);
+    } catch (error) {
+      console.log(error);
+      Notify.create({
+        type: "negative",
+        message: error.response.data.message,
+      });
+    }
+  });
+};
+
 const imprimir = async (codnotafiscal) => {
   if (!codnotafiscal) {
     codnotafiscal = codnotafiscalAberta.value;
+  }
+  if (!sNegocio.padrao.impressora) {
+    Notify.create({
+      type: "negative",
+      message: "Nenhuma impressora termica selecionada!",
+    });
+    return;
   }
   try {
     var { data } = await api.post(
@@ -171,6 +281,11 @@ const abrirPdf = (nota) => {
   }
   window.open(urlPdf.value, "_blank").focus();
 };
+
+defineExpose({
+  nova,
+  enviar,
+});
 </script>
 <template>
   <q-dialog v-model="dialogPdf" full-width>
@@ -202,7 +317,26 @@ const abrirPdf = (nota) => {
 
   <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
     Notas Fiscais
-    <q-btn flat color="primary" @click="nova()" icon="add" size="md" dense />
+    <q-btn
+      flat
+      color="primary"
+      @click="nova(65)"
+      icon="mdi-script-text-outline"
+      size="md"
+      dense
+    >
+      <q-tooltip class="bg-accent">Nova NFCe (Cupom)</q-tooltip>
+    </q-btn>
+    <q-btn
+      flat
+      color="primary"
+      @click="nova(55)"
+      icon="mdi-file-document-outline"
+      size="md"
+      dense
+    >
+      <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
+    </q-btn>
   </q-item-label>
   <div
     class="row q-col-gutter-md q-px-md"
@@ -229,13 +363,13 @@ const abrirPdf = (nota) => {
             />
             <q-avatar
               icon="mdi-file-document-remove"
-              color="red"
+              color="negative"
               text-color="white"
               v-else-if="nota.nfecancelamento || nota.nfeinutilizacao"
             />
             <q-avatar
               icon="mdi-file-document-check"
-              color="green"
+              color="secondary"
               text-color="white"
               v-else-if="nota.nfeautorizacao"
             />
@@ -299,83 +433,130 @@ const abrirPdf = (nota) => {
             </q-item-label>
           </q-item-section>
         </q-item>
+
         <q-card-actions v-if="nota.emitida">
-          <q-btn
-            round
-            icon="mdi-send"
-            color="primary"
-            @click="enviar(nota)"
-            v-if="!nota.nfeautorizacao"
-          >
-            <q-tooltip class="bg-accent">Enviar</q-tooltip>
-          </q-btn>
-          <q-btn
-            round
-            icon="mdi-cancel"
-            color="negative"
-            v-if="
-              !nota.nfeautorizacao &&
-              !nota.nfeinutilizacao &&
-              !nota.nfecancelamento
-            "
-          >
-            <q-tooltip class="bg-accent">Inutilizar</q-tooltip>
-          </q-btn>
-          <q-btn
-            round
-            icon="mdi-file-pdf-box"
-            color="primary"
-            @click="abrirPdf(nota)"
-            v-if="
-              nota.nfeautorizacao &&
-              !nota.nfeinutilizacao &&
-              !nota.nfecancelamento
-            "
-          >
-            <q-tooltip class="bg-accent">Danfe</q-tooltip>
-          </q-btn>
-          <q-btn
-            round
-            icon="mdi-file-xml-box"
-            color="primary"
-            :href="montarUrlXml(nota)"
-            target="_blank"
-            v-if="nota.numero"
-          >
-            <q-tooltip class="bg-accent">Arquivo XML da NFe</q-tooltip>
-          </q-btn>
-          <q-btn
-            round
-            icon="mdi-gmail"
-            color="primary"
-            v-if="
-              nota.nfeautorizacao &&
-              !nota.nfeinutilizacao &&
-              !nota.nfecancelamento
-            "
-          >
-            <q-tooltip class="bg-accent">Email</q-tooltip>
-          </q-btn>
-          <q-btn
-            round
-            icon="mdi-cancel"
-            color="negative"
-            v-if="
-              nota.nfeautorizacao &&
-              !nota.nfeinutilizacao &&
-              !nota.nfecancelamento
-            "
-          >
-            <q-tooltip class="bg-accent"> Cancelar </q-tooltip>
-          </q-btn>
-          <q-btn
-            round
-            icon="mdi-cloud-refresh-outline"
-            color="primary"
-            @click="consultar(nota)"
-          >
-            <q-tooltip class="bg-accent">Consultar</q-tooltip>
-          </q-btn>
+          <q-btn-group flat>
+            <!-- ENVIAR -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="mdi-send"
+              color="primary"
+              @click="enviar(nota)"
+              v-if="!nota.nfeautorizacao"
+            >
+              <q-tooltip class="bg-accent">Enviar</q-tooltip>
+            </q-btn>
+
+            <!-- INUTILIZAR -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="mdi-cancel"
+              color="negative"
+              @click="inutilizar(nota)"
+              v-if="
+                nota.numero &&
+                !nota.nfeautorizacao &&
+                !nota.nfeinutilizacao &&
+                !nota.nfecancelamento
+              "
+            >
+              <q-tooltip class="bg-accent">Inutilizar</q-tooltip>
+            </q-btn>
+
+            <!-- DANFE -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="mdi-file-pdf-box"
+              color="primary"
+              @click="abrirPdf(nota)"
+              v-if="
+                nota.nfeautorizacao &&
+                !nota.nfeinutilizacao &&
+                !nota.nfecancelamento
+              "
+            >
+              <q-tooltip class="bg-accent">Danfe</q-tooltip>
+            </q-btn>
+
+            <!-- XML -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="mdi-file-xml-box"
+              color="primary"
+              :href="montarUrlXml(nota)"
+              target="_blank"
+              v-if="nota.numero"
+            >
+              <q-tooltip class="bg-accent">Arquivo XML da NFe</q-tooltip>
+            </q-btn>
+
+            <!-- EMAIL -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="mdi-gmail"
+              color="primary"
+              v-if="
+                nota.nfeautorizacao &&
+                !nota.nfeinutilizacao &&
+                !nota.nfecancelamento
+              "
+            >
+              <q-tooltip class="bg-accent">E-mail</q-tooltip>
+            </q-btn>
+
+            <!-- CANCELAR -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="mdi-cancel"
+              color="negative"
+              @click="cancelar(nota)"
+              v-if="
+                nota.nfeautorizacao &&
+                !nota.nfeinutilizacao &&
+                !nota.nfecancelamento
+              "
+            >
+              <q-tooltip class="bg-accent"> Cancelar </q-tooltip>
+            </q-btn>
+
+            <!-- CONSULTAR -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="mdi-cloud-refresh-outline"
+              color="primary"
+              @click="consultar(nota)"
+              v-if="nota.nfechave"
+            >
+              <q-tooltip class="bg-accent">Consultar</q-tooltip>
+            </q-btn>
+
+            <!-- EXCLUIR -->
+            <q-btn
+              dense
+              flat
+              round
+              icon="delete"
+              color="negative"
+              @click="excluir(nota)"
+              v-if="!nota.numero"
+            >
+              <q-tooltip class="bg-accent">Consultar</q-tooltip>
+            </q-btn>
+          </q-btn-group>
         </q-card-actions>
       </q-card>
     </div>

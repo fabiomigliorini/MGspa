@@ -13,6 +13,7 @@ import ListagemTitulos from "src/components/offline/ListagemTitulos.vue";
 import ListagemNotas from "src/components/offline/ListagemNotas.vue";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
+import { db } from "boot/db";
 
 const route = useRoute();
 const router = useRouter();
@@ -22,6 +23,7 @@ const sUsuario = usuarioStore();
 const sPagarMe = pagarMeStore();
 const sPix = pixStore();
 const dialogRomaneio = ref(false);
+const listagemNotasRef = ref(null);
 
 const hotkeys = (event) => {
   switch (event.key) {
@@ -79,6 +81,11 @@ const hotkeys = (event) => {
       pix();
       break;
 
+    case "F9": // Nota Fiscal
+      event.preventDefault();
+      romaneioOuNota();
+      break;
+
     default:
       break;
   }
@@ -116,12 +123,11 @@ const fecharDialogs = async () => {
   dialogRomaneio.value = false;
 };
 
-// TODO: Oferecer pra Gerar Nota/Imprimir Romaneio/Etc
 const abrirDocumentoSeFechado = async () => {
   if (sNegocio.negocio.codnegociostatus == 2) {
     var audio = new Audio("registradora.mp3");
     audio.play();
-    romaneio();
+    romaneioOuNota();
   }
 };
 
@@ -202,13 +208,113 @@ const imprimirRomaneio = async () => {
     type: "positive",
     message: "Impressão Solicitada!",
   });
-  dialogRomaneio.value = false;
+  // dialogRomaneio.value = false;
+};
+
+const imprimirAbrirRomaneio = async () => {
+  await imprimirRomaneio();
+  await romaneio();
+};
+
+const novaNota = async (modelo) => {
+  let nota = null;
+  nota = await listagemNotasRef.value.nova(modelo);
+  if (nota) {
+    await listagemNotasRef.value.enviar(nota);
+  }
+};
+
+const romaneioOuNotaVendaPadrao = async (modelo) => {
+  const integracao = sNegocio.negocio.pagamentos.filter(
+    (p) => p.integracao
+  ).length;
+  const tiposEmitir = [
+    //1, //Dinheiro
+    //2, //Cheque
+    3, //Cartão de Crédito
+    4, //Cartão de Débito
+    //05=Crédito Loja
+    //10=Vale Alimentação
+    //11=Vale Refeição
+    //12=Vale Presente
+    //13=Vale Combustível
+    15, //Boleto Bancário
+    // 16, //Depósito Bancário
+    17, //Pagamento Instantâneo (PIX)
+    //18=Transferência bancária, Carteira Digital
+    //19=Programa de fidelidade, Cashback, Crédito Virtual
+    //90= Sem pagamento
+    //99=Outros
+  ];
+  const emitir = sNegocio.negocio.pagamentos.filter((p) =>
+    tiposEmitir.includes(p.tipo)
+  ).length;
+  // se foi pago por integracao ou por
+  if (integracao > 0 || emitir > 0) {
+    novaNota(modelo);
+    return;
+  }
+  imprimirAbrirRomaneio();
+};
+
+const romaneioOuNotaVenda = async () => {
+  if (sNegocio.negocio.codpessoa == 1) {
+    // consumidor decide em outra funcao se emite cupom
+    romaneioOuNotaVendaPadrao(65);
+    return;
+  } else {
+    // busca a pessoa
+    const p = db.pessoa.get(sNegocio.negocio.codpessoa);
+
+    // age de acordo com o cadastro
+    switch (p.notafiscal) {
+      case 0: // 1 - Sempre
+        novaNota(55);
+        return;
+
+      case 9: // 9 - Nunca Emitir
+        romaneioOuNotaVendaPadrao(65);
+        return;
+
+      case 2: // 2 - Somente no Fechamento
+      case 0: // 0 - Padrão
+      default:
+        romaneioOuNotaVendaPadrao(55);
+        return;
+    }
+  }
+};
+
+const romaneioOuNota = async () => {
+  // se nao estiver fechado cai fora
+  if (sNegocio.negocio.codnegociostatus != 2) {
+    return;
+  }
+
+  // busca natureza
+  const nat = await db.naturezaOperacao.get(
+    sNegocio.negocio.codnaturezaoperacao
+  );
+
+  if (nat.venda) {
+    // se for venda decide em outra funcao
+    romaneioOuNotaVenda();
+    return;
+  } else if (nat.transferencia) {
+    // se for transferencia já emite a nf
+    novaNota(55);
+    return;
+  }
+
+  // senao romaneio
+  imprimirAbrirRomaneio();
 };
 
 onMounted(() => {
   carregareOuCriarNegocio();
   document.addEventListener("keydown", hotkeys);
 });
+
 onUnmounted(() => {
   document.removeEventListener("keydown", hotkeys);
 });
@@ -218,7 +324,7 @@ onUnmounted(() => {
   <q-page v-if="sNegocio.negocio">
     <div class="q-pa-md q-col-gutter-md">
       <input-barras v-if="sNegocio.podeEditar" />
-      <listagem-notas />
+      <listagem-notas ref="listagemNotasRef" />
       <listagem-produtos />
       <dialog-sincronizacao />
       <listagem-titulos />

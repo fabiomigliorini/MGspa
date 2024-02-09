@@ -131,7 +131,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
     });
     var audio = new Audio("erro.mp3");
     audio.play();
-    falar("Não encontrei o código!");
+    falar("Não encontrei!");
   }
 };
 
