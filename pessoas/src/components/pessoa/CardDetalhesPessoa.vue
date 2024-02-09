@@ -19,27 +19,27 @@
             <q-toggle class="" outlined v-model="modelEditarDetalhes.fisica" label="Pessoa Física" />
           </div>
 
-          <div class="row">
+          <div class="row q-col-gutter-md">
             <div class="col-6">
               <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == false" label="Cnpj"
-                mask="##.###.###/####-##" class="q-pr-md" unmasked-value disable/>
-              <q-input outlined v-model="modelEditarDetalhes.cnpj" class="q-pr-md"
-                v-if="modelEditarDetalhes.fisica == true" label="CPF" mask="###.###.###-##" unmasked-value disable/>
+                mask="##.###.###/####-##" unmasked-value disable />
+              <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == true" label="CPF"
+                mask="###.###.###-##" unmasked-value disable />
             </div>
-            <div class="col-6">
-              <input-ie v-model="modelEditarDetalhes.ie" disable>
+            <div class="col-3">
+              <input-ie v-model="modelEditarDetalhes.ie" label="Insc Estadual" disable>
               </input-ie>
+            </div>
+            <div class="col-3">
+              <q-input outlined v-model="modelEditarDetalhes.rg" v-if="modelEditarDetalhes.fisica == true" label="RG"
+                class="q-mb-md" unmasked-value />
             </div>
           </div>
 
-          <div class="row">
+          <div class="row q-col-gutter-md">
+
             <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.rg" v-if="modelEditarDetalhes.fisica == true" label="RG"
-                class="q-pr-md q-mb-md" unmasked-value />
-            </div>
-            <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##-##-####" class="q-mb-md"
-                label="Nascimento / Fundação">
+              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##-##-####" label="Nascimento / Fundação">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -53,11 +53,74 @@
                 </template>
               </q-input>
             </div>
+
+            <div class="col-6">
+              <select-cidade v-model="modelEditarDetalhes.codcidadenascimento" :cidadeEditar="options"
+                label="Cidade Nascimento">
+
+              </select-cidade>
+            </div>
           </div>
 
 
 
-          <div class="row">
+          <div class="row q-col-gutter-md">
+
+
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.pai" class="q-pt-md" label="Nome do Pai" />
+            </div>
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.mae" class="q-pt-md" label="Nome da Mãe" />
+            </div>
+
+            <!-- <div class="col-6">
+                      <q-input outlined v-model="modelEditarDetalhes.pispasep" label="PIS/PASEP" mask="###.#####.##-#" unmasked-value/> 
+                    </div> -->
+
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.tituloeleitor" mask="####.####.####" label="Titulo Eleitor"
+                unmasked-value />
+            </div>
+            <div class="col-3">
+              <q-input outlined v-model="modelEditarDetalhes.titulozona" label="Titulo Zona" mask="###" unmasked-value />
+            </div>
+            <div class="col-3">
+              <q-input outlined v-model="modelEditarDetalhes.titulosecao" label="Titulo Seção" mask="####"
+                unmasked-value />
+            </div>
+
+            <div class="col-3">
+              <q-input outlined v-model="modelEditarDetalhes.ctps" label="CTPS" inputmode="numeric" mask="#######"
+                unmasked-value />
+            </div>
+
+            <div class="col-2">
+              <q-input outlined v-model="modelEditarDetalhes.seriectps" label="Série" mask="####" inputmode="numeric"
+                unmasked-value />
+            </div>
+
+            <div class="col-3">
+              <select-estado v-model="modelEditarDetalhes.codestadoctps" label="UF"></select-estado>
+
+            </div>
+
+            <div class="col-4">
+              <q-input outlined v-model="modelEditarDetalhes.emissaoctps" mask="##-##-####" label="Emissão CTPS">
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="modelEditarDetalhes.emissaoctps" :locale="brasil" mask="DD-MM-YYYY">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Fechar" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+
             <div class="col-6">
               <q-select outlined v-model="modelEditarDetalhes.tipotransportador" class="q-pr-md"
                 label="Tipo Transportador" :options="[
@@ -73,7 +136,7 @@
           </div>
 
           <q-input outlined borderless autogrow v-model="modelEditarDetalhes.observacoes" label="Observações"
-            type="textarea" class="q-mb-md" />
+            type="textarea" class="q-mb-md q-pt-md" />
 
           <q-toggle class="" outlined v-model="modelEditarDetalhes.cliente" label="Cliente" /> &nbsp;
           <q-toggle class="" outlined v-model="modelEditarDetalhes.fornecedor" label="Fornecedor" /> &nbsp;
@@ -97,7 +160,8 @@
         </q-item-section>
         <q-item-label header>
           <q-item-label>
-            <span class="text-h4 text-weight-bold" :class="sPessoa.item.inativo ? 'text-strike text-red-14' : null">{{ sPessoa.item.fantasia }}</span>
+            <span class="text-h4 text-weight-bold" :class="sPessoa.item.inativo ? 'text-strike text-red-14' : null">{{
+              sPessoa.item.fantasia }}</span>
             <q-btn flat round icon="edit" @click="editarDetalhes()" v-if="user.verificaPermissaoUsuario('Publico')" />
             <q-btn flat round icon="delete" @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
               v-if="user.verificaPermissaoUsuario('Financeiro')" />
@@ -117,18 +181,18 @@
             </q-btn>
 
             <q-btn flat icon="info">
-                  <q-tooltip transition-show="scale" transition-hide="scale">
-                    <q-item-label class="row">Criado por {{ sPessoa.item.usuariocriacao }} em {{
-                      Documentos.formataData(sPessoa.item.criacao)
-                    }}</q-item-label>
-                    <q-item-label class="row">Alterado por {{ sPessoa.item.usuarioalteracao }} em {{
-                      Documentos.formataData(sPessoa.item.alteracao) }}</q-item-label>
-                  </q-tooltip>
-                </q-btn>
+              <q-tooltip transition-show="scale" transition-hide="scale">
+                <q-item-label class="row">Criado por {{ sPessoa.item.usuariocriacao }} em {{
+                  Documentos.formataData(sPessoa.item.criacao)
+                }}</q-item-label>
+                <q-item-label class="row">Alterado por {{ sPessoa.item.usuarioalteracao }} em {{
+                  Documentos.formataData(sPessoa.item.alteracao) }}</q-item-label>
+              </q-tooltip>
+            </q-btn>
 
           </q-item-label>
           <q-item-label v-if="sPessoa.item.inativo">
-            Inativo 
+            Inativo
             {{ Documentos.formataFromNow(sPessoa.item.inativo) }}
           </q-item-label>
           <q-item-label caption>
@@ -148,14 +212,18 @@
             <q-item-section top>
               <q-item-label>
                 #0000{{ sPessoa.item.codpessoa }}
+                <a v-if="sPessoa.item.mercosId.length > 0"
+                  :href="'https://sandbox.mercos.com/41233/clientes/' + sPessoa.item.mercosId" target="_blank"><span
+                    v-if="sPessoa.item.mercosId.length > 0">/ {{ sPessoa.item.mercosId[0] }}</span></a>
               </q-item-label>
               <q-item-label caption>
-               Cliente
+                Pessoa
+                <span v-if="sPessoa.item.mercosId.length > 0"> / Mercos Id</span>
               </q-item-label>
             </q-item-section>
           </q-item>
           <q-separator inset />
-          
+
           <q-item>
             <q-item-section avatar top>
               <q-avatar icon="fingerprint" color="grey-2" text-color="blue" />
@@ -180,9 +248,13 @@
             </q-item-section>
             <q-item-section top>
               <q-item-label>
-                  {{ Documentos.verificaIdade(sPessoa.item.nascimento) }} Anos de idade
+                {{ Documentos.verificaIdade(sPessoa.item.nascimento) }} anos de Idade
+                <template v-if="sPessoa.item.codcidadenascimento">
+                  , nascido em {{ sPessoa.item.cidadenascimento }} / {{ sPessoa.item.ufnascimento }}
+                </template>
               </q-item-label>
-              <q-item-label caption class="text-grey-8">{{ Documentos.formataDataLonga(sPessoa.item.nascimento) }}</q-item-label>
+              <q-item-label caption class="text-grey-8">
+                {{ moment(sPessoa.item.nascimento).format("dddd, D [de] MMMM [de] YYYY") }}</q-item-label>
             </q-item-section>
           </q-item>
           <q-separator inset />
@@ -195,10 +267,24 @@
               <q-item-label style="white-space: pre-line">
                 {{ sPessoa.item.observacoes }}
                 <q-tooltip>
-                {{ sPessoa.item.observacoes }}
+                  {{ sPessoa.item.observacoes }}
                 </q-tooltip>
               </q-item-label>
               <q-item-label caption class="text-grey-8">Observações</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-item v-if="sPessoa.item.ctps">
+            <q-item-section avatar top>
+              <q-avatar icon="feed" color="grey-2" text-color="blue" />
+            </q-item-section>
+            <q-item-section top>
+              <q-item-label style="white-space: pre-line">
+                {{ sPessoa.item.seriectps }} / {{ sPessoa.item.ufctpsS }} / {{ sPessoa.item.ctps }} / {{
+                  Documentos.formataDatasemHr(sPessoa.item.emissaoctps) }}
+
+              </q-item-label>
+              <q-item-label caption>Série / Uf / Ctps / Emissão</q-item-label>
             </q-item-section>
           </q-item>
 
@@ -240,8 +326,71 @@
                 <q-item-label caption>
                   Grupo Econômico
                 </q-item-label>
+                <!-- <br>
+                <q-item-label>{{ sPessoa.item.pai }}</q-item-label>
+                <q-item-label caption>Nome do Pai</q-item-label> -->
               </q-item-section>
             </q-item>
+            <q-separator inset />
+          </template>
+
+
+          <template v-if="sPessoa.item.pai || sPessoa.item.mae">
+            <q-item class="col-6" style="text-decoration: none;">
+              <q-item-section avatar top>
+                <q-avatar icon="people" color="grey-2" text-color="blue" />
+              </q-item-section>
+              <q-item-section top>
+                <q-item-label lines="2">
+                  {{ sPessoa.item.pai }}
+
+                  <template v-if="sPessoa.item.pai && sPessoa.item.mae">
+                    e
+                  </template>
+                  {{ sPessoa.item.mae }}
+                </q-item-label>
+                <q-item-label caption>
+                  Filiação
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
+          </template>
+
+          <template v-if="sPessoa.item.pispasep">
+            <q-item class="col-6" style="text-decoration: none;">
+              <q-item-section avatar top>
+                <q-avatar icon="123" color="grey-2" text-color="blue" />
+              </q-item-section>
+              <q-item-section top>
+                <q-item-label lines="2">
+                  {{ Documentos.formataPisPasep(sPessoa.item.pispasep) }}
+                </q-item-label>
+                <q-item-label caption>
+                  PIS/PASEP
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
+          </template>
+
+
+          <template v-if="sPessoa.item.tituloeleitor">
+            <q-item class="col-6" style="text-decoration: none;">
+              <q-item-section avatar top>
+                <q-avatar icon="123" color="grey-2" text-color="blue" />
+              </q-item-section>
+              <q-item-section top>
+                <q-item-label lines="2">
+                  {{ Documentos.formataTitulo(sPessoa.item.tituloeleitor) }} / {{ sPessoa.item.titulozona }} / {{
+                    sPessoa.item.titulosecao }}
+                </q-item-label>
+                <q-item-label caption>
+                  Titulo Eleitor / Zona / Seção
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
           </template>
         </div>
       </div>
@@ -265,6 +414,8 @@ export default defineComponent({
 
   components: {
     SelectGrupoEconomico: defineAsyncComponent(() => import('components/pessoa/SelectGrupoEconomico.vue')),
+    SelectCidade: defineAsyncComponent(() => import('components/pessoa/SelectCidade.vue')),
+    SelectEstado: defineAsyncComponent(() => import('components/pessoa/SelectEstado.vue')),
     InputIe: defineAsyncComponent(() => import('components/pessoa/InputIe.vue')),
   },
 
@@ -345,7 +496,7 @@ export default defineComponent({
       })
     },
 
-    editarDetalhes() {
+    async editarDetalhes() {
       this.DialogDetalhes = true
       this.modelEditarDetalhes = {
         cnpj: this.Documentos.formataCnpjCpf(this.sPessoa.item.cnpj, this.sPessoa.item.fisica),
@@ -362,8 +513,23 @@ export default defineComponent({
         codgrupoeconomico: this.sPessoa.item.codgrupoeconomico,
         codcidade: this.sPessoa.item.PessoaEnderecoS.find(item => item.nfe === true)?.codcidade ?? null,
         rg: this.sPessoa.item.rg,
-        nascimento: this.sPessoa.item.nascimento ? moment(this.sPessoa.item.nascimento).format('DD-MM-YYYY') : null
+        nascimento: this.sPessoa.item.nascimento ? moment(this.sPessoa.item.nascimento).format('DD-MM-YYYY') : null,
+        pai: this.sPessoa.item.pai,
+        mae: this.sPessoa.item.mae,
+        codcidadenascimento: this.sPessoa.item.codcidadenascimento,
+        pispasep: this.sPessoa.item.pispasep,
+        tituloeleitor: this.sPessoa.item.tituloeleitor,
+        titulozona: this.sPessoa.item.titulozona,
+        titulosecao: this.sPessoa.item.titulosecao,
+        ctps: this.sPessoa.item.ctps,
+        seriectps: this.sPessoa.item.seriectps,
+        emissaoctps: this.sPessoa.item.emissaoctps ? moment(this.sPessoa.item.emissaoctps).format('DD-MM-YYYY') : null,
+        codestadoctps: this.sPessoa.item.codestadoctps
       }
+
+      const ret = await this.sPessoa.consultaCidade(this.sPessoa.item.codcidadenascimento)
+      this.options = [ret.data[0]]
+
     },
 
 
@@ -377,7 +543,6 @@ export default defineComponent({
         })
         return
       }
-
       try {
         const ret = await this.sPessoa.clienteSalvar(this.sPessoa.item.codpessoa, this.modelEditarDetalhes)
         this.sPessoa.item = ret.data.data
@@ -432,6 +597,7 @@ export default defineComponent({
     const GrupoEconomico = ref([])
     const Documentos = formataDocumetos()
     const user = guardaToken()
+    const options = ref([])
 
     return {
       formapagamento: ref({}),
@@ -439,6 +605,8 @@ export default defineComponent({
       route,
       Documentos,
       user,
+      options,
+      moment,
       DialogDetalhes: ref(false),
       modelEditarDetalhes: ref([]),
       GrupoEconomico,

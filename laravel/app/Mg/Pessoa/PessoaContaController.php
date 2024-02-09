@@ -21,7 +21,7 @@ class PessoaContaController extends MgController
     public function create (Request $request)
     {
 
-        Autorizador::autoriza(['Financeiro']);
+        Autorizador::autoriza(['Publico']);
         $data = $request->all();
         $pessoa = PessoaContaService::create($data);
         return new PessoaContaResource($pessoa);
@@ -35,7 +35,7 @@ class PessoaContaController extends MgController
 
     public function update (Request $request, $codpessoa, $codpessoaconta)
     {
-        Autorizador::autoriza(['Financeiro']);
+        Autorizador::autoriza(['Publico']);
         $data = $request->all();
         $pessoa = PessoaConta::findOrFail($codpessoaconta);
         $pessoa = PessoaContaService::update($pessoa, $data);
@@ -45,7 +45,7 @@ class PessoaContaController extends MgController
     public function delete (Request $request, $codpessoa, $codpessoaconta)
     {
 
-        Autorizador::autoriza(['Financeiro']);
+        Autorizador::autoriza(['Publico']);
         $pessoa = PessoaConta::findOrFail($codpessoaconta);
         $pessoa = PessoaContaService::delete($pessoa);
         return response()->json([
@@ -72,7 +72,7 @@ class PessoaContaController extends MgController
 
     public function ativar($codpessoaconta)
     {
-        Autorizador::autoriza(['Financeiro']);
+        Autorizador::autoriza(['Publico']);
         $pessaoConta = PessoaConta::findOrFail($codpessoaconta);
         $pessaoConta = PessoaContaService::ativar($pessaoConta);
 
@@ -81,7 +81,7 @@ class PessoaContaController extends MgController
 
     public function inativar($codpessoaconta)
     {
-        Autorizador::autoriza(['Financeiro']);
+        Autorizador::autoriza(['Publico']);
         $pessaoConta = PessoaConta::findOrFail($codpessoaconta);
         $pessaoConta = PessoaContaService::inativar($pessaoConta);
 

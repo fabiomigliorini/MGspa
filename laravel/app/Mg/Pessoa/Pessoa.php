@@ -38,6 +38,7 @@ use Mg\Pessoa\PessoaTelefone;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Colaborador\Colaborador;
 use Mg\Cidade\Cidade;
+use Mg\Cidade\Estado;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Pessoa\GrupoCliente;
@@ -105,14 +106,26 @@ class Pessoa extends MgModel
         'telefone3',
         'tipotransportador',
         'toleranciaatraso',
-        'vendedor'
+        'vendedor',
+        'pai',
+        'mae',
+        'codcidadenascimento',
+        'pispasep',
+        'tituloeleitor',
+        'titulozona',
+        'titulosecao',
+        'ctps',
+        'codestadoctps',
+        'seriectps',
+        'emissaoctps'
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
         'inativo',
-        'nascimento'
+        'nascimento',
+        'emissaoctps'
     ];
 
     protected $casts = [
@@ -138,7 +151,9 @@ class Pessoa extends MgModel
         'notafiscal' => 'integer',
         'tipotransportador' => 'integer',
         'toleranciaatraso' => 'integer',
-        'vendedor' => 'boolean'
+        'vendedor' => 'boolean',
+        'codcidadenascimento' => 'integer',
+        'codestadoctps' => 'integer'
     ];
 
     public function certidaoSefazMT()
@@ -154,6 +169,17 @@ class Pessoa extends MgModel
     public function Cidade()
     {
         return $this->belongsTo(Cidade::class, 'codcidade', 'codcidade');
+    }
+
+    public function CidadeNascimento()
+    {
+        return $this->belongsTo(Cidade::class, 'codcidadenascimento', 'codcidade');
+    }
+
+
+    public function Estado()
+    {
+        return $this->belongsTo(Estado::class, 'codestadoctps', 'codestado');
     }
 
     public function CidadeCobranca()

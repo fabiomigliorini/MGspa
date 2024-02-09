@@ -107,7 +107,7 @@ const coresSaldo = (saldo) =>  {
 </script>
 
 <template>
-    <q-card class="no-shadow cursor-pointer q-hoverable" bordered v-ripple>
+    <q-card class="no-shadow cursor-pointer q-hoverable" bordered>
         <q-card-section class="q-pa-none">
             <q-table title="Titulos Abertos" :filter="filter" @row-click="linkMgSis" :rows="titulosAbertos"
                 :columns="columns" no-data-label="Nenhum titulo encontrado" :separator="separator" emit-value

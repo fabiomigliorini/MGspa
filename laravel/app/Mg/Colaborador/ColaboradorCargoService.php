@@ -2,6 +2,8 @@
 
 namespace Mg\Colaborador;
 
+use Illuminate\Support\Facades\DB;
+
 class ColaboradorCargoService
 {
 
@@ -25,18 +27,16 @@ class ColaboradorCargoService
         return $colaboradorCargo->delete();
     }
 
-    // public static function inativar(GrupoEconomico $grupo)
-    // {
-    //     $grupo->update(['inativo' => Carbon::now()]);
-    //     return $grupo->refresh();
-    // }
-
+    
     public static function ativar($grupo)
     {
         $grupo->inativo = null;
         $grupo->update();
         return $grupo;
     }
+
+
+    
 
   
 }

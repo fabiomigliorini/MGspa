@@ -19,7 +19,6 @@ class ColaboradorCargoResource extends JsonResource
         $ret = parent::toArray($request);
         $ret['Cargo'] = @$this->Cargo->cargo;
         $ret['Filial'] = @$this->Filial->filial;
-        
         return $ret;
     }
 }

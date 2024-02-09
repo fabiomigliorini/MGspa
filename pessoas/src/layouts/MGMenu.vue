@@ -17,6 +17,12 @@
                             <q-item-label>Notas</q-item-label>
                         </q-item>
                     </q-list>
+                    <q-list float dense>
+                        <q-item  :to="{ name: 'grupoeconomicoindex' }" >
+                                <q-icon name="groups" size="25px" class="q-pr-sm"/>
+                                <q-item-label>Grupo Econômico</q-item-label>
+                        </q-item>
+                    </q-list>
                 </div>
 
                 <div class="col-6">
@@ -26,19 +32,25 @@
                             <q-item-label>Pessoas</q-item-label>
                         </q-item>
 
-                        <q-item v-if="user.usuarioLogado.permissoes.find
-                         (item => item.grupo === 'Administrador')" :to="{ name: 'permissoes' }">
+                        <q-item v-if="user.verificaPermissaoUsuario('Administrador')" :to="{ name: 'permissoes' }">
                             <q-icon name="admin_panel_settings" size="25px" class="q-pr-sm" />
                             <q-item-label>Permissões</q-item-label>
                         </q-item>
                     </q-list>
+
+                    <q-list float dense v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
+                        <q-item  :to="{ name: 'feriasindex' }" >
+                                <q-icon name="holiday_village" size="25px" class="q-pr-sm"/>
+                                <q-item-label>Férias</q-item-label>
+                        </q-item>
+                    </q-list>
                 </div>
 
-                <div class="col-6">
+                <div class="col-6" v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
                     <q-list float dense>
-                        <q-item  :to="{ name: 'grupoeconomicoindex' }" >
-                                <q-icon name="groups" size="25px" class="q-pr-sm"/>
-                                <q-item-label>Grupo Econômico</q-item-label>
+                        <q-item  :to="{ name: 'cargosindex' }" >
+                                <q-icon name="work" size="25px" class="q-pr-sm"/>
+                                <q-item-label>Cargos</q-item-label>
                         </q-item>
                     </q-list>
                 </div>
@@ -56,7 +68,7 @@ export default defineComponent({
 
     setup() {
         const user = guardaToken()
-
+        
         return {
             user,
         }

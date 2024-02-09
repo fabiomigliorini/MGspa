@@ -4,7 +4,14 @@ import { ref } from 'vue';
 
 
 export const pessoaStore = defineStore('pessoa', {
-  persist: true,
+  persist:{
+    paths:[
+      'arrPessoas',
+      'filtroPesquisa',
+      // 'item',
+      // 'counter',
+    ]
+  },
 
   state: () => ({
     counter: 0,
@@ -39,6 +46,7 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
     async get(codpessoa) {
+      this.item = null;
       const { data } = await api.get('v1/pessoa/' + codpessoa)
       this.item = data.data
       return data
@@ -54,7 +62,9 @@ export const pessoaStore = defineStore('pessoa', {
       const ret = await api.post('v1/pessoa', {
         fantasia: model.fantasia, pessoa: model.pessoa,
         fisica: model.fisica, cliente: model.cliente, cnpj: model.cnpj, rg: model.rg, ie: model.ie, tipotransportador: model.tipotransportador,
-        notafiscal: model.notafiscal, rntrc: model.rntrc, uf: model.uf
+        notafiscal: model.notafiscal, rntrc: model.rntrc, uf: model.uf, pai: model.pai, mae: model.mae, nascimento: model.nascimento, codcidadenascimento: model.codcidadenascimento,
+        pispasep: model.pispasep, tituloeleitor: model.tituloeleitor, titulozona: model.titulozona, titulosecao: model.titulosecao,
+        ctps: model.ctps, seriectps: model.seriectps, emissaoctps: model.emissaoctps, codestadoctps: model.codestadoctps
       })
       return ret;
     },
@@ -247,8 +257,12 @@ export const pessoaStore = defineStore('pessoa', {
       if (modelEditarCliente.tipotransportador == null) {
         modelEditarCliente.tipotransportador = 0
       }
-      const ret = await api.put('v1/pessoa/' + codpessoa, null, { params: modelEditarCliente })
+       const ret = await api.put('v1/pessoa/' + codpessoa,  modelEditarCliente);
+       const i = this.arrPessoas.findIndex(item => item.codpessoa === codpessoa)
+       this.arrPessoas[i] = ret.data.data
+
       return ret;
+     
     },
 
     async buscaFormaPagamento(codformapagamento) {
@@ -477,8 +491,45 @@ export const pessoaStore = defineStore('pessoa', {
       
      return ret;
 
-    }
+    },
 
+    async selectEstado() {
+      
+      const ret = await api.get('v1/select/estado')
+      return ret;
+    },
+
+
+    async getCargos(filtroCargo) {
+
+      const ret = await api.get('v1/cargo', { params: filtroCargo})
+      return ret;
+    },
+
+    async alterarCargo(modelCargo) {
+      const ret = await api.put('v1/cargo/' + modelCargo.codcargo, modelCargo)
+      return ret;
+    },
+
+    async excluirCargo(codcargo) {
+      const ret = await api.delete('v1/cargo/' + codcargo)
+      return ret;
+    },
+
+    async cargoInativar(codcargo) {
+      const ret = await api.post('v1/cargo/' + codcargo + '/inativo')
+      return ret;
+    },
+
+    async cargoAtivar(codcargo) {
+      const ret = await api.delete('v1/cargo/' + codcargo + '/inativo')
+      return ret;
+    },
+
+    async pessoasColaboradorCargo(codcargo) {
+      const ret = await api.get('v1/cargo/pessoas-cargo/' + codcargo)
+      return ret;
+    }
   }
 })
 

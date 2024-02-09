@@ -10,9 +10,9 @@
             </q-btn>
         </template>
 
-        <template #content>
+        <template #content >
             <q-page class="bg-white ">
-                <div class="row q-py-md q-pr-md">
+                <div class="row q-py-md q-pr-md" v-if="sPessoa.item">
                     <!-- <div class="col-lg-4 col-md-8 col-sm-12 col-xs-12 q-pl-md"> -->
                     <div class="col-md-8 col-sm-12 col-xs-12 q-pl-md">
 

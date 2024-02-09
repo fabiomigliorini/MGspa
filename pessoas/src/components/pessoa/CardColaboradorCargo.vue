@@ -31,9 +31,31 @@
                             {{ moment(colaboradorCargo.inicio).format('DD/MMM') }} a
                             {{ moment(colaboradorCargo.fim).format('DD/MMM/YYYY') }}
                         </q-item-label>
+
+
+                        <!-- <q-item-label caption v-if="!colaboradorCargo.fim">
+                            {{ moment(colaboradorCargo.inicio).format('DD/MMM/YYYY') }} a
+                            ({{ Documentos.formataFromNow(colaboradorCargo.inicio) }})
+                        </q-item-label> -->
+
                     </q-item-section>
                 </q-item>
 
+                <q-separator inset />
+
+                <q-item :to="'/cargo/' + colaboradorCargo.codcargo" clickable>
+                    <q-item-section avatar>
+                        <q-icon name="engineering" color="blue"></q-icon>
+                    </q-item-section>
+                    <q-item-section>
+                        <q-item-label v-if="colaboradorCargo.inicio">
+                            {{ colaboradorCargo.Cargo }}
+                        </q-item-label>
+                        <!-- <q-item-label caption>
+                           CAPTION
+                       </q-item-label> -->
+                    </q-item-section>
+                </q-item>
                 <q-separator inset />
                 <q-item
                     v-if="colaboradorCargo.comissaoloja || colaboradorCargo.comissaovenda || colaboradorCargo.comissaoxerox">

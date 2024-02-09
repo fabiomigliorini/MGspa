@@ -35,8 +35,13 @@ class PessoaResource extends JsonResource
             'formapagamento' => @$this->FormaPagamento->formapagamento,
         ];
 
+        $ret['cidadenascimento'] = @$this->CidadeNascimento->cidade;
+        $ret['ufnascimento'] = @$this->CidadeNascimento->Estado->sigla;
+        $ret['ufctpsS'] = @$this->Estado->sigla;
+
         $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
         $ret['usuarioalteracao'] = @$this->UsuarioAlteracao->usuario;
+        $ret['mercosId'] = $this->MercosClienteS()->orderBy('clienteid')->get()->pluck('clienteid');
         // Filhos
         $ret['PessoaCertidaoS'] = [];
         // foreach ($this->PessoaCertidaoS()->where('validade', '>=', Carbon::now()) as $pc)

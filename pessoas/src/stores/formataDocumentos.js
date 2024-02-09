@@ -362,6 +362,28 @@ export const formataDocumetos = defineStore('documentos', {
             cnpjcpf = this.formataCNPJ(cnpjcpf.toString().padStart(14, '0'))
             return cnpjcpf;
         },
+
+
+        formataTitulo(titulo) {
+            if (titulo == null) {
+                return titulo
+            }
+            titulo = titulo.toString().padStart(12, '0')
+            return titulo.slice(0, 4) + "." +
+            titulo.slice(4, 8) + "." +
+            titulo.slice(8, 12)
+        },
+
+        formataPisPasep(pispasep) {
+            if (pispasep == null) {
+                return pispasep
+            }
+            pispasep = pispasep.toString().padStart(11, '0')
+            return pispasep.slice(0, 3) + "." +
+            pispasep.slice(3, 8) + "." +
+            pispasep.slice(8, 10) + "-" + 
+            pispasep.slice(10, 12)
+        },
     }
 })
 

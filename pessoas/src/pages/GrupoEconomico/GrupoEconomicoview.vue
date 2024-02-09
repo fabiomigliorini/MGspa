@@ -109,13 +109,15 @@
             <q-dialog v-model="DialogGrupoEconomico">
                 <q-card>
                     <q-card-section>
+                        <q-form @submit="salvarGrupoEconomico(route.params.id)">
                         <q-input outlined v-model="modelEditarGrupo.grupoeconomico" label="Grupo Econômico"
                             class="q-mb-md" />
                         <q-input outlined v-model="modelEditarGrupo.observacoes" label="Observações" type="textarea"
                             class="q-mb-md" borderless autogrow />
+                        </q-form>
                     </q-card-section>
                     <q-card-actions align="right">
-                        <q-btn flat label="OK" color="primary" @click="salvarGrupoEconomico(route.params.id)"
+                        <q-btn flat label="OK" color="primary" type="submit"
                             v-close-popup />
                         <q-btn flat label="Cancelar" color="secondary" v-close-popup />
                     </q-card-actions>

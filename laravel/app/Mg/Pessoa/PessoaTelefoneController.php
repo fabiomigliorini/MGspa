@@ -21,7 +21,7 @@ class PessoaTelefoneController extends MgController
     public function create(Request $request, $codpessoa)
     {
 
-        Autorizador::autoriza(['Financeiro']);
+        Autorizador::autoriza(['Publico']);
 
         $request->validate([
             'tipo' => ['required'],
@@ -46,7 +46,7 @@ class PessoaTelefoneController extends MgController
 
     public function update(Request $request, $codpessoa, $codpessoatelefone)
     {
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
 
 
         $data = $request->all();
@@ -57,7 +57,7 @@ class PessoaTelefoneController extends MgController
 
     public function delete(Request $request, $codpessoa, $codpessoatelefone)
     {
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
 
         $telefones = PessoaTelefone::where('codpessoa', $codpessoa)->get()->count();
         if ($telefones > 1) {
@@ -90,7 +90,7 @@ class PessoaTelefoneController extends MgController
 
     public function ativar(Request $request, $codpessoa, $codpessoatelefone)
     {
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
 
         $pes = PessoaTelefone::findOrFail($codpessoatelefone);
         $pes = PessoaTelefoneService::ativar($pes);
@@ -101,7 +101,7 @@ class PessoaTelefoneController extends MgController
     public function inativar(Request $request, $codpessoa, $codpessoatelefone)
     {
 
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
         
         $pes = PessoaTelefone::findOrFail($codpessoatelefone);
         $pes = PessoaTelefoneService::inativar($pes);

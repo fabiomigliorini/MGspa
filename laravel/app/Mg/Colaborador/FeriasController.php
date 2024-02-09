@@ -44,4 +44,20 @@ class FeriasController extends MgController
             'result' => true
         ], 200);
     }
+
+    public function programacaoFerias(Request $request) 
+    {   
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $request->validate([
+            'ano' => 'required|integer|between:1990,2099'
+        ]);
+
+        $ferias = FeriasService::programacaoFerias($request->ano);
+        
+        return response()->json(
+            $ferias, 
+            200
+        );
+    }
 }

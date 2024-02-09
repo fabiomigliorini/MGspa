@@ -36,7 +36,9 @@
             </q-item-label>
 
             <q-item-label caption v-if="contas.cnpj">
-              {{ Documentos.formataCnpjEcpf(contas.cnpj) }} /
+              {{ Documentos.formataCnpjEcpf(contas.cnpj) }}
+            </q-item-label>
+            <q-item-label caption v-if="contas.titular">
               {{ contas.titular }}
             </q-item-label>
 

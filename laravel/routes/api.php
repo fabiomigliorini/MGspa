@@ -265,6 +265,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@show');
         Route::put('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@update');
         Route::delete('colaborador/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@delete');
+        Route::get('programacao-ferias/', '\Mg\Colaborador\FeriasController@programacaoFerias');
+
 
                  
         // Cargos
@@ -273,7 +275,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('cargo/{codcargo}/', '\Mg\Colaborador\CargoController@show');
         Route::put('cargo/{codcargo}/', '\Mg\Colaborador\CargoController@update');
         Route::delete('cargo/{codcargo}/', '\Mg\Colaborador\CargoController@delete');
-
+        Route::post('cargo/{codcargo}/inativo', '\Mg\Colaborador\CargoController@inativar');
+        Route::delete('cargo/{codcargo}/inativo', '\Mg\Colaborador\CargoController@ativar');
+        Route::get('cargo/pessoas-cargo/{codcargo}', '\Mg\Colaborador\CargoController@pessoasDoCargo');
        
 
         // Pessoa Conta

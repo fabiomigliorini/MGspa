@@ -18,7 +18,7 @@ class PessoaController extends MgController
     public function create(Request $request)
     {
 
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
 
 
         $data = $request->all();
@@ -42,7 +42,7 @@ class PessoaController extends MgController
 
     public function index(Request $request)
     {
-
+        
         $codpessoa = $request->codpessoa ?? null;
         $pessoa = $request->pessoa ?? null;
         $cnpj = $request->cnpj ?? null;
@@ -98,16 +98,15 @@ class PessoaController extends MgController
     }
 
     public function show(Request $request, $codpessoa)
-    {
+    {   
+
         $pessoa = Pessoa::findOrFail($codpessoa);
         return new PessoaResource($pessoa);
     }
 
     public function update(Request $request, $codpessoa)
     {
-
-
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
 
         $data = $request->all();
 
@@ -135,7 +134,7 @@ class PessoaController extends MgController
 
     public function delete(Request $request, $codpessoa)
     {
-         Autorizador::autoriza(array('Financeiro'));
+         Autorizador::autoriza(array('Publico'));
 
 
         $pessoa = Pessoa::findOrFail($codpessoa);
@@ -148,7 +147,7 @@ class PessoaController extends MgController
     public function ativar(Request $request, $codpessoa)
     {   
 
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
 
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::ativar($pessoa);
@@ -158,7 +157,7 @@ class PessoaController extends MgController
     public function inativar(Request $request, $codpessoa)
     {
 
-        Autorizador::autoriza(array('Financeiro'));
+        Autorizador::autoriza(array('Publico'));
 
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::inativar($pessoa);

@@ -4,16 +4,14 @@ namespace Mg\Pessoa;
 
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
-use DB;
-use Illuminate\Http\Request;
-use Mg\MgService;
+use Illuminate\Support\Facades\DB;
+use Exception;
 use Mg\Cidade\Estado;
 use Mg\Cidade\Cidade;
 use Mg\GrupoEconomico\GrupoEconomicoService;
 use Mg\Pessoa\GrupoClienteService;
 use Mg\NFePHP\NFePHPService;
 use Mg\Filial\Filial;
-use Mg\Permissao\Autorizador\Autorizador;
 
 class PessoaService
 {
@@ -214,10 +212,33 @@ class PessoaService
         return true;
     }
 
+    public static function verificaDuplicadoCnpjIe($cnpj, $ie)
+    {
+        $sql = "
+        select count(*) as quant
+        from tblpessoa p
+        where p.cnpj = :cnpj 
+        and regexp_replace(ie, '[^0-9]+', '', 'g')::numeric = regexp_replace(:ie, '[^0-9]+', '', 'g')::numeric
+        ";
+
+        $params['cnpj'] = $cnpj;
+        $params['ie'] = $ie;
+
+        $result = DB::select($sql, $params);
+
+        return $result;
+    }
+
+
     public static function create($data)
     {
         $pessoa = new Pessoa($data);
         $buscaRaizGrupoEconomico = static::buscaRaizCnpj($data['cnpj']);
+        $cnpjDuplicado = static::verificaDuplicadoCnpjIe($data['cnpj'] ?? null, $data['ie'] ?? null);
+
+        if ($cnpjDuplicado[0]->quant > 0) {
+            throw new Exception("Cnpj/CPF /Ie já está cadastrado!", 1);
+        }
 
         if (!empty($buscaRaizGrupoEconomico)) {
             $pessoa->codgrupoeconomico = $buscaRaizGrupoEconomico->codgrupoeconomico;
@@ -257,8 +278,6 @@ class PessoaService
             return $pessoa;
         }
 
-
-
         $pessoa->fill($data);
         $pessoa->save();
         return $pessoa;
@@ -278,8 +297,6 @@ class PessoaService
 
         return $ret;
     }
-
-
 
     public static function delete(Pessoa $pessoa)
     {

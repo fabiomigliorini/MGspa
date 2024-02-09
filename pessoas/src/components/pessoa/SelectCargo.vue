@@ -7,7 +7,7 @@ const sPessoa = pessoaStore();
 
 onMounted(async () => {
     const ret = await sPessoa.selectCargo()
-    opcoes.value = ret.data
+    opcoes.value = ret.data.data
 })
 
 const opcoes = ref([]);

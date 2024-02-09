@@ -459,31 +459,7 @@
         </q-card>
     </q-dialog>
 
-    <!-- Dialog novo Cargo / Editar Cargo -->
-    <q-dialog v-model="dialogNovoCargo">
-        <q-card style="min-width: 350px">
-            <q-form @submit="novoCargo()">
-                <q-card-section>
-                    <div class="text-h6">Novo Cargo</div>
-                </q-card-section>
-                <q-card-section>
-
-                    <q-input outlined v-model="modelNovoCargo.cargo" label="Cargo" :rules="[
-                        val => val && val.length > 0 || 'Cargo obrigatório'
-                    ]" />
-
-                    <q-input outlined v-model="modelNovoCargo.salario" label="Salario" />
-
-                    <q-input outlined v-model="modelNovoCargo.adicional" class="q-pt-md" label="Adicional" />
-                </q-card-section>
-
-                <q-card-actions align="right" class="text-primary">
-                    <q-btn flat label="Cancelar" v-close-popup />
-                    <q-btn flat label="Salvar" type="submit" />
-                </q-card-actions>
-            </q-form>
-        </q-card>
-    </q-dialog>
+    
 </template>
   
 <script>
@@ -760,32 +736,7 @@ export default defineComponent({
             })
         },
 
-        async novoCargo() {
-            this.dialogNovoCargo = true
-            if (this.modelNovoCargo.cargo) {
-                try {
-                    const ret = await this.sPessoa.novoCargo(this.modelNovoCargo)
-                    if (ret.data.data) {
-                        this.$q.notify({
-                            color: 'green-5',
-                            textColor: 'white',
-                            icon: 'done',
-                            message: 'Cargo criado!'
-                        })
-                        this.dialogNovoCargo = false
-                        this.modelNovoCargo = {}
-                    }
-                } catch (error) {
-                    this.$q.notify({
-                        color: 'red-5',
-                        textColor: 'white',
-                        icon: 'error',
-                        message: error.response.data.message
-                    })
-                }
-            }
-
-        },
+     
 
         editarColaborador(codcolaborador, codfilial, contratacao, vinculo, experiencia, renovacaoexperiencia,
             rescisao, numeroponto, numerocontabilidade, observacoes) {

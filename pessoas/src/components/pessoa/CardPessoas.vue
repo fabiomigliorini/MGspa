@@ -2,7 +2,7 @@
     <q-card v-ripple>
         <q-item :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
             <q-item-section avatar>
-                <q-avatar color="primary" class="q-my-md" size="35px" text-color="white" v-if="sPessoa.item.fantasia">
+                <q-avatar color="primary" class="q-my-md" size="35px" text-color="white" v-if="listagempessoas.fantasia">
                     {{ primeiraLetra(listagempessoas.fantasia) }}
                 </q-avatar>
             </q-item-section>

@@ -9,10 +9,19 @@ use Mg\Usuario\Autorizador;
 class CargoController extends MgController
 {
 
-    public function index()
+    public function index(Request $request)
     {
-            $cargos = Cargo::orderBy('cargo', 'asc')->get();
-              return response()->json($cargos, 200);
+            $cargo = $request->cargo ?? null;
+            $de = $request->de ?? null;
+            $ate = $request->ate ?? null;
+
+            $cargos = CargoService::index(
+                $cargo??null,
+                $de??null,
+                $ate??null,
+            );
+
+              return new CargoResource($cargos);
     }
 
     public function create(Request $request)
@@ -34,10 +43,10 @@ class CargoController extends MgController
         Autorizador::autoriza(['Recursos Humanos']);
 
         $data = $request->all();
-        $ferias = Cargo::findOrFail($codcargo);
-        $ferias = CargoService::update($codcargo, $data);
+        $cargo = Cargo::findOrFail($codcargo);
+        $cargo = CargoService::update($cargo, $data);
 
-        return new CargoResource($ferias);
+        return new CargoResource($cargo);
     }
 
     public function delete(Request $request, $codcargo)
@@ -50,4 +59,35 @@ class CargoController extends MgController
             'result' => true
         ], 200);
     }
+
+    public function ativar($codcargo)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $cargo = Cargo::findOrFail($codcargo);
+        $cargo = CargoService::ativar($cargo);
+
+        return new CargoResource($cargo);
+    }
+
+    public function inativar($codcargo)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+        $cargo = Cargo::findOrFail($codcargo);
+        $cargo = CargoService::inativar($cargo);
+
+        return new CargoResource($cargo);
+    }
+
+    public function pessoasDoCargo($codcargo)
+    {
+        $pessoasCargo = CargoService::pessoasDoCargo($codcargo);
+        $cargo = Cargo::findOrFail($codcargo);
+
+        return  CargoResource::collection([
+            'pessoasCargo' => $pessoasCargo,
+            'cargoS' => $cargo
+        ]);
+    }
+
 }

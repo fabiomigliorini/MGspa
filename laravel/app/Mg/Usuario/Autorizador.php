@@ -28,7 +28,6 @@ class Autorizador
             'gruposAutorizados' => implode(',', $gruposAutorizados)
         ];
 
-        
         if (!empty($codfilial)) {
             $sql .= 'and guu.codfilial = :codfilial';
             $params['codfilial'] = $codfilial;

@@ -27,6 +27,7 @@ class SelectEstadoController extends Controller
             return [
                 'value' => $item->codestado,
                 'label' => $item->estado,
+                'sigla' => $item->sigla
             ];
         });
 
