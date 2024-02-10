@@ -253,7 +253,7 @@ const lerCodigoBarras = async () => {
     input-class="text-right"
     @change="buscarBarras()"
     :prefix="labelQuantidade"
-    inputmode="decimal"
+    inputmode="tel"
   >
     <template v-slot:append>
       <q-btn
