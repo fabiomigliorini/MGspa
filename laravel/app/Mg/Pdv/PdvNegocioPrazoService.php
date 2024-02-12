@@ -4,6 +4,7 @@ namespace Mg\Pdv;
 
 use DB;
 use Carbon\Carbon;
+use \Exception;
 
 use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
@@ -87,7 +88,7 @@ class PdvNegocioPrazoService
 
             // inicializa um acumulador para controlar quanto deve ser a diferenca da ultima parcela
             $total = 0;
-            $parcelas = ($nfp->parcelas > 0)?$nfp->parcelas:1;
+            $parcelas = ($nfp->parcelas > 0) ? $nfp->parcelas : 1;
 
             // faz um looping para gerar duplicatas
             for ($i = 1; $i <= $parcelas; $i++) {
@@ -114,13 +115,13 @@ class PdvNegocioPrazoService
                         $tipo = TipoTituloService::TIPO_PIX_RECEBER;
                     } else {
                         $tipo = TipoTituloService::TIPO_PIX_PAGAR;
-                    }    
+                    }
                 } elseif ($nfp->FormaPagamento->entrega) {
                     if ($nfp->Negocio->codoperacao == 2) {
                         $tipo = TipoTituloService::TIPO_ENTREGA_RECEBER;
                     } else {
                         $tipo = TipoTituloService::TIPO_ENTREGA_PAGAR;
-                    }    
+                    }
                 } else {
                     $tipo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
                 }
@@ -155,7 +156,7 @@ class PdvNegocioPrazoService
 
             // monta sufixo da proxima forma de pagamento
             if ($qtdPrazo > 1) {
-                $sufixo = '-' . chr(ord(substr($sufixo, -1))+1);
+                $sufixo = '-' . chr(ord(substr($sufixo, -1)) + 1);
                 $sufixos[] = $sufixo;
             }
         }
