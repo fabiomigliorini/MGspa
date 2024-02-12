@@ -15,7 +15,7 @@ class NFePHPMailService
 
         // se destinatario veio em branco, busca do cadastro
         if (empty($destinatario)) {
-            $destinatario = $nf->Pessoa->emailnfe??$nf->Pessoa->email??$nf->Pessoa->emailcobranca;
+            $destinatario = $nf->Pessoa->PessoaEmailS()->where('nfe', true)->get()->pluck('email')->implode(',');
         }
 
         if (empty($destinatario)) {

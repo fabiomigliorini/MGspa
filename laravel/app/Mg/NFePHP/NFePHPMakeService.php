@@ -181,19 +181,23 @@ class NFePHPMakeService
         $nfe->tagemit($std);
 
         // Endereço Emitente
-        $std = new stdClass();
-        $std->xLgr = Strings::replaceSpecialsChars($nf->Filial->Pessoa->endereco);
-        $std->nro = Strings::replaceSpecialsChars($nf->Filial->Pessoa->numero);
-        $std->xCpl = Strings::replaceSpecialsChars($nf->Filial->Pessoa->complemento);
-        $std->xBairro = Strings::replaceSpecialsChars($nf->Filial->Pessoa->bairro);
-        $std->cMun = $nf->Filial->Pessoa->Cidade->codigooficial;
-        $std->xMun = Strings::replaceSpecialsChars($nf->Filial->Pessoa->Cidade->cidade);
-        $std->UF = Strings::replaceSpecialsChars($nf->Filial->Pessoa->Cidade->Estado->sigla);
-        $std->CEP = $nf->Filial->Pessoa->cep;
-        $std->cPais = $nf->Filial->Pessoa->Cidade->Estado->Pais->codigooficial;
-        $std->xPais = Strings::replaceSpecialsChars($nf->Filial->Pessoa->Cidade->Estado->Pais->pais);
-        $std->fone = numeroLimpo(($nf->Filial->Pessoa->telefone1 ?? $nf->Filial->Pessoa->telefone2) ?? $nf->Filial->Pessoa->telefone3);
-        $nfe->tagenderEmit($std);
+        if ($end = $nf->Filial->Pessoa->PessoaEnderecoS()->where('nfe', true)->orderBy('ordem')->first()) {
+            $std = new stdClass();
+            $std->xLgr = Strings::replaceSpecialsChars($end->endereco);
+            $std->nro = Strings::replaceSpecialsChars($end->numero);
+            $std->xCpl = Strings::replaceSpecialsChars($end->complemento);
+            $std->xBairro = Strings::replaceSpecialsChars($end->bairro);
+            $std->cMun = $end->Cidade->codigooficial;
+            $std->xMun = Strings::replaceSpecialsChars($end->Cidade->cidade);
+            $std->UF = Strings::replaceSpecialsChars($end->Cidade->Estado->sigla);
+            $std->CEP = $end->cep;
+            $std->cPais = $end->Cidade->Estado->Pais->codigooficial;
+            $std->xPais = Strings::replaceSpecialsChars($end->Cidade->Estado->Pais->pais);
+            if ($pt = $nf->Filial->Pessoa->PessoaTelefoneS()->orderBy('ordem')->first()) {
+                $std->fone = "0{$pt->ddd}{$pt->telefone}";
+            }
+            $nfe->tagenderEmit($std);
+        }
 
         // Destinatario
         if ($nf->codpessoa == Pessoa::CONSUMIDOR) {
@@ -238,25 +242,31 @@ class NFePHPMakeService
                 $std->CNPJ = str_pad($nf->Pessoa->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
                 $std->CPF = '';
             }
-            $std->email = ($nf->Pessoa->emailnfe ?? $nf->Pessoa->email) ?? $nf->Pessoa->emailcobranca;
+            if ($pe = $nf->Pessoa->PessoaEmailS()->where('nfe', true)->orderBy('ordem')->first()) {
+                $std->email = $pe->email;
+            }
             $nfe->tagdest($std);
 
             // Endereco Destinatario
             $std = new stdClass();
-            $std->xLgr = Strings::replaceSpecialsChars($nf->Pessoa->endereco);
-            $std->nro = Strings::replaceSpecialsChars($nf->Pessoa->numero);
-            if (!empty($nf->Pessoa->complemento)) {
-                $std->xCpl = Strings::replaceSpecialsChars($nf->Pessoa->complemento);
+            if ($end = $nf->Pessoa->PessoaEnderecoS()->where('nfe', true)->orderBy('ordem')->first()) {
+                $std->xLgr = Strings::replaceSpecialsChars($end->endereco);
+                $std->nro = Strings::replaceSpecialsChars($end->numero);
+                if (!empty($end->complemento)) {
+                    $std->xCpl = Strings::replaceSpecialsChars($end->complemento);
+                }
+                $std->xBairro = Strings::replaceSpecialsChars($end->bairro);
+                $std->cMun = $end->Cidade->codigooficial;
+                $std->xMun = Strings::replaceSpecialsChars($end->Cidade->cidade);
+                $std->UF = Strings::replaceSpecialsChars($end->Cidade->Estado->sigla);
+                $std->CEP = $end->cep;
+                $std->cPais = $end->Cidade->Estado->Pais->codigooficial;
+                $std->xPais = Strings::replaceSpecialsChars($end->Cidade->Estado->Pais->pais);
+                if ($pt = $nf->Pessoa->PessoaTelefoneS()->orderBy('ordem')->first()) {
+                    $std->fone = "0{$pt->ddd}{$pt->telefone}";
+                }            
+                $nfe->tagenderDest($std);
             }
-            $std->xBairro = Strings::replaceSpecialsChars($nf->Pessoa->bairro);
-            $std->cMun = $nf->Pessoa->Cidade->codigooficial;
-            $std->xMun = Strings::replaceSpecialsChars($nf->Pessoa->Cidade->cidade);
-            $std->UF = Strings::replaceSpecialsChars($nf->Pessoa->Cidade->Estado->sigla);
-            $std->CEP = $nf->Pessoa->cep;
-            $std->cPais = $nf->Pessoa->Cidade->Estado->Pais->codigooficial;
-            $std->xPais = Strings::replaceSpecialsChars($nf->Pessoa->Cidade->Estado->Pais->pais);
-            $std->fone = numeroLimpo(($nf->Pessoa->telefone1 ?? $nf->Pessoa->telefone2) ?? $nf->Pessoa->telefone3);
-            $nfe->tagenderDest($std);
         }
 
         $nItem = 0;
@@ -662,24 +672,26 @@ class NFePHPMakeService
         if (!empty($nf->codpessoatransportador)) {
             $std->xNome = substr(Strings::replaceSpecialsChars($nf->PessoaTransportador->pessoa), 0, 60);
             $std->IE = numeroLimpo($nf->PessoaTransportador->ie);
-            $end = [
-                Strings::replaceSpecialsChars($nf->PessoaTransportador->endereco),
-                Strings::replaceSpecialsChars($nf->PessoaTransportador->numero),
-                Strings::replaceSpecialsChars($nf->PessoaTransportador->complemento),
-                Strings::replaceSpecialsChars($nf->PessoaTransportador->bairro),
-            ];
-            $std->xEnder = implode(
-                ', ',
-                array_filter($end)
-            );
-            $std->xMun = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->cidade);
-            $std->UF = Strings::replaceSpecialsChars($nf->PessoaTransportador->Cidade->Estado->sigla);
             if ($nf->PessoaTransportador->fisica) {
                 $std->CNPJ = '';
                 $std->CPF = str_pad($nf->PessoaTransportador->cnpj, 11, '0', STR_PAD_LEFT); //'58716523000119';
             } else {
                 $std->CNPJ = str_pad($nf->PessoaTransportador->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
                 $std->CPF = '';
+            }
+            if ($end = $nf->PessoaTransportador->PessoaEnderecoS()->where('nfe', true)->orderBy('ordem')->first()) {
+                $arr = [
+                    Strings::replaceSpecialsChars($end->endereco),
+                    Strings::replaceSpecialsChars($end->numero),
+                    Strings::replaceSpecialsChars($end->complemento),
+                    Strings::replaceSpecialsChars($end->bairro),
+                ];
+                $std->xEnder = implode(
+                    ', ',
+                    array_filter($arr)
+                );
+                $std->xMun = Strings::replaceSpecialsChars($end->Cidade->cidade);
+                $std->UF = Strings::replaceSpecialsChars($end->Cidade->Estado->sigla);
             }
             $nfe->tagtransporta($std);
         }
