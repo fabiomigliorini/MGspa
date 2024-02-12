@@ -7,7 +7,6 @@
 namespace Mg\NaturezaOperacao;
 
 use Mg\MgModel;
-use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;

@@ -9,7 +9,6 @@ namespace Mg\Negocio;
 use Mg\MgModel;
 use Mg\CupomFiscal\CupomFiscalProdutoBarra;
 use Mg\Estoque\EstoqueMovimento;
-use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioProdutoBarraPedidoItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\Mercos\MercosPedidoItem;

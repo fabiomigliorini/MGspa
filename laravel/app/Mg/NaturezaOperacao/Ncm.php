@@ -9,7 +9,6 @@ namespace Mg\NaturezaOperacao;
 use Mg\MgModel;
 use Mg\NaturezaOperacao\Cest;
 use Mg\NaturezaOperacao\Ibptax;
-use Mg\NaturezaOperacao\Ncm;
 use Mg\Produto\Produto;
 use Mg\NaturezaOperacao\RegulamentoIcmsStMt;
 use Mg\Usuario\Usuario;

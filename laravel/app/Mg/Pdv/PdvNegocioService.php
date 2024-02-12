@@ -24,10 +24,10 @@ class PdvNegocioService
         // Procura se já existe um negocio com o uuid na base
         $negocio = Negocio::firstOrNew(['uuid' => $data['uuid']]);
         if ($negocio->codnegociostatus == 2) {
-            throw new \Exception("Tentando atualizar um negocio Fechado {$negocio->codnegocio}!", 1);
+            throw new Exception("Tentando atualizar um negocio Fechado {$negocio->codnegocio}!", 1);
         }
         if ($negocio->codnegociostatus == 3) {
-            throw new \Exception("Tentando atualizar um negocio Cancelado {$negocio->codnegocio}!", 1);
+            throw new Exception("Tentando atualizar um negocio Cancelado {$negocio->codnegocio}!", 1);
         }
 
         // importa os dados do negocio
@@ -41,7 +41,7 @@ class PdvNegocioService
         foreach ($data['itens'] as $item) {
             $npb = NegocioProdutoBarra::firstOrNew(['uuid' => $item['uuid']]);
             if (!empty($npb->codnegocio) && $npb->codnegocio != $negocio->codnegocio) {
-                throw new \Exception("Tentando atualizar um item de outro negocio {$npb->codnegocio}/{$negocio->codnegocio}!", 1);
+                throw new Exception("Tentando atualizar um item de outro negocio {$npb->codnegocio}/{$negocio->codnegocio}!", 1);
             }
             $npb->fill($item);
             $npb->codnegocio = $negocio->codnegocio;
@@ -57,7 +57,7 @@ class PdvNegocioService
             // procura se pagamento já existe
             $nfp = NegocioFormaPagamento::firstOrNew(['uuid' => $pagto['uuid']]);
             if (!empty($nfp->codnegocio) && $nfp->codnegocio != $negocio->codnegocio) {
-                throw new \Exception("Tentando atualizar um pagamento de outro negocio {$nfp->codnegocio}/{$negocio->codnegocio}!", 1);
+                throw new Exception("Tentando atualizar um pagamento de outro negocio {$nfp->codnegocio}/{$negocio->codnegocio}!", 1);
             }
             // vincula pagamento
             $nfp->fill($pagto);
@@ -89,7 +89,7 @@ class PdvNegocioService
             var_dump($ret);
             echo '<hr>';
             die('Erro ao Gerar Movimentação de Estoque');
-            return false;
+            // return false;
         }
         return true;
     }
@@ -124,14 +124,14 @@ class PdvNegocioService
                 $valorPagamentos += $nfp->valortotal;
                 if ($nfp->parcelas > 1 && $negocio->codpessoa == 1) {
                     throw new Exception('Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!', 1);
-                }                
+                }
                 if ($nfp->FormaPagamento->boleto && $negocio->codpessoa == 1) {
                     throw new Exception('Somente é permitido Boleto para Pessoas ou Empresas Cadastradas!', 1);
                 }
                 if ($nfp->FormaPagamento->fechamento && $negocio->codpessoa == 1) {
                     throw new Exception('Somente é permitido Fechamento para Pessoas ou Empresas Cadastradas!', 1);
                 }
-                if (!$nfp->FormaPagamento->avista && !$nfp->FormaPagamento->entrega) {
+                if (!$nfp->FormaPagamento->avista && !$nfp->FormaPagamento->entrega && !$nfp->FormaPagamento->pix) {
                     $valorPagamentosPrazo += $nfp->valorpagamento;
                 }
             }
@@ -159,7 +159,7 @@ class PdvNegocioService
             $fil = substr(str_pad($negocio->Filial->Pessoa->cnpj, 14, "0", STR_PAD_LEFT), 0, 8);
             $pes = substr(str_pad($negocio->Pessoa->cnpj, 14, "0", STR_PAD_LEFT), 0, 8);
             if ($fil != $pes) {
-                throw new \Exception("A Pessoa destino precisa ser uma Filial!", 1);
+                throw new Exception("A Pessoa destino precisa ser uma Filial!", 1);
             }
         }
 
