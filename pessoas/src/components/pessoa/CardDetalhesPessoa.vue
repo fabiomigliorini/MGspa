@@ -6,7 +6,7 @@
         <q-card-section>
           <q-input outlined v-model="modelEditarDetalhes.fantasia" label="Fantasia" class="" :rules="[
             val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
-          ]" />
+          ]" autofocus />
 
           <q-input outlined v-model="modelEditarDetalhes.pessoa" label="Razão Social" :rules="[
             val => val && val.length > 0 || 'Razão Social é Obrigatório'
@@ -39,11 +39,11 @@
           <div class="row q-col-gutter-md">
 
             <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##-##-####" label="Nascimento / Fundação">
+              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##/##/####" label="Nascimento / Fundação">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelEditarDetalhes.nascimento" :locale="brasil" mask="DD-MM-YYYY">
+                      <q-date v-model="modelEditarDetalhes.nascimento" :locale="brasil" mask="DD/MM/YYYY">
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Fechar" color="primary" flat />
                         </div>
@@ -61,7 +61,6 @@
               </select-cidade>
             </div>
           </div>
-
 
 
           <div class="row q-col-gutter-md">
@@ -106,11 +105,11 @@
             </div>
 
             <div class="col-4">
-              <q-input outlined v-model="modelEditarDetalhes.emissaoctps" mask="##-##-####" label="Emissão CTPS">
+              <q-input outlined v-model="modelEditarDetalhes.emissaoctps" mask="##/##/####" label="Emissão CTPS">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelEditarDetalhes.emissaoctps" :locale="brasil" mask="DD-MM-YYYY">
+                      <q-date v-model="modelEditarDetalhes.emissaoctps" :locale="brasil" mask="DD/MM/YYYY">
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Fechar" color="primary" flat />
                         </div>
@@ -122,16 +121,14 @@
             </div>
 
             <div class="col-6">
-              <q-select outlined v-model="modelEditarDetalhes.tipotransportador" class="q-pr-md"
-                label="Tipo Transportador" :options="[
-                  { label: 'Nenhum', value: 0 },
-                  { label: 'ETC - Empresa', value: 1 },
-                  { label: 'TAC - Autônomo', value: 2 },
-                  { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
+              <q-select outlined v-model="modelEditarDetalhes.tipotransportador" label="Tipo Transportador" :options="[
+                { label: 'Nenhum', value: 0 },
+                { label: 'ETC - Empresa', value: 1 },
+                { label: 'TAC - Autônomo', value: 2 },
+                { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
             </div>
             <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.rntrc" label="RNTRC" class="q-mb-md" mask="#########"
-                unmasked-value />
+              <q-input outlined v-model="modelEditarDetalhes.rntrc" label="RNTRC" mask="#########" unmasked-value />
             </div>
           </div>
 
@@ -212,9 +209,12 @@
             <q-item-section top>
               <q-item-label>
                 #0000{{ sPessoa.item.codpessoa }}
-                <a v-if="sPessoa.item.mercosId.length > 0"
-                  :href="'https://sandbox.mercos.com/41233/clientes/' + sPessoa.item.mercosId" target="_blank"><span
-                    v-if="sPessoa.item.mercosId.length > 0">/ {{ sPessoa.item.mercosId[0] }}</span></a>
+                <span v-if="sPessoa.item.mercosId.length > 0">
+                  /
+                  <q-btn dense v-if="sPessoa.item.mercosId.length > 0" flat color="primary" :label="Number(sPessoa.item.mercosId)"
+                    :href="'https://app.mercos.com/354041/clientes/' + sPessoa.item.mercosId" target="_blank" />
+                </span>
+
               </q-item-label>
               <q-item-label caption>
                 Pessoa
@@ -534,6 +534,7 @@ export default defineComponent({
 
 
     async salvarDetalhes() {
+
       if (!this.sPessoa.item.PessoaEnderecoS.find(item => item.nfe === true) && this.modelEditarDetalhes.ie) {
         this.$q.notify({
           color: 'red-5',
@@ -543,8 +544,19 @@ export default defineComponent({
         })
         return
       }
+
+      const editar = { ...this.modelEditarDetalhes }
+
+      if (editar.nascimento) {
+        editar.nascimento = this.Documentos.dataFormatoSql(editar.nascimento)
+      }
+
+      if (editar.emissaoctps) {
+        editar.emissaoctps = this.Documentos.dataFormatoSql(editar.emissaoctps)
+      }
+
       try {
-        const ret = await this.sPessoa.clienteSalvar(this.sPessoa.item.codpessoa, this.modelEditarDetalhes)
+        const ret = await this.sPessoa.clienteSalvar(this.sPessoa.item.codpessoa, editar)
         this.sPessoa.item = ret.data.data
         if (ret.data.data) {
           this.$q.notify({

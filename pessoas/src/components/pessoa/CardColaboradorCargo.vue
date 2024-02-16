@@ -1,8 +1,9 @@
 <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-    <div class="row q-col-gutter-md">
+    <div class="row">
         <div v-for="colaboradorCargo in colaboradorCargos.ColaboradorCargo"
-            v-bind:key="colaboradorCargo.codcolaboradorcargo" class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3">
-            <q-card bordered>
+            v-bind:key="colaboradorCargo.codcolaboradorcargo">
+            <div class="q-pl-md q-pt-md">
+            <q-card bordered>   
 
                 <q-item-label header>
                     {{ colaboradorCargo.Cargo }}
@@ -110,6 +111,7 @@
                     </q-item>
                 </template>
             </q-card>
+        </div>
         </div>
     </div>
 

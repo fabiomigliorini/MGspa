@@ -177,7 +177,7 @@ class Pessoa extends MgModel
     }
 
 
-    public function Estado()
+    public function EstadoCtps()
     {
         return $this->belongsTo(Estado::class, 'codestadoctps', 'codestado');
     }

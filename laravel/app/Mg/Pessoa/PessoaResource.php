@@ -37,7 +37,7 @@ class PessoaResource extends JsonResource
 
         $ret['cidadenascimento'] = @$this->CidadeNascimento->cidade;
         $ret['ufnascimento'] = @$this->CidadeNascimento->Estado->sigla;
-        $ret['ufctpsS'] = @$this->Estado->sigla;
+        $ret['ufctpsS'] = @$this->EstadoCtps->sigla;
 
         $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
         $ret['usuarioalteracao'] = @$this->UsuarioAlteracao->usuario;

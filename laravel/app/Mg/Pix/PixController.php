@@ -175,5 +175,16 @@ class PixController
     }
 
 
+    public function buscaCpfCnpjCadastro(Request $request)
+    {
+
+        $cnpj = $request->cnpj??null;
+        $cpf = $request->cpf??null; 
+
+        $busca = PixService::buscaCpfCnpjCadastro($cnpj, $cpf);
+
+        return response()->json($busca, 200);
+    }
+
 
 }

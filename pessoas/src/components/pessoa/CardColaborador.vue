@@ -9,7 +9,7 @@
         </q-list>
     </q-card>
 
-    <div v-for="colaborador in colaboradores" v-bind:key="colaborador.codcolaborador" class="q-pt-md">
+    <div v-for="colaborador in colaboradores" v-bind:key="colaborador.codcolaborador">
         <q-card bordered v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
             <q-list>
                 <q-item>
@@ -110,14 +110,14 @@
                     </q-item>
                 </template>
 
-                <q-item>
+                <q-item class="q-pl-md">
                     <q-item-section>
                         <card-colaborador-cargo :colaboradorCargos="colaborador"
                             v-on:update:colaboradorCargos="updateColaboradorCargo($event)" />
                     </q-item-section>
                 </q-item>
 
-                <q-item>
+                <q-item class="q-pl-md">
                     <q-item-section>
                         <card-ferias :feriasS="colaborador" v-on:update:feriasS="updateFerias($event)"></card-ferias>
                     </q-item-section>
@@ -147,8 +147,8 @@
                         { label: 'Terceirizado', value: 90 },
                         { label: 'Diarista', value: 91 }
                     ]" map-options emit-value :rules="[
-    val => val !== null && val !== '' && val !== undefined || 'Vinculo Obrigatório',
-]" />
+                    val => val !== null && val !== '' && val !== undefined || 'Vinculo Obrigatório',
+                    ]" />
 
                     <div class="row">
                         <div class="col-6">
@@ -366,22 +366,21 @@
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorFerias.dias" label="Dias" class="q-pr-md"
                                 @change="calculaDias()" />
-
+                        </div>
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
+                                val => val !== null && val !== '' && val !== undefined || 'Dias Abono obrigatório'
+                            ]" label="Dias Abono" @change="calculaDias()" />
+                        </div>
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" class="q-pr-md"
+                                label="Dias Descontados" @change="calculaDias()" />
                         </div>
 
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorFerias.diasgozo" label="Dias Gozo" :rules="[
                                 val => val !== null && val !== '' && val !== undefined || 'Dias Gozo Obrigatório'
                             ]" @change="calculaDias()" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
-                                val => val !== null && val !== '' && val !== undefined || 'Dias Abono obrigatório'
-                            ]" label="Dias Abono" class="q-pr-md" @change="calculaDias()" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" label="Dias Descontados"
-                                @change="calculaDias()" />
                         </div>
 
                         <div class="col-6">
@@ -422,7 +421,16 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined
+                            <q-toggle outlined v-model="modelnovoColaboradorFerias.prevista" label="Prevista" />
+                        </div>
+                        <div class="col-12">
+
+                            <q-date v-model="dateRange" label="Periodo Gozo" :locale="brasil" range mask="DD/MM/YYYY"
+                                landscape>
+
+                            </q-date>
+
+                            <!-- <q-input outlined
                                 :model-value="`${dateRange.from ? dateRange.from : ''} - ${dateRange.to ? dateRange.to : ''}`"
                                 label="Periodo de Gozo" :rules="[validaObrigatorio, validaData, validaGozoInicio]"
                                 class="q-pr-md" mask="##/##/#### - ##/##/####">
@@ -439,11 +447,9 @@
                                         </q-popup-proxy>
                                     </q-icon>
                                 </template>
-                            </q-input>
+                            </q-input> -->
                         </div>
-                        <div class="col-6">
-                            <q-toggle outlined v-model="modelnovoColaboradorFerias.prevista" label="Prevista" />
-                        </div>
+
                     </div>
 
                     <q-input outlined autogrow bordeless v-model="modelnovoColaboradorFerias.observacoes"
@@ -458,12 +464,10 @@
             </q-form>
         </q-card>
     </q-dialog>
-
-    
 </template>
   
 <script>
-import { defineComponent, defineAsyncComponent } from 'vue'
+import { defineComponent, defineAsyncComponent, watch } from 'vue'
 import { useQuasar, debounce } from "quasar"
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -634,7 +638,6 @@ export default defineComponent({
                     })
                 }
             }
-
         },
 
         async novoColaboradorFerias(codcolaborador) {
@@ -645,9 +648,45 @@ export default defineComponent({
             }
 
             const colaborador = this.colaboradores.find(colaborador => colaborador.codcolaborador === this.codcolaborador)
-            if (colaborador.Ferias[0] && colaborador.Ferias[0].dias !== undefined) {
-                this.modelnovoColaboradorFerias.dias = colaborador.Ferias[0].dias
-                this.modelnovoColaboradorFerias.diasgozo = colaborador.Ferias[0].dias
+
+            if (colaborador.Ferias[0] && colaborador.Ferias[1]) {
+
+                if (colaborador.Ferias[0].dias + colaborador.Ferias[1].dias == 30) {
+
+                    this.modelnovoColaboradorFerias.dias = 30
+                    this.modelnovoColaboradorFerias.diasgozo = 30
+
+
+                } else if (colaborador.Ferias[0].dias + colaborador.Ferias[1].dias < 30) {
+                    var dias = (30 - colaborador.Ferias[0].dias)
+                    if (dias > 0) {
+                        this.modelnovoColaboradorFerias.dias = dias
+                        this.modelnovoColaboradorFerias.diasgozo = dias
+                    }
+                }
+
+                if (colaborador.Ferias[0].dias + colaborador.Ferias[1].dias > 30) {
+                    var dias = (30 - colaborador.Ferias[0].dias)
+                    if (dias > 0) {
+                        this.modelnovoColaboradorFerias.dias = dias
+                        this.modelnovoColaboradorFerias.diasgozo = dias
+                    }
+                }
+            }
+
+            if (colaborador.Ferias[0] && colaborador.Ferias[0].dias !== undefined && !colaborador.Ferias[1]) {
+
+                if (colaborador.Ferias[0].dias == 30) {
+                    this.modelnovoColaboradorFerias.dias = 30
+                    this.modelnovoColaboradorFerias.diasgozo = 30
+
+                } else if (colaborador.Ferias[0].dias < 30) {
+                    var dias = (30 - colaborador.Ferias[0].dias)
+                    if (dias > 0) {
+                        this.modelnovoColaboradorFerias.dias = dias
+                        this.modelnovoColaboradorFerias.diasgozo = dias
+                    }
+                }
             }
 
             if (colaborador.Ferias[0] && colaborador.Ferias[0].aquisitivofim !== undefined) {
@@ -657,6 +696,11 @@ export default defineComponent({
                 this.modelnovoColaboradorFerias.aquisitivoinicio = sugestaoAqInicio
                 this.modelnovoColaboradorFerias.aquisitivofim = sugestaoAqFim
             }
+            if (this.modelnovoColaboradorFerias.dias == null && this.modelnovoColaboradorFerias.diasgozo == null) {
+                this.modelnovoColaboradorFerias.dias = '30'
+                this.modelnovoColaboradorFerias.diasgozo = '30'
+            }
+
 
             this.modelnovoColaboradorFerias.diasabono = '0'
             this.modelnovoColaboradorFerias.diasdescontados = '0'
@@ -669,8 +713,8 @@ export default defineComponent({
 
         async getApiNovaFerias() {
 
-                const colabFerias = {...this.modelnovoColaboradorFerias}    
-            
+            const colabFerias = { ...this.modelnovoColaboradorFerias }
+
             if (colabFerias.aquisitivoinicio) {
                 colabFerias.aquisitivoinicio = this.Documentos.dataFormatoSql(colabFerias.aquisitivoinicio)
             }
@@ -736,7 +780,7 @@ export default defineComponent({
             })
         },
 
-     
+
 
         editarColaborador(codcolaborador, codfilial, contratacao, vinculo, experiencia, renovacaoexperiencia,
             rescisao, numeroponto, numerocontabilidade, observacoes) {
@@ -965,7 +1009,6 @@ export default defineComponent({
                 this.modelnovoColaboradorFerias.diasdescontados = '0'
             }
 
-
             var calculadias = (this.modelnovoColaboradorFerias.dias -
                 this.modelnovoColaboradorFerias.diasabono - this.modelnovoColaboradorFerias.diasdescontados)
 
@@ -1001,6 +1044,45 @@ export default defineComponent({
         const dialogNovoCargo = ref(false)
         const codcolaborador = ref('')
         const dateRange = ref({ from: '', to: '' })
+
+
+        const range = debounce(async () => {
+
+
+            const gozoInicio = moment(dateRange.value.from, 'DD/MM/YYYY')
+            const gozoFim = moment(dateRange.value.to, 'DD/MM/YYYY')
+
+            var diasGozo = (gozoFim.diff(gozoInicio, 'days') + 1)
+
+            if (dateRange.value.from && dateRange.value.to) {
+                modelnovoColaboradorFerias.value.dias = diasGozo
+                modelnovoColaboradorFerias.value.diasgozo = diasGozo
+            }
+
+            // try {
+            //     const ret = await sPessoa.buscarPessoas();
+            //     loading.value = false;
+            //     $q.loadingBar.stop()
+            //     if (ret.data.data.length == 0) {
+            //         return $q.notify({
+            //             color: 'red-5',
+            //             textColor: 'white',
+            //             icon: 'warning',
+            //             message: 'Nenhum Registro encontrado'
+            //         })
+            //     }
+            // } catch (error) {
+            //     $q.loadingBar.stop()
+            // }
+        }, 500)
+
+        watch(
+            () => dateRange.value,
+            () => range(),
+            { deep: true }
+        );
+
+
         return {
             sPessoa,
             Documentos,
@@ -1024,7 +1106,7 @@ export default defineComponent({
                 daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
                 months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
                 monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
-                firstDayOfWeek: 1,
+                firstDayOfWeek: 0,
                 format24h: true,
                 pluralDay: 'dias'
             },

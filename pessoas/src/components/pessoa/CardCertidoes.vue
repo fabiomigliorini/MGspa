@@ -3,7 +3,8 @@
         <q-list>
             <q-item-label header>
                 Certidões
-                <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Publico')" @click="dialogCertidao = true, modelCertidao = {}, editCertidao = false" />
+                <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Publico')"
+                    @click="dialogCertidao = true, modelCertidao = {}, editCertidao = false" />
 
                 <q-radio v-model="filtroCertidaomodel" val="todas" label="Todas" @click="filtroCertidao()" />
                 <q-radio v-model="filtroCertidaomodel" val="validas" label="Válidas" @click="filtroCertidao()" />
@@ -120,19 +121,20 @@ export default defineComponent({
     methods: {
 
         filtroCertidao() {
+
             if (this.filtroCertidaomodel == 'validas') {
                 let validas = this.sPessoa.item.PessoaCertidaoS.filter(x => x.validade >= this.Documentos.dataAtual())
                 this.sPessoa.item.PessoaCertidaoS = validas
             }
             if (this.filtroCertidaomodel == 'todas') {
-                this.sPessoa.get(this.route.params.id)
+                this.sPessoa.item.PessoaCertidaoS = this.certidoesS
             }
         },
 
         async novaCertidao() {
             this.modelCertidao.codpessoa = this.route.params.id
             if (this.modelCertidao.validade) {
-             this.modelCertidao.validade = this.Documentos.dataFormatoSql(this.modelCertidao.validade)
+                this.modelCertidao.validade = this.Documentos.dataFormatoSql(this.modelCertidao.validade)
             }
             try {
                 const ret = await this.sPessoa.novaCertidao(this.modelCertidao)
@@ -167,7 +169,7 @@ export default defineComponent({
 
         async salvarCertidao() {
             if (this.modelCertidao.validade) {
-             this.modelCertidao.validade = this.Documentos.dataFormatoSql(this.modelCertidao.validade)
+                this.modelCertidao.validade = this.Documentos.dataFormatoSql(this.modelCertidao.validade)
             }
             try {
                 const ret = await this.sPessoa.salvarEdicaoCertidao(this.modelCertidao.codpessoacertidao, this.modelCertidao)
@@ -279,12 +281,11 @@ export default defineComponent({
         const $q = useQuasar()
         const sPessoa = pessoaStore()
         const editCertidao = ref(false)
-        //   const modelEditar = ref([])
         const loading = ref(true)
         const route = useRoute()
         const dialogCertidao = ref(false)
         const modelCertidao = ref({})
-        const filtroCertidaomodel = ref('todas')
+        const filtroCertidaomodel = ref('validas')
 
         const user = guardaToken()
         const Documentos = formataDocumetos()
@@ -292,6 +293,7 @@ export default defineComponent({
         const Paginas = ref({
             page: 1
         })
+        const certidoesS = ref([])
 
         return {
             sPessoa,
@@ -305,6 +307,7 @@ export default defineComponent({
             editCertidao,
             loading,
             modelCertidao,
+            certidoesS,
             brasil: {
                 days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),
                 daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
@@ -316,6 +319,12 @@ export default defineComponent({
             },
         }
     },
+    mounted() {
+        this.certidoesS = this.sPessoa.item.PessoaCertidaoS
+       
+        let validas = this.sPessoa.item.PessoaCertidaoS.filter(x => x.validade >= this.Documentos.dataAtual())
+        this.sPessoa.item.PessoaCertidaoS = validas
+    }
 })
 </script>
   

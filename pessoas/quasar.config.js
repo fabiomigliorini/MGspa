@@ -71,7 +71,12 @@ module.exports = configure(function (ctx) {
 
          MGLARA_URL: ctx.dev
          ? 'http://sistema-dev.mgpapelaria.com.br/MGLara/'
-         : 'https://sistema.mgpapelaria.com.br/MGLara/'
+         : 'https://sistema.mgpapelaria.com.br/MGLara/',
+
+         MERCOS: ctx.dev
+         ? 'https://app.mercos.com/354041/clientes/'
+         : 'https://app.mercos.com/354041/clientes/'
+
         },
       // transpile: false,
       // publicPath: '/',

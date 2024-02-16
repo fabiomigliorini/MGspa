@@ -295,7 +295,8 @@ export default defineComponent({
             message: 'Email alterado'
           })
           this.dialogEmail = false
-          this.sPessoa.get(this.route.params.id)
+
+          // this.sPessoa.get(this.route.params.id)
         }
       } catch (error) {
         this.$q.notify({

@@ -53,19 +53,7 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
     async criarPessoa(model) {
-      // if (model.ie !== undefined) {
-      //   model.ie = model.ie.replace(/[^\d]+/g, '')
-      //   // model.uf = model.uf.value
-      // }
-
-
-      const ret = await api.post('v1/pessoa', {
-        fantasia: model.fantasia, pessoa: model.pessoa,
-        fisica: model.fisica, cliente: model.cliente, cnpj: model.cnpj, rg: model.rg, ie: model.ie, tipotransportador: model.tipotransportador,
-        notafiscal: model.notafiscal, rntrc: model.rntrc, uf: model.uf, pai: model.pai, mae: model.mae, nascimento: model.nascimento, codcidadenascimento: model.codcidadenascimento,
-        pispasep: model.pispasep, tituloeleitor: model.tituloeleitor, titulozona: model.titulozona, titulosecao: model.titulosecao,
-        ctps: model.ctps, seriectps: model.seriectps, emissaoctps: model.emissaoctps, codestadoctps: model.codestadoctps
-      })
+      const ret = await api.post('v1/pessoa', model)
       return ret;
     },
 
@@ -163,8 +151,8 @@ export const pessoaStore = defineStore('pessoa', {
 
     async emailSalvar(codpessoa, codpessoaemail, modelalteraremail) {
       const ret = await api.put('v1/pessoa/' + codpessoa + '/email/' + codpessoaemail, modelalteraremail)
-      // const i = this.item.PessoaEmailS.findIndex(item => item.codpessoatelefone === codpessoatelefone)
-      // this.item.PessoaEmailS[i] = ret.data.data
+      const i = this.item.PessoaEmailS.findIndex(item => item.codpessoaemail === codpessoaemail)
+      this.item.PessoaEmailS[i] = ret.data.data
       return ret;
     },
 
@@ -486,8 +474,7 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
     async salvarColaboradorFerias(modelColaboradorFerias) {
-      const ret = await api.put('v1/colaborador/' + modelColaboradorFerias.codcolaborador +
-      '/ferias/' + modelColaboradorFerias.codferias, modelColaboradorFerias)
+      const ret = await api.put('v1/ferias/' + modelColaboradorFerias.codferias, modelColaboradorFerias)
       
      return ret;
 
@@ -529,7 +516,22 @@ export const pessoaStore = defineStore('pessoa', {
     async pessoasColaboradorCargo(codcargo) {
       const ret = await api.get('v1/cargo/pessoas-cargo/' + codcargo)
       return ret;
-    }
+    },
+
+    async programacaoFerias(ano) {
+      const ret = await api.get('v1/programacao-ferias/', {params: ano})
+      return ret;
+    },
+
+    async updateFeriasRange(codferias, dates) {
+      const ret = await api.put('v1/ferias/' + codferias, dates)
+      return ret;
+    },
+
+    async buscaCpfCnpjCadastro(cnpjcpf) {
+      const ret = await api.get('v1/pix/busca-cpf-cadastro', {params: cnpjcpf})
+      return ret;
+    },
   }
 })
 

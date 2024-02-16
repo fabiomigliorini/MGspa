@@ -1,7 +1,7 @@
 <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-    <div class="row q-col-gutter-md">
+    <div class="row q-pl-md">
         <div v-for="ferias in feriasS.Ferias" v-bind:key="ferias.codferias"
-            class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3">
+            class="">
             <q-card bordered :class="ferias.prevista == true ? 'bg-orange' : null">
                 <q-item>
                     <q-item-label header>
@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <!-- Dialog novo Colaborador Ferias -->
+    <!-- Dialog editar Colaborador Ferias -->
     <q-dialog v-model="dialogNovoColaboradorFerias">
         <q-card style="min-width: 350px">
             <q-form @submit="salvarColaboradorFerias()">
@@ -85,23 +85,25 @@
                 <q-card-section>
                     <div class="row">
                         <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.dias" label="Dias" class="q-pr-md" @change="calculaDias()" />
+                            <q-input outlined v-model="modelnovoColaboradorFerias.dias" label="Dias" class="q-pr-md"
+                                @change="calculaDias()" />
 
+                        </div>
+
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
+                                val => val !== null && val !== '' && val !== undefined || 'Dias Abono obrigatório'
+                            ]" label="Dias Abono"  @change="calculaDias()" />
+                        </div>
+                        <div class="col-6">
+                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" class="q-pr-md" label="Dias Descontados"
+                                @change="calculaDias()" />
                         </div>
 
                         <div class="col-6">
                             <q-input outlined v-model="modelnovoColaboradorFerias.diasgozo" label="Dias Gozo" :rules="[
                                 val => val !== null && val !== '' && val !== undefined || 'Dias Gozo Obrigatório'
                             ]" @change="calculaDias()" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasabono" :rules="[
-                                val => val !== null && val !== '' && val !== undefined || 'Dias Abono obrigatório'
-                            ]" label="Dias Abono" class="q-pr-md" @change="calculaDias()" />
-                        </div>
-                        <div class="col-6">
-                            <q-input outlined v-model="modelnovoColaboradorFerias.diasdescontados" label="Dias Descontados"
-                             @change="calculaDias()"/>
                         </div>
 
                         <div class="col-6">
@@ -142,32 +144,18 @@
                             </q-input>
                         </div>
                         <div class="col-6">
-                            <q-input outlined
-                                :model-value="`${dateRange.from == null ? '' : dateRange.from} - ${dateRange.to == null ? '' : dateRange.to}`"
-                                label="Periodo de Gozo" :rules="[validaObrigatorio, validaDataValida, validaGozoInicio]"
-                                class="q-pr-md" mask="##/##/#### - ##/##/####">
-
-
-                                <template v-slot:append>
-                                    <q-icon name="event" class="cursor-pointer">
-                                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                            <q-date v-model="dateRange" :locale="brasil" range mask="DD/MM/YYYY">
-                                                <div class="row items-center justify-end">
-                                                    <q-btn v-close-popup label="Fechar" color="primary" flat />
-                                                </div>
-                                            </q-date>
-                                        </q-popup-proxy>
-                                    </q-icon>
-                                </template>
-                            </q-input>
-                        </div>
-                        <div class="col-6">
                             <q-toggle outlined v-model="modelnovoColaboradorFerias.prevista" label="Prevista" />
                         </div>
+                        <div class="col-12">
+                            <q-date v-model="dateRange" :locale="brasil" range mask="DD/MM/YYYY" landscape>
+
+                            </q-date>
+                        </div>
+                       
                     </div>
 
                     <q-input outlined autogrow bordeless v-model="modelnovoColaboradorFerias.observacoes"
-                        label="Observações" type="textarea" />
+                        label="Observações" class="q-pt-md" type="textarea" />
 
                 </q-card-section>
 
@@ -181,7 +169,7 @@
 </template>
   
 <script>
-import { defineComponent, defineAsyncComponent } from 'vue'
+import { defineComponent, defineAsyncComponent, watch } from 'vue'
 import { useQuasar, debounce } from "quasar"
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -227,8 +215,8 @@ export default defineComponent({
         },
 
         editarFerias(codferias, codcolaborador, aquisitivoinicio, aquisitivofim, gozoinicio, gozofim, diasgozo,
-           
-        diasabono, diasdescontados, dias, observacoes, prevista) {
+
+            diasabono, diasdescontados, dias, observacoes, prevista) {
             this.dialogNovoColaboradorFerias = true
             this.modelnovoColaboradorFerias = {
                 codferias: codferias, codcolaborador: codcolaborador, aquisitivoinicio:
@@ -240,7 +228,7 @@ export default defineComponent({
                 prevista: prevista
             }
 
-            this.dateRange = {from: this.Documentos.formataDatasemHr(gozoinicio), to: this.Documentos.formataDatasemHr(gozofim)}
+            this.dateRange = { from: this.Documentos.formataDatasemHr(gozoinicio), to: this.Documentos.formataDatasemHr(gozofim) }
         },
 
         async salvarColaboradorFerias() {
@@ -259,7 +247,7 @@ export default defineComponent({
                 colabFerias.gozoinicio = this.Documentos.dataFormatoSql(this.dateRange.from)
                 colabFerias.gozofim = this.Documentos.dataFormatoSql(this.dateRange.to)
             }
-            
+
             try {
                 const ret = await this.sPessoa.salvarColaboradorFerias(colabFerias)
                 if (ret.data.data) {
@@ -408,6 +396,28 @@ export default defineComponent({
             return ctx.emit('update:feriasS', ret)
         }
 
+
+        const range = debounce(async () => {
+
+            const gozoInicio = moment(dateRange.value.from, 'DD/MM/YYYY')
+            const gozoFim = moment(dateRange.value.to, 'DD/MM/YYYY')
+
+            var diasGozo = (gozoFim.diff(gozoInicio, 'days') +1)
+
+            if (dateRange.value.from && dateRange.value.to && diasGozo !== modelnovoColaboradorFerias.value.dias) {
+                modelnovoColaboradorFerias.value.dias = diasGozo
+                modelnovoColaboradorFerias.value.diasgozo = diasGozo
+            }
+        }, 500)
+
+        watch(
+            () => dateRange.value,
+            () => range(),
+            { deep: true }
+        );
+
+
+
         const colaboradores = ref([])
 
         return {
@@ -426,7 +436,7 @@ export default defineComponent({
                 daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
                 months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
                 monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
-                firstDayOfWeek: 1,
+                firstDayOfWeek: 0,
                 format24h: true,
                 pluralDay: 'dias'
             },

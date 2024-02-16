@@ -263,7 +263,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // Route::get('colaborador/{codcolaborador}/ferias/', '\Mg\Colaborador\FeriasController@index');
         Route::post('colaborador/{codcolaborador}/ferias/', '\Mg\Colaborador\FeriasController@create');
         Route::get('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@show');
-        Route::put('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@update');
+        Route::put('ferias/{codferias}/', '\Mg\Colaborador\FeriasController@update');
         Route::delete('colaborador/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@delete');
         Route::get('programacao-ferias/', '\Mg\Colaborador\FeriasController@programacaoFerias');
 
@@ -523,6 +523,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
         Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
         Route::get('pix/', '\Mg\Pix\PixController@index');
+        Route::get('pix/busca-cpf-cadastro', '\Mg\Pix\PixController@buscaCpfCnpjCadastro');
+
 
         // Portador
         Route::get('portador', '\Mg\Portador\PortadorController@index');

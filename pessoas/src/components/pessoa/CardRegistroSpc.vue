@@ -93,8 +93,8 @@
               </template>
             </q-input>
 
-            <q-input outlined v-model="modelRegistroSpc.valor" label="Valor" step="any" :rules="[
-              val => val && val.length > 0 || 'Valor obrigatório'   
+            <q-input outlined v-model="modelRegistroSpc.valor" label="Valor" type="numeric" :rules="[
+              val => val !== null && val !== '' && val !== undefined || 'Valor obrigatório'   
             ]" />
 
             <q-input outlined v-model="modelRegistroSpc.observacoes" label="Observações" borderless
@@ -132,20 +132,30 @@ export default defineComponent({
     this.sPessoa.item.RegistroSpc = todos
     }
     if(this.filtroRegistroSpc == 'todos') {
-    this.sPessoa.get(this.route.params.id)
+      this.sPessoa.item.RegistroSpc = this.registrosS
     }
     },
 
     async novoRegistroSpc() {
       this.modelRegistroSpc.codpessoa = this.route.params.id
-     if(this.modelRegistroSpc.inclusao) {
-      this.modelRegistroSpc.inclusao = this.Documentos.dataFormatoSql(this.modelRegistroSpc.inclusao)
+
+      const novoRegistro = {...this.modelRegistroSpc}
+
+     if(novoRegistro.inclusao) {
+      novoRegistro.inclusao = this.Documentos.dataFormatoSql(novoRegistro.inclusao)
      }
-     if(this.modelRegistroSpc.baixa) {
-      this.modelRegistroSpc.baixa = this.Documentos.dataFormatoSql(this.modelRegistroSpc.baixa)
+     if(novoRegistro.baixa) {
+      novoRegistro.baixa = this.Documentos.dataFormatoSql(novoRegistro.baixa)
      }
+
+     
+     if(novoRegistro.valor.indexOf(',') > -1) {
+       var removeVirgula =  novoRegistro.valor.replace(/,([^,]*)$/,".$1")
+       novoRegistro.valor = removeVirgula
+      }
+
       try {
-        const ret = await this.sPessoa.novoRegistroSpc(this.route.params.id, this.modelRegistroSpc)
+        const ret = await this.sPessoa.novoRegistroSpc(this.route.params.id, novoRegistro)
         if (ret.data.data) {
           this.$q.notify({
             color: 'green-5',
@@ -153,8 +163,9 @@ export default defineComponent({
             icon: 'done',
             message: 'Registro Spc criado!'
           })
-          this.sPessoa.get(this.route.params.id)
+          
           this.dialogNovoRegistroSpc = false
+          this.sPessoa.item.RegistroSpc.push(ret.data.data)
         }
       } catch (error) {
         this.$q.notify({
@@ -177,15 +188,24 @@ export default defineComponent({
     },
 
     async salvarRegistro() {
-      if(this.modelRegistroSpc.inclusao) {
-      this.modelRegistroSpc.inclusao = this.Documentos.dataFormatoSql(this.modelRegistroSpc.inclusao)
+
+
+      const editRegistro = {...this.modelRegistroSpc}
+
+      if(editRegistro.inclusao) {
+        editRegistro.inclusao = this.Documentos.dataFormatoSql(editRegistro.inclusao)
       }
-      if(this.modelRegistroSpc.baixa) {
-      this.modelRegistroSpc.baixa = this.Documentos.dataFormatoSql(this.modelRegistroSpc.baixa)
+      if(editRegistro.baixa) {
+        editRegistro.baixa = this.Documentos.dataFormatoSql(editRegistro.baixa)
+      }
+
+      if(editRegistro.valor.toString().indexOf(',') > -1) {
+       var removeVirgula =  editRegistro.valor.replace(/,([^,]*)$/,".$1")
+        editRegistro.valor = removeVirgula
       }
 
       try {
-        const ret = await this.sPessoa.salvarEdicaoRegistro(this.route.params.id, this.modelRegistroSpc.codregistrospc, this.modelRegistroSpc)
+        const ret = await this.sPessoa.salvarEdicaoRegistro(this.route.params.id, editRegistro.codregistrospc, editRegistro)
         if (ret.data.data) {
           this.$q.notify({
             color: 'green-5',
@@ -245,7 +265,7 @@ export default defineComponent({
     const dialogNovoRegistroSpc = ref(false)
     const modelRegistroSpc = ref({})
     const editarRegistro = ref(false)
-    const filtroRegistroSpc = ref('todos')
+    const filtroRegistroSpc = ref('abertos')
     const user = guardaToken()
     const Documentos = formataDocumetos()
     const RegistroSpc = ref([])
@@ -253,6 +273,7 @@ export default defineComponent({
       page: 1
     })
 
+    const registrosS = ref([])
    
     return {
       sPessoa,
@@ -266,17 +287,24 @@ export default defineComponent({
       dialogNovoRegistroSpc,
       modelRegistroSpc,
       editarRegistro,
+      registrosS,
       brasil: {
         days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),
         daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
         months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
         monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
-        firstDayOfWeek: 1,
+        firstDayOfWeek: 0,
         format24h: true,
         pluralDay: 'dias'
       },
     }
   },
+  mounted() {
+    this.registrosS = this.sPessoa.item.RegistroSpc
+   
+    let todos = this.sPessoa.item.RegistroSpc.filter(x => !x.baixa)
+    this.sPessoa.item.RegistroSpc = todos
+  }
 })
 </script>
 

@@ -23,7 +23,7 @@ class FeriasController extends MgController
         return new FeriasResource($ferias);
     }
 
-    public function update(Request $request, $codcolaborador, $codferias)
+    public function update(Request $request, $codferias)
     {
         Autorizador::autoriza(['Recursos Humanos']);
 

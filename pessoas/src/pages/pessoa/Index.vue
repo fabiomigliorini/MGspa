@@ -21,8 +21,8 @@
 
       <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.verificaPermissaoUsuario('Publico')">
         <q-fab icon="add" direction="up" color="accent">
-          <q-fab-action @click="dialogNovaPessoa = true, novaPessoaModel.cliente = true, novaPessoaModel.notafiscal = 1"
-            color="primary" icon="person_add" label="Nova" />
+          <q-fab-action @click="dialogNovaPessoa = true, novaPessoaModel.notafiscal = 0" color="primary" icon="person_add"
+            label="Nova" />
           <q-fab-action @click="dialogimportar = true" icon="import_contacts" color="primary" label="Importar" />
         </q-fab>
       </q-page-sticky>
@@ -61,160 +61,164 @@
       <q-dialog v-model="dialogNovaPessoa">
         <q-card>
           <q-form @submit="novaPessoa()">
-            <div class="q-pa-md">
-              <q-card-section>
+            <q-card-section>
+              <div class="row">
 
-                <q-input outlined v-model="novaPessoaModel.fantasia" label="Fantasia" class="" :rules="[
-                  val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
-                ]" />
+                <div class="col-12">
+                  <q-input outlined v-model="novaPessoaModel.fantasia" label="Fantasia" :rules="[
+                    val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
+                  ]" autofocus />
+                </div>
 
-                <q-input outlined v-model="novaPessoaModel.pessoa" label="Razão Social" :rules="[
-                  val => val && val.length > 0 || 'Razão Social é Obrigatório'
-                ]" />
+                <div class="col-12">
+                  <q-input outlined v-model="novaPessoaModel.pessoa" label="Razão Social" :rules="[
+                    val => val && val.length > 0 || 'Razão Social é Obrigatório'
+                  ]" />
+                </div>
 
-                <div class="row">
-                  <q-toggle class="" outlined v-model="novaPessoaModel.fisica" label="Pessoa Física" />
-                  <q-toggle outlined v-model="novaPessoaModel.cliente" label="Cliente" />
+                <div class="col-12">
+                  <q-toggle outlined v-model="novaPessoaModel.fisica" label="Pessoa Física" />
 
                 </div>
 
-                <div class="row q-col-gutter-md">
-                  <div class="col-3">
-                    <q-input outlined v-model="novaPessoaModel.cnpj" label="Cnpj" v-if="novaPessoaModel.fisica == false"
-                      mask="##.###.###/####-##" unmasked-value required />
-                    <q-input outlined v-model="novaPessoaModel.cnpj" v-if="novaPessoaModel.fisica == true" label="CPF"
-                      mask="###.###.###-##" unmasked-value required />
-                  </div>
-                  <div class="col-3">
-                    <q-input label="Insc Estadual" v-model="novaPessoaModel.ie" outlined unmasked-value />
-                  </div>
-                  <div class="col-3">
-                    <q-select label="UF" v-model="novaPessoaModel.uf" :options="estados" option-label="value"
-                      option-value="value" emit-value outlined map-options />
-                  </div>
-                  <div class="col-3">
-                    <q-input outlined v-model="novaPessoaModel.rg" v-if="novaPessoaModel.fisica == true" label="RG"
-                      class="q-mb-md" unmasked-value />
-                  </div>
+
+                <div class="col-6 q-pr-md">
+                  <q-input outlined v-model="novaPessoaModel.cnpj" @change="buscaCnpj()" label="Cnpj"
+                    v-if="novaPessoaModel.fisica == false" mask="##.###.###/####-##" unmasked-value required />
+                  <q-input outlined v-model="novaPessoaModel.cnpj" @change="buscaCpf()"
+                    v-if="novaPessoaModel.fisica == true" label="CPF" mask="###.###.###-##" unmasked-value required />
+                </div>
+                <div class="col-3 q-pr-md">
+                  <q-input label="Insc Estadual" v-model="novaPessoaModel.ie" outlined unmasked-value />
+                </div>
+                <div class="col-3">
+                  <q-select label="UF" v-model="novaPessoaModel.uf" :options="estados" option-label="value"
+                    option-value="value" emit-value outlined map-options />
+                </div>
+                <div class="col-6 q-pt-md q-pr-md">
+                  <q-input outlined v-model="novaPessoaModel.rg" v-if="novaPessoaModel.fisica == true" label="RG"
+                    unmasked-value />
                 </div>
 
-                <div class="row q-col-gutter-md">
 
-                  <div class="col-6">
-                    <q-input outlined v-model="novaPessoaModel.nascimento" mask="##-##-####" class="q-pt-md"
-                      label="Nascimento / Fundação">
-                      <template v-slot:append>
-                        <q-icon name="event" class="cursor-pointer">
-                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                            <q-date v-model="novaPessoaModel.nascimento" :locale="brasil" mask="DD-MM-YYYY">
-                              <div class="row items-center justify-end">
-                                <q-btn v-close-popup label="Fechar" color="primary" flat />
-                              </div>
-                            </q-date>
-                          </q-popup-proxy>
-                        </q-icon>
-                      </template>
-                    </q-input>
-                  </div>
-
-                  <div class="col-6">
-                    <select-cidade v-model="novaPessoaModel.codcidadenascimento" :cidadeEditar="options"
-                      label="Cidade Nascimento" class="q-pt-md">
-
-                    </select-cidade>
-                  </div>
+                <div class="col-6 q-pt-md">
+                  <q-input outlined v-model="novaPessoaModel.nascimento" mask="##/##/####" label="Nascimento / Fundação">
+                    <template v-slot:append>
+                      <q-icon name="event" class="cursor-pointer">
+                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                          <q-date v-model="novaPessoaModel.nascimento" :locale="brasil" mask="DD/MM/YYYY">
+                            <div class="row items-center justify-end">
+                              <q-btn v-close-popup label="Fechar" color="primary" flat />
+                            </div>
+                          </q-date>
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                  </q-input>
                 </div>
 
-                <div class="row q-col-gutter-md">
+                <div class="col-6 q-pt-md q-pr-md">
+                  <select-cidade v-model="novaPessoaModel.codcidadenascimento" label="Cidade Nascimento">
 
-                  <div class="col-6">
-                    <q-select outlined class="q-pt-md" v-model="novaPessoaModel.tipotransportador"
-                      label="Tipo Transportador" :options="[
-                        { label: 'Nenhum', value: 0 },
-                        { label: 'ETC - Empresa', value: 1 },
-                        { label: 'TAC - Autônomo', value: 2 },
-                        { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
-                  </div>
-
-                  <div class="col-6">
-                    <q-select outlined v-model="novaPessoaModel.notafiscal" label="Nota Fiscal" :options="[
-                      { label: 'Tratamento Padrão', value: 0 },
-                      { label: 'Sempre', value: 1 },
-                      { label: 'Somente Fechamento', value: 2 },
-                      { label: 'Nunca', value: 9 }]" map-options emit-value clearable :rules="[
-                      val => val >= 0 && val != null || 'Nota Fiscal Obrigátorio'
-                      ]" class="q-pt-md" />
-                  </div>
-
-                  <div class="col-6">
-                    <q-input outlined v-model="novaPessoaModel.rntrc" label="RNTRC" mask="#########" unmasked-value />
-                  </div>
-
-                  <div class="col-6">
-                    <q-input outlined v-model="novaPessoaModel.pai" label="Nome do Pai" />
-                  </div>
-                  <div class="col-6">
-                    <q-input outlined v-model="novaPessoaModel.mae" label="Nome da Mãe" />
-                  </div>
-
-
-                  <div class="col-6">
-                    <q-input outlined v-model="novaPessoaModel.tituloeleitor" mask="####.####.####" label="Titulo Eleitor"
-                      unmasked-value />
-                  </div>
-                  <div class="col-3">
-                    <q-input outlined v-model="novaPessoaModel.titulozona" label="Titulo Zona" mask="###"
-                      unmasked-value />
-                  </div>
-                  <div class="col-3">
-                    <q-input outlined v-model="novaPessoaModel.titulosecao" label="Titulo Seção" mask="####"
-                      unmasked-value />
-                  </div>
-
-                  <div class="col-3">
-                    <q-input outlined v-model="novaPessoaModel.ctps" label="CTPS" inputmode="numeric" mask="#######"
-                      unmasked-value />
-                  </div>
-
-                  <div class="col-2">
-                    <q-input outlined v-model="novaPessoaModel.seriectps" label="Série" mask="####" inputmode="numeric"
-                      unmasked-value />
-                  </div>
-
-                  <div class="col-3">
-                    <select-estado v-model="novaPessoaModel.codestadoctps" label="UF"></select-estado>
-
-                  </div>
-
-                  <div class="col-4">
-                    <q-input outlined v-model="novaPessoaModel.emissaoctps" mask="##-##-####" label="Emissão CTPS">
-                      <template v-slot:append>
-                        <q-icon name="event" class="cursor-pointer">
-                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                            <q-date v-model="novaPessoaModel.emissaoctps" :locale="brasil" mask="DD-MM-YYYY">
-                              <div class="row items-center justify-end">
-                                <q-btn v-close-popup label="Fechar" color="primary" flat />
-                              </div>
-                            </q-date>
-                          </q-popup-proxy>
-                        </q-icon>
-                      </template>
-                    </q-input>
-                  </div>
-
-
-                  <div class="col-4">
-                    <q-input outlined v-model="novaPessoaModel.pispasep" label="PIS/PASEP" mask="###.#####.##-#"
-                      unmasked-value />
-                  </div>
+                  </select-cidade>
                 </div>
-              </q-card-section>
-              <div class="col-6 q-pt-none">
-                <q-card-actions align="right" class="text-primary">
-                  <q-btn flat label="Cancelar" v-close-popup />
-                  <q-btn flat label="Salvar" type="submit" />
-                </q-card-actions>
+
+                <div class="col-6 q-pt-md">
+                  <q-select outlined v-model="novaPessoaModel.tipotransportador" label="Tipo Transportador" :options="[
+                    { label: 'Nenhum', value: 0 },
+                    { label: 'ETC - Empresa', value: 1 },
+                    { label: 'TAC - Autônomo', value: 2 },
+                    { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
+                </div>
+
+                <div class="col-6 q-pt-md q-pr-md">
+                  <q-select outlined v-model="novaPessoaModel.notafiscal" label="Nota Fiscal" :options="[
+                    { label: 'Tratamento Padrão', value: 0 },
+                    { label: 'Sempre', value: 1 },
+                    { label: 'Somente Fechamento', value: 2 },
+                    { label: 'Nunca', value: 9 }]" map-options emit-value clearable :rules="[
+    val => val >= 0 && val != null || 'Nota Fiscal Obrigátorio'
+  ]" />
+                </div>
+
+                <div class="col-6 q-pt-md">
+                  <q-input outlined v-model="novaPessoaModel.rntrc" label="RNTRC" mask="#########" unmasked-value />
+                </div>
+
+                <div class="col-6 q-pr-md">
+                  <q-input outlined v-model="novaPessoaModel.pai" label="Nome do Pai" />
+                </div>
+                <div class="col-6">
+                  <q-input outlined v-model="novaPessoaModel.mae" label="Nome da Mãe" />
+                </div>
+
+
+                <div class="col-6 q-pt-md q-pr-md">
+                  <q-input outlined v-model="novaPessoaModel.tituloeleitor" mask="####.####.####" label="Titulo Eleitor"
+                    unmasked-value />
+                </div>
+                <div class="col-3 q-pt-md q-pr-md">
+                  <q-input outlined v-model="novaPessoaModel.titulozona" label="Titulo Zona" mask="###" unmasked-value />
+                </div>
+                <div class="col-3 q-pt-md">
+                  <q-input outlined v-model="novaPessoaModel.titulosecao" label="Titulo Seção" mask="####"
+                    unmasked-value />
+                </div>
+
+                <div class="col-3 q-pt-md q-pr-md">
+                  <q-input outlined v-model="novaPessoaModel.ctps" label="CTPS" inputmode="numeric" mask="#######"
+                    unmasked-value />
+                </div>
+
+                <div class="col-2 q-pt-md q-pr-md">
+                  <q-input outlined v-model="novaPessoaModel.seriectps" label="Série" mask="####" inputmode="numeric"
+                    unmasked-value />
+                </div>
+
+                <div class="col-3 q-pt-md q-pr-md">
+                  <select-estado v-model="novaPessoaModel.codestadoctps" label="UF"></select-estado>
+
+                </div>
+
+                <div class="col-4 q-pt-md">
+                  <q-input outlined v-model="novaPessoaModel.emissaoctps" mask="##/##/####" label="Emissão CTPS">
+                    <template v-slot:append>
+                      <q-icon name="event" class="cursor-pointer">
+                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                          <q-date v-model="novaPessoaModel.emissaoctps" :locale="brasil" mask="DD/MM/YYYY">
+                            <div class="row items-center justify-end">
+                              <q-btn v-close-popup label="Fechar" color="primary" flat />
+                            </div>
+                          </q-date>
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                  </q-input>
+                </div>
+
+
+                <div class="col-4 q-pt-md">
+                  <q-input outlined v-model="novaPessoaModel.pispasep" label="PIS/PASEP" mask="###.#####.##-#"
+                    unmasked-value />
+                </div>
+
+                <div class="col-12">
+                  <q-input outlined borderless autogrow v-model="novaPessoaModel.observacoes" label="Observações"
+                    type="textarea" class="q-mb-md q-pt-md" />
+                </div>
+
+
+                <q-toggle outlined v-model="novaPessoaModel.cliente" label="Cliente" />
+                <q-toggle class="" outlined v-model="novaPessoaModel.fornecedor" label="Fornecedor" /> &nbsp;
+                <q-toggle class="" outlined v-model="novaPessoaModel.vendedor" label="Vendedor" />
+
               </div>
+            </q-card-section>
+            <div class="col-6 q-pt-none">
+              <q-card-actions align="right" class="text-primary">
+                <q-btn flat label="Cancelar" v-close-popup />
+                <q-btn flat label="Salvar" type="submit" />
+              </q-card-actions>
             </div>
           </q-form>
         </q-card>
@@ -285,6 +289,56 @@ export default {
 
   methods: {
 
+    async buscaCnpj() {
+      var removeZero = this.novaPessoaModel.cnpj.replace(/^0+/, '')
+
+
+      if (this.novaPessoaModel.cnpj !== '') {
+        try {
+          const ret = await this.sPessoa.buscaCpfCnpjCadastro({ cnpj: removeZero })
+          if (ret.data[0]) {
+            this.novaPessoaModel.fantasia = ret.data[0].nome
+            this.novaPessoaModel.pessoa = ret.data[0].nome
+          }
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'warning',
+            message: error.response.data
+          })
+        }
+
+      }
+
+    },
+
+    async buscaCpf() {
+
+
+      var removeZero = this.novaPessoaModel.cnpj.replace(/^0+/, '')
+
+      console.log(this.novaPessoaModel.cnpj)
+      if (this.novaPessoaModel.cnpj !== '') {
+        try {
+          const ret = await this.sPessoa.buscaCpfCnpjCadastro({ cpf: removeZero })
+          if (ret.data[0]) {
+            this.novaPessoaModel.fantasia = ret.data[0].nome
+            this.novaPessoaModel.pessoa = ret.data[0].nome
+          }
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'warning',
+            message: error.response.data
+          })
+        }
+
+      }
+
+    },
+
     async novaPessoa() {
 
       if (this.novaPessoaModel.ie && !this.novaPessoaModel.uf) {
@@ -297,8 +351,17 @@ export default {
         return;
       }
 
+      const novaPessoacp = { ...this.novaPessoaModel }
+
+      if (novaPessoacp.nascimento) {
+        novaPessoacp.nascimento = this.Documentos.dataFormatoSql(novaPessoacp.nascimento)
+      }
+      if (novaPessoacp.emissaoctps) {
+        novaPessoacp.emissaoctps = this.Documentos.dataFormatoSql(novaPessoacp.emissaoctps)
+      }
+
       try {
-        const ret = await this.sPessoa.criarPessoa(this.novaPessoaModel)
+        const ret = await this.sPessoa.criarPessoa(novaPessoacp)
         if (ret.data.data) {
           this.$q.notify({
             color: 'green-4',

@@ -17,7 +17,7 @@ use Mg\Pdv\Pdv;
 
 class PixService
 {
-    public static function criarPixCobNegocio (Negocio $negocio)
+    public static function criarPixCobNegocio(Negocio $negocio)
     {
         // Valida se é de saída
         if ($negocio->NaturezaOperacao->codoperacao != Operacao::SAIDA) {
@@ -54,7 +54,7 @@ class PixService
             } else {
                 $cob->cnpj = $negocio->Pessoa->cnpj;
             }
-        // } elseif (!empty($negocio->cpf)) {
+            // } elseif (!empty($negocio->cpf)) {
             // $cob->cpf = $negocio->cpf;
         }
 
@@ -211,7 +211,7 @@ class PixService
             'e2eid' => $arrPix['endToEndId'],
             'codportador' => $portador->codportador,
         ]);
-        $pix->txid = $arrPix['txid']??null;
+        $pix->txid = $arrPix['txid'] ?? null;
         if (empty($pix->codpixcob) && !empty($pix->txid)) {
             $pixCob = PixCob::where('codportador', $pix->codportador)
                 ->where('txid', $pix->txid)->first();
@@ -219,31 +219,31 @@ class PixService
         if (!empty($pixCob)) {
             $pix->codpixcob = $pixCob->codpixcob;
         }
-        $pix->valor = $arrPix['valor']??null;
+        $pix->valor = $arrPix['valor'] ?? null;
 
-        $horario = Carbon::parse($arrPix['horario']??null);
+        $horario = Carbon::parse($arrPix['horario'] ?? null);
         $horario->setTimezone(config('app.timezone'));
         $pix->horario = $horario;
 
         if (isset($arrPix['pagador'])) {
-            $pix->nome = $arrPix['pagador']['nome']??null;
-            $pix->cpf = $arrPix['pagador']['cpf']??null;
-            $pix->cnpj = $arrPix['pagador']['cnpj']??null;
+            $pix->nome = $arrPix['pagador']['nome'] ?? null;
+            $pix->cpf = $arrPix['pagador']['cpf'] ?? null;
+            $pix->cnpj = $arrPix['pagador']['cnpj'] ?? null;
         }
         if (!empty($pix->nome)) {
             $pix->nome = primeiraLetraMaiuscula($pix->nome);
         }
-        $pix->infopagador = $arrPix['infoPagador']??null;
+        $pix->infopagador = $arrPix['infoPagador'] ?? null;
         $pix->save();
 
-        $arrDevs = $arrPix['devolucoes']??[];
+        $arrDevs = $arrPix['devolucoes'] ?? [];
         foreach ($arrDevs as $arrDev) {
             $pixDevolucao = PixDevolucao::firstOrNew([
                 'codpix' => $pix->codpix,
                 'rtrid' => $arrDev['rtrId']
             ]);
-            $pixDevolucao->id = $arrDev['id']??null;
-            $pixDevolucao->valor = $arrDev['valor']??null;
+            $pixDevolucao->id = $arrDev['id'] ?? null;
+            $pixDevolucao->valor = $arrDev['valor'] ?? null;
             if (!empty($arrDev['horario']['solicitacao'])) {
                 $pixDevolucao->solicitacao = Carbon::parse($arrDev['horario']['solicitacao']);
             }
@@ -263,7 +263,7 @@ class PixService
         return $pix;
     }
 
-    public static function processarPixCobNegocio (PixCob $cob)
+    public static function processarPixCobNegocio(PixCob $cob)
     {
         if (empty($cob->codnegocio)) {
             return;
@@ -297,7 +297,7 @@ class PixService
         Carbon $inicio = null,
         Carbon $fim = null,
         int $pagina = 0
-    ){
+    ) {
         if (empty($portador->pixdict)) {
             throw new \Exception("Não existe Chave PIX DICT cadastrada para o portador!", 1);
         }
@@ -359,7 +359,6 @@ class PixService
         $dompdf->render();
         $pdf = $dompdf->output();
         return $pdf;
-
     }
 
     public static function imprimirQrCode(PixCob $cob, $impressora)
@@ -368,7 +367,7 @@ class PixService
         exec($cmd);
     }
 
-    public static function listagem (
+    public static function listagem(
         $page = 1,
         $per_page = 50,
         $sort = 'horario',
@@ -512,4 +511,38 @@ class PixService
         ];
     }
 
+    public static function buscaCpfCnpjCadastro($cnpj, $cpf)
+    {
+
+        $sql = '
+        select 
+            pi.cpf, 
+            pi.nome,
+            pi.cnpj
+        from tblpix pi  
+        ';
+
+        $params = null;
+
+        if (!empty($cnpj)) {
+            $sql .= ' where cast(pi.cnpj as varchar) ilike :cnpj';
+            $params['cnpj'] = $cnpj;
+        }
+
+        if (!empty($cpf)) {
+            $sql .= ' where cast(pi.cpf as varchar) ilike :cpf';
+
+            $params['cpf'] = $cpf;
+        }
+
+        $sql .= '
+        ORDER BY nome desc
+        LIMIT 1
+        ';
+
+
+        $result = DB::select($sql, $params);
+
+        return $result;
+    }
 }
