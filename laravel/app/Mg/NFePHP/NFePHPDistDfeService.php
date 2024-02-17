@@ -22,6 +22,8 @@ use Mg\NfeTerceiro\NfeTerceiroService;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\PessoaService;
 use Mg\Pessoa\Pessoa;
+use Mg\Pessoa\PessoaEndereco;
+use Mg\Pessoa\PessoaTelefone;
 use Mg\Cidade\Cidade;
 use Mg\Filial\FilialService;
 
@@ -341,7 +343,7 @@ class NFePHPDistDfeService
             $pessoa->fisica = $emit->getElementsByTagName('CPF')->item(0)?true:false;
             $pessoa->pessoa = $emit->getElementsByTagName('xNome')->item(0)->nodeValue;
             $pessoa->fantasia = $emit->getElementsByTagName('xFant')->item(0)->nodeValue??$pessoa->pessoa;
-	        $pessoa->fantasia = substr(trim($pessoa->fantasia), 0, 50);
+            $pessoa->fantasia = substr(trim($pessoa->fantasia), 0, 50);
 
             $pessoa->endereco = $emit->getElementsByTagName('xLgr')->item(0)->nodeValue;
             $pessoa->numero = $emit->getElementsByTagName('nro')->item(0)->nodeValue;
@@ -363,6 +365,61 @@ class NFePHPDistDfeService
             $pessoa->fornecedor = true;
             $pessoa->notafiscal = 0;
             $pessoa->save();
+
+            $end = new PessoaEndereco([
+                'codpessoa' => $pessoa->codpessoa,
+                'ordem' => 1,
+                'nfe' => true,
+                'entrega' => true,
+                'cobranca' => true,
+                'cep' => $pessoa->cep,
+                'endereco' => $pessoa->endereco,
+                'numero' => $pessoa->numero,
+                'complemento' => $emit->getElementsByTagName('xCpl')->item(0)->nodeValue??null,
+                'bairro' => $pessoa->bairro,
+                'codcidade' => $pessoa->codcidade 
+            ]);
+            $end->save();
+
+            if ($pessoa->telefone1 != '0') {
+
+                $tel = $pessoa->telefone1;
+                switch (strlen($pessoa->telefone1)) {
+                    case 11:
+                        $ddd = substr($tel, 0, 2);
+                        $tel = substr($tel, 2, 9);
+                        break;
+
+                    case 10:
+                        $ddd = substr($tel, 0, 2);
+                        $tel = substr($tel, 2, 8);                            
+                        break;
+
+                    default:
+                        $ddd = 66;
+                        break;
+                }
+
+                if (in_array(substr($tel, 0, 1), ['9', '8', '7'])) {
+                    $tipo = 2; // celular
+                    if (strlen($tel) == 8) {
+                        $tel = '9' . $tel;
+                    }
+                } else {
+                    $tipo = 1; // fixo
+                }
+
+                $ptel = new PessoaTelefone([
+                    'codpessoa' => $pessoa->codpessoa,
+                    'ordem' => 1,
+                    'tipo' => $tipo,
+                    'pais' => 55,
+                    'ddd' => $ddd,
+                    'telefone' => $tel
+                ]);
+                $ptel->save();
+            }
+
             $nft->codpessoa = $pessoa->codpessoa;
         }
 
