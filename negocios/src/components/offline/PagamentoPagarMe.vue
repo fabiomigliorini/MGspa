@@ -701,6 +701,7 @@ const vaiParaStepManual = async (step) => {
             <q-input
               outlined
               v-model="pagamento.autorizacao"
+              maxlength="20"
               label="Código de Autorização"
               class="q-mb-md"
               autofocus
