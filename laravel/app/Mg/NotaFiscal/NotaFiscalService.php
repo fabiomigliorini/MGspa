@@ -223,12 +223,20 @@ class NotaFiscalService
                 // se quantidade nao for igual do negocio traz valores rateados
                 if ($item->quantidade != $quantidade) {
                     $perc = ($quantidade / $item->quantidade);
-                    $notaItem->valortotal = round($item->valortotal * $perc, 2);
+                    if (!empty($item->Negocio->codpdv)) {
+                        $notaItem->valortotal = round($item->valorprodutos * $perc, 2);
+                    } else {
+                        $notaItem->valortotal = round($item->valortotal * $perc, 2);
+                    }
                     $notaItem->valordesconto = round($item->valordesconto * $perc, 2);
                     $notaItem->valorfrete = round($item->valorfrete * $perc, 2);
                     $notaItem->valoroutras = round($item->valoroutras * $perc, 2);
                 } else {
-                    $notaItem->valortotal = $item->valortotal;
+                    if (!empty($item->Negocio->codpdv)) {
+                        $notaItem->valortotal = $item->valorprodutos;
+                    } else {
+                        $notaItem->valortotal = $item->valortotal;
+                    }
                     $notaItem->valordesconto = $item->valordesconto;
                     $notaItem->valorfrete = $item->valorfrete;
                     $notaItem->valoroutras = $item->valoroutras;
