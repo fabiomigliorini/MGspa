@@ -122,7 +122,7 @@ class PdvNegocioService
             $valorPagamentosPrazo = 0;
             foreach ($negocio->NegocioFormaPagamentos as $nfp) {
                 $valorPagamentos += $nfp->valortotal;
-                if ($nfp->parcelas > 1 && $negocio->codpessoa == 1) {
+                if ($nfp->prazo && $nfp->parcelas > 1 && $negocio->codpessoa == 1) {
                     throw new Exception('Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!', 1);
                 }
                 if ($nfp->FormaPagamento->boleto && $negocio->codpessoa == 1) {

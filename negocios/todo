@@ -7,7 +7,6 @@ FIXME nao gerar transferencias com itens inativos
 FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
 FIXME Quando expira o token ele precisa dar o refresh automaticamente
 
-BUG "Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!" para cartao credito parcelado
 BUG Gerando NF valor item errado negocio 03386452
 TODO Comanda
 TODO Mostrar se titulo Estornado
@@ -49,6 +48,7 @@ TODO fazer uma tela de consulta de preços tipo Kiosque pra substitiur kioske at
 [X] TODO Mostrar Espaco acima paginacao superior
 [X] BUG Nao esta enviando nf por email ao autorizar
 [X] BUG Limitar o input da Autorizacao pra 20 chars
+[X] BUG "Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!" para cartao credito parcelado
 
 - Pedido
   curl 'https://api-mgspa.mgpapelaria.com.br/api/v1/pagar-me/pedido' --data-raw 'codnegocio=3304171&codpessoa=1&codpagarmepos=44&valor=0.75&valorparcela=0.75&valorjuros=0&tipo=1&parcelas=1&jurosloja=1&descricao=Negocio+3304171&codfilial=102'
