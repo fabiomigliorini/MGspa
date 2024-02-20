@@ -178,6 +178,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('nota-fiscal/{codnotafiscal}/cancelar', '\Mg\Pdv\PdvNotaFiscalController@cancelar');
             Route::post('nota-fiscal/{codnotafiscal}/inutilizar', '\Mg\Pdv\PdvNotaFiscalController@inutilizar');
             Route::post('nota-fiscal/{codnotafiscal}/imprimir', '\Mg\Pdv\PdvNotaFiscalController@imprimir');
+            Route::post('nota-fiscal/{codnotafiscal}/mail', '\Mg\Pdv\PdvNotaFiscalController@mail');
             Route::delete('nota-fiscal/{codnotafiscal}', '\Mg\Pdv\PdvNotaFiscalController@excluir');
         });
 

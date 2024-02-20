@@ -104,6 +104,7 @@ const enviar = async (nota) => {
       message: `${retEnviar.data.respostaSefaz.cStat} - ${retEnviar.data.respostaSefaz.xMotivo}`,
     });
     if (retEnviar.data.nota.nfeautorizacao) {
+      mail(nota, null);
       abrirPdf(nota);
       if (nota.modelo == 65) {
         imprimir(nota.codnotafiscal);
@@ -173,6 +174,7 @@ const cancelar = (nota) => {
       isValid: (val) => val.length > 14,
       outlined: true,
       type: "text", // optional
+      placeholder: "Justificativa de Cancelamento...",
     },
     cancel: true,
   }).onOk(async (justificativa) => {
@@ -209,6 +211,7 @@ const inutilizar = (nota) => {
       isValid: (val) => val.length > 14,
       outlined: true,
       type: "text", // optional
+      placeholder: "Justificativa de Inutilização...",
     },
     cancel: true,
   }).onOk(async (justificativa) => {
@@ -262,6 +265,50 @@ const imprimir = async (codnotafiscal) => {
       message: error.response.data.message,
     });
   }
+};
+
+const mail = async (nota, destinatario) => {
+  try {
+    Notify.create({
+      type: "positive",
+      message: "Envio de e-mail solicitado ao servidor!",
+    });
+    var { data } = await api.post(
+      `/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/mail`,
+      {
+        pdv: sSinc.pdv.uuid,
+        destinatario: destinatario,
+      }
+    );
+    Notify.create({
+      type: data.sucesso ? "positive" : "negative",
+      message: `${data.mensagem}`,
+    });
+  } catch (error) {
+    console.log(error);
+    Notify.create({
+      type: "negative",
+      message: error.response.data.message,
+    });
+  }
+};
+
+const perguntarDestinatarioMail = (nota) => {
+  Dialog.create({
+    title: "Enviar NFe por e-mail",
+    message:
+      "Informe o endereço para envio, ou deixe em branco para enviar parar os endereços informados no cadastro! Caso deseje enviar para mais de um endereço, separe-os por vírgula!",
+    prompt: {
+      model: "",
+      //isValid: (val) => val.length > 14,
+      outlined: true,
+      type: "email", // optional
+      placeholder: "fulano@gmail.com,beltrano@hotmail.com",
+    },
+    cancel: true,
+  }).onOk((destinatario) => {
+    mail(nota, destinatario);
+  });
 };
 
 const montarUrlXml = (nota) => {
@@ -343,7 +390,7 @@ defineExpose({
     v-if="sNegocio.negocio.notas.length > 0"
   >
     <div
-      class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"
+      class="col-xs-12 col-sm-6 col-md-6 col-lg-3 col-xl-2"
       v-for="nota in sNegocio.negocio.notas"
       :key="nota.codnotafiscal"
     >
@@ -444,7 +491,7 @@ defineExpose({
               icon="mdi-send"
               color="primary"
               @click="enviar(nota)"
-              v-if="!nota.nfeautorizacao"
+              v-if="!nota.nfeautorizacao && !nota.nfeinutilizacao"
             >
               <q-tooltip class="bg-accent">Enviar</q-tooltip>
             </q-btn>
@@ -505,6 +552,7 @@ defineExpose({
               round
               icon="mdi-gmail"
               color="primary"
+              @click="perguntarDestinatarioMail(nota)"
               v-if="
                 nota.nfeautorizacao &&
                 !nota.nfeinutilizacao &&
