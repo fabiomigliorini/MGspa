@@ -42,7 +42,7 @@ class PessoaController extends MgController
 
     public function index(Request $request)
     {
-        
+
         $codpessoa = $request->codpessoa ?? null;
         $pessoa = $request->pessoa ?? null;
         $cnpj = $request->cnpj ?? null;
@@ -98,7 +98,7 @@ class PessoaController extends MgController
     }
 
     public function show(Request $request, $codpessoa)
-    {   
+    {
 
         $pessoa = Pessoa::findOrFail($codpessoa);
         return new PessoaResource($pessoa);
@@ -121,7 +121,7 @@ class PessoaController extends MgController
         //         'ie' => 'required|inscricao_estadual:' . $uf,
         //     ]);
         // }
-        
+
         // $this->validate($request, [
         //     'cnpj' => 'required|cpf_cnpj'
         // ]);
@@ -134,7 +134,7 @@ class PessoaController extends MgController
 
     public function delete(Request $request, $codpessoa)
     {
-         Autorizador::autoriza(array('Publico'));
+        Autorizador::autoriza(array('Publico'));
 
 
         $pessoa = Pessoa::findOrFail($codpessoa);
@@ -145,7 +145,7 @@ class PessoaController extends MgController
     }
 
     public function ativar(Request $request, $codpessoa)
-    {   
+    {
 
         Autorizador::autoriza(array('Publico'));
 
@@ -218,5 +218,19 @@ class PessoaController extends MgController
     {
         $qry = PessoaService::autocomplete($request->all());
         return response()->json($qry, 200);
+    }
+
+
+    public function verificaIeSefaz(Request $request)
+    {
+        $cnpj = $request->cnpj ?? '';
+        $codfilial = $request->codfilial;
+        $cpf = $request->cpf ?? '';
+        $ie = $request->ie ?? '';
+        $uf = $request->uf ?? '';
+
+        $pessoas = PessoaService::verificaIeSefaz($codfilial, $uf, $cnpj, $cpf, $ie);
+
+        return response()->json($pessoas, 200);
     }
 }

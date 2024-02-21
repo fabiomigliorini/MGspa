@@ -1,9 +1,9 @@
-<template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
+<template>
     <MGLayout drawer>
         <template #tituloPagina>
             Cargos
         </template>
-        <template #content>
+        <template #content v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
             <div class="row q-pa-md q-col-gutter-md">
                 <div class="col-md-3 col-sm-6 col-xs-12 col-lg-3 col-xl-2" v-for="cargo in cargos"
                     v-bind:key="cargo.codcargo">
@@ -95,13 +95,19 @@
                 </q-card>
             </q-dialog>
 
-            <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.verificaPermissaoUsuario('Financeiro')">
+            <q-page-sticky position="bottom-right" :offset="[18, 18]"
+                v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
                 <q-fab icon="add" direction="up" color="accent"
                     @click="dialogNovoCargo = true, editCargo = false, modelNovoCargo = {}">
                 </q-fab>
             </q-page-sticky>
         </template>
-        <template #drawer>
+        <!-- Template Não Autorizado -->
+        <template #content v-else>
+            <nao-autorizado></nao-autorizado>
+        </template>
+
+        <template #drawer v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
             <div class="q-pa-none q-pt-sm">
                 <q-card flat>
                     <q-list>
@@ -143,6 +149,7 @@ export default defineComponent({
     name: "Cargos",
     components: {
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
+        NaoAutorizado: defineAsyncComponent(() => import('components/NaoAutorizado.vue')),
     },
 
     methods: {

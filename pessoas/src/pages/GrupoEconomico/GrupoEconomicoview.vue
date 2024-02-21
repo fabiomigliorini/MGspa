@@ -33,19 +33,19 @@
                                 </q-item-label>
                             </q-item-section>
                         </q-item>
-                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" round flat icon="edit"
+                        <q-btn v-if="user.verificaPermissaoUsuario('Publico')" round flat icon="edit"
                             @click="editarGrupoEconomico(route.params.id)" />
-                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro')" round flat icon="delete"
+                        <q-btn v-if="user.verificaPermissaoUsuario('Publico')" round flat icon="delete"
                             @click="excluirGrupoEconomico(route.params.id)" />
 
-                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !GrupoEconomico.inativo" round flat
+                        <q-btn v-if="user.verificaPermissaoUsuario('Publico') && !GrupoEconomico.inativo" round flat
                             icon="pause" @click="inativarGrupo(route.params.id)">
                             <q-tooltip>
                                 Inativar
                             </q-tooltip>
                         </q-btn>
 
-                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && GrupoEconomico.inativo"
+                        <q-btn v-if="user.verificaPermissaoUsuario('Publico') && GrupoEconomico.inativo"
                             @click="ativar(route.params.id)" round flat icon="play_arrow">
                             <q-tooltip>
                                 Ativar

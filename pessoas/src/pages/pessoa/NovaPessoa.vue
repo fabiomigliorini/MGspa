@@ -1,300 +1,351 @@
 <template>
-  <div class="q-pa-md q-gutter-sm" style="text-align: left; padding-top: 20px;">
-    <q-btn :to="{ name: 'pessoa' }" color="grey" icon="list" label="Listagem" dense flat />
-  </div>
-  <q-separator></q-separator>
+  <MGLayout back-button>
+    <template #tituloPagina>
+      <span class="q-pl-sm">Pessoa - Nova</span>
+    </template>
 
-  <div class="q-pa-md q-gutter-sm" style="padding-top: 20px;">
-    <div class="text-h6 text-grey-8">
-      Nova Pessoa
-    </div>
-  </div>
-  <q-separator></q-separator>
-  <q-form @submit.prevent="onSubmit" class="q-gutter-md">
-    <div class="q-pa-md q-gutter-sm">
-      <q-input filled v-model="form.fantasia" label="Nome Fantasia" dense :rules="[
-        val => val && val.length > 0 || 'Nome fantasia obrigatório'
-      ]" required />
-      <q-input filled v-model="form.pessoa" label="Razão Social" dense :rules="[
-        val => val && val.length > 0 || 'Razão Social obrigatório'
-      ]" required />
-      <q-input filled v-model="form.contato" label="Contato" dense />
+    <template #botaoVoltar>
+      <q-btn flat dense round :to="{ name: 'pessoa' }" icon="arrow_back" aria-label="Voltar">
+      </q-btn>
+    </template>
+
+    <template #content>
+
+      <div id="q-app" style="min-height: 100vh;">
+
+        <div class="row">
+          <div class="col-11 q-pa-md relative-position flex flex-center">
+            <q-stepper v-model="step" ref="stepperRef" color="primary" animated header-nav>
+
+              <!-- TIPO -->
+              <q-step :name="0" title="Tipo" :done="step > 0">
+
+                <p>
+                  Selecione o Tipo de pessoa, Física para CPF ou Jurídica para CNPJ.
+                </p>
+
+                <q-btn-toggle outlined v-model="model.fisica" label="Pessoa Física"
+                  :options="[{ label: 'Fisica', value: true }, { label: 'Jurídica', value: false }]"
+                  @update:model-value="step = step + 1" />
+
+              </q-step>
+
+              <!-- CNPJ -->
+              <q-step :name="1" title="CNPJ/CPF" :done="step > 1">
+
+                <p>
+                  Informe o número do documento.
+                </p>
+
+                <q-input autofocus outlined v-model="model.cnpj" label="Cnpj" v-if="model.fisica == false"
+                  mask="##.###.###/####-##" unmasked-value required :rules="[validaObrigatorio, validaCpfCnpj]"
+                  ref="inputCnpjRef" @update:model-value="continuaSeCnpjValido()" />
+
+                <q-input autofocus outlined v-model="model.cnpj" v-if="model.fisica == true" label="CPF"
+                  mask="###.###.###-##" unmasked-value required :rules="[validaObrigatorio, validaCpfCnpj]"
+                  @update:model-value="continuaSeCnpjValido()" ref="inputCnpjRef" />
+
+              </q-step>
+
+              <!-- CADASTROS DUPLICADOS -->
+              <q-step :name="2" title="Duplicidade" :done="step > 2">
+
+                <template v-if="cadastrosEncontrados.length > 0">
+                  <p>
+                    Já existe cadastro com esse mesmo CNPJ/CPF. Verifique com atenção para evitar duplicidade de cadastro!
+                  </p>
+
+                  <div class="row q-pa-md q-col-gutter-md">
+                    <div class="col-md-6 col-sm-12 col-xs-12 col-lg-4 col-xl-4"
+                      v-for="listagempessoas in cadastrosEncontrados" v-bind:key="listagempessoas.codpessoa">
+                      <!-- CARD AQUI -->
+                      <card-pessoas :listagempessoas="listagempessoas"></card-pessoas>
+                    </div>
+                  </div>
+
+                </template>
+                <template v-else>
+                  Não existe nenhum cadastro com esse mesmo CNPJ/CPF, você pode prosseguir sem medo de duplicar o
+                  cadastro!
+                </template>
+
+              </q-step>
+
+              <!-- INSCRICAO SEFAZ -->
+              <q-step :name="3" title="Inscrição Estadual" :done="step > 3">
+
+                <p>
+                  Essas sãos as incrições estaduais que a SEFAZ retornou como válidas. Por favor selecione uma ou clique
+                  em sem inscrição para não vincular o cadastro à nenhuma delas.
+                </p>
+
+                <div v-for="ie in sefazCadastro.filter((item) => { return (item.cSit == 1) })" v-bind:key="ie.IE">
+                  <q-item tag="label" v-ripple>
+                    <q-item-section avatar>
+                      <q-radio v-model="model.ie" :val="ie.IE" color="teal" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>
+                        {{ formataIe(ie.UF, ie.IE) }}
+                      </q-item-label>
+                      <q-item-label v-if="ie.xFant">
+                        {{ ie.xFant }}
+                      </q-item-label>
+                      <q-item-label v-if="ie.ender" caption>
+                        {{ ie.ender.xLgr }},
+                        {{ ie.ender.nro }} -
+                        <template v-if="ie.ender.xCpl">
+                          {{ ie.ender.xCpl }} -
+                        </template>
+                        {{ ie.ender.xBairro }} -
+                        {{ ie.ender.xMun }}/{{ ie.UF }}
+                      </q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </div>
+
+                <q-item tag="label" v-ripple>
+                  <q-item-section avatar>
+                    <q-radio v-model="model.ie" :val="null" color="teal" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>Sem inscrição</q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-input outlined v-model="model.ie" label="Informar Inscrição Estadual" unmasked-value
+                  ref="step3Ref"></q-input>
+              </q-step>
 
 
-      <q-select filled v-model="form.codcidade" use-input input-debounce="0" label="Cidade" :options="options"
-        options-label="label" options-value="value" map-options emit-value clearable @filter="filtrocidade"
-        behavior="menu">
+              <!-- CONCLUIR -->
+              <q-step :name="4" title="Finalizar Cadastro" :done="step > 4">
 
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-grey">
-              Nenhum resultado encontrado.
-            </q-item-section>
-          </q-item>
-        </template>
-      </q-select>
+                <q-input outlined v-model="model.fantasia" label="Fantasia" :rules="[
+                  val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
+                ]" autofocus ref="step4Ref" />
 
-      <q-btn-toggle v-model="form.fisica" class="my-custom-toggle" no-caps rounded unelevated toggle-color="primary"
-        color="white" text-color="primary" :options="[
-          { label: 'Pessoa Física', value: true },
-          { label: 'Pessoa Jurídica', value: false }
-        ]" />
+                <q-input outlined v-model="model.pessoa" label="Razão Social" :rules="[
+                  val => val && val.length > 0 || 'Razão Social é Obrigatório'
+                ]" ref="step4Ref" />
+              </q-step>
 
-      <q-input filled v-model="form.cnpj" label="CNPJ/CPF" v-if="form.fisica == true" mask="###.###.###-##" unmasked-value
-        dense />
-      <q-input filled v-model="form.cnpj" label="CNPJ/CPF" v-else mask="##.###.###/####-##" unmasked-value dense />
-      <q-input filled v-model="form.ie" label="Inscrição Estadual" dense />
-      <q-input filled v-model="form.rntrc" label="RNTRC" dense />
-      <q-select filled v-model="form.tipotransportador" label="Tipo Transportador" />
-      <!-- :options="[{label:'ETC - Empresa', value:'etc'}, {label:'TAC - Autônomo', value:'tac'}, {label:'CTC - Cooperativa', value:'ctc'}]" -->
-
-      <div v-if="form.fisica == true" class="q-pa-md q-gutter-sm" style="padding-top: 20px;">
-        <div class="text-h6 text-grey-8">
-          Dados Pessoa Física
+              <template v-slot:navigation>
+                <q-stepper-navigation>
+                  <q-btn @click="step = step + 1" color="primary" :label="step === 4 ? 'Salvar' : 'Continuar'"></q-btn>
+                  <q-btn v-if="step > 0" flat color="primary" @click="step = step - 1" label="Voltar"
+                    class="q-ml-sm"></q-btn>
+                </q-stepper-navigation>
+              </template>
+            </q-stepper>
+          </div>
         </div>
       </div>
-      <q-input v-if="form.fisica == true" v-model="form.rg" filled label="RG" dense />
-      <q-input v-if="form.fisica == true" v-model="form.sexo" filled label="Sexo" dense />
-      <q-input v-if="form.fisica == true" v-model="form.estadocivil" filled label="Estado Civil" dense />
-      <q-input v-if="form.fisica == true" v-model="form.conjuge" filled label="Conjuge" dense />
+    </template>
 
-      <q-item-label>Cliente</q-item-label>
-      <q-btn-toggle v-model="form.cliente" class="my-custom-toggle" no-caps rounded unelevated toggle-color="primary"
-        color="white" text-color="primary" :options="[
-          { label: 'Sim', value: true },
-          { label: 'Não', value: false }
-        ]" />
-
-      <q-input filled v-model="form.cep" label="CEP" mask="#####-###" @change="BuscaCep()" unmasked-value dense
-        reactive-rules :rules="[
-          val => val && val.length > 7 && ceperror === false || 'CEP inválido'
-        ]" required />
-      <q-input filled v-model="form.endereco" label="Endereço" dense :rules="[
-        val => val && val.length > 0 || 'Endereço obrigatório'
-      ]" required />
-      <q-input filled v-model="form.numero" label="Número" dense :rules="[
-        val => val && val.length > 0 || 'Número obrigatório'
-      ]" required />
-      <q-input filled v-model="form.complemento" label="Complemento" dense />
-      <q-input filled v-model="form.bairro" label="Bairro" dense :rules="[
-        val => val && val.length > 0 || 'Bairro obrigatório'
-      ]" required />
-
-      <q-item-label>Cobrança no Mesmo Endereço</q-item-label>
-      <q-btn-toggle v-model="form.cobrancaendereco" class="my-custom-toggle" label="Cobrança no Mesmo Endereço" no-caps
-        rounded unelevated toggle-color="primary" color="white" text-color="primary" :options="[
-          { label: 'Sim', value: true },
-          { label: 'Não', value: false }
-        ]" />
-    </div>
-    <div v-if="form.cobrancaendereco == false" class="q-pa-md q-gutter-sm" style="padding-top: 20px;">
-      <div class="text-h6 text-grey-8">
-        Endereço de Cobrança
-
-      </div>
-    </div>
-    <div class="q-pa-md q-gutter-sm" padding>
-      <q-input v-if="form.cobrancaendereco == false" v-model="form.cepcobranca" filled label="CEP" mask="#####-###"
-        unmasked-value dense />
-      <q-input v-if="form.cobrancaendereco == false" filled v-model="form.enderecocobranca" label="Endereço" dense />
-      <q-input v-if="form.cobrancaendereco == false" filled v-model="form.numerocobranca" label="Número" dense />
-      <q-input v-if="form.cobrancaendereco == false" filled v-model="form.complementocobranca" label="Complemento"
-        dense />
-      <q-input v-if="form.cobrancaendereco == false" filled v-model="form.bairrocobranca" label="Bairro" dense />
-
-      <q-select v-if="form.cobrancaendereco == false" filled v-model="form.codcidadecobranca" use-input input-debounce="0"
-        label="Cidade" :options="options" options-label="label" options-value="value" map-options emit-value clearable
-        @filter="filtrocidade" behavior="menu" />
-
-      <q-input filled v-model="form.telefone1" mask="(##)# ####-####" label="Telefone" dense />
-      <q-input filled v-model="form.telefone2" mask="(##)# ####-####" label="Telefone 2" dense />
-      <q-input filled v-model="form.telefone3" mask="(##)# ####-####" label="Telefone 3" dense />
-      <q-input filled v-model="form.email" label="Email" dense />
-      <q-input filled v-model="form.emailnfe" label="Email para NFe" dense />
-      <q-input filled v-model="form.emailcobranca" label="Email para Cobranca" dense />
-      <q-input filled v-model="form.observacoes" label="Observações" type="textarea" dense />
-      <q-item-label>Fornecedor</q-item-label>
-      <q-btn-toggle class="my-custom-toggle" v-model="form.fornecedor" no-caps rounded unelevated toggle-color="primary"
-        color="white" text-color="primary" :options="[
-          { label: 'Sim', value: true },
-          { label: 'Não', value: false }
-        ]" />
-      <q-item-label>Vendedor</q-item-label>
-      <q-btn-toggle v-model="form.vendedor" class="my-custom-toggle" no-caps rounded unelevated toggle-color="primary"
-        color="white" text-color="primary" :options="[
-          { label: 'Sim', value: true },
-          { label: 'Não', value: false }
-        ]" />
-
-      <q-input filled v-model="form.inativo" mask="##-##-####" label="Inativo Desde">
-        <template v-slot:append>
-          <q-icon name="event" class="cursor-pointer">
-            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-              <q-date v-model="form.inativo" :locale="brasil" mask="DD-MM-YYYY">
-                <div class="row items-center justify-end">
-                  <q-btn v-close-popup label="Fechar" color="primary" flat />
-                </div>
-              </q-date>
-            </q-popup-proxy>
-          </q-icon>
-        </template>
-      </q-input>
-    </div>
-
-    <q-separator></q-separator>
-    <div class="q-pa-md q-gutter-sm">
-      <q-btn label="Salvar" type="submit" color="primary" />
-    </div>
-  </q-form>
-  <q-separator></q-separator>
+  </MGLayout>
 </template>
 
 <script>
-import { ref, onMounted, defineAsyncComponent } from 'vue'
-import { api } from 'boot/axios'
-import { useQuasar } from 'quasar'
-import { Notify } from 'quasar'
+import { ref, defineAsyncComponent } from 'vue'
+import { useQuasar, debounce } from 'quasar'
 import { useRouter } from 'vue-router'
 import { guardaToken } from 'src/stores'
+import { pessoaStore } from 'src/stores/pessoa'
+import { isCnpjCpfValido } from 'src/utils/validador'
+import { formataIe } from 'src/utils/formatador'
 
 export default {
-  //   components:{ MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))},
+  components: {
+    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
+    CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),
+  },
+
+  methods: {
+
+    validaObrigatorio(value) {
+      if (!value) {
+        return "Preenchimento Obrigatório!";
+      }
+      return true;
+    },
+
+    validaCpfCnpj(value) {
+      if (!isCnpjCpfValido(value)) {
+        return "Número de Documento Inválido!";
+      }
+      return true;
+    },
+
+    async continuaSeCnpjValido() {
+      if (!this.model.cnpj) {
+        return;
+      }
+      if (isCnpjCpfValido(this.model.cnpj)) {
+        await this.buscarCadastrosCnpj();
+        if (this.cadastrosEncontrados.length == 0) {
+          this.step = 3;
+        } else {
+          this.step = 2;
+        }
+      }
+    },
+
+    async buscarCadastrosCnpj() {
+      try {
+        this.cnpjConsultado = this.model.cnpj;
+        const ret = await this.sPessoa.VerificaExisteCnpjCpf({ cnpj: this.model.cnpj })
+        if (ret.data.data) {
+          this.cadastrosEncontrados = ret.data.data
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+
+    async verificaIeSefaz() {
+      try {
+        var codfilial = 101;
+        // var codfilial = this.user.usuarioLogado.codfilial;
+        const ret = await this.sPessoa.verificaIeSefaz(codfilial, this.model.fisica, this.model.cnpj);
+        this.sefazCadastro = ret.data.retSefaz
+        this.receitaWsCadastro = ret.data.retReceita
+      } catch (error) {
+        console.log(error);
+        // $q.notify({
+        //   color: 'red-5',
+        //   textColor: 'white',
+        //   icon: 'error',
+        //   message: 'Nenhuma IE encontrada na Sefaz'
+        // })
+      }
+
+    }
+
+  },
+
+  watch: {
+    step: function (newVal) {
+      this.onContinueStep()
+    }
+  },
+
+
   setup() {
+    const cnpjConsultado = ref(null);
     const $q = useQuasar()
+    const sPessoa = pessoaStore()
     const router = useRouter()
-    const OptionsCidade = ref([])
-    const options = ref(OptionsCidade)
-    const ceperror = ref(false)
-
-    const form = ref({
-      pessoa: '',
-      fantasia: '',
-      fisica: false,
-      cliente: true,
-      fornecedor: false,
-      consumidor: true,
-      creditobloqueado: false,
-      vendedor: false,
-      cobrancaendereco: false,
-      notafiscal: '1',
-      codusuariocriacao: ''
+    const stepperRef = ref(null)
+    const inputCnpjRef = ref(null)
+    const step2Ref = ref(null)
+    const step3Ref = ref(null)
+    const step4Ref = ref(null)
+    const step = ref(0)
+    const model = ref({
+      fisica: null,
+      cnpj: null
     })
 
-    // Mostra as primeiras 100 cidades da API
-    const SelectCidade = async () => {
 
-      try {
-        const { data } = await api.get('v1/select/cidade')
-        OptionsCidade.value = data
-      } catch (error) {
-        console.log(error.data)
-      }
-    }
+    const cadastrosEncontrados = ref([])
+    const count = ref("0")
+    const sefazCadastro = ref([])
+    const receitaWsCadastro = ref([])
+    const user = guardaToken()
 
+    async function onContinueStep() {
 
-    onMounted(() => {
-      SelectCidade()
-    })
-
-    // Busca CEP e preenche o input do endereço e bairro
-    const BuscaCep = async () => {
-      setTimeout(async () => {
-
-        if (form.value.cep.length > 7) {
-          const { data } = await api.get('https://viacep.com.br/ws/' + form.value.cep + '/json/')
-
-          if (data.logradouro) {
-            ceperror.value = false
-            form.value.endereco = data.logradouro
-            form.value.bairro = data.bairro
-            return false
+      switch (step.value) {
+        case 2:
+          if (this.model.cnpj != this.cnpjConsultado) {
+            this.buscarCadastrosCnpj();
           }
-          if (data.erro == true) {
-            ceperror.value = true
-            return true
+          break;
+
+        case 3:
+          this.verificaIeSefaz();
+          break;
+
+        case 4:
+
+          if (receitaWsCadastro.value !== null) {
+
+            if (receitaWsCadastro.value.fantasia !== "") {
+              model.value.fantasia = receitaWsCadastro.value.fantasia
+            }
+
+            model.value.fantasia = receitaWsCadastro.value.fantasia
+            model.value.pessoa = receitaWsCadastro.value.nome
+
           }
-          return
-        } else return
 
-      }, 1000)
-    }
+          if (sefazCadastro.value !== null && receitaWsCadastro.value == null) {
+            model.value.fantasia = sefazCadastro.value[0].xNome
+            model.value.pessoa = sefazCadastro.value[0].xNome
+          }
 
-    // Envio do formulario de cadastro para a API
-    const onSubmit = async () => {
+          // stepperRef.value.next()
 
-      const auth = guardaToken()
-      const codusuario = await auth.verificaToken() //Pega o código do usuario autenticado para enviar junto no formulario
+          break;
+        case 5:
+          await step4Ref.value.validate()
 
-      try {
-        if (form.value.cobrancaendereco == true) {
-          form.value.cepcobranca = form.value.cep
-          form.value.enderecocobranca = form.value.endereco
-          form.value.numerocobranca = form.value.numero
-          form.value.bairrocobranca = form.value.bairro
-          form.value.codcidadecobranca = form.value.codcidade
-          form.value.complementocobranca = form.value.complemento
-        }
+          let post = {
+            notafiscal: 0,
+            consumidor: true,
+            vendedor: false,
+            creditobloqueado: true,
+            fornecedor: false,
+            cliente: false,
+            uf: sefazCadastro.value[0] ? sefazCadastro.value[0].UF : null
+          }
 
-        form.value.codusuariocriacao = codusuario.codusuario
-        const { data } = await api.post('v1/pessoa', form.value)
+          const modelPessoa = Object.assign(model.value, post)
 
-        if (data.data) {
-          $q.notify({
-            color: 'green-4',
-            textColor: 'white',
-            icon: 'done',
-            message: 'Pessoa Cadastrada com sucesso'
-          })
-          router.push('/pessoa/view/' + data.data.codpessoa)
-        }
-
-      } catch (error) {
-        console.log(error.data)
-        $q.notify({
-          color: 'red-5',
-          textColor: 'white',
-          icon: 'warning',
-          message: 'Erro ao cadastrar nova pessoa, tente novamente'
-        })
-      }
-    }
-    return {
-      form,
-      onSubmit,
-      SelectCidade,
-      BuscaCep,
-      ceperror,
-      OptionsCidade,
-      brasil: {
-        days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),
-        daysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
-        months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
-        monthsShort: 'Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez'.split('_'),
-        firstDayOfWeek: 1,
-        format24h: true,
-        pluralDay: 'dias'
-      },
-      options,
-      filtrocidade(val, update) {
-        if (val === '') {
-          update(() => {
-            options.value = OptionsCidade.value
-          })
-          return
-        }
-        update(async () => {
-          const needle = val.toLowerCase()
           try {
-            if (needle.length > 3) {
-              const { data } = await api.get('v1/select/cidade?cidade=' + needle)
-              options.value = data
-              return
+            const ret = await sPessoa.criarPessoa(modelPessoa)
+
+            if (ret.data.data) {
+              $q.notify({
+                color: 'green-5',
+                textColor: 'white',
+                icon: 'done',
+                message: 'Cadastro criado!'
+              })
+              router.push('/pessoa/' + ret.data.data.codpessoa)
             }
           } catch (error) {
-            console.log(error)
+            $q.notify({
+              color: 'red-5',
+              textColor: 'white',
+              icon: 'error',
+              message: error.response.data.message
+            })
           }
-        })
+          break;
+
+        default:
+          break;
       }
+    }
+
+
+    return {
+      step,
+      model,
+      stepperRef,
+      inputCnpjRef,
+      step2Ref,
+      step3Ref,
+      step4Ref,
+      onContinueStep,
+      sPessoa,
+      sefazCadastro,
+      cadastrosEncontrados,
+      receitaWsCadastro,
+      count,
+      formataIe
     }
   }
 }

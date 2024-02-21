@@ -161,7 +161,7 @@
               sPessoa.item.fantasia }}</span>
             <q-btn flat round icon="edit" @click="editarDetalhes()" v-if="user.verificaPermissaoUsuario('Publico')" />
             <q-btn flat round icon="delete" @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
-              v-if="user.verificaPermissaoUsuario('Financeiro')" />
+              v-if="user.verificaPermissaoUsuario('Publico')" />
 
             <q-btn v-if="user.verificaPermissaoUsuario('Publico') && !sPessoa.item.inativo" flat round icon="pause"
               @click="inativar(sPessoa.item.codpessoa)">
@@ -535,15 +535,15 @@ export default defineComponent({
 
     async salvarDetalhes() {
 
-      if (!this.sPessoa.item.PessoaEnderecoS.find(item => item.nfe === true) && this.modelEditarDetalhes.ie) {
-        this.$q.notify({
-          color: 'red-5',
-          textColor: 'white',
-          icon: 'error',
-          message: 'Cadastre um endereço para verificar a Inscrição Estadual'
-        })
-        return
-      }
+      // if (!this.sPessoa.item.PessoaEnderecoS.find(item => item.nfe === true) && this.modelEditarDetalhes.ie) {
+      //   this.$q.notify({
+      //     color: 'red-5',
+      //     textColor: 'white',
+      //     icon: 'error',
+      //     message: 'Cadastre um endereço para verificar a Inscrição Estadual'
+      //   })
+      //   return
+      // }
 
       const editar = { ...this.modelEditarDetalhes }
 

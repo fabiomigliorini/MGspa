@@ -21,9 +21,9 @@
 
       <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.verificaPermissaoUsuario('Publico')">
         <q-fab icon="add" direction="up" color="accent">
-          <q-fab-action @click="dialogNovaPessoa = true, novaPessoaModel.notafiscal = 0" color="primary" icon="person_add"
+          <q-fab-action :to="{ name: 'pessoanova' }" color="primary" icon="person_add"
             label="Nova" />
-          <q-fab-action @click="dialogimportar = true" icon="import_contacts" color="primary" label="Importar" />
+          <!-- <q-fab-action @click="dialogimportar = true" icon="import_contacts" color="primary" label="Importar" /> -->
         </q-fab>
       </q-page-sticky>
 
@@ -137,8 +137,8 @@
                     { label: 'Sempre', value: 1 },
                     { label: 'Somente Fechamento', value: 2 },
                     { label: 'Nunca', value: 9 }]" map-options emit-value clearable :rules="[
-    val => val >= 0 && val != null || 'Nota Fiscal Obrigátorio'
-  ]" />
+                      val => val >= 0 && val != null || 'Nota Fiscal Obrigátorio'
+                    ]" />
                 </div>
 
                 <div class="col-6 q-pt-md">

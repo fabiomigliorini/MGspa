@@ -34,14 +34,14 @@
                         <q-btn v-if="user.verificaPermissaoUsuario('Recursos Humanos')" round flat icon="delete"
                             @click="excluirCargo(cargo.codcargo)" />
 
-                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && !cargo.inativo" round flat icon="pause"
+                        <q-btn v-if="user.verificaPermissaoUsuario('Recursos Humanos') && !cargo.inativo" round flat icon="pause"
                             @click="inativar(cargo.codcargo)">
                             <q-tooltip>
                                 Inativar
                             </q-tooltip>
                         </q-btn>
 
-                        <q-btn v-if="user.verificaPermissaoUsuario('Financeiro') && cargo.inativo" round flat
+                        <q-btn v-if="user.verificaPermissaoUsuario('Recursos Humanos') && cargo.inativo" round flat
                             icon="play_arrow" @click="ativar(cargo.codcargo)">
                             <q-tooltip>
                                 Ativar

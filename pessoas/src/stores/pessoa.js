@@ -532,6 +532,32 @@ export const pessoaStore = defineStore('pessoa', {
       const ret = await api.get('v1/pix/busca-cpf-cadastro', {params: cnpjcpf})
       return ret;
     },
+
+
+    async VerificaExisteCnpjCpf(cnpjcpf) {
+      const ret = await api.get('v1/pessoa', {
+        params: cnpjcpf
+      })
+      return ret;
+    },
+
+
+    async verificaIeSefaz(codfilial, fisica, cnpjCpf) {
+      var params = {
+        codfilial: codfilial,
+      }
+      if (fisica) {
+        params.cpf = cnpjCpf
+      } else {
+        params.cnpj = cnpjCpf
+      }
+      const ret = await api.get('v1/pessoa/verifica-ie-sefaz', {
+        params: params
+      })
+      return ret;
+    },
+
+
   }
 })
 

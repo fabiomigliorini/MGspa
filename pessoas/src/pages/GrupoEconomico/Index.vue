@@ -29,7 +29,7 @@
                 </div>
             </q-infinite-scroll>
 
-            <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.verificaPermissaoUsuario('Financeiro')">
+            <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.verificaPermissaoUsuario('Publico')">
                 <q-fab icon="add" direction="up" color="accent" @click="novoGrupo()">
                 </q-fab>
             </q-page-sticky>

@@ -4,12 +4,11 @@
             Permissões
         </template>
 
-        <template #content v-if="user.usuarioLogado.permissoes.find
-            (item => item.grupo === 'Administrador')">
+        <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
 
             <q-page class="q-pa-md">
                 <div class="row q-col-gutter-md">
-                   
+
                     <tree-grupo-usuarios></tree-grupo-usuarios>
 
                     <div class="col-md-8 col-md-8 col-xs-12">

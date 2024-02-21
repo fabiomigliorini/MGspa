@@ -49,6 +49,8 @@ Route::group(['prefix' => 'v1/auth'], function () {
 Route::group(['prefix' => 'v1'], function () {
     // Pessoa
     Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
+    Route::get('pessoa/verifica-ie-sefaz', '\Mg\Pessoa\PessoaController@verificaIeSefaz');
+
 
     // PDV
     Route::group(['prefix' => 'pdv'], function () {

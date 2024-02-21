@@ -391,6 +391,9 @@ class PessoaService
 
         // Percorre todas as inscricoes da sefaz, criando uma tblPessoa para cada
         $retPessoas = [];
+
+        dd($retIes);
+
         foreach ($retIes as $retIe) {
 
             // Verifica se combinacao CPF/CNPJ/IE ja esta cadastrada
@@ -645,5 +648,79 @@ class PessoaService
         ])->get('https://receitaws.com.br/v1/cnpj/' . $cnpj);
 
         return $response;
+    }
+
+
+    public static function verificaIeSefaz($codfilial, $uf, $cnpj, $cpf, $ie)
+    {
+
+        $retReceita = null;
+
+        // Se veio um CNPJ, consulta a receita com esse CNPJ
+        if (!empty($cnpj)) {
+            $cnpj = numeroLimpo($cnpj);
+            $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
+            $retReceita = static::buscarReceitaWs($cnpj);
+            if ($retReceita->status() != 200 || $retReceita['status'] == "ERROR") {
+                // throw new \Exception($retReceita['message'], 1);
+            }
+            $uf = $retReceita['uf'] ?? null;
+        }
+
+        // Consulta o CNPJ / CPF ou IE na Sefaz
+        $retSefaz = null;
+        $retIes = [];
+        if (!empty($cnpj) || !empty($cpf) || (!empty($ie))) {
+            $filial = Filial::findOrFail($codfilial);
+            if (empty($uf)) {
+                $uf = $filial->Pessoa->Cidade->Estado->sigla;
+            }
+
+            try {
+
+                $retSefaz = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
+                switch ($retSefaz->infCons->cStat) {
+                    case '259': // Rejeição: CNPJ da consulta não cadastrado como contribuinte na UF
+                    case '264': // Rejeicao: CPF da consulta nao cadastrado como contribuinte na UF
+                        break;
+                    case '111': // Consulta cadastro com uma ocorrência
+                        $retIes = [$retSefaz->infCons->infCad];
+                        break;
+                    case '112': // Consulta cadastro com mais de uma ocorrencia
+                        $retIes = $retSefaz->infCons->infCad;
+                        break;
+                    default:
+                        break;
+                }
+            } catch (\Exception $e) {
+
+                $message = $e->getMessage();
+                if (substr($message, 0, 45) != "Servico [NfeConsultaCadastro] indisponivel UF") {
+                    throw new \Exception($e->getMessage());
+                }
+            }
+
+            if (isset($retIes[0])) {
+                $cnpj = $retIes[0]->CNPJ ?? '';
+                $cpf = $retIes[0]->CPF ?? '';
+            }
+        }
+
+        // Caso a consulta da sefaz tenha retornado um CNPJ
+        // Faz a consulta na receita para esse CNPJ
+        if (!empty($cnpj) && empty($retReceita)) {
+            $retReceita = static::buscarReceitaWs($cnpj);
+        }
+
+        $resultReceita = null;
+
+        if ($retReceita !== null) {
+            $resultReceita = json_decode($retReceita);
+        }
+
+        return [
+            'retReceita' => $resultReceita,
+            'retSefaz' => $retIes
+        ];
     }
 }

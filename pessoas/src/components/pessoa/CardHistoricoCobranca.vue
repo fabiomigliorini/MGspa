@@ -4,7 +4,7 @@
             <q-list>
                 <q-item-label header>
                     Histórico de Cobrança
-                    <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Financeiro')" @click="dialogEditarHistorico = true, modelCobrancaHistorico = {},
+                    <q-btn flat round icon="add" v-if="user.verificaPermissaoUsuario('Publico')" @click="dialogEditarHistorico = true, modelCobrancaHistorico = {},
                         cobrancaNova = true" />
                 </q-item-label>
                 <div v-for="historico in HistoricosCobranca" v-bind:key="historico.codcobrancahistorico">
@@ -34,7 +34,7 @@
                             
                         </q-item-section>
 
-                        <q-btn-dropdown flat auto-close v-if="user.verificaPermissaoUsuario('Financeiro')">
+                        <q-btn-dropdown flat auto-close v-if="user.verificaPermissaoUsuario('Publico')">
                             <q-btn flat round icon="edit"
                                 @click="editarHistorico(historico.codcobrancahistorico, historico.historico)" />
                             <q-btn flat round icon="delete" @click="deletarHistorico(historico.codcobrancahistorico)" />
