@@ -13,6 +13,7 @@ class Autorizador
         if (empty($codusuario)) {
             $codusuario = Auth::user()->codusuario;
         }
+        $gruposAutorizados[] = 'Administrador';
 
         $sql = '
             select count(guu.codgrupousuariousuario) 
@@ -22,7 +23,6 @@ class Autorizador
             and gu.grupousuario in (:gruposAutorizados)
         ';
         
-
         $params = [
             'codusuario' => $codusuario,
             'gruposAutorizados' => implode(',', $gruposAutorizados)
