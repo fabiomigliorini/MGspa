@@ -455,7 +455,7 @@ const creditCardColorPagamento = (pag) => {
       </q-item>
 
       <!-- PAGAMENTOS -->
-      <template v-if="sNegocio.negocio.pagamentos">
+      <template v-if="sNegocio.negocio.pagamentos.length > 0">
         <template v-for="pag in sNegocio.negocio.pagamentos" :key="pag.uuid">
           <q-item>
             <q-item-section>

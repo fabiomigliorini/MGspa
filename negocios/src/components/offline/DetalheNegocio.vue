@@ -171,6 +171,20 @@ const recarregarDaApi = () => {
     }
   });
 };
+
+const negocioStatusIconColor = () => {
+  console.log(sNegocio.negocio.codnegociostatus);
+  switch (sNegocio.negocio.codnegociostatus) {
+    case 2: // Fechado
+      return "secondary";
+
+    case 3: // Cancelado
+      return "negative";
+
+    default:
+      return "grey";
+  }
+};
 </script>
 <template>
   <!-- Editar Pessoa -->
@@ -315,7 +329,11 @@ const recarregarDaApi = () => {
     <!-- Natureza -->
     <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
-        <q-avatar icon="work" color="grey" text-color="white" />
+        <q-avatar
+          icon="work"
+          :color="negocioStatusIconColor()"
+          text-color="white"
+        />
       </q-item-section>
 
       <q-item-section>

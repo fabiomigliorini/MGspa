@@ -7,14 +7,7 @@ use Mg\Negocio\NegocioNotaFiscalResource;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NFePHP\NFePHPService;
-
-// use Mg\Negocio\NegocioResource;
-// use Mg\Negocio\Negocio;
-// use Mg\NotaFiscal\NotaFiscalService;
-// use Mg\PagarMe\PagarMePedidoResource;
-// use Mg\Pix\PixService;
-// use Mg\PagarMe\PagarMeService;
-// use Mg\PagarMe\PagarMePedido;
+use Mg\NFePHP\NFePHPMailService;
 
 class PdvNotaFiscalController
 {
@@ -91,4 +84,11 @@ class PdvNotaFiscalController
         return response()->json($res, 200);
     }    
 
+    public function mail(PdvRequest $request, $codnotafiscal)
+    {
+        PdvService::autoriza($request->pdv);
+        $nf = NotaFiscal::findOrFail($codnotafiscal);
+        $res = NFePHPMailService::mail($nf, $request->destinatario);
+        return response()->json($res, 200);
+    }
 }

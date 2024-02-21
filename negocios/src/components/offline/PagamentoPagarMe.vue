@@ -367,7 +367,7 @@ const vaiParaStepManual = async (step) => {
                 <q-input
                   prefix="R$"
                   type="number"
-                  stepManual="0.01"
+                  step="0.01"
                   min="0.01"
                   :max="sNegocio.valorapagar"
                   borderless
@@ -701,6 +701,7 @@ const vaiParaStepManual = async (step) => {
             <q-input
               outlined
               v-model="pagamento.autorizacao"
+              maxlength="20"
               label="Código de Autorização"
               class="q-mb-md"
               autofocus

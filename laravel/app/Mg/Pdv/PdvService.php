@@ -191,8 +191,11 @@ class PdvService
                 nat.compra, 
                 nat.venda, 
                 nat.vendadevolucao, 
+                nat.transferencia,
                 nat.financeiro,
                 nat.codnaturezaoperacaodevolucao,
+                nat.preco,
+                nat.emitida,
                 :sincronizado as sincronizado
             from tblnaturezaoperacao nat 
             ';
