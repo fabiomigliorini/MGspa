@@ -153,12 +153,17 @@ const calcularParcelas = async () => {
   const codformapagamento = pagamento.value.codformapagamento;
 
   const valorMinimoParcela = forma.value.valorMinimoParcela;
-  // const valorMinimo = forma.value.valorMinimo;
+  const valorMinimo = forma.value.valorMinimo;
   const maximoParcelas = forma.value.maximoParcelas;
   const maximoParcelasSemJuros = forma.value.maximoParcelasSemJuros;
   const abonarJurosAcima = forma.value.abonarJurosAcima;
 
   parcelamentoDisponivel.value = [];
+  pagamento.value.parcelas = 0;
+
+  if (valor < valorMinimo) {
+    return;
+  }
 
   for (let i = 1; i <= maximoParcelas; i++) {
     var valorjuros = 0;
@@ -168,7 +173,7 @@ const calcularParcelas = async () => {
       valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100;
       valorjuros = Math.round((valorparcela * i - valor) * 100) / 100;
     }
-    if (valorparcela < valorMinimoParcela) {
+    if (valorparcela < valorMinimoParcela && i > 1) {
       break;
     }
     parcelamentoDisponivel.value.push({
@@ -305,7 +310,13 @@ const salvar = async () => {
             @click="sNegocio.dialog.pagamentoPrazo = false"
             tabindex="-1"
           />
-          <q-btn type="submit" flat label="salvar" color="primary" />
+          <q-btn
+            type="submit"
+            flat
+            label="salvar"
+            color="primary"
+            :disable="pagamento.parcelas < 1"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

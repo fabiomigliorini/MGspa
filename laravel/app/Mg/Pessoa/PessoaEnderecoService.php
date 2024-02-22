@@ -10,7 +10,6 @@ class PessoaEnderecoService
 
     public static function create($data)
     {
-
         if (empty($data['ordem'])) {
             $data['ordem'] = PessoaEndereco::where('codpessoa', $data['codpessoa'])->max('ordem') + 1;
         }

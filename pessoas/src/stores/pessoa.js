@@ -250,7 +250,7 @@ export const pessoaStore = defineStore('pessoa', {
        this.arrPessoas[i] = ret.data.data
 
       return ret;
-     
+
     },
 
     async buscaFormaPagamento(codformapagamento) {
@@ -469,19 +469,19 @@ export const pessoaStore = defineStore('pessoa', {
     async salvarColaboradorCargo(modelColaboradorCargo) {
       const ret = await api.put('v1/colaborador/' + modelColaboradorCargo.codcolaborador +
        '/cargo/' + modelColaboradorCargo.codcolaboradorcargo, modelColaboradorCargo)
-       
+
       return ret;
     },
 
     async salvarColaboradorFerias(modelColaboradorFerias) {
       const ret = await api.put('v1/ferias/' + modelColaboradorFerias.codferias, modelColaboradorFerias)
-      
+
      return ret;
 
     },
 
     async selectEstado() {
-      
+
       const ret = await api.get('v1/select/estado')
       return ret;
     },
@@ -528,8 +528,12 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-    async buscaCpfCnpjCadastro(cnpjcpf) {
-      const ret = await api.get('v1/pix/busca-cpf-cadastro', {params: cnpjcpf})
+    async descobreNomePeloPix(cnpjCpf) {
+      const ret = await api.get('v1/pix/descobre-nome', {
+        params: {
+          cnpjCpf: cnpjCpf
+        }
+      });
       return ret;
     },
 

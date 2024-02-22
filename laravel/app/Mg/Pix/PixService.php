@@ -511,38 +511,24 @@ class PixService
         ];
     }
 
-    public static function buscaCpfCnpjCadastro($cnpj, $cpf)
+    public static function descobreNome($cnpjCpf)
     {
 
         $sql = '
-        select 
-            pi.cpf, 
-            pi.nome,
-            pi.cnpj
-        from tblpix pi  
+            select 
+                pi.cpf, 
+                pi.cnpj,
+                pi.nome
+            from tblpix pi  
+            where cast(coalesce(to_char(pi.cnpj, \'FM00000000000000\'), to_char(pi.cpf, \'FM00000000000\')) as varchar) = :cnpjCpf
+            ORDER BY criacao desc
+            LIMIT 1
         ';
 
-        $params = null;
+        $result = DB::select($sql, [
+            'cnpjCpf' => $cnpjCpf
+        ]);
 
-        if (!empty($cnpj)) {
-            $sql .= ' where cast(pi.cnpj as varchar) ilike :cnpj';
-            $params['cnpj'] = $cnpj;
-        }
-
-        if (!empty($cpf)) {
-            $sql .= ' where cast(pi.cpf as varchar) ilike :cpf';
-
-            $params['cpf'] = $cpf;
-        }
-
-        $sql .= '
-        ORDER BY nome desc
-        LIMIT 1
-        ';
-
-
-        $result = DB::select($sql, $params);
-
-        return $result;
+        return $result[0]??null;
     }
 }

@@ -18,25 +18,27 @@ class PessoaController extends MgController
     public function create(Request $request)
     {
 
-        Autorizador::autoriza(array('Publico'));
-
+        Autorizador::autoriza(['Publico']);
 
         $data = $request->all();
 
-        if ($request->ie) {
-            $ie = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
-            $request['ie'] = $ie;
+        if ($request->ieoutra) {
             $this->validate($request, [
-                'cnpj' => 'required|cpf_cnpj',
-                'ie' => 'required|inscricao_estadual:' . $request->uf,
+                'ieoutra' => 'required|inscricao_estadual:' . $request->uf,
             ]);
         }
 
         $this->validate($request, [
-            'cnpj' => 'required|cpf_cnpj'
+            'cnpj' => 'required|cpf_cnpj',
+            'fisica' => 'required|boolean',
+            'fantasia' => 'required',
+            'pessoa' => 'required',
+            'consumidor' => 'required|boolean',
+            'fornecedor' => 'required|boolean',
+            'cliente' => 'required|boolean',      
         ]);
 
-        $pessoa = PessoaService::create($data);
+        $pessoa = PessoaService::createPelaSefazReceitaWs($data);
         return new PessoaResource($pessoa);
     }
 

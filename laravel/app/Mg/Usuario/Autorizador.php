@@ -13,19 +13,23 @@ class Autorizador
         if (empty($codusuario)) {
             $codusuario = Auth::user()->codusuario;
         }
-        $gruposAutorizados[] = 'Administrador';
 
-        $sql = '
-            select count(guu.codgrupousuariousuario) 
+        $whereGrupo = 'and gu.grupousuario in (\'Administrador\'';
+        foreach ($gruposAutorizados as $grupo) {
+            $whereGrupo .= ", '{$grupo}'";
+        }
+        $whereGrupo .= ')';
+
+        $sql = "
+            select count(guu.codgrupousuariousuario) as count
             from tblgrupousuariousuario guu
             inner join tblgrupousuario gu on (gu.codgrupousuario = guu.codgrupousuario)
             where guu.codusuario = :codusuario
-            and gu.grupousuario in (:gruposAutorizados)
-        ';
+            {$whereGrupo}
+        ";
         
         $params = [
             'codusuario' => $codusuario,
-            'gruposAutorizados' => implode(',', $gruposAutorizados)
         ];
 
         if (!empty($codfilial)) {
@@ -33,8 +37,8 @@ class Autorizador
             $params['codfilial'] = $codfilial;
         }
 
-        $ret = DB::select($sql, $params);
-        return ($ret[0]->count > 0);
+        $ret = DB::selectOne($sql, $params);
+        return ($ret->count > 0);
     }
 
     public static function autoriza($gruposAutorizados, $codfilial = null, $codusuario = null) 

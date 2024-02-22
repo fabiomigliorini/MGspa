@@ -65,11 +65,11 @@
         Endereço
         <q-btn v-if="user.verificaPermissaoUsuario('Publico')" flat round icon="add"
           @click="modalNovoEndereco()"></q-btn>
-          <q-banner inline-actions class="text-white bg-red" v-if="sPessoa.item.PessoaEnderecoS.length == 0">
+          <q-banner rounded inline-actions class="text-white bg-red" v-if="sPessoa.item.PessoaEnderecoS.length == 0">
             Sem informar ao menos um endereço, não será possivel emitir Nota Fiscal.
           </q-banner>
       </q-item-label>
-    
+
 
           <div v-for="element in sPessoa.item.PessoaEnderecoS" v-bind:key="element.codpessoaendereco">
             <q-separator inset />

@@ -526,7 +526,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
         Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
         Route::get('pix/', '\Mg\Pix\PixController@index');
-        Route::get('pix/busca-cpf-cadastro', '\Mg\Pix\PixController@buscaCpfCnpjCadastro');
+        Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
 
 
         // Portador

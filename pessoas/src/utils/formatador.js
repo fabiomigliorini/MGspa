@@ -186,3 +186,17 @@ export const formataIe = (uf, ie) => {
             break;
     }
 };
+
+
+export const primeiraLetraMaiuscula = (str)  => {
+  return str.replace(
+    /\w\S*/g,
+    function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
+}
+
+export const removerAcentos = (str) => {
+  return str.normalize('NFD').replace(/\p{Mn}/gu, "");
+}
