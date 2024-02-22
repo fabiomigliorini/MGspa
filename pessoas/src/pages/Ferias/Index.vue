@@ -10,7 +10,9 @@
 
             <div class="q-pa-md">
                 <q-card bordered>
-
+                    <pre>
+                    {{ ferias }}
+                    </pre>
                     <q-table title="Programação de férias" :filter="filter" :rows="ferias" :columns="columns"
                         no-data-label="Nenhum titulo encontrado" :separator="separator" emit-value>
 

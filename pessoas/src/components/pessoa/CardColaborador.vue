@@ -56,7 +56,7 @@
                 </q-item>
 
                 <q-separator inset />
-                <q-item>
+                <q-item v-if="colaborador.experiencia">
                     <q-item-section avatar>
                         <q-icon name="event" color="blue"></q-icon>
                     </q-item-section>
@@ -147,13 +147,14 @@
                         { label: 'Terceirizado', value: 90 },
                         { label: 'Diarista', value: 91 }
                     ]" map-options emit-value :rules="[
-                    val => val !== null && val !== '' && val !== undefined || 'Vinculo Obrigatório',
-                    ]" />
+    val => val !== null && val !== '' && val !== undefined || 'Vinculo Obrigatório',
+]" />
 
                     <div class="row">
                         <div class="col-6">
                             <q-input outlined v-model="modelNovoColaborador.contratacao" class="q-pr-md" mask="##/##/####"
-                                label="Contratação" :rules="[validaObrigatorio, validaData, validaContratacao]">
+                                label="Contratação" :rules="[validaObrigatorio, validaData, validaContratacao]"
+                                @change="preencheExperiencia()">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -171,7 +172,7 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelNovoColaborador.experiencia" mask="##/##/####"
-                                label="Experiência" :rules="[validaObrigatorio, validaData, validaExperiencia]">
+                                label="Experiência" :rules="[validaData, validaExperiencia]">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -189,8 +190,8 @@
                         </div>
                         <div class="col-6">
                             <q-input outlined v-model="modelNovoColaborador.renovacaoexperiencia" mask="##/##/####"
-                                label="Renovação Experiência"
-                                :rules="[validaObrigatorio, validaData, validaRenovacaoExperiencia]" class="q-pr-md">
+                                label="Renovação Experiência" :rules="[validaData, validaRenovacaoExperiencia]"
+                                class="q-pr-md">
 
                                 <template v-slot:append>
                                     <q-icon name="event" class="cursor-pointer">
@@ -509,26 +510,36 @@ export default defineComponent({
             }
         },
 
+
+        preencheExperiencia() {
+
+            this.modelNovoColaborador.experiencia = moment(this.modelNovoColaborador.contratacao, 'DD/MM/YYYY').add(44, 'days').format('DD/MM/YYYY')
+            this.modelNovoColaborador.renovacaoexperiencia = moment(this.modelNovoColaborador.experiencia, 'DD/MM/YYYY').add(44, 'days').format('DD/MM/YYYY')
+
+        },
+
         async novoColaborador() {
 
             this.modelNovoColaborador.codpessoa = this.route.params.id
 
-            if (this.modelNovoColaborador.contratacao) {
-                this.modelNovoColaborador.contratacao = this.Documentos.dataFormatoSql(this.modelNovoColaborador.contratacao)
+            const colab = { ...this.modelNovoColaborador };
+
+            if (colab.contratacao) {
+                colab.contratacao = this.Documentos.dataFormatoSql(colab.contratacao)
             }
 
-            if (this.modelNovoColaborador.experiencia) {
-                this.modelNovoColaborador.experiencia = this.Documentos.dataFormatoSql(this.modelNovoColaborador.experiencia)
+            if (colab.experiencia) {
+                colab.experiencia = this.Documentos.dataFormatoSql(colab.experiencia)
             }
-            if (this.modelNovoColaborador.renovacaoexperiencia) {
-                this.modelNovoColaborador.renovacaoexperiencia = this.Documentos.dataFormatoSql(this.modelNovoColaborador.renovacaoexperiencia)
+            if (colab.renovacaoexperiencia) {
+                colab.renovacaoexperiencia = this.Documentos.dataFormatoSql(colab.renovacaoexperiencia)
             }
-            if (this.modelNovoColaborador.rescisao) {
-                this.modelNovoColaborador.rescisao = this.Documentos.dataFormatoSql(this.modelNovoColaborador.rescisao)
+            if (colab.rescisao) {
+                colab.rescisao = this.Documentos.dataFormatoSql(colab.rescisao)
             }
 
             try {
-                const ret = await this.sPessoa.novoColaborador(this.modelNovoColaborador)
+                const ret = await this.sPessoa.novoColaborador(colab)
                 if (ret.data.data) {
                     this.$q.notify({
                         color: 'green-5',
@@ -821,8 +832,7 @@ export default defineComponent({
             if (maximo.isBefore(cont)) {
                 return 'Data Muito no Futuro!';
             }
-            this.modelNovoColaborador.experiencia = moment(this.modelNovoColaborador.contratacao, 'DD/MM/YYYY').add(44, 'days').format('DD/MM/YYYY')
-            this.modelNovoColaborador.renovacaoexperiencia = moment(this.modelNovoColaborador.experiencia, 'DD/MM/YYYY').add(44, 'days').format('DD/MM/YYYY')
+
 
             return true;
         },
