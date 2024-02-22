@@ -9,7 +9,7 @@ use Mg\Usuario\Autorizador;
 class FeriasController extends MgController
 {
 
-    public function create(Request $request)
+    public function create(Request $request, $codcolaborador)
     {
         Autorizador::autoriza(['Recursos Humanos']);
         $data = $request->all();
@@ -23,7 +23,7 @@ class FeriasController extends MgController
         return new FeriasResource($ferias);
     }
 
-    public function update(Request $request, $codferias)
+    public function update(Request $request, $codcolaborador, $codferias)
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
@@ -34,7 +34,7 @@ class FeriasController extends MgController
         return new FeriasResource($ferias);
     }
 
-    public function delete(Request $request, $codferias)
+    public function delete(Request $request, $codcolaborador, $codferias)
     {
         Autorizador::autoriza(['Recursos Humanos']);
         $ferias = Ferias::findOrFail($codferias);
@@ -45,16 +45,10 @@ class FeriasController extends MgController
         ], 200);
     }
 
-    public function programacaoFerias(Request $request) 
+    public function programacaoFerias(Request $request, $ano) 
     {   
         Autorizador::autoriza(['Recursos Humanos']);
-
-        $request->validate([
-            'ano' => 'required|integer|between:1990,2099'
-        ]);
-
-        $ferias = FeriasService::programacaoFerias($request->ano);
-        
+        $ferias = FeriasService::programacaoFerias($ano);
         return response()->json(
             $ferias, 
             200

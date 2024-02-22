@@ -3,7 +3,7 @@ import { api } from 'src/boot/axios'
 
 export const GrupoEconomicoStore = defineStore('grupoeconomico', {
   persist: true,
-  
+
   state: () => ({
     filtroGrupoPesquisa: {
       nome: null,
@@ -12,17 +12,7 @@ export const GrupoEconomicoStore = defineStore('grupoeconomico', {
     arrGrupos:[]
   }),
 
-  getters: {
-    doubleCount (state) {
-      return state.counter * 2
-    }
-  },
-
   actions: {
-    increment () {
-      this.counter++
-    },
-
     async selectGrupoEconomico(grupoeconomico) {
       const ret = await api.get('v1/grupoeconomico/select?grupoeconomico=' + grupoeconomico);
       return ret;
@@ -74,7 +64,7 @@ export const GrupoEconomicoStore = defineStore('grupoeconomico', {
       return ret;
     },
 
-    
+
     async ativarGrupo(codgrupoeconomico) {
       const ret = await api.delete('v1/grupoeconomico/' + codgrupoeconomico + '/inativo');
       return ret;

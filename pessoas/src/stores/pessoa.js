@@ -34,17 +34,7 @@ export const pessoaStore = defineStore('pessoa', {
     desativaScrollnoFiltro: ref(false)
   }),
 
-  getters: {
-    doubleCount(state) {
-      return state.counter * 2
-    },
-  },
-
   actions: {
-    increment() {
-      this.counter++
-    },
-
     async get(codpessoa) {
       this.item = null;
       const { data } = await api.get('v1/pessoa/' + codpessoa)
@@ -406,12 +396,6 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-    async getColaborador(codpessoa) {
-      const ret = await api.get('v1/pessoa/' + codpessoa + '/colaborador')
-      // const i = this.item.PessoaContaS.findIndex(item => item.codpessoaconta === codpessoaconta)
-      // this.item.PessoaContaS[i] = ret.data.data
-      return ret;
-    },
 
 
     async novoColaborador(modelNovoColaborador) {
@@ -449,17 +433,6 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
 
-    async novoColaboradorFerias(modelnovoColaboradorFerias) {
-      const ret = await api.post('v1/colaborador/' + modelnovoColaboradorFerias.codcolaborador + '/ferias', modelnovoColaboradorFerias)
-      return ret;
-    },
-
-
-    async deletarFerias(codferias) {
-      const ret = await api.delete('v1/colaborador/ferias/' + codferias)
-      return ret;
-    },
-
 
     async salvarColaborador(modelEditColaborador) {
       const ret = await api.put('v1/colaborador/' + modelEditColaborador.codcolaborador, modelEditColaborador)
@@ -473,12 +446,6 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-    async salvarColaboradorFerias(modelColaboradorFerias) {
-      const ret = await api.put('v1/ferias/' + modelColaboradorFerias.codferias, modelColaboradorFerias)
-
-     return ret;
-
-    },
 
     async selectEstado() {
 
