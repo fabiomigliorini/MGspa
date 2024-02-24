@@ -1,13 +1,12 @@
 <template>
   <template v-if="colaborador.Ferias.length > 0">
-    <q-separator inset />
     <q-item>
       <q-item-section>
       <div class="row q-col-gutter-md">
         <div
           v-for="ferias in colaborador.Ferias"
           v-bind:key="ferias.codferias"
-          class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3"
+          class="q-pa-md"
         >
           <q-card
             bordered

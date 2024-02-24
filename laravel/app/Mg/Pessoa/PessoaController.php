@@ -23,9 +23,14 @@ class PessoaController extends MgController
         $data = $request->all();
 
         if ($request->ieoutra) {
+
+            $request['ieoutra'] = str_pad($request->ieoutra, 11, 0, STR_PAD_LEFT);
+           
             $this->validate($request, [
                 'ieoutra' => 'required|inscricao_estadual:' . $request->uf,
             ]);
+
+            $request['ieoutra'] = ltrim($request->ieoutra, '0');
         }
 
         $this->validate($request, [

@@ -73,10 +73,6 @@
               <q-input outlined v-model="modelEditarDetalhes.mae" class="q-pt-md" label="Nome da Mãe" />
             </div>
 
-            <!-- <div class="col-6">
-                      <q-input outlined v-model="modelEditarDetalhes.pispasep" label="PIS/PASEP" mask="###.#####.##-#" unmasked-value/> 
-                    </div> -->
-
             <div class="col-6">
               <q-input outlined v-model="modelEditarDetalhes.tituloeleitor" mask="####.####.####" label="Titulo Eleitor"
                 unmasked-value />
@@ -130,6 +126,12 @@
             <div class="col-6">
               <q-input outlined v-model="modelEditarDetalhes.rntrc" label="RNTRC" mask="#########" unmasked-value />
             </div>
+
+            <div class="col-6">
+              <q-input outlined v-model="modelEditarDetalhes.pispasep" label="PIS/PASEP" mask="###.#####.##-#"
+                unmasked-value />
+            </div>
+
           </div>
 
           <q-input outlined borderless autogrow v-model="modelEditarDetalhes.observacoes" label="Observações"
@@ -211,7 +213,8 @@
                 #0000{{ sPessoa.item.codpessoa }}
                 <span v-if="sPessoa.item.mercosId.length > 0">
                   /
-                  <q-btn dense v-if="sPessoa.item.mercosId.length > 0" flat color="primary" :label="Number(sPessoa.item.mercosId)"
+                  <q-btn dense v-if="sPessoa.item.mercosId.length > 0" flat color="primary"
+                    :label="Number(sPessoa.item.mercosId)"
                     :href="'https://app.mercos.com/354041/clientes/' + sPessoa.item.mercosId" target="_blank" />
                 </span>
 

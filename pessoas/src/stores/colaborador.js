@@ -43,9 +43,9 @@ export const colaboradorStore = defineStore("colaborador", {
     async putFerias(model) {
       const ret = await api.put(
         "v1/colaborador/" +
-          model.codcolaborador +
-          "/ferias/" +
-          model.codferias,
+        model.codcolaborador +
+        "/ferias/" +
+        model.codferias,
         model
       );
       const colaborador = this.findColaborador(model.codcolaborador);
@@ -62,5 +62,66 @@ export const colaboradorStore = defineStore("colaborador", {
       });
       return ret;
     },
+
+    async salvarColaboradorCargo(model) {
+      const ret = await api.put('v1/colaborador/' + model.codcolaborador +
+        '/cargo/' + model.codcolaboradorcargo, model)
+
+      const colaborador = this.findColaborador(model.codcolaborador);
+      const i = colaborador.ColaboradorCargo.findIndex((el) => {
+        return el.codcolaboradorcargo == model.codcolaboradorcargo;
+      });
+      colaborador.ColaboradorCargo[i] = ret.data.data;
+      return ret;
+    },
+
+ 
+    async novoColaboradorCargo(model) {
+      const ret = await api.post('v1/colaborador/cargo/', model)
+
+      const i = this.colaboradores.findIndex(
+        (item) => item.codcolaborador === model.codcolaborador
+      );
+      this.colaboradores[i] = ret.data.data;
+      return ret;
+    },
+
+
+    async deleteColaboradorCargo(model) {
+
+      const ret = await api.delete('v1/colaborador/cargo/' + model.codcolaboradorcargo)
+      const colaborador = this.findColaborador(model.codcolaborador);
+      const i = colaborador.ColaboradorCargo.findIndex((el) => {
+        return el.codcolaboradorcargo == model.codcolaboradorcargo;
+      });
+      colaborador.ColaboradorCargo.splice(i, 1);
+      return true;
+    },
+
+  
+    async excluirColaborador(model) {
+      const ret = await api.delete('v1/colaborador/' + model.codcolaborador)
+      
+      const colaborador = this.colaboradores.findIndex((el) => {
+        return el.codcolaborador == model.codcolaborador;
+      });
+
+      this.colaboradores.splice(colaborador, 1);
+      return true;
+    },
+
+    async salvarColaborador(modelEditColaborador) {
+      const ret = await api.put('v1/colaborador/' + modelEditColaborador.codcolaborador, modelEditColaborador)
+      return ret;
+    },
+
+
+
+    async novoColaborador(modelNovoColaborador) {
+      const ret = await api.post('v1/colaborador/', modelNovoColaborador)
+      return ret;
+    },
+
+
   },
 });

@@ -39,7 +39,7 @@
                     </q-list>
 
                     <q-list float dense v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-                        <q-item  :to="{ name: 'feriasindex' }" >
+                        <q-item  :to="'/ferias/' + moment().year()" >
                                 <q-icon name="holiday_village" size="25px" class="q-pr-sm"/>
                                 <q-item-label>Férias</q-item-label>
                         </q-item>
@@ -62,6 +62,9 @@
 <script>
 import { guardaToken } from 'src/stores'
 import { defineComponent } from 'vue'
+import moment from 'moment';
+import 'moment/min/locales';
+moment.locale("pt-br")
 
 export default defineComponent({
     name: "MGMenu",
@@ -71,6 +74,7 @@ export default defineComponent({
         
         return {
             user,
+            moment,
         }
     },
 })

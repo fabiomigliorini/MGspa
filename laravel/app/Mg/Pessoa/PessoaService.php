@@ -260,12 +260,15 @@ class PessoaService
             'cnpj' => $data['cnpj'],
             'cliente' => $data['cliente'],
             'fornecedor' => $data['fornecedor'],
-            'ie' => $data['ie']??$data['ieoutra'],
+            'ie' => $data['ie'],
             'consumidor' => $data['consumidor']??true,
             'creditobloqueado' => true,
             'vendedor' => false,
             'notafiscal' => 0,
         ];
+        if ($dataPessoa['ie'] == 'OUTRA') {
+            $dataPessoa['ie'] = $data['ieoutra'];
+        }
         if ($data['fisica']) {
             $dataPessoa['codgrupoeconomico'] = static::buscaCodGrupoEconomicoPeloCpf($data['cnpj']);
         } else {

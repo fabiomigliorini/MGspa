@@ -396,27 +396,6 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-
-
-    async novoColaborador(modelNovoColaborador) {
-      const ret = await api.post('v1/colaborador/', modelNovoColaborador)
-      // const i = this.item.PessoaContaS.findIndex(item => item.codpessoaconta === codpessoaconta)
-      // this.item.PessoaContaS[i] = ret.data.data
-      return ret;
-    },
-
-
-    async deletarColaborador(codcolaborador) {
-      const ret = await api.delete('v1/colaborador/' + codcolaborador)
-      return ret;
-    },
-
-
-    async novoColaboradorCargo(modelnovoColaboradorCargo) {
-      const ret = await api.post('v1/colaborador/cargo/', modelnovoColaboradorCargo)
-      return ret;
-    },
-
     async novoCargo(modelNovoCargo) {
       const ret = await api.post('v1/cargo/', modelNovoCargo)
       return ret;
@@ -427,25 +406,8 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-    async deletarColaboradorCargo(codcolaboradorcargo) {
-      const ret = await api.delete('v1/colaborador/cargo/' + codcolaboradorcargo)
-      return ret;
-    },
 
-
-
-    async salvarColaborador(modelEditColaborador) {
-      const ret = await api.put('v1/colaborador/' + modelEditColaborador.codcolaborador, modelEditColaborador)
-      return ret;
-    },
-
-    async salvarColaboradorCargo(modelColaboradorCargo) {
-      const ret = await api.put('v1/colaborador/' + modelColaboradorCargo.codcolaborador +
-       '/cargo/' + modelColaboradorCargo.codcolaboradorcargo, modelColaboradorCargo)
-
-      return ret;
-    },
-
+  
 
     async selectEstado() {
 
@@ -486,7 +448,7 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
     async programacaoFerias(ano) {
-      const ret = await api.get('v1/programacao-ferias/', {params: ano})
+      const ret = await api.get('v1/programacao-ferias/' + ano)
       return ret;
     },
 

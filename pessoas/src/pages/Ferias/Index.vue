@@ -10,9 +10,9 @@
 
             <div class="q-pa-md">
                 <q-card bordered>
-                    <pre>
+                    <!-- <pre>
                     {{ ferias }}
-                    </pre>
+                    </pre> -->
                     <q-table title="Programação de férias" :filter="filter" :rows="ferias" :columns="columns"
                         no-data-label="Nenhum titulo encontrado" :separator="separator" emit-value>
 
@@ -51,9 +51,11 @@
                                             v-model:model-value="modelRange[feriasS.codferias]" :min="1" :max="max"
                                             ref="range" :left-label-value="datedoRangeMin(modelRange[feriasS.codferias])"
                                             :right-label-value="datedoRangeMax(modelRange[feriasS.codferias])" label-always
-                                            switch-label-side drag-range />
+                                            switch-label-side drag-range
+                                            />
                                     </div>
 
+                                    {{ modelRange }}
                                 </q-td>
                                 <q-td key="data" :props="ferias">
                                     <div v-for="feriasS in ferias.row.ferias" v-bind:key="feriasS.codferias">
@@ -89,6 +91,7 @@ import { pessoaStore } from 'src/stores/pessoa'
 import { formataDocumetos } from 'src/stores/formataDocumentos'
 import { useQuasar } from 'quasar'
 import { guardaToken } from 'src/stores'
+import { useRoute, useRouter } from 'vue-router'
 
 export default {
     components: {
@@ -98,6 +101,22 @@ export default {
 
 
     methods: {
+
+        teste(ferias, min, max) {
+
+       
+
+
+            const acumulaRangeFerias = []
+
+            var params = Object.assign(ferias, min, max)
+
+            acumulaRangeFerias.push(params)
+
+
+
+
+        },
 
         async filtroAno(anoFiltro) {
             var anoAtual = moment().year();
@@ -169,16 +188,40 @@ export default {
         },
 
         async submit() {
-            console.log(this.modelRange)
+            // console.log(this.$refs.range)
 
             // this.modelRange.forEach(item => {
             //     console.log(item)
             // });
 
+            // console.log(this.modelRange)
             // const keys = Object.keys(this.modelRange)
             // const valores = Object.values(this.modelRange)
             // console.log(keys)
-            
+
+            delete this.modelRange.max;
+            delete this.modelRange.min;
+
+            console.log(this.modelRange)
+
+
+            var keys = Object.keys(this.modelRange)
+
+            var values = Object.values(this.modelRange)
+            let model = []
+
+            keys.forEach(element => {
+
+                values.forEach(elvalue => {
+                    model.push({
+                        codferias: element,
+                        min: elvalue.min,
+                        max: elvalue.max
+                    })
+
+                });
+            });
+            console.log(model)
 
 
             // let feriasAcumula = []
@@ -220,8 +263,7 @@ export default {
             var rangeMax = moment(primeiroDia).date(this.modelRange.max)
             var converteDataMax = moment(rangeMax).format('YYYY-MM-DD')
 
-            this.modelRange
-
+            // this.modelRange
 
 
             const periodoGozo = {
@@ -254,10 +296,14 @@ export default {
         },
 
         async atualizaAno(ano) {
-            const ret = await this.sPessoa.programacaoFerias({ ano: ano })
-            this.ferias = ret.data
-            this.ano = ano
+            if (ano == null) {
+                ano = this.route.params.ano
+            }
 
+            const ret = await this.sPessoa.programacaoFerias(ano)
+            this.ferias = ret.data
+            this.router.push('/ferias/' + ano)
+            this.ano = ano
             return ret;
         },
     },
@@ -279,6 +325,8 @@ export default {
         const show_filter = ref(true)
         const separator = ref('cell')
         const range = ref(null)
+        const route = useRoute()
+        const router = useRouter()
 
 
         const emit = async (ret, codferias) => {
@@ -326,19 +374,21 @@ export default {
             separator,
             columns,
             emit,
-            range
+            range,
+            route,
+            router
         }
     },
     async mounted() {
         var year = moment().year()
         this.atualizaAno(year)
+
         var bissexto = moment([year]).isLeapYear()
         if (bissexto) {
             this.max = 366
         } else {
             this.max = 365
         }
-
     }
 }
 </script>

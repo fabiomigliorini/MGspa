@@ -22,7 +22,7 @@ const routes = [
       { path: '/grupoeconomico/:id', name: 'grupoeconomico', component: () => import('pages/GrupoEconomico/GrupoEconomicoview') },
       { path: '/nota-fiscal/dashboard', name: 'notafiscaldash', component: () => import('pages/NotaFiscal/Index.vue') },
       { path: '/permissoes', name:'permissoes', component: () => import('pages/Permissoes/Index.vue') },
-      { path: '/ferias', name:'feriasindex', component: () => import('pages/Ferias/Index.vue') },
+      { path: '/ferias/:ano', name:'feriasindex', component: () => import('pages/Ferias/Index.vue') },
       { path: '/cargo', name:'cargosindex', component: () => import('pages/Cargos/Index.vue') },
       { path: '/cargo/:id', name:'cargoView', component: () => import('pages/Cargos/cargoView.vue') },
 

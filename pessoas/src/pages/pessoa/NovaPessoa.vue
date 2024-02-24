@@ -5,14 +5,7 @@
     </template>
 
     <template #botaoVoltar>
-      <q-btn
-        flat
-        dense
-        round
-        :to="{ name: 'pessoa' }"
-        icon="arrow_back"
-        aria-label="Voltar"
-      >
+      <q-btn flat dense round :to="{ name: 'pessoa' }" icon="arrow_back" aria-label="Voltar">
       </q-btn>
     </template>
 
@@ -20,14 +13,7 @@
       <div id="q-app" style="min-height: 100vh">
         <div class="row flex flex-center">
           <div class="q-pa-lg col-xs-12 col-sm-8 col-md-6 col-lg-4 col-xl-3">
-            <q-stepper
-            vertical
-
-              v-model="step"
-              color="primary"
-              animated
-              header-nav
-            >
+            <q-stepper vertical v-model="step" color="primary" animated header-nav>
               <!-- TIPO -->
               <q-step :name="0" title="Tipo" :done="step > 0">
                 <p>
@@ -35,73 +21,37 @@
                   CNPJ.
                 </p>
 
-                <q-option-group
-                  :options="[
-                    { label: 'Fisica', value: true },
-                    { label: 'Jurídica', value: false },
-                  ]"
-                  type="radio"
-                  v-model="model.fisica"
-                  @update:model-value="step = step + 1"
-                />
+                <q-option-group :options="[
+                  { label: 'Fisica', value: true },
+                  { label: 'Jurídica', value: false },
+                ]" type="radio" v-model="model.fisica" @update:model-value="step = step + 1" />
               </q-step>
 
               <!-- CNPJ -->
               <q-step :name="1" title="CNPJ/CPF" :done="step > 1">
                 <p>Informe o número do documento.</p>
 
-                <q-input
-                  autofocus
-                  outlined
-                  v-model="model.cnpj"
-                  label="CNPJ"
-                  v-if="model.fisica == false"
-                  mask="##.###.###/####-##"
-                  unmasked-value
-                  required
-                  :rules="[validaObrigatorio, validaCpfCnpj]"
-                  @update:model-value="continuaSeCnpjValido()"
-                  style="max-width: 200px"
-                  inputmode="numeric"
-                />
-                <q-input
-                  autofocus
-                  outlined
-                  v-model="model.cnpj"
-                  v-if="model.fisica == true"
-                  label="CPF"
-                  mask="###.###.###-##"
-                  unmasked-value
-                  required
-                  :rules="[validaObrigatorio, validaCpfCnpj]"
-                  @update:model-value="continuaSeCnpjValido()"
-                  style="max-width: 200px"
-                  inputmode="numeric"
-                />
+                <q-input autofocus outlined v-model="model.cnpj" label="CNPJ" v-if="model.fisica == false"
+                  mask="##.###.###/####-##" unmasked-value required :rules="[validaObrigatorio, validaCpfCnpj]"
+                  @update:model-value="continuaSeCnpjValido()" style="max-width: 200px" inputmode="numeric" />
+                <q-input autofocus outlined v-model="model.cnpj" v-if="model.fisica == true" label="CPF"
+                  mask="###.###.###-##" unmasked-value required :rules="[validaObrigatorio, validaCpfCnpj]"
+                  @update:model-value="continuaSeCnpjValido()" style="max-width: 200px" inputmode="numeric" />
               </q-step>
 
               <!-- CADASTROS DUPLICADOS -->
               <q-step :name="2" title="Duplicidade" :done="step > 2">
                 <template v-if="cadastrosEncontrados.length > 0">
-                  <q-banner
-                    rounded
-                    inline-actions
-                    class="text-white bg-red q-mb-md"
-                  >
+                  <q-banner rounded inline-actions class="text-white bg-red q-mb-md">
                     Já existe cadastro com esse mesmo CNPJ/CPF. Verifique com
                     atenção para evitar duplicidade de cadastro!
                   </q-banner>
 
                   <div class="row q-col-gutter-md">
-                    <div
-                      class="col-12"
-                      v-for="listagempessoas in cadastrosEncontrados"
-                      v-bind:key="listagempessoas.codpessoa"
-                    >
+                    <div class="col-12" v-for="listagempessoas in cadastrosEncontrados"
+                      v-bind:key="listagempessoas.codpessoa">
                       <!-- CARD AQUI -->
-                      <card-pessoas
-                        :listagempessoas="listagempessoas"
-                      ></card-pessoas>
+                      <card-pessoas :listagempessoas="listagempessoas"></card-pessoas>
                     </div>
                   </div>
                 </template>
@@ -122,31 +72,18 @@
                 <q-list style="max-width: 400px">
                   <q-item tag="label" v-ripple>
                     <q-item-section avatar>
-                      <q-radio
-                        v-model="model.ie"
-                        :val="null"
-                        @update:model-value="step += 1"
-                      />
+                      <q-radio v-model="model.ie" :val="null" @update:model-value="step += 1" />
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>Sem inscrição</q-item-label>
                     </q-item-section>
                   </q-item>
 
-                  <q-item
-                    tag="label"
-                    v-ripple
-                    v-for="ie in sefazCadastro.filter((item) => {
-                      return item.cSit == 1;
-                    })"
-                    v-bind:key="ie.IE"
-                  >
+                  <q-item tag="label" v-ripple v-for="ie in sefazCadastro.filter((item) => {
+                    return item.cSit == 1;
+                  })" v-bind:key="ie.IE">
                     <q-item-section avatar>
-                      <q-radio
-                        v-model="model.ie"
-                        :val="ie.IE"
-                        @update:model-value="step += 1"
-                      />
+                      <q-radio v-model="model.ie" :val="ie.IE" @update:model-value="step += 1" />
                     </q-item-section>
                     <q-item-section>
                       <q-item-label overline>
@@ -171,13 +108,17 @@
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>
-                        <q-input
-                          outlined
-                          v-model="model.ieoutra"
-                          label="Outra"
-                          unmasked-value
-                          @update:model-value="model.ie = 'OUTRA'"
-                        />
+                        <div class="row">
+                          <div class="col-6">
+                            <q-input outlined v-model="model.ieoutra" label="Outra" unmasked-value
+                              @update:model-value="model.ie = 'OUTRA'" />
+                          </div>
+
+                          <div class="col-5 q-pl-md">
+                            <select-estado label="UF" v-model="model.uf"></select-estado>
+
+                          </div>
+                        </div>
                       </q-item-label>
                     </q-item-section>
                   </q-item>
@@ -186,54 +127,22 @@
 
               <!-- CONCLUIR -->
               <q-step :name="4" title="Finalizar " :done="step > 4">
-                <q-input
-                  outlined
-                  v-model="model.fantasia"
-                  label="Fantasia"
-                  :rules="[
-                    (val) =>
-                      (val && val.length >= 3) || 'Nome Fantasia deve ter no mínimo 3 letras!',
-                  ]"
-                  autofocus
-                  style="max-width: 350px"
-                  maxlength="50"
-                />
+                <q-input outlined v-model="model.fantasia" label="Fantasia" :rules="[
+                  (val) =>
+                    (val && val.length >= 3) || 'Nome Fantasia deve ter no mínimo 3 letras!',
+                ]" autofocus style="max-width: 350px" maxlength="50" />
 
-                <q-input
-                  outlined
-                  v-model="model.pessoa"
-                  label="Razão Social"
-                  :rules="[
-                    (val) =>
-                      (val && val.length >= 5) || 'Razão Social deve coonter no mínimo 5 letras!',
-                  ]"
-                  style="max-width: 550px"
-                  maxlength="100"
-                />
+                <q-input outlined v-model="model.pessoa" label="Razão Social" :rules="[
+                  (val) =>
+                    (val && val.length >= 5) || 'Razão Social deve coonter no mínimo 5 letras!',
+                ]" style="max-width: 550px" maxlength="100" />
               </q-step>
 
               <template v-slot:navigation>
                 <q-stepper-navigation>
-                  <q-btn
-                    v-if="step != 4"
-                    @click="step = step + 1"
-                    color="primary"
-                    label="Continuar"
-                  />
-                  <q-btn
-                    v-else
-                    @click="salvar()"
-                    color="primary"
-                    label="Salvar"
-                  />
-                  <q-btn
-                    v-if="step > 0"
-                    flat
-                    color="primary"
-                    @click="step = step - 1"
-                    label="Voltar"
-                    class="q-ml-sm"
-                  />
+                  <q-btn v-if="step != 4" @click="step = step + 1" color="primary" label="Continuar" />
+                  <q-btn v-else @click="salvar()" color="primary" label="Salvar" />
+                  <q-btn v-if="step > 0" flat color="primary" @click="step = step - 1" label="Voltar" class="q-ml-sm" />
                 </q-stepper-navigation>
               </template>
             </q-stepper>
@@ -260,6 +169,8 @@ import {
 export default {
   components: {
     MGLayout: defineAsyncComponent(() => import("layouts/MGLayout.vue")),
+    SelectEstado: defineAsyncComponent(() => import("components/pessoa/SelectEstado.vue")),
+
     CardPessoas: defineAsyncComponent(() =>
       import("components/pessoa/CardPessoas.vue")
     ),
@@ -386,7 +297,7 @@ export default {
       // verifica CPF/CNPJ
       if (!isCnpjCpfValido(this.model.cnpj)) {
         this.step = 1;
-          return false;
+        return false;
       }
 
       if (this.model.fantasia.length < 3) {
@@ -423,7 +334,7 @@ export default {
 
       // se usuario selecionou uma ie da sefaz, adiciona ela no objeto
       if (this.model.ie) {
-        consultas.sefaz = this.sefazCadastro.find((el) => {return el.IE == this.model.ie});
+        consultas.sefaz = this.sefazCadastro.find((el) => { return el.IE == this.model.ie });
       }
 
       // parametros com o model e as consultas
@@ -445,12 +356,23 @@ export default {
         }
       } catch (error) {
         console.log(error);
-        this.$q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: error.response.data.message,
-        });
+
+        if (error.response.data.errors.ieoutra && error.response.data.errors.ieoutra[0]) {
+          this.$q.notify({
+            color: "red-5",
+            textColor: "white",
+            icon: "error",
+            message: error.response.data.errors.ieoutra[0],
+          });
+        } else {
+          this.$q.notify({
+            color: "red-5",
+            textColor: "white",
+            icon: "error",
+            message: error.response.data.message,
+          });
+        }
+
       }
     },
   },

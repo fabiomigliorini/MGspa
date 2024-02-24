@@ -2,6 +2,7 @@
 
 namespace Mg\Colaborador;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ColaboradorCargoService
@@ -9,6 +10,10 @@ class ColaboradorCargoService
 
     public static function create($data)
     {
+        $fim = Carbon::parse($data['inicio'])->subDays(1);
+        ColaboradorCargo::where('codcolaborador', $data['codcolaborador'])->whereNull('fim')->update([
+            'fim' => $fim,
+        ]);
         $colaboradorCargo = new ColaboradorCargo($data);
         $colaboradorCargo->save();
         return $colaboradorCargo->refresh();

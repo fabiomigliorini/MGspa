@@ -3,6 +3,7 @@
 namespace Mg\Colaborador;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Mg\MgController;
 use Mg\Usuario\Autorizador;
 
@@ -13,8 +14,10 @@ class ColaboradorCargoController extends MgController
     {
         Autorizador::autoriza(['Recursos Humanos']);
         $data = $request->all();
-        $criarcolaborador = ColaboradorCargoService::create($data);
-        return new ColaboradorCargoResource($criarcolaborador);
+        DB::beginTransaction();
+        $cc = ColaboradorCargoService::create($data);
+        DB::commit();
+        return new ColaboradorResource($cc->Colaborador);
     }
 
     public function show(Request $request, $codcolaborador, $codcolaboradorcargo)

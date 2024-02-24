@@ -33,7 +33,7 @@ const verificaauth = async () => {
   if ((localStorage.getItem('access_token'))) {
     window.location = "#/"
   } else {
-    window.location = process.env.OAUTH_URL + '?state=quasar-v2'
+    window.location = process.env.OAUTH_URL + "?state=quasar-v2"
   }
 }
 
