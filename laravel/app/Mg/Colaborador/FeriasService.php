@@ -53,8 +53,8 @@ class FeriasService
             left join tblcargo ca on (ca.codcargo = cc.codcargo)
             left join tblfilial f on (f.codfilial = cc.codfilial)
             left join tblpessoa p on (p.codpessoa = c.codpessoa)
-            where extract(year from c.contratacao) >= :ano
-            and extract(year from coalesce(c.rescisao, now())) <= :ano
+            where extract(year from c.contratacao) <= :ano
+            and (extract(year from c.rescisao) <= :ano or c.rescisao is null)
             order by f.codfilial, ca.cargo nulls last, p.fantasia
         ';
 
