@@ -82,6 +82,7 @@ const urlTitulo = (codtitulo) => {
                 </template>
                 Em aberto
               </template>
+              <template v-else-if="titulo.estornado"> Estornado </template>
               <template v-else> Agrupado/Liquidado </template>
             </q-item-label>
           </q-item-section>

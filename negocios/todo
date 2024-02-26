@@ -1,8 +1,6 @@
 MANDATORY:
-TODO Cancelamento de Negocio
 TODO Comanda
 TODO fazer baixa de vales automaticamente
-TODO Mostrar se titulo Estornado
 TODO fazer devolucao
 TODO fazer tela para gerenciar cadastro dos PDVs autorizados
 TODO Tela/Bordero Totais do dia C/Detalhamento
@@ -48,3 +46,5 @@ TODO prancheta de pesquisa de produtos sem codigo (substituir pranchetas impress
 [X] TODO fazer geracao da NF de Transferencia
 [X] BUG nao deixar criar cobraca cartao quando nao tem nenhum POS selecionado
 [X] FIXME nao gerar fechamento com itens inativos
+[X] TODO Cancelamento de Negocio
+[X] TODO Mostrar se titulo Estornado
