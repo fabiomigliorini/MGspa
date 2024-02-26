@@ -168,6 +168,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
             Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
             Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
+            Route::delete('negocio/{codnegocio}', '\Mg\Pdv\PdvController@deleteNegocio');
             Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
             Route::post('negocio/{codnegocio}/romaneio/imprimir/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');

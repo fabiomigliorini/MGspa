@@ -173,7 +173,6 @@ const recarregarDaApi = () => {
 };
 
 const negocioStatusIconColor = () => {
-  console.log(sNegocio.negocio.codnegociostatus);
   switch (sNegocio.negocio.codnegociostatus) {
     case 2: // Fechado
       return "secondary";
@@ -343,6 +342,9 @@ const negocioStatusIconColor = () => {
         </q-item-label>
         <q-item-label caption>
           {{ sNegocio.negocio.negociostatus }}
+        </q-item-label>
+        <q-item-label caption v-if="sNegocio.negocio.justificativa">
+          {{ sNegocio.negocio.justificativa }}
         </q-item-label>
       </q-item-section>
     </q-item>

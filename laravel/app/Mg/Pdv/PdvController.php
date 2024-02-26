@@ -3,7 +3,7 @@
 namespace Mg\Pdv;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\DB;
 use Mg\Negocio\NegocioResource;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscalService;
@@ -94,6 +94,23 @@ class PdvController
     {
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = PdvNegocioService::negocio($request->negocio, $pdv);
+        return new NegocioResource($negocio);
+    }
+
+    public function deleteNegocio(PdvRequest $request, $codnegocio)
+    {
+        DB::beginTransaction();
+        $pdv = PdvService::autoriza($request->pdv);
+        $request->validate([
+            'justificativa' => [
+                'required',
+                'string',
+                'min:15',
+            ]
+        ]);        
+        $negocio = Negocio::findOrFail($codnegocio);
+        $negocio = PdvNegocioService::cancelar($negocio, $pdv, $request->justificativa);
+        DB::commit();
         return new NegocioResource($negocio);
     }
 

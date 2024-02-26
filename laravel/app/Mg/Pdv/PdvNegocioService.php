@@ -11,12 +11,15 @@ use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioStatus;
+use Mg\NotaFiscal\NotaFiscalService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
+use Mg\Titulo\TituloService;
+use Mg\Negocio\NegocioService;
 
 class PdvNegocioService
 {
 
-    public static function negocio($data, $pdv)
+    public static function negocio($data, Pdv $pdv)
     {
         // abre transacao no banco
         DB::beginTransaction();
@@ -192,6 +195,36 @@ class PdvNegocioService
         }
 
         // retorna
+        return $negocio;
+    }
+
+    public static function cancelar(Negocio $negocio, Pdv $pdv, String $justificativa)
+    {
+        if (!in_array($negocio->codnegociostatus, [1, 2])) {
+            throw new Exception("Status do Negócio Não Permite Cancelamento!", 1);
+        }
+
+        foreach ($negocio->NegocioProdutoBarraS as $npb) {
+            foreach ($npb->NotaFiscalProdutoBarraS as $nfpb) {
+                if (NotaFiscalService::isAtiva($nfpb->NotaFiscal)) {
+                    throw new Exception("Negócio possui Nota Fiscal ativa!", 1);
+                }
+            }
+        }
+
+        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
+            foreach ($nfp->TituloS as $tit) {
+                if (!empty($tit->estornado)) {
+                    continue;
+                }
+                TituloService::estornar($tit);
+            }
+        }
+
+        $negocio->codnegociostatus = NegocioStatus::CANCELADO;
+        $negocio->justificativa = $justificativa;
+        $negocio->save();
+        NegocioService::movimentaEstoque($negocio);
         return $negocio;
     }
 }

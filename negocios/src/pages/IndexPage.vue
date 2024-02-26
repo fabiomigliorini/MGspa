@@ -12,7 +12,7 @@ import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
 import ListagemTitulos from "src/components/offline/ListagemTitulos.vue";
 import ListagemNotas from "src/components/offline/ListagemNotas.vue";
 import { api } from "boot/axios";
-import { Notify } from "quasar";
+import { Dialog, Notify } from "quasar";
 import { db } from "boot/db";
 
 const route = useRoute();
@@ -138,6 +138,30 @@ const fechar = async () => {
   await fecharDialogs();
   await sNegocio.fechar();
   abrirDocumentoSeFechado();
+};
+
+const cancelar = async () => {
+  if (
+    sNegocio.negocio.codnegociostatus != 1 &&
+    sNegocio.negocio.codnegociostatus != 2
+  ) {
+    return;
+  }
+  Dialog.create({
+    title: "Justificativa de Cancelamento",
+    message:
+      "Descreva o motivo do cancelamento desse negócio. Precisa conter no mínimo 15 caracteres!",
+    prompt: {
+      model: "",
+      isValid: (val) => val.length > 14,
+      outlined: true,
+      type: "text", // optional
+      placeholder: "Justificativa de Cancelamento...",
+    },
+    cancel: true,
+  }).onOk(async (justificativa) => {
+    await sNegocio.cancelar(justificativa);
+  });
 };
 
 const dinheiro = async () => {
@@ -388,6 +412,18 @@ onUnmounted(() => {
           v-if="sNegocio.negocio.codnegociostatus == 1"
         >
           <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
+        </q-btn>
+        <q-btn
+          fab
+          icon="delete"
+          color="negative"
+          @click="cancelar()"
+          v-if="
+            sNegocio.negocio.codnegociostatus == 1 ||
+            sNegocio.negocio.codnegociostatus == 2
+          "
+        >
+          <q-tooltip class="bg-accent">Cancelar Negócio</q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>
