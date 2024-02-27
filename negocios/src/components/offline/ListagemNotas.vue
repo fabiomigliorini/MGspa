@@ -602,7 +602,7 @@ defineExpose({
               @click="excluir(nota)"
               v-if="!nota.numero"
             >
-              <q-tooltip class="bg-accent">Consultar</q-tooltip>
+              <q-tooltip class="bg-accent">Excluir</q-tooltip>
             </q-btn>
           </q-btn-group>
         </q-card-actions>
