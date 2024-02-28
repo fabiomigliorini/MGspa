@@ -18,9 +18,9 @@
                         </q-item>
                     </q-list>
                     <q-list float dense>
-                        <q-item  :to="{ name: 'grupoeconomicoindex' }" >
-                                <q-icon name="groups" size="25px" class="q-pr-sm"/>
-                                <q-item-label>Grupo Econômico</q-item-label>
+                        <q-item :to="{ name: 'grupoeconomicoindex' }">
+                            <q-icon name="groups" size="25px" class="q-pr-sm" />
+                            <q-item-label>Grupo Econômico</q-item-label>
                         </q-item>
                     </q-list>
                 </div>
@@ -39,21 +39,31 @@
                     </q-list>
 
                     <q-list float dense v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-                        <q-item  :to="'/ferias/' + moment().year()" >
-                                <q-icon name="holiday_village" size="25px" class="q-pr-sm"/>
-                                <q-item-label>Férias</q-item-label>
+                        <q-item :to="'/ferias/' + moment().year()">
+                            <q-icon name="holiday_village" size="25px" class="q-pr-sm" />
+                            <q-item-label>Férias</q-item-label>
                         </q-item>
                     </q-list>
                 </div>
 
                 <div class="col-6" v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
                     <q-list float dense>
-                        <q-item  :to="{ name: 'cargosindex' }" >
-                                <q-icon name="work" size="25px" class="q-pr-sm"/>
-                                <q-item-label>Cargos</q-item-label>
+                        <q-item :to="{ name: 'cargosindex' }">
+                            <q-icon name="work" size="25px" class="q-pr-sm" />
+                            <q-item-label>Cargos</q-item-label>
                         </q-item>
                     </q-list>
                 </div>
+
+                <div class="col-6">
+                    <q-list float dense>
+                        <q-item :to="{ name: 'aniversariosindex' }"> 
+                            <q-icon name="celebration" size="25px" class="q-pr-sm" />
+                            <q-item-label>Aniversários</q-item-label>
+                        </q-item>
+                    </q-list>
+                </div>
+
             </div>
         </q-menu>
     </q-btn>
@@ -71,7 +81,7 @@ export default defineComponent({
 
     setup() {
         const user = guardaToken()
-        
+
         return {
             user,
             moment,

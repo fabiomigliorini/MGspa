@@ -186,6 +186,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // Allan - daqui pra baixo
         Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
+        Route::get('pessoa/aniversarios/', '\Mg\Pessoa\PessoaController@buscaAniversarios');
         Route::post('pessoa/', '\Mg\Pessoa\PessoaController@create');
         Route::get('pessoa/formadepagamento', '\Mg\Pessoa\PessoaController@formapagamento');
         Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@show');
@@ -193,6 +194,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
         Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
         Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
+        
+
 
         //GrupoCliente
         Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index');
@@ -263,6 +266,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('colaborador/{codcolaborador}/ferias/', '\Mg\Colaborador\FeriasController@create');
         Route::get('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@show');
         Route::put('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@update');
+        Route::put('ferias/atualiza-todas-ferias/', '\Mg\Colaborador\FeriasController@AtualizaTodasFerias');
+       
         Route::delete('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@delete');
         Route::get('programacao-ferias/{ano}', '\Mg\Colaborador\FeriasController@programacaoFerias');
                  

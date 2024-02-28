@@ -490,7 +490,12 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-
+    async buscaAniversarios(filtro) {
+      const ret = await api.get('v1/pessoa/aniversarios', {
+        params: filtro
+      })
+      return ret;
+    }
   }
 })
 

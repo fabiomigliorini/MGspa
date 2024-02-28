@@ -123,5 +123,19 @@ export const colaboradorStore = defineStore("colaborador", {
     },
 
 
+    async atualizaTodasFerias(model) {
+      const ret = await api.put('v1/ferias/atualiza-todas-ferias/', model);
+     
+      // const colaborador = this.findColaborador(model.codcolaborador);
+      // const i = colaborador.Ferias.findIndex((el) => {
+      //   return el.codferias == model.codferias;
+      // });
+      // colaborador.Ferias[i] = ret.data.data;
+
+      return ret;
+    },
+
+
+
   },
 });

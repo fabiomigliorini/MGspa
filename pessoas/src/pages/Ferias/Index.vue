@@ -4,52 +4,24 @@
     <template #content v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
       <div class="q-pa-md">
         <q-card bordered>
-          <q-table
-            title="Programação de férias"
-            :filter="filter"
-            :rows="ferias"
-            :columns="columns"
-            no-data-label="Nenhum titulo encontrado"
-            :separator="separator"
-            emit-value
-          >
+          <q-table title="Programação de férias" :filter="filter" :rows="ferias" :columns="columns"
+            no-data-label="Nenhuma programação de férias encontrada" :separator="separator" emit-value :pagination="{rowsPerPage: 100}">
             <template v-slot:top-right>
-              <q-btn
-                flat
-                color="primary"
-                icon="chevron_left"
-                @click="filtroAno(-1)"
-              />
+              <q-btn flat color="primary" icon="chevron_left" @click="filtroAno(-1)" />
               {{ ano }}
-              <q-btn
-                flat
-                color="primary"
-                icon="chevron_right"
-                @click="filtroAno(+1)"
-              />
+              <q-btn flat color="primary" icon="chevron_right" @click="filtroAno(+1)" />
 
-              <q-input
-                v-if="show_filter"
-                outlined
-                dense
-                debounce="300"
-                class="q-pa-sm"
-                v-model="filter"
-                placeholder="Pesquisar"
-              >
+              <q-input v-if="show_filter" outlined dense debounce="300" class="q-pa-sm" v-model="filter"
+                placeholder="Pesquisar">
                 <template v-slot:append>
                   <q-icon name="search" />
                 </template>
               </q-input>
-              <q-btn
-                class="q-ml-sm"
-                icon="filter_list"
-                @click="show_filter = !show_filter"
-                flat
-              />
+              <q-btn class="q-ml-sm" icon="filter_list" @click="show_filter = !show_filter" flat />
             </template>
 
             <template v-slot:body="ferias">
+
               <q-tr :props="ferias">
                 <q-td key="filial" :props="ferias">
                   {{ ferias.row.filial }}
@@ -58,26 +30,18 @@
                   {{ ferias.row.cargo }}
                 </q-td>
 
-                <q-td key="fantasia" :props="ferias">
+                <q-td key="fantasia" :props="ferias" @click="linkPessoa(ferias.row.codpessoa)" class="cursor-pointer">
                   {{ ferias.row.fantasia }}
                 </q-td>
+              
                 <q-td key="janeiro" colspan="12" :props="ferias">
                   <div v-for="f in ferias.row.ferias" v-bind:key="f.codferias">
-                    <q-range
-                      :model-value="f.range"
-                      @update:modelValue="(value) => {alteraRange(value, f)}"
-                      :min="1"
-                      :max="max"
-                      ref="range"
-                      drag-only-range
-                    />
-                  </div>
+                    <q-range :model-value="f.range" @update:modelValue="(value) => { alteraRange(value, f) }" :min="1"
+                      :max="max" ref="range" drag-only-range :disable="!f.prevista" :color="f.prevista ? 'blue' : 'green'" />
+                    </div>
                 </q-td>
                 <q-td key="data" :props="ferias">
-                  <div
-                    v-for="feriasS in ferias.row.ferias"
-                    v-bind:key="feriasS.codferias"
-                  >
+                  <div v-for="feriasS in ferias.row.ferias" v-bind:key="feriasS.codferias">
                     {{ moment(feriasS.gozoinicio).format('ddd, D/MMM') }}
                     a
                     {{ moment(feriasS.gozofim).format('D/MMM/YYYY') }}
@@ -108,6 +72,7 @@ import { formataDocumetos } from "src/stores/formataDocumentos";
 import { useQuasar } from "quasar";
 import { guardaToken } from "src/stores";
 import { useRoute, useRouter } from "vue-router";
+import { colaboradorStore } from "src/stores/colaborador";
 
 export default {
   components: {
@@ -122,18 +87,10 @@ export default {
       ferias.range = range;
       ferias.diagozoinicio = range.min;
       ferias.diagozofim = range.max;
-      const gozoinicio = moment().startOf('year').add(range.min -1, 'days');
-      const gozofim = moment().startOf('year').add(range.max -1, 'days');
+      const gozoinicio = moment().startOf('year').add(range.min - 1, 'days');
+      const gozofim = moment().startOf('year').add(range.max - 1, 'days');
       ferias.gozoinicio = gozoinicio.format('YYYY-MM-DD');
       ferias.gozofim = gozofim.format('YYYY-MM-DD');
-    },
-
-    teste(ferias, min, max) {
-      const acumulaRangeFerias = [];
-
-      var params = Object.assign(ferias, min, max);
-
-      acumulaRangeFerias.push(params);
     },
 
     async filtroAno(anoFiltro) {
@@ -144,8 +101,9 @@ export default {
       }
 
       if (anoFiltro == 1) {
-        this.ano = this.ano + 1;
+        this.ano = (parseInt(this.ano) + parseInt(1));
       }
+
 
       try {
         const ret = await this.atualizaAno(this.ano);
@@ -162,143 +120,35 @@ export default {
       }
     },
 
-    datedoRangeMin(min) {
-      if (min == undefined) {
-        return "-";
-      }
-      if (min && min.min) {
-        min = min.min;
-      }
-
-      if (min == 0) {
-        return "-";
-      }
-
-      var ano = new Date().getFullYear();
-      var inicio = new Date("1/1/" + ano);
-      var primeiroDia = moment(inicio.valueOf());
-      var range = moment(primeiroDia).date(min);
-      var converteData = moment(range).format("DD/MM/YYYY");
-      return converteData;
-    },
-
-    datedoRangeMax(max) {
-      if (max == undefined) {
-        return "-";
-      }
-      if (max && max.max) {
-        max = max.max;
-      }
-
-      if (max == 0) {
-        return "-";
-      }
-
-      var ano = new Date().getFullYear();
-      var inicio = new Date("1/1/" + ano);
-      var primeiroDia = moment(inicio.valueOf());
-      var range = moment(primeiroDia).date(max);
-      var converteData = moment(range).format("DD/MM/YYYY");
-      return converteData;
-    },
-
     async submit() {
-      // console.log(this.$refs.range)
 
-      // this.modelRange.forEach(item => {
-      //     console.log(item)
-      // });
+      let putFerias = []
 
-      // console.log(this.modelRange)
-      // const keys = Object.keys(this.modelRange)
-      // const valores = Object.values(this.modelRange)
-      // console.log(keys)
-
-      delete this.modelRange.max;
-      delete this.modelRange.min;
-
-      console.log(this.modelRange);
-
-      var keys = Object.keys(this.modelRange);
-
-      var values = Object.values(this.modelRange);
-      let model = [];
-
-      keys.forEach((element) => {
-        values.forEach((elvalue) => {
-          model.push({
-            codferias: element,
-            min: elvalue.min,
-            max: elvalue.max,
-          });
-        });
+      this.ferias.forEach(el => {
+        if (el.ferias.length > 0) {
+          putFerias.push(el.ferias)
+        }
       });
-      console.log(model);
 
-      // let feriasAcumula = []
-
-      // keys.forEach(element => {
-
-      //     valores.forEach(value => {
-
-      //         feriasAcumula.push({
-      //             codferias: element,
-      //             min: value.min,
-      //             max: value.max
-      //         })
-      //     });
-      //     console.log(feriasAcumula)
-
-      // });
-
-      if (this.modelRange.max - this.modelRange.min > 30) {
+      try {
+        const ret = await this.sColaborador.atualizaTodasFerias(putFerias)
+        if (ret.data) {
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Salvo!'
+          })
+        }
+      } catch (error) {
+        console.log(error)
         this.$q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: "A férias pode ser no máximo 30 dias!",
-        });
-        return;
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: error.response.data.message
+        })
       }
-
-      var ano = new Date().getFullYear();
-      var inicio = new Date("1/1/" + ano);
-      var primeiroDia = moment(inicio.valueOf());
-
-      var rangeMin = moment(primeiroDia).date(this.modelRange.min);
-
-      var converteDataMin = moment(rangeMin).format("YYYY-MM-DD");
-      var rangeMax = moment(primeiroDia).date(this.modelRange.max);
-      var converteDataMax = moment(rangeMax).format("YYYY-MM-DD");
-
-      // this.modelRange
-
-      const periodoGozo = {
-        gozoinicio: converteDataMin,
-        gozofim: converteDataMax,
-      };
-
-      // try {
-      //     const ret = await this.sPessoa.updateFeriasRange(codferias, periodoGozo)
-      //     if (ret.data.data) {
-      //         this.$q.notify({
-      //             color: 'green-5',
-      //             textColor: 'white',
-      //             icon: 'done',
-      //             message: 'Salvo!'
-      //         })
-      //         const i = this.ferias.findIndex(item => item.codcolaborador === codcolaborador)
-      //         const l = this.ferias[i].ferias.findIndex(item => item.codferias === codferias)
-      //         this.ferias[i].ferias[l] = ret.data.data
-      //     }
-      // } catch (error) {
-      //     this.$q.notify({
-      //         color: 'green-5',
-      //         textColor: 'white',
-      //         icon: 'done',
-      //         message: error.response.data.message
-      //     })
-      // }
     },
 
     async atualizaAno(ano) {
@@ -319,6 +169,15 @@ export default {
       this.ano = ano;
       return ret;
     },
+
+    linkPessoa(codpessoa) {
+
+      var a = document.createElement('a');
+      a.target = "_blank";
+      a.href = "/#/pessoa/" + codpessoa
+      a.click();
+    },
+
   },
 
   setup(props, ctx) {
@@ -327,6 +186,7 @@ export default {
       max: 0,
     });
     const sPessoa = pessoaStore();
+    const sColaborador = colaboradorStore()
     const ferias = ref([]);
     const Documentos = formataDocumetos();
     const $q = useQuasar();
@@ -340,17 +200,7 @@ export default {
     const route = useRoute();
     const router = useRouter();
 
-    const emit = async (ret, codferias) => {
-      console.log(ret);
-      console.log(codferias);
-      // const item = range.value.find(item => item.value)
-      // console.log(item)
 
-      // range.value[0].modelValue.min = ret.min
-      // range.value[0].modelValue.max = ret.max
-      console.log(range.value[0]);
-      return ctx.emit("update:modelRange", ret);
-    };
 
     const columns = [
       {
@@ -481,13 +331,14 @@ export default {
       show_filter,
       separator,
       columns,
-      emit,
+      sColaborador,
       range,
       route,
       router,
     };
   },
   async mounted() {
+    var year = moment().year()
     this.atualizaAno();
     var bissexto = moment([year]).isLeapYear();
     if (bissexto) {

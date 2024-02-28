@@ -25,6 +25,8 @@ const routes = [
       { path: '/ferias/:ano', name:'feriasindex', component: () => import('pages/Ferias/Index.vue') },
       { path: '/cargo', name:'cargosindex', component: () => import('pages/Cargos/Index.vue') },
       { path: '/cargo/:id', name:'cargoView', component: () => import('pages/Cargos/cargoView.vue') },
+      { path: '/aniversarios', name:'aniversariosindex', component: () => import('pages/Aniversarios/Index.vue') },
+
 
 
     ],

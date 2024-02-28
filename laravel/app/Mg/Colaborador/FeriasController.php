@@ -54,4 +54,20 @@ class FeriasController extends MgController
             200
         );
     }
+
+    public function AtualizaTodasFerias(Request $request)
+    {
+        $arr = array_values($request->all());  
+        foreach ($arr as $key => $value) {
+            unset($value[0]['diagozoinicio']);
+            unset($value[0]['diagozofim']);
+            unset($value[0]['range']);
+            $ferias = Ferias::findOrFail($value[0]['codferias']);
+           $atualizaTodasFerias =  FeriasService::update($ferias, $value[0]);
+            
+        }
+
+        return response()->json($atualizaTodasFerias, 200);
+
+    }
 }

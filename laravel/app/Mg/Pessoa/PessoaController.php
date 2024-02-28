@@ -240,4 +240,17 @@ class PessoaController extends MgController
 
         return response()->json($pessoas, 200);
     }
+
+    public function buscaAniversarios(Request $request)
+    {
+       
+        $todos = $request->todos??null;
+        $colaborador = $request->colaborador??null;
+        $cliente = $request->cliente??null;
+        $fornecedor = $request->fornecedor??null;
+
+        $aniversarios = PessoaService::aniversarios($todos, $colaborador, $cliente, $fornecedor);
+
+       return response()->json($aniversarios, 200);
+    }
 }
