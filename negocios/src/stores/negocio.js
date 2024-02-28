@@ -771,6 +771,35 @@ export const negocioStore = defineStore("negocio", {
       }
     },
 
+    async cancelar(justificativa) {
+      if (!this.negocio.sincronizado) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Impossível cancelar um negócio não sincronizado com o servidor!",
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      try {
+        const ret = await sSinc.cancelarNegocio(
+          this.negocio.codnegocio,
+          justificativa
+        );
+        if (ret.codnegocio) {
+          Notify.create({
+            type: "positive",
+            message: "Negócio cancelado!",
+          });
+          this.negocio = ret;
+          db.negocio.put(ret);
+          this.atualizarListagem();
+        }
+      } catch (error) {
+        console.log(erro);
+      }
+    },
+
     async criarPixCob(valor) {
       if (!this.negocio.sincronizado) {
         Notify.create({

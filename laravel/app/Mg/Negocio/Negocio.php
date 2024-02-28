@@ -48,6 +48,7 @@ class Negocio extends MgModel
         'codusuariorecebimento',
         'cpf',
         'entrega',
+        'justificativa',
         'lancamento',
         'observacoes',
         'recebimento',
