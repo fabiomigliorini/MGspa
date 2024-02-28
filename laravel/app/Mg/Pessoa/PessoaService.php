@@ -199,7 +199,7 @@ class PessoaService
             return $ret->codgrupoeconomico;
         }
         return null;
-    }    
+    }
 
     public static function podeVenderAPrazo(Pessoa $pessoa, $valorAvaliar = 0)
     {
@@ -251,7 +251,7 @@ class PessoaService
         return $result;
     }
 
-    public static function createPelaSefazReceitaWs($data) 
+    public static function createPelaSefazReceitaWs($data)
     {
         $dataPessoa = [
             'pessoa' => $data['pessoa'],
@@ -261,7 +261,7 @@ class PessoaService
             'cliente' => $data['cliente'],
             'fornecedor' => $data['fornecedor'],
             'ie' => $data['ie'],
-            'consumidor' => $data['consumidor']??true,
+            'consumidor' => $data['consumidor'] ?? true,
             'creditobloqueado' => true,
             'vendedor' => false,
             'notafiscal' => 0,
@@ -291,36 +291,34 @@ class PessoaService
                 if ($cidade) {
                     $end = PessoaEnderecoService::create([
                         'codpessoa' => $pessoa->codpessoa,
-                        'cep' => numeroLimpo($end['CEP']??'00000000'),
-                        'endereco' => substr($end['xLgr']??'Nao Informado', 0, 100),
-                        'numero' => substr($end['nro']??'S/N', 0, 10),
-                        'complemento' => substr($end['xCpl']??null, 0, 50),
-                        'bairro' => substr($end['xBairro']??'Nao Informado', 0, 50),
+                        'cep' => numeroLimpo($end['CEP'] ?? '00000000'),
+                        'endereco' => substr($end['xLgr'] ?? 'Nao Informado', 0, 100),
+                        'numero' => substr($end['nro'] ?? 'S/N', 0, 10),
+                        'complemento' => substr($end['xCpl'] ?? null, 0, 50),
+                        'bairro' => substr($end['xBairro'] ?? 'Nao Informado', 0, 50),
                         'codcidade' => $cidade->codcidade,
-                    ]);    
+                    ]);
                 }
-    
             }
-
         }
 
         if ($data['receitaWs']) {
             $rec = $data['receitaWs'];
             if ($rec['abertura']) {
                 $pessoa->nascimento = Carbon::createFromFormat('d/m/Y', $rec['abertura']);
-                $pessoa->save();    
+                $pessoa->save();
             }
             $cidade = CidadeService::buscaPeloNomeUf($rec['municipio'], $rec['uf']);
             if ($cidade) {
                 $end = PessoaEnderecoService::create([
                     'codpessoa' => $pessoa->codpessoa,
-                    'cep' => numeroLimpo($rec['cep']??'00000000'),
-                    'endereco' => substr($rec['logradouro']??'Nao Informado', 0, 100),
-                    'numero' => substr($rec['numero']??'S/N', 0, 10),
-                    'complemento' => substr($rec['complemento']??null, 0, 50),
-                    'bairro' => substr($rec['bairro']??'Nao Informado', 0, 50),
+                    'cep' => numeroLimpo($rec['cep'] ?? '00000000'),
+                    'endereco' => substr($rec['logradouro'] ?? 'Nao Informado', 0, 100),
+                    'numero' => substr($rec['numero'] ?? 'S/N', 0, 10),
+                    'complemento' => substr($rec['complemento'] ?? null, 0, 50),
+                    'bairro' => substr($rec['bairro'] ?? 'Nao Informado', 0, 50),
                     'codcidade' => $cidade->codcidade,
-                ]);    
+                ]);
             }
             if ($rec['email']) {
                 PessoaEmailService::createOrUpdate([
@@ -347,7 +345,6 @@ class PessoaService
             }
         }
         return $pessoa;
-        
     }
 
 
@@ -771,7 +768,7 @@ class PessoaService
             $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
             $retReceita = static::buscarReceitaWs($cnpj);
             // if ($retReceita->status() != 200 || $retReceita['status'] == "ERROR") {
-                // throw new \Exception($retReceita['message'], 1);
+            // throw new \Exception($retReceita['message'], 1);
             // }
             $uf = $retReceita['uf'] ?? null;
         }
@@ -831,8 +828,11 @@ class PessoaService
         ];
     }
 
-    public static function aniversarios($todos, $colaborador, $cliente, $fornecedor)
+    public static function aniversarios($tipo)
     {
+        if (!$tipo) {
+            $tipo = 'todos';
+        }
 
         $sql = '
         with aniversarios as (
@@ -848,40 +848,30 @@ class PessoaService
             where p.nascimento is not null
         ';
 
+        switch ($tipo) {
+            case 'cliente':
+                $sql .= ' and p.codpessoa not in ( --filtro colaborador
+                    select c.codpessoa
+                    from tblcolaborador c
+                    where c.rescisao is null
+                ) and p.cliente )';
+                break;
+            case 'fornecedor':
+                $sql .= ' and p.fornecedor = true )';
+                break;
 
-        if($cliente) {
-            $sql .= ' and p.cliente )';
+            case 'colaborador':
+                $sql .= ' and p.codpessoa in ( --filtro colaborador
+                select c.codpessoa
+                from tblcolaborador c
+                where c.rescisao is null
+                )';
         }
 
-        if($fornecedor) {
-            $sql .= ' and p.fornecedor = true )';
-        }
-
-        if($colaborador) {
-            $sql .=' and p.codpessoa not in ( --filtro colaborador
-            select c.codpessoa
-            from tblcolaborador c
-            where c.rescisao is null
-            )
-            union all --- daqui 
-            select 
-                date_part(\'month\', c.contratacao) as mes, 
-                date_part(\'day\', c.contratacao) as dia, 
-                date_part(\'year\', now()) - date_part(\'year\', c.contratacao) as idade,
-                \'Empresa\' as tipo,
-                p.pessoa,
-                c.codpessoa, 
-                c.contratacao as data
-            from tblcolaborador c
-            inner join tblpessoa p on (p.codpessoa = c.codpessoa)
-            where c.rescisao is null
-            and date_part(\'year\', c.contratacao) < date_part(\'year\', CURRENT_DATE) -- ate aqui somente se Todos ou Colaborador
-        )';
-        }
-
-        if($todos) {
-
-            $sql .='
+        switch ($tipo) {
+            case 'colaborador':
+            case 'todos':
+                $sql .= '
                 union all
                 select 
                     date_part(\'month\', c.contratacao) as mes, 
@@ -895,8 +885,8 @@ class PessoaService
                 inner join tblpessoa p on (p.codpessoa = c.codpessoa)
                 where c.rescisao is null
                 and date_part(\'year\', c.contratacao) < date_part(\'year\', CURRENT_DATE) -- ate aqui somente se Todos ou Colaborador
-            )';
-
+                )';
+                break;
         }
 
         $sql .= '
@@ -904,10 +894,9 @@ class PessoaService
         from aniversarios 
         order by mes, dia
         ';
-    
+
         $result = DB::select($sql);
 
         return $result;
-
     }
 }

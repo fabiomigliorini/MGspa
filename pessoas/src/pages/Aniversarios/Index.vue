@@ -6,8 +6,14 @@
             <div class="row q-pa-md">
                 <div class="col-12">
                     <q-card>
-                        <q-tabs v-model="modelTab" dense class="text-grey" active-color="primary" indicator-color="primary"
-                            align="justify" narrow-indicator>
+                        <q-tabs
+                          v-model="tipo"
+                          dense
+                          class="text-grey"
+                          active-color="primary"
+                          indicator-color="primary"
+                          align="justify"
+                          narrow-indicator>
                             <q-tab name="todos" label="Todos" />
                             <q-tab name="colaborador" label="Colaborador" />
                             <q-tab name="cliente" label="Cliente" />
@@ -15,7 +21,12 @@
                         </q-tabs>
 
                         <div class="row q-gutter-md q-pa-md">
-                            <q-date v-model="date" :options="events" event-color="orange" landscape class="" />
+                            <q-date
+                              v-model="date"
+                              :options="events"
+                              event-color="orange"
+                              landscape
+                              class="" />
 
                             <div v-for="aniversario, i in aniversariosDoDia" v-bind:key="i">
                                 <div class="col-3">
@@ -81,7 +92,7 @@
         </template>
     </MGLayout>
 </template>
-  
+
 <script>
 import { defineComponent, defineAsyncComponent, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -95,10 +106,7 @@ export default defineComponent({
     computed: {
         aniversariosDoDia() {
             const dia = moment(this.date, 'YYYY/MM/DD');
-            // console.log(this.date);
-            // console.log(dia);
             return this.aniversarios.filter((a) => {
-                // console.log([a.dia, dia.date(), a.mes, dia.month()]);
                 return (a.dia == dia.date() && a.mes == (dia.month() + 1));
             });
         }
@@ -109,14 +117,13 @@ export default defineComponent({
 
     methods: {
 
-        async montaCalendarioAniversarios(filtro) {
+        async getAniversarios() {
 
-            const ret = await this.sPessoa.buscaAniversarios(filtro)
+            const ret = await this.sPessoa.buscaAniversarios(this.tipo)
             this.aniversarios = ret.data
 
             let dates = []
             let arrAniversarios = []
-
             var diaAtual = moment()
 
             this.aniversarios.forEach(el => {
@@ -143,34 +150,14 @@ export default defineComponent({
     },
 
     watch: {
-        modelTab: function (newVal) {
-            switch (newVal) {
-
-                case 'todos':
-                    this.montaCalendarioAniversarios({ todos: true })
-                    break;
-
-                case 'colaborador':
-                    this.montaCalendarioAniversarios({ colaborador: true })
-                    break;
-
-                case 'cliente':
-                    this.montaCalendarioAniversarios({ cliente: true })
-                    break;
-
-                case 'fornecedor':
-                    this.montaCalendarioAniversarios({ fornecedor: true })
-                    break;
-
-                default:
-                    break;
-            }
+        tipo: function () {
+          this.getAniversarios();
         },
     },
 
     setup(props, context) {
         const router = useRouter()
-        const modelTab = ref('todos')
+        const tipo = ref('todos')
         const sPessoa = pessoaStore()
         const splitterModel = ref(50)
         const events = ['2019/02/01', '2019/02/05', '2019/02/06']
@@ -188,7 +175,7 @@ export default defineComponent({
         return {
             splitterModel,
             events,
-            modelTab,
+            tipo,
             sPessoa,
             date,
             aniversarios,
@@ -198,9 +185,8 @@ export default defineComponent({
 
     },
     async mounted() {
-        this.montaCalendarioAniversarios({ todos: true })
+        this.getAniversarios()
     }
 
 })
 </script>
-  

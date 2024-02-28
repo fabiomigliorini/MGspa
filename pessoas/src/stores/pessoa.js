@@ -407,7 +407,7 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
 
-  
+
 
     async selectEstado() {
 
@@ -490,9 +490,9 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-    async buscaAniversarios(filtro) {
+    async buscaAniversarios(tipo) {
       const ret = await api.get('v1/pessoa/aniversarios', {
-        params: filtro
+        params: {tipo:tipo}
       })
       return ret;
     }

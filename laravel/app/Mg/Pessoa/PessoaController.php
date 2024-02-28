@@ -25,7 +25,7 @@ class PessoaController extends MgController
         if ($request->ieoutra) {
 
             $request['ieoutra'] = str_pad($request->ieoutra, 11, 0, STR_PAD_LEFT);
-           
+
             $this->validate($request, [
                 'ieoutra' => 'required|inscricao_estadual:' . $request->uf,
             ]);
@@ -40,7 +40,7 @@ class PessoaController extends MgController
             'pessoa' => 'required',
             'consumidor' => 'required|boolean',
             'fornecedor' => 'required|boolean',
-            'cliente' => 'required|boolean',      
+            'cliente' => 'required|boolean',
         ]);
 
         $pessoa = PessoaService::createPelaSefazReceitaWs($data);
@@ -241,16 +241,9 @@ class PessoaController extends MgController
         return response()->json($pessoas, 200);
     }
 
-    public function buscaAniversarios(Request $request)
+    public function aniversarios(Request $request)
     {
-       
-        $todos = $request->todos??null;
-        $colaborador = $request->colaborador??null;
-        $cliente = $request->cliente??null;
-        $fornecedor = $request->fornecedor??null;
-
-        $aniversarios = PessoaService::aniversarios($todos, $colaborador, $cliente, $fornecedor);
-
-       return response()->json($aniversarios, 200);
+        $aniversarios = PessoaService::aniversarios($request->tipo);
+        return response()->json($aniversarios, 200);
     }
 }

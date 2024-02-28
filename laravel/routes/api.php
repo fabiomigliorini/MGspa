@@ -187,7 +187,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // Allan - daqui pra baixo
         Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
-        Route::get('pessoa/aniversarios/', '\Mg\Pessoa\PessoaController@buscaAniversarios');
+        Route::get('pessoa/aniversarios/', '\Mg\Pessoa\PessoaController@aniversarios');
         Route::post('pessoa/', '\Mg\Pessoa\PessoaController@create');
         Route::get('pessoa/formadepagamento', '\Mg\Pessoa\PessoaController@formapagamento');
         Route::get('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@show');
