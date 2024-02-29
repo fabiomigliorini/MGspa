@@ -187,9 +187,8 @@ export const formataIe = (uf, ie) => {
     }
 };
 
-
 export const primeiraLetraMaiuscula = (str)  => {
-  return str.replace(
+  return removerAcentos(str).trimStart().replace(/\s+/g, ' ').replace(
     /\w\S*/g,
     function(txt) {
       return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
