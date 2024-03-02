@@ -961,15 +961,7 @@ class PessoaService
 
         $params['data'] = Carbon::now()->toDateString();
 
-
-        // $params['data'] = "'" . $params['data'] . "'::date";
-
-
         $result = DB::select($sql, $params);
-
-
-        dd($result);
-
         return $result;
 
     } 
