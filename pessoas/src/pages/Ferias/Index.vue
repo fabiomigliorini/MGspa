@@ -34,10 +34,12 @@
                   {{ ferias.row.fantasia }}
                 </q-td>
               
-                <q-td key="janeiro" colspan="12" :props="ferias">
+                <q-td key="janeiro" colspan="13" :props="ferias">
                   <div v-for="f in ferias.row.ferias" v-bind:key="f.codferias">
                     <q-range :model-value="f.range" @update:modelValue="(value) => { alteraRange(value, f) }" :min="1"
                       :max="max" ref="range" drag-only-range :disable="!f.prevista" :color="f.prevista ? 'blue' : 'green'" />
+                    
+                 
                     </div>
                 </q-td>
                 <q-td key="data" :props="ferias">
@@ -91,6 +93,12 @@ export default {
       const gozofim = moment().startOf('year').add(range.max - 1, 'days');
       ferias.gozoinicio = gozoinicio.format('YYYY-MM-DD');
       ferias.gozofim = gozofim.format('YYYY-MM-DD');
+
+      console.log(range)
+      // if(range.max > 366) {
+      //   range.max = parseInt(range.max) - 366
+      // }
+
     },
 
     async filtroAno(anoFiltro) {
@@ -162,6 +170,11 @@ export default {
             min: ferias.diagozoinicio,
             max: ferias.diagozofim,
           };
+
+          if(ferias.diagozoinicio > 335 && ferias.diagozofim < 31 ) {
+            ferias.range.max = parseInt(397) - parseInt(31) + parseInt(ferias.diagozofim)
+          }
+
         });
       });
       this.ferias = ret.data;
@@ -185,6 +198,7 @@ export default {
       min: 0,
       max: 0,
     });
+
     const sPessoa = pessoaStore();
     const sColaborador = colaboradorStore()
     const ferias = ref([]);
@@ -310,6 +324,13 @@ export default {
         sortable: true,
       },
       {
+        name: "Janeiro",
+        label: "Janeiro",
+        field: "janeiro",
+        align: "top-left",
+        sortable: true,
+      },
+      {
         name: "data",
         label: "Data",
         field: "data",
@@ -342,10 +363,11 @@ export default {
     this.atualizaAno();
     var bissexto = moment([year]).isLeapYear();
     if (bissexto) {
-      this.max = 366;
+      this.max = 397; // dias totais do ano todo + o mes de janeiro
     } else {
-      this.max = 365;
+      this.max = 396;
     }
+
   },
 };
 </script>

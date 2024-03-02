@@ -26,13 +26,14 @@ class UsuarioController extends MgController
             if (!empty($usuario->codimagem)) {
                 $res[$i]->imagem->url = $usuario->Imagem->url;
             }
-
+            unset($usuario->senha); 
             $grupos = [];
             foreach ($usuario->GrupoUsuarioUsuarioS as $grupo) {
                 $grupos[] = [
                     'grupousuario' => $grupo->GrupoUsuario->grupousuario,
                     'filial' => $grupo->Filial->filial
                 ];
+
             }
 
             $res[$i]->grupos = $grupos;

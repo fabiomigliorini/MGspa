@@ -32,9 +32,9 @@
                             <q-item-label>Pessoas</q-item-label>
                         </q-item>
 
-                        <q-item v-if="user.verificaPermissaoUsuario('Administrador')" :to="{ name: 'permissoes' }">
+                        <q-item v-if="user.verificaPermissaoUsuario('Administrador')" :to="{ name: 'usuarios' }">
                             <q-icon name="admin_panel_settings" size="25px" class="q-pr-sm" />
-                            <q-item-label>Permissões</q-item-label>
+                            <q-item-label>Usuários</q-item-label>
                         </q-item>
                     </q-list>
 

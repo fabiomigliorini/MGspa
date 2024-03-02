@@ -24,8 +24,14 @@ class PessoaController extends MgController
 
         if ($request->ieoutra) {
 
-            $request['ieoutra'] = str_pad($request->ieoutra, 11, 0, STR_PAD_LEFT);
+            if (strlen($request['ieoutra']) == 12 && $request['uf'] == 'MG') {
+                $request['ieoutra'] = str_pad($request->ieoutra, 13, 0, STR_PAD_LEFT);
+            }
 
+            if (strlen($request['ieoutra']) == 9 && $request['uf'] == 'MT') {
+                $request['ieoutra'] = str_pad($request->ieoutra, 11, 0, STR_PAD_LEFT);
+            }
+            
             $this->validate($request, [
                 'ieoutra' => 'required|inscricao_estadual:' . $request->uf,
             ]);
@@ -245,5 +251,17 @@ class PessoaController extends MgController
     {
         $aniversarios = PessoaService::aniversarios($request->tipo);
         return response()->json($aniversarios, 200);
+    }
+
+
+
+    public function aniversariosColaboradores()
+    {
+
+        // TERMINAR ESTA DANDO ERRO
+
+        $teste =  PessoaService::aniversariosColaboradores();
+
+        dd($teste);
     }
 }

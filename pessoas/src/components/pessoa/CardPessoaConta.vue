@@ -178,7 +178,7 @@
 
             <q-input outlined v-model="modelContaBancaria.cnpj" v-if="modelContaBancaria.radio === 'bancaria'"
               label="Cnpj/Cpf" step="any" />
-            <q-input outlined v-model="modelContaBancaria.titular" label="Titular" step="any" />
+            <input-filtered outlined v-model="modelContaBancaria.titular" label="Titular" step="any" />
 
             <q-input outlined autogrow bordeless v-model="modelContaBancaria.observacoes" class="q-pt-md"
               label="Observações" type="textarea" />
@@ -209,6 +209,7 @@ export default defineComponent({
 
   components: {
     SelectBanco: defineAsyncComponent(() => import('components/pessoa/SelectBanco.vue')),
+    InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue')),
   },
 
   methods: {

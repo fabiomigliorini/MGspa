@@ -37,7 +37,7 @@
               telNovo == false ? null : val => val && val.length > 0 || 'Telefone obrigatório'
             ]" />
 
-          <q-input outlined v-model="modelTel.apelido" label="Apelido" :rules="[]" />
+          <input-filtered outlined v-model="modelTel.apelido" label="Apelido" :rules="[]" />
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
@@ -138,7 +138,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, defineAsyncComponent } from 'vue'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -155,6 +155,10 @@ export default defineComponent({
  
   display: "Transition",
   order: 6,
+
+  components: {
+    InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue')),
+  },
 
   methods: {
 

@@ -26,7 +26,7 @@
           </q-item-section>
         </q-item>
 
-        <!-- TODOS LOCAIS -->
+        <!-- LOCAIS -->
         <q-item dense>
           <q-item-section>
             <q-item-label>Todos</q-item-label>

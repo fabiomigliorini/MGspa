@@ -899,4 +899,78 @@ class PessoaService
 
         return $result;
     }
+
+
+    public static function aniversariosColaboradores()
+    {
+
+        $sql = '
+        with anivB as (
+            with anivA as (
+                        select 
+                            date_part(\'month\', p.nascimento) as mes, 
+                            date_part(\'day\', p.nascimento) as dia, 
+                            date_part(\'year\', :data) - date_part(\'year\', p.nascimento) as idade,
+                            \'Idade\' as tipo,
+                            p.pessoa, 
+                            p.codpessoa,
+                            p.nascimento as data
+                        from tblpessoa p
+                        where p.nascimento is not null
+                        and p.codpessoa in (
+                            select c.codpessoa
+                            from tblcolaborador c
+                            where c.rescisao is null
+                        )
+                        --and p.nascimento 
+                        union all 
+                        select 
+                            date_part(\'month\', c.contratacao) as mes, 
+                            date_part(\'day\', c.contratacao) as dia, 
+                            date_part(\'year\', :data) - date_part(\'year\', c.contratacao) as idade,
+                            \'Empresa\' as tipo,
+                            p.pessoa,
+                            c.codpessoa, 
+                            c.contratacao as data
+                        from tblcolaborador c
+                        inner join tblpessoa p on (p.codpessoa = c.codpessoa)
+                        where c.rescisao is null
+                        and date_part(\'year\', c.contratacao) < date_part(\'year\', :data) -- ate aqui somente se Todos ou Colaborador
+            )
+            select *
+                ,
+                to_date(
+                    case when (date_part(\'month\', :data) = 12) then 
+                        case when (a.mes = 1) then 
+                            date_part(\'year\', :data) + 1
+                        else 
+                            date_part(\'year\', :data) 
+                        end
+                    else 
+                        date_part(\'year\', :data) 
+                    end
+                    || \'-\' || a.mes || \'-\' || a.dia
+                    , \'yyyy-mm-dd\') as aniversario
+            from anivA a
+        )
+        select * 
+        from anivB 
+        where aniversario between :data and :data + \'15 days\'::interval
+        order by aniversario
+        ';
+
+        $params['data'] = Carbon::now()->toDateString();
+
+
+        // $params['data'] = "'" . $params['data'] . "'::date";
+
+
+        $result = DB::select($sql, $params);
+
+
+        dd($result);
+
+        return $result;
+
+    } 
 }

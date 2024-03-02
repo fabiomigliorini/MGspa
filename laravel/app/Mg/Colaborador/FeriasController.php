@@ -45,29 +45,30 @@ class FeriasController extends MgController
         ], 200);
     }
 
-    public function programacaoFerias(Request $request, $ano) 
-    {   
+    public function programacaoFerias(Request $request, $ano)
+    {
         Autorizador::autoriza(['Recursos Humanos']);
         $ferias = FeriasService::programacaoFerias($ano);
         return response()->json(
-            $ferias, 
+            $ferias,
             200
         );
     }
 
     public function AtualizaTodasFerias(Request $request)
     {
-        $arr = array_values($request->all());  
-        foreach ($arr as $key => $value) {
-            unset($value[0]['diagozoinicio']);
-            unset($value[0]['diagozofim']);
-            unset($value[0]['range']);
-            $ferias = Ferias::findOrFail($value[0]['codferias']);
-           $atualizaTodasFerias =  FeriasService::update($ferias, $value[0]);
-            
+        $arr = array_values($request->all());
+
+        foreach ($arr as $key => $ferias) {
+            foreach ($ferias as $key => $value) {
+                unset($value->diagozoinicio);
+                unset($value->diagozofim);
+                unset($value->range);
+                $ferias = Ferias::findOrFail($value['codferias']);
+                $atualizaTodasFerias =  FeriasService::update($ferias, $value);
+            }
         }
 
         return response()->json($atualizaTodasFerias, 200);
-
     }
 }

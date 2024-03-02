@@ -29,16 +29,6 @@ class UsuarioService extends MgService
         foreach ($model->GrupoUsuarioUsuarioS as $grupo) {
 
             $grupos[$grupo->GrupoUsuario->grupousuario]['grupousuario'] = $grupo->GrupoUsuario->grupousuario;
-
-            if (!isset($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'])) {
-                $grupos[$grupo->GrupoUsuario->grupousuario]['filiais'] = [];
-            }
-
-            array_push($grupos[$grupo->GrupoUsuario->grupousuario]['filiais'], $grupo->Filial->filial);
-
-            foreach ($grupo->GrupoUsuario->GrupoUsuarioPermissaoS as $permissao) {
-                $permissoes_array[] = $permissao->Permissao->permissao;
-            }
         }
 
         foreach ($permissoes_array as $permissao) {

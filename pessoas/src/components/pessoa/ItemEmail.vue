@@ -11,7 +11,7 @@
           <q-input outlined v-model="modelEmail.email" autofocus label="Email" :rules="[
             val => val && val.length > 0 || 'Email obrigatório'
           ]" class="" />
-          <q-input outlined v-model="modelEmail.apelido" label="Apelido" class="" />
+          <input-filtered outlined v-model="modelEmail.apelido" label="Apelido" class="" />
           <q-toggle v-model="modelEmail.cobranca" label="Cobrança" />
           <q-toggle v-model="modelEmail.nfe" label="Envio de NFe" />
         </q-card-section>
@@ -125,7 +125,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted } from 'vue'
+import { defineComponent, defineAsyncComponent } from 'vue'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -138,6 +138,10 @@ import { guardaToken } from 'src/stores'
 
 export default defineComponent({
   name: "ItemEmail",
+
+  components: {
+    InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue'))
+  },
 
   computed: {
     dragOptions() {

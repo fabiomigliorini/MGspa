@@ -13,7 +13,7 @@ const routes = [
     path: '/',
     // component: () => import('layouts/MGLayout.vue'),
     children: [
-      { path: '', name: 'inicio', component: () => import('pages/pessoa/Index') },
+      { path: '', name: 'inicio', component: () => import('pages/Aniversarios/Index.vue') },
       { path: '/pessoa', name: 'pessoa', component: () => import('pages/pessoa/Index') },
       { path: '/pessoa/nova', name: 'pessoanova', component: () => import('pages/pessoa/NovaPessoa') },
       { path: '/pessoa/:id', name: 'pessoaview', component: () => import('pages/pessoa/PessoaView') },
@@ -21,7 +21,8 @@ const routes = [
       { path: '/grupoeconomico', name:'grupoeconomicoindex', component: () => import('pages/GrupoEconomico/Index.vue') },
       { path: '/grupoeconomico/:id', name: 'grupoeconomico', component: () => import('pages/GrupoEconomico/GrupoEconomicoview') },
       { path: '/nota-fiscal/dashboard', name: 'notafiscaldash', component: () => import('pages/NotaFiscal/Index.vue') },
-      { path: '/permissoes', name:'permissoes', component: () => import('pages/Permissoes/Index.vue') },
+      { path: '/usuarios', name:'usuarios', component: () => import('pages/usuarios/Index.vue') },
+      { path: '/usuarios/:codusuario', name: 'usuariosview', component: () => import('pages/usuarios/usuariosview') },
       { path: '/ferias/:ano', name:'feriasindex', component: () => import('pages/Ferias/Index.vue') },
       { path: '/cargo', name:'cargosindex', component: () => import('pages/Cargos/Index.vue') },
       { path: '/cargo/:id', name:'cargoView', component: () => import('pages/Cargos/cargoView.vue') },

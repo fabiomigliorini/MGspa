@@ -14,7 +14,7 @@
             ]" required />
           <div class="row">
             <div class="col-9">
-              <q-input outlined v-model="modelEndereco.endereco" ref="endereco" class="q-pr-md" label="Endereço" :rules="[
+              <input-filtered outlined v-model="modelEndereco.endereco" ref="endereco" class="q-pr-md" label="Endereço" :rules="[
                 val => val && val.length > 0 || 'Endereço obrigatório'
               ]" required :disable="buscandoCep" />
 
@@ -28,13 +28,13 @@
           </div>
           <div class="row">
             <div class="col-6">
-              <q-input outlined v-model="modelEndereco.bairro" label="Bairro" class="q-pr-md" :rules="[
+              <input-filtered outlined v-model="modelEndereco.bairro" label="Bairro" class="q-pr-md" :rules="[
                 val => val && val.length > 0 || 'Bairro obrigatório'
               ]" required :disable="buscandoCep" />
 
             </div>
             <div class="col-6">
-              <q-input class="" outlined v-model="modelEndereco.complemento" label="Complemento" :disable="buscandoCep" />
+              <input-filtered class="" outlined v-model="modelEndereco.complemento" label="Complemento" :disable="buscandoCep" />
             </div>
           </div>
 
@@ -42,7 +42,7 @@
             :cidadeEditar="options" :disable="buscandoCep" class="q-mb-md">
           </select-cidade>
 
-          <q-input class="" outlined v-model="modelEndereco.apelido" label="Apelido" />
+          <input-filtered class="" outlined v-model="modelEndereco.apelido" label="Apelido" />
           <q-item-label class="">
             <q-toggle v-model="modelEndereco.cobranca" label="Cobrança" />
             <q-toggle v-model="modelEndereco.entrega" label="Entrega" />
@@ -195,6 +195,7 @@ export default defineComponent({
   },
   components: {
     SelectCidade: defineAsyncComponent(() => import('components/pessoa/SelectCidade.vue')),
+    InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue')),
   },
 
   methods: {

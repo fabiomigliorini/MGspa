@@ -8,11 +8,12 @@
       </span>
       DFe's
       <span class="gt-xs">
-       (Documentos Fiscais Eletrônicos)
+        (Documentos Fiscais Eletrônicos)
       </span>
     </template>
 
     <!-- Menu Drawer (Esquerda) -->
+
     <template slot="drawer">
 
       <q-item-label header>Chave</q-item-label>
@@ -20,7 +21,7 @@
       <!-- Filtro Chave -->
       <q-item>
         <q-item-section>
-          <q-input outlined v-model="filter.nfechave" label="Chave" >
+          <q-input outlined v-model="filter.nfechave" label="Chave">
             <template v-slot:prepend>
               <q-icon name="fas fa-barcode" />
             </template>
@@ -31,7 +32,7 @@
       <!-- Filtro codfilial -->
       <q-item>
         <q-item-section>
-          <mg-select-filial label="Filial" v-model="filter.codfilial" filtro-dfe/>
+          <mg-select-filial label="Filial" v-model="filter.codfilial" filtro-dfe />
         </q-item-section>
       </q-item>
 
@@ -40,6 +41,7 @@
       <q-item>
         <q-item-section>
           <q-input outlined v-model="filter.datade" label="De" type="date" stack-label :max="filter.dataate">
+
             <template v-slot:prepend>
               <q-icon name="date_range" />
             </template>
@@ -51,6 +53,7 @@
       <q-item>
         <q-item-section>
           <q-input outlined v-model="filter.dataate" label="Até" type="date" stack-label :min="filter.datade">
+
             <template v-slot:prepend>
               <q-icon name="date_range" />
             </template>
@@ -63,6 +66,7 @@
       <q-item>
         <q-item-section>
           <q-input outlined v-model="filter.nsude" label="De" type="number" :max="filter.nsuate">
+
             <template v-slot:prepend>
               <q-icon name="dialpad" />
             </template>
@@ -73,6 +77,7 @@
       <q-item>
         <q-item-section>
           <q-input outlined v-model="filter.nsuate" label="Até" type="number" :min="filter.nsude">
+
             <template v-slot:prepend>
               <q-icon name="dialpad" />
             </template>
@@ -92,21 +97,21 @@
         <q-infinite-scroll @load="loadMore" ref="infiniteScroll">
 
           <!-- Percorre registros  -->
+
           <template v-for="item in data">
 
             <!-- Link para detalhes -->
-            <q-item clickable v-ripple @click="abrirDistribuicaoDfe(item)">
-
+            <q-item>
               <q-item-section top avatar>
                 <q-avatar color="teal" text-color="white" :icon="iconeDfeTipo(item.DfeTipo.schemaxml)" />
               </q-item-section>
 
               <q-item-section top class="col-sm-2 gt-xs">
                 <q-item-label class="text-weight-medium">
-                  {{item.Filial.filial}}
+                  {{ item.Filial.filial }}
                 </q-item-label>
                 <q-item-label caption>
-                    {{ item.DfeTipo.schemaxml }}
+                  {{ item.DfeTipo.schemaxml }}
                 </q-item-label>
               </q-item-section>
 
@@ -114,51 +119,56 @@
 
                 <!-- NotaFiscalTerceiro -->
                 <template v-if="item.codnotafiscalterceiro > 0">
+
                   <q-item-label lines="1">
                     <span class="text-weight-medium" v-if="item.NotaFiscalTerceiro.codpessoa">
-                      {{item.NotaFiscalTerceiro.Pessoa.fantasia}}
+                      {{ item.NotaFiscalTerceiro.Pessoa.fantasia }}
                     </span>
                     <span class="text-weight-medium" v-else>
-                      {{item.NotaFiscalTerceiro.emitente}}
+                      {{ item.NotaFiscalTerceiro.emitente }}
                     </span>
                   </q-item-label>
                   <q-item-label lines="1">
                     <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
-                      R$ {{numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00')}}
+                      R$ {{ numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00') }}
                     </span>
                     <span class="text-grey-8" v-if="item.NotaFiscalTerceiro.natop">
-                      - {{item.NotaFiscalTerceiro.natop}}
+                      - {{ item.NotaFiscalTerceiro.natop }}
                     </span>
                   </q-item-label>
                 </template>
 
+
                 <!-- DistribuicaoDfeEventoS -->
+
                 <template v-if="item.coddistribuicaodfeevento > 0">
                   <q-item-label lines="1">
                     <span class="text-weight-medium">
-                      {{item.DistribuicaoDfeEvento.orgao}}
+                      {{ item.DistribuicaoDfeEvento.orgao }}
                     </span>
                     <span class="text-weight-medium">
-                      {{formataCnpj(item.DistribuicaoDfeEvento.cnpj)}}
-                      {{formataCpf(item.DistribuicaoDfeEvento.cpf)}}
+                      {{ formataCnpj(item.DistribuicaoDfeEvento.cnpj) }}
+                      {{ formataCpf(item.DistribuicaoDfeEvento.cpf) }}
                     </span>
                   </q-item-label>
-                  <q-item-label lines="1" v-if="item.DistribuicaoDfeEvento.coddistribuicaodfeevento > 0">
+                  <q-item-label lines="1" v-if="item.DistribuicaoDfeEvento.coddistribuicaodfeevento > 0"
+                    @click="abrirDistribuicaoDfe(item)">
                     <span class="text-grey-8">
-                       {{item.DistribuicaoDfeEvento.DfeEvento.dfeevento}}
-                       ({{item.DistribuicaoDfeEvento.DfeEvento.tpevento}})
+                      {{ item.DistribuicaoDfeEvento.DfeEvento.dfeevento }}
+                      ({{ item.DistribuicaoDfeEvento.DfeEvento.tpevento }})
                     </span>
                     <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
-                      {{numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00')}}
+                      {{ numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00') }}
                     </span>
                   </q-item-label>
                 </template>
 
                 <!-- chave -->
-                <q-item-label caption lines="1">
-                  {{formataNfeChave(item.nfechave)}}
+                <q-item-label caption lines="1" @click="abrirDistribuicaoDfe(item)">
+                  {{ formataNfeChave(item.nfechave) }}
                 </q-item-label>
               </q-item-section>
+
 
               <!-- data e NSU -->
               <q-item-section top side class="gt-xs">
@@ -168,6 +178,22 @@
                 <abbr :title="moment(item.data).format('LLL')">
                   {{ moment(item.data).fromNow() }}
                 </abbr>
+              </q-item-section>
+              <q-item-section side>
+                <q-btn-group flat >
+                  <q-btn flat dense color="blue" icon="replay" @click="processar(item.coddistribuicaodfe)">
+                    <q-tooltip class="bg-accent">
+                      Reprocessar
+                    </q-tooltip>
+                  </q-btn>
+
+                  <q-btn flat dense rounded color="blue" icon="code" @click="abrirDistribuicaoDfe(item)">
+                    <q-tooltip class="bg-accent">
+                      Arquivo XML
+                    </q-tooltip>
+                  </q-btn>
+                </q-btn-group>
+
               </q-item-section>
 
             </q-item>
@@ -182,7 +208,7 @@
 
 
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="search" color="primary" @click="openSefazDialog()"/>
+        <q-btn fab icon="search" color="primary" @click="openSefazDialog()" />
       </q-page-sticky>
 
       <q-dialog v-model="sefazDialog">
@@ -193,6 +219,7 @@
 
           <q-card-section class="col q-pt-none">
             <q-list bordered class="rounded-borders" style="min-width: 350px">
+
               <template v-for="filial in filiaisHabilitadas">
                 <!-- <q-item-label header>{{filial.filial}}</q-item-label> -->
                 <q-item v-ripple clickable @click="filial.selecionada = !filial.selecionada">
@@ -201,20 +228,16 @@
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>
-                      {{filial.filial}}
+                      {{ filial.filial }}
                       <small v-if="filial.nsu" class="text-grey-7">
-                        ({{filial.nsu}}<template v-if="filial.nsufinal">
-                          / {{filial.nsufinal}}
+                        ({{ filial.nsu }}<template v-if="filial.nsufinal">
+                          / {{ filial.nsufinal }}
                         </template>)
                       </small>
                     </q-item-label>
                     <q-item-label caption>
-                      <q-linear-progress
-                        stripe rounded
-                        size="10px"
-                        :value="filial.percentual"
-                        :indeterminate="filial.percentualIndeterminado"
-                        />
+                      <q-linear-progress stripe rounded size="10px" :value="filial.percentual"
+                        :indeterminate="filial.percentualIndeterminado" />
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -225,13 +248,8 @@
 
           <q-card-actions align="right" class="bg-white">
             <q-btn flat label="CANCELAR" color="grey" v-close-popup />
-            <q-btn
-              flat
-              label="PESQUISAR"
-              icon="search"
-              color="primary"
-              :disabled="filiaisSelecionadas.length == 0"
-              @click="pesquisarSefazSelecionadas()"/>
+            <q-btn flat label="PESQUISAR" icon="search" color="primary" :disabled="filiaisSelecionadas.length == 0"
+              @click="pesquisarSefazSelecionadas()" />
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -260,7 +278,7 @@ export default {
     MgNoData
   },
 
-  data () {
+  data() {
     return {
       data: [],
       page: 1,
@@ -307,6 +325,19 @@ export default {
       })
     },
 
+    processar(coddistribuicaodfe) {
+      this.processarXml(coddistribuicaodfe)
+    },
+
+    processarXml: debounce(function (coddistribuicaodfe) {
+      // inicializa variaveis
+      var vm = this
+      // faz chamada api
+      vm.$axios.get('dfe/distribuicao/' + coddistribuicaodfe + '/processar').then(response => {
+        console.log(response)
+      })
+    }, 500),
+
     pesquisarSefazFilial: function (filial) {
 
       // inicializa variaveis
@@ -339,7 +370,7 @@ export default {
           filial.percentual = pesquisados / total;
         }
         if (filial.percentual != 1 && vm.sefazDialog) {
-          vm.pesquisarSefazFilial (filial);
+          vm.pesquisarSefazFilial(filial);
         }
       })
 
@@ -360,7 +391,7 @@ export default {
 
       // faz chamada api
       vm.$axios.get('dfe/filiais-habilitadas').then(response => {
-        vm.filiaisHabilitadas = response.data.map(function (filial){
+        vm.filiaisHabilitadas = response.data.map(function (filial) {
           filial.selecionada = true;
           filial.percentual = 0;
           filial.percentualIndeterminado = false;
@@ -371,7 +402,7 @@ export default {
       })
     }, 500),
 
-    abrirDistribuicaoDfe (item) {
+    abrirDistribuicaoDfe(item) {
       this.carregarXml(item.coddistribuicaodfe)
     },
 
@@ -382,7 +413,7 @@ export default {
       // faz chamada api
       vm.$axios.get('dfe/distribuicao/' + coddistribuicaodfe + '/xml').then(response => {
         this.xml = response.data;
-        let blob = new Blob([response.data], {type: 'text/xml'});
+        let blob = new Blob([response.data], { type: 'text/xml' });
         let url = URL.createObjectURL(blob);
         window.open(url);
         URL.revokeObjectURL(url, '_self');
@@ -415,7 +446,7 @@ export default {
       return nfechave;
     },
 
-    iconeDfeTipo (schemaxml) {
+    iconeDfeTipo(schemaxml) {
       switch (schemaxml) {
         case 'procNFe_v4.00.xsd':
           return 'fas fa-file-code';
@@ -436,7 +467,7 @@ export default {
     },
 
     // scroll infinito - carregar mais registros
-    loadMore (index, done) {
+    loadMore(index, done) {
       this.page++
       this.loadData(true, done)
     },
@@ -484,7 +515,7 @@ export default {
   },
 
   // na criacao, busca filtro do Vuex
-  created () {
+  created() {
     this.filter = this.$store.state.filtroDfeDistribuicao
     this.loadFiliaisHabilitadas();
 
@@ -493,5 +524,4 @@ export default {
 }
 </script>
 
-<style>
-</style>
+<style></style>

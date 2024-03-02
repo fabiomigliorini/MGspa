@@ -4,11 +4,13 @@
     <q-card>
       <q-form @submit="salvarDetalhes()">
         <q-card-section>
-          <q-input outlined v-model="modelEditarDetalhes.fantasia" label="Fantasia" class="" :rules="[
+          <!-- <q-input outlined v-model="modelEditarDetalhes.fantasia" label="Fantasia" class="" :rules="[
+            val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
+          ]" autofocus /> -->
+          <input-filtered outlined v-model="modelEditarDetalhes.fantasia" label="Fantasia" :rules="[
             val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
           ]" autofocus />
-
-          <q-input outlined v-model="modelEditarDetalhes.pessoa" label="Razão Social" :rules="[
+          <input-filtered outlined v-model="modelEditarDetalhes.pessoa" label="Razão Social" :rules="[
             val => val && val.length > 0 || 'Razão Social é Obrigatório'
           ]" />
 
@@ -67,10 +69,10 @@
 
 
             <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.pai" class="q-pt-md" label="Nome do Pai" />
+              <input-filtered outlined v-model="modelEditarDetalhes.pai" class="q-pt-md" label="Nome do Pai" />
             </div>
             <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.mae" class="q-pt-md" label="Nome da Mãe" />
+              <input-filtered outlined v-model="modelEditarDetalhes.mae" class="q-pt-md" label="Nome da Mãe" />
             </div>
 
             <div class="col-6">
@@ -420,6 +422,8 @@ export default defineComponent({
     SelectCidade: defineAsyncComponent(() => import('components/pessoa/SelectCidade.vue')),
     SelectEstado: defineAsyncComponent(() => import('components/pessoa/SelectEstado.vue')),
     InputIe: defineAsyncComponent(() => import('components/pessoa/InputIe.vue')),
+    InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue')),
+
   },
 
   methods: {
@@ -571,14 +575,14 @@ export default defineComponent({
           this.DialogDetalhes = false
         }
       } catch (error) {
-        if (error.response.data.errors.cnpj) {
+        if (error.response.data.errors && error.response.data.errors.cnpj) {
           this.$q.notify({
             color: 'red-5',
             textColor: 'white',
             icon: 'error',
             message: error.response.data.errors.cnpj
           })
-        } else if (error.response.data.errors.ie) {
+        } else if (error.response.data.errors && error.response.data.errors.ie) {
           this.$q.notify({
             color: 'red-5',
             textColor: 'white',
@@ -590,7 +594,7 @@ export default defineComponent({
             color: 'red-5',
             textColor: 'white',
             icon: 'error',
-            message: error.message
+            message: error.response.data.message
           })
         }
       }
