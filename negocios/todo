@@ -1,11 +1,11 @@
 MANDATORY:
+TODO fazer tela para gerenciar cadastro dos PDVs autorizados
+TODO Navegacao Negocios Fechados com opcao abrir
 TODO Comanda
 TODO fazer baixa de vales automaticamente
 TODO fazer devolucao
-TODO fazer tela para gerenciar cadastro dos PDVs autorizados
 TODO Tela/Bordero Totais do dia C/Detalhamento
-TODO Navegacao Negocios Fechados com opcao abrir
-FIXME nao gerar transferencias com itens inativos
+FIXME nao gerar transferencias com itens inativos no MGLara/nota-fiscal/gera-transferencias
 
 IMPROVEMENTS:
 FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes

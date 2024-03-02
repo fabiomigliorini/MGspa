@@ -16,6 +16,18 @@ const routes = [
       },
     ],
   },
+  {
+    path: "/",
+    component: () => import("layouts/ConfigLayout.vue"),
+    children: [
+      { path: "/pdv/", component: () => import("pages/PdvPage.vue") },
+      {
+        path: "/pdv/:codpdv",
+        name: "pdv",
+        component: () => import("pages/PdvViewPage.vue"),
+      },
+    ],
+  },
 
   // Always leave this as last one,
   // but you can also remove it

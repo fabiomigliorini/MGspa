@@ -3,6 +3,7 @@
 namespace Mg\Pdv;
 
 use DB;
+use Illuminate\Support\Carbon;
 use Mg\PagarMe\PagarMePos;
 
 class PdvService
@@ -51,6 +52,41 @@ class PdvService
         }
         return $pdv;
     }
+
+    public static function autorizar(Pdv $pdv)
+    {
+        $pdv->update([
+            'autorizado' => true,
+            'inativo' => null
+        ]);
+        return $pdv;
+    }
+
+    public static function desautorizar(Pdv $pdv)
+    {
+        $pdv->update([
+            'inativo' => Carbon::now(),
+            'autorizado' => false
+        ]);
+        return $pdv;
+    }
+
+    public static function inativar(Pdv $pdv)
+    {
+        $pdv->update([
+            'inativo' => Carbon::now(),
+            'autorizado' => false
+        ]);
+        return $pdv;
+    }
+
+    public static function reativar(Pdv $pdv)
+    {
+        $pdv->update([
+            'inativo' => null
+        ]);
+        return $pdv;
+    }    
 
     public static function produtoCount()
     {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { negocioStore } from "stores/negocio";
 import { Dialog } from "quasar";
 import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
@@ -12,8 +12,6 @@ const sNegocio = negocioStore();
 const settingsDialog = ref(false);
 
 const edicao = ref({});
-
-onMounted(async () => {});
 
 const salvar = async () => {
   Dialog.create({
