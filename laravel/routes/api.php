@@ -186,6 +186,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         });
 
         // Allan - daqui pra baixo
+        Route::get('pessoa/aniversario-colaboradores', '\Mg\Pessoa\PessoaController@aniversariosColaboradores');
         Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
         Route::get('pessoa/aniversarios/', '\Mg\Pessoa\PessoaController@aniversarios');
         Route::post('pessoa/', '\Mg\Pessoa\PessoaController@create');
@@ -227,6 +228,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('pessoa/{codpessoa}/email/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaEmailController@ativar');
         Route::get('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@verificarEmail');
         Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@confirmaEmail');
+
+
+
+
 
         // Pessoa Endereço
         Route::get('pessoa/{codpessoa}/endereco/', '\Mg\Pessoa\PessoaEnderecoController@index');
@@ -427,6 +432,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::apiResource('negocio', '\Mg\Negocio\NegocioController');
 
         // Usuários
+        Route::get('usuario/todos', '\Mg\Usuario\UsuarioController@index');
         Route::get('usuario/{id}/autor', '\Mg\Usuario\UsuarioController@autor');
         Route::get('usuario/{id}/grupos', '\Mg\Usuario\UsuarioController@grupos')->name('usuario.grupos');
         Route::post('usuario/{id}/grupos', '\Mg\Usuario\UsuarioController@gruposAdicionar')->name('usuario.grupos.adicionar');
