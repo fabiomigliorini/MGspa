@@ -54,7 +54,7 @@ Route::group(['prefix' => 'v1'], function () {
 
     // PDV
     Route::group(['prefix' => 'pdv'], function () {
-        Route::put('dispositivo', '\Mg\Pdv\PdvController@dispositivo');
+        Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo');
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio');
     });
 
@@ -183,6 +183,11 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('nota-fiscal/{codnotafiscal}/imprimir', '\Mg\Pdv\PdvNotaFiscalController@imprimir');
             Route::post('nota-fiscal/{codnotafiscal}/mail', '\Mg\Pdv\PdvNotaFiscalController@mail');
             Route::delete('nota-fiscal/{codnotafiscal}', '\Mg\Pdv\PdvNotaFiscalController@excluir');
+            Route::get('dispositivo', '\Mg\Pdv\PdvController@getDispositivo');
+            Route::post('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@autorizar');
+            Route::delete('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@desautorizar');
+            Route::post('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@inativar');
+            Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
         });
 
         // Allan - daqui pra baixo

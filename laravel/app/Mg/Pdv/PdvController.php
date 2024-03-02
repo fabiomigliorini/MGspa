@@ -15,7 +15,13 @@ use Mg\PagarMe\PagarMePedido;
 class PdvController
 {
 
-    public function dispositivo(Request $request)
+    public function getDispositivo(Request $request)
+    {
+        $pdvs = Pdv::orderBy('criacao', 'desc')->get();
+        return PdvResource::collection($pdvs);
+    }
+
+    public function putDispositivo(Request $request)
     {
         $request->validate([
             'uuid' => 'required|uuid',
@@ -35,6 +41,34 @@ class PdvController
             $request->versaonavegador,
             $request->plataforma
         );
+        return new PdvResource($pdv);
+    }
+
+    public static function autorizar($codpdv) 
+    {
+        $pdv = Pdv::findOrFail($codpdv);
+        $pdv = PdvService::autorizar($pdv);
+        return new PdvResource($pdv);
+    }
+
+    public static function desautorizar($codpdv) 
+    {
+        $pdv = Pdv::findOrFail($codpdv);
+        $pdv = PdvService::desautorizar($pdv);
+        return new PdvResource($pdv);
+    }
+    
+    public static function inativar($codpdv) 
+    {
+        $pdv = Pdv::findOrFail($codpdv);
+        $pdv = PdvService::inativar($pdv);
+        return new PdvResource($pdv);
+    }
+
+    public static function reativar($codpdv) 
+    {
+        $pdv = Pdv::findOrFail($codpdv);
+        $pdv = PdvService::reativar($pdv);
         return new PdvResource($pdv);
     }
 
