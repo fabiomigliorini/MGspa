@@ -910,7 +910,7 @@ class PessoaService
                         select 
                             date_part(\'month\', p.nascimento) as mes, 
                             date_part(\'day\', p.nascimento) as dia, 
-                            date_part(\'year\', :data) - date_part(\'year\', p.nascimento) as idade,
+                            date_part(\'year\', :data::date) - date_part(\'year\', p.nascimento) as idade,
                             \'Idade\' as tipo,
                             p.pessoa, 
                             p.codpessoa,
@@ -927,7 +927,7 @@ class PessoaService
                         select 
                             date_part(\'month\', c.contratacao) as mes, 
                             date_part(\'day\', c.contratacao) as dia, 
-                            date_part(\'year\', :data) - date_part(\'year\', c.contratacao) as idade,
+                            date_part(\'year\', :data::date) - date_part(\'year\', c.contratacao) as idade,
                             \'Empresa\' as tipo,
                             p.pessoa,
                             c.codpessoa, 
@@ -935,19 +935,19 @@ class PessoaService
                         from tblcolaborador c
                         inner join tblpessoa p on (p.codpessoa = c.codpessoa)
                         where c.rescisao is null
-                        and date_part(\'year\', c.contratacao) < date_part(\'year\', :data) -- ate aqui somente se Todos ou Colaborador
+                        and date_part(\'year\', c.contratacao) < date_part(\'year\', :data::date) -- ate aqui somente se Todos ou Colaborador
             )
             select *
                 ,
                 to_date(
-                    case when (date_part(\'month\', :data) = 12) then 
+                    case when (date_part(\'month\', :data::date) = 12) then 
                         case when (a.mes = 1) then 
-                            date_part(\'year\', :data) + 1
+                            date_part(\'year\', :data::date) + 1
                         else 
-                            date_part(\'year\', :data) 
+                            date_part(\'year\', :data::date) 
                         end
                     else 
-                        date_part(\'year\', :data) 
+                        date_part(\'year\', :data::date) 
                     end
                     || \'-\' || a.mes || \'-\' || a.dia
                     , \'yyyy-mm-dd\') as aniversario
@@ -955,7 +955,7 @@ class PessoaService
         )
         select * 
         from anivB 
-        where aniversario between :data and :data + \'15 days\'::interval
+        where aniversario between :data::date and :data::date + \'15 days\'::interval
         order by aniversario
         ';
 
