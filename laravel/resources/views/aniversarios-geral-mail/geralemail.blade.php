@@ -37,7 +37,7 @@
 		@foreach($anivs as $aniv)
 		
 		<tr>
-			<td>{{ $aniv->pessoa }}</td>
+			<td><a href="https://pessoas.mgpapelaria.com.br/#/pessoa/{{$aniv->codpessoa}}">{{ $aniv->pessoa }}</a></td>
 			<?php
 				$aniversario = \Carbon\Carbon::parse($aniv->aniversario);
 				$aniversario = $aniversario->isoFormat('dddd, D MMMM');
