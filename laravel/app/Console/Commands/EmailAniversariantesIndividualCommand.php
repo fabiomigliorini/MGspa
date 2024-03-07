@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Mg\Pessoa\PessoaEmail;
 use Mg\Pessoa\PessoaService;
 
 class EmailAniversariantesIndividualCommand extends Command
@@ -12,7 +13,7 @@ class EmailAniversariantesIndividualCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'aniversariantes:individial';
+    protected $signature = 'aniversariantes:individual';
 
     /**
      * The console command description.
@@ -38,7 +39,6 @@ class EmailAniversariantesIndividualCommand extends Command
      */
     public function handle()
     {
-
-        return 0;
+        return PessoaService::enviaEmailIndividual();
     }
 }

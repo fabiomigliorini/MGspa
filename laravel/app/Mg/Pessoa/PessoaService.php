@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\Mail;
 use Mg\Cidade\Estado;
 use Mg\Cidade\Cidade;
 use Mg\Cidade\CidadeService;
@@ -955,7 +956,7 @@ class PessoaService
         )
         select * 
         from anivB 
-        where aniversario between :data::date and :data::date + \'15 days\'::interval
+        where aniversario between :data::date - \'2 days\'::interval and :data::date + \'15 days\'::interval
         order by aniversario
         ';
 
@@ -963,6 +964,77 @@ class PessoaService
 
         $result = DB::select($sql, $params);
         return $result;
+    }
 
-    } 
+
+    public static function aniversariosColaboradoresIndividual()
+    {
+
+        $sql = '
+        with aniversarios as (
+            select 
+                date_part(\'month\', p.nascimento) as mes, 
+                date_part(\'day\', p.nascimento) as dia, 
+                date_part(\'year\', now()) - date_part(\'year\', p.nascimento) as idade,
+                \'Idade\' as tipo,
+                p.pessoa, 
+                p.codpessoa,
+                p.nascimento as data
+            from tblpessoa p
+            where p.nascimento is not null
+         and p.codpessoa in ( --filtro colaborador
+                select c.codpessoa
+                from tblcolaborador c
+                where c.rescisao is null
+                )
+                union all
+                select 
+                    date_part(\'month\', c.contratacao) as mes, 
+                    date_part(\'day\', c.contratacao) as dia, 
+                    date_part(\'year\', now()) - date_part(\'year\', c.contratacao) as idade,
+                    \'Empresa\' as tipo,
+                    p.pessoa,
+                    c.codpessoa, 
+                    c.contratacao as data
+                from tblcolaborador c
+                inner join tblpessoa p on (p.codpessoa = c.codpessoa)
+                where c.rescisao is null
+                and date_part(\'year\', c.contratacao) < date_part(\'year\', CURRENT_DATE) -- ate aqui somente se Todos ou Colaborador
+                )
+        select * 
+        from aniversarios a
+        where date_part(\'month\', a.data) = date_part(\'month\', current_date)
+        and date_part(\'day\', a.data) = date_part(\'day\', current_date)
+        ';
+
+
+        return DB::select($sql);
+    }
+
+
+    public static function enviaEmailIndividual()
+    {
+        $anivs = static::aniversariosColaboradoresIndividual();
+        if (sizeof($anivs) == 0) {
+            return true;
+        }
+        foreach ($anivs as $aniv) {
+            $emails = PessoaEmail::select('email')->where('codpessoa', $aniv->codpessoa)->get()->pluck('email');
+            Mail::to($emails)->queue(new EmailAniversarioIndividual($aniv));
+        }
+        return true;
+    }
+
+
+    public static function enviaEmailGeral()
+    {
+        $email = env('MAIL_ANIVERSARIANTES', null);
+        if (!$email) {
+            throw new Exception("MAIL_ANIVERSARIANTES não está definido no .env!", 1);
+        }
+        $emails = explode(',', $email);
+        $anivs = static::aniversariosColaboradores();
+        $email = Mail::to($emails)->queue(new EmailAniversarioGeral($anivs));
+        return true;
+    }
 }

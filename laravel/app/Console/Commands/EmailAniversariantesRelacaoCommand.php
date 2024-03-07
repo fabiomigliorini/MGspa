@@ -38,8 +38,7 @@ class EmailAniversariantesRelacaoCommand extends Command
      */
     public function handle()
     {
-        $anivs = PessoaService::aniversariosColaboradores();
-        dd($anivs);
-        return 0;
+        $enviaEmail =  PessoaService::enviaEmailGeral();
+        return $enviaEmail;
     }
 }

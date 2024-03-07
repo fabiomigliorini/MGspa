@@ -29,6 +29,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt('00:01');
         $schedule->command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);
         $schedule->command('pix:consultar --horas=36')->everyFiveMinutes();
+        $schedule->command('aniversariantes:individual')->dailyAt('08:00');
+        $schedule->command('aniversariantes:geral')->dailyAt('08:00');
     }
 
     /**
