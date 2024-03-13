@@ -9,6 +9,7 @@ export const usuarioStore = defineStore("usuario", {
     filtroUsuarioPesquisa: {
       usuario: null,
       page: 1,
+      inativo: 1
     },
   }),
 
@@ -18,7 +19,7 @@ export const usuarioStore = defineStore("usuario", {
 
     async getUsuario(codusuario) {
       const ret = await api.get('v1/usuario/' + codusuario + '/detalhes');
-      this.detalheUsuarios = ret.data
+      this.detalheUsuarios = ret.data.data
       return ret;
     },
 
@@ -41,6 +42,39 @@ export const usuarioStore = defineStore("usuario", {
 
     async getFilial() {
       const ret = await api.get('v1/filial');
+      return ret;
+    },
+
+    async excluirUsuario(codusuario) {
+      const ret = await api.delete('v1/usuario/' + codusuario)
+      return ret;
+    },
+
+    async ativar(codusuario) {
+      const ret = await api.delete('v1/usuario/' + codusuario + '/inativo')
+      this.detalheUsuarios = ret.data.data
+      return ret;
+
+    },
+
+    async inativar(codusuario) {
+      const ret = await api.post('v1/usuario/' + codusuario + '/inativo')
+      this.detalheUsuarios = ret.data.data
+      return ret;
+    },
+
+    async usuarioAlterarPerfil(model) {
+      const ret = await api.put('v1/usuario/' + model.codusuario + '/alterar', model)
+      return ret;
+    },
+
+    async putUsuario(model) {
+      const ret = await api.put('v1/usuario/' + model.codusuario + '/grupos-usuarios', model)
+      return ret;
+    },
+
+    async postUsuario(model) {
+      const ret = await api.post('v1/usuario/criar', model)
       return ret;
     }
 

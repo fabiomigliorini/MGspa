@@ -9,7 +9,7 @@
         <template #tituloPagina>
             Cargo
         </template>
-        <template #content>
+        <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
             <q-card bordered class="col-12 q-ma-md">
                 <q-item>
                     <q-toolbar class="text-black">
@@ -150,6 +150,9 @@
                 </q-card>
             </q-dialog>
         </template>
+        <template #content v-else>
+            <nao-autorizado></nao-autorizado>
+        </template>
     </MGLayout>
 </template>
   
@@ -169,7 +172,9 @@ export default defineComponent({
 
     components: {
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-
+        NaoAutorizado: defineAsyncComponent(() =>
+            import("components/NaoAutorizado.vue")
+        ),
     },
 
 

@@ -3,7 +3,8 @@
     <q-list>
       <q-item>
         <q-item-section avatar>
-          <q-avatar color="primary" class="q-my-md" size="70px" text-color="white" v-if="sUsuario.detalheUsuarios.usuario">
+          <q-avatar color="primary" class="q-my-md" size="70px" text-color="white"
+            v-if="sUsuario.detalheUsuarios.usuario">
             {{ primeiraLetra(sUsuario.detalheUsuarios.usuario).toUpperCase() }}
           </q-avatar>
         </q-item-section>
@@ -11,34 +12,23 @@
           <q-item-label>
             <span class="text-h4 text-weight-bold"
               :class="sUsuario.detalheUsuarios.inativo ? 'text-strike text-red-14' : null">{{
-                sUsuario.detalheUsuarios.usuario }}</span>
+              sUsuario.detalheUsuarios.usuario }}</span>
 
-            <q-btn flat round icon="edit" @click="editarDetalhes()"
-              v-if="user.verificaPermissaoUsuario('Administrador')" />
-            <q-btn flat round icon="delete"
-              @click="removerPessoa(sUsuario.detalheUsuarios.codpessoa, sUsuario.item.pessoa)" />
+            <q-btn flat round icon="edit" @click="editar()" v-if="user.verificaPermissaoUsuario('Administrador')" />
+
+            <q-btn flat round icon="delete" @click="excluir(sUsuario.detalheUsuarios.codusuario)" />
 
             <q-btn v-if="user.verificaPermissaoUsuario('Administrador') && !sUsuario.detalheUsuarios.inativo" flat round
-              icon="pause" @click="inativar(sUsuario.item.codpessoa)">
+              icon="pause" @click="inativar(sUsuario.detalheUsuarios.codusuario)">
               <q-tooltip transition-show="scale" transition-hide="scale">
                 Inativar
               </q-tooltip>
             </q-btn>
 
             <q-btn v-if="user.verificaPermissaoUsuario('Administrador') && sUsuario.detalheUsuarios.inativo" flat round
-              icon="play_arrow" @click="ativar(sUsuario.item.codpessoa)">
+              icon="play_arrow" @click="ativar(sUsuario.detalheUsuarios.codusuario)">
               <q-tooltip transition-show="scale" transition-hide="scale">
                 Ativar
-              </q-tooltip>
-            </q-btn>
-
-            <q-btn flat icon="info">
-              <q-tooltip transition-show="scale" transition-hide="scale">
-                <q-item-label class="row">Criado por {{ sUsuario.item.usuariocriacao }} em {{
-                  Documentos.formataData(sUsuario.item.criacao)
-                }}</q-item-label>
-                <q-item-label class="row">Alterado por {{ sUsuario.item.usuarioalteracao }} em {{
-                  Documentos.formataData(sUsuario.item.alteracao) }}</q-item-label>
               </q-tooltip>
             </q-btn>
 
@@ -61,10 +51,10 @@
               <q-avatar icon="badge" color="grey-2" text-color="blue" />
             </q-item-section>
             <q-item-section top>
-              <q-item-label v-if="sUsuario.detalheUsuarios.pessoa">
+              <q-item-label v-if="sUsuario.detalheUsuarios.Pessoa">
                 #00{{ sUsuario.detalheUsuarios.codusuario }} <br>
-                <q-btn flat dense :label="sUsuario.detalheUsuarios.pessoa.pessoa"
-                  :to="'/pessoa/' + sUsuario.detalheUsuarios.pessoa.codpessoa" target="_blank" />
+                <q-btn flat dense :label="sUsuario.detalheUsuarios.Pessoa.pessoa"
+                  :to="'/pessoa/' + sUsuario.detalheUsuarios.Pessoa.codpessoa" target="_blank" />
               </q-item-label>
               <q-item-label caption>
                 Pessoa
@@ -79,7 +69,7 @@
             </q-item-section>
             <q-item-section top>
               <q-item-label v-if="sUsuario.detalheUsuarios.filial">
-                {{ sUsuario.detalheUsuarios.filial.filial }}
+                {{ sUsuario.detalheUsuarios.filial }}
               </q-item-label>
               <q-item-label caption>
                 <span>Filial</span>
@@ -97,8 +87,9 @@
             </q-item-section>
             <q-item-section top>
               <q-item-label>
-                <span v-if="sUsuario.detalheUsuarios.impressoramatricial">{{ sUsuario.detalheUsuarios.impressoramatricial
-                }}</span>
+                <span v-if="sUsuario.detalheUsuarios.impressoramatricial">{{
+              sUsuario.detalheUsuarios.impressoramatricial
+            }}</span>
                 <span v-else>Vazio</span>
               </q-item-label>
               <q-item-label caption>
@@ -115,7 +106,7 @@
             <q-item-section top>
               <q-item-label>
                 <span v-if="sUsuario.detalheUsuarios.impressoratermica">{{ sUsuario.detalheUsuarios.impressoratermica
-                }}</span>
+                  }}</span>
                 <span v-else>Vazio</span>
               </q-item-label>
               <q-item-label caption>
@@ -173,6 +164,84 @@ export default defineComponent({
       }
       return fantasia.charAt(0)
     },
+
+    editar() {
+      this.$router.push('/usuarios/' + this.route.params.codusuario + '/editar')
+    },
+
+    excluir(codusuario) {
+
+      this.$q.dialog({
+        title: 'Excluir pessoa',
+        message: 'Tem certeza que deseja excluir esse usuário ?',
+        cancel: true,
+      }).onOk(async () => {
+        try {
+          const ret = await this.sUsuario.excluirUsuario(codusuario)
+          console.log(ret)
+          if (ret.data.result) {
+            this.$q.notify({
+              color: 'green-5',
+              textColor: 'white',
+              icon: 'done',
+              message: 'Removido'
+            })
+            this.$router.push('/usuarios')
+          }
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'warning',
+            message: error.response.data.message
+          })
+        }
+      })
+    },
+
+    async inativar(codusuario) {
+      try {
+        const ret = await this.sUsuario.inativar(codusuario)
+        if (ret.data) {
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Inativado!'
+          })
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: error.response.data
+        })
+      }
+    },
+
+    async ativar(codusuario) {
+      try {
+        const ret = await this.sUsuario.ativar(codusuario)
+        if (ret.data) {
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'Ativado!'
+          })
+        }
+      } catch (error) {
+        this.$q.notify({
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: error.response.data
+        })
+      }
+
+    },
+
   },
 
   setup() {
@@ -191,7 +260,6 @@ export default defineComponent({
       user,
       moment,
       DialogDetalhes: ref(false),
-      modelEditarDetalhes: ref([]),
     }
   },
 })

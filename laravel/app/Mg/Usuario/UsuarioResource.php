@@ -17,10 +17,13 @@ class UsuarioResource extends JsonResource
     {   
         $ret = parent::toArray($request);
         unset($ret['senha']);
+        unset($ret['remember_token']);
+
         if ($this->codpessoa) {
             $ret['Pessoa'] = new PessoaResource($this->Pessoa);
         }
         $ret['permissoes'] = UsuarioService::buscaGrupoPermissoes($this->codusuario);
+        $ret['filial'] = $this->Filial->filial;
         return $ret;
     }
 }

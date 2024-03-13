@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Mg\MgController;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
@@ -22,26 +23,7 @@ class UsuarioController extends MgController
         $qry = UsuarioService::pesquisar($filter, $sort, $fields)->with('Imagem');
         $res = $qry->paginate()->appends($request->all());
 
-        foreach ($res as $i => $usuario) {
-            if (!empty($usuario->codimagem)) {
-                $res[$i]->imagem->url = $usuario->Imagem->url;
-            }
-            unset($usuario->senha); 
-            $grupos = [];
-            foreach ($usuario->GrupoUsuarioUsuarioS as $grupo) {
-                $grupos[] = [
-                    'grupousuario' => $grupo->GrupoUsuario->grupousuario,
-                    'filial' => $grupo->Filial->filial
-                ];
-
-            }
-
-            $res[$i]->grupos = $grupos;
-
-        }
-
-        return response()->json($res, 200);
-
+        return UsuarioResource::collection($res);
     }
 
 
@@ -110,7 +92,7 @@ class UsuarioController extends MgController
     public function detalhes($id)
     {
         $model = UsuarioService::detalhes($id);
-        return response()->json($model, 200);
+        return new UsuarioResource($model);
     }
 
     /**
@@ -148,18 +130,12 @@ class UsuarioController extends MgController
                 'min:2',
             ],
             'senha' => [
-                'senha_confirmacao:'.$request->get('senha_confirmacao'),
+                'senha_confirmacao:' . $request->get('senha_confirmacao'),
                 'min:6'
             ],
             'senha_antiga' => [
                 'senha_antiga'
             ],
-            'impressoramatricial' => [
-                'required'
-            ],
-            'impressoratermica' => [
-                'required'
-            ]
         ], [
             'usuario.required' => 'O campo "Usuário" deve ser preenchido!',
             'usuario.unique' => 'Este "Usuário" já esta cadastrado',
@@ -180,7 +156,7 @@ class UsuarioController extends MgController
 
         $model->update();
 
-        return response()->json($model, 201);
+        return new UsuarioResource($model);
     }
 
     /**
@@ -193,9 +169,14 @@ class UsuarioController extends MgController
     {
         $model = Usuario::findOrFail($id);
         $model->delete();
+
+        return response()->json([
+            'result' => $model
+        ], 200);
     }
 
-    public function autor(Request $request, $id) {
+    public function autor(Request $request, $id)
+    {
         $model = Usuario::findOrFail($id);
         $res = [
             'codusuario' => $model->codusuario,
@@ -213,18 +194,20 @@ class UsuarioController extends MgController
         return response()->json($res, 200);
     }
 
-    public function ativar(Request $request, $id) {
+    public function ativar(Request $request, $id)
+    {
         $model = Usuario::findOrFail($id);
         $model = UsuarioService::ativar($model);
 
-        return response()->json($model, 200);
+        return new UsuarioResource($model);
     }
 
-    public function inativar(Request $request, $id) {
+    public function inativar(Request $request, $id)
+    {
         $model = Usuario::findOrFail($id);
         $model = UsuarioService::inativar($model);
 
-        return response()->json($model, 200);
+        return new UsuarioResource($model);
     }
 
     public function grupos(Request $request, $id)
@@ -263,10 +246,23 @@ class UsuarioController extends MgController
         return response()->json($model, 204);
     }
 
-
-    public function permissoesUsuarios() 
+    public function permissoesUsuarios()
     {
         $usuario = Auth::user();
         return new UsuarioResource($usuario);
+    }
+
+    public function gruposAdicionarERemover(Request $request, $id)
+    {
+        $usuario = Usuario::findOrFail($id);
+        $data = $request->all();
+        $usuario = UsuarioService::updateUsuario($usuario, $data);
+        return new UsuarioResource($usuario);
+    }
+
+    public function novoUsuario(Request $request)
+    {
+       $usuario =  UsuarioService::create($request->all());
+       return new UsuarioResource($usuario);
     }
 }

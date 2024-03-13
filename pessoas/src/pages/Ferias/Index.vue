@@ -5,7 +5,8 @@
       <div class="q-pa-md">
         <q-card bordered>
           <q-table title="Programação de férias" :filter="filter" :rows="ferias" :columns="columns"
-            no-data-label="Nenhuma programação de férias encontrada" :separator="separator" emit-value :pagination="{rowsPerPage: 100}">
+            no-data-label="Nenhuma programação de férias encontrada" :separator="separator" emit-value
+            :pagination="{ rowsPerPage: 100 }">
             <template v-slot:top-right>
               <q-btn flat color="primary" icon="chevron_left" @click="filtroAno(-1)" />
               {{ ano }}
@@ -33,18 +34,20 @@
                 <q-td key="fantasia" :props="ferias" @click="linkPessoa(ferias.row.codpessoa)" class="cursor-pointer">
                   {{ ferias.row.fantasia }}
                 </q-td>
-              
-                <q-td key="janeiro" colspan="13" :props="ferias">
+
+                <q-td :key="this.ano == moment().year() ? 'janeiro' : 'dezembro'"
+                  :colspan="this.ano == moment().year() ? '14' : '14'" :props="ferias">
                   <div v-for="f in ferias.row.ferias" v-bind:key="f.codferias">
                     <q-range :model-value="f.range" @update:modelValue="(value) => { alteraRange(value, f) }" :min="1"
-                      :max="max" ref="range" drag-only-range :disable="!f.prevista" :color="f.prevista ? 'blue' : 'green'" />
-                    
-                 
-                    </div>
+                      :max="max" ref="range" drag-only-range :disable="!f.prevista"
+                      :color="f.prevista ? 'blue' : 'green'" />
+
+
+                  </div>
                 </q-td>
                 <q-td key="data" :props="ferias">
                   <div v-for="feriasS in ferias.row.ferias" v-bind:key="feriasS.codferias">
-                    {{ moment(feriasS.gozoinicio).format('ddd, D/MMM') }}
+                    {{ moment(feriasS.gozoinicio).format('ddd, D/MMM') }} <br>
                     a
                     {{ moment(feriasS.gozofim).format('D/MMM/YYYY') }}
                   </div>
@@ -93,12 +96,6 @@ export default {
       const gozofim = moment().startOf('year').add(range.max - 1, 'days');
       ferias.gozoinicio = gozoinicio.format('YYYY-MM-DD');
       ferias.gozofim = gozofim.format('YYYY-MM-DD');
-
-      console.log(range)
-      // if(range.max > 366) {
-      //   range.max = parseInt(range.max) - 366
-      // }
-
     },
 
     async filtroAno(anoFiltro) {
@@ -129,7 +126,6 @@ export default {
     },
 
     async submit() {
-
       let putFerias = []
 
       this.ferias.forEach(el => {
@@ -138,25 +134,32 @@ export default {
         }
       });
 
-      try {
-        const ret = await this.sColaborador.atualizaTodasFerias(putFerias)
-        if (ret.data) {
+      this.$q.dialog({
+        title: 'Salvar Férias',
+        message: 'Tem certeza que deseja salvar todas as férias ?',
+        cancel: true,
+        persistent: true
+      }).onOk(async () => {
+        try {
+          const ret = await this.sColaborador.atualizaTodasFerias(putFerias)
+          if (ret.data) {
+            this.$q.notify({
+              color: 'green-5',
+              textColor: 'white',
+              icon: 'done',
+              message: 'Salvo!'
+            })
+          }
+        } catch (error) {
+          console.log(error)
           this.$q.notify({
             color: 'green-5',
             textColor: 'white',
             icon: 'done',
-            message: 'Salvo!'
+            message: error.response.data.message
           })
         }
-      } catch (error) {
-        console.log(error)
-        this.$q.notify({
-          color: 'green-5',
-          textColor: 'white',
-          icon: 'done',
-          message: error.response.data.message
-        })
-      }
+      })
     },
 
     async atualizaAno(ano) {
@@ -171,10 +174,14 @@ export default {
             max: ferias.diagozofim,
           };
 
-          if(ferias.diagozoinicio > 335 && ferias.diagozofim < 31 ) {
+          if (ferias.diagozoinicio > 335 && ferias.diagozofim < 31) {
             ferias.range.max = parseInt(397) - parseInt(31) + parseInt(ferias.diagozofim)
           }
 
+          if (this.ano !== moment().year() && ferias.diagozoinicio > 335 && ferias.diagozofim < 31) {
+            ferias.range.min = parseInt(397) - parseInt(62) - parseInt(ferias.diagozoinicio)
+            ferias.range.max = parseInt(397) - parseInt(ferias.range.max)
+          }
         });
       });
       this.ferias = ret.data;
@@ -222,120 +229,110 @@ export default {
         label: "Filial",
         field: "filial",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "cargo",
         label: "Cargo",
         field: "cargo",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "fantasia",
         label: "Nome",
         field: "fantasia",
         align: "top-left",
-        sortable: true,
+      },
+
+      {
+        name: "dezembro",
+        label: "Dez",
+        field: "dezembro",
+        align: "top-left",
       },
 
       {
         name: "janeiro",
-        label: "Janeiro",
+        label: "Jan",
         field: "janeiro",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Fevereiro",
-        label: "Fevereiro",
+        label: "Fev",
         field: "fevereiro",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Março",
-        label: "Março",
+        label: "Mar",
         field: "marco",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Abril",
-        label: "Abril",
+        label: "Abr",
         field: "abril",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Maio",
-        label: "Maio",
+        label: "Mai",
         field: "maio",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Junho",
-        label: "Junho",
+        label: "Jun",
         field: "junho",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Julho",
-        label: "Julho",
+        label: "Jul",
         field: "julho",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Agosto",
-        label: "Agosto",
+        label: "Ago",
         field: "agosto",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Setembro",
-        label: "Setembro",
+        label: "Set",
         field: "setembro",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Outubro",
-        label: "Outubro",
+        label: "Out",
         field: "outubro",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Novembro",
-        label: "Novembro",
+        label: "Nov",
         field: "novembro",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Dezembro",
-        label: "Dezembro",
+        label: "Dez",
         field: "dezembro",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "Janeiro",
-        label: "Janeiro",
+        label: "Jan",
         field: "janeiro",
         align: "top-left",
-        sortable: true,
       },
       {
         name: "data",
         label: "Data",
         field: "data",
         align: "top-left",
-        sortable: true,
       },
     ];
 
@@ -359,7 +356,9 @@ export default {
     };
   },
   async mounted() {
+
     var year = moment().year()
+    this.ano = year;
     this.atualizaAno();
     var bissexto = moment([year]).isLeapYear();
     if (bissexto) {

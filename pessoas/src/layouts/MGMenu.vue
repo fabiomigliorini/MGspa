@@ -62,6 +62,17 @@
                             <q-item-label>Aniversários</q-item-label>
                         </q-item>
                     </q-list>
+
+
+                </div>
+
+                <div class="col-6">
+                    <q-list float dense v-if="user.verificaPermissaoUsuario('Administrador')">
+                        <q-item :to="{ name: 'grupousuarios' }"> 
+                            <q-icon name="admin_panel_settings" size="25px" class="q-pr-sm" />
+                            <q-item-label>Grupo Usuários</q-item-label>
+                        </q-item>
+                    </q-list>
                 </div>
 
             </div>

@@ -22,45 +22,65 @@ onMounted(async () => {
   const filiais = await sUsuario.getFilial()
 
   grupoUsuarios.value = ret.data.data
-  console.log(grupoUsuarios.value)
   filial.value = filiais.data.data
-  console.log(sUsuario.detalheUsuarios.grupo_usuario_usuario_s)
-  
+
 })  
 </script>
 
 <template>
-  <q-card bordered>
-  
-    <q-markup-table :separator="separator" flat bordered>
-      <thead>
-        <tr>
-          <th class="text-left">Grupo</th>
-          <th v-for="filiais in filial" v-bind:key="filiais.codfilial" class="text-left">{{ filiais.filial }} <br> {{
-            filiais.codfilial }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="grupos in grupoUsuarios" v-bind:key="grupos.codgrupousuario">
 
-          <th scope="row">{{ grupos.grupousuario }}</th>
+  <div class="row">
+    <div class="col-12">
+      <q-card>
+        <q-item>
+          <q-item-label>
+            Permissões
+          </q-item-label>
+        </q-item>
+      </q-card>
+    </div>
+  </div>
 
-          <td v-for="filiais in filial" v-bind:key="filiais.codfilial" class="text-left">
-            
-            <!-- <div v-for="gruposDoUsuario in sUsuario.detalheUsuarios.grupo_usuario_usuario_s" v-bind:key="gruposDoUsuario.codgrupousuario"> -->
+  <div class="row q-pa-md q-col-gutter-md">
+    <div class="xs-12 col-sm-6 col-md-4 col-lg-3"
+      v-for="gruposDoUsuario in sUsuario.detalheUsuarios.permissoes"
+      v-bind:key="gruposDoUsuario.codgrupousuario">
+      <q-card class="no-shadow cursor-pointer" bordered>
+        <q-list>
+          <q-item :to="'/grupo-usuarios/' + gruposDoUsuario.codgrupousuario">
+            <q-card-section class="text-center">
+              <q-avatar size="100px" class="shadow-10">
+                <q-icon name="admin_panel_settings" color="primary" />
+              </q-avatar>
+            </q-card-section>
 
-              <q-btn-toggle v-model:model-value="modelGrupoUsuario" class="my-custom-toggle" no-caps unelevated
-              toggle-color="red" color="white" text-color="primary" :options="[
-                { label: 'Sim', value: grupos.codgrupousuario },
-                { label: 'Não', value: 'nao' }
-              ]" />
-            <!-- </div> -->
-           
-          </td>
+            <q-card-section>
+              <q-item-label :class="gruposDoUsuario.inativo ? 'text-strike text-red-14' : null">
+                {{ gruposDoUsuario.grupousuario }}
 
-          <q-separator />
-        </tr>
-      </tbody>
-    </q-markup-table>
-  </q-card>
+              </q-item-label>
+
+              <q-item-label caption>
+                {{ gruposDoUsuario.observacoes }}
+
+              </q-item-label>
+              <br>
+              <br>
+              <br>
+              <q-item-label>
+                Filial: {{ gruposDoUsuario.filial }}
+
+
+              </q-item-label>
+
+
+            </q-card-section>
+
+
+          </q-item>
+        </q-list>
+      </q-card>
+    </div>
+
+  </div>
 </template>

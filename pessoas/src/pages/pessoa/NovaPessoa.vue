@@ -229,7 +229,7 @@ export default {
       try {
         var codfilial = this.user.usuarioLogado.codfilial;
         const ret = await this.sPessoa.verificaIeSefaz(
-          codfilial,
+          101,
           this.model.fisica,
           this.model.cnpj
         );
@@ -243,11 +243,11 @@ export default {
     async sugerirNome() {
       if (!this.model.fisica && this.receitaWsCadastro.nome) {
         this.model.pessoa = primeiraLetraMaiuscula(
-          removerAcentos(this.receitaWsCadastro.nome)
+          removerAcentos(this.receitaWsCadastro.nome).substr(0, 50)
         );
         if (this.receitaWsCadastro.fantasia) {
           this.model.fantasia = primeiraLetraMaiuscula(
-            removerAcentos(this.receitaWsCadastro.fantasia)
+            removerAcentos(this.receitaWsCadastro.fantasia).substr(0, 50)
           );
         } else {
           this.model.fantasia = this.model.pessoa;
@@ -265,11 +265,11 @@ export default {
         }
         if (insc) {
           this.model.pessoa = primeiraLetraMaiuscula(
-            removerAcentos(insc.xNome)
+            removerAcentos(insc.xNome).substr(0, 50)
           );
           if (insc.xFant) {
             this.model.fantasia = primeiraLetraMaiuscula(
-              removerAcentos(insc.xFant)
+              removerAcentos(insc.xFant).substr(0, 50)
             );
           } else {
             this.model.fantasia = this.model.pessoa;
@@ -281,7 +281,7 @@ export default {
       const nomePix = await this.sPessoa.descobreNomePeloPix(this.model.cnpj);
       if (nomePix.data.nome) {
         this.model.fantasia = primeiraLetraMaiuscula(
-          removerAcentos(nomePix.data.nome)
+          removerAcentos(nomePix.data.nome).substr(0, 50)
         );
         this.model.pessoa = this.model.fantasia;
       }

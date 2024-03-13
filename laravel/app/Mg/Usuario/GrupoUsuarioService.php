@@ -2,31 +2,16 @@
 
 namespace Mg\Usuario;
 
+use Illuminate\Support\Facades\DB;
 use Mg\MgService;
+use stdClass;
 
 class GrupoUsuarioService extends MgService
 {
-    public static function detalhes($id) {
+    public static function detalhes($id)
+    {
 
         $model = GrupoUsuario::findOrFail($id);
-        $usuarios = [];
-        foreach ($model->GrupoUsuarioUsuarioS as $usuario) {
-
-            foreach ($usuario->Usuario->GrupoUsuarioUsuarioS as $grupo) {
-                $grupos[$grupo->GrupoUsuario->codgrupousuario] = $grupo->GrupoUsuario->grupousuario;
-            }
-
-            $usuarios[$usuario['codusuario']] = [
-                'codusuario' => $usuario->Usuario->codusuario,
-                'usuario' => $usuario->Usuario->usuario,
-                'grupos' => $grupos
-            ];
-        }
-
-        $model['Usuarios'] = $usuarios;
-        $model['usuariocriacao'] = $model->UsuarioCriacao->usuario ?? false;
-        $model['usuarioalteracao'] = $model->UsuarioAlteracao->usuario ?? false;
-
         return $model;
     }
 
@@ -38,8 +23,8 @@ class GrupoUsuarioService extends MgService
             $qry->AtivoInativo($filter['inativo']);
         }
 
-        if (!empty($filter['usuario'])) {
-            $qry->palavras('usuario', $filter['usuario']);
+        if (!empty($filter['grupo'])) {
+            $qry->palavras('grupousuario', $filter['grupo']);
         }
 
         $qry = self::qryOrdem($qry, $sort);

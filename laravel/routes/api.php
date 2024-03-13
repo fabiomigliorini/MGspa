@@ -444,16 +444,29 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('usuario/{id}/grupos', '\Mg\Usuario\UsuarioController@gruposRemover')->name('usuario.grupos.remover');
         Route::get('usuario/{id}/detalhes', '\Mg\Usuario\UsuarioController@detalhes')->name('usuario.detalhes');
         Route::delete('usuario/{id}/inativo', '\Mg\Usuario\UsuarioController@ativar')->name('usuario.ativar');
+        Route::delete('usuario/{id}', '\Mg\Usuario\UsuarioController@destroy');
+        Route::put('usuario/{id}/alterar', '\Mg\Usuario\UsuarioController@update');
+        Route::put('usuario/{id}/grupos-usuarios', '\Mg\Usuario\UsuarioController@gruposAdicionarERemover');
+        Route::post('usuario/criar', '\Mg\Usuario\UsuarioController@novoUsuario');
+
+
+        
         Route::post('usuario/{id}/inativo', '\Mg\Usuario\UsuarioController@inativar')->name('usuario.inativar');
 
         Route::apiResource('usuario', '\Mg\Usuario\UsuarioController');
 
         // Grupos de usuário
+        
+        Route::get('grupo-usuario/todos', '\Mg\Usuario\GrupoUsuarioController@index');
+       
         Route::get('grupo-usuario/{id}/autor', '\Mg\Usuario\GrupoUsuarioController@autor');
-        Route::get('grupo-usuario/{id}/detalhes', '\Mg\Usuario\GrupoUsuarioController@detalhes')->name('grupo-usuario.detalhes');
+        Route::get('grupo-usuario/{id}', '\Mg\Usuario\GrupoUsuarioController@detalhes');
         Route::delete('grupo-usuario/{id}/inativo', '\Mg\Usuario\GrupoUsuarioController@ativar')->name('grupo-usuario.ativar');
         Route::post('grupo-usuario/{id}/inativo', '\Mg\Usuario\GrupoUsuarioController@inativar')->name('grupo-usuario.inativar');
         Route::apiResource('grupo-usuario', '\Mg\Usuario\GrupoUsuarioController');
+        Route::delete('grupo-usuario/{id}', '\Mg\Usuario\GrupoUsuarioController@destroy');
+        Route::put('grupo-usuario/{id}/alterar', '\Mg\Usuario\GrupoUsuarioController@update');
+
 
         // Filiais
         Route::apiResource('filial', '\Mg\Filial\FilialController');

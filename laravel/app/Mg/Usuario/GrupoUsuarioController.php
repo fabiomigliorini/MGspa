@@ -20,7 +20,7 @@ class GrupoUsuarioController extends MgController
         $qry = GrupoUsuarioService::pesquisar($filter, $sort, $fields);
         $res = $qry->paginate()->appends($request->all());
 
-        return response()->json($res, 200);
+        return GrupoUsuarioResource::collection($res);
 
     }
 
@@ -73,7 +73,7 @@ class GrupoUsuarioController extends MgController
     public function detalhes($id)
     {
         $model = GrupoUsuarioService::detalhes($id);
-        return response()->json($model, 200);
+        return new GrupoUsuarioResource($model);
     }
 
     /**
@@ -100,10 +100,8 @@ class GrupoUsuarioController extends MgController
         ]);
 
         $model->fill($request->all());
-
         $model->update();
-
-        return response()->json($model, 201);
+        return new GrupoUsuarioResource($model);
     }
 
     /**
@@ -116,6 +114,10 @@ class GrupoUsuarioController extends MgController
     {
         $model = GrupoUsuario::findOrFail($id);
         $model->delete();
+
+        return response()->json([
+            'result' => $model
+        ], 200);
     }
 
     public function autor(Request $request, $id) {
@@ -140,14 +142,14 @@ class GrupoUsuarioController extends MgController
         $model = GrupoUsuario::findOrFail($id);
         $model = GrupoUsuarioService::ativar($model);
 
-        return response()->json($model, 200);
+        return new GrupoUsuarioResource($model);
     }
 
     public function inativar(Request $request, $id) {
         $model = GrupoUsuario::findOrFail($id);
         $model = GrupoUsuarioService::inativar($model);
 
-        return response()->json($model, 200);
+        return new GrupoUsuarioResource($model);
     }
 
 }

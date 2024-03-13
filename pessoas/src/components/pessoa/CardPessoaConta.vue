@@ -94,7 +94,7 @@
   <!-- Dialog nova conta -->
   <q-dialog v-model="dialogNovaConta">
     <q-card style="min-width: 350px">
-      <q-form @submit="editarConta == false ? novoRegistroSpc() : salvarConta()">
+      <q-form @submit="editarConta == false ? novaContaBancaria() : salvarConta()">
         <q-card-section>
           <div v-if="editarConta" class="text-h6">Editar Conta Bancária</div>
           <div v-else class="text-h6">Nova Conta Bancária</div>
@@ -214,11 +214,13 @@ export default defineComponent({
 
   methods: {
 
-    async novoRegistroSpc() {
+    async novaContaBancaria() {
       this.modelContaBancaria.codpessoa = this.route.params.id
 
       try {
         const ret = await this.sPessoa.novaContaBancaria(this.route.params.id, this.modelContaBancaria)
+        console.log(ret)
+        console.log(this.sPessoa.item.PessoaContaS)
         if (ret.data.data) {
           this.$q.notify({
             color: 'green-5',
@@ -226,7 +228,6 @@ export default defineComponent({
             icon: 'done',
             message: 'Conta Criada!'
           })
-          this.sPessoa.get(this.route.params.id)
           this.dialogNovaConta = false
         }
       } catch (error) {

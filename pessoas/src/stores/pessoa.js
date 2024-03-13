@@ -374,6 +374,7 @@ export const pessoaStore = defineStore('pessoa', {
 
     async novaContaBancaria(codpessoa, modelContaBancaria) {
       const ret = await api.post('v1/pessoa/' + codpessoa + '/conta/', modelContaBancaria)
+      this.item.PessoaContaS.push(ret.data.data)      
       return ret;
     },
 
@@ -406,15 +407,11 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
-
-
-
     async selectEstado() {
 
       const ret = await api.get('v1/select/estado')
       return ret;
     },
-
 
     async getCargos(filtroCargo) {
 
@@ -495,7 +492,14 @@ export const pessoaStore = defineStore('pessoa', {
         params: {tipo:tipo}
       })
       return ret;
-    }
+    },
+
+    async buscaPessoasSelectUsuario(model) {
+      const ret = await api.get('v1/pessoa', {
+        params: model 
+      })
+      return ret;
+    },
   }
 })
 

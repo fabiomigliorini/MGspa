@@ -42,6 +42,8 @@
               </q-avatar>
               <div class="text-subtitle1 q-mt-md q-mb-xs">{{ user }}</div>
 
+              <q-btn color="primary" :to="'/perfil'" class="q-mb-md" label="Perfil" push size="sm" v-close-popup />
+
               <q-btn color="primary" label="Sair" push size="sm" v-close-popup @click="Deslogar" />
             </div>
           </div>

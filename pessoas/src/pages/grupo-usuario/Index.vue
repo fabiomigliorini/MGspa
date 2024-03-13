@@ -1,30 +1,36 @@
 <template>
     <MGLayout drawer>
         <template #tituloPagina>
-            Usuários
+            Grupo Usuários
         </template>
 
         <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
-            <q-infinite-scroll @load="scrollUsuario" :disable="loading">
+            <q-infinite-scroll @load="scrollGrupoUsuario" :disable="loading">
                 <q-separator />
                 <div class="row q-pa-md q-col-gutter-md">
-                    <div class="xs-12 col-sm-6 col-md-4 col-lg-3" v-for="usuario in sUsuario.usuarios"
-                        v-bind:key="usuario.codusuario">
+                    <div class="xs-12 col-sm-6 col-md-4 col-lg-3" v-for="grupoUsuario in sGrupoUsuario.grupoUsuarios"
+                        v-bind:key="grupoUsuario.codgrupousuario">
                         <q-card class="no-shadow cursor-pointer" bordered>
+                            
                             <q-list>
-                                <q-item :to="'/usuarios/' + usuario.codusuario">
+                                <q-item :to="'/grupo-usuarios/' + grupoUsuario.codgrupousuario">
 
                                     <q-card-section class="text-center">
                                         <q-avatar size="100px" class="shadow-10">
-                                            <q-icon name="people" color="primary" />
+                                            <q-icon name="groups_3" color="primary" />
                                         </q-avatar>
                                     </q-card-section>
 
                                     <q-card-section>
-                                        <q-item-label :class="usuario.inativo ? 'text-strike text-red-14' : null">
-                                            {{ usuario.usuario }}
+                                        <q-item-label :class="grupoUsuario.inativo ? 'text-strike text-red-14' : null">
+                                            {{ grupoUsuario.grupousuario }}
 
                                         </q-item-label>
+                                        <q-item-label caption :class="grupoUsuario.inativo ? 'text-strike text-red-14' : null">
+                                            {{ grupoUsuario.observacoes }}
+
+                                        </q-item-label>
+
                                     </q-card-section>
                                 </q-item>
                             </q-list>
@@ -33,12 +39,6 @@
 
                 </div>
             </q-infinite-scroll>
-
-            <q-page-sticky position="bottom-right" :offset="[18, 18]"
-                v-if="user.verificaPermissaoUsuario('Administrador')">
-                <q-btn fab icon="add" color="accent" :to="{ name: 'usuarionovo' }" />
-            </q-page-sticky>
-
         </template>
 
         <template #content v-else>
@@ -50,16 +50,16 @@
                 <q-card flat>
                     <q-list>
                         <q-item-label header>
-                            Filtro Usuário
-                            <q-btn icon="replay" @click="buscarUsuarios()" flat round no-caps />
+                            Filtro Grupo Usuário
+                            <q-btn icon="replay" @click="buscarGruposUsuarios()" flat round no-caps />
                         </q-item-label>
                     </q-list>
                 </q-card>
                 <div class="q-pa-md q-gutter-md">
-                    <q-input outlined v-model="sUsuario.filtroUsuarioPesquisa.usuario" label="Usuário"
-                        @change="buscarUsuarios()" />
+                    <q-input outlined v-model="sGrupoUsuario.filtroGrupoUsuarioPesquisa.grupo" label="Grupo Usuário"
+                        @change="buscarGruposUsuarios()" />
 
-                    <q-select outlined v-model="sUsuario.filtroUsuarioPesquisa.inativo" label="Ativo / Inativo"
+                    <q-select outlined v-model="sGrupoUsuario.filtroGrupoUsuarioPesquisa.inativo" label="Ativo / Inativo"
                         :options="[
             { label: 'Ativos', value: 1 },
             { label: 'Inativos', value: 2 }]" map-options emit-value clearable />
@@ -71,9 +71,9 @@
 
 <script>
 import { defineComponent, defineAsyncComponent, ref, onMounted, watch } from 'vue'
-import { usuarioStore } from 'src/stores/usuario'
 import { useQuasar, debounce } from 'quasar'
 import { guardaToken } from 'src/stores'
+import { grupoUsuarioStore } from 'src/stores/grupo-usuario'
 
 export default defineComponent({
     name: "Index",
@@ -86,16 +86,16 @@ export default defineComponent({
     },
 
     setup() {
-        const sUsuario = usuarioStore()
+        const sGrupoUsuario = grupoUsuarioStore()
         const loading = ref(false)
         const $q = useQuasar()
         const user = guardaToken()
 
-        const buscarUsuarios = debounce(async () => {
+        const buscarGruposUsuarios = debounce(async () => {
             $q.loadingBar.start()
-            sUsuario.filtroUsuarioPesquisa.page = 1;
+            sGrupoUsuario.filtroGrupoUsuarioPesquisa.page = 1;
             try {
-                const ret = await sUsuario.todosUsuarios()
+                const ret = await sGrupoUsuario.todosGruposUsuarios()
                 loading.value = false;
                 $q.loadingBar.stop()
                 if (ret.data.data.length == 0) {
@@ -113,28 +113,28 @@ export default defineComponent({
 
 
         watch(
-            () => sUsuario.filtroUsuarioPesquisa.inativo,
-            () => buscarUsuarios(),
+            () => sGrupoUsuario.filtroGrupoUsuarioPesquisa.inativo,
+            () => buscarGruposUsuarios(),
         );
 
 
         onMounted(async () => {
-            if (sUsuario.usuarios.length == 0) {
-                buscarUsuarios();
+            if (sGrupoUsuario.grupoUsuarios.length == 0) {
+                buscarGruposUsuarios();
             }
 
         })
 
         return {
-            sUsuario,
+            sGrupoUsuario,
             loading,
             user,
-            buscarUsuarios,
-            async scrollUsuario(index, done) {
+            buscarGruposUsuarios,
+            async scrollGrupoUsuario(index, done) {
                 loading.value = true;
                 // $q.loadingBar.start()
-                sUsuario.filtroUsuarioPesquisa.page++;
-                const ret = await sUsuario.todosUsuarios();
+                sGrupoUsuario.filtroGrupoUsuarioPesquisa.page++;
+                const ret = await sGrupoUsuario.todosGruposUsuarios();
                 loading.value = false
                 // $q.loadingBar.stop()
                 if (ret.data.data.length == 0) {

@@ -25,7 +25,6 @@
                               v-model="date"
                               :options="events"
                               event-color="orange"
-                              landscape
                               class="" />
 
                             <div v-for="aniversario, i in aniversariosDoDia" v-bind:key="i">
@@ -46,7 +45,7 @@
                                                     </q-item-label>
                                                     <q-item-label>
                                                         <q-icon name="people" color="blue" />&nbsp;
-                                                        <q-btn dense flat color="primary" :label="aniversario.pessoa"
+                                                        <q-btn dense flat color="primary" class="ellipsis" :label="aniversario.pessoa"
                                                             :href="'/#/pessoa/' + aniversario.codpessoa" target="_blank" />
                                                     </q-item-label>
                                                 </q-item-section>
