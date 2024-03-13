@@ -205,8 +205,6 @@
                 <q-avatar icon="done" text-color="white" color="green" v-else />
               </q-item-section>
 
-              </q-item-section>
-
               <!-- Coluna 1 -->
               <q-item-section >
                 <q-item-label>
