@@ -205,14 +205,17 @@
                 <q-avatar icon="done" text-color="white" color="green" v-else />
               </q-item-section>
 
-              </q-item-section>
-
               <!-- Coluna 1 -->
               <q-item-section >
                 <q-item-label>
-                  {{ item.nome }}
-                  <template v-if="item.nome == null">
+                  <template v-if="item.codpix == null">
                     Aguardando Pagamento
+                  </template>
+                  <template v-else-if="item.nome == null">
+                    Sem Identificação de Nome
+                  </template>
+                  <template v-else>
+                    {{ item.nome }}
                   </template>
                 </q-item-label>
                 <q-item-label caption>

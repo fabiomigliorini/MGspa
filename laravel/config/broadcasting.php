@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => env('BROADCAST_DRIVER', 'ably'),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,7 +43,7 @@ return [
 
         'ably' => [
             'driver' => 'ably',
-            'key' => env('ABLY_KEY'),
+            'key' => env('ABLY_APP_KEY'),
         ],
 
         'redis' => [
