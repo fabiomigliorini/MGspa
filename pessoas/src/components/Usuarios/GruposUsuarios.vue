@@ -13,9 +13,6 @@ const grupoUsuarios = ref([])
 const filial = ref([])
 
 const sUsuario = usuarioStore()
-const modelGrupoUsuario = ref({})
-const separator = ref('cell')
-
 
 onMounted(async () => {
   const ret = await sUsuario.getGrupoUsuarios()
@@ -42,8 +39,7 @@ onMounted(async () => {
   </div>
 
   <div class="row q-pa-md q-col-gutter-md">
-    <div class="xs-12 col-sm-6 col-md-4 col-lg-3"
-      v-for="gruposDoUsuario in sUsuario.detalheUsuarios.permissoes"
+    <div class="xs-12 col-sm-6 col-md-4 col-lg-3" v-for="gruposDoUsuario in sUsuario.detalheUsuarios.permissoes"
       v-bind:key="gruposDoUsuario.codgrupousuario">
       <q-card class="no-shadow cursor-pointer" bordered>
         <q-list>
@@ -67,12 +63,14 @@ onMounted(async () => {
               <br>
               <br>
               <br>
-              <q-item-label>
-                Filial: {{ gruposDoUsuario.filial }}
-
-
+              <q-item-label caption>
+                <template v-for="(filial, i) in gruposDoUsuario.filiais" v-bind:key="filial.codfilial">
+                  <span v-if="i != 0">
+                    |
+                  </span>
+                  {{ filial.filial }}
+                </template>
               </q-item-label>
-
 
             </q-card-section>
 

@@ -74,7 +74,6 @@ export default defineComponent({
         onMounted(async () => {
             sUsuario.detalheUsuarios = []
             await sUsuario.getUsuario(route.params.codusuario)
-            console.log(sUsuario.detalheUsuarios)
         })
 
         return {

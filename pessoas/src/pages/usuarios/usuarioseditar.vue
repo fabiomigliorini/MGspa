@@ -5,7 +5,7 @@
         </template>
 
         <template #botaoVoltar>
-            <q-btn flat dense round :to="{ name: 'usuarios' }" icon="arrow_back" aria-label="Voltar">
+            <q-btn flat dense round :to="'/usuarios/' + route.params.codusuario" icon="arrow_back" aria-label="Voltar">
             </q-btn>
         </template>
 
@@ -70,6 +70,7 @@ export default defineComponent({
             sPessoa,
             sUsuario,
             user,
+            route,
             totalNegocioPessoa,
         }
     },

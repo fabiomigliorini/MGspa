@@ -3,7 +3,6 @@
 namespace Mg\Usuario;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Mg\Pessoa\PessoaResource;
 
 class GrupoUsuarioResource extends JsonResource
 {
@@ -19,10 +18,11 @@ class GrupoUsuarioResource extends JsonResource
         $ret = parent::toArray($request);
 
         // Busca no banco todos os relacionamentos com usuarios ativos
-        $guus = GrupoUsuarioUsuario::with(['usuario' => function ($query) {
+        $guus = GrupoUsuarioUsuario::whereHas('usuario', function ($query) {
             $query->whereNull('inativo');
-        }])->where('codgrupousuario', $this->codgrupousuario)->orderBy('codfilial')->get();
+        })->where('codgrupousuario', $this->codgrupousuario)->orderBy('codfilial')->get();
 
+        
         // inicializa uma collection com os usuarios
         $usuarios = collect([]);
 

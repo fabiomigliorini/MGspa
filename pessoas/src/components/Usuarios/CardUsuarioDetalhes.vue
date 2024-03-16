@@ -178,7 +178,6 @@ export default defineComponent({
       }).onOk(async () => {
         try {
           const ret = await this.sUsuario.excluirUsuario(codusuario)
-          console.log(ret)
           if (ret.data.result) {
             this.$q.notify({
               color: 'green-5',

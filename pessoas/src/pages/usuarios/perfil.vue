@@ -7,7 +7,7 @@
 
         <template #content>
             <div class="row q-pa-md flex flex-center">
-                <div class="col-8">
+                <div class="col-lg-4 col-md-8 col-sm-12 col-xs-12">
                     <q-card bordered>
                         <q-list>
                             <q-item>
@@ -17,17 +17,22 @@
                                         {{ primeiraLetra(sUsuario.detalheUsuarios.usuario).toUpperCase() }}
                                     </q-avatar>
                                 </q-item-section>
-                                <q-item-label header>
-                                    <br>
-                                    <q-item-label>
+                                <q-item-section>
+                                    <q-item-label header>
                                         <span class="text-h4 text-weight-bold"
                                             :class="sUsuario.detalheUsuarios.inativo ? 'text-strike text-red-14' : null">{{
                                             sUsuario.detalheUsuarios.usuario }}</span>
-
-                                        <q-btn flat round icon="edit" label="Alterar senha"  no-caps align="left" @click="editar()"
-                                            v-if="user.verificaPermissaoUsuario('Administrador')" />
                                     </q-item-label>
-                                </q-item-label>
+                                </q-item-section>
+                                
+                                <q-item-section>
+                                    <q-item-label>
+                                        <q-toolbar>
+                                            <q-space />
+                                            <q-btn color="primary" label="Alterar senha" @click="editar()" />
+                                        </q-toolbar>
+                                    </q-item-label>
+                                </q-item-section>
                             </q-item>
                             <q-separator inset />
 

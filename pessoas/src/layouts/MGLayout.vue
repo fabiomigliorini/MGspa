@@ -12,7 +12,6 @@
         <q-toolbar-title>
           <slot name="tituloPagina"></slot>
         </q-toolbar-title>
-        <q-space />
 
         <!-- <q-btn round dense flat color="white" icon="notifications">
             <q-badge color="red" text-color="white" floating>

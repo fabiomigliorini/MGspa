@@ -1,81 +1,59 @@
 <template>
     <q-btn flat color="blue-grey" icon="apps">
-        <q-tooltip transition-show="rotate" transition-hide="rotate">
-            Menu
-        </q-tooltip>
-        <q-menu transition-show="rotate" transition-hide="rotate">
-            <div class="row q-pt-md">
-                <div class="col-6">
-                    <q-list float dense>
-                        <q-item :to="{ name: 'inicio' }" active-class="q-item-no-link-highlighting">
-                            <q-icon name="start" size="25px" class="q-pr-sm" />
-                            <q-item-label>Início</q-item-label>
-                        </q-item>
 
-                        <q-item :to="{ name: 'notafiscaldash' }">
-                            <q-icon name="receipt" size="25px" class="q-pr-sm" />
-                            <q-item-label>Notas</q-item-label>
-                        </q-item>
-                    </q-list>
-                    <q-list float dense>
-                        <q-item :to="{ name: 'grupoeconomicoindex' }">
-                            <q-icon name="groups" size="25px" class="q-pr-sm" />
-                            <q-item-label>Grupo Econômico</q-item-label>
-                        </q-item>
-                    </q-list>
-                </div>
+        <q-menu transition-show="fade" transition-hide="fade" class="bg-blue-grey text-yellow-6 ">
 
-                <div class="col-6">
-                    <q-list float dense>
-                        <q-item :to="{ name: 'pessoa' }">
-                            <q-icon name="people" size="25px" class="q-pr-sm" />
-                            <q-item-label>Pessoas</q-item-label>
-                        </q-item>
-
-                        <q-item v-if="user.verificaPermissaoUsuario('Administrador')" :to="{ name: 'usuarios' }">
-                            <q-icon name="admin_panel_settings" size="25px" class="q-pr-sm" />
-                            <q-item-label>Usuários</q-item-label>
-                        </q-item>
-                    </q-list>
-
-                    <q-list float dense v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-                        <q-item :to="'/ferias/' + moment().year()">
-                            <q-icon name="holiday_village" size="25px" class="q-pr-sm" />
-                            <q-item-label>Férias</q-item-label>
-                        </q-item>
-                    </q-list>
-                </div>
-
-                <div class="col-6" v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-                    <q-list float dense>
-                        <q-item :to="{ name: 'cargosindex' }">
-                            <q-icon name="work" size="25px" class="q-pr-sm" />
-                            <q-item-label>Cargos</q-item-label>
-                        </q-item>
-                    </q-list>
-                </div>
-
-                <div class="col-6">
-                    <q-list float dense>
-                        <q-item :to="{ name: 'aniversariosindex' }"> 
-                            <q-icon name="celebration" size="25px" class="q-pr-sm" />
-                            <q-item-label>Aniversários</q-item-label>
-                        </q-item>
-                    </q-list>
-
-
-                </div>
-
-                <div class="col-6">
-                    <q-list float dense v-if="user.verificaPermissaoUsuario('Administrador')">
-                        <q-item :to="{ name: 'grupousuarios' }"> 
-                            <q-icon name="admin_panel_settings" size="25px" class="q-pr-sm" />
-                            <q-item-label>Grupo Usuários</q-item-label>
-                        </q-item>
-                    </q-list>
-                </div>
-
+            <div class="row q-col-gutter-md q-py-sm q-px-lg">
+                <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'pessoa' }">
+                    <q-icon name="person" size="35px" />
+                    <div>Pessoas</div>
+                </q-btn>
+                <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'grupoeconomicoindex' }">
+                    <q-icon name="apartment" size="35px" />
+                    <div>Grupo Econômico</div>
+                </q-btn>
+                <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'aniversariosindex' }">
+                    <q-icon name="celebration" size="35px" />
+                    <div>Aniversários</div>
+                </q-btn>
+                <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'notafiscaldash' }">
+                    <q-icon name="receipt" size="35px" />
+                    <div>Notas</div>
+                </q-btn>
             </div>
+
+            <template v-if="user.verificaPermissaoUsuario('Administrador')">
+                <!-- <hr class="q-mx-md"> -->
+                <q-separator inset color="yelllow-6" />
+
+                <div class="row q-col-gutter-md q-py-sm q-px-lg">
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'usuarios' }">
+                        <q-icon name="admin_panel_settings" size="35px" />
+                        <div>Usuários</div>
+                    </q-btn>
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'grupousuarios' }">
+                        <q-icon name="groups" size="35px" />
+                        <div>Grupo Usuários</div>
+                    </q-btn>
+                </div>
+            </template>
+
+            <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
+                <!-- <hr class="q-mx-md"> -->
+                <q-separator inset color="yelllow-6" />
+
+                <div class="row q-col-gutter-md q-py-sm q-px-lg">
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="'/ferias/' + moment().year()">
+                        <q-icon name="hotel" size="35px" />
+                        <div>Férias</div>
+                    </q-btn>
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'cargosindex' }">
+                        <q-icon name="work" size="35px" />
+                        <div>Cargos</div>
+                    </q-btn>
+                </div>
+            </template>
+
         </q-menu>
     </q-btn>
 </template>

@@ -307,7 +307,6 @@ export default defineComponent({
     async mounted() {
         await this.sGrupoUsuario.getGrupoUsuarioDetalhes(this.route.params.codgrupousuario)
 
-        console.log(this.sGrupoUsuario.detalheGrupoUsuarios)
     }
 })
 </script>
