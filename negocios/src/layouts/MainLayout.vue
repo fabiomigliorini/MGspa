@@ -2,7 +2,6 @@
 import { ref } from "vue";
 import LeftDrawer from "components/LeftDrawer.vue";
 import RightDrawer from "components/RightDrawer.vue";
-import ComputerSettings from "components/ComputerSettings.vue";
 import UsuarioConectado from "components/UsuarioConectado.vue";
 import { version } from "../../package.json";
 
@@ -31,13 +30,19 @@ const toggleRightDrawer = () => {
         </q-toolbar-title>
         <div class="gt-xs q-mr-sm">v{{ version }}</div>
 
-        // TODO: criar componente para usar nos dois layouts
+        <!-- TODO: criar componente para usar nos dois layouts -->
         <usuario-conectado />
         &nbsp;
-        <computer-settings />
+        <q-btn to="/config/padrao" round icon="settings" flat />
         &nbsp;
 
-        <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
+        <q-btn
+          dense
+          flat
+          round
+          icon="attach_money"
+          @click="toggleRightDrawer"
+        />
       </q-toolbar>
       <!-- <q-tabs align="left">
         <q-route-tab to="/page1" label="Page One" />

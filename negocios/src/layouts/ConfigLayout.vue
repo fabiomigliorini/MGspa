@@ -2,7 +2,6 @@
 import { ref } from "vue";
 import ConfigLeftDrawer from "components/ConfigLeftDrawer.vue";
 // import RightDrawer from "components/RightDrawer.vue";
-import ComputerSettings from "components/ComputerSettings.vue";
 import UsuarioConectado from "components/UsuarioConectado.vue";
 import { version } from "../../package.json";
 
@@ -33,7 +32,7 @@ const toggleLeftDrawer = () => {
 
         <usuario-conectado />
         &nbsp;
-        <computer-settings />
+        <q-btn to="/" round icon="point_of_sale" flat />
         &nbsp;
 
         <!-- <q-btn dense flat round icon="menu" @click="toggleRightDrawer" /> -->
