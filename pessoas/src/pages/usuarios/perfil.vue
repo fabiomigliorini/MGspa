@@ -24,7 +24,7 @@
                                             sUsuario.detalheUsuarios.usuario }}</span>
                                     </q-item-label>
                                 </q-item-section>
-                                
+
                                 <q-item-section>
                                     <q-item-label>
                                         <q-toolbar>
@@ -163,7 +163,7 @@
                                         </q-item-section>
                                         <q-item-section top>
                                             <q-item-label>
-                                                <q-input outlined v-model="modelPerfilUsuario.senha_antiga"
+                                                <q-input outlined v-model="modelPerfilUsuario.senha_antiga" :rules="[antigaValida]"
                                                     label="Senha antiga" :type="isPwd ? 'password' : 'text'">
                                                     <template v-slot:append>
                                                         <q-icon :name="isPwd ? 'visibility_off' : 'visibility'"
@@ -181,7 +181,7 @@
                                         <q-item-section top>
                                             <q-item-label>
                                                 <q-input outlined v-model="modelPerfilUsuario.senha" label="Nova Senha"
-                                                    :type="isPwd ? 'password' : 'text'">
+                                                    :type="isPwd ? 'password' : 'text'" :rules="[senhaValida]">
 
                                                     <template v-slot:append>
                                                         <q-icon :name="isPwd ? 'visibility_off' : 'visibility'"
@@ -199,7 +199,8 @@
                                         <q-item-section top>
                                             <q-item-label>
                                                 <q-input outlined v-model="modelPerfilUsuario.senha_confirmacao"
-                                                    label="Confirmar nova senha" :type="isPwd ? 'password' : 'text'">
+                                                    label="Confirmar nova senha" :rules="[confirmacaoValida]"
+                                                    :type="isPwd ? 'password' : 'text'">
 
                                                     <template v-slot:append>
                                                         <q-icon :name="isPwd ? 'visibility_off' : 'visibility'"
@@ -241,10 +242,8 @@ moment.locale("pt-br");
 export default defineComponent({
     name: "perfil",
 
-
     components: {
         MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-
     },
 
     methods: {
@@ -266,7 +265,30 @@ export default defineComponent({
 
         },
 
+        antigaValida(val) {
+            return true;
+        },
+
+        senhaValida(val) {
+            if (String(val).length < 8) {
+                return 'No mínimo 8 caracteres!'
+            }
+            const senhavalidaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/
+            if (!senhavalidaRegex.test(val)) {
+                return 'A senha deve conter pelo menos uma letra maiuscula, minuscula e um numero!'
+            }
+            return true;
+        },
+
+        confirmacaoValida(val) {
+            if (this.modelPerfilUsuario.senha != val) {
+                return 'Senhas não batem!'
+            }
+            return true;
+        },
+
         async salvar() {
+            console.log('entrou');
 
             try {
                 if (!this.modelPerfilUsuario.senha_antiga) {
@@ -284,7 +306,7 @@ export default defineComponent({
                         color: 'green-5',
                         textColor: 'white',
                         icon: 'done',
-                        message: 'Usuário alterado!'
+                        message: 'Senha alterada!'
                     })
                     this.dialogAlterarSenha = false
                 }
@@ -331,6 +353,9 @@ export default defineComponent({
         const user = guardaToken()
         const modelPerfilUsuario = ref({})
         const dialogAlterarSenha = ref(false)
+
+
+
 
         return {
             formapagamento: ref({}),

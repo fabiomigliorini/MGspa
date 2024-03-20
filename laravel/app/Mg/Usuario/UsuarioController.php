@@ -21,7 +21,7 @@ class UsuarioController extends MgController
     {
         list($filter, $sort, $fields) = $this->filtros($request);
         $qry = UsuarioService::pesquisar($filter, $sort, $fields)->with('Imagem');
-        $res = $qry->paginate()->appends($request->all());
+        $res = $qry->orderBy('usuario', 'asc')->paginate()->appends($request->all());
 
         return UsuarioResource::collection($res);
     }
@@ -264,5 +264,15 @@ class UsuarioController extends MgController
     {
        $usuario =  UsuarioService::create($request->all());
        return new UsuarioResource($usuario);
+    }
+
+    public function resetSenha($codusuario)
+    {
+
+        $usuario = Usuario::findOrFail($codusuario);
+
+        $resetSenha = UsuarioService::resetarSenha($usuario);
+
+        return response()->json($resetSenha, 200);
     }
 }

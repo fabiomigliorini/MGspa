@@ -8,6 +8,7 @@ export const pessoaStore = defineStore('pessoa', {
     paths:[
       'arrPessoas',
       'filtroPesquisa',
+      'urlRetorno'
       // 'item',
       // 'counter',
     ]
@@ -31,7 +32,8 @@ export const pessoaStore = defineStore('pessoa', {
       page: 1,
       per_page: 108
     },
-    desativaScrollnoFiltro: ref(false)
+    desativaScrollnoFiltro: ref(false),
+    urlRetorno: []
   }),
 
   actions: {

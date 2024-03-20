@@ -13,21 +13,6 @@
           <slot name="tituloPagina"></slot>
         </q-toolbar-title>
 
-        <!-- <q-btn round dense flat color="white" icon="notifications">
-            <q-badge color="red" text-color="white" floating>
-              0
-            </q-badge>
-            <q-menu
-            >
-              <q-list style="min-width: 100px">
-                <q-card class="text-center no-shadow no-border">
-                  <q-btn label="Ver tudo" style="max-width: 120px !important;" flat dense
-                         class="text-indigo-8"></q-btn>
-                </q-card>
-              </q-list>
-            </q-menu>
-          </q-btn> -->
-
         <!-- Renderiza o menu -->
         <mg-menu></mg-menu>
 
@@ -118,7 +103,7 @@ export default defineComponent({
       },
       Deslogar
     }
-  }
+  },
 })
 </script>
 

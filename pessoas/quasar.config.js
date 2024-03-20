@@ -184,13 +184,13 @@ module.exports = configure(function (ctx) {
 
 
       manifest: {
-        name: `MGpwa`,
-        short_name: `MGpwa`,
-        description: `MGpwa`,
+        name: `Pessoas`,
+        short_name: `MGPessoa`,
+        description: `Pessoas`,
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#ffffff',
-        theme_color: '#027be3',
+        theme_color: '#FFFF00',
         icons: [
           {
             src: 'icons/icon-128x128.png',

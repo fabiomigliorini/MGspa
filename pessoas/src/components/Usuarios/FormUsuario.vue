@@ -1,5 +1,6 @@
 <template>
   <q-form @submit="submit()">
+    <!-- <pre>{{ this.sUsuario.detalheUsuarios }}</pre> -->
     <q-card bordered class="q-ma-md">
       <q-card-section>
         <q-item v-if="codusuario">
@@ -43,10 +44,10 @@
                 </div>
                 <div class="col-7">
                   <select-filial outlined label="Filial" v-model="model.codfilial" :rules="[
-                (val) =>
-                  (val !== null && val !== '' && val !== undefined) ||
-                  'Filial Obrigatório',
-              ]"></select-filial>
+    (val) =>
+      (val !== null && val !== '' && val !== undefined) ||
+      'Filial Obrigatório',
+  ]"></select-filial>
                 </div>
               </div>
             </q-item-label>
@@ -60,10 +61,10 @@
             <q-item-label>
               <select-pessoa-usuario outlined label="Pessoa" :modelcod-pessoa="model.codpessoa"
                 v-model="model.codpessoa" :rules="[
-                    (val) =>
-                      (val !== null && val !== '' && val !== undefined) ||
-                      'Pessoa Obrigatória',
-                  ]"></select-pessoa-usuario>
+    (val) =>
+      (val !== null && val !== '' && val !== undefined) ||
+      'Pessoa Obrigatória',
+  ]"></select-pessoa-usuario>
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -294,20 +295,26 @@ export default defineComponent({
     }
 
     var existe = false;
+    var permGrupo = {};
+    var codsfiliais = [];
     this.grupos.forEach((grupo) => {
       this.model.permissoes[grupo.codgrupousuario] = {};
       this.filiais.forEach((filial) => {
+        existe = false;
         if (this.codusuario) {
-          existe = this.sUsuario.detalheUsuarios.permissoes.some((p) => {
-            return p.codfilial == filial.codfilial && p.codgrupousuario == grupo.codgrupousuario
+          permGrupo = this.sUsuario.detalheUsuarios.permissoes.find((g) => {
+            return g.codgrupousuario == grupo.codgrupousuario
           });
+          if (permGrupo) {
+            existe = permGrupo.filiais.some((f) => {
+              return f.codfilial == filial.codfilial
+            })
+          }
         }
         this.model.permissoes[grupo.codgrupousuario][filial.codfilial] = existe;
       })
     })
-
   }
-
 })
 </script>
 

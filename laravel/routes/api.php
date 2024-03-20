@@ -449,6 +449,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::put('usuario/{id}/grupos-usuarios', '\Mg\Usuario\UsuarioController@gruposAdicionarERemover');
         Route::post('usuario/criar', '\Mg\Usuario\UsuarioController@novoUsuario');
 
+        Route::get('usuario/{id}/reset-senha', '\Mg\Usuario\UsuarioController@resetSenha');
 
         
         Route::post('usuario/{id}/inativo', '\Mg\Usuario\UsuarioController@inativar')->name('usuario.inativar');

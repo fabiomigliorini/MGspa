@@ -76,6 +76,11 @@ export const usuarioStore = defineStore("usuario", {
     async postUsuario(model) {
       const ret = await api.post('v1/usuario/criar', model)
       return ret;
+    },
+
+    async resetarSenha(codusuario) {
+      const ret = await api.get('v1/usuario/' + codusuario +'/reset-senha')
+      return ret;
     }
 
   },

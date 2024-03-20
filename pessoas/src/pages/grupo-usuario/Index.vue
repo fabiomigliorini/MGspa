@@ -8,7 +8,7 @@
             <q-infinite-scroll @load="scrollGrupoUsuario" :disable="loading">
                 <q-separator />
                 <div class="row q-pa-md q-col-gutter-md">
-                    <div class="xs-12 col-sm-6 col-md-4 col-lg-3" v-for="grupoUsuario in sGrupoUsuario.grupoUsuarios"
+                    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" v-for="grupoUsuario in sGrupoUsuario.grupoUsuarios"
                         v-bind:key="grupoUsuario.codgrupousuario">
                         <q-card class="no-shadow cursor-pointer" bordered>
                             
@@ -17,7 +17,7 @@
 
                                     <q-card-section class="text-center">
                                         <q-avatar size="100px" class="shadow-10">
-                                            <q-icon name="groups_3" color="primary" />
+                                            <q-icon name="groups" color="primary" />
                                         </q-avatar>
                                     </q-card-section>
 
