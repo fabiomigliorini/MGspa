@@ -41,9 +41,6 @@ watch(
   () => props.codestoquelocal,
   (newValue, oldValue) => {
     buscarOpcoes();
-    if (newValue != oldValue) {
-      alterar(null);
-    }
   }
 );
 

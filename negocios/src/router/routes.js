@@ -17,15 +17,11 @@ const routes = [
     ],
   },
   {
-    path: "/",
+    path: "/config",
     component: () => import("layouts/ConfigLayout.vue"),
     children: [
-      { path: "/pdv/", component: () => import("pages/PdvPage.vue") },
-      {
-        path: "/pdv/:codpdv",
-        name: "pdv",
-        component: () => import("pages/PdvViewPage.vue"),
-      },
+      { path: "padrao/", component: () => import("pages/PadraoPage.vue") },
+      { path: "pdv/", component: () => import("pages/PdvPage.vue") },
     ],
   },
 
