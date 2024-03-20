@@ -14,10 +14,12 @@
                             <q-tab name="fornecedor" label="Fornecedor" />
                         </q-tabs>
 
-                        <div class="row q-gutter-md q-pa-md flex flex-center">
-                            <q-date v-model="date" :options="events" event-color="orange" />
+                        <div class="row q-gutter-md q-pa-md">
+                            <div class="col-xs-12 col-md-6 flex flex-center">
+                                <q-date v-model="date" :options="events" event-color="orange" />
+                            </div>
                             <div v-for="aniversario, i in aniversariosDoDia" v-bind:key="i">
-                                <div class="col-3">
+                                <div class="col-xs-12 col-md-2 col-lg-4">
                                     <q-card>
                                         <q-card-section>
                                             <q-item>
@@ -29,9 +31,16 @@
                                                         </div>
                                                     </q-item-label>
                                                     <q-item-label>
-                                                        <q-icon name="celebration" color="blue" />&nbsp; 
-                                                        {{
-                                                     aniversario.idade }} Anos de {{ aniversario.tipo }}
+                                                        <q-icon name="celebration" color="blue" />&nbsp;
+                                                        {{ aniversario.idade }}
+                                                        <span v-if="aniversarios.idade == 1">
+                                                            Ano
+                                                        </span>
+                                                        <span v-else>
+                                                            Anos
+                                                        </span>
+                                                        de
+                                                        {{ aniversario.tipo }}
                                                     </q-item-label>
                                                     <q-item-label>
                                                         <q-icon name="people" color="blue" />&nbsp;
@@ -58,16 +67,23 @@
                                     <template v-slot:body="aniversarios">
 
                                         <q-tr :props="aniversarios">
-                                    
                                             <q-td key="data" :props="aniversarios">
                                                 {{ moment(aniversarios.row.data).format('ddd, D/MMM') }}
                                             </q-td>
-                                            <q-td key="pessoa" :props="aniversarios" class="cursor-pointer"
-                                                @click="pessoa(aniversarios.row.codpessoa)">
-                                                {{ aniversarios.row.pessoa }}
+                                            <q-td key="pessoa" :props="aniversarios">
+                                                <q-btn :to="'/pessoa/' + aniversarios.row.codpessoa"
+                                                    :label="aniversarios.row.pessoa" flat dense />
                                             </q-td>
                                             <q-td key="idade" :props="aniversarios">
-                                                {{ aniversarios.row.idade }} Anos de idade
+                                                {{ aniversarios.row.idade }}
+                                                <span v-if="aniversarios.row.idade == 1">
+                                                    Ano
+                                                </span>
+                                                <span v-else>
+                                                    Anos
+                                                </span>
+                                                de
+                                                {{ aniversarios.row.tipo }}
                                             </q-td>
                                         </q-tr>
                                     </template>
@@ -106,12 +122,6 @@ export default defineComponent({
 
     methods: {
 
-        pessoa(codpessoa) {
-            var a = document.createElement('a');
-            a.target = "_blank";
-            a.href = "/#/pessoa/" + codpessoa
-            a.click();
-        },
 
         async getAniversarios() {
 
@@ -142,58 +152,6 @@ export default defineComponent({
             this.events = dates
 
         },
-
-        async publishSubscribe() {
-
-            var extras = {
-                push: {
-                    notification: {
-                        title: 'Hello from Ably!',
-                        body: 'Teste notificação Push'
-                    },
-                    data: {
-                        foo: 'bar',
-                        baz: 'qux'
-                    }
-                }
-            };
-
-            // Connect to Ably with your API key
-            const ably = new Ably.Rest.Promise("OnmSpw.hJFWXQ:LufpHd1sCEkx0XtctIww739NwQTsIG3SXLrzslwhMww")
-
-            // ably.connection.once("connected", () => {
-            //     console.log("Connected to Ably!")
-            // })
-
-            // Create a channel called 'get-started' and register a listener to subscribe to all messages with the name 'first'
-            const channel = ably.channels.get("OnmSpw")
-
-            console.log(channel);
-            console.log(ably)
-
-            // await channel.subscribe("first", (message) => {
-            //     console.log("Message received: " + message.data)
-            // });
-
-            // Publish a message with the name 'first' and the contents 'Here is my first message!'
-            //    const teste = await channel.publish("first", "Here is my first message!")
-            const teste = await channel.publish({ name: 'example', data: 'data', extras: extras }, function (err) {
-
-                if (err) {
-                    console.log('erro', err)
-                    return
-                }
-
-                console.log('push enviado')
-            });
-            // Close the connection to Ably after a 5 second delay
-            // setTimeout(async () => {
-            //     ably.connection.close();
-            //     await ably.connection.once("closed", function () {
-            //         console.log("Closed the connection to Ably.")
-            //     });
-            // }, 5000);
-        }
 
     },
 
@@ -232,10 +190,6 @@ export default defineComponent({
     },
     async mounted() {
         this.getAniversarios()
-
-
-        // this.publishSubscribe();
-
     }
 
 })

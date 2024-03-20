@@ -53,7 +53,8 @@ export const guardaToken = defineStore('auth', () => {
     // initialize state from local storage to enable user to stay logged in
     user: JSON.parse(localStorage.getItem('usuario')),
     returnUrl: null,
-    usuarioLogado: {}
+    usuarioLogado: {},
+    urlRetorno: {}
   })
 
   const token = ref(localStorage.getItem('access_token'))

@@ -32,11 +32,13 @@
               </q-tooltip>
             </q-btn>
 
+            <q-btn color="primary" label="Resetar Senha" @click="resetarSenha(sUsuario.detalheUsuarios.codusuario)" />
+
           </q-item-label>
           <q-item-label v-if="sUsuario.detalheUsuarios.inativo">
             Inativo
           </q-item-label>
-          <q-item-label caption>
+          <q-item-label caption v-if="sUsuario.detalheUsuarios.inativo">
             {{ moment(sUsuario.detalheUsuarios.inativo).format('DD/MM/YYYY hh:mm') }}
           </q-item-label>
         </q-item-label>
@@ -157,6 +159,42 @@ export default defineComponent({
   name: "CardUsuarioDetalhes",
 
   methods: {
+
+    resetarSenha(codusuario) {
+
+      this.$q.dialog({
+        title: 'Reset de senha',
+        message: 'Tem certeza que deseja resetar a senha desse usuário ?',
+        cancel: true,
+      }).onOk(async () => {
+        try {
+          const ret = await this.sUsuario.resetarSenha(codusuario)
+          console.log(ret)
+          if (ret.data) {
+
+            this.$q.dialog({
+              title: 'Senha gerada',
+              message: 'A nova senha é: <b class="text-h6">' + ret.data + '</b>',
+              html: true
+            }).onOk(() => {
+              // console.log('OK')
+            }).onCancel(() => {
+              // console.log('Cancel')
+            }).onDismiss(() => {
+              // console.log('I am triggered on both OK and Cancel')
+            })
+          }
+        } catch (error) {
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'warning',
+            message: error.response.data.message
+          })
+        }
+      })
+
+    },
 
     primeiraLetra(fantasia) {
       if (fantasia.charAt(0) == ' ') {

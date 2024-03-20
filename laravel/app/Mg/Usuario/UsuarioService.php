@@ -95,4 +95,19 @@ class UsuarioService extends MgService
     }
 
 
+    public static function resetarSenha($usuario)
+    {
+
+        $pwd = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 8);
+
+        $usuario->fill([
+            'senha' => $pwd
+        ]);
+        $usuario->senha = bcrypt($usuario->senha);
+
+        $usuario->update();
+
+        return $pwd;
+
+    }
 }

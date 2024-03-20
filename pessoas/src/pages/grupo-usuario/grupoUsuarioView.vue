@@ -14,7 +14,7 @@
             <q-card bordered class="col-12 q-ma-md">
                 <q-item>
                     <q-toolbar class="text-black">
-                        <q-avatar color="primary" size="100px" text-color="white" icon="shield"></q-avatar>
+                        <q-avatar color="primary" size="100px" text-color="white" icon="groups"></q-avatar>
                         <q-item class="q-subtitle-1 q-pl-md">
                             <q-item-section>
                                 <q-item-label header lines="1" class="text-h4 text-weight-bold"

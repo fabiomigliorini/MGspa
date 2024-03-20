@@ -8,22 +8,27 @@
             <q-infinite-scroll @load="scrollUsuario" :disable="loading">
                 <q-separator />
                 <div class="row q-pa-md q-col-gutter-md">
-                    <div class="xs-12 col-sm-6 col-md-4 col-lg-3" v-for="usuario in sUsuario.usuarios"
+                    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" v-for="usuario in sUsuario.usuarios"
                         v-bind:key="usuario.codusuario">
                         <q-card class="no-shadow cursor-pointer" bordered>
                             <q-list>
                                 <q-item :to="'/usuarios/' + usuario.codusuario">
 
-                                    <q-card-section class="text-center">
-                                        <q-avatar size="100px" class="shadow-10">
-                                            <q-icon name="people" color="primary" />
+                                    <q-item-section avatar v-if="usuario.usuario">
+                                        <q-avatar color="primary" class="q-my-md" size="40px" text-color="white">
+                                            {{ primeiraLetra(usuario.usuario) }}
                                         </q-avatar>
-                                    </q-card-section>
-
+                                    </q-item-section>
                                     <q-card-section>
                                         <q-item-label :class="usuario.inativo ? 'text-strike text-red-14' : null">
                                             {{ usuario.usuario }}
-
+                                        </q-item-label>
+                                        <q-item-label v-if="usuario.Pessoa" caption>
+                                            {{ usuario.Pessoa.pessoa }}
+                                        </q-item-label>
+                                        <q-item-label v-for="permissao in usuario.permissoes" caption
+                                            v-bind:key="permissao.codgrupousuario">
+                                            {{ permissao.grupousuario }}
                                         </q-item-label>
                                     </q-card-section>
                                 </q-item>
@@ -84,6 +89,15 @@ export default defineComponent({
             import("components/NaoAutorizado.vue")
         ),
     },
+    methods: {
+        primeiraLetra(usuario) {
+            if (usuario.charAt(0) == ' ') {
+                return usuario.charAt(1)
+            }
+            return usuario.charAt(0)
+        },
+
+    },
 
     setup() {
         const sUsuario = usuarioStore()
@@ -133,8 +147,8 @@ export default defineComponent({
             async scrollUsuario(index, done) {
                 loading.value = true;
                 // $q.loadingBar.start()
-                sUsuario.filtroUsuarioPesquisa.page++;
                 const ret = await sUsuario.todosUsuarios();
+                sUsuario.filtroUsuarioPesquisa.page++;
                 loading.value = false
                 // $q.loadingBar.stop()
                 if (ret.data.data.length == 0) {

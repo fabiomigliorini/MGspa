@@ -25,12 +25,12 @@ class UsuarioResource extends JsonResource
 
         $guus = GrupoUsuarioUsuario::with(['grupousuario' => function ($query) {
         }])->where('codusuario', $this->codusuario)->orderBy('codfilial')->get();
-       
+
         $usuarios = collect([]);
 
         // percorre os relacionamentos
         foreach ($guus as $guu) {
-        
+
             // se e a primeira vez que passa pelo grupo do usuario
             if (!isset($usuarios[$guu->codgrupousuario])) {
                 $usuarios[$guu->codgrupousuario] = (object) [
@@ -41,6 +41,7 @@ class UsuarioResource extends JsonResource
                 ];
             }
 
+
             // adiciona a filial
             $usuarios[$guu->codgrupousuario]->filiais[] = [
                 'codfilial' => $guu->codfilial,
@@ -50,7 +51,9 @@ class UsuarioResource extends JsonResource
 
         $ret['permissoes'] = $usuarios->sortBy('grupousuario', SORT_NATURAL | SORT_FLAG_CASE)->toArray();
 
-        $ret['filial'] = $this->Filial->filial;
+        if ($this->codfilial) {
+            $ret['filial'] = $this->Filial->filial;
+        }
         return $ret;
     }
 }
