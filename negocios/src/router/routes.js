@@ -24,6 +24,14 @@ const routes = [
       { path: "pdv/", component: () => import("pages/PdvPage.vue") },
     ],
   },
+  {
+    path: "/listagem",
+    component: () => import("layouts/ListagemLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/ListagemPage.vue") },
+      // { path: "pdv/", component: () => import("pages/PdvPage.vue") },
+    ],
+  },
 
   // Always leave this as last one,
   // but you can also remove it

@@ -5,6 +5,7 @@ namespace Mg\Pdv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Negocio\NegocioResource;
+use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\PagarMe\PagarMePedidoResource;
@@ -44,28 +45,28 @@ class PdvController
         return new PdvResource($pdv);
     }
 
-    public static function autorizar($codpdv) 
+    public static function autorizar($codpdv)
     {
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::autorizar($pdv);
         return new PdvResource($pdv);
     }
 
-    public static function desautorizar($codpdv) 
+    public static function desautorizar($codpdv)
     {
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::desautorizar($pdv);
         return new PdvResource($pdv);
     }
-    
-    public static function inativar($codpdv) 
+
+    public static function inativar($codpdv)
     {
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::inativar($pdv);
         return new PdvResource($pdv);
     }
 
-    public static function reativar($codpdv) 
+    public static function reativar($codpdv)
     {
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::reativar($pdv);
@@ -141,7 +142,7 @@ class PdvController
                 'string',
                 'min:15',
             ]
-        ]);        
+        ]);
         $negocio = Negocio::findOrFail($codnegocio);
         $negocio = PdvNegocioService::cancelar($negocio, $pdv, $request->justificativa);
         DB::commit();
@@ -157,6 +158,75 @@ class PdvController
             $negocio = Negocio::findOrFail($codnegocio);
         }
         return new NegocioResource($negocio);
+    }
+
+    public function getNegocios(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+
+        $qry = Negocio::query();
+
+        foreach ($request->all() as $filtro => $valor) {
+            switch ($filtro) {
+                case 'lancamento_de':
+                    $qry->where('lancamento', '>=', $valor);
+                    break;
+                case 'lancamento_ate':
+                    $qry->where('lancamento', '<=', $valor);
+                    break;
+                case 'codnegocio':
+                    $qry->where('codnegocio', $valor);
+                    break;
+                case 'codestoquelocal':
+                    $qry->where('codestoquelocal', $valor);
+                    break;
+                case 'codnegociostatus':
+                    $qry->where('codnegociostatus', $valor);
+                    break;
+                case 'codnaturezaoperacao':
+                    $qry->where('codnaturezaoperacao', $valor);
+                    break;
+                case 'codpessoa':
+                    $qry->where('codpessoa', $valor);
+                    break;
+                case 'codpessoavendedor':
+                    $qry->where('codpessoavendedor', $valor);
+                    break;
+                case 'codpessoatransportador':
+                    $qry->where('codpessoatransportador', $valor);
+                    break;
+                case 'codpdv':
+                    $qry->where('codpdv', $valor);
+                    break;
+                case 'codusuario':
+                    $qry->where('codusuario', $valor);
+                    break;
+                case 'integracao':
+                    if (sizeof($valor) == 2) {
+                        // se todos nao precisa fazer nenhum filtro
+                        break;
+                    }
+                    $integracao = ($valor[0] != 'Manual');
+                    $qry->whereIn('codnegocio', function ($query) use ($integracao) {
+                        $query->select('codnegocio')
+                            ->from('tblnegocioformapagamento')
+                            ->whereRaw('tblnegocioformapagamento.codnegocio = tblnegocio.codnegocio')
+                            ->where('integracao', $integracao);
+                    });    
+                    break;
+                case 'pagamento':
+                    if (sizeof($valor) == 4) {
+                        // se todos nao precisa fazer nenhum filtro
+                        break;
+                    }
+                    break;
+                case 'pdv':
+                    break;
+                default:
+                    break;
+            }
+        }
+        return NegocioListagemResource::collection($qry->paginate(100));
     }
 
     public function fecharNegocio(PdvRequest $request, $codnegocio)
@@ -221,13 +291,12 @@ class PdvController
         return new PagarMePedidoResource($pedido);
     }
 
-    public function  notaFiscal(PdvRequest $request, $codnegocio) 
+    public function  notaFiscal(PdvRequest $request, $codnegocio)
     {
         PdvService::autoriza($request->pdv);
-        $modelo = intval($request->modelo??65);
+        $modelo = intval($request->modelo ?? 65);
         $negocio = Negocio::findOrFail($request->codnegocio);
         NotaFiscalService::gerarNotaFiscalDoNegocio($negocio, $modelo);
         return new NegocioResource($negocio);
     }
-
 }

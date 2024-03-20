@@ -1,7 +1,9 @@
 MANDATORY:
-TODO fazer tela para gerenciar cadastro dos PDVs autorizados
+TODO Editar Nome do PDV
 TODO Navegacao Negocios Fechados com opcao abrir
 TODO Comanda
+
+PODE SER DEPOIS DE 1/ABRIL
 TODO fazer baixa de vales automaticamente
 TODO fazer devolucao
 TODO Tela/Bordero Totais do dia C/Detalhamento
@@ -22,6 +24,7 @@ TODO dar permissoes para receber em dinheiro somente para grupo de Caixas/Gerent
 TODO fazer venda de vale compras
 TODO fazer liquidacao de titulo
 TODO prancheta de pesquisa de produtos sem codigo (substituir pranchetas impressas)
+TODO Controle de permissoes (Autorização de Dispositivos / Cancelar Negocio)
 
 [X] romaneio em impressora termica
 [X] colocar link para cadastro do produto
@@ -48,3 +51,4 @@ TODO prancheta de pesquisa de produtos sem codigo (substituir pranchetas impress
 [X] FIXME nao gerar fechamento com itens inativos
 [X] TODO Cancelamento de Negocio
 [X] TODO Mostrar se titulo Estornado
+[X] TODO fazer tela para gerenciar cadastro dos PDVs autorizados

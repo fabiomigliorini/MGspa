@@ -4,7 +4,7 @@ import { Notify } from "quasar";
 
 export const pdvStore = defineStore("pdv", {
   state: () => ({
-    dispositivos: {},
+    dispositivos: [],
   }),
 
   actions: {
@@ -125,6 +125,15 @@ export const pdvStore = defineStore("pdv", {
         });
         return false;
       }
+    },
+
+    async findByUuid(uuid) {
+      if (this.dispositivos.length == 0) {
+        await this.getDispositivos();
+      }
+      return this.dispositivos.find((el) => {
+        return (el.uuid = uuid);
+      });
     },
   },
 });

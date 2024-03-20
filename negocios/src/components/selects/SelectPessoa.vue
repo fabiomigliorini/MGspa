@@ -12,6 +12,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  somenteVendedores: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -23,7 +27,11 @@ const alterar = (value) => {
 };
 
 const buscarPeloCod = async (codpessoa) => {
-  opcoes.value = await db.pessoa.where({ codpessoa: codpessoa }).toArray();
+  if (codpessoa) {
+    opcoes.value = await db.pessoa.where({ codpessoa: codpessoa }).toArray();
+    return;
+  }
+  opcoes.value = [];
 };
 
 watch(
@@ -55,8 +63,15 @@ const pesquisa = (textoPesquisa, update) => {
     // Busca Pessoas baseados na primeira palavra de pesquisa
     var colPessoas = await db.pessoa
       .where("buscaArr")
-      .startsWithIgnoreCase(palavras[0])
-      .and((p) => p.inativo == null);
+      .startsWithIgnoreCase(palavras[0]);
+
+    if (props.somenteAtivos) {
+      colPessoas.and((p) => p.inativo == null);
+    }
+
+    if (props.somenteVendedores) {
+      colPessoas.and((p) => p.vendedor == true);
+    }
 
     // se estiver buscando por mais de uma palavra
     if (palavras.length > 1) {

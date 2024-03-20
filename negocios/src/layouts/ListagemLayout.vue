@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
-import ConfigLeftDrawer from "components/ConfigLeftDrawer.vue";
+import ListagemLeftDrawer from "components/ListagemLeftDrawer.vue";
+import RightDrawer from "components/RightDrawer.vue";
 import UsuarioConectado from "components/UsuarioConectado.vue";
 import { version } from "../../package.json";
 
@@ -21,17 +22,18 @@ const toggleLeftDrawer = () => {
           <q-avatar>
             <img src="MGPapelariaQuadrado.svg" />
           </q-avatar>
-          Configurações
+          Listagem
         </q-toolbar-title>
         <div class="gt-xs q-mr-sm">v{{ version }}</div>
 
+        <!-- TODO: criar componente para usar nos dois layouts -->
         <usuario-conectado />
         <q-btn to="/" round icon="point_of_sale" flat />
       </q-toolbar>
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <config-left-drawer />
+      <Listagem-Left-Drawer />
     </q-drawer>
 
     <q-page-container>
