@@ -132,7 +132,7 @@ export const pdvStore = defineStore("pdv", {
         await this.getDispositivos();
       }
       return this.dispositivos.find((el) => {
-        return (el.uuid = uuid);
+        return el.uuid == uuid;
       });
     },
   },

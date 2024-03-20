@@ -167,7 +167,16 @@ class PdvController
         $qry = Negocio::query();
 
         foreach ($request->all() as $filtro => $valor) {
+            if (empty($valor)) {
+                continue;
+            }
             switch ($filtro) {
+                case 'valor_de':
+                    $qry->where('valortotal', '>=', $valor);
+                    break;
+                case 'valor_ate':
+                    $qry->where('valortotal', '<=', $valor);
+                    break;
                 case 'lancamento_de':
                     $qry->where('lancamento', '>=', $valor);
                     break;
@@ -212,13 +221,15 @@ class PdvController
                             ->from('tblnegocioformapagamento')
                             ->whereRaw('tblnegocioformapagamento.codnegocio = tblnegocio.codnegocio')
                             ->where('integracao', $integracao);
-                    });    
+                    });
                     break;
-                case 'pagamento':
-                    if (sizeof($valor) == 4) {
-                        // se todos nao precisa fazer nenhum filtro
-                        break;
-                    }
+                case 'codformapagamento':
+                    $qry->whereIn('codnegocio', function ($query) use ($valor) {
+                        $query->select('codnegocio')
+                            ->from('tblnegocioformapagamento')
+                            ->whereRaw('tblnegocioformapagamento.codnegocio = tblnegocio.codnegocio')
+                            ->whereIn('codformapagamento', $valor);
+                    });
                     break;
                 case 'pdv':
                     break;

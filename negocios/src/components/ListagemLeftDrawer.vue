@@ -171,6 +171,39 @@ onMounted(() => {
       </q-item-section>
     </q-item>
 
+    <!-- VALOR -->
+    <q-item>
+      <q-item-section>
+        <div class="row q-col-gutter-sm">
+          <q-input
+            outlined
+            type="number"
+            step="0.01"
+            min="0.01"
+            input-class="text-right"
+            v-model="sListagem.filtro.valor_de"
+            :max="sListagem.filtro.valor_ate"
+            label="Valor de"
+            class="col-6"
+            prefix="R$"
+          />
+          <q-input
+            outlined
+            type="number"
+            step="0.01"
+            :min="
+              sListagem.filtro.valor_de > 0 ? sListagem.filtro.valor_de : 0.01
+            "
+            input-class="text-right"
+            v-model="sListagem.filtro.valor_ate"
+            label="até"
+            class="col-6"
+            prefix="R$"
+          />
+        </div>
+      </q-item-section>
+    </q-item>
+
     <!-- NATUREZA -->
     <q-item>
       <q-item-section>
@@ -225,11 +258,13 @@ onMounted(() => {
       <q-item-section>
         <q-select
           outlined
-          v-model="sListagem.filtro.pagamento"
+          v-model="sListagem.filtro.codformapagamento"
           multiple
-          :options="sListagem.opcoes.pagamento"
+          :options="sListagem.opcoes.codformapagamento"
           label="Forma de Pagamento"
           clearable
+          map-options
+          emit-value
         />
       </q-item-section>
     </q-item>
@@ -251,42 +286,3 @@ onMounted(() => {
     <!-- FIM -->
   </q-list>
 </template>
-<!--
-
-
-
-
-
-
-
-
-    <q-separator spaced />
-
-    <q-item-label header>Pagamento</q-item-label>
-
-    <q-item tag="label" v-ripple>
-      <q-item-section>
-        <q-item-label>Integrado</q-item-label>
-      </q-item-section>
-      <q-item-section side>
-        <q-toggle
-          color="blue"
-          v-model="sListagem.filtro.integrado"
-          val="battery"
-        />
-      </q-item-section>
-    </q-item>
-
-    <q-item tag="label" v-ripple>
-      <q-item-section>
-        <q-item-label>Manual</q-item-label>
-      </q-item-section>
-      <q-item-section side>
-        <q-toggle
-          color="blue"
-          v-model="sListagem.filtro.manual"
-          val="battery"
-        />
-      </q-item-section>
-    </q-item>
-  -->

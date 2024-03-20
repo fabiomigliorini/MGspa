@@ -15,7 +15,36 @@ export const listagemStore = defineStore("listagem", {
 
   state: () => ({
     opcoes: {
-      pagamento: ["PIX", "Cartão", "Dinheiro", "Prazo"],
+      codformapagamento: [
+        {
+          label: "Dinheiro",
+          value: process.env.CODFORMAPAGAMENTO_DINHEIRO,
+        },
+        {
+          label: "PIX Chave",
+          value: process.env.CODFORMAPAGAMENTO_PIXCHAVE,
+        },
+        {
+          label: "Cartão Manual",
+          value: process.env.CODFORMAPAGAMENTO_CARTAOMANUAL,
+        },
+        {
+          label: "Entrega",
+          value: process.env.CODFORMAPAGAMENTO_ENTREGA,
+        },
+        {
+          label: "Fechamento",
+          value: process.env.CODFORMAPAGAMENTO_FECHAMENTO,
+        },
+        {
+          label: "Carteira",
+          value: process.env.CODFORMAPAGAMENTO_CARTEIRA,
+        },
+        {
+          label: "Boleto",
+          value: process.env.CODFORMAPAGAMENTO_BOLETO,
+        },
+      ],
       integracao: ["Manual", "Integrado"],
       codnegociostatus: [
         {
@@ -34,7 +63,6 @@ export const listagemStore = defineStore("listagem", {
     },
     filtro: {},
     negocios: [],
-    carregando: true,
     paginacao: {
       current_page: 0,
       from: null,
@@ -64,8 +92,10 @@ export const listagemStore = defineStore("listagem", {
         codpessoatransportador: null,
         codpdv: null,
         codusuario: null,
-        integracao: ["Manual", "Integrado"],
-        pagamento: ["PIX", "Cartão", "Dinheiro", "Prazo"],
+        integracao: [],
+        codformapagamento: [],
+        valor_de: null,
+        valor_ate: null,
       };
       const pdv = await sPdv.findByUuid(sSinc.pdv.uuid);
       if (pdv) {
@@ -78,20 +108,15 @@ export const listagemStore = defineStore("listagem", {
     async getNegocios() {
       this.paginacao.current_page = 0;
       this.paginacao.last_page = 99999;
-      this.negocios = [];
-      this.carregando = false;
+      // this.negocios = [];
       await this.getNegociosPaginacao();
     },
 
     async getNegociosPaginacao() {
-      if (this.carregando) {
-        return;
-      }
       if (this.paginacao.current_page >= this.paginacao.last_page) {
-        return;
+        return false;
       }
       try {
-        this.carregando = true;
         const filtro = { ...this.filtro };
         filtro.pdv = sSinc.pdv.uuid;
         //converte data inicial
@@ -109,16 +134,16 @@ export const listagemStore = defineStore("listagem", {
           filtro.lancamento_ate = null;
         }
         filtro.page = this.paginacao.current_page + 1;
-        console.log(filtro);
         const { data } = await api.get("/api/v1/pdv/negocio", {
           params: filtro,
         });
-        this.negocios = this.negocios.concat(data.data);
+        if (filtro.page == 1) {
+          this.negocios = data.data;
+        } else {
+          this.negocios = this.negocios.concat(data.data);
+        }
         this.paginacao = data.meta;
-        this.carregando = false;
       } catch (error) {
-        this.carregando = false;
-        console.log(error);
         var message = error?.response?.data?.message;
         if (!message) {
           message = error?.message;
