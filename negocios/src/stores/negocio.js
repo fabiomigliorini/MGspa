@@ -27,9 +27,9 @@ export const negocioStore = defineStore("negocio", {
       pagamentoPrazo: false,
     },
     padrao: {
-      codestoquelocal: null,
-      codpessoa: 1,
-      codnaturezaoperacao: null,
+      codestoquelocal: 101001, //Deposito
+      codpessoa: 1, //Consumidor
+      codnaturezaoperacao: 1, //Venda
       impressora: null,
       codpagarmepos: null,
     },

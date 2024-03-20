@@ -226,6 +226,7 @@ class PdvController
                     break;
             }
         }
+        $qry->orderBy('lancamento', 'desc')->orderBy('codnegocio', 'desc');
         return NegocioListagemResource::collection($qry->paginate(100));
     }
 

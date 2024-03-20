@@ -94,17 +94,19 @@ export const listagemStore = defineStore("listagem", {
         this.carregando = true;
         const filtro = { ...this.filtro };
         filtro.pdv = sSinc.pdv.uuid;
-        if (filtro.lancamento_de) {
-          filtro.lancamento_de = moment(
-            filtro.lancamento_de,
-            "DD/MM/YYYY HH:mm"
-          ).format("YYYY-MM-DD HH:mm:SS");
+        //converte data inicial
+        var lanc = moment(filtro.lancamento_de, "DD/MM/YYYY HH:mm", true);
+        if (lanc.isValid()) {
+          filtro.lancamento_de = lanc.format("YYYY-MM-DD HH:mm:SS");
+        } else {
+          filtro.lancamento_de = null;
         }
-        if (filtro.lancamento_ate) {
-          filtro.lancamento_ate = moment(
-            filtro.lancamento_ate,
-            "DD/MM/YYYY HH:mm"
-          ).format("YYYY-MM-DD HH:mm:SS");
+        //converte data final
+        var lanc = moment(filtro.lancamento_ate, "DD/MM/YYYY HH:mm", true);
+        if (lanc.isValid()) {
+          filtro.lancamento_ate = lanc.format("YYYY-MM-DD HH:mm:SS");
+        } else {
+          filtro.lancamento_ate = null;
         }
         filtro.page = this.paginacao.current_page + 1;
         console.log(filtro);
@@ -129,125 +131,5 @@ export const listagemStore = defineStore("listagem", {
         return false;
       }
     },
-    /*
-    async getDispositivos() {
-      try {
-        const { data } = await api.get("/api/v1/pdv/dispositivo");
-        this.dispositivos = data.data;
-      } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
-        if (!message) {
-          message = error?.message;
-        }
-        Notify.create({
-          type: "negative",
-          message: message,
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
-      }
-    },
-
-    async autorizar(pdv) {
-      try {
-        const { data } = await api.post(
-          `/api/v1/pdv/dispositivo/${pdv.codpdv}/autorizado`
-        );
-        pdv = data.data;
-        const i = this.dispositivos.findIndex((el) => {
-          return el.codpdv == pdv.codpdv;
-        });
-        this.dispositivos[i] = pdv;
-      } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
-        if (!message) {
-          message = error?.message;
-        }
-        Notify.create({
-          type: "negative",
-          message: message,
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
-      }
-    },
-
-    async desautorizar(pdv) {
-      try {
-        const { data } = await api.delete(
-          `/api/v1/pdv/dispositivo/${pdv.codpdv}/autorizado`
-        );
-        pdv = data.data;
-        const i = this.dispositivos.findIndex((el) => {
-          return el.codpdv == pdv.codpdv;
-        });
-        this.dispositivos[i] = pdv;
-      } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
-        if (!message) {
-          message = error?.message;
-        }
-        Notify.create({
-          type: "negative",
-          message: message,
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
-      }
-    },
-
-    async inativar(pdv) {
-      try {
-        const { data } = await api.post(
-          `/api/v1/pdv/dispositivo/${pdv.codpdv}/inativo`
-        );
-        pdv = data.data;
-        const i = this.dispositivos.findIndex((el) => {
-          return el.codpdv == pdv.codpdv;
-        });
-        this.dispositivos[i] = pdv;
-      } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
-        if (!message) {
-          message = error?.message;
-        }
-        Notify.create({
-          type: "negative",
-          message: message,
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
-      }
-    },
-
-    async reativar(pdv) {
-      try {
-        const { data } = await api.delete(
-          `/api/v1/pdv/dispositivo/${pdv.codpdv}/inativo`
-        );
-        pdv = data.data;
-        const i = this.dispositivos.findIndex((el) => {
-          return el.codpdv == pdv.codpdv;
-        });
-        this.dispositivos[i] = pdv;
-      } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
-        if (!message) {
-          message = error?.message;
-        }
-        Notify.create({
-          type: "negative",
-          message: message,
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
-      }
-    },
-    */
   },
 });

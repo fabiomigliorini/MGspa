@@ -32,10 +32,8 @@ const toggleRightDrawer = () => {
 
         <!-- TODO: criar componente para usar nos dois layouts -->
         <usuario-conectado />
-        &nbsp;
         <q-btn to="/config/padrao" round icon="settings" flat />
-        &nbsp;
-
+        <q-btn to="/listagem" round icon="checklist_rtl" flat />
         <q-btn
           dense
           flat
@@ -44,11 +42,6 @@ const toggleRightDrawer = () => {
           @click="toggleRightDrawer"
         />
       </q-toolbar>
-      <!-- <q-tabs align="left">
-        <q-route-tab to="/page1" label="Page One" />
-        <q-route-tab to="/page2" label="Page Two" />
-        <q-route-tab to="/page3" label="Page Three" />
-      </q-tabs> -->
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { debounce } from "quasar";
 
 import { listagemStore } from "src/stores/listagem";
@@ -7,22 +7,18 @@ import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const sListagem = listagemStore();
-const scrollTargetRef = ref(null);
 const scrollRef = ref(null);
 
-const onLoad = (index, done) => {
-  console.log("onLoad");
-  sListagem.getNegociosPaginacao().then(() => {
-    if (sListagem.paginacao.current_page >= sListagem.paginacao.last_page) {
-      done(true);
-    } else {
-      done();
-    }
-  });
+const onLoad = async (index, done) => {
+  await sListagem.getNegociosPaginacao();
+  if (sListagem.paginacao.current_page >= sListagem.paginacao.last_page) {
+    done(true);
+  } else {
+    done(false);
+  }
 };
 
 const inicializa = debounce(async () => {
-  console.log("inicializa");
   await sListagem.getNegocios();
   scrollRef.value.reset();
   scrollRef.value.resume();
@@ -31,51 +27,43 @@ const inicializa = debounce(async () => {
 watch(
   () => sListagem.filtro,
   () => {
-    console.log("watrch");
     inicializa();
   },
   { deep: true }
 );
 
-onMounted(() => {
-  // sListagem.getNegocios();
-});
+const statusClass = (codnegociostatus) => {
+  switch (codnegociostatus) {
+    case 1:
+      return "bg-teal-1 text-teal-10";
+    case 2:
+      // return "bg-indigo-1 text-indigo-10";
+      return "";
+    case 3:
+      return "bg-deep-orange-1 text-deep-orange-10";
+    default:
+      return "bg-amber-1 text-amber-10";
+  }
+};
 </script>
 <template>
   <q-page>
-    <!-- <q-btn label="buscar" @click="inicializa"></q-btn> -->
-
-    <q-list
-      ref="scrollTargetRef"
-      class="scroll q-ma-md"
-      style="max-height: 100vh; overflow: auto; max-width: 600px"
-      bordered
+    <div
+      v-if="sListagem.negocios.length == 0"
+      class="absolute-center text-grey text-center"
     >
-      <q-infinite-scroll
-        @load="onLoad"
-        :offset="250"
-        :scroll-target="scrollTargetRef"
-        ref="scrollRef"
-      >
+      <q-icon name="do_not_disturb" color="" size="300px" />
+      <h3>Nenhum registro localizado!</h3>
+    </div>
+    <q-list v-else>
+      <q-infinite-scroll @load="onLoad" ref="scrollRef">
         <template :key="index" v-for="(item, index) in sListagem.negocios">
-          <q-item :to="'/negocio/' + item.codnegocio">
-            <q-item-section>
-              <q-item-label> {{ item.fantasia }} </q-item-label>
-              <q-item-label
-                caption
-                class="ellipsis"
-                v-if="item.fantasiavendedor"
-              >
-                {{ item.fantasiavendedor }}
-              </q-item-label>
-              <q-item-label caption>
-                {{ moment(item.lancamento).format("DD/MM/YY HH:mm") }}
-              </q-item-label>
-              <q-item-label caption>
-                #{{ String(item.codnegocio).padStart(8, "0") }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section>
+          <q-item
+            :to="'/negocio/' + item.codnegocio"
+            :class="statusClass(item.codnegociostatus)"
+            class="row"
+          >
+            <q-item-section class="col-xs-2 col-sm-1">
               <q-item-label class="text-right">
                 {{
                   new Intl.NumberFormat("pt-BR", {
@@ -85,19 +73,43 @@ onMounted(() => {
                   }).format(item.valortotal)
                 }}
               </q-item-label>
-              <q-item-label class="text-right ellipsis" caption>
-                {{ item.naturezaoperacao }}
-              </q-item-label>
               <q-item-label class="text-right" caption>
                 {{ item.estoquelocal }}
               </q-item-label>
             </q-item-section>
+
             <q-item-section>
-              <q-item-label>
-                {{ item.negociostatus }}
+              <q-item-label> {{ item.fantasia }} </q-item-label>
+              <q-item-label
+                caption
+                class="ellipsis"
+                v-if="item.fantasiavendedor"
+              >
+                {{ item.fantasiavendedor }}
               </q-item-label>
+
+              <q-item-label class="ellipsis" caption>
+                #{{ String(item.codnegocio).padStart(8, "0") }}
+                {{ item.naturezaoperacao }}
+              </q-item-label>
+            </q-item-section>
+            <q-item-section class="gt-sm">
               <q-item-label caption> {{ item.usuario }} </q-item-label>
               <q-item-label caption> {{ item.pdv }} </q-item-label>
+            </q-item-section>
+            <q-item-section class="gt-md ellipsis">
+              <q-item-label caption> {{ item.uuid }} </q-item-label>
+            </q-item-section>
+            <q-item-section
+              class="col-xs-4 col-sm-3 col-md-2 col-lg-1 ellipsis"
+              side
+            >
+              <q-item-label caption>
+                {{ moment(item.lancamento).format("DD/MM/YY HH:mm:ss") }}
+              </q-item-label>
+              <q-item-label caption>
+                {{ item.negociostatus }}
+              </q-item-label>
             </q-item-section>
           </q-item>
           <q-separator />
@@ -110,9 +122,5 @@ onMounted(() => {
         </template>
       </q-infinite-scroll>
     </q-list>
-
-    <pre>{{ sListagem.paginacao }}</pre>
-    <pre>{{ sListagem.negocios }}</pre>
-    <pre>{{ sListagem.filtro }}</pre>
   </q-page>
 </template>
