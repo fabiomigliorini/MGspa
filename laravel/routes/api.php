@@ -190,6 +190,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::delete('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@desautorizar');
             Route::post('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@inativar');
             Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
+            Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
+
         });
 
         // Allan - daqui pra baixo

@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { api } from "src/boot/axios";
 import { Notify } from "quasar";
+import { sincronizacaoStore } from "./sincronizacao";
+
 
 export const pdvStore = defineStore("pdv", {
   state: () => ({
@@ -135,5 +137,24 @@ export const pdvStore = defineStore("pdv", {
         return el.uuid == uuid;
       });
     },
+
+    async selectFilail() {
+      const ret = await api.get('/api/v1/select/filial');
+      return ret;
+    },
+
+    async updateConfigPdv(model) {
+
+      const sSinc = sincronizacaoStore();
+      model.pdv = sSinc.pdv.uuid;
+
+      const ret = await api.put('/api/v1/pdv/dispositivo/' + model.codpdv + '/editar', model);
+      const i = this.dispositivos.findIndex((el) => {
+        return el.codpdv == model.codpdv;
+      });
+      this.dispositivos[i] = ret.data.data;
+      return ret;
+    }
+
   },
 });
