@@ -323,4 +323,18 @@ class PdvController
         $negocios = PdvService::conferencia($request->codpdv, $request->dia);
         return response()->json($negocios, 200);
     }
+
+    public function update(PdvRequest $request, $codpdv)
+    {
+
+        PdvService::autoriza($request->pdv);
+        $pdv =  Pdv::findOrFail($codpdv);
+        $data = $request->all();
+
+        unset($data['pdv']);
+
+        $pdvUpdate = PdvService::update($pdv, $data);
+
+        return new PdvResource($pdvUpdate);
+    }
 }

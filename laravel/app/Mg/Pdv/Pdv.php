@@ -34,7 +34,8 @@ class Pdv extends MgModel
         'plataforma',
         'precisao',
         'uuid',
-        'versaonavegador'
+        'versaonavegador',
+        'observacoes'
     ];
 
     protected $dates = [

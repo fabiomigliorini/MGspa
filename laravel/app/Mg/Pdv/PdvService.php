@@ -367,4 +367,14 @@ class PdvService
 
         return $result;
     }
+
+
+    public static function update($pdv, $data)
+    {
+
+        $pdv->fill($data);
+        $pdv->save();
+        return $pdv;
+    }
+
 }
