@@ -167,8 +167,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
             Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
             Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
-            Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
             Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');
+            Route::get('negocio/conferencia', '\Mg\Pdv\PdvController@conferencia');
+            Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
             Route::delete('negocio/{codnegocio}', '\Mg\Pdv\PdvController@deleteNegocio');
             Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
             Route::post('negocio/{codnegocio}/romaneio/imprimir/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
@@ -202,7 +203,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
         Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
         Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
-        
+
 
 
         //GrupoCliente
@@ -279,10 +280,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@show');
         Route::put('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@update');
         Route::put('ferias/atualiza-todas-ferias/', '\Mg\Colaborador\FeriasController@AtualizaTodasFerias');
-       
+
         Route::delete('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@delete');
         Route::get('programacao-ferias/{ano}', '\Mg\Colaborador\FeriasController@programacaoFerias');
-                 
+
         // Cargos
         Route::get('cargo/', '\Mg\Colaborador\CargoController@index');
         Route::post('cargo/', '\Mg\Colaborador\CargoController@create');
@@ -452,15 +453,15 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         Route::get('usuario/{id}/reset-senha', '\Mg\Usuario\UsuarioController@resetSenha');
 
-        
+
         Route::post('usuario/{id}/inativo', '\Mg\Usuario\UsuarioController@inativar')->name('usuario.inativar');
 
         Route::apiResource('usuario', '\Mg\Usuario\UsuarioController');
 
         // Grupos de usuário
-        
+
         Route::get('grupo-usuario/todos', '\Mg\Usuario\GrupoUsuarioController@index');
-       
+
         Route::get('grupo-usuario/{id}/autor', '\Mg\Usuario\GrupoUsuarioController@autor');
         Route::get('grupo-usuario/{id}', '\Mg\Usuario\GrupoUsuarioController@detalhes');
         Route::delete('grupo-usuario/{id}/inativo', '\Mg\Usuario\GrupoUsuarioController@ativar')->name('grupo-usuario.ativar');

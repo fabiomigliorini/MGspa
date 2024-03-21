@@ -29,7 +29,14 @@ const routes = [
     component: () => import("layouts/ListagemLayout.vue"),
     children: [
       { path: "", component: () => import("pages/ListagemPage.vue") },
-      // { path: "pdv/", component: () => import("pages/PdvPage.vue") },
+    ],
+  },
+
+  {
+    path: "/conferencia",
+    component: () => import("layouts/ConferenciaLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/ConferenciaPage.vue") },
     ],
   },
 

@@ -32,15 +32,32 @@ const toggleRightDrawer = () => {
 
         <!-- TODO: criar componente para usar nos dois layouts -->
         <usuario-conectado />
-        <q-btn to="/config/padrao" round icon="settings" flat />
-        <q-btn to="/listagem" round icon="checklist_rtl" flat />
-        <q-btn
-          dense
-          flat
-          round
-          icon="attach_money"
-          @click="toggleRightDrawer"
-        />
+        <q-btn to="/config/padrao" round icon="settings" flat>
+          <q-tooltip>
+            Configurações
+          </q-tooltip>
+        </q-btn>
+
+        <q-btn to="/listagem" round icon="checklist_rtl" flat>
+          <q-tooltip>
+            Listagem
+          </q-tooltip>
+
+        </q-btn>
+
+        <q-btn to="/conferencia" round icon="check" flat>
+          <q-tooltip>
+            Conferência
+          </q-tooltip>
+
+        </q-btn>
+
+
+        <q-btn dense flat round icon="attach_money" @click="toggleRightDrawer">
+          <q-tooltip>
+            Totais
+          </q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
