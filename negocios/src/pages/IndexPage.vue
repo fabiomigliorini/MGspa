@@ -14,6 +14,7 @@ import ListagemNotas from "src/components/offline/ListagemNotas.vue";
 import { api } from "boot/axios";
 import { Dialog, Notify } from "quasar";
 import { db } from "boot/db";
+import jsPDF from "jspdf";
 
 const route = useRoute();
 const router = useRouter();
@@ -102,6 +103,11 @@ const vazioOuCriar = async () => {
 };
 
 const carregareOuCriarNegocio = async () => {
+  const codnegocio = route.params.codnegocio;
+  if (codnegocio) {
+    const ret = await sNegocio.recarregarDaApi(codnegocio);
+    console.log(ret);
+  }
   const uuid = route.params.uuid;
   if (uuid) {
     const ret = await sNegocio.carregar(uuid);
@@ -219,6 +225,23 @@ const urlRomaneio = computed({
 const romaneio = async () => {
   fecharDialogs();
   dialogRomaneio.value = true;
+};
+
+const orcamento = async () => {
+  // fecharDialogs();
+  // dialogRomaneio.value = true;
+
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: [210, 297],
+  });
+
+  doc.text("Hello world 2!", 50, 10);
+  // doc.save("two-by-four.pdf");
+
+  doc.text("Hello world!", 10, 10);
+  doc.save("a4.pdf");
 };
 
 const imprimirRomaneio = async () => {
@@ -395,6 +418,15 @@ onUnmounted(() => {
       v-if="sNegocio.negocio"
     >
       <div class="q-gutter-sm">
+        <q-btn
+          fab
+          icon="print"
+          color="primary"
+          @click="orcamento()"
+          v-if="sNegocio.negocio.codnegociostatus != 3"
+        >
+          <q-tooltip class="bg-accent">Orçamento</q-tooltip>
+        </q-btn>
         <q-btn
           fab
           icon="print"
