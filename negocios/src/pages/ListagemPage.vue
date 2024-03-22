@@ -20,8 +20,10 @@ const onLoad = async (index, done) => {
 
 const inicializa = debounce(async () => {
   await sListagem.getNegocios();
-  scrollRef.value.reset();
-  scrollRef.value.resume();
+  try {
+    scrollRef.value.reset();
+    scrollRef.value.resume();
+  } catch (error) {}
 });
 
 watch(

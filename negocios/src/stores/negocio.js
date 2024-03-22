@@ -12,12 +12,13 @@ const sSinc = sincronizacaoStore();
 
 export const negocioStore = defineStore("negocio", {
   persist: {
-    paths: ["padrao", "paginaAtual"],
+    paths: ["padrao", "paginaAtual", "ultimos"],
   },
 
   state: () => ({
     negocio: null,
     negocios: [],
+    ultimos: [],
     dialog: {
       valores: false,
       pagamentoDinheiro: false,
@@ -72,21 +73,101 @@ export const negocioStore = defineStore("negocio", {
 
   actions: {
     async atualizarListagem() {
+      // em aberto
       this.negocios = await db.negocio
         .where("codnegociostatus")
         .equals(1)
         .reverse()
         .sortBy("criacao");
+
+      // ultimos 10 fechados/cancelados
+      if (this.negocio.codnegociostatus == 1) {
+        return;
+      }
+      var ultimos = this.ultimos;
+      const i = ultimos.findIndex((u) => {
+        return u.codnegocio == this.negocio.codnegocio;
+      });
+      if (i > -1) {
+        return;
+      }
+      ultimos.unshift(this.negocio);
+      if (ultimos.length > 10) {
+        ultimos = ultimos.slice(0, 10);
+      }
+      this.ultimos = ultimos;
     },
 
-    async carregar(uuid) {
-      const negocio = await db.negocio.get(uuid);
-      if (negocio != undefined) {
-        this.negocio = negocio;
+    async carregarPeloCodnegocio(codnegocio) {
+      // busca no indexedDB
+      const negocio = await db.negocio
+        .where("codnegocio")
+        .equals(codnegocio)
+        .first();
+
+      // se nao tem offline busca na api
+      if (negocio == undefined) {
+        try {
+          await this.recarregarDaApi(codnegocio);
+          return this.negocio;
+        } catch (error) {
+          console.log(error);
+          Notify.create({
+            type: "negative",
+            message: "Falha ao buscar dados no Servidor!",
+            actions: [{ icon: "close", color: "white" }],
+          });
+          return false;
+        }
       }
-      this.carregarChavesEstrangeiras();
-      this.atualizarListagem();
-      return negocio;
+
+      // se negocio esta sincronizado busca da API para
+      // caso o negocio tenha sido alterado em outro computador
+      this.negocio = negocio;
+      if (negocio.sincronizado) {
+        try {
+          this.recarregarDaApi(codnegocio);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      await this.carregarChavesEstrangeiras();
+      await this.atualizarListagem();
+      return this.negocio;
+    },
+
+    async carregarPeloUuid(uuid) {
+      const negocio = await db.negocio.get(uuid);
+
+      // verifica se deve recarregar da api
+      if (negocio == undefined) {
+        try {
+          await this.recarregarDaApi(uuid);
+          return this.negocio;
+        } catch (error) {
+          console.log(error);
+          Notify.create({
+            type: "negative",
+            message: "Falha ao buscar dados no Servidor!",
+            actions: [{ icon: "close", color: "white" }],
+          });
+          return false;
+        }
+      }
+
+      // se negocio esta sincronizado busca da API para
+      // caso o negocio tenha sido alterado em outro computador
+      this.negocio = negocio;
+      if (negocio.sincronizado) {
+        try {
+          this.recarregarDaApi(uuid);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      await this.carregarChavesEstrangeiras();
+      await this.atualizarListagem();
+      return this.negocio;
     },
 
     async recarregar() {
@@ -94,7 +175,7 @@ export const negocioStore = defineStore("negocio", {
       return true;
     },
 
-    criar() {
+    async criar() {
       const uuid = uid();
       const negocio = {
         uuid: uuid,
@@ -224,9 +305,11 @@ export const negocioStore = defineStore("negocio", {
       var negocio = await this.carregarPrimeiroVazio();
       if (negocio == false) {
         negocio = this.criar();
+        await this.carregarChavesEstrangeiras();
+        await this.salvar();
+      } else {
+        await this.carregarChavesEstrangeiras();
       }
-      await this.carregarChavesEstrangeiras();
-      this.salvar();
       return negocio;
     },
 
@@ -278,12 +361,14 @@ export const negocioStore = defineStore("negocio", {
       // Pessoa
       if (this.negocio.codpessoa) {
         const pes = await db.pessoa.get(this.negocio.codpessoa);
-        if (pes.codformapagamento) {
-          const fp = await db.formaPagamento.get(pes.codformapagamento);
-          pes.formapagamento = fp.formapagamento;
+        if (pes) {
+          if (pes.codformapagamento) {
+            const fp = await db.formaPagamento.get(pes.codformapagamento);
+            pes.formapagamento = fp.formapagamento;
+          }
+          this.negocio.Pessoa = pes;
+          fantasia = pes.fantasia;
         }
-        this.negocio.Pessoa = pes;
-        fantasia = pes.fantasia;
       }
 
       // Vendedor
@@ -313,7 +398,7 @@ export const negocioStore = defineStore("negocio", {
       if (sincronizar) {
         this.sincronizar(this.negocio.uuid);
       }
-      this.atualizarListagem();
+      await this.atualizarListagem();
       return ret;
     },
 
@@ -612,6 +697,7 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async sincronizar(uuid) {
+      console.log("entrou sincronizar");
       const negocio = await db.negocio.get(uuid);
       try {
         const ret = await sSinc.putNegocio(negocio);
@@ -622,7 +708,7 @@ export const negocioStore = defineStore("negocio", {
           codnegocio: ret.codnegocio,
           codnegociostatus: ret.codnegociostatus,
         });
-        if ((this.negocio.uuid = ret.uuid)) {
+        if (this.negocio.uuid == ret.uuid) {
           this.negocio.codnegocio = ret.codnegocio;
           this.negocio.codnegociostatus = ret.codnegociostatus;
           if (
@@ -641,7 +727,7 @@ export const negocioStore = defineStore("negocio", {
       } catch (error) {
         console.log(error);
       }
-      this.atualizarListagem();
+      await this.atualizarListagem();
     },
 
     async recarregarDaApi(codOrUuid) {
@@ -650,10 +736,9 @@ export const negocioStore = defineStore("negocio", {
         if (ret.codnegocio) {
           this.negocio = ret;
           db.negocio.put(ret);
-          this.atualizarListagem();
         }
       } catch (error) {
-        console.log(erro);
+        console.log(error);
       }
     },
 
@@ -764,10 +849,10 @@ export const negocioStore = defineStore("negocio", {
           });
           this.negocio = ret;
           db.negocio.put(ret);
-          this.atualizarListagem();
+          await this.atualizarListagem();
         }
       } catch (error) {
-        console.log(erro);
+        console.log(error);
       }
     },
 
@@ -793,10 +878,10 @@ export const negocioStore = defineStore("negocio", {
           });
           this.negocio = ret;
           db.negocio.put(ret);
-          this.atualizarListagem();
+          await this.atualizarListagem();
         }
       } catch (error) {
-        console.log(erro);
+        console.log(error);
       }
     },
 
@@ -819,11 +904,11 @@ export const negocioStore = defineStore("negocio", {
           });
           this.negocio = ret;
           db.negocio.put(ret);
-          this.atualizarListagem();
+          await this.atualizarListagem();
           return ret.pixCob[0];
         }
       } catch (error) {
-        console.log(erro);
+        console.log(error);
       }
     },
 
@@ -866,11 +951,11 @@ export const negocioStore = defineStore("negocio", {
           });
           this.negocio = ret;
           db.negocio.put(ret);
-          this.atualizarListagem();
+          await this.atualizarListagem();
           return ret.PagarMePedidoS[0];
         }
       } catch (error) {
-        console.log(erro);
+        console.log(error);
       }
     },
   },

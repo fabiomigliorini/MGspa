@@ -103,15 +103,18 @@ const vazioOuCriar = async () => {
 };
 
 const carregareOuCriarNegocio = async () => {
-  const codnegocio = route.params.codnegocio;
-  if (codnegocio) {
-    const ret = await sNegocio.recarregarDaApi(codnegocio);
-    console.log(ret);
-  }
   const uuid = route.params.uuid;
   if (uuid) {
-    const ret = await sNegocio.carregar(uuid);
+    const ret = await sNegocio.carregarPeloUuid(uuid);
     if (ret != undefined) {
+      return;
+    }
+  }
+  const codnegocio = route.params.codnegocio;
+  if (codnegocio) {
+    const ret = await sNegocio.carregarPeloCodnegocio(parseInt(codnegocio));
+    if (ret != undefined) {
+      router.push("/offline/" + sNegocio.negocio.uuid);
       return;
     }
   }

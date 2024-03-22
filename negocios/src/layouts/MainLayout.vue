@@ -33,30 +33,15 @@ const toggleRightDrawer = () => {
         <!-- TODO: criar componente para usar nos dois layouts -->
         <usuario-conectado />
         <q-btn to="/config/padrao" round icon="settings" flat>
-          <q-tooltip>
-            Configurações
-          </q-tooltip>
-        </q-btn>
-
-        <q-btn to="/listagem" round icon="checklist_rtl" flat>
-          <q-tooltip>
-            Listagem
-          </q-tooltip>
-
+          <q-tooltip class="bg-accent"> Configurações </q-tooltip>
         </q-btn>
 
         <q-btn to="/conferencia" round icon="check" flat>
-          <q-tooltip>
-            Conferência
-          </q-tooltip>
-
+          <q-tooltip class="bg-accent"> Conferência </q-tooltip>
         </q-btn>
 
-
         <q-btn dense flat round icon="attach_money" @click="toggleRightDrawer">
-          <q-tooltip>
-            Totais
-          </q-tooltip>
+          <q-tooltip class="bg-accent"> Totais </q-tooltip>
         </q-btn>
       </q-toolbar>
     </q-header>
@@ -72,13 +57,5 @@ const toggleRightDrawer = () => {
     <q-page-container>
       <router-view :key="$route.fullPath" />
     </q-page-container>
-
-    <!-- <q-footer reveal elevated class="bg-grey-8 text-white">
-      <q-toolbar>
-        <q-toolbar-title>
-          <div></div>
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-footer> -->
   </q-layout>
 </template>
