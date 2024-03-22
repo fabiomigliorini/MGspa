@@ -200,7 +200,6 @@ const desligarLeitor = async () => {
 };
 
 const lerCodigoBarras = async () => {
-  console.log("lercodigoBarras");
   const barcodeDetector = new BarcodeDetector({
     formats: [
       // "aztec",
@@ -223,7 +222,6 @@ const lerCodigoBarras = async () => {
   var tentativas = 0;
   do {
     tentativas++;
-    console.log(tentativas);
     try {
       barcodes = await barcodeDetector.detect(barcodeVideo.value);
       if (barcodes.length <= 0) {
