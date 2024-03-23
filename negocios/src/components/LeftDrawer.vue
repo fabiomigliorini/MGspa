@@ -13,21 +13,6 @@ const criar = async () => {
   var audio = new Audio("novo.mp3");
   audio.play();
 };
-
-const statusClass = (codnegociostatus) => {
-  // return "";
-  switch (codnegociostatus) {
-    case 1:
-      return "bg-teal-1 text-teal-10";
-    case 2:
-      // return "bg-indigo-1 text-indigo-10";
-      return "";
-    case 3:
-      return "bg-deep-orange-1 text-deep-orange-10";
-    default:
-      return "bg-amber-1 text-amber-10";
-  }
-};
 </script>
 <template>
   <q-item-label header>
@@ -51,8 +36,6 @@ const statusClass = (codnegociostatus) => {
             :color="n.sincronizado == true ? 'secondary' : 'negative'"
             text-color="white"
           />
-          <!-- <q-avatar color="primary" text-color="white">{{ n.uid }}</q-avatar> -->
-          <!-- <q-icon round color="primary" name="delete" /> -->
         </q-item-section>
 
         <q-item-section>
@@ -98,8 +81,6 @@ const statusClass = (codnegociostatus) => {
         v-ripple
         exact-active-class="bg-blue-1"
       >
-        <!-- <pre>{{ n.codnegociostatus }}</pre>
-        <pre>{{ n }}</pre> -->
         <q-item-section avatar>
           <q-avatar
             icon="shopping_cart"
@@ -115,11 +96,7 @@ const statusClass = (codnegociostatus) => {
           <q-item-label v-if="n.naturezaoperacao" class="ellipsis">
             {{ n.naturezaoperacao }}
           </q-item-label>
-          <q-item-label class="ellipsis" v-if="n.codnegociostatus == 3">
-            <q-chip square color="negative" text-color="white" icon="warning">
-              Cancelado
-            </q-chip>
-          </q-item-label>
+
           <q-item-label caption v-if="n.fantasiavendedor" class="ellipsis">
             {{ n.fantasiavendedor }}
           </q-item-label>
@@ -135,6 +112,18 @@ const statusClass = (codnegociostatus) => {
               maximumFractionDigits: 2,
             }).format(n.valortotal)
           }}
+          <q-item-label class="ellipsis" v-if="n.codnegociostatus == 3">
+            <q-chip
+              square
+              color="negative"
+              text-color="white"
+              icon="warning"
+              size="sm"
+              dense
+            >
+              Cancelado
+            </q-chip>
+          </q-item-label>
         </q-item-section>
       </q-item>
       <q-separator />

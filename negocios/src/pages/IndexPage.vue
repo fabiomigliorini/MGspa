@@ -166,6 +166,7 @@ const cancelar = async () => {
       outlined: true,
       type: "text", // optional
       placeholder: "Justificativa de Cancelamento...",
+      persistent: true,
     },
     cancel: true,
   }).onOk(async (justificativa) => {

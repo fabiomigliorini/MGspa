@@ -89,9 +89,10 @@ export const negocioStore = defineStore("negocio", {
         return u.codnegocio == this.negocio.codnegocio;
       });
       if (i > -1) {
-        return;
+        ultimos[i] = this.negocio;
+      } else {
+        ultimos.unshift(this.negocio);
       }
-      ultimos.unshift(this.negocio);
       if (ultimos.length > 10) {
         ultimos = ultimos.slice(0, 10);
       }
