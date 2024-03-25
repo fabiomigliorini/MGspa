@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Negocio\NegocioResource;
 use Mg\Negocio\NegocioListagemResource;
+use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\PagarMe\PagarMePedidoResource;
@@ -262,6 +263,22 @@ class PdvController
     public function imprimirRomaneio($codnegocio, $impressora)
     {
         RomaneioService::imprimir($codnegocio, $impressora);
+    }
+
+    public function comanda($codnegocio)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $pdf = NegocioComandaService::pdf($negocio);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Comanda'.$codnegocio.'.pdf"'
+        ]);
+    }
+
+    public function imprimirComanda($codnegocio, $impressora)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        NegocioComandaService::imprimir($negocio, $impressora);
     }
 
     public function criarPixCob(PdvRequest $request)

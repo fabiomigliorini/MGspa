@@ -24,6 +24,7 @@ const sUsuario = usuarioStore();
 const sPagarMe = pagarMeStore();
 const sPix = pixStore();
 const dialogRomaneio = ref(false);
+const dialogComanda = ref(false);
 const listagemNotasRef = ref(null);
 
 const hotkeys = (event) => {
@@ -65,6 +66,11 @@ const hotkeys = (event) => {
     case "F3": // Fechar
       event.preventDefault();
       fechar();
+      break;
+
+    case "F4": // Comanda
+      event.preventDefault();
+      comanda();
       break;
 
     case "F6": // Dinheiro
@@ -147,6 +153,7 @@ const fecharDialogs = async () => {
   sUsuario.dialog.login = false;
   sPagarMe.dialog.detalhesPedido = false;
   dialogRomaneio.value = false;
+  dialogComanda.value = false;
 };
 
 const abrirDocumentoSeFechado = async () => {
@@ -243,9 +250,40 @@ const urlRomaneio = computed({
   },
 });
 
+const urlComanda = computed({
+  get() {
+    return (
+      process.env.API_BASE_URL +
+      "/api/v1/pdv/negocio/" +
+      sNegocio.negocio.codnegocio +
+      "/comanda"
+    );
+  },
+});
+
 const romaneio = async () => {
   fecharDialogs();
   dialogRomaneio.value = true;
+};
+
+const comanda = async () => {
+  if (!sNegocio.negocio.sincronizado) {
+    Notify.create({
+      type: "negative",
+      message: "Impossível imprimir comanda de um negócio não sincronizado!",
+    });
+    return;
+  }
+  if (sNegocio.itensAtivos.length == 0) {
+    Notify.create({
+      type: "negative",
+      message: "Nenhum item!",
+    });
+    return;
+  }
+  fecharDialogs();
+  imprimirComanda();
+  dialogComanda.value = true;
 };
 
 const orcamento = async () => {
@@ -269,7 +307,7 @@ const imprimirRomaneio = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
       sNegocio.negocio.codnegocio +
-      "/romaneio/imprimir/" +
+      "/romaneio/" +
       sNegocio.padrao.impressora
   );
   Notify.create({
@@ -277,6 +315,20 @@ const imprimirRomaneio = async () => {
     message: "Impressão Solicitada!",
   });
   // dialogRomaneio.value = false;
+};
+
+const imprimirComanda = async () => {
+  await api.post(
+    "/api/v1/pdv/negocio/" +
+      sNegocio.negocio.codnegocio +
+      "/comanda/" +
+      sNegocio.padrao.impressora
+  );
+  Notify.create({
+    type: "positive",
+    message: "Impressão Solicitada!",
+  });
+  // dialogComanda.value = false;
 };
 
 const imprimirAbrirRomaneio = async () => {
@@ -425,6 +477,32 @@ onUnmounted(() => {
       </q-card>
     </q-dialog>
 
+    <q-dialog v-model="dialogComanda" full-height @hide="vazioOuCriar()">
+      <q-card style="height: 100%">
+        <!-- <q-card-section>
+          <div class="text-h6">Romaneio</div>
+        </q-card-section> -->
+
+        <q-card-section style="height: 91%" class="q-pb-none">
+          <iframe
+            style="width: 100%; height: 100%; border: none"
+            :src="urlComanda"
+          ></iframe>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            color="primary"
+            flat
+            label="Imprimir"
+            @click="imprimirComanda()"
+            :disable="sNegocio.padrao.impressora == null"
+          />
+          <q-btn color="primary" flat label="Fechar" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-page-scroller
       position="bottom-left"
       :scroll-offset="150"
@@ -453,6 +531,17 @@ onUnmounted(() => {
           v-if="sNegocio.negocio.codnegociostatus != 3"
         >
           <q-tooltip class="bg-accent">Orçamento</q-tooltip>
+        </q-btn>
+
+        <!-- ROMANEIO -->
+        <q-btn
+          fab
+          icon="receipt"
+          color="secondary"
+          @click="comanda()"
+          v-if="sNegocio.negocio.codnegociostatus == 1"
+        >
+          <q-tooltip class="bg-accent">Comanda (F4)</q-tooltip>
         </q-btn>
 
         <!-- ROMANEIO -->
