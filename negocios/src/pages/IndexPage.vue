@@ -102,6 +102,23 @@ const vazioOuCriar = async () => {
   router.push("/offline/" + sNegocio.negocio.uuid);
 };
 
+const duplicar = async () => {
+  await fecharDialogs();
+  Dialog.create({
+    title: "Duplicar",
+    message: "Tem certeza que deseja duplicar esse negócio?",
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const neg = await sNegocio.duplicar();
+      router.push("/offline/" + sNegocio.negocio.uuid);
+      var audio = new Audio("novo.mp3");
+      audio.play();
+    } catch (error) {}
+  });
+};
+
 const carregareOuCriarNegocio = async () => {
   const uuid = route.params.uuid;
   if (uuid) {
@@ -422,24 +439,34 @@ onUnmounted(() => {
       v-if="sNegocio.negocio"
     >
       <div class="q-gutter-sm">
+        <!-- DUPLICAR -->
+        <q-btn fab icon="content_copy" color="secondary" @click="duplicar()">
+          <q-tooltip class="bg-accent">Duplicar</q-tooltip>
+        </q-btn>
+
+        <!-- ORCAMENTO -->
         <q-btn
           fab
           icon="print"
-          color="primary"
+          color="secondary"
           @click="orcamento()"
           v-if="sNegocio.negocio.codnegociostatus != 3"
         >
           <q-tooltip class="bg-accent">Orçamento</q-tooltip>
         </q-btn>
+
+        <!-- ROMANEIO -->
         <q-btn
           fab
           icon="print"
-          color="primary"
+          color="secondary"
           @click="romaneio()"
           v-if="sNegocio.negocio.codnegociostatus == 2"
         >
           <q-tooltip class="bg-accent">Romaneio</q-tooltip>
         </q-btn>
+
+        <!-- FECHAR -->
         <q-btn
           fab
           icon="send"
@@ -449,6 +476,8 @@ onUnmounted(() => {
         >
           <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
         </q-btn>
+
+        <!-- CANCELAR -->
         <q-btn
           fab
           icon="delete"
