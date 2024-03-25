@@ -7,11 +7,11 @@ use Illuminate\Support\Str;
 use JasperPHP\Instructions;
 use JasperPHP\Report;
 use JasperPHP\PdfProcessor;
-
+use Mg\Pdv\Pdv;
 
 class NegocioComandaService
 {
-    public static function pdf (Negocio $negocio)
+    public static function pdf(Negocio $negocio)
     {
         $report = new Report(app_path('/Mg/Negocio/comanda.jrxml'), []);
         Instructions::prepare($report); // prepara o relatorio lendo o arquivo
@@ -26,13 +26,13 @@ class NegocioComandaService
         return $pdf;
     }
 
-    public static function imprimir (Negocio $negocio, $impressora)
+    public static function imprimir(Negocio $negocio, $impressora)
     {
         $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/negocio/' . $negocio->codnegocio . '/comanda\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
-        exec($cmd); 
+        exec($cmd);
     }
 
-    public static function unificar (Negocio $negocio, Negocio $negocioComanda)
+    public static function unificar(Negocio $negocio, Negocio $negocioComanda, Pdv $pdv = null)
     {
         // verifica se nao está tentando unificar a comanda nela mesma
         if ($negocioComanda->codnegocio == $negocio->codnegocio) {
@@ -54,12 +54,16 @@ class NegocioComandaService
             throw new \Exception("Comanda não tem nenhum item!", 1);
         }
 
+        // novo PDV ao qual o negocio sera associado
+        $codpdv = $pdv->codpdv ?? null;
+
         // se o negocio "destino" não tem nenhum item, "inverte" os papeis
         // a "comanda" vira o negocio "destino"
         if ($negocio->NegocioProdutoBarras()->count() == 0) {
             // puxa pro usuario
             $negocioComanda->update([
-                'codusuario' => $negocio->codusuario
+                'codusuario' => $negocio->codusuario,
+                'codpdv' => $codpdv,
             ]);
             $negocioComanda->fresh();
             return $negocioComanda;
@@ -67,10 +71,25 @@ class NegocioComandaService
 
         // duplica os itens da comanda pro destino
         foreach ($negocioComanda->NegocioProdutoBarras as $pbComanda) {
+            if (!empty($pbComanda->inativo)) {
+                continue;
+            }
             $pb = $pbComanda->replicate();
             $pb->codnegocio = $negocio->codnegocio;
             $pb->uuid = Str::uuid();
             $pb->save();
+            if ($codpdv != null) {
+                $negocio->valorprodutos += $pbComanda->valorprodutos;
+                $negocio->valordesconto += $pbComanda->valordesconto;
+                $negocio->valorfrete += $pbComanda->valorfrete;
+                $negocio->valorseguro += $pbComanda->valorseguro;
+                $negocio->valoroutras += $pbComanda->valoroutras;
+                $negocio->valortotal += $pbComanda->valortotal;
+            }
+        }
+        if ($codpdv != null) {
+            $negocio->save();
+            NegocioService::recalcularTotal($negocio);
         }
 
         // monta observacoes
@@ -87,21 +106,24 @@ class NegocioComandaService
             'observacoes' => $observacoes
         ]);
 
-        // junta desconto
-        if (!empty($negocioComanda->valordesconto)) {
-            $negocio->update([
-                'valordesconto' => $negocio->valordesconto + $negocioComanda->valordesconto
-            ]);
+        // Codigo Legado da Versao antiga Yii
+        // pode deixar de fazer depois que for desativado
+        // na versao nova desconto e frete já estão nos itens
+        if ($codpdv == null) {
+            // junta desconto
+            if (!empty($negocioComanda->valordesconto)) {
+                $negocio->update([
+                    'valordesconto' => $negocio->valordesconto + $negocioComanda->valordesconto
+                ]);
+            }
+            // junta frete
+            if (!empty($negocioComanda->valorfrete)) {
+                $negocio->update([
+                    'valorfrete' => $negocio->valorfrete + $negocioComanda->valorfrete
+                ]);
+            }
         }
 
-        // junta frete
-        if (!empty($negocioComanda->valorfrete)) {
-            $negocio->update([
-                'valorfrete' => $negocio->valorfrete + $negocioComanda->valorfrete
-            ]);
-        }
-
-        return $negocio;
+        return $negocio->fresh();
     }
-
 }

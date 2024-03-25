@@ -525,6 +525,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         return false;
       }
     },
+
     async criarPixCob(valor, codnegocio) {
       try {
         const { data } = await api.post("/api/v1/pdv/pix/cob/", {
@@ -575,6 +576,30 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
           descricao,
         });
         return data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async unificarComanda(codnegocio, codnegociocomanda) {
+      try {
+        const { data } = await api.post(
+          `/api/v1/pdv/negocio/${codnegocio}/unificar/${codnegociocomanda}`,
+          {
+            pdv: this.pdv.uuid,
+          }
+        );
+        return data;
       } catch (error) {
         console.log(error);
         var message = error?.response?.data?.message;

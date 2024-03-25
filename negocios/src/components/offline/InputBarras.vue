@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, watch } from "vue";
+import { useRouter } from "vue-router";
 import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "stores/sincronizacao";
-import { useQuasar } from "quasar";
+import { Notify } from "quasar";
 import { falar } from "../../utils/falar.js";
 
-const $q = useQuasar();
+const router = useRouter();
 const sProduto = produtoStore();
 const sNegocio = negocioStore();
 const sSinc = sincronizacaoStore();
@@ -27,7 +28,7 @@ const labelQuantidade = computed({
 
 const informarVendedor = async (codpessoavendedor) => {
   await sNegocio.informarVendedor(codpessoavendedor);
-  $q.notify({
+  Notify.create({
     type: "positive",
     message: "Vendedor '" + sNegocio.negocio.fantasiavendedor + "' informado.",
     timeout: 1500, // 1,5 segundos
@@ -39,15 +40,21 @@ const informarVendedor = async (codpessoavendedor) => {
   audio.play();
 };
 
-const abrirComanda = (codnegocio) => {
-  $q.notify({
-    type: "negative",
-    message: "Precisa implementar busca da comanda " + codnegocio + "!",
-    timeout: 0, // 20 minutos
-    actions: [{ icon: "close", color: "white" }],
-  });
-  var audio = new Audio("erro.mp3");
-  audio.play();
+const unificarComanda = async (codnegociocomanda) => {
+  let sucesso = false;
+  try {
+    sucesso = await sNegocio.unificarComanda(codnegociocomanda);
+  } catch (error) {}
+  if (sucesso) {
+    router.push("/offline/" + sNegocio.negocio.uuid);
+    var audio = new Audio("sucesso.mp3");
+    audio.play();
+    falar("Comanda Lida!");
+  } else {
+    var audio = new Audio("erro.mp3");
+    audio.play();
+    falar("Falha ao buscar comanda!");
+  }
 };
 
 watch(barras, (newValue, oldValue) => {
@@ -94,7 +101,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
 
         // Comanda Negocio (Ex NEG03386672)
         case "NEG":
-          abrirComanda(parseInt(codigo));
+          unificarComanda(parseInt(codigo));
           return;
       }
     }
@@ -114,7 +121,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
       qtd,
       ret[0].preco
     );
-    $q.notify({
+    Notify.create({
       type: "positive",
       message: "Código " + txt + " adicionado.",
       timeout: 1500, // 1,5 segundos
@@ -123,7 +130,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
     var audio = new Audio("successo.mp3");
     audio.play();
   } else {
-    $q.notify({
+    Notify.create({
       type: "negative",
       message: "Falha ao buscar código " + txt + "!",
       timeout: 0, // 20 minutos

@@ -281,6 +281,18 @@ class PdvController
         NegocioComandaService::imprimir($negocio, $impressora);
     }
 
+    public function unificarComanda (PdvRequest $request, $codnegocio, $codnegociocomanda)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        $negocio = Negocio::findOrFail($codnegocio);
+        $negocioComanda = Negocio::findOrFail($codnegociocomanda);
+        $negocio = NegocioComandaService::unificar($negocio, $negocioComanda, $pdv);
+        return [
+            'negocio' => new NegocioResource($negocio),
+            'comanda' => new NegocioResource($negocioComanda->fresh())
+        ];
+    }
+
     public function criarPixCob(PdvRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);

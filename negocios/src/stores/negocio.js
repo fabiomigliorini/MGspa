@@ -993,5 +993,42 @@ export const negocioStore = defineStore("negocio", {
         console.log(error);
       }
     },
+
+    async unificarComanda(codnegociocomanda) {
+      if (!this.negocio.sincronizado) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Impossível ler Comandas em um negócio não sincronizado com o servidor!",
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      try {
+        const ret = await sSinc.unificarComanda(
+          this.negocio.codnegocio,
+          codnegociocomanda
+        );
+        if (!ret) {
+          return false;
+        }
+        Notify.create({
+          type: "positive",
+          message: "Comanda Lida!",
+        });
+        if (ret.negocio.codnegocio) {
+          db.negocio.put(ret.negocio);
+        }
+        if (ret.comanda.codnegocio) {
+          db.negocio.put(ret.comanda);
+        }
+        this.negocio = ret.negocio;
+        await this.atualizarListagem();
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
   },
 });

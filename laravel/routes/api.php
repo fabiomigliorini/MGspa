@@ -58,7 +58,7 @@ Route::group(['prefix' => 'v1'], function () {
         // precisa ficar fora da autenticacao para o servico de impressao acessar
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio');
         Route::get('negocio/{codnegocio}/comanda', '\Mg\Pdv\PdvController@comanda');
-});
+    });
 
     // Produto
     Route::post('produto/unifica-variacoes', '\Mg\Produto\ProdutoController@unificaVariacoes');
@@ -176,6 +176,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
             Route::post('negocio/{codnegocio}/romaneio/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
             Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');
+            Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Pdv\PdvController@unificarComanda');
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
             Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
             Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\Pdv\PdvController@consultarPagarMePedido');
