@@ -40,6 +40,15 @@ const routes = [
     ],
   },
 
+  {
+    path: "/offline/:uuid/orcamento",
+    // component: () => import("layouts/OrcamentoLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/OrcamentoPage.vue") },
+    ],
+  },
+
+
   // Always leave this as last one,
   // but you can also remove it
   {
