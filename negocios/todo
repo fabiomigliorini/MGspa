@@ -11,7 +11,6 @@ FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistem
 FIXME Quando expira o token ele precisa dar o refresh automaticamente
 TODO quando entrar na tela, verificar a data da sincronizacao e forcar sincronizacao caso seja muito antiga (1 dia)
 TODO fazer tela de fechamento de caixa
-TODO Orcamento em PDF usando dados OffLine (Allan)
 TODO fazer controle das entregas tanto para clientes quanto para transferencias
 TODO quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
 TODO fazer uma tela de consulta de preços tipo Kiosque pra substitiur kioske atual (Allan)
@@ -54,3 +53,4 @@ TODO Controle de permissoes (Autorização de Dispositivos / Cancelar Negocio) (
 [X] TODO Navegacao Negocios Fechados com opcao abrir
 [X] TODO Botao Duplicar
 [X] TODO Comanda
+[X] TODO Orcamento em PDF usando dados OffLine (Allan)
