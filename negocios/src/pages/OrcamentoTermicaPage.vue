@@ -2,10 +2,11 @@
 import { onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { negocioStore } from "src/stores/negocio";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
 import { formataCnpjCpf } from "../utils/formatador.js";
 import { produtoStore } from "src/stores/produto";
+import BarCode from "components/BarCode.vue";
+import moment from "moment/min/moment-with-locales";
+moment.locale("pt-br");
 
 const route = useRoute();
 const sNegocio = negocioStore();
@@ -26,52 +27,64 @@ onMounted(() => {
     <div class="conteudo">
       <table class="relatorio">
         <tr>
-          <td class="local text-bold">Local</td>
-          <td>{{ sNegocio.negocio.estoquelocal }}</td>
-          <td class="text-bold text-right">Negócio</td>
-          <td>#{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}</td>
-        </tr>
-        <tr>
-          <td class="text-bold text-right">Vendedor</td>
-          <td>{{ sNegocio.negocio.fantasiavendedor }}</td>
-          <td class="text-bold text-right">Data</td>
           <td>
+            <span class="row">
+              #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }} -
+              {{ sNegocio.negocio.estoquelocal }}
+            </span>
+            <span class="row"
+              >Vendedor: {{ sNegocio.negocio.fantasiavendedor }}</span
+            >
             {{
               moment(sNegocio.negocio.lancamento).format("DD/MM/YYYY HH:mm:SS")
             }}
           </td>
         </tr>
       </table>
-      <div class="negocio"></div>
+      <hr />
       <table class="relatorio">
         <tr>
-          <td class="text-bold">Cliente</td>
-          <td class="text-bold" style="font-size: 2.5em">
+          <td class="text-bold" style="font-size: 3em">
             {{ sNegocio.negocio.fantasia }}
           </td>
         </tr>
         <tr>
-          <td>Cnpj / CPF</td>
-          <td v-if="sNegocio.negocio.Pessoa.cnpj">
-            {{ formataCnpjCpf(sNegocio.negocio.Pessoa.cnpj) }}
-          </td>
-        </tr>
-        <tr>
-          <td>Endereço:</td>
           <td>
+            <span class="row">
+              #{{ String(sNegocio.negocio.codpessoa).padStart(8, "0") }} |
+              {{
+                formataCnpjCpf(
+                  sNegocio.negocio.Pessoa.cnpj,
+                  sNegocio.negocio.Pessoa.fisica
+                )
+              }}
+            </span>
+            <div class="row">
+              <span v-if="sNegocio.negocio.Pessoa.telefone1">
+                {{ sNegocio.negocio.Pessoa.telefone1 }}
+              </span>
+              <span v-if="sNegocio.negocio.Pessoa.telefone2">
+                | {{ sNegocio.negocio.Pessoa.telefone2 }}
+              </span>
+              <span v-if="sNegocio.negocio.Pessoa.telefone3">
+                | {{ sNegocio.negocio.Pessoa.telefone3 }}
+              </span>
+            </div>
             <span v-if="sNegocio.negocio.Pessoa.endereco">
-              {{ sNegocio.negocio.Pessoa.endereco }},</span
-            >
-
+              {{ sNegocio.negocio.Pessoa.endereco }},
+            </span>
             <span v-if="sNegocio.negocio.Pessoa.numero"
-              >{{ sNegocio.negocio.Pessoa.numero }},</span
-            >
+              >{{ sNegocio.negocio.Pessoa.numero }} -
+            </span>
+            <span v-if="sNegocio.negocio.Pessoa.complemento"
+              >{{ sNegocio.negocio.Pessoa.complemento }} -
+            </span>
             <span v-if="sNegocio.negocio.Pessoa.bairro">
-              {{ sNegocio.negocio.Pessoa.bairro }},</span
-            >
-
-            {{ sNegocio.negocio.Pessoa.cidade }} -
-            {{ sNegocio.negocio.Pessoa.uf }}
+              {{ sNegocio.negocio.Pessoa.bairro }} -
+            </span>
+            {{ sNegocio.negocio.Pessoa.cidade }}/{{
+              sNegocio.negocio.Pessoa.uf
+            }}
           </td>
         </tr>
       </table>
@@ -79,53 +92,58 @@ onMounted(() => {
       <table class="relatorio">
         <thead class="negativo">
           <tr>
-            <th class="img"></th>
-            <th class="codigo">Código</th>
-            <th class="produto">Descrição</th>
-            <th class="unidademedida">UM</th>
-            <th class="quantidade">Quantidade</th>
-            <th class="valor">Preço</th>
-            <th class="valor">Total</th>
+            <th class="produto">Produtos</th>
           </tr>
         </thead>
         <tbody class="zebrada">
-          <tr
+          <template
             v-for="produto in sNegocio.itensAtivos"
             v-bind:key="produto.codproduto"
           >
-            <td class="img">
-              <img
-                :src="sProduto.urlImagem(produto.codimagem)"
-                style="width: 100%; border-radius: 50%"
-              />
-            </td>
-            <td class="codigo">{{ produto.barras }}</td>
-            <td class="produto">{{ produto.produto }}</td>
-            <td class="unidademedida">UN</td>
-            <td class="quantidade">{{ produto.quantidade }}</td>
-            <td class="valor text-right">
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(produto.valorunitario)
-              }}
-            </td>
-            <td class="valor text-right">
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(produto.valortotal)
-              }}
-            </td>
-          </tr>
+            <tr>
+              <!-- <td class="img">
+                            <img :src="sProduto.urlImagem(produto.codimagem)" style="width: 20%; border-radius: 50%;">
+                        </td> -->
+              <td class="codigo">
+                {{ produto.barras }} |
+
+                {{ produto.produto }}
+              </td>
+            </tr>
+            <tr>
+              <td class="valor text-right">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 3,
+                    maximumFractionDigits: 3,
+                  }).format(produto.quantidade)
+                }}
+                de R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(produto.valorunitario)
+                }}
+                = R$
+                <b>
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "decimal",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(produto.valortotal)
+                  }}</b
+                >
+              </td>
+            </tr>
+          </template>
 
           <tr>
-            <td colspan="6" class="subtotal text-right">SubTotal</td>
             <td class="subtotal text-right">
+              SubTotal: R$
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -137,8 +155,8 @@ onMounted(() => {
           </tr>
 
           <tr v-if="sNegocio.negocio.valordesconto">
-            <td colspan="6" class="text-right">Desconto</td>
             <td class="text-right">
+              Desconto:
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -150,8 +168,8 @@ onMounted(() => {
           </tr>
 
           <tr v-if="sNegocio.negocio.valorfrete">
-            <td colspan="6" class="text-right">Frete</td>
             <td class="text-right">
+              Frete:
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -163,8 +181,8 @@ onMounted(() => {
           </tr>
 
           <tr v-if="sNegocio.negocio.valorseguro">
-            <td colspan="6" class="text-right">Seguro</td>
             <td class="text-right">
+              Seguro:
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -176,8 +194,8 @@ onMounted(() => {
           </tr>
 
           <tr v-if="sNegocio.negocio.valoroutras">
-            <td colspan="6" class="text-right">Outras</td>
             <td class="text-right">
+              Outras:
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -189,9 +207,10 @@ onMounted(() => {
           </tr>
 
           <tr>
-            <td colspan="6" class="text-right"><b>Total:</b></td>
             <td class="text-right">
+              <b>Total:</b>
               <b>
+                R$
                 {{
                   new Intl.NumberFormat("pt-BR", {
                     style: "decimal",
@@ -224,12 +243,27 @@ onMounted(() => {
           {{ formapagamento.formapagamento }}
         </span>
       </div>
-      <br /><br /><br /><br /><br />
 
-      <div class="final text-center">
-        <div>Migliorini & Migliorini Ltda</div>
-        <div>Cnpj: 04.576.775/0002-41</div>
-        <div>Fone: (66) 3515-0101</div>
+      <hr />
+      <div class="text-center text-h5 text-bold">
+        Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+      </div>
+      <BarCode
+        :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
+        :format="'code128'"
+        display-value="false"
+        :width="2"
+        :height="70"
+      />
+      <div class="text-center text-h5 text-bold">
+        R$
+        {{
+          new Intl.NumberFormat("pt-BR", {
+            style: "decimal",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(sNegocio.negocio.valortotal)
+        }}
       </div>
     </div>
   </template>
@@ -251,7 +285,7 @@ and open the template in the editor.
   }
 
   @page {
-    margin: 1cm;
+    margin: 0.1cm;
   }
 }
 
@@ -264,7 +298,7 @@ and open the template in the editor.
     background: white;
 
     border: 1px solid grey;
-    padding: 1.3cm;
+    padding: 0.3cm;
 
     /* to centre page on screen*/
     margin-left: auto;
@@ -275,20 +309,20 @@ and open the template in the editor.
 @media all {
   .borda table {
     border: 1px solid blue;
-    padding: 10px;
+    padding: 5px;
   }
 
   body {
     font-family: sans-serif;
-    font-size: 7pt;
+    font-size: 4pt;
   }
 
   div.cabecalho,
   div.rodape {
     width: 100%;
-    border-top: 4px solid black;
+    border-top: 3px solid black;
     padding: 0.2cm;
-    font-size: 20pt;
+    font-size: 15pt;
     font-weight: bold;
     margin: 0cm;
   }
@@ -302,7 +336,7 @@ and open the template in the editor.
   }
 
   div.cabecalho {
-    margin-bottom: 0.5cm;
+    /* margin-bottom: 0.5cm; */
     border-bottom: 4px solid black;
   }
 
@@ -323,13 +357,13 @@ tbody.zebrada tr:first-child td {
     border-top: 2px solid black;
 }
 */
-
   td,
   th {
     text-align: left;
     padding: 0.02cm;
-    font-size: 7pt;
-    vertical-align: top;
+    font-size: 8pt;
+
+    /* vertical-align: top; */
   }
 
   th {
@@ -436,13 +470,13 @@ tbody.zebrada tr:first-child td {
 
 @media print {
   @page {
-    size: A4 portrait;
+    size: 8cm 30cm;
   }
 }
 
 @media screen {
   body {
-    width: 21cm;
+    width: 8cm;
   }
 }
 
@@ -453,27 +487,27 @@ tbody.zebrada tr:first-child td {
 
 /* especifico do relatorio */
 .codigo {
-  width: 1.1cm;
-  vertical-align: middle;
+  width: 0.3cm;
+  /* vertical-align: middle; */
 }
 
 .img {
-  width: 1cm;
+  width: 0.1cm;
 }
 
 .produto {
-  width: 8cm;
-  vertical-align: middle;
+  width: 0.3cm;
+  /* vertical-align: middle; */
 }
 
 .preco {
-  width: 5cm;
-  vertical-align: middle;
+  width: 0.3cm;
+  /* vertical-align: middle; */
 }
 
 .unidademedida {
   width: 0.3cm;
-  vertical-align: middle;
+  /* vertical-align: middle; */
 }
 
 .variacao {
@@ -482,7 +516,7 @@ tbody.zebrada tr:first-child td {
 
 .referencia {
   width: 1.5cm;
-  vertical-align: middle;
+  /* vertical-align: middle; */
 }
 
 .data {
@@ -490,19 +524,19 @@ tbody.zebrada tr:first-child td {
 }
 
 .quantidade {
-  width: 0.5cm;
+  width: 0.3cm;
   text-align: right;
-  vertical-align: middle;
+  /* vertical-align: middle; */
 }
 
 .valor {
-  width: 1cm;
-  vertical-align: middle;
+  width: 0.1cm;
+  /* vertical-align: middle; */
 }
 
 .local {
   width: 0.7cm;
-  vertical-align: middle;
+  /* vertical-align: middle; */
 }
 
 .prateleira {
@@ -547,10 +581,14 @@ tbody.zebrada tr:first-child td {
 
 #logoOrcamento {
   text-align: right;
-  margin-top: -35px;
+  margin-top: -30px;
 }
 
 #logoOrcamento img {
-  width: 150px;
+  width: 100px;
+}
+
+hr {
+  border: 0.8px solid black;
 }
 </style>

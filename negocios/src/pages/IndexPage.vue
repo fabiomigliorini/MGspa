@@ -27,6 +27,8 @@ const dialogComanda = ref(false);
 const listagemNotasRef = ref(null);
 const dialogOrcamento = ref(false);
 const iFrameOrcamentoRef = ref(null);
+const dialogOrcamentoTermica = ref(false);
+const iFrameOrcamentoTermicaRef = ref(null);
 
 const hotkeys = (event) => {
   switch (event.key) {
@@ -156,6 +158,7 @@ const fecharDialogs = async () => {
   dialogRomaneio.value = false;
   dialogComanda.value = false;
   dialogOrcamento.value = false;
+  dialogOrcamentoTermica.value = false;
 };
 
 const abrirDocumentoSeFechado = async () => {
@@ -269,8 +272,30 @@ const romaneio = async () => {
 };
 
 const orcamento = async () => {
-  fecharDialogs();
-  dialogOrcamento.value = true;
+  Dialog.create({
+    title: "Selecione uma opção",
+    message: "Selecione o tipo de impressão para o orçamento",
+    options: {
+      type: "radio",
+      model: "opt1",
+      // isValid: val => val === 'opt2',
+      // inline: true
+      items: [
+        { label: "Impressora Papel A4", value: "papela4" },
+        { label: "Impressora Térmica", value: "termica" },
+      ],
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk((data) => {
+    if (data == "papela4") {
+      fecharDialogs();
+      dialogOrcamento.value = true;
+    } else {
+      fecharDialogs();
+      dialogOrcamentoTermica.value = true;
+    }
+  });
 };
 
 const comanda = async () => {
@@ -328,6 +353,10 @@ const imprimirAbrirRomaneio = async () => {
 
 const imprimirOrcamento = () => {
   iFrameOrcamentoRef.value.contentWindow.print();
+};
+
+const imprimirOrcamentoTermica = () => {
+  iFrameOrcamentoTermicaRef.value.contentWindow.print();
 };
 
 const novaNota = async (modelo) => {
@@ -516,6 +545,29 @@ onUnmounted(() => {
             flat
             label="Imprimir"
             @click="imprimirOrcamento()"
+          />
+          <q-btn color="primary" flat label="Fechar" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Orçamento Termica -->
+    <q-dialog v-model="dialogOrcamentoTermica" full-height>
+      <q-card style="height: 100%">
+        <q-card-section style="height: 91%" class="q-pb-none">
+          <iframe
+            ref="iFrameOrcamentoTermicaRef"
+            style="width: 100%; height: 100%; border: none"
+            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento-termica'"
+          ></iframe>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            color="primary"
+            flat
+            label="Imprimir"
+            @click="imprimirOrcamentoTermica()"
           />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>

@@ -48,6 +48,15 @@ const routes = [
     ],
   },
 
+  {
+    path: "/offline/:uuid/orcamento-termica",
+    // component: () => import("layouts/OrcamentoLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/OrcamentoTermicaPage.vue") },
+    ],
+  },
+
+
 
   // Always leave this as last one,
   // but you can also remove it
