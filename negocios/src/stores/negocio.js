@@ -314,6 +314,41 @@ export const negocioStore = defineStore("negocio", {
       return negocio;
     },
 
+    async duplicar() {
+      const uuid = uid();
+      // const negocio = { ...this.negocio };
+      // let negocio = Object.assign({}, this.negocio);
+      let negocio = JSON.parse(JSON.stringify(this.negocio));
+      negocio.codnegocio = null;
+      negocio.uuid = uuid;
+      negocio.codnegociostatus = 1;
+      negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
+      negocio.criacao = moment().format("YYYY-MM-DD HH:mm:ss");
+      negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
+      negocio.sincronizado = false;
+      negocio.codpdv = null;
+      negocio.pagamentos = [];
+      negocio.titulos = [];
+      negocio.notas = [];
+      negocio.PagarMePedidoS = [];
+      negocio.pixCob = [];
+      negocio.itens = negocio.itens.filter((i) => {
+        return i.inativo == null;
+      });
+      negocio.itens.forEach((i) => {
+        i.codnegocioprodutobarra = null;
+        i.codnegocio = null;
+        i.uuid = uid();
+      });
+      db.negocio.add(negocio, uuid);
+      this.atualizarListagem();
+      this.negocio = negocio;
+      await this.carregarChavesEstrangeiras();
+      await this.salvar();
+      this.atualizarListagem();
+      return negocio;
+    },
+
     async carregarChavesEstrangeiras() {
       var naturezaoperacao = null;
       var codoperacao = null;
@@ -698,7 +733,6 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async sincronizar(uuid) {
-      console.log("entrou sincronizar");
       const negocio = await db.negocio.get(uuid);
       try {
         const ret = await sSinc.putNegocio(negocio);

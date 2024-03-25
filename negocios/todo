@@ -1,6 +1,6 @@
 MANDATORY:
-TODO Navegacao Negocios Fechados com opcao abrir
 TODO Comanda
+TODO Alterar Pessoa/Detalhes mesmo em negocio fechado (reabrir)
 
 PODE SER DEPOIS DE 1/ABRIL
 TODO fazer baixa de vales automaticamente
@@ -52,3 +52,5 @@ TODO Controle de permissoes (Autorização de Dispositivos / Cancelar Negocio)
 [X] TODO fazer tela para gerenciar cadastro dos PDVs autorizados
 [X] TODO Tela/Bordero Totais do dia C/Detalhamento --- nome da tela Conferencia
 [X] TODO Editar Nome do PDV
+[X] TODO Navegacao Negocios Fechados com opcao abrir
+[X] TODO Botao Duplicar
