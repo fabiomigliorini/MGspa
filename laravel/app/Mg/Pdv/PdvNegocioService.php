@@ -211,7 +211,9 @@ class PdvNegocioService
 
         // marca negocio como fechado
         $negocio->codnegociostatus = NegocioStatus::FECHADO;
-        $negocio->codusuario = Auth::user()->codusuario;
+        if ($usuario = Auth::user()) {
+            $negocio->codusuario = $usuario->codusuario;
+        }
         $negocio->codpdv = $pdv->codpdv;
         $negocio->lancamento = Carbon::now();
         $negocio->save();
