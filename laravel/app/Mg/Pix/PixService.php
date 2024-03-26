@@ -287,6 +287,7 @@ class PixService
         }
         $nfp->tipo = 17;
         $nfp->integracao = true;
+        $nfp->avista = true;
         $nfp->codformapagamento = $fp->codformapagamento;
         $nfp->save();
         $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
