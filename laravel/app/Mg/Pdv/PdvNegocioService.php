@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Exception;
 use DB;
-
+use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
@@ -14,24 +14,29 @@ use Mg\Negocio\NegocioStatus;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
-use Mg\Negocio\NegocioService;
+use Illuminate\Support\Facades\Log;
+
 
 class PdvNegocioService
 {
 
     public static function negocio($data, Pdv $pdv)
     {
-        // abre transacao no banco
-        DB::beginTransaction();
-
         // Procura se já existe um negocio com o uuid na base
         $negocio = Negocio::firstOrNew(['uuid' => $data['uuid']]);
-        if ($negocio->codnegociostatus == 2) {
-            throw new Exception("Tentando atualizar um negocio Fechado {$negocio->codnegocio}!", 1);
+
+        // Se Fechado/Cancelado
+        if (in_array($negocio->codnegociostatus, [2, 3])) {
+            return static::negocioFechado($negocio, $data, $pdv);
         }
-        if ($negocio->codnegociostatus == 3) {
-            throw new Exception("Tentando atualizar um negocio Cancelado {$negocio->codnegocio}!", 1);
-        }
+
+        // Se Aberto
+        return static::negocioAberto($negocio, $data, $pdv);
+    }
+
+
+    public static function negocioAberto(Negocio $negocio, $data, Pdv $pdv)
+    {
 
         // importa os dados do negocio
         $negocio->fill($data);
@@ -72,27 +77,63 @@ class PdvNegocioService
         $uuids = array_column($data['pagamentos'], 'uuid');
         NegocioFormaPagamento::where('codnegocio', $negocio->codnegocio)->where('integracao', false)->whereNotIn('uuid', $uuids)->delete();
 
-        // salva no banco
-        DB::commit();
         return $negocio;
     }
+
+    public static function negocioFechado(Negocio $negocio, $data, Pdv $pdv)
+    {
+        if ($negocio->valortotal != $data['valortotal']) {
+            throw new Exception("Não é permitido alterar os valores de um negocio Fechado ou Cancelado {$negocio->codnegocio}!", 1);
+        }
+        if ($negocio->NaturezaOperacao->financeiro != $data['financeiro']) {
+            throw new Exception("Não é permitido alterar de uma Natureza que não gera financeiro para outra que gera, ou vice-versa {$negocio->codnegocio}!", 1);
+        }
+
+        $natNova = NaturezaOperacao::findOrFail($data['codnaturezaoperacao']);
+        if ($negocio->NaturezaOperacao->codoperacao !== $natNova->codoperacao) {
+            throw new Exception("Não é permitido alterar de uma Natureza de Saída para outra de Entrada ou vice-versa {$negocio->codnegocio}!", 1);
+        }
+
+        $negocio->fill($data);
+        $negocio->codpdv = $pdv->codpdv;
+        $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
+        $negocio->codusuario = Auth::user()->codusuario;
+        $negocio->save();
+
+        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
+            foreach ($nfp->TituloS as $titulo) {
+                $titulo->codpessoa = $negocio->codpessoa;
+                $titulo->codtipotitulo = $natNova->codtipotitulo;
+                $titulo->codcontacontabil = $natNova->codcontacontabil;
+                $titulo->save();
+            }
+        }
+
+        // agenda movimentacao de estoque
+        static::movimentarEstoque($negocio);
+
+        return $negocio;
+    }
+
 
     public static function movimentarEstoque(Negocio $negocio)
     {
         // Chama MGLara para fazer movimentacao do estoque com delay de 10 segundos
         $url = env('MGLARA_URL') . "estoque/gera-movimento-negocio/{$negocio->codnegocio}?delay=10";
-        $ret = json_decode(file_get_contents($url, false, stream_context_create([
-            "ssl" => [
-                "verify_peer" => false,
-                "verify_peer_name" => false,
-            ]
-        ])));
-        if (@$ret->response !== 'Agendado') {
-            echo '<pre>';
-            var_dump($ret);
-            echo '<hr>';
-            die('Erro ao Gerar Movimentação de Estoque');
-            // return false;
+        try {
+            $ret = json_decode(file_get_contents($url, false, stream_context_create([
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ]
+            ])));
+            if (@$ret->response !== 'Agendado') {
+                Log::error("Erro ao agendar movimentacao de estoque do negocio {$negocio->codnegocio}: ", (array) $ret);
+                return false;
+            }
+        } catch (\Throwable $th) {
+            Log::error("Erro ao agendar movimentacao de estoque do negocio {$negocio->codnegocio}: {$th->getMessage()}");
+            return false;
         }
         return true;
     }
@@ -189,10 +230,7 @@ class PdvNegocioService
         }
 
         // agenda movimentacao de estoque
-        try {
-            static::movimentarEstoque($negocio);
-        } catch (\Throwable $th) {
-        }
+        static::movimentarEstoque($negocio);
 
         // retorna
         return $negocio;
@@ -224,7 +262,7 @@ class PdvNegocioService
         $negocio->codnegociostatus = NegocioStatus::CANCELADO;
         $negocio->justificativa = $justificativa;
         $negocio->save();
-        NegocioService::movimentaEstoque($negocio);
+        static::movimentarEstoque($negocio);
         return $negocio;
     }
 }

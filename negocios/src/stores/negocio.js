@@ -761,19 +761,24 @@ export const negocioStore = defineStore("negocio", {
         }
       } catch (error) {
         console.log(error);
+        return false;
       }
       await this.atualizarListagem();
+      return true;
     },
 
     async recarregarDaApi(codOrUuid) {
       try {
         const ret = await sSinc.getNegocio(codOrUuid);
-        if (ret.codnegocio) {
-          this.negocio = ret;
-          db.negocio.put(ret);
+        if (!ret.codnegocio) {
+          return false;
         }
+        this.negocio = ret;
+        db.negocio.put(ret);
+        return true;
       } catch (error) {
         console.log(error);
+        return false;
       }
     },
 

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { negocioStore } from "stores/negocio";
-import { Dialog } from "quasar";
+import { Dialog, Notify } from "quasar";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpjCpf } from "../../utils/formatador.js";
 import moment from "moment/min/moment-with-locales";
@@ -143,8 +143,13 @@ const informarVendedor = async (codpessoavendedor) => {
   });
 };
 
-const sincronizar = () => {
-  sNegocio.sincronizar(sNegocio.negocio.uuid);
+const sincronizar = async () => {
+  if (await sNegocio.sincronizar(sNegocio.negocio.uuid)) {
+    Notify.create({
+      type: "positive",
+      message: "Negócio Sincronizado com o Servidor!",
+    });
+  }
 };
 
 const recarregarDaApi = () => {
@@ -156,6 +161,7 @@ const recarregarDaApi = () => {
     options: {
       type: "toggle",
       model: [],
+      isValid: (val) => val[0] == "OK",
       items: [
         {
           label: "Sim, pode apagar o que eu alterei!",
@@ -164,10 +170,13 @@ const recarregarDaApi = () => {
         },
       ],
     },
-  }).onOk((data) => {
-    if (data[0] == "OK") {
-      const cod = sNegocio.negocio.codnegocio || sNegocio.negocio.uuid;
-      sNegocio.recarregarDaApi(cod);
+  }).onOk(async () => {
+    if (await sNegocio.recarregarDaApi(sNegocio.negocio.uuid)) {
+      sNegocio.atualizarListagem();
+      Notify.create({
+        type: "positive",
+        message: "Dados Recarregados do Servidor!",
+      });
     }
   });
 };
@@ -270,11 +279,7 @@ const negocioStatusIconColor = () => {
       <q-form ref="formItem" @submit="salvarPessoa()">
         <q-card-section>
           <q-list>
-            <q-item
-              :clickable="sNegocio.podeEditar"
-              v-ripple
-              @click="informarVendedor(null)"
-            >
+            <q-item clickable v-ripple @click="informarVendedor(null)">
               <q-item-section avatar>
                 <q-avatar
                   color="negative"
@@ -287,7 +292,7 @@ const negocioStatusIconColor = () => {
             <q-item
               v-for="vendedor in vendedores"
               :key="vendedor.codpessoa"
-              :clickable="sNegocio.podeEditar"
+              clickable
               v-ripple
               @click="informarVendedor(vendedor.codpessoa)"
             >
@@ -310,7 +315,7 @@ const negocioStatusIconColor = () => {
     <!-- <q-item-label header>Pessoa</q-item-label> -->
 
     <!-- Filial -->
-    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarPessoa()">
+    <q-item clickable @click="editarPessoa()">
       <q-item-section avatar top>
         <q-avatar icon="store" color="grey" text-color="white" />
       </q-item-section>
@@ -326,7 +331,7 @@ const negocioStatusIconColor = () => {
     </q-item>
 
     <!-- Natureza -->
-    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarPessoa()">
+    <q-item clickable v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
         <q-avatar
           icon="work"
@@ -350,7 +355,7 @@ const negocioStatusIconColor = () => {
     </q-item>
 
     <!-- PESSOA -->
-    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarPessoa()">
+    <q-item clickable v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
         <q-avatar icon="person" color="grey" text-color="white" />
       </q-item-section>
@@ -411,7 +416,7 @@ const negocioStatusIconColor = () => {
 
     <!-- OBSERVACOES -->
     <q-item
-      :clickable="sNegocio.podeEditar"
+      clickable
       v-ripple
       v-if="sNegocio.negocio.observacoes"
       @click="editarPessoa()"
@@ -432,7 +437,8 @@ const negocioStatusIconColor = () => {
       v-if="sNegocio.negocio.Pessoa != undefined && sNegocio.negocio.financeiro"
     >
       <q-item
-        :clickable="sNegocio.podeEditar"
+        clickable
+        v-ripple
         v-if="sNegocio.negocio.Pessoa.codformapagamento"
       >
         <q-item-section avatar top>
@@ -451,7 +457,7 @@ const negocioStatusIconColor = () => {
     <q-separator spaced inset />
 
     <!-- VENDEDOR -->
-    <q-item :clickable="sNegocio.podeEditar" v-ripple @click="editarVendedor()">
+    <q-item clickable v-ripple @click="editarVendedor()">
       <q-item-section avatar top>
         <q-avatar icon="escalator_warning" color="grey" text-color="white" />
       </q-item-section>

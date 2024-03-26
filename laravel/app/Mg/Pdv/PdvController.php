@@ -129,7 +129,9 @@ class PdvController
     public function putNegocio(PdvRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);
+        DB::beginTransaction();
         $negocio = PdvNegocioService::negocio($request->negocio, $pdv);
+        DB::commit();
         return new NegocioResource($negocio);
     }
 
@@ -271,7 +273,7 @@ class PdvController
         $pdf = NegocioComandaService::pdf($negocio);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="Comanda'.$codnegocio.'.pdf"'
+            'Content-Disposition' => 'inline; filename="Comanda' . $codnegocio . '.pdf"'
         ]);
     }
 
@@ -281,7 +283,7 @@ class PdvController
         NegocioComandaService::imprimir($negocio, $impressora);
     }
 
-    public function unificarComanda (PdvRequest $request, $codnegocio, $codnegociocomanda)
+    public function unificarComanda(PdvRequest $request, $codnegocio, $codnegociocomanda)
     {
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($codnegocio);
