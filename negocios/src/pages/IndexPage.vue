@@ -277,16 +277,13 @@ const orcamento = async () => {
     message: "Selecione o tipo de impressão para o orçamento",
     options: {
       type: "radio",
-      model: "opt1",
-      // isValid: val => val === 'opt2',
-      // inline: true
+      isValid: (val) => val !== undefined,
       items: [
         { label: "Impressora Papel A4", value: "papela4" },
         { label: "Impressora Térmica", value: "termica" },
       ],
     },
     cancel: true,
-    persistent: true,
   }).onOk((data) => {
     if (data == "papela4") {
       fecharDialogs();
@@ -553,7 +550,7 @@ onUnmounted(() => {
 
     <!-- Orçamento Termica -->
     <q-dialog v-model="dialogOrcamentoTermica" full-height>
-      <q-card style="height: 100%">
+      <q-card style="height: 100%; width: 360px">
         <q-card-section style="height: 91%" class="q-pb-none">
           <iframe
             ref="iFrameOrcamentoTermicaRef"
@@ -602,7 +599,7 @@ onUnmounted(() => {
         <!-- ORCAMENTO -->
         <q-btn
           fab
-          icon="print"
+          icon="mdi-clipboard-edit-outline"
           color="secondary"
           @click="orcamento()"
           v-if="

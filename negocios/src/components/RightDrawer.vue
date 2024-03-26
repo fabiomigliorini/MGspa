@@ -5,6 +5,6 @@ import DetalheNegocio from "components/offline/DetalheNegocio.vue";
 <template>
   <!-- TOTAIS -->
   <total-negocio />
-  <q-separator spaced inset />
+  <q-separator spaced />
   <detalhe-negocio />
 </template>

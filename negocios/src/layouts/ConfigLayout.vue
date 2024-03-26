@@ -26,7 +26,9 @@ const toggleLeftDrawer = () => {
         <div class="gt-xs q-mr-sm">v{{ version }}</div>
 
         <usuario-conectado />
-        <q-btn to="/" round icon="point_of_sale" flat />
+        <q-btn to="/" round icon="point_of_sale" flat>
+          <q-tooltip class="bg-accent"> Tela de Vendas </q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 

@@ -83,7 +83,7 @@ class PdvNegocioService
     public static function negocioFechado(Negocio $negocio, $data, Pdv $pdv)
     {
         if ($negocio->valortotal != $data['valortotal']) {
-            throw new Exception("Não é permitido alterar os valores de um negocio Fechado ou Cancelado {$negocio->codnegocio}!", 1);
+            throw new Exception("Não é permitido alterar os valores de um negocio Fechado ou Cancelado {$negocio->codnegocio} {$negocio->valortotal} != {$data['valortotal']}!", 1);
         }
         if ($negocio->NaturezaOperacao->financeiro != $data['financeiro']) {
             throw new Exception("Não é permitido alterar de uma Natureza que não gera financeiro para outra que gera, ou vice-versa {$negocio->codnegocio}!", 1);
@@ -94,10 +94,12 @@ class PdvNegocioService
             throw new Exception("Não é permitido alterar de uma Natureza de Saída para outra de Entrada ou vice-versa {$negocio->codnegocio}!", 1);
         }
 
+        // Não alterar usuario, pdv nem data de lançamento
+        unset($data['codusuario']);
+        unset($data['lancamento']);
+        unset($data['codpdv']);
         $negocio->fill($data);
-        $negocio->codpdv = $pdv->codpdv;
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
-        $negocio->codusuario = Auth::user()->codusuario;
         $negocio->save();
 
         foreach ($negocio->NegocioFormaPagamentoS as $nfp) {

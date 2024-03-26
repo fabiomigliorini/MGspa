@@ -1,7 +1,15 @@
+BUG Falha ao alterar observacoes do http://localhost:9900/#/offline/65a381a6-2a90-44eb-aa60-0b863d6d529e - diz que esta alterando valores
+BUG Codigo de Barras do Orcamento com UUID quando não tem CODNEGOCIO (Offline)
+
 PODE SER DEPOIS DE 1/ABRIL
 TODO fazer baixa de vales automaticamente
 TODO fazer devolucao (Allan)
 FIXME nao gerar transferencias com itens inativos no MGLara/nota-fiscal/gera-transferencias
+TODO Adicionar Informacoes do Usuario na visualizacao do negocio
+TODO Adicionar Filtro por Usuario na listagem
+TODO Adicionar Totais no /conferencia
+TODO Adicionar Botao Cancelar nas Cobrancas da Stone
+TODO Impressão de Comanda de Vendedor
 
 IMPROVEMENTS:
 FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistema começa a misturar os itens de negocios diferentes
@@ -53,3 +61,4 @@ TODO Dar Permissao de natureza de operacao por grupo. Exemplo Caixa nao consegue
 [X] TODO Comanda
 [X] TODO Orcamento em PDF usando dados OffLine (Allan)
 [X] TODO Alterar Pessoa/Detalhes mesmo em negocio fechado
+[X] BUG Nao pode alterar a data de lancamento quando é um negocio fechado/cancelado

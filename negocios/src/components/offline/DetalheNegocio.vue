@@ -454,7 +454,7 @@ const negocioStatusIconColor = () => {
       </q-item>
     </template>
 
-    <q-separator spaced inset />
+    <q-separator spaced />
 
     <!-- VENDEDOR -->
     <q-item clickable v-ripple @click="editarVendedor()">
@@ -475,7 +475,7 @@ const negocioStatusIconColor = () => {
       </q-item-section>
     </q-item>
 
-    <q-separator spaced inset />
+    <q-separator spaced />
 
     <!-- CODIGOS -->
     <q-item>
@@ -505,6 +505,35 @@ const negocioStatusIconColor = () => {
           color="negative"
           icon="file_download"
         />
+      </q-item-section>
+    </q-item>
+
+    <q-separator spaced />
+
+    <!-- PDV/Usuario -->
+    <q-item>
+      <q-item-section avatar top>
+        <q-avatar icon="mdi-monitor-account" color="grey" text-color="white" />
+      </q-item-section>
+
+      <q-item-section>
+        <q-item-label lines="1" v-if="sNegocio.negocio.codusuario">
+          {{ sNegocio.negocio.usuario }}
+        </q-item-label>
+        <template v-if="sNegocio.negocio.codpdv">
+          <q-item-label lines="1" v-if="sNegocio.negocio.Pdv.apelido">
+            {{ sNegocio.negocio.Pdv.apelido }}
+          </q-item-label>
+          <q-item-label lines="1" v-else>
+            #{{ String(sNegocio.negocio.codpdv).padStart(8, "0") }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ sNegocio.negocio.Pdv.uuid }}
+          </q-item-label>
+          <q-item-label caption>
+            {{ sNegocio.negocio.Pdv.ip }}
+          </q-item-label>
+        </template>
       </q-item-section>
     </q-item>
   </q-list>

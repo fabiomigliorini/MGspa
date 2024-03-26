@@ -24,6 +24,11 @@ class NegocioResource extends Resource
             $ret['percentualdesconto'] = ($ret['valordesconto'] / $ret['valorprodutos']) * 100;
         }
         $ret['sincronizado'] = true;
+        $ret['usuario'] = $this->Usuario->usuario;
+        $ret['Pdv'] = null;
+        if (!empty($this->codpdv)) {
+            $ret['Pdv'] = $this->Pdv->toArray();
+        }
         $ret['Pessoa'] = $this->Pessoa->toArray();
         $ret['Pessoa']['formapagamento'] = $this->Pessoa->FormaPagamento->formapagamento??null;
         $ret['Pessoa']['cidade'] = $this->Pessoa->Cidade->cidade??null;

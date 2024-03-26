@@ -426,8 +426,10 @@ export const negocioStore = defineStore("negocio", {
     async salvar(sincronizar = true) {
       // marca alteracao
       if (sincronizar) {
-        this.negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
-        this.negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
+        if (this.negocio.codnegociostatus == 1) {
+          this.negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
+          this.negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
+        }
         this.negocio.sincronizado = false;
       }
       const ret = await db.negocio.put(toRaw(this.negocio));
