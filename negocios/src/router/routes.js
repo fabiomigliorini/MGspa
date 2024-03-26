@@ -27,9 +27,7 @@ const routes = [
   {
     path: "/listagem",
     component: () => import("layouts/ListagemLayout.vue"),
-    children: [
-      { path: "", component: () => import("pages/ListagemPage.vue") },
-    ],
+    children: [{ path: "", component: () => import("pages/ListagemPage.vue") }],
   },
 
   {
@@ -56,7 +54,13 @@ const routes = [
     ],
   },
 
-
+  {
+    path: "/devolucao/:codnegocio",
+    component: () => import("layouts/DevolucaoLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/DevolucaoPage.vue") },
+    ],
+  },
 
   // Always leave this as last one,
   // but you can also remove it

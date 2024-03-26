@@ -6,6 +6,7 @@ import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 import { formataCnpjCpf } from "../utils/formatador.js";
 import { produtoStore } from "src/stores/produto";
+import BarCode from "components/BarCode.vue";
 
 const route = useRoute();
 const sNegocio = negocioStore();
@@ -32,8 +33,15 @@ onMounted(() => {
           <td>#{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}</td>
         </tr>
         <tr>
-          <td class="text-bold text-right">Vendedor</td>
-          <td>{{ sNegocio.negocio.fantasiavendedor }}</td>
+          <td
+            v-if="sNegocio.negocio.fantasiavendedor"
+            class="text-bold text-right"
+          >
+            Vendedor
+          </td>
+          <td v-if="sNegocio.negocio.fantasiavendedor">
+            {{ sNegocio.negocio.fantasiavendedor }}
+          </td>
           <td class="text-bold text-right">Data</td>
           <td>
             {{
@@ -50,26 +58,23 @@ onMounted(() => {
             {{ sNegocio.negocio.fantasia }}
           </td>
         </tr>
-        <tr>
+        <tr v-if="sNegocio.negocio.Pessoa.cnpj">
           <td>Cnpj / CPF</td>
-          <td v-if="sNegocio.negocio.Pessoa.cnpj">
+          <td>
             {{ formataCnpjCpf(sNegocio.negocio.Pessoa.cnpj) }}
           </td>
         </tr>
-        <tr>
-          <td>Endereço:</td>
+        <tr v-if="sNegocio.negocio.codpessoa != 1">
           <td>
             <span v-if="sNegocio.negocio.Pessoa.endereco">
-              {{ sNegocio.negocio.Pessoa.endereco }},</span
-            >
-
+              {{ sNegocio.negocio.Pessoa.endereco }},
+            </span>
             <span v-if="sNegocio.negocio.Pessoa.numero"
-              >{{ sNegocio.negocio.Pessoa.numero }},</span
-            >
+              >{{ sNegocio.negocio.Pessoa.numero }},
+            </span>
             <span v-if="sNegocio.negocio.Pessoa.bairro">
-              {{ sNegocio.negocio.Pessoa.bairro }},</span
-            >
-
+              {{ sNegocio.negocio.Pessoa.bairro }},
+            </span>
             {{ sNegocio.negocio.Pessoa.cidade }} -
             {{ sNegocio.negocio.Pessoa.uf }}
           </td>
@@ -232,6 +237,31 @@ onMounted(() => {
         <div>Fone: (66) 3515-0101</div>
       </div>
     </div>
+    <br /><br />
+    <hr />
+    <div class="text-center text-h5 text-bold">
+      Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+    </div>
+    <div class="barcode">
+      <BarCode
+        :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
+        :format="'code128'"
+        display-value="false"
+        :width="2"
+        :height="70"
+        class="flex flex-center"
+      />
+    </div>
+    <div class="text-center text-h5 text-bold">
+      R$
+      {{
+        new Intl.NumberFormat("pt-BR", {
+          style: "decimal",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(sNegocio.negocio.valortotal)
+      }}
+    </div>
   </template>
 </template>
 <style>
@@ -350,6 +380,11 @@ tbody.zebrada tr:first-child td {
     padding-top: 2px;
     width: 50%;
     padding-bottom: 2px;
+  }
+
+  .barcode {
+    display: flex;
+    justify-content: center;
   }
 
   .negocio {

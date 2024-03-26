@@ -32,9 +32,9 @@ onMounted(() => {
               #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }} -
               {{ sNegocio.negocio.estoquelocal }}
             </span>
-            <span class="row"
-              >Vendedor: {{ sNegocio.negocio.fantasiavendedor }}</span
-            >
+            <span class="row" v-if="sNegocio.negocio.fantasiavendedor">
+              Vendedor: {{ sNegocio.negocio.fantasiavendedor }}
+            </span>
             {{
               moment(sNegocio.negocio.lancamento).format("DD/MM/YYYY HH:mm:SS")
             }}
@@ -49,7 +49,7 @@ onMounted(() => {
           </td>
         </tr>
         <tr>
-          <td>
+          <td v-if="sNegocio.negocio.Pessoa.codpessoa != 1">
             <span class="row">
               #{{ String(sNegocio.negocio.codpessoa).padStart(8, "0") }} |
               {{
@@ -224,47 +224,45 @@ onMounted(() => {
         </tbody>
       </table>
     </div>
-    <div class="pagamento">
-      <div v-if="sNegocio.negocio.pagamentos">
-        <b>Forma de Pagamento:</b>
-        <span
-          class="text-right"
-          v-for="formapagamento in sNegocio.negocio.pagamentos"
-          v-bind:key="formapagamento.codformapagamento"
-        >
-          <br />{{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(formapagamento.valorpagamento)
-          }}
-          &nbsp;
-          {{ formapagamento.formapagamento }}
-        </span>
-      </div>
-
-      <hr />
-      <div class="text-center text-h5 text-bold">
-        Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
-      </div>
-      <BarCode
-        :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
-        :format="'code128'"
-        display-value="false"
-        :width="2"
-        :height="70"
-      />
-      <div class="text-center text-h5 text-bold">
-        R$
-        {{
+    <div class="pagamento" v-if="sNegocio.negocio.pagamentos.length > 0">
+      <b>Forma de Pagamento:</b>
+      <span
+        class="text-right"
+        v-for="formapagamento in sNegocio.negocio.pagamentos"
+        v-bind:key="formapagamento.codformapagamento"
+      >
+        <br />{{
           new Intl.NumberFormat("pt-BR", {
             style: "decimal",
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
-          }).format(sNegocio.negocio.valortotal)
+          }).format(formapagamento.valorpagamento)
         }}
-      </div>
+        &nbsp;
+        {{ formapagamento.formapagamento }}
+      </span>
+    </div>
+
+    <hr />
+    <div class="text-center text-h5 text-bold">
+      Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+    </div>
+    <BarCode
+      :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
+      :format="'code128'"
+      display-value="false"
+      :width="2"
+      :height="70"
+    />
+    <div class="text-center text-h5 text-bold">
+      R$
+      {{
+        new Intl.NumberFormat("pt-BR", {
+          style: "decimal",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(sNegocio.negocio.valortotal)
+      }}
     </div>
   </template>
 </template>
