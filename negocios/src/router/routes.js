@@ -55,7 +55,7 @@ const routes = [
   },
 
   {
-    path: "/devolucao/:codnegocio",
+    path: "/offline/:uuid/devolucao",
     component: () => import("layouts/DevolucaoLayout.vue"),
     children: [
       { path: "", component: () => import("pages/DevolucaoPage.vue") },

@@ -1,20 +1,23 @@
 <script setup>
-import { ref } from "vue";
 import UsuarioConectado from "components/UsuarioConectado.vue";
 import { version } from "../../package.json";
-
-const leftDrawerOpen = ref(false);
-
-const toggleLeftDrawer = () => {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-};
+import { negocioStore } from "src/stores/negocio";
+const sNegocio = negocioStore();
 </script>
 
 <template>
   <q-layout view="hHh lpr fFf">
     <q-header reveal elevated height-hint="98">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
+        <template v-if="sNegocio.negocio">
+          <q-btn
+            dense
+            flat
+            round
+            icon="arrow_back"
+            :to="'/offline/' + sNegocio.negocio.uuid"
+          />
+        </template>
 
         <q-toolbar-title>
           <q-avatar>
@@ -26,7 +29,6 @@ const toggleLeftDrawer = () => {
 
         <!-- TODO: criar componente para usar nos dois layouts -->
         <usuario-conectado />
-        <q-btn to="/" round icon="point_of_sale" flat />
       </q-toolbar>
     </q-header>
 
