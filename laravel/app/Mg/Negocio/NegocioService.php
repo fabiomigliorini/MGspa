@@ -26,6 +26,10 @@ class NegocioService
         if (($negocio->valortotal - $valorpagamento) > 0.01) {
             return false;
         }
+        // se for de um PDV, deixa o usuario fechar pela interface
+        if (!empty($negocio->codpdv)) {
+            return false;
+        }
         return static::fechar($negocio);
     }
 
