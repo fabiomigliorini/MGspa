@@ -329,39 +329,58 @@ const lerCodigoBarras = async () => {
   <q-dialog v-model="sProduto.dialogPesquisa" maximized>
     <q-card>
       <q-card-section class="bg-primary text-white">
-        <q-input
-          outlined
-          autofocus
-          v-model="sProduto.textoPesquisa"
-          label="Pesquisa"
-          ref="refPesquisa"
-          bg-color="white"
-          @keydown.enter.prevent="sProduto.pesquisar()"
-        >
-          <template v-slot:append>
-            <q-btn
-              round
-              dense
-              flat
-              icon="close"
-              @click="sProduto.textoPesquisa = ''"
-            >
-              <q-tooltip class="bg-accent">Limpar</q-tooltip>
-            </q-btn>
-            <q-btn round dense flat icon="search" @click="sProduto.pesquisar()">
-              <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
-            </q-btn>
-            <q-btn
-              round
-              dense
-              flat
-              icon="logout"
-              @click="sProduto.dialogPesquisa = false"
-            >
-              <q-tooltip class="bg-accent">Fechar</q-tooltip>
-            </q-btn>
-          </template>
-        </q-input>
+        <div class="row q-col-gutter-sm">
+          <q-input
+            outlined
+            autofocus
+            v-model="sProduto.textoPesquisa"
+            label="Pesquisa"
+            ref="refPesquisa"
+            bg-color="white"
+            class="col"
+            @keydown.enter.prevent="sProduto.pesquisar()"
+          >
+            <template v-slot:append>
+              <q-btn
+                round
+                dense
+                flat
+                icon="close"
+                @click="sProduto.textoPesquisa = ''"
+              >
+                <q-tooltip class="bg-accent">Limpar</q-tooltip>
+              </q-btn>
+              <q-btn
+                round
+                dense
+                flat
+                icon="search"
+                @click="sProduto.pesquisar()"
+              >
+                <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
+              </q-btn>
+              <q-btn
+                round
+                dense
+                flat
+                icon="logout"
+                @click="sProduto.dialogPesquisa = false"
+              >
+                <q-tooltip class="bg-accent">Fechar</q-tooltip>
+              </q-btn>
+            </template>
+          </q-input>
+          <q-select
+            outlined
+            borderless
+            v-model="sProduto.sortPesquisa"
+            :options="['Alfabética', 'Preço', 'Código', 'Barras']"
+            label="Ordem"
+            bg-color="white"
+            style="width: 130px"
+            @update:model-value="sProduto.pesquisar()"
+          />
+        </div>
       </q-card-section>
 
       <q-card-section class="q-pa-none q-ma-none">

@@ -9,6 +9,7 @@ export const produtoStore = defineStore("produto", {
     resultadoPesquisa: [],
     textoPesquisa: null,
     dialogPesquisa: false,
+    sortPesquisa: "Alfabética",
   }),
 
   actions: {
@@ -63,13 +64,66 @@ export const produtoStore = defineStore("produto", {
 
       // transforma colecao de produto em array
       var arrProdutos = await colProdutos.toArray();
-      arrProdutos = arrProdutos.sort((a, b) => {
-        if (a.produto > b.produto) {
-          return 1;
-        } else {
-          return -1;
-        }
-      });
+      switch (this.sortPesquisa) {
+        case "Preço":
+          arrProdutos = arrProdutos.sort((a, b) => {
+            if (a.preco > b.preco) {
+              return 1;
+            } else if (a.preco == b.preco) {
+              if (a.produto > b.produto) {
+                return 1;
+              } else {
+                return -1;
+              }
+            } else {
+              return -1;
+            }
+          });
+          break;
+
+        case "Código":
+          arrProdutos = arrProdutos.sort((a, b) => {
+            if (a.codproduto > b.codproduto) {
+              return 1;
+            } else if (a.codproduto == b.codproduto) {
+              if (a.produto > b.produto) {
+                return 1;
+              } else {
+                return -1;
+              }
+            } else {
+              return -1;
+            }
+          });
+          break;
+
+        case "Barras":
+          arrProdutos = arrProdutos.sort((a, b) => {
+            if (a.barras > b.barras) {
+              return 1;
+            } else if (a.barras == b.barras) {
+              if (a.produto > b.produto) {
+                return 1;
+              } else {
+                return -1;
+              }
+            } else {
+              return -1;
+            }
+          });
+          break;
+
+        case "Alfabética":
+        default:
+          arrProdutos = arrProdutos.sort((a, b) => {
+            if (a.produto > b.produto) {
+              return 1;
+            } else {
+              return -1;
+            }
+          });
+          break;
+      }
       LoadingBar.stop();
       if (arrProdutos.length > 200) {
         Notify.create({
@@ -92,7 +146,6 @@ export const produtoStore = defineStore("produto", {
         });
       }
       this.resultadoPesquisa = arrProdutos;
-      // this.resultadoPesquisa = arrProdutos;
     },
 
     async buscarBarras(barras) {
