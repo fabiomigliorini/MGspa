@@ -83,6 +83,7 @@ class PdvNegocioPrazoService
         }
         $sufixos = [$sufixo];
 
+        $totalTitulos = 0;
         // Percorre todas as formas
         foreach ($nfps as $nfp) {
 
@@ -101,6 +102,7 @@ class PdvNegocioPrazoService
                     $valor = $nfp->valorparcela;
                 }
                 $total += $valor;
+                $totalTitulos += $valor;
 
                 // calcula data de vencimento
                 if ($nfp->FormaPagamento->fechamento) {
@@ -161,6 +163,6 @@ class PdvNegocioPrazoService
             }
         }
 
-        return true;
+        return $totalTitulos;
     }
 }

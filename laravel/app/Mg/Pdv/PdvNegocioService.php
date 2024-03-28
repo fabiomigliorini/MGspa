@@ -219,7 +219,16 @@ class PdvNegocioService
         $negocio->save();
 
         // gera titulos do financeiro
-        PdvNegocioPrazoService::gerarTitulos($negocio);
+        if ($negocio->NaturezaOperacao->financeiro) {
+            $prazo = PdvNegocioPrazoService::gerarTitulos($negocio);
+            $negocio->valoraprazo = $prazo;
+            $negocio->valoravista = $negocio->valortotal - $prazo;
+            $negocio->save();
+        } else {
+            $negocio->valoraprazo = 0;
+            $negocio->valoravista = 0;
+            $negocio->save();
+        }
 
         // salva transacao no banco de dados
         DB::commit();

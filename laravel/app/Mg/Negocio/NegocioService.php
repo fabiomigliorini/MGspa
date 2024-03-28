@@ -4,6 +4,7 @@ namespace Mg\Negocio;
 
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Exception;
 
 use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
@@ -127,8 +128,7 @@ class NegocioService
 
         //se ja tem titulos gerados gera erro
         if (count($nfp->Titulos) != 0) {
-            $nfp->addError("codformapagamento", "Já existem Títulos gerados para a forma de pagamento, impossível gerar novos!");
-            return false;
+            throw new Exception("Já existem Títulos gerados para a forma de pagamento, impossível gerar novos!");
         }
 
         $total = 0;
@@ -178,7 +178,7 @@ class NegocioService
                 return false;
             }
         }
-        return true;
+        return $total;
     }
 
 }

@@ -1,5 +1,4 @@
 BUG Quando abre um negocio feito no antigo, ao fechar nao cria nota (problema valorprodutos não preenchido no MGsis)
-BUG Quando recebe um PIX/Cartao, ao consultar ele nao esta criando a nota nem atualizando as listagens
 BUG Falha ao alterar observacoes do http://localhost:9900/#/offline/65a381a6-2a90-44eb-aa60-0b863d6d529e - diz que esta alterando valores
 BUG Codigo de Barras do Orcamento com UUID quando não tem CODNEGOCIO (Offline)
 
@@ -64,3 +63,4 @@ TODO Dar Permissao de natureza de operacao por grupo. Exemplo Caixa nao consegue
 [X] TODO Orcamento em PDF usando dados OffLine (Allan)
 [X] TODO Alterar Pessoa/Detalhes mesmo em negocio fechado
 [X] BUG Nao pode alterar a data de lancamento quando é um negocio fechado/cancelado
+[X] BUG Quando recebe um PIX/Cartao, ao consultar ele nao esta criando a nota nem atualizando as listagens
