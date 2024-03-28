@@ -23,7 +23,8 @@ const edicaoPessoa = ref({
 });
 
 const vendedores = ref([]);
-
+const filtroVendedor = ref(null);
+const vendedoresFiltrados = ref([]);
 const dialogPessoa = ref(false);
 const dialogVendedor = ref(false);
 
@@ -103,10 +104,23 @@ const buscarListagemVendedores = async () => {
   LoadingBar.stop();
 };
 
+const filtrarVendedor = async () => {
+  if (!filtroVendedor.value) {
+    vendedoresFiltrados.value = vendedores.value;
+    return;
+  }
+  const filtro = filtroVendedor.value.toUpperCase();
+  vendedoresFiltrados.value = vendedores.value.filter((v) => {
+    return v.fantasia.toUpperCase().includes(filtro);
+  });
+};
+
 const editarVendedor = async () => {
   if (vendedores.value.length == 0) {
     await buscarListagemVendedores();
   }
+  filtroVendedor.value = null;
+  await filtrarVendedor();
   dialogVendedor.value = true;
 };
 
@@ -274,9 +288,18 @@ const negocioStatusIconColor = () => {
   </q-dialog>
 
   <!-- Editar Vendedor -->
-  <q-dialog v-model="dialogVendedor">
-    <q-card style="width: 500px; max-width: 80vw">
+  <q-dialog v-model="dialogVendedor" full-height>
+    <q-card style="width: 500px">
       <q-form ref="formItem" @submit="salvarPessoa()">
+        <q-card-section>
+          <q-input
+            outlined
+            autofocus
+            label="Vendedor"
+            v-model="filtroVendedor"
+            @update:model-value="filtrarVendedor()"
+          />
+        </q-card-section>
         <q-card-section>
           <q-list>
             <q-item clickable v-ripple @click="informarVendedor(null)">
@@ -290,7 +313,7 @@ const negocioStatusIconColor = () => {
               <q-item-section> Sem Vendedor </q-item-section>
             </q-item>
             <q-item
-              v-for="vendedor in vendedores"
+              v-for="vendedor in vendedoresFiltrados"
               :key="vendedor.codpessoa"
               clickable
               v-ripple
