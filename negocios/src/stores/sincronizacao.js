@@ -136,7 +136,9 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         await this.sincronizarNaturezaOperacao();
         await this.sincronizarPessoa();
         await this.sincronizarProduto();
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
 
       // esconde janela de progresso
       this.importacao.rodando = false;
@@ -310,6 +312,12 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
             limite: this.importacao.limiteRequisicao,
           },
         });
+
+        // se nao veio nada interrompe o loop
+        if (data.length == 0) {
+          break;
+        }
+
         // incrementa numero de requisicoes
         this.importacao.requisicoes++;
 
@@ -384,6 +392,12 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
             limite: this.importacao.limiteRequisicao,
           },
         });
+
+        // se nao veio nada interrompe o loop
+        if (data.length == 0) {
+          break;
+        }
+
         // incrementa numero de requisicoes
         this.importacao.requisicoes++;
 
