@@ -248,7 +248,13 @@
     </p>
     <div style="font-size: larger; margin-top: 2cm; border-top: 1px solid black">
         {{ $negocio->Pessoa->pessoa }} <br>
-        CNPJ/CPF {{ formataCnpjCpf($negocio->Pessoa->cnpj, $negocio->Pessoa->fisica) }}
+        @if ($negocio->Pessoa->fisica)
+            CPF
+        @else
+            CNPJ
+        @endif
+        {{ formataCnpjCpf($negocio->Pessoa->cnpj, $negocio->Pessoa->fisica) }}
+        ({{ formataCodigo($negocio->codpessoa) }})
     </div>
     <div style="font-size: larger; margin-top: 2cm; border-top: 1px solid black">
         Nome Completo Legível
