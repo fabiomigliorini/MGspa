@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "stores/sincronizacao";
-import { Notify } from "quasar";
+import { Notify, Dialog } from "quasar";
 import { falar } from "../../utils/falar.js";
 
 const router = useRouter();
@@ -55,6 +55,27 @@ const unificarComanda = async (codnegociocomanda) => {
     audio.play();
     falar("Falha ao buscar comanda!");
   }
+};
+
+const comanda = async () => {
+  Dialog.create({
+    title: "Informe o número da Comanda",
+    message: "Informe o número da comanda ou negócio que deseja unificar!",
+    prompt: {
+      model: "",
+      isValid: (val) => val > 100,
+      outlined: true,
+      type: "Number", // optional
+      min: 1, // optional
+      max: 99999999, // optional
+      step: 1, // optional
+      placeholder: "Comanda...",
+      // inputClass: "text-center",
+    },
+    cancel: true,
+  }).onOk(async (codnegociocomanda) => {
+    unificarComanda(parseInt(codnegociocomanda));
+  });
 };
 
 watch(barras, (newValue, oldValue) => {
@@ -282,6 +303,9 @@ const lerCodigoBarras = async () => {
         @click="sProduto.dialogPesquisa = true"
       >
         <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
+      </q-btn>
+      <q-btn round dense flat icon="receipt" @click="comanda()">
+        <q-tooltip class="bg-accent">Abir Comanda</q-tooltip>
       </q-btn>
       <q-btn
         round
