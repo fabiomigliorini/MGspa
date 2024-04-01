@@ -166,6 +166,7 @@ class PdvNegocioService
             //Calcula total pagamentos à vista e à prazo
             $valorPagamentos = 0;
             $valorPagamentosPrazo = 0;
+            $valorLimiteCredito = 0;
             foreach ($negocio->NegocioFormaPagamentos as $nfp) {
                 $valorPagamentos += $nfp->valortotal;
                 if ($nfp->prazo && $nfp->parcelas > 1 && $negocio->codpessoa == 1) {
@@ -177,8 +178,11 @@ class PdvNegocioService
                 if ($nfp->FormaPagamento->fechamento && $negocio->codpessoa == 1) {
                     throw new Exception('Somente é permitido Fechamento para Pessoas ou Empresas Cadastradas!', 1);
                 }
-                if (!$nfp->FormaPagamento->avista && !$nfp->FormaPagamento->entrega && !$nfp->FormaPagamento->pix) {
+                if (!$nfp->FormaPagamento->avista) {
                     $valorPagamentosPrazo += $nfp->valorpagamento;
+                    if (!$nfp->FormaPagamento->entrega && !$nfp->FormaPagamento->pix) {
+                        $valorLimiteCredito += $nfp->valorpagamento;
+                    }
                 }
             }
 
@@ -186,16 +190,18 @@ class PdvNegocioService
             if (($negocio->valortotal - $valorPagamentos) >= 0.01) {
                 $valorPagamentos = formataNumero($valorPagamentos, 2);
                 $valorTotal = formataNumero($negocio->valortotal, 2);
-                throw new Exception("O valor dos Pagamentos ($valorPagamentos) é inferior ao Total ($valorTotal)!", 1);
+                throw new Exception("O valor dos Pagamentos ({$valorPagamentos}) é inferior ao Total ({$valorTotal})!", 1);
             }
 
             // valida total à prazo
             if ($valorPagamentosPrazo > $negocio->valortotal) {
-                throw new Exception('O valor dos Pagamentos é superior ao Total!', 1);
+                $valorPagamentos = formataNumero($valorPagamentosPrazo, 2);
+                $valorTotal = formataNumero($negocio->valortotal, 2);
+                throw new Exception("O valor à prazo ({$valorPagamentos}) é superior ao Total ({$valorTotal})!", 1);
             }
 
             // valida se tem limite de credito
-            if (!PdvNegocioPrazoService::avaliaLimiteCredito($negocio->Pessoa, $valorPagamentosPrazo)) {
+            if (!PdvNegocioPrazoService::avaliaLimiteCredito($negocio->Pessoa, $valorLimiteCredito)) {
                 throw new Exception('Solicite Liberação de Crédito ao Departamento Financeiro!', 1);
             }
         }

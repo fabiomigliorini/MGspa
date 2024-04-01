@@ -186,6 +186,19 @@ const calcularParcelas = async () => {
 };
 
 const salvar = async () => {
+  if (
+    pagamento.value.codformapagamento !=
+      process.env.CODFORMAPAGAMENTO_ENTREGA &&
+    sNegocio.negocio.codpessoa == 1
+  ) {
+    Notify.create({
+      type: "negative",
+      message:
+        "Não é possível adicionar pagamento à Prazo para Consumidor! Informe o Cliente primeiro!",
+      actions: [{ icon: "close", color: "white" }],
+    });
+    return;
+  }
   sNegocio.dialog.pagamentoPrazo = false;
   var parc = parcelamentoDisponivel.value.find(
     (i) => i.parcelas == pagamento.value.parcelas

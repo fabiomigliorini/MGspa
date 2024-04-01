@@ -715,9 +715,9 @@ export const negocioStore = defineStore("negocio", {
       this.negocio.observacoes = observacoes;
       await this.carregarChavesEstrangeiras();
 
-      // desconto
+      // se tiver desconto e o negócio ainda estiver aberto
       const desconto = parseFloat(this.negocio.Pessoa.desconto);
-      if (desconto > 0) {
+      if (desconto > 0 && this.negocio.codnegociostatus == 1) {
         this.negocio.itens.forEach((item) => {
           item.percentualdesconto = desconto;
           this.itemRecalcularValorProdutos(item);

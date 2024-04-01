@@ -91,9 +91,9 @@ const hotkeys = (event) => {
       pix();
       break;
 
-    case "F9": // Nota Fiscal
+    case "F9": // A Prazo
       event.preventDefault();
-      romaneioOuNota();
+      prazo();
       break;
 
     default:
@@ -242,6 +242,14 @@ const pix = async () => {
   }
   await fecharDialogs();
   sNegocio.dialog.pagamentoPix = true;
+};
+
+const prazo = async () => {
+  if (sNegocio.negocio.codnegociostatus != 1) {
+    return;
+  }
+  await fecharDialogs();
+  sNegocio.dialog.pagamentoPrazo = true;
 };
 
 const urlRomaneio = computed({

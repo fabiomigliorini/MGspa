@@ -1,9 +1,5 @@
-BUG Nao deixar informar a Prazo quando codpessoa = 1 (ifnromaram a prazo, depois colocaram a pessoa, veio desconto, deu erro)
-BUG F9 não está funcionando
-BUG nao aplicar desconto quando altera o cliente depois de fechado o negocio
 TODO adicionar botão cancelar integração Stone
 TODO Fechar automaticamente com Stone e pix qr code
-TODO Adiciona Botao para informar comanda manualmente
 BUG Falha ao alterar observacoes do http://localhost:9900/#/offline/65a381a6-2a90-44eb-aa60-0b863d6d529e - diz que esta alterando valores
 BUG Codigo de Barras do Orcamento com UUID quando não tem CODNEGOCIO (Offline)
 
@@ -74,3 +70,8 @@ TODO Dar Permissao de natureza de operacao por grupo. Exemplo Caixa nao consegue
 [X] BUG Quando recebe um PIX/Cartao, ao consultar ele nao esta criando a nota nem atualizando as listagens
 [X] BUG Quando abre um negocio feito no antigo, ao fechar nao cria nota (problema valorprodutos não preenchido no MGsis)
 [X] BUG Adicionar Ordem por preco quando busca produto e tem $ na string
+[X] BUG Nao deixar informar a Prazo quando codpessoa = 1 (ifnromaram a prazo, depois colocaram a pessoa, veio desconto, deu erro)
+[X] BUG F9 não está funcionando
+[X] BUG nao aplicar desconto quando altera o cliente depois de fechado o negocio
+[X] BUG Deixou fechar #03451158 no teste com valor a prazo maior que valor do negocio
+[X] TODO Adiciona Botao para informar comanda manualmente
