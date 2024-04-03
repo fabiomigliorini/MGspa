@@ -32,6 +32,7 @@ export const negocioStore = defineStore("negocio", {
       codpessoa: 1, //Consumidor
       codnaturezaoperacao: 1, //Venda
       codoperacao: 2, //Saída
+      venda: true, //Saída
       impressora: null,
       codpagarmepos: null,
     },
@@ -77,6 +78,7 @@ export const negocioStore = defineStore("negocio", {
       this.padrao = { ...padrao };
       const nat = await db.naturezaOperacao.get(padrao.codnaturezaoperacao);
       this.padrao.codoperacao = nat.codoperacao;
+      this.padrao.venda = nat.venda;
     },
 
     async atualizarListagem() {
@@ -192,6 +194,7 @@ export const negocioStore = defineStore("negocio", {
         codestoquelocaldestino: null,
         codnaturezaoperacao: this.padrao.codnaturezaoperacao,
         codoperacao: this.padrao.codoperacao,
+        venda: this.padrao.venda,
         naturezaoperacao: null,
         financeiro: false,
         codnegociostatus: 1,
@@ -360,6 +363,7 @@ export const negocioStore = defineStore("negocio", {
     async carregarChavesEstrangeiras() {
       var naturezaoperacao = null;
       var codoperacao = null;
+      var venda = null;
       var operacao = null;
       var negociostatus = null;
       var estoquelocal = null;
@@ -375,6 +379,7 @@ export const negocioStore = defineStore("negocio", {
         naturezaoperacao = nat.naturezaoperacao;
         financeiro = nat.financeiro;
         codoperacao = nat.codoperacao;
+        venda = nat.venda;
         if (nat.codoperacao == 1) {
           operacao = "Entrada";
         } else {
@@ -424,6 +429,7 @@ export const negocioStore = defineStore("negocio", {
       this.negocio.naturezaoperacao = naturezaoperacao;
       this.negocio.financeiro = financeiro;
       this.negocio.codoperacao = codoperacao;
+      this.negocio.venda = venda;
       this.negocio.operacao = operacao;
       this.negocio.negociostatus = negociostatus;
       this.negocio.estoquelocal = estoquelocal;

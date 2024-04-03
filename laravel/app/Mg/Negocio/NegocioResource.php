@@ -34,6 +34,7 @@ class NegocioResource extends Resource
         $ret['Pessoa']['cidade'] = $this->Pessoa->Cidade->cidade??null;
         $ret['Pessoa']['uf'] = $this->Pessoa->Cidade->Estado->sigla??null;
         $ret['naturezaoperacao'] = $this->NaturezaOperacao->naturezaoperacao;
+        $ret['venda'] = $this->NaturezaOperacao->venda;
         $ret['financeiro'] = $this->NaturezaOperacao->financeiro;
         $ret['operacao'] = $this->Operacao->operacao;
         $ret['negociostatus'] = $this->NegocioStatus->negociostatus;
