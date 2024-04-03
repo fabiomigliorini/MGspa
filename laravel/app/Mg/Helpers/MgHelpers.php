@@ -9,8 +9,8 @@ if (!function_exists('formataData')) {
             return null;
         }
 
-        if (!$data instanceof Carbon\Carbon) {
-            $data = new Carbon\Carbon($data);
+        if (!$data instanceof Carbon) {
+            $data = new Carbon($data);
         }
 
         switch (strtoupper($formato)) {
@@ -571,7 +571,7 @@ if (!function_exists('urlArrGet')) {
     function urlArrGet($arrGet = [], $path = null, $parameters = [], $secure = null)
     {
         foreach ($arrGet as $key => $data) {
-            if ($data instanceof Carbon\Carbon) {
+            if ($data instanceof Carbon) {
                 $arrGet[$key] = $data->format('Y-m-d H:i:s');
             }
         }
