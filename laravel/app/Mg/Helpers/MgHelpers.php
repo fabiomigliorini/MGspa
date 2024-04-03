@@ -1,5 +1,7 @@
 <?php
 
+use Carbon\Carbon;
+
 if (!function_exists('formataData')) {
     function formataData($data, $formato = 'C')
     {
@@ -165,6 +167,42 @@ if (!function_exists('formataValorPorExtenso')) {
     }
 }
 
+if (!function_exists('formataDataPorExtenso')) {
+    function formataDataPorExtenso($data = false)
+    {
+        if ($data) {
+            $data = Carbon::parse($data)->format('Y-m-d');
+            $mes = date('m', strtotime($data));
+        } else {
+            $mes = date('m');
+            $data = date('Y-m-d');
+        }
+        $meses = array(
+            '01' => 'Janeiro',
+            '02' => 'Fevereiro',
+            '03' => 'Marco',
+            '04' => 'Abril',
+            '05' => 'Maio',
+            '06' => 'Junho',
+            '07' => 'Julho',
+            '08' => 'Agosto',
+            '09' => 'Setembro',
+            '10' => 'Outubro',
+            '11' => 'Novembro',
+            '12' => 'Dezembro'
+        );
+        $dias = array(
+            0 => 'Domingo',
+            1 => 'Segunda-feira',
+            2 => 'Terca-feira',
+            3 => 'Quarta-feira',
+            4 => 'Quinta-feira',
+            5 => 'Sexta-feira',
+            6 => 'Sabado'
+        );
+        return $dias[date('w', strtotime($data))] . ', ' . date('d', strtotime($data)) . ' de ' . $meses[$mes] . ' de ' . date('Y', strtotime($data));
+    }
+}
 
 if (!function_exists('formataNumero')) {
     function formataNumero($numero, $digitos = 2)
@@ -550,7 +588,7 @@ if (!function_exists('numeroLimpo')) {
 
 if (!function_exists('primeiraLetraMaiuscula')) {
     function primeiraLetraMaiuscula(
-        $str, 
+        $str,
         $delimiters = [
             " ",
             "-",
@@ -558,7 +596,7 @@ if (!function_exists('primeiraLetraMaiuscula')) {
             "'",
             "O'",
             "Mc",
-        ], 
+        ],
         $exceptions = [
             "de",
             "do",
@@ -625,5 +663,5 @@ if (!function_exists('primeiraLetraMaiuscula')) {
         }
 
         return $result;
-    }    
+    }
 }

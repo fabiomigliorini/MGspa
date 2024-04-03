@@ -1,6 +1,7 @@
 <script setup>
 import { negocioStore } from "stores/negocio";
 import { useRouter } from "vue-router";
+import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
@@ -32,8 +33,8 @@ const criar = async () => {
       >
         <q-item-section avatar>
           <q-avatar
-            icon="shopping_cart"
-            :color="n.sincronizado == true ? 'secondary' : 'negative'"
+            :icon="iconeNegocio(n)"
+            :color="corIconeNegocio(n)"
             text-color="white"
           />
         </q-item-section>
@@ -83,8 +84,8 @@ const criar = async () => {
       >
         <q-item-section avatar>
           <q-avatar
-            icon="shopping_cart"
-            :color="n.sincronizado == true ? 'secondary' : 'negative'"
+            :icon="iconeNegocio(n)"
+            :color="corIconeNegocio(n)"
             text-color="white"
           />
         </q-item-section>

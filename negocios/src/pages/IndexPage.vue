@@ -23,6 +23,7 @@ const sUsuario = usuarioStore();
 const sPagarMe = pagarMeStore();
 const sPix = pixStore();
 const dialogRomaneio = ref(false);
+const dialogVale = ref(false);
 const dialogComanda = ref(false);
 const listagemNotasRef = ref(null);
 const dialogOrcamento = ref(false);
@@ -156,6 +157,7 @@ const fecharDialogs = async () => {
   sUsuario.dialog.login = false;
   sPagarMe.dialog.detalhesPedido = false;
   dialogRomaneio.value = false;
+  dialogVale.value = false;
   dialogComanda.value = false;
   dialogOrcamento.value = false;
   dialogOrcamentoTermica.value = false;
@@ -263,6 +265,17 @@ const urlRomaneio = computed({
   },
 });
 
+const urlVale = computed({
+  get() {
+    return (
+      process.env.API_BASE_URL +
+      "/api/v1/pdv/negocio/" +
+      sNegocio.negocio.codnegocio +
+      "/vale"
+    );
+  },
+});
+
 const urlComanda = computed({
   get() {
     return (
@@ -277,6 +290,11 @@ const urlComanda = computed({
 const romaneio = async () => {
   fecharDialogs();
   dialogRomaneio.value = true;
+};
+
+const vale = async () => {
+  fecharDialogs();
+  dialogVale.value = true;
 };
 
 const orcamento = async () => {
@@ -337,6 +355,20 @@ const imprimirRomaneio = async () => {
   // dialogRomaneio.value = false;
 };
 
+const imprimirVale = async () => {
+  await api.post(
+    "/api/v1/pdv/negocio/" +
+      sNegocio.negocio.codnegocio +
+      "/vale/" +
+      sNegocio.padrao.impressora
+  );
+  Notify.create({
+    type: "positive",
+    message: "Impressão Solicitada!",
+  });
+  // dialogRomaneio.value = false;
+};
+
 const imprimirComanda = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
@@ -354,6 +386,10 @@ const imprimirComanda = async () => {
 const imprimirAbrirRomaneio = async () => {
   await imprimirRomaneio();
   await romaneio();
+};
+const imprimirAbrirVale = async () => {
+  await imprimirVale();
+  await vale();
 };
 
 const imprimirOrcamento = () => {
@@ -506,6 +542,33 @@ onUnmounted(() => {
       </q-card>
     </q-dialog>
 
+    <!-- VALE -->
+    <q-dialog v-model="dialogVale" full-height>
+      <q-card style="height: 100%">
+        <!-- <q-card-section>
+          <div class="text-h6">Romaneio</div>
+        </q-card-section> -->
+
+        <q-card-section style="height: 91%" class="q-pb-none">
+          <iframe
+            style="width: 100%; height: 100%; border: none"
+            :src="urlVale"
+          ></iframe>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            color="primary"
+            flat
+            label="Imprimir"
+            @click="imprimirVale()"
+            :disable="sNegocio.padrao.impressora == null"
+          />
+          <q-btn color="primary" flat label="Fechar" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <!-- COMANDA -->
     <q-dialog v-model="dialogComanda" full-height @hide="vazioOuCriar()">
       <q-card style="height: 100%">
@@ -643,6 +706,17 @@ onUnmounted(() => {
           <q-tooltip class="bg-accent">Romaneio</q-tooltip>
         </q-btn>
 
+        <!-- Vale -->
+        <q-btn
+          fab
+          icon="mdi-ticket"
+          color="secondary"
+          @click="vale()"
+          v-if="sNegocio.negocio.codnegociostatus == 2"
+        >
+          <q-tooltip class="bg-accent">Vale Compras</q-tooltip>
+        </q-btn>
+
         <!-- FECHAR -->
         <q-btn
           fab
@@ -669,6 +743,21 @@ onUnmounted(() => {
           "
         >
           <q-tooltip class="bg-accent">Cancelar Negócio</q-tooltip>
+        </q-btn>
+
+        <q-btn
+          fab
+          icon="assignment_returned"
+          color="secondary"
+          :to="route.params.uuid + '/devolucao/'"
+          :itensDevolucao="sNegocio.negocio"
+          v-if="
+            sNegocio.itensAtivos.length > 0 &&
+            sNegocio.negocio.codnegociostatus == 2 &&
+            sNegocio.negocio.venda
+          "
+        >
+          <q-tooltip class="bg-accent">Devolução</q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>

@@ -230,6 +230,7 @@ class NotaFiscalService
                     }
                     $notaItem->valordesconto = round($item->valordesconto * $perc, 2);
                     $notaItem->valorfrete = round($item->valorfrete * $perc, 2);
+                    $notaItem->valorseguro = round($item->valorseguro * $perc, 2);
                     $notaItem->valoroutras = round($item->valoroutras * $perc, 2);
                 } else {
                     if (!empty($item->Negocio->codpdv)) {
@@ -239,6 +240,7 @@ class NotaFiscalService
                     }
                     $notaItem->valordesconto = $item->valordesconto;
                     $notaItem->valorfrete = $item->valorfrete;
+                    $notaItem->valorseguro = $item->valorseguro;
                     $notaItem->valoroutras = $item->valoroutras;
                 }
     

@@ -628,5 +628,24 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         return false;
       }
     },
+
+    async negocioDevolucao(codnegocio, arrDevolucao) {
+      try {
+        const ret = await api.post(
+          "/api/v1/pdv/negocio/" + codnegocio + "/devolucao",
+          {
+            pdv: this.pdv.uuid,
+            devolucao: arrDevolucao,
+          }
+        );
+        return ret;
+      } catch (error) {
+        console.log(error);
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
+      }
+    },
   },
 });

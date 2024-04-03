@@ -28,12 +28,35 @@ class NegocioProdutoBarraResource extends Resource
             $quantidade = $this->ProdutoBarra->ProdutoEmbalagem->quantidade;
         }
         $ret['produto'] = PdvService::montarDescricaoProduto(
-            $this->ProdutoBarra->Produto->produto, 
-            $this->ProdutoBarra->ProdutoVariacao->variacao, 
-            $sigla, 
+            $this->ProdutoBarra->Produto->produto,
+            $this->ProdutoBarra->ProdutoVariacao->variacao,
+            $sigla,
             $quantidade
         );
-        $ret['codimagem'] = ($this->ProdutoBarra->ProdutoVariacao->codprodutoimagem)?$this->ProdutoBarra->ProdutoVariacao->ProdutoImagem->codimagem:null;
+        $ret['codimagem'] = ($this->ProdutoBarra->ProdutoVariacao->codprodutoimagem) ? $this->ProdutoBarra->ProdutoVariacao->ProdutoImagem->codimagem : null;
+
+        // Todas as Devolucoes ativas do iten
+        $devs = $this->NegocioProdutoBarraDevolucaoS()->with('Negocio')->whereHas('Negocio', function ($qry) {
+            $qry->where('tblnegocio.codnegociostatus', 2);
+        })->get();
+        $ret['devolucoes'] = [];
+        foreach ($devs as $dev) {
+            $ret['devolucoes'][] = [
+                'codnegocioprodutobarra' => $dev->codnegocioprodutobarra,
+                'codnegocio' => $dev->codnegocio,
+                'quantidade' => $dev->quantidade,
+                'lancamento' => $dev->Negocio->lancamento,
+                'codnegociostatus' => $dev->Negocio->codnegociostatus,
+            ];
+        }
+
+        if ($this->codnegocioprodutobarradevolucao) {
+            $ret['devolucao'] = [
+                'codnegocio' => $this->NegocioProdutoBarraDevolucao->codnegocio,
+                'lancamento' => $this->NegocioProdutoBarraDevolucao->Negocio->lancamento,
+            ];
+        }
+
         return $ret;
     }
 }

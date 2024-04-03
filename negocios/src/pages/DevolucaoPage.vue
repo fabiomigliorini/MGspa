@@ -1,14 +1,15 @@
 <script setup>
 import { ref, watch, computed, onMounted } from "vue";
-import { debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
-
-import moment from "moment/min/moment-with-locales";
 import { useRoute } from "vue-router";
 import { produtoStore } from "src/stores/produto";
+import { Dialog, Notify } from "quasar";
+import { useRouter } from "vue-router";
+import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const route = useRoute();
+const router = useRouter();
 
 const sNegocio = negocioStore();
 const sProduto = produtoStore();
@@ -19,8 +20,15 @@ const totalDevolucao = ref(null);
 onMounted(() => {
   sNegocio.carregarPeloUuid(route.params.uuid).then(() => {
     itensDevolucao.value = [...sNegocio.negocio.itens];
+    itensDevolucao.value = itensDevolucao.value.filter((i) => {
+      return !i.inativo;
+    });
     itensDevolucao.value.forEach((i) => {
-      i.disponivelDevolucao = i.quantidade;
+      i.devolvido = 0;
+      i.devolucoes.forEach((d) => {
+        i.devolvido += d.quantidade;
+      });
+      i.disponivelDevolucao = i.quantidade - i.devolvido;
       i.quantidadeDevolucao = null;
       i.valorDevolucao = null;
     });
@@ -28,10 +36,12 @@ onMounted(() => {
 });
 
 const calcularTotalDevolucao = () => {
-  totalDevolucao.value = itensDevolucao.value.reduce(
-    (n, { valorDevolucao }) => n + valorDevolucao,
-    0
-  );
+  if (sNegocio.negocio.codpessoa !== 1) {
+    totalDevolucao.value = itensDevolucao.value.reduce(
+      (n, { valorDevolucao }) => n + valorDevolucao,
+      0
+    );
+  }
 };
 
 const calcularValorDevolucao = (item) => {
@@ -43,8 +53,10 @@ const calcularValorDevolucao = (item) => {
 
 const marcarTodos = () => {
   itensDevolucao.value.forEach((i) => {
-    i.quantidadeDevolucao = i.disponivelDevolucao;
-    calcularValorDevolucao(i);
+    if (i.disponivelDevolucao > 0) {
+      i.quantidadeDevolucao = i.disponivelDevolucao;
+      calcularValorDevolucao(i);
+    }
   });
 };
 
@@ -55,15 +67,38 @@ const marcarNenhum = () => {
   });
 };
 
-const salvarDevolucao = (value) => {
-  console.log("chama a devolucao bebe!");
+const salvarDevolucao = async () => {
+  Dialog.create({
+    title: "Devolução",
+    message: "Tem certeza que deseja devolver esses produtos?",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      const ret = await sNegocio.Devolucao(itensDevolucao.value);
+      if (ret.data.data) {
+        router.push("/negocio/" + ret.data.data.codnegocio);
+      }
+    } catch (error) {}
+  });
 };
 </script>
 <template>
   <q-page>
     <div class="flex flex-center">
-      <q-card style="max-width: 700px" class="q-pa-md q-ma-md">
+      <q-card
+        style="max-width: 700px"
+        class="q-pa-md q-ma-md"
+        v-if="sNegocio.negocio"
+      >
         <h4 class="q-ma-md">Selecione os produtos para Devolução!</h4>
+
+        <q-banner
+          inline-actions
+          class="text-white bg-red"
+          v-if="sNegocio.negocio.codpessoa == 1"
+        >
+          Informe o cadastro da pessoa para fazer uma devolução!
+        </q-banner>
 
         <div class="row">
           <q-btn
@@ -81,10 +116,10 @@ const salvarDevolucao = (value) => {
             flat
           />
           <q-btn
-            type="salvar"
             label="Confirmar"
             class="q-mt-md flex flex-center"
             color="primary"
+            @click="salvarDevolucao"
             flat
             v-if="totalDevolucao"
           />
@@ -177,6 +212,20 @@ const salvarDevolucao = (value) => {
                       }).format(item.valortotal)
                     }}
                   </q-item-label>
+                  <q-item-label
+                    overline
+                    class="text-orange-7"
+                    v-if="item.devolvido > 0"
+                  >
+                    {{
+                      new Intl.NumberFormat("pt-BR", {
+                        style: "decimal",
+                        minimumFractionDigits: 3,
+                        maximumFractionDigits: 3,
+                      }).format(item.devolvido)
+                    }}
+                    já devolvido anteriormente
+                  </q-item-label>
                 </q-item-section>
                 <q-item-section style="max-width: 160px">
                   <q-input
@@ -186,6 +235,7 @@ const salvarDevolucao = (value) => {
                     step="0.001"
                     :max="item.disponivelDevolucao"
                     outlined
+                    :disable="item.disponivelDevolucao == 0"
                     item-aligned
                     label="Quantidade"
                     input-class="text-right"

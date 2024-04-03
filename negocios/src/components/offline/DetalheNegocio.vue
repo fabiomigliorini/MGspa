@@ -507,7 +507,7 @@ const negocioStatusIconColor = () => {
           @click="sincronizar()"
           round
           :color="
-            sNegocio.negocio.sincronizado == true ? 'secondary' : 'negative'
+            sNegocio.negocio.sincronizado == true ? 'secondary' : 'orange'
           "
           icon="file_upload"
         />

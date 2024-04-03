@@ -1051,5 +1051,14 @@ export const negocioStore = defineStore("negocio", {
         return false;
       }
     },
+
+    async Devolucao(arrDevolucao) {
+      const postDevolucao = await sSinc.negocioDevolucao(
+        this.negocio.codnegocio,
+        arrDevolucao
+      );
+
+      return postDevolucao;
+    },
   },
 });

@@ -3,6 +3,8 @@ import { ref, computed } from "vue";
 import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
 import { Dialog } from "quasar";
+import moment from "moment/min/moment-with-locales";
+moment.locale("pt-br");
 
 const sProduto = produtoStore();
 const sNegocio = negocioStore();
@@ -501,6 +503,43 @@ const linkProduto = (codproduto) => {
               </template>
             </div>
           </q-card-section>
+
+          <q-item
+            :to="'/negocio/' + item.devolucao.codnegocio"
+            v-if="item.devolucao && item.devolucao.codnegocio"
+          >
+            <q-item-section class="text-caption text-orange-7">
+              <q-item-label overline class="text-orange-7">
+                Devolvido de #{{
+                  String(item.devolucao.codnegocio).padStart(8, "0")
+                }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-item
+            v-for="devolucao in item.devolucoes"
+            v-bind:key="devolucao.codnegocioprodutobarra"
+            :to="'/negocio/' + devolucao.codnegocio"
+          >
+            <q-item-section class="text-caption text-orange-7">
+              <q-item-label overline class="text-orange-7">
+                Devolvido
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 3,
+                    maximumFractionDigits: 3,
+                  }).format(devolucao.quantidade)
+                }}
+              </q-item-label>
+              <q-item-label>
+                {{ moment(devolucao.lancamento).fromNow() }} em #{{
+                  String(devolucao.codnegocio).padStart(8, "0")
+                }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
           <q-item
             clickable
             v-ripple

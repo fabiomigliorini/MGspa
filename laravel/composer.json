@@ -26,6 +26,7 @@
         "nfephp-org/sped-nfe": "^5.1",
         "openboleto/openboleto": "dev-master",
         "phpoffice/phpspreadsheet": "^1.28",
+        "picqer/php-barcode-generator": "^2.4",
         "quilhasoft/jasperphp": "dev-master",
         "quilhasoft/jasperphp-openboleto": "dev-master"
     },

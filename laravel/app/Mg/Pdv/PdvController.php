@@ -8,6 +8,7 @@ use Mg\Negocio\NegocioResource;
 use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioDevolucaoService;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixService;
@@ -262,6 +263,22 @@ class PdvController
         ]);
     }
 
+    public function imprimirVale($codnegocio, $impressora)
+    {
+        ValeService::imprimir($codnegocio, $impressora);
+    }
+
+
+    public function vale($codnegocio)
+    {
+        $negocio = Negocio::findOrFail($codnegocio);
+        $pdf = ValeService::pdf($negocio);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Romaneio' . $codnegocio . '.pdf"'
+        ]);
+    }
+
     public function imprimirRomaneio($codnegocio, $impressora)
     {
         RomaneioService::imprimir($codnegocio, $impressora);
@@ -367,5 +384,15 @@ class PdvController
         $pdvUpdate = PdvService::update($pdv, $data);
 
         return new PdvResource($pdvUpdate);
+    }
+
+    public function devolucao(PdvRequest $request, $codnegocio)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        $negocioOriginal = Negocio::findOrFail($codnegocio);
+        DB::beginTransaction();
+        $negocioDev = PdvNegocioDevolucaoService::gerarDevolucao($pdv, $negocioOriginal, $request->devolucao);
+        DB::commit();
+        return new NegocioResource($negocioDev);
     }
 }
