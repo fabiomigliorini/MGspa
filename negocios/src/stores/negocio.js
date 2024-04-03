@@ -4,8 +4,8 @@ import { db } from "boot/db";
 import { Notify, uid } from "quasar";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import moment from "moment";
-import tiposPagamento from "../tipos-pagamento.json";
-import bandeirasCartao from "../bandeiras-cartao.json";
+import tiposPagamento from "../data/tipos-pagamento.json";
+import bandeirasCartao from "../data/bandeiras-cartao.json";
 import { falar } from "../utils/falar.js";
 
 const sSinc = sincronizacaoStore();

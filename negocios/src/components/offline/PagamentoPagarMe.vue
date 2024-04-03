@@ -5,7 +5,7 @@ import { negocioStore } from "stores/negocio";
 import { pagarMeStore } from "stores/pagar-me";
 import moment from "moment/min/moment-with-locales";
 import SelectPagarMePos from "../selects/SelectPagarMePos.vue";
-import cartoesManuais from "../../cartoes-manuais.json";
+import cartoesManuais from "../../data/cartoes-manuais.json";
 moment.locale("pt-br");
 
 const sNegocio = negocioStore();
