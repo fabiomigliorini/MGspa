@@ -31,6 +31,7 @@ export const negocioStore = defineStore("negocio", {
       codestoquelocal: 101001, //Deposito
       codpessoa: 1, //Consumidor
       codnaturezaoperacao: 1, //Venda
+      codoperacao: 2, //Saída
       impressora: null,
       codpagarmepos: null,
     },
@@ -72,6 +73,12 @@ export const negocioStore = defineStore("negocio", {
   },
 
   actions: {
+    async salvarPadrao(padrao) {
+      this.padrao = { ...padrao };
+      const nat = await db.naturezaOperacao.get(padrao.codnaturezaoperacao);
+      this.padrao.codoperacao = nat.codoperacao;
+    },
+
     async atualizarListagem() {
       // em aberto
       this.negocios = await db.negocio
@@ -184,6 +191,7 @@ export const negocioStore = defineStore("negocio", {
         codestoquelocal: this.padrao.codestoquelocal,
         codestoquelocaldestino: null,
         codnaturezaoperacao: this.padrao.codnaturezaoperacao,
+        codoperacao: this.padrao.codoperacao,
         naturezaoperacao: null,
         financeiro: false,
         codnegociostatus: 1,
@@ -305,7 +313,7 @@ export const negocioStore = defineStore("negocio", {
     async carregarPrimeiroVazioOuCriar() {
       var negocio = await this.carregarPrimeiroVazio();
       if (negocio == false) {
-        negocio = this.criar();
+        negocio = await this.criar();
         await this.carregarChavesEstrangeiras();
         await this.salvar();
       } else {

@@ -26,7 +26,7 @@ const salvar = async () => {
     message: "Tem certeza que você deseja salvar?",
     cancel: true,
   }).onOk(() => {
-    sNegocio.padrao = { ...edicao.value };
+    sNegocio.salvarPadrao(edicao.value);
     Notify.create({
       type: "positive",
       message: "Configurações Salvas!",
