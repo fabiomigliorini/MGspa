@@ -511,6 +511,11 @@
                 "tabela": "tbltituloboleto",
                 "coluna": "codtituloboleto",
                 "metodo": "TituloBoleto"
+            },
+            "codnegocioformapagamento": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codnegocioformapagamento",
+                "metodo": "NegocioFormaPagamento"
             }
         },
         "hasMany": {
@@ -629,6 +634,11 @@
                 "tabela": "tbltitulonfeterceiro",
                 "coluna": "codtitulo",
                 "metodo": "TituloNfeTerceiroS"
+            },
+            "tblnegocioformapagamento.codtitulo": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codtitulo",
+                "metodo": "NegocioFormaPagamentoS"
             }
         }
     },
@@ -994,6 +1004,11 @@
                 "tabela": "tblpessoa",
                 "coluna": "codpessoa",
                 "metodo": "Pessoa"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
             }
         },
         "hasMany": {
@@ -1006,6 +1021,11 @@
                 "tabela": "tblportadormovimento",
                 "coluna": "codnegocioformapagamento",
                 "metodo": "PortadorMovimentoS"
+            },
+            "tblmovimentotitulo.codnegocioformapagamento": {
+                "tabela": "tblmovimentotitulo",
+                "coluna": "codnegocioformapagamento",
+                "metodo": "MovimentoTituloS"
             }
         }
     },

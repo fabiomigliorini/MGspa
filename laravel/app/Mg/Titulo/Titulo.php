@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jun/2021 08:42:37
+ * Date: 04/Apr/2024 16:34:26
  */
 
 namespace Mg\Titulo;
@@ -16,9 +16,9 @@ use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\ValeCompra\ValeCompra;
 use Mg\Titulo\TituloBoleto;
 use Mg\Titulo\TituloNfeTerceiro;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\ContaContabil\ContaContabil;
 use Mg\Filial\Filial;
-use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Pessoa\Pessoa;
 use Mg\Portador\Portador;
 use Mg\Titulo\TipoTitulo;
@@ -182,6 +182,11 @@ class Titulo extends MgModel
     public function MovimentoTituloRelacionadoS()
     {
         return $this->hasMany(MovimentoTitulo::class, 'codtitulorelacionado', 'codtitulo');
+    }
+
+    public function NegocioFormaPagamentoS()
+    {
+        return $this->hasMany(NegocioFormaPagamento::class, 'codtitulo', 'codtitulo');
     }
 
     public function NfeTerceiroDuplicataS()

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Jan/2024 17:10:58
+ * Date: 04/Apr/2024 16:34:05
  */
 
 namespace Mg\Negocio;
@@ -9,6 +9,7 @@ namespace Mg\Negocio;
 use Mg\MgModel;
 use Mg\Titulo\Titulo;
 use Mg\Portador\PortadorMovimento;
+use Mg\Titulo\MovimentoTitulo;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
@@ -35,6 +36,7 @@ class NegocioFormaPagamento extends MgModel
         'codpessoa',
         'codpixcob',
         'codstonetransacao',
+        'codtitulo',
         'integracao',
         'parcelas',
         'tipo',
@@ -62,6 +64,7 @@ class NegocioFormaPagamento extends MgModel
         'codpessoa' => 'integer',
         'codpixcob' => 'integer',
         'codstonetransacao' => 'integer',
+        'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'integracao' => 'boolean',
@@ -111,6 +114,11 @@ class NegocioFormaPagamento extends MgModel
         return $this->belongsTo(StoneTransacao::class, 'codstonetransacao', 'codstonetransacao');
     }
 
+    public function Titulo()
+    {
+        return $this->belongsTo(Titulo::class, 'codtitulo', 'codtitulo');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -123,6 +131,11 @@ class NegocioFormaPagamento extends MgModel
 
 
     // Tabelas Filhas
+    public function MovimentoTituloS()
+    {
+        return $this->hasMany(MovimentoTitulo::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+    }
+
     public function PortadorMovimentoS()
     {
         return $this->hasMany(PortadorMovimento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');

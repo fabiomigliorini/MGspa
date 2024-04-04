@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Oct/2021 14:29:32
+ * Date: 04/Apr/2024 16:34:43
  */
 
 namespace Mg\Titulo;
@@ -17,6 +17,7 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloAgrupamento;
 use Mg\Usuario\Usuario;
 use Mg\Titulo\TituloBoleto;
+use Mg\Negocio\NegocioFormaPagamento;
 
 class MovimentoTitulo extends MgModel
 {
@@ -28,6 +29,7 @@ class MovimentoTitulo extends MgModel
         'codboletoretorno',
         'codcobranca',
         'codliquidacaotitulo',
+        'codnegocioformapagamento',
         'codportador',
         'codtipomovimentotitulo',
         'codtitulo',
@@ -53,6 +55,7 @@ class MovimentoTitulo extends MgModel
         'codcobranca' => 'integer',
         'codliquidacaotitulo' => 'integer',
         'codmovimentotitulo' => 'integer',
+        'codnegocioformapagamento' => 'integer',
         'codportador' => 'integer',
         'codtipomovimentotitulo' => 'integer',
         'codtitulo' => 'integer',
@@ -80,6 +83,11 @@ class MovimentoTitulo extends MgModel
     public function LiquidacaoTitulo()
     {
         return $this->belongsTo(LiquidacaoTitulo::class, 'codliquidacaotitulo', 'codliquidacaotitulo');
+    }
+
+    public function NegocioFormaPagamento()
+    {
+        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
     }
 
     public function Portador()

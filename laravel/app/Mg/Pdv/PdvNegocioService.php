@@ -208,9 +208,15 @@ class PdvNegocioService
 
         // validacoes de transferencia
         if ($negocio->NaturezaOperacao->transferencia == true) {
-            $fil = substr(str_pad($negocio->Filial->Pessoa->cnpj, 14, "0", STR_PAD_LEFT), 0, 8);
-            $pes = substr(str_pad($negocio->Pessoa->cnpj, 14, "0", STR_PAD_LEFT), 0, 8);
-            if ($fil != $pes) {
+            $mesmaEmpresa = false;
+            foreach ($negocio->Pessoa->FilialS as $fil) {
+                if ($fil->codempresa == $negocio->Filial->codempresa) {
+                    $mesmaEmpresa = true;
+                } else {
+                    $mesmaEmpresa = false;
+                }
+            }
+            if (!$mesmaEmpresa) {
                 throw new Exception("A Pessoa destino precisa ser uma Filial!", 1);
             }
         }
