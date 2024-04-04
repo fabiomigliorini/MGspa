@@ -667,55 +667,66 @@ onUnmounted(() => {
           <q-tooltip class="bg-accent">Duplicar</q-tooltip>
         </q-btn>
 
-        <!-- ORCAMENTO -->
-        <q-btn
-          fab
-          icon="mdi-clipboard-edit-outline"
-          color="secondary"
-          @click="orcamento()"
-          v-if="
-            sNegocio.itensAtivos.length > 0 &&
-            sNegocio.negocio.codnegociostatus != 3
-          "
-        >
-          <q-tooltip class="bg-accent">Orçamento</q-tooltip>
-        </q-btn>
-
-        <!-- COMANDA -->
-        <q-btn
-          fab
-          icon="receipt"
-          color="secondary"
-          @click="comanda()"
-          v-if="
-            sNegocio.itensAtivos.length > 0 &&
-            sNegocio.negocio.codnegociostatus == 1
-          "
-        >
-          <q-tooltip class="bg-accent">Comanda (F4)</q-tooltip>
-        </q-btn>
-
-        <!-- ROMANEIO -->
-        <q-btn
-          fab
+        <q-fab
+          color="accent"
           icon="print"
-          color="secondary"
-          @click="romaneio()"
-          v-if="sNegocio.negocio.codnegociostatus == 2"
+          direction="up"
+          v-if="sNegocio.itensAtivos.length > 0"
         >
-          <q-tooltip class="bg-accent">Romaneio</q-tooltip>
-        </q-btn>
+          <!-- COMANDA -->
+          <q-fab-action
+            external-label
+            label-class="bg-accent"
+            label="Comanda (F4)"
+            icon="receipt"
+            color="accent"
+            @click="comanda()"
+            v-if="
+              sNegocio.negocio.sincronizado > 0 &&
+              sNegocio.negocio.codnegociostatus == 1
+            "
+          />
 
-        <!-- Vale -->
-        <q-btn
-          fab
-          icon="mdi-ticket"
-          color="secondary"
-          @click="vale()"
-          v-if="sNegocio.negocio.codnegociostatus == 2"
-        >
-          <q-tooltip class="bg-accent">Vale Compras</q-tooltip>
-        </q-btn>
+          <!-- ROMANEIO -->
+          <q-fab-action
+            external-label
+            label-class="bg-accent"
+            label="Romaneio"
+            icon="print"
+            color="accent"
+            @click="romaneio()"
+            v-if="sNegocio.negocio.codnegociostatus == 2"
+          />
+
+          <!-- ORCAMENTO -->
+          <q-fab-action
+            external-label
+            label-class="bg-accent"
+            label="Orçamento"
+            icon="mdi-clipboard-edit-outline"
+            color="accent"
+            @click="orcamento()"
+            v-if="
+              sNegocio.itensAtivos.length > 0 &&
+              sNegocio.negocio.codnegociostatus != 3
+            "
+          >
+            <!-- <q-tooltip class="bg-accent">Orçamento</q-tooltip> -->
+          </q-fab-action>
+
+          <!-- VALE -->
+          <q-fab-action
+            external-label
+            label-class="bg-accent"
+            label="Vale Compras"
+            icon="mdi-ticket"
+            color="accent"
+            @click="vale()"
+            v-if="sNegocio.negocio.codnegociostatus == 2"
+          >
+            <!-- <q-tooltip class="bg-accent">Vale Compras</q-tooltip> -->
+          </q-fab-action>
+        </q-fab>
 
         <!-- FECHAR -->
         <q-btn
@@ -748,7 +759,7 @@ onUnmounted(() => {
         <q-btn
           fab
           icon="assignment_returned"
-          color="secondary"
+          color="warning"
           :to="route.params.uuid + '/devolucao/'"
           :itensDevolucao="sNegocio.negocio"
           v-if="
