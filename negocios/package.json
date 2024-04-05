@@ -1,6 +1,6 @@
 {
   "name": "negocios",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "Controle de Negocios MG Papelaria",
   "productName": "Negocios",
   "author": "MG Papelaria",
@@ -17,6 +17,7 @@
     "axios": "^1.2.1",
     "dexie": "^3.2.4",
     "jsbarcode": "^3.11.6",
+    "mitt": "^3.0.1",
     "moment": "^2.29.4",
     "pinia": "^2.0.11",
     "pinia-plugin-persistedstate": "^3.2.0",

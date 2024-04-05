@@ -47,11 +47,11 @@ const toggleRightDrawer = () => {
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <LeftDrawer></LeftDrawer>
+      <LeftDrawer />
     </q-drawer>
 
     <q-drawer v-model="rightDrawerOpen" show-if-above bordered side="right">
-      <RightDrawer></RightDrawer>
+      <RightDrawer />
     </q-drawer>
 
     <q-page-container>

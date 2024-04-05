@@ -1,9 +1,8 @@
-TODO adicionar botão cancelar integração Stone
-TODO Fechar automaticamente com Stone e pix qr code
 BUG Falha ao alterar observacoes do http://localhost:9900/#/offline/65a381a6-2a90-44eb-aa60-0b863d6d529e - diz que esta alterando valores
 BUG Codigo de Barras do Orcamento com UUID quando não tem CODNEGOCIO (Offline)
 
 PODE SER DEPOIS DE 1/ABRIL
+TODO Nao gerar vale quando devolver uma mercadoria de uma venda que ainda não foi paga (titulo está em aberto) e sim dar baixa no título original
 TODO Deixar nos últimos 10 negócios apenas negócios do PDV
 TODO Filtro por usuário
 TODO fazer baixa de vales automaticamente
@@ -75,3 +74,5 @@ TODO Dar Permissao de natureza de operacao por grupo. Exemplo Caixa nao consegue
 [X] BUG nao aplicar desconto quando altera o cliente depois de fechado o negocio
 [X] BUG Deixou fechar #03451158 no teste com valor a prazo maior que valor do negocio
 [X] TODO Adiciona Botao para informar comanda manualmente
+[X] TODO adicionar botão cancelar integração Stone
+[X] TODO Fechar automaticamente com Stone e pix qr code

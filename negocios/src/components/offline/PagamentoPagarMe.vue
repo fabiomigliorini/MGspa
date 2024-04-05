@@ -3,9 +3,10 @@ import { ref, watch, computed } from "vue";
 import { Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pagarMeStore } from "stores/pagar-me";
-import moment from "moment/min/moment-with-locales";
+import emitter from "../../utils/emitter.js";
 import SelectPagarMePos from "../selects/SelectPagarMePos.vue";
 import cartoesManuais from "../../data/cartoes-manuais.json";
+import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const sNegocio = negocioStore();
@@ -245,6 +246,14 @@ const salvarManual = async () => {
 const consultar = async () => {
   await sPagarMe.consultarPedido();
   if (sPagarMe.pedido.status == 2) {
+    sPagarMe.dialog.detalhesPedido = false;
+    emitter.emit("pagamentoAdicionado");
+  }
+};
+
+const cancelar = async () => {
+  await sPagarMe.cancelarPedido();
+  if (sPagarMe.pedido.status == 3) {
     sPagarMe.dialog.detalhesPedido = false;
   }
 };
@@ -921,6 +930,14 @@ const vaiParaStepManual = async (step) => {
         </q-list>
       </q-card-section>
       <q-card-actions align="right">
+        <q-btn
+          flat
+          label="cancelar"
+          color="negative"
+          @click="cancelar()"
+          tabindex="-1"
+          v-if="sPagarMe.pedido.status != 3"
+        />
         <q-btn
           flat
           label="consultar"

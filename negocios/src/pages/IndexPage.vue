@@ -14,6 +14,7 @@ import ListagemNotas from "src/components/offline/ListagemNotas.vue";
 import { api } from "boot/axios";
 import { Dialog, Notify } from "quasar";
 import { db } from "boot/db";
+import emitter from "../utils/emitter.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -494,9 +495,22 @@ const romaneioOuNota = async () => {
   imprimirAbrirRomaneio();
 };
 
+const pagamentoAdicionado = () => {
+  if (sNegocio.negocio.codnegociostatus != 1) {
+    return;
+  }
+  if (sNegocio.valorapagar > 0) {
+    return;
+  }
+  fechar();
+};
+
 onMounted(() => {
   carregareOuCriarNegocio();
   document.addEventListener("keydown", hotkeys);
+  emitter.on("pagamentoAdicionado", () => {
+    pagamentoAdicionado();
+  });
 });
 
 onUnmounted(() => {

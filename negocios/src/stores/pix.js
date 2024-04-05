@@ -20,7 +20,7 @@ export const pixStore = defineStore("pix", {
           "/api/v1/pix/cob/" + this.pixCob.codpixcob + "/transmitir"
         );
         this.pixCob = data.data;
-        this.atualizarPixCobNegocio();
+        await this.atualizarPixCobNegocio();
         Notify.create({
           type: "positive",
           message: "Cobrança PIX Transmitida ao Banco!",
@@ -46,7 +46,7 @@ export const pixStore = defineStore("pix", {
           "/api/v1/pix/cob/" + this.pixCob.codpixcob + "/consultar"
         );
         this.pixCob = data.data;
-        this.atualizarPixCobNegocio();
+        await this.atualizarPixCobNegocio();
         Notify.create({
           type: "positive",
           message: "Consulta Efetuada!",
@@ -101,7 +101,7 @@ export const pixStore = defineStore("pix", {
       }
     },
 
-    atualizarPixCobNegocio() {
+    async atualizarPixCobNegocio() {
       // se nao estiver com o mesmo negocio desiste
       if (this.pixCob.codnegocio != sNegocio.negocio.codnegocio) {
         return;
@@ -134,7 +134,7 @@ export const pixStore = defineStore("pix", {
       }
 
       // recarrega negocio da api
-      sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio);
+      await sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio);
     },
   },
 });

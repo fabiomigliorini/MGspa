@@ -42,6 +42,32 @@ export const pagarMeStore = defineStore("pagarMe", {
       }
     },
 
+    async cancelarPedido() {
+      try {
+        const { data } = await api.delete(
+          "/api/v1/pdv/pagar-me/pedido/" + this.pedido.codpagarmepedido
+        );
+        this.pedido = data.data;
+        await this.atualizarPagarMePedido();
+        Notify.create({
+          type: "positive",
+          message: "Cancelamento Efetuado!",
+        });
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
     async atualizarPagarMePedido() {
       // se nao estiver com o mesmo negocio desiste
       if (this.pedido.codnegocio != sNegocio.negocio.codnegocio) {

@@ -183,6 +183,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
             Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
             Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\Pdv\PdvController@consultarPagarMePedido');
+            Route::delete('pagar-me/pedido/{codpagarmepedido}', '\Mg\Pdv\PdvController@cancelarPagarMePedido');
             Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
             Route::post('nota-fiscal/{codnotafiscal}/criar', '\Mg\Pdv\PdvNotaFiscalController@criar');
             Route::post('nota-fiscal/{codnotafiscal}/enviar', '\Mg\Pdv\PdvNotaFiscalController@enviar');

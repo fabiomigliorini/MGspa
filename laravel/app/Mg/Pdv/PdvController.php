@@ -351,6 +351,13 @@ class PdvController
         return new PagarMePedidoResource($pedido);
     }
 
+    public function cancelarPagarMePedido($codpagarmepedido)
+    {
+        $pedido = PagarMePedido::findOrFail($codpagarmepedido);
+        $pedido = PagarMeService::cancelarPedido($pedido);
+        return new PagarMePedidoResource($pedido);
+    }
+    
     public function  notaFiscal(PdvRequest $request, $codnegocio)
     {
         PdvService::autoriza($request->pdv);

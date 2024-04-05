@@ -9,7 +9,6 @@ use Carbon\Carbon;
 
 use Mg\Negocio\Negocio;
 use Mg\Portador\Portador;
-use Mg\Pix\GerenciaNet\GerenciaNetService;
 
 class PixController
 {
