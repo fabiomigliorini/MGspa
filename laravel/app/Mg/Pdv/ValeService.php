@@ -5,6 +5,7 @@ namespace Mg\Pdv;
 use Dompdf\Dompdf;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use Mg\Negocio\Negocio;
+use Mg\Titulo\TituloService;
 
 class ValeService
 {
@@ -12,20 +13,26 @@ class ValeService
     {
         $generator = new BarcodeGeneratorPNG();
         $tits = [];
-        $barcodes = [];
         foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
-            foreach ($nfp->Titulos as $tit) {
-                if ($tit->saldo < 0) {
+            if (!empty($nfp->codtitulo)) {
+                if ($nfp->Titulo->codtipotitulo == TituloService::TIPO_VALE && $nfp->Titulo->saldo < 0) {
+                    $tits[$nfp->codtitulo] = $nfp->Titulo;
+                }
+            }
+            foreach ($nfp->TituloS as $tit) {
+                if ($tit->codtipotitulo == TituloService::TIPO_VALE && $tit->saldo < 0) {
                     $tits[] = $tit;
-                    $str = 'VALE' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
-                    $barcodes[$tit->codtitulo] = base64_encode($generator->getBarcode($str, $generator::TYPE_CODE_128, 1, 60));
-
                 }
             }
         }
 
+        $barcodes = [];
+        foreach ($tits as $tit) {
+            $str = 'VALE' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
+            $barcodes[$tit->codtitulo] = base64_encode($generator->getBarcode($str, $generator::TYPE_CODE_128, 1, 60));
+        }
+
         // carrega HTML da view
-        
         $dompdf = new Dompdf();
         $html = view('negocio.vale', compact('tits', 'barcodes'))->render();
         $dompdf->loadHtml($html);

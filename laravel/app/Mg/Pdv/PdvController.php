@@ -272,7 +272,6 @@ class PdvController
         ValeService::imprimir($codnegocio, $impressora);
     }
 
-
     public function vale($codnegocio)
     {
         $negocio = Negocio::findOrFail($codnegocio);
