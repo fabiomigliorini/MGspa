@@ -319,10 +319,10 @@ const creditCardColorPagamento = (pag) => {
 
   <!-- DIALOGS DE PAGAMENTOS -->
   <pagamento-dinheiro />
-  <pagamento-vale />
   <pagamento-pix />
   <pagamento-pagar-me />
   <pagamento-prazo />
+  <pagamento-vale />
 
   <template v-if="sNegocio.negocio">
     <!-- TOTAIS -->
@@ -553,16 +553,6 @@ const creditCardColorPagamento = (pag) => {
         sNegocio.negocio.financeiro && sNegocio.negocio.codnegociostatus == 1
       "
     >
-      <!-- BOTAO Vale -->
-      <q-btn
-        round
-        @click="dialogPagamentoVale()"
-        icon="mdi-ticket"
-        color="primary"
-      >
-        <q-tooltip class="bg-accent">Vale Compras </q-tooltip>
-      </q-btn>
-
       <!-- BOTAO DINHEIRO -->
       <q-btn
         round
@@ -596,6 +586,16 @@ const creditCardColorPagamento = (pag) => {
         color="primary"
       >
         <q-tooltip class="bg-accent">À Prazo (F9)</q-tooltip>
+      </q-btn>
+
+      <!-- BOTAO VALE -->
+      <q-btn
+        round
+        @click="dialogPagamentoVale()"
+        icon="mdi-ticket"
+        color="primary"
+      >
+        <q-tooltip class="bg-accent">Vale Compras </q-tooltip>
       </q-btn>
     </q-list>
 

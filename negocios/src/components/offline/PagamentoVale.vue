@@ -1,12 +1,15 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import { negocioStore } from "stores/negocio";
-import { debounce } from "quasar";
+import { debounce, Notify } from "quasar";
+import emitter from "../../utils/emitter.js";
 const sNegocio = negocioStore();
 
 const valorPagamento = ref(null);
 const codtituloVale = ref(null);
+const codtituloValeBipado = ref(null);
 const titulo = ref(null);
+const refDialogVale = ref(null);
 
 const valorSaldo = computed(() => {
   return sNegocio.valorapagar - valorPagamento.value;
@@ -20,17 +23,39 @@ const valorSaldoLabel = computed(() => {
   return valorSaldo.value > 0 ? "Faltando" : "Troco";
 });
 
+emitter.on("valeComprasLido", (codigo) => {
+  sNegocio.dialog.pagamentoVale = true;
+  codtituloValeBipado.value = codigo;
+});
+
+//TODO: nao inicializar valores quando lido pelo leitor
 const inicializarValores = () => {
   valorPagamento.value = null;
   codtituloVale.value = null;
   titulo.value = null;
+  if (codtituloValeBipado.value) {
+    codtituloVale.value = codtituloValeBipado.value;
+    codtituloValeBipado.value = null;
+    buscarVale();
+  }
 };
 
+//TODO: nao deixar ler duas vezes o mesmo vale no mesmo negocio
 const buscarVale = debounce(async () => {
   titulo.value = null;
   valorPagamento.value = null;
   if (!codtituloVale.value) {
     return;
+  }
+  const ja = sNegocio.negocio.pagamentos.filter((i) => {
+    return i.codtitulo == codtituloVale.value;
+  });
+  if (ja.length > 0) {
+    Notify.create({
+      type: "negative",
+      message: "Este vale já foi usado neste negócio!",
+    });
+    return false;
   }
   const ret = await sNegocio.buscarVale(codtituloVale.value);
   if (!ret) {
@@ -91,7 +116,6 @@ const salvar = () => {
   if (valorSaldo.value < 0) {
     valortroco = Math.round(Math.abs(valorSaldo.value * 100)) / 100;
   }
-  sNegocio.dialog.pagamentoVale = false;
   sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_VALE), // codformapagamento Vale
     90, // tipo Dinheiro
@@ -105,12 +129,23 @@ const salvar = () => {
     null, // parcelas
     null // valorparcela
   );
+  if (sNegocio.negocio.codpessoa == 1) {
+    sNegocio.informarPessoa(
+      sNegocio.negocio.codestoquelocal,
+      sNegocio.negocio.codnaturezaoperacao,
+      titulo.value.codpessoa,
+      null, //cpf
+      sNegocio.negocio.observacoes
+    );
+  }
+  sNegocio.dialog.pagamentoVale = false;
 };
 </script>
 <template>
   <q-dialog
     v-model="sNegocio.dialog.pagamentoVale"
     @before-show="inicializarValores()"
+    ref="refDialogVale"
   >
     <q-card>
       <q-form @submit="salvar()">

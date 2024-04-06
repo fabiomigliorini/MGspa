@@ -278,7 +278,7 @@ class PdvController
         $pdf = ValeService::pdf($negocio);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="Romaneio' . $codnegocio . '.pdf"'
+            'Content-Disposition' => 'inline; filename="ValeCompras' . $codnegocio . '.pdf"'
         ]);
     }
 

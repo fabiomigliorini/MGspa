@@ -6,6 +6,7 @@ import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import { Notify, Dialog } from "quasar";
 import { falar } from "../../utils/falar.js";
+import emitter from "../../utils/emitter.js";
 
 const router = useRouter();
 const sProduto = produtoStore();
@@ -55,6 +56,11 @@ const unificarComanda = async (codnegociocomanda) => {
     audio.play();
     falar("Falha ao buscar comanda!");
   }
+};
+
+const valeCompras = async (codigo) => {
+  emitter.emit("valeComprasLido", codigo);
+  falar("Vale Compras Lido!");
 };
 
 const comanda = async () => {
@@ -123,6 +129,10 @@ const adicionarPeloCodigoBarras = async (txt) => {
         // Comanda Negocio (Ex NEG03386672)
         case "NEG":
           unificarComanda(parseInt(codigo));
+          return;
+
+        case "VAL":
+          valeCompras(parseInt(codigo));
           return;
       }
     }

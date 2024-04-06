@@ -28,7 +28,7 @@ class ValeService
 
         $barcodes = [];
         foreach ($tits as $tit) {
-            $str = 'VALE' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
+            $str = 'VAL' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
             $barcodes[$tit->codtitulo] = base64_encode($generator->getBarcode($str, $generator::TYPE_CODE_128, 1, 60));
         }
 
