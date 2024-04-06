@@ -438,7 +438,7 @@ class NFePHPDistDfeService
         } else {
             $ie = @$dest->getElementsByTagName('IE')->item(0)->nodeValue;
         }
-        if ($filial = FilialService::buscarPorCnpjIe($cnpj??$cpf, $ie)) {
+        if ($filial = FilialService::buscarPorCnpjIe($cnpj??$cpf, $ie, true)) {
             $nft->codfilial = $filial->codfilial;
         }
 

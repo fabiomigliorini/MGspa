@@ -29,7 +29,7 @@ class FilialService extends MgService
     }
 
 
-    public static function buscarPorCnpjIe ($cnpj, $ie)
+    public static function buscarPorCnpjIe ($cnpj, $ie, $apenasComPesquisaDfeHabilitada = false)
     {
         // Se nao tem IE
         if (empty($ie)) {
@@ -57,8 +57,13 @@ class FilialService extends MgService
                 'ie' => $ie
             ]))->pluck('codpessoa');
         }
+
+        $qry = Filial::whereIn('codpessoa', $codpessoas);
+        if ($apenasComPesquisaDfeHabilitada) {
+            $qry = $qry->where('dfe', true);
+        }
         
-        return Filial::whereIn('codpessoa', $codpessoas)->first();
+        return $qry->first();
     }
 
 }
