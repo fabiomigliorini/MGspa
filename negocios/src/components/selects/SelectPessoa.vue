@@ -56,9 +56,18 @@ const pesquisa = (textoPesquisa, update) => {
       return;
     }
 
-    // monta array de palavras pra buscas
+    // sinaliza pro usuario que está pesquisando
     LoadingBar.start();
-    const palavras = texto.split(" ");
+
+    // monta array de palavras pra buscas
+    const numeric = texto.replace(/\D/g, "");
+    const alpha = texto.replace(/[^\w\s]/gi, "");
+    var palavras = [];
+    if (!/\s/g.test(texto) && numeric == alpha && numeric.length > 3) {
+      palavras = [numeric];
+    } else {
+      palavras = texto.split(" ");
+    }
 
     // Busca Pessoas baseados na primeira palavra de pesquisa
     var colPessoas = await db.pessoa
