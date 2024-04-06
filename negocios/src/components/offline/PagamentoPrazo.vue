@@ -209,6 +209,7 @@ const salvar = async () => {
   sNegocio.adicionarPagamento(
     parseInt(pagamento.value.codformapagamento), // codformapagamento Prazo
     forma.tipo, // tipo Deposito Bancario
+    null, // codtitulo
     pagamento.value.valor, // valorpagamento
     parc.valorjuros, // valorjuros
     null, // valortroco

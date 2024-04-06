@@ -10,7 +10,10 @@ use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
 use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
+use Mg\Titulo\MovimentoTitulo;
+use Mg\Titulo\TituloService;
 use Mg\Titulo\TipoTituloService;
+use Mg\Negocio\NegocioFormaPagamentoService;
 
 class PdvNegocioPrazoService
 {
@@ -164,5 +167,49 @@ class PdvNegocioPrazoService
         }
 
         return $totalTitulos;
+    }
+
+    public static function baixarVales(Negocio $negocio)
+    {
+        $nfps = $negocio->NegocioFormaPagamentoS()
+            ->whereNotNull('codtitulo')
+            ->where('codformapagamento', NegocioFormaPagamentoService::CODFORMAPAGAMENTO_VALE)
+            ->get();
+        foreach ($nfps as $nfp) {
+            $mov = new MovimentoTitulo();
+            $mov->codtipomovimentotitulo = TituloService::TIPO_AMORTIZACAO;
+            $mov->codtitulo = $nfp->codtitulo;
+            $mov->codnegocioformapagamento = $nfp->codnegocioformapagamento;
+            $mov->codportador = $nfp->Titulo->codportador;
+            if ($negocio->codoperacao == 2) {
+                $mov->debito = $nfp->valorpagamento;
+            } else {
+                $mov->credito = $nfp->valorpagamento;
+            }
+            $mov->transacao = $negocio->lancamento;
+            $mov->sistema = $negocio->lancamento;
+            $mov->save();
+        }
+    }
+
+    public static function estornarBaixaVales(Negocio $negocio)
+    {
+        $nfps = $negocio->NegocioFormaPagamentoS()
+            ->whereNotNull('codtitulo')
+            ->where('codformapagamento', NegocioFormaPagamentoService::CODFORMAPAGAMENTO_VALE)
+            ->get();
+        foreach ($nfps as $nfp) {
+            foreach ($nfp->MovimentoTituloS as $movOriginal) {
+                $mov = new MovimentoTitulo();
+                $mov->codtipomovimentotitulo = TituloService::TIPO_ESTORNO_AMORTIZACAO;
+                $mov->codtitulo = $movOriginal->codtitulo;
+                $mov->codportador = $movOriginal->codportador;
+                $mov->debito = $movOriginal->credito;
+                $mov->credito = $movOriginal->debito;
+                $mov->transacao = $movOriginal->transacao;
+                $mov->sistema = Carbon::now();
+                $mov->save();
+            }
+        }
     }
 }

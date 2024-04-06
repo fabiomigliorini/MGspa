@@ -39,6 +39,7 @@ const salvar = () => {
   sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_DINHEIRO), // codformapagamento Dinheiro
     1, // tipo Dinheiro
+    null, // codtitulo
     valorPagamento.value,
     null, // valorjuros
     valortroco,

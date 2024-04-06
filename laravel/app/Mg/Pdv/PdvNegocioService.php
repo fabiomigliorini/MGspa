@@ -16,7 +16,6 @@ use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
 
-
 class PdvNegocioService
 {
 
@@ -236,6 +235,7 @@ class PdvNegocioService
             $negocio->valoraprazo = $prazo;
             $negocio->valoravista = $negocio->valortotal - $prazo;
             $negocio->save();
+            PdvNegocioPrazoService::baixarVales($negocio);
         } else {
             $negocio->valoraprazo = 0;
             $negocio->valoravista = 0;
@@ -283,6 +283,7 @@ class PdvNegocioService
                 TituloService::estornar($tit);
             }
         }
+        PdvNegocioPrazoService::estornarBaixaVales($negocio);
 
         $negocio->codnegociostatus = NegocioStatus::CANCELADO;
         $negocio->justificativa = $justificativa;

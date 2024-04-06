@@ -199,7 +199,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@inativar');
             Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
             Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
-
+            Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
         });
 
         // Allan - daqui pra baixo

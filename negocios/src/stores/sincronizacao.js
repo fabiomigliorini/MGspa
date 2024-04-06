@@ -647,5 +647,19 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         });
       }
     },
+
+    async buscarVale(codtitulo) {
+      try {
+        const ret = await api.get("/api/v1/pdv/vale/" + codtitulo);
+        return ret;
+      } catch (error) {
+        console.log(error);
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+        });
+        return null;
+      }
+    },
   },
 });

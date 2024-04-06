@@ -22,6 +22,7 @@ export const negocioStore = defineStore("negocio", {
     dialog: {
       valores: false,
       pagamentoDinheiro: false,
+      pagamentoVale: false,
       pagamentoPix: false,
       pagamentoPagarMe: false,
       pagamentoCartaoManual: false,
@@ -801,6 +802,7 @@ export const negocioStore = defineStore("negocio", {
     async adicionarPagamento(
       codformapagamento,
       tipo,
+      codtitulo,
       valorpagamento,
       valorjuros,
       valortroco,
@@ -849,6 +851,7 @@ export const negocioStore = defineStore("negocio", {
         alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
         criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
         valorpagamento: valorpagamento,
+        codtitulo: codtitulo,
         valorjuros: valorjuros,
         valortotal: valorpagamento + valorjuros,
         valortroco: valortroco,
@@ -1059,6 +1062,11 @@ export const negocioStore = defineStore("negocio", {
       );
 
       return postDevolucao;
+    },
+
+    async buscarVale(codtitulo) {
+      const vale = await sSinc.buscarVale(codtitulo);
+      return vale;
     },
   },
 });

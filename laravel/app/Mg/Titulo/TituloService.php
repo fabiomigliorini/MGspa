@@ -32,6 +32,8 @@ class TituloService
     const TIPO_MULTA = 401;
     const TIPO_ESTORNO_MULTA = 941;
 
+    const TIPO_VALE = 3;
+
     public static function estornar(Titulo $titulo)
     {
         if (!empty($titulo->estornado)) {

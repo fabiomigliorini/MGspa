@@ -36,4 +36,6 @@ class NegocioFormaPagamentoService
         99 => 'Outros'
     ];
 
+    const CODFORMAPAGAMENTO_VALE = 1030;
+
 }

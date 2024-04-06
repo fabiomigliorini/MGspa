@@ -231,6 +231,7 @@ const salvarManual = async () => {
   await sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_CARTAOMANUAL), // codformapagamento Dinheiro
     tipo.tpag, // tipo
+    null, // codtitulo
     pagamento.value.valor,
     pagamento.value.valorjuros, // valorjuros
     null, // valortroco

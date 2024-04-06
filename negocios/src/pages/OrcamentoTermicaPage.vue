@@ -98,7 +98,7 @@ onMounted(() => {
         <tbody class="zebrada">
           <template
             v-for="produto in sNegocio.itensAtivos"
-            v-bind:key="produto.codproduto"
+            v-bind:key="produto.uuid"
           >
             <tr>
               <!-- <td class="img">
@@ -229,7 +229,7 @@ onMounted(() => {
       <span
         class="text-right"
         v-for="formapagamento in sNegocio.negocio.pagamentos"
-        v-bind:key="formapagamento.codformapagamento"
+        v-bind:key="formapagamento.uuid"
       >
         <br />{{
           new Intl.NumberFormat("pt-BR", {

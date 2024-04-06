@@ -5,6 +5,7 @@ import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
 import { pagarMeStore } from "stores/pagar-me";
 import PagamentoDinheiro from "components/offline/PagamentoDinheiro.vue";
+import PagamentoVale from "components/offline/PagamentoVale.vue";
 import PagamentoPix from "components/offline/PagamentoPix.vue";
 import PagamentoPagarMe from "components/offline/PagamentoPagarMe.vue";
 import PagamentoPrazo from "components/offline/PagamentoPrazo.vue";
@@ -26,6 +27,10 @@ const edicao = ref({
   valoroutras: null,
   valortotal: null,
 });
+
+const urlTitulo = (codtitulo) => {
+  return process.env.MGSIS_URL + "index.php?r=titulo/view&id=" + codtitulo;
+};
 
 const editarValores = () => {
   edicao.value.valorprodutos = sNegocio.negocio.valorprodutos;
@@ -118,6 +123,9 @@ const dialogPagamentoDinheiro = () => {
   sNegocio.dialog.pagamentoDinheiro = true;
 };
 
+const dialogPagamentoVale = () => {
+  sNegocio.dialog.pagamentoVale = true;
+};
 const dialogPagamentoPix = () => {
   sNegocio.dialog.pagamentoPix = true;
 };
@@ -311,6 +319,7 @@ const creditCardColorPagamento = (pag) => {
 
   <!-- DIALOGS DE PAGAMENTOS -->
   <pagamento-dinheiro />
+  <pagamento-vale />
   <pagamento-pix />
   <pagamento-pagar-me />
   <pagamento-prazo />
@@ -485,6 +494,17 @@ const creditCardColorPagamento = (pag) => {
                   "
                 />
               </q-item-label>
+              <q-item-label caption v-if="pag.codtitulo">
+                <q-btn
+                  :href="urlTitulo(pag.codtitulo)"
+                  target="_blank"
+                  :label="pag.codtitulo"
+                  flat
+                  size="sm"
+                  dense
+                  icon-right="launch"
+                />
+              </q-item-label>
               <q-item-label caption v-if="pag.autorizacao">
                 <template v-if="pag.nomebandeira">
                   {{ pag.nomebandeira }}:
@@ -533,6 +553,16 @@ const creditCardColorPagamento = (pag) => {
         sNegocio.negocio.financeiro && sNegocio.negocio.codnegociostatus == 1
       "
     >
+      <!-- BOTAO Vale -->
+      <q-btn
+        round
+        @click="dialogPagamentoVale()"
+        icon="mdi-ticket"
+        color="primary"
+      >
+        <q-tooltip class="bg-accent">Vale Compras </q-tooltip>
+      </q-btn>
+
       <!-- BOTAO DINHEIRO -->
       <q-btn
         round

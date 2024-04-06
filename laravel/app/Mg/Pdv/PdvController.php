@@ -2,6 +2,7 @@
 
 namespace Mg\Pdv;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Negocio\NegocioResource;
@@ -14,6 +15,9 @@ use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixService;
 use Mg\PagarMe\PagarMeService;
 use Mg\PagarMe\PagarMePedido;
+use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloResource;
+use Mg\Titulo\TituloService;
 
 class PdvController
 {
@@ -357,7 +361,7 @@ class PdvController
         $pedido = PagarMeService::cancelarPedido($pedido);
         return new PagarMePedidoResource($pedido);
     }
-    
+
     public function  notaFiscal(PdvRequest $request, $codnegocio)
     {
         PdvService::autoriza($request->pdv);
@@ -401,5 +405,18 @@ class PdvController
         $negocioDev = PdvNegocioDevolucaoService::gerarDevolucao($pdv, $negocioOriginal, $request->devolucao);
         DB::commit();
         return new NegocioResource($negocioDev);
+    }
+
+
+    public function buscarVale($codtitulo)
+    {
+        $titulo = Titulo::find($codtitulo);
+        if (!$titulo) {
+            throw new Exception("Nenhum título localizado com este código!");
+        }
+        if ($titulo->codtipotitulo != TituloService::TIPO_VALE) {
+            throw new Exception("Este não é um Vale Compras!");
+        }
+        return new TituloResource($titulo);
     }
 }

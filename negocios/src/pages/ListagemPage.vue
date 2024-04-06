@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from "vue";
 import { debounce } from "quasar";
+import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
 
 import { listagemStore } from "src/stores/listagem";
 import moment from "moment/min/moment-with-locales";
@@ -66,6 +67,13 @@ const statusClass = (codnegociostatus) => {
             class="row"
           >
             <q-item-section class="col-xs-2 col-sm-1">
+              <q-item-section avatar>
+                <q-avatar
+                  :icon="iconeNegocio(item)"
+                  :color="corIconeNegocio(item)"
+                  text-color="white"
+                />
+              </q-item-section>
               <q-item-label class="text-right">
                 {{
                   new Intl.NumberFormat("pt-BR", {

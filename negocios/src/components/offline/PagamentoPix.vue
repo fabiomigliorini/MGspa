@@ -53,6 +53,7 @@ const pixChave = async () => {
   sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_PIXCHAVE), // codformapagamento Pix
     16, // tipo Deposito Bancario
+    null, // codtitulo
     valorPagamento.value, // valorpagamento
     null, // valorjuros
     null, // valortroco
