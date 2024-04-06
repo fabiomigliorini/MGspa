@@ -1,4 +1,5 @@
 <script setup>
+import { Dialog, Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { useRouter } from "vue-router";
 import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
@@ -13,6 +14,46 @@ const criar = async () => {
   router.push("/offline/" + n.uuid);
   var audio = new Audio("novo.mp3");
   audio.play();
+};
+
+const abrirNegocio = async () => {
+  Dialog.create({
+    title: "Abrir um Negócio",
+    message: "Informe o número do negócio que deseja abrir!",
+    prompt: {
+      model: "",
+      isValid: (val) => val > 100,
+      outlined: true,
+      type: "Number", // optional
+      min: 1, // optional
+      max: 99999999, // optional
+      step: 1, // optional
+      placeholder: "Número do Negócio...",
+      // inputClass: "text-center",
+    },
+    cancel: true,
+  }).onOk(async (codnegocio) => {
+    const neg = await sNegocio.carregarPeloCodnegocio(codnegocio);
+    if (neg.codnegocio == codnegocio) {
+      Notify.create({
+        type: "positive",
+        message:
+          "Negócio #'" + String(codnegocio).padStart(8, "0") + "' aberto!",
+        timeout: 1500, // 1,5 segundos
+      });
+    } else {
+      Notify.create({
+        type: "negative",
+        message:
+          "Negocio #'" +
+          String(codnegocio).padStart(8, "0") +
+          "' não localizado!",
+        timeout: 0, // 20 minutos
+        actions: [{ icon: "close", color: "white" }],
+      });
+    }
+    router.push("/offline/" + sNegocio.negocio.uuid);
+  });
 };
 </script>
 <template>
@@ -71,6 +112,9 @@ const criar = async () => {
     Últimos
     <q-btn to="/listagem" icon="checklist_rtl" flat dense color="primary">
       <q-tooltip class="bg-accent"> Listagem </q-tooltip>
+    </q-btn>
+    <q-btn icon="launch" flat dense color="primary" @click="abrirNegocio()">
+      <q-tooltip class="bg-accent"> Abrir pelo Código do Negócio </q-tooltip>
     </q-btn>
   </q-item-label>
   <template v-if="sNegocio.ultimos">

@@ -110,8 +110,10 @@ class PdvNegocioPrazoService
                 // calcula data de vencimento
                 if ($nfp->FormaPagamento->fechamento) {
                     $vencimento = Carbon::now()->addMonths($i)->addDays(7)->endOfMonth();
-                } else {
+                } elseif ($nfp->FormaPagamento->diasentreparcelas == 30) {
                     $vencimento = Carbon::now()->addMonths($i);
+                } else {
+                    $vencimento = Carbon::now()->addDays($nfp->FormaPagamento->diasentreparcelas * $i);
                 }
 
                 // calcula o tipo de titulo

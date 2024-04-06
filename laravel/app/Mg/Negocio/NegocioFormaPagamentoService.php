@@ -37,5 +37,6 @@ class NegocioFormaPagamentoService
     ];
 
     const CODFORMAPAGAMENTO_VALE = 1030;
+    const CODFORMAPAGAMENTO_ENTREGA_AVISTA = 1099;
 
 }

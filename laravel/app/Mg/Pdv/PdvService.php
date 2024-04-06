@@ -138,7 +138,12 @@ class PdvService
             }
             $item->preco = floatval($item->preco);
             $item->produto = static::montarDescricaoProduto($item->produto, $item->variacao, $item->sigla, $item->quantidade);
-            $item->busca = $item->produto . ' ' . number_format($item->preco, 2, ',', '.');
+            $item->busca = 
+                $item->produto . ' ' .
+                number_format($item->preco, 2, ',', '')  . ' ' .
+                $item->barras  . ' ' .
+                substr($item->barras, -6, 6)
+                ;
             $item->buscaArr = array_values(array_unique(explode(' ', $item->busca)));
             return $item;
         }, $regs);
