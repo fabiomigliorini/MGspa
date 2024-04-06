@@ -205,6 +205,7 @@ class PdvNegocioPrazoService
                 $mov = new MovimentoTitulo();
                 $mov->codtipomovimentotitulo = TituloService::TIPO_ESTORNO_AMORTIZACAO;
                 $mov->codtitulo = $movOriginal->codtitulo;
+                $mov->codnegocioformapagamento = $movOriginal->codnegocioformapagamento;
                 $mov->codportador = $movOriginal->codportador;
                 $mov->debito = $movOriginal->credito;
                 $mov->credito = $movOriginal->debito;
