@@ -118,7 +118,7 @@ const salvar = () => {
   }
   sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_VALE), // codformapagamento Vale
-    90, // tipo Dinheiro
+    12, // tipo tPag Vale Presente
     codtituloVale.value,
     valorPagamento.value,
     null, // valorjuros
