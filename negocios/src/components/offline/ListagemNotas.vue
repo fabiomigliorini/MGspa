@@ -45,11 +45,6 @@ const status = (nota) => {
   return "Em Digitação";
 };
 
-// Route::post(
-//   "negocio/{codnegocio}/nota-fiscal",
-//   "\Mg\Pdv\PdvController@notaFiscal"
-// );
-
 const nova = async (modelo) => {
   try {
     // busca registros na ApI
@@ -83,15 +78,31 @@ const atualizarListagemNotas = (nota) => {
 
 const enviar = async (nota) => {
   try {
-    var retCriar = await api.post(
+    // cria o XML
+    var ret = await api.post(
       `/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/criar`,
       { pdv: sSinc.pdv.uuid }
     );
+
+    // pega nota do retorno
+    nota = ret.data.data;
     Notify.create({
       type: "positive",
       message: "XML da NFe Criado!",
     });
-    const retEnviar = await api.post(
+
+    // se offline mostra o PDF
+    if (offline(nota)) {
+      abrirPdf(nota);
+      if (nota.modelo == 65) {
+        imprimir(nota.codnotafiscal);
+      }
+      atualizarListagemNotas(nota);
+      return;
+    }
+
+    // enviar a NFe
+    ret = await api.post(
       `/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/enviar`,
       { pdv: sSinc.pdv.uuid }
     );
@@ -101,16 +112,21 @@ const enviar = async (nota) => {
     });
     Notify.create({
       type: "positive",
-      message: `${retEnviar.data.respostaSefaz.cStat} - ${retEnviar.data.respostaSefaz.xMotivo}`,
+      message: `${ret.data.respostaSefaz.cStat} - ${ret.data.respostaSefaz.xMotivo}`,
     });
-    if (retEnviar.data.nota.nfeautorizacao) {
+    nota = ret.data.nota;
+
+    // se tem autorizacao
+    if (nota.nfeautorizacao) {
       mail(nota, null);
       abrirPdf(nota);
       if (nota.modelo == 65) {
         imprimir(nota.codnotafiscal);
       }
     }
-    atualizarListagemNotas(retEnviar.data.nota);
+
+    // atualiza litsagem de notas
+    atualizarListagemNotas(nota);
   } catch (error) {
     console.log(error);
     Notify.create({
@@ -309,6 +325,13 @@ const perguntarDestinatarioMail = (nota) => {
   }).onOk((destinatario) => {
     mail(nota, destinatario);
   });
+};
+
+const offline = (nota) => {
+  if (!nota.nfechave) {
+    return false;
+  }
+  return nota.nfechave.substring(34, 35) == "9";
 };
 
 const montarUrlXml = (nota) => {
@@ -523,9 +546,10 @@ defineExpose({
               color="primary"
               @click="abrirPdf(nota)"
               v-if="
-                nota.nfeautorizacao &&
-                !nota.nfeinutilizacao &&
-                !nota.nfecancelamento
+                offline(nota) ||
+                (nota.nfeautorizacao &&
+                  !nota.nfeinutilizacao &&
+                  !nota.nfecancelamento)
               "
             >
               <q-tooltip class="bg-accent">Danfe</q-tooltip>
