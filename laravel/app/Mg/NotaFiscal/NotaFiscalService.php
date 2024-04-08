@@ -307,7 +307,7 @@ class NotaFiscalService
                 $duplicata = new NotaFiscalDuplicatas([
                     'codnotafiscal' => $nota->codnotafiscal,
                     'fatura' => $titulo->numero,
-                    'valor' => $titulo->valor,
+                    'valor' => abs($titulo->credito + $titulo->debito),
                     'vencimento' => $titulo->vencimento,
                 ]);
                 $duplicata->save();

@@ -331,7 +331,7 @@ const offline = (nota) => {
   if (!nota.nfechave) {
     return false;
   }
-  return nota.nfechave.substring(34, 35) == "9";
+  return nota.nfechave.substring(34, 35) == "9" && nota.modelo == 65;
 };
 
 const montarUrlXml = (nota) => {
