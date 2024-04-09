@@ -40,7 +40,7 @@ class PdvNegocioPrazoService
 
         //verifica o atraso
         if (!empty($aberto->vencimento)) {
-            $atraso = Carbon::parse($aberto->vencimento)->diffInDays(Carbon::now());
+            $atraso = Carbon::parse($aberto->vencimento)->diffInDays(Carbon::now(), false);
             if ($atraso > $pessoa->toleranciaatraso) {
                 return false;
             }
