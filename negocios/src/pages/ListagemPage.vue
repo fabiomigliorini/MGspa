@@ -66,14 +66,17 @@ const statusClass = (codnegociostatus) => {
             :class="statusClass(item.codnegociostatus)"
             class="row"
           >
+            <!-- ICONE -->
+            <q-item-section avatar>
+              <q-avatar
+                :icon="iconeNegocio(item)"
+                :color="corIconeNegocio(item)"
+                text-color="white"
+              />
+            </q-item-section>
+
+            <!-- VALOR/FILIAL -->
             <q-item-section class="col-xs-2 col-sm-1">
-              <q-item-section avatar>
-                <q-avatar
-                  :icon="iconeNegocio(item)"
-                  :color="corIconeNegocio(item)"
-                  text-color="white"
-                />
-              </q-item-section>
               <q-item-label class="text-right">
                 {{
                   new Intl.NumberFormat("pt-BR", {
@@ -88,6 +91,7 @@ const statusClass = (codnegociostatus) => {
               </q-item-label>
             </q-item-section>
 
+            <!-- PESSOA/VENDEDOR/COD/NATUREZA -->
             <q-item-section>
               <q-item-label> {{ item.fantasia }} </q-item-label>
               <q-item-label
@@ -103,13 +107,19 @@ const statusClass = (codnegociostatus) => {
                 {{ item.naturezaoperacao }}
               </q-item-label>
             </q-item-section>
+
+            <!-- USUARIO/PDV -->
             <q-item-section class="gt-sm">
               <q-item-label caption> {{ item.usuario }} </q-item-label>
               <q-item-label caption> {{ item.pdv }} </q-item-label>
             </q-item-section>
+
+            <!-- UUID -->
             <q-item-section class="gt-md ellipsis">
               <q-item-label caption> {{ item.uuid }} </q-item-label>
             </q-item-section>
+
+            <!-- DATA/STATUS -->
             <q-item-section
               class="col-xs-4 col-sm-3 col-md-2 col-lg-1 ellipsis"
               side

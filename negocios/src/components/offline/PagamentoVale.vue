@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { negocioStore } from "stores/negocio";
 import { debounce, Notify } from "quasar";
 import emitter from "../../utils/emitter.js";
@@ -21,11 +21,6 @@ const valorSaldoClass = computed(() => {
 
 const valorSaldoLabel = computed(() => {
   return valorSaldo.value > 0 ? "Faltando" : "Troco";
-});
-
-emitter.on("valeComprasLido", (codigo) => {
-  sNegocio.dialog.pagamentoVale = true;
-  codtituloValeBipado.value = codigo;
 });
 
 //TODO: nao inicializar valores quando lido pelo leitor
@@ -140,6 +135,17 @@ const salvar = () => {
   }
   sNegocio.dialog.pagamentoVale = false;
 };
+
+onMounted(() => {
+  emitter.on("valeComprasLido", (codigo) => {
+    sNegocio.dialog.pagamentoVale = true;
+    codtituloValeBipado.value = codigo;
+  });
+});
+
+onUnmounted(() => {
+  emitter.off("valeComprasLido");
+});
 </script>
 <template>
   <q-dialog

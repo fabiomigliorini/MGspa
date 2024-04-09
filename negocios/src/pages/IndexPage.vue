@@ -515,6 +515,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener("keydown", hotkeys);
+  emitter.off("pagamentoAdicionado");
 });
 </script>
 
