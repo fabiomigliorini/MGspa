@@ -24,6 +24,8 @@ export const pixStore = defineStore("pix", {
         Notify.create({
           type: "positive",
           message: "Cobrança PIX Transmitida ao Banco!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
         });
       } catch (error) {
         console.log(error);
@@ -34,6 +36,7 @@ export const pixStore = defineStore("pix", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -50,6 +53,8 @@ export const pixStore = defineStore("pix", {
         Notify.create({
           type: "positive",
           message: "Consulta Efetuada!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
         });
       } catch (error) {
         console.log(error);
@@ -60,6 +65,7 @@ export const pixStore = defineStore("pix", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -71,6 +77,7 @@ export const pixStore = defineStore("pix", {
         Notify.create({
           type: "negative",
           message: "Nenhuma impressora térmica selecionada!",
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -85,6 +92,8 @@ export const pixStore = defineStore("pix", {
         Notify.create({
           type: "positive",
           message: "Impressão solicitada!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
         });
       } catch (error) {
         console.log(error);
@@ -95,6 +104,7 @@ export const pixStore = defineStore("pix", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;

@@ -30,6 +30,8 @@ const salvar = async () => {
     Notify.create({
       type: "positive",
       message: "Configurações Salvas!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
   });
 };

@@ -154,6 +154,7 @@ const validarManual = async () => {
     Notify.create({
       type: "negative",
       message: "Selecione um parceiro!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return false;
@@ -164,6 +165,7 @@ const validarManual = async () => {
     Notify.create({
       type: "negative",
       message: "Preencha o Tipo!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return false;
@@ -174,6 +176,7 @@ const validarManual = async () => {
     Notify.create({
       type: "negative",
       message: "Preencha o Valor!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return false;
@@ -184,6 +187,7 @@ const validarManual = async () => {
     Notify.create({
       type: "negative",
       message: "O Valor não pode ser maior que o saldo a pagar do Negócio!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return false;
@@ -194,6 +198,7 @@ const validarManual = async () => {
     Notify.create({
       type: "negative",
       message: "Selecione a quantidade de Parcelas!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return false;
@@ -204,6 +209,7 @@ const validarManual = async () => {
     Notify.create({
       type: "negative",
       message: "Selecione a Bandeira!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return false;
@@ -214,6 +220,7 @@ const validarManual = async () => {
     Notify.create({
       type: "negative",
       message: "Preencha o número de Autorização!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return false;

@@ -151,6 +151,7 @@ export const listagemStore = defineStore("listagem", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;

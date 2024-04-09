@@ -1,3 +1,4 @@
+BUG Deixar itens do Select de PDV por ordem alfabetica
 BUG Falha ao alterar observacoes do http://localhost:9900/#/offline/65a381a6-2a90-44eb-aa60-0b863d6d529e - diz que esta alterando valores
 BUG Codigo de Barras do Orcamento com UUID quando não tem CODNEGOCIO (Offline)
 
@@ -5,13 +6,8 @@ PODE SER DEPOIS DE 1/ABRIL
 TODO Nao gerar vale quando devolver uma mercadoria de uma venda que ainda não foi paga (titulo está em aberto) e sim dar baixa no título original
 TODO Deixar nos últimos 10 negócios apenas negócios do PDV
 TODO Filtro por usuário
-TODO fazer baixa de vales automaticamente
-TODO fazer devolucao (Allan)
-FIXME nao gerar transferencias com itens inativos no MGLara/nota-fiscal/gera-transferencias
-TODO Adicionar Informacoes do Usuario na visualizacao do negocio
 TODO Adicionar Filtro por Usuario na listagem
 TODO Adicionar Totais no /conferencia
-TODO Adicionar Botao Cancelar nas Cobrancas da Stone
 TODO Impressão de Comanda de Vendedor
 TODO Ajustar step do input da quantidade para aceitar frações somente para produtos vendidos em metro, kg, etc (vincular ao cadastro de unidade de medida)
 
@@ -76,3 +72,8 @@ TODO Dar Permissao de natureza de operacao por grupo. Exemplo Caixa nao consegue
 [X] TODO Adiciona Botao para informar comanda manualmente
 [X] TODO adicionar botão cancelar integração Stone
 [X] TODO Fechar automaticamente com Stone e pix qr code
+[X] TODO fazer baixa de vales automaticamente
+[X] TODO fazer devolucao (Allan)
+[X] FIXME nao gerar transferencias com itens inativos no MGLara/nota-fiscal/gera-transferencias
+[X] TODO Adicionar Informacoes do Usuario na visualizacao do negocio
+[X] TODO Adicionar Botao Cancelar nas Cobrancas da Stone

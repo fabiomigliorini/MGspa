@@ -68,6 +68,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
         });
         var audio = new Audio("erro.mp3");
         audio.play();
@@ -118,6 +120,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: "Antes de sincronizar você deve fazer Login!",
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         var audio = new Audio("erro.mp3");
@@ -183,6 +186,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
         });
       }
     },
@@ -213,6 +218,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
         });
       }
     },
@@ -243,6 +250,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
         });
       }
     },
@@ -273,6 +282,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
         });
       }
     },
@@ -296,6 +307,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
         });
       }
 
@@ -376,6 +389,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
         });
       }
 
@@ -463,6 +478,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -486,6 +502,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -510,6 +527,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -534,6 +552,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -557,6 +576,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -599,6 +619,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -623,6 +644,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -644,6 +666,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
         });
       }
     },
@@ -657,6 +681,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         Notify.create({
           type: "negative",
           message: error.response.data.message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
         });
         return null;
       }

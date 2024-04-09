@@ -1,6 +1,5 @@
 <script setup>
 import { sincronizacaoStore } from "stores/sincronizacao";
-import { Notify } from "quasar";
 
 const sSinc = sincronizacaoStore();
 </script>

@@ -49,6 +49,8 @@ const buscarVale = debounce(async () => {
     Notify.create({
       type: "negative",
       message: "Este vale já foi usado neste negócio!",
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
     return false;
   }

@@ -56,6 +56,8 @@ const nova = async (modelo) => {
     Notify.create({
       type: "positive",
       message: "Nota Fiscal Criada!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
     sNegocio.negocio.notas = data.data.notas;
     sNegocio.salvar(false);
@@ -65,6 +67,8 @@ const nova = async (modelo) => {
     Notify.create({
       type: "negative",
       message: error.response.data.message,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
   }
 };
@@ -90,6 +94,8 @@ const enviar = async (nota) => {
     Notify.create({
       type: "positive",
       message: "XML da NFe Criado!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
 
     // se offline mostra o PDF
@@ -110,10 +116,14 @@ const enviar = async (nota) => {
     Notify.create({
       type: "positive",
       message: "NFe Enviada para Sefaz!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
     Notify.create({
       type: "positive",
       message: `${ret.data.respostaSefaz.cStat} - ${ret.data.respostaSefaz.xMotivo}`,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
     nota = ret.data.nota;
 
@@ -133,6 +143,8 @@ const enviar = async (nota) => {
     Notify.create({
       type: "negative",
       message: error.response.data.message,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
   }
 };
@@ -146,6 +158,8 @@ const consultar = async (nota) => {
     Notify.create({
       type: "positive",
       message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
     atualizarListagemNotas(data.nota);
   } catch (error) {
@@ -153,6 +167,8 @@ const consultar = async (nota) => {
     Notify.create({
       type: "negative",
       message: error.response.data.message,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
   }
 };
@@ -166,6 +182,8 @@ const excluir = async (nota) => {
     Notify.create({
       type: "positive",
       message: "Nota Fiscal Exlcuída!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
     var i = sNegocio.negocio.notas.findIndex((item) => {
       return item.codnotafiscal == nota.codnotafiscal;
@@ -177,6 +195,8 @@ const excluir = async (nota) => {
     Notify.create({
       type: "negative",
       message: error.response.data.message,
+      timeout: 3000, // 3 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
   }
 };
@@ -206,6 +226,8 @@ const cancelar = (nota) => {
       Notify.create({
         type: "positive",
         message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
+        timeout: 1000, // 1 segundo
+        actions: [{ icon: "close", color: "white" }],
       });
       atualizarListagemNotas(data.nota);
     } catch (error) {
@@ -213,6 +235,8 @@ const cancelar = (nota) => {
       Notify.create({
         type: "negative",
         message: error.response.data.message,
+        timeout: 3000, // 3 segundos
+        actions: [{ icon: "close", color: "white" }],
       });
     }
   });
@@ -243,6 +267,8 @@ const inutilizar = (nota) => {
       Notify.create({
         type: "positive",
         message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
+        timeout: 1000, // 1 segundo
+        actions: [{ icon: "close", color: "white" }],
       });
       atualizarListagemNotas(data.nota);
     } catch (error) {
@@ -250,6 +276,8 @@ const inutilizar = (nota) => {
       Notify.create({
         type: "negative",
         message: error.response.data.message,
+        timeout: 3000, // 3 segundos
+        actions: [{ icon: "close", color: "white" }],
       });
     }
   });
@@ -263,6 +291,8 @@ const imprimir = async (codnotafiscal) => {
     Notify.create({
       type: "negative",
       message: "Nenhuma impressora termica selecionada!",
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
     return;
   }
@@ -274,12 +304,16 @@ const imprimir = async (codnotafiscal) => {
     Notify.create({
       type: "positive",
       message: `Enviado para impressora ${sNegocio.padrao.impressora}!`,
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
   } catch (error) {
     console.log(error);
     Notify.create({
       type: "negative",
       message: error.response.data.message,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
   }
 };
@@ -289,6 +323,8 @@ const mail = async (nota, destinatario) => {
     Notify.create({
       type: "positive",
       message: "Envio de e-mail solicitado ao servidor!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
     var { data } = await api.post(
       `/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/mail`,
@@ -300,12 +336,16 @@ const mail = async (nota, destinatario) => {
     Notify.create({
       type: data.sucesso ? "positive" : "negative",
       message: `${data.mensagem}`,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
   } catch (error) {
     console.log(error);
     Notify.create({
       type: "negative",
       message: error.response.data.message,
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
   }
 };

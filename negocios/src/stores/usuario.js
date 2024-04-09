@@ -61,6 +61,7 @@ export const usuarioStore = defineStore("usuario", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -84,6 +85,8 @@ export const usuarioStore = defineStore("usuario", {
         Notify.create({
           type: "negative",
           message: "Falha ao renovar token de autenticação!",
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
         });
         console.log(error);
       }

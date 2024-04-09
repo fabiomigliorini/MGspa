@@ -26,6 +26,8 @@ export const pagarMeStore = defineStore("pagarMe", {
         Notify.create({
           type: "positive",
           message: "Consulta Efetuada!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
         });
       } catch (error) {
         console.log(error);
@@ -36,6 +38,7 @@ export const pagarMeStore = defineStore("pagarMe", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -52,6 +55,8 @@ export const pagarMeStore = defineStore("pagarMe", {
         Notify.create({
           type: "positive",
           message: "Cancelamento Efetuado!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
         });
       } catch (error) {
         console.log(error);
@@ -62,6 +67,7 @@ export const pagarMeStore = defineStore("pagarMe", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;

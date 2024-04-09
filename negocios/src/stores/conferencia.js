@@ -34,7 +34,6 @@ export const conferenciaStore = defineStore("conferencia", {
     },
 
     async getConferencia() {
-   
       try {
         const filtro = { ...this.filtro };
         filtro.pdv = sSinc.pdv.uuid;
@@ -46,11 +45,11 @@ export const conferenciaStore = defineStore("conferencia", {
           filtro.dia = null;
         }
         //converte data final
-       
+
         const ret = await api.get("/api/v1/pdv/negocio/conferencia", {
           params: filtro,
         });
-          this.conferencias = ret.data;
+        this.conferencias = ret.data;
       } catch (error) {
         var message = error?.response?.data?.message;
         if (!message) {
@@ -59,6 +58,7 @@ export const conferenciaStore = defineStore("conferencia", {
         Notify.create({
           type: "negative",
           message: message,
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;

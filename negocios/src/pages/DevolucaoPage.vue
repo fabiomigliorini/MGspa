@@ -1,9 +1,9 @@
 <script setup>
-import { ref, watch, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { negocioStore } from "stores/negocio";
 import { useRoute } from "vue-router";
 import { produtoStore } from "src/stores/produto";
-import { Dialog, Notify } from "quasar";
+import { Dialog } from "quasar";
 import { useRouter } from "vue-router";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");

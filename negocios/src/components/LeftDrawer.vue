@@ -39,7 +39,8 @@ const abrirNegocio = async () => {
         type: "positive",
         message:
           "Negócio #'" + String(codnegocio).padStart(8, "0") + "' aberto!",
-        timeout: 1500, // 1,5 segundos
+        timeout: 1000, // 1 segundo
+        actions: [{ icon: "close", color: "white" }],
       });
     } else {
       Notify.create({
@@ -48,7 +49,7 @@ const abrirNegocio = async () => {
           "Negocio #'" +
           String(codnegocio).padStart(8, "0") +
           "' não localizado!",
-        timeout: 0, // 20 minutos
+        timeout: 3000, // 3 segundos
         actions: [{ icon: "close", color: "white" }],
       });
     }

@@ -32,7 +32,8 @@ const informarVendedor = async (codpessoavendedor) => {
   Notify.create({
     type: "positive",
     message: "Vendedor '" + sNegocio.negocio.fantasiavendedor + "' informado.",
-    timeout: 1500, // 1,5 segundos
+    timeout: 1000, // 1 segundo
+    actions: [{ icon: "close", color: "white" }],
   });
   if (sNegocio.negocio.codpessoavendedor) {
     falar("Vendedor " + sNegocio.negocio.fantasiavendedor.split(" ")[0]);
@@ -155,7 +156,8 @@ const adicionarPeloCodigoBarras = async (txt) => {
     Notify.create({
       type: "positive",
       message: "Código " + txt + " adicionado.",
-      timeout: 1500, // 1,5 segundos
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
     sNegocio.paginaAtual = 1;
     var audio = new Audio("successo.mp3");

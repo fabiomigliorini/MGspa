@@ -126,6 +126,7 @@ export const negocioStore = defineStore("negocio", {
           Notify.create({
             type: "negative",
             message: "Falha ao buscar dados no Servidor!",
+            timeout: 3000, // 3 segundos
             actions: [{ icon: "close", color: "white" }],
           });
           return false;
@@ -160,6 +161,7 @@ export const negocioStore = defineStore("negocio", {
           Notify.create({
             type: "negative",
             message: "Falha ao buscar dados no Servidor!",
+            timeout: 3000, // 3 segundos
             actions: [{ icon: "close", color: "white" }],
           });
           return false;
@@ -895,6 +897,7 @@ export const negocioStore = defineStore("negocio", {
           type: "negative",
           message:
             "Impossível fechar um negócio não sincronizado com o servidor!",
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -905,6 +908,8 @@ export const negocioStore = defineStore("negocio", {
           Notify.create({
             type: "positive",
             message: "Negócio Fechado!",
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: "close", color: "white" }],
           });
           this.negocio = ret;
           db.negocio.put(ret);
@@ -921,6 +926,7 @@ export const negocioStore = defineStore("negocio", {
           type: "negative",
           message:
             "Impossível cancelar um negócio não sincronizado com o servidor!",
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -934,6 +940,8 @@ export const negocioStore = defineStore("negocio", {
           Notify.create({
             type: "positive",
             message: "Negócio cancelado!",
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: "close", color: "white" }],
           });
           this.negocio = ret;
           db.negocio.put(ret);
@@ -950,6 +958,7 @@ export const negocioStore = defineStore("negocio", {
           type: "negative",
           message:
             "Impossível criar Cobrança PIX em um negócio não sincronizado com o servidor!",
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -960,6 +969,8 @@ export const negocioStore = defineStore("negocio", {
           Notify.create({
             type: "positive",
             message: "Cobrança PIX Criada!",
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: "close", color: "white" }],
           });
           this.negocio = ret;
           db.negocio.put(ret);
@@ -985,6 +996,7 @@ export const negocioStore = defineStore("negocio", {
           type: "negative",
           message:
             "Impossível criar Cobrança Stone/PagarMe em um negócio não sincronizado com o servidor!",
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -1007,6 +1019,8 @@ export const negocioStore = defineStore("negocio", {
           Notify.create({
             type: "positive",
             message: "Cobrança Pagar Me/Stone Criada!",
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: "close", color: "white" }],
           });
           this.negocio = ret;
           db.negocio.put(ret);
@@ -1024,6 +1038,7 @@ export const negocioStore = defineStore("negocio", {
           type: "negative",
           message:
             "Impossível ler Comandas em um negócio não sincronizado com o servidor!",
+          timeout: 3000, // 3 segundos
           actions: [{ icon: "close", color: "white" }],
         });
         return false;
@@ -1039,6 +1054,8 @@ export const negocioStore = defineStore("negocio", {
         Notify.create({
           type: "positive",
           message: "Comanda Lida!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
         });
         if (ret.negocio.codnegocio) {
           db.negocio.put(ret.negocio);

@@ -195,6 +195,7 @@ const salvar = async () => {
       type: "negative",
       message:
         "Não é possível adicionar pagamento à Prazo para Consumidor! Informe o Cliente primeiro!",
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
     return;

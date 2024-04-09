@@ -11,7 +11,6 @@ const sPdv = pdvStore();
 const model = ref({});
 const dialogEditarPdv = ref(false);
 
-
 const openStreetMapUrl = (pdv) => {
   if (!pdv.longitude) {
     return "";
@@ -29,19 +28,18 @@ const editar = (pdv) => {
 };
 
 const salvarPdv = async () => {
-
   try {
-    const ret = await sPdv.updateConfigPdv(model.value)
+    const ret = await sPdv.updateConfigPdv(model.value);
     dialogEditarPdv.value = false;
   } catch (error) {
     Notify.create({
       type: "negative",
       message: error.response.data.message,
+      timeout: 3000, // 3 segundos
       actions: [{ icon: "close", color: "white" }],
     });
   }
 };
-
 
 onMounted(() => {
   sPdv.getDispositivos();
@@ -53,14 +51,28 @@ onMounted(() => {
       <template v-for="pdv in sPdv.dispositivos" :key="pdv.codpdv">
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
           <q-card class="my-card" flat bordered>
-            <iframe width="100%" height="200" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
-              :src="openStreetMapUrl(pdv)">
+            <iframe
+              width="100%"
+              height="200"
+              frameborder="0"
+              scrolling="no"
+              marginheight="0"
+              marginwidth="0"
+              :src="openStreetMapUrl(pdv)"
+            >
             </iframe>
 
             <q-card-section>
-              <q-btn fab color="primary" icon="place" class="absolute"
-                style="top: 0; right: 12px; transform: translateY(-50%)" :href="googleMapsUrl(pdv)" target="_blank"
-                :disable="!pdv.latitude" />
+              <q-btn
+                fab
+                color="primary"
+                icon="place"
+                class="absolute"
+                style="top: 0; right: 12px; transform: translateY(-50%)"
+                :href="googleMapsUrl(pdv)"
+                target="_blank"
+                :disable="!pdv.latitude"
+              />
 
               <div class="row no-wrap items-center">
                 <div class="col text-h6 ellipsis">
@@ -69,7 +81,14 @@ onMounted(() => {
               </div>
               <div class="text-subtitle1">
                 {{ pdv.apelido }}
-                <q-btn flat dense size="sm" round icon="edit" @click="editar(pdv)">
+                <q-btn
+                  flat
+                  dense
+                  size="sm"
+                  round
+                  icon="edit"
+                  @click="editar(pdv)"
+                >
                   <q-tooltip class="bg-accent">Editar</q-tooltip>
                 </q-btn>
               </div>
@@ -104,31 +123,69 @@ onMounted(() => {
             </q-card-section>
             <q-card-section>
               <!-- INATIVAR -->
-              <q-banner rounded dense class="bg-green text-white" inline-actions v-if="pdv.autorizado">
+              <q-banner
+                rounded
+                dense
+                class="bg-green text-white"
+                inline-actions
+                v-if="pdv.autorizado"
+              >
                 Autorizado
                 <template v-slot:action>
-                  <q-btn flat dense round icon="pause" size="sm" @click="sPdv.inativar(pdv)">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="pause"
+                    size="sm"
+                    @click="sPdv.inativar(pdv)"
+                  >
                     <q-tooltip class="bg-accent">Inativar</q-tooltip>
                   </q-btn>
                 </template>
               </q-banner>
 
               <!-- ATIVAR -->
-              <q-banner rounded dense class="bg-red text-white" inline-actions v-else-if="pdv.inativo">
+              <q-banner
+                rounded
+                dense
+                class="bg-red text-white"
+                inline-actions
+                v-else-if="pdv.inativo"
+              >
                 Inativo
                 <template v-slot:action>
-                  <q-btn flat dense icon="play_arrow" size="sm" @click="sPdv.reativar(pdv)">
+                  <q-btn
+                    flat
+                    dense
+                    icon="play_arrow"
+                    size="sm"
+                    @click="sPdv.reativar(pdv)"
+                  >
                     <q-tooltip class="bg-accent">Reativar</q-tooltip>
                   </q-btn>
                 </template>
               </q-banner>
 
               <!-- AUTORIZAR -->
-              <q-banner rounded dense class="bg-orange text-white" inline-actions v-else>
+              <q-banner
+                rounded
+                dense
+                class="bg-orange text-white"
+                inline-actions
+                v-else
+              >
                 Não Autorizado
                 <template v-slot:action>
-                  <q-btn flat dense round icon="check_circle" size="sm" v-if="!pdv.autorizado"
-                    @click="sPdv.autorizar(pdv)">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="check_circle"
+                    size="sm"
+                    v-if="!pdv.autorizado"
+                    @click="sPdv.autorizar(pdv)"
+                  >
                     <q-tooltip class="bg-accent">Autorizar</q-tooltip>
                   </q-btn>
                 </template>
@@ -148,12 +205,24 @@ onMounted(() => {
         <q-form @submit="salvarPdv">
           <q-card-section>
             <div class="q-col-gutter-md">
-              <q-input outlined v-model="model.apelido" autofocus label="Apelido" />
+              <q-input
+                outlined
+                v-model="model.apelido"
+                autofocus
+                label="Apelido"
+              />
 
               <select-filial v-model="model.codfilial"></select-filial>
 
-              <q-input outlined autogrow v-model="model.observacoes" label="Observações" type="textarea" class="q-mb-md"
-                autofocus />
+              <q-input
+                outlined
+                autogrow
+                v-model="model.observacoes"
+                label="Observações"
+                type="textarea"
+                class="q-mb-md"
+                autofocus
+              />
             </div>
           </q-card-section>
 

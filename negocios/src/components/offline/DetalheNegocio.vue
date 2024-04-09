@@ -162,6 +162,8 @@ const sincronizar = async () => {
     Notify.create({
       type: "positive",
       message: "Negócio Sincronizado com o Servidor!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
   }
 };
@@ -190,6 +192,8 @@ const recarregarDaApi = () => {
       Notify.create({
         type: "positive",
         message: "Dados Recarregados do Servidor!",
+        timeout: 1000, // 1 segundo
+        actions: [{ icon: "close", color: "white" }],
       });
     }
   });

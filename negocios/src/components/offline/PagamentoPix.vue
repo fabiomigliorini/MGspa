@@ -110,6 +110,8 @@ const mensagem = () => {
     Notify.create({
       type: "positive",
       message: "Mensagem copiada para a área de transferência!",
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: "close", color: "white" }],
     });
   });
 };

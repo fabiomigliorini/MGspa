@@ -327,6 +327,8 @@ const comanda = async () => {
     Notify.create({
       type: "negative",
       message: "Impossível imprimir comanda de um negócio não sincronizado!",
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
     return;
   }
@@ -334,6 +336,8 @@ const comanda = async () => {
     Notify.create({
       type: "negative",
       message: "Nenhum item!",
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
     });
     return;
   }
@@ -352,6 +356,8 @@ const imprimirRomaneio = async () => {
   Notify.create({
     type: "positive",
     message: "Impressão Solicitada!",
+    timeout: 1000, // 1 segundo
+    actions: [{ icon: "close", color: "white" }],
   });
   // dialogRomaneio.value = false;
 };
@@ -366,6 +372,8 @@ const imprimirVale = async () => {
   Notify.create({
     type: "positive",
     message: "Impressão Solicitada!",
+    timeout: 1000, // 1 segundo
+    actions: [{ icon: "close", color: "white" }],
   });
   // dialogRomaneio.value = false;
 };
@@ -380,6 +388,8 @@ const imprimirComanda = async () => {
   Notify.create({
     type: "positive",
     message: "Impressão Solicitada!",
+    timeout: 1000, // 1 segundo
+    actions: [{ icon: "close", color: "white" }],
   });
   // dialogComanda.value = false;
 };

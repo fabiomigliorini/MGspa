@@ -132,17 +132,23 @@ export const produtoStore = defineStore("produto", {
             "Pesquisa encontrou " +
             arrProdutos.length +
             " itens. Mostrando apenas os 200 primeiros. Refine a sua pesquisa.",
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
         });
         arrProdutos = arrProdutos.slice(0, 200);
       } else if (arrProdutos.length == 0) {
         Notify.create({
           type: "negative",
           message: "Nenhum item localizado. Melhore sua pesquisa.",
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
         });
       } else {
         Notify.create({
           type: "positive",
           message: "Pesquisa encontrou " + arrProdutos.length + " itens.",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
         });
       }
       this.resultadoPesquisa = arrProdutos;
