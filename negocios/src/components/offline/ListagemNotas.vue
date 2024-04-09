@@ -12,6 +12,7 @@ const sSinc = sincronizacaoStore();
 
 const dialogPdf = ref(false);
 const urlPdf = ref(null);
+const btnImprimir = ref(false);
 const codnotafiscalAberta = ref(null);
 
 const urlNotaFiscal = (codnotafiscal) => {
@@ -344,6 +345,7 @@ const montarUrlPdf = (nota) => {
 
 const abrirPdf = (nota) => {
   urlPdf.value = montarUrlPdf(nota);
+  btnImprimir.value = nota.modelo == 65 ? true : false;
   codnotafiscalAberta.value = nota.codnotafiscal;
   if (Platform.is.desktop) {
     dialogPdf.value = true;
@@ -361,13 +363,7 @@ defineExpose({
   <q-dialog v-model="dialogPdf" full-width>
     <q-card>
       <q-card-section>
-        <div class="text-h6">Danfe</div>
-      </q-card-section>
-
-      <q-separator />
-
-      <q-card-section>
-        <iframe :src="urlPdf" style="width: 100%; height: 60vh" />
+        <iframe :src="urlPdf" style="width: 100%; height: 80vh" />
       </q-card-section>
 
       <q-separator />
@@ -380,6 +376,7 @@ defineExpose({
           color="primary"
           v-close-popup
           @click="imprimir()"
+          v-if="btnImprimir"
         />
       </q-card-actions>
     </q-card>
