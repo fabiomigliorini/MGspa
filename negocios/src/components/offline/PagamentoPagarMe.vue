@@ -15,6 +15,7 @@ const pagamento = ref({});
 const parcelamentoDisponivel = ref([]);
 const formPagarMe = ref(null);
 const stepManual = ref(1);
+const btnConsultarRef = ref(null);
 
 const inicializarValores = () => {
   const padrao = {
@@ -731,7 +732,10 @@ const vaiParaStepManual = async (step) => {
   </q-dialog>
 
   <!-- DIALOG DETALHES PEDIDO -->
-  <q-dialog v-model="sPagarMe.dialog.detalhesPedido">
+  <q-dialog
+    v-model="sPagarMe.dialog.detalhesPedido"
+    @show="btnConsultarRef.$el.focus()"
+  >
     <q-card style="width: 600px">
       <q-card-section>
         <div class="text-h6">
@@ -944,7 +948,8 @@ const vaiParaStepManual = async (step) => {
           label="consultar"
           color="primary"
           @click="consultar()"
-          tabindex="-1"
+          type="submit"
+          ref="btnConsultarRef"
         />
         <q-btn
           flat

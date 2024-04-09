@@ -14,6 +14,7 @@ const sPix = pixStore();
 
 const valorPagamento = ref(null);
 const formPix = ref(null);
+const btnConsultarRef = ref(null);
 
 const inicializarValores = () => {
   valorPagamento.value = sNegocio.valorapagar;
@@ -69,11 +70,11 @@ const transmitir = () => {
   sPix.transmitirPixCob();
 };
 
-const transmitirSeNovo = () => {
-  if (sPix.pixCob.qrcode != null) {
-    return;
+const transmitirSeNovo = async () => {
+  if (sPix.pixCob.qrcode == null) {
+    await sPix.transmitirPixCob();
   }
-  sPix.transmitirPixCob();
+  btnConsultarRef.value.$el.focus();
 };
 
 const consultar = async () => {
@@ -356,7 +357,7 @@ const whatsapp = () => {
           label="consultar"
           color="primary"
           @click="consultar()"
-          tabindex="-1"
+          ref="btnConsultarRef"
         />
         <q-btn
           flat
