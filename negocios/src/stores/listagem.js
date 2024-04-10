@@ -63,6 +63,7 @@ export const listagemStore = defineStore("listagem", {
     },
     filtro: {},
     negocios: [],
+    orcamentos: [],
     paginacao: {
       current_page: 0,
       from: null,
@@ -143,6 +144,30 @@ export const listagemStore = defineStore("listagem", {
           this.negocios = this.negocios.concat(data.data);
         }
         this.paginacao = data.meta;
+      } catch (error) {
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async getOrcamentos(uuid) {
+      try {
+        const { data } = await api.get("/api/v1/pdv/orcamento", {
+          params: {
+            pdv: sSinc.pdv.uuid,
+            uuid: uuid,
+          },
+        });
+        this.orcamentos = data.data;
       } catch (error) {
         var message = error?.response?.data?.message;
         if (!message) {

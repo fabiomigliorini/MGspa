@@ -3,18 +3,24 @@ import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
+import { listagemStore } from "stores/listagem";
 import { sincronizacaoStore } from "stores/sincronizacao";
-import { Notify, Dialog } from "quasar";
+import { Notify, Dialog, debounce } from "quasar";
 import { falar } from "../../utils/falar.js";
 import emitter from "../../utils/emitter.js";
+import moment from "moment/min/moment-with-locales";
+moment.locale("pt-br");
 
 const router = useRouter();
 const sProduto = produtoStore();
 const sNegocio = negocioStore();
+const sListagem = listagemStore();
 const sSinc = sincronizacaoStore();
 const quantidade = ref(1);
 const barras = ref(null);
 const barcodeVideo = ref(null);
+const dialogOrcamento = ref(false);
+const uuidOrcamento = ref(null);
 
 var stream = null;
 var leitorLigado = ref(false);
@@ -26,6 +32,38 @@ const labelQuantidade = computed({
     return lbl;
   },
 });
+
+const orcamento = (inicioUuid) => {
+  uuidOrcamento.value = inicioUuid;
+  dialogOrcamento.value = true;
+};
+
+watch(
+  () => uuidOrcamento.value,
+  () => {
+    buscarOrcamento();
+  }
+);
+
+const buscarOrcamento = debounce(() => {
+  if (!uuidOrcamento.value) {
+    sListagem.orcamentos = [];
+    return;
+  }
+  sListagem.getOrcamentos(uuidOrcamento.value);
+});
+
+const unificarOrcamento = (orc) => {
+  Dialog.create({
+    title: "Abrir como Comanda",
+    message:
+      "Tem certeza que deseja abrir esse orçamento como uma comanda? Esta operação não poderá ser desfeita.",
+    cancel: true,
+  }).onOk(() => {
+    unificarComanda(parseInt(orc.codnegocio));
+    dialogOrcamento.value = false;
+  });
+};
 
 const informarVendedor = async (codpessoavendedor) => {
   await sNegocio.informarVendedor(codpessoavendedor);
@@ -120,22 +158,26 @@ const adicionarPeloCodigoBarras = async (txt) => {
   if (txt.length == 11) {
     const prefixo = txt.substring(0, 3);
     const codigo = txt.substring(3, 11);
-    if (!isNaN(codigo)) {
-      switch (prefixo) {
-        // Comanda Vendedor (Ex  VDD00010022)
-        case "VDD":
-          informarVendedor(parseInt(codigo));
-          return;
+    switch (prefixo) {
+      // Comanda Vendedor (Ex VDD00010022)
+      case "VDD":
+        informarVendedor(parseInt(codigo));
+        return;
 
-        // Comanda Negocio (Ex NEG03386672)
-        case "NEG":
-          unificarComanda(parseInt(codigo));
-          return;
+      // Comanda Negocio (Ex NEG03386672)
+      case "NEG":
+        unificarComanda(parseInt(codigo));
+        return;
 
-        case "VAL":
-          valeCompras(parseInt(codigo));
-          return;
-      }
+      // Orçamento (Ex ORC7d5864f5)
+      case "ORC":
+        orcamento(codigo);
+        return;
+
+      // Vale compras (Ex VAL00532214)
+      case "VAL":
+        valeCompras(parseInt(codigo));
+        return;
     }
   }
 
@@ -316,9 +358,28 @@ const lerCodigoBarras = async () => {
       >
         <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
       </q-btn>
-      <q-btn round dense flat icon="receipt" @click="comanda()">
-        <q-tooltip class="bg-accent">Abir Comanda</q-tooltip>
-      </q-btn>
+      <q-fab icon="receipt" flat padding="5px" direction="down">
+        <!-- COMANDA -->
+        <q-fab-action
+          external-label
+          label-class="bg-primary"
+          label="Importar Comanda"
+          icon="receipt"
+          color="primary"
+          @click="comanda()"
+          label-position="left"
+        />
+        <!-- COMANDA -->
+        <q-fab-action
+          external-label
+          label-class="bg-primary"
+          label="Importar Orçamento"
+          icon="mdi-clipboard-edit-outline"
+          color="primary"
+          @click="orcamento()"
+          label-position="left"
+        />
+      </q-fab>
       <q-btn
         round
         dense
@@ -360,6 +421,86 @@ const lerCodigoBarras = async () => {
       Ler código de Barras!
     </q-btn>
   </div>
+
+  <!-- Pesquisa Orçamento -->
+  <q-dialog v-model="dialogOrcamento">
+    <q-card style="width: 360px">
+      <q-card-section>
+        <q-input
+          type="text"
+          mask="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          outlined
+          v-model="uuidOrcamento"
+          autofocus
+          label="UUID"
+          class="q-mb-md"
+        />
+        <q-scroll-area style="height: 400px">
+          <q-list v-if="sListagem.orcamentos.length > 0">
+            <template v-for="orc in sListagem.orcamentos" :key="orc.codnegocio">
+              <q-item clickable v-ripple @click="unificarOrcamento(orc)">
+                <q-item-section>
+                  <q-item-label>
+                    {{ orc.estoquelocal }}
+                  </q-item-label>
+                  <q-item-label caption v-if="orc.codpessoa != 1">
+                    {{ orc.fantasia }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ orc.naturezaoperacao }}
+                  </q-item-label>
+                  <q-item-label caption v-if="orc.codpessoavendedor">
+                    {{ orc.fantasiavendedor }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    #{{ String(orc.codnegocio).padStart(8, "0") }}
+                  </q-item-label>
+                  <q-item-label caption class="ellipsis">
+                    {{ orc.uuid }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side top>
+                  <q-item-label>
+                    R$
+                    {{
+                      new Intl.NumberFormat("pt-BR", {
+                        style: "decimal",
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(orc.valortotal)
+                    }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ moment(orc.lancamento).fromNow() }}
+                  </q-item-label>
+                  <q-item-label caption> </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator />
+            </template>
+          </q-list>
+          <template v-else-if="uuidOrcamento">
+            <h4>Nenhum Orçamento Localizado!</h4>
+            Confirme se você digitou o código UUID correto ou ainda se quem
+            emitiu o orçamento fez o processo de sincronização!
+          </template>
+          <template v-else>
+            <h4>Digite o UUID!</h4>
+            Digite o código UUID para pesquisar os orçamentos em aberto!
+          </template>
+        </q-scroll-area>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn
+          flat
+          label="Cancelar"
+          color="primary"
+          @click="dialogOrcamento = false"
+          tabindex="-1"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 
   <!-- Pesquisa de Produto -->
   <q-dialog v-model="sProduto.dialogPesquisa" maximized>

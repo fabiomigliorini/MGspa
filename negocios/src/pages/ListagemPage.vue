@@ -2,7 +2,6 @@
 import { ref, watch } from "vue";
 import { debounce } from "quasar";
 import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
-
 import { listagemStore } from "src/stores/listagem";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");

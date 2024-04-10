@@ -15,14 +15,6 @@ const valorSaldo = computed(() => {
   return sNegocio.valorapagar - valorPagamento.value;
 });
 
-const valorSaldoClass = computed(() => {
-  return valorSaldo.value > 0 ? "text-red" : "text-green";
-});
-
-const valorSaldoLabel = computed(() => {
-  return valorSaldo.value > 0 ? "Faltando" : "Troco";
-});
-
 //TODO: nao inicializar valores quando lido pelo leitor
 const inicializarValores = () => {
   valorPagamento.value = null;
@@ -159,29 +151,6 @@ onUnmounted(() => {
       <q-form @submit="salvar()">
         <q-card-section style="min-height: 430px">
           <q-list>
-            <!-- <h1>Pagamento Vale</h1> -->
-            <!-- <q-item>
-              <q-item-section side class="text-h5 text-grey">
-                R$
-              </q-item-section>
-              <q-item-section>
-                <q-item-label
-                  class="text-h2 text-primary text-weight-bolder text-right"
-                >
-                  {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(sNegocio.valorapagar)
-                  }}
-                </q-item-label>
-                <q-item-label caption class="text-right">
-                  À Pagar
-                </q-item-label>
-              </q-item-section>
-            </q-item> -->
-
             <q-item>
               <q-item-section side class="text-h5 text-grey">
                 #Vale
@@ -284,28 +253,6 @@ onUnmounted(() => {
                 </q-item-section>
               </q-item>
             </template>
-            <!-- <q-item>
-              <q-item-section side class="text-h5 text-grey">
-                R$
-              </q-item-section>
-              <q-item-section>
-                <q-item-label
-                  :class="valorSaldoClass"
-                  class="text-h2 text-weight-bolder text-right"
-                >
-                  {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(Math.abs(valorSaldo))
-                  }}
-                </q-item-label>
-                <q-item-label caption class="text-right">
-                  {{ valorSaldoLabel }}
-                </q-item-label>
-              </q-item-section>
-            </q-item> -->
           </q-list>
         </q-card-section>
 

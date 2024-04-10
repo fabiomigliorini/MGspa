@@ -49,6 +49,12 @@ class NegocioComandaService
             throw new \Exception("Negócio não está aberto!", 1);
         }
 
+        // verifica se nao está tentando unificar a comanda nela mesma
+        if ($negocioComanda->codfilial != $negocio->codfilial) {
+            throw new \Exception("Negócio e Comanda são de Filiais diferentes!", 1);
+        }
+
+
         // verifica se tem item pra "puxar"
         if ($negocioComanda->NegocioProdutoBarras()->count() == 0) {
             throw new \Exception("Comanda não tem nenhum item!", 1);

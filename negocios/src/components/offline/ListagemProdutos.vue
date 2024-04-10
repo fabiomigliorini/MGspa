@@ -383,7 +383,7 @@ const linkProduto = (codproduto) => {
       <div
         class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
         v-for="item in itens"
-        :key="item.codprodutobarra"
+        :key="item.uuid"
       >
         <q-card>
           <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />

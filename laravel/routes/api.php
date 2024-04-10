@@ -47,10 +47,10 @@ Route::group(['prefix' => 'v1/auth'], function () {
 });
 
 Route::group(['prefix' => 'v1'], function () {
+
     // Pessoa
     Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
     Route::get('pessoa/verifica-ie-sefaz', '\Mg\Pessoa\PessoaController@verificaIeSefaz');
-
 
     // PDV
     Route::group(['prefix' => 'pdv'], function () {
@@ -180,6 +180,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');
             Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Pdv\PdvController@unificarComanda');
             Route::post('negocio/{codnegocio}/devolucao', '\Mg\Pdv\PdvController@devolucao');
+            Route::get('orcamento', '\Mg\Pdv\PdvController@getOrcamentos');
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
             Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
             Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\Pdv\PdvController@consultarPagarMePedido');
@@ -202,7 +203,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
         });
 
-        // Allan - daqui pra baixo
+        // Pessoa
         Route::get('pessoa/aniversario-colaboradores', '\Mg\Pessoa\PessoaController@aniversariosColaboradores');
         Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');
         Route::get('pessoa/aniversarios/', '\Mg\Pessoa\PessoaController@aniversarios');
@@ -214,11 +215,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
         Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
 
-
-
         //GrupoCliente
         Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index');
-
 
         // Pessoa Telefone
         Route::get('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@index');
@@ -245,10 +243,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('pessoa/{codpessoa}/email/{codpessoatelefone}/inativo', '\Mg\Pessoa\PessoaEmailController@ativar');
         Route::get('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@verificarEmail');
         Route::post('pessoa/{codpessoa}/email/{codpessoatelefone}/verificar', '\Mg\Pessoa\PessoaEmailController@confirmaEmail');
-
-
-
-
 
         // Pessoa Endereço
         Route::get('pessoa/{codpessoa}/endereco/', '\Mg\Pessoa\PessoaEnderecoController@index');
@@ -290,7 +284,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@show');
         Route::put('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@update');
         Route::put('ferias/atualiza-todas-ferias/', '\Mg\Colaborador\FeriasController@AtualizaTodasFerias');
-
         Route::delete('colaborador/{codcolaborador}/ferias/{codferias}/', '\Mg\Colaborador\FeriasController@delete');
         Route::get('programacao-ferias/{ano}', '\Mg\Colaborador\FeriasController@programacaoFerias');
 
@@ -324,13 +317,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('grupo-economico/{codgrupoeconomico}/nfe-terceiro', '\Mg\GrupoEconomico\GrupoEconomicoController@nfeTerceiro');
         Route::get('grupo-economico/{codgrupoeconomico}/negocios', '\Mg\GrupoEconomico\GrupoEconomicoController@negocios');
         Route::get('grupo-economico/{codgrupoeconomico}/top-produtos', '\Mg\GrupoEconomico\GrupoEconomicoController@topProdutos');
-
-
         Route::get('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@show');
         Route::post('grupoeconomico/{codgrupoeconomico}/inativo', '\Mg\GrupoEconomico\GrupoEconomicoController@inativar');
         Route::delete('grupoeconomico/{codgrupoeconomico}/inativo', '\Mg\GrupoEconomico\GrupoEconomicoController@ativar');
-
-
         Route::put('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@update');
         Route::delete('grupoeconomico/{codgrupoeconomico}/', '\Mg\GrupoEconomico\GrupoEconomicoController@delete');
 
@@ -362,7 +351,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::put('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@update');
         Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@delete');
 
-
         Route::group(['prefix' => 'produto'], function () {
             Route::get('{codproduto}', '\Mg\Produto\ProdutoController@show');
         });
@@ -385,7 +373,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             });
         });
 
-
         // NOTA FISCAL TRANSFERENCIA
         Route::get('nota-fiscal/dashboard', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@index');
         Route::get('nota-fiscal/gera-transferencias/{codfilial}', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@GerarNovaTransferencia');
@@ -393,7 +380,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('nota-fiscal/notas-nao-autorizadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasNaoAutorizadas');
         Route::get('nota-fiscal/notas-emitidas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasEmitidas');
         Route::get('nota-fiscal/notas-lancadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasLancadas');
-
 
         // MDFe
         Route::post('mdfe/criar-da-nota-fiscal/{codnotafiscal}', '\Mg\Mdfe\MdfeController@criarDaNotaFiscal');
@@ -460,18 +446,12 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::put('usuario/{id}/alterar', '\Mg\Usuario\UsuarioController@update');
         Route::put('usuario/{id}/grupos-usuarios', '\Mg\Usuario\UsuarioController@gruposAdicionarERemover');
         Route::post('usuario/criar', '\Mg\Usuario\UsuarioController@novoUsuario');
-
         Route::get('usuario/{id}/reset-senha', '\Mg\Usuario\UsuarioController@resetSenha');
-
-
         Route::post('usuario/{id}/inativo', '\Mg\Usuario\UsuarioController@inativar')->name('usuario.inativar');
-
         Route::apiResource('usuario', '\Mg\Usuario\UsuarioController');
 
         // Grupos de usuário
-
         Route::get('grupo-usuario/todos', '\Mg\Usuario\GrupoUsuarioController@index');
-
         Route::get('grupo-usuario/{id}/autor', '\Mg\Usuario\GrupoUsuarioController@autor');
         Route::get('grupo-usuario/{id}', '\Mg\Usuario\GrupoUsuarioController@detalhes');
         Route::delete('grupo-usuario/{id}/inativo', '\Mg\Usuario\GrupoUsuarioController@ativar')->name('grupo-usuario.ativar');
@@ -479,7 +459,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::apiResource('grupo-usuario', '\Mg\Usuario\GrupoUsuarioController');
         Route::delete('grupo-usuario/{id}', '\Mg\Usuario\GrupoUsuarioController@destroy');
         Route::put('grupo-usuario/{id}/alterar', '\Mg\Usuario\GrupoUsuarioController@update');
-
 
         // Filiais
         Route::apiResource('filial', '\Mg\Filial\FilialController');
@@ -563,7 +542,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
         Route::get('pix/', '\Mg\Pix\PixController@index');
         Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
-
 
         // Portador
         Route::get('portador', '\Mg\Portador\PortadorController@index');

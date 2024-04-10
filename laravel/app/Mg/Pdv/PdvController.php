@@ -249,6 +249,14 @@ class PdvController
         return NegocioListagemResource::collection($qry->paginate(100));
     }
 
+    public function getOrcamentos(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        $qry = Negocio::where('codnegociostatus', 1)->where('uuid', 'ilike', "{$request->uuid}%");
+        $qry->orderBy('lancamento', 'desc')->orderBy('codnegocio', 'desc');
+        return NegocioListagemResource::collection($qry->limit(50)->get());
+    }    
+
     public function fecharNegocio(PdvRequest $request, $codnegocio)
     {
         $pdv = PdvService::autoriza($request->pdv);

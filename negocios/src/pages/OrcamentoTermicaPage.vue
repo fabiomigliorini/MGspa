@@ -29,7 +29,13 @@ onMounted(() => {
         <tr>
           <td>
             <span class="row">
-              #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }} -
+              <template v-if="sNegocio.negocio.codnegocio">
+                #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+              </template>
+              <template v-else>
+                {{ sNegocio.negocio.uuid }}
+              </template>
+              -
               {{ sNegocio.negocio.estoquelocal }}
             </span>
             <span class="row" v-if="sNegocio.negocio.fantasiavendedor">
@@ -101,9 +107,6 @@ onMounted(() => {
             v-bind:key="produto.uuid"
           >
             <tr>
-              <!-- <td class="img">
-                            <img :src="sProduto.urlImagem(produto.codimagem)" style="width: 20%; border-radius: 50%;">
-                        </td> -->
               <td class="codigo">
                 {{ produto.barras }} |
 
@@ -243,17 +246,40 @@ onMounted(() => {
       </span>
     </div>
 
-    <hr />
-    <div class="text-center text-h5 text-bold">
-      Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
-    </div>
-    <BarCode
-      :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
-      :format="'code128'"
-      display-value="false"
-      :width="2"
-      :height="70"
-    />
+    <hr class="q-mb-md" />
+    <template v-if="sNegocio.negocio.sincronizado">
+      <div class="text-center text-h5 text-bold">
+        Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+      </div>
+      <div class="barcode">
+        <BarCode
+          :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
+          :format="'code128'"
+          display-value="false"
+          :width="2"
+          :height="70"
+          class="flex flex-center"
+        />
+      </div>
+    </template>
+    <template v-else>
+      <div class="text-center text-h5 text-bold">
+        Orçamento {{ sNegocio.negocio.uuid.substring(0, 8) }}
+      </div>
+      <div
+        class="barcode text-center"
+        style="display: flex; justify-content: center"
+      >
+        <BarCode
+          :value="'ORC' + sNegocio.negocio.uuid.substring(0, 8)"
+          :format="'code128'"
+          display-value="false"
+          :width="2"
+          :height="70"
+          class="flex flex-center"
+        />
+      </div>
+    </template>
     <div class="text-center text-h5 text-bold">
       R$
       {{

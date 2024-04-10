@@ -236,19 +236,39 @@ onMounted(() => {
     </div>
     <br /><br />
     <hr />
-    <div class="text-center text-h5 text-bold">
-      Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
-    </div>
-    <div class="barcode">
-      <BarCode
-        :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
-        :format="'code128'"
-        display-value="false"
-        :width="2"
-        :height="70"
-        class="flex flex-center"
-      />
-    </div>
+    <template v-if="sNegocio.negocio.sincronizado">
+      <div class="text-center text-h5 text-bold">
+        Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+      </div>
+      <div class="barcode">
+        <BarCode
+          :value="'NEG' + String(sNegocio.negocio.codnegocio).padStart(8, '0')"
+          :format="'code128'"
+          display-value="false"
+          :width="2"
+          :height="70"
+          class="flex flex-center"
+        />
+      </div>
+    </template>
+    <template v-else>
+      <div class="text-center text-h5 text-bold">
+        Orçamento {{ sNegocio.negocio.uuid.substring(0, 8) }}
+      </div>
+      <div
+        class="barcode text-center"
+        style="display: flex; justify-content: center"
+      >
+        <BarCode
+          :value="'ORC' + sNegocio.negocio.uuid.substring(0, 8)"
+          :format="'code128'"
+          display-value="false"
+          :width="2"
+          :height="70"
+          class="flex flex-center"
+        />
+      </div>
+    </template>
     <div class="text-center text-h5 text-bold">
       R$
       {{
