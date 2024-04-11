@@ -332,58 +332,74 @@ class PagarMeService
         if (empty($ped->codnegocio)) {
             return false;
         }
-        $nfp = NegocioFormaPagamento::firstOrNew([
-            'codpagarmepedido' => $ped->codpagarmepedido
+
+        if ($ped->valorpagoliquido <= 0) {
+            NegocioFormaPagamento::where([
+                'codpagarmepedido' => $ped->codpagarmepedido,
+            ])->delete();
+            return true;
+        }
+
+        $fp = FormaPagamento::firstOrNew([
+            'stone' => true,
+            'integracao' => true
         ]);
-        $nfp->codnegocio = $ped->codnegocio;
-        $fp = FormaPagamento::firstOrNew(['stone' => true, 'integracao' => true]);
+
         if (!$fp->exists) {
             $fp->formapagamento = 'Stone PagarMe';
             $fp->avista = true;
             $fp->integracao = true;
             $fp->save();
         }
-        $nfp->codformapagamento = $fp->codformapagamento;
-        $nfp->avista = true;
-        $nfp->valorpagamento = $ped->valorpagoliquido;
-        $nfp->valorjuros = $ped->valorjuros;
-        $nfp->valortotal = $nfp->valorpagamento + $nfp->valorjuros;
-        $nfp->valortroco = null;
+
+        $tipo = 99; //Outros
+        $autorizacao = null;
+        $bandeira = null;
         foreach ($ped->PagarMePagamentoS as $pag) {
             if ($pag->valorcancelamento) {
                 continue;
             }
             switch ($pag->tipo) {
                 case 1: //debit
-                    $nfp->tipo = 4; //Cartão de Débito
+                    $tipo = 4; //Cartão de Débito
                     break;
                 case 2: //credit
-                    $nfp->tipo = 3; //Cartão de Crédito
+                    $tipo = 3; //Cartão de Crédito
                     break;
                 case 3: //voucher
-                    $nfp->tipo = 3; //Cartão de Crédito
+                    $tipo = 3; //Cartão de Crédito
                     break;
                 case 4: //prepaid
-                    $nfp->tipo = 3; //Cartão de Crédito
-                    break;
-                default:
-                    $nfp->tipo = 99; //Outros
+                    $tipo = 3; //Cartão de Crédito
                     break;
             }
-            $nfp->autorizacao = $pag->autorizacao;
-            $nfp->bandeira = static::converteBandeiraPagarMeParaBandeiraNfe(
+            $autorizacao = $pag->autorizacao;
+            $bandeira = static::converteBandeiraPagarMeParaBandeiraNfe(
                 $pag->PagarMeBandeira->bandeira
             );
         }
-        $nfp->integracao = true;
-        $nfp->codpessoa = env('PAGAR_ME_CODPESSOA');
-        if ($nfp->valorpagamento > 0) {
-            $nfp->save();
-        } elseif (!empty($nfp->codnegocioformapagamento)) {
-            $nfp->delete();
-        }
 
-        $fechado = NegocioService::fecharSePago($ped->Negocio);
+        NegocioFormaPagamento::updateOrCreate(
+            [
+                'codnegocio' => $ped->codnegocio,
+                'autorizacao' => $autorizacao,
+                'codpessoa' => env('PAGAR_ME_CODPESSOA')
+            ],
+            [
+                'codpagarmepedido' => $ped->codpagarmepedido,
+                'codformapagamento' => $fp->codformapagamento,
+                'avista' => true,
+                'valorpagamento' => $ped->valorpagoliquido,
+                'valorjuros' => $ped->valorjuros,
+                'valortotal' => $ped->valorpagoliquido + $ped->valorjuros,
+                'valortroco' => null,
+                'tipo' => $tipo,
+                'bandeira' => $bandeira,
+                'integracao' => true
+            ]
+        );
+
+        NegocioService::fecharSePago($ped->Negocio);
 
         return true;
     }
