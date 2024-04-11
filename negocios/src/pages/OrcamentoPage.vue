@@ -295,6 +295,7 @@ and open the template in the editor.
 @media print {
   body {
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   @page {
