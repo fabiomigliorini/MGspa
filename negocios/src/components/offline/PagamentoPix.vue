@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { Notify } from "quasar";
+import { Notify, debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
 import { formataCpf } from "../../utils/formatador.js";
@@ -77,13 +77,13 @@ const transmitirSeNovo = async () => {
   btnConsultarRef.value.$el.focus();
 };
 
-const consultar = async () => {
+const consultar = debounce(async () => {
   await sPix.consultarPixCob();
   if (sPix.pixCob.status == "CONCLUIDA") {
     sPix.dialog.detalhesPixCob = false;
     emitter.emit("pagamentoAdicionado");
   }
-};
+}, 500);
 
 const imprimir = () => {
   sPix.imprimirPixCob();

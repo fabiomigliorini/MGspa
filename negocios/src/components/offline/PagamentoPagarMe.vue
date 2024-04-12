@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { Notify } from "quasar";
+import { Notify, debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pagarMeStore } from "stores/pagar-me";
 import emitter from "../../utils/emitter.js";
@@ -252,13 +252,13 @@ const salvarManual = async () => {
   sNegocio.dialog.pagamentoCartaoManual = false;
 };
 
-const consultar = async () => {
+const consultar = debounce(async () => {
   await sPagarMe.consultarPedido();
   if (sPagarMe.pedido.status == 2) {
     sPagarMe.dialog.detalhesPedido = false;
     emitter.emit("pagamentoAdicionado");
   }
-};
+}, 500);
 
 const cancelar = async () => {
   await sPagarMe.cancelarPedido();

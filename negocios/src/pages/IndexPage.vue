@@ -12,7 +12,7 @@ import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
 import ListagemTitulos from "src/components/offline/ListagemTitulos.vue";
 import ListagemNotas from "src/components/offline/ListagemNotas.vue";
 import { api } from "boot/axios";
-import { Dialog, Notify } from "quasar";
+import { Dialog, Notify, debounce } from "quasar";
 import { db } from "boot/db";
 import emitter from "../utils/emitter.js";
 
@@ -174,7 +174,7 @@ const abrirDocumentoSeFechado = async () => {
   }
 };
 
-const fechar = async () => {
+const fechar = debounce(async () => {
   if (!sNegocio.podeEditar) {
     if (sNegocio.negocio.codnegociostatus == 1) {
       Notify.create({
@@ -189,7 +189,7 @@ const fechar = async () => {
   await fecharDialogs();
   await sNegocio.fechar();
   abrirDocumentoSeFechado();
-};
+}, 300);
 
 const cancelar = async () => {
   if (!sNegocio.podeEditar || sNegocio.negocio.codnegociostatus != 2) {
