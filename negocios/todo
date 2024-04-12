@@ -1,10 +1,7 @@
 IMPORTANTES
-TODO Adicionar nome do Caixa na pagina da confissão de dívida
-BUG Pagamento Duplicado Stone (Webhook gravando pagamento no mesmo momento que usuario consulta)
 TODO fazer venda de vale compras
 TODO fazer liquidacao de titulo
 TODO fazer tela de fechamento de caixa
-TODO Filtro por usuário
 TODO Impressão de Comanda de Vendedor
 FIXME Quando expira o token ele precisa dar o refresh automaticamente
 TODO quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
@@ -19,7 +16,6 @@ TODO dar permissoes para receber em dinheiro somente para grupo de Caixas/Gerent
 DESEJAVEIS
 TODO prancheta de pesquisa de produtos sem codigo (substituir pranchetas impressas)
 TODO Nao gerar vale quando devolver uma mercadoria de uma venda que ainda não foi paga (titulo está em aberto) e sim dar baixa no título original
-TODO Deixar nos últimos 10 negócios apenas negócios do PDV
 TODO Adicionar Filtro por Usuario na listagem
 TODO Adicionar Totais no /conferencia
 TODO Ajustar step do input da quantidade para aceitar frações somente para produtos vendidos em metro, kg, etc (vincular ao cadastro de unidade de medida)
@@ -84,3 +80,6 @@ FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistem
 [X] TODO Adicionar Informacoes do Usuario na visualizacao do negocio
 [X] TODO Adicionar Botao Cancelar nas Cobrancas da Stone
 [X] BUG Codigo de Barras do Orcamento com UUID quando não tem CODNEGOCIO (Offline)
+[X] TODO Adicionar nome do Caixa na pagina da confissão de dívida
+[X] BUG Pagamento Duplicado Stone (Webhook gravando pagamento no mesmo momento que usuario consulta)
+[X] TODO Deixar nos últimos 10 negócios apenas negócios do PDV
