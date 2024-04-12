@@ -449,48 +449,49 @@ class PagarMeService
         ?float $valor
     ) {
 
-        // Busca na filial transacao com aquele id
-        $pp = PagarMePagamento::firstOrNew([
-            'idtransacao' => $idtransacao,
-            'codfilial' => $codfilial
-        ]);
-
         // Bandeira
+        $codpagarmebandeira = null;
         if (!empty($bandeira)) {
             $band = PagarMeService::buscaOuCriaBandeira($bandeira);
-            $pp->codpagarmebandeira = $band->codpagarmebandeira;
+            $codpagarmebandeira = $band->codpagarmebandeira;
         }
-
-        $pp->codpagarmepos = $codpagarmepos;
-        $pp->jurosloja = $jurosloja;
-        $pp->parcelas = $parcelas;
-        $pp->tipo = $tipo;
-        $pp->codpagarmepedido = $codpagarmepedido;
-        $pp->autorizacao = $autorizacao;
-        $pp->identificador = $identificador;
-        $pp->nsu = $nsu;
-        $pp->nome = $nome;
 
         // data da transacao - covnerte Timezone de UTC pra America/Cuiaba
         $transacao = Carbon::parse($transacao);
         $transacao->setTimezone(config('app.timezone'));
-        $pp->transacao = $transacao;
 
         // decide se é pagamento ou cancelamento pelo status da transacao
+        $valorpagamento = null;
+        $valorcancelamento = null;
         switch (strtolower($status)) {
             case 'paid':
-                $pp->valorpagamento = $valor;
-                $pp->valorcancelamento = null;
+                $valorpagamento = $valor;
                 break;
 
             case 'canceled':
-                $pp->valorpagamento = null;
-                $pp->valorcancelamento = $valor;
+                $valorcancelamento = $valor;
                 break;
         }
 
-        // salva
-        $pp->save();
+        // Busca na filial transacao com aquele id
+        $pp = PagarMePagamento::updateOrCreate([
+            'idtransacao' => $idtransacao,
+            'codfilial' => $codfilial,
+        ], [
+            'codpagarmebandeira' => $codpagarmebandeira,
+            'codpagarmepos' => $codpagarmepos,
+            'jurosloja' => $jurosloja,
+            'parcelas' => $parcelas,
+            'tipo' => $tipo,
+            'codpagarmepedido' => $codpagarmepedido,
+            'autorizacao' => $autorizacao,
+            'identificador' => $identificador,
+            'nsu' => $nsu,
+            'nome' => $nome,
+            'transacao' => $transacao,
+            'valorpagamento' => $valorpagamento,
+            'valorcancelamento' => $valorcancelamento,
+        ]);
 
         return $pp;
     }
