@@ -549,9 +549,7 @@ const creditCardColorPagamento = (pag) => {
     <!-- BOTOES DE ADICIONAR PAGAMENTO -->
     <q-list
       class="q-pa-md q-gutter-sm text-right"
-      v-if="
-        sNegocio.negocio.financeiro && sNegocio.negocio.codnegociostatus == 1
-      "
+      v-if="sNegocio.negocio.financeiro && sNegocio.podeEditar"
     >
       <!-- BOTAO DINHEIRO -->
       <q-btn

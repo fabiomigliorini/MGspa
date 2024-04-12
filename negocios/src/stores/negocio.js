@@ -61,7 +61,10 @@ export const negocioStore = defineStore("negocio", {
       });
     },
     podeEditar() {
-      return this.negocio?.codnegociostatus == 1;
+      return (
+        this.negocio?.codnegociostatus == 1 &&
+        this.negocio?.codpdv == sSinc.pdv?.codpdv
+      );
     },
     valorapagar() {
       var pagamentos = 0;
