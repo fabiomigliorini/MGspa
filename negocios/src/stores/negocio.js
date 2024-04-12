@@ -234,6 +234,8 @@ export const negocioStore = defineStore("negocio", {
         pagamentos: [],
         titulos: [],
         notas: [],
+        codpdv: sSinc.pdv.codpdv,
+        Pdv: { ...sSinc.pdv },
       };
       db.negocio.add(negocio, uuid);
       this.atualizarListagem();
@@ -394,14 +396,16 @@ export const negocioStore = defineStore("negocio", {
         const nat = await db.naturezaOperacao.get(
           this.negocio.codnaturezaoperacao
         );
-        naturezaoperacao = nat.naturezaoperacao;
-        financeiro = nat.financeiro;
-        codoperacao = nat.codoperacao;
-        venda = nat.venda;
-        if (nat.codoperacao == 1) {
-          operacao = "Entrada";
-        } else {
-          operacao = "Saída";
+        if (nat) {
+          naturezaoperacao = nat.naturezaoperacao;
+          financeiro = nat.financeiro;
+          codoperacao = nat.codoperacao;
+          venda = nat.venda;
+          if (nat.codoperacao == 1) {
+            operacao = "Entrada";
+          } else {
+            operacao = "Saída";
+          }
         }
       }
 
@@ -422,7 +426,9 @@ export const negocioStore = defineStore("negocio", {
       // estoquelocal
       if (this.negocio.codestoquelocal) {
         const loc = await db.estoqueLocal.get(this.negocio.codestoquelocal);
-        estoquelocal = loc.estoquelocal;
+        if (loc) {
+          estoquelocal = loc.estoquelocal;
+        }
       }
 
       // Pessoa
@@ -441,7 +447,9 @@ export const negocioStore = defineStore("negocio", {
       // Vendedor
       if (this.negocio.codpessoavendedor) {
         const vnd = await db.pessoa.get(this.negocio.codpessoavendedor);
-        fantasiavendedor = vnd.fantasia;
+        if (vnd) {
+          fantasiavendedor = vnd.fantasia;
+        }
       }
 
       this.negocio.naturezaoperacao = naturezaoperacao;

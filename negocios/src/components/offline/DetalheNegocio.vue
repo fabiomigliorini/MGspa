@@ -548,17 +548,19 @@ const negocioStatusIconColor = () => {
           {{ sNegocio.negocio.usuario }}
         </q-item-label>
         <template v-if="sNegocio.negocio.codpdv">
-          <q-item-label lines="1" v-if="sNegocio.negocio.Pdv.apelido">
-            {{ sNegocio.negocio.Pdv.apelido }}
-          </q-item-label>
+          <template v-if="sNegocio.negocio.Pdv">
+            <q-item-label lines="1" v-if="sNegocio.negocio.Pdv.apelido">
+              {{ sNegocio.negocio.Pdv.apelido }}
+            </q-item-label>
+            <q-item-label caption>
+              {{ sNegocio.negocio.Pdv.uuid }}
+            </q-item-label>
+            <q-item-label caption>
+              {{ sNegocio.negocio.Pdv.ip }}
+            </q-item-label>
+          </template>
           <q-item-label lines="1" v-else>
             #{{ String(sNegocio.negocio.codpdv).padStart(8, "0") }}
-          </q-item-label>
-          <q-item-label caption>
-            {{ sNegocio.negocio.Pdv.uuid }}
-          </q-item-label>
-          <q-item-label caption>
-            {{ sNegocio.negocio.Pdv.ip }}
           </q-item-label>
         </template>
       </q-item-section>

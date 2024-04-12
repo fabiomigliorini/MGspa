@@ -60,7 +60,9 @@ const hotkeys = (event) => {
 
     case "F1": // Pesquisa
       event.preventDefault();
-      sProduto.dialogPesquisa = true;
+      if (sNegocio.podeEditar) {
+        sProduto.dialogPesquisa = true;
+      }
       break;
 
     case "F2": // Novo
@@ -173,7 +175,15 @@ const abrirDocumentoSeFechado = async () => {
 };
 
 const fechar = async () => {
-  if (sNegocio.negocio.codnegociostatus != 1) {
+  if (!sNegocio.podeEditar) {
+    if (sNegocio.negocio.codnegociostatus == 1) {
+      Notify.create({
+        type: "negative",
+        message: "Você não pode fechar um negócio de outro PDV!",
+        timeout: 3000, // 3 segundos
+        actions: [{ icon: "close", color: "white" }],
+      });
+    }
     return;
   }
   await fecharDialogs();
@@ -182,10 +192,7 @@ const fechar = async () => {
 };
 
 const cancelar = async () => {
-  if (
-    sNegocio.negocio.codnegociostatus != 1 &&
-    sNegocio.negocio.codnegociostatus != 2
-  ) {
+  if (!sNegocio.podeEditar || sNegocio.negocio.codnegociostatus != 2) {
     return;
   }
   Dialog.create({
@@ -207,7 +214,7 @@ const cancelar = async () => {
 };
 
 const dinheiro = async () => {
-  if (sNegocio.negocio.codnegociostatus != 1) {
+  if (!sNegocio.podeEditar) {
     return;
   }
   await fecharDialogs();
@@ -215,7 +222,7 @@ const dinheiro = async () => {
 };
 
 const pagarMe = async () => {
-  if (sNegocio.negocio.codnegociostatus != 1) {
+  if (!sNegocio.podeEditar) {
     return;
   }
   if (sPagarMe.dialog.detalhesPedido) {
@@ -232,7 +239,7 @@ const pagarMe = async () => {
 };
 
 const pix = async () => {
-  if (sNegocio.negocio.codnegociostatus != 1) {
+  if (!sNegocio.podeEditar) {
     return;
   }
   if (sPix.dialog.detalhesPixCob) {
@@ -248,7 +255,7 @@ const pix = async () => {
 };
 
 const prazo = async () => {
-  if (sNegocio.negocio.codnegociostatus != 1) {
+  if (!sNegocio.podeEditar) {
     return;
   }
   await fecharDialogs();
@@ -506,7 +513,7 @@ const romaneioOuNota = async () => {
 };
 
 const pagamentoAdicionado = () => {
-  if (sNegocio.negocio.codnegociostatus != 1) {
+  if (!sNegocio.podeEditar) {
     return;
   }
   if (sNegocio.valorapagar > 0) {
@@ -595,7 +602,7 @@ onUnmounted(() => {
     </q-dialog>
 
     <!-- COMANDA -->
-    <q-dialog v-model="dialogComanda" full-height @hide="vazioOuCriar()">
+    <q-dialog v-model="dialogComanda" full-height>
       <q-card style="height: 100%">
         <!-- <q-card-section>
           <div class="text-h6">Romaneio</div>
@@ -703,6 +710,7 @@ onUnmounted(() => {
             external-label
             label-class="bg-accent"
             label="Comanda (F4)"
+            label-position="left"
             icon="receipt"
             color="accent"
             @click="comanda()"
@@ -717,6 +725,7 @@ onUnmounted(() => {
             external-label
             label-class="bg-accent"
             label="Romaneio"
+            label-position="left"
             icon="print"
             color="accent"
             @click="romaneio()"
@@ -728,6 +737,7 @@ onUnmounted(() => {
             external-label
             label-class="bg-accent"
             label="Orçamento"
+            label-position="left"
             icon="mdi-clipboard-edit-outline"
             color="accent"
             @click="orcamento()"
@@ -735,22 +745,19 @@ onUnmounted(() => {
               sNegocio.itensAtivos.length > 0 &&
               sNegocio.negocio.codnegociostatus != 3
             "
-          >
-            <!-- <q-tooltip class="bg-accent">Orçamento</q-tooltip> -->
-          </q-fab-action>
+          />
 
           <!-- VALE -->
           <q-fab-action
             external-label
             label-class="bg-accent"
             label="Vale Compras"
+            label-position="left"
             icon="mdi-ticket"
             color="accent"
             @click="vale()"
             v-if="sNegocio.negocio.codnegociostatus == 2"
-          >
-            <!-- <q-tooltip class="bg-accent">Vale Compras</q-tooltip> -->
-          </q-fab-action>
+          />
         </q-fab>
 
         <!-- FECHAR -->
@@ -759,10 +766,7 @@ onUnmounted(() => {
           icon="send"
           color="primary"
           @click="fechar()"
-          v-if="
-            sNegocio.itensAtivos.length > 0 &&
-            sNegocio.negocio.codnegociostatus == 1
-          "
+          v-if="sNegocio.itensAtivos.length > 0 && sNegocio.podeEditar"
         >
           <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
         </q-btn>
@@ -773,10 +777,7 @@ onUnmounted(() => {
           icon="delete"
           color="negative"
           @click="cancelar()"
-          v-if="
-            sNegocio.negocio.codnegociostatus == 1 ||
-            sNegocio.negocio.codnegociostatus == 2
-          "
+          v-if="sNegocio.podeEditar || sNegocio.negocio.codnegociostatus == 2"
         >
           <q-tooltip class="bg-accent">Cancelar Negócio</q-tooltip>
         </q-btn>
