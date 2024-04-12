@@ -286,6 +286,18 @@ export const negocioStore = defineStore("negocio", {
       this.negocio.valoroutras = Math.round(valoroutras * 100) / 100;
       this.negocio.valorjuros = Math.round(valorjuros * 100) / 100;
       this.negocio.valortotal = Math.round(valortotal * 100) / 100;
+
+      await this.recalcularTroco();
+    },
+
+    async recalcularTroco() {
+      const pagar = this.valorapagar;
+      const troco = pagar < 0 ? Math.abs(pagar) : null;
+      this.negocio.pagamentos.forEach((pag) => {
+        if (pag.codformapagamento == process.env.CODFORMAPAGAMENTO_DINHEIRO) {
+          pag.valortroco = troco;
+        }
+      });
     },
 
     async carregarPrimeiroVazio() {
