@@ -178,19 +178,25 @@ class PdvNegocioPrazoService
             ->where('codformapagamento', NegocioFormaPagamentoService::CODFORMAPAGAMENTO_VALE)
             ->get();
         foreach ($nfps as $nfp) {
-            $mov = new MovimentoTitulo();
-            $mov->codtipomovimentotitulo = TituloService::TIPO_AMORTIZACAO;
-            $mov->codtitulo = $nfp->codtitulo;
-            $mov->codnegocioformapagamento = $nfp->codnegocioformapagamento;
-            $mov->codportador = $nfp->Titulo->codportador;
+            $debito = null;
+            $credito = null;
             if ($negocio->codoperacao == 2) {
-                $mov->debito = $nfp->valorpagamento;
+                $debito = $nfp->valorpagamento;
             } else {
-                $mov->credito = $nfp->valorpagamento;
+                $credito = $nfp->valorpagamento;
             }
-            $mov->transacao = $negocio->lancamento;
-            $mov->sistema = $negocio->lancamento;
-            $mov->save();
+            MovimentoTitulo::updateOrCreate([
+                'codtipomovimentotitulo' => TituloService::TIPO_AMORTIZACAO,
+                'codtitulo' => $nfp->codtitulo,
+                'codnegocioformapagamento' => $nfp->codnegocioformapagamento
+
+            ], [
+                'codportador' => $nfp->Titulo->codportador,
+                'debito' => $debito,
+                'credito' => $credito,
+                'transacao' => $negocio->lancamento,
+                'sistema' => $negocio->lancamento,
+            ]);
         }
     }
 
@@ -202,16 +208,18 @@ class PdvNegocioPrazoService
             ->get();
         foreach ($nfps as $nfp) {
             foreach ($nfp->MovimentoTituloS as $movOriginal) {
-                $mov = new MovimentoTitulo();
-                $mov->codtipomovimentotitulo = TituloService::TIPO_ESTORNO_AMORTIZACAO;
-                $mov->codtitulo = $movOriginal->codtitulo;
-                $mov->codnegocioformapagamento = $movOriginal->codnegocioformapagamento;
-                $mov->codportador = $movOriginal->codportador;
-                $mov->debito = $movOriginal->credito;
-                $mov->credito = $movOriginal->debito;
-                $mov->transacao = $movOriginal->transacao;
-                $mov->sistema = Carbon::now();
-                $mov->save();
+                MovimentoTitulo::updateOrCreate([
+                    'codtipomovimentotitulo' => TituloService::TIPO_ESTORNO_AMORTIZACAO,
+                    'codtitulo' => $nfp->codtitulo,
+                    'codnegocioformapagamento' => $nfp->codnegocioformapagamento
+
+                ], [
+                    'codportador' => $movOriginal->codportador,
+                    'debito' => $movOriginal->credito,
+                    'credito' => $movOriginal->debito,
+                    'transacao' => $movOriginal->transacao,
+                    'sistema' => Carbon::now(),
+                ]);
             }
         }
     }
