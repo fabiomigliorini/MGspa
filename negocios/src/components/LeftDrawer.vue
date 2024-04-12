@@ -1,12 +1,14 @@
 <script setup>
 import { Dialog, Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
+import { sincronizacaoStore } from "src/stores/sincronizacao";
 import { useRouter } from "vue-router";
 import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const sNegocio = negocioStore();
+const sSinc = sincronizacaoStore();
 const router = useRouter();
 
 const criar = async () => {
@@ -96,13 +98,21 @@ const abrirNegocio = async () => {
           </q-item-label>
         </q-item-section>
         <q-item-section side class="text-bold">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(n.valortotal)
-          }}
+          <q-item-label>
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(n.valortotal)
+            }}
+            <q-badge
+              color="orange"
+              text-color="white"
+              rounded
+              v-if="n.codpdv != sSinc.pdv.codpdv"
+            />
+          </q-item-label>
         </q-item-section>
       </q-item>
       <q-separator />
@@ -151,13 +161,22 @@ const abrirNegocio = async () => {
           </q-item-label>
         </q-item-section>
         <q-item-section side class="text-bold">
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(n.valortotal)
-          }}
+          <q-item-label>
+            {{
+              new Intl.NumberFormat("pt-BR", {
+                style: "decimal",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(n.valortotal)
+            }}
+            <q-badge
+              color="orange"
+              text-color="white"
+              rounded
+              v-if="n.codpdv != sSinc.pdv.codpdv"
+            />
+          </q-item-label>
+
           <q-item-label class="ellipsis" v-if="n.codnegociostatus == 3">
             <q-chip
               square
