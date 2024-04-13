@@ -192,7 +192,10 @@ const fechar = debounce(async () => {
 }, 300);
 
 const cancelar = async () => {
-  if (!sNegocio.podeEditar || sNegocio.negocio.codnegociostatus != 2) {
+  if (
+    sNegocio.negocio.codnegociostatus != 1 &&
+    sNegocio.negocio.codnegociostatus != 2
+  ) {
     return;
   }
   Dialog.create({
