@@ -12,8 +12,10 @@ class NotaFiscalProdutoBarraService
 {
     public static function calcularTributacao(NotaFiscalProdutoBarra &$nfpb, $somenteVazios = true)
     {
-        if ((!empty($nfpb->codcfop) && (!empty($nfpb->csosn) || ($nfpb->icmscst != ''))) || !$somenteVazios) {
-            return true;
+        if ($somenteVazios) {
+            if ((!empty($nfpb->codcfop) && (!empty($nfpb->csosn) || ($nfpb->icmscst != '')))) {
+                return true;
+            }
         }
 
         if (empty($nfpb->codprodutobarra)) {
@@ -52,7 +54,7 @@ class NotaFiscalProdutoBarraService
 
         if ($nfpb->NotaFiscal->Pessoa->Cidade->Estado == $nfpb->NotaFiscal->Filial->Pessoa->Cidade->Estado) {
             $sql .= 'AND t.codestado = :codestado';
-            $params['codestado'] =  $nfpb->NotaFiscal->Pessoa->Cidade->codestado;
+            $params['codestado'] = $nfpb->NotaFiscal->Pessoa->Cidade->codestado;
         } else {
             $sql .= 'AND t.codestado is null';
         }
@@ -66,7 +68,7 @@ class NotaFiscalProdutoBarraService
         $trib = $ret[0];
 
         // calcula valor encima do qual sera feito rateio/calculos
-        $valorTotalFinal =       
+        $valorTotalFinal =
             $nfpb->valortotal
             - $nfpb->valordesconto
             + $nfpb->valorfrete

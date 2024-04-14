@@ -188,13 +188,12 @@ class NotaFiscalTransferenciaService extends MGModel
             'codfilial' => $codfilial
         ]);
 
-       
+
         $gerados = [];
 
         $nfs = [];
 
-        foreach($regs as $reg)
-        {
+        foreach ($regs as $reg) {
             if (isset($gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao])) {
 
                 $nf = $nfs[$gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['codnotafiscal']];
@@ -217,9 +216,9 @@ class NotaFiscalTransferenciaService extends MGModel
                 $nf->save();
 
                 $gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao] = [
-                        'itens' => 0,
-                        'codnotafiscal' => 0,
-                    ];
+                    'itens' => 0,
+                    'codnotafiscal' => 0,
+                ];
 
             }
 
@@ -327,5 +326,122 @@ class NotaFiscalTransferenciaService extends MGModel
         ]);
 
         return $lancada;
+    }
+
+    public static function buscarNotasTransferenciaSaidaSemEntrada()
+    {
+        $sql = '
+            select 
+                nf.*
+            from tblnotafiscal nf
+            inner join tblfilial orig on (orig.codfilial = nf.codfilial)
+            inner join tblfilial dest on (dest.codpessoa = nf.codpessoa)
+            inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = nf.codnaturezaoperacao)
+            left join tblnotafiscal nfdest on (nfdest.emitida = false and nfdest.nfechave = nf.nfechave)
+            where nf.emitida = true
+            and nf.nfeautorizacao is not null
+            and nf.nfeinutilizacao is null
+            and nf.nfecancelamento is null
+            and orig.codempresa = dest.codempresa
+            and orig.codempresa = 1
+            and nat.transferencia = true
+            and nfdest.codnotafiscal is null
+        ';
+        $regs = DB::select($sql);
+        $nfs = NotaFiscal::hydrate($regs);
+        return $nfs;
+    }
+
+    public static function gerarTransferenciaEntrada(NotaFiscal $nf)
+    {
+        $nfEnt = NotaFiscal::updateOrCreate([
+            'nfechave' => $nf->nfechave,
+            'numero' => $nf->numero,
+            'serie' => $nf->serie,
+            'modelo' => $nf->modelo,
+            'emitida' => false,
+            'codfilial' => $nf->Pessoa->FilialS[0]->codfilial,
+            'codestoquelocal' => $nf->Pessoa->FilialS[0]->EstoqueLocalS[0]->codestoquelocal,
+            'codpessoa' => $nf->Filial->codpessoa,
+        ], [
+            'codnaturezaoperacao' => $nf->NaturezaOperacao->codnaturezaoperacaodevolucao,
+            'codoperacao' => $nf->codoperacao == 2 ? 1 : 2,
+            'emissao' => $nf->emissao,
+            'saida' => $nf->saida,
+            'frete' => $nf->frete,
+            'icmsbase' => $nf->icmsbase,
+            'icmsvalor' => $nf->icmsvalor,
+            'icmsstbase' => $nf->icmsstbase,
+            'icmsstvalor' => $nf->icmsstvalor,
+            'ipibase' => $nf->ipibase,
+            'ipivalor' => $nf->ipivalor,
+            'pesobruto' => $nf->pesobruto,
+            'pesoliquido' => $nf->pesoliquido,
+            'tpemis' => $nf->tpemis,
+            'valordesconto' => $nf->valordesconto,
+            'valorfrete' => $nf->valorfrete,
+            'valoroutras' => $nf->valoroutras,
+            'valorprodutos' => $nf->valorprodutos,
+            'valorseguro' => $nf->valorseguro,
+            'valortotal' => $nf->valortotal,
+            'volumes' => $nf->volumesx,
+        ]);
+
+        foreach ($nf->NotaFiscalProdutoBarraS as $item) {
+            $itemEnt = NotaFiscalProdutoBarra::updateOrCreate([
+                'codnotafiscal' => $nfEnt->codnotafiscal,
+                'codnotafiscalprodutobarraorigem' => $item->codnotafiscalprodutobarra
+            ], [
+                'codprodutobarra' => $item->codprodutobarra,
+                'codnegocioprodutobarra' => $item->codnegocioprodutobarra,
+                'codcfop' => $item->codcfop,
+                'csosn' => $item->csosn,
+                'quantidade' => $item->quantidade,
+                'valorunitario' => $item->valorunitario,
+                'valortotal' => $item->valortotal,
+                'valordesconto' => $item->valordesconto,
+                'valorfrete' => $item->valorfrete,
+                'valoroutras' => $item->valoroutras,
+                'valorseguro' => $item->valorseguro,
+                'cofinsbase' => $item->cofinsbase,
+                'cofinscst' => $item->cofinscst,
+                'cofinspercentual' => $item->cofinspercentual,
+                'cofinsvalor' => $item->cofinsvalor,
+                'csllbase' => $item->csllbase,
+                'csllpercentual' => $item->csllpercentual,
+                'csllvalor' => $item->csllvalor,
+                'fethabkg' => $item->fethabkg,
+                'fethabvalor' => $item->fethabvalor,
+                'funruralpercentual' => $item->funruralpercentual,
+                'funruralvalor' => $item->funruralvalor,
+                'iagrokg' => $item->iagrokg,
+                'iagrovalor' => $item->iagrovalor,
+                'icmsbase' => $item->icmsbase,
+                'icmsbasepercentual' => $item->icmsbasepercentual,
+                'icmscst' => $item->icmscst,
+                'icmspercentual' => $item->icmspercentual,
+                'icmsstbase' => $item->icmsstbase,
+                'icmsstpercentual' => $item->icmsstpercentual,
+                'icmsstvalor' => $item->icmsstvalor,
+                'icmsvalor' => $item->icmsvalor,
+                'ipibase' => $item->ipibase,
+                'ipicst' => $item->ipicst,
+                'ipipercentual' => $item->ipipercentual,
+                'ipivalor' => $item->ipivalor,
+                'irpjbase' => $item->irpjbase,
+                'irpjpercentual' => $item->irpjpercentual,
+                'irpjvalor' => $item->irpjvalor,
+                'pisbase' => $item->pisbase,
+                'piscst' => $item->piscst,
+                'pispercentual' => $item->pispercentual,
+                'pisvalor' => $item->pisvalor,
+                'senarpercentual' => $item->senarpercentual,
+                'senarvalor' => $item->senarvalor,
+            ]);
+            NotaFiscalProdutoBarraService::calcularTributacao($itemEnt, false);
+            $itemEnt->save();
+        }
+
+        return $nfEnt;
     }
 }

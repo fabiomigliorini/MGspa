@@ -24,6 +24,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('nota-fiscal:transferencia-entrada')->hourly();
         $schedule->command('nfe-php:resolver-pendente')->everyFiveMinutes();
         $schedule->command('nfe-php:dist-dfe')->hourly();
         $schedule->command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt('00:01');
