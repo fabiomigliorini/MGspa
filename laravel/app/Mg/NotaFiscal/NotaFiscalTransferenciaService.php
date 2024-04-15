@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Mg\MgModel;
 use Carbon\Carbon;
 use Mg\Negocio\NegocioProdutoBarra;
+use Mg\NfeTerceiro\NfeTerceiro;
 
 class NotaFiscalTransferenciaService extends MGModel
 {
@@ -197,7 +198,6 @@ class NotaFiscalTransferenciaService extends MGModel
             if (isset($gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao])) {
 
                 $nf = $nfs[$gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['codnotafiscal']];
-
             } else {
 
 
@@ -219,7 +219,6 @@ class NotaFiscalTransferenciaService extends MGModel
                     'itens' => 0,
                     'codnotafiscal' => 0,
                 ];
-
             }
 
             $npb = NegocioProdutoBarra::findOrFail($reg->codnegocioprodutobarra);
@@ -441,6 +440,8 @@ class NotaFiscalTransferenciaService extends MGModel
             NotaFiscalProdutoBarraService::calcularTributacao($itemEnt, false);
             $itemEnt->save();
         }
+
+        NfeTerceiro::where('nfechave', $nfEnt->nfechave)->whereNull('codnotafiscal')->update(['codnotafiscal' => $nfEnt->codnotafiscal]);
 
         return $nfEnt;
     }

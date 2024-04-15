@@ -46,8 +46,9 @@ class NotaFiscalTransferenciaEntrada extends Command
                 DB::beginTransaction();
                 $nfEnt = NotaFiscalTransferenciaService::gerarTransferenciaEntrada($nf);
                 DB::commit();
-                Log::info("Importada Transferencia Entrada {$nf->numero} Chave {$nfEnt->nfechave}!");
+                Log::info("Importada Transferencia Entrada {$nf->numero} Chave {$nf->nfechave} ({$nf->codnotafiscal})!");
             } catch (\Exception $e) {
+                Log::error("Falha ao gerar Transferencia Entrada {$nf->numero} Chave {$nf->nfechave} ({$nf->codnotafiscal})!");
                 Log::error($e->getMessage());
             }
         }
