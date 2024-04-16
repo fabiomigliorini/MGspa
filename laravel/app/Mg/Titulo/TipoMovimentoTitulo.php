@@ -18,6 +18,7 @@ class TipoMovimentoTitulo extends MgModel
     const DESCONTO = 500;
     const LIQUIDACAO = 600;
     const ESTORNOLIQUIDACAO = 930;
+    const AJUSTE = 200;
 
     protected $table = 'tbltipomovimentotitulo';
     protected $primaryKey = 'codtipomovimentotitulo';

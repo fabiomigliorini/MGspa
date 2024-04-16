@@ -347,11 +347,11 @@ class BoletoBbService
         // acumula cod dos movimentos gerados
         $codmovimentotitulos = [];
 
-        // lanca outros como juro
+        // lanca outros como ajuste
         if ($tituloBoleto->valoroutro > 0) {
             $mov = MovimentoTitulo::firstOrNew([
                 'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => TipoMovimentoTitulo::JUROS,
+                'codtipomovimentotitulo' => TipoMovimentoTitulo::AJUSTE,
             ]);
             $mov->codtitulo = $tituloBoleto->codtitulo;
             $mov->codportador = $tituloBoleto->codportador;
