@@ -174,21 +174,37 @@ const abrirDocumentoSeFechado = async () => {
   }
 };
 
+var fechando = false;
 const fechar = debounce(async () => {
-  if (!sNegocio.podeEditar) {
-    if (sNegocio.negocio.codnegociostatus == 1) {
-      Notify.create({
-        type: "negative",
-        message: "Você não pode fechar um negócio de outro PDV!",
-        timeout: 3000, // 3 segundos
-        actions: [{ icon: "close", color: "white" }],
-      });
-    }
+  if (fechando) {
+    Notify.create({
+      type: "negative",
+      message: "Duplo fechamento detectado, abortando!",
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: "close", color: "white" }],
+    });
     return;
   }
-  await fecharDialogs();
-  await sNegocio.fechar();
-  abrirDocumentoSeFechado();
+  fechando = true;
+  try {
+    if (!sNegocio.podeEditar) {
+      if (sNegocio.negocio.codnegociostatus == 1) {
+        Notify.create({
+          type: "negative",
+          message: "Você não pode fechar um negócio de outro PDV!",
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+      }
+      return;
+    }
+    await fecharDialogs();
+    await sNegocio.fechar();
+    abrirDocumentoSeFechado();
+  } catch (error) {
+    console.log(error);
+  }
+  fechando = false;
 }, 300);
 
 const cancelar = async () => {
