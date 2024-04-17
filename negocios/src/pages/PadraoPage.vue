@@ -1,4 +1,6 @@
 <script setup>
+import MainLayout from "src/layouts/MainLayout.vue";
+import ConfigLeftDrawer from "components/ConfigLeftDrawer.vue";
 import { ref, onMounted } from "vue";
 import { negocioStore } from "stores/negocio";
 import { Dialog, Notify } from "quasar";
@@ -37,7 +39,13 @@ const salvar = async () => {
 };
 </script>
 <template>
-  <q-page>
+  <main-layout title="Meu Dispositivo" :right-drawer="false">
+    <!-- LEFT DRAWER -->
+    <template v-slot:left-drawer>
+      <config-left-drawer />
+    </template>
+
+    <!-- CONTEUDO -->
     <div class="row justify-center">
       <q-card class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2">
         <q-form ref="formItem" @submit="salvar()">
@@ -91,5 +99,5 @@ const salvar = async () => {
         </q-form>
       </q-card>
     </div>
-  </q-page>
+  </main-layout>
 </template>

@@ -1,4 +1,6 @@
 <script setup>
+import MainLayout from "src/layouts/MainLayout.vue";
+import ConfigLeftDrawer from "components/ConfigLeftDrawer.vue";
 import { onMounted, ref } from "vue";
 import { pdvStore } from "src/stores/pdv";
 import moment from "moment/min/moment-with-locales";
@@ -46,7 +48,12 @@ onMounted(() => {
 });
 </script>
 <template>
-  <q-page>
+  <main-layout title="Outros Dispositivos" :right-drawer="false">
+    <!-- LEFT DRAWER -->
+    <template v-slot:left-drawer>
+      <config-left-drawer />
+    </template>
+
     <div class="row q-pa-md q-col-gutter-md q-pb-xl">
       <template v-for="pdv in sPdv.dispositivos" :key="pdv.codpdv">
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
@@ -233,5 +240,5 @@ onMounted(() => {
         </q-form>
       </q-card>
     </q-dialog>
-  </q-page>
+  </main-layout>
 </template>

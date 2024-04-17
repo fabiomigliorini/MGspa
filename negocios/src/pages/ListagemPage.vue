@@ -1,4 +1,6 @@
 <script setup>
+import MainLayout from "src/layouts/MainLayout.vue";
+import ListagemLeftDrawer from "src/components/ListagemLeftDrawer.vue";
 import { ref, watch } from "vue";
 import { debounce } from "quasar";
 import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
@@ -49,7 +51,13 @@ const statusClass = (codnegociostatus) => {
 };
 </script>
 <template>
-  <q-page>
+  <main-layout title="Listagem" :right-drawer="false">
+    <!-- LEFT DRAWER -->
+    <template v-slot:left-drawer>
+      <Listagem-Left-Drawer />
+    </template>
+
+    <!-- CONTEUDO -->
     <div
       v-if="sListagem.negocios.length == 0"
       class="absolute-center text-grey text-center"
@@ -141,5 +149,5 @@ const statusClass = (codnegociostatus) => {
         </template>
       </q-infinite-scroll>
     </q-list>
-  </q-page>
+  </main-layout>
 </template>
