@@ -3,7 +3,10 @@
     class="fullscreen bg-blue text-white text-center q-pa-md flex flex-center"
   >
     <div>
-      <div style="font-size: 30vh">404</div>
+      <!-- <div style="font-size: 30vh">404</div> -->
+      <div style="font-size: 30vh">
+        <q-icon name="mdi-emoticon-sick-outline" />
+      </div>
 
       <div class="text-h2" style="opacity: 0.4">Eita!!! Nada aqui...</div>
 
@@ -13,7 +16,7 @@
         text-color="blue"
         unelevated
         to="/"
-        label="Ir para o Início"
+        label="Voltar para o Início"
         no-caps
       />
     </div>
