@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2024 15:02:16
+ * Date: 17/Apr/2024 12:22:08
  */
 
 namespace Mg\Pessoa;
@@ -37,17 +37,19 @@ use Mg\Pessoa\PessoaEndereco;
 use Mg\Pessoa\PessoaTelefone;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Colaborador\Colaborador;
+use Mg\NotaFiscal\NotaFiscalPagamento;
 use Mg\Cidade\Cidade;
-use Mg\Cidade\Estado;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Pessoa\GrupoCliente;
 use Mg\GrupoEconomico\GrupoEconomico;
 use Mg\Pessoa\Sexo;
+use Mg\Cidade\Estado;
 
 class Pessoa extends MgModel
 {
 
+    // TODO: Passar essas constantes para Service
     const NOTAFISCAL_TRATAMENTOPADRAO = 0;
     const NOTAFISCAL_SEMPRE = 1;
     const NOTAFISCAL_SOMENTE_FECHAMENTO = 2;
@@ -68,7 +70,9 @@ class Pessoa extends MgModel
         'cnpj',
         'codcidade',
         'codcidadecobranca',
+        'codcidadenascimento',
         'codestadocivil',
+        'codestadoctps',
         'codformapagamento',
         'codgrupocliente',
         'codgrupoeconomico',
@@ -81,10 +85,12 @@ class Pessoa extends MgModel
         'credito',
         'creditobloqueado',
         'crt',
+        'ctps',
         'desconto',
         'email',
         'emailcobranca',
         'emailnfe',
+        'emissaoctps',
         'endereco',
         'enderecocobranca',
         'fantasia',
@@ -92,40 +98,36 @@ class Pessoa extends MgModel
         'fornecedor',
         'ie',
         'inativo',
+        'mae',
         'mensagemvenda',
         'nascimento',
         'notafiscal',
         'numero',
         'numerocobranca',
         'observacoes',
+        'pai',
         'pessoa',
+        'pispasep',
         'rg',
         'rntrc',
+        'seriectps',
         'telefone1',
         'telefone2',
         'telefone3',
         'tipotransportador',
-        'toleranciaatraso',
-        'vendedor',
-        'pai',
-        'mae',
-        'codcidadenascimento',
-        'pispasep',
         'tituloeleitor',
-        'titulozona',
         'titulosecao',
-        'ctps',
-        'codestadoctps',
-        'seriectps',
-        'emissaoctps'
+        'titulozona',
+        'toleranciaatraso',
+        'vendedor'
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
+        'emissaoctps',
         'inativo',
-        'nascimento',
-        'emissaoctps'
+        'nascimento'
     ];
 
     protected $casts = [
@@ -133,7 +135,9 @@ class Pessoa extends MgModel
         'cnpj' => 'float',
         'codcidade' => 'integer',
         'codcidadecobranca' => 'integer',
+        'codcidadenascimento' => 'integer',
         'codestadocivil' => 'integer',
+        'codestadoctps' => 'integer',
         'codformapagamento' => 'integer',
         'codgrupocliente' => 'integer',
         'codgrupoeconomico' => 'integer',
@@ -149,13 +153,16 @@ class Pessoa extends MgModel
         'fisica' => 'boolean',
         'fornecedor' => 'boolean',
         'notafiscal' => 'integer',
+        'pispasep' => 'float',
         'tipotransportador' => 'integer',
+        'tituloeleitor' => 'float',
+        'titulosecao' => 'float',
+        'titulozona' => 'float',
         'toleranciaatraso' => 'integer',
-        'vendedor' => 'boolean',
-        'codcidadenascimento' => 'integer',
-        'codestadoctps' => 'integer'
+        'vendedor' => 'boolean'
     ];
 
+    // TODO: Passar essa Funcao para Service
     public function certidaoSefazMT()
     {
         return $this->PessoaCertidaoS()->where('validade', '>=', Carbon::createMidnightDate())
@@ -171,25 +178,24 @@ class Pessoa extends MgModel
         return $this->belongsTo(Cidade::class, 'codcidade', 'codcidade');
     }
 
-    public function CidadeNascimento()
-    {
-        return $this->belongsTo(Cidade::class, 'codcidadenascimento', 'codcidade');
-    }
-
-
-    public function EstadoCtps()
-    {
-        return $this->belongsTo(Estado::class, 'codestadoctps', 'codestado');
-    }
-
     public function CidadeCobranca()
     {
         return $this->belongsTo(Cidade::class, 'codcidadecobranca', 'codcidade');
     }
 
+    public function CidadeNascimento()
+    {
+        return $this->belongsTo(Cidade::class, 'codcidadenascimento', 'codcidade');
+    }
+
     public function EstadoCivil()
     {
         return $this->belongsTo(EstadoCivil::class, 'codestadocivil', 'codestadocivil');
+    }
+
+    public function EstadoCtps()
+    {
+        return $this->belongsTo(Estado::class, 'codestadoctps', 'codestado');
     }
 
     public function FormaPagamento()
@@ -302,6 +308,11 @@ class Pessoa extends MgModel
     public function NotaFiscalTransportadorS()
     {
         return $this->hasMany(NotaFiscal::class, 'codpessoatransportador', 'codpessoa');
+    }
+
+    public function NotaFiscalPagamentoS()
+    {
+        return $this->hasMany(NotaFiscalPagamento::class, 'codpessoa', 'codpessoa');
     }
 
     public function NotaFiscalTerceiroS()

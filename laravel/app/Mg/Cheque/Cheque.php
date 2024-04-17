@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:24:23
+ * Date: 17/Apr/2024 12:20:20
  */
 
 namespace Mg\Cheque;
@@ -10,6 +10,7 @@ use Mg\MgModel;
 use Mg\Cheque\ChequeEmitente;
 use Mg\Cheque\ChequeRepasseCheque;
 use Mg\Cobranca\Cobranca;
+use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Banco\Banco;
 use Mg\Pessoa\Pessoa;
 use Mg\Titulo\Titulo;
@@ -107,6 +108,11 @@ class Cheque extends MgModel
     public function CobrancaS()
     {
         return $this->hasMany(Cobranca::class, 'codcheque', 'codcheque');
+    }
+
+    public function LiquidacaoTituloS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codcheque', 'codcheque');
     }
 
 }

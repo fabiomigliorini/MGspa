@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jan/2024 18:07:42
+ * Date: 17/Apr/2024 12:12:52
  */
 
 namespace Mg\Portador;
@@ -20,15 +20,18 @@ use Mg\Titulo\TituloBoleto;
 use Mg\Portador\ExtratoBancario;
 use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorTransferencia;
+use Mg\Pdv\Pdv;
 use Mg\Banco\Banco;
 use Mg\Filial\Filial;
 
 class Portador extends MgModel
 {
+    // TODO: passar constante para Service
     const CARTEIRA = 999;
 
     protected $table = 'tblportador';
     protected $primaryKey = 'codportador';
+
 
     protected $fillable = [
         'agencia',
@@ -128,6 +131,11 @@ class Portador extends MgModel
     public function MovimentoTituloS()
     {
         return $this->hasMany(MovimentoTitulo::class, 'codportador', 'codportador');
+    }
+
+    public function PdvS()
+    {
+        return $this->hasMany(Pdv::class, 'codportador', 'codportador');
     }
 
     public function PixS()

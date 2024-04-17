@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jan/2024 17:27:45
+ * Date: 17/Apr/2024 12:13:56
  */
 
 namespace Mg\Pix;
@@ -9,6 +9,7 @@ namespace Mg\Pix;
 use Mg\MgModel;
 use Mg\Pix\PixDevolucao;
 use Mg\Portador\PortadorMovimento;
+use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
@@ -81,6 +82,11 @@ class Pix extends MgModel
 
 
     // Tabelas Filhas
+    public function LiquidacaoTituloS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codpix', 'codpix');
+    }
+
     public function PixDevolucaoS()
     {
         return $this->hasMany(PixDevolucao::class, 'codpix', 'codpix');

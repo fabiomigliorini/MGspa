@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jan/2024 17:28:44
+ * Date: 17/Apr/2024 12:13:13
  */
 
 namespace Mg\PagarMe;
@@ -9,6 +9,7 @@ namespace Mg\PagarMe;
 use Mg\MgModel;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Filial\Filial;
 use Mg\Negocio\Negocio;
 use Mg\PagarMe\PagarMePos;
@@ -111,6 +112,11 @@ class PagarMePedido extends MgModel
 
 
     // Tabelas Filhas
+    public function LiquidacaoTituloS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codpagarmepedido', 'codpagarmepedido');
+    }
+
     public function NegocioFormaPagamentoS()
     {
         return $this->hasMany(NegocioFormaPagamento::class, 'codpagarmepedido', 'codpagarmepedido');

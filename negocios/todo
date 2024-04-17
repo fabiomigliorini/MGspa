@@ -1,12 +1,16 @@
+EM ANDAMENTO
+TODO fazer liquidacao de titulo
+TODO Adicionar CODPORTADOR na Manutenção de PDV
+TODO Não deixar Movimentar Dinheiro quando PDV não tiver Portador
+
 IMPORTANTES
-TODO Vincular NFeTerceiro x Nota Fiscal na Transferencia de Entrada
 TODO Excluir transferencia de entrada quando transferencia de saida for cancelada
 TODO fazer venda de vale compras
-TODO fazer liquidacao de titulo
 TODO fazer tela de fechamento de caixa
 TODO Impressão de Comanda de Vendedor
 FIXME Quando expira o token ele precisa dar o refresh automaticamente
 TODO quando codigo de barras nao existir offline, pesquisar primeiro no online antes de mostrar erro
+TODO Adicionar Forma de Pagamento Cheque
 
 SEGURANCA
 TODO bloquear baixar negocio somente para Gerente/Administrador (Allan)
@@ -85,3 +89,4 @@ FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistem
 [X] TODO Adicionar nome do Caixa na pagina da confissão de dívida
 [X] BUG Pagamento Duplicado Stone (Webhook gravando pagamento no mesmo momento que usuario consulta)
 [X] TODO Deixar nos últimos 10 negócios apenas negócios do PDV
+[X] TODO Vincular NFeTerceiro x Nota Fiscal na Transferencia de Entrada

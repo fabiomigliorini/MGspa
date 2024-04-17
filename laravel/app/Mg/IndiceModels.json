@@ -97,6 +97,11 @@
                 "tabela": "tblportadortransferencia",
                 "coluna": "codportadororigem",
                 "metodo": "PortadorTransferenciaOrigemS"
+            },
+            "tblpdv.codportador": {
+                "tabela": "tblpdv",
+                "coluna": "codportador",
+                "metodo": "PdvS"
             }
         }
     },
@@ -440,6 +445,26 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuarioestorno",
                 "metodo": "UsuarioEstorno"
+            },
+            "codcheque": {
+                "tabela": "tblcheque",
+                "coluna": "codcheque",
+                "metodo": "Cheque"
+            },
+            "codpagarmepedido": {
+                "tabela": "tblpagarmepedido",
+                "coluna": "codpagarmepedido",
+                "metodo": "PagarMePedido"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
+            },
+            "codpix": {
+                "tabela": "tblpix",
+                "coluna": "codpix",
+                "metodo": "Pix"
             }
         },
         "hasMany": {
@@ -690,6 +715,11 @@
                 "tabela": "tblcobranca",
                 "coluna": "codcheque",
                 "metodo": "CobrancaS"
+            },
+            "tblliquidacaotitulo.codcheque": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codcheque",
+                "metodo": "LiquidacaoTituloS"
             }
         }
     },
@@ -744,6 +774,16 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codcidadenascimento": {
+                "tabela": "tblcidade",
+                "coluna": "codcidadenascimento",
+                "metodo": "CidadeNascimento"
+            },
+            "codestadoctps": {
+                "tabela": "tblestado",
+                "coluna": "codestadoctps",
+                "metodo": "EstadoCtps"
             }
         },
         "hasMany": {
@@ -901,6 +941,11 @@
                 "tabela": "tblcolaborador",
                 "coluna": "codpessoa",
                 "metodo": "ColaboradorS"
+            },
+            "tblnotafiscalpagamento.codpessoa": {
+                "tabela": "tblnotafiscalpagamento",
+                "coluna": "codpessoa",
+                "metodo": "NotaFiscalPagamentoS"
             }
         }
     },
@@ -910,7 +955,23 @@
         "namespace": "Mg\\Cheque",
         "classe": "ChequeEmitente",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/ChequeEmitente.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codcheque": {
+                "tabela": "tblcheque",
+                "coluna": "codcheque",
+                "metodo": "Cheque"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblchequerepassecheque": {
@@ -919,8 +980,35 @@
         "namespace": "Mg\\Cheque",
         "classe": "ChequeRepasseCheque",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/ChequeRepasseCheque.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codcheque": {
+                "tabela": "tblcheque",
+                "coluna": "codcheque",
+                "metodo": "Cheque"
+            },
+            "codchequerepasse": {
+                "tabela": "tblchequerepasse",
+                "coluna": "codchequerepasse",
+                "metodo": "ChequeRepasse"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblchequedevolucao.codchequerepassecheque": {
+                "tabela": "tblchequedevolucao",
+                "coluna": "codchequerepassecheque",
+                "metodo": "ChequeDevolucaoS"
+            }
+        }
     },
     "tblcontacontabil": {
         "tabela": "tblcontacontabil",
@@ -3687,6 +3775,11 @@
                 "tabela": "tblportadormovimento",
                 "coluna": "codpix",
                 "metodo": "PortadorMovimentoS"
+            },
+            "tblliquidacaotitulo.codpix": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codpix",
+                "metodo": "LiquidacaoTituloS"
             }
         }
     },
@@ -5384,6 +5477,11 @@
                 "tabela": "tblnegocioformapagamento",
                 "coluna": "codpagarmepedido",
                 "metodo": "NegocioFormaPagamentoS"
+            },
+            "tblliquidacaotitulo.codpagarmepedido": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codpagarmepedido",
+                "metodo": "LiquidacaoTituloS"
             }
         }
     },
@@ -5739,6 +5837,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
             }
         },
         "hasMany": {
@@ -5766,6 +5869,11 @@
                 "tabela": "tblpixcob",
                 "coluna": "codpdv",
                 "metodo": "PixCobS"
+            },
+            "tblliquidacaotitulo.codpdv": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codpdv",
+                "metodo": "LiquidacaoTituloS"
             }
         }
     },
@@ -5940,5 +6048,61 @@
             }
         },
         "hasMany": []
+    },
+    "tblchequedevolucao": {
+        "tabela": "tblchequedevolucao",
+        "campocodigo": "codchequedevolucao",
+        "namespace": "Mg\\Cheque",
+        "classe": "ChequeDevolucao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/ChequeDevolucao.php",
+        "belongsTo": {
+            "codchequemotivodevolucao": {
+                "tabela": "tblchequemotivodevolucao",
+                "coluna": "codchequemotivodevolucao",
+                "metodo": "ChequeMotivoDevolucao"
+            },
+            "codchequerepassecheque": {
+                "tabela": "tblchequerepassecheque",
+                "coluna": "codchequerepassecheque",
+                "metodo": "ChequeRepasseCheque"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblchequemotivodevolucao": {
+        "tabela": "tblchequemotivodevolucao",
+        "campocodigo": "codchequemotivodevolucao",
+        "namespace": "Mg\\Cheque",
+        "classe": "ChequeMotivoDevolucao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Cheque\/ChequeMotivoDevolucao.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblchequedevolucao.codchequemotivodevolucao": {
+                "tabela": "tblchequedevolucao",
+                "coluna": "codchequemotivodevolucao",
+                "metodo": "ChequeDevolucaoS"
+            }
+        }
     }
 }

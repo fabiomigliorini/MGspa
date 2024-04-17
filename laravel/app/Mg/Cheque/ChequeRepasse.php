@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:49:00
+ * Date: 17/Apr/2024 12:21:12
  */
 
 namespace Mg\Cheque;
@@ -20,6 +20,7 @@ class ChequeRepasse extends MgModel
     protected $fillable = [
         'codportador',
         'data',
+        'inativo',
         'observacoes'
     ];
 

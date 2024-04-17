@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jan/2024 17:28:20
+ * Date: 17/Apr/2024 12:14:11
  */
 
 namespace Mg\Pdv;
@@ -12,8 +12,10 @@ use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
+use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
+use Mg\Portador\Portador;
 
 class Pdv extends MgModel
 {
@@ -25,17 +27,18 @@ class Pdv extends MgModel
         'apelido',
         'autorizado',
         'codfilial',
+        'codportador',
         'desktop',
         'inativo',
         'ip',
         'latitude',
         'longitude',
         'navegador',
+        'observacoes',
         'plataforma',
         'precisao',
         'uuid',
-        'versaonavegador',
-        'observacoes'
+        'versaonavegador'
     ];
 
     protected $dates = [
@@ -48,6 +51,7 @@ class Pdv extends MgModel
         'autorizado' => 'boolean',
         'codfilial' => 'integer',
         'codpdv' => 'integer',
+        'codportador' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'desktop' => 'boolean',
@@ -63,6 +67,11 @@ class Pdv extends MgModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
+    public function Portador()
+    {
+        return $this->belongsTo(Portador::class, 'codportador', 'codportador');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -75,6 +84,11 @@ class Pdv extends MgModel
 
 
     // Tabelas Filhas
+    public function LiquidacaoTituloS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codpdv', 'codpdv');
+    }
+
     public function NegocioS()
     {
         return $this->hasMany(Negocio::class, 'codpdv', 'codpdv');

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:46:10
+ * Date: 17/Apr/2024 12:14:26
  */
 
 namespace Mg\Titulo;
@@ -11,6 +11,10 @@ use Mg\Titulo\MovimentoTitulo;
 use Mg\Pessoa\Pessoa;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
+use Mg\Cheque\Cheque;
+use Mg\PagarMe\PagarMePedido;
+use Mg\Pdv\Pdv;
+use Mg\Pix\Pix;
 
 class LiquidacaoTitulo extends MgModel
 {
@@ -19,16 +23,27 @@ class LiquidacaoTitulo extends MgModel
 
 
     protected $fillable = [
+        'autorizacao',
+        'bandeira',
+        'codcheque',
+        'codpagarmepedido',
+        'codpdv',
         'codpessoa',
+        'codpessoacartao',
+        'codpix',
         'codportador',
         'codusuario',
         'codusuarioestorno',
         'credito',
         'debito',
         'estornado',
+        'integracao',
         'observacao',
+        'parcelas',
         'sistema',
-        'transacao'
+        'tipo',
+        'transacao',
+        'valortotal'
     ];
 
     protected $dates = [
@@ -40,22 +55,52 @@ class LiquidacaoTitulo extends MgModel
     ];
 
     protected $casts = [
+        'bandeira' => 'integer',
+        'codcheque' => 'integer',
         'codliquidacaotitulo' => 'integer',
+        'codpagarmepedido' => 'integer',
+        'codpdv' => 'integer',
         'codpessoa' => 'integer',
+        'codpessoacartao' => 'integer',
+        'codpix' => 'integer',
         'codportador' => 'integer',
         'codusuario' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codusuarioestorno' => 'integer',
         'credito' => 'float',
-        'debito' => 'float'
+        'debito' => 'float',
+        'integracao' => 'boolean',
+        'parcelas' => 'integer',
+        'tipo' => 'integer',
+        'valortotal' => 'float'
     ];
 
 
     // Chaves Estrangeiras
+    public function Cheque()
+    {
+        return $this->belongsTo(Cheque::class, 'codcheque', 'codcheque');
+    }
+
+    public function PagarMePedido()
+    {
+        return $this->belongsTo(PagarMePedido::class, 'codpagarmepedido', 'codpagarmepedido');
+    }
+
+    public function Pdv()
+    {
+        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
+    }
+
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function Pix()
+    {
+        return $this->belongsTo(Pix::class, 'codpix', 'codpix');
     }
 
     public function Portador()
