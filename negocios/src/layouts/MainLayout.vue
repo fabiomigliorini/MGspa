@@ -106,7 +106,6 @@ const toggleRightDrawer = () => {
                 {{ appBlock.label }}
               </q-item-label> -->
               <div class="row">
-                <!-- PDV -->
                 <template v-for="(app, iApp) in appBlock.apps" :key="iApp">
                   <q-item
                     class="col-4 text-grey-8"
