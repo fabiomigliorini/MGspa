@@ -3,7 +3,7 @@ import { Dialog, Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
 import { useRouter } from "vue-router";
-import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
+import { iconeNegocio, corIconeNegocio } from "src/utils/iconeNegocio.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 

@@ -86,7 +86,7 @@ const salvarDevolucao = async () => {
   <q-page>
     <div class="flex flex-center">
       <q-card
-        style="max-width: 700px"
+        style="max-width: 800px"
         class="q-pa-md q-ma-md"
         v-if="sNegocio.negocio"
       >
@@ -133,17 +133,18 @@ const salvarDevolucao = async () => {
             >
               <q-item>
                 <q-item-section avatar>
-                  <q-avatar>
-                    <img :src="sProduto.urlImagem(item.codimagem)" />
-                  </q-avatar>
+                  <q-img
+                    :src="sProduto.urlImagem(item.codimagem)"
+                    style="width: 130px"
+                  />
                 </q-item-section>
 
                 <q-item-section class="col">
-                  <q-item-label lines="1">{{ item.produto }}</q-item-label>
+                  <q-item-label lines="2">{{ item.produto }}</q-item-label>
                   <q-item-label caption lines="1">
                     <span class="text-weight-bold">{{ item.barras }}</span>
                   </q-item-label>
-                  <q-item-label caption lines="3">
+                  <q-item-label caption lines="1">
                     {{
                       new Intl.NumberFormat("pt-BR", {
                         style: "decimal",
@@ -257,7 +258,7 @@ const salvarDevolucao = async () => {
                 </q-item-section>
               </q-item>
 
-              <q-separator inset="item" />
+              <q-separator />
             </template>
           </q-list>
 
