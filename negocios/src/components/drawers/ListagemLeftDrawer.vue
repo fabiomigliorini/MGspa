@@ -1,10 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted } from "vue";
-import { listagemStore } from "src/stores/listagem";
-import SelectEstoqueLocal from "./selects/SelectEstoqueLocal.vue";
-import SelectNaturezaOperacao from "./selects/SelectNaturezaOperacao.vue";
-import SelectPessoa from "./selects/SelectPessoa.vue";
-import SelectPdv from "./selects/SelectPdv.vue";
+import { listagemStore } from "stores/listagem";
+import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
+import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
+import SelectPessoa from "components/selects/SelectPessoa.vue";
+import SelectPdv from "components/selects/SelectPdv.vue";
 const sListagem = listagemStore();
 
 onMounted(() => {
