@@ -1,8 +1,5 @@
 <script setup>
-import MainLayout from "src/layouts/MainLayout.vue";
-import OfflineLeftDrawer from "src/components/OfflineLeftDrawer.vue";
-import OfflineRightDrawer from "src/components/OfflineRightDrawer.vue";
-import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { negocioStore } from "stores/negocio";
 import { produtoStore } from "stores/produto";
@@ -153,13 +150,6 @@ const carregareOuCriarNegocio = async () => {
   }
   vazioOuCriar();
 };
-
-watch(
-  () => route.params.uuid,
-  () => {
-    carregareOuCriarNegocio();
-  }
-);
 
 const fecharDialogs = async () => {
   sNegocio.dialog.pagamentoDinheiro = false;
@@ -566,19 +556,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main-layout title="PDV">
-    <!-- LEFT DRAWER -->
-    <template v-slot:left-drawer>
-      <offline-left-drawer />
-    </template>
-
-    <!-- RIGHT DRAWER -->
-    <template v-slot:right-drawer>
-      <offline-right-drawer />
-    </template>
-
-    <!-- CONTEUDO -->
-    <div class="q-pa-md q-col-gutter-md" v-if="sNegocio.negocio">
+  <q-page v-if="sNegocio.negocio">
+    <div class="q-pa-md q-col-gutter-md">
       <input-barras v-if="sNegocio.podeEditar" />
       <listagem-notas ref="listagemNotasRef" />
       <listagem-produtos />
@@ -838,5 +817,5 @@ onUnmounted(() => {
         </q-btn>
       </div>
     </q-page-sticky>
-  </main-layout>
+  </q-page>
 </template>

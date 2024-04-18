@@ -1,8 +1,7 @@
 <script setup>
-import MainLayout from "src/layouts/MainLayout.vue";
-import ConferenciaLeftDrawer from "src/components/ConferenciaLeftDrawer.vue";
-import { watch } from "vue";
+import { ref, watch } from "vue";
 import { debounce } from "quasar";
+
 import { conferenciaStore } from "src/stores/conferencia";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
@@ -22,13 +21,7 @@ watch(
 );
 </script>
 <template>
-  <main-layout title="Conferência" :right-drawer="false">
-    <!-- LEFT DRAWER -->
-    <template v-slot:left-drawer>
-      <conferencia-left-drawer />
-    </template>
-
-    <!-- CONTEUDO -->
+  <q-page>
     <div
       v-if="sConferencia.conferencias.length == 0"
       class="absolute-center text-grey text-center"
@@ -134,5 +127,5 @@ watch(
         <q-separator v-if="index >= 0" />
       </template>
     </q-list>
-  </main-layout>
+  </q-page>
 </template>
