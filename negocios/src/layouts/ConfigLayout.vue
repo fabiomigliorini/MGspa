@@ -4,7 +4,7 @@ import ConfigLeftDrawer from "components/drawers/ConfigLeftDrawer.vue";
 import UsuarioConectado from "components/UsuarioConectado.vue";
 </script>
 <template>
-  <main-layout title="Conferência" left-drawer>
+  <main-layout title="Configurações" left-drawer>
     <template #usuario>
       <!-- USUARIO  -->
       <usuario-conectado />

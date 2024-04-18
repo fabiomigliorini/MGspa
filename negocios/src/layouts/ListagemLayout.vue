@@ -4,7 +4,7 @@ import ListagemLeftDrawer from "components/drawers/ListagemLeftDrawer.vue";
 import UsuarioConectado from "components/UsuarioConectado.vue";
 </script>
 <template>
-  <main-layout title="Devolução" left-drawer>
+  <main-layout title="Listagem de Negócios" left-drawer>
     <template #usuario>
       <!-- USUARIO  -->
       <usuario-conectado />
