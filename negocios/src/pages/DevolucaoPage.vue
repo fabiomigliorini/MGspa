@@ -1,6 +1,5 @@
 <script setup>
-import MainLayout from "src/layouts/MainLayout.vue";
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { negocioStore } from "stores/negocio";
 import { useRoute } from "vue-router";
 import { produtoStore } from "src/stores/produto";
@@ -82,23 +81,9 @@ const salvarDevolucao = async () => {
     } catch (error) {}
   });
 };
-
-const backTo = computed({
-  get() {
-    if (!sNegocio.negocio) {
-      return null;
-    }
-    return "/offline/" + sNegocio.negocio.uuid;
-  },
-});
 </script>
 <template>
-  <main-layout
-    title="Devolução"
-    :left-drawer="false"
-    :right-drawer="false"
-    :back-to="backTo"
-  >
+  <q-page>
     <div class="flex flex-center">
       <q-card
         style="max-width: 700px"
@@ -291,5 +276,5 @@ const backTo = computed({
         </q-form>
       </q-card>
     </div>
-  </main-layout>
+  </q-page>
 </template>

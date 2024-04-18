@@ -4,7 +4,6 @@ TODO Adicionar CODPORTADOR na Manutenção de PDV
 TODO Não deixar Movimentar Dinheiro quando PDV não tiver Portador
 
 IMPORTANTES
-TODO Quando fecha negocio em outro PDV, atualizar na listagem dos que ainda tem em aberto o negocio na listagem
 TODO Excluir transferencia de entrada quando transferencia de saida for cancelada
 TODO fazer venda de vale compras
 TODO fazer tela de fechamento de caixa

@@ -1,6 +1,7 @@
 const routes = [
   {
     path: "/",
+    component: () => import("layouts/MainLayout.vue"),
     children: [
       { path: "", component: () => import("pages/IndexPage.vue") },
       {
@@ -17,6 +18,7 @@ const routes = [
   },
   {
     path: "/config",
+    component: () => import("layouts/ConfigLayout.vue"),
     children: [
       { path: "padrao/", component: () => import("pages/PadraoPage.vue") },
       { path: "pdv/", component: () => import("pages/PdvPage.vue") },
@@ -24,44 +26,41 @@ const routes = [
   },
   {
     path: "/listagem",
-    component: () => import("pages/ListagemPage.vue"),
+    component: () => import("layouts/ListagemLayout.vue"),
+    children: [{ path: "", component: () => import("pages/ListagemPage.vue") }],
   },
 
   {
     path: "/conferencia",
-    component: () => import("pages/ConferenciaPage.vue"),
+    component: () => import("layouts/ConferenciaLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/ConferenciaPage.vue") },
+    ],
   },
 
   {
     path: "/offline/:uuid/orcamento",
-    component: () => import("pages/OrcamentoPage.vue"),
+    // component: () => import("layouts/OrcamentoLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/OrcamentoPage.vue") },
+    ],
   },
 
   {
     path: "/offline/:uuid/orcamento-termica",
-    component: () => import("pages/OrcamentoTermicaPage.vue"),
+    // component: () => import("layouts/OrcamentoLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/OrcamentoTermicaPage.vue") },
+    ],
   },
 
   {
     path: "/offline/:uuid/devolucao",
-    component: () => import("pages/DevolucaoPage.vue"),
+    component: () => import("layouts/DevolucaoLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/DevolucaoPage.vue") },
+    ],
   },
-
-  // {
-  //   path: "/liquidacao",
-  //   component: () => import("layouts/LiquidacaoLayout.vue"),
-  //   children: [
-  //     { path: "", component: () => import("pages/LiquidacaoListagemPage.vue") },
-  //     {
-  //       path: "/nova",
-  //       component: () => import("pages/LiquidacaoNovaPage.vue"),
-  //     },
-  //     {
-  //       path: "/:codliquidacao/",
-  //       component: () => import("pages/LiquidacaoViewPage.vue"),
-  //     },
-  //   ],
-  // },
 
   // Always leave this as last one,
   // but you can also remove it
