@@ -260,9 +260,22 @@ class PdvService
                 f.filial,
                 f.codpessoa,
                 f.codempresa,
+                p.fantasia,
+                p.pessoa,
+                p.cnpj,
+                p.telefone1 as telefone,
+                p.endereco,
+                p.numero,
+                p.complemento,
+                p.bairro,
+                c.cidade,
+                e.sigla as uf,
                 :sincronizado as sincronizado
             from tblestoquelocal t 
             inner join tblfilial f on (f.codfilial = t.codfilial)
+            inner join tblpessoa p on (p.codpessoa = f.codpessoa)
+            inner join tblcidade c on (c.codcidade = p.codcidade)
+            inner join tblestado e on (e.codestado = c.codestado)
             ';
         $regs = DB::select($sql, [
             'sincronizado' => $sincronizado

@@ -1,19 +1,22 @@
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import { db } from "boot/db";
 import { negocioStore } from "src/stores/negocio";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
-import { formataCnpjCpf } from "../utils/formatador.js";
+import { formataCnpjCpf, formataCnpj } from "../utils/formatador.js";
 import { produtoStore } from "src/stores/produto";
 import BarCode from "components/BarCode.vue";
 
 const route = useRoute();
 const sNegocio = negocioStore();
 const sProduto = produtoStore();
+const loc = ref(null);
 
-onMounted(() => {
-  const ret = sNegocio.carregarPeloUuid(route.params.uuid);
+onMounted(async () => {
+  const ret = await sNegocio.carregarPeloUuid(route.params.uuid);
+  loc.value = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal);
 });
 </script>
 <template>
@@ -208,7 +211,7 @@ onMounted(() => {
       </table>
     </div>
     <div class="pagamento">
-      <div v-if="sNegocio.negocio.pagamentos">
+      <div v-if="sNegocio.negocio.pagamentos.lenght > 0">
         <b>Forma de Pagamento:</b>
         <span
           class="text-right"
@@ -227,11 +230,15 @@ onMounted(() => {
         </span>
       </div>
       <br /><br /><br /><br /><br />
-
-      <div class="final text-center">
-        <div>Migliorini & Migliorini Ltda</div>
-        <div>Cnpj: 04.576.775/0002-41</div>
-        <div>Fone: (66) 3515-0101</div>
+      <div class="final text-center" v-if="loc">
+        <div>
+          {{ loc.fantasia }}
+        </div>
+        <div>
+          {{ loc.pessoa }}
+        </div>
+        <div>CNPJ: {{ formataCnpj(loc.cnpj) }}</div>
+        <div>Fone: {{ loc.telefone }}</div>
       </div>
     </div>
     <br /><br />
@@ -511,7 +518,7 @@ tbody.zebrada tr:first-child td {
 }
 
 .img {
-  width: 1cm;
+  width: 1.75cm;
 }
 
 .produto {
