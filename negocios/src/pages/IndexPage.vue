@@ -8,7 +8,6 @@ import { pagarMeStore } from "stores/pagar-me";
 import { pixStore } from "stores/pix";
 import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
-import DialogSincronizacao from "components/offline/DialogSincronizacao.vue";
 import ListagemTitulos from "components/offline/ListagemTitulos.vue";
 import ListagemNotas from "components/offline/ListagemNotas.vue";
 import { api } from "boot/axios";
@@ -108,6 +107,9 @@ const hotkeys = (event) => {
 const vazioOuCriar = async () => {
   await fecharDialogs();
   const neg = await sNegocio.carregarPrimeiroVazioOuCriar();
+  if (!neg) {
+    return false;
+  }
   try {
     var audio = new Audio("novo.mp3");
     audio.play();
@@ -561,7 +563,6 @@ onUnmounted(() => {
       <input-barras v-if="sNegocio.podeEditar" />
       <listagem-notas ref="listagemNotasRef" />
       <listagem-produtos />
-      <dialog-sincronizacao />
       <listagem-titulos />
     </div>
     <div style="padding-bottom: 75px"></div>

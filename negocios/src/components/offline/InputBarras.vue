@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
 import { listagemStore } from "stores/listagem";
-import { sincronizacaoStore } from "stores/sincronizacao";
 import { Notify, Dialog, debounce } from "quasar";
 import { falar } from "../../utils/falar.js";
 import emitter from "../../utils/emitter.js";
@@ -15,7 +14,6 @@ const router = useRouter();
 const sProduto = produtoStore();
 const sNegocio = negocioStore();
 const sListagem = listagemStore();
-const sSinc = sincronizacaoStore();
 const quantidade = ref(1);
 const barras = ref(null);
 const barcodeVideo = ref(null);
@@ -381,22 +379,6 @@ const lerCodigoBarras = async () => {
           label-position="left"
         />
       </q-fab>
-      <q-btn
-        round
-        dense
-        flat
-        icon="refresh"
-        :loading="sSinc.importacao.rodando"
-        :percentage="sSinc.importacao.progresso * 100"
-        @click="sSinc.sincronizar()"
-      >
-        <template v-slot:loading>
-          <q-spinner-dots />
-        </template>
-        <q-tooltip class="bg-accent">
-          Sincronizar Cadastro de Produtos
-        </q-tooltip>
-      </q-btn>
     </template>
   </q-input>
 

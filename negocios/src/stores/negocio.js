@@ -323,6 +323,9 @@ export const negocioStore = defineStore("negocio", {
           if (neg.codnaturezaoperacao != this.padrao.codnaturezaoperacao) {
             return false;
           }
+          if (neg.codpdv != sSinc.pdv.codpdv) {
+            return false;
+          }
           return true;
         })
         .sortBy("lancamento");
@@ -334,15 +337,35 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async carregarPrimeiroVazioOuCriar() {
-      var negocio = await this.carregarPrimeiroVazio();
-      if (negocio == false) {
-        negocio = await this.criar();
+      if (!sSinc.pdv.codpdv) {
+        Notify.create({
+          type: "negative",
+          message: "Registro de PDV ainda não criado no servidor!",
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      if (!sSinc.ultimaSincronizacao.completa) {
+        Notify.create({
+          type: "negative",
+          message: "Ainda não foi feita nenhuma sincronização!",
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      let negocio = await this.carregarPrimeiroVazio();
+      if (negocio != false) {
+        await this.carregarChavesEstrangeiras();
+        return negocio;
+      }
+      negocio = await this.criar();
+      if (negocio != false) {
         await this.carregarChavesEstrangeiras();
         await this.salvar();
-      } else {
-        await this.carregarChavesEstrangeiras();
       }
-      return negocio;
+      return false;
     },
 
     async duplicar() {

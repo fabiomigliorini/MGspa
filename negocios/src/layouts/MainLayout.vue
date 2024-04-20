@@ -93,6 +93,11 @@ const toggleRightDrawer = () => {
           </q-avatar>
           {{ title }}
         </q-toolbar-title>
+
+        <!-- BOTOES ADICIONAIS -->
+        <slot name="botoes" />
+
+        <!-- VERSAO  -->
         <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
 
         <!-- USUARIO  -->

@@ -13,6 +13,9 @@ const router = useRouter();
 
 const criar = async () => {
   const n = await sNegocio.carregarPrimeiroVazioOuCriar();
+  if (!n) {
+    return false;
+  }
   router.push("/offline/" + n.uuid);
   var audio = new Audio("novo.mp3");
   audio.play();
@@ -63,7 +66,7 @@ const abrirNegocio = async () => {
   <q-item-label header>
     Abertos
     <q-btn flat label="F2" color="primary" @click="criar()" icon="add" dense>
-      <q-tooltip class="bg-accent">> Novo </q-tooltip>
+      <q-tooltip class="bg-accent"> Novo </q-tooltip>
     </q-btn>
   </q-item-label>
   <template v-if="sNegocio.negocios">

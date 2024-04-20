@@ -15,11 +15,13 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
   state: () => ({
     ultimaSincronizacao: {
-      FormaPagamento: null,
-      EstoqueLocal: null,
-      NaturezaOperacao: null,
-      Pessoa: null,
-      Produto: null,
+      impressora: null,
+      formaPagamento: null,
+      estoqueLocal: null,
+      naturezaOperacao: null,
+      pessoa: null,
+      produto: null,
+      completa: null,
     },
     labelSincronizacao: "",
     pdv: {
@@ -139,6 +141,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         await this.sincronizarNaturezaOperacao();
         await this.sincronizarPessoa();
         await this.sincronizarProduto();
+        this.ultimaSincronizacao.completa = this.ultimaSincronizacao.impressora;
       } catch (error) {
         console.log(error);
       }
@@ -179,7 +182,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         db.impressora.where("sincronizado").below(sincronizado).delete();
 
         //registra data de Sincronizacao
-        this.impressora = sincronizado;
+        this.ultimaSincronizacao.impressora = sincronizado;
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Impressoras");
@@ -211,7 +214,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         db.formaPagamento.where("sincronizado").below(sincronizado).delete();
 
         //registra data de Sincronizacao
-        this.ultimaSincronizacao.FormaPagamento = sincronizado;
+        this.ultimaSincronizacao.formaPagamento = sincronizado;
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Formas de Pagamento");
@@ -243,7 +246,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         db.estoqueLocal.where("sincronizado").below(sincronizado).delete();
 
         //registra data de Sincronizacao
-        this.ultimaSincronizacao.EstoqueLocal = sincronizado;
+        this.ultimaSincronizacao.estoqueLocal = sincronizado;
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Locais de Estoque");
@@ -275,7 +278,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         db.naturezaOperacao.where("sincronizado").below(sincronizado).delete();
 
         //registra data de Sincronizacao
-        this.ultimaSincronizacao.NaturezaOperacao = sincronizado;
+        this.ultimaSincronizacao.naturezaOperacao = sincronizado;
       } catch (error) {
         console.log(error);
         console.log("Impossível sincronizar Natureza Operacao");
@@ -350,8 +353,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
         //monta status de progresso
         this.importacao.totalSincronizados += data.length;
-        this.importacao.progresso =
-          this.importacao.totalSincronizados / this.importacao.totalRegistros;
+        this.importacao.progresso = Math.round(
+          (this.importacao.totalSincronizados * 100) /
+            this.importacao.totalRegistros
+        );
         this.importacao.tempoTotal = Math.round(
           (performance.now() - inicio) / 1000
         );
@@ -367,7 +372,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       if (this.importacao.rodando) {
         db.pessoa.where("sincronizado").below(sincronizado).delete();
       }
-      this.ultimaSincronizacao.Pessoa = sincronizado;
+      this.ultimaSincronizacao.pessoa = sincronizado;
     },
 
     async sincronizarProduto() {
@@ -432,8 +437,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
         //monta status de progresso
         this.importacao.totalSincronizados += data.length;
-        this.importacao.progresso =
-          this.importacao.totalSincronizados / this.importacao.totalRegistros;
+        this.importacao.progresso = Math.round(
+          (this.importacao.totalSincronizados * 100) /
+            this.importacao.totalRegistros
+        );
         this.importacao.tempoTotal = Math.round(
           (performance.now() - inicio) / 1000
         );
@@ -449,7 +456,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       if (this.importacao.rodando) {
         db.produto.where("sincronizado").below(sincronizado).delete();
       }
-      this.ultimaSincronizacao.Produto = sincronizado;
+      this.ultimaSincronizacao.produto = sincronizado;
     },
 
     async putNegocio(negocio) {
