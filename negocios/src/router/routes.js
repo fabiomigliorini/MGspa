@@ -1,4 +1,7 @@
+import OfflineLayout from "layouts/OfflineLayout.vue";
+
 const routes = [
+  // OFFLINE
   {
     path: "/",
     component: () => import("layouts/OfflineLayout.vue"),
@@ -16,28 +19,17 @@ const routes = [
       },
     ],
   },
-  {
-    path: "/config",
-    component: () => import("layouts/ConfigLayout.vue"),
-    children: [
-      { path: "padrao/", component: () => import("pages/PadraoPage.vue") },
-      { path: "pdv/", component: () => import("pages/PdvPage.vue") },
-    ],
-  },
-  {
-    path: "/listagem",
-    component: () => import("layouts/ListagemLayout.vue"),
-    children: [{ path: "", component: () => import("pages/ListagemPage.vue") }],
-  },
 
+  // DEVOLUCAO
   {
-    path: "/conferencia",
-    component: () => import("layouts/ConferenciaLayout.vue"),
+    path: "/offline/:uuid/devolucao",
+    component: () => import("layouts/DevolucaoLayout.vue"),
     children: [
-      { path: "", component: () => import("pages/ConferenciaPage.vue") },
+      { path: "", component: () => import("pages/DevolucaoPage.vue") },
     ],
   },
 
+  // ORCAMENTOS
   {
     path: "/offline/:uuid/orcamento",
     // component: () => import("layouts/OrcamentoLayout.vue"),
@@ -45,7 +37,6 @@ const routes = [
       { path: "", component: () => import("pages/OrcamentoPage.vue") },
     ],
   },
-
   {
     path: "/offline/:uuid/orcamento-termica",
     // component: () => import("layouts/OrcamentoLayout.vue"),
@@ -54,11 +45,29 @@ const routes = [
     ],
   },
 
+  // CONFIG
   {
-    path: "/offline/:uuid/devolucao",
-    component: () => import("layouts/DevolucaoLayout.vue"),
+    path: "/config",
+    component: () => import("layouts/ConfigLayout.vue"),
     children: [
-      { path: "", component: () => import("pages/DevolucaoPage.vue") },
+      { path: "padrao/", component: () => import("pages/PadraoPage.vue") },
+      { path: "pdv/", component: () => import("pages/PdvPage.vue") },
+    ],
+  },
+
+  // LISTAGEM NEGOCIOS
+  {
+    path: "/listagem",
+    component: () => import("layouts/ListagemLayout.vue"),
+    children: [{ path: "", component: () => import("pages/ListagemPage.vue") }],
+  },
+
+  // CONFERENCIA CAIXA
+  {
+    path: "/conferencia",
+    component: () => import("layouts/ConferenciaLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/ConferenciaPage.vue") },
     ],
   },
 
