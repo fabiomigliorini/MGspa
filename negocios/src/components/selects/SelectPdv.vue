@@ -29,16 +29,32 @@ onMounted(async () => {
   filtrado.value = [...opcoes.value];
 });
 
+const sortRegs = (regs) => {
+  regs = regs.sort((a, b) => {
+    if (!a.apelido) {
+      return 1;
+    }
+    if (!b.apelido) {
+      return -1;
+    }
+    if (a.apelido.toUpperCase() > b.apelido.toUpperCase()) {
+      return 1;
+    }
+    return -1;
+  });
+  return regs;
+};
+
 const pesquisa = (val, update) => {
   if (val === "") {
     update(() => {
-      filtrado.value = opcoes.value;
+      filtrado.value = sortRegs(opcoes.value);
     });
     return;
   }
   update(() => {
     const pesquisa = val.toLowerCase();
-    filtrado.value = opcoes.value.filter((item) => {
+    let regs = opcoes.value.filter((item) => {
       if (item.apelido == null) {
         item.apelido = "";
       }
@@ -48,6 +64,7 @@ const pesquisa = (val, update) => {
         item.apelido.toLowerCase().indexOf(pesquisa) > -1
       );
     });
+    filtrado.value = sortRegs(regs);
   });
 };
 </script>
