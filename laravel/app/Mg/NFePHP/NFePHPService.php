@@ -732,11 +732,9 @@ class NFePHPService extends MgService
             if (isset($r->infNFe->ide->tpEmis) && $r->infNFe->ide->tpEmis != Empresa::MODOEMISSAONFCE_OFFLINE) {
                 throw new \Exception("Nota Fiscal ainda não está autorizada!");
             }
-
         } elseif (!file_exists($path)) {
             // Se arquivo XML Autorizado nao existir
             throw new \Exception("Não foi Localizado o arquivo da NFe ($path)");
-
         } else {
             // Carrega XML Autorizado
             $xml = file_get_contents($path);
@@ -759,7 +757,9 @@ class NFePHPService extends MgService
             $danfe->printParameters('P', 'A4', 5, 5);
         } else {
             $danfe = new Danfce($xml);
-            $danfe->setMargins(3); //seta as margens
+            $danfe->setMargins(3);
+            // Imprime somente via CLiente quando offline
+            $danfe->setOffLineDoublePrint(false);
         }
 
         // Helvetica pq Times muito ruim de ler
