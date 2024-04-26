@@ -12,9 +12,9 @@ use Mg\Filial\Empresa;
 use Mg\NotaFiscal\NotaFiscalService;
 use NFePHP\NFe\Complements;
 use NFePHP\NFe\Common\Standardize;
-use NFePHP\NFe\Factories\Protocol;
 use NFePHP\Common\Strings;
 use NFePHP\DA\NFe\Danfe;
+use NFePHP\DA\NFe\Danfce;
 
 class NFePHPService extends MgService
 {
@@ -206,8 +206,6 @@ class NFePHPService extends MgService
         $xmlAssinado = file_get_contents($pathAssinada);
 
         // Vincula o Protocolo no XML Assinado
-        // $prot = new Protocol();
-        // $xmlProtocolado = $prot->add($xmlAssinado, $resp);
         $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $resp);
 
 
@@ -238,8 +236,6 @@ class NFePHPService extends MgService
         $xmlAssinado = file_get_contents($pathAssinada);
 
         // Vincula o Protocolo no XML Assinado
-        // $prot = new Protocol();
-        // $xmlProtocolado = $prot->add($xmlAssinado, $resp);
         $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $resp);
 
         // Salva o Arquivo com a NFe Aprovada
@@ -737,58 +733,45 @@ class NFePHPService extends MgService
                 throw new \Exception("Nota Fiscal ainda não está autorizada!");
             }
 
-            // Se arquivo XML Autorizado nao existir
         } elseif (!file_exists($path)) {
+            // Se arquivo XML Autorizado nao existir
             throw new \Exception("Não foi Localizado o arquivo da NFe ($path)");
 
-            // Carrega XML Autorizado
         } else {
+            // Carrega XML Autorizado
             $xml = file_get_contents($path);
         }
 
-        if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
-
-            // Logo somente na Migliorini
-            if ($nf->Filial->codempresa == 1) {
+        // Logo somente na Migliorini
+        $logo = null;
+        if ($nf->Filial->codempresa == 1) {
+            if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
                 $logo = 'data://text/plain;base64,' . base64_encode(file_get_contents(public_path('MGPapelariaLogo.jpeg')));
             } else {
-                $logo = null;
-            }
-
-            $danfe = new Danfe($xml);
-            $danfe->debugMode(false);
-            $danfe->setDefaultFont('helvetica');
-            //$danfce->creditsIntegratorFooter('MGsis - Powered by NFePHP');
-            // Caso queira mudar a configuracao padrao de impressao
-            /*  $this->printParameters( $orientacao = '', $papel = 'A4', $margSup = 2, $margEsq = 2 ); */
-            //Informe o numero DPEC
-            /*  $danfe->depecNumber('123456789'); */
-            //Configura a posicao da logo
-            /*  $danfe->logoParameters($logo, 'C', false);  */
-            //Gera o PDF
-            $pdf = $danfe->render($logo);
-        } else {
-
-            // Logo somente na Migliorini
-            if ($nf->Filial->codempresa == 1) {
                 $logo = 'data://text/plain;base64,' . base64_encode(file_get_contents(public_path('MGPapelariaLogoSeloPretoBranco.jpeg')));
-            } else {
-                $logo = null;
             }
-
-            $danfce = new DanfceMg($xml);
-            // $danfce->debugMode(true);//seta modo debug, deve ser false em produção
-            $danfce->setPaperWidth(80); //seta a largura do papel em mm max=80 e min=58
-            $danfce->setMargins(2); //seta as margens
-            $danfce->setDefaultFont('helvetica'); //altera o font pode ser 'times' ou 'arial'
-            $danfce->setOffLineDoublePrint(false); //ativa ou desativa a impressão conjunta das via do consumidor e da via do estabelecimento qnado a nfce for emitida em contingência OFFLINE
-            //$danfce->setPrintResume(true); //ativa ou desativa a impressao apenas do resumo
-            //$danfce->setViaEstabelecimento(); //altera a via do consumidor para a via do estabelecimento, quando a NFCe for emitida em contingência OFFLINE
-            //$danfce->setAsCanceled(); //força marcar nfce como cancelada
-            $danfce->creditsIntegratorFooter('MGsis - Powered by NFePHP');
-            $pdf = $danfce->render($logo);
         }
 
+        // Instancia DANFE (Modelo 55) ou DANFCE (Modelo65)
+        if ($nf->modelo == NotaFiscalService::MODELO_NFE) {
+            $danfe = new Danfe($xml);
+            // margem de 5 pro chrome não cortar na impressao
+            $danfe->printParameters('P', 'A4', 5, 5);
+        } else {
+            $danfe = new Danfce($xml);
+            $danfe->setMargins(3); //seta as margens
+        }
+
+        // Helvetica pq Times muito ruim de ler
+        $danfe->setDefaultFont('helvetica');
+
+        // Nossa propaganda
+        $danfe->creditsIntegratorFooter('MGsis - Powered by NFePHP');
+
+        // Gera PDF
+        $pdf = $danfe->render($logo);
+
+        // Salva PDF
         $pathDanfe = NFePHPPathService::pathDanfe($nf, true);
         file_put_contents($pathDanfe, $pdf);
 
