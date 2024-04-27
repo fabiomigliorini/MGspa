@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { usuarioStore } from "stores/usuario";
+import { sincronizacaoStore } from "src/stores/sincronizacao";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const sUsuario = usuarioStore();
+const sSinc = sincronizacaoStore();
 const usuario = ref(null);
 const senha = ref(null);
 const mostrarSenha = ref(false);
@@ -116,7 +118,12 @@ onMounted(() => {
             expira
             {{ moment(sUsuario.token.expires_at).fromNow() }}
           </div>
+          <div class="text-grey-8 text-caption q-my-md" v-if="sSinc.pdv.uuid">
+            {{ sSinc.pdv.uuid }}
+          </div>
+          <div class="text-grey-8 text-caption q-my-md" v-else>Sem UUID</div>
         </div>
+
         <q-btn-group>
           <q-btn
             color="primary"

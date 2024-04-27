@@ -82,9 +82,13 @@ export const listagemStore = defineStore("listagem", {
       }
       const filtro = {
         codnegocio: null,
-        lancamento_de: moment().startOf("day").format("DD/MM/YYYY HH:mm"),
+        lancamento_de: moment()
+          .subtract(7, "d")
+          .startOf("day")
+          .format("DD/MM/YYYY HH:mm"),
         lancamento_ate: moment().endOf("day").format("DD/MM/YYYY HH:mm"),
         codestoquelocal: sNegocio.padrao.codestoquelocal,
+        codusuario: null,
         codnegociostatus: null,
         // codnaturezaoperacao: sNegocio.padrao.codnaturezaoperacao,
         codnaturezaoperacao: null,

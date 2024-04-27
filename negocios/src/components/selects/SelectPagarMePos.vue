@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { db } from "boot/db";
-import { produtoStore } from "src/stores/produto";
 
 const props = defineProps({
   modelValue: {

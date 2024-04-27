@@ -1,22 +1,25 @@
 export const iconeNegocio = (n) => {
-  if (n.codnegociostatus == 1) {
-    return "mdi-cart-outline";
+  switch (n.codnegociostatus) {
+    case 1:
+      return "mdi-cart-outline";
+    case 3:
+      return "mdi-cart-remove";
   }
   if (n.codoperacao == 2) {
-    return "mdi-cart-check";
+    return "mdi-cart-arrow-up";
   }
-  return "mdi-cart-remove";
+  return "mdi-cart-arrow-down";
 };
 
 export const corIconeNegocio = (n) => {
-  if (n.codnegociostatus == 1) {
-    if (n.sincronizado) {
+  switch (n.codnegociostatus) {
+    case 1:
       return "secondary";
-    }
-    return "orange";
+    case 3:
+      return "negative";
   }
   if (n.codoperacao == 2) {
     return "primary";
   }
-  return "negative";
+  return "warning";
 };

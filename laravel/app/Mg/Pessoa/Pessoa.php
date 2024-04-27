@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Apr/2024 12:22:08
+ * Date: 25/Apr/2024 18:42:25
  */
 
 namespace Mg\Pessoa;
@@ -258,6 +258,11 @@ class Pessoa extends MgModel
     public function LiquidacaoTituloS()
     {
         return $this->hasMany(LiquidacaoTitulo::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function LiquidacaoTituloCartaoS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codpessoacartao', 'codpessoa');
     }
 
     public function MdfeVeiculoCondutorS()

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Apr/2024 12:14:26
+ * Date: 25/Apr/2024 18:41:06
  */
 
 namespace Mg\Titulo;
@@ -96,6 +96,11 @@ class LiquidacaoTitulo extends MgModel
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function PessoaCartao()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoacartao', 'codpessoa');
     }
 
     public function Pix()

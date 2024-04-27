@@ -201,6 +201,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
             Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
             Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
+            Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');
         });
 
         // Pessoa
@@ -503,6 +504,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('select/veiculo-tipo', '\Mg\Select\SelectVeiculoTipoController@index');
         Route::get('select/veiculo', '\Mg\Select\SelectVeiculoController@index');
         Route::get('select/produto-barra', '\Mg\Select\SelectProdutoBarraController@index');
+        Route::get('select/usuario', '\Mg\Select\SelectUsuarioController@index');
+        Route::get('select/portador', '\Mg\Select\SelectPortadorController@index');
 
         Route::get('veiculo', '\Mg\Veiculo\VeiculoController@index');
         Route::get('veiculo/{id}', '\Mg\Veiculo\VeiculoController@show');

@@ -40,11 +40,16 @@ const apps = ref([
         label: "Conferência",
         to: "/conferencia",
       },
-      // {
-      //   icon: "mdi-checkbook",
-      //   label: "Liquidações",
-      //   to: "/liquidacao",
-      // },
+    ],
+  },
+  {
+    label: "Liquidações",
+    apps: [
+      {
+        icon: "mdi-checkbook",
+        label: "Liquidações",
+        to: "/liquidacao",
+      },
     ],
   },
   {
@@ -147,7 +152,7 @@ const toggleRightDrawer = () => {
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered v-if="leftDrawer">
+    <q-drawer v-model="leftDrawerOpen" bordered show-if-above v-if="leftDrawer">
       <slot name="left-drawer" />
     </q-drawer>
 

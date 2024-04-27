@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
+import moment from "moment";
 
 export const usuarioStore = defineStore("usuario", {
   persist: {
@@ -30,8 +31,7 @@ export const usuarioStore = defineStore("usuario", {
         let { data } = await api.post("/oauth/token", params);
         if (data.access_token) {
           this.token = data;
-          const miliseconds = data.expires_in * 1000;
-          this.token.expires_at = new Date(Date.now() + miliseconds);
+          this.token.expires_at = moment().add(data.expires_in, "seconds");
           this.getUsuario();
         }
         return true;
@@ -79,6 +79,7 @@ export const usuarioStore = defineStore("usuario", {
         let { data } = await api.post("/oauth/token", params);
         if (data.access_token) {
           this.token = data;
+          this.token.expires_at = moment().add(data.expires_in, "seconds");
           this.getUsuario();
         }
       } catch (error) {

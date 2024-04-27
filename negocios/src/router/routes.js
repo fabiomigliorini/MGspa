@@ -1,5 +1,3 @@
-import OfflineLayout from "layouts/OfflineLayout.vue";
-
 const routes = [
   // OFFLINE
   {
@@ -68,6 +66,14 @@ const routes = [
     component: () => import("layouts/ConferenciaLayout.vue"),
     children: [
       { path: "", component: () => import("pages/ConferenciaPage.vue") },
+    ],
+  },
+
+  {
+    path: "/liquidacao",
+    component: () => import("layouts/LiquidacaoListagemLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/LiquidacaoListagemPage.vue") },
     ],
   },
 

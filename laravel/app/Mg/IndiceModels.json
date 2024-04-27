@@ -465,6 +465,11 @@
                 "tabela": "tblpix",
                 "coluna": "codpix",
                 "metodo": "Pix"
+            },
+            "codpessoacartao": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoacartao",
+                "metodo": "PessoaCartao"
             }
         },
         "hasMany": {
@@ -946,6 +951,11 @@
                 "tabela": "tblnotafiscalpagamento",
                 "coluna": "codpessoa",
                 "metodo": "NotaFiscalPagamentoS"
+            },
+            "tblliquidacaotitulo.codpessoacartao": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codpessoacartao",
+                "metodo": "LiquidacaoTituloCartaoS"
             }
         }
     },
