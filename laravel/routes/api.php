@@ -279,6 +279,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::put('colaborador/{codcolaborador}/cargo/{codcolaboradorcargo}/', '\Mg\Colaborador\ColaboradorCargoController@update');
         Route::delete('colaborador/cargo/{codcolaboradorcargo}/', '\Mg\Colaborador\ColaboradorCargoController@delete');
 
+        Route::get('comissao-caixas', '\Mg\Colaborador\ColaboradorCargoController@comissaoCaixas');
+
+
         // Ferias
         // Route::get('colaborador/{codcolaborador}/ferias/', '\Mg\Colaborador\FeriasController@index');
         Route::post('colaborador/{codcolaborador}/ferias/', '\Mg\Colaborador\FeriasController@create');

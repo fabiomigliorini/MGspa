@@ -47,4 +47,13 @@ class ColaboradorCargoController extends MgController
             'result' => true
         ], 200);
     }
+
+    public function comissaoCaixas(Request $request)
+    {
+        $inicio = $request->inicio;
+        $fim = $request->fim;
+        $ret = ColaboradorComissaoService::comissaoCaixas($inicio, $fim);
+        return response()->json($ret, 200);
+    }
+
 }

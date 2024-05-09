@@ -51,6 +51,10 @@
                         <q-icon name="work" size="35px" />
                         <div>Cargos</div>
                     </q-btn>
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="'/comissao-caixas/'">
+                        <q-icon name="point_of_sale" size="35px" />
+                        <div>Comissão Caixas</div>
+                    </q-btn>
                 </div>
             </template>
 
