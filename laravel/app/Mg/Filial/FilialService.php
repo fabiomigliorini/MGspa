@@ -29,7 +29,7 @@ class FilialService extends MgService
     }
 
 
-    public static function buscarPorCnpjIe ($cnpj, $ie, $apenasComPesquisaDfeHabilitada = false)
+    public static function buscarPorCnpjIe ($cnpj, $ie, $primeiroComDfeHabilitada = true)
     {
         // Se nao tem IE
         if (empty($ie)) {
@@ -59,8 +59,8 @@ class FilialService extends MgService
         }
 
         $qry = Filial::whereIn('codpessoa', $codpessoas);
-        if ($apenasComPesquisaDfeHabilitada) {
-            $qry = $qry->where('dfe', true);
+        if ($primeiroComDfeHabilitada) {
+            $qry = $qry->orderBy('dfe', 'desc');
         }
         
         return $qry->first();
