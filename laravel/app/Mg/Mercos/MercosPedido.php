@@ -1,14 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 12:10:57
+ * Date: 11/May/2024 16:00:19
  */
 
 namespace Mg\Mercos;
 
 use Mg\MgModel;
 use Mg\Mercos\MercosPedidoItem;
-use Mg\Mercoscliente\Mercoscliente;
+use Mg\Mercos\MercosCliente;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
 
@@ -50,7 +50,7 @@ class MercosPedido extends MgModel
     // Chaves Estrangeiras
     public function MercosCliente()
     {
-        return $this->belongsTo(Mercoscliente::class, 'codmercoscliente', 'codmercoscliente');
+        return $this->belongsTo(MercosCliente::class, 'codmercoscliente', 'codmercoscliente');
     }
 
     public function Negocio()

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 12:12:48
+ * Date: 11/May/2024 16:00:40
  */
 
 namespace Mg\Mercos;

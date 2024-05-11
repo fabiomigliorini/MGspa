@@ -1,18 +1,18 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:31:57
+ * Date: 11/May/2024 16:19:18
  */
 
 namespace Mg\Produto;
 
 use Mg\MgModel;
-use Mg\Prancheta\PranchetaProduto;
 use Mg\Produto\ProdutoBarra;
 use Mg\Produto\ProdutoEmbalagem;
 use Mg\Produto\ProdutoHistoricoPreco;
 use Mg\Produto\ProdutoImagem;
 use Mg\Produto\ProdutoVariacao;
+use Mg\Mercos\MercosProduto;
 use Mg\NaturezaOperacao\Cest;
 use Mg\Marca\Marca;
 use Mg\NaturezaOperacao\Ncm;
@@ -21,6 +21,7 @@ use Mg\Produto\TipoProduto;
 use Mg\NaturezaOperacao\Tributacao;
 use Mg\Produto\UnidadeMedida;
 use Mg\Usuario\Usuario;
+use Mg\Estoque\EstoqueLocal;
 
 class Produto extends MgModel
 {
@@ -36,16 +37,21 @@ class Produto extends MgModel
         'altura',
         'codcest',
         'codcestanterior',
+        'codestoquelocal',
         'codmarca',
         'codncm',
         'codopencart',
         'codopencartvariacao',
+        'codprodutoembalagemcompra',
+        'codprodutoembalagemtransferencia',
         'codprodutoimagem',
         'codsubgrupoproduto',
         'codtipoproduto',
         'codtributacao',
         'codunidademedida',
+        'conferenciaperiodica',
         'descricaosite',
+        'estoque',
         'importado',
         'inativo',
         'largura',
@@ -57,6 +63,7 @@ class Produto extends MgModel
         'produto',
         'profundidade',
         'referencia',
+        'revisao',
         'site',
         'vendesite'
     ];
@@ -64,7 +71,8 @@ class Produto extends MgModel
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo'
+        'inativo',
+        'revisao'
     ];
 
     protected $casts = [
@@ -74,11 +82,14 @@ class Produto extends MgModel
         'altura' => 'float',
         'codcest' => 'integer',
         'codcestanterior' => 'integer',
+        'codestoquelocal' => 'integer',
         'codmarca' => 'integer',
         'codncm' => 'integer',
         'codopencart' => 'integer',
         'codopencartvariacao' => 'integer',
         'codproduto' => 'integer',
+        'codprodutoembalagemcompra' => 'integer',
+        'codprodutoembalagemtransferencia' => 'integer',
         'codprodutoimagem' => 'integer',
         'codsubgrupoproduto' => 'integer',
         'codtipoproduto' => 'integer',
@@ -86,6 +97,8 @@ class Produto extends MgModel
         'codunidademedida' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'conferenciaperiodica' => 'boolean',
+        'estoque' => 'boolean',
         'importado' => 'boolean',
         'largura' => 'float',
         'peso' => 'float',
@@ -102,6 +115,11 @@ class Produto extends MgModel
         return $this->belongsTo(Cest::class, 'codcest', 'codcest');
     }
 
+    public function EstoqueLocal()
+    {
+        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
+    }
+
     public function Marca()
     {
         return $this->belongsTo(Marca::class, 'codmarca', 'codmarca');
@@ -110,6 +128,16 @@ class Produto extends MgModel
     public function Ncm()
     {
         return $this->belongsTo(Ncm::class, 'codncm', 'codncm');
+    }
+
+    public function ProdutoEmbalagemCompra()
+    {
+        return $this->belongsTo(ProdutoEmbalagem::class, 'codprodutoembalagemcompra', 'codprodutoembalagem');
+    }
+
+    public function ProdutoEmbalagemTransferencia()
+    {
+        return $this->belongsTo(ProdutoEmbalagem::class, 'codprodutoembalagemtransferencia', 'codprodutoembalagem');
     }
 
     public function ProdutoImagem()
@@ -149,9 +177,9 @@ class Produto extends MgModel
 
 
     // Tabelas Filhas
-    public function PranchetaProdutoS()
+    public function MercosProdutoS()
     {
-        return $this->hasMany(PranchetaProduto::class, 'codproduto', 'codproduto');
+        return $this->hasMany(MercosProduto::class, 'codproduto', 'codproduto');
     }
 
     public function ProdutoBarraS()

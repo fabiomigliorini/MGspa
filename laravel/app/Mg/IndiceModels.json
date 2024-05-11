@@ -2356,14 +2356,24 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codestoquelocal": {
+                "tabela": "tblestoquelocal",
+                "coluna": "codestoquelocal",
+                "metodo": "EstoqueLocal"
+            },
+            "codprodutoembalagemcompra": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codprodutoembalagemcompra",
+                "metodo": "ProdutoEmbalagemCompra"
+            },
+            "codprodutoembalagemtransferencia": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codprodutoembalagemtransferencia",
+                "metodo": "ProdutoEmbalagemTransferencia"
             }
         },
         "hasMany": {
-            "tblpranchetaproduto.codproduto": {
-                "tabela": "tblpranchetaproduto",
-                "coluna": "codproduto",
-                "metodo": "PranchetaProdutoS"
-            },
             "tblprodutobarra.codproduto": {
                 "tabela": "tblprodutobarra",
                 "coluna": "codproduto",
@@ -2388,6 +2398,11 @@
                 "tabela": "tblprodutovariacao",
                 "coluna": "codproduto",
                 "metodo": "ProdutoVariacaoS"
+            },
+            "tblmercosproduto.codproduto": {
+                "tabela": "tblmercosproduto",
+                "coluna": "codproduto",
+                "metodo": "MercosProdutoS"
             }
         }
     },
@@ -4753,36 +4768,6 @@
             }
         }
     },
-    "tblpranchetaproduto": {
-        "tabela": "tblpranchetaproduto",
-        "campocodigo": "codpranchetaproduto",
-        "namespace": "Mg\\Prancheta",
-        "classe": "PranchetaProduto",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Prancheta\/PranchetaProduto.php",
-        "belongsTo": {
-            "codprancheta": {
-                "tabela": "tblprancheta",
-                "coluna": "codprancheta",
-                "metodo": "Prancheta"
-            },
-            "codproduto": {
-                "tabela": "tblproduto",
-                "coluna": "codproduto",
-                "metodo": "Produto"
-            },
-            "codusuarioalteracao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "UsuarioAlteracao"
-            },
-            "codusuariocriacao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuariocriacao",
-                "metodo": "UsuarioCriacao"
-            }
-        },
-        "hasMany": []
-    },
     "tblcest": {
         "tabela": "tblcest",
         "campocodigo": "codcest",
@@ -5015,32 +5000,6 @@
                 "tabela": "tblgrupoproduto",
                 "coluna": "codfamiliaproduto",
                 "metodo": "GrupoProdutoS"
-            }
-        }
-    },
-    "tblprancheta": {
-        "tabela": "tblprancheta",
-        "campocodigo": "codprancheta",
-        "namespace": "Mg\\Prancheta",
-        "classe": "Prancheta",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Prancheta\/Prancheta.php",
-        "belongsTo": {
-            "codusuarioalteracao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "UsuarioAlteracao"
-            },
-            "codusuariocriacao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuariocriacao",
-                "metodo": "UsuarioCriacao"
-            }
-        },
-        "hasMany": {
-            "tblpranchetaproduto.codprancheta": {
-                "tabela": "tblpranchetaproduto",
-                "coluna": "codprancheta",
-                "metodo": "PranchetaProdutoS"
             }
         }
     },
@@ -6112,6 +6071,112 @@
                 "tabela": "tblchequedevolucao",
                 "coluna": "codchequemotivodevolucao",
                 "metodo": "ChequeDevolucaoS"
+            }
+        }
+    },
+    "tblmercosproduto": {
+        "tabela": "tblmercosproduto",
+        "campocodigo": "codmercosproduto",
+        "namespace": "Mg\\Mercos",
+        "classe": "MercosProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mercos\/MercosProduto.php",
+        "belongsTo": {
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codprodutoembalagem": {
+                "tabela": "tblprodutoembalagem",
+                "coluna": "codprodutoembalagem",
+                "metodo": "ProdutoEmbalagem"
+            },
+            "codprodutovariacao": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codprodutovariacao",
+                "metodo": "ProdutoVariacao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmercosprodutoimagem.codmercosproduto": {
+                "tabela": "tblmercosprodutoimagem",
+                "coluna": "codmercosproduto",
+                "metodo": "MercosProdutoImagemS"
+            }
+        }
+    },
+    "tblmercosprodutoimagem": {
+        "tabela": "tblmercosprodutoimagem",
+        "campocodigo": "codmercosprodutoimagem",
+        "namespace": "Mg\\Mercos",
+        "classe": "MercosProdutoImagem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Mercos\/MercosProdutoImagem.php",
+        "belongsTo": {
+            "codimagem": {
+                "tabela": "tblimagem",
+                "coluna": "codimagem",
+                "metodo": "Imagem"
+            },
+            "codmercosproduto": {
+                "tabela": "tblmercosproduto",
+                "coluna": "codmercosproduto",
+                "metodo": "MercosProduto"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblprancheta": {
+        "tabela": "tblprancheta",
+        "campocodigo": "codprancheta",
+        "namespace": "Mg\\Produto",
+        "classe": "Prancheta",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/Prancheta.php",
+        "belongsTo": {
+            "codpranchetacategoria": {
+                "tabela": "tblpranchetacategoria",
+                "coluna": "codpranchetacategoria",
+                "metodo": "PranchetaCategoria"
+            },
+            "codprodutobarra": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarra",
+                "metodo": "ProdutoBarra"
+            }
+        },
+        "hasMany": []
+    },
+    "tblpranchetacategoria": {
+        "tabela": "tblpranchetacategoria",
+        "campocodigo": "codpranchetacategoria",
+        "namespace": "Mg\\Produto",
+        "classe": "PranchetaCategoria",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/PranchetaCategoria.php",
+        "belongsTo": [],
+        "hasMany": {
+            "tblprancheta.codpranchetacategoria": {
+                "tabela": "tblprancheta",
+                "coluna": "codpranchetacategoria",
+                "metodo": "PranchetaS"
             }
         }
     }
