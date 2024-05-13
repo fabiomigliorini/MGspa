@@ -364,6 +364,7 @@ export const negocioStore = defineStore("negocio", {
       if (negocio != false) {
         await this.carregarChavesEstrangeiras();
         await this.salvar();
+        return negocio;
       }
       return false;
     },
