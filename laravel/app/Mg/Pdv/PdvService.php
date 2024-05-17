@@ -387,6 +387,7 @@ class PdvService
                 :sincronizado as sincronizado
             from tblpranchetacategoria cat
             where cat.codpranchetacategoriapai is null
+            order by cat.ordem
         ';
         $cats = DB::select($sql, [
             'sincronizado' => $sincronizado
