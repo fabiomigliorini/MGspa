@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
@@ -318,6 +318,23 @@ const lerCodigoBarras = async () => {
     falar("Não consigo ler!");
   }
 };
+
+onMounted(() => {
+  emitter.on("adicionarProduto", (prod) => {
+    adicionarPelaListagem(
+      prod.codprodutobarra,
+      prod.barras,
+      prod.codproduto,
+      prod.produto,
+      prod.codimagem,
+      prod.preco
+    );
+  });
+});
+
+onUnmounted(() => {
+  emitter.off("adicionarProduto");
+});
 </script>
 
 <template>

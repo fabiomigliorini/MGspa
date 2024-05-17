@@ -86,12 +86,19 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async atualizarListagem() {
-      // em aberto
-      this.negocios = await db.negocio
+      const negs = await db.negocio
         .where("codnegociostatus")
         .equals(1)
         .reverse()
-        .sortBy("criacao");
+        .sortBy("lancamento");
+      this.negocios = negs.slice(0, 10);
+      const iNegocio = this.negocios.findIndex((neg) => {
+        return neg.codnegocio == this.negocio.codnegocio;
+      });
+      if (iNegocio == -1) {
+        this.negocios.unshift(this.negocio);
+        this.negocios.shift(1);
+      }
 
       // ultimos 10 fechados/cancelados
       if (this.negocio.codnegociostatus == 1) {

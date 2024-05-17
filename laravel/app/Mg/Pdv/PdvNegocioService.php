@@ -161,6 +161,9 @@ class PdvNegocioService
             if (($negocio->valortotal >= 1000) && (empty($negocio->Pessoa->cnpj)) && (empty($negocio->cpf))) {
                 throw new Exception('Obrigatório Identificar CPF para vendas acima de R$ 1.000,00!', 1);
             }
+        }
+
+        if ($negocio->NaturezaOperacao->financeiro == true) {
 
             //Calcula total pagamentos à vista e à prazo
             $valorPagamentos = 0;

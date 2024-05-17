@@ -21,6 +21,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       naturezaOperacao: null,
       pessoa: null,
       produto: null,
+      prancheta: null,
       completa: null,
     },
     labelSincronizacao: "",
@@ -141,6 +142,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         await this.sincronizarNaturezaOperacao();
         await this.sincronizarPessoa();
         await this.sincronizarProduto();
+        await this.sincronizarPrancheta();
         this.ultimaSincronizacao.completa = this.ultimaSincronizacao.impressora;
       } catch (error) {
         console.log(error);
@@ -457,6 +459,38 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         db.produto.where("sincronizado").below(sincronizado).delete();
       }
       this.ultimaSincronizacao.produto = sincronizado;
+    },
+
+    async sincronizarPrancheta() {
+      // inicializa progresso
+      this.inicializaProgresso("Prancheta");
+      let sincronizado = null;
+
+      try {
+        // busca registros na ApI
+        let { data } = await api.get("/api/v1/pdv/prancheta", {
+          params: { pdv: this.pdv.uuid },
+        });
+
+        // insere dados no banco local indexeddb
+        await db.prancheta.bulkPut(data);
+
+        // exclui registros que nao vieram na importacao
+        sincronizado = data[0].sincronizado;
+        db.prancheta.where("sincronizado").below(sincronizado).delete();
+
+        //registra data de Sincronizacao
+        this.ultimaSincronizacao.prancheta = sincronizado;
+      } catch (error) {
+        console.log(error);
+        console.log("Impossível sincronizar Prancheta");
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: "close", color: "white" }],
+        });
+      }
     },
 
     async putNegocio(negocio) {

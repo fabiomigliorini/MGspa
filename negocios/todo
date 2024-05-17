@@ -1,3 +1,4 @@
+BUG Quando abre venda de outro PDV, está trazendo os itens em ordem inversa ao que foi adicionado no PDV Origina. Os ultimos vem primeiro.
 BUG Quando adiciona dois pagamentos em dinheiro, esta calculando o troco nos dois tblnegocioformapagamento, duplicando o valor total. Exemplo Venda 102,40, Pagamento A de 100,00, Pagamento B de 13,00, Associa Troco de 10,60 nos dois pagamentos
 BUG Mostrar erro quando pessoa não tem endereço ou telefone cadastrado e usuario quiser fazer devolução
 BUG Nos Xerox a listagem de negocios abertos esta ficando enorme - computador fica lento

@@ -114,7 +114,7 @@ const vazioOuCriar = async () => {
     var audio = new Audio("novo.mp3");
     audio.play();
   } catch (error) {}
-  router.push("/offline/" + sNegocio.negocio.uuid);
+  router.push("/offline/" + neg.uuid);
 };
 
 const duplicar = async () => {

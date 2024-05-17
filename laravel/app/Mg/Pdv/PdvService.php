@@ -331,6 +331,74 @@ class PdvService
         return $ret;
     }
 
+    public static function categoriasCategoriaPrancheta($cat) {
+        $sql = '
+            select 
+                cat.*
+            from tblpranchetacategoria cat
+            where cat.codpranchetacategoriapai = :codpranchetacategoria
+            order by cat.ordem
+        ';
+        $cats = DB::select($sql, [
+            'codpranchetacategoria' => $cat->codpranchetacategoria
+        ]);
+        foreach ($cats as $catFilha) {
+            static::categoriasCategoriaPrancheta($catFilha);
+        }
+        $cat->categorias = $cats;
+
+        $sql = '
+            select
+                pr.*,
+                pv.codproduto,
+                p.codproduto,
+                pb.barras,
+                p.produto,
+                pv.variacao,
+                p.abc,
+                um.sigla,
+                pe.quantidade,
+                pri.codimagem,
+                coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) as preco,
+                coalesce(pv.inativo, p.inativo) as inativo
+            from tblprancheta pr
+            inner join tblprodutobarra pb on (pb.codprodutobarra = pr.codprodutobarra)
+            inner join tblprodutovariacao pv on (pv.codprodutovariacao  = pb.codprodutovariacao)
+            inner join tblproduto p on (p.codproduto  = pv.codproduto)
+            left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
+            inner join tblunidademedida um on (um.codunidademedida = coalesce(pe.codunidademedida, p.codunidademedida))
+            left join tblprodutoimagem pri on (pri.codprodutoimagem = pv.codprodutoimagem)
+            where pr.codpranchetacategoria = :codpranchetacategoria
+            order by pr.ordem
+        ';
+        $prods = DB::select($sql, [
+            'codpranchetacategoria' => $cat->codpranchetacategoria
+        ]);
+        $cat->produtos = $prods;
+    }
+
+    public static function prancheta()
+    {
+
+        $sincronizado = date('Y-m-d h:i:s');
+        $sql = '
+            select 
+                cat.*,
+                :sincronizado as sincronizado
+            from tblpranchetacategoria cat
+            where cat.codpranchetacategoriapai is null
+        ';
+        $cats = DB::select($sql, [
+            'sincronizado' => $sincronizado
+        ]);
+
+        foreach ($cats as $cat) {
+            static::categoriasCategoriaPrancheta($cat);
+        }
+
+        return $cats;
+    }
+
     public static function conferencia($codpdv, $dia)
     {
         $sql = '

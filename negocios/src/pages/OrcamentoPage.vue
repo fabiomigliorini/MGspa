@@ -127,10 +127,13 @@ onMounted(async () => {
               }}
             </td>
           </tr>
-
-          <tr>
-            <td colspan="6" class="subtotal text-right">SubTotal</td>
-            <td class="subtotal text-right">
+        </tbody>
+        <tbody class="totais">
+          <tr
+            v-if="sNegocio.negocio.valortotal != sNegocio.negocio.valorprodutos"
+          >
+            <td colspan="6" class="text-right">Produtos</td>
+            <td class="text-right">
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -140,7 +143,6 @@ onMounted(async () => {
               }}
             </td>
           </tr>
-
           <tr v-if="sNegocio.negocio.valordesconto">
             <td colspan="6" class="text-right">Desconto</td>
             <td class="text-right">
@@ -194,43 +196,51 @@ onMounted(async () => {
           </tr>
 
           <tr>
-            <td colspan="6" class="text-right"><b>Total:</b></td>
+            <td colspan="6" class="text-right">Total</td>
             <td class="text-right">
-              <b>
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(sNegocio.negocio.valortotal)
-                }}</b
-              >
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(sNegocio.negocio.valortotal)
+              }}
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="pagamento">
-      <div v-if="sNegocio.negocio.pagamentos.lenght > 0">
-        <b>Forma de Pagamento:</b>
-        <span
-          class="text-right"
-          v-for="formapagamento in sNegocio.negocio.pagamentos"
-          v-bind:key="formapagamento.uuid"
-        >
-          <br />{{
+
+    <div v-if="sNegocio.negocio.pagamentos.length > 0">
+      <hr />
+      Forma de Pagamento:
+      <!-- PAGAMENTO -->
+      <div v-for="pag in sNegocio.negocio.pagamentos" v-bind:key="pag.uuid">
+        <b>
+          {{
             new Intl.NumberFormat("pt-BR", {
               style: "decimal",
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            }).format(formapagamento.valorpagamento)
+            }).format(pag.valorpagamento)
           }}
-          &nbsp;
-          {{ formapagamento.formapagamento }}
-        </span>
+        </b>
+        {{ pag.formapagamento }}
       </div>
-      <br /><br /><br /><br /><br />
-      <div class="final text-center" v-if="loc">
+    </div>
+
+    <!-- OBSERVACOES -->
+    <template v-if="sNegocio.negocio.observacoes">
+      <hr />
+      <div style="white-space: pre-line; font-size: larger">
+        <b> Observações: </b> <br />
+        {{ sNegocio.negocio.observacoes }}
+      </div>
+    </template>
+
+    <!-- ASSINATURA -->
+    <div>
+      <div class="final text-center" style="margin-top: 2cm" v-if="loc">
         <div>
           {{ loc.fantasia }}
         </div>
@@ -372,12 +382,22 @@ and open the template in the editor.
   tbody.zebrada tr:nth-child(even) {
     background-color: #eeeeee;
   }
+  tbody.zebrada tr:last-child td {
+    border-bottom: 1px solid black;
+  }
 
   /*
-tbody.zebrada tr:first-child td {
+
+
+  tbody.zebrada tr:first-child td {
     border-top: 2px solid black;
-}
-*/
+  }
+  */
+
+  tbody.totais tr td {
+    font-size: larger;
+    font-weight: bold;
+  }
 
   td,
   th {

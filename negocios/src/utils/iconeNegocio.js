@@ -14,6 +14,9 @@ export const iconeNegocio = (n) => {
 export const corIconeNegocio = (n) => {
   switch (n.codnegociostatus) {
     case 1:
+      if (!n.sincronizado) {
+        return "accent";
+      }
       return "secondary";
     case 3:
       return "negative";

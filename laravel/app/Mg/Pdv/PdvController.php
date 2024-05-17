@@ -131,6 +131,12 @@ class PdvController
         return PdvService::impressora();
     }
 
+    public function prancheta(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        return PdvService::prancheta();
+    }
+
     public function putNegocio(PdvRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);

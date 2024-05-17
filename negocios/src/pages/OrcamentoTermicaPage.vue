@@ -143,10 +143,13 @@ onMounted(() => {
               </td>
             </tr>
           </template>
-
-          <tr>
+        </tbody>
+        <tbody class="totais">
+          <tr
+            v-if="sNegocio.negocio.valorprodutos != sNegocio.negocio.valortotal"
+          >
             <td class="subtotal text-right">
-              SubTotal: R$
+              Produtos R$
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -159,7 +162,7 @@ onMounted(() => {
 
           <tr v-if="sNegocio.negocio.valordesconto">
             <td class="text-right">
-              Desconto:
+              Desconto R$
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -172,7 +175,7 @@ onMounted(() => {
 
           <tr v-if="sNegocio.negocio.valorfrete">
             <td class="text-right">
-              Frete:
+              Frete R$
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -185,7 +188,7 @@ onMounted(() => {
 
           <tr v-if="sNegocio.negocio.valorseguro">
             <td class="text-right">
-              Seguro:
+              Seguro R$
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -198,7 +201,7 @@ onMounted(() => {
 
           <tr v-if="sNegocio.negocio.valoroutras">
             <td class="text-right">
-              Outras:
+              Outras R$
               {{
                 new Intl.NumberFormat("pt-BR", {
                   style: "decimal",
@@ -211,44 +214,53 @@ onMounted(() => {
 
           <tr>
             <td class="text-right">
-              <b>Total:</b>
-              <b>
-                R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(sNegocio.negocio.valortotal)
-                }}</b
-              >
+              Total R$
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(sNegocio.negocio.valortotal)
+              }}
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-if="sNegocio.negocio.pagamentos.length > 0" class="pagamentos">
+          <tr>
+            <td><b>Forma de Pagamento:</b></td>
+          </tr>
+          <tr
+            v-for="formapagamento in sNegocio.negocio.pagamentos"
+            v-bind:key="formapagamento.uuid"
+          >
+            <td>
+              R$
+              {{
+                new Intl.NumberFormat("pt-BR", {
+                  style: "decimal",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(formapagamento.valorpagamento)
+              }}
+              -
+              {{ formapagamento.formapagamento }}
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-if="sNegocio.negocio.observacoes" class="observacoes">
+          <tr>
+            <td style="">
+              <b>Observações:</b> <br />
+              {{ sNegocio.negocio.observacoes }}
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="pagamento" v-if="sNegocio.negocio.pagamentos.length > 0">
-      <b>Forma de Pagamento:</b>
-      <span
-        class="text-right"
-        v-for="formapagamento in sNegocio.negocio.pagamentos"
-        v-bind:key="formapagamento.uuid"
-      >
-        <br />{{
-          new Intl.NumberFormat("pt-BR", {
-            style: "decimal",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }).format(formapagamento.valorpagamento)
-        }}
-        &nbsp;
-        {{ formapagamento.formapagamento }}
-      </span>
-    </div>
 
-    <hr class="q-mb-md" />
+    <!-- <hr class="q-mb-md" /> -->
     <template v-if="sNegocio.negocio.sincronizado">
-      <div class="text-center text-h5 text-bold">
+      <div class="text-center text-h5 text-bold q-pt-md">
         Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
       </div>
       <div class="barcode">
@@ -377,11 +389,33 @@ and open the template in the editor.
     background-color: #eeeeee;
   }
 
-  /*
-tbody.zebrada tr:first-child td {
+  tbody.totais tr:first-child td {
     border-top: 2px solid black;
-}
-*/
+  }
+
+  tbody.totais tr:last-child td {
+    border-bottom: 2px solid black;
+  }
+
+  tbody.pagamentos tr:last-child td {
+    border-bottom: 2px solid black;
+  }
+
+  tbody.observacoes tr td {
+    white-space: pre-line;
+    border-bottom: 2px solid black;
+  }
+
+  tbody.totais tr td {
+    font-size: 2.5em;
+    font-weight: bold;
+  }
+
+  /*
+  tbody.zebrada tr:first-child td {
+    border-top: 2px solid black;
+  }
+  */
   td,
   th {
     text-align: left;
@@ -392,23 +426,8 @@ tbody.zebrada tr:first-child td {
   }
 
   th {
-    border-bottom: 1px solid black;
+    border-bottom: 2px solid black;
     text-align: center;
-  }
-
-  td.subtotal {
-    border-top: 1px solid black;
-    /* font-weight: bold; */
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-
-  .final {
-    border-top: 1px solid black;
-    font-weight: bold;
-    padding-top: 2px;
-    width: 50%;
-    padding-bottom: 2px;
   }
 
   .negocio {
@@ -417,22 +436,6 @@ tbody.zebrada tr:first-child td {
     padding-top: 2px;
     width: 100%;
     padding-bottom: 2px;
-  }
-
-  td.total {
-    /* border-top: 1px solid black; */
-    /* border-bottom: 1px solid black; */
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-weight: bold;
-  }
-
-  td.total-geral {
-    border-top: 2px solid black;
-    border-bottom: 2px solid black;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-weight: bold;
   }
 
   table {
