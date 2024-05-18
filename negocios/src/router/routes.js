@@ -50,6 +50,10 @@ const routes = [
     children: [
       { path: "padrao/", component: () => import("pages/PadraoPage.vue") },
       { path: "pdv/", component: () => import("pages/PdvPage.vue") },
+      {
+        path: "prancheta/",
+        component: () => import("pages/PranchetaPage.vue"),
+      },
     ],
   },
 

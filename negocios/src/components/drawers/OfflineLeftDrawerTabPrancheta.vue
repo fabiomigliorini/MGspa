@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { db } from "src/boot/db";
 import { produtoStore } from "src/stores/produto";
 import emitter from "src/utils/emitter";
@@ -12,10 +12,6 @@ const historico = ref([]);
 
 onMounted(() => {
   carregarPrancheta();
-});
-
-const itens = computed(() => {
-  return Math.ceil(sNegocio.quantidadeProdutosAtivos / porPagina.value);
 });
 
 const carregarPrancheta = async () => {
@@ -65,7 +61,7 @@ const voltar = (i) => {
       <q-item clickable v-ripple @click="selecionarCategoria(cat)">
         <q-item-section avatar>
           <q-avatar rounded size="90px">
-            <img :src="'/categorias/' + cat.imagem" />
+            <img :src="cat.imagem" />
           </q-avatar>
         </q-item-section>
         <q-item-section>

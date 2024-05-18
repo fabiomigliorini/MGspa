@@ -4,6 +4,7 @@ BUG Mostrar erro quando pessoa não tem endereço ou telefone cadastrado e usuar
 BUG Nos Xerox a listagem de negocios abertos esta ficando enorme - computador fica lento
 
 EM ANDAMENTO
+TODO Bolar uma maneira de sincronizar pessoas novas para pegar cadastro recem feito
 TODO fazer liquidacao de titulo
 TODO Adicionar CODPORTADOR na Manutenção de PDV
 TODO Não deixar Movimentar Dinheiro quando PDV não tiver Portador
