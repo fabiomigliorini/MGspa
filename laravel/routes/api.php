@@ -168,7 +168,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
             Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
             Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
-            Route::get('prancheta', '\Mg\Pdv\PdvController@prancheta');
+            Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
+            Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
             Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
             Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
             Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');

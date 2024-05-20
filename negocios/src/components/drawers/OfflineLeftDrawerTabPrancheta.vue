@@ -61,7 +61,8 @@ const voltar = (i) => {
       <q-item clickable v-ripple @click="selecionarCategoria(cat)">
         <q-item-section avatar>
           <q-avatar rounded size="90px">
-            <img :src="cat.imagem" />
+            <img :src="cat.imagem" v-if="cat.imagem" />
+            <q-icon name="mdi-bookshelf" color="grey" />
           </q-avatar>
         </q-item-section>
         <q-item-section>
