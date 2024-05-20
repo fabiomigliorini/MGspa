@@ -35,18 +35,19 @@ class VendaMensalService
         	inner join tblnegocioprodutobarra on (tblnegocioprodutobarra.codnegocio = tblnegocio.codnegocio)
         	inner join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnegocioprodutobarra.codprodutobarra)
         	left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
-          inner join tblpessoa on (tblpessoa.codpessoa = tblnegocio.codpessoa)
+            inner join tblpessoa on (tblpessoa.codpessoa = tblnegocio.codpessoa)
         	where tblprodutobarra.codprodutovariacao = :codprodutovariacao
-          and tblnegocio.codnegociostatus = 2 --Fechado
+            and tblnegocio.codnegociostatus = 2 --Fechado
+            and tblnegocioprodutobarra.inativo is null
         	and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
-          and tblpessoa.codpessoa not in (select tblfilial.codpessoa from tblfilial)
+            and tblpessoa.codpessoa not in (select tblfilial.codpessoa from tblfilial)
         	group by
                 tblnegocio.codestoquelocal
         	    , date_trunc('month', tblnegocio.lancamento);
         ";
 
         $vendas = DB::select($sql, [
-          'codprodutovariacao' => $pv->codprodutovariacao
+            'codprodutovariacao' => $pv->codprodutovariacao
         ]);
 
         $inicio = Carbon::now();
@@ -55,8 +56,8 @@ class VendaMensalService
         foreach ($vendas as $venda) {
             $elpv = EstoqueLocalProdutoVariacaoService::buscaOuCria($venda->codestoquelocal, $pv->codprodutovariacao);
             $v = EstoqueLocalProdutoVariacaoVenda::firstOrNew([
-              'codestoquelocalprodutovariacao' => $elpv->codestoquelocalprodutovariacao,
-              'mes' => $venda->mes,
+                'codestoquelocalprodutovariacao' => $elpv->codestoquelocalprodutovariacao,
+                'mes' => $venda->mes,
             ]);
             $v->quantidade = $venda->quantidade;
             $v->valor = $venda->valor;
@@ -76,8 +77,8 @@ class VendaMensalService
           )
         ";
         $ret = DB::delete($sql, [
-          'inicio' => $inicio,
-          'codprodutovariacao' => $pv->codprodutovariacao,
+            'inicio' => $inicio,
+            'codprodutovariacao' => $pv->codprodutovariacao,
         ]);
 
         return true;
@@ -99,14 +100,15 @@ class VendaMensalService
             inner join tblpessoa on (tblpessoa.codpessoa = tblnegocio.codpessoa)
             where tblprodutobarra.codprodutovariacao = :codprodutovariacao
             and tblnegocio.codnegociostatus = 2 --Fechado
+            and tblnegocioprodutobarra.inativo is null
             and (tblnaturezaoperacao.venda = true or tblnaturezaoperacao.vendadevolucao = true)
             and tblpessoa.codpessoa not in (select tblfilial.codpessoa from tblfilial)
         ";
         $venda = DB::select($sql, [
-          'codprodutovariacao' => $pv->codprodutovariacao
+            'codprodutovariacao' => $pv->codprodutovariacao
         ])[0];
         return $pv->update([
-          'vendainicio' => $venda->vendainicio
+            'vendainicio' => $venda->vendainicio
         ]);
     }
 
@@ -141,7 +143,7 @@ class VendaMensalService
           limit 1
         ";
         $compra = DB::select($sql, [
-          'codprodutovariacao' => $pv->codprodutovariacao
+            'codprodutovariacao' => $pv->codprodutovariacao
         ]);
         $dataultimacompra = null;
         $quantidadeultimacompra = null;
@@ -167,10 +169,10 @@ class VendaMensalService
             }
         }
         return $pv->update([
-          'dataultimacompra' => $dataultimacompra,
-          'quantidadeultimacompra' => $quantidadeultimacompra,
-          'custoultimacompra' => $custoultimacompra,
-          'lotecompra' => $lotecompra,
+            'dataultimacompra' => $dataultimacompra,
+            'quantidadeultimacompra' => $quantidadeultimacompra,
+            'custoultimacompra' => $custoultimacompra,
+            'lotecompra' => $lotecompra,
         ]);
     }
 
@@ -216,7 +218,7 @@ class VendaMensalService
     public static function determinarQuantidadeEstoqueDeposito($quantidade)
     {
         $perc = static::determinarPercentualEstoqueDeposito($quantidade);
-        return floor(($quantidade * $perc) /100);
+        return floor(($quantidade * $perc) / 100);
     }
 
     public static function determinarPercentualEstoqueLocal($quantidade = null)
@@ -231,8 +233,8 @@ class VendaMensalService
                     101001 => 0,
                     102001 => 0,
                     103001 => 100,
-		    104001 => 0,
-		    105001 => 0
+                    104001 => 0,
+                    105001 => 0
                 ];
 
             case 2:
@@ -241,7 +243,7 @@ class VendaMensalService
                     102001 => 50,
                     103001 => 50,
                     104001 => 0,
-		    105001 => 0
+                    105001 => 0
                 ];
 
             case 3:
@@ -250,7 +252,7 @@ class VendaMensalService
                     102001 => 33.3,
                     103001 => 33.4,
                     104001 => 33.3,
-		    105001 => 0
+                    105001 => 0
                 ];
 
             case 4:
@@ -259,7 +261,7 @@ class VendaMensalService
                     102001 => 25,
                     103001 => 25,
                     104001 => 25,
-		    105001 => 25
+                    105001 => 25
                 ];
 
             case 5:
@@ -268,7 +270,7 @@ class VendaMensalService
                     102001 => 20,
                     103001 => 40,
                     104001 => 20,
-		    105001 => 20
+                    105001 => 20
                 ];
 
             default:
@@ -283,18 +285,17 @@ class VendaMensalService
                 // determina um padrao de distribuicao de acordo com faturamento
                 $ret = [
                     $codestoquelocal_deposito => $deposito,
-                    102001 => ($lojas * 35)/100,
-                    103001 => ($lojas * 46)/100,
-                    104001 => ($lojas * 12)/100,
-		    105001 => ($lojas * 7)/100
+                    102001 => ($lojas * 35) / 100,
+                    103001 => ($lojas * 46) / 100,
+                    104001 => ($lojas * 12) / 100,
+                    105001 => ($lojas * 7) / 100
                 ];
 
                 return $ret;
-
-            }
+        }
     }
 
-    public static function determinarMesesVendas (Carbon $data)
+    public static function determinarMesesVendas(Carbon $data)
     {
         $ret = [];
         switch ($data->month) {
@@ -305,30 +306,30 @@ class VendaMensalService
                 $ret[] = Carbon::create($data->year - 1, 10, 1, 0, 0, 0);
                 $ret[] = Carbon::create($data->year - 1, 11, 1, 0, 0, 0);
                 $ret[] = Carbon::create($data->year - 1, 12, 1, 0, 0, 0);
-            break;
+                break;
 
             case 5: // Maio = Novembro/Dezembro/Abril
                 $ret[] = Carbon::create($data->year - 1, 11, 1, 0, 0, 0);
                 $ret[] = Carbon::create($data->year - 1, 12, 1, 0, 0, 0);
                 $ret[] = (clone $data)->subMonth(1);
-            break;
+                break;
 
             case 6: // Junho = Dezembro/Abril/Maio
                 $ret[] = Carbon::create($data->year - 1, 12, 1, 0, 0, 0);
                 $ret[] = (clone $data)->subMonth(2);
                 $ret[] = (clone $data)->subMonth(1);
-            break;
+                break;
 
             default: // ultimos dois meses
                 $ret[] = (clone $data)->subMonth(3);
                 $ret[] = (clone $data)->subMonth(2);
                 $ret[] = (clone $data)->subMonth(1);
-            break;
+                break;
         }
         return $ret;
     }
 
-    public static function determinarMesesVendasAulas (Carbon $data)
+    public static function determinarMesesVendasAulas(Carbon $data)
     {
         $somar = [];
         $diminuir = [];
@@ -367,7 +368,7 @@ class VendaMensalService
 
     public static function calcularMinimoMaximo(ProdutoVariacao $pv)
     {
-	return false;
+        return false;
 
         // se produto inativo, zera estoque minimo e maximo
         if (!empty($pv->inativo) || !empty($pv->Produto->inativo)) {
@@ -376,8 +377,8 @@ class VendaMensalService
                 'estoquemaximo' => 0,
             ]);
             return $pv->update([
-              'estoqueminimo' => 0,
-              'estoquemaximo' => 0,
+                'estoqueminimo' => 0,
+                'estoquemaximo' => 0,
             ]);
         }
 
@@ -424,13 +425,13 @@ class VendaMensalService
             group by elpv.codestoquelocal, elpvv.mes
         ";
         $vendas = collect(DB::select($sql, [
-          'codprodutovariacao' => $pv->codprodutovariacao,
+            'codprodutovariacao' => $pv->codprodutovariacao,
         ]));
 
         // transforma coluna mes em instancia do Carbon
         foreach ($vendas as $key => $venda) {
             $venda->mes = Carbon::parse($venda->mes);
-            $venda->quantidade = (double) $venda->quantidade;
+            $venda->quantidade = (float) $venda->quantidade;
         }
 
         // passa pelas filiais
@@ -443,21 +444,21 @@ class VendaMensalService
             $vendasLoja = $vendas->where('codestoquelocal', $loja->codestoquelocal);
 
             // Se mes Corrente vendeu mais que primeiro mês da Série, utiliza corrente
-            $vendaMesCorrente = $vendasLoja->firstWhere('mes', $mesCorrente)->quantidade??0;
-            $vendaPrimeiroMes = $vendasLoja->firstWhere('mes', $mesesVendas[0])->quantidade??0;
+            $vendaMesCorrente = $vendasLoja->firstWhere('mes', $mesCorrente)->quantidade ?? 0;
+            $vendaPrimeiroMes = $vendasLoja->firstWhere('mes', $mesesVendas[0])->quantidade ?? 0;
             $qtVenda = max($vendaMesCorrente, $vendaPrimeiroMes);
 
             // Soma outros dois meses da série
-            $qtVenda += $vendasLoja->firstWhere('mes', $mesesVendas[1])->quantidade??0;
-            $qtVenda += $vendasLoja->firstWhere('mes', $mesesVendas[2])->quantidade??0;
+            $qtVenda += $vendasLoja->firstWhere('mes', $mesesVendas[1])->quantidade ?? 0;
+            $qtVenda += $vendasLoja->firstWhere('mes', $mesesVendas[2])->quantidade ?? 0;
 
             // soma Vendas Volta As Aulas pra acumular no estoque da filial
             $qtAulasFilial = 0;
             foreach ($mesesVendasAulasFilial['somar'] as $mes) {
-                $qtAulasFilial += $vendasLoja->firstWhere('mes', $mes)->quantidade??0;
+                $qtAulasFilial += $vendasLoja->firstWhere('mes', $mes)->quantidade ?? 0;
             }
             foreach ($mesesVendasAulasFilial['diminuir'] as $mes) {
-                $qtAulasFilial -= $vendasLoja->firstWhere('mes', $mes)->quantidade??0;
+                $qtAulasFilial -= $vendasLoja->firstWhere('mes', $mes)->quantidade ?? 0;
             }
             $qtVenda = round(max($qtVenda, $qtAulasFilial), 0);
             $qtDeposito = static::determinarQuantidadeEstoqueDeposito($qtVenda);
@@ -466,10 +467,10 @@ class VendaMensalService
             // soma Vendas Volta As Aulas pra acumular no estoque geral
             $qtAulasGeral = 0;
             foreach ($mesesVendasAulasGeral['somar'] as $mes) {
-                $qtAulasGeral += $vendasLoja->firstWhere('mes', $mes)->quantidade??0;
+                $qtAulasGeral += $vendasLoja->firstWhere('mes', $mes)->quantidade ?? 0;
             }
             foreach ($mesesVendasAulasGeral['diminuir'] as $mes) {
-                $qtAulasGeral -= $vendasLoja->firstWhere('mes', $mes)->quantidade??0;
+                $qtAulasGeral -= $vendasLoja->firstWhere('mes', $mes)->quantidade ?? 0;
             }
             $qtAulasGeral = round($qtAulasGeral, 0);
             if ($qtAulasGeral > $qtVenda) {
@@ -495,33 +496,32 @@ class VendaMensalService
             // Totaliza quantidades
             $totDeposito += $qtDeposito;
             $totLojas += $qtMaximo;
-
         }
 
         // Filtra somente do Deposito
         $vendasDeposito = $vendas->where('codestoquelocal', $deposito->codestoquelocal);
 
         // Se mes Corrente vendeu mais que primeiro mês da Série, utiliza corrente
-        $vendaMesCorrente = $vendasDeposito->firstWhere('mes', $mesCorrente)->quantidade??0;
-        $vendaPrimeiroMes = $vendasDeposito->firstWhere('mes', $mesesVendas[0])->quantidade??0;
+        $vendaMesCorrente = $vendasDeposito->firstWhere('mes', $mesCorrente)->quantidade ?? 0;
+        $vendaPrimeiroMes = $vendasDeposito->firstWhere('mes', $mesesVendas[0])->quantidade ?? 0;
         $qtVenda = max($vendaMesCorrente, $vendaPrimeiroMes);
 
         // Soma outros dois meses da série
-        $qtVenda += $vendasDeposito->firstWhere('mes', $mesesVendas[1])->quantidade??0;
-        $qtVenda += $vendasDeposito->firstWhere('mes', $mesesVendas[2])->quantidade??0;
+        $qtVenda += $vendasDeposito->firstWhere('mes', $mesesVendas[1])->quantidade ?? 0;
+        $qtVenda += $vendasDeposito->firstWhere('mes', $mesesVendas[2])->quantidade ?? 0;
 
         // Soma vendas meses volta as aulas do deposito
         foreach ($mesesVendasAulasFilial['somar'] as $mes) {
-            $qtVenda += $vendasDeposito->firstWhere('mes', $mes)->quantidade??0;
+            $qtVenda += $vendasDeposito->firstWhere('mes', $mes)->quantidade ?? 0;
         }
         foreach ($mesesVendasAulasFilial['diminuir'] as $mes) {
-            $qtVenda -= $vendasDeposito->firstWhere('mes', $mes)->quantidade??0;
+            $qtVenda -= $vendasDeposito->firstWhere('mes', $mes)->quantidade ?? 0;
         }
         foreach ($mesesVendasAulasGeral['somar'] as $mes) {
-            $qtVenda += $vendasDeposito->firstWhere('mes', $mes)->quantidade??0;
+            $qtVenda += $vendasDeposito->firstWhere('mes', $mes)->quantidade ?? 0;
         }
         foreach ($mesesVendasAulasGeral['diminuir'] as $mes) {
-            $qtVenda -= $vendasDeposito->firstWhere('mes', $mes)->quantidade??0;
+            $qtVenda -= $vendasDeposito->firstWhere('mes', $mes)->quantidade ?? 0;
         }
         $qtVenda = round($qtVenda, 0);
 
