@@ -96,7 +96,6 @@ const btnSincronizarColor = computed({
           color="negative"
           @click="sSinc.abortarSincronizacao()"
           tabindex="-1"
-          :disable="!sSinc.importacao.rodando"
         />
       </q-card-actions>
     </q-card>

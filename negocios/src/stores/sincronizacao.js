@@ -181,6 +181,7 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
     async abortarSincronizacao() {
       this.importacao.rodando = false;
+      this.importacao.dialog = false;
     },
 
     inicializaProgresso(label) {
