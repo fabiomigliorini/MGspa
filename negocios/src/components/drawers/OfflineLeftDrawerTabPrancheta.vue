@@ -42,7 +42,7 @@ const voltar = (i) => {
 };
 </script>
 <template>
-  <div class="q-pa-md">
+  <div class="q-pa-md" v-if="historico.length > 0">
     <q-breadcrumbs>
       <q-breadcrumbs-el icon="home" @click="inicio()" class="cursor-pointer" />
       <q-breadcrumbs-el
@@ -55,8 +55,6 @@ const voltar = (i) => {
     </q-breadcrumbs>
   </div>
   <q-list>
-    <q-separator />
-
     <template v-for="cat in categorias" :key="cat.codpranchetacategoria">
       <q-item clickable v-ripple @click="selecionarCategoria(cat)">
         <q-item-section avatar>

@@ -14,6 +14,12 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
   },
 
   state: () => ({
+    sincronizacao: {
+      config: true,
+      pessoa: true,
+      produto: true,
+      completa: true,
+    },
     ultimaSincronizacao: {
       impressora: null,
       formaPagamento: null,
@@ -47,10 +53,11 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       totalSincronizados: null,
       progresso: 0,
       rodando: false,
+      dialog: false,
       requisicoes: null,
+      tempoTotal: null,
       maxRequisicoes: 1000,
       limiteRequisicao: 3000,
-      tempoTotal: null,
     },
   }),
 
@@ -136,20 +143,40 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
 
       // roda as importacoes
       try {
-        await this.sincronizarImpressora();
-        await this.sincronizarFormaPagamento();
-        await this.sincronizarEstoqueLocal();
-        await this.sincronizarNaturezaOperacao();
-        await this.sincronizarPessoa();
-        await this.sincronizarProduto();
-        await this.sincronizarPrancheta();
-        this.ultimaSincronizacao.completa = this.ultimaSincronizacao.impressora;
+        if (this.sincronizacao.config) {
+          await this.sincronizarImpressora();
+          await this.sincronizarFormaPagamento();
+          await this.sincronizarEstoqueLocal();
+          await this.sincronizarNaturezaOperacao();
+        }
+        if (this.sincronizacao.pessoa) {
+          await this.sincronizarPessoa();
+        }
+        if (this.sincronizacao.produto) {
+          await this.sincronizarProduto();
+          await this.sincronizarPrancheta();
+        }
       } catch (error) {
         console.log(error);
       }
 
       // esconde janela de progresso
+      this.inicializaVars();
+    },
+
+    async inicializaVars() {
+      this.inicializaProgresso(null);
+      this.importacao.dialog = false;
       this.importacao.rodando = false;
+      this.ultimaSincronizacao.completa = [
+        this.ultimaSincronizacao.impressora,
+        this.ultimaSincronizacao.formaPagamento,
+        this.ultimaSincronizacao.estoqueLocal,
+        this.ultimaSincronizacao.naturezaOperacao,
+        this.ultimaSincronizacao.pessoa,
+        this.ultimaSincronizacao.produto,
+        this.ultimaSincronizacao.prancheta,
+      ].sort()[0];
     },
 
     async abortarSincronizacao() {
@@ -166,6 +193,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
     },
 
     async sincronizarImpressora() {
+      if (!this.importacao.rodando) {
+        return;
+      }
+
       // inicializa progresso
       this.inicializaProgresso("Impressoras");
       let sincronizado = null;
@@ -198,6 +229,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
     },
 
     async sincronizarFormaPagamento() {
+      if (!this.importacao.rodando) {
+        return;
+      }
+
       // inicializa progresso
       this.inicializaProgresso("Formas de Pagamento");
       let sincronizado = null;
@@ -230,6 +265,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
     },
 
     async sincronizarEstoqueLocal() {
+      if (!this.importacao.rodando) {
+        return;
+      }
+
       // inicializa progresso
       this.inicializaProgresso("Locais de Estoque");
       let sincronizado = null;
@@ -262,6 +301,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
     },
 
     async sincronizarNaturezaOperacao() {
+      if (!this.importacao.rodando) {
+        return;
+      }
+
       // inicializa progresso
       this.inicializaProgresso("Natureza De Operação");
       let sincronizado = null;
@@ -294,6 +337,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
     },
 
     async sincronizarPessoa() {
+      if (!this.importacao.rodando) {
+        return;
+      }
+
       // inicializa progresso
       this.inicializaProgresso("Pessoas");
 
@@ -373,11 +420,15 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       // exclui registros que nao vieram na importacao
       if (this.importacao.rodando) {
         db.pessoa.where("sincronizado").below(sincronizado).delete();
+        this.ultimaSincronizacao.pessoa = sincronizado;
       }
-      this.ultimaSincronizacao.pessoa = sincronizado;
     },
 
     async sincronizarProduto() {
+      if (!this.importacao.rodando) {
+        return;
+      }
+
       // inicializa progresso
       this.inicializaProgresso("Produtos");
 
@@ -457,11 +508,15 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       // exclui registros que nao vieram na importacao
       if (this.importacao.rodando) {
         db.produto.where("sincronizado").below(sincronizado).delete();
+        this.ultimaSincronizacao.produto = sincronizado;
       }
-      this.ultimaSincronizacao.produto = sincronizado;
     },
 
     async sincronizarPrancheta() {
+      if (!this.importacao.rodando) {
+        return;
+      }
+
       // inicializa progresso
       this.inicializaProgresso("Prancheta");
       let sincronizado = null;
