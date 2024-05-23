@@ -258,6 +258,7 @@ const adicionarCategoria = () => {
     categorias: [],
     produtos: [],
   });
+  corrigirOrdem();
 };
 
 const adicionarCategoriaRaiz = () => {
@@ -279,6 +280,7 @@ const adicionarCategoriaRaiz = () => {
     categorias: [],
     produtos: [],
   });
+  corrigirOrdem();
 };
 
 const adicionarProduto = () => {
@@ -346,6 +348,7 @@ const adicionarProduto = () => {
         true
       );
     }, 750);
+    corrigirOrdem();
   });
 };
 
@@ -375,6 +378,7 @@ const removerCategoria = () => {
     codpranchetacategoria.value = null;
     categoria.value = null;
     aba.value = null;
+    corrigirOrdem();
   });
 };
 
@@ -404,6 +408,7 @@ const categoriaParaCima = () => {
     categoria.value.ordem = pai.categorias[i - 1].ordem;
     pai.categorias[i - 1].ordem = ordemAntiga;
   }
+  corrigirOrdem();
 };
 
 const categoriaParaBaixo = () => {
@@ -432,6 +437,7 @@ const categoriaParaBaixo = () => {
     categoria.value.ordem = pai.categorias[i + 1].ordem;
     pai.categorias[i + 1].ordem = ordemAntiga;
   }
+  corrigirOrdem();
 };
 
 const removerProduto = () => {
@@ -451,6 +457,7 @@ const removerProduto = () => {
     produto.value = null;
     aba.value = null;
   });
+  corrigirOrdem();
 };
 
 const produtoParaCima = () => {
@@ -467,6 +474,7 @@ const produtoParaCima = () => {
   const ordemAntiga = produto.value.ordem;
   produto.value.ordem = pai.produtos[i - 1].ordem;
   pai.produtos[i - 1].ordem = ordemAntiga;
+  corrigirOrdem();
 };
 
 const produtoParaBaixo = () => {
@@ -483,6 +491,37 @@ const produtoParaBaixo = () => {
   const ordemAntiga = produto.value.ordem;
   produto.value.ordem = pai.produtos[i + 1].ordem;
   pai.produtos[i + 1].ordem = ordemAntiga;
+  corrigirOrdem();
+};
+
+const corrigirOrdemCategoria = (cat) => {
+  let ordem = 1;
+  cat.categorias
+    .sort((a, b) => a.ordem - b.ordem)
+    .forEach((cat) => {
+      cat.ordem = ordem;
+      ordem++;
+      corrigirOrdemCategoria(cat);
+    });
+  ordem = 1;
+  cat.produtos
+    .sort((a, b) => a.ordem - b.ordem)
+    .forEach((prd) => {
+      prd.ordem = ordem;
+      ordem++;
+    });
+};
+
+const corrigirOrdem = () => {
+  let ordem = 1;
+  prancheta.value
+    .sort((a, b) => a.ordem - b.ordem)
+    .forEach((cat) => {
+      cat.ordem = ordem;
+      ordem++;
+      corrigirOrdemCategoria(cat);
+    });
+  console.log(prancheta.value);
 };
 
 const linkProduto = (codproduto) => {
@@ -527,6 +566,7 @@ const alterarCategoriaProduto = (codpranchetacategorianova) => {
 
   // sinaliza nova categoria pai
   codpranchetacategoriapai.value = codpranchetacategorianova;
+  corrigirOrdem();
 };
 
 const alterarCategoriaPai = (codpranchetacategorianova) => {
@@ -589,6 +629,7 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
   }
 
   codpranchetacategoriapai.value = codpranchetacategorianova;
+  corrigirOrdem();
 };
 </script>
 <template>
