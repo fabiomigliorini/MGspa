@@ -27,7 +27,7 @@ onMounted(() => {
 });
 
 const carregarPrancheta = async () => {
-  await sSinc.sincronizarPrancheta();
+  await sSinc.sincronizarPrancheta(true);
   prancheta.value = await db.prancheta.orderBy("ordem").toArray();
   produto.value = null;
   categoria.value = null;
@@ -62,7 +62,7 @@ const salvar = async () => {
         pdv: sSinc.pdv.uuid,
       };
       const ret = await api.put("/api/v1/pdv/prancheta/", data);
-      await sSinc.sincronizarPrancheta();
+      await sSinc.sincronizarPrancheta(true);
       prancheta.value = await db.prancheta.orderBy("ordem").toArray();
       Notify.create({
         type: "positive",
@@ -589,16 +589,6 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
   }
 
   codpranchetacategoriapai.value = codpranchetacategorianova;
-};
-
-const teste = () => {
-  // let nodes = refTree.value.getNodeByKey();
-  // console.log(nodes);
-
-  // refTree.value.expandAll();
-  let expanded = refTree.value.isExpanded("CAT16");
-  console.log(expanded);
-  refTree.value.setExpanded("CAT16", !expanded);
 };
 </script>
 <template>

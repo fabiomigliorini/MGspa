@@ -513,8 +513,8 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       }
     },
 
-    async sincronizarPrancheta() {
-      if (!this.importacao.rodando) {
+    async sincronizarPrancheta(forcar = false) {
+      if (!this.importacao.rodando && !forcar) {
         return;
       }
 
