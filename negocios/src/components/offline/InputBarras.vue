@@ -156,7 +156,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
   if (txt.length == 11) {
     const prefixo = txt.substring(0, 3);
     const codigo = txt.substring(3, 11);
-    switch (prefixo) {
+    switch (prefixo.toUpperCase()) {
       // Comanda Vendedor (Ex VDD00010022)
       case "VDD":
         informarVendedor(parseInt(codigo));
