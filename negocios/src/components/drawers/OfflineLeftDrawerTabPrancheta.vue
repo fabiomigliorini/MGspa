@@ -64,8 +64,8 @@ const pesquisarCategoria = (cat, textoMinusculo) => {
         .includes(textoMinusculo)
     ) {
       categorias.value.push(subCat);
-      pesquisarCategoria(subCat, textoMinusculo);
     }
+    pesquisarCategoria(subCat, textoMinusculo);
   });
   cat.produtos.forEach((prd) => {
     if (
