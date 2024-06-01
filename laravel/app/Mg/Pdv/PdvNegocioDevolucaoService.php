@@ -182,6 +182,9 @@ class PdvNegocioDevolucaoService
             NotaFiscalService::gerarNotaFiscalDoNegocio($negocio, NotaFiscalService::MODELO_NFE);
         }
 
+        // agenda movimentacao de estoque
+        PdvNegocioService::movimentarEstoque($negocio);
+
         return $negocio;
     }
 }

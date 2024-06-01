@@ -1,15 +1,15 @@
+
 BUG Quando abre venda de outro PDV, está trazendo os itens em ordem inversa ao que foi adicionado no PDV Origina. Os ultimos vem primeiro.
 BUG Quando adiciona dois pagamentos em dinheiro, esta calculando o troco nos dois tblnegocioformapagamento, duplicando o valor total. Exemplo Venda 102,40, Pagamento A de 100,00, Pagamento B de 13,00, Associa Troco de 10,60 nos dois pagamentos
 BUG Mostrar erro quando pessoa não tem endereço ou telefone cadastrado e usuario quiser fazer devolução
-BUG Nos Xerox a listagem de negocios abertos esta ficando enorme - computador fica lento
 
 EM ANDAMENTO
-TODO Bolar uma maneira de sincronizar pessoas novas para pegar cadastro recem feito
 TODO fazer liquidacao de titulo
 TODO Adicionar CODPORTADOR na Manutenção de PDV
 TODO Não deixar Movimentar Dinheiro quando PDV não tiver Portador
 
 IMPORTANTES
+TODO Bolar uma maneira de sincronizar pessoas novas para pegar cadastro recem feito
 TODO Excluir transferencia de entrada quando transferencia de saida for cancelada
 TODO fazer venda de vale compras
 TODO fazer tela de fechamento de caixa
@@ -96,3 +96,5 @@ FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistem
 [X] BUG Pagamento Duplicado Stone (Webhook gravando pagamento no mesmo momento que usuario consulta)
 [X] TODO Deixar nos últimos 10 negócios apenas negócios do PDV
 [X] TODO Vincular NFeTerceiro x Nota Fiscal na Transferencia de Entrada
+[X] BUG Nos Xerox a listagem de negocios abertos esta ficando enorme - computador fica lento
+[X] BUG Nao esta gerando movimento de estoque nas devoluções
