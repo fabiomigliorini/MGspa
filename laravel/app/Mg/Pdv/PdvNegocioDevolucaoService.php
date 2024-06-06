@@ -4,6 +4,7 @@ namespace Mg\Pdv;
 
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioFormaPagamento;
@@ -28,7 +29,7 @@ class PdvNegocioDevolucaoService
 
 
         $negocio = new Negocio();
-        $negocio->codusuario = $negocioOriginal->codusuario;
+        $negocio->codusuario = Auth::user()->codusuario;
         $negocio->codfilial =  $negocioOriginal->codfilial;
         $negocio->codpessoa = $negocioOriginal->Pessoa->codpessoa;
         $negocio->codestoquelocal = $negocioOriginal->codestoquelocal;
