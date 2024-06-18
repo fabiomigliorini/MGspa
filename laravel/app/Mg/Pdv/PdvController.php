@@ -351,6 +351,7 @@ class PdvController
         $data = (object) $request->all();
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($request->codnegocio);
+        PagarMeService::consultarPedidosAbertosPos($data->codpagarmepos);
         PagarMeService::cancelarPedidosAbertosPos($data->codpagarmepos);
         PagarMeService::criarPedido(
             null,

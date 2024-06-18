@@ -293,6 +293,21 @@ class PagarMeService
         return true;
     }
 
+    public static function consultarPedidosAbertosPos(int $codpagarmepos)
+    {
+        $peds = PagarMePedido::where([
+            'codpagarmepos' => $codpagarmepos,
+            'status' => 1,
+        ])->get();
+        foreach ($peds as $ped) {
+            try {
+                static::consultarPedido($ped);
+            } catch (\Exception $e) {
+            }
+        }
+        return true;
+    }    
+
     public static function fecharPedidoSePago(PagarmePedido $ped)
     {
 
