@@ -164,7 +164,7 @@ class EtiquetaService
             inner join tblproduto p on (p.codproduto = t.codproduto)
             left join tblprodutoembalagem pe on (pe.codprodutoembalagem = t.codprodutoembalagem)
             where t.criacao between :datainicial and :datafinal
-            and date_trunc(\'day\', t.criacao) != date_trunc(\'day\', p.criacao)
+            and date_trunc(\'day\', t.criacao) != date_trunc(\'day\', coalesce(p.criacao, \'1980-01-01\'))
             order by p.produto, pe.quantidade nulls first
             ';
         $regs = DB::select($sql, [
