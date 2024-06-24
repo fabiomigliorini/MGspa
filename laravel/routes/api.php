@@ -88,7 +88,6 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/consultar', '\Mg\Titulo\BoletoBb\BoletoBbController@consultar');
     Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/baixar', '\Mg\Titulo\BoletoBb\BoletoBbController@baixar');
     Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf');
-    Route::get('titulo/looker', '\Mg\Titulo\TituloController@looker');
 
     // Stone
     Route::group(['prefix' => 'stone-connect'], function () {
@@ -155,6 +154,9 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('dfe/distribuicao/{coddistribuicaodfe}/xml', '\Mg\Dfe\DfeController@xml');
     Route::get('dfe/distribuicao/{coddistribuicaodfe}/processar', '\Mg\Dfe\DfeController@processar');
     Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
+
+    Route::post('titulo/agrupamento/{codtituloagrupamento}/mail', '\Mg\Titulo\TituloAgrupamentoController@mail');
+
 });
 
 Route::group(['middleware' => ['auth:api', 'cors']], function () {
