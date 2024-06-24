@@ -10,7 +10,7 @@ class TituloAgrupamentoController extends Controller
 
     public function mail(Request $request, $codtituloagrupamento)
     {
-        $dest = $request->destnatario??null;
+        $dest = $request->destinatario??null;
         $ta = TituloAgrupamento::findOrFail($codtituloagrupamento);
         $res = TituloAgrupamentoMailService::mail($ta, $dest);
         return $res;
