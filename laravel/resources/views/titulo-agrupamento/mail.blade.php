@@ -198,9 +198,8 @@ $tits = collect($ta->TituloS->sortBy('vencimento')->sortBy('numero')->all());
         @endif
     </table>
 
-
     <p>
-        Esta <b>mensagem é gerada automaticamente</b> pelo nosso sistema, por favor não responda.
+        Esta <b>mensagem é gerada automaticamente</b> pelo nosso sistema, qualquer dúvida ou erro entre em contato que teremos o maior prazer em lhe atender.
     </p>
 
     <p>

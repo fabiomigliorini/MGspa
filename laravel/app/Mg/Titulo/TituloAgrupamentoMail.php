@@ -68,11 +68,14 @@ class TituloAgrupamentoMail extends Mailable
 
         // Anexa Notas Fiscais
         foreach ($this->nfs as $nf) {
-            $path = NFePHPPathService::pathNFeAutorizada($nf);
+            $path = NFePHPPathService::pathDanfe($nf);
+            if (!file_exists($path)) {
+                NFePHPService::danfe($nf);
+            }            
             if (file_exists($path)) {
                 $this->attach($path);
             }
-            $path = NFePHPPathService::pathDanfe($nf);
+            $path = NFePHPPathService::pathNFeAutorizada($nf);
             if (file_exists($path)) {
                 $this->attach($path);
             }
