@@ -114,7 +114,7 @@ $tits = collect($ta->TituloS->sortBy('vencimento')->sortBy('numero')->all());
                     Original
                 </th>
                 <th>
-                    Principal
+                    Agrupado
                 </th>
                 <th>
                     Multa
