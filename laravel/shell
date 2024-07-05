@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose exec api-mgspa /bin/bash
+docker compose exec api-mgspa /bin/bash

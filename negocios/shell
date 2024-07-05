@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose exec negocios /bin/bash
+docker compose exec negocios /bin/bash
