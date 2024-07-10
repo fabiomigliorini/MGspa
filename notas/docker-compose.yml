@@ -2,6 +2,7 @@ version: '3.7'
 services:
     quasar-notas:
         build: ./
+        restart: unless-stopped
         tty: true
         volumes:
             - /opt/www:/opt/www
