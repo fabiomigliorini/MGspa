@@ -59,6 +59,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio');
         Route::get('negocio/{codnegocio}/vale', '\Mg\Pdv\PdvController@vale');
         Route::get('negocio/{codnegocio}/comanda', '\Mg\Pdv\PdvController@comanda');
+        Route::get('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@show');
     });
 
     // Produto
@@ -185,6 +186,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');
             Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Pdv\PdvController@unificarComanda');
             Route::post('negocio/{codnegocio}/devolucao', '\Mg\Pdv\PdvController@devolucao');
+            Route::post('negocio/{codnegocio}/anexo', '\Mg\Pdv\PdvAnexoController@upload');
+            Route::get('negocio/{codnegocio}/anexo', '\Mg\Pdv\PdvAnexoController@listagem');
+            Route::delete('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@excluir');
             Route::get('orcamento', '\Mg\Pdv\PdvController@getOrcamentos');
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
             Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');

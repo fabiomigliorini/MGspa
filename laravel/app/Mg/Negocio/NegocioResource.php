@@ -7,6 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
+use Mg\Pdv\PdvAnexoService;
 
 class NegocioResource extends Resource
 {
@@ -50,6 +51,7 @@ class NegocioResource extends Resource
             $ret['titulos'] = $ret['titulos']->concat(TituloResource::collection($nfp->TituloS()->orderBy('vencimento')->get()));
         }
         $ret['notas'] = new NegocioNotaFiscalResource($this);
+        $ret['anexos'] = PdvAnexoService::listagem($this->codnegocio);
         return $ret;
     }
 

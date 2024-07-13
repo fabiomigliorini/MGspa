@@ -1087,6 +1087,56 @@ export const negocioStore = defineStore("negocio", {
       }
     },
 
+    async uploadAnexo(pasta, anexoBase64) {
+      try {
+        // asdasd();
+        const ret = await sSinc.uploadAnexo(
+          this.negocio.codnegocio,
+          pasta,
+          anexoBase64
+        );
+        if (!ret) {
+          return false;
+        }
+        Notify.create({
+          type: "positive",
+          message: "Imagem Adicionada!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
+        });
+        this.negocio.anexos = ret.data;
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
+
+    async deleteAnexo(pasta, anexo) {
+      try {
+        // asdasd();
+        const data = await sSinc.deleteAnexo(
+          this.negocio.codnegocio,
+          pasta,
+          anexo
+        );
+        if (!data) {
+          return false;
+        }
+        Notify.create({
+          type: "positive",
+          message: "Anexo Excluído!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
+        });
+        this.negocio.anexos = data;
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
+
     async unificarComanda(codnegociocomanda) {
       if (!this.negocio.sincronizado) {
         Notify.create({

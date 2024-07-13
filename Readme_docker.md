@@ -8,7 +8,7 @@ sudo apt install docker docker-compose docker-compose-v2 docker.io git git-man x
 
 Adicionar o usuario do linux ao grupo do Docker
 ```
-sudo usermod -a -G docker usuario
+sudo usermod -a -G docker super
 ```
 
 Reinicie o computador por causa do Grupo, é mais efetivo do que ficar descobrindo
@@ -29,17 +29,34 @@ Vincular a chave ssh no https://github.com/settings/ssh/new e preencher:
 
 ---
 
-### MGdata
+### MGdb
 
 Inície o container e Importe o banco de dados:
 ```
-cd ~
-mkdir Docker
-cd Docker
+cd /opt/www
 git clone git@github.com:fabiomigliorini/MGdb.git
-cd ~/Docker/MGdb
-./start
-./copiar-base-producao
+./start-prod
+```
+
+Caso queira apagarbanco e criar um novo eliminar a pasta /opt/www/MGdb/.db
+
+```
+rm -rf /opt/www/MGdb/.db
+```
+Alterar Autenticação
+```
+sudo vi /opt/www/MGdb/.db/data/pg_hba.conf
+```
+Trocar
+```
+#host all all all scram-sha-256
+host all all all md5
+```
+
+```
+./stop
+./start-prod
+docker compose exec mgdb su - postgres -c "zcat /tmp/host/BackupMigracaoSaturno.gz | psql"
 ```
 
 Acesse pelo endereço endereço: pgsql://localhost:54320/

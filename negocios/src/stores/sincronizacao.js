@@ -784,5 +784,55 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         return null;
       }
     },
+
+    async uploadAnexo(codnegocio, pasta, anexoBase64) {
+      try {
+        const ret = await api.post(
+          "/api/v1/pdv/negocio/" + codnegocio + "/anexo",
+          {
+            pdv: this.pdv.uuid,
+            pasta: pasta,
+            anexoBase64: anexoBase64,
+          }
+        );
+        return ret;
+      } catch (error) {
+        console.log(error);
+        let message = error.message;
+        if (error.response) {
+          message = error.response.data.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async deleteAnexo(codnegocio, pasta, anexo) {
+      try {
+        const { data } = await api.delete(
+          "/api/v1/pdv/negocio/" + codnegocio + "/anexo/" + pasta + "/" + anexo,
+          {
+            params: {
+              pdv: this.pdv.uuid,
+            },
+          }
+        );
+        return data;
+      } catch (error) {
+        console.log(error);
+        Notify.create({
+          type: "negative",
+          message: error.response.data.message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
   },
 });

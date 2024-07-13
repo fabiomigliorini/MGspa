@@ -10,6 +10,7 @@ import ListagemProdutos from "components/offline/ListagemProdutos.vue";
 import InputBarras from "components/offline/InputBarras.vue";
 import ListagemTitulos from "components/offline/ListagemTitulos.vue";
 import ListagemNotas from "components/offline/ListagemNotas.vue";
+import ListagemAnexos from "components/offline/ListagemAnexos.vue";
 import { api } from "boot/axios";
 import { Dialog, Notify, debounce } from "quasar";
 import { db } from "boot/db";
@@ -560,20 +561,49 @@ onUnmounted(() => {
 <template>
   <q-page v-if="sNegocio.negocio">
     <div class="q-pa-md q-col-gutter-md">
+      <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
+        Notas, Títulos e Documentos anexos
+        <q-btn
+          flat
+          color="primary"
+          @click="listagemNotasRef.nova(65)"
+          icon="mdi-script-text-outline"
+          size="md"
+          dense
+        >
+          <q-tooltip class="bg-accent">Nova NFCe (Cupom)</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          color="primary"
+          @click="listagemNotasRef.nova(55)"
+          icon="mdi-file-document-outline"
+          size="md"
+          dense
+        >
+          <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
+        </q-btn>
+      </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
-      <listagem-notas ref="listagemNotasRef" />
+      <div
+        class="row q-col-gutter-md q-px-md"
+        v-if="
+          sNegocio.negocio.codnegociostatus == 2 ||
+          sNegocio.negocio.codnegociostatus == 3
+        "
+      >
+        <listagem-notas ref="listagemNotasRef" />
+        <listagem-titulos />
+        <listagem-anexos v-if="sNegocio.negocio.anexos" />
+      </div>
+
       <listagem-produtos />
-      <listagem-titulos />
     </div>
     <div style="padding-bottom: 75px"></div>
 
     <!-- ROMANEIO -->
     <q-dialog v-model="dialogRomaneio" full-height>
       <q-card style="height: 100%">
-        <!-- <q-card-section>
-          <div class="text-h6">Romaneio</div>
-        </q-card-section> -->
-
         <q-card-section style="height: 91%" class="q-pb-none">
           <iframe
             style="width: 100%; height: 100%; border: none"
