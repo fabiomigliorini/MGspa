@@ -195,8 +195,7 @@ class PdvNegocioService
                 throw new Exception("O valor dos Pagamentos ({$valorPagamentos}) é inferior ao Total ({$valorTotal})!", 1);
             }
 
-            // valida total à prazo
-            if ($valorPagamentosPrazo > $negocio->valortotal) {
+            if (($negocio->valortotal - $valorPagamentos) <= -0.01) {
                 $valorPagamentos = formataNumero($valorPagamentosPrazo, 2);
                 $valorTotal = formataNumero($negocio->valortotal, 2);
                 throw new Exception("O valor à prazo ({$valorPagamentos}) é superior ao Total ({$valorTotal})!", 1);
