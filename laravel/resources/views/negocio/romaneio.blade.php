@@ -248,7 +248,10 @@
                     {{ $negocio->lancamento->format('d/m/Y') }}.
                 </p>
                 <div style="font-size: larger; margin-top: 2cm; border-top: 1px solid black">
-                    {{ $negocio->Pessoa->pessoa }} <br>
+                    {{ $negocio->Pessoa->fantasia }} <br>
+                    @if ($negocio->Pessoa->pessoa != $negocio->Pessoa->fantasia)
+                        {{ $negocio->Pessoa->pessoa }} <br>
+                    @endif
                     @if ($negocio->Pessoa->fisica)
                         CPF
                     @else
