@@ -385,6 +385,25 @@ class PdvController
         return new PagarMePedidoResource($pedido);
     }
 
+    public function importarPagarMePedidosPendentes(request $request)
+    {
+        $peds = PagarMeService::importarPendentes();
+        $peds = PagarMePedido::where('status', PagarMeService::STATUS_NUMBER['pending'])
+            ->orderBy('criacao', 'desc')
+            ->orderBy('codpagarmepedido', 'desc')
+            ->get();
+        return PagarMePedidoResource::collection($peds);
+    }
+
+    public function pagarMePedidosPendentes(request $request)
+    {
+        $peds = PagarMePedido::where('status', PagarMeService::STATUS_NUMBER['pending'])
+            ->orderBy('criacao', 'desc')
+            ->orderBy('codpagarmepedido', 'desc')
+            ->get();
+        return PagarMePedidoResource::collection($peds);
+    }
+
     public function  notaFiscal(PdvRequest $request, $codnegocio)
     {
         PdvService::autoriza($request->pdv);

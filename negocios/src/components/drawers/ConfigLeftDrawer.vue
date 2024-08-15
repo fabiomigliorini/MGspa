@@ -28,6 +28,27 @@
   <q-item
     clickable
     tag="a"
+    :to="'/config/pagar-me/'"
+    v-ripple
+    exact-active-class="bg-blue-1"
+  >
+    <q-item-section avatar>
+      <q-avatar
+        icon="mdi-monitor-multiple"
+        color="primary"
+        text-color="white"
+      />
+    </q-item-section>
+    <q-item-section>
+      <q-item-label class="ellipsis">PagarMe</q-item-label>
+    </q-item-section>
+  </q-item>
+  <q-separator />
+
+  <!-- Listagem PDV -->
+  <q-item
+    clickable
+    tag="a"
     :to="'/config/pdv/'"
     v-ripple
     exact-active-class="bg-blue-1"

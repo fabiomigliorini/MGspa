@@ -11,13 +11,6 @@ const sPdv = pdvStore();
 const model = ref({});
 const dialogEditarPdv = ref(false);
 
-const openStreetMapUrl = (pdv) => {
-  if (!pdv.longitude) {
-    return "";
-  }
-  return `http://www.openstreetmap.org/export/embed.html?bbox=${pdv.longitude},${pdv.latitude},${pdv.longitude},${pdv.latitude}&layers=ND`;
-};
-
 const googleMapsUrl = (pdv) => {
   return `http://maps.google.com/maps?q=${pdv.latitude},${pdv.longitude}`;
 };
@@ -51,24 +44,13 @@ onMounted(() => {
       <template v-for="pdv in sPdv.dispositivos" :key="pdv.codpdv">
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
           <q-card class="my-card" flat bordered>
-            <iframe
-              width="100%"
-              height="200"
-              frameborder="0"
-              scrolling="no"
-              marginheight="0"
-              marginwidth="0"
-              :src="openStreetMapUrl(pdv)"
-            >
-            </iframe>
-
             <q-card-section>
               <q-btn
                 fab
                 color="primary"
                 icon="place"
                 class="absolute"
-                style="top: 0; right: 12px; transform: translateY(-50%)"
+                style="top: 0; right: 12px; transform: translateY(15%)"
                 :href="googleMapsUrl(pdv)"
                 target="_blank"
                 :disable="!pdv.latitude"

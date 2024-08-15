@@ -306,7 +306,7 @@ class PagarMeService
             }
         }
         return true;
-    }    
+    }
 
     public static function fecharPedidoSePago(PagarmePedido $ped)
     {
@@ -566,9 +566,82 @@ class PagarMeService
         $ped->status = static::STATUS_NUMBER[$api->response->status];
         $ped->save();
 
+        // se está pago, fecha o pedido
+        static::fecharPedidoSePago($ped);
+
         // cria forma de pagamento e atrela ao negocio
         static::vincularNegocioFormaPagamento($ped);
 
         return $ped->fresh();
+    }
+
+    public static function importarPendentes()
+    {
+        $filiais = Filial::whereNotNull('pagarmesk')
+            ->whereNull('inativo')
+            ->orderBy('codfilial')
+            ->get();
+        $peds = [];
+        foreach ($filiais as $filial) {
+            $api = new PagarMeApi($filial->pagarmesk);
+            $api->getOrders('pending');
+            foreach ($api->response->data as $ret) {
+                $status = 1;
+                if (isset($ret->status)) {
+                    $status = static::STATUS_NUMBER[$ret->status];
+                }
+                $codnegocio = null;
+                if (isset($ret->items[0]->description)) {
+                    if (substr($ret->items[0]->description, 0, 8) == "Negocio ") {
+                        $codnegocio = @intval(substr($ret->items[0]->description, 8));
+                        if (Negocio::where(['codnegocio' => $codnegocio])->count() == 0) {
+                            $codnegocio = null;
+                        }
+                    }
+                }
+                $codpagarmepos = null;
+                if (isset($ret->poi_payment_settings->devices_serial_number)) {
+                    foreach ($ret->poi_payment_settings->devices_serial_number as $serial) {
+                        $pos = static::buscaOuCriaPos($filial->codfilial, $serial);
+                        $codpagarmepos = $pos->codpagarmepos;
+                    }
+                }
+                $jurosloja = true;
+                if (isset($ret->poi_payment_settings->payment_setup->installment_type)) {
+                    $jurosloja = ($ret->poi_payment_settings->payment_setup->installment_type == 'merchant') ? true : false;
+                }
+                $parcelas = 1;
+                if (isset($ret->poi_payment_settings->payment_setup->installments)) {
+                    $parcelas = $ret->poi_payment_settings->payment_setup->installments;
+                }
+                $tipo = 1;
+                if (isset($ret->poi_payment_settings->payment_setup->type)) {
+                    $tipo = static::TYPE_NUMBER[$ret->poi_payment_settings->payment_setup->type];
+                }
+
+                $ped = static::alteraOuCriaPedido(
+                    $filial->codfilial,
+                    $ret->id,
+                    $status,
+                    $codnegocio,
+                    null,
+                    $codpagarmepos,
+                    null,
+                    null,
+                    $ret->closed,
+                    $jurosloja,
+                    $parcelas,
+                    $tipo,
+                    $ret->amount / 100,
+                    null,
+                    $ret->amount / 100,
+                    null,
+                    null,
+                    null
+                );
+                $peds[] = $ped;
+            }
+        }
+        return $peds;
     }
 }

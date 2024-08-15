@@ -8,12 +8,55 @@ const sNegocio = negocioStore();
 export const pagarMeStore = defineStore("pagarMe", {
   state: () => ({
     pedido: {},
+    pedidosPendentes: {},
     dialog: {
       detalhesPedido: false,
     },
   }),
 
   actions: {
+    async consultarPedidosPendentes() {
+      try {
+        const { data } = await api.get("/api/v1/pdv/pagar-me/pedido/pendentes");
+        this.pedidosPendentes = data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async importarPedidosPendentes() {
+      try {
+        const { data } = await api.patch(
+          "/api/v1/pdv/pagar-me/pedido/pendentes"
+        );
+        this.pedidosPendentes = data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
     async consultarPedido() {
       try {
         const { data } = await api.post(
@@ -75,6 +118,16 @@ export const pagarMeStore = defineStore("pagarMe", {
     },
 
     async atualizarPagarMePedido() {
+      // se nao estiver vinculado com negocio desiste
+      if (!this.pedido.codnegocio) {
+        return;
+      }
+
+      // se nao estiver com negocio aberto desiste
+      if (!sNegocio.negocio) {
+        return;
+      }
+
       // se nao estiver com o mesmo negocio desiste
       if (this.pedido.codnegocio != sNegocio.negocio.codnegocio) {
         return;

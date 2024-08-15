@@ -247,4 +247,29 @@ class PagarMeApi {
 
     }
 
+    public function getOrders ($status = 'pending')
+    {
+        // filtro pelo status
+        $data = [
+            'status' => $status,
+        ];
+
+        // monta URL
+        $url = $this->url . "v5/orders";
+
+        // aborta caso erro no put
+        if (!$this->get($url, $data)) {
+            if (!empty($this->errno)) {
+                throw new \Exception("Error {$this->errno}: {$this->error}");
+            }                
+            if (isset($this->response->message)) {
+                throw new \Exception("Status {$this->status}: {$this->response->message}");
+            }
+            throw new \Exception("Status {$this->status}: {$this->responseText}");
+        }
+
+        return $this->status == 200;
+
+    }
+
 }
