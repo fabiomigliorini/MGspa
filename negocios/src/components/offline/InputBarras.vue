@@ -139,7 +139,7 @@ watch(barras, (newValue, oldValue) => {
   if (isNaN(quant)) {
     return;
   }
-  quantidade.value = quant;
+  quantidade.value = Math.abs(quant);
   barras.value = "";
 });
 
