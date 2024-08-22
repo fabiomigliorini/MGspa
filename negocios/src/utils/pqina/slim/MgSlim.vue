@@ -6,11 +6,14 @@ import { negocioStore } from "stores/negocio";
 const sNegocio = negocioStore();
 var cropper = null;
 
+const emit = defineEmits(["upload"]);
+
 const props = defineProps({
   ratio: {
     type: String,
     default: "free",
   },
+
   pasta: {
     type: String,
     default: "imagem",
@@ -22,11 +25,11 @@ const refSlim = ref(null);
 const inicializar = async () => {
   cropper = new Slim(refSlim.value, {
     ratio: props.ratio,
-    // size: props.size,
+    mimetypes: "image/jpeg,text/plain",
     instantEdit: true,
     uploadBase64: true,
     forceType: "jpeg",
-    label: "!",
+    label: "Clique para adicionar uma imagem!",
     // forceSize: "200.300",
     willSave: function (data, ready) {
       sNegocio
@@ -36,6 +39,7 @@ const inicializar = async () => {
         })
         .finally(() => {
           ready(false);
+          emit("upload");
         });
     },
   });
@@ -49,7 +53,16 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div class="slim" ref="refSlim">
+  <div
+    class="slim"
+    ref="refSlim"
+    style="
+      min-width: 250px;
+      min-height: 300px;
+      max-height: 60vh;
+      border: 1px dashed lightgrey;
+    "
+  >
     <slot></slot>
   </div>
 </template>

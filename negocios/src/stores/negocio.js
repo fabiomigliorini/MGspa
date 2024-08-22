@@ -1100,7 +1100,7 @@ export const negocioStore = defineStore("negocio", {
         }
         Notify.create({
           type: "positive",
-          message: "Imagem Adicionada!",
+          message: "Anexo Adicionado!",
           timeout: 1000, // 1 segundo
           actions: [{ icon: "close", color: "white" }],
         });
