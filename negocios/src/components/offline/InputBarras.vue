@@ -349,6 +349,7 @@ onUnmounted(() => {
     @change="buscarBarras()"
     :prefix="labelQuantidade"
     inputmode="tel"
+    autocomplete="off"
     autofocus
   >
     <template v-slot:append>
