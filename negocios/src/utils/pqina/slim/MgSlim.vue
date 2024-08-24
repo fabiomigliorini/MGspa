@@ -30,7 +30,8 @@ const inicializar = async () => {
     uploadBase64: true,
     forceType: "jpeg",
     label: "Clique para adicionar uma imagem!",
-    // forceSize: "200.300",
+    jpegCompression: 80,
+    // forceSize: "400.800",
     willSave: function (data, ready) {
       sNegocio
         .uploadAnexo(props.pasta, data.output.image)
