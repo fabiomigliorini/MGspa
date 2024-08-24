@@ -137,7 +137,7 @@ onMounted(() => {
                       style: "decimal",
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    }).format(produto.valortotal)
+                    }).format(produto.valorprodutos)
                   }}</b
                 >
               </td>

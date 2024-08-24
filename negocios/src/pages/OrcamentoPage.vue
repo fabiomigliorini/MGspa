@@ -123,8 +123,29 @@ onMounted(async () => {
                   style: "decimal",
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
-                }).format(produto.valortotal)
+                }).format(produto.valorprodutos)
               }}
+              <template v-if="produto.valordesconto">
+                <div>
+                  (-
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "decimal",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(produto.valordesconto)
+                  }})
+                </div>
+                <div>
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "decimal",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(produto.valorprodutos - produto.valordesconto)
+                  }}
+                </div>
+              </template>
             </td>
           </tr>
         </tbody>
