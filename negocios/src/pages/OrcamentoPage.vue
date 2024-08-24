@@ -116,6 +116,32 @@ onMounted(async () => {
                   maximumFractionDigits: 2,
                 }).format(produto.valorunitario)
               }}
+              <template
+                v-if="produto.valordesconto > 0 && produto.quantidade > 0"
+              >
+                <div>
+                  (-
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "decimal",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(produto.valordesconto / produto.quantidade)
+                  }})
+                </div>
+                <div>
+                  {{
+                    new Intl.NumberFormat("pt-BR", {
+                      style: "decimal",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }).format(
+                      (produto.valorprodutos - produto.valordesconto) /
+                        produto.quantidade
+                    )
+                  }}
+                </div>
+              </template>
             </td>
             <td class="valor text-right">
               {{
