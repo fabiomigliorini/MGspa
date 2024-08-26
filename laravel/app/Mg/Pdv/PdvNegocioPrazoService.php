@@ -94,6 +94,12 @@ class PdvNegocioPrazoService
             $total = 0;
             $parcelas = ($nfp->parcelas > 0) ? $nfp->parcelas : 1;
 
+            // data atual para calcular vencimentos
+            $dataInicial = Carbon::now();
+            if ($nfp->FormaPagamento->fechamento) {
+                $dataInicial->addDays(5)->startOfMonth();
+            }
+
             // faz um looping para gerar duplicatas
             for ($i = 1; $i <= $parcelas; $i++) {
 
@@ -109,11 +115,11 @@ class PdvNegocioPrazoService
 
                 // calcula data de vencimento
                 if ($nfp->FormaPagamento->fechamento) {
-                    $vencimento = Carbon::now()->addMonths($i)->addDays(7)->endOfMonth();
+                    $vencimento = (clone $dataInicial)->addMonths($i)->endOfMonth();
                 } elseif ($nfp->FormaPagamento->diasentreparcelas == 30) {
-                    $vencimento = Carbon::now()->addMonths($i);
+                    $vencimento = (clone $dataInicial)->addMonths($i);
                 } else {
-                    $vencimento = Carbon::now()->addDays($nfp->FormaPagamento->diasentreparcelas * $i);
+                    $vencimento = (clone $dataInicial)->addDays($nfp->FormaPagamento->diasentreparcelas * $i);
                 }
 
                 // calcula o tipo de titulo
