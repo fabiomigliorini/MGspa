@@ -130,7 +130,7 @@
                 <input-filtered outlined v-model="model.fantasia" label="Fantasia" :rules="[
                   (val) =>
                     (val && val.length >= 3) || 'Nome Fantasia deve ter no mínimo 3 letras!',
-                ]" autofocus style="max-width: 350px" maxlength="50" />
+                ]" autofocus style="max-width: 350px" maxlength="50" @focus="fantasiaFocus" @update:model-value="preencherRazaoSeVazia" />
 
                 <input-filtered outlined v-model="model.pessoa" label="Razão Social" :rules="[
                   (val) =>
@@ -178,6 +178,21 @@ export default {
   },
 
   methods: {
+    fantasiaFocus(evt) {
+      if (this.model.pessoa == this.model.fantasia) {
+        this.razaoVazia = true;
+        return;
+      }
+      this.razaoVazia = (this.model.pessoa)?false:true;
+    },
+
+    preencherRazaoSeVazia(value) {
+      if (!this.razaoVazia) {
+        return
+      }
+      this.model.pessoa = value;
+    },
+
     validaObrigatorio(value) {
       if (!value) {
         return "Preenchimento Obrigatório!";
@@ -418,6 +433,7 @@ export default {
       fornecedor: false,
       cliente: true,
     });
+    const razaoVazia = ref(false);
     const cadastrosEncontrados = ref([]);
     const sefazCadastro = ref([]);
     const receitaWsCadastro = ref([]);
@@ -428,6 +444,7 @@ export default {
       router,
       user,
       model,
+      razaoVazia,
       sPessoa,
       sefazCadastro,
       cadastrosEncontrados,

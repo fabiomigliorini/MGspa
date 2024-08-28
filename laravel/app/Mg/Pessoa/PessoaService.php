@@ -305,29 +305,31 @@ class PessoaService
 
         if ($data['receitaWs']) {
             $rec = $data['receitaWs'];
-            if ($rec['abertura']) {
+            if (isset($rec['abertura'])) {
                 $pessoa->nascimento = Carbon::createFromFormat('d/m/Y', $rec['abertura']);
                 $pessoa->save();
             }
-            $cidade = CidadeService::buscaPeloNomeUf($rec['municipio'], $rec['uf']);
-            if ($cidade) {
-                $end = PessoaEnderecoService::create([
-                    'codpessoa' => $pessoa->codpessoa,
-                    'cep' => numeroLimpo($rec['cep'] ?? '00000000'),
-                    'endereco' => substr($rec['logradouro'] ?? 'Nao Informado', 0, 100),
-                    'numero' => substr($rec['numero'] ?? 'S/N', 0, 10),
-                    'complemento' => substr($rec['complemento'] ?? null, 0, 50),
-                    'bairro' => substr($rec['bairro'] ?? 'Nao Informado', 0, 50),
-                    'codcidade' => $cidade->codcidade,
-                ]);
+            if (isset($rec['municipio'])) {
+                $cidade = CidadeService::buscaPeloNomeUf($rec['municipio'], $rec['uf']);
+                if ($cidade) {
+                    $end = PessoaEnderecoService::create([
+                        'codpessoa' => $pessoa->codpessoa,
+                        'cep' => numeroLimpo($rec['cep'] ?? '00000000'),
+                        'endereco' => substr($rec['logradouro'] ?? 'Nao Informado', 0, 100),
+                        'numero' => substr($rec['numero'] ?? 'S/N', 0, 10),
+                        'complemento' => substr($rec['complemento'] ?? null, 0, 50),
+                        'bairro' => substr($rec['bairro'] ?? 'Nao Informado', 0, 50),
+                        'codcidade' => $cidade->codcidade,
+                    ]);
+                }    
             }
-            if ($rec['email']) {
+            if (isset($rec['email'])) {
                 PessoaEmailService::createOrUpdate([
                     'codpessoa' => $pessoa->codpessoa,
                     'email' => $rec['email'],
                 ]);
             }
-            if ($rec['telefone']) {
+            if (isset($rec['telefone'])) {
                 // Telefone (Pode retornar string com vario separado por /)
                 // Ex. "(66) 3532-7678 / (66) 99999-9999"
                 $strtel = $rec['telefone'];
