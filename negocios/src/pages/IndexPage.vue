@@ -11,6 +11,7 @@ import InputBarras from "components/offline/InputBarras.vue";
 import ListagemTitulos from "components/offline/ListagemTitulos.vue";
 import ListagemNotas from "components/offline/ListagemNotas.vue";
 import ListagemAnexos from "components/offline/ListagemAnexos.vue";
+import DeliveryButton from "components/buttons/DeliveryButton.vue";
 import { api } from "boot/axios";
 import { Dialog, Notify, debounce } from "quasar";
 import { db } from "boot/db";
@@ -561,8 +562,10 @@ onUnmounted(() => {
 <template>
   <q-page v-if="sNegocio.negocio">
     <div class="q-pa-md q-col-gutter-md">
-      <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
-        Notas, Títulos e Documentos anexos
+      <q-item-label class="row items-center" header v-if="sNegocio.negocio.codnegociostatus == 2">
+        <div class="q-mr-sm">
+          Notas, Títulos e Documentos anexos
+        </div>
         <q-btn
           flat
           color="primary"
@@ -583,6 +586,7 @@ onUnmounted(() => {
         >
           <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
         </q-btn>
+        <DeliveryButton class="q-ml-auto" />
       </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
       <div
