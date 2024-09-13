@@ -30,7 +30,7 @@ const inicializar = async () => {
     uploadBase64: true,
     forceType: "jpeg",
     label: "Clique para adicionar uma imagem!",
-    jpegCompression: 80,
+    jpegCompression: 30,
     // forceSize: "400.800",
     willSave: function (data, ready) {
       sNegocio
