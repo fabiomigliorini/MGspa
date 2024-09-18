@@ -180,11 +180,12 @@
         @endif
 
         <!-- TOTAL -->
-        <b>Total R$ {{ formataNumero($negocio->valortotal, 2) }}</b>
+        <div style="margin-top: 5px; margin-bottom: 5px; font-size: 12pt; background: black; color: white; padding: 5px">
+            <b>Total R$ {{ formataNumero($negocio->valortotal, 2) }}</b>
+        </div>
 
         <!-- PAGAMENTOS -->
         @foreach ($negocio->NegocioFormaPagamentoS as $pag)
-            <br>
 
             <!-- JUROS -->
             @if (!empty($pag->valorjuros))
@@ -203,6 +204,9 @@
                 Troco
                 R$ {{ formataNumero($pag->valortroco, 2) }}
             @endif
+            
+            <br>
+
         @endforeach
 
     </div>
