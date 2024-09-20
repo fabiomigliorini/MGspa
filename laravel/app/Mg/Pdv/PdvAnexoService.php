@@ -93,7 +93,7 @@ class PdvAnexoService
 
         // deixa em preto e branco
         imagefilter($anexo, IMG_FILTER_GRAYSCALE);
-        imagefilter($anexo, IMG_FILTER_BRIGHTNESS, 5);
+        imagefilter($anexo, IMG_FILTER_BRIGHTNESS, 0);
         imagefilter($anexo, IMG_FILTER_CONTRAST, -100);
 
         // redimensiona
