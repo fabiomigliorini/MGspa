@@ -583,17 +583,15 @@ class NFePHPMakeService
                         $std->pIPI = number_format($nfpb->ipipercentual, 2, '.', '');
                         $nfe->tagIPI($std);
 
+                    } 
+
                     // Devolucao de IPI
-                    } else if (!empty($nfpb->ipidevolucaovalor)) {
+                    if (!empty($nfpb->ipidevolucaovalor)) {
                         $std = new stdClass();
-                        $std->item = $nItem;
-                        $std->cEnq = 999; //Outros
-                        $std->CST = str_pad($nfpb->ipicst, 2, '0', STR_PAD_LEFT);
+                        $std->item = $nItem; //item da NFe
+                        $std->pDevol = number_format($nfpb->devolucaopercentual, 2, '.', '');
                         $std->vIPIDevol = number_format($nfpb->ipidevolucaovalor, 2, '.', '');
-                        $std->vIPI = number_format($nfpb->ipivalor, 2, '.', '');
-                        $std->vBC = number_format($nfpb->ipibase, 2, '.', '');
-                        $std->pIPI = number_format($nfpb->ipipercentual, 2, '.', '');
-                        $nfe->tagIPI($std);
+                        $nfe->tagimpostoDevol($std);
                     }                    
                     break;
 

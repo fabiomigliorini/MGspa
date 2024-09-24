@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2024 18:01:41
+ * Date: 24/Sep/2024 18:26:23
  */
 
 namespace Mg\NotaFiscal;
@@ -37,6 +37,7 @@ class NotaFiscalProdutoBarra extends MgModel
         'csllvalor',
         'csosn',
         'descricaoalternativa',
+        'devolucaopercentual',
         'fethabkg',
         'fethabvalor',
         'funruralpercentual',
@@ -99,6 +100,7 @@ class NotaFiscalProdutoBarra extends MgModel
         'csllbase' => 'float',
         'csllpercentual' => 'float',
         'csllvalor' => 'float',
+        'devolucaopercentual' => 'float',
         'fethabkg' => 'float',
         'fethabvalor' => 'float',
         'funruralpercentual' => 'float',
