@@ -582,7 +582,19 @@ class NFePHPMakeService
                         $std->vBC = number_format($nfpb->ipibase, 2, '.', '');
                         $std->pIPI = number_format($nfpb->ipipercentual, 2, '.', '');
                         $nfe->tagIPI($std);
-                    }
+
+                    // Devolucao de IPI
+                    } else if (!empty($nfpb->ipidevolucaovalor)) {
+                        $std = new stdClass();
+                        $std->item = $nItem;
+                        $std->cEnq = 999; //Outros
+                        $std->CST = str_pad($nfpb->ipicst, 2, '0', STR_PAD_LEFT);
+                        $std->vIPIDevol = number_format($nfpb->ipidevolucaovalor, 2, '.', '');
+                        $std->vIPI = number_format($nfpb->ipivalor, 2, '.', '');
+                        $std->vBC = number_format($nfpb->ipibase, 2, '.', '');
+                        $std->pIPI = number_format($nfpb->ipipercentual, 2, '.', '');
+                        $nfe->tagIPI($std);
+                    }                    
                     break;
 
                 default: // SIMPLES
@@ -655,6 +667,7 @@ class NFePHPMakeService
         $std->vDesc = number_format($nf->valordesconto, 2, '.', '');
         // $std->vII = 0.00;
         $std->vIPI = number_format($nf->ipivalor, 2, '.', '');
+        $std->vIPIDevol = number_format($nf->ipidevolucaovalor, 2, '.', '');
         $std->vPIS = number_format($totalPis, 2, '.', '');
         $std->vCOFINS = number_format($totalCofins, 2, '.', '');
         $std->vOutro = number_format($nf->valoroutras, 2, '.', '');

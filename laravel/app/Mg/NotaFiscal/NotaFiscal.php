@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Jan/2024 14:52:06
+ * Date: 24/Sep/2024 18:01:33
  */
 
 namespace Mg\NotaFiscal;
@@ -47,6 +47,7 @@ class NotaFiscal extends MgModel
         'icmsstvalor',
         'icmsvalor',
         'ipibase',
+        'ipidevolucaovalor',
         'ipivalor',
         'justificativa',
         'modelo',
@@ -110,6 +111,7 @@ class NotaFiscal extends MgModel
         'icmsstvalor' => 'float',
         'icmsvalor' => 'float',
         'ipibase' => 'float',
+        'ipidevolucaovalor' => 'float',
         'ipivalor' => 'float',
         'modelo' => 'integer',
         'nfeimpressa' => 'boolean',

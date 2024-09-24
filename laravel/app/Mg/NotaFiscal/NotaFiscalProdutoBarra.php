@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Jan/2024 14:45:06
+ * Date: 24/Sep/2024 18:01:41
  */
 
 namespace Mg\NotaFiscal;
 
 use Mg\MgModel;
 use Mg\Estoque\EstoqueMovimento;
+use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\NaturezaOperacao\Cfop;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NotaFiscal\NotaFiscal;
@@ -52,6 +53,7 @@ class NotaFiscalProdutoBarra extends MgModel
         'icmsvalor',
         'ipibase',
         'ipicst',
+        'ipidevolucaovalor',
         'ipipercentual',
         'ipivalor',
         'irpjbase',
@@ -113,6 +115,7 @@ class NotaFiscalProdutoBarra extends MgModel
         'icmsvalor' => 'float',
         'ipibase' => 'float',
         'ipicst' => 'float',
+        'ipidevolucaovalor' => 'float',
         'ipipercentual' => 'float',
         'ipivalor' => 'float',
         'irpjbase' => 'float',
