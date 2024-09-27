@@ -18,6 +18,7 @@ class NFePHPValidacaoService
         static::validarPessoaNFe($nf);
         static::validarOffLine($nf);
         static::validarCertidoes($nf);
+        static::validarPagamento($nf);
     }
 
     public static function validarEmitente(NotaFiscal $nf)
@@ -86,4 +87,16 @@ class NFePHPValidacaoService
         }
         return true;
     }
+
+    public static function validarPagamento(NotaFiscal $nf)
+    {
+        $pago = floatval($nf->NotaFiscalPagamentoS()->sum(DB::raw('coalesce(valorpagamento, 0) - coalesce(troco, 0)')));
+        if (($pago - $nf->valortotal) >= 0.01) {
+            $pago = formataNumero($pago);
+            $nota = formataNumero($nf->valortotal);
+            throw new \Exception("Valor dos pagamentos '{$pago}' maior que valor da nota '{$nota}'!");
+        }
+    }
+
+
 }

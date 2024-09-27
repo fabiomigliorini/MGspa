@@ -3603,21 +3603,22 @@
         },
         {
             "name": "nfephp-org/sped-da",
-            "version": "v1.1.5",
+            "version": "v1.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nfephp-org/sped-da.git",
-                "reference": "4cd345b216257bab0a1e4020d619317d4e1ad101"
+                "reference": "93ae550adcf5dd0c43598f27e323a8af84ceba22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nfephp-org/sped-da/zipball/4cd345b216257bab0a1e4020d619317d4e1ad101",
-                "reference": "4cd345b216257bab0a1e4020d619317d4e1ad101",
+                "url": "https://api.github.com/repos/nfephp-org/sped-da/zipball/93ae550adcf5dd0c43598f27e323a8af84ceba22",
+                "reference": "93ae550adcf5dd0c43598f27e323a8af84ceba22",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-gd": "*",
+                "ext-mbstring": "*",
                 "nfephp-org/sped-common": "^5.1.0",
                 "php": ">= 7.4",
                 "tecnickcom/tc-lib-barcode": "^1"
@@ -3673,9 +3674,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nfephp-org/sped-da/issues",
-                "source": "https://github.com/nfephp-org/sped-da/tree/v1.1.5"
+                "source": "https://github.com/nfephp-org/sped-da/tree/v1.1.6"
             },
-            "time": "2022-12-27T12:04:57+00:00"
+            "time": "2024-05-07T19:32:22+00:00"
         },
         {
             "name": "nfephp-org/sped-gtin",
@@ -10891,5 +10892,5 @@
         "php": "^7.3|^8.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
