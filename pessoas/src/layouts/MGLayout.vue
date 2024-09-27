@@ -1,3 +1,44 @@
+<script setup>
+
+import { ref, defineProps } from 'vue'
+import { Dialog } from 'quasar';
+import { version } from "../../package.json";
+import MgMenu from 'layouts/MGMenu.vue';
+
+const leftDrawerOpen = ref(false)
+const user = ref(localStorage.getItem('usuario'))
+
+defineProps({
+  drawer: {
+    type: Boolean,
+    default: false
+  },
+  backButton: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const deslogar = async () => {
+  Dialog.create({
+    title: 'Sair da conta',
+    message: 'Tem certeza que deseja sair?',
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('usuario')
+    window.location = process.env.LOGOUT_URL
+  })
+}
+
+const toggleLeftDrawer = () => {
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+
+</script>
+
 <template>
   <q-layout view="Hhh lpR fff">
     <q-header reveal elevated class="bg-yellow text-blue-grey">
@@ -17,7 +58,7 @@
         <mg-menu></mg-menu>
 
         <!-- Usuario logout -->
-        <q-btn-dropdown flat color="blue-grey" icon="person" :label="user">
+        <q-btn-dropdown flat dense color="blue-grey" icon="person" :label="user">
           <div class="row no-wrap q-pa-md justify-center">
 
             <div class="column items-center">
@@ -28,7 +69,7 @@
 
               <q-btn color="primary" :to="'/perfil'" class="q-mb-md" label="Perfil" push size="sm" v-close-popup />
 
-              <q-btn color="primary" label="Sair" push size="sm" v-close-popup @click="Deslogar" />
+              <q-btn color="primary" label="Sair" push size="sm" v-close-popup @click="deslogar()" />
             </div>
           </div>
         </q-btn-dropdown>
@@ -46,66 +87,11 @@
     </q-page-container>
     <q-footer elevated reveal class="bg-grey-8 text-white">
       <div class="q-ma-xs text-weight-light text-center">
-        MGpwa - &copy; MG Papelaria
+        Pessoas | MG Papelaria &copy; | v{{ version }}
       </div>
     </q-footer>
   </q-layout>
 </template>
-
-<script>
-
-import { defineComponent, ref, defineAsyncComponent } from 'vue'
-import { useQuasar } from 'quasar'
-import { useRouter } from 'vue-router'
-
-export default defineComponent({
-  name: 'MGLayout',
-
-  components: {
-    MgMenu: defineAsyncComponent(() => import('layouts/MGMenu.vue'))
-  },
-  props: {
-    drawer: {
-      type: Boolean,
-      default: false
-    },
-    backButton: {
-      type: Boolean,
-      default: false
-    }
-  },
-
-  setup() {
-    const leftDrawerOpen = ref(false)
-    const $q = useQuasar()
-    const router = useRouter()
-    const user = ref(localStorage.getItem('usuario'))
-
-    const Deslogar = async () => {
-      $q.dialog({
-        title: 'Sair da conta',
-        message: 'Tem certeza que deseja sair?',
-        cancel: true,
-        persistent: true
-      }).onOk(async () => {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('usuario')
-        window.location = process.env.LOGOUT_URL
-        // router.replace({name: 'login'})
-      })
-    }
-
-    return {
-      user,
-      leftDrawerOpen,
-      toggleLeftDrawer() {
-        leftDrawerOpen.value = !leftDrawerOpen.value
-      },
-      Deslogar
-    }
-  },
-})
-</script>
 
 <style>
 /* FONT AWESOME GENERIC BEAT */

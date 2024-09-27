@@ -10,7 +10,7 @@ const user = guardaToken();
 
 </script>
 <template>
-    <q-btn flat color="blue-grey" icon="apps">
+    <q-btn flat  dense round color="blue-grey" icon="apps" >
 
         <q-menu transition-show="fade" transition-hide="fade" class="bg-blue-grey text-yellow-6 q-pa-xs">
 
