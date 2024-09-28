@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 11/May/2024 16:19:18
+ * Date: 28/Sep/2024 15:11:30
  */
 
 namespace Mg\Produto;
@@ -49,6 +49,7 @@ class Produto extends MgModel
         'codtipoproduto',
         'codtributacao',
         'codunidademedida',
+        'comissao',
         'conferenciaperiodica',
         'descricaosite',
         'estoque',
@@ -97,6 +98,7 @@ class Produto extends MgModel
         'codunidademedida' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'comissao' => 'integer',
         'conferenciaperiodica' => 'boolean',
         'estoque' => 'boolean',
         'importado' => 'boolean',

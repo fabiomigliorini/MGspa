@@ -2919,8 +2919,25 @@
         "namespace": "Mg\\Meta",
         "classe": "Meta",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Meta\/Meta.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblmetafilial.codmeta": {
+                "tabela": "tblmetafilial",
+                "coluna": "codmeta",
+                "metodo": "MetaFilialS"
+            }
+        }
     },
     "tblmetafilialpessoa": {
         "tabela": "tblmetafilialpessoa",

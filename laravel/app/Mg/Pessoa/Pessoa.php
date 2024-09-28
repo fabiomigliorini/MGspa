@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Apr/2024 18:42:25
+ * Date: 28/Sep/2024 15:11:25
  */
 
 namespace Mg\Pessoa;
@@ -77,6 +77,7 @@ class Pessoa extends MgModel
         'codgrupocliente',
         'codgrupoeconomico',
         'codsexo',
+        'comissao',
         'complemento',
         'complementocobranca',
         'conjuge',
@@ -145,6 +146,7 @@ class Pessoa extends MgModel
         'codsexo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'comissao' => 'integer',
         'consumidor' => 'boolean',
         'credito' => 'float',
         'creditobloqueado' => 'boolean',
