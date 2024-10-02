@@ -35,6 +35,14 @@ const user = guardaToken();
                     </q-btn>
                 </q-item>
 
+                <q-separator inset color="yelllow-6" />
+                <q-item class="q-px-sm">
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" to="/metas">
+                        <q-icon name="trending_up" size="35px" />
+                        <div>Metas</div>
+                    </q-btn>
+                </q-item>
+
                 <template v-if="user.verificaPermissaoUsuario('Administrador')">
                     <q-separator inset color="yelllow-6" />
                     <q-item class="q-px-sm">

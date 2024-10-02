@@ -118,6 +118,11 @@ const routes = [
         name: "comissaocaixas",
         component: () => import("pages/Cargos/ComissaoCaixas.vue"),
       },
+      {
+        path: "/metas/:codmeta?",
+        name: "metas",
+        component: () => import("pages/Metas/Index.vue"),
+      },
     ],
     meta: {
       auth: true,

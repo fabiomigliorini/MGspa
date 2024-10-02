@@ -215,6 +215,11 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');
         });
 
+        // METAS
+        Route::get('meta/', '\Mg\Meta\MetaController@index');
+        Route::get('meta/{codmeta}', '\Mg\Meta\MetaController@show');
+
+
         // Pessoa
         Route::get('pessoa/aniversario-colaboradores', '\Mg\Pessoa\PessoaController@aniversariosColaboradores');
         Route::get('pessoa/', '\Mg\Pessoa\PessoaController@index');

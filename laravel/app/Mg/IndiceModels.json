@@ -956,6 +956,11 @@
                 "tabela": "tblliquidacaotitulo",
                 "coluna": "codpessoacartao",
                 "metodo": "LiquidacaoTituloCartaoS"
+            },
+            "tblmetavendedor.codpessoa": {
+                "tabela": "tblmetavendedor",
+                "coluna": "codpessoa",
+                "metodo": "MetaVendedorS"
             }
         }
     },
@@ -2936,6 +2941,11 @@
                 "tabela": "tblmetafilial",
                 "coluna": "codmeta",
                 "metodo": "MetaFilialS"
+            },
+            "tblmetavendedor.codmeta": {
+                "tabela": "tblmetavendedor",
+                "coluna": "codmeta",
+                "metodo": "MetaVendedorS"
             }
         }
     },
@@ -6196,5 +6206,35 @@
                 "metodo": "PranchetaS"
             }
         }
+    },
+    "tblmetavendedor": {
+        "tabela": "tblmetavendedor",
+        "campocodigo": "codmetavendedor",
+        "namespace": "Mg\\Meta",
+        "classe": "MetaVendedor",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Meta\/MetaVendedor.php",
+        "belongsTo": {
+            "codmeta": {
+                "tabela": "tblmeta",
+                "coluna": "codmeta",
+                "metodo": "Meta"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }
