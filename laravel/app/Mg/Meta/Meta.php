@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Sep/2024 15:08:44
+ * Date: 02/Oct/2024 14:47:07
  */
 
 namespace Mg\Meta;
 
 use Mg\MgModel;
 use Mg\Meta\MetaFilial;
+use Mg\Meta\MetaVendedor;
 use Mg\Usuario\Usuario;
 
 class Meta extends MgModel
@@ -62,6 +63,11 @@ class Meta extends MgModel
     public function MetaFilialS()
     {
         return $this->hasMany(MetaFilial::class, 'codmeta', 'codmeta');
+    }
+
+    public function MetaVendedorS()
+    {
+        return $this->hasMany(MetaVendedor::class, 'codmeta', 'codmeta');
     }
 
 }
