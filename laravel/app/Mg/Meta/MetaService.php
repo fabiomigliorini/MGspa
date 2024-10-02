@@ -22,6 +22,7 @@ class MetaService
             where v.dia between :inicial and :final
             and v.comissaovendedor = 1
             group by v.codfilial, v.filial, v.dia
+            order by v.codfilial, v.filial, v.dia
         ';
         $regs = DB::select($sql, [
             'inicial' => $meta->periodoinicial,
@@ -64,6 +65,7 @@ class MetaService
             where v.dia between :inicial and :final
             and v.comissaovendedor = 2
             group by v.codpessoavendedor, v.vendedor, v.dia
+            order by v.codpessoavendedor, v.vendedor, v.dia
         ';
         $regs = DB::select($sql, [
             'inicial' => $meta->periodoinicial,
