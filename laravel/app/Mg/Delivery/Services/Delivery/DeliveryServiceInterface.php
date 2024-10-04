@@ -4,5 +4,10 @@ namespace Mg\Delivery\Services\Delivery;
 
 interface DeliveryServiceInterface
 {
-    public function requestDelivery(SalesOrder $order): string;
+    /**
+     * @param \Mg\Delivery\Services\Delivery\SalesOrder $order
+     * @return string delivery id
+     */
+    public function request(SalesOrder $order): string;
+    public function cancel(string $id): void;
 }

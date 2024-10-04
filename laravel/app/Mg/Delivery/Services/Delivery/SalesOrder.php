@@ -7,7 +7,7 @@ class SalesOrder
         public Customer $customer,
         public Address $address,
         public string $payment_method,
-        public string $observations,
+        public ?string $observations = null,
     ) {
     }
 }

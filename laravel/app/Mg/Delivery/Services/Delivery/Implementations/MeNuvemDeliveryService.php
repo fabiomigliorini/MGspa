@@ -6,15 +6,18 @@ use Illuminate\Support\Facades\Http;
 use Mg\Delivery\Services\Delivery\DeliveryServiceInterface;
 use Mg\Delivery\Services\Delivery\SalesOrder;
 
+
+// TODO: Criar botão para consultar o estado da entrega do pedido.
+// TODO: Criar cronnn a cada 10 min para atualizar o estado da entrega.
 class MeNuvemDeliveryService implements DeliveryServiceInterface
 {
     const API_BASE = 'https://novopainel.menuvem.com.br/app-api';
 
-    public function requestDelivery(SalesOrder $order): string
+    public function request(SalesOrder $order): string
     {
         $orderCookie = $this->createOrder();
 
-        $this->updateOrder($orderCookie, [
+        $updatedOrder = $this->updateOrder($orderCookie, [
             "nomecompleto" => $order->customer->name,
             "numerocelular" => $order->customer->phone,
             "cidade" => $order->address->city,
@@ -27,9 +30,45 @@ class MeNuvemDeliveryService implements DeliveryServiceInterface
             "complemento" => $order->address->additional_info,
             "metodopagamento_descrito" => $order->payment_method,
             "observacoes" => $order->observations,
+            "codigo_pedido_status" => 3,
+            "tipopedido" => "e",
+            "subtotal" => 57.82,
+            "total" => 57.82
         ]);
 
         return $orderCookie;
+    }
+
+    public function cancel(string $orderCookie): void
+    {
+        $order = $this->getOrder($orderCookie);
+
+        $orderId = $order['pedido']['codigo_pedido'];
+
+        $updatedOrder = Http::withHeaders([
+            'Authorization' => $this->getAuthToken()
+        ])
+            ->post(self::API_BASE . "/pedidos/salvar/$orderId", [
+                "acao" => 4,
+                "codigo_motivo" => null,
+                "observacao_motivo" => "",
+            ])
+            ->json();
+
+        if (!$updatedOrder['status']) {
+            throw new \Exception('Erro ao cancelar pedido!');
+        }
+    }
+
+    private function getOrder(string $orderCookie): array
+    {
+        $order = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->getAuthToken(),
+        ])
+            ->get(self::API_BASE . "/gerenciador/detalhes/$orderCookie")
+            ->json();
+
+        return $order;
     }
 
     private function createOrder(): string
@@ -42,17 +81,14 @@ class MeNuvemDeliveryService implements DeliveryServiceInterface
             ->json('cookie');
     }
 
-    private function updateOrder(string $orderCookie, array $data): bool
+    private function updateOrder(string $orderCookie, array $data): array
     {
         return Http::withHeaders([
             'Authorization' => $this->getAuthToken(),
         ])
             ->post(self::API_BASE . "/gerenciador/$orderCookie/salvar", $data)
-            ->throw()
-            ->ok();
+            ->json();
     }
-
-
 
     /**
      * Retorna o token de autentica o para a API.
@@ -67,6 +103,7 @@ class MeNuvemDeliveryService implements DeliveryServiceInterface
     {
         $token = env('MENUVEM_TOKEN');
 
+        // TODO: Verificar se o token não está expirado.
         if ($token) {
             return $token;
         }

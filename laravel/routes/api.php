@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('v1/auth/user', '\Mg\Usuario\UsuarioController@permissoesUsuarios');
 
 Route::middleware('auth:api')->get('v1/auth/logout', function (Request $request) {
-    $user =  $request->user();
+    $user = $request->user();
     $accessToken = $user->token();
     DB::table('oauth_refresh_tokens')
         ->where('access_token_id', $accessToken->id)
@@ -564,5 +564,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('portador', '\Mg\Portador\PortadorController@index');
         Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
         Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
+
+        // Delivery
+        Route::post('delivery/request', '\Mg\Delivery\Controllers\DeliveryController@request');
+        Route::post('delivery/cancel/{id}', '\Mg\Delivery\Controllers\DeliveryController@cancel');
     });
 });

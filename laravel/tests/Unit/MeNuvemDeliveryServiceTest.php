@@ -17,7 +17,7 @@ class MeNuvemDeliveryServiceTest extends TestCase
     public function testRequestDelivery()
     {
         $data = (object) [
-            'sales_id' => random_int(1, 100),
+            'deal_id' => random_int(1, 100),
             'name' => 'Everton de Souza Andrade',
             'phone' => '(11) 99999-9999',
             'street' => 'Rua das Tamareiras',
