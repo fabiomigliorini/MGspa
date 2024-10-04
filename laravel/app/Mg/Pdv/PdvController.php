@@ -5,6 +5,7 @@ namespace Mg\Pdv;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Mg\Delivery\Services\Delivery\DeliveryServiceInterface;
 use Mg\Negocio\NegocioResource;
 use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
@@ -172,14 +173,16 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-    public function getNegocio(PdvRequest $request, $codnegocio)
+    public function getNegocio(PdvRequest $request, DeliveryServiceInterface $deliveryService, $codnegocio)
     {
         PdvService::autoriza($request->pdv);
+
         if (preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}$/i', $codnegocio)) {
-            $negocio = Negocio::where(['uuid' => $codnegocio])->firstOrFail();
+            $negocio = Negocio::with('deliveries')->where(['uuid' => $codnegocio])->firstOrFail();
         } else {
-            $negocio = Negocio::findOrFail($codnegocio);
+            $negocio = Negocio::with('deliveries')->findOrFail($codnegocio);
         }
+
         return new NegocioResource($negocio);
     }
 
@@ -270,7 +273,7 @@ class PdvController
         $qry = Negocio::where('codnegociostatus', 1)->where('uuid', 'ilike', "{$request->uuid}%");
         $qry->orderBy('lancamento', 'desc')->orderBy('codnegocio', 'desc');
         return NegocioListagemResource::collection($qry->limit(50)->get());
-    }    
+    }
 
     public function fecharNegocio(PdvRequest $request, $codnegocio)
     {
@@ -404,7 +407,7 @@ class PdvController
         return PagarMePedidoResource::collection($peds);
     }
 
-    public function  notaFiscal(PdvRequest $request, $codnegocio)
+    public function notaFiscal(PdvRequest $request, $codnegocio)
     {
         PdvService::autoriza($request->pdv);
         $modelo = intval($request->modelo ?? 65);
@@ -429,7 +432,7 @@ class PdvController
     {
 
         PdvService::autoriza($request->pdv);
-        $pdv =  Pdv::findOrFail($codpdv);
+        $pdv = Pdv::findOrFail($codpdv);
         $data = $request->all();
 
         unset($data['pdv']);

@@ -6,6 +6,7 @@
 
 namespace Mg\Negocio;
 
+use Mg\Delivery\Models\Delivery;
 use Mg\MgModel;
 use Mg\Negocio\NegocioCaixaMercadoria;
 use Mg\Negocio\NegocioFormaPagamento;
@@ -226,4 +227,8 @@ class Negocio extends MgModel
         return $this->hasMany(StonePreTransacao::class, 'codnegocio', 'codnegocio');
     }
 
+    public function deliveries()
+    {
+        return $this->hasMany(Delivery::class, 'deal_id', 'uuid');
+    }
 }
