@@ -586,7 +586,7 @@ onUnmounted(() => {
         >
           <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
         </q-btn>
-        <DeliveryButton class="q-ml-auto" />
+        <DeliveryButton class="q-ml-auto" :deal-id="sNegocio.negocio.uuid" :deliveries="sNegocio.negocio.deliveries" />
       </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
       <div

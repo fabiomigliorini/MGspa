@@ -46,7 +46,7 @@ const { loading, execute: executeSubmit } = useLoading(submit);
 </script>
 
 <template>
-  <q-form class="q-pa-md" ref="form" @submit="executeSubmit">
+  <q-form class="base-form" ref="form" @submit="executeSubmit">
     <slot name="fields" v-bind="{ loading }"></slot>
 
     <slot name="error" v-bind="{ error }">
@@ -55,7 +55,7 @@ const { loading, execute: executeSubmit } = useLoading(submit);
       </div>
     </slot>
 
-    <div class="d-flex justify-between">
+    <div class="d-flex justify-between base-form-actions">
       <slot name="actions" v-bind="{ loading }"> </slot>
     </div>
   </q-form>

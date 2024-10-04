@@ -1,117 +1,85 @@
 <script setup>
-import { reactive, ref } from "vue";
-import { useRequestDelivery } from "src/composables/useRequestDelivery";
-import BaseForm from "../forms/BaseForm.vue";
-import { requiredFormRule } from "src/utils/formRules/requiredFormRule";
-import { useLoading } from "src/composables/useLoading";
+import { computed, ref } from "vue";
 
-const dialog = ref(false);
+import DeliveryDetailsDialog from "../dialogs/DeliveryDetailsDialog.vue";
+import DeliveryRequestDialog from "../dialogs/DeliveryRequestDialog.vue";
+import { DeliveryStatusEnum } from "src/enums/DeliveryStatusEnum";
 
-const { status, request, cancel } = useRequestDelivery();
+const props = defineProps({
+  dealId: {
+    type: String,
+    required: true,
+  },
+  deliveries: {
+    type: Array,
+    default: () => [],
+  },
+});
 
-const { loading: loadingRequest, execute: executeRequest } =
-  useLoading(request);
-const { loading: loadingCancel, execute: executeCancel } = useLoading(cancel);
+const deliveryRequestDialog = ref(false);
+const deliveryDetailsDialog = ref(false);
 
-const submit = async (formData) => {
-  await executeRequest(formData);
-  dialog.value = false;
-};
 
-const fieldsValues = reactive({
-  name: null,
-  phone: null,
-  address: null,
+const deliveryInProgress = computed(() => {
+  return props.deliveries.find((delivery) =>
+  [
+    DeliveryStatusEnum.PENDING.value,
+    DeliveryStatusEnum.IN_TRANSIT.value,
+  ].includes(delivery.status)
+);
+});
+
+const status = computed(() => {
+  if (!deliveryInProgress.value) {
+    return null
+  }
+
+  return DeliveryStatusEnum[deliveryInProgress.value.status]
 });
 </script>
 
 <template>
-  <div>
-    <q-chip
-      v-if="status"
+  <div class="delivery-button">
+    <q-btn
+      v-if="status && status.name !== 'Cancelado'"
+      @click="deliveryDetailsDialog = true"
+      class="text-none"
       :color="status.color"
       :text-color="status.textColor"
       :icon="status.icon"
+      unelevated
+      size="small"
     >
       {{ status.name }}
-    </q-chip>
-    <template v-if="(status && status.name != 'Entregue') || !status">
-      <q-btn
-        v-if="!status || status.name === 'Cancelado'"
-        @click="dialog = true"
-        class="text-none"
-        icon="mdi-truck-delivery-outline"
-        size="md"
-        color="primary"
-        label="Solicitar Entrega"
-        unelevated
-      >
-      </q-btn>
-      <q-btn
-        v-else
-        @click="executeCancel"
-        :loading="loadingCancel"
-        class="text-none"
-        icon="mdi-close"
-        size="md"
-        text-color="red"
-        label="Cancelar Entrega"
-        outline
-        unelevated
-      >
-      </q-btn>
-    </template>
+    </q-btn>
+    <q-btn
+      v-if="!status || status.name === 'Cancelado'"
+      @click="deliveryRequestDialog = true"
+      class="text-none"
+      icon="mdi-truck-delivery-outline"
+      size="md"
+      color="primary"
+      label="Solicitar Entrega"
+      unelevated
+    >
+    </q-btn>
 
-    <q-dialog v-model="dialog">
-      <q-card style="min-width: 350px">
-        <q-card-section class="q-pb-none q-pt-sm">
-          <div class="text-h6">Solicitar Entrega</div>
-        </q-card-section>
-
-        <BaseForm :submit-callback="submit">
-          <template #fields>
-            <q-input
-              v-model="fieldsValues.name"
-              outlined
-              dense
-              label="Nome"
-              :rules="[requiredFormRule()]"
-            />
-            <q-input
-              v-model="fieldsValues.phone"
-              outlined
-              dense
-              label="Telefone"
-              :rules="[requiredFormRule()]"
-            />
-            <q-input
-              v-model="fieldsValues.address"
-              outlined
-              dense
-              label="Endereço"
-              :rules="[requiredFormRule()]"
-            />
-          </template>
-          <template #actions>
-            <q-btn class="text-none" flat label="Cancelar" :disable="loadingRequest" close-popup />
-            <q-btn
-              :loading="loadingRequest"
-              type="submit"
-              class="text-none"
-              color="primary"
-              unelevated
-              label="Solicitar"
-            />
-          </template>
-        </BaseForm>
-      </q-card>
-    </q-dialog>
+    <DeliveryDetailsDialog
+      v-model="deliveryDetailsDialog"
+      v-if="deliveryInProgress"
+      :delivery="deliveryInProgress"
+    />
+    <DeliveryRequestDialog v-model="deliveryRequestDialog" :deal-id="dealId" />
   </div>
 </template>
 
 <style>
-.text-none {
-  text-decoration: none !important;
-  text-transform: none !important;
+.delivery-button .q-btn {
+  padding: 4px 8px;
+}
+
+.delivery-button .q-icon {
+  font-size: 16px;
+  margin-right: 4px;
 }
 </style>
