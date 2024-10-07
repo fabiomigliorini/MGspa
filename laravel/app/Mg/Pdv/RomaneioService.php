@@ -7,11 +7,14 @@ use Mg\Negocio\Negocio;
 
 class RomaneioService
 {
-    public static function pdf(Negocio $negocio)
+    public static function pdf(Negocio $negocio, bool $confissao = true)
     {
+        // pega os anexos em base64
+        $anexos = PdvAnexoService::base64($negocio->codnegocio, true);
+
         // carrega HTML da view
         $dompdf = new Dompdf();
-        $html = view('negocio.romaneio', compact('negocio'))->render();
+        $html = view('negocio.romaneio', compact('negocio', 'anexos', 'confissao'))->render();
         $dompdf->loadHtml($html);
 
         // Bobina 80mm x 297 (altura A4)

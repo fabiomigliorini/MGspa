@@ -126,7 +126,7 @@ class PdvAnexoService
         return $anexo;
     }    
 
-    public static function listagem(int $codnegocio)
+    public static function listagem(int $codnegocio, bool $fullpath = false)
     {
         $dir = static::diretorio($codnegocio);
         $anexos = Storage::disk('negocio-anexo')->allFiles($dir);
@@ -138,7 +138,10 @@ class PdvAnexoService
             'lixeira' => [],
         ];
         foreach ($anexos as $i => $anexo) {
-            list($idx, $anexo) = explode('/', str_replace($dir, '', $anexo));
+            list($idx, $arquivo) = explode('/', str_replace($dir, '', $anexo));
+            if (!$fullpath) {
+                $anexo = $arquivo;
+            } 
             if (!isset($ret[$idx])) {
                 $ret[$idx] = [];
             }
@@ -147,6 +150,21 @@ class PdvAnexoService
         }
         return $ret;
         // return $anexos;
+    }
+
+    public static function base64 (int $codnegocio)
+    {
+        $listagem = static::listagem($codnegocio, true);
+        foreach ($listagem as $pasta => $anexos) {
+            if (!in_array($pasta, ['confissao','imagem'])) {
+                continue;
+            }
+            foreach ($anexos as $i => $anexo) {
+                $base64 = 'data:image/jpeg;base64,' . base64_encode(Storage::disk('negocio-anexo')->get($anexo));
+                $listagem[$pasta][$i] = $base64;
+            }
+        }
+        return $listagem;
     }
 
     public static function excluir(int $codnegocio, string $pasta, string $anexo)

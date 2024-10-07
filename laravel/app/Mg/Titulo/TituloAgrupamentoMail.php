@@ -84,7 +84,7 @@ class TituloAgrupamentoMail extends Mailable
 
         // Anexa Romaneios
         foreach ($this->negs as $neg) {
-            $pdf = RomaneioService::pdf($neg);
+            $pdf = RomaneioService::pdf($neg, false);
             $this->attachData($pdf, "Negocio{$neg->codnegocio}.pdf", [
                 'mime' => 'application/pdf',
             ]);
@@ -94,28 +94,15 @@ class TituloAgrupamentoMail extends Mailable
             foreach ($listagem as $pasta => $anexos) {
                 foreach ($anexos as $anexo) {
                     switch ($pasta) {
-                        case 'lixeira':
-                            break;
-                        case 'confissao':
-                        case 'imagem':
-                            $data = Storage::disk('negocio-anexo')->get("{$dir}/{$pasta}/{$anexo}");
-                            [$largura, $altura] = getimagesizefromstring($data);
-                            $data = base64_encode($data);
-                            $dompdf = new Dompdf();
-                            $dompdf->loadHtml("<img src='data:image/jpeg;base64,{$data}' style='width:100%; height:100%'>");
-                            $dompdf->setPaper([0.0, 0.0, $largura, $altura], 'portrait');
-                            $dompdf->render();
-                            $data = $dompdf->output();
-                            $this->attachData($data, "Negocio{$neg->codnegocio}-Anexo-{$iAnexo}.pdf", [
-                                'mime' => 'application/pdf',
-                            ]);
-                            break;
                         case 'pdf':
                             $data = Storage::disk('negocio-anexo')->get("{$dir}/{$pasta}/{$anexo}");
                             $this->attachData($data, "Negocio{$neg->codnegocio}-Anexo-{$iAnexo}.pdf", [
                                 'mime' => 'application/pdf',
                             ]);
                             break;
+                        case 'lixeira':
+                        case 'confissao':
+                        case 'imagem':
                         default:
                             break;
                     }

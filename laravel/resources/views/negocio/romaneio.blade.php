@@ -216,73 +216,85 @@
         <span style="white-space: pre-line">{{ $negocio->observacoes }}</span>
     @endif
 
+    @foreach ($anexos['confissao'] as $img)
+        <h1 style="page-break-before: always;">Assinatura</h1>
+        <img src="{{ $img }}"  style="width: 100%; ">
+    @endforeach
+
+    @foreach ($anexos['imagem'] as $img)
+        <h1 style="page-break-before: always;">Imagem Anexada</h1>
+        <img src="{{ $img }}"  style="width: 100%; ">
+    @endforeach
+
     <!-- TITULOS -->
-    @foreach ($negocio->NegocioFormaPagamentos as $nfp)
-        @foreach ($nfp->Titulos()->orderBy('vencimento')->get() as $titulo)
-            <!-- CABECALHO VENCIMENTOS -->
-            @if ($loop->first)
-                <h1 style="page-break-before: always;">Confissão de Dívida</h1>
-                <p style="font-size: larger; text-align:justify">
-                    Confesso(amos) e me(nos) constituo(imos) devedor(es)
-                    do(s) valor(es) descrito(s) abaixo, obrigando-me(nos) a pagar em moeda corrente
-                    do pais, conforme os vencimento(s). Declaro(amos) ainda, ter recebido o(s)
-                    serviço(s) e/ou produto(s) descritos no romaneio de conferência
-                    <b>{{ formataCodigo($negocio->codnegocio) }}</b>
-                    sem nada a reclamar.
-                </p>
-            @endif
-            <p style="font-size: larger; text-align:justify">
-                Pagarei em <b>{{ formataData($titulo->vencimento, 'd/m/Y') }}</b>
-                @if (!empty($titulo->debito))
-                    R$ <b>{{ formataNumero($titulo->debito) }}</b>
-                @else
-                    R$ <b>{{ formataNumero($titulo->credito) }}</b>
+    @if ($confissao) 
+        @foreach ($negocio->NegocioFormaPagamentos as $nfp)
+            @foreach ($nfp->Titulos()->orderBy('vencimento')->get() as $titulo)
+                <!-- CABECALHO VENCIMENTOS -->
+                @if ($loop->first)
+                    <h1 style="page-break-before: always;">Confissão de Dívida</h1>
+                    <p style="font-size: larger; text-align:justify">
+                        Confesso(amos) e me(nos) constituo(imos) devedor(es)
+                        do(s) valor(es) descrito(s) abaixo, obrigando-me(nos) a pagar em moeda corrente
+                        do pais, conforme os vencimento(s). Declaro(amos) ainda, ter recebido o(s)
+                        serviço(s) e/ou produto(s) descritos no romaneio de conferência
+                        <b>{{ formataCodigo($negocio->codnegocio) }}</b>
+                        sem nada a reclamar.
+                    </p>
                 @endif
-                <br>
-            </p>
-            @if ($loop->last)
                 <p style="font-size: larger; text-align:justify">
-                    Totalizando
-                    R$ <b>{{ formataNumero($nfp->valorpagamento) }}</b>
-                    ({{ formataValorPorExtenso($nfp->valorpagamento) }})
-                    .
-                </p>
-                <p style="font-size: larger; text-align:justify">
-                    {{ $negocio->Filial->Pessoa->Cidade->cidade }}/{{ $negocio->Filial->Pessoa->Cidade->Estado->sigla }},
-                    {{ $negocio->lancamento->format('d/m/Y') }}.
-                </p>
-                <div style="font-size: larger; margin-top: 2cm; border-top: 1px solid black">
-                    {{ $negocio->Pessoa->fantasia }} <br>
-                    @if ($negocio->Pessoa->pessoa != $negocio->Pessoa->fantasia)
-                        {{ $negocio->Pessoa->pessoa }} <br>
-                    @endif
-                    @if ($negocio->Pessoa->fisica)
-                        CPF
+                    Pagarei em <b>{{ formataData($titulo->vencimento, 'd/m/Y') }}</b>
+                    @if (!empty($titulo->debito))
+                        R$ <b>{{ formataNumero($titulo->debito) }}</b>
                     @else
-                        CNPJ
-                    @endif
-                    {{ formataCnpjCpf($negocio->Pessoa->cnpj, $negocio->Pessoa->fisica) }}
-                    ({{ formataCodigo($negocio->codpessoa) }})
-                </div>
-                <div style="font-size: larger; margin-top: 2cm; border-top: 1px solid black">
-                    Nome Completo Legível
-                </div>
-                <p style="font-size: larger; margin-top: 0.5cm; font-size:">
-                    Negócio <b>{{ formataCodigo($negocio->codnegocio) }}</b>
-                    @if ($negocio->codpessoavendedor)
-                        <br>
-                        Vendedor <b>{{ $negocio->PessoaVendedor->fantasia }}</b>
+                        R$ <b>{{ formataNumero($titulo->credito) }}</b>
                     @endif
                     <br>
-                    Usuário <b>{{ $negocio->Usuario->usuario }}</b>
-                    @if (@$negocio->Pdv->apelido)
-                        <br>
-                        PDV <b>{{ $negocio->Pdv->apelido }}</b>
-                    @endif
                 </p>
-            @endif
+                @if ($loop->last)
+                    <p style="font-size: larger; text-align:justify">
+                        Totalizando
+                        R$ <b>{{ formataNumero($nfp->valorpagamento) }}</b>
+                        ({{ formataValorPorExtenso($nfp->valorpagamento) }})
+                        .
+                    </p>
+                    <p style="font-size: larger; text-align:justify">
+                        {{ $negocio->Filial->Pessoa->Cidade->cidade }}/{{ $negocio->Filial->Pessoa->Cidade->Estado->sigla }},
+                        {{ $negocio->lancamento->format('d/m/Y') }}.
+                    </p>
+                    <div style="font-size: larger; margin-top: 2cm; border-top: 1px solid black">
+                        {{ $negocio->Pessoa->fantasia }} <br>
+                        @if ($negocio->Pessoa->pessoa != $negocio->Pessoa->fantasia)
+                            {{ $negocio->Pessoa->pessoa }} <br>
+                        @endif
+                        @if ($negocio->Pessoa->fisica)
+                            CPF
+                        @else
+                            CNPJ
+                        @endif
+                        {{ formataCnpjCpf($negocio->Pessoa->cnpj, $negocio->Pessoa->fisica) }}
+                        ({{ formataCodigo($negocio->codpessoa) }})
+                    </div>
+                    <div style="font-size: larger; margin-top: 2cm; border-top: 1px solid black">
+                        Nome Completo Legível
+                    </div>
+                    <p style="font-size: larger; margin-top: 0.5cm; font-size:">
+                        Negócio <b>{{ formataCodigo($negocio->codnegocio) }}</b>
+                        @if ($negocio->codpessoavendedor)
+                            <br>
+                            Vendedor <b>{{ $negocio->PessoaVendedor->fantasia }}</b>
+                        @endif
+                        <br>
+                        Usuário <b>{{ $negocio->Usuario->usuario }}</b>
+                        @if (@$negocio->Pdv->apelido)
+                            <br>
+                            PDV <b>{{ $negocio->Pdv->apelido }}</b>
+                        @endif
+                    </p>
+                @endif
+            @endforeach
         @endforeach
-    @endforeach
+    @endif
 
 </body>
 
