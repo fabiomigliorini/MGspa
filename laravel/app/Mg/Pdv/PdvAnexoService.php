@@ -93,13 +93,13 @@ class PdvAnexoService
 
         // deixa em preto e branco
         imagefilter($anexo, IMG_FILTER_GRAYSCALE);
-        imagefilter($anexo, IMG_FILTER_BRIGHTNESS, 10);
-        imagefilter($anexo, IMG_FILTER_CONTRAST, -50);
+        imagefilter($anexo, IMG_FILTER_BRIGHTNESS, -30);
+        imagefilter($anexo, IMG_FILTER_CONTRAST, -30);
 
         // redimensiona
         list($largura, $altura) = getimagesize($anexoBase64);
-        $novaLargura = 400;
-        $novaAltura = 800;
+        $novaLargura = 500;
+        $novaAltura = 1000;
         $anexoRedimensionada = imagecreatetruecolor($novaLargura, $novaAltura);
         imagecopyresized($anexoRedimensionada, $anexo, 0, 0, 0, 0, $novaLargura, $novaAltura, $largura, $altura);
 

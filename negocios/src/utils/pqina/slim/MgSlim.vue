@@ -30,7 +30,7 @@ const inicializar = async () => {
     uploadBase64: true,
     forceType: "jpeg",
     label: "Clique para adicionar uma imagem!",
-    jpegCompression: 30,
+    jpegCompression: 50,
     // forceSize: "400.800",
     willSave: function (data, ready) {
       sNegocio
@@ -54,16 +54,12 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div
-    class="slim"
-    ref="refSlim"
-    style="
+  <div class="slim" ref="refSlim" style="
       min-width: 250px;
       min-height: 300px;
       max-height: 60vh;
       border: 1px dashed lightgrey;
-    "
-  >
+    ">
     <slot></slot>
   </div>
 </template>
