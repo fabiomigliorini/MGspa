@@ -39,7 +39,6 @@ const detalhado = ref([]);
 
 const colunasTabelaNegocios = [
   { name: 'codnegocio', label: '#', field: 'codnegocio', format: val => '#' + String(val).padStart(8, '0'), sortable: true },
-  { name: 'lancamento', label: 'Hora', field: 'lancamento', format: val => moment(val).format('HH:mm'), sortable: true },
   {
     name: 'valortotal',
     label: 'Valor',
@@ -51,10 +50,11 @@ const colunasTabelaNegocios = [
     }).format(val), sortable: true
   },
   { name: 'fantasia', label: 'Fantasia', field: 'fantasia', align: 'left', sortable: true },
+  { name: 'lancamento', label: 'Hora', field: 'lancamento', format: val => moment(val).format('HH:mm'), sortable: true },
+  { name: 'usuario', align: 'left', label: 'Usuário', field: 'usuario', sortable: true },
   {
     name: 'pdv', label: 'PDV', align: 'left', field: 'pdv', sortable: true
   },
-  { name: 'usuario', align: 'left', label: 'Usuário', field: 'usuario', sortable: true },
 ]
 
 const inicializaAnosMeses = async () => {
@@ -204,14 +204,14 @@ watch(data, () => {
   <q-page>
 
     <!-- ANOS -->
-    <q-tabs v-model="ano" inline-label class="bg-primary text-white shadow-2">
+    <q-tabs v-model="ano" inline-label class="bg-primary text-white">
       <template v-for="a in anos" :key="a">
         <q-tab :name="a" :label="a" />
       </template>
     </q-tabs>
 
     <!-- MESES -->
-    <q-tabs v-model="mes" inline-label class="bg-primary text-white shadow-2">
+    <q-tabs v-model="mes" inline-label class="bg-primary text-white">
       <template v-for="m in meses" :key="m.numero">
         <q-tab :name="m.numero" :label="m.label" />
       </template>
@@ -220,9 +220,9 @@ watch(data, () => {
     <div class="row q-pa-md q-col-gutter-md">
 
       <!-- CALENDARIO -->
-      <div>
+      <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2" style="min-width: 310px;">
         <q-date minimal v-model="data" :options="datasDisponiveis" :events="datasFaltando" event-color="negative"
-          no-unset mask="YYYY-MM-DD" />
+          no-unset mask="YYYY-MM-DD" style="width: 100%;" />
       </div>
 
       <!-- CARD DETALHES -->
@@ -256,7 +256,7 @@ watch(data, () => {
                 <q-table dense flat :rows="f.negocios" :columns="colunasTabelaNegocios" row-key="codnegocio"
                   virtual-scroll :pagination="{
                     rowsPerPage: 0
-                  }" :rows-per-page-options="[0]" style="height: 60vh">
+                  }" :rows-per-page-options="[0]" style="max-height: 60vh">
 
 
                   <!-- LINK NEGOCIO -->
