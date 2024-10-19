@@ -74,6 +74,19 @@ const routes = [
     ],
   },
 
+  // CONFISSOES
+  {
+    path: "/confissao",
+    component: () => import("layouts/ConfissaoLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/ConfissaoPage.vue") },
+      {
+        path: "faltando",
+        component: () => import("pages/ConfissaoFaltandoPage.vue"),
+      },
+    ],
+  },
+
   {
     path: "/liquidacao",
     component: () => import("layouts/LiquidacaoListagemLayout.vue"),

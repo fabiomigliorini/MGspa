@@ -3,8 +3,9 @@
 namespace Mg\Pdv;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
-// use Mg\Negocio\Negocio;
+use Mg\Negocio\Negocio;
 
 class PdvAnexoService
 {
@@ -16,7 +17,7 @@ class PdvAnexoService
 
     public static function nomeNovoArquivo(int $codnegocio, $pasta)
     {
-        $ext = ($pasta == 'pdf')?'.pdf':'.jpeg';
+        $ext = ($pasta == 'pdf') ? '.pdf' : '.jpeg';
         $arquivo = $pasta . '/' . date('Y-m-d-H-i-s') . '-' . uniqid() . $ext;
         return static::diretorio($codnegocio) . $arquivo;
     }
@@ -32,10 +33,10 @@ class PdvAnexoService
                 return static::uploadImagem($codnegocio, $pasta, $anexoBase64);
                 break;
 
-                case 'pdf':
-                    return static::uploadPdf($codnegocio, $pasta, $anexoBase64);
-                    break;
-    
+            case 'pdf':
+                return static::uploadPdf($codnegocio, $pasta, $anexoBase64);
+                break;
+
             default:
                 # code...
                 break;
@@ -124,7 +125,7 @@ class PdvAnexoService
         $anexo = static::nomeNovoArquivo($codnegocio, $pasta);
         Storage::disk('negocio-anexo')->put($anexo, $pdf);
         return $anexo;
-    }    
+    }
 
     public static function listagem(int $codnegocio, bool $fullpath = false)
     {
@@ -141,7 +142,7 @@ class PdvAnexoService
             list($idx, $arquivo) = explode('/', str_replace($dir, '', $anexo));
             if (!$fullpath) {
                 $anexo = $arquivo;
-            } 
+            }
             if (!isset($ret[$idx])) {
                 $ret[$idx] = [];
             }
@@ -152,11 +153,11 @@ class PdvAnexoService
         // return $anexos;
     }
 
-    public static function base64 (int $codnegocio)
+    public static function base64(int $codnegocio)
     {
         $listagem = static::listagem($codnegocio, true);
         foreach ($listagem as $pasta => $anexos) {
-            if (!in_array($pasta, ['confissao','imagem'])) {
+            if (!in_array($pasta, ['confissao', 'imagem'])) {
                 continue;
             }
             foreach ($anexos as $i => $anexo) {
@@ -174,5 +175,208 @@ class PdvAnexoService
         $nova = "{$dir}/lixeira/{$anexo}";
         Storage::disk('negocio-anexo')->move($antiga, $nova);
         return $nova;
+    }
+
+    public static function sugerir(string $anexoBase64)
+    {
+        // tira o anexo da string
+        $data = explode(',', $anexoBase64);
+        $jpeg = base64_decode($data[1]);
+        $anexo = imagecreatefromstring($jpeg);
+
+        // salva ele num arquivo temporario
+        $arquivo = tempnam('/tmp', 'anexo-') . '.jpeg';
+        imagejpeg($anexo, $arquivo);
+
+        // roda o tesseract OCR para extrair o texto
+        $cmd = "tesseract --psm 6 '{$arquivo}' -";
+        $ret = shell_exec($cmd);
+
+        // apaga arquivo temporario
+        unlink($arquivo);
+
+        // explode o texto em linhas
+        $linhas = preg_split('/$\R?^/m', $ret);
+
+        // pega o soudex de conferencia e totalizando
+        $sdexConferencia = soundex('conferencia');
+        $sdexTotalizando = soundex('totalizando');
+
+        // inicializa variaveis buscadas
+        $valor = null;
+        $codnegocio = null;
+
+        // percorre as linhas
+        foreach ($linhas as $linha) {
+
+            // quebra a linha em palavras
+            $linha = preg_replace("/[^A-Za-z0-9\,\.\# ]/", ' ', $linha);
+            $linha = preg_replace('/\s+/', ' ', $linha);
+            $palavras = preg_split('/\s+/', $linha, -1, PREG_SPLIT_NO_EMPTY);
+
+            // percorre as palavras
+            foreach ($palavras as $i => $palavra) {
+
+                if (empty($codnegocio)) {
+                    // verifica a similiaridade da palavra conferencia
+                    $perc = null;
+                    similar_text('conferencia', $palavra, $perc);
+
+                    // calcula o soudex da palavra                
+                    $sdex  = soundex($palavra);
+
+                    // se é mais de 80% similar
+                    // ou é o mesmo soudex, a proxima palavra é o numero do negocio
+                    // Ex: Romaneio de conferência #03732930 sem
+                    if ($perc > 80 || $sdex == $sdexConferencia) {
+                        $codnegocio = numeroLimpo($palavras[$i + 1]);
+                        continue;
+                    }
+
+                    // se comeca com #, tem exatamente 9 caracteres, 
+                    // sendo que os ultimos oito são numericos
+                    if (substr($palavra, 0, 1) == '#' && strlen($palavra) == 9) {
+                        if (numeroLimpo($palavra) == substr($palavra, 1, 8)) {
+                            $codnegocio = numeroLimpo($palavra);
+                            continue;
+                        }
+                    }
+                }
+
+                if (empty($valor)) {
+                    // verifica a similiaridade da palavra totalizando
+                    $perc = null;
+                    similar_text('totalizando', $palavra, $perc);
+
+                    // calcla o soudenx da palavra
+                    $sdex  = soundex($palavra);
+
+                    // se é mais de 80% similar
+                    // ou é o mesmo soudex, daqui duas palavras tem o valor
+                    // Ex: Totalizando R$ 32,53 (trinta e dois reais e
+                    if ($perc > 80 || $sdex == $sdexTotalizando) {
+                        // dd($linha);
+                        // dd($palavras[$i + 2]);
+                        $valor = numeroLimpo($palavras[$i + 2]) / 100;
+                        break;
+                    }
+                }
+            }
+        }
+
+        $encontrados = static::procurar($codnegocio, $valor);
+
+        // retorna tudo que econtrou
+        return [
+            'codnegocio' => $codnegocio,
+            'valor' => $valor,
+            'encontrados' => $encontrados
+        ];
+    }
+
+    static function procurar($codnegocio, $valor)
+    {
+        // verifica se encontra no banco de dados um negocio com esse valor e codnegocio
+        return Negocio::where(['codnegocio' => $codnegocio, 'valortotal' => $valor])->count();
+    }
+
+    static function faltando($ano, $mes)
+    {
+        // busca todos negocios a prazo com saldo em aberto
+        $sql = '
+            select distinct
+                n.codfilial, 
+                f.filial, 
+                n.codpdv, 
+                p.apelido pdv, 
+                n.codusuario, 
+                u.usuario, 
+                n.codpessoa,
+                pe.fantasia,
+                date_trunc(\'day\', n.lancamento) as data,
+                n.lancamento, 
+                n.codnegocio, 
+                n.valortotal 
+            from tbltitulo t
+            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            inner join tblnegocio n on (n.codnegocio = nfp.codnegocio)
+            inner join tblfilial f on (f.codfilial = n.codfilial)
+            inner join tblpessoa pe on (pe.codpessoa = n.codpessoa)
+            left join tblpdv p on (p.codpdv = n.codpdv)
+            inner join tblusuario u on (u.codusuario = n.codusuario)
+            where t.saldo > 0
+            and date_trunc(\'month\', n.lancamento) = :mes
+            order by n.lancamento asc, n.codfilial asc 
+        ';
+
+        // filtra o mes selecionado
+        $regs = collect(DB::select($sql, [
+            'mes' => "{$ano}-{$mes}-01"
+        ]));
+        $datas = $regs->groupBy('data');
+
+        // monta esqueleto retorno
+        $ret = (object) [
+            'resumo' => [],
+            'datas' => [],
+        ];
+
+        // percorre todos registros
+        foreach ($datas as $data => $itens) {
+
+            // pega somente a data, remove hora
+            $data = substr($data, 0, 10);
+
+            // agrupa as filiais
+            $codfilials = $itens->groupBy('codfilial')->sortKeys();
+
+            // monta esqueleto de retorno da data
+            $retData = (object) [
+                'data' => $data,
+                'faltando' => 0,
+                'filiais' => [],
+            ];
+
+            // percorre as filiais
+            foreach ($codfilials as $codfilial => $negs) {
+
+                // monta esqueleto de retorno da filial
+                $retFilial = (object) [
+                    'codfilial' => $codfilial,
+                    'filial' => $negs[0]->filial,
+                    'faltando' => 0,
+                    'negocios' => [],
+                ];
+
+                // percorre todos negocios
+                foreach ($negs as $neg) {
+
+                    // verifica se existe anexo pro negocio
+                    $dir = static::diretorio($neg->codnegocio);
+                    $anexos = count(Storage::disk('negocio-anexo')->files("{$dir}/confissao"));
+
+                    // se tem anexo faltando adiciona o negocio no array de retorno
+                    if (!$anexos) {
+                        $retData->faltando++;
+                        $retFilial->faltando++;
+                        $retFilial->negocios[] = $neg;
+                    }
+                }
+
+                // se tem anexo faltando adiciona a filial no array de retorno
+                if ($retFilial->faltando > 0) {
+                    $retData->filiais[] = $retFilial;
+                }
+            }
+
+
+            // se tem anexo faltando adiciona a filial no array de retorno
+            if ($retData->faltando > 0) {
+                // concatena a data
+                $ret->datas[] = $retData;
+                $ret->resumo[] = $data;
+            }
+        }
+        return $ret;
     }
 }

@@ -189,6 +189,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('negocio/{codnegocio}/anexo', '\Mg\Pdv\PdvAnexoController@upload');
             Route::get('negocio/{codnegocio}/anexo', '\Mg\Pdv\PdvAnexoController@listagem');
             Route::delete('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@excluir');
+            Route::post('negocio/anexo/sugerir', '\Mg\Pdv\PdvAnexoController@sugerir');
+            Route::post('negocio/anexo/procurar', '\Mg\Pdv\PdvAnexoController@procurar');
+            Route::get('negocio/anexo/faltando/{ano}/{mes}', '\Mg\Pdv\PdvAnexoController@faltando');
             Route::get('orcamento', '\Mg\Pdv\PdvController@getOrcamentos');
             Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
             Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');

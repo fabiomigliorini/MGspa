@@ -1,12 +1,14 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { storeToRefs } from 'pinia'
 import Slim from "./slim.module.js";
-import { negocioStore } from "stores/negocio";
+import { confissaoStore } from "src/stores/confissao.js";
 
-const sNegocio = negocioStore();
+const sConfissao = confissaoStore();
 var cropper = null;
 
 const emit = defineEmits(["upload"]);
+const { imagem } = storeToRefs(sConfissao)
 
 const props = defineProps({
   ratio: {
@@ -22,6 +24,12 @@ const props = defineProps({
 
 const refSlim = ref(null);
 
+watch(imagem, () => {
+  if (imagem.value == null) {
+    cropper.remove();
+  }
+})
+
 const inicializar = async () => {
   cropper = new Slim(refSlim.value, {
     ratio: props.ratio,
@@ -31,17 +39,13 @@ const inicializar = async () => {
     forceType: "jpeg",
     label: "Clique para adicionar uma imagem!",
     jpegCompression: 50,
-    // forceSize: "400.800",
     willSave: function (data, ready) {
-      sNegocio
-        .uploadAnexo(props.pasta, data.output.image)
-        .then(() => {
-          cropper.remove();
-        })
-        .finally(() => {
-          ready(false);
-          emit("upload");
-        });
+      sConfissao.novaImagem(data.output.image)
+      ready(true);
+    },
+    willRemove: function (data, ready) {
+      sConfissao.inicializarSugestao();
+      ready(true);
     },
   });
 };

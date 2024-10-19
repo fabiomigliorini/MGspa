@@ -30,15 +30,20 @@ const apps = ref([
         label: "PDV",
         to: "/",
       },
-      {
-        icon: "checklist_rtl",
-        label: "Listagem",
-        to: "/listagem",
-      },
+      // {
+      //   icon: "checklist_rtl",
+      //   label: "Listagem",
+      //   to: "/listagem",
+      // },
       {
         icon: "check",
         label: "Conferência",
         to: "/conferencia",
+      },
+      {
+        icon: "photo_camera",
+        label: "Conf",
+        to: "/confissao",
       },
     ],
   },
@@ -80,15 +85,7 @@ const toggleRightDrawer = () => {
     <q-header reveal elevated height-hint="98">
       <q-toolbar>
         <!-- HAMBURQUER ESQUERDO -->
-        <q-btn
-          dense
-          flat
-          round
-          icon="menu"
-          @click="toggleLeftDrawer"
-          :disable="!leftDrawer"
-          v-if="!backTo"
-        />
+        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" :disable="!leftDrawer" v-if="!backTo" />
         <q-btn dense flat round icon="arrow_back" :to="backTo" v-if="backTo" />
 
         <!-- TITULO -->
@@ -117,12 +114,7 @@ const toggleRightDrawer = () => {
               </q-item-label> -->
               <div class="row">
                 <template v-for="(app, iApp) in appBlock.apps" :key="iApp">
-                  <q-item
-                    class="col-4 text-grey-8"
-                    :to="app.to"
-                    clickable
-                    active-class="bg-teal-1 text-grey-8"
-                  >
+                  <q-item class="col-4 text-grey-8" :to="app.to" clickable active-class="bg-teal-1 text-grey-8">
                     <q-item-section class="flex-center">
                       <q-icon :name="app.icon" size="40px" />
                       <q-item-label class="text-caption ellipsis">
@@ -132,23 +124,13 @@ const toggleRightDrawer = () => {
                   </q-item>
                 </template>
               </div>
-              <q-separator
-                v-if="iAppBlock != apps.length - 1"
-                class="q-my-sm"
-              />
+              <q-separator v-if="iAppBlock != apps.length - 1" class="q-my-sm" />
             </template>
           </q-menu>
         </q-btn>
 
         <!-- HAMBURGER DIREITO -->
-        <q-btn
-          dense
-          flat
-          round
-          icon="menu"
-          @click="toggleRightDrawer"
-          :disable="!rightDrawer"
-        />
+        <q-btn dense flat round icon="menu" @click="toggleRightDrawer" :disable="!rightDrawer" />
       </q-toolbar>
     </q-header>
 
@@ -156,13 +138,7 @@ const toggleRightDrawer = () => {
       <slot name="left-drawer" />
     </q-drawer>
 
-    <q-drawer
-      v-model="rightDrawerOpen"
-      show-if-above
-      bordered
-      side="right"
-      v-if="rightDrawer"
-    >
+    <q-drawer v-model="rightDrawerOpen" show-if-above bordered side="right" v-if="rightDrawer">
       <slot name="right-drawer" />
     </q-drawer>
 
