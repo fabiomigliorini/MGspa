@@ -768,25 +768,13 @@ export const negocioStore = defineStore("negocio", {
       this.salvar();
     },
 
-    async informarPessoa(
-      codestoquelocal,
-      codnaturezaoperacao,
-      codpessoa,
-      cpf,
-      observacoes
-    ) {
-      await this.recarregar();
-      this.negocio.codestoquelocal = codestoquelocal;
-      this.negocio.codnaturezaoperacao = codnaturezaoperacao;
+    async informarPessoa(codpessoa, cpf) {
       this.negocio.codpessoa = codpessoa;
       if (codpessoa == 1) {
         this.negocio.cpf = cpf;
       } else {
         this.negocio.cpf = null;
       }
-      this.negocio.observacoes = observacoes;
-      await this.carregarChavesEstrangeiras();
-
       // se tiver desconto e o negócio ainda estiver aberto
       const desconto = parseFloat(this.negocio.Pessoa.desconto);
       if (desconto > 0 && this.negocio.codnegociostatus == 1) {
@@ -795,7 +783,16 @@ export const negocioStore = defineStore("negocio", {
           this.itemRecalcularValorProdutos(item);
         });
       }
+      await this.carregarChavesEstrangeiras();
+      await this.salvar();
+    },
 
+    async informarNatureza(codestoquelocal, codnaturezaoperacao, observacoes) {
+      await this.recarregar();
+      this.negocio.codestoquelocal = codestoquelocal;
+      this.negocio.codnaturezaoperacao = codnaturezaoperacao;
+      this.negocio.observacoes = observacoes;
+      await this.carregarChavesEstrangeiras();
       await this.salvar();
     },
 

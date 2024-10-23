@@ -4,21 +4,20 @@ import { negocioStore } from "stores/negocio";
 import { Dialog, Notify } from "quasar";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpjCpf } from "../../utils/formatador.js";
-import moment from "moment/min/moment-with-locales";
-import SelectPessoa from "components/selects/SelectPessoa.vue";
 import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
 import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
+import WizardPessoa from "./WizardPessoa.vue";
 import { db } from "boot/db";
 import { LoadingBar } from "quasar";
+import emitter from "src/utils/emitter";
+import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const sNegocio = negocioStore();
 
-const edicaoPessoa = ref({
+const edicaoNatureza = ref({
   codestoquelocal: null,
   codnaturezaoperacao: null,
-  codpessoa: null,
-  cpf: null,
   observacoes: null,
 });
 
@@ -79,13 +78,19 @@ function validarCPF(cpf) {
   return true;
 }
 
-const editarPessoa = () => {
-  edicaoPessoa.value.codestoquelocal = sNegocio.negocio.codestoquelocal;
-  edicaoPessoa.value.codnaturezaoperacao = sNegocio.negocio.codnaturezaoperacao;
-  edicaoPessoa.value.codpessoa = sNegocio.negocio.codpessoa;
-  edicaoPessoa.value.cpf = sNegocio.negocio.cpf;
-  edicaoPessoa.value.observacoes = sNegocio.negocio.observacoes;
+const editarNatureza = () => {
+  edicaoNatureza.value.codestoquelocal = sNegocio.negocio.codestoquelocal;
+  edicaoNatureza.value.codnaturezaoperacao = sNegocio.negocio.codnaturezaoperacao;
+  edicaoNatureza.value.observacoes = sNegocio.negocio.observacoes;
   dialogPessoa.value = true;
+};
+
+const editarPessoa = () => {
+  emitter.emit('informarPessoa');
+}
+
+const urlPessoa = (codpessoa) => {
+  return process.env.MGSIS_URL + "index.php?r=pessoa/view&id=" + codpessoa;
 };
 
 const buscarListagemVendedores = async () => {
@@ -124,18 +129,16 @@ const editarVendedor = async () => {
   dialogVendedor.value = true;
 };
 
-const salvarPessoa = async () => {
+const salvarNatureza = async () => {
   Dialog.create({
     title: "Salvar",
     message: "Tem certeza que você deseja salvar?",
     cancel: true,
   }).onOk(() => {
-    sNegocio.informarPessoa(
-      edicaoPessoa.value.codestoquelocal,
-      edicaoPessoa.value.codnaturezaoperacao,
-      edicaoPessoa.value.codpessoa,
-      edicaoPessoa.value.cpf,
-      edicaoPessoa.value.observacoes
+    sNegocio.informarNatureza(
+      edicaoNatureza.value.codestoquelocal,
+      edicaoNatureza.value.codnaturezaoperacao,
+      edicaoNatureza.value.observacoes
     );
     dialogPessoa.value = false;
   });
@@ -216,75 +219,24 @@ const negocioStatusIconColor = () => {
   <!-- Editar Pessoa -->
   <q-dialog v-model="dialogPessoa">
     <q-card style="width: 500px; max-width: 80vw">
-      <q-form ref="formItem" @submit="salvarPessoa()">
+      <q-form ref="formItem" @submit="salvarNatureza()">
         <q-card-section>
           <div class="row q-gutter-md q-pr-md">
             <div class="col-12">
-              <select-estoque-local
-                outlined
-                v-model="edicaoPessoa.codestoquelocal"
-                label="Local de Estoque"
-                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
-              />
+              <select-estoque-local outlined v-model="edicaoNatureza.codestoquelocal" label="Local de Estoque"
+                :rules="[(val) => !!val || 'Preenchimento Obrigatório']" />
             </div>
             <div class="col-12">
-              <select-natureza-operacao
-                outlined
-                v-model="edicaoPessoa.codnaturezaoperacao"
-                label="Natureza de Operacao"
-                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
-              />
+              <select-natureza-operacao outlined v-model="edicaoNatureza.codnaturezaoperacao"
+                label="Natureza de Operacao" :rules="[(val) => !!val || 'Preenchimento Obrigatório']" />
             </div>
             <div class="col-12">
-              <select-pessoa
-                ref="selectPessoa"
-                outlined
-                v-model="edicaoPessoa.codpessoa"
-                label="Pessoa"
-                :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
-                clearable
-                @clear="edicaoPessoa.codpessoa = 1"
-              >
-                <template v-slot:after>
-                  X
-                  <q-icon
-                    name="delete"
-                    @click.stop.prevent="model = null"
-                    class="cursor-pointer"
-                  />
-                </template>
-              </select-pessoa>
-            </div>
-            <div class="col-12">
-              <q-input
-                ref="codpessoa"
-                v-if="edicaoPessoa.codpessoa == 1"
-                :rules="[validarCPF]"
-                outlined
-                v-model="edicaoPessoa.cpf"
-                label="CPF"
-                mask="###.###.###-##"
-                unmasked-value
-              />
-            </div>
-            <div class="col-12">
-              <q-input
-                outlined
-                autogrow
-                v-model.number="edicaoPessoa.observacoes"
-                label="Observações"
-              />
+              <q-input outlined autogrow v-model.number="edicaoNatureza.observacoes" label="Observações" />
             </div>
           </div>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="primary"
-            @click="dialogPessoa = false"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="primary" @click="dialogPessoa = false" tabindex="-1" />
           <q-btn type="submit" flat label="Salvar" color="primary" />
         </q-card-actions>
       </q-form>
@@ -294,35 +246,21 @@ const negocioStatusIconColor = () => {
   <!-- Editar Vendedor -->
   <q-dialog v-model="dialogVendedor" full-height>
     <q-card style="width: 500px">
-      <q-form ref="formItem" @submit="salvarPessoa()">
+      <q-form ref="formItem">
         <q-card-section>
-          <q-input
-            outlined
-            autofocus
-            label="Vendedor"
-            v-model="filtroVendedor"
-            @update:model-value="filtrarVendedor()"
-          />
+          <q-input outlined autofocus label="Vendedor" v-model="filtroVendedor"
+            @update:model-value="filtrarVendedor()" />
         </q-card-section>
         <q-card-section>
           <q-list>
             <q-item clickable v-ripple @click="informarVendedor(null)">
               <q-item-section avatar>
-                <q-avatar
-                  color="negative"
-                  icon="close"
-                  text-color="white"
-                ></q-avatar>
+                <q-avatar color="negative" icon="close" text-color="white"></q-avatar>
               </q-item-section>
               <q-item-section> Sem Vendedor </q-item-section>
             </q-item>
-            <q-item
-              v-for="vendedor in vendedoresFiltrados"
-              :key="vendedor.codpessoa"
-              clickable
-              v-ripple
-              @click="informarVendedor(vendedor.codpessoa)"
-            >
+            <q-item v-for="vendedor in vendedoresFiltrados" :key="vendedor.codpessoa" clickable v-ripple
+              @click="informarVendedor(vendedor.codpessoa)">
               <q-item-section avatar>
                 <q-avatar color="primary" text-color="white">
                   {{ vendedor.fantasia.charAt(0) }}
@@ -342,7 +280,7 @@ const negocioStatusIconColor = () => {
     <!-- <q-item-label header>Pessoa</q-item-label> -->
 
     <!-- Filial -->
-    <q-item clickable @click="editarPessoa()">
+    <q-item clickable @click="editarNatureza()">
       <q-item-section avatar top>
         <q-avatar icon="store" color="grey" text-color="white" />
       </q-item-section>
@@ -358,13 +296,9 @@ const negocioStatusIconColor = () => {
     </q-item>
 
     <!-- Natureza -->
-    <q-item clickable v-ripple @click="editarPessoa()">
+    <q-item clickable v-ripple @click="editarNatureza()">
       <q-item-section avatar top>
-        <q-avatar
-          icon="work"
-          :color="negocioStatusIconColor()"
-          text-color="white"
-        />
+        <q-avatar icon="work" :color="negocioStatusIconColor()" text-color="white" />
       </q-item-section>
 
       <q-item-section>
@@ -381,10 +315,28 @@ const negocioStatusIconColor = () => {
       </q-item-section>
     </q-item>
 
+
+    <!-- OBSERVACOES -->
+    <q-item clickable v-ripple v-if="sNegocio.negocio.observacoes" @click="editarNatureza()">
+      <q-item-section avatar top>
+        <q-avatar icon="notes" color="grey" text-color="white" />
+      </q-item-section>
+
+      <q-item-section>
+        <q-item-label lines="1" style="white-space: pre-line">
+          {{ sNegocio.negocio.observacoes }}
+        </q-item-label>
+        <q-item-label caption>Observações</q-item-label>
+      </q-item-section>
+    </q-item>
+
+    <q-separator spaced />
+
     <!-- PESSOA -->
+    <wizard-pessoa />
     <q-item clickable v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
-        <q-avatar icon="person" color="grey" text-color="white" />
+        <q-avatar icon="person" :color="(sNegocio.negocio.codpessoa == 1) ? 'grey' : 'secondary'" text-color="white" />
       </q-item-section>
 
       <q-item-section>
@@ -394,7 +346,7 @@ const negocioStatusIconColor = () => {
         <q-item-label caption v-if="sNegocio.negocio.cpf">
           {{ formataCpf(sNegocio.negocio.cpf) }}
         </q-item-label>
-        <template v-if="sNegocio.negocio.Pessoa">
+        <template v-if="sNegocio.negocio.codpessoa != 1 && sNegocio.negocio.Pessoa">
           <q-item-label caption v-if="sNegocio.negocio.Pessoa.cnpj">
             {{
               formataCnpjCpf(
@@ -416,67 +368,48 @@ const negocioStatusIconColor = () => {
             {{ sNegocio.negocio.Pessoa.uf }}
           </q-item-label>
         </template>
+        <template v-else>
+          <q-item-label caption>
+            Clique ou F10 para informar
+          </q-item-label>
+        </template>
       </q-item-section>
 
-      <q-item-section
-        side
-        v-if="sNegocio.negocio.codpessoa == 1 && !sNegocio.negocio.cpf"
-      >
+      <q-item-section side v-if="sNegocio.negocio.codpessoa == 1 && !sNegocio.negocio.cpf">
         <q-icon name="info" color="warning" />
+      </q-item-section>
+    </q-item>
+
+    <q-item clickable v-ripple :href="urlPessoa(sNegocio.negocio.codpessoa)" target="_blank"
+      v-if="sNegocio.negocio.codpessoa != 1">
+      <q-item-section avatar top>
+        <q-avatar icon="attach_money" color="secondary" text-color="white" />
+      </q-item-section>
+
+      <q-item-section>
+        <template v-if="sNegocio.negocio.Pessoa != undefined && sNegocio.negocio.Pessoa.codformapagamento">
+          <q-item-label lines="1">
+            {{ sNegocio.negocio.Pessoa.formapagamento }}
+          </q-item-label>
+          <q-item-label caption>Forma de Pagamento Padrão</q-item-label>
+        </template>
+        <template v-else>
+          <q-item-label lines="2">
+            Sem forma de pagamento definida
+          </q-item-label>
+        </template>
+      </q-item-section>
+      <q-item-section side>
+        <q-avatar icon="launch" color="secondary" text-color="white" :to="urlPessoa(sNegocio.negocio.codpessoa)" />
       </q-item-section>
     </q-item>
 
     <template v-if="sNegocio.negocio.Pessoa != undefined">
       <q-item v-if="sNegocio.negocio.Pessoa.mensagemvenda">
         <q-item-section>
-          <q-banner
-            inline-actions
-            rounded
-            class="bg-orange-8 text-white"
-            style="white-space: pre-line"
-          >
+          <q-banner inline-actions rounded class="bg-orange-8 text-white" style="white-space: pre-line">
             {{ sNegocio.negocio.Pessoa.mensagemvenda }}
           </q-banner>
-        </q-item-section>
-      </q-item>
-    </template>
-
-    <!-- OBSERVACOES -->
-    <q-item
-      clickable
-      v-ripple
-      v-if="sNegocio.negocio.observacoes"
-      @click="editarPessoa()"
-    >
-      <q-item-section avatar top>
-        <q-avatar icon="notes" color="grey" text-color="white" />
-      </q-item-section>
-
-      <q-item-section>
-        <q-item-label lines="1" style="white-space: pre-line">
-          {{ sNegocio.negocio.observacoes }}
-        </q-item-label>
-        <q-item-label caption>Observações</q-item-label>
-      </q-item-section>
-    </q-item>
-
-    <template
-      v-if="sNegocio.negocio.Pessoa != undefined && sNegocio.negocio.financeiro"
-    >
-      <q-item
-        clickable
-        v-ripple
-        v-if="sNegocio.negocio.Pessoa.codformapagamento"
-      >
-        <q-item-section avatar top>
-          <q-avatar icon="attach_money" color="grey" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label lines="1">
-            {{ sNegocio.negocio.Pessoa.formapagamento }}
-          </q-item-label>
-          <q-item-label caption>Forma de Pagamento Padrão</q-item-label>
         </q-item-section>
       </q-item>
     </template>
@@ -507,14 +440,8 @@ const negocioStatusIconColor = () => {
     <!-- CODIGOS -->
     <q-item>
       <q-item-section avatar top>
-        <q-btn
-          @click="sincronizar()"
-          round
-          :color="
-            sNegocio.negocio.sincronizado == true ? 'secondary' : 'accent'
-          "
-          icon="file_upload"
-        />
+        <q-btn @click="sincronizar()" round :color="sNegocio.negocio.sincronizado == true ? 'secondary' : 'accent'
+          " icon="file_upload" />
       </q-item-section>
 
       <q-item-section>
@@ -526,12 +453,7 @@ const negocioStatusIconColor = () => {
       </q-item-section>
 
       <q-item-section side>
-        <q-btn
-          @click="recarregarDaApi()"
-          round
-          color="negative"
-          icon="file_download"
-        />
+        <q-btn @click="recarregarDaApi()" round color="negative" icon="file_download" />
       </q-item-section>
     </q-item>
 

@@ -107,6 +107,16 @@ class PdvController
         return PdvService::pessoa($codpessoa, $limite);
     }
 
+    public function postPessoa(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        $data = (object) $request->all();
+        DB::beginTransaction();
+        $pessoa = PdvPessoaService::novaPessoa($data);
+        DB::commit();
+        return PdvService::pessoa($pessoa->codpessoa, 1);
+    }
+
     public function naturezaOperacao(PdvRequest $request)
     {
         PdvService::autoriza($request->pdv);

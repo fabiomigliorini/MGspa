@@ -14,7 +14,7 @@ use Mg\GrupoEconomico\GrupoEconomicoService;
 use Mg\Pessoa\GrupoClienteService;
 use Mg\NFePHP\NFePHPService;
 use Mg\Filial\Filial;
-use stdClass;
+use Mg\Pix\Pix;
 
 class PessoaService
 {
@@ -749,6 +749,16 @@ class PessoaService
         return PessoaService::update($pessoa, $data);
     }
 
+    public static function buscarNomePeloPixCpf($cpf)
+    {
+        return Pix::select(['nome'])->where('cpf', $cpf)->orderBy('criacao', 'desc')->first();
+    }
+
+    public static function buscarNomePeloPixCnpj($cnpj) 
+    {
+        return Pix::select(['nome'])->where('cnpj', $cnpj)->orderBy('criacao', 'desc')->first();
+    }
+
     public static function buscarReceitaWs($cnpj)
     {
         $response = Http::withHeaders([
@@ -825,9 +835,16 @@ class PessoaService
             $resultReceita = json_decode($retReceita);
         }
 
+        if (!empty($cpf)) {
+            $pix = static::buscarNomePeloPixCpf($cpf);
+        } elseif (!empty($cnpj)) {
+            $pix = static::buscarNomePeloPixCnpj($cnpj);
+        }
+
         return [
             'retReceita' => $resultReceita,
-            'retSefaz' => $retIes
+            'retSefaz' => $retIes,
+            'retPix' => $pix
         ];
     }
 

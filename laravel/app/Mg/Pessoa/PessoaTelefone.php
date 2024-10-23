@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Feb/2023 12:38:30
+ * Date: 23/Oct/2024 14:27:04
  */
 
 namespace Mg\Pessoa;
@@ -19,6 +20,7 @@ class PessoaTelefone extends MgModel
     protected $fillable = [
         'apelido',
         'codpessoa',
+        'codverificacao',
         'ddd',
         'inativo',
         'ordem',
@@ -40,10 +42,10 @@ class PessoaTelefone extends MgModel
         'codpessoatelefone' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'codverificacao' => 'integer',
         'ddd' => 'float',
         'ordem' => 'integer',
         'pais' => 'float',
-        'telefone' => 'float',
         'tipo' => 'integer'
     ];
 
@@ -63,5 +65,4 @@ class PessoaTelefone extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
 }

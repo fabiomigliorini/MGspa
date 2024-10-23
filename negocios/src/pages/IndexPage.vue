@@ -100,6 +100,12 @@ const hotkeys = (event) => {
       prazo();
       break;
 
+
+    case "F10": // Pessoa
+      event.preventDefault();
+      emitter.emit('informarPessoa');
+      break;
+
     default:
       break;
   }
@@ -114,7 +120,7 @@ const vazioOuCriar = async () => {
   try {
     var audio = new Audio("novo.mp3");
     audio.play();
-  } catch (error) {}
+  } catch (error) { }
   router.push("/offline/" + neg.uuid);
 };
 
@@ -131,7 +137,7 @@ const duplicar = async () => {
       router.push("/offline/" + sNegocio.negocio.uuid);
       var audio = new Audio("novo.mp3");
       audio.play();
-    } catch (error) {}
+    } catch (error) { }
   });
 };
 
@@ -378,9 +384,9 @@ const comanda = async () => {
 const imprimirRomaneio = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
-      sNegocio.negocio.codnegocio +
-      "/romaneio/" +
-      sNegocio.padrao.impressora
+    sNegocio.negocio.codnegocio +
+    "/romaneio/" +
+    sNegocio.padrao.impressora
   );
   Notify.create({
     type: "positive",
@@ -394,9 +400,9 @@ const imprimirRomaneio = async () => {
 const imprimirVale = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
-      sNegocio.negocio.codnegocio +
-      "/vale/" +
-      sNegocio.padrao.impressora
+    sNegocio.negocio.codnegocio +
+    "/vale/" +
+    sNegocio.padrao.impressora
   );
   Notify.create({
     type: "positive",
@@ -410,9 +416,9 @@ const imprimirVale = async () => {
 const imprimirComanda = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
-      sNegocio.negocio.codnegocio +
-      "/comanda/" +
-      sNegocio.padrao.impressora
+    sNegocio.negocio.codnegocio +
+    "/comanda/" +
+    sNegocio.padrao.impressora
   );
   Notify.create({
     type: "positive",
@@ -563,35 +569,18 @@ onUnmounted(() => {
     <div class="q-pa-md q-col-gutter-md">
       <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
         Notas, Títulos e Documentos anexos
-        <q-btn
-          flat
-          color="primary"
-          @click="listagemNotasRef.nova(65)"
-          icon="mdi-script-text-outline"
-          size="md"
-          dense
-        >
+        <q-btn flat color="primary" @click="listagemNotasRef.nova(65)" icon="mdi-script-text-outline" size="md" dense>
           <q-tooltip class="bg-accent">Nova NFCe (Cupom)</q-tooltip>
         </q-btn>
-        <q-btn
-          flat
-          color="primary"
-          @click="listagemNotasRef.nova(55)"
-          icon="mdi-file-document-outline"
-          size="md"
-          dense
-        >
+        <q-btn flat color="primary" @click="listagemNotasRef.nova(55)" icon="mdi-file-document-outline" size="md" dense>
           <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
         </q-btn>
       </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
-      <div
-        class="row q-col-gutter-md q-px-md"
-        v-if="
-          sNegocio.negocio.codnegociostatus == 2 ||
-          sNegocio.negocio.codnegociostatus == 3
-        "
-      >
+      <div class="row q-col-gutter-md q-px-md" v-if="
+        sNegocio.negocio.codnegociostatus == 2 ||
+        sNegocio.negocio.codnegociostatus == 3
+      ">
         <listagem-notas ref="listagemNotasRef" />
         <listagem-titulos />
         <listagem-anexos v-if="sNegocio.negocio.anexos" />
@@ -605,20 +594,12 @@ onUnmounted(() => {
     <q-dialog v-model="dialogRomaneio" full-height>
       <q-card style="height: 100%">
         <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            style="width: 100%; height: 100%; border: none"
-            :src="urlRomaneio"
-          ></iframe>
+          <iframe style="width: 100%; height: 100%; border: none" :src="urlRomaneio"></iframe>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirRomaneio()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirRomaneio()"
+            :disable="sNegocio.padrao.impressora == null" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -632,20 +613,12 @@ onUnmounted(() => {
         </q-card-section> -->
 
         <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            style="width: 100%; height: 100%; border: none"
-            :src="urlVale"
-          ></iframe>
+          <iframe style="width: 100%; height: 100%; border: none" :src="urlVale"></iframe>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirVale()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirVale()"
+            :disable="sNegocio.padrao.impressora == null" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -659,20 +632,12 @@ onUnmounted(() => {
         </q-card-section> -->
 
         <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            style="width: 100%; height: 100%; border: none"
-            :src="urlComanda"
-          ></iframe>
+          <iframe style="width: 100%; height: 100%; border: none" :src="urlComanda"></iframe>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirComanda()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirComanda()"
+            :disable="sNegocio.padrao.impressora == null" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -682,20 +647,12 @@ onUnmounted(() => {
     <q-dialog v-model="dialogOrcamento" full-height full-width>
       <q-card style="height: 100%">
         <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            ref="iFrameOrcamentoRef"
-            style="width: 100%; height: 100%; border: none"
-            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento'"
-          ></iframe>
+          <iframe ref="iFrameOrcamentoRef" style="width: 100%; height: 100%; border: none"
+            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento'"></iframe>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirOrcamento()"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirOrcamento()" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -705,145 +662,70 @@ onUnmounted(() => {
     <q-dialog v-model="dialogOrcamentoTermica" full-height>
       <q-card style="height: 100%; width: 360px">
         <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            ref="iFrameOrcamentoTermicaRef"
-            style="width: 100%; height: 100%; border: none"
-            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento-termica'"
-          ></iframe>
+          <iframe ref="iFrameOrcamentoTermicaRef" style="width: 100%; height: 100%; border: none"
+            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento-termica'"></iframe>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirOrcamentoTermica()"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirOrcamentoTermica()" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
-    <q-page-scroller
-      position="bottom-left"
-      :scroll-offset="150"
-      :offset="[18, 18]"
-    >
+    <q-page-scroller position="bottom-left" :scroll-offset="150" :offset="[18, 18]">
       <q-btn fab icon="keyboard_arrow_up" color="secondary" />
     </q-page-scroller>
 
-    <q-page-sticky
-      position="bottom-right"
-      :offset="[18, 18]"
-      v-if="sNegocio.negocio"
-    >
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="sNegocio.negocio">
       <div class="q-gutter-sm">
         <!-- DUPLICAR -->
-        <q-btn
-          fab
-          icon="content_copy"
-          color="secondary"
-          @click="duplicar()"
-          v-if="sNegocio.itensAtivos.length > 0"
-        >
+        <q-btn fab icon="content_copy" color="secondary" @click="duplicar()" v-if="sNegocio.itensAtivos.length > 0">
           <q-tooltip class="bg-accent">Duplicar</q-tooltip>
         </q-btn>
 
-        <q-fab
-          color="accent"
-          icon="print"
-          direction="up"
-          v-if="sNegocio.itensAtivos.length > 0"
-        >
+        <q-fab color="accent" icon="print" direction="up" v-if="sNegocio.itensAtivos.length > 0">
           <!-- COMANDA -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Comanda (F4)"
-            label-position="left"
-            icon="receipt"
-            color="accent"
-            @click="comanda()"
-            v-if="
+          <q-fab-action external-label label-class="bg-accent" label="Comanda (F4)" label-position="left" icon="receipt"
+            color="accent" @click="comanda()" v-if="
               sNegocio.negocio.sincronizado > 0 &&
               sNegocio.negocio.codnegociostatus == 1
-            "
-          />
+            " />
 
           <!-- ROMANEIO -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Romaneio"
-            label-position="left"
-            icon="print"
-            color="accent"
-            @click="romaneio()"
-            v-if="sNegocio.negocio.codnegociostatus == 2"
-          />
+          <q-fab-action external-label label-class="bg-accent" label="Romaneio" label-position="left" icon="print"
+            color="accent" @click="romaneio()" v-if="sNegocio.negocio.codnegociostatus == 2" />
 
           <!-- ORCAMENTO -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Orçamento"
-            label-position="left"
-            icon="mdi-clipboard-edit-outline"
-            color="accent"
-            @click="orcamento()"
-            v-if="
+          <q-fab-action external-label label-class="bg-accent" label="Orçamento" label-position="left"
+            icon="mdi-clipboard-edit-outline" color="accent" @click="orcamento()" v-if="
               sNegocio.itensAtivos.length > 0 &&
               sNegocio.negocio.codnegociostatus != 3
-            "
-          />
+            " />
 
           <!-- VALE -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Vale Compras"
-            label-position="left"
-            icon="mdi-ticket"
-            color="accent"
-            @click="vale()"
-            v-if="sNegocio.negocio.codnegociostatus == 2"
-          />
+          <q-fab-action external-label label-class="bg-accent" label="Vale Compras" label-position="left"
+            icon="mdi-ticket" color="accent" @click="vale()" v-if="sNegocio.negocio.codnegociostatus == 2" />
         </q-fab>
 
         <!-- FECHAR -->
-        <q-btn
-          fab
-          icon="send"
-          color="primary"
-          @click="fechar()"
-          v-if="sNegocio.itensAtivos.length > 0 && sNegocio.podeEditar"
-        >
+        <q-btn fab icon="send" color="primary" @click="fechar()"
+          v-if="sNegocio.itensAtivos.length > 0 && sNegocio.podeEditar">
           <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
         </q-btn>
 
         <!-- CANCELAR -->
-        <q-btn
-          fab
-          icon="delete"
-          color="negative"
-          @click="cancelar()"
-          v-if="sNegocio.podeEditar || sNegocio.negocio.codnegociostatus == 2"
-        >
+        <q-btn fab icon="delete" color="negative" @click="cancelar()"
+          v-if="sNegocio.podeEditar || sNegocio.negocio.codnegociostatus == 2">
           <q-tooltip class="bg-accent">Cancelar Negócio</q-tooltip>
         </q-btn>
 
-        <q-btn
-          fab
-          icon="assignment_returned"
-          color="warning"
-          :to="route.params.uuid + '/devolucao/'"
-          :itensDevolucao="sNegocio.negocio"
-          v-if="
+        <q-btn fab icon="assignment_returned" color="warning" :to="route.params.uuid + '/devolucao/'"
+          :itensDevolucao="sNegocio.negocio" v-if="
             sNegocio.itensAtivos.length > 0 &&
             sNegocio.negocio.codnegociostatus == 2 &&
             sNegocio.negocio.venda
-          "
-        >
+          ">
           <q-tooltip class="bg-accent">Devolução</q-tooltip>
         </q-btn>
       </div>

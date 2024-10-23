@@ -1,15 +1,11 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
-import { api } from "src/boot/axios";
+import { api } from 'src/boot/axios';
 
 const props = defineProps({
   modelValue: {
     type: Number,
-  },
-  somenteAtivos: {
-    type: Boolean,
-    default: true,
-  },
+  }
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -29,8 +25,8 @@ const buscarPeloCod = async () => {
   if (!props.modelValue) {
     return;
   }
-  const ret = await api.get("/api/v1/select/usuario", {
-    params: { codusuario: props.modelValue },
+  const ret = await api.get("/api/v1/select/cidade", {
+    params: { codcidade: props.modelValue },
   });
   opcoes.value = ret.data;
 };
@@ -42,10 +38,9 @@ const buscar = async (val, update, abort) => {
   }
 
   update(async () => {
-    const ret = await api.get("/api/v1/select/usuario", {
+    const ret = await api.get("/api/v1/select/cidade", {
       params: {
-        busca: val,
-        somenteAtivos: props.somenteAtivos,
+        cidade: val
       },
     });
     opcoes.value = ret.data;
@@ -60,21 +55,18 @@ watch(
     buscarPeloCod(newValue);
   }
 );
+
 </script>
 
 <template>
   <q-select :options="opcoes" :model-value="modelValue" use-input @filter="buscar" emit-value map-options
-    option-value="codusuario" option-label="usuario" v-bind="$attrs" options-cover
+    option-value="value" option-label="label" v-bind="$attrs" options-cover
     @update:model-value="(value) => alterar(value)" input-debounce="500" clearable>
-    <template v-slot:option="scope">
-      <q-item v-bind="scope.itemProps">
-        <q-item-section :class="scope.opt.inativo ? 'text-red' : ''">
-          <q-item-label>
-            {{ scope.opt.usuario }}
-          </q-item-label>
-          <q-item-label lines="1">
-            {{ scope.opt.fantasia }}
-          </q-item-label>
+
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey">
+          Nenhum resultado encontrado.
         </q-item-section>
       </q-item>
     </template>

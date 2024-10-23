@@ -834,5 +834,25 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         return false;
       }
     },
+
+    async postPessoa(pessoa) {
+      try {
+        pessoa.pdv = this.pdv.uuid;
+        var { data } = await api.post("/api/v1/pdv/pessoa", pessoa);
+        await db.pessoa.bulkPut(data);
+        return data[0].codpessoa;
+      } catch (error) {
+        let message = "Falha ao salvar a pessoa!";
+        try {
+          message = error.response.data.message;
+        } catch (error) {}
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+      }
+    },
   },
 });
