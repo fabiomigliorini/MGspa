@@ -5,11 +5,11 @@ namespace Mg\Pdv;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Mg\Cidade\Cidade;
 use Mg\Negocio\NegocioResource;
 use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioDevolucaoService;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixService;
@@ -104,17 +104,61 @@ class PdvController
         PdvService::autoriza($request->pdv);
         $codpessoa = $request->codpessoa ?? 0;
         $limite = $request->limite ?? 10000;
-        return PdvService::pessoa($codpessoa, $limite);
+        return PdvService::pessoa($codpessoa, null, $limite);
+    }
+
+    public function pessoaPeloCnpj(PdvRequest $request, $cnpj)
+    {
+        PdvService::autoriza($request->pdv);
+        return PdvService::pessoa(null, $cnpj, 999999);
     }
 
     public function postPessoa(PdvRequest $request)
     {
         PdvService::autoriza($request->pdv);
+
+        // caso tenha IE
+        if (!empty($request->ie)) {
+
+            // busca a cidade do cadastro
+            $cidade = Cidade::find($request['enderecos'][0]['codcidade']);
+            if (!$cidade) {
+                throw new Exception("Cidade não informada!", 1);
+            }
+
+            // descobre a UF
+            $uf = $cidade->Estado->sigla;
+
+            // gambiarra do BUG no componente de validação de terceiro
+            if (strlen($request['ie']) == 12 && $uf == 'MG') {
+                $request['ie'] = str_pad($request->ie, 13, 0, STR_PAD_LEFT);
+            }
+            if (strlen($request['ie']) == 9 && $uf == 'MT') {
+                $request['ie'] = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
+            }
+
+            // valida a IE na UF
+            $request->validate([
+                'ie' => 'inscricao_estadual:' . $uf,
+            ]);    
+        }
+
+        // valida restante dos campos
+        $request->validate([
+            'cnpj' => 'required|cpf_cnpj',
+            'fisica' => 'required|boolean',
+            'fantasia' => 'required|min:3',
+            'pessoa' => 'required|min:3',
+        ]);
+
+        //salva dados no banco
         $data = (object) $request->all();
         DB::beginTransaction();
         $pessoa = PdvPessoaService::novaPessoa($data);
         DB::commit();
-        return PdvService::pessoa($pessoa->codpessoa, 1);
+
+        // retorna pessoa salva
+        return PdvService::pessoa($pessoa->codpessoa, null, 1);
     }
 
     public function naturezaOperacao(PdvRequest $request)
@@ -280,7 +324,7 @@ class PdvController
         $qry = Negocio::where('codnegociostatus', 1)->where('uuid', 'ilike', "{$request->uuid}%");
         $qry->orderBy('lancamento', 'desc')->orderBy('codnegocio', 'desc');
         return NegocioListagemResource::collection($qry->limit(50)->get());
-    }    
+    }
 
     public function fecharNegocio(PdvRequest $request, $codnegocio)
     {

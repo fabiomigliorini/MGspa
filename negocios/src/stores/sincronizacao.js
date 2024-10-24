@@ -846,6 +846,36 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         try {
           message = error.response.data.message;
         } catch (error) {}
+        try {
+          Object.values(error.response.data.errors).forEach((e) => {
+            e.forEach((m) => {
+              message = m;
+            });
+          });
+        } catch (error) {}
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+      }
+    },
+
+    async pessoaPeloCnpj(cnpj) {
+      try {
+        var { data } = await api.get("/api/v1/pdv/pessoa/cnpj/" + cnpj, {
+          params: { pdv: this.pdv.uuid },
+        });
+        await db.pessoa.bulkPut(data);
+        return data.length;
+      } catch (error) {
+        console.log(error);
+        let message =
+          "Falha ao pesquisar CNPJ/CPF no servidor! Operando Offline!";
+        try {
+          message = error.response.data.message;
+        } catch (error) {}
         Notify.create({
           type: "negative",
           message: message,

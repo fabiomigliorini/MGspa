@@ -173,9 +173,13 @@ class PdvService
         return $regs[0];
     }
 
-    public static function pessoa($codpessoa, $limite)
+    public static function pessoa($codpessoa, $cnpj, $limite)
     {
         $sincronizado = date('Y-m-d h:i:s');
+        $params = [
+            'sincronizado' => $sincronizado,
+            'limite' => $limite,
+        ];
         $sql = '
             select 
                 p.codpessoa,
@@ -200,24 +204,28 @@ class PdvService
             left join tblcidade c on (c.codcidade = p.codcidade)
             left join tblestado e on (e.codestado = c.codestado)
         ';
-        if ($limite == 1) {
+        if (!empty($cnpj)) {
+            $params['cnpj'] = "%{$cnpj}%";
             $sql .= '
-                where codpessoa = :codpessoa
+                where to_char(cnpj, \'FM00000000000000\') ilike :cnpj
             ';
         } else {
-            $sql .= '
-                where codpessoa > :codpessoa
-            ';
+            $params['codpessoa'] = $codpessoa;
+            if ($limite == 1) {
+                $sql .= '
+                    where codpessoa = :codpessoa
+                ';
+            } else {
+                $sql .= '
+                    where codpessoa > :codpessoa
+                ';
+            }
         }
         $sql .= '
             order by codpessoa
             limit :limite
         ';
-        $regs = DB::select($sql, [
-            'codpessoa' => $codpessoa,
-            'limite' => $limite,
-            'sincronizado' => $sincronizado
-        ]);
+        $regs = DB::select($sql, $params);
         $regs = array_map(function ($item) {
             $busca = "{$item->pessoa} . {$item->fantasia} . {$item->cnpj} " . str_pad($item->codpessoa, 8, "0", STR_PAD_LEFT);
             $busca = trim(preg_replace('/[^A-Za-z0-9 ]/', '', $busca));

@@ -1,9 +1,9 @@
 <script setup>
-import { ref, defineProps } from 'vue';
+import { ref, defineProps, watch } from 'vue';
 import { LoadingBar, Notify, debounce, Dialog } from "quasar";
 import { db } from "boot/db";
-import { formataCnpjCpf, primeiraLetraMaiuscula } from "src/utils/formatador.js";
-import { isCpfValido, isCnpjValido, isEmailValido, isTelefoneValido } from 'src/utils/validador.js';
+import { formataCnpjCpf, formataIe, primeiraLetraMaiuscula } from "src/utils/formatador.js";
+import { isCpfValido, isCnpjValido, isCnpjCpfValido, isEmailValido, isTelefoneValido } from 'src/utils/validador.js';
 import SelectCidade from '../selects/SelectCidade.vue';
 import InputFiltered from '../InputFiltered.vue';
 import { sincronizacaoStore } from 'src/stores/sincronizacao';
@@ -36,7 +36,12 @@ const cnpj = ref(null);
 const consultando = ref(false);
 const formPessoa = ref(null);
 const inputTelefone = ref(null);
-const pessoa = ref(null)
+const pessoa = ref({
+  cnpj: null,
+  fisica: false,
+  fantasia: null,
+  pessoa: null,
+})
 const consultaSefaz = ref(null);
 
 const props = defineProps({
@@ -107,6 +112,14 @@ const pesquisa = debounce(async () => {
     palavras = texto.split(" ");
   }
 
+  if (isCnpjCpfValido(numeric)) {
+    try {
+      await sSinc.pessoaPeloCnpj(numeric);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   // Busca Pessoas baseados na primeira palavra de pesquisa
   var colPessoas = await db.pessoa
     .where("buscaArr")
@@ -125,7 +138,10 @@ const pesquisa = debounce(async () => {
     // monta expressoes regulares
     var regexes = [];
     for (let i = 1; i < palavras.length; i++) {
-      regexes.push(new RegExp(".*" + palavras[i] + ".*", "i"));
+      try {
+        regexes.push(new RegExp(".*" + palavras[i] + ".*", "i"));
+      } catch (error) {
+      }
     }
 
     // percorre todos registros filtrando pelas expressoes regulares
@@ -210,6 +226,14 @@ const consultarDocumento = async () => {
     }
     parseConsultaPix();
     parseReceitaWs();
+    if (consultaSefaz.value.retSefaz) {
+      if (consultaSefaz.value.retSefaz.length == 0) {
+        step.value = 3;
+      } else if ((consultaSefaz.value.retSefaz.length == 1) & (pessoa.value.fisica == false)) {
+        await parseIe(consultaSefaz.value.retSefaz[0])
+        step.value = 3;
+      }
+    }
   } catch (error) {
     console.log(error);
     Notify.create({
@@ -337,6 +361,15 @@ const parseIe = (ret) => {
 const outraIe = () => {
   pessoa.value.ie = null;
   step.value = 3;
+}
+
+const validarIe = (val) => {
+  if (!val) {
+    return true;
+  }
+  if (val.length > 20) {
+    return 'Muito longo!';
+  }
 }
 
 const novoEmail = () => {
@@ -490,15 +523,28 @@ const salvar = async (e) => {
 
 }
 
+watch(
+  () => pessoa.value.pessoa,
+  (newValue, oldValue) => {
+    if (step.value != 3) {
+      return;
+    }
+    if (pessoa.value.fantasia == oldValue) {
+      pessoa.value.fantasia = newValue;
+    }
+  }
+);
+
 </script>
 <template>
   <q-dialog v-model="dialog">
 
-    <q-stepper v-model="step" ref="stepper" color="primary" animated style="width: 800px; max-width: 80vw;">
+    <q-stepper v-model="step" ref="stepper" color="primary" animated style="width: 800px; max-width: 100vw;">
 
-      <q-step :name="1" title="Documento" icon="settings" :done="step > 1" style="height: 700px; max-height: 80vh;">
+      <q-step :name="1" title="DOC" icon="settings" :done="step > 1" style="height: 700px; max-height: 65vh;">
         <div class="row">
-          <q-input outlined autofocus label="Pesquisa" v-model="cnpj" class="col-12" @update:model-value="pesquisa()"
+          <q-input outlined autofocus label="Pesquisa" v-model="cnpj" class="col-12"
+            @update:model-value="consultando = true; pesquisa()"
             :rules="[val => (!!val && val.length > 3) || 'Digite pelo menos 3 letras']">
 
             <template v-slot:append>
@@ -507,31 +553,43 @@ const salvar = async (e) => {
           </q-input>
 
           <div class="col-12 text-center" style="margin-top: 25vh;" v-if="consultando">
-            <q-spinner color="primary" size="200px" v-if="consultando" />
+            <q-spinner color="grey" size="200px" />
           </div>
+          <template v-else-if="opcoes.length == 0">
+            <div class="col-12 text-center text-grey" style="margin-top: 25vh;" v-if="cnpj">
+              <q-icon name="mdi-account-cancel-outline" size="200px" />
+              <br>
+              Nenhuma cadastro de pessoa encontrado!
+            </div>
+            <div class="col-12 text-center text-grey" style="margin-top: 25vh;" v-else>
+              <q-icon name="mdi-account-search-outline" size="200px" />
+              <br>
+              Digite o CNPJ, CPF ou o nome para pesquisar!
+            </div>
+
+          </template>
           <q-list separator class="col-12" v-else>
             <template v-for="p in opcoes" :key="p.codpessoa">
               <q-item clickable v-ripple @click="confirmar(p.codpessoa, null)">
                 <q-item-section avatar>
-                  <q-icon name="person" v-if="p.fisica" />
-                  <q-icon name="warehouse" v-else />
+                  <q-avatar color="primary" text-color="white" icon="person" v-if="p.fisica" />
+                  <q-avatar color="primary" text-color="white" icon="warehouse" v-else />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-h6">{{ p.fantasia }}</q-item-label>
-                  <q-item-label v-if="p.cnpj">
-                    <b>{{ formataCnpjCpf(p.cnpj, p.fisica) }}</b>
+                  <q-item-label class="text-h6 text-primary">{{ p.fantasia }}</q-item-label>
+                  <q-item-label class="text-weight-bolder text-grey-7" v-if="p.cnpj">
+                    {{ formataCnpjCpf(p.cnpj, p.fisica) }}
                   </q-item-label>
-                  <q-item-label v-if="p.ie">
-                    {{ p.ie }}
+                  <q-item-label class="text-weight-bolder text-grey-7" v-if="p.ie">
+                    {{ formataIe(p.uf, p.ie) }}
                   </q-item-label>
                   <q-item-label caption>
                     {{ p.pessoa }}
                   </q-item-label>
-                  <!-- {{ p.codpessoa }} -->
 
                 </q-item-section>
-                <q-item-section side>
-                  <q-item-label v-if="p.cidade">
+                <q-item-section class="gt-xs" side>
+                  <q-item-label class="text-weight-bolder text-grey-7" v-if="p.cidade">
                     {{ p.cidade }} / {{ p.uf }}
                   </q-item-label>
                   <q-item-label v-if="p.bairro">
@@ -551,8 +609,7 @@ const salvar = async (e) => {
         </div>
       </q-step>
 
-      <q-step :name="2" title="Inscrição" icon="create_new_folder" :done="step > 2"
-        style="height: 700px; max-height: 80vh;">
+      <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2" style="height: 700px; max-height: 65vh;">
         <div class="col-12 text-center" style="margin-top: 25vh;" v-if="consultando">
           <q-spinner color="primary" size="200px" v-if="consultando" />
         </div>
@@ -560,23 +617,23 @@ const salvar = async (e) => {
           <template v-for="(ie, i) in consultaSefaz.retSefaz" :key="i">
             <q-item clickable v-ripple @click="parseIe(ie)">
               <q-item-section avatar>
-                <q-avatar color="secondary" text-color="white">
+                <q-avatar color="primary" text-color="white">
                   {{ i + 1 }}
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-h6">
-                  {{ ie.IE }}/{{ ie.UF }}
+                <q-item-label class="text-h6 text-primary">
+                  {{ formataIe(ie.UF, ie.IE) }}/{{ ie.UF }}
                 </q-item-label>
-                <q-item-label v-if="ie.xFant">
+                <q-item-label class="text-weight-bolder text-grey-7" v-if="ie.xFant">
                   {{ ie.xFant }}
                 </q-item-label>
                 <q-item-label caption v-if="ie.xNome">
                   {{ ie.xNome }}
                 </q-item-label>
               </q-item-section>
-              <q-item-section side v-if="ie.ender">
-                <q-item-label>
+              <q-item-section class="gt-xs" side v-if="ie.ender">
+                <q-item-label class="text-weight-bolder text-grey-7">
                   {{ ie.ender[0].xMun }}/{{ ie.UF }}
                 </q-item-label>
                 <q-item-label v-if="ie.ender[0].xBairro">
@@ -598,13 +655,11 @@ const salvar = async (e) => {
               </q-avatar>
             </q-item-section>
             <q-item-section>
-              <q-item-label class="text-h6">
-                Sem Inscrição | Outra Inscrição
+              <q-item-label class="text-h6 text-negative">
+                Sem IE / Outra IE
               </q-item-label>
               <q-item-label caption>
                 Pessoa <b>NÃO TEM INSCRIÇÃO</b> estadual
-              </q-item-label>
-              <q-item-label caption>
                 <b>OU</b> deseja <b>INFORMAR MANUALMENTE</b>.
               </q-item-label>
             </q-item-section>
@@ -612,7 +667,7 @@ const salvar = async (e) => {
         </q-list>
       </q-step>
 
-      <q-step :name="3" title="Nome" icon="create_new_folder" :done="step > 2" style="height: 700px; max-height: 80vh;">
+      <q-step :name="3" title="OK" icon="create_new_folder" :done="step > 2" style="height: 700px; max-height: 65vh;">
         <q-form ref="formPessoa" @submit="salvar">
 
           <div class="row q-col-gutter-md q-mb-md">
@@ -622,15 +677,15 @@ const salvar = async (e) => {
               mask="##.###.###/####-##" :rules="[val => !!val || 'Obrigatório', val => isCnpjValido(val) || 'Inválido']"
               v-else />
             <q-input class="col-md-3 col-sm-6 col-xs-12" outlined v-model="pessoa.ie" label="Inscrição Estadual"
-              :rules="[val => val.length <= 20 || 'Muito longo, reduza!']" counter maxlength="20" />
+              :rules="[val => validarIe(val)]" counter maxlength="20" />
           </div>
           <div class="row q-col-gutter-md q-mb-md">
-            <input-filtered class="col-6" outlined v-model="pessoa.fantasia" label="Fantasia"
-              :rules="[val => !!val || 'Obrigatório', val => val.length > 3 || 'Muito Curto', val => val.length <= 50 || 'Muito longo, abrevie!']"
-              counter maxlength="50" autofocus />
             <input-filtered class="col-6" outlined v-model="pessoa.pessoa" label="Razão Social"
               :rules="[val => !!val || 'Obrigatório', val => val.length > 3 || 'Muito Curto', val => val.length <= 100 || 'Muito longo, abrevie!']"
-              counter maxlength="100" />
+              counter maxlength="100" autofocus />
+            <input-filtered class="col-6" outlined v-model="pessoa.fantasia" label="Fantasia"
+              :rules="[val => !!val || 'Obrigatório', val => val.length > 3 || 'Muito Curto', val => val.length <= 50 || 'Muito longo, abrevie!']"
+              maxlength="50" />
           </div>
           <div class="row q-col-gutter-md q-mb-md">
             <template v-for="(e, i) in pessoa.emails" :key="i">
@@ -687,7 +742,7 @@ const salvar = async (e) => {
                 counter maxlength="50">
               </input-filtered>
               <input-filtered class="col-md-3 col-sm-3 col-xs-12" outlined v-model="pessoa.enderecos[i].complemento"
-                label="Complemento" :rules="[val => val.length <= 50 || 'Muito longo!']" counter maxlength="50">
+                label="Complemento" :rules="[val => String(val).length <= 50 || 'Muito longo!']" counter maxlength="50">
               </input-filtered>
               <select-cidade outlined v-model="pessoa.enderecos[i].codcidade" class="col-md-6 col-sm-6 col-xs-12"
                 label="Cidade" :rules="[val => !!val || 'Obrigatório']" />
@@ -700,18 +755,18 @@ const salvar = async (e) => {
       </q-step>
 
       <template v-slot:navigation>
-        <q-stepper-navigation class="q-gutter-sm text-right">
-          <q-btn color="accent" v-if="step == 1 && isCpfValido(cnpj)" label="Informar CPF Sem Cadastro"
+        <q-stepper-navigation class="q-gutter-sm">
+          <q-btn flat color="accent" v-if="step == 1 && isCpfValido(cnpj)" label="Informar CPF Sem Cadastro"
             @click="confirmar(1, cnpj)" />
-          <q-btn color="secondary" v-if="step == 1 && isCnpjValido(cnpj)" label="Cadastrar Pessoa Jurídica"
+          <q-btn flat color="secondary" v-if="step == 1 && isCnpjValido(cnpj)" label="Cadastrar Pessoa Jurídica"
             @click="nova(false)" />
-          <q-btn color="secondary" v-if="step == 1 && isCpfValido(cnpj)" label="Cadastrar Pessoa Física"
+          <q-btn flat color="secondary" v-if="step == 1 && isCpfValido(cnpj)" label="Cadastrar Pessoa Física"
             @click="nova(true)" />
-          <q-btn color="accent" v-if="step == 1 && !isCnpjValido(cnpj) && !isCpfValido(cnpj)"
+          <q-btn flat color="accent" v-if="step == 1 && !isCnpjValido(cnpj) && !isCpfValido(cnpj)"
             label="Não identificar pessoa" @click="confirmar(1, null)" />
-          <q-btn v-if="step > 1" flat color="primary" @click="$refs.stepper.previous()" label="Voltar"
+          <q-btn flat color="warning" v-if="step > 1" @click="$refs.stepper.previous()" label="Voltar"
             class="q-ml-sm" />
-          <q-btn color="negative" label="Fechar" @click="dialog = false" />
+          <q-btn flat color="negative" label="Cancelar" @click="dialog = false" />
         </q-stepper-navigation>
       </template>
 

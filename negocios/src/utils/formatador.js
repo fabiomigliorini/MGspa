@@ -41,7 +41,7 @@ export const formataIe = (uf, ie) => {
 
     case "AP":
       ie = ie.toString().padStart(9, "0");
-      return ie.slice(0, 9);
+      return ie;
       break;
 
     case "AM":
@@ -166,7 +166,7 @@ export const formataIe = (uf, ie) => {
 
     case "PI":
       ie = ie.toString().padStart(9, "0");
-      return ie.slice(0, 9);
+      return ie;
       break;
 
     case "RJ":
@@ -239,6 +239,7 @@ export const formataIe = (uf, ie) => {
       break;
 
     default:
+      return ie;
       break;
   }
 };
