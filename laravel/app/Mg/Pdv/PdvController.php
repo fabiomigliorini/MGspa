@@ -18,6 +18,7 @@ use Mg\PagarMe\PagarMePedido;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloResource;
 use Mg\Titulo\TituloService;
+use App\Rules\InscricaoEstadual;
 
 class PdvController
 {
@@ -129,17 +130,12 @@ class PdvController
             // descobre a UF
             $uf = $cidade->Estado->sigla;
 
-            // gambiarra do BUG no componente de validação de terceiro
-            if (strlen($request['ie']) == 12 && $uf == 'MG') {
-                $request['ie'] = str_pad($request->ie, 13, 0, STR_PAD_LEFT);
-            }
-            if (strlen($request['ie']) == 9 && $uf == 'MT') {
-                $request['ie'] = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
-            }
+            // completa com zero a esquerda de acordo com a UF
+            $request['ie'] = InscricaoEstadual::padPelaUf($uf, $request['ie']);
 
             // valida a IE na UF
             $request->validate([
-                'ie' => 'inscricao_estadual:' . $uf,
+                'ie' => new InscricaoEstadual($uf),
             ]);    
         }
 

@@ -67,14 +67,14 @@ class DistribuicaoService
                 $barras[$pb->codprodutobarra] = (object) [
                     'codprodutobarra' => $pb->codprodutobarra,
                     'barras' => $pb->barras,
-                    'embalagem' => $pb->ProdutoEmbalagem->UnidadeMedida->sigla??null,
-                    'quantidade' => $pb->ProdutoEmbalagem->quantidade??null
+                    'embalagem' => $pb->ProdutoEmbalagem->UnidadeMedida->sigla ?? null,
+                    'quantidade' => $pb->ProdutoEmbalagem->quantidade ?? null
                 ];
                 if (!empty($pb->codprodutoembalagem)) {
                     $embalagens[$pb->codprodutoembalagem] = (object) [
                         'codprodutoembalagem' => $pb->codprodutoembalagem,
-                        'embalagem' => $pb->ProdutoEmbalagem->UnidadeMedida->sigla??null,
-                        'quantidade' => $pb->ProdutoEmbalagem->quantidade??null
+                        'embalagem' => $pb->ProdutoEmbalagem->UnidadeMedida->sigla ?? null,
+                        'quantidade' => $pb->ProdutoEmbalagem->quantidade ?? null
                     ];
                 }
             }
@@ -206,10 +206,10 @@ class DistribuicaoService
                         } elseif ($lote % 12 == 0) {
                             $fragmento = 0.25;
                         } elseif ($lote % 6 == 0) {
-                            $fragmento = 1/3;
+                            $fragmento = 1 / 3;
                         }
                     }
-                    $lotes = ceil($lotes/$fragmento) * $fragmento;
+                    $lotes = ceil($lotes / $fragmento) * $fragmento;
                 } else {
                     $lotes = max(round($lotes, 0), 1);
                 }
@@ -307,7 +307,7 @@ class DistribuicaoService
         $spreadsheet->getDefaultStyle()->getFont()
             ->setName('Liberation Sans')
             ->setSize(10)
-            ;
+        ;
         $titulo = "Transferência";
         $spreadsheet->getProperties()
             ->setCreator("MG Papelaria")
@@ -347,7 +347,7 @@ class DistribuicaoService
         $sheet->setCellValue("E{$linhaCabecalho}", 'Bot');
         $sheet->setCellValue("F{$linhaCabecalho}", 'Cen');
         $sheet->setCellValue("G{$linhaCabecalho}", 'Imp');
-	$sheet->setCellValue("H{$linhaCabecalho}", 'Ama');
+        $sheet->setCellValue("H{$linhaCabecalho}", 'Ama');
         $sheet->setCellValue("I{$linhaCabecalho}", 'Dep');
         $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd($linhaCabecalho, $linhaCabecalho);
         $sheet->getStyle("A{$linhaCabecalho}:I{$linhaCabecalho}")->getFont()->setBold(true);
@@ -366,7 +366,7 @@ class DistribuicaoService
         $sheet->getColumnDimension('F')->setWidth(6.5);
         $sheet->getColumnDimension('G')->setWidth(6.5);
         $sheet->getColumnDimension('H')->setWidth(6.5);
-	$sheet->getColumnDimension('I')->setWidth(6.5);
+        $sheet->getColumnDimension('I')->setWidth(6.5);
 
         // congela paineis
         $sheet->freezePane("A{$linha}");
@@ -376,7 +376,7 @@ class DistribuicaoService
             102001 => 'E',
             103001 => 'F',
             104001 => 'G',
-	    105001 => 'H',
+            105001 => 'H',
         ];
 
         // linha onde comeca os produtos
@@ -385,7 +385,7 @@ class DistribuicaoService
         // percorre produtos
         foreach ($produtos as $prod) {
             $linha2 = $linha + 1;
-	    $linha3 = $linha2 + 1;
+            $linha3 = $linha2 + 1;
 
             // codigo do produto
             $sheet->mergeCells("A{$linha}:A{$linha3}");
@@ -420,9 +420,9 @@ class DistribuicaoService
             $sheet->getRowDimension($linha2)->setRowHeight(11);
             if ($linhasBarras > 3) {
                 $height = ($linhasBarras - 2) * 11;
-		if ($height > 55) {
+                if ($height > 55) {
                     $height = 55;
-		}
+                }
                 $sheet->getRowDimension($linha3)->setRowHeight($height);
             } else {
                 $sheet->getRowDimension($linha3)->setRowHeight(11);
@@ -442,7 +442,7 @@ class DistribuicaoService
                 $sheet->setCellValue("{$coluna}{$linha}", $dest->transferir);
 
                 $str = "={$dest->saldoquantidade}+{$coluna}{$linha}";
-		$sheet->setCellValue("{$coluna}{$linha2}", $str);
+                $sheet->setCellValue("{$coluna}{$linha2}", $str);
 
                 // percentual
                 if (!empty($dest->estoquemaximo)) {
@@ -462,13 +462,13 @@ class DistribuicaoService
             $sheet->getStyle("E{$linha2}:I{$linha3}")->getFont()->setSize(8);
             //$sheet->getStyle("E{$linha2}:I{$linha3}")->getFont()->getColor()->setARGB('FF999999');
 
-	    // Alinhamento Vertical
-	    $sheet->getStyle("E{$linha3}:I{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+            // Alinhamento Vertical
+            $sheet->getStyle("E{$linha3}:I{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
             $sheet->getStyle("A{$linha}:D{$linha3}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
             $sheet->getStyle("I{$linha}:I{$linha2}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
             // Saldo Final Deposito
-	    $sheet->mergeCells("I{$linha}:I{$linha2}");
+            $sheet->mergeCells("I{$linha}:I{$linha2}");
             $str = "=D{$linha}-E{$linha}-F{$linha}-G{$linha}-H{$linha}";
             $sheet->setCellValue("I{$linha}", $str);
             $sheet->getStyle("D{$linha}:I{$linha3}")->getNumberFormat()->setFormatCode('#,##0');
@@ -484,7 +484,7 @@ class DistribuicaoService
 
             $linha += 3;
         }
-        $linhaFinal = $linha-1;
+        $linhaFinal = $linha - 1;
 
         // Filtro
         $spreadsheet->getActiveSheet()->setAutoFilter("A{$linhaCabecalho}:I{$linhaFinal}");
@@ -522,7 +522,7 @@ class DistribuicaoService
 
         // Fundo Azul na Andre Maggi
         $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-        $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFDCE8F2');	
+        $sheet->getStyle("H{$linhaInicial}:H{$linhaFinal}")->getFill()->getStartColor()->setARGB('FFDCE8F2');
 
         // Quebra automatica para descricao do produto e barras
         $sheet->getStyle("B{$linhaInicial}:B{$linhaFinal}")->getAlignment()->setShrinkToFit(true);
@@ -553,6 +553,6 @@ class DistribuicaoService
         }
         $writer->save($arquivo);
         chmod($arquivo, 0666);
-        return $arquivo;        
+        return $arquivo;
     }
 }

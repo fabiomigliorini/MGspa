@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Mg\Cidade\Cidade;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Usuario\Autorizador;
+use App\Rules\InscricaoEstadual;
+
 
 class PessoaController extends MgController
 {
@@ -24,13 +26,8 @@ class PessoaController extends MgController
 
         if ($request->ieoutra) {
 
-            if (strlen($request['ieoutra']) == 12 && $request['uf'] == 'MG') {
-                $request['ieoutra'] = str_pad($request->ieoutra, 13, 0, STR_PAD_LEFT);
-            }
-
-            if (strlen($request['ieoutra']) == 9 && $request['uf'] == 'MT') {
-                $request['ieoutra'] = str_pad($request->ieoutra, 11, 0, STR_PAD_LEFT);
-            }
+            // completa com zero a esquerda de acordo com a UF
+            $request['ie'] = InscricaoEstadual::padPelaUf($uf, $request['ie']);            
             
             $this->validate($request, [
                 'ieoutra' => 'required|inscricao_estadual:' . $request->uf,

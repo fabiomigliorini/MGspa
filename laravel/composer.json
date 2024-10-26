@@ -12,7 +12,7 @@
         "dompdf/dompdf": "^2.0",
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",
-        "geekcom/validator-docs": "^3.9",
+        "geekcom/validator-docs": "^3.10",
         "guzzlehttp/guzzle": "^7.5",
         "laravel/framework": "^8.12",
         "laravel/helpers": "^1.6",
