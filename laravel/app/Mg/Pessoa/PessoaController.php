@@ -4,15 +4,11 @@ namespace Mg\Pessoa;
 
 use Illuminate\Http\Request;
 use Mg\MgController;
-use Carbon\Carbon;
-use Illuminate\Validation\Rule;
 use DB;
-use Illuminate\Support\Facades\Auth;
-use Mg\Cidade\Cidade;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Usuario\Autorizador;
 use App\Rules\InscricaoEstadual;
-
+use Mg\Mercos\MercosCliente;
 
 class PessoaController extends MgController
 {
@@ -121,23 +117,6 @@ class PessoaController extends MgController
 
         $data = $request->all();
 
-        // if ($request->ie) {
-        //     $buscaSigla = PessoaService::buscaSigla($request->codcidade);
-        //     $uf = $buscaSigla[0]->sigla;
-        //     $ie = str_pad($request->ie, 11, 0, STR_PAD_LEFT);
-        //     $request['ie'] = $ie;
-
-        //     $this->validate($request, [
-        //         'cnpj' => 'required|cpf_cnpj',
-        //         'ie' => 'required|inscricao_estadual:' . $uf,
-        //     ]);
-        // }
-
-        // $this->validate($request, [
-        //     'cnpj' => 'required|cpf_cnpj'
-        // ]);
-
-
         $pessoa = Pessoa::findOrFail($codpessoa);
         $pessoa = PessoaService::update($pessoa, $data);
         return new PessoaResource($pessoa);
@@ -146,7 +125,6 @@ class PessoaController extends MgController
     public function delete(Request $request, $codpessoa)
     {
         Autorizador::autoriza(array('Publico'));
-
 
         $pessoa = Pessoa::findOrFail($codpessoa);
         $res = PessoaService::delete($pessoa);
@@ -157,7 +135,6 @@ class PessoaController extends MgController
 
     public function ativar(Request $request, $codpessoa)
     {
-
         Autorizador::autoriza(array('Publico'));
 
         $pessoa = Pessoa::findOrFail($codpessoa);
@@ -167,7 +144,6 @@ class PessoaController extends MgController
 
     public function inativar(Request $request, $codpessoa)
     {
-
         Autorizador::autoriza(array('Publico'));
 
         $pessoa = Pessoa::findOrFail($codpessoa);
@@ -188,7 +164,6 @@ class PessoaController extends MgController
         $pessoas = PessoaService::importar($codfilial, $uf, $cnpj, $cpf, $ie);
         return PessoaResource::collection($pessoas);
     }
-
 
     public function atualizaCampos($pessoa)
     {
@@ -251,8 +226,6 @@ class PessoaController extends MgController
         return response()->json($aniversarios, 200);
     }
 
-
-
     public function aniversariosColaboradores()
     {
 
@@ -261,5 +234,22 @@ class PessoaController extends MgController
         $teste =  PessoaService::aniversariosColaboradores();
 
         dd($teste);
+    }
+
+    public function transferirMercosId(Request $request, $codpessoa)
+    {
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        $pessoaNova = Pessoa::findOrFail($request->codpessoanova);
+        $mc = MercosCliente::where([
+            'codpessoa' => $codpessoa,
+            'clienteid' => $request->mercosid
+        ])->first();
+        if (!$mc) {
+            throw new Exception("Não foi localizado nenhum Mercos ID {$request->mercosid} para a pessoa {$codpessoa}!", 1);
+        }
+        $mc->update([
+            'codpessoa' => $request->codpessoanova
+        ]);
+        return new PessoaResource($pessoa->fresh());
     }
 }

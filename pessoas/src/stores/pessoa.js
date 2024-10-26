@@ -64,6 +64,14 @@ export const pessoaStore = defineStore('pessoa', {
       return ret;
     },
 
+    async transferirMercosId(codpessoa, mercosid, codpessoanova) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/transferir-mercos-id', {
+        mercosid: mercosid,
+        codpessoanova: codpessoanova,
+      });
+      return ret;
+    },
+
     async getEndereco(codpessoa, codpessoaendereco) {
       const { data } = await api.get('v1/pessoa/' + codpessoa + '/endereco/' + codpessoaendereco)
       this.item.PessoaEnderecoS = data.data
@@ -376,7 +384,7 @@ export const pessoaStore = defineStore('pessoa', {
 
     async novaContaBancaria(codpessoa, modelContaBancaria) {
       const ret = await api.post('v1/pessoa/' + codpessoa + '/conta/', modelContaBancaria)
-      this.item.PessoaContaS.push(ret.data.data)      
+      this.item.PessoaContaS.push(ret.data.data)
       return ret;
     },
 
@@ -498,7 +506,7 @@ export const pessoaStore = defineStore('pessoa', {
 
     async buscaPessoasSelectUsuario(model) {
       const ret = await api.get('v1/pessoa', {
-        params: model 
+        params: model
       })
       return ret;
     },

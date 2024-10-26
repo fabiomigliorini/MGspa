@@ -236,6 +236,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('pessoa/{codpessoa}', '\Mg\Pessoa\PessoaController@delete');
         Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
         Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
+        Route::post('pessoa/{codpessoa}/transferir-mercos-id', '\Mg\Pessoa\PessoaController@transferirMercosId');
 
         //GrupoCliente
         Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index');
@@ -520,7 +521,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
         // Autocomplete / Select
-        //Route::get('select/pessoa', '\Mg\Select\SelectPessoaController@index');
+        Route::get('select/pessoa', '\Mg\Select\SelectPessoaController@index');
         Route::get('select/cidade', '\Mg\Select\SelectCidadeController@index');
         Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');

@@ -14,8 +14,8 @@
             val => val && val.length > 0 || 'Razão Social é Obrigatório'
           ]" />
 
-          <select-grupo-economico v-model="modelEditarDetalhes.codgrupoeconomico" label="Grupo Econômico" class="q-mb-md"
-            :permite-adicionar="true" />
+          <select-grupo-economico v-model="modelEditarDetalhes.codgrupoeconomico" label="Grupo Econômico"
+            class="q-mb-md" :permite-adicionar="true" />
 
           <div class="row">
             <q-toggle class="" outlined v-model="modelEditarDetalhes.fisica" label="Pessoa Física" />
@@ -23,8 +23,8 @@
 
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == false" label="Cnpj"
-                mask="##.###.###/####-##" unmasked-value disable />
+              <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == false"
+                label="Cnpj" mask="##.###.###/####-##" unmasked-value disable />
               <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == true" label="CPF"
                 mask="###.###.###-##" unmasked-value disable />
             </div>
@@ -41,7 +41,8 @@
           <div class="row q-col-gutter-md">
 
             <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##/##/####" label="Nascimento / Fundação">
+              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##/##/####"
+                label="Nascimento / Fundação">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -80,7 +81,8 @@
                 unmasked-value />
             </div>
             <div class="col-3">
-              <q-input outlined v-model="modelEditarDetalhes.titulozona" label="Titulo Zona" mask="###" unmasked-value />
+              <q-input outlined v-model="modelEditarDetalhes.titulozona" label="Titulo Zona" mask="###"
+                unmasked-value />
             </div>
             <div class="col-3">
               <q-input outlined v-model="modelEditarDetalhes.titulosecao" label="Titulo Seção" mask="####"
@@ -151,6 +153,27 @@
     </q-card>
   </q-dialog>
 
+  <!-- DIALOG MERCOS -->
+  <q-dialog v-model="DialogMercos">
+    <q-card style="width: 300px">
+      <q-form @submit="salvarMercos">
+        <q-card-section>
+          <q-select outlined v-model="mercosTransferir.mercosid" label="Mercos ID"
+            :rules="[val => val > 1 || 'Obrigatório']" :options="sPessoa.item.mercosId" />
+
+          <select-pessoa autofocus outlined v-model="mercosTransferir.codpessoanova" label="Transferir para Pessoa" somente-ativos
+            :rules="[val => val > 1 || 'Obrigatório']" />
+
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="salvar" color="primary" type="submit" />
+          <q-btn flat label="fechar" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
+
+
   <q-card bordered>
     <q-list>
       <q-item>
@@ -212,14 +235,19 @@
             </q-item-section>
             <q-item-section top>
               <q-item-label>
-                #0000{{ sPessoa.item.codpessoa }}
+                #{{ String(sPessoa.item.codpessoa).padStart(8, '0') }}
                 <span v-if="sPessoa.item.mercosId.length > 0">
-                  /
-                  <q-btn dense v-if="sPessoa.item.mercosId.length > 0" flat color="primary"
-                    :label="Number(sPessoa.item.mercosId)"
-                    :href="'https://app.mercos.com/354041/clientes/' + sPessoa.item.mercosId" target="_blank" />
+                  <template v-for="mid in sPessoa.item.mercosId" :key="mid">
+                    /
+                    <q-btn dense flat color="primary" :label="mid"
+                      :href="'https://app.mercos.com/354041/clientes/' + mid" target="_blank" />
+                  </template>
+                  <q-btn dense flat icon="manage_accounts" color="primary" @click="abrirDialogMercos">
+                    <q-tooltip class="bg-indigo" :offset="[10, 10]">
+                      Transferir MercosID {{ sPessoa.item.mercosId }} para outro cadastro!
+                    </q-tooltip>
+                  </q-btn>
                 </span>
-
               </q-item-label>
               <q-item-label caption>
                 Pessoa
@@ -278,6 +306,7 @@
               <q-item-label caption class="text-grey-8">Observações</q-item-label>
             </q-item-section>
           </q-item>
+          <q-separator inset />
 
           <q-item v-if="sPessoa.item.ctps">
             <q-item-section avatar top>
@@ -292,6 +321,7 @@
               <q-item-label caption>Série / Uf / Ctps / Emissão</q-item-label>
             </q-item-section>
           </q-item>
+          <q-separator inset />
 
         </div>
         <div class="col-xs-12 col-sm-6">
@@ -423,7 +453,7 @@ export default defineComponent({
     SelectEstado: defineAsyncComponent(() => import('components/pessoa/SelectEstado.vue')),
     InputIe: defineAsyncComponent(() => import('components/pessoa/InputIe.vue')),
     InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue')),
-
+    SelectPessoa: defineAsyncComponent(() => import('components/select/SelectPessoa.vue')),
   },
 
   methods: {
@@ -539,18 +569,52 @@ export default defineComponent({
 
     },
 
+    async abrirDialogMercos() {
+      this.mercosTransferir.codpessoanova = null;
+      if (this.sPessoa.item.mercosId.length > 0) {
+        this.mercosTransferir.mercosid = this.sPessoa.item.mercosId[0];
+      } else {
+        this.mercosTransferir.mercosid = null;
+      }
+      this.DialogMercos = true;
+    },
+
+    salvarMercos(evt) {
+      if (evt) {
+        evt.preventDefault();
+      }
+      this.$q.dialog({
+        title: 'Confirma',
+        message: 'Tem certeza que deseja confirmar a transferência do Mercos ID?',
+        cancel: true,
+      }).onOk(async () => {
+        try {
+          const ret = await this.sPessoa.transferirMercosId(this.sPessoa.item.codpessoa,
+            this.mercosTransferir.mercosid,
+            this.mercosTransferir.codpessoanova
+          )
+          this.sPessoa.item = ret.data.data
+          this.$q.notify({
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'done',
+            message: 'MercosID Transferido'
+          });
+          this.DialogMercos = false
+        } catch (error) {
+          console.log(error);
+          this.$q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: 'Falha ao transferir MercosID!'
+          })
+        }
+      })
+
+    },
 
     async salvarDetalhes() {
-
-      // if (!this.sPessoa.item.PessoaEnderecoS.find(item => item.nfe === true) && this.modelEditarDetalhes.ie) {
-      //   this.$q.notify({
-      //     color: 'red-5',
-      //     textColor: 'white',
-      //     icon: 'error',
-      //     message: 'Cadastre um endereço para verificar a Inscrição Estadual'
-      //   })
-      //   return
-      // }
 
       const editar = { ...this.modelEditarDetalhes }
 
@@ -617,6 +681,10 @@ export default defineComponent({
     const Documentos = formataDocumetos()
     const user = guardaToken()
     const options = ref([])
+    const mercosTransferir = ref({
+      mercosid: null,
+      codpessoanova: null,
+    });
 
     return {
       formapagamento: ref({}),
@@ -626,6 +694,8 @@ export default defineComponent({
       user,
       options,
       moment,
+      DialogMercos: ref(false),
+      mercosTransferir,
       DialogDetalhes: ref(false),
       modelEditarDetalhes: ref([]),
       GrupoEconomico,
