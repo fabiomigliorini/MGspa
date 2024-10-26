@@ -536,7 +536,7 @@ export default defineComponent({
     async editarDetalhes() {
       this.DialogDetalhes = true
       this.modelEditarDetalhes = {
-        cnpj: this.Documentos.formataCnpjCpf(this.sPessoa.item.cnpj, this.sPessoa.item.fisica),
+        cnpj: (this.sPessoa.item.fisica)?String(this.sPessoa.item.cnpj).padStart(11, '0'):String(this.sPessoa.item.cnpj).padStart(14, '0'),
         rntrc: this.sPessoa.item.rntrc,
         ie: this.sPessoa.item.ie,
         fantasia: this.sPessoa.item.fantasia,
