@@ -26,10 +26,14 @@ class PessoaTelefoneController extends MgController
         $request->validate([
             'tipo' => ['required'],
             'pais' => ['required'],
-            'ddd' => ['required'],
             'telefone' => ['required'],
         ]);
 
+        if ($request->tipo != 9) {
+            $request->validate([
+                'ddd' => ['required'],
+            ]);
+        } 
 
         $data = $request->all();
         $data['codpessoa'] = $codpessoa;

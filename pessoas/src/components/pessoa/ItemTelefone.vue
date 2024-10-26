@@ -16,26 +16,32 @@
             label="Fixo" outlined />
           <q-radio v-model="modelTel.tipo" checked-icon="task_alt" unchecked-icon="panorama_fish_eye" :val="2"
             label="Celular" outlined />
+          <q-radio v-model="modelTel.tipo" checked-icon="task_alt" unchecked-icon="panorama_fish_eye" :val="9"
+            label="Outro" outlined />
 
           <q-separator spaced></q-separator>
 
           <q-input outlined v-model="modelTel.pais" mask="(+##)" value="+55" label="País" :rules="[
             val => val && val.length > 0 || 'Pais obrigatório'
-          ]" unmasked-value/>
+          ]" unmasked-value />
 
           <q-input outlined v-model="modelTel.ddd" mask="(##)" label="DDD" :rules="[
-          telNovo == false ? null : val => val && val.length > 0 || 'DDD obrigatório'
-          ]" unmasked-value/>
-          
-          <q-input v-if="modelTel.tipo == '2'" outlined v-model="modelTel.telefone" mask="# ####-####"
-            label="Telefone" unmasked-value :rules="[
-              telNovo == false ? null : val => val && val.length > 0 || 'Telefone obrigatório'
-            ]" />
+            telNovo == false ? null : val => val && val.length > 0 || 'DDD obrigatório'
+          ]" unmasked-value v-if="modelTel.tipo != '9'" />
 
-          <q-input v-if="modelTel.tipo == '1'" outlined v-model="modelTel.telefone" mask="####-####"
-            label="Telefone" unmasked-value :rules="[
+          <q-input v-if="modelTel.tipo == '2'" outlined v-model="modelTel.telefone" mask="# ####-####" label="Telefone"
+            unmasked-value :rules="[
               telNovo == false ? null : val => val && val.length > 0 || 'Telefone obrigatório'
-            ]" />
+            ]" inputmode="numeric" />
+
+          <q-input v-if="modelTel.tipo == '1'" outlined v-model="modelTel.telefone" mask="####-####" label="Telefone"
+            unmasked-value :rules="[
+              telNovo == false ? null : val => val && val.length > 0 || 'Telefone obrigatório'
+            ]" inputmode="numeric" />
+
+          <q-input v-if="modelTel.tipo == '9'" outlined v-model="modelTel.telefone" label="Telefone" :rules="[
+            telNovo == false ? null : val => val && val.length > 0 || 'Telefone obrigatório'
+          ]" inputmode="tel" />
 
           <input-filtered outlined v-model="modelTel.apelido" label="Apelido" :rules="[]" />
         </q-card-section>
@@ -66,7 +72,9 @@
           <q-item-section class="cursor-pointer" lines="1" @click="linkTel(element.ddd, element.telefone)" clickable
             v-ripple>
             <q-item-label v-if="!element.inativo">
-              ({{ element.ddd }})
+              <template v-if="element.ddd">
+                ({{ element.ddd }})
+              </template>
               {{ formataFone(element.tipo, element.telefone) }}
               <q-icon v-if="element.verificacao" color="blue" name="verified" />
             </q-item-label>
@@ -152,7 +160,7 @@ const modelTel = ref({})
 
 export default defineComponent({
   name: "ItemTelefone",
- 
+
   display: "Transition",
   order: 6,
 
@@ -407,21 +415,21 @@ export default defineComponent({
       switch (tipo) {
         case 2:
           return 'smartphone'
-          break;
-        default:
+        case 1:
           return 'phone'
-          break;
+        default:
+          return 'device_unknown'
       }
     },
 
     formataFone(tipo, fone) {
       switch (tipo) {
         case 2:
-          return this.formataCelular(fone)
-          break;
+          return this.formataCelular(fone);
+        case 1:
+          return this.formataFixo(fone);
         default:
-          return this.formataFixo(fone)
-          break;
+          return fone;
       }
     },
 

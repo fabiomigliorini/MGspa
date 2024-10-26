@@ -17,6 +17,9 @@ class PessoaTelefoneService
             $data['ordem'] = PessoaTelefone::where('codpessoa', $data['codpessoa'])->max('ordem') + 1;
         }
         $telefone = new PessoaTelefone($data);
+        if ($telefone->tipo == 9 && empty($telefone->ddd)) {
+            $telefone->ddd = null;
+        }
         $telefone->save();
         PessoaService::atualizaCamposLegado($telefone->Pessoa);
         return $telefone->refresh();
