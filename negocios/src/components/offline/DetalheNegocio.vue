@@ -9,6 +9,7 @@ import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
 import WizardPessoa from "./WizardPessoa.vue";
 import { db } from "boot/db";
 import { LoadingBar } from "quasar";
+import { iconeNegocio, corIconeNegocio } from "src/utils/iconeNegocio.js";
 import emitter from "src/utils/emitter";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
@@ -202,18 +203,6 @@ const recarregarDaApi = () => {
   });
 };
 
-const negocioStatusIconColor = () => {
-  switch (sNegocio.negocio.codnegociostatus) {
-    case 2: // Fechado
-      return "secondary";
-
-    case 3: // Cancelado
-      return "negative";
-
-    default:
-      return "grey";
-  }
-};
 </script>
 <template>
   <!-- Editar Pessoa -->
@@ -231,7 +220,7 @@ const negocioStatusIconColor = () => {
                 label="Natureza de Operacao" :rules="[(val) => !!val || 'Preenchimento Obrigatório']" />
             </div>
             <div class="col-12">
-              <q-input outlined autogrow v-model.number="edicaoNatureza.observacoes" label="Observações" />
+              <q-input autofocus outlined autogrow v-model.number="edicaoNatureza.observacoes" label="Observações" />
             </div>
           </div>
         </q-card-section>
@@ -282,7 +271,7 @@ const negocioStatusIconColor = () => {
     <!-- Filial -->
     <q-item clickable @click="editarNatureza()">
       <q-item-section avatar top>
-        <q-avatar icon="store" color="grey" text-color="white" />
+        <q-avatar icon="store" color="secondary" text-color="white" />
       </q-item-section>
 
       <q-item-section>
@@ -298,7 +287,8 @@ const negocioStatusIconColor = () => {
     <!-- Natureza -->
     <q-item clickable v-ripple @click="editarNatureza()">
       <q-item-section avatar top>
-        <q-avatar icon="work" :color="negocioStatusIconColor()" text-color="white" />
+        <q-avatar :icon="iconeNegocio(sNegocio.negocio)" :color="corIconeNegocio(sNegocio.negocio)"
+          text-color="white" />
       </q-item-section>
 
       <q-item-section>
@@ -317,14 +307,19 @@ const negocioStatusIconColor = () => {
 
 
     <!-- OBSERVACOES -->
-    <q-item clickable v-ripple v-if="sNegocio.negocio.observacoes" @click="editarNatureza()">
+    <q-item clickable v-ripple @click="editarNatureza()">
       <q-item-section avatar top>
-        <q-avatar icon="notes" color="grey" text-color="white" />
+        <q-avatar icon="notes" :color="(sNegocio.negocio.observacoes) ? 'secondary' : 'grey'" text-color="white" />
       </q-item-section>
 
       <q-item-section>
         <q-item-label lines="1" style="white-space: pre-line">
-          {{ sNegocio.negocio.observacoes }}
+          <template v-if="sNegocio.negocio.observacoes">
+            {{ sNegocio.negocio.observacoes }}
+          </template>
+          <template v-else>
+            Clique aqui para adicionar
+          </template>
         </q-item-label>
         <q-item-label caption>Observações</q-item-label>
       </q-item-section>
@@ -336,7 +331,9 @@ const negocioStatusIconColor = () => {
     <wizard-pessoa />
     <q-item clickable v-ripple @click="editarPessoa()">
       <q-item-section avatar top>
-        <q-avatar icon="person" :color="(sNegocio.negocio.codpessoa == 1) ? 'grey' : 'secondary'" text-color="white" />
+        <q-avatar icon="person"
+          :color="(sNegocio.negocio.codpessoa != 1 || sNegocio.negocio.cpf) ? 'secondary' : 'grey'"
+          text-color="white" />
       </q-item-section>
 
       <q-item-section>
@@ -419,7 +416,8 @@ const negocioStatusIconColor = () => {
     <!-- VENDEDOR -->
     <q-item clickable v-ripple @click="editarVendedor()">
       <q-item-section avatar top>
-        <q-avatar icon="escalator_warning" color="grey" text-color="white" />
+        <q-avatar icon="escalator_warning" :color="(sNegocio.negocio.codpessoavendedor) ? 'secondary' : 'grey'"
+          text-color="white" />
       </q-item-section>
 
       <q-item-section>
@@ -462,7 +460,7 @@ const negocioStatusIconColor = () => {
     <!-- PDV/Usuario -->
     <q-item>
       <q-item-section avatar top>
-        <q-avatar icon="mdi-monitor-account" color="grey" text-color="white" />
+        <q-avatar icon="mdi-monitor-account" color="secondary" text-color="white" />
       </q-item-section>
 
       <q-item-section>
