@@ -1084,12 +1084,13 @@ export const negocioStore = defineStore("negocio", {
       }
     },
 
-    async uploadAnexo(pasta, anexoBase64) {
+    async uploadAnexo(pasta, ratio, anexoBase64) {
       try {
         // asdasd();
         const ret = await sSinc.uploadAnexo(
           this.negocio.codnegocio,
           pasta,
+          ratio,
           anexoBase64
         );
         if (!ret) {

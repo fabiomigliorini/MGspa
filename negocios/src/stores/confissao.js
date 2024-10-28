@@ -10,14 +10,16 @@ export const confissaoStore = defineStore("confissao", {
 
   state: () => ({
     imagem: null,
+    ratio: null,
     codnegocio: null,
     valor: null,
     encontrados: 0,
   }),
 
   actions: {
-    async novaImagem(imagem) {
+    async novaImagem(imagem, ratio) {
       this.imagem = imagem;
+      this.ratio = ratio;
       this.codnegocio = null;
       this.valor = null;
       this.encontrados = null;
@@ -71,6 +73,7 @@ export const confissaoStore = defineStore("confissao", {
         const ret = await sSinc.uploadAnexo(
           this.codnegocio,
           "confissao",
+          this.ratio,
           this.imagem
         );
         if (!ret) {

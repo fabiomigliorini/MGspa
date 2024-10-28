@@ -4,12 +4,14 @@ namespace Mg\Pdv;
 
 use Illuminate\Support\Facades\Storage;
 
+use Mg\Negocio\Negocio;
+
 class PdvAnexoController
 {
     public function upload($codnegocio, PdvRequest $request)
     {
         PdvService::autoriza($request->pdv);
-        PdvAnexoService::upload($codnegocio, $request->pasta, $request->anexoBase64);
+        PdvAnexoService::upload($codnegocio, $request->pasta, $request->ratio??'', $request->anexoBase64);
         return PdvAnexoService::listagem($codnegocio);
     }
 
@@ -56,5 +58,13 @@ class PdvAnexoController
     {
         PdvService::autoriza($request->pdv);
         return PdvAnexoService::faltando($ano, $mes);
+    }
+
+    public function ignorarConfissao  (PdvRequest $request, $codnegocio)
+    {
+        PdvService::autoriza($request->pdv);
+        PdvAnexoService::ignorarConfissao($codnegocio);
+        $neg = Negocio::findOrFail($codnegocio);
+        return PdvAnexoService::faltando($neg->lancamento->year, $neg->lancamento->month);
     }
 }

@@ -785,13 +785,14 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       }
     },
 
-    async uploadAnexo(codnegocio, pasta, anexoBase64) {
+    async uploadAnexo(codnegocio, pasta, ratio, anexoBase64) {
       try {
         const ret = await api.post(
           "/api/v1/pdv/negocio/" + codnegocio + "/anexo",
           {
             pdv: this.pdv.uuid,
             pasta: pasta,
+            ratio: ratio,
             anexoBase64: anexoBase64,
           }
         );

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import Slim from "./slim.module.js";
 import { negocioStore } from "stores/negocio";
 
@@ -13,7 +13,6 @@ const props = defineProps({
     type: String,
     default: "free",
   },
-
   pasta: {
     type: String,
     default: "imagem",
@@ -34,7 +33,7 @@ const inicializar = async () => {
     // forceSize: "400.800",
     willSave: function (data, ready) {
       sNegocio
-        .uploadAnexo(props.pasta, data.output.image)
+        .uploadAnexo(props.pasta, props.ratio, data.output.image)
         .then(() => {
           cropper.remove();
         })
@@ -52,6 +51,15 @@ onMounted(() => {
 onBeforeUnmount(() => {
   cropper.destroy();
 });
+
+watch(
+  () => props.ratio,
+  () => {
+    cropper.destroy();
+    inicializar();
+  }
+);
+
 </script>
 <template>
   <div class="slim" ref="refSlim" style="

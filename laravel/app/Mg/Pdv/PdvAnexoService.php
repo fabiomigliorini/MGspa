@@ -2,8 +2,10 @@
 
 namespace Mg\Pdv;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 use Mg\Negocio\Negocio;
 
@@ -22,15 +24,15 @@ class PdvAnexoService
         return static::diretorio($codnegocio) . $arquivo;
     }
 
-    public static function upload(int $codnegocio, string $pasta, string $anexoBase64)
+    public static function upload(int $codnegocio, string $pasta, string $ratio, string $anexoBase64)
     {
         switch ($pasta) {
             case 'confissao':
-                return static::uploadConfissao($codnegocio, $pasta, $anexoBase64);
+                return static::uploadConfissao($codnegocio, $pasta, $ratio, $anexoBase64);
                 break;
 
             case 'imagem':
-                return static::uploadImagem($codnegocio, $pasta, $anexoBase64);
+                return static::uploadImagem($codnegocio, $pasta, $ratio, $anexoBase64);
                 break;
 
             case 'pdf':
@@ -43,8 +45,25 @@ class PdvAnexoService
         }
     }
 
+    public static function marcaDataUsuarioConfissao(int $codnegocio)
+    {
+        $dir = static::diretorio($codnegocio);
+        $anexos = Storage::disk('negocio-anexo')->allFiles("$dir/confissao");
+        if (sizeof($anexos) > 0) {
+            Negocio::where(['codnegocio' => $codnegocio])->whereNull('confissao')->update([
+                'codusuarioconfissao' => Auth::user()->codusuario,
+                'confissao' => Carbon::now(),
+            ]);
+        } else {
+            Negocio::where(['codnegocio' => $codnegocio])->whereNotNull('confissao')->update([
+                'codusuarioconfissao' => null,
+                'confissao' => null,
+            ]);
+        }
+    }
 
-    public static function uploadImagem(int $codnegocio, string $pasta, string $anexoBase64)
+
+    public static function uploadImagem(int $codnegocio, string $pasta, string $ratio, string $anexoBase64)
     {
         // tira o anexo da string
         $data = explode(',', $anexoBase64);
@@ -85,7 +104,7 @@ class PdvAnexoService
         return $anexo;
     }
 
-    public static function uploadConfissao(int $codnegocio, string $pasta, string $anexoBase64)
+    public static function uploadConfissao(int $codnegocio, string $pasta, string $ratio, string $anexoBase64)
     {
         // tira o anexo da string
         $data = explode(',', $anexoBase64);
@@ -99,8 +118,26 @@ class PdvAnexoService
 
         // redimensiona
         list($largura, $altura) = getimagesize($anexoBase64);
-        $novaLargura = 500;
-        $novaAltura = 1000;
+        if ($ratio == '1:2') {
+            $novaLargura = 500;
+            $novaAltura = 1000;
+        } else {
+            $novaLargura = $largura;
+            $novaAltura = $altura;
+            $maxLargura = 1000;
+            $maxAltura = 1000;
+            do {
+                if ($novaLargura > $maxLargura) {
+                    $prop = $maxLargura / $novaLargura;
+                    $novaAltura = floor($prop * $novaAltura);
+                    $novaLargura = floor($prop * $novaLargura);
+                } else if ($novaAltura > $maxAltura) {
+                    $prop = $maxAltura / $novaAltura;
+                    $novaAltura = floor($prop * $novaAltura);
+                    $novaLargura = floor($prop * $novaLargura);
+                }
+            } while ($novaLargura > $maxLargura || $novaAltura > $maxAltura);
+        }
         $anexoRedimensionada = imagecreatetruecolor($novaLargura, $novaAltura);
         imagecopyresized($anexoRedimensionada, $anexo, 0, 0, 0, 0, $novaLargura, $novaAltura, $largura, $altura);
 
@@ -113,6 +150,10 @@ class PdvAnexoService
         // salva
         $anexo = static::nomeNovoArquivo($codnegocio, $pasta);
         Storage::disk('negocio-anexo')->put($anexo, $data);
+
+        // marca como conferido
+        static::marcaDataUsuarioConfissao($codnegocio);
+
         return $anexo;
     }
 
@@ -174,6 +215,7 @@ class PdvAnexoService
         $antiga = "{$dir}/{$pasta}/{$anexo}";
         $nova = "{$dir}/lixeira/{$anexo}";
         Storage::disk('negocio-anexo')->move($antiga, $nova);
+        static::marcaDataUsuarioConfissao($codnegocio);
         return $nova;
     }
 
@@ -305,6 +347,7 @@ class PdvAnexoService
             left join tblpdv p on (p.codpdv = n.codpdv)
             inner join tblusuario u on (u.codusuario = n.codusuario)
             where t.saldo > 0
+            and n.confissao is null
             and date_trunc(\'month\', n.lancamento) = :mes
             order by n.lancamento asc, n.codfilial asc 
         ';
@@ -378,5 +421,13 @@ class PdvAnexoService
             }
         }
         return $ret;
+    }
+
+    public static function ignorarConfissao($codnegocio)
+    {
+        return Negocio::where(['codnegocio' => $codnegocio])->whereNull('confissao')->update([
+            'codusuarioconfissao' => Auth::user()->codusuario,
+            'confissao' => Carbon::now(),
+        ]);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Dec/2023 18:03:48
+ * Date: 28/Oct/2024 16:39:02
  */
 
 namespace Mg\Negocio;
@@ -45,7 +45,9 @@ class Negocio extends MgModel
         'codpessoavendedor',
         'codusuario',
         'codusuarioacertoentrega',
+        'codusuarioconfissao',
         'codusuariorecebimento',
+        'confissao',
         'cpf',
         'entrega',
         'justificativa',
@@ -67,6 +69,7 @@ class Negocio extends MgModel
     protected $dates = [
         'acertoentrega',
         'alteracao',
+        'confissao',
         'criacao',
         'lancamento',
         'recebimento'
@@ -87,6 +90,7 @@ class Negocio extends MgModel
         'codusuario' => 'integer',
         'codusuarioacertoentrega' => 'integer',
         'codusuarioalteracao' => 'integer',
+        'codusuarioconfissao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codusuariorecebimento' => 'integer',
         'cpf' => 'float',
@@ -167,6 +171,11 @@ class Negocio extends MgModel
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioConfissao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioconfissao', 'codusuario');
     }
 
     public function UsuarioCriacao()

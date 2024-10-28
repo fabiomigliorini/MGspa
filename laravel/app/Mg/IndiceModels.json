@@ -1575,6 +1575,11 @@
                 "tabela": "tblpdv",
                 "coluna": "codpdv",
                 "metodo": "Pdv"
+            },
+            "codusuarioconfissao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioconfissao",
+                "metodo": "UsuarioConfissao"
             }
         },
         "hasMany": {

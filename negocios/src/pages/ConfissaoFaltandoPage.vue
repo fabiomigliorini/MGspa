@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
-import { exportFile, Notify } from "quasar";
+import { exportFile, Notify, Dialog } from "quasar";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
 import { api } from "src/boot/axios";
 
@@ -38,7 +38,8 @@ const datasFaltando = ref([]);
 const detalhado = ref([]);
 
 const colunasTabelaNegocios = [
-  { name: 'codnegocio', label: '#', field: 'codnegocio', format: val => '#' + String(val).padStart(8, '0'), sortable: true },
+  { name: 'codnegocio', label: '', field: 'codnegocio', sortable: true },
+  { name: 'ignorar', label: '#', field: 'codnegocio', sortable: false },
   {
     name: 'valortotal',
     label: 'Valor',
@@ -183,6 +184,43 @@ const exportTable = () => {
   }
 }
 
+const ignorar = (codnegocio) => {
+
+  Dialog.create({
+    title: "Ignorar",
+    message: "Tem certeza que você deseja ignorar a confissão de dívida para o negocio " + codnegocio + "?",
+    cancel: true,
+  }).onOk(async () => {
+
+    try {
+      const ret = await api.post("/api/v1/pdv/negocio/" + codnegocio + "/ignorar-confissao/", {
+        pdv: sSinc.pdv.uuid
+      });
+      datasFaltando.value = [];
+      ret.data.resumo.forEach(d => {
+        datasFaltando.value.push(moment(d).format('YYYY/MM/DD'));
+      });
+      datas.value = ret.data.datas;
+      await detalhesDoDia();
+    } catch (error) {
+      console.log(error);
+      var message = error?.response?.data?.message;
+      if (!message) {
+        message = error?.message;
+      }
+      Notify.create({
+        type: "negative",
+        message: message,
+        timeout: 3000, // 3 segundos
+        actions: [{ icon: "close", color: "white" }],
+      });
+      return false;
+    }
+
+  });
+
+}
+
 onMounted(() => {
   inicializaAnosMeses();
 });
@@ -261,6 +299,10 @@ watch(data, () => {
 
                   <!-- LINK NEGOCIO -->
                   <template v-slot:body-cell-codnegocio="props">
+                    <q-td :props="props">
+                      <q-btn link size="12px" round flat ripple dense color="negative" icon="not_interested"
+                        @click="ignorar(props.key)" />
+                    </q-td>
                     <q-td :props="props">
                       <q-btn link size="12px" flat ripple dense color="primary" :label="props.value"
                         :to="'/negocio/' + props.key" />

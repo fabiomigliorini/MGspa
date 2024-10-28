@@ -1,14 +1,25 @@
 <script setup>
+import { ref } from "vue";
 import MgSlimBatch from "src/utils/pqina/slim/MgSlimBatch.vue";
 import { confissaoStore } from "src/stores/confissao";
 
 const sConfissao = confissaoStore();
+
+const ratioOptions = ref([
+  { value: '1:2', label: 'Confissão Impressora Térmica' },
+  { value: 'free', label: 'Livre' },
+
+])
+const confissaoRatio = ref('1:2');
+
 </script>
 <template>
   <q-page>
     <div class="row q-pa-md">
       <div style="max-width: 300px;  margin: auto;">
-        <mg-slim-batch ratio="1:2" pasta="confissao" @upload="dialogConfissao = false" />
+        <q-select outlined class="q-mb-md" :options="ratioOptions" v-model="confissaoRatio" label="Tamanho" map-options
+          emit-value />
+        <mg-slim-batch :ratio="confissaoRatio" pasta="confissao" @upload="dialogConfissao = false" />
         <q-input type="number" min="0" class="q-mt-md" input-class="text-right" step="1" outlined
           v-model="sConfissao.codnegocio" :disable="sConfissao.encontrados == 1" />
         <q-input type="number" min="0" class="q-my-md" input-class="text-right" step="0.01" outlined

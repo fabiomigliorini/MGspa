@@ -40,7 +40,7 @@ const inicializar = async () => {
     label: "Clique para adicionar uma imagem!",
     jpegCompression: 50,
     willSave: function (data, ready) {
-      sConfissao.novaImagem(data.output.image)
+      sConfissao.novaImagem(data.output.image, props.ratio)
       ready(true);
     },
     willRemove: function (data, ready) {
@@ -56,6 +56,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
   cropper.destroy();
 });
+
+watch(
+  () => props.ratio,
+  () => {
+    cropper.destroy();
+    inicializar();
+  }
+);
 </script>
 <template>
   <div class="slim" ref="refSlim" style="
