@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jul/2020 09:11:32
+ * Date: 29/Oct/2024 12:01:06
  */
 
 namespace Mg\NaturezaOperacao;
@@ -9,6 +9,7 @@ namespace Mg\NaturezaOperacao;
 use Mg\MgModel;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
+use Mg\NaturezaOperacao\DominioAcumulador;
 use Mg\Usuario\Usuario;
 
 class Cfop extends MgModel
@@ -46,6 +47,11 @@ class Cfop extends MgModel
 
 
     // Tabelas Filhas
+    public function DominioAcumuladorS()
+    {
+        return $this->hasMany(DominioAcumulador::class, 'codcfop', 'codcfop');
+    }
+
     public function NotaFiscalProdutoBarraS()
     {
         return $this->hasMany(NotaFiscalProdutoBarra::class, 'codcfop', 'codcfop');
