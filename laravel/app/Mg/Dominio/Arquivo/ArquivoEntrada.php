@@ -213,7 +213,7 @@ class ArquivoEntrada extends Arquivo
 
             // se mesmo assim nao achou, nao pode continuar
             if (!$acum) {
-                throw new \Exception("Falha ao localizar Acumulador para CFOP {$seg->codcfop}, CST: {$seg->icmscst}!", 1);
+                throw new \Exception("Sem Acumulador para CFOP '{$seg->codcfop}' CST '{$seg->icmscst}' NF '{$doc->numero}' Pessoa '{$doc->pessoa}'!", 1);
             }
 
             // se for nota inutilizada ou cancelada utiliza valor 0
