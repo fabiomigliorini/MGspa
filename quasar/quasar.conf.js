@@ -85,6 +85,8 @@ module.exports = function (ctx) {
         'QTime',
         'QCheckbox',
         'QTable',
+        'QTd',
+        'QTh',
         'QSpace',
         'QForm',
         'QAjaxBar',

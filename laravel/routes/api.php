@@ -565,6 +565,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('dominio/entrada', '\Mg\Dominio\DominioController@entrada');
         Route::post('dominio/nfe-saida', '\Mg\Dominio\DominioController@nfeSaida');
         Route::post('dominio/nfe-entrada', '\Mg\Dominio\DominioController@nfeEntrada');
+        Route::post('dominio/acumulador', '\Mg\Dominio\DominioController@salvarAcumulador');
+        Route::delete('dominio/acumulador/{coddominioacumulador}', '\Mg\Dominio\DominioController@excluirAcumulador');
 
         // Pix
         Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');

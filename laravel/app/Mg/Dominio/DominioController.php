@@ -8,7 +8,7 @@ use Mg\MgController;
 use Mg\Filial\Empresa;
 
 use Carbon\Carbon;
-
+use Mg\NaturezaOperacao\DominioAcumulador;
 
 class DominioController extends MgController
 {
@@ -32,6 +32,7 @@ class DominioController extends MgController
                     'codfilial' => $filial->codfilial,
                     'filial' => $filial->filial,
                     'empresadominio' => $filial->empresadominio,
+                    'acumuladores' => DominioAcumuladorResource::collection($filial->DominioAcumuladorS),
                 ];
             }
             $ret[] = [
@@ -41,9 +42,6 @@ class DominioController extends MgController
             ];
         }
         return $ret;
-        // $filiais = Filial::where('');
-        // $mes = Carbon::parse($request->mes);
-        // return DominioService::estoque($codfilial, $mes);
     }
 
     // public function estoque(Request $request)
@@ -91,4 +89,14 @@ class DominioController extends MgController
         return DominioXMLService::nfeEntrada($codfilial, $mes);
     }
 
+    public function salvarAcumulador (Request $request)
+    {
+        $acum = DominioAcumuladorService::salvar($request->all());
+        return new DominioAcumuladorResource($acum);
+    }
+
+    public function excluirAcumulador (Request $request, $coddominioacumulador)
+    {
+        return DominioAcumuladorService::excluir($coddominioacumulador);
+    }
 }
