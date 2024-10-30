@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use DB;
 
 use Mg\Filial\Filial;
-use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
+use Mg\NaturezaOperacao\DominioAcumulador;
 
 /**
  *
@@ -184,7 +184,7 @@ class ArquivoEntrada extends Arquivo
             // e zera valor total segmento
             if ($seg->valortotal == 0) {
                 $valorTotalSegmento = 0;
-                $trib = TributacaoNaturezaOperacao::where('codnaturezaoperacao', $doc->codnaturezaoperacao)->first();
+                $acum = DominioAcumulador::where('codcfop', $doc->codcfop)->first();
 
             // se nao totaliza o segmento e busca tributacao
             } else {
@@ -203,30 +203,17 @@ class ArquivoEntrada extends Arquivo
                 }
 
                 // busca dados da tributacao
-                $trib = TributacaoNaturezaOperacao::
-                    where('codtributacao', $seg->codtributacao)
-                    ->where('bit', $seg->bit)
-                    ->where('codnaturezaoperacao', $doc->codnaturezaoperacao)
-                    ->where('codtipoproduto', $seg->codtipoproduto)
-                    ->where('codestado', $doc->codestado)
+                $acum = DominioAcumulador::
+                    where('codcfop', $seg->codcfop)
+                    ->where('icmscst', $seg->icmscst)
+                    ->where('codfilial', $this->filial->codfilial)
                     ->first();
-
-                // se nao achou, busca com estado nulo
-                if (!$trib) {
-                    $trib = TributacaoNaturezaOperacao::
-                        where('codtributacao', $seg->codtributacao)
-                        ->where('bit', $seg->bit)                    
-                        ->where('codnaturezaoperacao', $doc->codnaturezaoperacao)
-                        ->where('codtipoproduto', $seg->codtipoproduto)
-                        ->whereNull('codestado')
-                        ->first();
-                }
 
             }
 
             // se mesmo assim nao achou, nao pode continuar
-            if (!$trib) {
-                throw new \Exception("Falha ao localizar TributacaoNaturezaOperacao (codtributacao:{$seg->codtributacao} bit:{$seg->bit} codnaturezaoperacao:{$doc->codnaturezaoperacao} codtipoproduto:{$seg->codtipoproduto} codestado:{$doc->codestado})", 1);
+            if (!$acum) {
+                throw new \Exception("Falha ao localizar Acumulador para CFOP {$seg->codcfop}, CST: {$seg->icmscst}!", 1);
             }
 
             // se for nota inutilizada ou cancelada utiliza valor 0
@@ -234,16 +221,16 @@ class ArquivoEntrada extends Arquivo
                 $valorTotalSegmento = 0;
             }
 
-            $this->criaRegistroSegmento($doc, $nSeq, $seg, $nSeg, $trib, $valorTotalSegmento);
+            $this->criaRegistroSegmento($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento);
 
             if (!empty($doc->nfeinutilizacao) || !empty($doc->nfecancelamento)) {
                 continue;
             }
 
-            $this->criaRegistroIcms($doc, $nSeq, $seg, $nSeg, $trib, $valorTotalSegmento);
+            $this->criaRegistroIcms($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento);
 
             if ($seg->icmsstbase > 0) {
-                $this->criaRegistroIcmsSt($doc, $nSeq, $seg, $nSeg, $trib, $valorTotalSegmento);
+                $this->criaRegistroIcmsSt($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento);
             }
 
             // busca produtos do segmento
@@ -296,7 +283,7 @@ class ArquivoEntrada extends Arquivo
             // percorre os produtos
             foreach ($prods as $prod) {
                 $valorTotalProduto = $prod->valortotal + $prod->icmsstvalor + $prod->ipivalor;
-                $this->criaRegistroProduto ($doc, $nSeq, $seg, $nSeg, $trib, $prod, $valorTotalProduto);
+                $this->criaRegistroProduto ($doc, $nSeq, $seg, $nSeg, $acum, $prod, $valorTotalProduto);
             }
 
             if ($nSeg == 1 && $doc->duplicatas > 0) {
@@ -332,7 +319,7 @@ class ArquivoEntrada extends Arquivo
         $this->registros[] = $reg;
     }
 
-    public function criaRegistroProduto ($doc, $nSeq, $seg, $nSeg, $trib, $prod, $valorTotalProduto)
+    public function criaRegistroProduto ($doc, $nSeq, $seg, $nSeg, $acum, $prod, $valorTotalProduto)
     {
         $reg = new RegistroEntradaProduto();
         $reg->sequencial = $nSeq;
@@ -377,7 +364,7 @@ class ArquivoEntrada extends Arquivo
         $reg->cfop = $seg->codcfop;
         $reg->custoTotal = round($valorTotalProduto, 2);
         $reg->quantidadeProduto = $prod->quantidade;
-        $reg->movimentacaoFisica = $trib->movimentacaofisica?'S':'N';
+        $reg->movimentacaoFisica = $acum->movimentacaofisica?'S':'N';
         $reg->valorContabil =
             round(
                 $valorTotalProduto
@@ -396,7 +383,7 @@ class ArquivoEntrada extends Arquivo
 
     }
 
-    public function criaRegistroIcmsSt ($doc, $nSeq, $seg, $nSeg, $trib, $valorTotalSegmento)
+    public function criaRegistroIcmsSt ($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
     {
         $reg = new RegistroEntradaImposto();
         $reg->sequencial = $nSeq;
@@ -408,7 +395,7 @@ class ArquivoEntrada extends Arquivo
         $this->registros[] = $reg;
     }
 
-    public function criaRegistroIcms ($doc, $nSeq, $seg, $nSeg, $trib, $valorTotalSegmento)
+    public function criaRegistroIcms ($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
     {
         $reg = new RegistroEntradaImposto();
         $reg->codigoImposto = 1; // ICMS
@@ -430,7 +417,7 @@ class ArquivoEntrada extends Arquivo
         $this->registros[] = $reg;
     }
 
-    public function criaRegistroSegmento ($doc, $nSeq, $seg, $nSeg, $trib, $valorTotalSegmento)
+    public function criaRegistroSegmento ($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
     {
         // cria registro do segmento
         $reg = new RegistroEntradaSegmento();
@@ -462,9 +449,9 @@ class ArquivoEntrada extends Arquivo
         }
 
         if ($doc->duplicatas > 0) {
-            $reg->codigoAcumulador = $trib->acumuladordominioprazo;
+            $reg->codigoAcumulador = $acum->acumuladorprazo;
         } else {
-            $reg->codigoAcumulador = $trib->acumuladordominiovista;
+            $reg->codigoAcumulador = $acum->acumuladoravista;
         }
         $reg->cfop = $seg->codcfop;
         $reg->segmento = $nSeg;
