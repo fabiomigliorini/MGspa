@@ -218,7 +218,7 @@ export default {
       empresas: [],
       mes: null,
       dialogAcumulador: false,
-      tab: 'acum',
+      tab: 'export',
       splitterModel: 15,
       tabFilial: 101,
       acumulador: {
