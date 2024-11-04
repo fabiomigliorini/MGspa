@@ -75,6 +75,7 @@ export const usuarioStore = defineStore("usuario", {
 
     async postUsuario(model) {
       const ret = await api.post('v1/usuario/criar', model)
+      this.usuarios.push(ret.data.data);
       return ret;
     },
 

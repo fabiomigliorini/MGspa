@@ -23,8 +23,9 @@ class UsuarioResource extends JsonResource
             $ret['Pessoa'] = new PessoaResource($this->Pessoa);
         }
 
-        $guus = GrupoUsuarioUsuario::with(['grupousuario' => function ($query) {
-        }])->where('codusuario', $this->codusuario)->orderBy('codfilial')->get();
+        $ret['portador'] = $this->Portador->portador??null;
+
+        $guus = GrupoUsuarioUsuario::with(['grupousuario' => function ($query) {}])->where('codusuario', $this->codusuario)->orderBy('codfilial')->get();
 
         $usuarios = collect([]);
 

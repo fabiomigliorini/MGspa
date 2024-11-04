@@ -32,24 +32,28 @@
             </q-item-label>
           </q-item-label>
         </q-item>
+
         <q-item class="q-px-none">
           <q-item-section avatar top>
             <q-avatar icon="corporate_fare" color="grey-2" text-color="blue" />
           </q-item-section>
           <q-item-section top>
+            <q-item-label class="row ">
+              <q-input class="col-6 q-pr-md" outlined v-model="model.usuario" maxlength="20" :rules="[usuarioValido]"
+                label="Usuario" />
+              <select-filial class="col-6" outlined label="Filial" v-model="model.codfilial" />
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item class="q-px-none">
+          <q-item-section avatar top>
+            <q-avatar icon="wallet" color="grey-2" text-color="blue" />
+          </q-item-section>
+          <q-item-section top>
             <q-item-label>
-              <div class="row q-col-gutter-md">
-                <div class="col-5">
-                  <q-input outlined v-model="model.usuario" maxlength="20" :rules="[usuarioValido]" label="Usuario" />
-                </div>
-                <div class="col-7">
-                  <select-filial outlined label="Filial" v-model="model.codfilial" :rules="[
-    (val) =>
-      (val !== null && val !== '' && val !== undefined) ||
-      'Filial Obrigatório',
-  ]"></select-filial>
-                </div>
-              </div>
+              <select-portador outlined label="Portador" v-model="model.codportador" />
+
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -61,13 +65,15 @@
             <q-item-label>
               <select-pessoa-usuario outlined label="Pessoa" :modelcod-pessoa="model.codpessoa"
                 v-model="model.codpessoa" :rules="[
-    (val) =>
-      (val !== null && val !== '' && val !== undefined) ||
-      'Pessoa Obrigatória',
-  ]"></select-pessoa-usuario>
+                  (val) =>
+                    (val !== null && val !== '' && val !== undefined) ||
+                    'Pessoa Obrigatória',
+                ]"></select-pessoa-usuario>
             </q-item-label>
           </q-item-section>
         </q-item>
+
+
       </q-card-section>
 
       <q-card-section class="q-px-md q-py-none">
@@ -105,11 +111,10 @@
         </div>
       </q-card-section>
 
-
-      <q-card-actions class="q-pa-md">
-        <q-btn label="Salvar" color="primary" class="" type="submit" />
-      </q-card-actions>
     </q-card>
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="save" color="primary" type="submit" />
+    </q-page-sticky>
   </q-form>
 
 </template>
@@ -133,8 +138,8 @@ export default defineComponent({
 
   components: {
     SelectFilial: defineAsyncComponent(() => import('components/pessoa/SelectFilial.vue')),
+    SelectPortador: defineAsyncComponent(() => import('components/select/SelectPortador.vue')),
     SelectPessoaUsuario: defineAsyncComponent(() => import('components/Usuarios/SelectPessoaUsuario.vue')),
-
   },
 
   methods: {
@@ -237,6 +242,7 @@ export default defineComponent({
       codusuario: null,
       usuario: null,
       codfilial: null,
+      codportador: null,
       codpessoa: null,
       permissoes: {}
     })
@@ -291,6 +297,7 @@ export default defineComponent({
       this.model.codusuario = this.sUsuario.detalheUsuarios.codusuario;
       this.model.usuario = this.sUsuario.detalheUsuarios.usuario;
       this.model.codfilial = this.sUsuario.detalheUsuarios.codfilial;
+      this.model.codportador = this.sUsuario.detalheUsuarios.codportador;
       this.model.codpessoa = this.sUsuario.detalheUsuarios.codpessoa;
     }
 

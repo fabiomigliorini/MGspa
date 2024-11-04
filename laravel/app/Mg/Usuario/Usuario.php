@@ -2,209 +2,6 @@
 
 namespace Mg\Usuario;
 
-/**
- * Campos
- * @property  bigint                         $codusuario                         NOT NULL DEFAULT nextval('tblusuario_codusuario_seq'::regclass)
- * @property  varchar(50)                    $usuario                            NOT NULL
- * @property  varchar(100)                   $senha
- * @property  bigint                         $codecf
- * @property  bigint                         $codfilial
- * @property  bigint                         $codoperacao                        NOT NULL
- * @property  bigint                         $codpessoa
- * @property  varchar(100)                   $impressoratelanegocio
- * @property  bigint                         $codportador
- * @property  varchar(50)                    $impressoratermica
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  timestamp                      $ultimoacesso
- * @property  date                           $inativo
- * @property  varchar(50)                    $impressoramatricial
- * @property  varchar(100)                   $remember_token
- * @property  bigint                         $codimagem
- *
- * Chaves Estrangeiras
- * @property  Imagem                         $Imagem
- * @property  Ecf                            $Ecf
- * @property  Filial                         $Filial
- * @property  Operacao                       $Operacao
- * @property  Pessoa                         $Pessoa
- * @property  Portador                       $Portador
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  GrupoUsuarioUsuario[]          $GrupoUsuarioUsuarioS
- *
- * @property  Cest[]                         $CestAlteracaoS
- * @property  Cest[]                         $CestCriacaoS
- * @property  EstoqueLocal[]                 $EstoqueLocalAlteracaoS
- * @property  EstoqueLocal[]                 $EstoqueLocalCriacaoS
- * @property  EstoqueMes[]                   $EstoqueMesAlteracaoS
- * @property  EstoqueMes[]                   $EstoqueMesCriacaoS
- * @property  EstoqueMovimento[]             $EstoqueMovimentoAlteracaoS
- * @property  EstoqueMovimento[]             $EstoqueMovimentoCriacaoS
- * @property  EstoqueSaldoConferencia[]      $EstoqueSaldoConferenciaS
- * @property  EstoqueSaldoConferencia[]      $EstoqueSaldoConferenciaS
- * @property  FamiliaProduto[]               $FamiliaprodutoS
- * @property  FamiliaProduto[]               $FamiliaprodutoS
- * @property  GrupoUsuario[]                 $GrupoUsuarioAlteracaoS
- * @property  GrupoUsuario[]                 $GrupoUsuarioCriacaoS
- * @property  Permissao[]                    $PermissaoAlteracaoS
- * @property  Permissao[]                    $PermissaoCriacaoS
- * @property  RegulamentoIcmsStMt[]          $RegulamentoIcmsStMtAlteracaoS
- * @property  RegulamentoIcmsStMt[]          $RegulamentoIcmsStMtCriacaoS
- * @property  Banco[]                        $BancoAlteracaoS
- * @property  Banco[]                        $BancoCriacaoS
- * @property  BaseRemota[]                   $BaseRemotaAlteracaoS
- * @property  BaseRemota[]                   $BaseRemotaCriacaoS
- * @property  BoletoMotivoOcorrencia[]       $BoletoMotivoOcorrenciaAlteracaoS
- * @property  BoletoMotivoOcorrencia[]       $BoletoMotivoOcorrenciaCriacaoS
- * @property  BoletoRetorno[]                $BoletoRetornoAlteracaoS
- * @property  BoletoRetorno[]                $BoletoRetornoCriacaoS
- * @property  BoletoTipoOcorrencia[]         $BoletoTipoOcorrenciaAlteracaoS
- * @property  BoletoTipoOcorrencia[]         $BoletoTipoOcorrenciaCriacaoS
- * @property  Cfop[]                         $CfopAlteracaoS
- * @property  Cfop[]                         $CfopCriacaoS
- * @property  Cheque[]                       $ChequeAlteracaoS
- * @property  Cheque[]                       $ChequeCriacaoS
- * @property  ChequeEmitente[]               $ChequeEmitenteAlteracaoS
- * @property  ChequeEmitente[]               $ChequeEmitenteCriacaoS
- * @property  Cidade[]                       $CidadeAlteracaoS
- * @property  Cidade[]                       $CidadeCriacaoS
- * @property  Cobranca[]                     $CobrancaAlteracaoS
- * @property  Cobranca[]                     $CobrancaCriacaoS
- * @property  CobrancaHistorico[]            $CobrancaHistoricoAlteracaoS
- * @property  CobrancaHistorico[]            $CobrancaHistoricoCriacaoS
- * @property  CobrancaHistoricoTitulo[]      $CobrancaHistoricoTituloAlteracaoS
- * @property  CobrancaHistoricoTitulo[]      $CobrancaHistoricoTituloCriacaoS
- * @property  Codigo[]                       $CodigoAlteracaoS
- * @property  Codigo[]                       $CodigoCriacaoS
- * @property  ContaContabil[]                $ContaContabilAlteracaoS
- * @property  ContaContabil[]                $ContaContabilCriacaoS
- * @property  CupomFiscal[]                  $CupomFiscalAlteracaoS
- * @property  CupomFiscal[]                  $CupomFiscalCriacaoS
- * @property  CupomFiscalProdutoBarra[]      $CupomFiscalProdutoBarraAlteracaoS
- * @property  CupomFiscalProdutoBarra[]      $CupomFiscalProdutoBarraCriacaoS
- * @property  Ecf[]                          $EcfAlteracaoS
- * @property  Ecf[]                          $EcfCriacaoS
- * @property  Ecf[]                          $EcfS
- * @property  EcfReducaoz[]                  $EcfReducaozAlteracaoS
- * @property  EcfReducaoz[]                  $EcfReducaozCriacaoS
- * @property  Empresa[]                      $EmpresaAlteracaoS
- * @property  Empresa[]                      $EmpresaCriacaoS
- * @property  EstadoCivil[]                  $EstadoCivilAlteracaoS
- * @property  EstadoCivil[]                  $EstadoCivilCriacaoS
- * @property  Estado[]                       $EstadoAlteracaoS
- * @property  Estado[]                       $EstadoCriacaoS
- * @property  EstoqueMovimentoTipo[]         $EstoqueMovimentoTipoAlteracaoS
- * @property  EstoqueMovimentoTipo[]         $EstoqueMovimentoTipoCriacaoS
- * @property  EstoqueSaldo[]                 $EstoqueSaldoAlteracaoS
- * @property  EstoqueSaldo[]                 $EstoqueSaldoCriacaoS
- * @property  Filial[]                       $FilialAcbrNfeMonitorS
- * @property  Filial[]                       $FilialAlteracaoS
- * @property  Filial[]                       $FilialCriacaoS
- * @property  FormaPagamento[]               $FormaPagamentoAlteracaoS
- * @property  FormaPagamento[]               $FormaPagamentoCriacaiS
- * @property  GrupoCliente[]                 $GrupoClienteAlteracaoS
- * @property  GrupoCliente[]                 $GrupoClienteCriacaoS
- * @property  GrupoProduto[]                 $GrupoProdutoAlteracaoS
- * @property  GrupoProduto[]                 $GrupoProdutoCriacaoS
- * @property  Ibptax[]                       $IbptaxAlteracaoS
- * @property  Ibptax[]                       $IbptaxCriacaoS
- * @property  LiquidacaoTitulo[]             $LiquidacaoTituloAlteracaoS
- * @property  LiquidacaoTitulo[]             $LiquidacaoTituloCriacaoS
- * @property  LiquidacaoTitulo[]             $LiquidacaoTituloEstornoS
- * @property  LiquidacaoTitulo[]             $LiquidacaoTituloS
- * @property  Marca[]                        $MarcaAlteracaoS
- * @property  Marca[]                        $MarcaCriacaoS
- * @property  Menu[]                         $MenuAlteracaoS
- * @property  Menu[]                         $MenuCriacaoS
- * @property  MovimentoTitulo[]              $MovimentoTituloAlteracaoS
- * @property  MovimentoTitulo[]              $MovimentoTituloCriacaoS
- * @property  NaturezaOperacao[]             $NaturezaOperacaoAlteracaoS
- * @property  NaturezaOperacao[]             $NaturezaOperacaoCriacaoS
- * @property  Ncm[]                          $NcmAlteracaoS
- * @property  Ncm[]                          $NcmCriacaoS
- * @property  Negocio[]                      $NegocioAcertoEntregaS
- * @property  Negocio[]                      $NegocioAlteracaoS
- * @property  Negocio[]                      $NegocioCriacaoS
- * @property  Negocio[]                      $NegocioS
- * @property  NegocioFormaPagamento[]        $NegocioFormaPagamentoAlteracaoS
- * @property  NegocioFormaPagamento[]        $NegocioFormaPagamentoCriacaoS
- * @property  NegocioProdutoBarra[]          $NegocioProdutoBarraAlteracaoS
- * @property  NegocioProdutoBarra[]          $NegocioProdutoBarraCriacaoS
- * @property  NegocioStatus[]                $NegocioStatusAlteracaoS
- * @property  NegocioStatus[]                $NegocioStatusCriacaoS
- * @property  NfeTerceiro[]                  $NfeTerceiroAlteracaoS
- * @property  NfeTerceiro[]                  $NfeTerceiroCriacaoS
- * @property  NfeTerceiroDuplicata[]         $NfeTerceiroDuplicataAlteracaoS
- * @property  NfeTerceiroDuplicata[]         $NfeTerceiroDuplicataCriacaoS
- * @property  NfeTerceiroItem[]              $NfeTerceiroItemAlteracaoS
- * @property  NfeTerceiroItem[]              $NfeTerceiroItemCriacaoS
- * @property  NotaFiscalCartaCorrecao[]      $NotaFiscalCartaCorrecaoAlteracaoS
- * @property  NotaFiscalCartaCorrecao[]      $NotaFiscalCartaCorrecaoCriacaoS
- * @property  NotaFiscal[]                   $NotaFiscaAlteracaolS
- * @property  NotaFiscal[]                   $NotaFiscalCriacaoS
- * @property  NotaFiscalDuplicatas[]         $NotaFiscalDuplicatasAlteracaoS
- * @property  NotaFiscalDuplicatas[]         $NotaFiscalDuplicatasCriacaoS
- * @property  NotaFiscalProdutoBarra[]       $NotaFiscalProdutoBarraAlteracaoS
- * @property  NotaFiscalProdutoBarra[]       $NotaFiscalProdutoBarraCriacaoS
- * @property  NotaFiscalReferenciada[]       $NotaFiscalReferenciadaAlteracaoS
- * @property  NotaFiscalReferenciada[]       $NotaFiscalReferenciadaCriacaoS
- * @property  Operacao[]                     $OperacaoAlteracaoS
- * @property  Operacao[]                     $OperacaoCriacaoS
- * @property  Pais[]                         $PaisAlteracaoS
- * @property  Pais[]                         $PaisCriacaoS
- * @property  ParametrosGerais[]             $ParametrosGeraisAlteracaoS
- * @property  ParametrosGerais[]             $ParametrosGeraisCriacaoS
- * @property  Pessoa[]                       $PessoaAlteracaoS
- * @property  Pessoa[]                       $PessoaCriacaoS
- * @property  Portador[]                     $PortadorAlteracaoS
- * @property  Portador[]                     $PortadorCriacaoS
- * @property  ProdutoBarra[]                 $ProdutoBarraAlteracaoS
- * @property  ProdutoBarra[]                 $ProdutoBarraCriacaoS
- * @property  Produto[]                      $ProdutoAlteracaoS
- * @property  Produto[]                      $ProdutoCriacaoS
- * @property  ProdutoEmbalagem[]             $ProdutoEmbalagemAlteracaoS
- * @property  ProdutoEmbalagem[]             $ProdutoEmbalagemCriacaoS
- * @property  ProdutoHistoricoPreco[]        $ProdutoHistoricoPrecoAlteracaoS
- * @property  ProdutoHistoricoPreco[]        $ProdutoHistoricoPrecoCriacaoS
- * @property  RegistroSpc[]                  $RegistroSpcAlteracaoS
- * @property  RegistroSpc[]                  $RegistroSpcCriacaoS
- * @property  Sexo[]                         $SexoAlteracaoS
- * @property  Sexo[]                         $SexoCriacaoS
- * @property  SubGrupoProduto[]              $SubGrupoProdutoAlteracaoS
- * @property  SubGrupoProduto[]              $SubGrupoProdutoCriacaoS
- * @property  TipoMovimentoTitulo[]          $TipoMovimentoTituloAlteracaoS
- * @property  TipoMovimentoTitulo[]          $TipoMovimentoTituloCriacaoS
- * @property  TipoProduto[]                  $TipoProdutoAlteracaoS
- * @property  TipoProduto[]                  $TipoProdutoCriacaoS
- * @property  TipoTitulo[]                   $TipoTituloAlteracaoS
- * @property  TipoTitulo[]                   $TipoTituloCriacaoS
- * @property  TituloAgrupamento[]            $TituloAgrupamentoAlteracaoS
- * @property  TituloAgrupamento[]            $TituloAgrupamentoCriacaoS
- * @property  Titulo[]                       $TituloAlteracaoS
- * @property  Titulo[]                       $TituloCriacaoS
- * @property  Tributacao[]                   $TributacaoAlteracaoS
- * @property  Tributacao[]                   $TributacaoCriacaoS
- * @property  TributacaoNaturezaOperacao[]   $TributacaoNaturezaOperacaoAlteracaoS
- * @property  TributacaoNaturezaOperacao[]   $TributacaoNaturezaOperacaoCriacaoS
- * @property  Meta[]                         $MetaAlteracaoS
- * @property  Meta[]                         $MetaCriacaoS
- * @property  MetaFilial[]                   $MetaFilialAlteracaoS
- * @property  MetaFilial[]                   $MetaFilialCriacaoS
- * @property  MetaFilialPessoa[]             $MetaFilialPessoaAlteracaoS
- * @property  MetaFilialPessoa[]             $MetaFilialPessoaCriacaoS
- * @property  Cargo[]                        $CargoAlteracaoS
- * @property  Cargo[]                        $CargoCriacaoS
- * @property  UnidadeMedida[]                $UnidadeMedidaAlteracaoS
- * @property  UnidadeMedida[]                $UnidadeMedidaCriacaoS
- * @property  Usuario[]                      $UsuarioAlteracaoS
- * @property  Usuario[]                      $UsuarioCriacaoS
- */
-
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Foundation\Auth\Access\Authorizable;
@@ -212,11 +9,11 @@ use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Laravel\Passport\HasApiTokens;
 
-
 use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
 use Mg\Filial\Filial;
 use Mg\Imagem\Imagem;
+use Mg\Portador\Portador;
 
 class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswordContract
 {
@@ -254,7 +51,6 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     }
 
 
-
     public function getAuthPassword() 
     {
         if (!empty($this->inativo)) {
@@ -271,7 +67,6 @@ class Usuario extends MGModel implements AuthenticatableContract, CanResetPasswo
     * @return array
     */
     // Chaves Estrangeiras
-
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');

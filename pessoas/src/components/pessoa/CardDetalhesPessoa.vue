@@ -1,149 +1,137 @@
 <template>
   <!-- DIALOG EDITAR DETALHES -->
   <q-dialog v-model="DialogDetalhes">
-    <q-card>
+    <q-card style="width: 800px; max-width: 80vw;">
       <q-form @submit="salvarDetalhes()">
-        <q-card-section>
-          <!-- <q-input outlined v-model="modelEditarDetalhes.fantasia" label="Fantasia" class="" :rules="[
+        <q-card-section class="row q-col-gutter-md">
+
+          <!-- CNPJ OU CPF -->
+          <q-input :class="modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'" outlined
+            v-model="modelPessoa.cnpj" :label="modelPessoa.fisica ? 'CPF' : 'CNPJ'"
+            :mask="modelPessoa.fisica ? '###.###.###-##' : '##.###.###/####-##'" unmasked-value disable />
+
+          <!-- INSCRICAO ESTADUAL -->
+          <input-ie :class="modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'"
+            v-model="modelPessoa.ie" label="Inscrição Estadual" disable />
+
+          <!-- NASCIMENTO -->
+          <q-input :class="modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'" outlined
+            v-model="modelPessoa.nascimento" mask="##/##/####" :label="modelPessoa.fisica ? 'Nascimento' : 'Fundação'">
+            <template v-slot:append>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                  <q-date v-model="modelPessoa.nascimento" :locale="brasil" mask="DD/MM/YYYY">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Fechar" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+
+          <!-- RG -->
+          <q-input class="col-md-3 col-sm-6 col-xs-12" outlined v-model="modelPessoa.rg"
+            v-if="modelPessoa.fisica == true" label="RG" unmasked-value />
+
+          <!-- FANTASIA -->
+          <input-filtered outlined v-model="modelPessoa.fantasia" label="Fantasia" :rules="[
             val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
-          ]" autofocus /> -->
-          <input-filtered outlined v-model="modelEditarDetalhes.fantasia" label="Fantasia" :rules="[
-            val => val && val.length > 0 || 'Nome Fantasia é Obrigatório'
-          ]" autofocus />
-          <input-filtered outlined v-model="modelEditarDetalhes.pessoa" label="Razão Social" :rules="[
+          ]" autofocus class="col-md-4 col-sm-6 col-xs-12" />
+
+          <!-- RAZAO SOCIAL -->
+          <input-filtered outlined v-model="modelPessoa.pessoa" label="Razão Social" :rules="[
             val => val && val.length > 0 || 'Razão Social é Obrigatório'
-          ]" />
+          ]" class="col-md-4 col-sm-6 col-xs-12" />
 
-          <select-grupo-economico v-model="modelEditarDetalhes.codgrupoeconomico" label="Grupo Econômico"
-            class="q-mb-md" :permite-adicionar="true" />
+          <!-- GRUPO ECONOMICO -->
+          <select-grupo-economico class="col-md-4 col-sm-6 col-xs-12" v-model="modelPessoa.codgrupoeconomico"
+            label="Grupo Econômico" :permite-adicionar="true" />
 
-          <div class="row">
-            <q-toggle class="" outlined v-model="modelEditarDetalhes.fisica" label="Pessoa Física" />
+          <template v-if="modelPessoa.fisica">
+
+            <!-- CIDADE NASCIMENTO -->
+            <select-cidade class="col-md-4 col-sm-6 col-xs-12" v-model="modelPessoa.codcidadenascimento"
+              :cidadeEditar="options" label="Nascido em" />
+
+            <!-- PAI -->
+            <input-filtered class="col-md-4 col-sm-6 col-xs-12" outlined v-model="modelPessoa.pai"
+              label="Nome do Pai" />
+
+            <!-- MAE -->
+            <input-filtered class="col-md-4 col-sm-6 col-xs-12" outlined v-model="modelPessoa.mae"
+              label="Nome da Mãe" />
+
+
+            <!-- TITULO -->
+            <q-input class="col-md-4 col-sm-6 col-xs-12" outlined v-model="modelPessoa.tituloeleitor"
+              mask="####.####.####" label="Título de Eleitor" unmasked-value />
+
+            <!-- ZONA -->
+            <q-input class="col-md-2 col-sm-3 col-xs-6" outlined v-model="modelPessoa.titulozona" label="Zona"
+              mask="###" unmasked-value />
+
+            <!-- SECAO -->
+            <q-input class="col-md-2 col-sm-3 col-xs-6" outlined v-model="modelPessoa.titulosecao" label="Seção"
+              mask="####" unmasked-value />
+
+            <!-- PIS -->
+            <q-input class="col-md-4 col-sm-4 col-xs-12" outlined v-model="modelPessoa.pispasep" label="PIS/PASEP"
+              mask="###.#####.##-#" unmasked-value />
+
+            <!-- CARTEIRA TRABALHO -->
+            <q-input class="col-md-4 col-sm-3 col-xs-12" outlined v-model="modelPessoa.ctps" label="CTPS"
+              inputmode="numeric" mask="#######" unmasked-value />
+
+            <!-- SERIE -->
+            <q-input class="col-md-2 col-sm-2 col-xs-6" outlined v-model="modelPessoa.seriectps" label="Série"
+              mask="####" inputmode="numeric" unmasked-value />
+
+            <!-- UF -->
+            <select-estado class="col-md-2 col-sm-3 col-xs-6" v-model="modelPessoa.codestadoctps"
+              label="UF"></select-estado>
+
+            <!-- EMISSAO -->
+            <q-input class="col-md-4 col-sm-6 col-xs-12" outlined v-model="modelPessoa.emissaoctps" mask="##/##/####"
+              label="Emissão CTPS">
+              <template v-slot:append>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-date v-model="modelPessoa.emissaoctps" :locale="brasil" mask="DD/MM/YYYY">
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Fechar" color="primary" flat />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+          </template>
+
+          <!-- RNTRC -->
+          <q-input class="col-md-4 col-sm-6 col-xs-12" outlined v-model="modelPessoa.rntrc" label="RNTRC"
+            mask="#########" unmasked-value />
+
+          <!-- TIPO TRANSPORTADOR -->
+          <q-select class="col-md-8 col-sm-12 col-xs-12" outlined v-model="modelPessoa.tipotransportador"
+            label="Tipo Transportador" :options="[
+              { label: 'Nenhum', value: 0 },
+              { label: 'ETC - Empresa', value: 1 },
+              { label: 'TAC - Autônomo', value: 2 },
+              { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
+
+          <!-- OBSERVACOES -->
+          <q-input outlined borderless autogrow v-model="modelPessoa.observacoes" label="Observações" type="textarea"
+            class=" col-12" />
+
+          <!-- TOGGLES -->
+          <div class="col-12">
+            <q-toggle class="" outlined v-model="modelPessoa.cliente" label="Cliente" /> &nbsp;
+            <q-toggle class="" outlined v-model="modelPessoa.fornecedor" label="Fornecedor" /> &nbsp;
+            <q-toggle class="" outlined v-model="modelPessoa.vendedor" label="Vendedor" />
           </div>
 
-          <div class="row q-col-gutter-md">
-            <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == false"
-                label="Cnpj" mask="##.###.###/####-##" unmasked-value disable />
-              <q-input outlined v-model="modelEditarDetalhes.cnpj" v-if="modelEditarDetalhes.fisica == true" label="CPF"
-                mask="###.###.###-##" unmasked-value disable />
-            </div>
-            <div class="col-3">
-              <input-ie v-model="modelEditarDetalhes.ie" label="Insc Estadual" disable>
-              </input-ie>
-            </div>
-            <div class="col-3">
-              <q-input outlined v-model="modelEditarDetalhes.rg" v-if="modelEditarDetalhes.fisica == true" label="RG"
-                class="q-mb-md" unmasked-value />
-            </div>
-          </div>
-
-          <div class="row q-col-gutter-md">
-
-            <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.nascimento" mask="##/##/####"
-                label="Nascimento / Fundação">
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelEditarDetalhes.nascimento" :locale="brasil" mask="DD/MM/YYYY">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Fechar" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-
-            <div class="col-6">
-              <select-cidade v-model="modelEditarDetalhes.codcidadenascimento" :cidadeEditar="options"
-                label="Cidade Nascimento">
-
-              </select-cidade>
-            </div>
-          </div>
-
-
-          <div class="row q-col-gutter-md">
-
-
-            <div class="col-6">
-              <input-filtered outlined v-model="modelEditarDetalhes.pai" class="q-pt-md" label="Nome do Pai" />
-            </div>
-            <div class="col-6">
-              <input-filtered outlined v-model="modelEditarDetalhes.mae" class="q-pt-md" label="Nome da Mãe" />
-            </div>
-
-            <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.tituloeleitor" mask="####.####.####" label="Titulo Eleitor"
-                unmasked-value />
-            </div>
-            <div class="col-3">
-              <q-input outlined v-model="modelEditarDetalhes.titulozona" label="Titulo Zona" mask="###"
-                unmasked-value />
-            </div>
-            <div class="col-3">
-              <q-input outlined v-model="modelEditarDetalhes.titulosecao" label="Titulo Seção" mask="####"
-                unmasked-value />
-            </div>
-
-            <div class="col-3">
-              <q-input outlined v-model="modelEditarDetalhes.ctps" label="CTPS" inputmode="numeric" mask="#######"
-                unmasked-value />
-            </div>
-
-            <div class="col-2">
-              <q-input outlined v-model="modelEditarDetalhes.seriectps" label="Série" mask="####" inputmode="numeric"
-                unmasked-value />
-            </div>
-
-            <div class="col-3">
-              <select-estado v-model="modelEditarDetalhes.codestadoctps" label="UF"></select-estado>
-
-            </div>
-
-            <div class="col-4">
-              <q-input outlined v-model="modelEditarDetalhes.emissaoctps" mask="##/##/####" label="Emissão CTPS">
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelEditarDetalhes.emissaoctps" :locale="brasil" mask="DD/MM/YYYY">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Fechar" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-
-            <div class="col-6">
-              <q-select outlined v-model="modelEditarDetalhes.tipotransportador" label="Tipo Transportador" :options="[
-                { label: 'Nenhum', value: 0 },
-                { label: 'ETC - Empresa', value: 1 },
-                { label: 'TAC - Autônomo', value: 2 },
-                { label: 'CTC - Cooperativa', value: 3 }]" map-options emit-value clearable />
-            </div>
-            <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.rntrc" label="RNTRC" mask="#########" unmasked-value />
-            </div>
-
-            <div class="col-6">
-              <q-input outlined v-model="modelEditarDetalhes.pispasep" label="PIS/PASEP" mask="###.#####.##-#"
-                unmasked-value />
-            </div>
-
-          </div>
-
-          <q-input outlined borderless autogrow v-model="modelEditarDetalhes.observacoes" label="Observações"
-            type="textarea" class="q-mb-md q-pt-md" />
-
-          <q-toggle class="" outlined v-model="modelEditarDetalhes.cliente" label="Cliente" /> &nbsp;
-          <q-toggle class="" outlined v-model="modelEditarDetalhes.fornecedor" label="Fornecedor" /> &nbsp;
-          <q-toggle class="" outlined v-model="modelEditarDetalhes.vendedor" label="Vendedor" />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="primary" v-close-popup />
@@ -161,8 +149,8 @@
           <q-select outlined v-model="mercosTransferir.mercosid" label="Mercos ID"
             :rules="[val => val > 1 || 'Obrigatório']" :options="sPessoa.item.mercosId" />
 
-          <select-pessoa autofocus outlined v-model="mercosTransferir.codpessoanova" label="Transferir para Pessoa" somente-ativos
-            :rules="[val => val > 1 || 'Obrigatório']" />
+          <select-pessoa autofocus outlined v-model="mercosTransferir.codpessoanova" label="Transferir para Pessoa"
+            somente-ativos :rules="[val => val > 1 || 'Obrigatório']" />
 
         </q-card-section>
         <q-card-actions align="right">
@@ -472,9 +460,9 @@ export default defineComponent({
         }
       } catch (error) {
         this.$q.notify({
-          color: 'green-5',
+          color: 'negative',
           textColor: 'white',
-          icon: 'done',
+          icon: 'error',
           message: error.response.data
         })
       }
@@ -495,9 +483,9 @@ export default defineComponent({
         }
       } catch (error) {
         this.$q.notify({
-          color: 'green-5',
+          color: 'negative',
           textColor: 'white',
-          icon: 'done',
+          icon: 'error',
           message: error.response.data
         })
       }
@@ -535,8 +523,8 @@ export default defineComponent({
 
     async editarDetalhes() {
       this.DialogDetalhes = true
-      this.modelEditarDetalhes = {
-        cnpj: (this.sPessoa.item.fisica)?String(this.sPessoa.item.cnpj).padStart(11, '0'):String(this.sPessoa.item.cnpj).padStart(14, '0'),
+      this.modelPessoa = {
+        cnpj: (this.sPessoa.item.fisica) ? String(this.sPessoa.item.cnpj).padStart(11, '0') : String(this.sPessoa.item.cnpj).padStart(14, '0'),
         rntrc: this.sPessoa.item.rntrc,
         ie: this.sPessoa.item.ie,
         fantasia: this.sPessoa.item.fantasia,
@@ -616,7 +604,7 @@ export default defineComponent({
 
     async salvarDetalhes() {
 
-      const editar = { ...this.modelEditarDetalhes }
+      const editar = { ...this.modelPessoa }
 
       if (editar.nascimento) {
         editar.nascimento = this.Documentos.dataFormatoSql(editar.nascimento)
@@ -697,7 +685,7 @@ export default defineComponent({
       DialogMercos: ref(false),
       mercosTransferir,
       DialogDetalhes: ref(false),
-      modelEditarDetalhes: ref([]),
+      modelPessoa: ref([]),
       GrupoEconomico,
       brasil: {
         days: 'Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado'.split('_'),

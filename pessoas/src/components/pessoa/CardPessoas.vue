@@ -7,7 +7,7 @@
                 </q-avatar>
             </q-item-section>
             <q-item-section>
-                <q-item-label class="ellipsis text-h6" :class="listagempessoas.inativo ? 'text-strike text-red-14' : null">
+                <q-item-label class="text-h6" :class="listagempessoas.inativo ? 'text-strike text-red-14' : null">
                     {{ listagempessoas.fantasia }}
                 </q-item-label>
                 <q-item-label class="ellipsis" v-if="listagempessoas.inativo">

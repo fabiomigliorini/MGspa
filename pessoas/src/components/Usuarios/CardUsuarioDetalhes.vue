@@ -1,6 +1,6 @@
 <template v-if="sUsuario.detalheUsuarios">
   <q-card bordered>
-    <q-list>
+    <q-list separator>
       <q-item>
         <q-item-section avatar>
           <q-avatar color="primary" class="q-my-md" size="70px" text-color="white"
@@ -12,7 +12,7 @@
           <q-item-label>
             <span class="text-h4 text-weight-bold"
               :class="sUsuario.detalheUsuarios.inativo ? 'text-strike text-red-14' : null">{{
-              sUsuario.detalheUsuarios.usuario }}</span>
+                sUsuario.detalheUsuarios.usuario }}</span>
 
             <q-btn flat round icon="edit" @click="editar()" v-if="user.verificaPermissaoUsuario('Administrador')" />
 
@@ -44,100 +44,64 @@
         </q-item-label>
 
       </q-item>
-      <q-separator inset />
 
-      <div class="row">
-        <div class="col-xs-12 col-sm-12">
-          <q-item>
-            <q-item-section avatar top>
-              <q-avatar icon="badge" color="grey-2" text-color="blue" />
-            </q-item-section>
-            <q-item-section top>
-              <q-item-label v-if="sUsuario.detalheUsuarios.Pessoa">
-                #00{{ sUsuario.detalheUsuarios.codusuario }} <br>
-                <q-btn flat dense :label="sUsuario.detalheUsuarios.Pessoa.pessoa"
-                  :to="'/pessoa/' + sUsuario.detalheUsuarios.Pessoa.codpessoa" target="_blank" />
-              </q-item-label>
-              <q-item-label caption>
-                Pessoa
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
+      <q-item :to="'/pessoa/' + sUsuario.detalheUsuarios.codpessoa" v-if="sUsuario.detalheUsuarios.codpessoa">
+        <q-item-section avatar top>
+          <q-avatar icon="badge" color="grey-2" text-color="blue" />
+        </q-item-section>
+        <q-item-section top>
+          <q-item-label>
+            {{ sUsuario.detalheUsuarios.Pessoa.pessoa }}
+          </q-item-label>
+          <q-item-label caption>
+            Pessoa
+          </q-item-label>
+        </q-item-section>
+      </q-item>
 
-          <q-item>
-            <q-item-section avatar top>
-              <q-avatar icon="corporate_fare" color="grey-2" text-color="blue" />
-            </q-item-section>
-            <q-item-section top>
-              <q-item-label v-if="sUsuario.detalheUsuarios.filial">
-                {{ sUsuario.detalheUsuarios.filial }}
-              </q-item-label>
-              <q-item-label caption>
-                <span>Filial</span>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
+      <q-item v-if="sUsuario.detalheUsuarios.codfilial">
+        <q-item-section avatar top>
+          <q-avatar icon="corporate_fare" color="grey-2" text-color="blue" />
+        </q-item-section>
+        <q-item-section top>
+          <q-item-label v-if="sUsuario.detalheUsuarios.filial">
+            {{ sUsuario.detalheUsuarios.filial }}
+          </q-item-label>
+          <q-item-label caption>
+            <span>Filial</span>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
 
-        </div>
+      <q-item v-if="sUsuario.detalheUsuarios.codportador">
+        <q-item-section avatar top>
+          <q-avatar icon="wallet" color="grey-2" text-color="blue" />
+        </q-item-section>
+        <q-item-section top>
+          <q-item-label>
+            {{ sUsuario.detalheUsuarios.portador }}
+          </q-item-label>
+          <q-item-label caption>
+            Portador
+          </q-item-label>
+        </q-item-section>
+      </q-item>
 
-        <div class="col-xs-12 col-sm-12">
-          <q-item>
-            <q-item-section avatar top>
-              <q-avatar icon="print" color="grey-2" text-color="blue" />
-            </q-item-section>
-            <q-item-section top>
-              <q-item-label>
-                <span v-if="sUsuario.detalheUsuarios.impressoramatricial">{{
-              sUsuario.detalheUsuarios.impressoramatricial
-            }}</span>
-                <span v-else>Vazio</span>
-              </q-item-label>
-              <q-item-label caption>
-                Impressora Matricial
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
+      <q-item>
+        <q-item-section avatar top>
+          <q-avatar icon="login" color="grey-2" text-color="blue" />
+        </q-item-section>
+        <q-item-section top>
+          <q-item-label>
+            {{ moment(sUsuario.detalheUsuarios.ultimoacesso).format("DD/MMM/YYYY") }} -
+            {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
+          </q-item-label>
+          <q-item-label caption>
+            Último acesso
+          </q-item-label>
+        </q-item-section>
+      </q-item>
 
-          <q-item>
-            <q-item-section avatar top>
-              <q-avatar icon="print" color="grey-2" text-color="blue" />
-            </q-item-section>
-            <q-item-section top>
-              <q-item-label>
-                <span v-if="sUsuario.detalheUsuarios.impressoratermica">{{ sUsuario.detalheUsuarios.impressoratermica
-                  }}</span>
-                <span v-else>Vazio</span>
-              </q-item-label>
-              <q-item-label caption>
-                <span>Impressora Térmica</span>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
-
-        </div>
-        <div class="col-xs-12 col-sm-12">
-          <q-item>
-            <q-item-section avatar top>
-              <q-avatar icon="login" color="grey-2" text-color="blue" />
-            </q-item-section>
-            <q-item-section top>
-              <q-item-label>
-                {{ moment(sUsuario.detalheUsuarios.ultimoacesso).format("DD/MMM/YYYY") }} -
-                {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
-              </q-item-label>
-              <q-item-label caption>
-                Último acesso
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
-
-        </div>
-      </div>
     </q-list>
   </q-card>
 </template>

@@ -51,7 +51,7 @@ class SelectPortadorController extends Controller
             $sql .= ' and p.inativo is null ';
         }
 
-        $sql .= ' ORDER BY p.portador, p.codportador LIMIT 50';
+        $sql .= ' ORDER BY p.portador, p.codportador LIMIT 250';
 
         // RETORNA
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
