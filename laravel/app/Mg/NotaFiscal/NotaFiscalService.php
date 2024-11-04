@@ -11,6 +11,7 @@ use Mg\Pessoa\PessoaService;
 use Mg\Negocio\NegocioProdutoBarraService;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacaoService;
+use Mg\Negocio\NegocioService;
 
 // use Illuminate\Support\Facades\Auth;
 
@@ -73,6 +74,10 @@ class NotaFiscalService
 
         if ($negocio->Pessoa->notafiscal == PessoaService::NOTAFISCAL_NUNCA) {
             throw new Exception('Pessoa marcada para Nunca Emitir NFe!', 1);
+        }
+
+        if ($negocio->codnegociostatus != NegocioService::STATUS_FECHADO) {
+            throw new Exception('Negócio cancelado ou aberto, impossível gerar a NFE!', 1);
         }
 
         // inicia transacao no Banco
