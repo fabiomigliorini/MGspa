@@ -6,7 +6,7 @@
             icon="arrow_back" aria-label="Voltar">
             </q-btn>
         </template>
-        
+
         <template #tituloPagina>
             Grupo Econômico
         </template>
@@ -95,7 +95,7 @@
 
 
             <div class="q-pa-md">
-                <tabela-titulos-abertos :titulos-abertos="titulosAbertos"
+                <tabela-titulos-abertos :titulos-abertos="titulosAbertos" :codgrupoeconomico="GrupoEconomico.codgrupoeconomico"
                     v-on:update:titulos-abertos="updateTitulosAbertos($event)">
                 </tabela-titulos-abertos>
             </div>
@@ -126,7 +126,7 @@
         </template>
     </MGLayout>
 </template>
-  
+
 <script>
 import { defineComponent, defineAsyncComponent, onMounted } from 'vue'
 import { useQuasar } from "quasar"
@@ -363,6 +363,5 @@ export default defineComponent({
     },
 })
 </script>
-  
+
 <style scoped></style>
-  

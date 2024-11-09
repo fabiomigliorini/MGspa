@@ -24,7 +24,7 @@
 
                             <q-item>
                                 <q-item-section avatar>
-                                    <q-avatar icon="payments" color="grey-2" text-color="blue" />
+                                    <q-avatar icon="payments" color="grey-2" text-color="primary" />
                                 </q-item-section>
                                 <q-item-section>
                                     <q-item-label :class="cargo.inativo ? 'text-strike text-red-14' : null">
@@ -40,7 +40,7 @@
 
                             <q-item>
                                 <q-item-section avatar>
-                                    <q-avatar icon="payments" color="grey-2" text-color="blue" />
+                                    <q-avatar icon="payments" color="grey-2" text-color="primary" />
                                 </q-item-section>
                                 <q-item-section>
                                     <q-item-label :class="cargo.inativo ? 'text-strike text-red-14' : null">
@@ -137,7 +137,7 @@
         </template>
     </MGLayout>
 </template>
-  
+
 <script>
 import { defineComponent, defineAsyncComponent, ref, onMounted } from 'vue'
 import { guardaToken } from 'src/stores'
@@ -239,6 +239,5 @@ export default defineComponent({
     }
 })
 </script>
-  
+
 <style scoped></style>
-  

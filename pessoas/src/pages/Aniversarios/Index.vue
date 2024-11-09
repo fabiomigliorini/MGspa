@@ -26,12 +26,12 @@
                                                 <q-item-section>
                                                     <q-item-label>
                                                         <div class="text-h4 q-mb-md">
-                                                            <q-icon name="calendar_month" color="blue" />
+                                                            <q-icon name="calendar_month" color="primary" />
                                                             Dia {{ aniversario.dia }}
                                                         </div>
                                                     </q-item-label>
                                                     <q-item-label>
-                                                        <q-icon name="celebration" color="blue" />&nbsp;
+                                                        <q-icon name="celebration" color="primary" />&nbsp;
                                                         {{ aniversario.idade }}
                                                         <span v-if="aniversarios.idade == 1">
                                                             Ano
@@ -43,7 +43,7 @@
                                                         {{ aniversario.tipo }}
                                                     </q-item-label>
                                                     <q-item-label>
-                                                        <q-icon name="people" color="blue" />&nbsp;
+                                                        <q-icon name="people" color="primary" />&nbsp;
                                                         <q-btn dense flat color="primary" class="ellipsis"
                                                             :label="aniversario.pessoa"
                                                             :href="'/#/pessoa/' + aniversario.codpessoa"

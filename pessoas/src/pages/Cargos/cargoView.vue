@@ -84,7 +84,7 @@
 
                             <q-item>
                                 <q-item-section avatar>
-                                    <q-avatar icon="corporate_fare" color="grey-2" text-color="blue" />
+                                    <q-avatar icon="corporate_fare" color="grey-2" text-color="primary" />
                                 </q-item-section>
                                 <q-item-section>
                                     <q-item-label :class="pessoaCargo.inativo ? 'text-strike text-red-14' : null">
@@ -98,7 +98,7 @@
 
                             <q-item>
                                 <q-item-section avatar>
-                                    <q-avatar icon="event" color="grey-2" text-color="blue" />
+                                    <q-avatar icon="event" color="grey-2" text-color="primary" />
                                 </q-item-section>
                                 <q-item-section>
                                     <q-item-label :class="pessoaCargo.inativo ? 'text-strike text-red-14' : null">
@@ -155,7 +155,7 @@
         </template>
     </MGLayout>
 </template>
-  
+
 <script>
 import { defineComponent, defineAsyncComponent, onMounted } from 'vue'
 import { useQuasar } from "quasar"
@@ -331,6 +331,5 @@ export default defineComponent({
     }
 })
 </script>
-  
+
 <style scoped></style>
-  

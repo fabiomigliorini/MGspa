@@ -157,6 +157,8 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('dfe/filiais-habilitadas', '\Mg\Dfe\DfeController@filiaisHabilitadas');
 
     Route::post('titulo/agrupamento/{codtituloagrupamento}/mail', '\Mg\Titulo\TituloAgrupamentoController@mail');
+    Route::get('titulo/relatorio', '\Mg\Titulo\TituloRelatorioController@relatorio');
+    Route::get('titulo/relatorio-pdf', '\Mg\Titulo\TituloRelatorioController@relatorioPdf');
 
 });
 

@@ -3,8 +3,7 @@
     <q-list>
       <q-item-label header>
         Dados do Cliente e Crédito
-        <q-btn flat round icon="edit" @click="editarCliente()" 
-        v-if="user.verificaPermissaoUsuario('Financeiro')" />
+        <q-btn flat round icon="edit" @click="editarCliente()" v-if="user.verificaPermissaoUsuario('Financeiro')" />
       </q-item-label>
 
       <q-separator inset />
@@ -13,16 +12,19 @@
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="payments" color="grey-2" text-color="blue" />
+              <q-avatar icon="payments" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label v-if="sPessoa.item.aberto.quantidade > 0">
                 {{ sPessoa.item.aberto.quantidade }} Titulos totalizando
                 <br>
-                {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sPessoa.item.aberto.saldo) }}
+                {{ new Intl.NumberFormat('pt-BR', {
+                  style: 'currency', currency: 'BRL'
+                }).format(sPessoa.item.aberto.saldo) }}
               </q-item-label>
               <q-item-label v-if="sPessoa.item.aberto.quantidade > 0">
-                <span v-if="Documentos.verificaPassadoFuturo(sPessoa.item.aberto.vencimento)" class="text-red-14">Mais atrasado vencido {{ Documentos.formataFromNow(sPessoa.item.aberto.vencimento) }}</span>
+                <span v-if="Documentos.verificaPassadoFuturo(sPessoa.item.aberto.vencimento)" class="text-red-14">Mais
+                  atrasado vencido {{ Documentos.formataFromNow(sPessoa.item.aberto.vencimento) }}</span>
                 <span v-else>
                   Primeiro Vencimento {{ Documentos.formataFromNow(sPessoa.item.aberto.vencimento) }}
                 </span>
@@ -32,17 +34,35 @@
               </q-item-label>
               <q-item-label caption class="text-grey-8">Saldo em aberto</q-item-label>
             </q-item-section>
+            <q-item-section side>
+              <q-btn-group flat>
+                <q-btn flat dense color="primary" icon="list" :href="linkTitulosAbertos()" class="float-right"
+                  target="_blank">
+                  <q-tooltip class="bg-primary" :offset="[10, 10]">
+                    Ver títulos em aberto!
+                  </q-tooltip>
+                </q-btn>
+                <q-btn flat dense color="primary" icon="print" :href="linkRelatorioTitulosAbertos()" class="float-right"
+                  target="_blank">
+                  <q-tooltip class="bg-primary" :offset="[10, 10]">
+                    Relatório de Títulos em aberto!
+                  </q-tooltip>
+                </q-btn>
+              </q-btn-group>
+            </q-item-section>
           </q-item>
-
           <q-separator inset />
-          
+        </div>
+
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="credit_card" color="grey-2" text-color="blue" />
+              <q-avatar icon="credit_card" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
-                {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sPessoa.item.credito) }}
+                {{ new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sPessoa.item.credito)
+                }}
               </q-item-label>
               <q-item-label caption class="text-grey-8">Limite de Cŕedito</q-item-label>
             </q-item-section>
@@ -53,7 +73,7 @@
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="shopping_cart" color="grey-2" text-color="blue" />
+              <q-avatar icon="shopping_cart" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -63,12 +83,13 @@
               <q-item-label caption class="text-grey-8">Consumidor Final</q-item-label>
             </q-item-section>
           </q-item>
-
           <q-separator inset />
+        </div>
 
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top v-if="sPessoa.item.GrupoCliente">
-              <q-avatar icon="groups" color="grey-2" text-color="blue" />
+              <q-avatar icon="groups" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section v-if="sPessoa.item.GrupoCliente">
               <q-item-label>
@@ -83,7 +104,7 @@
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="schedule_send" color="grey-2" text-color="blue" />
+              <q-avatar icon="schedule_send" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -93,10 +114,12 @@
             </q-item-section>
           </q-item>
           <q-separator inset />
-          
+        </div>
+
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="people" color="grey-2" text-color="blue" />
+              <q-avatar icon="people" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -112,7 +135,7 @@
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="credit_card_off" color="grey-2" text-color="blue" />
+              <q-avatar icon="credit_card_off" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -123,11 +146,12 @@
             </q-item-section>
           </q-item>
           <q-separator inset />
+        </div>
 
-
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="payments" color="grey-2" text-color="blue" />
+              <q-avatar icon="payments" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -143,7 +167,7 @@
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="sell" color="grey-2" text-color="blue" />
+              <q-avatar icon="sell" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label lines="5">
@@ -154,11 +178,12 @@
             </q-item-section>
           </q-item>
           <q-separator inset />
+        </div>
 
-
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="attach_money" color="grey-2" text-color="blue" />
+              <q-avatar icon="attach_money" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label lines="2" v-if="sPessoa.item.codformapagamento">
@@ -173,7 +198,7 @@
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="receipt_long" color="grey-2" text-color="blue" />
+              <q-avatar icon="receipt_long" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label lines="5">
@@ -187,10 +212,12 @@
             </q-item-section>
           </q-item>
           <q-separator inset />
+        </div>
 
+        <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="switch_account" color="grey-2" text-color="blue" />
+              <q-avatar icon="switch_account" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -200,14 +227,13 @@
               <q-item-label caption class="text-grey-8">Fornecedor</q-item-label>
             </q-item-section>
           </q-item>
-  
           <q-separator inset />
         </div>
 
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="schedule_send" color="grey-2" text-color="blue" />
+              <q-avatar icon="schedule_send" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section>
               <q-item-label lines="10" style="white-space: pre">
@@ -256,8 +282,7 @@
           <q-toggle class="" outlined v-model="modelEditar.creditobloqueado" label="Crédito Bloqueado" />
 
           <div class="row" v-if="!modelEditar.creditobloqueado">
-            <div class="col-9"
-            v-if="user.verificaPermissaoUsuario('Financeiro')" >
+            <div class="col-9" v-if="user.verificaPermissaoUsuario('Financeiro')">
               <q-input outlined v-model="modelEditar.credito" label="Limite de Crédito" type="number" step="0"
                 input-class="text-right" class="q-pr-md">
                 <template v-slot:prepend>
@@ -357,7 +382,15 @@ export default defineComponent({
           message: error.message
         })
       }
-    }
+    },
+
+    linkTitulosAbertos() {
+      return process.env.MGSIS_URL + "index.php?r=titulo/index&Titulo[status]=A&Titulo[codpessoa]=" + this.sPessoa.item.codpessoa
+    },
+
+    linkRelatorioTitulosAbertos() {
+      return process.env.API_URL + "v1/titulo/relatorio-pdf?codpessoa=" + this.sPessoa.item.codpessoa
+    },
   },
 
   setup() {

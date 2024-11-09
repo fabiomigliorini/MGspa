@@ -89,7 +89,7 @@ const buscarRegistros = (val, update) => {
         <template v-slot:option="bancos">
                 <q-item v-bind="bancos.itemProps">
                   <q-item-section avatar>
-                    <q-icon name="account_balance" color="blue" />
+                    <q-icon name="account_balance" color="primary" />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>{{ bancos.opt.banco }}</q-item-label>

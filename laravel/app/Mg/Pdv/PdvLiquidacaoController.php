@@ -16,11 +16,4 @@ class PdvLiquidacaoController
         $qry = PdvLiquidacaoService::queryPorLiquidacao($filtros);
         return LiquidacaoTituloResource::collection($qry->paginate(100));
     }
-/*
-    public function getLiquidacoesB(PdvRequest $request)
-    {
-
-
-    }
-    */
 }

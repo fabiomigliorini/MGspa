@@ -8,7 +8,7 @@
 
             <q-radio v-model="filtroRegistroSpc" val="todos" label="Todos" @click="filtroSpc()"/>
             <q-radio v-model="filtroRegistroSpc" val="abertos" label="Abertos" @click="filtroSpc()" />
-        
+
         </q-item-label>
 
         <div v-for="registro in sPessoa.item.RegistroSpc" v-bind:key="registro.codregistrospc">
@@ -16,7 +16,7 @@
           <q-item>
             <q-item-section avatar>
               <q-avatar>
-                <q-icon name="money_off" color="blue" />
+                <q-icon name="money_off" color="primary" />
               </q-avatar>
             </q-item-section>
 
@@ -31,7 +31,7 @@
 
                 <span v-if="registro.baixa" class="row">Baixado em:
                   <span class="text-weight-bold">&nbsp;{{ Documentos.formataDatasemHr(registro.baixa) }}</span>
-                </span>               
+                </span>
               </q-item-label>
             </q-item-section>
 
@@ -94,7 +94,7 @@
             </q-input>
 
             <q-input outlined v-model="modelRegistroSpc.valor" label="Valor" type="numeric" :rules="[
-              val => val !== null && val !== '' && val !== undefined || 'Valor obrigatório'   
+              val => val !== null && val !== '' && val !== undefined || 'Valor obrigatório'
             ]" />
 
             <q-input outlined v-model="modelRegistroSpc.observacoes" label="Observações" borderless
@@ -148,7 +148,7 @@ export default defineComponent({
       novoRegistro.baixa = this.Documentos.dataFormatoSql(novoRegistro.baixa)
      }
 
-     
+
      if(novoRegistro.valor.indexOf(',') > -1) {
        var removeVirgula =  novoRegistro.valor.replace(/,([^,]*)$/,".$1")
        novoRegistro.valor = removeVirgula
@@ -163,7 +163,7 @@ export default defineComponent({
             icon: 'done',
             message: 'Registro Spc criado!'
           })
-          
+
           this.dialogNovoRegistroSpc = false
           this.sPessoa.item.RegistroSpc.push(ret.data.data)
         }
@@ -274,7 +274,7 @@ export default defineComponent({
     })
 
     const registrosS = ref([])
-   
+
     return {
       sPessoa,
       RegistroSpc,
@@ -301,7 +301,7 @@ export default defineComponent({
   },
   mounted() {
     this.registrosS = this.sPessoa.item.RegistroSpc
-   
+
     let todos = this.sPessoa.item.RegistroSpc.filter(x => !x.baixa)
     this.sPessoa.item.RegistroSpc = todos
   }

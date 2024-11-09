@@ -24,7 +24,7 @@
             <q-separator inset />
             <q-item>
               <q-item-section avatar>
-                <q-icon name="celebration" color="blue"></q-icon>
+                <q-icon name="celebration" color="primary"></q-icon>
               </q-item-section>
               <q-item-section>
                 <q-item-label v-if="ferias.diasgozo">
@@ -49,7 +49,7 @@
             <q-separator inset />
             <q-item>
               <q-item-section avatar>
-                <q-icon name="event" color="blue"></q-icon>
+                <q-icon name="event" color="primary"></q-icon>
               </q-item-section>
               <q-item-section>
                 <q-item-label>
@@ -64,7 +64,7 @@
               <q-separator inset />
               <q-item>
                 <q-item-section avatar>
-                  <q-icon name="comment" color="blue"></q-icon>
+                  <q-icon name="comment" color="primary"></q-icon>
                 </q-item-section>
                 <q-item-section>
                   <q-item-label>

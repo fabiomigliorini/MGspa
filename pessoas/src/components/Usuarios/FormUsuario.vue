@@ -35,7 +35,7 @@
 
         <q-item class="q-px-none">
           <q-item-section avatar top>
-            <q-avatar icon="corporate_fare" color="grey-2" text-color="blue" />
+            <q-avatar icon="corporate_fare" color="grey-2" text-color="primary" />
           </q-item-section>
           <q-item-section top>
             <q-item-label class="row ">
@@ -48,7 +48,7 @@
 
         <q-item class="q-px-none">
           <q-item-section avatar top>
-            <q-avatar icon="wallet" color="grey-2" text-color="blue" />
+            <q-avatar icon="wallet" color="grey-2" text-color="primary" />
           </q-item-section>
           <q-item-section top>
             <q-item-label>
@@ -59,7 +59,7 @@
         </q-item>
         <q-item class="q-px-none">
           <q-item-section avatar top>
-            <q-avatar icon="people" color="grey-2" text-color="blue" />
+            <q-avatar icon="people" color="grey-2" text-color="primary" />
           </q-item-section>
           <q-item-section top>
             <q-item-label>

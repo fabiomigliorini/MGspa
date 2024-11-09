@@ -47,7 +47,7 @@
 
       <q-item :to="'/pessoa/' + sUsuario.detalheUsuarios.codpessoa" v-if="sUsuario.detalheUsuarios.codpessoa">
         <q-item-section avatar top>
-          <q-avatar icon="badge" color="grey-2" text-color="blue" />
+          <q-avatar icon="badge" color="grey-2" text-color="primary" />
         </q-item-section>
         <q-item-section top>
           <q-item-label>
@@ -61,7 +61,7 @@
 
       <q-item v-if="sUsuario.detalheUsuarios.codfilial">
         <q-item-section avatar top>
-          <q-avatar icon="corporate_fare" color="grey-2" text-color="blue" />
+          <q-avatar icon="corporate_fare" color="grey-2" text-color="primary" />
         </q-item-section>
         <q-item-section top>
           <q-item-label v-if="sUsuario.detalheUsuarios.filial">
@@ -75,7 +75,7 @@
 
       <q-item v-if="sUsuario.detalheUsuarios.codportador">
         <q-item-section avatar top>
-          <q-avatar icon="wallet" color="grey-2" text-color="blue" />
+          <q-avatar icon="wallet" color="grey-2" text-color="primary" />
         </q-item-section>
         <q-item-section top>
           <q-item-label>
@@ -89,7 +89,7 @@
 
       <q-item>
         <q-item-section avatar top>
-          <q-avatar icon="login" color="grey-2" text-color="blue" />
+          <q-avatar icon="login" color="grey-2" text-color="primary" />
         </q-item-section>
         <q-item-section top>
           <q-item-label>

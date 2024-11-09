@@ -13,7 +13,7 @@
         <q-item>
           <q-item-section avatar>
             <q-avatar>
-              <q-icon :name="contas.agencia !== null ? 'account_balance' : 'pix'" color="blue" />
+              <q-icon :name="contas.agencia !== null ? 'account_balance' : 'pix'" color="primary" />
             </q-avatar>
           </q-item-section>
 

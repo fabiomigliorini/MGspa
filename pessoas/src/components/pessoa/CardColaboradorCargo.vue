@@ -17,7 +17,7 @@
                     <q-separator inset />
                     <q-item>
                         <q-item-section avatar>
-                            <q-icon name="corporate_fare" color="blue"></q-icon>
+                            <q-icon name="corporate_fare" color="primary"></q-icon>
                         </q-item-section>
                         <q-item-section>
                             <q-item-label v-if="colaboradorCargo.inicio">
@@ -38,7 +38,7 @@
 
                     <q-item :to="'/cargo/' + colaboradorCargo.codcargo" clickable>
                         <q-item-section avatar>
-                            <q-icon name="engineering" color="blue"></q-icon>
+                            <q-icon name="engineering" color="primary"></q-icon>
                         </q-item-section>
                         <q-item-section>
                             <q-item-label v-if="colaboradorCargo.inicio">
@@ -50,7 +50,7 @@
                     <q-item
                         v-if="colaboradorCargo.comissaoloja || colaboradorCargo.comissaovenda || colaboradorCargo.comissaoxerox">
                         <q-item-section avatar>
-                            <q-icon name="money" color="blue"></q-icon>
+                            <q-icon name="money" color="primary"></q-icon>
                         </q-item-section>
                         <q-item-section>
                             <q-item-label>
@@ -68,7 +68,7 @@
                         <q-separator inset />
                         <q-item>
                             <q-item-section avatar>
-                                <q-icon name="payments" color="blue"></q-icon>
+                                <q-icon name="payments" color="primary"></q-icon>
                             </q-item-section>
                             <q-item-section>
                                 <q-item-label>
@@ -87,7 +87,7 @@
                         <q-separator inset />
                         <q-item>
                             <q-item-section avatar>
-                                <q-icon name="comment" color="blue"></q-icon>
+                                <q-icon name="comment" color="primary"></q-icon>
                             </q-item-section>
                             <q-item-section>
                                 <q-item-label>
@@ -208,7 +208,7 @@
         </q-card>
     </q-dialog>
 </template>
-  
+
 <script>
 import { defineComponent, defineAsyncComponent, computed } from 'vue'
 import { useQuasar, debounce, TouchSwipe } from "quasar"
@@ -447,6 +447,5 @@ export default defineComponent({
     },
 })
 </script>
-  
+
 <style scoped></style>
-  

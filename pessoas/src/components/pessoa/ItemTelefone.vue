@@ -67,7 +67,7 @@
         <q-separator inset />
         <q-item>
           <q-item-section avatar top>
-            <q-avatar :icon="iconeFone(element.tipo)" color="grey-2" text-color="blue" />
+            <q-avatar :icon="iconeFone(element.tipo)" color="grey-2" text-color="primary" />
           </q-item-section>
           <q-item-section class="cursor-pointer" lines="1" @click="linkTel(element.ddd, element.telefone)" clickable
             v-ripple>
@@ -76,12 +76,12 @@
                 ({{ element.ddd }})
               </template>
               {{ formataFone(element.tipo, element.telefone) }}
-              <q-icon v-if="element.verificacao" color="blue" name="verified" />
+              <q-icon v-if="element.verificacao" color="primary" name="verified" />
             </q-item-label>
             <q-item-label v-else>
               <s>({{ element.ddd }})
                 {{ formataFone(element.tipo, element.telefone) }}</s>
-              <q-icon v-if="element.verificacao" color="blue" name="verified" />
+              <q-icon v-if="element.verificacao" color="primary" name="verified" />
             </q-item-label>
             <q-item-label caption>
               {{ element.apelido }}
@@ -92,7 +92,7 @@
           </q-item-section>
           <q-item-section side>
             <div class="row">
-              <q-btn flat size="sm" dense label="Verificar" color="blue"
+              <q-btn flat size="sm" dense label="Verificar" color="primary"
                 v-if="!element.verificacao && element.tipo === 2 && user.verificaPermissaoUsuario('Publico')"
                 @click="enviarSms(element.pais, element.ddd, element.telefone, element.codpessoatelefone)" />
 

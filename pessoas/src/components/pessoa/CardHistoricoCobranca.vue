@@ -12,7 +12,7 @@
                     <q-item>
                         <q-item-section avatar>
                             <q-avatar>
-                                <q-icon name="comment" color="blue" />
+                                <q-icon name="comment" color="primary" />
                             </q-avatar>
                             <!-- <q-item-label caption>#0000{{ historico.codcobrancahistorico }}</q-item-label> -->
                         </q-item-section>
@@ -31,7 +31,7 @@
                         </q-item-section>
 
                         <q-item-section side top class="gt-xs">
-                            
+
                         </q-item-section>
 
                         <q-btn-dropdown flat auto-close v-if="user.verificaPermissaoUsuario('Publico')">
@@ -70,7 +70,7 @@
         </q-card>
     </q-dialog>
 </template>
-  
+
 <script>
 import { defineComponent, defineAsyncComponent } from 'vue'
 import { useQuasar, debounce } from "quasar"
@@ -234,6 +234,5 @@ export default defineComponent({
     }
 })
 </script>
-  
+
 <style scoped></style>
-  

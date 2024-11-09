@@ -219,35 +219,54 @@
         <div class="col-xs-12 col-sm-6">
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="badge" color="grey-2" text-color="blue" />
+              <q-avatar icon="badge" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section top>
               <q-item-label>
                 #{{ String(sPessoa.item.codpessoa).padStart(8, '0') }}
-                <span v-if="sPessoa.item.mercosId.length > 0">
-                  <template v-for="mid in sPessoa.item.mercosId" :key="mid">
-                    /
-                    <q-btn dense flat color="primary" :label="mid"
-                      :href="'https://app.mercos.com/354041/clientes/' + mid" target="_blank" />
-                  </template>
-                  <q-btn dense flat icon="manage_accounts" color="primary" @click="abrirDialogMercos">
-                    <q-tooltip class="bg-indigo" :offset="[10, 10]">
-                      Transferir MercosID {{ sPessoa.item.mercosId }} para outro cadastro!
-                    </q-tooltip>
-                  </q-btn>
-                </span>
               </q-item-label>
               <q-item-label caption>
-                Pessoa
-                <span v-if="sPessoa.item.mercosId.length > 0"> / Mercos Id</span>
+                Código
               </q-item-label>
             </q-item-section>
           </q-item>
           <q-separator inset />
 
+          <template v-for="mid in sPessoa.item.mercosId" :key="mid">
+            <q-item>
+              <q-item-section avatar top>
+                <q-avatar icon="shopping_cart" color="grey-2" text-color="primary" />
+              </q-item-section>
+              <q-item-section top>
+                <q-item-label>
+                  {{ mid }}
+                </q-item-label>
+                <q-item-label caption>
+                  Mercos Id
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-btn-group flat>
+                  <q-btn dense flat icon="launch" color="primary"
+                    :href="'https://app.mercos.com/354041/clientes/' + mid" target="_blank">
+                    <q-tooltip class="bg-primary" :offset="[10, 10]">
+                      Ir para Mercos!
+                    </q-tooltip>
+                  </q-btn>
+                  <q-btn dense flat icon="manage_accounts" color="primary" @click="abrirDialogMercos">
+                    <q-tooltip class="bg-primary" :offset="[10, 10]">
+                      Transferir MercosID para outro cadastro!
+                    </q-tooltip>
+                  </q-btn>
+                </q-btn-group>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
+          </template>
+
           <q-item>
             <q-item-section avatar top>
-              <q-avatar icon="fingerprint" color="grey-2" text-color="blue" />
+              <q-avatar icon="fingerprint" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section top>
               <q-item-label>
@@ -265,7 +284,7 @@
 
           <q-item v-if="sPessoa.item.nascimento">
             <q-item-section avatar top>
-              <q-avatar icon="celebration" color="grey-2" text-color="blue" />
+              <q-avatar icon="celebration" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section top>
               <q-item-label>
@@ -282,7 +301,7 @@
 
           <q-item v-if="sPessoa.item.observacoes">
             <q-item-section avatar top>
-              <q-avatar icon="notes" color="grey-2" text-color="blue" />
+              <q-avatar icon="notes" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section top>
               <q-item-label style="white-space: pre-line">
@@ -298,7 +317,7 @@
 
           <q-item v-if="sPessoa.item.ctps">
             <q-item-section avatar top>
-              <q-avatar icon="feed" color="grey-2" text-color="blue" />
+              <q-avatar icon="engineering" color="grey-2" text-color="primary" />
             </q-item-section>
             <q-item-section top>
               <q-item-label style="white-space: pre-line">
@@ -316,7 +335,7 @@
           <template v-if="sPessoa.item.rntrc || sPessoa.item.tipotransportador">
             <q-item class="col-6">
               <q-item-section avatar top>
-                <q-avatar icon="local_shipping" color="grey-2" text-color="blue" />
+                <q-avatar icon="local_shipping" color="grey-2" text-color="primary" />
               </q-item-section>
               <q-item-section top>
                 <q-item-label lines="2" v-if="sPessoa.item.rntrc">
@@ -340,7 +359,7 @@
             <q-item class="col-6" :to="'/grupoeconomico/' + this.sPessoa.item.codgrupoeconomico"
               style="text-decoration: none;" v-ripple clickable>
               <q-item-section avatar top>
-                <q-avatar icon="groups" color="grey-2" text-color="blue" />
+                <q-avatar icon="groups" color="grey-2" text-color="primary" />
               </q-item-section>
               <q-item-section top>
                 <q-item-label lines="2">
@@ -361,7 +380,7 @@
           <template v-if="sPessoa.item.pai || sPessoa.item.mae">
             <q-item class="col-6" style="text-decoration: none;">
               <q-item-section avatar top>
-                <q-avatar icon="people" color="grey-2" text-color="blue" />
+                <q-avatar icon="people" color="grey-2" text-color="primary" />
               </q-item-section>
               <q-item-section top>
                 <q-item-label lines="2">
@@ -383,7 +402,7 @@
           <template v-if="sPessoa.item.pispasep">
             <q-item class="col-6" style="text-decoration: none;">
               <q-item-section avatar top>
-                <q-avatar icon="123" color="grey-2" text-color="blue" />
+                <q-avatar icon="elderly" color="grey-2" text-color="primary" />
               </q-item-section>
               <q-item-section top>
                 <q-item-label lines="2">
@@ -401,7 +420,7 @@
           <template v-if="sPessoa.item.tituloeleitor">
             <q-item class="col-6" style="text-decoration: none;">
               <q-item-section avatar top>
-                <q-avatar icon="123" color="grey-2" text-color="blue" />
+                <q-avatar icon="how_to_vote" color="grey-2" text-color="primary" />
               </q-item-section>
               <q-item-section top>
                 <q-item-label lines="2">

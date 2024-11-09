@@ -14,7 +14,7 @@
                 <q-item>
                     <q-item-section avatar>
                         <q-avatar>
-                            <q-icon name="card_membership" color="blue" />
+                            <q-icon name="card_membership" color="primary" />
                         </q-avatar>
                     </q-item-section>
 
@@ -105,7 +105,7 @@
         </q-card>
     </q-dialog>
 </template>
-  
+
 <script>
 import { defineComponent, defineAsyncComponent } from 'vue'
 import { useQuasar, debounce } from "quasar"
@@ -321,12 +321,11 @@ export default defineComponent({
     },
     mounted() {
         this.certidoesS = this.sPessoa.item.PessoaCertidaoS
-       
+
         let validas = this.sPessoa.item.PessoaCertidaoS.filter(x => x.validade >= this.Documentos.dataAtual())
         this.sPessoa.item.PessoaCertidaoS = validas
     }
 })
 </script>
-  
+
 <style scoped></style>
-  

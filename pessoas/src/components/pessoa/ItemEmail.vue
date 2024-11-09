@@ -39,7 +39,7 @@
         <q-separator inset />
         <q-item>
           <q-item-section avatar top>
-            <q-avatar icon="email" color="grey-2" text-color="blue" />
+            <q-avatar icon="email" color="grey-2" text-color="primary" />
           </q-item-section>
           <q-item-section>
 
@@ -50,7 +50,7 @@
               <span v-else>
                 {{ element.email }}
               </span>
-              <q-icon v-if="element.verificacao" class="" color="blue" name="verified" />
+              <q-icon v-if="element.verificacao" class="" color="primary" name="verified" />
             </q-item-label>
 
             <q-item-label caption>
@@ -67,7 +67,7 @@
             <div class="row">
 
               <q-btn v-if="!element.verificacao && user.verificaPermissaoUsuario('Publico')" label="Verificar"
-                color="blue" flat size="sm" dense @click="enviarEmail(element.email, element.codpessoaemail)" />
+                color="primary" flat size="sm" dense @click="enviarEmail(element.email, element.codpessoaemail)" />
 
               <q-btn-dropdown flat auto-close dense v-if="user.verificaPermissaoUsuario('Publico')">
                 <q-btn v-if="user.verificaPermissaoUsuario('Publico')" flat round icon="edit"

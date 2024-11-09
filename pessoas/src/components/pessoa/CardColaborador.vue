@@ -50,7 +50,7 @@
         <q-separator inset />
         <q-item>
           <q-item-section avatar>
-            <q-icon name="event" color="blue"></q-icon>
+            <q-icon name="event" color="primary"></q-icon>
           </q-item-section>
           <q-item-section>
             <q-item-label v-if="!colaborador.rescisao">
@@ -70,7 +70,7 @@
           <q-separator inset />
           <q-item>
             <q-item-section avatar>
-              <q-icon name="event" color="blue"></q-icon>
+              <q-icon name="event" color="primary"></q-icon>
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -91,7 +91,7 @@
           <q-separator inset />
           <q-item>
             <q-item-section avatar>
-              <q-icon name="timer" color="blue"></q-icon>
+              <q-icon name="timer" color="primary"></q-icon>
             </q-item-section>
             <q-item-section>
               <q-item-label v-if="colaborador.numeroponto || colaborador.numerocontabilidade
@@ -115,7 +115,7 @@
           <q-separator inset />
           <q-item>
             <q-item-section avatar>
-              <q-icon name="comment" color="blue"></q-icon>
+              <q-icon name="comment" color="primary"></q-icon>
             </q-item-section>
             <q-item-section>
               <q-item-label v-if="colaborador.observacoes" style="white-space: pre-line">
