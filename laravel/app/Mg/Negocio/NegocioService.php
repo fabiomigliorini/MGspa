@@ -17,10 +17,16 @@ class NegocioService
     const STATUS_FECHADO = 2;
     const STATUS_CANCELADO = 3;
 
+    const CODNEGOCIOSTATUS_DESCRICAO = [
+        1 => 'Aberto',
+        2 => 'Fechado',
+        3 => 'Cancelado'
+    ];
+
     public static function fecharSePago (Negocio $negocio)
     {
         static::recalcularTotal($negocio);
-        if ($negocio->codnegociostatus != NegocioStatus::ABERTO) {
+        if ($negocio->codnegociostatus != static::STATUS_ABERTO) {
             return false;
         }
         $valorpagamento = floatval($negocio->NegocioFormaPagamentoS()->sum('valorpagamento'));
@@ -54,7 +60,7 @@ class NegocioService
             return PdvNegocioService::fechar($negocio, $negocio->Pdv);
         }
 
-        if ($negocio->codnegociostatus != NegocioStatus::ABERTO) {
+        if ($negocio->codnegociostatus != static::STATUS_ABERTO) {
             throw new \Exception("O Status do Negócio não permite Fechamento!", 1);
         }
 
@@ -98,7 +104,7 @@ class NegocioService
 
         //atualiza status
         $negocio->update([
-            'codnegociostatus' => NegocioStatus::FECHADO,
+            'codnegociostatus' => static::STATUS_FECHADO,
             'codusuario' => Auth::user()->codusuario??$negocio->codusuario,
             'lancamento' => Carbon::now()
         ]);

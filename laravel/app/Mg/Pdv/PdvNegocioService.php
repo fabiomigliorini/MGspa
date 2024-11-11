@@ -10,7 +10,7 @@ use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
-use Mg\Negocio\NegocioStatus;
+use Mg\Negocio\NegocioService;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
@@ -24,8 +24,15 @@ class PdvNegocioService
         // Procura se já existe um negocio com o uuid na base
         $negocio = Negocio::firstOrNew(['uuid' => $data['uuid']]);
 
+        // Verifica se o Status do Front e Backend conferem
+        if ($negocio->exists && $negocio->codnegociostatus != $data['codnegociostatus']) {
+            $back = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$negocio->codnegociostatus]??$negocio->codnegociostatus;
+            $front = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$data['codnegociostatus']]??$data['codnegociostatus'];
+            throw new Exception("Negocio consta como {$back} no Servidor, mas {$front} no PDV. Verifique com o suporte!");
+        }
+
         // Se Fechado/Cancelado
-        if (in_array($negocio->codnegociostatus, [2, 3])) {
+        if (in_array($negocio->codnegociostatus, [NegocioService::STATUS_FECHADO, NegocioService::STATUS_CANCELADO])) {
             return static::negocioFechado($negocio, $data, $pdv);
         }
 
@@ -36,6 +43,11 @@ class PdvNegocioService
 
     public static function negocioAberto(Negocio $negocio, $data, Pdv $pdv)
     {
+
+        // só considera o status do frontend caso seja novo
+        if ($negocio->exists) {
+            unset($data['codnegociostatus']);
+        }
 
         // importa os dados do negocio
         $negocio->fill($data);
@@ -93,9 +105,14 @@ class PdvNegocioService
             throw new Exception("Não é permitido alterar de uma Natureza de Saída para outra de Entrada ou vice-versa {$negocio->codnegocio}!", 1);
         }
 
-        // Não alterar usuario, pdv nem data de lançamento
+        // Ignorar do front:
+        // Usuario
+        // PDV 
+        // Data de lançamento
+        // Status
         unset($data['codusuario']);
         unset($data['lancamento']);
+        unset($data['codnegociostatus']);
         unset($data['codpdv']);
         $negocio->fill($data);
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
@@ -145,7 +162,7 @@ class PdvNegocioService
         DB::beginTransaction();
 
         // validacao de status
-        if ($negocio->codnegociostatus != NegocioStatus::ABERTO) {
+        if ($negocio->codnegociostatus != NegocioService::STATUS_ABERTO) {
             throw new Exception('O Status do Negócio não permite Fechamento!', 1);
         }
 
@@ -223,7 +240,7 @@ class PdvNegocioService
         }
 
         // marca negocio como fechado
-        $negocio->codnegociostatus = NegocioStatus::FECHADO;
+        $negocio->codnegociostatus = NegocioService::STATUS_FECHADO;
         if ($usuario = Auth::user()) {
             $negocio->codusuario = $usuario->codusuario;
         }
@@ -265,7 +282,7 @@ class PdvNegocioService
 
     public static function cancelar(Negocio $negocio, Pdv $pdv, String $justificativa)
     {
-        if (!in_array($negocio->codnegociostatus, [1, 2])) {
+        if (!in_array($negocio->codnegociostatus, [NegocioService::STATUS_ABERTO, NegocioService::STATUS_FECHADO])) {
             throw new Exception("Status do Negócio Não Permite Cancelamento!", 1);
         }
 
@@ -287,7 +304,7 @@ class PdvNegocioService
         }
         PdvNegocioPrazoService::estornarBaixaVales($negocio);
 
-        $negocio->codnegociostatus = NegocioStatus::CANCELADO;
+        $negocio->codnegociostatus = NegocioService::STATUS_CANCELADO;
         $negocio->justificativa = $justificativa;
         $negocio->save();
         static::movimentarEstoque($negocio);
