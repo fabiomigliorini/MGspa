@@ -19,19 +19,20 @@ export default ({ Vue }) => {
     return Promise.reject(error)
   });
 
-  // Vue.prototype.$axios.interceptors.response.use((response) => {
-  //   return response
-  // }, function (error) {
-  //   if (error.response) {
-  //     if (error.response.status) {
-  //       const originalRequest = error.config;
-  //       if (error.response.status === 401 && !originalRequest._retry) {
-  //         //window.location="http://api-mgspa-dev.mgpapelaria.com.br/api/quasar"
-  //         // window.location=process.env.OAUTH_URL + "?state=quasar-v1"
-  //         // refresh.handle(error.response)
-  //       }
-  //     }
-  //   }
-  //   return Promise.reject(error)
-  // })
+  Vue.prototype.$axios.interceptors.response.use((response) => {
+    return response
+  }, function (error) {
+    if (error.response) {
+      if (error.response.status) {
+        const originalRequest = error.config;
+        if (error.response.status === 401){
+          console.log('Erro 401')
+          let url = new URL(window.location.href)
+          url = encodeURI(url.origin)
+          window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
+        }
+      }
+    }
+    return Promise.reject(error)
+  })
 }
