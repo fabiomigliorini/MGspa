@@ -50,9 +50,9 @@ export default defineComponent({
       if ((localStorage.getItem('access_token'))) {
         // window.location = "#/"
       } else {
-        // let url = new URL(window.location.href)
-        // url = encodeURI(url.origin)
-        // window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
+        let url = new URL(window.location.href)
+        url = encodeURI(url.origin)
+        window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
       }
     }
 
