@@ -46,7 +46,8 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
-        return view('auth.login');
+        return redirect(env('AUTH_API_URL') . '/login');
+        //return view('auth.login');
     }
 
     /**
