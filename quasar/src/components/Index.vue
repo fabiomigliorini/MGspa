@@ -8,10 +8,11 @@
     <div slot="content" class="layout-padding">
       <div class="row wrap">
         <div class="text-center col-md-1 col-xs-3 col-sm-2" v-for="aplicativo in aplicativos">
-          <q-btn flat color="primary" :icon="aplicativo.icon" @click="$router.push(aplicativo.path)" size="2rem" style="min-height:0"/>
+          <q-btn flat color="primary" :icon="aplicativo.icon" @click="$router.push(aplicativo.path)" size="2rem"
+            style="min-height:0" />
           <br>
           <small @click="$router.push(aplicativo.path)" class="text-primary" style="cursor:pointer">
-            {{aplicativo.title}}
+            {{ aplicativo.title }}
           </small>
         </div>
       </div>
@@ -31,7 +32,7 @@ export default {
     MgLayout
   },
 
-  data () {
+  data() {
     return {
       left: false
     }
@@ -39,7 +40,7 @@ export default {
 
   computed: {
     aplicativos: {
-      get () {
+      get() {
         return this.$store.state.aplicativos.aplicativos
       }
     }
@@ -48,36 +49,38 @@ export default {
     user: function (e) {
       var vm = this
       let data = {
-        usuario:'',
-        codusuario:'',
+        usuario: '',
+        codusuario: '',
       }
-        vm.$axios.get('auth/user').then(response => {
-          // salva código da imagem avatar do usuário
-          localStorage.setItem('auth.usuario.usuario', response.data.data.usuario)
-          localStorage.setItem('auth.usuario.codusuario', response.data.data.codusuario)
-          this.$store.commit('perfil/updatePerfil', {
-            usuario: localStorage.getItem('auth.usuario.usuario'),
-            avatar: localStorage.getItem('auth.usuario.avatar'),
-            codusuario: localStorage.getItem('auth.usuario.codusuario')
-          })
-        }).catch(error => {
-          console.log(error.response)
+      vm.$axios.get('auth/user').then(response => {
+        // salva código da imagem avatar do usuário
+        localStorage.setItem('auth.usuario.usuario', response.data.data.usuario)
+        localStorage.setItem('auth.usuario.codusuario', response.data.data.codusuario)
+        this.$store.commit('perfil/updatePerfil', {
+          usuario: localStorage.getItem('auth.usuario.usuario'),
+          avatar: localStorage.getItem('auth.usuario.avatar'),
+          codusuario: localStorage.getItem('auth.usuario.codusuario')
         })
+      }).catch(error => {
+        let url = new URL(window.location.href)
+        url = encodeURI(url.origin)
+        window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
+      })
     }
   },
 
-  mounted () {
+  mounted() {
+    this.user()
   }
 
 }
-  const  urlParams = new URLSearchParams(window.location.search);
-  const Token = urlParams.get("accesstoken");
-  if (Token){
-  localStorage.setItem('auth.token', Token);
-  setTimeout(function() {
-    window.location.href = "/";
-}, 1000);
-}
+// const urlParams = new URLSearchParams(window.location.search);
+// const Token = urlParams.get("accesstoken");
+// if (Token) {
+//   localStorage.setItem('auth.token', Token);
+//   setTimeout(function () {
+//     window.location.href = "/";
+//   }, 1000);
+// }
 </script>
-<style>
-</style>
+<style></style>

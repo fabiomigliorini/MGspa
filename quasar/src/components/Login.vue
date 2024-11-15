@@ -18,10 +18,10 @@
             entrar
           </q-btn>
           <q-btn color="red" style="margin-top: 10px;">
-          <a  href="http://api-mgspa-dev.mgpapelaria.com.br/api/quasar" style="color:white">
-            Login usando MGSpa
-          </a>
-        </q-btn>
+            <a href="http://api-mgspa-dev.mgpapelaria.com.br/api/quasar" style="color:white">
+              Login usando MGSpa
+            </a>
+          </q-btn>
         </form>
       </q-card-section>
     </q-card>
@@ -30,9 +30,12 @@
 </template>
 
 <script>
+import axios from 'axios'
+//import env
+// require('dotenv').config()
 export default {
   name: 'login',
-  data () {
+  data() {
     return {
       username: null,
       password: null,
@@ -43,27 +46,41 @@ export default {
 
   components: {
   },
+  mounted() {
+    var vm = this
+    vm.$axios.get('auth/user').then(response => {
+      localStorage.setItem('auth.usuario.avatar', response.data.avatar)
+      localStorage.setItem('auth.usuario.usuario', response.data.usuario)
+      localStorage.setItem('auth.usuario.codusuario', response.data.codusuario)
+      this.$store.commit('perfil/updatePerfil', {
+        usuario: localStorage.getItem('auth.usuario.usuario'),
+        avatar: localStorage.getItem('auth.usuario.avatar'),
+        codusuario: localStorage.getItem('auth.usuario.codusuario')
+      })
+      vm.$router.push('/')
+    }).catch(error => {
+      let url = new URL(window.location.href)
+      url = encodeURI(url.origin)
+      window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
+    });
+  },
   created() {
-    //do something after creating vue instance
   },
   methods: {
-
     login: function (e) {
       var vm = this
       let data = {
         username: vm.username,
-        password: vm.password
+        password: vm.password,
+        grant_type: 'password',
+        client_id: process.env.API_AUTH_CLIENT_ID,
+        client_secret: process.env.API_AUTH_CLIENT_SECRET
       }
-      // Busca Autenticacao
-      vm.$axios.post('auth/login', data).then(response => {
+      axios.post(process.env.API_AUTH_URL + '/api/oauth/token', data, { withCredentials: true }).then(response => {
         // salva token no Local Storage
         let token = response.data.access_token
         localStorage.setItem('auth.token', token)
-      
-
-       
         vm.$axios.get('auth/user').then(response => {
-  
           // salva código da imagem avatar do usuário
           localStorage.setItem('auth.usuario.avatar', response.data.avatar)
           localStorage.setItem('auth.usuario.usuario', response.data.usuario)
@@ -73,11 +90,11 @@ export default {
             avatar: localStorage.getItem('auth.usuario.avatar'),
             codusuario: localStorage.getItem('auth.usuario.codusuario')
           })
-         
+          vm.$router.push('/')
         }).catch(error => {
           console.log(error.response)
         })
-        vm.$router.push('/')
+
       }).catch(error => {
         // Mensagem de erro
         console.log('erro no login')
@@ -85,7 +102,7 @@ export default {
         this.mensagem = error.response.data.mensagem
       })
     }
-    
+
   }
 }
 </script>
@@ -97,7 +114,7 @@ export default {
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-size: cover;
-  background-color:#464646;
+  background-color: #464646;
   height: 100%;
   padding-top: 10%;
 }

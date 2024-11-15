@@ -19,7 +19,7 @@
           <q-btn flat round dense icon="apps" @click="rightDrawer = !rightDrawer" />
         </slot>
       </q-toolbar>
-
+ 
       <slot name="tabHeader"></slot>
 
     </q-header>
@@ -98,6 +98,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: 'mg-layout',
   data () {
@@ -147,16 +148,30 @@ export default {
         title: 'Sair do sistema',
         message: 'Tem certeza que deseja sair do sistema?'
       }).onOk(() => {
-        vm.$axios.get('auth/logout').then(response => {
+        let token = document.cookie.split(';').find((item) => item.trim().startsWith('access_token='));
+
+        if(token){
+          token = token.split('=')[1]
+        }
+        axios.post(process.env.API_AUTH_URL + '/api/logout',
+          {},
+          {
+            headers: {
+              'Authorization': 'Bearer ' + token
+            }
+          }
+        ).then(response => {
           localStorage.removeItem('auth.token');
           localStorage.removeItem('auth.usuario.usuario');
           localStorage.removeItem('auth.usuario.codusuario');
           localStorage.removeItem('auth.usuario.avatar');
-          window.location=process.env.LOGOUT_URL;
+          vm.$router.push('/login')
           vm.$q.notify({
             message: 'Até mais...',
             color: 'positive',
           })
+        }).catch(error => {
+          console.log(error.response)
         })
       }).onCancel(() => {});
 
