@@ -14,6 +14,13 @@ const api = axios.create({ baseURL: process.env.API_BASE_URL });
 api.interceptors.request.use(
   (config) => {
     // Autorizacao
+    //get access_token from cookie
+
+    let tokenCookie = document.cookie.split(";").find((c) => c.trim().startsWith("access_token="));
+    if (tokenCookie) {
+      sUsuario.token.access_token = tokenCookie.split("=")[1];
+    }
+
     if (sUsuario.token.access_token) {
       config.headers["Authorization"] = "Bearer " + sUsuario.token.access_token;
     }

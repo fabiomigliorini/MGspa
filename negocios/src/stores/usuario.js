@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { api } from "boot/axios";
 import { Notify } from "quasar";
 import moment from "moment";
+import axios from "axios";
 
 export const usuarioStore = defineStore("usuario", {
   persist: {
@@ -28,7 +29,7 @@ export const usuarioStore = defineStore("usuario", {
         client_secret: process.env.CLIENT_SECRET,
       };
       try {
-        let { data } = await api.post("/oauth/token", params);
+        let { data } = await axios.post(process.env.API_AUTH_URL + "/api/oauth/token/json", params, { withCredentials: true });
         if (data.access_token) {
           this.token = data;
           this.token.expires_at = moment().add(data.expires_in, "seconds");
@@ -76,7 +77,7 @@ export const usuarioStore = defineStore("usuario", {
         client_secret: process.env.CLIENT_SECRET,
       };
       try {
-        let { data } = await api.post("/oauth/token", params);
+        let { data } = await axios.post(process.env.API_AUTH_URL + "/api/refresh", params, { withCredentials: true });
         if (data.access_token) {
           this.token = data;
           this.token.expires_at = moment().add(data.expires_in, "seconds");
@@ -95,7 +96,12 @@ export const usuarioStore = defineStore("usuario", {
 
     async logout() {
       try {
-        let { data } = await api.get("/api/v1/auth/logout");
+        let { data } = await axios.post(process.env.API_AUTH_URL + "/api/logout", {},
+          {
+            headers: {
+              'Authorization': 'Bearer ' + this.token.access_token
+            }
+          });
         this.usuario = {};
         this.token = {};
       } catch (error) {
@@ -104,6 +110,11 @@ export const usuarioStore = defineStore("usuario", {
     },
 
     async getUsuario() {
+      let tokenCookie = document.cookie.split(";").find((c) => c.trim().startsWith("access_token="));
+      if (tokenCookie) {
+        this.token.access_token = tokenCookie.split("=")[1];
+      }
+
       if (this.token.access_token) {
         try {
           let { data } = await api.get("/api/v1/auth/user");
