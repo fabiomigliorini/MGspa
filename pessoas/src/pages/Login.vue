@@ -23,25 +23,36 @@ export default defineComponent({
     // Se existir o token redireciona o usuario para home
     const verificaauth = async () => {
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const Token = urlParams.get("accesstoken");
+      // const urlParams = new URLSearchParams(window.location.search);
+      // const Token = urlParams.get("accesstoken");
 
-        if(route.redirectedFrom && route.redirectedFrom.href != "#/") {
-          sPessoa.urlRetorno = route.redirectedFrom.href
-        }
-        
-      if (Token) {
-        auth.accessToken(Token);
-        setTimeout(function () {
-          window.location.replace("/" + sPessoa.urlRetorno)
-          sPessoa.urlRetorno = "#/"
-        }, 1000);
+      if(route.redirectedFrom && route.redirectedFrom.href != "#/") {
+        sPessoa.urlRetorno = route.redirectedFrom.href
       }
 
+      let tokenCookie = document.cookie.split(";").find((c) => c.trim().startsWith("access_token="));
+      if (tokenCookie) {
+        const Token = tokenCookie.split("=")[1];
+        localStorage.setItem('access_token', Token);
+        console.log('Token', Token)
+
+        if (Token) {
+          auth.accessToken(Token);
+          setTimeout(function () {
+            window.location.replace("/" + sPessoa.urlRetorno)
+            sPessoa.urlRetorno = "#/"
+          }, 1000);
+        }
+      }
+
+
+
       if ((localStorage.getItem('access_token'))) {
-        window.location = "#/"
+        // window.location = "#/"
       } else {
-        window.location = process.env.OAUTH_URL + "?state=quasar-v2"
+        // let url = new URL(window.location.href)
+        // url = encodeURI(url.origin)
+        // window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
       }
     }
 

@@ -87,6 +87,10 @@ export const guardaToken = defineStore('auth', () => {
   // Acessa os dados do usuario como verificação se o token esta valido na API
   async function verificaToken() {
     try {
+      let tokenCookie = document.cookie.split(";").find((c) => c.trim().startsWith("access_token="));
+      if (tokenCookie) {
+        token.value = tokenCookie.split("=")[1];
+      }
       const tokenverificacao = 'Bearer ' + token.value
       const { data } = await api.get('v1/auth/user', {
         headers: {
@@ -105,6 +109,9 @@ export const guardaToken = defineStore('auth', () => {
     } catch (error) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('usuario')
+      let url = new URL(window.location.href)
+      url = encodeURI(url.origin)
+      window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
     }
   }
   return {

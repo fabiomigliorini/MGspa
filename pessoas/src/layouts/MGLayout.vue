@@ -4,6 +4,7 @@ import { ref, defineProps } from 'vue'
 import { Dialog } from 'quasar';
 import { version } from "../../package.json";
 import MgMenu from 'layouts/MGMenu.vue';
+import axios from 'axios';
 
 const leftDrawerOpen = ref(false)
 const user = ref(localStorage.getItem('usuario'))
@@ -26,9 +27,31 @@ const deslogar = async () => {
     cancel: true,
     persistent: true
   }).onOk(async () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('usuario')
-    window.location = process.env.LOGOUT_URL
+    // localStorage.removeItem('access_token')
+    // localStorage.removeItem('usuario')
+    // window.location = process.env.LOGOUT_URL
+
+    let token = document.cookie.split(';').find((item) => item.trim().startsWith('access_token='));
+
+    if (token) {
+      token = token.split('=')[1]
+    }
+    axios.post(process.env.API_AUTH_URL + '/api/logout',
+      {},
+      {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      }
+    ).then(response => {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('usuario')
+
+      window.location = "#/"
+
+    }).catch(error => {
+      console.log(error.response)
+    })
   })
 }
 
