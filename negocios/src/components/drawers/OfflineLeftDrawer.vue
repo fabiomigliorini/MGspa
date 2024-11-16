@@ -2,12 +2,26 @@
 import { ref } from "vue";
 import OfflineLeftDrawerTabNegocios from "./OfflineLeftDrawerTabNegocios.vue";
 import OfflineLeftDrawerTabPrancheta from "./OfflineLeftDrawerTabPrancheta.vue";
+import OfflineLeftDrawerTabMercos from "./OfflineLeftDrawerTabMercos.vue";
 const tab = ref("negocios");
 </script>
 <template>
-  <q-tabs v-model="tab" dense active-color="primary">
-    <q-tab name="negocios" label="Negocios" />
-    <q-tab name="prancheta" label="Prancheta" />
+  <q-tabs v-model="tab" dense active-color="primary" class="text-grey-8" align="left" inline-label>
+    <q-tab name="negocios" icon="mdi-format-list-checkbox">
+      <q-tooltip class="bg-accent">
+        Listagem de Negócios
+      </q-tooltip>
+    </q-tab>
+    <q-tab name="prancheta" icon="mdi-clipboard-text-outline">
+      <q-tooltip class="bg-accent">
+        Prancheta
+      </q-tooltip>
+    </q-tab>
+    <q-tab name="mercos" icon="mdi-cloud-sync-outline">
+      <q-tooltip class="bg-accent">
+        Vendas Mercos
+      </q-tooltip>
+    </q-tab>
   </q-tabs>
 
   <q-separator />
@@ -18,6 +32,10 @@ const tab = ref("negocios");
 
     <q-tab-panel name="prancheta" class="q-pa-none">
       <offline-left-drawer-tab-prancheta />
+    </q-tab-panel>
+
+    <q-tab-panel name="mercos" class="q-pa-none">
+      <offline-left-drawer-tab-mercos />
     </q-tab-panel>
   </q-tab-panels>
 </template>
