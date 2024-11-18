@@ -38,12 +38,21 @@ const datasFaltando = ref([]);
 const detalhado = ref([]);
 
 const colunasTabelaNegocios = [
-  { name: 'codnegocio', label: '', field: 'codnegocio', sortable: true },
-  { name: 'ignorar', label: '#', field: 'codnegocio', sortable: false },
+  { name: 'codnegocio', label: '#', field: 'codnegocio', sortable: true },
   {
     name: 'valortotal',
     label: 'Valor',
     field: row => parseFloat(row.valortotal),
+    format: val => new Intl.NumberFormat("pt-BR", {
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(val), sortable: true
+  },
+  {
+    name: 'valorsaldo',
+    label: 'Saldo',
+    field: row => parseFloat(row.valorsaldo),
     format: val => new Intl.NumberFormat("pt-BR", {
       style: "decimal",
       minimumFractionDigits: 2,
@@ -302,8 +311,6 @@ watch(data, () => {
                     <q-td :props="props">
                       <q-btn link size="12px" round flat ripple dense color="negative" icon="not_interested"
                         @click="ignorar(props.key)" />
-                    </q-td>
-                    <q-td :props="props">
                       <q-btn link size="12px" flat ripple dense color="primary" :label="props.value"
                         :to="'/negocio/' + props.key" />
                     </q-td>

@@ -325,7 +325,12 @@ class PdvAnexoService
     static function faltando($ano, $mes)
     {
         // busca todos negocios a prazo com saldo em aberto
-        $sql = '
+        $sql = "
+            with s as (
+                select t.codnegocioformapagamento, abs(sum(t.saldo)) as valorsaldo
+                from tbltitulo t 
+                group by t.codnegocioformapagamento 
+            )
             select distinct
                 n.codfilial, 
                 f.filial, 
@@ -335,22 +340,25 @@ class PdvAnexoService
                 u.usuario, 
                 n.codpessoa,
                 pe.fantasia,
-                date_trunc(\'day\', n.lancamento) as data,
+                date_trunc('day', n.lancamento) as data,
                 n.lancamento, 
                 n.codnegocio, 
-                n.valortotal 
-            from tbltitulo t
-            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
-            inner join tblnegocio n on (n.codnegocio = nfp.codnegocio)
+                n.valortotal,
+                s.valorsaldo
+            from tblnegocio n
+            inner join tblnegocioformapagamento nfp on (nfp.codnegocio = n.codnegocio)
+            inner join tblformapagamento fp on (fp.codformapagamento = nfp.codformapagamento)
             inner join tblfilial f on (f.codfilial = n.codfilial)
             inner join tblpessoa pe on (pe.codpessoa = n.codpessoa)
-            left join tblpdv p on (p.codpdv = n.codpdv)
             inner join tblusuario u on (u.codusuario = n.codusuario)
-            where t.saldo > 0
+            inner join s on (s.codnegocioformapagamento = nfp.codnegocioformapagamento)
+            inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
+            left join tblpdv p on (p.codpdv = n.codpdv)
+            where n.codnegociostatus = 2
+            and date_trunc('month', n.lancamento) = :mes
             and n.confissao is null
-            and date_trunc(\'month\', n.lancamento) = :mes
-            order by n.lancamento asc, n.codfilial asc 
-        ';
+            and nat.venda
+        ";
 
         // filtra o mes selecionado
         $regs = collect(DB::select($sql, [
@@ -387,29 +395,11 @@ class PdvAnexoService
                 $retFilial = (object) [
                     'codfilial' => $codfilial,
                     'filial' => $negs[0]->filial,
-                    'faltando' => 0,
-                    'negocios' => [],
+                    'faltando' => count($negs),
+                    'negocios' => $negs,
                 ];
-
-                // percorre todos negocios
-                foreach ($negs as $neg) {
-
-                    // verifica se existe anexo pro negocio
-                    $dir = static::diretorio($neg->codnegocio);
-                    $anexos = count(Storage::disk('negocio-anexo')->files("{$dir}/confissao"));
-
-                    // se tem anexo faltando adiciona o negocio no array de retorno
-                    if (!$anexos) {
-                        $retData->faltando++;
-                        $retFilial->faltando++;
-                        $retFilial->negocios[] = $neg;
-                    }
-                }
-
-                // se tem anexo faltando adiciona a filial no array de retorno
-                if ($retFilial->faltando > 0) {
-                    $retData->filiais[] = $retFilial;
-                }
+                $retData->faltando += $retFilial->faltando;
+                $retData->filiais[] = $retFilial;
             }
 
 
