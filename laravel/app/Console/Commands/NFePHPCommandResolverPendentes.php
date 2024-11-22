@@ -14,7 +14,7 @@ class NFePHPCommandResolverPendentes extends Command
      *
      * @var string
      */
-    protected $signature = 'nfe-php:resolver-pendentes {--quantidade=}';
+    protected $signature = 'nfe-php:resolver-pendentes {--quantidade=1000} {--minutos=60}';
 
     /**
      * The console command description.
@@ -41,7 +41,8 @@ class NFePHPCommandResolverPendentes extends Command
     public function handle()
     {
         $quantidade = $this->option('quantidade')??1000;
-        $pendentes = NFePHPRoboService::pendentes($quantidade);
+        $minutos = $this->option('minutos')??60;
+        $pendentes = NFePHPRoboService::pendentes($minutos, $quantidade, $minutos);
         foreach ($pendentes as $pendente) {
             $this->info("Agendando Job para #$pendente->codnotafiscal");
             NFePHPResolverJob::dispatch($pendente->codnotafiscal);
