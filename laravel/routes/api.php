@@ -159,7 +159,6 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('titulo/agrupamento/{codtituloagrupamento}/mail', '\Mg\Titulo\TituloAgrupamentoController@mail');
     Route::get('titulo/relatorio', '\Mg\Titulo\TituloRelatorioController@relatorio');
     Route::get('titulo/relatorio-pdf', '\Mg\Titulo\TituloRelatorioController@relatorioPdf');
-
 });
 
 Route::group(['middleware' => ['auth:api', 'cors']], function () {
@@ -580,5 +579,13 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('portador', '\Mg\Portador\PortadorController@index');
         Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
         Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
+
+        /* Mercos */
+        Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');
+        Route::get('pdv/mercos/pedido/', '\Mg\Pdv\PdvMercosController@listagemPedido');
+        // Route::get('mercos/produto/{id}/exporta', 'MercosController@exportaProduto');
+        // Route::get('mercos/produto/{id}/atualiza', 'MercosController@atualizaProduto');
+        // Route::get('mercos/pedido/{codpedido}/faturamento', 'MercosController@exportaFaturamento');
+        // Route::get('mercos/cliente/apos/{alterado_apos}', 'MercosController@importaClienteApos');
     });
 });

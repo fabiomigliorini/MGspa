@@ -8,7 +8,7 @@ use Mg\NotaFiscal\NotaFiscal;
 
 class NFePHPRoboService
 {
-    public static function pendentes($per_page = 50, $current_page = 1, $desc = false)
+    public static function pendentes($minutos, $per_page = 50, $current_page = 1, $desc = false)
     {
         $desc = ($desc)?'DESC':'ASC';
         $offset = ($per_page * ($current_page - 1));
@@ -36,16 +36,17 @@ class NFePHPRoboService
             and nf.nfecancelamento is null
             and nf.nfeinutilizacao is null
             and nf.numero != 0
-            order by emissao $desc, codnotafiscal $desc
-            limit $per_page offset $offset
+            and nf.emissao >= (now() - '{$minutos} minutes'::interval)
+            order by emissao {$desc}, codnotafiscal {$desc}
+            limit {$per_page} offset {$offset}
         ";
         return DB::select($sql);
     }
 
-    public static function resolverPendentes($per_page = 10, $current_page = 1, $desc = false)
+    public static function resolverPendentes($minutos, $per_page = 10, $current_page = 1, $desc = false)
     {
         // carrega notas pendentes
-        $pendentes = NFePHPRoboService::pendentes($per_page, $current_page, $desc);
+        $pendentes = NFePHPRoboService::pendentes($minutos, $per_page, $current_page, $desc);
         $ret = [];
 
         // percorre as pendentes e chama metodo para resolver cada uma das notas
