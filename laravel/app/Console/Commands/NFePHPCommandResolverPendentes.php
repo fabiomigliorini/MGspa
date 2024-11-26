@@ -42,7 +42,7 @@ class NFePHPCommandResolverPendentes extends Command
     {
         $quantidade = $this->option('quantidade')??1000;
         $minutos = $this->option('minutos')??60;
-        $pendentes = NFePHPRoboService::pendentes($minutos, $quantidade, $minutos);
+        $pendentes = NFePHPRoboService::pendentes($minutos, $quantidade);
         foreach ($pendentes as $pendente) {
             $this->info("Agendando Job para #$pendente->codnotafiscal");
             NFePHPResolverJob::dispatch($pendente->codnotafiscal);

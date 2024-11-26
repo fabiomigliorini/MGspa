@@ -26,7 +26,7 @@ body {
       <ul>
         @foreach ($marca->produtos as $produto)
           <li>
-            <a style="color: #000001; text-decoration: none;" href="http://sistema.mgpapelaria.com.br/MGLara/produto/{{ $produto->codproduto }}">
+            <a style="color: #000001; text-decoration: none;" href="https://sistema.mgpapelaria.com.br/MGLara/produto/{{ $produto->codproduto }}">
               {{ $produto->produto }}
               @if ($produto->critico)
               <span style="background-color: red; color:white">Crítico</span>
