@@ -228,7 +228,6 @@ const consultarDocumento = async () => {
   LoadingBar.start();
   consultando.value = true;
   try {
-    //TODO: Trazer Nome pelo PIX
     let url = 'api/v1/pessoa/verifica-ie-sefaz';
     let params = {
       codfilial: 101,

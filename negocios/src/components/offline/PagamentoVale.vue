@@ -15,7 +15,6 @@ const valorSaldo = computed(() => {
   return sNegocio.valorapagar - valorPagamento.value;
 });
 
-//TODO: nao inicializar valores quando lido pelo leitor
 const inicializarValores = () => {
   valorPagamento.value = null;
   codtituloVale.value = null;
@@ -27,7 +26,6 @@ const inicializarValores = () => {
   }
 };
 
-//TODO: nao deixar ler duas vezes o mesmo vale no mesmo negocio
 const buscarVale = debounce(async () => {
   titulo.value = null;
   valorPagamento.value = null;
