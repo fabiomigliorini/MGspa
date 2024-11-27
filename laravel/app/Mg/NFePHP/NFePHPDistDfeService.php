@@ -29,7 +29,10 @@ use Mg\Filial\FilialService;
 
 class NFePHPDistDfeService
 {
-    public static function consultar(Filial $filial, int $nsuInicial = 0, int $nsuFinal = 0)
+    // ultNSU = ultimo consultado
+    // numNSU = para consultar um NSU especifico
+    // chave = para consultar uma chave especifica
+    public static function consultar(Filial $filial, int $ultNSU = 0, int $numNSU = 0, string $chave = null)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
 
@@ -42,11 +45,12 @@ class NFePHPDistDfeService
 
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
-        if ($nsuInicial == 0) {
-            $nsuInicial = DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
+        if ($ultNSU == 0) {
+            $ultNSU = DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
+	    $ultNSU++;
         }
-        Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - NSU {$nsuInicial} / {$nsuFinal}");
-        $resp = $tools->sefazDistDFe($nsuInicial);
+        Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - ultNSU {$ultNSU} numNSU {$numNSU} chave {$chave}");
+        $resp = $tools->sefazDistDFe($ultNSU, $numNSU, $chave);
 
         $st = (new Standardize($resp))->toStd();
         switch ($st->cStat) {
