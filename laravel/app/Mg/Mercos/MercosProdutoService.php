@@ -339,11 +339,14 @@ class MercosProdutoService {
     }
 
     // Tenta descobrir qual o codprodutobarra
-    public static function procurarProdutoBarra($id, $codigo)
+    public static function procurarProdutoBarra($id, $codigo, $agregador_id)
     {
         $mp = static::procurarPeloId($id);
         if ($mp == null) {
-            return ProdutoBarra::findOrFail(env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO'));
+            $mp = static::procurarPeloId($agregador_id);
+            if ($mp == null) {
+                return ProdutoBarra::findOrFail(env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO'));
+            }
         }
         if (empty($mp)) {
             $mp = static::criarPeloCodigo($id, $codigo);

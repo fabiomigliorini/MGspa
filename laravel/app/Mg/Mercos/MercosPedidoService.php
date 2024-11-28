@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Pdv\Pdv;
 
@@ -137,17 +138,49 @@ class MercosPedidoService
                 static::rateiaFrete($n, $ped->valor_frete);
             }
         }
+
+        // Marca Mercos Pay como forma de pagamento
+        switch ($ped->condicao_pagamento_id) {
+            case 1567554: // Boleto 
+            case 1186408: // Cartão 1x 
+            case 1193911: // Cartão 2x 
+            case 1193912: // Cartão 3x 
+            case 1193913: // Cartão 4x 
+            case 1193914: // Cartão 5x 
+            case 1193915: // Cartão 6x 
+            case 1567555: // Cartão 7x 
+            case 1567556: // Cartão 8x 
+            case 1567557: // Cartão 9x 
+            case 1567558: // Cartão 10x 
+            case 1567559: // Cartão 11x 
+            case 1567560: // Cartão 12x 
+            case 1193916: // PIX
+                $nfp = NegocioFormaPagamento::firstOrNew([
+                    'codnegocio' => $n->codnegocio,
+                    'codformapagamento' => env('MERCOS_CODFORMAPAGAMENTO_MERCOSPAY')
+                ]);
+                $nfp->valorpagamento = $n->valortotal;
+                $nfp->valortotal = $n->valortotal;
+                $nfp->avista = true;
+                $nfp->integracao = false;
+                $nfp->save();
+                break;
+
+            case 1127747: // Prazo
+            default:
+                break;
+        }
         return $mp;
     }
 
-    public static function totalizaDescontoProduto (Negocio $n)
+    public static function totalizaDescontoProduto(Negocio $n)
     {
         $n->valordesconto = $n->NegocioProdutoBarraS()->sum('valordesconto');
         $n->valorprodutos = $n->NegocioProdutoBarraS()->sum('valorprodutos');
         $n->save();
     }
 
-    public static function rateiaFrete(Negocio $n, $frete) 
+    public static function rateiaFrete(Negocio $n, $frete)
     {
         if (!$n->valorprodutos) {
             return;
@@ -182,7 +215,7 @@ class MercosPedidoService
             return;
         }
         // TODO: quando env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO') trazer descricao do site
-        $pb = MercosProdutoService::procurarProdutoBarra($item->produto_id, $item->produto_codigo);
+        $pb = MercosProdutoService::procurarProdutoBarra($item->produto_id, $item->produto_codigo, $item->produto_agregador_id);
         if (!$pb) {
             return false;
         }
@@ -264,6 +297,4 @@ class MercosPedidoService
         ';
         return DB::select($sql);
     }
-
-
 }
