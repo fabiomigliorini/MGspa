@@ -23,11 +23,11 @@ class PessoaController extends MgController
         if ($request->ieoutra) {
 
             // completa com zero a esquerda de acordo com a UF
-            $request['ie'] = InscricaoEstadual::padPelaUf($uf, $request['ie']);
+            $request['ieoutra'] = InscricaoEstadual::padPelaUf($request['uf'], $request['ieoutra']);
 
             // valida a IE na UF
             $request->validate([
-                'ieoutra' => new InscricaoEstadual($uf),
+                'ieoutra' => new InscricaoEstadual($request['uf']),
             ]);
 
             $request['ieoutra'] = ltrim($request->ieoutra, '0');
