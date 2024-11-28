@@ -358,9 +358,14 @@ const parseIe = (ret) => {
   if (ret.CPF) {
     pessoa.value.cnpj = String(ret.CPF).padStart(11, '0');
   }
+
+  // se veio endereco, adiciona todos
   if (ret.ender) {
     pessoa.value.enderecos = [];
     ret.ender.forEach(async (end) => {
+      if (end == undefined) {
+        return;
+      }
       let novo = {
         endereco: primeiraLetraMaiuscula(end.xLgr),
         numero: end.nro,
@@ -376,10 +381,23 @@ const parseIe = (ret) => {
       }
       pessoa.value.enderecos.push(novo);
     })
-
   }
-  step.value = 3;
 
+  // se nao tem endereco, adiciona um em branco
+  if (pessoa.value.enderecos.length == 0) {
+    pessoa.value.enderecos.push({
+      endereco: null,
+      numero: null,
+      municipio: null,
+      uf: null,
+      codcidade: null,
+      bairro: null,
+      complemento: null,
+      cep: null
+    })
+  }
+
+  step.value = 3;
 }
 
 const outraIe = () => {
@@ -586,16 +604,16 @@ watch(
                     </template>
                   </q-input>
 
-                  <div class="col-12 text-center" style="margin-top: 25vh;" v-if="consultando">
+                  <div class="col-12 text-center" style="margin-top: 15vh; height: 300px" v-if="consultando">
                     <q-spinner color="grey" size="200px" />
                   </div>
                   <template v-else-if="opcoes.length == 0">
-                    <div class="col-12 text-center text-grey" style="margin-top: 25vh;" v-if="cnpj">
+                    <div class="col-12 text-center text-grey" style="margin-top: 15vh;" v-if="cnpj">
                       <q-icon name="mdi-account-cancel-outline" size="200px" />
                       <br>
                       Nenhuma cadastro de pessoa encontrado!
                     </div>
-                    <div class="col-12 text-center text-grey" style="margin-top: 25vh;" v-else>
+                    <div class="col-12 text-center text-grey" style="margin-top: 15vh;" v-else>
                       <q-icon name="mdi-account-search-outline" size="200px" />
                       <br>
                       Digite o CNPJ, CPF ou o nome para pesquisar!
@@ -644,7 +662,7 @@ watch(
               </q-step>
 
               <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2">
-                <div class="col-12 text-center" style="margin-top: 25vh;" v-if="consultando">
+                <div class="col-12 text-center" style="margin-top: 15vh; height: 300px" v-if="consultando">
                   <q-spinner color="primary" size="200px" v-if="consultando" />
                 </div>
                 <q-list separator v-else>
@@ -667,18 +685,20 @@ watch(
                         </q-item-label>
                       </q-item-section>
                       <q-item-section class="gt-xs" side v-if="ie.ender">
-                        <q-item-label class="text-weight-bolder text-grey-7">
-                          {{ ie.ender[0].xMun }}/{{ ie.UF }}
-                        </q-item-label>
-                        <q-item-label v-if="ie.ender[0].xBairro">
-                          {{ ie.ender[0].xBairro }}
-                        </q-item-label>
-                        <q-item-label caption v-if="ie.ender[0].xLgr">
-                          {{ ie.ender[0].xLgr }}, {{ ie.ender[0].nro }}
-                        </q-item-label>
-                        <q-item-label caption v-if="ie.ender[0].xCpl">
-                          {{ ie.ender[0].xCpl }}
-                        </q-item-label>
+                        <template v-if="ie.ender[0] != undefined">
+                          <q-item-label class="text-weight-bolder text-grey-7">
+                            {{ ie.ender[0].xMun }}/{{ ie.UF }}
+                          </q-item-label>
+                          <q-item-label v-if="ie.ender[0].xBairro">
+                            {{ ie.ender[0].xBairro }}
+                          </q-item-label>
+                          <q-item-label caption v-if="ie.ender[0].xLgr">
+                            {{ ie.ender[0].xLgr }}, {{ ie.ender[0].nro }}
+                          </q-item-label>
+                          <q-item-label caption v-if="ie.ender[0].xCpl">
+                            {{ ie.ender[0].xCpl }}
+                          </q-item-label>
+                        </template>
                       </q-item-section>
                     </q-item>
                   </template>
