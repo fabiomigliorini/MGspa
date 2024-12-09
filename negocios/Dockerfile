@@ -1,4 +1,6 @@
-FROM node:lts-alpine
+#FROM node:lts-alpine
+FROM node:18.20-alpine
+
 RUN npm i --location=global @quasar/cli@latest
 MAINTAINER mgpapelaria.com.br
 
