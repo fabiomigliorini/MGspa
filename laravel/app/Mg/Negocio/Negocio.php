@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Oct/2024 16:39:02
+ * Date: 09/Dec/2024 11:33:09
  */
 
 namespace Mg\Negocio;
@@ -16,6 +16,7 @@ use Mg\Pix\PixCob;
 use Mg\Stone\StonePreTransacao;
 use Mg\Mercos\MercosPedido;
 use Mg\PagarMe\PagarMePedido;
+use Mg\Saurus\SaurusPedido;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -228,6 +229,11 @@ class Negocio extends MgModel
     public function PixCobS()
     {
         return $this->hasMany(PixCob::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function SaurusPedidoS()
+    {
+        return $this->hasMany(SaurusPedido::class, 'codnegocio', 'codnegocio');
     }
 
     public function StonePreTransacaoS()

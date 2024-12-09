@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Oct/2024 12:01:20
+ * Date: 09/Dec/2024 11:33:49
  */
 
 namespace Mg\Filial;
@@ -31,6 +31,7 @@ use Mg\Pdv\Pdv;
 use Mg\Colaborador\Colaborador;
 use Mg\Colaborador\ColaboradorCargo;
 use Mg\NaturezaOperacao\DominioAcumulador;
+use Mg\Saurus\SaurusPdv;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -229,6 +230,11 @@ class Filial extends MgModel
     public function PortadorS()
     {
         return $this->hasMany(Portador::class, 'codfilial', 'codfilial');
+    }
+
+    public function SaurusPdvS()
+    {
+        return $this->hasMany(SaurusPdv::class, 'codfilial', 'codfilial');
     }
 
     public function StoneFilialS()

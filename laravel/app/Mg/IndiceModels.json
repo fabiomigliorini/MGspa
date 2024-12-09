@@ -289,6 +289,11 @@
                 "tabela": "tbldominioacumulador",
                 "coluna": "codfilial",
                 "metodo": "DominioAcumuladorS"
+            },
+            "tblsauruspdv.codfilial": {
+                "tabela": "tblsauruspdv",
+                "coluna": "codfilial",
+                "metodo": "SaurusPdvS"
             }
         }
     },
@@ -2954,6 +2959,11 @@
                 "tabela": "tbltitulo",
                 "coluna": "codtitulo",
                 "metodo": "Titulo"
+            },
+            "codsauruspagamento": {
+                "tabela": "tblsauruspagamento",
+                "coluna": "codsauruspagamento",
+                "metodo": "SaurusPagamento"
             }
         },
         "hasMany": {
@@ -3469,6 +3479,11 @@
                 "tabela": "tblpagarmepedido",
                 "coluna": "codnegocio",
                 "metodo": "PagarMePedidoS"
+            },
+            "tblsauruspedido.codnegocio": {
+                "tabela": "tblsauruspedido",
+                "coluna": "codnegocio",
+                "metodo": "SaurusPedidoS"
             }
         }
     },
@@ -7722,6 +7737,11 @@
                 "tabela": "tblliquidacaotitulo",
                 "coluna": "codpdv",
                 "metodo": "LiquidacaoTituloS"
+            },
+            "tblsauruspdv.codpdv": {
+                "tabela": "tblsauruspdv",
+                "coluna": "codpdv",
+                "metodo": "SaurusPdvS"
             }
         }
     },
@@ -8377,6 +8397,171 @@
                 "tabela": "tblauditoriatransmissao",
                 "coluna": "codauditoria",
                 "metodo": "AuditoriaTransmissaoS"
+            }
+        }
+    },
+    "tblsauruspdv": {
+        "tabela": "tblsauruspdv",
+        "campocodigo": "codsauruspdv",
+        "namespace": "Mg\\Saurus",
+        "classe": "SaurusPdv",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Saurus\/SaurusPdv.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codpdv": {
+                "tabela": "tblpdv",
+                "coluna": "codpdv",
+                "metodo": "Pdv"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblsauruspedido.codsauruspdv": {
+                "tabela": "tblsauruspedido",
+                "coluna": "codsauruspdv",
+                "metodo": "SaurusPedidoS"
+            }
+        }
+    },
+    "tblsauruspedido": {
+        "tabela": "tblsauruspedido",
+        "campocodigo": "codsauruspedido",
+        "namespace": "Mg\\Saurus",
+        "classe": "SaurusPedido",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Saurus\/SaurusPedido.php",
+        "belongsTo": {
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codsauruspdv": {
+                "tabela": "tblsauruspdv",
+                "coluna": "codsauruspdv",
+                "metodo": "SaurusPdv"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblsauruspagamento.codsauruspedido": {
+                "tabela": "tblsauruspagamento",
+                "coluna": "codsauruspedido",
+                "metodo": "SaurusPagamentoS"
+            }
+        }
+    },
+    "tblsauruspagamento": {
+        "tabela": "tblsauruspagamento",
+        "campocodigo": "codsauruspagamento",
+        "namespace": "Mg\\Saurus",
+        "classe": "SaurusPagamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Saurus\/SaurusPagamento.php",
+        "belongsTo": {
+            "codsaurusbandeira": {
+                "tabela": "tblsaurusbandeira",
+                "coluna": "codsaurusbandeira",
+                "metodo": "SaurusBandeira"
+            },
+            "codsauruspedido": {
+                "tabela": "tblsauruspedido",
+                "coluna": "codsauruspedido",
+                "metodo": "SaurusPedido"
+            },
+            "codsauruspinpad": {
+                "tabela": "tblsauruspinpad",
+                "coluna": "codsauruspinpad",
+                "metodo": "SaurusPinPad"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnegocioformapagamento.codsauruspagamento": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codsauruspagamento",
+                "metodo": "NegocioFormaPagamentoS"
+            }
+        }
+    },
+    "tblsaurusbandeira": {
+        "tabela": "tblsaurusbandeira",
+        "campocodigo": "codsaurusbandeira",
+        "namespace": "Mg\\Saurus",
+        "classe": "SaurusBandeira",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Saurus\/SaurusBandeira.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblsauruspagamento.codsaurusbandeira": {
+                "tabela": "tblsauruspagamento",
+                "coluna": "codsaurusbandeira",
+                "metodo": "SaurusPagamentoS"
+            }
+        }
+    },
+    "tblsauruspinpad": {
+        "tabela": "tblsauruspinpad",
+        "campocodigo": "codsauruspinpad",
+        "namespace": "Mg\\Saurus",
+        "classe": "SaurusPinPad",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Saurus\/SaurusPinPad.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblsauruspagamento.codsauruspinpad": {
+                "tabela": "tblsauruspagamento",
+                "coluna": "codsauruspinpad",
+                "metodo": "SaurusPagamentoS"
             }
         }
     }
