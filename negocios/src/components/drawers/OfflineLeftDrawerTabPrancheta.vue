@@ -39,6 +39,7 @@ const selecionarCategoria = (cat) => {
 
 const adicionarProduto = (prod) => {
   emitter.emit("adicionarProduto", prod);
+  document.activeElement.blur()
 };
 
 const voltar = (i) => {
@@ -117,22 +118,12 @@ const pesquisar = debounce(async () => {
   <div class="q-pa-md">
     <q-breadcrumbs v-if="historico.length > 0">
       <q-breadcrumbs-el icon="home" @click="inicio()" class="cursor-pointer" />
-      <q-breadcrumbs-el
-        v-for="(cat, i) in historico"
-        :key="i"
-        :label="cat.categoria"
-        @click="voltar(i)"
-        class="cursor-pointer"
-      />
+      <q-breadcrumbs-el v-for="(cat, i) in historico" :key="i" :label="cat.categoria" @click="voltar(i)"
+        class="cursor-pointer" />
     </q-breadcrumbs>
     <q-input outlined v-model="texto" label="Pesquisa" autofocus v-else>
       <template v-slot:append>
-        <q-icon
-          v-if="texto !== ''"
-          name="close"
-          @click="texto = ''"
-          class="cursor-pointer"
-        />
+        <q-icon v-if="texto !== ''" name="close" @click="texto = ''" class="cursor-pointer" />
         <q-icon name="search" />
       </template>
     </q-input>
