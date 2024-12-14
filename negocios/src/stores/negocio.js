@@ -195,7 +195,6 @@ export const negocioStore = defineStore("negocio", {
           console.log(error);
         }
       }
-      await this.atualizarListagem();
       return this.negocio;
     },
 
@@ -411,7 +410,6 @@ export const negocioStore = defineStore("negocio", {
         i.uuid = uid();
       });
       db.negocio.add(negocio, uuid);
-      this.atualizarListagem();
       this.negocio = { ...negocio };
       await this.carregarChavesEstrangeiras();
       await this.salvar();
@@ -585,8 +583,9 @@ export const negocioStore = defineStore("negocio", {
       const ret = await db.negocio.put(toRaw(this.negocio));
       if (sincronizar) {
         this.sincronizar(this.negocio.uuid);
+      } else {
+        this.atualizarListagem();
       }
-      await this.atualizarListagem();
       return ret;
     },
 
@@ -921,7 +920,7 @@ export const negocioStore = defineStore("negocio", {
         console.log(error);
         return false;
       }
-      await this.atualizarListagem();
+      this.atualizarListagem();
       return true;
     },
 
@@ -931,13 +930,18 @@ export const negocioStore = defineStore("negocio", {
         if (!ret.codnegocio) {
           return false;
         }
-        this.negocio = { ...ret };
-        db.negocio.put(ret);
+        await this.atualizarNegocioPeloObjeto(ret);
         return true;
       } catch (error) {
         console.log(error);
         return false;
       }
+    },
+
+    async atualizarNegocioPeloObjeto(neg) {
+      this.negocio = { ...neg };
+      db.negocio.put(neg);
+      this.atualizarListagem();
     },
 
     async adicionarPagamento(
@@ -1050,9 +1054,7 @@ export const negocioStore = defineStore("negocio", {
             timeout: 1000, // 1 segundo
             actions: [{ icon: "close", color: "white" }],
           });
-          this.negocio = { ...ret };
-          db.negocio.put(ret);
-          await this.atualizarListagem();
+          await this.atualizarNegocioPeloObjeto(ret);
         }
       } catch (error) {
         console.log(error);
@@ -1082,9 +1084,7 @@ export const negocioStore = defineStore("negocio", {
             timeout: 1000, // 1 segundo
             actions: [{ icon: "close", color: "white" }],
           });
-          this.negocio = { ...ret };
-          db.negocio.put(ret);
-          await this.atualizarListagem();
+          await this.atualizarNegocioPeloObjeto(ret);
         }
       } catch (error) {
         console.log(error);
@@ -1111,9 +1111,7 @@ export const negocioStore = defineStore("negocio", {
             timeout: 1000, // 1 segundo
             actions: [{ icon: "close", color: "white" }],
           });
-          this.negocio = { ...ret };
-          db.negocio.put(ret);
-          await this.atualizarListagem();
+          await this.atualizarNegocioPeloObjeto(ret);
           return ret.pixCob[0];
         }
       } catch (error) {
@@ -1161,9 +1159,7 @@ export const negocioStore = defineStore("negocio", {
             timeout: 1000, // 1 segundo
             actions: [{ icon: "close", color: "white" }],
           });
-          this.negocio = { ...ret };
-          db.negocio.put(ret);
-          await this.atualizarListagem();
+          await this.atualizarNegocioPeloObjeto(ret);
           return ret.PagarMePedidoS[0];
         }
       } catch (error) {
@@ -1248,13 +1244,11 @@ export const negocioStore = defineStore("negocio", {
           actions: [{ icon: "close", color: "white" }],
         });
         if (ret.negocio.codnegocio) {
-          db.negocio.put(ret.negocio);
+          await this.atualizarNegocioPeloObjeto(ret.negocio);
         }
         if (ret.comanda.codnegocio) {
           db.negocio.put(ret.comanda);
         }
-        this.negocio = { ...ret.negocio };
-        await this.atualizarListagem();
         return true;
       } catch (error) {
         console.log(error);

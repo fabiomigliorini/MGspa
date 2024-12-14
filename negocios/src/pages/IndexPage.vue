@@ -210,6 +210,7 @@ const fechar = debounce(async () => {
     await fecharDialogs();
     await sNegocio.fechar();
     abrirDocumentoSeFechado();
+    emitter.emit('fechado');
   } catch (error) {
     console.log(error);
   }

@@ -583,9 +583,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         /* Mercos */
         Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');
         Route::get('pdv/mercos/pedido/', '\Mg\Pdv\PdvMercosController@listagemPedido');
+        Route::post('pdv/negocio/{codnegocio}/mercos/{codpedido}/reimportar', '\Mg\Pdv\PdvMercosController@reimportar');
+        Route::post('pdv/negocio/{codnegocio}/mercos/{codpedido}/faturamento', '\Mg\Pdv\PdvMercosController@exportarFaturamento');
         // Route::get('mercos/produto/{id}/exporta', 'MercosController@exportaProduto');
         // Route::get('mercos/produto/{id}/atualiza', 'MercosController@atualizaProduto');
-        // Route::get('mercos/pedido/{codpedido}/faturamento', 'MercosController@exportaFaturamento');
         // Route::get('mercos/cliente/apos/{alterado_apos}', 'MercosController@importaClienteApos');
     });
 });

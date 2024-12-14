@@ -307,6 +307,9 @@ class NotaFiscalService
                 'bandeira' => $forma->bandeira,
                 'autorizacao' => $forma->autorizacao,
             ]);
+            if ($pag->tipo == 99) {
+                $pag->descricao = $forma->FormaPagamento->formapagamento;
+            }
             $pag->save();
             foreach ($forma->Titulos as $titulo) {
                 $duplicata = new NotaFiscalDuplicatas([

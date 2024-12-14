@@ -785,6 +785,9 @@ class NFePHPMakeService
             $std = new stdClass();
             $std->indPag = $nfp->avista?0:1; //pagamento a vista
             $std->tPag = str_pad($nfp->tipo, 2, '0', STR_PAD_LEFT);
+            if ($nfp->descricao) {
+                $std->xPag = $nfp->descricao;
+            }
             $std->vPag = $nfp->valorpagamento;
 
             // Se Cartao Debito/Credito

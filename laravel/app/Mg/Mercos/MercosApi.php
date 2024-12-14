@@ -11,7 +11,8 @@ use Carbon\Carbon;
  * @author escmig98
  * @property boolean $debug Modo debug - mostra log erros
  */
-class MercosApi {
+class MercosApi
+{
 
     protected $debug = false;
     protected $url;
@@ -32,9 +33,9 @@ class MercosApi {
     {
         // Traz variaves de ambiente
         $this->debug = $debug;
-        $this->url = (!empty($url))?$url:env('MERCOS_BASEURL');
-        $this->applicationToken = (!empty($user))?$user:env('MERCOS_APPLICATION_TOKEN');
-        $this->companyToken = (!empty($password))?$password:env('MERCOS_COMPANY_TOKEN');
+        $this->url = (!empty($url)) ? $url : env('MERCOS_BASEURL');
+        $this->applicationToken = (!empty($user)) ? $user : env('MERCOS_APPLICATION_TOKEN');
+        $this->companyToken = (!empty($password)) ? $password : env('MERCOS_COMPANY_TOKEN');
         // $this->languagePTBR = (!empty($language_ptbr))?$language_ptbr:env('MERCOS_LANGUAGE_PTBR');
     }
 
@@ -64,15 +65,15 @@ class MercosApi {
         if (empty($http_header)) {
             $http_header = [
                 'Content-Type: application/json',
-                'ApplicationToken: '. $this->applicationToken,
-                'CompanyToken: '. $this->companyToken
+                'ApplicationToken: ' . $this->applicationToken,
+                'CompanyToken: ' . $this->companyToken
             ];
         }
 
         // codifica como json os dados
         $data_string = null;
         if (!empty($data)) {
-            $data_string = ($data_as_json)?json_encode($data):$data;
+            $data_string = ($data_as_json) ? json_encode($data) : $data;
         } else {
             $url = $url . '?' . http_build_query($data);
             // curl_setopt($ch, CURLOPT_URL, $url);
@@ -80,7 +81,7 @@ class MercosApi {
 
         // Loga Execucao
         if ($this->debug) {
-            Log::debug(class_basename($this) . " - $request - $url - " . ($data_as_json?"$data_string - ":'') . json_encode($http_header));
+            Log::debug(class_basename($this) . " - $request - $url - " . ($data_as_json ? "$data_string - " : '') . json_encode($http_header));
         }
 
         // Monta Chamada CURL
@@ -114,9 +115,9 @@ class MercosApi {
             } else {
                 $this->status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             }
-            $headerSize = curl_getinfo($ch , CURLINFO_HEADER_SIZE);
+            $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
-            $headerStr = substr($this->response , 0 , $headerSize );
+            $headerStr = substr($this->response, 0, $headerSize);
             $this->headers = $this->parseHeader($headerStr);
 
             // Loga Reotrno
@@ -136,11 +137,11 @@ class MercosApi {
 
             // Caso de Throttle espera os segundos que o
             if ($this->status == 429) {
-                $segundos = isset($this->headers['retry-after'])?$this->headers['retry-after']:5;
+                $segundos = isset($this->headers['retry-after']) ? $this->headers['retry-after'] : 5;
                 sleep($segundos);
             }
 
-        // Enquanto nao der Throttle
+            // Enquanto nao der Throttle
         } while ($this->status == 429);
 
         curl_close($ch);
@@ -152,23 +153,24 @@ class MercosApi {
 
         // retorna
         return $ret;
-
     }
 
     function parseHeader($response)
     {
-        if (!preg_match_all('/([A-Za-z\-]{1,})\:(.*)\\r/', $response, $matches)
-                || !isset($matches[1], $matches[2])){
+        if (
+            !preg_match_all('/([A-Za-z\-]{1,})\:(.*)\\r/', $response, $matches)
+            || !isset($matches[1], $matches[2])
+        ) {
             return false;
         }
         $headers = [];
-        foreach ($matches[1] as $index => $key){
+        foreach ($matches[1] as $index => $key) {
             $headers[trim($key)] = trim($matches[2][$index]);
         }
         return $headers;
     }
 
-    public function postProdutos (
+    public function postProdutos(
         $nome,
         $preco_tabela,
         $preco_minimo,
@@ -193,8 +195,8 @@ class MercosApi {
         $altura = null,
         $comprimento = null,
         $peso_dimensoes_unitario = true,
-        $exibir_no_b2b = true)
-    {
+        $exibir_no_b2b = true
+    ) {
         // monta Array com dados
         $data = (object) [
             'nome' => $nome,
@@ -235,7 +237,7 @@ class MercosApi {
         return $this->status == 201;
     }
 
-    public function putProdutos (
+    public function putProdutos(
         $id,
         $nome,
         $preco_tabela,
@@ -261,8 +263,8 @@ class MercosApi {
         $altura = null,
         $comprimento = null,
         $peso_dimensoes_unitario = true,
-        $exibir_no_b2b = true)
-    {
+        $exibir_no_b2b = true
+    ) {
         // monta Array com dados
         $data = (object) [
             'id' => $id,
@@ -298,14 +300,14 @@ class MercosApi {
         return $this->status == 201;
     }
 
-    public function getProdutos (Carbon $alterado_apos)
+    public function getProdutos(Carbon $alterado_apos)
     {
 
         $data = [];
         if (!empty($alterado_apos)) {
             $alt = clone $alterado_apos;
             $alt->setTimezone('America/Sao_Paulo');
-            $data ['alterado_apos'] = $alt->format('Y-m-d H:i:s');
+            $data['alterado_apos'] = $alt->format('Y-m-d H:i:s');
         }
 
         // monta URL
@@ -323,11 +325,11 @@ class MercosApi {
         return $this->responseObject;
     }
 
-    public function postImagensProduto (
+    public function postImagensProduto(
         $produto_id,
         $ordem,
-        $imagem_base64)
-    {
+        $imagem_base64
+    ) {
         // monta Array com dados
         $data = (object) [
             'produto_id' => $produto_id,
@@ -346,7 +348,7 @@ class MercosApi {
         return $this->status == 201;
     }
 
-    public function getPedidos (Carbon $alterado_apos, int $status = 2)
+    public function getPedidos(Carbon $alterado_apos, int $status = 2)
     {
 
         // somente pedidos (0-Cancelado / 1-Orcamento / 2-Pedido)
@@ -358,7 +360,7 @@ class MercosApi {
         if (!empty($alterado_apos)) {
             $alt = clone $alterado_apos;
             $alt->setTimezone('America/Sao_Paulo');
-            $data ['alterado_apos'] = $alt->format('Y-m-d H:i:s');
+            $data['alterado_apos'] = $alt->format('Y-m-d H:i:s');
         }
 
         // monta URL
@@ -376,13 +378,13 @@ class MercosApi {
         return $this->responseObject;
     }
 
-    public function postFaturamento (
+    public function postFaturamento(
         $pedido_id,
         $valor_faturado,
         Carbon $data_faturamento,
         $numero_nf,
-        $informacoes_adicionais)
-    {
+        $informacoes_adicionais
+    ) {
         // monta Array com dados
         $data = (object) [
             "pedido_id" => $pedido_id,
@@ -403,14 +405,14 @@ class MercosApi {
         return $this->status == 201;
     }
 
-    public function putFaturamento (
+    public function putFaturamento(
         $faturamento_id,
         $pedido_id,
         $valor_faturado,
         Carbon $data_faturamento,
         $numero_nf,
-        $informacoes_adicionais)
-    {
+        $informacoes_adicionais
+    ) {
         // monta Array com dados
         $data = (object) [
             "pedido_id" => $pedido_id,
@@ -431,14 +433,14 @@ class MercosApi {
         return $this->status == 201;
     }
 
-    public function getClientes (Carbon $alterado_apos)
+    public function getClientes(Carbon $alterado_apos)
     {
 
         $data = [];
         if (!empty($alterado_apos)) {
             $alt = clone $alterado_apos;
             $alt->setTimezone('America/Sao_Paulo');
-            $data ['alterado_apos'] = $alt->format('Y-m-d H:i:s');
+            $data['alterado_apos'] = $alt->format('Y-m-d H:i:s');
         }
 
         // monta URL
@@ -456,7 +458,7 @@ class MercosApi {
         return $this->responseObject;
     }
 
-    public function getCliente ($cliente_id)
+    public function getCliente($cliente_id)
     {
 
         // monta URL
@@ -473,6 +475,4 @@ class MercosApi {
 
         return $this->responseObject;
     }
-
-
 }

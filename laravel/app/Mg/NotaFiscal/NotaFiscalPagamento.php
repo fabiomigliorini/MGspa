@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Jan/2024 15:40:53
+ * Date: 13/Dec/2024 11:48:44
  */
 
 namespace Mg\NotaFiscal;
@@ -23,6 +23,7 @@ class NotaFiscalPagamento extends MgModel
         'bandeira',
         'codnotafiscal',
         'codpessoa',
+        'descricao',
         'integracao',
         'tipo',
         'troco',

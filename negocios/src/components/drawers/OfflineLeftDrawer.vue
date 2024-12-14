@@ -17,7 +17,7 @@ const tab = ref("negocios");
         Prancheta
       </q-tooltip>
     </q-tab>
-    <q-tab name="mercos" icon="mdi-cloud-sync-outline">
+    <q-tab name="mercos" icon="mdi-cloud-outline">
       <q-tooltip class="bg-accent">
         Vendas Mercos
       </q-tooltip>

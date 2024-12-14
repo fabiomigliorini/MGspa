@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted } from "vue";
-import { Dialog, Notify } from "quasar";
+import { onMounted, onUnmounted } from "vue";
+import { Dialog } from "quasar";
+import emitter from "src/utils/emitter";
 import { mercosStore } from "stores/mercos";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import moment from "moment/min/moment-with-locales";
@@ -19,16 +20,22 @@ const importarPedido = async () => {
   });
 };
 
-
 onMounted(() => {
   sMercos.atualizarListagem();
+  emitter.on("fechado", () => {
+    sMercos.atualizarListagem();
+  });
+});
+
+onUnmounted(() => {
+  emitter.off("fechado");
 });
 </script>
 <template>
   <!-- <pre>{{ sMercos.pedidos }}</pre> -->
   <q-item-label header>
     Vendas Abertas Mercos
-    <q-btn flat color="primary" @click="importarPedido()" icon="mdi-web-sync" dense>
+    <q-btn flat color="primary" @click="importarPedido()" icon="mdi-cloud-download-outline" dense>
       <q-tooltip class="bg-accent"> Sincronizar com Mercos </q-tooltip>
     </q-btn>
     <q-btn flat color="primary" @click="sMercos.atualizarListagem()" icon="sync" dense>

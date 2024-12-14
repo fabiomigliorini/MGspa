@@ -52,6 +52,18 @@ class NegocioResource extends Resource
         }
         $ret['notas'] = new NegocioNotaFiscalResource($this);
         $ret['anexos'] = PdvAnexoService::listagem($this->codnegocio);
+        $ret['MercosPedidoS'] = [];
+        foreach ($this->MercosPedidoS as $mp) {
+            $ret['MercosPedidoS'][] = $mp->only([
+                'codmercospedido',
+                'pedidoid',
+                'numero',
+                'condicaopagamento',
+                'enderecoentrega',
+                'faturamentoid'
+            ]);
+        }
+        //  = MercosPedidoResource
         return $ret;
     }
 

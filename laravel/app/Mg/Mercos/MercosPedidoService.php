@@ -5,6 +5,7 @@ namespace Mg\Mercos;
 use \Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Exception;
 
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
@@ -91,52 +92,54 @@ class MercosPedidoService
             $n = $mp->Negocio;
         }
 
-        if (!in_array($n->codnegociostatus, [2, 3])) {
-            $n->codestoquelocal = env('MERCOS_CODESTOQUELOCAL');
-            $n->codfilial = $n->EstoqueLocal->codfilial;
-            // $n->lancamento = $ped->data_criacao;
-            $n->lancamento = $ped->data_emissao;
-            if (empty($n->lancamento)) {
-                $n->lancamento = $ped->ultima_alteracao;
-            }
-            $n->codnaturezaoperacao = env('MERCOS_CODNATUREZAOPERACAO');
-            $n->codoperacao = $n->NaturezaOperacao->codoperacao;
-            $n->codnegociostatus = 1;
-            $n->codpessoavendedor = env('MERCOS_CODPESSOAVENDEDOR');
-            $n->codusuario = Auth::user()->codusuario;
-            $n->codusuariocriacao = $n->codusuario;
-            $n->codusuarioalteracao = $n->codusuario;
-            if ($pdv) {
-                $n->codpdv = $pdv->codpdv;
-            }
+        if (in_array($n->codnegociostatus, [2, 3])) {
+            return $mp;
+        }
 
-            $mc = MercosClienteService::buscaOuCriaPeloId($ped->cliente_id);
-            $n->codpessoa = $mc->codpessoa;
-            $n->valortotal = $ped->total;
-            if (isset($ped->modalidade_entrega_nome)) {
-                $n->observacoes = $ped->modalidade_entrega_nome;
-            }
-            // os valores abaixo serao importados pelos itens depois
-            // $n->valorprodutos = 
-            // $n->valordesconto =
-            // $n->valorfrete =
-            $n->save();
+        $n->codestoquelocal = env('MERCOS_CODESTOQUELOCAL');
+        $n->codfilial = $n->EstoqueLocal->codfilial;
+        // $n->lancamento = $ped->data_criacao;
+        $n->lancamento = $ped->data_emissao;
+        if (empty($n->lancamento)) {
+            $n->lancamento = $ped->ultima_alteracao;
+        }
+        $n->codnaturezaoperacao = env('MERCOS_CODNATUREZAOPERACAO');
+        $n->codoperacao = $n->NaturezaOperacao->codoperacao;
+        $n->codnegociostatus = 1;
+        $n->codpessoavendedor = env('MERCOS_CODPESSOAVENDEDOR');
+        $n->codusuario = Auth::user()->codusuario;
+        $n->codusuariocriacao = $n->codusuario;
+        $n->codusuarioalteracao = $n->codusuario;
+        if ($pdv) {
+            $n->codpdv = $pdv->codpdv;
+        }
 
-            $mp->codnegocio = $n->codnegocio;
-            $mp->save();
+        $mc = MercosClienteService::buscaOuCriaPeloId($ped->cliente_id);
+        $n->codpessoa = $mc->codpessoa;
+        $n->valortotal = $ped->total;
+        if (isset($ped->modalidade_entrega_nome)) {
+            $n->observacoes = $ped->modalidade_entrega_nome;
+        }
+        // os valores abaixo serao importados pelos itens depois
+        // $n->valorprodutos = 
+        // $n->valordesconto =
+        // $n->valorfrete =
+        $n->save();
 
-            // importa itens
-            foreach ($ped->itens as $item) {
-                static::parsePedidoItem($item, $n, $mp);
-            }
+        $mp->codnegocio = $n->codnegocio;
+        $mp->save();
 
-            // calcula valorprodutos e valordesconto pela somatoria dos produtos
-            static::totalizaDescontoProduto($n);
+        // importa itens
+        foreach ($ped->itens as $item) {
+            static::parsePedidoItem($item, $n, $mp);
+        }
 
-            // rateia o frete pelos produtos
-            if ($ped->valor_frete) {
-                static::rateiaFrete($n, $ped->valor_frete);
-            }
+        // calcula valorprodutos e valordesconto pela somatoria dos produtos
+        static::totalizaDescontoProduto($n);
+
+        // rateia o frete pelos produtos
+        if ($ped->valor_frete) {
+            static::rateiaFrete($n, $ped->valor_frete);
         }
 
         // Marca Mercos Pay como forma de pagamento
@@ -161,6 +164,7 @@ class MercosPedidoService
                 ]);
                 $nfp->valorpagamento = $n->valortotal;
                 $nfp->valortotal = $n->valortotal;
+                $nfp->tipo = 99; // tpag 99 = Outros
                 $nfp->avista = true;
                 $nfp->integracao = false;
                 $nfp->save();
@@ -175,8 +179,8 @@ class MercosPedidoService
 
     public static function totalizaDescontoProduto(Negocio $n)
     {
-        $n->valordesconto = $n->NegocioProdutoBarraS()->sum('valordesconto');
-        $n->valorprodutos = $n->NegocioProdutoBarraS()->sum('valorprodutos');
+        $n->valordesconto = $n->NegocioProdutoBarraS()->whereNull('inativo')->sum('valordesconto');
+        $n->valorprodutos = $n->NegocioProdutoBarraS()->whereNull('inativo')->sum('valorprodutos');
         $n->save();
     }
 
@@ -186,7 +190,7 @@ class MercosPedidoService
             return;
         }
         $perc = $frete / $n->valorprodutos;
-        $npbs = $n->NegocioProdutoBarraS;
+        $npbs = $n->NegocioProdutoBarraS()->whereNull('inativo')->get();
         $iUltimo = count($npbs) - 1;
         $saldo = $frete;
         foreach ($npbs as $i => $npb) {
@@ -197,6 +201,7 @@ class MercosPedidoService
                 $npb->valorfrete = $saldo;
             }
             $npb->valortotal += $npb->valorfrete;
+            $npb->save();
         }
         $n->valorfrete = $frete;
         $n->save();
@@ -204,22 +209,40 @@ class MercosPedidoService
 
     public static function parsePedidoItem($item, Negocio $n, MercosPedido $mp)
     {
+        // se é item excluido do mercos, ignora
+        if ($item->excluido) {
+            return;
+        }
+
+        // instancia tabela que amarra item do mercos com item do mgsis
         $mpi = MercosPedidoItem::firstOrNew([
             'itemid' => $item->id,
             'codmercospedido' => $mp->codmercospedido,
         ]);
+
+        // se item não tiver sido excluido, aproveita o mesmo
         if (!empty($mpi->codnegocioprodutobarra)) {
-            return $mpi;
+            if (empty($mpi->NegocioProdutoBarra->inativo)) {
+                $npb = $mpi->NegocioProdutoBarra;
+            }
         }
-        if ($item->excluido) {
-            return;
-        }
-        // TODO: quando env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO') trazer descricao do site
+
+        // procura codigo do produto barra
         $pb = MercosProdutoService::procurarProdutoBarra($item->produto_id, $item->produto_codigo, $item->produto_agregador_id);
         if (!$pb) {
             return false;
         }
-        $npb = new NegocioProdutoBarra([
+
+        // cria item do mgsis
+        if (!isset($npb)) {
+            $npb = new NegocioProdutoBarra([
+                'codnegocio' => $n->codnegocio,
+                'codprodutobarra' => $pb->codprodutobarra,
+            ]);
+        }
+
+        // preenche com os dados do mercos
+        $npb->fill([
             'codnegocio' => $n->codnegocio,
             'codprodutobarra' => $pb->codprodutobarra,
             'quantidade' => $item->quantidade,
@@ -227,20 +250,28 @@ class MercosPedidoService
             'valorprodutos' => $item->preco_tabela * $item->quantidade,
             'valortotal' => $item->subtotal,
         ]);
+
+        // calcula o desconto se houver
         $npb->valordesconto = $npb->valorprodutos - $npb->valortotal;
         if ($npb->valordesconto && $npb->valorprodutos) {
             $npb->percentualdesconto = (($npb->valordesconto * 100) / $npb->valorprodutos);
         }
-        $npb->save();
+
+        // se for item nao localizado coloca descricao nas observacoes do item
         if ($npb->codprodutobarra == env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO')) {
             $npb->observacoes = "{$item->produto_codigo} - {$item->produto_nome}";
         }
+
+        // salva item
+        $npb->save();
+
+        // informa item na tabela de relacionamento
         $mpi->codnegocioprodutobarra = $npb->codnegocioprodutobarra;
         $mpi->save();
         return $mpi;
     }
 
-    public static function exportaFaturamento(Negocio $n)
+    public static function exportarFaturamento(Negocio $n)
     {
         $ret = [];
         if ($n->codnegociostatus != 2) {
@@ -296,5 +327,17 @@ class MercosPedidoService
             order by mp.numero desc, mp.pedidoid desc
         ';
         return DB::select($sql);
+    }
+
+    public static function reimportar(MercosPedido $ped)
+    {
+        $api = new MercosApi();
+        $desde = $ped->ultimaalteracaomercos;
+        $ret = collect($api->getPedidos($desde->addMinute(-1)));
+        if (!$ped = $ret->where('id', $ped->pedidoid)->first()) {
+            throw new Exception("Impossível localizar pedido no retorno da API do Mercos!", 1);
+        }
+        $ped = static::parsePedido($ped);
+        return $ped;
     }
 }
