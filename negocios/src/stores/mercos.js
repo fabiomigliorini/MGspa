@@ -82,5 +82,30 @@ export const mercosStore = defineStore("mercos", {
         return false;
       }
     },
+
+    async atualizarPedidoPeloNegocio(neg) {
+      var item = this.pedidos.findLast((i) => {
+        return (i.codnegocio = ped.codnegocio);
+      });
+      if (!item) {
+        item = {
+          codnegocio: neg.codnegocio,
+          uuid: neg.uuid,
+          codpdv: neg.codpdv,
+        };
+        this.pedidos.unshift(item);
+      }
+      item.valortotal = neg.valortotal;
+      item.codpessoa = neg.codpessoa;
+      item.fantasia = neg.fantasia;
+      if (neg.MercosPedidoS.length > 0) {
+        ped = neg.MercosPedidoS[0];
+        item.codmercospedido = ped.codmercospedido;
+        item.pedidoid = ped.pedidoid;
+        item.numero = ped.numero;
+        item.condicaopagamento = ped.condicaopagamento;
+        item.ultimaalteracaomercos = ped.ultimaalteracaomercos;
+      }
+    },
   },
 });

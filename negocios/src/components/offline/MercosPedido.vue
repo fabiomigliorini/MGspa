@@ -2,9 +2,11 @@
 import { Dialog, Notify } from "quasar";
 import { api } from "src/boot/axios";
 import { negocioStore } from "stores/negocio";
+import { mercosStore } from "stores/mercos";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
 
 const sNegocio = negocioStore();
+const sMercos = mercosStore();
 const sSinc = sincronizacaoStore();
 
 const informarFaturamento = async (mp) => {
@@ -46,13 +48,6 @@ const confirmarReimportar = (mp) => {
     // persistent: true
   }).onOk(() => {
     reimportar(mp);
-    // console.log('>>>> OK')
-  }).onOk(() => {
-    // console.log('>>>> second OK catcher')
-  }).onCancel(() => {
-    // console.log('>>>> Cancel')
-  }).onDismiss(() => {
-    // console.log('I am triggered on both OK and Cancel')
   })
 }
 
@@ -73,6 +68,7 @@ const reimportar = async (mp) => {
       message: 'Pedido reimportado do Mercos!',
       actions: [{ icon: "close", color: "white" }],
     });
+    sMercos.atualizarPedidoPeloNegocio(data.data);
   } catch (error) {
     console.log(error);
     var message = error?.response?.data?.message;

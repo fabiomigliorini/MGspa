@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Dec/2023 18:28:08
+ * Date: 16/Dec/2024 09:40:21
  */
 
 namespace Mg\Negocio;
@@ -29,6 +30,7 @@ class NegocioProdutoBarra extends MgModel
         'codusuarioconferencia',
         'conferencia',
         'inativo',
+        'observacoes',
         'percentualdesconto',
         'quantidade',
         'uuid',
@@ -130,5 +132,4 @@ class NegocioProdutoBarra extends MgModel
     {
         return $this->hasMany(NotaFiscalProdutoBarra::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
     }
-
 }

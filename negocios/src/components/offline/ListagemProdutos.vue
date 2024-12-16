@@ -84,6 +84,7 @@ const inativos = computed(() => {
 });
 
 const edicao = ref({
+  uuid: null,
   codprodutobarra: null,
   quantidade: null,
   valorunitario: null,
@@ -96,18 +97,19 @@ const edicao = ref({
   valortotal: null,
 });
 
-const editar = async (codprodutobarra) => {
+const editar = async (uuid) => {
   await sNegocio.recarregar();
   const item = sNegocio.negocio.itens.find(function (item) {
     return (
       item.inativo === null &&
-      parseInt(item.codprodutobarra) === parseInt(codprodutobarra)
+      item.uuid == uuid
     );
   });
   if (!item) {
     return false;
   }
-  edicao.value.codprodutobarra = codprodutobarra;
+  edicao.value.uuid = uuid;
+  edicao.value.codprodutobarra = item.codprodutobarra;
   edicao.value.quantidade = item.quantidade;
   edicao.value.valorunitario = item.valorunitario;
   edicao.value.valorprodutos = item.valorprodutos;
@@ -120,13 +122,13 @@ const editar = async (codprodutobarra) => {
   dialogItem.value = true;
 };
 
-const inativar = async (codprodutobarra) => {
+const inativar = async (uuid) => {
   Dialog.create({
     title: "Excluir",
     message: "Tem certeza que você deseja excluir esse item do negócio?",
     cancel: true,
   }).onOk(() => {
-    sNegocio.itemInativar(codprodutobarra);
+    sNegocio.itemInativar(uuid);
   });
 };
 
@@ -137,7 +139,8 @@ const salvar = async () => {
     cancel: true,
   }).onOk(() => {
     sNegocio.itemSalvar(
-      edicao.value.codprodutobarra,
+      edicao.value.uuid,
+      parseInt(edicao.value.codprodutobarra),
       parseFloat(edicao.value.quantidade),
       parseFloat(edicao.value.valorunitario),
       parseFloat(edicao.value.valorprodutos),
@@ -214,152 +217,66 @@ const linkProduto = (codproduto) => {
             <q-card-section>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input
-                    autofocus
-                    type="number"
-                    step="0.001"
-                    min="0.001"
-                    lazy-rules
-                    outlined
-                    v-model.number="edicao.quantidade"
-                    label="Quantidade"
-                    input-class="text-right"
-                    :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorProdutos()"
-                  />
+                  <q-input autofocus type="number" step="0.001" min="0.001" lazy-rules outlined
+                    v-model.number="edicao.quantidade" label="Quantidade" input-class="text-right"
+                    :rules="preenchimentoObrigatorioRule" @change="recalcularValorProdutos()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    outlined
-                    v-model.number="edicao.valorunitario"
-                    prefix="R$"
-                    label="Preço"
-                    input-class="text-right"
-                    :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorProdutos()"
-                  />
+                  <q-input type="number" step="0.01" min="0.01" outlined v-model.number="edicao.valorunitario"
+                    prefix="R$" label="Preço" input-class="text-right" :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()" />
                 </div>
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    outlined
-                    v-model.number="edicao.valorprodutos"
-                    prefix="R$"
-                    label="Total Produto"
-                    input-class="text-right"
-                    :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorProdutos()"
-                  />
+                  <q-input type="number" step="0.01" min="0.01" outlined v-model.number="edicao.valorprodutos"
+                    prefix="R$" label="Total Produto" input-class="text-right" :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="99.9"
-                    outlined
-                    v-model.number="edicao.percentualdesconto"
-                    label="% Desc"
-                    input-class="text-right"
-                    suffix="%"
-                    :rules="maiorQueZeroRule"
-                    @change="recalcularValorDesconto()"
-                  />
+                  <q-input type="number" step="0.01" min="0" max="99.99" outlined
+                    v-model.number="edicao.percentualdesconto" label="% Desc" input-class="text-right" suffix="%"
+                    :rules="maiorQueZeroRule" @change="recalcularValorDesconto()" />
                 </div>
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    :max="edicao.valorprodutos - 0.01"
-                    outlined
-                    v-model.number="edicao.valordesconto"
-                    prefix="R$"
-                    label="Desconto"
-                    input-class="text-right"
-                    :rules="maiorQueZeroRule"
-                    @change="recalcularPercentualDesconto()"
-                  />
+                  <q-input type="number" step="0.01" :max="edicao.valorprodutos - 0.01" outlined
+                    v-model.number="edicao.valordesconto" prefix="R$" label="Desconto" input-class="text-right"
+                    :rules="maiorQueZeroRule" @change="recalcularPercentualDesconto()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    outlined
-                    v-model.number="edicao.valorfrete"
-                    prefix="R$"
-                    label="Frete"
-                    input-class="text-right"
-                    :rules="maiorQueZeroRule"
-                    @change="recalcularValorTotal()"
-                  />
+                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valorfrete" prefix="R$"
+                    label="Frete" input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    outlined
-                    v-model.number="edicao.valorseguro"
-                    prefix="R$"
-                    label="Seguro"
-                    input-class="text-right"
-                    :rules="maiorQueZeroRule"
-                    @change="recalcularValorTotal()"
-                  />
+                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valorseguro" prefix="R$"
+                    label="Seguro" input-class="text-right" :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    outlined
-                    v-model.number="edicao.valoroutras"
-                    prefix="R$"
-                    label="Outras"
-                    input-class="text-right"
-                    :rules="maiorQueZeroRule"
-                    @change="recalcularValorTotal()"
-                  />
+                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valoroutras" prefix="R$"
+                    label="Outras" input-class="text-right" :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    outlined
-                    v-model.number="edicao.valortotal"
-                    prefix="R$"
-                    label="Total"
-                    input-class="text-right"
-                    :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorTotal()"
-                  />
+                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valortotal" prefix="R$"
+                    label="Total" input-class="text-right" :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorTotal()" />
                 </div>
               </div>
             </q-card-section>
 
             <q-card-actions align="right">
-              <q-btn
-                flat
-                label="Cancelar"
-                color="primary"
-                @click="dialogItem = false"
-                tabindex="-1"
-              />
+              <q-btn flat label="Cancelar" color="primary" @click="dialogItem = false" tabindex="-1" />
               <q-btn type="submit" flat label="Salvar" color="primary" />
             </q-card-actions>
           </q-form>
@@ -369,54 +286,25 @@ const linkProduto = (codproduto) => {
 
     <!-- Paginacao -->
     <div class="row q-px-md">
-      <q-pagination
-        v-model="sNegocio.paginaAtual"
-        :max="paginas"
-        :max-pages="6"
-        boundary-numbers
-        gutter="md"
-      />
+      <q-pagination v-model="sNegocio.paginaAtual" :max="paginas" :max-pages="6" boundary-numbers gutter="md" />
     </div>
 
     <!-- listagem de produto -->
     <div class="row q-pa-md q-col-gutter-md">
-      <div
-        class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
-        v-for="item in itens"
-        :key="item.uuid"
-      >
+      <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" v-for="item in itens" :key="item.uuid">
         <q-card>
           <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
           <q-separator />
 
           <q-card-section class="q-pb-none">
-            <div
-              class="absolute"
-              style="top: 0; right: 5px; transform: translateY(-42px)"
-            >
-              <q-btn
-                v-if="sNegocio.podeEditar"
-                color="primary"
-                round
-                icon="edit"
-                @click="editar(item.codprodutobarra)"
-              />
-              <q-btn
-                v-if="sNegocio.podeEditar"
-                round
-                color="negative"
-                icon="delete"
-                class="q-ma-sm"
-                @click="inativar(item.codprodutobarra)"
-              />
+            <div class="absolute" style="top: 0; right: 5px; transform: translateY(-42px)">
+              <q-btn v-if="sNegocio.podeEditar" color="primary" round icon="edit" @click="editar(item.uuid)" />
+              <q-btn v-if="sNegocio.podeEditar" round color="negative" icon="delete" class="q-ma-sm"
+                @click="inativar(item.uuid)" />
             </div>
 
-            <Transition
-              mode="out-in"
-              :duration="{ enter: 300, leave: 300 }"
-              leave-active-class="animated bounceOut"
-              enter-active-class="animated bounceIn"
-            >
+            <Transition mode="out-in" :duration="{ enter: 300, leave: 300 }" leave-active-class="animated bounceOut"
+              enter-active-class="animated bounceIn">
               <div class="text-h5" :key="item.valortotal">
                 <small class="text-grey-7">R$</small>
                 {{
@@ -430,29 +318,13 @@ const linkProduto = (codproduto) => {
             </Transition>
 
             <div class="text-overline text-grey-7">
-              <q-btn
-                v-if="sNegocio.podeEditar"
-                size="xs"
-                label="-"
-                round
-                dense
-                flat
-                @click="
-                  sNegocio.itemAdicionarQuantidade(item.codprodutobarra, -1)
-                "
-              />
+              <q-btn v-if="sNegocio.podeEditar" size="xs" label="-" round dense flat @click="
+                sNegocio.itemAdicionarQuantidade(item.uuid, -1)
+                " />
               {{ new Intl.NumberFormat("pt-BR").format(item.quantidade) }}
-              <q-btn
-                v-if="sNegocio.podeEditar"
-                size="xs"
-                label="+"
-                round
-                dense
-                flat
-                @click="
-                  sNegocio.itemAdicionarQuantidade(item.codprodutobarra, 1)
-                "
-              />
+              <q-btn v-if="sNegocio.podeEditar" size="xs" label="+" round dense flat @click="
+                sNegocio.itemAdicionarQuantidade(item.uuid, 1)
+                " />
               de
               {{
                 new Intl.NumberFormat("pt-BR", {
@@ -504,10 +376,7 @@ const linkProduto = (codproduto) => {
             </div>
           </q-card-section>
 
-          <q-item
-            :to="'/negocio/' + item.devolucao.codnegocio"
-            v-if="item.devolucao && item.devolucao.codnegocio"
-          >
+          <q-item :to="'/negocio/' + item.devolucao.codnegocio" v-if="item.devolucao && item.devolucao.codnegocio">
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
                 Devolvido de #{{
@@ -517,11 +386,8 @@ const linkProduto = (codproduto) => {
             </q-item-section>
           </q-item>
 
-          <q-item
-            v-for="devolucao in item.devolucoes"
-            v-bind:key="devolucao.codnegocioprodutobarra"
-            :to="'/negocio/' + devolucao.codnegocio"
-          >
+          <q-item v-for="devolucao in item.devolucoes" v-bind:key="devolucao.codnegocioprodutobarra"
+            :to="'/negocio/' + devolucao.codnegocio">
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
                 Devolvido
@@ -540,12 +406,7 @@ const linkProduto = (codproduto) => {
               </q-item-label>
             </q-item-section>
           </q-item>
-          <q-item
-            clickable
-            v-ripple
-            :href="linkProduto(item.codproduto)"
-            target="_blank"
-          >
+          <q-item clickable v-ripple :href="linkProduto(item.codproduto)" target="_blank">
             <q-item-section class="text-caption text-grey-7">
               <q-item-label overline>{{ item.barras }}</q-item-label>
               <q-item-label>{{ item.produto }}</q-item-label>
@@ -558,24 +419,12 @@ const linkProduto = (codproduto) => {
 
     <!-- Paginacao -->
     <div class="row q-px-md q-mb-lg">
-      <q-pagination
-        v-model="sNegocio.paginaAtual"
-        :max="paginas"
-        :max-pages="6"
-        boundary-numbers
-        gutter="md"
-      />
+      <q-pagination v-model="sNegocio.paginaAtual" :max="paginas" :max-pages="6" boundary-numbers gutter="md" />
     </div>
 
     <div class="q-pa-md q-mb-xl" v-if="inativos.length > 0">
-      <q-table
-        :rows="inativos"
-        virtual-scroll
-        title="Itens Excluídos"
-        :rows-per-page-options="[0]"
-        :columns="columns"
-        selection="multiple"
-      >
+      <q-table :rows="inativos" virtual-scroll title="Itens Excluídos" :rows-per-page-options="[0]" :columns="columns"
+        selection="multiple">
         <template v-slot:header-selection> </template>
         <template v-slot:body-selection="scope">
           <q-avatar>

@@ -669,13 +669,10 @@ export const negocioStore = defineStore("negocio", {
       await this.salvar();
     },
 
-    async itemAdicionarQuantidade(codprodutobarra, quantidade) {
+    async itemAdicionarQuantidade(uuid, quantidade) {
       await this.recarregar();
       const item = this.negocio.itens.find(function (item) {
-        return (
-          item.inativo === null &&
-          parseInt(item.codprodutobarra) === parseInt(codprodutobarra)
-        );
+        return item.inativo === null && item.uuid == uuid;
       });
       if (!item) {
         return false;
@@ -691,6 +688,7 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async itemSalvar(
+      uuid,
       codprodutobarra,
       quantidade,
       valorunitario,
@@ -704,14 +702,12 @@ export const negocioStore = defineStore("negocio", {
     ) {
       await this.recarregar();
       const item = this.negocio.itens.find(function (item) {
-        return (
-          item.inativo === null &&
-          parseInt(item.codprodutobarra) === parseInt(codprodutobarra)
-        );
+        return item.inativo === null && item.uuid == uuid;
       });
       if (!item) {
         return false;
       }
+      item.codprodutobarra = codprodutobarra;
       item.quantidade = quantidade;
       item.valorunitario = valorunitario;
       item.valorprodutos = valorprodutos;
@@ -725,13 +721,10 @@ export const negocioStore = defineStore("negocio", {
       this.salvar();
     },
 
-    async itemInativar(codprodutobarra) {
+    async itemInativar(uuid) {
       await this.recarregar();
       const inativar = this.negocio.itens.find(function (item) {
-        return (
-          item.inativo === null &&
-          parseInt(item.codprodutobarra) == parseInt(codprodutobarra)
-        );
+        return item.inativo === null && item.uuid == uuid;
       });
       if (inativar) {
         inativar.inativo = moment().format("YYYY-MM-DD HH:mm:ss");

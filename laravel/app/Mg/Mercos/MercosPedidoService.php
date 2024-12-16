@@ -130,9 +130,19 @@ class MercosPedidoService
         $mp->save();
 
         // importa itens
+        $mpis = [];
         foreach ($ped->itens as $item) {
-            static::parsePedidoItem($item, $n, $mp);
+            if ($mpi = static::parsePedidoItem($item, $n, $mp)) {
+                $mpis[] = $mpi;
+            }
         }
+
+        // exclui itens que não eram vinculados à nenhum item
+        $cods = collect($mpis)->pluck('codnegocioprodutobarra')->toArray();
+        NegocioProdutoBarra::where('codnegocio', $n->codnegocio)
+            ->whereNull('inativo')
+            ->whereNotIn('codnegocioprodutobarra', $cods)
+            ->update(['inativo' => Carbon::now()]);
 
         // calcula valorprodutos e valordesconto pela somatoria dos produtos
         static::totalizaDescontoProduto($n);
