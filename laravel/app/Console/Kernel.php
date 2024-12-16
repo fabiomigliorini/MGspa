@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('nota-fiscal:transferencia-entrada')->hourly();
         $schedule->command('nfe-php:resolver-pendente')->everyTenMinutes();
-        $schedule->command('nfe-php:dist-dfe')->hourly();
+        $schedule->command('nfe-php:dist-dfe')->everyThirtyMinutes();
         $schedule->command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt('00:01');
         $schedule->command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);
         $schedule->command('pix:consultar --horas=36')->everyTenMinutes();
