@@ -59,6 +59,9 @@ class NFePHPCommandDistDfe extends Command
                     if ($resp === null) {
                         break;
                     }
+                    if (!empty($numNSU)) {
+                        break;
+                    }
                     $ultNSU = $resp['ultNSU']+1;
                     $continuar = ($resp['ultNSU'] < $resp['maxNSU']);
                     if ($continuar) {

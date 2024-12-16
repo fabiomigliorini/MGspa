@@ -47,7 +47,6 @@ class NFePHPDistDfeService
         //a quantidade de documentos, e para não baixar várias vezes as mesmas coisas.
         if ($ultNSU == 0) {
             $ultNSU = DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
-	    $ultNSU++;
         }
         Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - ultNSU {$ultNSU} numNSU {$numNSU} chave {$chave}");
         $resp = $tools->sefazDistDFe($ultNSU, $numNSU, $chave);
