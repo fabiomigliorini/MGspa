@@ -214,6 +214,7 @@ const apropriar = () => {
   }).onOk(async () => {
     if (await sNegocio.apropriar(sNegocio.negocio.codnegocio)) {
       sNegocio.atualizarListagem();
+      emitter.emit('negocioAlterado');
       Notify.create({
         type: "positive",
         message: "Negocio !",

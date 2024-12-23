@@ -22,13 +22,13 @@ const importarPedido = async () => {
 
 onMounted(() => {
   sMercos.atualizarListagem();
-  emitter.on("fechado", () => {
+  emitter.on('negocioAlterado', () => {
     sMercos.atualizarListagem();
   });
 });
 
 onUnmounted(() => {
-  emitter.off("fechado");
+  emitter.off('negocioAlterado');
 });
 </script>
 <template>

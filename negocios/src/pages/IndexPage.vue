@@ -210,7 +210,7 @@ const fechar = debounce(async () => {
     await fecharDialogs();
     await sNegocio.fechar();
     abrirDocumentoSeFechado();
-    emitter.emit('fechado');
+    emitter.emit('negocioAlterado');
   } catch (error) {
     console.log(error);
   }
@@ -239,6 +239,7 @@ const cancelar = async () => {
     cancel: true,
   }).onOk(async (justificativa) => {
     await sNegocio.cancelar(justificativa);
+    emitter.emit('negocioAlterado');
   });
 };
 
