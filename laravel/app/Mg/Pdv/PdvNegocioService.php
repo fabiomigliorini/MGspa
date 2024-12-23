@@ -26,8 +26,8 @@ class PdvNegocioService
 
         // Verifica se o Status do Front e Backend conferem
         if ($negocio->exists && $negocio->codnegociostatus != $data['codnegociostatus']) {
-            $back = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$negocio->codnegociostatus]??$negocio->codnegociostatus;
-            $front = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$data['codnegociostatus']]??$data['codnegociostatus'];
+            $back = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$negocio->codnegociostatus] ?? $negocio->codnegociostatus;
+            $front = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$data['codnegociostatus']] ?? $data['codnegociostatus'];
             throw new Exception("Negocio consta como {$back} no Servidor, mas {$front} no PDV. Verifique com o suporte!");
         }
 
@@ -279,6 +279,23 @@ class PdvNegocioService
         // retorna
         return $negocio;
     }
+
+    public static function apropriar(Negocio $negocio, Pdv $pdv)
+    {
+        if (!in_array($negocio->codnegociostatus, [NegocioService::STATUS_ABERTO])) {
+            throw new Exception("Status do Negócio Não Permite Troca do PDV!", 1);
+        }
+
+        if ($negocio->codpdv == $pdv->codpdv) {
+            throw new Exception("Este negócio já está vinculado à este PDV!", 1);
+        }
+        
+        $negocio->codpdv = $pdv->codpdv;
+        $negocio->save();
+
+        return $negocio;
+    }
+
 
     public static function cancelar(Negocio $negocio, Pdv $pdv, String $justificativa)
     {

@@ -38,7 +38,7 @@ class PdvMercosController
         DB::beginTransaction();
         MercosPedidoService::reimportar($mp);
         DB::commit();
-        $n->fresh();
+        $n->refresh();
         return new NegocioResource($n);
     }
 
@@ -53,7 +53,7 @@ class PdvMercosController
     {
         $n = Negocio::findOrFail($codnegocio);
         MercosPedidoService::exportarFaturamento($n);
-        $n->fresh();
+        $n->refresh();
         return new NegocioResource($n);
     }
 

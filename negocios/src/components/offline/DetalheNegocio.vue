@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { negocioStore } from "stores/negocio";
+import { sincronizacaoStore } from "stores/sincronizacao";
 import { Dialog, Notify } from "quasar";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpjCpf } from "../../utils/formatador.js";
@@ -15,6 +16,7 @@ import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
 const sNegocio = negocioStore();
+const sSinc = sincronizacaoStore();
 
 const edicaoNatureza = ref({
   codestoquelocal: null,
@@ -202,6 +204,25 @@ const recarregarDaApi = () => {
     }
   });
 };
+
+const apropriar = () => {
+  Dialog.create({
+    title: "Apropriar",
+    message:
+      "Tem certeza que você deseja se apropriar desse negócio? Será impossível continuar editando este negócio no computador onde ele está vinculado atualmente!",
+    cancel: true,
+  }).onOk(async () => {
+    if (await sNegocio.apropriar(sNegocio.negocio.codnegocio)) {
+      sNegocio.atualizarListagem();
+      Notify.create({
+        type: "positive",
+        message: "Negocio !",
+        timeout: 1000, // 1 segundo
+        actions: [{ icon: "close", color: "white" }],
+      });
+    }
+  });
+}
 
 </script>
 <template>
@@ -483,6 +504,11 @@ const recarregarDaApi = () => {
             #{{ String(sNegocio.negocio.codpdv).padStart(8, "0") }}
           </q-item-label>
         </template>
+      </q-item-section>
+
+      <q-item-section top side
+        v-if="sNegocio.negocio.codnegociostatus == 1 && sNegocio.negocio.codpdv != sSinc.pdv.codpdv && sNegocio.negocio.sincronizado == true">
+        <q-btn @click="apropriar()" round color="negative" icon="mdi-transit-transfer" />
       </q-item-section>
     </q-item>
   </q-list>

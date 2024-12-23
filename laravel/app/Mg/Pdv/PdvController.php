@@ -330,6 +330,14 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
+    public function apropriar(PdvRequest $request, $codnegocio)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        $negocio = Negocio::findOrFail($codnegocio);
+        $negocio = PdvNegocioService::apropriar($negocio, $pdv);
+        return new NegocioResource($negocio);
+    }
+
     public function romaneio($codnegocio)
     {
         $negocio = Negocio::findOrFail($codnegocio);

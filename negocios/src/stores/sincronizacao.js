@@ -606,6 +606,31 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       }
     },
 
+    async postApropriar(codnegocio) {
+      try {
+        const { data } = await api.post(
+          "/api/v1/pdv/negocio/" + codnegocio + "/apropriar",
+          {
+            pdv: this.pdv.uuid,
+          }
+        );
+        return data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
     async fecharNegocio(codnegocio) {
       try {
         const { data } = await api.post(

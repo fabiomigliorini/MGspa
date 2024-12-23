@@ -85,7 +85,7 @@ export const mercosStore = defineStore("mercos", {
 
     async atualizarPedidoPeloNegocio(neg) {
       var item = this.pedidos.findLast((i) => {
-        return (i.codnegocio = ped.codnegocio);
+        return i.codnegocio == neg.codnegocio;
       });
       if (!item) {
         item = {
@@ -99,7 +99,7 @@ export const mercosStore = defineStore("mercos", {
       item.codpessoa = neg.codpessoa;
       item.fantasia = neg.fantasia;
       if (neg.MercosPedidoS.length > 0) {
-        ped = neg.MercosPedidoS[0];
+        const ped = neg.MercosPedidoS[0];
         item.codmercospedido = ped.codmercospedido;
         item.pedidoid = ped.pedidoid;
         item.numero = ped.numero;

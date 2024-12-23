@@ -931,6 +931,20 @@ export const negocioStore = defineStore("negocio", {
       }
     },
 
+    async apropriar(codOrUuid) {
+      try {
+        const ret = await sSinc.postApropriar(codOrUuid);
+        if (!ret.codnegocio) {
+          return false;
+        }
+        await this.atualizarNegocioPeloObjeto(ret);
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
+
     async atualizarNegocioPeloObjeto(neg) {
       this.negocio = { ...neg };
       db.negocio.put(neg);
