@@ -495,7 +495,7 @@ export const negocioStore = defineStore("negocio", {
       var negociostatus = "Aberto";
       var estoquelocal = "Local Indefinido";
       var fantasia = "Pessoa Indefinida";
-      var fantasiavendedor = "Vendedor";
+      var fantasiavendedor = "";
       var financeiro = false;
 
       if (!this.negocio) {
@@ -887,37 +887,37 @@ export const negocioStore = defineStore("negocio", {
 
     async sincronizar(uuid) {
       const negocio = await db.negocio.get(uuid);
+      let retorno = false;
       try {
         const ret = await sSinc.putNegocio(negocio);
-        if (!ret) {
-          return false;
-        }
-        db.negocio.update(ret.uuid, {
-          codnegocio: ret.codnegocio,
-          codnegociostatus: ret.codnegociostatus,
-        });
-        if (this.negocio.uuid == ret.uuid) {
-          this.negocio.codnegocio = ret.codnegocio;
-          this.negocio.codnegociostatus = ret.codnegociostatus;
-          if (
-            this.negocio.valortotal == ret.valortotal &&
-            this.negocio.valordesconto == ret.valordesconto &&
-            this.negocio.valorprodutos == ret.valorprodutos &&
-            this.negocio.valorjuros == ret.valorjuros &&
-            this.negocio.valoroutras == ret.valoroutras
-          ) {
-            this.negocio.sincronizado = true;
-            db.negocio.update(ret.uuid, {
-              sincronizado: true,
-            });
+        if (ret) {
+          db.negocio.update(ret.uuid, {
+            codnegocio: ret.codnegocio,
+            codnegociostatus: ret.codnegociostatus,
+          });
+          if (this.negocio.uuid == ret.uuid) {
+            this.negocio.codnegocio = ret.codnegocio;
+            this.negocio.codnegociostatus = ret.codnegociostatus;
+            if (
+              this.negocio.valortotal == ret.valortotal &&
+              this.negocio.valordesconto == ret.valordesconto &&
+              this.negocio.valorprodutos == ret.valorprodutos &&
+              this.negocio.valorjuros == ret.valorjuros &&
+              this.negocio.valoroutras == ret.valoroutras
+            ) {
+              this.negocio.sincronizado = true;
+              db.negocio.update(ret.uuid, {
+                sincronizado: true,
+              });
+            }
           }
+          retorno = true;
         }
       } catch (error) {
         console.log(error);
-        return false;
       }
       this.atualizarListagem();
-      return true;
+      return retorno;
     },
 
     async recarregarDaApi(codOrUuid) {
