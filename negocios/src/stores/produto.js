@@ -1,6 +1,10 @@
 import { defineStore } from "pinia";
 import { db } from "boot/db";
 import { Notify, LoadingBar } from "quasar";
+import { sincronizacaoStore } from "./sincronizacao";
+import { api } from "src/boot/axios";
+
+const sSinc = sincronizacaoStore();
 
 export const produtoStore = defineStore("produto", {
   persist: true,
@@ -155,6 +159,7 @@ export const produtoStore = defineStore("produto", {
     },
 
     async buscarBarras(barras) {
+      this.sincroniza(barras);
       let ret = await db.produto.where({ barras }).toArray();
       if (ret.length >= 1) {
         return ret;
@@ -171,6 +176,22 @@ export const produtoStore = defineStore("produto", {
         .filter((produto) => produto.quantidade == null)
         .toArray();
       return ret;
+    },
+
+    async sincroniza(barras) {
+      try {
+        var { data } = await api.get("/api/v1/pdv/produto/" + barras, {
+          params: {
+            pdv: sSinc.pdv.uuid,
+          },
+        });
+        if (data.length > 0) {
+          await db.produto.bulkPut(data);
+        }
+      } catch (error) {
+        console.log(error);
+        console.log("Impossível buscar barras " + barras + " no Backend!");
+      }
     },
   },
 });

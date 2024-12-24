@@ -92,6 +92,9 @@ export const negocioStore = defineStore("negocio", {
         .reverse()
         .sortBy("lancamento");
       this.negocios = negs.slice(0, 10);
+      if (!this.negocio) {
+        return;
+      }
       const iNegocio = this.negocios.findIndex((neg) => {
         return neg.codnegocio == this.negocio.codnegocio;
       });

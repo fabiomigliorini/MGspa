@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted } from "vue";
 import { Dialog, Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
@@ -61,6 +62,10 @@ const abrirNegocio = async () => {
     router.push("/offline/" + sNegocio.negocio.uuid);
   });
 };
+
+onMounted(() => {
+  sNegocio.atualizarListagem();
+});
 </script>
 <template>
   <q-item-label header>
@@ -71,19 +76,9 @@ const abrirNegocio = async () => {
   </q-item-label>
   <template v-if="sNegocio.negocios">
     <template v-for="n in sNegocio.negocios" :key="n.uuid">
-      <q-item
-        clickable
-        tag="a"
-        :to="'/offline/' + n.uuid"
-        v-ripple
-        exact-active-class="bg-blue-1"
-      >
+      <q-item clickable tag="a" :to="'/offline/' + n.uuid" v-ripple exact-active-class="bg-blue-1">
         <q-item-section avatar>
-          <q-avatar
-            :icon="iconeNegocio(n)"
-            :color="corIconeNegocio(n)"
-            text-color="white"
-          />
+          <q-avatar :icon="iconeNegocio(n)" :color="corIconeNegocio(n)" text-color="white" />
         </q-item-section>
 
         <q-item-section>
@@ -109,12 +104,7 @@ const abrirNegocio = async () => {
                 maximumFractionDigits: 2,
               }).format(n.valortotal)
             }}
-            <q-badge
-              color="orange"
-              text-color="white"
-              rounded
-              v-if="n.codpdv != sSinc.pdv.codpdv"
-            />
+            <q-badge color="orange" text-color="white" rounded v-if="n.codpdv != sSinc.pdv.codpdv" />
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -133,19 +123,9 @@ const abrirNegocio = async () => {
   </q-item-label>
   <template v-if="sNegocio.ultimos">
     <template v-for="n in sNegocio.ultimos" :key="n.uuid">
-      <q-item
-        clickable
-        tag="a"
-        :to="'/offline/' + n.uuid"
-        v-ripple
-        exact-active-class="bg-blue-1"
-      >
+      <q-item clickable tag="a" :to="'/offline/' + n.uuid" v-ripple exact-active-class="bg-blue-1">
         <q-item-section avatar>
-          <q-avatar
-            :icon="iconeNegocio(n)"
-            :color="corIconeNegocio(n)"
-            text-color="white"
-          />
+          <q-avatar :icon="iconeNegocio(n)" :color="corIconeNegocio(n)" text-color="white" />
         </q-item-section>
 
         <q-item-section>
@@ -172,23 +152,11 @@ const abrirNegocio = async () => {
                 maximumFractionDigits: 2,
               }).format(n.valortotal)
             }}
-            <q-badge
-              color="orange"
-              text-color="white"
-              rounded
-              v-if="n.codpdv != sSinc.pdv.codpdv"
-            />
+            <q-badge color="orange" text-color="white" rounded v-if="n.codpdv != sSinc.pdv.codpdv" />
           </q-item-label>
 
           <q-item-label class="ellipsis" v-if="n.codnegociostatus == 3">
-            <q-chip
-              square
-              color="negative"
-              text-color="white"
-              icon="warning"
-              size="sm"
-              dense
-            >
+            <q-chip square color="negative" text-color="white" icon="warning" size="sm" dense>
               Cancelado
             </q-chip>
           </q-item-label>

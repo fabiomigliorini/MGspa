@@ -168,6 +168,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::group(['prefix' => 'pdv'], function () {
             Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
             Route::get('produto', '\Mg\Pdv\PdvController@produto');
+            Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
             Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
             Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvController@pessoaPeloCnpj');
             Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');

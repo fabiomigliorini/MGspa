@@ -19,6 +19,7 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloResource;
 use Mg\Titulo\TituloService;
 use App\Rules\InscricaoEstadual;
+use Mg\Produto\ProdutoService;
 
 class PdvController
 {
@@ -92,6 +93,16 @@ class PdvController
         $codprodutobarra = $request->codprodutobarra ?? 0;
         $limite = $request->limite ?? 10000;
         return PdvService::produto($codprodutobarra, $limite);
+    }
+
+    public function produtoBarras(PdvRequest $request, $barras)
+    {
+        PdvService::autoriza($request->pdv);
+        $codprodutobarra = -1;
+        if ($pb = ProdutoService::buscaPorBarras($barras)) {
+            $codprodutobarra = $pb->codprodutobarra;
+        }
+        return PdvService::produto($codprodutobarra, 1);
     }
 
     public function pessoaCount(PdvRequest $request)

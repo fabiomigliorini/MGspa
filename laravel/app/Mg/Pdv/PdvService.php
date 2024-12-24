@@ -123,10 +123,20 @@ class PdvService
             left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
             left join tblunidademedida ume on (ume.codunidademedida = pe.codunidademedida)
             left join tblprodutoimagem pri on (pri.codprodutoimagem = pv.codprodutoimagem)
-            where pb.codprodutobarra > :codprodutobarra
-            order by pb.codprodutobarra
-            limit :limite
         ';
+        if ($limite == 1) {
+            $sql .= '
+                where pb.codprodutobarra = :codprodutobarra
+                order by pb.codprodutobarra
+                limit :limite
+            ';
+        } else {
+            $sql .= '
+                where pb.codprodutobarra > :codprodutobarra
+                order by pb.codprodutobarra
+                limit :limite
+            ';
+        }
         $regs = DB::select($sql, [
             'codprodutobarra' => $codprodutobarra,
             'limite' => $limite,
