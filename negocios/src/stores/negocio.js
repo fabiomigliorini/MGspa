@@ -86,40 +86,48 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async atualizarListagem() {
-      const negs = await db.negocio
-        .where("codnegociostatus")
-        .equals(1)
+      // busca todos negocios abertos do PDV
+      let negs = await db.negocio
+        .where("[codnegociostatus+codpdv]")
+        .equals([1, sSinc.pdv.codpdv])
         .reverse()
-        .sortBy("lancamento");
-      this.negocios = negs.slice(0, 10);
-      if (!this.negocio) {
-        return;
-      }
-      const iNegocio = this.negocios.findIndex((neg) => {
-        return neg.codnegocio == this.negocio.codnegocio;
-      });
-      if (iNegocio == -1) {
-        this.negocios.unshift(this.negocio);
-        this.negocios.shift(1);
-      }
+        .sortBy("criacao");
+      this.negocios = negs;
 
-      // ultimos 10 fechados/cancelados
-      if (this.negocio.codnegociostatus == 1) {
-        return;
+      // verifica se tem negocio aberto
+      if (this.negocio) {
+        // verifica se o negocio está na listagem de abertos
+        const iNegocio = negs.findIndex((neg) => {
+          return neg.codnegocio == this.negocio.codnegocio;
+        });
+
+        // verifica se o negocio está na listagem dos ultimos
+        var ultimos = this.ultimos;
+        const iUltimo = ultimos.findIndex((u) => {
+          return u.codnegocio == this.negocio.codnegocio;
+        });
+
+        if (iUltimo != -1) {
+          if (iNegocio != -1) {
+            // se esta nos abertos remove dos ultimos
+            ultimos.splice(iUltimo, 1);
+          } else {
+            // senao atualiza ele na listagem de ultimos
+            ultimos[iUltimo] = { ...this.negocio };
+          }
+        } else if (iNegocio == -1) {
+          // se nao esta nem nos ultimos nem nos abertos, adiciona nos ultimos
+          ultimos.unshift({ ...this.negocio });
+        }
+
+        //se listagem de ultimos maior que 10 registros filtra os 10 primeiros
+        if (ultimos.length > 10) {
+          ultimos = ultimos.slice(0, 10);
+        }
+
+        // atualiza listagem dos ultimos
+        this.ultimos = ultimos;
       }
-      var ultimos = this.ultimos;
-      const i = ultimos.findIndex((u) => {
-        return u.codnegocio == this.negocio.codnegocio;
-      });
-      if (i > -1) {
-        ultimos[i] = this.negocio;
-      } else {
-        ultimos.unshift(this.negocio);
-      }
-      if (ultimos.length > 10) {
-        ultimos = ultimos.slice(0, 10);
-      }
-      this.ultimos = ultimos;
     },
 
     async carregarPeloCodnegocio(codnegocio) {
@@ -254,8 +262,8 @@ export const negocioStore = defineStore("negocio", {
         Pdv: { ...sSinc.pdv },
       };
       db.negocio.add(negocio, uuid);
-      this.atualizarListagem();
       this.negocio = { ...negocio };
+      await this.atualizarListagem();
       return negocio;
     },
 
@@ -416,7 +424,7 @@ export const negocioStore = defineStore("negocio", {
       this.negocio = { ...negocio };
       await this.carregarChavesEstrangeiras();
       await this.salvar();
-      this.atualizarListagem();
+      await this.atualizarListagem();
       return negocio;
     },
 
@@ -587,7 +595,7 @@ export const negocioStore = defineStore("negocio", {
       if (sincronizar) {
         this.sincronizar(this.negocio.uuid);
       } else {
-        this.atualizarListagem();
+        await this.atualizarListagem();
       }
       return ret;
     },
@@ -916,7 +924,7 @@ export const negocioStore = defineStore("negocio", {
       } catch (error) {
         console.log(error);
       }
-      this.atualizarListagem();
+      await this.atualizarListagem();
       return retorno;
     },
 
@@ -951,7 +959,7 @@ export const negocioStore = defineStore("negocio", {
     async atualizarNegocioPeloObjeto(neg) {
       this.negocio = { ...neg };
       db.negocio.put(neg);
-      this.atualizarListagem();
+      await this.atualizarListagem();
     },
 
     async adicionarPagamento(

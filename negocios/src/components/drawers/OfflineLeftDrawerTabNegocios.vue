@@ -69,7 +69,7 @@ onMounted(() => {
 </script>
 <template>
   <q-item-label header>
-    Abertos
+    Meus em Aberto
     <q-btn flat label="F2" color="primary" @click="criar()" icon="add" dense>
       <q-tooltip class="bg-accent"> Novo </q-tooltip>
     </q-btn>

@@ -291,6 +291,7 @@ class PdvNegocioService
         }
         
         $negocio->codpdv = $pdv->codpdv;
+        $negocio->lancamento = Carbon::now();
         $negocio->save();
 
         return $negocio;
