@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { Dialog, Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
@@ -8,6 +8,7 @@ import { iconeNegocio, corIconeNegocio } from "src/utils/iconeNegocio.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
+const reconsultandoAbertos = ref(false);
 const sNegocio = negocioStore();
 const sSinc = sincronizacaoStore();
 const router = useRouter();
@@ -63,8 +64,14 @@ const abrirNegocio = async () => {
   });
 };
 
-onMounted(() => {
-  sNegocio.atualizarListagem();
+const reconsultarAbertos = async () => {
+  reconsultandoAbertos.value = true;
+  await sNegocio.reconsultarAbertos();
+  reconsultandoAbertos.value = false;
+}
+
+onMounted(async () => {
+  await sNegocio.atualizarListagem();
 });
 </script>
 <template>
@@ -72,6 +79,9 @@ onMounted(() => {
     Meus em Aberto
     <q-btn flat label="F2" color="primary" @click="criar()" icon="add" dense>
       <q-tooltip class="bg-accent"> Novo </q-tooltip>
+    </q-btn>
+    <q-btn flat color="primary" @click="reconsultarAbertos()" icon="refresh" dense :loading="reconsultandoAbertos">
+      <q-tooltip class="bg-accent"> Reconsultar Abertos </q-tooltip>
     </q-btn>
   </q-item-label>
   <template v-if="sNegocio.negocios">

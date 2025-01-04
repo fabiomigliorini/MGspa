@@ -130,6 +130,25 @@ export const negocioStore = defineStore("negocio", {
       }
     },
 
+    async reconsultarAbertos() {
+      for (const neg of this.negocios) {
+        if (!neg.sincronizado) {
+          return;
+        }
+        try {
+          const ret = await sSinc.getNegocio(neg.uuid);
+          await db.negocio.put(ret);
+          if (this.negocio.uuid == ret.uuid) {
+            this.negocio = { ...ret };
+          }
+        } catch (error) {
+          console.log("Erro ao buscar " + neg.uuid);
+          console.log(error);
+        }
+      }
+      this.atualizarListagem();
+    },
+
     async carregarPeloCodnegocio(codnegocio) {
       // busca no indexedDB
       const negocio = await db.negocio
