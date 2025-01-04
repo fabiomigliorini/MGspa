@@ -48,15 +48,25 @@ const apps = ref([
     ],
   },
   {
-    label: "Liquidações",
+    label: "Comandas",
     apps: [
       {
-        icon: "mdi-checkbook",
-        label: "Liquidações",
-        to: "/liquidacao",
+        icon: "mdi-barcode",
+        label: "Comandas",
+        to: "/comanda-vendedor",
       },
     ],
   },
+  // {
+  //   label: "Liquidações",
+  //   apps: [
+  //     {
+  //       icon: "mdi-checkbook",
+  //       label: "Liquidações",
+  //       to: "/liquidacao",
+  //     },
+  //   ],
+  // },
   {
     label: "Configurações",
     apps: [

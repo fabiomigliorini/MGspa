@@ -27,6 +27,13 @@ const routes = [
     ],
   },
 
+  // COMANDAS VENDEDOR
+  {
+    path: "/comanda-vendedor",
+    component: () => import("layouts/ComandaLayout.vue"),
+    children: [{ path: "", component: () => import("pages/ComandaPage.vue") }],
+  },
+
   // ORCAMENTOS
   {
     path: "/offline/:uuid/orcamento",
