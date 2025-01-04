@@ -314,7 +314,7 @@ class PdvNegocioService
 
         foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
             foreach ($nfp->TituloS as $tit) {
-                if ($tit->debito != $tit->saldo) {
+                if (($tit->debito - $tit->credito) != $tit->saldo) {
                     throw new Exception("O Título {$tit->numero} já foi movimentado. Impossível cancelar!", 1);
                 }
                 if (!empty($tit->estornado)) {
