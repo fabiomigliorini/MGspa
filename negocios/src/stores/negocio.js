@@ -86,6 +86,8 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async atualizarListagem() {
+      console.log("atualizando listagem ");
+
       // busca todos negocios abertos do PDV
       let negs = await db.negocio
         .where("[codnegociostatus+codpdv]")
@@ -136,7 +138,9 @@ export const negocioStore = defineStore("negocio", {
           return;
         }
         try {
+          console.log("reconsultnado " + neg.uuid);
           const ret = await sSinc.getNegocio(neg.uuid);
+          console.log("reconsultado " + ret.codnegocio);
           await db.negocio.put(ret);
           if (this.negocio.uuid == ret.uuid) {
             this.negocio = { ...ret };
