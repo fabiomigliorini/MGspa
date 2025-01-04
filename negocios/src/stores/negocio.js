@@ -133,15 +133,25 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async reconsultarAbertos() {
+      var iNeg = 1;
       for (const neg of this.negocios) {
         if (!neg.sincronizado) {
           return;
         }
         try {
-          console.log("reconsultnado " + neg.uuid);
+          console.log(
+            "reconsultnado " +
+              iNeg +
+              "/" +
+              this.negocios.length +
+              " - " +
+              neg.uuid
+          );
+          iNeg++;
           const ret = await sSinc.getNegocio(neg.uuid);
           console.log("reconsultado " + ret.codnegocio);
-          await db.negocio.put(ret);
+          let retDb = await db.negocio.put(ret);
+          console.log(retDb);
           if (this.negocio.uuid == ret.uuid) {
             this.negocio = { ...ret };
           }
