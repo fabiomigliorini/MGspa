@@ -136,7 +136,7 @@ export const negocioStore = defineStore("negocio", {
       var iNeg = 1;
       for (const neg of this.negocios) {
         if (!neg.sincronizado) {
-          return;
+          continue;
         }
         try {
           console.log(
