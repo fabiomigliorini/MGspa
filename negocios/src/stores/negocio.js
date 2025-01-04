@@ -86,8 +86,6 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async atualizarListagem() {
-      console.log("atualizando listagem ");
-
       // busca todos negocios abertos do PDV
       let negs = await db.negocio
         .where("[codnegociostatus+codpdv]")
@@ -133,25 +131,40 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async reconsultarAbertos() {
+      // mostra notificacao
+      const dismiss = Notify.create({
+        type: "ongoing",
+        message: "Reconsultando meus negócios abertos no Servidor!",
+        timeout: 0,
+      });
+
+      // percorre todos negocios abertos do pdv
       var iNeg = 1;
       for (const neg of this.negocios) {
+        // se nao está sincronizado, não reconsulta no servidor
         if (!neg.sincronizado) {
           continue;
         }
+
         try {
+          // log pra saber se deu algum erro
           console.log(
             "reconsultnado " +
               iNeg +
               "/" +
               this.negocios.length +
               " - " +
-              neg.uuid
+              neg.codnegocio
           );
           iNeg++;
+
+          // consulta no servidor
           const ret = await sSinc.getNegocio(neg.uuid);
-          console.log("reconsultado " + ret.codnegocio);
+
+          // salva no banco local
           let retDb = await db.negocio.put(ret);
-          console.log(retDb);
+
+          // se for o negocio aberto, atualiza o objeto da tela
           if (this.negocio.uuid == ret.uuid) {
             this.negocio = { ...ret };
           }
@@ -160,7 +173,12 @@ export const negocioStore = defineStore("negocio", {
           console.log(error);
         }
       }
+
+      // atualiza listagem de negocios abertos (drawer)
       this.atualizarListagem();
+
+      // fecha notificacao
+      dismiss();
     },
 
     async carregarPeloCodnegocio(codnegocio) {
