@@ -204,12 +204,12 @@ class MercosPedidoService
         $iUltimo = count($npbs) - 1;
         $saldo = $frete;
         foreach ($npbs as $i => $npb) {
-            if ($i != $iUltimo) {
-                $npb->valorfrete = round($perc * $frete, 2);
-                $saldo -= $npb->valorfrete;
-            } else {
-                $npb->valorfrete = $saldo;
+            $valorfrete = round($perc * $npb->valorprodutos, 2);
+            if ($valorfrete > $saldo || $i == $iUltimo) {
+                $valorfrete = $saldo;
             }
+            $saldo -= $valorfrete;
+            $npb->valorfrete = $valorfrete;
             $npb->valortotal += $npb->valorfrete;
             $npb->save();
         }

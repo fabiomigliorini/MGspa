@@ -360,7 +360,10 @@ class MercosProdutoService {
         } else {
             $qry->where('codprodutoembalagem', $mp->codprodutoembalagem);
         }
-        return $qry->first();
+        if ($pb = $qry->first()) {
+            return $pb;
+        }
+        return ProdutoBarra::findOrFail(env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO'));
     }
 
     // carrega model Produto Pelo ID do Mercos
