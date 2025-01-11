@@ -131,7 +131,7 @@ class MercosPedidoService
 
         // importa itens
         $mpis = [];
-        foreach ($ped->itens as $item) {
+        foreach (array_reverse($ped->itens) as $item) {
             if ($mpi = static::parsePedidoItem($item, $n, $mp)) {
                 $mpis[] = $mpi;
             }
