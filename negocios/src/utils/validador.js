@@ -1,8 +1,6 @@
 export const isCnpjValido = (cnpj) => {
   cnpj = String(cnpj).replace(/[^\d]+/g, "");
 
-  if (cnpj == "") return false;
-
   if (cnpj.length != 14) {
     return false;
   }
@@ -61,6 +59,10 @@ export const isCnpjValido = (cnpj) => {
 
 export const isCpfValido = (strCPF) => {
   strCPF = String(strCPF).replace(/[^\d]+/g, "");
+
+  if (strCPF.length != 11) {
+    return false;
+  }
 
   var Soma;
   var Resto;
