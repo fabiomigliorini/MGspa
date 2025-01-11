@@ -250,12 +250,16 @@ const consultarDocumento = async () => {
     }
     parseConsultaPix();
     parseReceitaWs();
-    if (consultaSefaz.value.retSefaz) {
-      if (consultaSefaz.value.retSefaz.length == 0) {
-        step.value = 3;
-      } else if ((consultaSefaz.value.retSefaz.length == 1) & (pessoa.value.fisica == false)) {
-        await parseIe(consultaSefaz.value.retSefaz[0])
-        step.value = 3;
+    if (consultaSefaz.value.retSefaz && pessoa.value.fisica == false) {
+      const ie = consultaSefaz.value.retSefaz.filter(i => i.cSit == '1');
+      switch (ie.length) {
+        case 0:
+          step.value = 3;
+          break;
+        case 1:
+          await parseIe(ie[0]);
+          step.value = 3;
+          break;
       }
     }
   } catch (error) {
@@ -263,8 +267,6 @@ const consultarDocumento = async () => {
     Notify.create({
       type: "negative",
       message: "Falha ao consultar API da SEFAZ/ReceitaWS!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
     });
   } finally {
     consultando.value = false;
@@ -319,8 +321,6 @@ const procurarCidade = async (cidade, uf) => {
       Notify.create({
         type: "negative",
         message: "Localizada mais de uma cidade para '" + cidade + "/" + uf + "'! Informe manualmente!",
-        timeout: 3000, // 3 segundos
-        actions: [{ icon: "close", color: "white" }],
       });
     }
     return null;
@@ -330,8 +330,6 @@ const procurarCidade = async (cidade, uf) => {
     Notify.create({
       type: "negative",
       message: "Falha ao consultar código da cidade!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
     });
     return null;
 
@@ -339,7 +337,14 @@ const procurarCidade = async (cidade, uf) => {
 
 }
 
-const parseIe = (ret) => {
+const parseIe = async (ret) => {
+  if (ret.cSit == '0') {
+    Notify.create({
+      type: "negative",
+      message: "Esta Inscrição Estadual não está Habilitada!",
+    });
+    return;
+  }
   if (ret.xNome) {
     pessoa.value.pessoa = primeiraLetraMaiuscula(ret.xNome);
   }
@@ -362,7 +367,7 @@ const parseIe = (ret) => {
   // se veio endereco, adiciona todos
   if (ret.ender) {
     pessoa.value.enderecos = [];
-    ret.ender.forEach(async (end) => {
+    for (const end of ret.ender) {
       if (end == undefined) {
         return;
       }
@@ -379,8 +384,8 @@ const parseIe = (ret) => {
       if (end.xMun) {
         novo.codcidade = await procurarCidade(end.xMun, ret.UF);
       }
-      pessoa.value.enderecos.push(novo);
-    })
+      await pessoa.value.enderecos.push(novo);
+    }
   }
 
   // se nao tem endereco, adiciona um em branco
@@ -492,8 +497,6 @@ const consultarCep = async (i) => {
       Notify.create({
         type: "negative",
         message: "CEP não localizado!",
-        timeout: 3000, // 3 segundos
-        actions: [{ icon: "close", color: "white" }],
       });
       return;
     }
@@ -512,8 +515,6 @@ const consultarCep = async (i) => {
     Notify.create({
       type: "negative",
       message: "Falha ao consultar CEP!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
     });
   }
 
@@ -675,6 +676,9 @@ watch(
                       </q-item-section>
                       <q-item-section>
                         <q-item-label class="text-h6 text-primary">
+                          <b class="text-negative" v-if="ie.cSit == '0'">
+                            Não Habilitada!
+                          </b>
                           {{ formataIe(ie.UF, ie.IE) }}/{{ ie.UF }}
                         </q-item-label>
                         <q-item-label class="text-weight-bolder text-grey-7" v-if="ie.xFant">
