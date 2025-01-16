@@ -282,7 +282,7 @@ class NFePHPDistDfeService
 
     }
 
-    public static function processarProcNFe(DistribuicaoDfe $dd, $gz)
+    public static function processarProcNFe(DistribuicaoDfe $dd = null, $gz)
     {
         // Carrega XML
         $dom = new \DOMDocument();
@@ -294,7 +294,9 @@ class NFePHPDistDfeService
         ]);
 
         // dados da Nfe
-        $nft->codfilial = $nft->codfilial??$dd->codfilial;
+        if (empty($nft->codfilial) && $dd) {
+            $nft->codfilial = $dd->codfilial;
+        }
         $nft->natureza = $nft->natureza??@$dom->getElementsByTagName('natOp')->item(0)->nodeValue;
         switch ((int)$dom->getElementsByTagName('tpNF')->item(0)->nodeValue) {
             case 1:
@@ -308,12 +310,15 @@ class NFePHPDistDfeService
         $nft->serie = $nft->serie??@$dom->getElementsByTagName('serie')->item(0)->nodeValue;
         $nft->numero = $nft->numero??@$dom->getElementsByTagName('nNF')->item(0)->nodeValue;
         $nft->tipo = $nft->tipo??@$dom->getElementsByTagName('tpNF')->item(0)->nodeValue;
-        $nft->emissao = $nft->emissao??@Carbon::parse($dom->getElementsByTagName('dhEmi')->item(0)->nodeValue);
+        $nft->emissao = @Carbon::parse($dom->getElementsByTagName('dhEmi')->item(0)->nodeValue);
+        // dd([$dom->getElementsByTagName('dhEmi')->item(0)->nodeValue, $nft]);
         $nft->finalidade = $nft->finalidade??@$dom->getElementsByTagName('finNFe')->item(0)->nodeValue;
         $nft->indsituacao = $nft->indsituacao??NfeTerceiro::INDSITUACAO_AUTORIZADA;
         $nft->informacoes = $nft->observacoes??@$dom->getElementsByTagName('infCpl')->item(0)->nodeValue;
         //$nft->indmanifestacao = $nft->indmanifestacao??NfeTerceiro::INDMANIFESTACAO_SEM;
-        $nft->nsu = $dd->nsu;
+        if ($dd) {
+            $nft->nsu = $dd->nsu;
+        }
         $nft->nfedataautorizacao = $nft->nfedataautorizacao??@Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue);
 
         // valores
@@ -582,12 +587,16 @@ class NFePHPDistDfeService
             $nftp->save();
         }
 
+        if (!$dd) {
+            return true;
+        }
+
         // vincula dfe na nota fiscal de terceiro
         $dd->codnfeterceiro = $nft->codnfeterceiro;
         $dd->nfechave = $nft->nfechave;
         $dd->data = $nft->nfedataautorizacao??$nft->emissao??Carbon::now();
         return $dd->save();
-    }
+}
 
     public static function carregarXml(DistribuicaoDfe $dd)
     {

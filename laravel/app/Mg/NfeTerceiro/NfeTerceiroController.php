@@ -70,4 +70,11 @@ class NfeTerceiroController
         return $ret;
     }
 
+    public function download ($codnfeterceiro)
+    {
+        $nfeTerceiro = NfeTerceiro::findOrFail($codnfeterceiro);
+        NfeTerceiroService::download($nfeTerceiro);
+        return $nfeTerceiro->fresh();
+    }
+
 }
