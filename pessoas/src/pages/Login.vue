@@ -34,7 +34,7 @@ export default defineComponent({
       if (tokenCookie) {
         const Token = tokenCookie.split("=")[1];
         localStorage.setItem('access_token', Token);
-        console.log('Token', Token)
+        // console.log('Token', Token)
 
         if (Token) {
           auth.accessToken(Token);
