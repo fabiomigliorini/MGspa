@@ -1,15 +1,15 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:31:34
+ * Date: 25/Jan/2025 11:02:45
  */
 
 namespace Mg\Saurus;
 
 use Mg\MgModel;
 use Mg\Saurus\SaurusPedido;
+use Mg\Saurus\SaurusPinPad;
 use Mg\Filial\Filial;
-use Mg\Pdv\Pdv;
 use Mg\Usuario\Usuario;
 
 class SaurusPdv extends MgModel
@@ -23,7 +23,6 @@ class SaurusPdv extends MgModel
         'autorizacao',
         'chavepublica',
         'codfilial',
-        'codpdv',
         'contratoid',
         'id',
         'inativo',
@@ -40,7 +39,6 @@ class SaurusPdv extends MgModel
 
     protected $casts = [
         'codfilial' => 'integer',
-        'codpdv' => 'integer',
         'codsauruspdv' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -52,11 +50,6 @@ class SaurusPdv extends MgModel
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
-    }
-
-    public function Pdv()
-    {
-        return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
     }
 
     public function UsuarioAlteracao()
@@ -74,6 +67,11 @@ class SaurusPdv extends MgModel
     public function SaurusPedidoS()
     {
         return $this->hasMany(SaurusPedido::class, 'codsauruspdv', 'codsauruspdv');
+    }
+
+    public function SaurusPinPadS()
+    {
+        return $this->hasMany(SaurusPinPad::class, 'codsauruspdv', 'codsauruspdv');
     }
 
 }

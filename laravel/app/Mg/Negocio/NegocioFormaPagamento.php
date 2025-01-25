@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:44:22
+ * Date: 25/Jan/2025 11:05:48
  */
 
 namespace Mg\Negocio;
@@ -18,7 +18,7 @@ use Mg\Pix\PixCob;
 use Mg\Stone\StoneTransacao;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pessoa\Pessoa;
-use Mg\Saurus\SaurusPagamento;
+use Mg\Saurus\SaurusPedido;
 
 class NegocioFormaPagamento extends MgModel
 {
@@ -36,7 +36,7 @@ class NegocioFormaPagamento extends MgModel
         'codpagarmepedido',
         'codpessoa',
         'codpixcob',
-        'codsauruspagamento',
+        'codsauruspedido',
         'codstonetransacao',
         'codtitulo',
         'integracao',
@@ -65,7 +65,7 @@ class NegocioFormaPagamento extends MgModel
         'codpagarmepedido' => 'integer',
         'codpessoa' => 'integer',
         'codpixcob' => 'integer',
-        'codsauruspagamento' => 'integer',
+        'codsauruspedido' => 'integer',
         'codstonetransacao' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -112,9 +112,9 @@ class NegocioFormaPagamento extends MgModel
         return $this->belongsTo(PixCob::class, 'codpixcob', 'codpixcob');
     }
 
-    public function SaurusPagamento()
+    public function SaurusPedido()
     {
-        return $this->belongsTo(SaurusPagamento::class, 'codsauruspagamento', 'codsauruspagamento');
+        return $this->belongsTo(SaurusPedido::class, 'codsauruspedido', 'codsauruspedido');
     }
 
     public function StoneTransacao()

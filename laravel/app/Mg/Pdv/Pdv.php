@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:31:58
+ * Date: 25/Jan/2025 11:02:37
  */
 
 namespace Mg\Pdv;
@@ -13,7 +13,6 @@ use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
 use Mg\Titulo\LiquidacaoTitulo;
-use Mg\Saurus\SaurusPdv;
 use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 use Mg\Portador\Portador;
@@ -113,11 +112,6 @@ class Pdv extends MgModel
     public function PixCobS()
     {
         return $this->hasMany(PixCob::class, 'codpdv', 'codpdv');
-    }
-
-    public function SaurusPdvS()
-    {
-        return $this->hasMany(SaurusPdv::class, 'codpdv', 'codpdv');
     }
 
 }

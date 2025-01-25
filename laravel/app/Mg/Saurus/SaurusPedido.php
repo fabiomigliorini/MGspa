@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:31:21
+ * Date: 25/Jan/2025 11:03:00
  */
 
 namespace Mg\Saurus;
 
 use Mg\MgModel;
 use Mg\Saurus\SaurusPagamento;
+use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Saurus\SaurusPdv;
 use Mg\Usuario\Usuario;
@@ -77,6 +78,11 @@ class SaurusPedido extends MgModel
 
 
     // Tabelas Filhas
+    public function NegocioFormaPagamentoS()
+    {
+        return $this->hasMany(NegocioFormaPagamento::class, 'codsauruspedido', 'codsauruspedido');
+    }
+
     public function SaurusPagamentoS()
     {
         return $this->hasMany(SaurusPagamento::class, 'codsauruspedido', 'codsauruspedido');

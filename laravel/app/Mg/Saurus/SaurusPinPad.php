@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:29:53
+ * Date: 25/Jan/2025 11:05:21
  */
 
 namespace Mg\Saurus;
@@ -9,6 +9,8 @@ namespace Mg\Saurus;
 use Mg\MgModel;
 use Mg\Saurus\SaurusPagamento;
 use Mg\Usuario\Usuario;
+use Mg\Filial\Filial;
+use Mg\Saurus\SaurusPdv;
 
 class SaurusPinPad extends MgModel
 {
@@ -18,6 +20,8 @@ class SaurusPinPad extends MgModel
 
     protected $fillable = [
         'apelido',
+        'codfilial',
+        'codsauruspdv',
         'id',
         'inativo',
         'observacoes',
@@ -31,6 +35,8 @@ class SaurusPinPad extends MgModel
     ];
 
     protected $casts = [
+        'codfilial' => 'integer',
+        'codsauruspdv' => 'integer',
         'codsauruspinpad' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
@@ -38,6 +44,16 @@ class SaurusPinPad extends MgModel
 
 
     // Chaves Estrangeiras
+    public function Filial()
+    {
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function SaurusPdv()
+    {
+        return $this->belongsTo(SaurusPdv::class, 'codsauruspdv', 'codsauruspdv');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');

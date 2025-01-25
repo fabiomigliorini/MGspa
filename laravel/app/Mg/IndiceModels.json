@@ -2960,10 +2960,10 @@
                 "coluna": "codtitulo",
                 "metodo": "Titulo"
             },
-            "codsauruspagamento": {
-                "tabela": "tblsauruspagamento",
-                "coluna": "codsauruspagamento",
-                "metodo": "SaurusPagamento"
+            "codsauruspedido": {
+                "tabela": "tblsauruspedido",
+                "coluna": "codsauruspedido",
+                "metodo": "SaurusPedido"
             }
         },
         "hasMany": {
@@ -7737,11 +7737,6 @@
                 "tabela": "tblliquidacaotitulo",
                 "coluna": "codpdv",
                 "metodo": "LiquidacaoTituloS"
-            },
-            "tblsauruspdv.codpdv": {
-                "tabela": "tblsauruspdv",
-                "coluna": "codpdv",
-                "metodo": "SaurusPdvS"
             }
         }
     },
@@ -8412,11 +8407,6 @@
                 "coluna": "codfilial",
                 "metodo": "Filial"
             },
-            "codpdv": {
-                "tabela": "tblpdv",
-                "coluna": "codpdv",
-                "metodo": "Pdv"
-            },
             "codusuarioalteracao": {
                 "tabela": "tblusuario",
                 "coluna": "codusuarioalteracao",
@@ -8433,6 +8423,11 @@
                 "tabela": "tblsauruspedido",
                 "coluna": "codsauruspdv",
                 "metodo": "SaurusPedidoS"
+            },
+            "tblsauruspinpad.codsauruspdv": {
+                "tabela": "tblsauruspinpad",
+                "coluna": "codsauruspdv",
+                "metodo": "SaurusPinPadS"
             }
         }
     },
@@ -8469,6 +8464,11 @@
                 "tabela": "tblsauruspagamento",
                 "coluna": "codsauruspedido",
                 "metodo": "SaurusPagamentoS"
+            },
+            "tblnegocioformapagamento.codsauruspedido": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codsauruspedido",
+                "metodo": "NegocioFormaPagamentoS"
             }
         }
     },
@@ -8505,13 +8505,7 @@
                 "metodo": "UsuarioCriacao"
             }
         },
-        "hasMany": {
-            "tblnegocioformapagamento.codsauruspagamento": {
-                "tabela": "tblnegocioformapagamento",
-                "coluna": "codsauruspagamento",
-                "metodo": "NegocioFormaPagamentoS"
-            }
-        }
+        "hasMany": []
     },
     "tblsaurusbandeira": {
         "tabela": "tblsaurusbandeira",
@@ -8555,6 +8549,16 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codsauruspdv": {
+                "tabela": "tblsauruspdv",
+                "coluna": "codsauruspdv",
+                "metodo": "SaurusPdv"
             }
         },
         "hasMany": {

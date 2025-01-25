@@ -1,13 +1,12 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:44:12
+ * Date: 25/Jan/2025 11:05:06
  */
 
 namespace Mg\Saurus;
 
 use Mg\MgModel;
-use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Saurus\SaurusBandeira;
 use Mg\Saurus\SaurusPedido;
 use Mg\Saurus\SaurusPinPad;
@@ -85,13 +84,6 @@ class SaurusPagamento extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-
-    // Tabelas Filhas
-    public function NegocioFormaPagamentoS()
-    {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codsauruspagamento', 'codsauruspagamento');
     }
 
 }
