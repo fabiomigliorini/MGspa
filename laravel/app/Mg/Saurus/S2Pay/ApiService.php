@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Log;
 
 class ApiService 
 {
-    public static function functionAutorizacao($chavePDV) {
-        $chave = base64_encode($chavePDV . '|' . env('CNPJ'));
+    public static function functionAutorizacao($chavePDV, $cnpj) {
+        $chave = base64_encode($chavePDV . '|' . str_pad($cnpj, 14, '0', STR_PAD_LEFT));
 
         try {
             $curl = curl_init();
@@ -50,7 +50,7 @@ class ApiService
 
     public static function functionPdvRegistrar($chavePDV, $pessoa, $numero, $contratoId) {
     
-        $autorizacao = self::functionAutorizacao($chavePDV);
+        $autorizacao = self::functionAutorizacao($chavePDV, $pessoa->cnpj);
 
         $curl = curl_init();
         $url = env('SAURUS_S2PAY_URL') . '/api/FunctionPdv';

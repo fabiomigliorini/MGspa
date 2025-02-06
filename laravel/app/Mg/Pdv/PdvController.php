@@ -669,11 +669,13 @@ class PdvController
 
         $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
 
+        $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdvSaurus->codfilial)->codpessoa);
+
         $responsePdvSaurus = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
 
         if(str_contains($responsePdvSaurus->retTexto, 'Chave de Autorização está Inválida')){
 
-            $autorizacao = ApiService::functionAutorizacao($pdvSaurus->id);
+            $autorizacao = ApiService::functionAutorizacao($pdvSaurus->id, $pessoa->cnpj);
 
             SaurusPdv::updateOrCreate(
                 [

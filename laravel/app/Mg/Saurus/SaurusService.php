@@ -3,9 +3,11 @@
 namespace Mg\Saurus;
 
 use Illuminate\Support\Facades\Log;
+use Mg\Filial\Filial;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioService;
+use Mg\Pessoa\Pessoa;
 use Mg\Saurus\S2Pay\ApiService;
 
 class SaurusService
@@ -90,7 +92,9 @@ class SaurusService
 
         if($pdv->vencimento < now()) {
 
-            $responseAutorizacao = ApiService::functionAutorizacao($pdv->id);
+            $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdv->codfilial)->codpessoa);
+
+            $responseAutorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
 
             $pdv->autorizacao = $responseAutorizacao->response->chavePublica;
             $pdv->vencimento = $responseAutorizacao->response->vencimento;
@@ -112,9 +116,11 @@ class SaurusService
         
         $pdv = SaurusPdv::findOrFail($ped->codsauruspdv);
 
+        $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdv->codfilial)->codpessoa);
+
         if($pdv->vencimento < now()) {
 
-            $responseAutorizacao = ApiService::functionAutorizacao($pdv->id);
+            $responseAutorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
 
             $pdv->autorizacao = $responseAutorizacao->response->chavePublica;
             $pdv->vencimento = $responseAutorizacao->response->vencimento;
