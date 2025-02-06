@@ -8,6 +8,8 @@ use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
 use Mg\Pdv\PdvAnexoService;
+use Mg\Saurus\SaurusPedido;
+use Mg\Saurus\SaurusPedidoResource;
 
 class NegocioResource extends Resource
 {
@@ -46,6 +48,7 @@ class NegocioResource extends Resource
         $ret['pagamentos'] = NegocioFormaPagamentoResource::collection($this->NegocioFormaPagamentoS);
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());
         $ret['PagarMePedidoS'] = PagarMePedidoResource::collection($this->PagarMePedidoS()->orderBy('criacao', 'desc')->get());
+        $ret['SaurusPedidoS'] = SaurusPedidoResource::collection($this->SaurusPedidoS()->orderBy('criacao', 'desc')->get());
         $ret['titulos'] = collect([]);
         foreach ($this->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
             $ret['titulos'] = $ret['titulos']->concat(TituloResource::collection($nfp->TituloS()->orderBy('vencimento')->get()));

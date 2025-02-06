@@ -4,10 +4,12 @@ import { Dialog } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
 import { pagarMeStore } from "stores/pagar-me";
+import { saurusStore } from "stores/saurus";
 import PagamentoDinheiro from "components/offline/PagamentoDinheiro.vue";
 import PagamentoVale from "components/offline/PagamentoVale.vue";
 import PagamentoPix from "components/offline/PagamentoPix.vue";
 import PagamentoPagarMe from "components/offline/PagamentoPagarMe.vue";
+import PagamentoSaurus from "components/offline/PagamentoSaurus.vue";
 import PagamentoPrazo from "components/offline/PagamentoPrazo.vue";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpj } from "../../utils/formatador.js";
@@ -17,6 +19,7 @@ moment.locale("pt-br");
 const sNegocio = negocioStore();
 const sPix = pixStore();
 const sPagarMe = pagarMeStore();
+const sSaurus = saurusStore();
 
 const edicao = ref({
   valorprodutos: null,
@@ -148,8 +151,27 @@ const dialogDetalhesPagarMePedido = (ped) => {
   sPagarMe.dialog.detalhesPedido = true;
 };
 
+const dialogDetalhesSaurusPedido = (ped) => {
+  sSaurus.pedido = ped;
+  sSaurus.dialog.detalhesPedido = true;
+};
+
 const excluirPagamento = (pag) => {
   sNegocio.excluirPagamento(pag.uuid);
+};
+
+const dialogPagamento = () => {
+  switch (sNegocio.padrao.maquineta) {
+    case "pagarme":
+      sNegocio.dialog.pagamentoPagarMe = true;
+      break;
+    case "saurus":
+      sNegocio.dialog.pagamentoSaurus = true;
+      break;
+    default:
+      sNegocio.dialog.pagamentoPagarMe = true;
+      break;
+  }
 };
 
 const valorSaldoLabel = computed(() => {
@@ -321,6 +343,7 @@ const creditCardColorPagamento = (pag) => {
   <pagamento-dinheiro />
   <pagamento-pix />
   <pagamento-pagar-me />
+  <pagamento-saurus />
   <pagamento-prazo />
   <pagamento-vale />
 
@@ -565,7 +588,7 @@ const creditCardColorPagamento = (pag) => {
       <q-btn
         round
         icon="credit_card"
-        @click="dialogPagamentoPagarMe()"
+        @click="dialogPagamento()"
         color="primary"
       >
         <q-tooltip class="bg-accent">Cartão (F7)</q-tooltip>
@@ -704,6 +727,129 @@ const creditCardColorPagamento = (pag) => {
             @click="dialogDetalhesPagarMePedido(ped)"
             v-for="pag in ped.PagarMePagamentoS"
             :key="pag.codpagarmepagamento"
+          >
+            <q-item-section avatar top>
+              <q-btn
+                round
+                :color="creditCardColorPagamento(pag)"
+                icon="credit_card"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label lines="1" v-if="pag.valorpagamento">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(pag.valorpagamento)
+                }}
+              </q-item-label>
+              <q-item-label
+                lines="1"
+                v-if="pag.valorcancelamento"
+                class="text-negative"
+              >
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(pag.valorcancelamento)
+                }}
+                Cancelamento
+              </q-item-label>
+              <q-item-label caption v-if="pag.parcelas > 1">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valor)
+                }}
+                em {{ pag.parcelas }}
+                parcelas de R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valorparcela)
+                }}
+                <span v-if="ped.valorjuros"> C/Juros </span>
+              </q-item-label>
+              <q-item-label caption>
+                {{ pag.nome }}
+
+                <span class="text-uppercase">
+                  {{ pag.bandeira }}
+                  {{ pag.tipodescricao }}
+                </span>
+                | POS {{ pag.apelido }} |
+                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
+                {{ moment(pag.transacao).fromNow() }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </template>
+
+      <template
+        v-for="ped in sNegocio.negocio.SaurusPedidoS"
+        :key="ped.codsauruspedido"
+      >
+        <template v-if="ped.status != 2">
+          <q-item clickable v-ripple @click="dialogDetalhesSaurusPedido(ped)">
+            <q-item-section avatar top>
+              <q-btn round :color="creditCardColor(ped)" icon="credit_card" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label lines="1">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valortotal)
+                }}
+              </q-item-label>
+              <q-item-label caption v-if="ped.parcelas > 1">
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valor)
+                }}
+                em {{ ped.parcelas }}
+                parcelas de R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(ped.valorparcela)
+                }}
+                <span v-if="ped.valorjuros"> C/Juros </span>
+              </q-item-label>
+              <q-item-label caption>
+                <span class="text-uppercase">
+                  {{ ped.tipodescricao }}
+                </span>
+                | POS {{ ped.apelido }} |
+                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
+                {{ moment(ped.criacao).fromNow() }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+        <template v-else>
+          <q-item
+            clickable
+            v-ripple
+            @click="dialogDetalhesSaurusPedido(ped)"
+            v-for="pag in ped.SaurusPagamentoS"
+            :key="pag.codsauruspagamento"
           >
             <q-item-section avatar top>
               <q-btn

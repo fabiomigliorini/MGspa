@@ -25,6 +25,17 @@
   <q-separator />
 
   <!-- Listagem PDV -->
+  <q-item clickable tag="a" :to="'/config/saurus-s2-pay/'" v-ripple exact-active-class="bg-blue-1">
+    <q-item-section avatar>
+      <q-avatar icon="mdi-printer-pos-outline" color="primary" text-color="white" />
+    </q-item-section>
+    <q-item-section>
+      <q-item-label class="ellipsis">Saurus/S2Pay</q-item-label>
+    </q-item-section>
+  </q-item>
+  <q-separator />
+
+  <!-- Listagem PDV -->
   <q-item clickable tag="a" :to="'/config/pdv/'" v-ripple exact-active-class="bg-blue-1">
     <q-item-section avatar>
       <q-avatar icon="mdi-monitor-multiple" color="primary" text-color="white" />

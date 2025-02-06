@@ -116,5 +116,69 @@
         "apelido": "Outros"
       }
     ]
+  },
+  {
+    "codpessoa": 20119,
+    "apelido": "SafraPay",
+    "logo": "/logo-cartoes/Safra.jpg",
+    "tipos": [
+      {
+        "tpag": 4,
+        "tipo": 1,
+        "apelido": "Débito"
+      },
+      {
+        "tpag": 3,
+        "tipo": 2,
+        "apelido": "Crédito"
+      },
+      {
+        "tpag": 3,
+        "tipo": 3,
+        "apelido": "Voucher"
+      }
+    ],
+    "bandeiras": [
+      {
+        "bandeira": 1,
+        "apelido": "Visa"
+      },
+      {
+        "bandeira": 2,
+        "apelido": "Mastercard"
+      },
+      {
+        "bandeira": 3,
+        "apelido": "American Express"
+      },
+      {
+        "bandeira": 4,
+        "apelido": "Sorocred"
+      },
+      {
+        "bandeira": 5,
+        "apelido": "Diners Club"
+      },
+      {
+        "bandeira": 6,
+        "apelido": "Elo"
+      },
+      {
+        "bandeira": 7,
+        "apelido": "Hipercard"
+      },
+      {
+        "bandeira": 8,
+        "apelido": "Aura"
+      },
+      {
+        "bandeira": 9,
+        "apelido": "Cabal"
+      },
+      {
+        "bandeira": 99,
+        "apelido": "Outros"
+      }
+    ]
   }
 ]
