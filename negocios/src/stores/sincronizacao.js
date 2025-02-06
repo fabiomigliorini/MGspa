@@ -301,6 +301,32 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       }
     },
 
+    async silentSincronizarEstoqueLocal() {
+      try {
+        // busca registros na ApI
+        let { data } = await api.get("/api/v1/pdv/estoque-local", {
+          params: { pdv: this.pdv.uuid },
+        });
+
+        // insere dados no banco local indexeddb
+        await db.estoqueLocal.bulkPut(data);
+
+        // exclui registros que nao vieram na importacao
+        let sincronizado = data[0].sincronizado;
+
+        db.estoqueLocal.where("sincronizado").below(sincronizado).delete();
+
+        //registra data de Sincronizacao
+        this.ultimaSincronizacao.estoqueLocal = sincronizado;
+
+        return true;
+      } catch (error) {
+        console.log(error);
+        console.log("Impossível sincronizar Locais de Estoque");
+        return false;
+      }
+    },
+
     async sincronizarNaturezaOperacao() {
       if (!this.importacao.rodando) {
         return;
@@ -723,6 +749,49 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
           codnegocio,
           codpessoa,
           codpagarmepos,
+          valor,
+          valorparcela,
+          valorjuros,
+          tipo,
+          parcelas,
+          jurosloja,
+          descricao,
+        });
+        return data.data;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
+    async criarSaurusPedido(
+      codnegocio,
+      codpessoa,
+      codsauruspos,
+      valor,
+      valorparcela,
+      valorjuros,
+      tipo,
+      parcelas,
+      jurosloja,
+      descricao
+    ) {
+      try {
+        const { data } = await api.post("/api/v1/pdv/saurus/pedido/", {
+          pdv: codsauruspos,
+          codnegocio,
+          codpessoa,
+          codsauruspos,
           valor,
           valorparcela,
           valorjuros,

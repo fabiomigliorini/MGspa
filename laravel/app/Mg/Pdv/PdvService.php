@@ -5,6 +5,8 @@ namespace Mg\Pdv;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Mg\PagarMe\PagarMePos;
+use Mg\Saurus\SaurusPdv;
+use Mg\Saurus\SaurusPinPad;
 
 class PdvService
 {
@@ -309,6 +311,12 @@ class PdvService
         ]);
         foreach ($regs as $reg) {
             $reg->PagarMePosS = PagarMePos::select(['codpagarmepos', 'serial', 'apelido'])->where('codfilial', $reg->codfilial)->whereNull('inativo')->get();
+            $reg->SaurusPosS = SaurusPdv::select(['tblsauruspdv.codsauruspdv', 'tblsauruspdv.id as serial', 'tblsauruspdv.apelido'])
+            ->join('tblsauruspinpad', 'tblsauruspinpad.codsauruspdv', '=', 'tblsauruspdv.codsauruspdv') 
+            ->where('tblsauruspdv.codfilial', $reg->codfilial)
+            ->whereNull('tblsauruspdv.inativo')
+            ->groupBy('tblsauruspdv.codsauruspdv', 'tblsauruspdv.id', 'tblsauruspdv.apelido')
+            ->get();
         }
         return $regs;
     }

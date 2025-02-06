@@ -6,11 +6,19 @@ import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vu
 import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
 import SelectPagarMePos from "components/selects/SelectPagarMePos.vue";
 import SelectImpressora from "components/selects/SelectImpressora.vue";
+import SelectSaurusPos from "components/selects/SelectSaurusPos.vue";
 // import SelectPessoa from "components/selects/SelectPessoa.vue";
 
 const sNegocio = negocioStore();
 
 const edicao = ref({});
+
+const opcoesPos = ref([
+  { name: "POS Stone/PagarMe", value: "pagarme" },
+  { name: "POS Safrapay/Saurus", value: "saurus" },
+]);
+
+const opcaoPosSelecionado = ref("");
 
 onMounted(() => {
   inicializaModel();
@@ -50,13 +58,38 @@ const salvar = async () => {
                 @update:model-value="edicao.codpagarmepos = null"
                 clearable
               />
+
+              <q-select
+                v-model="edicao.maquineta"
+                :options="opcoesPos"
+                @update:model-value="edicao.maquineta = $event"
+                emit-value
+                map-options
+                option-value="value"
+                option-label="name"
+                label="POS"
+                clearable
+                outlined
+              />
+
               <select-pagar-me-pos
+                v-if="edicao.maquineta === 'pagarme'"
                 outlined
                 v-model="edicao.codpagarmepos"
                 label="POS Stone/PagarMe"
                 :codestoquelocal="edicao.codestoquelocal"
                 clearable
               />
+
+              <select-saurus-pos
+                v-if="edicao.maquineta === 'saurus'"
+                outlined
+                v-model="edicao.codsauruspos"
+                label="POS Safrapay/Saurus"
+                :codestoquelocal="edicao.codestoquelocal"
+                clearable
+              />
+
               <select-natureza-operacao
                 outlined
                 v-model="edicao.codnaturezaoperacao"

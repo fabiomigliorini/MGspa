@@ -25,6 +25,7 @@ export const negocioStore = defineStore("negocio", {
       pagamentoVale: false,
       pagamentoPix: false,
       pagamentoPagarMe: false,
+      pagamentoSaurus: false,
       pagamentoCartaoManual: false,
       pagamentoPrazo: false,
     },
@@ -36,6 +37,8 @@ export const negocioStore = defineStore("negocio", {
       venda: true, //Saída
       impressora: null,
       codpagarmepos: null,
+      codsauruspos: null,
+      maquineta: null,
     },
     paginaAtual: 1,
   }),
@@ -1230,6 +1233,54 @@ export const negocioStore = defineStore("negocio", {
           });
           await this.atualizarNegocioPeloObjeto(ret);
           return ret.PagarMePedidoS[0];
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+
+    async criarSaurusPedido(
+      codsauruspos,
+      valor,
+      valorparcela,
+      valorjuros,
+      tipo,
+      parcelas,
+      jurosloja
+    ) {
+      if (!this.negocio.sincronizado) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Impossível criar Cobrança Saurus/Safra Pay em um negócio não sincronizado com o servidor!",
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      try {
+        const descricao = "Negocio " + this.negocio.codnegocio;
+        const ret = await sSinc.criarSaurusPedido(
+          this.negocio.codnegocio,
+          this.negocio.codpessoa,
+          codsauruspos,
+          valor,
+          valorparcela,
+          valorjuros,
+          tipo,
+          parcelas,
+          jurosloja,
+          descricao
+        );
+        if (ret.codnegocio) {
+          Notify.create({
+            type: "positive",
+            message: "Cobrança Saurus/Safra Pay Criada!",
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: "close", color: "white" }],
+          });
+          await this.atualizarNegocioPeloObjeto(ret);
+          return ret.SaurusPedidoS[0];
         }
       } catch (error) {
         console.log(error);

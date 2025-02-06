@@ -223,6 +223,18 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
             Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
             Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');
+
+            //ROTAS SAURUS
+
+            Route::post('saurus/registrar-pos', '\Mg\Pdv\PdvController@registrarPosSaurus');
+            Route::post('saurus/verificar-leitura', '\Mg\Pdv\PdvController@verificarLeituraSaurus');
+            Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
+            Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
+            Route::delete('saurus/pedido/{codsauruspedido}', '\Mg\Pdv\PdvController@cancelarSaurusPedido');
+            Route::get('saurus/pdvs', '\Mg\Pdv\PdvController@listaPdvsSaurus');
+            Route::post('saurus/pdv/{codsauruspdv}', '\Mg\Pdv\PdvController@editarPdvSaurus');
+            Route::get('saurus/pdv/{codsauruspdv}/inativar', '\Mg\Pdv\PdvController@inativarPdvSaurus');
+            Route::get('saurus/pdv/{codsauruspdv}/ativar', '\Mg\Pdv\PdvController@ativarPdvSaurus');
         });
 
         // METAS

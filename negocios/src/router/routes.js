@@ -58,6 +58,7 @@ const routes = [
       { path: "padrao/", component: () => import("pages/PadraoPage.vue") },
       { path: "pdv/", component: () => import("pages/PdvPage.vue") },
       { path: "pagar-me/", component: () => import("pages/PagarMePage.vue") },
+      { path: "saurus-s2-pay/", component: () => import("pages/SaurusS2PayPage.vue") },
       {
         path: "prancheta/",
         component: () => import("pages/PranchetaPage.vue"),

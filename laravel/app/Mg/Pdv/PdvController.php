@@ -19,7 +19,16 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloResource;
 use Mg\Titulo\TituloService;
 use App\Rules\InscricaoEstadual;
+use Mg\Filial\Filial;
+use Mg\Pessoa\Pessoa;
 use Mg\Produto\ProdutoService;
+use Mg\Saurus\S2Pay\ApiService;
+use Mg\Saurus\SaurusPdv;
+use Mg\Saurus\SaurusPedido;
+use Mg\Saurus\SaurusPedidoResource;
+use Mg\Saurus\SaurusPinPad;
+use Mg\Saurus\SaurusService;
+use Ramsey\Uuid\Uuid;
 
 class PdvController
 {
@@ -440,6 +449,50 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
+    public function criarSaurusPedido(Request $request)
+    {
+        $data = (object) $request->all();
+        $pdvSaurus = SaurusPdv::where('codsauruspdv', $request->pdv)->firstOrFail();
+        $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
+        $negocio = Negocio::findOrFail($request->codnegocio);
+        SaurusService::cancelarPedidosAbertosPdv($pdvSaurus->codsauruspdv);
+        
+        $idpedido = Uuid::uuid4();
+        $idfaturapag = Uuid::uuid4();
+
+        switch($data->tipo){
+            case 1:
+                $modpagamento = 4;
+                break;
+            case 2:
+                $modpagamento = 3;
+                break;
+            default:
+                $modpagamento = 3;
+        }
+
+
+        SaurusService::criarPedido(
+            $idpedido,
+            $pdvSaurus->codsauruspdv,
+            $data->codnegocio,
+            $data->valor,
+            $data->valorjuros ?? 0,
+            ($data->valorjuros ?? 0) + ($data->valor ?? 0),
+            $data->valorparcela ?? 0,
+            $idfaturapag,
+            $modpagamento,
+            $data->parcelas,
+            0,
+            $data->codpessoa,
+            now(), 
+            $pdvSaurus,
+            $pos
+        );
+
+        return new NegocioResource($negocio);
+    }
+
     public function consultarPagarMePedido($codpagarmepedido)
     {
         $pedido = PagarMePedido::findOrFail($codpagarmepedido);
@@ -447,11 +500,29 @@ class PdvController
         return new PagarMePedidoResource($pedido);
     }
 
+    public function consultarSaurusPedido($codsauruspedido)
+    {
+        $pedido = SaurusPedido::findOrFail($codsauruspedido);
+        if ($pedido->status == 0) {
+            $pedido = SaurusService::consultarPedido($pedido);
+        }
+        // $pedido = SaurusService::consultarPedido($pedido);
+        return new SaurusPedidoResource($pedido);
+    }
+
     public function cancelarPagarMePedido($codpagarmepedido)
     {
         $pedido = PagarMePedido::findOrFail($codpagarmepedido);
         $pedido = PagarMeService::cancelarPedido($pedido);
         return new PagarMePedidoResource($pedido);
+    }
+
+
+    public function cancelarSaurusPedido($codsauruspedido)
+    {
+        $pedido = SaurusPedido::findOrFail($codsauruspedido);
+        $pedido = SaurusService::cancelarPedido($pedido);
+        return new SaurusPedidoResource($pedido);
     }
 
     public function importarPagarMePedidosPendentes(request $request)
@@ -529,5 +600,154 @@ class PdvController
             throw new Exception("Este não é um Vale Compras!");
         }
         return new TituloResource($titulo);
+    }
+
+    public function registrarPosSaurus(Request $request)
+    {
+        $request->validate([
+            'pdv_uuid' => 'nullable|string',
+            'apelido' => 'required|string',
+            'contrato' => 'required|string',
+            'codfilial' => 'required|exists:tblfilial,codfilial',
+        ]);
+
+        $pdv_uuid = $request->pdv_uuid ?? Uuid::uuid4();
+        $pessoa = Pessoa::findOrFail(Filial::findOrFail($request->codfilial)->codpessoa);
+
+        $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
+
+        // get max numero pdv
+
+        $numero = SaurusPdv::select('numero')->orderBy('numero', 'desc')->first();
+
+        if ($numero) {
+            $numero = $numero->numero + 1;
+        }
+
+        if ($pdvSaurus && $pdvSaurus->vencimento > now()) {
+
+            return response()->json([
+                'success' => true,
+                'pdvsaurus' => $pdvSaurus
+            ], 200);
+            
+        } else {
+
+            $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $request->numero, $request->contrato);
+
+            SaurusPdv::updateOrCreate(
+                [
+                    'id' => $pdv_uuid,
+                ],
+                [
+                    'apelido' => $request->apelido,
+                    'autorizacao' => $responsePdvSaurus->autorizacao->response->chavePublica,
+                    'vencimento' => $responsePdvSaurus->autorizacao->response->vencimento,
+                    'chavepublica' => $responsePdvSaurus->pdv->response->chavePublica,
+                    'contratoid' => $responsePdvSaurus->pdv->response->contratoId,
+                    'codfilial' => $request->codfilial,
+                    'numero' => $numero,
+                ]
+            );
+
+            $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
+
+            return response()->json([
+                'success' => true,
+                'pdvsaurus' => $pdvSaurus
+            ], 200);
+
+        }
+    }
+
+    public function verificarLeituraSaurus(Request $request) {
+        $request->validate([
+            'pdv_uuid' => 'required|string',
+        ]);
+
+        $pdv_uuid = $request->pdv_uuid;
+
+        $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
+
+        $responsePdvSaurus = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
+
+        if(str_contains($responsePdvSaurus->retTexto, 'Chave de Autorização está Inválida')){
+
+            $autorizacao = ApiService::functionAutorizacao($pdvSaurus->id);
+
+            SaurusPdv::updateOrCreate(
+                [
+                    'id' => $pdv_uuid,
+                ],
+                [
+
+                    'autorizacao' => $autorizacao->response->chavePublica,
+                    'vencimento' => $autorizacao->response->vencimento,
+                ]
+            );
+
+            $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
+
+            $responsePdvSaurus = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
+        }
+
+        if(count($responsePdvSaurus->response->pinPads) > 0) {
+
+            
+            SaurusPinPad::updateOrCreate(
+                [
+                    'id' => $responsePdvSaurus->response->pinPads[0],
+                ],
+                [
+                    'apelido' => $pdvSaurus->apelido,
+                    'serial' => $responsePdvSaurus->response->pinPads[0],
+                    'codfilial' => $pdvSaurus->codfilial,
+                    'codsauruspdv' => $pdvSaurus->codsauruspdv,
+                ]
+            );
+     
+
+            return response()->json([
+                'success' => true,
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+            ], 200);
+        }
+
+    }
+
+    public function listaPdvsSaurus(Request $request) {
+        $pdvs = SaurusPdv::orderBy('criacao', 'desc')->with('SaurusPinPadS')->get();
+        return $pdvs;
+    }
+
+    public function editarPdvSaurus(Request $request, $codsauruspdv){
+        $request->validate([
+            'apelido' => 'required|string',
+            'codfilial' => 'required|exists:tblfilial,codfilial',
+        ]);
+
+        $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
+        $pdvSaurus->apelido = $request->apelido;
+        $pdvSaurus->codfilial = $request->codfilial;
+        $pdvSaurus->save();
+        return $pdvSaurus;
+
+    }
+
+    public function inativarPdvSaurus(Request $request, $codsauruspdv){
+        $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
+        $pdvSaurus->inativo = now();
+        $pdvSaurus->save();
+        return $pdvSaurus;
+    }
+
+    public function ativarPdvSaurus(Request $request, $codsauruspdv){
+        $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
+        $pdvSaurus->inativo = null;
+        $pdvSaurus->save();
+        return $pdvSaurus;
     }
 }
