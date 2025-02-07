@@ -48,7 +48,7 @@ class ApiService
         }
     }
 
-    public static function functionPdvRegistrar($chavePDV, $pessoa, $numero, $contratoId) {
+    public static function functionPdvRegistrar($chavePDV, $pessoa, $numero) {
     
         $autorizacao = self::functionAutorizacao($chavePDV, $pessoa->cnpj);
 
@@ -61,7 +61,6 @@ class ApiService
 
         $data = [
             'id' => $chavePDV,
-            'contratoId' => $contratoId,
             'dominio' => str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT), #pessoa-filial
             'numero' => $numero,
             'razaoSocial' => $pessoa->pessoa,#pessoa-filial
