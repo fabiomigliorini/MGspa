@@ -1285,6 +1285,7 @@ export const negocioStore = defineStore("negocio", {
       } catch (error) {
         console.log(error);
       }
+      return false;
     },
 
     async uploadAnexo(pasta, ratio, anexoBase64) {

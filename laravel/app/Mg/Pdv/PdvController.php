@@ -619,9 +619,10 @@ class PdvController
         // get max numero pdv
 
         $numero = SaurusPdv::select('numero')->orderBy('numero', 'desc')->first();
-
         if ($numero) {
             $numero = $numero->numero + 1;
+        } else {
+            $numero = 1;
         }
 
         if ($pdvSaurus && $pdvSaurus->vencimento > now()) {

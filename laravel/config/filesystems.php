@@ -77,6 +77,11 @@ return [
             'root' => env('NEGOCIO_ANEXO_PATH'),
         ],
 
+        'pessoa-anexo' => [
+            'driver' => 'local',
+            'root' => env('PESSOA_ANEXO_PATH'),
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -1,11 +1,10 @@
 <script setup>
 import { ref, watch, computed } from "vue";
-import { Notify, debounce } from "quasar";
+import { debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pagarMeStore } from "stores/pagar-me";
 import { saurusStore } from "stores/saurus";
 import emitter from "../../utils/emitter.js";
-import SelectPagarMePos from "../selects/SelectPagarMePos.vue";
 import SelectSaurusPos from "../selects/SelectSaurusPos.vue";
 import cartoesManuais from "../../data/cartoes-manuais.json";
 import moment from "moment/min/moment-with-locales";
@@ -18,12 +17,7 @@ const sSaurus = saurusStore();
 const pagamento = ref({});
 const parcelamentoDisponivel = ref([]);
 const formSaurus = ref(null);
-const stepManual = ref(1);
 const btnConsultarRef = ref(null);
-const opcoesPos = ref([
-  { name: "POS Stone/PagarMe", value: "pagarme" },
-  { name: "POS Safrapay/Saurus", value: "saurus" },
-]);
 
 const inicializarValores = () => {
   const padrao = {
@@ -159,156 +153,30 @@ const salvar = async () => {
   sNegocio.dialog.pagamentoSaurus = false;
 };
 
-const validarManual = async () => {
-  if (!pagamento.value.codpessoa) {
-    stepManual.value = 1;
-    Notify.create({
-      type: "negative",
-      message: "Selecione um parceiro!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
-  }
-
-  if (!pagamento.value.tipo) {
-    stepManual.value = 2;
-    Notify.create({
-      type: "negative",
-      message: "Preencha o Tipo!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
-  }
-
-  if (!pagamento.value.valor) {
-    stepManual.value = 3;
-    Notify.create({
-      type: "negative",
-      message: "Preencha o Valor!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
-  }
-
-  if (pagamento.value.valor > sNegocio.valorapagar) {
-    stepManual.value = 3;
-    Notify.create({
-      type: "negative",
-      message: "O Valor não pode ser maior que o saldo a pagar do Negócio!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
-  }
-
-  if (!pagamento.value.parcelas) {
-    stepManual.value = 3;
-    Notify.create({
-      type: "negative",
-      message: "Selecione a quantidade de Parcelas!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
-  }
-
-  if (!pagamento.value.bandeira) {
-    stepManual.value = 4;
-    Notify.create({
-      type: "negative",
-      message: "Selecione a Bandeira!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
-  }
-
-  if (!pagamento.value.autorizacao) {
-    stepManual.value = 5;
-    Notify.create({
-      type: "negative",
-      message: "Preencha o número de Autorização!",
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
-  }
-
-  return true;
-};
-
-const salvarManual = async () => {
-  if (!(await validarManual())) {
-    return;
-  }
-  const tipo = tiposManuais.value.find((el) => {
-    return pagamento.value.tipo == el.tipo;
-  });
-  await sNegocio.adicionarPagamento(
-    parseInt(process.env.CODFORMAPAGAMENTO_CARTAOMANUAL), // codformapagamento Dinheiro
-    tipo.tpag, // tipo
-    null, // codtitulo
-    pagamento.value.valor,
-    pagamento.value.valorjuros, // valorjuros
-    null, // valortroco
-    pagamento.value.codpessoa, // codpessoa
-    pagamento.value.bandeira, // bandeira
-    pagamento.value.autorizacao, // autorizacao
-    pagamento.value.parcelas,
-    pagamento.value.valorparcela
-  );
-  sNegocio.dialog.pagamentoCartaoManual = false;
-};
-
 const consultar = debounce(async () => {
-  if (edicao.value.maquineta === "saurus") {
-    await sSaurus.consultarPedido();
-    if (sSaurus.pedido.status == 2) {
-      sSaurus.dialog.detalhesPedido = false;
-      emitter.emit("pagamentoAdicionado");
-    }
-  } else if (edicao.value.maquineta === "pagarme") {
-    await sPagarMe.consultarPedido();
-    if (sPagarMe.pedido.status == 2) {
-      sPagarMe.dialog.detalhesPedido = false;
-      emitter.emit("pagamentoAdicionado");
-    }
+  await sSaurus.consultarPedido();
+  if (sSaurus.pedido.status == 2) {
+    sSaurus.dialog.detalhesPedido = false;
+    emitter.emit("pagamentoAdicionado");
   }
 }, 500);
 
 const cancelar = async () => {
-  console.log(edicao.value.maquineta);
-  if (edicao.value.maquineta === "saurus") {
-    await sSaurus.cancelarPedido();
-    if (sSaurus.pedido.status == 3) {
-      sSaurus.dialog.detalhesPedido = false;
-    }
-  } else if (edicao.value.maquineta === "pagarme") {
-    await sPagarMe.cancelarPedido();
-    if (sPagarMe.pedido.status == 3) {
-      sPagarMe.dialog.detalhesPedido = false;
-    }
+  await sSaurus.cancelarPedido();
+  if (sSaurus.pedido.status == 3) {
+    sSaurus.dialog.detalhesPedido = false;
   }
 };
 
 const fechar = async () => {
   sNegocio.dialog.pagamentoSaurus = false;
-
   sNegocio.dialog.pagamentoPagarMe = false;
-
   sNegocio.dialog.pagamentoCartaoManual = false;
 };
 
 const manual = async () => {
-  stepManual.value = 1;
-
   sNegocio.dialog.pagamentoSaurus = false;
-
   sNegocio.dialog.pagamentoPagarMe = false;
-
   sNegocio.dialog.pagamentoCartaoManual = true;
 };
 
@@ -356,39 +224,6 @@ const labelParceiro = computed(() => {
   return ret;
 });
 
-const vaiParaStepManual = async (step) => {
-  switch (step) {
-    case 1: // Parceiros
-      break;
-
-    case 2: // Tipo
-      if (pagamento.value.codpessoa) {
-        const pes = cartoesManuais.find((el) => {
-          return pagamento.value.codpessoa == el.codpessoa;
-        });
-        // se só tem um tipo vai para próximo step
-        if (pes.tipos.length == 1) {
-          vaiParaStepManual(step + 1);
-          return;
-        }
-      }
-      break;
-
-    case 4: // Bandeira
-      if (pagamento.value.codpessoa) {
-        const pes = cartoesManuais.find((el) => {
-          return pagamento.value.codpessoa == el.codpessoa;
-        });
-        if (pes.bandeiras.length == 1) {
-          vaiParaStepManual(step + 1);
-          return;
-        }
-      }
-      break;
-  }
-  stepManual.value = step;
-};
-
 const toStone = async () => {
   sNegocio.dialog.pagamentoSaurus = false;
   sNegocio.dialog.pagamentoCartaoManual = false;
@@ -397,10 +232,7 @@ const toStone = async () => {
 </script>
 <template>
   <!-- DIALOG NOVO PEDIDO -->
-  <q-dialog
-    v-model="sNegocio.dialog.pagamentoSaurus"
-    @before-show="inicializarValores()"
-  >
+  <q-dialog v-model="sNegocio.dialog.pagamentoSaurus" @before-show="inicializarValores()">
     <q-card style="width: 600px">
       <q-form @submit="salvar()" ref="formSaurus">
         <q-card-section>
@@ -408,32 +240,18 @@ const toStone = async () => {
             <!-- POS  -->
             <q-item>
               <q-item-section>
-                <select-saurus-pos
-                  outlined
-                  v-model="pagamento.codsauruspos"
-                  label="POS Safrapay/Saurus"
+                <select-saurus-pos outlined v-model="pagamento.codsauruspos" label="POS Safrapay/Saurus"
                   :codestoquelocal="sNegocio.negocio.codestoquelocal"
-                  :rules="[(value) => value || 'Selecione a Maquineta!']"
-                  clearable
-                />
+                  :rules="[(value) => value || 'Selecione a Maquineta!']" clearable />
               </q-item-section>
             </q-item>
 
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <q-input
-                  prefix="R$"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  :max="sNegocio.valorapagar"
-                  borderless
-                  v-model.number="pagamento.valor"
-                  :rules="valorRule"
-                  autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary "
-                />
+                <q-input prefix="R$" type="number" step="0.01" min="0.01" :max="sNegocio.valorapagar" borderless
+                  v-model.number="pagamento.valor" :rules="valorRule" autofocus
+                  input-class="text-h2 text-weight-bolder text-right text-primary " />
               </q-item-section>
             </q-item>
 
@@ -452,16 +270,8 @@ const toStone = async () => {
             <q-item v-if="pagamento.tipo == 2">
               <q-item-section>
                 <div class="row">
-                  <div
-                    class="col-xs-12 col-sm-6"
-                    v-for="parc in parcelamentoDisponivel"
-                    :key="parc.parcelas"
-                  >
-                    <q-radio
-                      v-model="pagamento.parcelas"
-                      :val="parc.parcelas"
-                      :disable="!parc.habilitado"
-                    >
+                  <div class="col-xs-12 col-sm-6" v-for="parc in parcelamentoDisponivel" :key="parc.parcelas">
+                    <q-radio v-model="pagamento.parcelas" :val="parc.parcelas" :disable="!parc.habilitado">
                       <b>{{ parc.parcelas }}</b>
                       <span class="text-grey"> x R$ </span>
                       <b>
@@ -483,41 +293,17 @@ const toStone = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="primary"
-            @click="fechar()"
-            tabindex="-1"
-          />
-          <q-btn
-            flat
-            label="Usar Stone"
-            color="primary"
-            @click="toStone()"
-            tabindex="-1"
-          />
-          <q-btn
-            type="button"
-            flat
-            label="Cartão Manual"
-            @click="manual()"
-            color="primary"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="primary" @click="fechar()" tabindex="-1" />
+          <q-btn flat label="Usar Stone" color="primary" @click="toStone()" tabindex="-1" />
+          <q-btn type="button" flat label="Cartão Manual" @click="manual()" color="primary" tabindex="-1" />
           <q-btn type="submit" flat label="Enviar Maquineta" color="primary" />
         </q-card-actions>
       </q-form>
     </q-card>
   </q-dialog>
 
-  <!-- DIALOG CARTAO MANUAL -->
-
   <!-- DIALOG DETALHES PEDIDO SAURUS-->
-  <q-dialog
-    v-model="sSaurus.dialog.detalhesPedido"
-    @show="btnConsultarRef.$el.focus()"
-  >
+  <q-dialog v-model="sSaurus.dialog.detalhesPedido" @show="btnConsultarRef.$el.focus()">
     <q-card style="width: 600px">
       <q-card-section>
         <div class="text-h6">
@@ -536,10 +322,7 @@ const toStone = async () => {
 
         <!-- PAGAMENTOS -->
         <q-list>
-          <template
-            v-for="pag in sSaurus.pedido.SaurusPagamentoS"
-            :key="pag.codsauruspagamento"
-          >
+          <template v-for="pag in sSaurus.pedido.SaurusPagamentoS" :key="pag.codsauruspagamento">
             <!-- VALOR -->
             <q-separator spaced />
             <template v-if="pag.valorcancelamento">
@@ -717,32 +500,11 @@ const toStone = async () => {
         </q-list>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn
-          flat
-          label="cancelar"
-          color="negative"
-          @click="cancelar()"
-          tabindex="-1"
-          v-if="sSaurus.pedido.status != 3"
-        />
-        <q-btn
-          flat
-          label="consultar"
-          color="primary"
-          @click="consultar()"
-          type="submit"
-          ref="btnConsultarRef"
-        />
-        <q-btn
-          flat
-          label="Fechar"
-          color="primary"
-          @click="sSaurus.dialog.detalhesPedido = false"
-          tabindex="-1"
-        />
+        <q-btn flat label="cancelar" color="negative" @click="cancelar()" tabindex="-1"
+          v-if="sSaurus.pedido.status != 3" />
+        <q-btn flat label="consultar" color="primary" @click="consultar()" type="submit" ref="btnConsultarRef" />
+        <q-btn flat label="Fechar" color="primary" @click="sSaurus.dialog.detalhesPedido = false" tabindex="-1" />
       </q-card-actions>
     </q-card>
   </q-dialog>
-
-  <!-- DIALOG DETALHES PEDIDO PAGARME-->
 </template>
