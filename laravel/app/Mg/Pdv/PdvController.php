@@ -607,7 +607,6 @@ class PdvController
         $request->validate([
             'pdv_uuid' => 'nullable|string',
             'apelido' => 'required|string',
-            'contrato' => 'required|string',
             'codfilial' => 'required|exists:tblfilial,codfilial',
         ]);
 
@@ -634,7 +633,7 @@ class PdvController
             
         } else {
 
-            $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $request->numero, $request->contrato);
+            $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $request->numero);
 
             SaurusPdv::updateOrCreate(
                 [

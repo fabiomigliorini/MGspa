@@ -24,18 +24,12 @@ const codsauruspdv = ref("");
 
 const apelido = ref("");
 const filial = ref("");
-const contrato = ref("");
 const qrCodeBasae64 = ref("");
 const loading = ref(false);
 
 const ruleApelido = [
   (v) => !!v || "Apelido é obrigatório",
   (v) => (v && v.length <= 50) || "Máximo de 50 caracteres",
-  (v) => (v && v.length >= 3) || "Mínimo de 3 caracteres",
-];
-
-const ruleContrato = [
-  (v) => !!v || "Contrato é obrigatório",
   (v) => (v && v.length >= 3) || "Mínimo de 3 caracteres",
 ];
 
@@ -52,7 +46,6 @@ const gerarQrCode = async () => {
     .post("api/v1/pdv/saurus/registrar-pos", {
       apelido: apelido.value,
       codfilial: filial.value,
-      contrato: contrato.value,
       pdv_uuid: pdv_uuid.value || null,
     })
     .then(async ({ data }) => {
@@ -125,8 +118,7 @@ const checkValidate = computed(() => {
   if (
     apelido.value.length < 3 ||
     apelido.value.length > 50 ||
-    !filial.value ||
-    !contrato.value
+    !filial.value
   ) {
     return true;
   }
@@ -145,7 +137,6 @@ const editarMaquineta = (pdv) => {
   apelido.value = pdv.apelido;
   filial.value = pdv.codfilial;
   pdv_uuid.value = pdv.id;
-  contrato.value = pdv.contratoid;
 };
 
 const salvarMaquineta = async () => {
@@ -269,7 +260,6 @@ const definirPinPad = async (pdv) => {
   apelido.value = pdv.apelido;
   filial.value = pdv.codfilial;
   pdv_uuid.value = pdv.id;
-  contrato.value = pdv.contratoid;
   openModalCadastro.value = true;
 };
 
@@ -278,7 +268,6 @@ watch(openModalCadastro, (value) => {
     qrCodeBasae64.value = "";
     apelido.value = "";
     filial.value = "";
-    contrato.value = "";
     pdv_uuid.value = "";
     isValid.value = false;
   }
@@ -289,7 +278,6 @@ watch(openModalEditCadastro, (value) => {
     codsauruspdv.value = "";
     apelido.value = "";
     filial.value = "";
-    contrato.value = "";
     pdv_uuid.value = "";
     isValid.value = false;
   }
@@ -333,18 +321,6 @@ onMounted(() => {
               class="col-12"
               maxlength="50"
               :rules="ruleApelido"
-              :disable="isValid"
-            />
-
-            <!-- input contrato -->
-            <q-input
-              v-model="contrato"
-              ref="inputContrato"
-              outlined
-              label="Contrato"
-              class="col-12"
-              maxlength="50"
-              :rules="ruleContrato"
               :disable="isValid"
             />
 
