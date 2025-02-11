@@ -235,6 +235,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('saurus/pdv/{codsauruspdv}', '\Mg\Pdv\PdvController@editarPdvSaurus');
             Route::get('saurus/pdv/{codsauruspdv}/inativar', '\Mg\Pdv\PdvController@inativarPdvSaurus');
             Route::get('saurus/pdv/{codsauruspdv}/ativar', '\Mg\Pdv\PdvController@ativarPdvSaurus');
+            Route::get('saurus/pedido/{codsauruspedido}/reenviar', '\Mg\Pdv\PdvController@reenviarSaurusPedido');
         });
 
         // METAS

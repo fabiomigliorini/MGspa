@@ -2,6 +2,7 @@
 
 namespace Mg\Saurus;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Mg\Filial\Filial;
 use Mg\FormaPagamento\FormaPagamento;
@@ -97,7 +98,7 @@ class SaurusService
             $responseAutorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
 
             $pdv->autorizacao = $responseAutorizacao->response->chavePublica;
-            $pdv->vencimento = $responseAutorizacao->response->vencimento;
+            $pdv->vencimento = Carbon::parse($responseAutorizacao->response->vencimento)->subHour(1)->subMinutes(10);
 
             $pdv->save();
         }
@@ -123,7 +124,7 @@ class SaurusService
             $responseAutorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
 
             $pdv->autorizacao = $responseAutorizacao->response->chavePublica;
-            $pdv->vencimento = $responseAutorizacao->response->vencimento;
+            $pdv->vencimento = Carbon::parse($responseAutorizacao->response->vencimento)->subHour(1)->subMinutes(10);
 
             $pdv->save();
         }
