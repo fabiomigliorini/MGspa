@@ -86,6 +86,35 @@ export const saurusStore = defineStore("saurus", {
       }
     },
 
+    async reenviarPedido() {
+      try {
+        const { data } = await api.get(
+          "/api/v1/pdv/saurus/pedido/" +
+            this.pedido.codsauruspedido +
+            "/reenviar"
+        );
+        Notify.create({
+          type: "positive",
+          message: "Reenvio Efetuado!",
+          timeout: 1000, // 1 segundo
+          actions: [{ icon: "close", color: "white" }],
+        });
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+    },
+
     async cancelarPedido() {
       try {
         const { data } = await api.delete(

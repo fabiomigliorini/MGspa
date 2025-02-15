@@ -19,6 +19,7 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloResource;
 use Mg\Titulo\TituloService;
 use App\Rules\InscricaoEstadual;
+use Carbon\Carbon;
 use Mg\Filial\Filial;
 use Mg\Pessoa\Pessoa;
 use Mg\Produto\ProdutoService;
@@ -493,6 +494,40 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
+    public function reenviarSaurusPedido($codsauruspedido)
+    {
+        $pedido = SaurusPedido::findOrFail($codsauruspedido);
+        
+        $pdv = SaurusPdv::where('codsauruspdv', $pedido->codsauruspdv)->firstOrFail();
+        $pos = SaurusPinPad::where('codsauruspdv', $pdv->codsauruspdv)->firstOrFail();
+
+        if($pdv->vencimento < now()) {
+
+            $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdv->codfilial)->codpessoa);
+
+            $autorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
+
+            SaurusPdv::updateOrCreate(
+                [
+                    'id' => $pdv->id,
+                ],
+                [
+
+                    'autorizacao' => $autorizacao->response->chavePublica,
+                    'vencimento' => Carbon::parse($autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
+                ]
+            );
+
+            $pdv->fresh();
+        }
+
+        $pedidoResponse = ApiService::functionPedidoCriar($pedido, $pdv, $pos);
+
+        $negocio = Negocio::findOrFail($pedido->codnegocio);
+
+        return new NegocioResource($negocio);
+    }
+
     public function consultarPagarMePedido($codpagarmepedido)
     {
         $pedido = PagarMePedido::findOrFail($codpagarmepedido);
@@ -615,15 +650,7 @@ class PdvController
 
         $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
 
-        // get max numero pdv
-
-        $numero = SaurusPdv::select('numero')->orderBy('numero', 'desc')->first();
-        if ($numero) {
-            $numero = $numero->numero + 1;
-        } else {
-            $numero = 1;
-        }
-
+        
         if ($pdvSaurus && $pdvSaurus->vencimento > now()) {
 
             return response()->json([
@@ -633,7 +660,18 @@ class PdvController
             
         } else {
 
-            $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $request->numero);
+            if ($pdvSaurus) {
+                $numero = $pdvSaurus->numero;
+            } else {
+                $numero = SaurusPdv::select('numero')->orderBy('numero', 'desc')->first();
+                if ($numero) {
+                    $numero = $numero->numero + 1;
+                } else {
+                    $numero = 1;
+                }
+            }
+
+            $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $numero);
 
             SaurusPdv::updateOrCreate(
                 [
@@ -642,7 +680,7 @@ class PdvController
                 [
                     'apelido' => $request->apelido,
                     'autorizacao' => $responsePdvSaurus->autorizacao->response->chavePublica,
-                    'vencimento' => $responsePdvSaurus->autorizacao->response->vencimento,
+                    'vencimento' => Carbon::parse($responsePdvSaurus->autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
                     'chavepublica' => $responsePdvSaurus->pdv->response->chavePublica,
                     'contratoid' => $responsePdvSaurus->pdv->response->contratoId,
                     'codfilial' => $request->codfilial,
@@ -684,7 +722,7 @@ class PdvController
                 [
 
                     'autorizacao' => $autorizacao->response->chavePublica,
-                    'vencimento' => $autorizacao->response->vencimento,
+                    'vencimento' => Carbon::parse($autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
                 ]
             );
 

@@ -161,6 +161,10 @@ const consultar = debounce(async () => {
   }
 }, 500);
 
+const reenviar = async () => {
+  await sSaurus.reenviarPedido();
+};
+
 const cancelar = async () => {
   await sSaurus.cancelarPedido();
   if (sSaurus.pedido.status == 3) {
@@ -232,7 +236,10 @@ const toStone = async () => {
 </script>
 <template>
   <!-- DIALOG NOVO PEDIDO -->
-  <q-dialog v-model="sNegocio.dialog.pagamentoSaurus" @before-show="inicializarValores()">
+  <q-dialog
+    v-model="sNegocio.dialog.pagamentoSaurus"
+    @before-show="inicializarValores()"
+  >
     <q-card style="width: 600px">
       <q-form @submit="salvar()" ref="formSaurus">
         <q-card-section>
@@ -240,18 +247,32 @@ const toStone = async () => {
             <!-- POS  -->
             <q-item>
               <q-item-section>
-                <select-saurus-pos outlined v-model="pagamento.codsauruspos" label="POS Safrapay/Saurus"
+                <select-saurus-pos
+                  outlined
+                  v-model="pagamento.codsauruspos"
+                  label="POS Safrapay/Saurus"
                   :codestoquelocal="sNegocio.negocio.codestoquelocal"
-                  :rules="[(value) => value || 'Selecione a Maquineta!']" clearable />
+                  :rules="[(value) => value || 'Selecione a Maquineta!']"
+                  clearable
+                />
               </q-item-section>
             </q-item>
 
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <q-input prefix="R$" type="number" step="0.01" min="0.01" :max="sNegocio.valorapagar" borderless
-                  v-model.number="pagamento.valor" :rules="valorRule" autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary " />
+                <q-input
+                  prefix="R$"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  :max="sNegocio.valorapagar"
+                  borderless
+                  v-model.number="pagamento.valor"
+                  :rules="valorRule"
+                  autofocus
+                  input-class="text-h2 text-weight-bolder text-right text-primary "
+                />
               </q-item-section>
             </q-item>
 
@@ -270,8 +291,16 @@ const toStone = async () => {
             <q-item v-if="pagamento.tipo == 2">
               <q-item-section>
                 <div class="row">
-                  <div class="col-xs-12 col-sm-6" v-for="parc in parcelamentoDisponivel" :key="parc.parcelas">
-                    <q-radio v-model="pagamento.parcelas" :val="parc.parcelas" :disable="!parc.habilitado">
+                  <div
+                    class="col-xs-12 col-sm-6"
+                    v-for="parc in parcelamentoDisponivel"
+                    :key="parc.parcelas"
+                  >
+                    <q-radio
+                      v-model="pagamento.parcelas"
+                      :val="parc.parcelas"
+                      :disable="!parc.habilitado"
+                    >
                       <b>{{ parc.parcelas }}</b>
                       <span class="text-grey"> x R$ </span>
                       <b>
@@ -293,9 +322,28 @@ const toStone = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="fechar()" tabindex="-1" />
-          <q-btn flat label="Usar Stone" color="primary" @click="toStone()" tabindex="-1" />
-          <q-btn type="button" flat label="Cartão Manual" @click="manual()" color="primary" tabindex="-1" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="primary"
+            @click="fechar()"
+            tabindex="-1"
+          />
+          <q-btn
+            flat
+            label="Usar Stone"
+            color="primary"
+            @click="toStone()"
+            tabindex="-1"
+          />
+          <q-btn
+            type="button"
+            flat
+            label="Cartão Manual"
+            @click="manual()"
+            color="primary"
+            tabindex="-1"
+          />
           <q-btn type="submit" flat label="Enviar Maquineta" color="primary" />
         </q-card-actions>
       </q-form>
@@ -303,7 +351,10 @@ const toStone = async () => {
   </q-dialog>
 
   <!-- DIALOG DETALHES PEDIDO SAURUS-->
-  <q-dialog v-model="sSaurus.dialog.detalhesPedido" @show="btnConsultarRef.$el.focus()">
+  <q-dialog
+    v-model="sSaurus.dialog.detalhesPedido"
+    @show="btnConsultarRef.$el.focus()"
+  >
     <q-card style="width: 600px">
       <q-card-section>
         <div class="text-h6">
@@ -322,7 +373,10 @@ const toStone = async () => {
 
         <!-- PAGAMENTOS -->
         <q-list>
-          <template v-for="pag in sSaurus.pedido.SaurusPagamentoS" :key="pag.codsauruspagamento">
+          <template
+            v-for="pag in sSaurus.pedido.SaurusPagamentoS"
+            :key="pag.codsauruspagamento"
+          >
             <!-- VALOR -->
             <q-separator spaced />
             <template v-if="pag.valorcancelamento">
@@ -451,7 +505,7 @@ const toStone = async () => {
               </q-item-section>
               <q-item-section>
                 <q-item-label>
-                  POS {{ sSaurus.pedido.apelido }} Serial
+                  POS: {{ sSaurus.pedido.apelido }} <br />Serial:
                   {{ sSaurus.pedido.pos }}
                 </q-item-label>
                 <q-item-label caption>
@@ -500,10 +554,37 @@ const toStone = async () => {
         </q-list>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat label="cancelar" color="negative" @click="cancelar()" tabindex="-1"
-          v-if="sSaurus.pedido.status != 3" />
-        <q-btn flat label="consultar" color="primary" @click="consultar()" type="submit" ref="btnConsultarRef" />
-        <q-btn flat label="Fechar" color="primary" @click="sSaurus.dialog.detalhesPedido = false" tabindex="-1" />
+        <q-btn
+          flat
+          label="cancelar"
+          color="negative"
+          @click="cancelar()"
+          tabindex="-1"
+          v-if="sSaurus.pedido.status != 3"
+        />
+        <q-btn
+          flat
+          label="consultar"
+          color="primary"
+          @click="consultar()"
+          type="submit"
+          ref="btnConsultarRef"
+        />
+        <q-btn
+          v-if="sSaurus.pedido.status == 0"
+          flat
+          label="Reenviar"
+          color="primary"
+          @click="reenviar()"
+          tabindex="-1"
+        />
+        <q-btn
+          flat
+          label="Fechar"
+          color="primary"
+          @click="sSaurus.dialog.detalhesPedido = false"
+          tabindex="-1"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>

@@ -62,7 +62,7 @@ class ApiService
         $data = [
             'id' => $chavePDV,
             'dominio' => str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT), #pessoa-filial
-            'numero' => $numero,
+            'numero' => "$numero",
             'razaoSocial' => $pessoa->pessoa,#pessoa-filial
             'documento' => str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT),#pessoa-filial
             'chavePublica' => env('SAURUS_S2PAY_CREDENTIAL'), #env
