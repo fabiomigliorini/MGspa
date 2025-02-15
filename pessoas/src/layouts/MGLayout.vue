@@ -1,6 +1,6 @@
 <script setup>
 
-import { ref, defineProps } from 'vue'
+import { ref } from 'vue'
 import { Dialog } from 'quasar';
 import { version } from "../../package.json";
 import MgMenu from 'layouts/MGMenu.vue';

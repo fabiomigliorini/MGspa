@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('v1/auth/user', '\Mg\Usuario\UsuarioController@permissoesUsuarios');
+Route::middleware(['auth:api', 'cors'])->get('v1/auth/user', '\Mg\Usuario\UsuarioController@permissoesUsuarios');
 
 Route::middleware('auth:api')->get('v1/auth/logout', function (Request $request) {
     $user =  $request->user();
@@ -51,6 +51,7 @@ Route::group(['prefix' => 'v1'], function () {
     // Pessoa
     Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
     Route::get('pessoa/verifica-ie-sefaz', '\Mg\Pessoa\PessoaController@verificaIeSefaz');
+    Route::get('pessoa/{codpessoa}/anexo/{status}/{arquivo}', '\Mg\Pessoa\PessoaAnexoController@get');
 
     // PDV
     Route::group(['prefix' => 'pdv'], function () {
@@ -254,6 +255,12 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@inativar');
         Route::delete('pessoa/{codpessoa}/inativo', '\Mg\Pessoa\PessoaController@ativar');
         Route::post('pessoa/{codpessoa}/transferir-mercos-id', '\Mg\Pessoa\PessoaController@transferirMercosId');
+        Route::post('pessoa/{codpessoa}/anexo', '\Mg\Pessoa\PessoaAnexoController@upload');
+        Route::get('pessoa/{codpessoa}/anexo', '\Mg\Pessoa\PessoaAnexoController@index');
+        Route::put('pessoa/{codpessoa}/anexo/ativo/{nome}', '\Mg\Pessoa\PessoaAnexoController@update');
+        Route::delete('pessoa/{codpessoa}/anexo/ativo/{nome}', '\Mg\Pessoa\PessoaAnexoController@inativar');
+        Route::delete('pessoa/{codpessoa}/anexo/inativo/{nome}', '\Mg\Pessoa\PessoaAnexoController@delete');
+        Route::patch('pessoa/{codpessoa}/anexo/inativo/{nome}', '\Mg\Pessoa\PessoaAnexoController@ativar');
 
         //GrupoCliente
         Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index');
