@@ -157,7 +157,7 @@ class PdvController
             // valida a IE na UF
             $request->validate([
                 'ie' => new InscricaoEstadual($uf),
-            ]);    
+            ]);
         }
 
         // valida restante dos campos
@@ -457,11 +457,11 @@ class PdvController
         $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
         $negocio = Negocio::findOrFail($request->codnegocio);
         SaurusService::cancelarPedidosAbertosPdv($pdvSaurus->codsauruspdv);
-        
+
         $idpedido = Uuid::uuid4();
         $idfaturapag = Uuid::uuid4();
 
-        switch($data->tipo){
+        switch ($data->tipo) {
             case 1:
                 $modpagamento = 4;
                 break;
@@ -486,7 +486,7 @@ class PdvController
             $data->parcelas,
             0,
             $data->codpessoa,
-            now(), 
+            now(),
             $pdvSaurus,
             $pos
         );
@@ -497,11 +497,11 @@ class PdvController
     public function reenviarSaurusPedido($codsauruspedido)
     {
         $pedido = SaurusPedido::findOrFail($codsauruspedido);
-        
+
         $pdv = SaurusPdv::where('codsauruspdv', $pedido->codsauruspdv)->firstOrFail();
         $pos = SaurusPinPad::where('codsauruspdv', $pdv->codsauruspdv)->firstOrFail();
 
-        if($pdv->vencimento < now()) {
+        if ($pdv->vencimento < now()) {
 
             $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdv->codfilial)->codpessoa);
 
@@ -639,66 +639,69 @@ class PdvController
 
     public function registrarPosSaurus(Request $request)
     {
+
+        // valida campos requeridos
         $request->validate([
             'pdv_uuid' => 'nullable|string',
             'apelido' => 'required|string',
             'codfilial' => 'required|exists:tblfilial,codfilial',
         ]);
 
+        // se nao veio uuid, gera um
         $pdv_uuid = $request->pdv_uuid ?? Uuid::uuid4();
-        $pessoa = Pessoa::findOrFail(Filial::findOrFail($request->codfilial)->codpessoa);
 
+        // verifica se já existe um pdv com esse uuid cadastrado
         $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
-
-        
         if ($pdvSaurus && $pdvSaurus->vencimento > now()) {
-
             return response()->json([
                 'success' => true,
                 'pdvsaurus' => $pdvSaurus
             ], 200);
-            
-        } else {
-
-            if ($pdvSaurus) {
-                $numero = $pdvSaurus->numero;
-            } else {
-                $numero = SaurusPdv::select('numero')->orderBy('numero', 'desc')->first();
-                if ($numero) {
-                    $numero = $numero->numero + 1;
-                } else {
-                    $numero = 1;
-                }
-            }
-
-            $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $numero);
-
-            SaurusPdv::updateOrCreate(
-                [
-                    'id' => $pdv_uuid,
-                ],
-                [
-                    'apelido' => $request->apelido,
-                    'autorizacao' => $responsePdvSaurus->autorizacao->response->chavePublica,
-                    'vencimento' => Carbon::parse($responsePdvSaurus->autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
-                    'chavepublica' => $responsePdvSaurus->pdv->response->chavePublica,
-                    'contratoid' => $responsePdvSaurus->pdv->response->contratoId,
-                    'codfilial' => $request->codfilial,
-                    'numero' => $numero,
-                ]
-            );
-
-            $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
-
-            return response()->json([
-                'success' => true,
-                'pdvsaurus' => $pdvSaurus
-            ], 200);
-
         }
+
+        // busca a pessoa
+        $pessoa = Filial::findOrFail($request->codfilial)->pessoa;//Pessoa::findOrFail(->codpessoa);
+
+        // se nao tem numero, busca o proximo na filial
+        if ($pdvSaurus) {
+            $numero = $pdvSaurus->numero;
+        } else {
+            $numero = SaurusPdv::select('numero')->where('codfilial', $request->codfilial)->orderBy('numero', 'desc')->first();
+            if ($numero) {
+                $numero = $numero->numero + 1;
+            } else {
+                $numero = 1;
+            }
+        }
+
+        // faz a chamada na api da saurus criando o pdv 
+        $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $numero);
+
+        // salva retorno na tabela
+        $pdvSaurus = SaurusPdv::updateOrCreate(
+            [
+                'id' => $pdv_uuid,
+            ],
+            [
+                'apelido' => $request->apelido,
+                'autorizacao' => $responsePdvSaurus->autorizacao->response->chavePublica,
+                'vencimento' => Carbon::parse($responsePdvSaurus->autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
+                'chavepublica' => $responsePdvSaurus->pdv->response->chavePublica,
+                'contratoid' => $responsePdvSaurus->pdv->response->contratoId,
+                'codfilial' => $request->codfilial,
+                'numero' => $numero,
+            ]
+        );
+
+        // retorna o pdv criado
+        return response()->json([
+            'success' => true,
+            'pdvsaurus' => $pdvSaurus
+        ], 200);
     }
 
-    public function verificarLeituraSaurus(Request $request) {
+    public function verificarLeituraSaurus(Request $request)
+    {
         $request->validate([
             'pdv_uuid' => 'required|string',
         ]);
@@ -711,7 +714,7 @@ class PdvController
 
         $responsePdvSaurus = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
 
-        if(str_contains($responsePdvSaurus->retTexto, 'Chave de Autorização está Inválida')){
+        if (str_contains($responsePdvSaurus->retTexto, 'Chave de Autorização está Inválida')) {
 
             $autorizacao = ApiService::functionAutorizacao($pdvSaurus->id, $pessoa->cnpj);
 
@@ -731,9 +734,9 @@ class PdvController
             $responsePdvSaurus = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
         }
 
-        if(count($responsePdvSaurus->response->pinPads) > 0) {
+        if (count($responsePdvSaurus->response->pinPads) > 0) {
 
-            
+
             SaurusPinPad::updateOrCreate(
                 [
                     'id' => $responsePdvSaurus->response->pinPads[0],
@@ -745,7 +748,7 @@ class PdvController
                     'codsauruspdv' => $pdvSaurus->codsauruspdv,
                 ]
             );
-     
+
 
             return response()->json([
                 'success' => true,
@@ -755,15 +758,16 @@ class PdvController
                 'success' => false,
             ], 200);
         }
-
     }
 
-    public function listaPdvsSaurus(Request $request) {
+    public function listaPdvsSaurus(Request $request)
+    {
         $pdvs = SaurusPdv::orderBy('criacao', 'desc')->with('SaurusPinPadS')->get();
         return $pdvs;
     }
 
-    public function editarPdvSaurus(Request $request, $codsauruspdv){
+    public function editarPdvSaurus(Request $request, $codsauruspdv)
+    {
         $request->validate([
             'apelido' => 'required|string',
             'codfilial' => 'required|exists:tblfilial,codfilial',
@@ -774,17 +778,18 @@ class PdvController
         $pdvSaurus->codfilial = $request->codfilial;
         $pdvSaurus->save();
         return $pdvSaurus;
-
     }
 
-    public function inativarPdvSaurus(Request $request, $codsauruspdv){
+    public function inativarPdvSaurus(Request $request, $codsauruspdv)
+    {
         $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
         $pdvSaurus->inativo = now();
         $pdvSaurus->save();
         return $pdvSaurus;
     }
 
-    public function ativarPdvSaurus(Request $request, $codsauruspdv){
+    public function ativarPdvSaurus(Request $request, $codsauruspdv)
+    {
         $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
         $pdvSaurus->inativo = null;
         $pdvSaurus->save();

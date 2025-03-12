@@ -61,7 +61,7 @@ class ApiService
 
         $data = [
             'id' => $chavePDV,
-            'dominio' => str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT), #pessoa-filial
+            'dominio' => env('SAURUS_S2PAY_DOMINIO'),
             'numero' => "$numero",
             'razaoSocial' => $pessoa->pessoa,#pessoa-filial
             'documento' => str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT),#pessoa-filial
@@ -86,7 +86,6 @@ class ApiService
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
         curl_close($curl);
-
         
         if ($response === false) {
             throw new \Exception('Falha ao acessar API da Saurus!', 1);
