@@ -10,7 +10,7 @@
 /Lio
 /Stone
 /Pix
-
+/.idea
 .php_cs.cache
 
 /utils/DB/*.pdf

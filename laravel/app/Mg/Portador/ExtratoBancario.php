@@ -26,13 +26,26 @@ class ExtratoBancario extends MgModel
         'lancamento',
         'numero',
         'observacoes',
-        'valor'
+        'valor',
+        'indicadortipolancamento',
+        'codigoagenciaorigem',
+        'numerolote',
+        'codigohistorico',
+        'textodescricaohistorico',
+        'indicadorsinallancamento',
+        'textoinformacaocomplementar',
+        'numerocpfcnpjcontrapartida',
+        'indicadortipopessoacontrapartida',
+        'codigobancocontrapartida',
+        'numerocontacontrapartida',
+        'textodvcontacontrapartida'
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
-        'lancamento'
+        'lancamento',
+        'movimento'
     ];
 
     protected $casts = [
