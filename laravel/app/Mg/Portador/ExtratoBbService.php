@@ -32,7 +32,7 @@ class ExtratoBbService
     }
     public static function consultarExtrato(Portador $portador, $dataInicioSolicitacao, $dataFimSolicitacao)
     {
-        $numeroPaginaSolicitacao = 1; //TODO Rodar as paginas
+        $numeroPaginaSolicitacao = 1;
         $registros = 0;
         $falhas = 0;
 
@@ -50,7 +50,7 @@ class ExtratoBbService
                 $numeroPaginaSolicitacao
             );
 
-            //TODO: Tratar erro
+            //TODO: Tratar possíveis erros da api
 
             foreach ($extrato['listaLancamento'] as $lancamento) {
 

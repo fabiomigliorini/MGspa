@@ -56,7 +56,6 @@ class ExtratoBbApiService
         Carbon $dataFimSolicitacao = null,
         $numeroPaginaSolicitacao = 1
     ){
-        //TODO: Falta os argumentos de data
         $url = env('BB_URL_EXTRATO') . '/conta-corrente/agencia/' . $agenciaBeneficiario . '/conta/' . $contaBeneficiario
             . '?gw-dev-app-key=' . $gwDevAppKey
             . '&numeroPaginaSolicitacao=' . $numeroPaginaSolicitacao;
