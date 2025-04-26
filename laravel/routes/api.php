@@ -600,6 +600,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // Portador
         Route::get('portador', '\Mg\Portador\PortadorController@index');
+        Route::get('portador/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
         Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
         Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
