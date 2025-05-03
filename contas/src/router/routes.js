@@ -1,10 +1,24 @@
 const routes = [
+  // ROTAS LIVRES
+  {
+    path: "/login",
+    name: "login",
+    component: () => import("pages/Login.vue"),
+  },
+  // ROTAS AUTENTICADAS
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    //component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
-    ]
+      {
+        path: "",
+        name: "inicio",
+        component: () => import('pages/IndexPage.vue')
+      }
+    ],
+    meta: {
+      auth: true,
+    },
   },
 
   // Always leave this as last one,

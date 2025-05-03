@@ -1,13 +1,13 @@
 <template>
-  <q-page class="flex flex-center">
-    <img
-      alt="Quasar logo"
-      src="~assets/quasar-logo-vertical.svg"
-      style="width: 200px; height: 200px"
-    >
-  </q-page>
+  <MGLayout>
+    <template #tituloPagina> Início </template>
+    <template #content>
+      <span>Hello World</span>
+    </template>
+  </MGLayout>
 </template>
 
 <script setup>
 //
+import MGLayout from 'layouts/MGLayout.vue'
 </script>

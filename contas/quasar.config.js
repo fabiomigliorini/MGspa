@@ -3,7 +3,7 @@
 
 import { defineConfig } from '#q-app/wrappers'
 
-export default defineConfig((/* ctx */) => {
+export default defineConfig(( ctx ) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -50,7 +50,12 @@ export default defineConfig((/* ctx */) => {
 
       // publicPath: '/',
       // analyze: true,
-      // env: {},
+      env: {
+        API_URL: ctx.dev
+          ? 'https://api-mgspa-dev.mgpapelaria.com.br/api/'
+          : 'https://api-mgspa.mgpapelaria.com.br/api/',
+        API_AUTH_URL: "https://auth-dev.mgpapelaria.com.br"
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
@@ -72,7 +77,12 @@ export default defineConfig((/* ctx */) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
     devServer: {
-      // https: true,
+      //server: {
+      //  type: "https",
+      //},
+      allowedHosts: '*',
+      https: true,
+      port: 8086,
       open: true // opens browser window automatically
     },
 
@@ -91,7 +101,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: ["Dialog"]
     },
 
     // animations: 'all', // --- includes all animations
