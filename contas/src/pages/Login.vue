@@ -16,7 +16,6 @@ const auth = authStore()
 const verificaAuth = async () => {
   const route = useRoute()
   const sPessoa = pessoaStore()
-  auth.urlRetorno = "teste";
   // const urlParams = new URLSearchParams(window.location.search);
   // const Token = urlParams.get("accesstoken");
   if(route.redirectedFrom && route.redirectedFrom.href != "#/") {

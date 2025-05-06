@@ -120,4 +120,12 @@ class ExtratoBbService
             'falhas' => $falhas,
         ];
     }
+
+    public static function listaExtratos($codportador, $per_page){
+        $extratosPage = ExtratoBancario::where('codportador', '=', $codportador
+        )->orderBy('criacao', 'desc'
+        )->paginate($per_page);
+
+        return $extratosPage;
+    }
 }

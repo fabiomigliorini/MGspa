@@ -61,4 +61,17 @@ class PortadorController extends MgController
 
 
     }
+
+    public function listaExtratos(Request $request, $codportador){
+        $per_page = $request->limit??50;
+
+        $extratosPage = ExtratoBbService::listaExtratos($codportador, $per_page);
+
+        return response()->json([
+            'data' => $extratosPage->items(),
+            'current_page' => $extratosPage->currentPage(),
+            'last_page' => $extratosPage->lastPage(),
+            'total' => $extratosPage->total()
+        ]);
+    }
 }
