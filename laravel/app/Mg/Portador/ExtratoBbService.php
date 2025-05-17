@@ -2,6 +2,7 @@
 
 namespace App\Mg\Portador;
 
+use Exception;
 use Carbon\Carbon;
 use Mg\Portador\ExtratoBancario;
 use Mg\Portador\Portador;
@@ -50,10 +51,16 @@ class ExtratoBbService
                 $numeroPaginaSolicitacao
             );
 
+            if (isset($extrato['erros'])) {
+                throw new Exception($extrato['erros'][0]['mensagem'], 1);
+            }
+
             //TODO: Tratar possíveis erros da api
-
+            // if (!isset($extrato['listaLancamento'])) {
+            //     dd($extrato);
+            //     continue;
+            // }
             foreach ($extrato['listaLancamento'] as $lancamento) {
-
 
                 /* $trntype = null;
                  switch ($lancamento['indicadorSinalLancamento']){
@@ -70,18 +77,10 @@ class ExtratoBbService
                      'trntype' => $trntype,
                  ]);*/
 
-                $extratoBancario = ExtratoBancario::where([
+                 $extratoBancario = ExtratoBancario::firstOrNew([
                     'codportador' => $portador->codportador,
                     'fitid' => $lancamento['numeroDocumento'],
-                ])->first();
-
-                if ($extratoBancario) {
-                    continue;
-                }
-                //TODO: Ver porque não funcionou com findOrNew
-                $extratoBancario = new ExtratoBancario();
-                $extratoBancario->codportador = $portador->codportador;
-                $extratoBancario->fitid = $lancamento['numeroDocumento'];
+                 ]);
 
                 //$extratoBancario->codextratobancariotipomovimento = $tipo->codextratobancariotipomovimento;
                 $extratoBancario->indicadortipolancamento = $lancamento['indicadorTipoLancamento'];
@@ -116,6 +115,8 @@ class ExtratoBbService
         return [
             'codportador' => $portador->codportador,
             'portador' => $portador->portador,
+            'inicio' => $dataInicioSolicitacao->format('Y-m-d'),
+            'fim' => $dataFimSolicitacao->format('Y-m-d'),
             'registros' => $registros,
             'falhas' => $falhas,
         ];
