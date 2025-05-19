@@ -102,6 +102,11 @@
                 "tabela": "tblpdv",
                 "coluna": "codportador",
                 "metodo": "PdvS"
+            },
+            "tblportadorsaldo.codportador": {
+                "tabela": "tblportadorsaldo",
+                "coluna": "codportador",
+                "metodo": "PortadorSaldoS"
             }
         }
     },
@@ -8568,5 +8573,20 @@
                 "metodo": "SaurusPagamentoS"
             }
         }
+    },
+    "tblportadorsaldo": {
+        "tabela": "tblportadorsaldo",
+        "campocodigo": "codportadorsaldo",
+        "namespace": "Mg\\Portador",
+        "classe": "PortadorSaldo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Portador\/PortadorSaldo.php",
+        "belongsTo": {
+            "codportador": {
+                "tabela": "tblportador",
+                "coluna": "codportador",
+                "metodo": "Portador"
+            }
+        },
+        "hasMany": []
     }
 }

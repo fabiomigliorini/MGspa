@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Apr/2024 12:12:52
+ * Date: 19/May/2025 15:57:17
  */
 
 namespace Mg\Portador;
@@ -21,6 +21,7 @@ use Mg\Portador\ExtratoBancario;
 use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorTransferencia;
 use Mg\Pdv\Pdv;
+use Mg\Portador\PortadorSaldo;
 use Mg\Banco\Banco;
 use Mg\Filial\Filial;
 
@@ -151,6 +152,11 @@ class Portador extends MgModel
     public function PortadorMovimentoS()
     {
         return $this->hasMany(PortadorMovimento::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorSaldoS()
+    {
+        return $this->hasMany(PortadorSaldo::class, 'codportador', 'codportador');
     }
 
     public function PortadorTransferenciaDestinoS()
