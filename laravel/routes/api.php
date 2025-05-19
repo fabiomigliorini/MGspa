@@ -602,6 +602,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('portador', '\Mg\Portador\PortadorController@index');
         Route::get('portador/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
         Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
+        Route::get('portador/{codportador}/extratos', '\Mg\Portador\PortadorController@listaExtratos');
         Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
         /* Mercos */
