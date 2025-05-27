@@ -12,7 +12,8 @@ export default defineConfig(( ctx ) => {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     boot: [
-      'axios'
+      'axios',
+      'moment'
     ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
@@ -80,6 +81,7 @@ export default defineConfig(( ctx ) => {
       //server: {
       //  type: "https",
       //},
+      //host: 'https://sistema-dev.mgpapelaria.com.br:8086/',
       allowedHosts: '*',
       https: true,
       port: 8086,

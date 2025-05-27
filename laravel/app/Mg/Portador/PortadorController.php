@@ -3,6 +3,7 @@
 namespace Mg\Portador;
 
 use App\Mg\Portador\ExtratoBbService;
+use App\Mg\Portador\SomatorioSaldoResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -64,8 +65,10 @@ class PortadorController extends MgController
 
     public function listaExtratos(Request $request, $codportador){
         $per_page = $request->limit??50;
+        $dataInicial = Carbon::parse($request->data_inicial);
+        $dataFinal = Carbon::parse($request->data_final);
 
-        $extratosPage = ExtratoBbService::listaExtratos($codportador, $per_page);
+        $extratosPage = ExtratoBbService::listaExtratos($codportador, $dataInicial, $dataFinal, $per_page);
 
         return response()->json([
             'data' => $extratosPage->items(),
@@ -73,5 +76,19 @@ class PortadorController extends MgController
             'last_page' => $extratosPage->lastPage(),
             'total' => $extratosPage->total()
         ]);
+    }
+
+    public function getIntervaloSaldos(){
+        return PortadorService::getIntervaloTotalExtratos();
+    }
+
+    public function listaSaldos(Request $request){
+        //Todo Tratar se vier vazio
+        $dataInicial = Carbon::parse($request->data_inicial);
+        $dataFinal = Carbon::parse($request->data_final);
+
+        $dados = PortadorService::listaSaldos($dataInicial, $dataFinal);
+
+        return new SomatorioSaldoResource($dados);
     }
 }

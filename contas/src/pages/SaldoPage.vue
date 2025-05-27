@@ -1,0 +1,356 @@
+<template>
+  <MGLayout>
+    <template #tituloPagina> Saldo </template>
+    <template #content>
+      <div class="q-ma-md">
+        <q-skeleton  height="150px" v-if="buscandoIntervalo"/>
+        <div style="display: flex; flex-direction: column" v-else>
+          <q-btn-toggle unelevated class="q-mb-sm"
+                        v-model="anoSelecionado" :options="anos" :disable="isLoading"
+                        color="white" text-color="primary" toggle-color="primary"  />
+
+          <q-btn-toggle unelevated class="q-mb-sm"
+                        v-model="mesSelecionado" :options="meses" :disable="isLoading"
+                        color="white" text-color="primary" toggle-color="primary"  />
+
+          <div style="display: flex;" class="q-mb-sm">
+            <q-select label="Início"
+                      v-model="diaInicioSelecionado" :options="dias" :disable="isLoading"
+                      style="width: 100px" class="q-mr-sm" filled dense  label-color="primary" bg-color="white" />
+            <q-select label="Fim"
+                      v-model="diaFinalSelecionado" :options="dias" :disable="isLoading"
+                      style="width: 100px" class="q-mr-sm" filled dense label-color="primary" bg-color="white" />
+          </div>
+        </div>
+
+      </div>
+
+      <div class="q-mx-md" style="display: flex; justify-content: end;gap:8px">
+        <q-btn :loading="buscandoApiBb" color="primary"  icon="camera_enhance"
+               @click="buscandoApiBb = true" label="Consultar API BB">
+          <template v-slot:loading>
+            <q-spinner-oval class="on-left" />
+            Carregando...
+          </template>
+        </q-btn>
+
+        <q-btn :loading="importandoOfx" color="primary" icon="camera_enhance"
+               @click="console.log('importandoOfx')" label="Importar OFX">
+          <template v-slot:loading>
+            <q-spinner-hourglass class="on-left" />
+            Processando...
+          </template>
+        </q-btn>
+      </div>
+
+      <div class="q-pa-md">
+        <q-table :columns="columns" :rows="rows" row-key="banco"
+          flat bordered hide-pagination
+          no-data-label="Nenhum dado disponível"
+          :loading="isLoading || buscandoIntervalo">
+
+          <!-- Coluna Banco -->
+          <template v-slot:body-cell-banco="props">
+            <q-td :props="props" class="text-weight-bold" style="vertical-align: top;">
+              {{ props.row.banco }}
+            </q-td>
+          </template>
+
+          <!-- Colunas de Filial -->
+          <template v-slot:body-cell="props">
+            <q-td :props="props" class="q-pa-0" style="vertical-align: top;">
+              <div v-if="Array.isArray(props.value) && props.value.length">
+                <q-btn v-for="port in props.value" :key="port.codportador"
+                  dense flat class="text-weight-light"
+                  @click="abrePortador(port.codportador)">
+                  {{ formatMoney(port.saldo) }}
+                </q-btn>
+              </div>
+              <div v-else class="text-grey">---</div>
+            </q-td>
+          </template>
+
+          <!-- Coluna Total por Banco -->
+          <template v-slot:body-cell-totalBanco="props">
+            <q-td :props="props" class="text-weight-bold bg-yellow-1" style="vertical-align: top;">
+              {{ formatMoney(props.value) }}
+            </q-td>
+          </template>
+
+          <!-- Rodapé -->
+          <template v-slot:bottom-row>
+            <q-tr class="bg-yellow-1 text-weight-bold">
+
+              <q-td key="banco">Total por Filial</q-td>
+
+              <q-td v-for="f in filiais" :key="f.codfilial" align="right">
+                {{ formatMoney(f.totalFilial) }}
+              </q-td>
+
+              <q-td align="right">
+                {{ formatMoney(totalGeral) }}
+              </q-td>
+            </q-tr>
+          </template>
+
+          <!-- Loading state -->
+          <template v-slot:loading>
+            <q-inner-loading showing color="primary" />
+          </template>
+        </q-table>
+
+      </div>
+    </template>
+  </MGLayout>
+</template>
+
+<script>
+import MGLayout from 'layouts/MGLayout.vue'
+import { formatMoney } from 'src/utils/formatters.js'
+import { nextTick, watch } from 'vue'
+
+export default {
+  components: { MGLayout },
+  data() {
+    return {
+      isLoading: false,
+      filiais: [],
+      columns: [],
+      rows: [],
+      footer: {},
+
+      anoSelecionado : null,
+      mesSelecionado : null,
+      diaInicioSelecionado: null,
+      diaFinalSelecionado: null,
+
+      buscandoIntervalo: false,
+      intervaloSaldos: {
+        inicio: null,
+        fim: null,
+      },
+      buscandoApiBb: false,
+      importandoOfx: false
+    }
+  },
+  methods: {
+    formatMoney,
+    buscaIntervaloSaldos(){
+      this.buscandoIntervalo = true;
+      this.$api
+        .get(`v1/portador/intervalo-saldos`, {})
+        .then((response) => {
+          const intervalo = response.data;
+
+          this.intervaloSaldos = {
+            inicio: intervalo.primeira_data,
+            fim: intervalo.ultima_data,
+          }
+          //const anoSelecionadoStore = ref(filtroStore.anoSelecionado)
+          //this.anoSelecionado =  anoSelecionadoStore.value ? anoSelecionadoStore.value : this.$moment().year();
+          this.anoSelecionado =  this.$moment().year();
+        })
+        .catch((error) => {
+          console.error('Erro:', error)
+        })
+        .finally(() => {
+          this.buscandoIntervalo = false;
+        })
+    },
+
+    listaSaldos(){
+      console.log("listaSaldos")
+      if (
+        !this.periodoSelecionado.inicio ||
+        !this.periodoSelecionado.fim ||
+        this.isLoading
+      ) {
+        return;
+      }
+      console.log("listaSaldos loading")
+      this.isLoading = true
+      this.$api
+        .get(`v1/portador/lista-saldos`, {
+          params: {
+            data_inicial: this.periodoSelecionado.inicio.format('YYYY-MM-DD'),
+            data_final: this.periodoSelecionado.fim.format('YYYY-MM-DD'),
+          },
+        })
+        .then((response) => {
+          this.filiais = response.data.data.filiais
+          this.totalPorBanco = response.data.data.totalPorBanco;
+          this.totalGeral = response.data.data.totalGeral
+          this.montaTabela()
+        })
+        .catch((error) => {
+          console.error('Erro:', error)
+        })
+        .finally(() => {
+          this.isLoading = false;
+        })
+    },
+
+    montaTabela() {
+      this.columns = [
+        { name: 'banco', label: 'Banco', field: 'banco', align: 'left' },
+        ...this.filiais.map((filial, idx) => ({
+          name: String(idx), label: filial.nome, field: String(idx), align: 'right'
+        })),
+        { name: 'totalBanco',  label: 'Total Banco', field: 'totalBanco',  align: 'right' }
+      ];
+
+      const linhasPorBanco = {};
+
+      this.filiais.forEach((filial, idxFilial) => {
+        filial.bancos.forEach(banco => {
+          const codbanco = banco.codbanco;
+
+          if (!linhasPorBanco[codbanco]) {
+            linhasPorBanco[codbanco] = {
+              banco: banco.nome,
+              totalBanco: 0
+            };
+
+            this.filiais.forEach((_, idx) => {
+              linhasPorBanco[codbanco][String(idx)] = [];
+            });
+          }
+
+          linhasPorBanco[codbanco][String(idxFilial)] = banco.portadores;
+
+          const total = this.totalPorBanco.find(t => t.codbanco === codbanco);
+          linhasPorBanco[codbanco].totalBanco = total ? total.valor : 0;
+        });
+      });
+
+      this.rows = Object.values(linhasPorBanco);
+    },
+
+    abrePortador(codportador) {
+      this.$router.push({
+        name: 'extrato',
+        params: { id: codportador },
+        query: {
+          data_inicial: this.periodoSelecionado.inicio.format('YYYY-MM-DD'),
+          data_final: this.periodoSelecionado.fim.format('YYYY-MM-DD')
+        }
+      })
+    }
+  },
+  computed: {
+    anos(){
+      const anoInicio = this.$moment(this.intervaloSaldos.inicio).year()
+      const anoFim   = this.$moment(this.intervaloSaldos.fim).year()
+      const anos = [];
+      for (let ano = anoInicio; ano <= anoFim; ano++) {
+        anos.push(ano)
+      }
+      return anos.map(ano => {
+        return {label:ano, value: ano}
+      })
+    },
+    meses(){
+      const inicio = this.$moment(this.intervaloSaldos.inicio)
+      const fim   = this.$moment(this.intervaloSaldos.fim)
+
+      const mesInicio = (this.anoSelecionado === inicio.year() ? inicio.month() : 0)
+      const mesFim    = (this.anoSelecionado === fim.year()   ? fim.month()   : 11)
+
+      const meses = []
+      for (let mes = mesInicio; mes <= mesFim; mes++) {
+        const dt = this.$moment({ year: this.anoSelecionado, month: mes })
+        meses.push({
+          value: mes,
+          label: dt.format('MMM')
+        })
+      }
+      return meses
+    },
+    dias(){
+      const inicioIntervalo = new Date(this.intervaloSaldos.inicio)
+      const fimIntervalo = new Date(this.intervaloSaldos.fim)
+
+      const primeiroDia = new Date(this.anoSelecionado, this.mesSelecionado, 1)
+      const ultimoDia = new Date(this.anoSelecionado, this.mesSelecionado + 1, 0)
+
+      const inicioValido = primeiroDia < inicioIntervalo ? inicioIntervalo : primeiroDia
+      const fimValido =   ultimoDia > fimIntervalo ? fimIntervalo : ultimoDia
+
+      const diaInicio = inicioValido.getDate()
+      const diaFim = fimValido.getDate()
+
+      const dias = []
+      for (let d = diaInicio; d <= diaFim; d++) {
+        dias.push(d)
+      }
+
+      return dias
+    },
+    /*diasFiltrados () {
+      return this.dias.filter(d => d >= this.diaInicioSelecionado)
+    },*/
+    periodoSelecionado(){
+      if (
+        this.anoSelecionado === null ||
+        this.mesSelecionado === null ||
+        this.diaInicioSelecionado === null ||
+        this.diaFinalSelecionado === null
+      ) {
+        return { inicio: null, fim: null };
+      }
+
+      return {
+        inicio: this.$moment([this.anoSelecionado, this.mesSelecionado, this.diaInicioSelecionado]),
+        fim: this.$moment([this.anoSelecionado, this.mesSelecionado, this.diaFinalSelecionado])
+      };
+      /*return {
+        inicio: this.$moment([this.anoSelecionado,this.mesSelecionado,this.diaInicioSelecionado]),
+        fim: this.$moment([this.anoSelecionado, this.mesSelecionado, this.diaFinalSelecionado]),
+      }*/
+    },
+
+  },
+  watch: {
+    anoSelecionado(){
+      //filtroStore.anoSelecionado = val
+      this.mesSelecionado = this.meses[0].value
+    },
+    mesSelecionado(){
+      this.diaInicioSelecionado = this.dias[0];
+      this.diaFinalSelecionado = this.dias[this.dias.length-1];
+    },
+    diaInicioSelecionado (novoDia) {
+      if (this.diaFinalSelecionado < novoDia) {
+        this.diaFinalSelecionado = novoDia
+      }
+    },
+    diaFinalSelecionado (novoDia) {
+      if (this.diaInicioSelecionado > novoDia) {
+        this.diaInicioSelecionado = novoDia
+      }
+    }
+  },
+  mounted() {
+
+    this.buscaIntervaloSaldos()
+
+    watch(
+      () => [
+        this.anoSelecionado,
+        this.mesSelecionado,
+        this.diaInicioSelecionado,
+        this.diaFinalSelecionado
+      ],
+      async () => {
+        // aguarda todos os watchers internos terminarem de rodar
+        await nextTick()
+        this.listaSaldos()
+      }
+    )
+  },
+}
+</script>
+
+<style scoped>
+
+</style>

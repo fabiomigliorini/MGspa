@@ -1,23 +1,24 @@
 <template>
   <MGLayout>
-    <template #tituloPagina> Início </template>
+    <template #tituloPagina> Extrato </template>
     <template #content>
-      <q-table
-        class="my-sticky-dynamic"
-        flat bordered
-        title="Extratos"
-        :rows="extratos"
-        :columns="columns"
-        :loading="isLoading"
-        row-key="codextratobancario"
-        virtual-scroll
-        :virtual-scroll-item-size="48"
-        :virtual-scroll-sticky-size-start="48"
-        :pagination="pagination"
-        :rows-per-page-options="[0]"
-        @virtual-scroll="onScroll"
-        loading-label="Carregando"
-      />
+      <div class="q-pa-md">
+        <q-table
+          class="my-sticky-dynamic"
+          flat bordered
+          :rows="extratos"
+          :columns="columns"
+          :loading="isLoading"
+          row-key="codextratobancario"
+          virtual-scroll
+          :virtual-scroll-item-size="48"
+          :virtual-scroll-sticky-size-start="48"
+          :pagination="pagination"
+          :rows-per-page-options="[0]"
+          @virtual-scroll="onScroll"
+          loading-label="Carregando"
+        />
+      </div>
     </template>
   </MGLayout>
 </template>
@@ -132,13 +133,15 @@ export default {
         done?.()
         return
       }
-      const codportador = 1 //TODO: Deixar dinamico aqui ou ver como pegar pelo Auth no laravel
+
       this.isLoading = true
       this.$api
-        .get(`v1/portador/${codportador}/extratos`, {
+        .get(`v1/portador/${this.$route.params.id}/extratos`, {
           params: {
             page: this.page,
             limit: this.perPage,
+            data_inicial: this.$route.query.data_inicial,
+            data_final: this.$route.query.data_final
           },
         })
         .then((response) => {
@@ -178,7 +181,7 @@ export default {
   .q-table__top,
   .q-table__bottom,
   thead tr:first-child th
-    background-color: #ffeb3b !important
+    background-color: white !important
 
   thead tr th
     position: sticky
