@@ -65,8 +65,13 @@ class PortadorController extends MgController
 
     public function listaExtratos(Request $request, $codportador){
         $per_page = $request->limit??50;
-        $dataInicial = Carbon::parse($request->data_inicial);
-        $dataFinal = Carbon::parse($request->data_final);
+        $mes = $request->mes;
+        $ano = $request->ano;
+
+        $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
+        $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
+
+
 
         $extratosPage = ExtratoBbService::listaExtratos($codportador, $dataInicial, $dataFinal, $per_page);
 
@@ -84,8 +89,11 @@ class PortadorController extends MgController
 
     public function listaSaldos(Request $request){
         //Todo Tratar se vier vazio
-        $dataInicial = Carbon::parse($request->data_inicial);
-        $dataFinal = Carbon::parse($request->data_final);
+        $mes = $request->mes;
+        $ano = $request->ano;
+
+        $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
+        $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
 
         $dados = PortadorService::listaSaldos($dataInicial, $dataFinal);
 

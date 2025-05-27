@@ -12,15 +12,6 @@
           <q-btn-toggle unelevated class="q-mb-sm"
                         v-model="mesSelecionado" :options="meses" :disable="isLoading"
                         color="white" text-color="primary" toggle-color="primary"  />
-
-          <div style="display: flex;" class="q-mb-sm">
-            <q-select label="Início"
-                      v-model="diaInicioSelecionado" :options="dias" :disable="isLoading"
-                      style="width: 100px" class="q-mr-sm" filled dense  label-color="primary" bg-color="white" />
-            <q-select label="Fim"
-                      v-model="diaFinalSelecionado" :options="dias" :disable="isLoading"
-                      style="width: 100px" class="q-mr-sm" filled dense label-color="primary" bg-color="white" />
-          </div>
         </div>
 
       </div>
@@ -62,7 +53,13 @@
               <div v-if="Array.isArray(props.value) && props.value.length">
                 <q-btn v-for="port in props.value" :key="port.codportador"
                   dense flat class="text-weight-light"
-                  @click="abrePortador(port.codportador)">
+                  :to="{
+                      name: 'extrato',
+                      params: {
+                        id: port.codportador,
+                        ano: this.anoSelecionado, mes:
+                        this.mesSelecionado + 1 },
+                    }">
                   {{ formatMoney(port.saldo) }}
                 </q-btn>
               </div>
@@ -115,14 +112,14 @@ export default {
     return {
       isLoading: false,
       filiais: [],
+      totalPorBanco: 0,
+      totalGeral: 0,
       columns: [],
       rows: [],
       footer: {},
 
       anoSelecionado : null,
       mesSelecionado : null,
-      diaInicioSelecionado: null,
-      diaFinalSelecionado: null,
 
       buscandoIntervalo: false,
       intervaloSaldos: {
@@ -146,8 +143,6 @@ export default {
             inicio: intervalo.primeira_data,
             fim: intervalo.ultima_data,
           }
-          //const anoSelecionadoStore = ref(filtroStore.anoSelecionado)
-          //this.anoSelecionado =  anoSelecionadoStore.value ? anoSelecionadoStore.value : this.$moment().year();
           this.anoSelecionado =  this.$moment().year();
         })
         .catch((error) => {
@@ -160,11 +155,7 @@ export default {
 
     listaSaldos(){
       console.log("listaSaldos")
-      if (
-        !this.periodoSelecionado.inicio ||
-        !this.periodoSelecionado.fim ||
-        this.isLoading
-      ) {
+      if (this.isLoading) {
         return;
       }
       console.log("listaSaldos loading")
@@ -172,8 +163,8 @@ export default {
       this.$api
         .get(`v1/portador/lista-saldos`, {
           params: {
-            data_inicial: this.periodoSelecionado.inicio.format('YYYY-MM-DD'),
-            data_final: this.periodoSelecionado.fim.format('YYYY-MM-DD'),
+            mes: this.mesSelecionado + 1,
+            ano: this.anoSelecionado,
           },
         })
         .then((response) => {
@@ -225,17 +216,6 @@ export default {
 
       this.rows = Object.values(linhasPorBanco);
     },
-
-    abrePortador(codportador) {
-      this.$router.push({
-        name: 'extrato',
-        params: { id: codportador },
-        query: {
-          data_inicial: this.periodoSelecionado.inicio.format('YYYY-MM-DD'),
-          data_final: this.periodoSelecionado.fim.format('YYYY-MM-DD')
-        }
-      })
-    }
   },
   computed: {
     anos(){
@@ -266,68 +246,10 @@ export default {
       }
       return meses
     },
-    dias(){
-      const inicioIntervalo = new Date(this.intervaloSaldos.inicio)
-      const fimIntervalo = new Date(this.intervaloSaldos.fim)
-
-      const primeiroDia = new Date(this.anoSelecionado, this.mesSelecionado, 1)
-      const ultimoDia = new Date(this.anoSelecionado, this.mesSelecionado + 1, 0)
-
-      const inicioValido = primeiroDia < inicioIntervalo ? inicioIntervalo : primeiroDia
-      const fimValido =   ultimoDia > fimIntervalo ? fimIntervalo : ultimoDia
-
-      const diaInicio = inicioValido.getDate()
-      const diaFim = fimValido.getDate()
-
-      const dias = []
-      for (let d = diaInicio; d <= diaFim; d++) {
-        dias.push(d)
-      }
-
-      return dias
-    },
-    /*diasFiltrados () {
-      return this.dias.filter(d => d >= this.diaInicioSelecionado)
-    },*/
-    periodoSelecionado(){
-      if (
-        this.anoSelecionado === null ||
-        this.mesSelecionado === null ||
-        this.diaInicioSelecionado === null ||
-        this.diaFinalSelecionado === null
-      ) {
-        return { inicio: null, fim: null };
-      }
-
-      return {
-        inicio: this.$moment([this.anoSelecionado, this.mesSelecionado, this.diaInicioSelecionado]),
-        fim: this.$moment([this.anoSelecionado, this.mesSelecionado, this.diaFinalSelecionado])
-      };
-      /*return {
-        inicio: this.$moment([this.anoSelecionado,this.mesSelecionado,this.diaInicioSelecionado]),
-        fim: this.$moment([this.anoSelecionado, this.mesSelecionado, this.diaFinalSelecionado]),
-      }*/
-    },
-
   },
   watch: {
     anoSelecionado(){
-      //filtroStore.anoSelecionado = val
       this.mesSelecionado = this.meses[0].value
-    },
-    mesSelecionado(){
-      this.diaInicioSelecionado = this.dias[0];
-      this.diaFinalSelecionado = this.dias[this.dias.length-1];
-    },
-    diaInicioSelecionado (novoDia) {
-      if (this.diaFinalSelecionado < novoDia) {
-        this.diaFinalSelecionado = novoDia
-      }
-    },
-    diaFinalSelecionado (novoDia) {
-      if (this.diaInicioSelecionado > novoDia) {
-        this.diaInicioSelecionado = novoDia
-      }
     }
   },
   mounted() {
@@ -337,12 +259,10 @@ export default {
     watch(
       () => [
         this.anoSelecionado,
-        this.mesSelecionado,
-        this.diaInicioSelecionado,
-        this.diaFinalSelecionado
+        this.mesSelecionado
       ],
       async () => {
-        // aguarda todos os watchers internos terminarem de rodar
+
         await nextTick()
         this.listaSaldos()
       }

@@ -17,7 +17,7 @@ const routes = [
 
       },
       {
-        path: "extrato/:id",
+        path: "extrato/:id/:ano/:mes",
         name: "extrato",
         component: () => import('pages/IndexPage.vue')
       }

@@ -140,8 +140,8 @@ export default {
           params: {
             page: this.page,
             limit: this.perPage,
-            data_inicial: this.$route.query.data_inicial,
-            data_final: this.$route.query.data_final
+            mes: this.$route.params.mes,
+            ano: this.$route.params.ano
           },
         })
         .then((response) => {
