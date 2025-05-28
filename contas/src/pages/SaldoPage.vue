@@ -156,7 +156,6 @@ export default {
     },
 
     listaSaldos(){
-      console.log("listaSaldos")
       if (this.isLoading) {
         return;
       }

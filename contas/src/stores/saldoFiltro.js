@@ -5,5 +5,5 @@ export const saldoFiltroStore = defineStore('saldoFiltro', {
     anoSelecionado: null,
     mesSelecionado: null,
   }),
-  persist: true // se estiver usando pinia-plugin-persistedstate
+  persist: true
 })
