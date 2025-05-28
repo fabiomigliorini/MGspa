@@ -99,10 +99,15 @@
 <script>
 import MGLayout from 'layouts/MGLayout.vue'
 import { formatMoney } from 'src/utils/formatters.js'
-import { nextTick, watch } from 'vue'
+//import { nextTick, watch } from 'vue'
+import { saldoFiltroStore } from 'src/stores/saldoFiltro'
 
 export default {
   components: { MGLayout },
+  setup() {
+    const filtro = saldoFiltroStore()
+    return { filtro }
+  },
   data() {
     return {
       isLoading: false,
@@ -113,8 +118,8 @@ export default {
       rows: [],
       footer: {},
 
-      anoSelecionado : null,
-      mesSelecionado : null,
+      //anoSelecionado : null,
+      //mesSelecionado : null,
 
       buscandoIntervalo: false,
       intervaloSaldos: {
@@ -137,13 +142,16 @@ export default {
             inicio: intervalo.primeira_data,
             fim: intervalo.ultima_data,
           }
-          this.anoSelecionado =  this.$moment().year();
+          if(!this.anoSelecionado){
+            this.anoSelecionado =  this.$moment().year();
+          }
         })
         .catch((error) => {
           console.error('Erro:', error)
         })
         .finally(() => {
           this.buscandoIntervalo = false;
+          this.listaSaldos()
         })
     },
 
@@ -257,6 +265,14 @@ export default {
     },
   },
   computed: {
+    anoSelecionado: {
+      get() { return this.filtro.anoSelecionado },
+      set(val) { this.filtro.anoSelecionado = val }
+    },
+    mesSelecionado: {
+      get() { return this.filtro.mesSelecionado },
+      set(val) { this.filtro.mesSelecionado = val }
+    },
     anos(){
       const anoInicio = this.$moment(this.intervaloSaldos.inicio).year()
       const anoFim   = this.$moment(this.intervaloSaldos.fim).year()
@@ -289,13 +305,16 @@ export default {
   watch: {
     anoSelecionado(){
       this.mesSelecionado = this.meses[0].value
+    },
+    mesSelecionado(){
+      this.listaSaldos()
     }
   },
   mounted() {
 
     this.buscaIntervaloSaldos()
 
-    watch(
+    /*watch(
       () => [
         this.anoSelecionado,
         this.mesSelecionado
@@ -305,7 +324,7 @@ export default {
         await nextTick()
         this.listaSaldos()
       }
-    )
+    )*/
   },
 }
 </script>
