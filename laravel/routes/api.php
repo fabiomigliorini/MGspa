@@ -600,11 +600,11 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // Portador
         Route::get('portador', '\Mg\Portador\PortadorController@index');
-        Route::get('portador/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
         Route::get('portador/intervalo-saldos', '\Mg\Portador\PortadorController@getIntervaloSaldos');
         Route::get('portador/lista-saldos', '\Mg\Portador\PortadorController@listaSaldos');
         Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
         Route::get('portador/{codportador}/extratos', '\Mg\Portador\PortadorController@listaExtratos');
+        Route::get('portador/{codportador}/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
         Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
         /* Mercos */
