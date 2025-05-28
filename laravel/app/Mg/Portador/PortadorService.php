@@ -148,11 +148,10 @@ class PortadorService
             'data_final' => $dataFinal
         ]);
 
-        //return self::processarDados($data, $dataInicial, $dataFinal);
-        return self::montaExtruturaSaldo($data);
+        return self::montaEstruturaSaldo($data);
     }
 
-    private static function montaExtruturaSaldo(array $linhas): array
+    private static function montaEstruturaSaldo(array $linhas): array
     {
         // monta os portadores de um banco
         $montarPortadores = function($itensBanco): array {
