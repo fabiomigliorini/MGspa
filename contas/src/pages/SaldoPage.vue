@@ -3,7 +3,7 @@
     <template #tituloPagina> Saldo </template>
     <template #content>
       <div class="q-ma-md">
-        <q-skeleton  height="150px" v-if="buscandoIntervalo"/>
+        <q-skeleton  height="90px" v-if="buscandoIntervalo"/>
         <div style="display: flex; flex-direction: column" v-else>
           <q-btn-toggle unelevated class="q-mb-sm"
                         v-model="anoSelecionado" :options="anos" :disable="isLoading"
@@ -17,21 +17,17 @@
       </div>
 
       <div class="q-mx-md" style="display: flex; justify-content: end;gap:8px">
-        <q-btn :loading="buscandoApiBb" color="primary"  icon="camera_enhance"
-               @click="buscandoApiBb = true" label="Consultar API BB">
+
+        <q-btn :loading="importandoOfx" color="primary" icon="upload_file"
+               @click="$refs.inputArquivo.click()" label="Importar OFX">
           <template v-slot:loading>
             <q-spinner-oval class="on-left" />
-            Carregando...
-          </template>
-        </q-btn>
-
-        <q-btn :loading="importandoOfx" color="primary" icon="camera_enhance"
-               @click="console.log('importandoOfx')" label="Importar OFX">
-          <template v-slot:loading>
-            <q-spinner-hourglass class="on-left" />
             Processando...
           </template>
         </q-btn>
+
+        <input ref="inputArquivo" type="file" accept=".ofx" style="display: none"
+               @change="uploadOfx" />
       </div>
 
       <div class="q-pa-md">
@@ -90,7 +86,6 @@
             </q-tr>
           </template>
 
-          <!-- Loading state -->
           <template v-slot:loading>
             <q-inner-loading showing color="primary" />
           </template>
@@ -126,7 +121,6 @@ export default {
         inicio: null,
         fim: null,
       },
-      buscandoApiBb: false,
       importandoOfx: false
     }
   },
@@ -158,7 +152,7 @@ export default {
       if (this.isLoading) {
         return;
       }
-      console.log("listaSaldos loading")
+
       this.isLoading = true
       this.$api
         .get(`v1/portador/lista-saldos`, {
@@ -215,6 +209,51 @@ export default {
       });
 
       this.rows = Object.values(linhasPorBanco);
+    },
+    uploadOfx(event){
+      this.importandoOfx = true;
+      const arquivos = event.target.files;
+
+      const formData = new FormData();
+      for (let i = 0; i < arquivos.length; i++) {
+        formData.append('arquivos[]', arquivos[i]);
+      }
+
+      this.$api.post(`v1/portador/importar-ofx`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        .then((response) => {
+          const resp = response.data;
+
+          Object.keys(resp).forEach(arquivo => {
+            var mensagem = `
+              Importados ${resp[arquivo].registros}
+              registros no portador ${resp[arquivo].portador}
+              com ${resp[arquivo].falhas} falhas!'`;
+
+            this.$q.notify({ message: mensagem, color: 'positive' })
+          })
+
+        })
+        .catch((error) => {
+          console.error('Erro:', error)
+          /*info.files.forEach((arquivo, ) => {
+            var mensagem =
+              'Falha ao importar o arquivo "' +
+              arquivo.name +
+              '"!'
+            ;
+            vm.$q.notify({
+              message: mensagem,
+              color: 'negative',
+              // position: 'top',
+            })
+          });*/
+        })
+        .finally(() => {
+          this.importandoOfx = false;
+          this.listaSaldos()
+        })
     },
   },
   computed: {

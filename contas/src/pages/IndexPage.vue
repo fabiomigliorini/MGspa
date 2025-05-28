@@ -2,6 +2,23 @@
   <MGLayout>
     <template #tituloPagina> Extrato </template>
     <template #content>
+      <div class="q-mx-md q-mt-md"
+           style="display: flex; align-items: center; justify-content: space-between;"
+           v-if="portador && filial">
+        <div>
+          <p class="text-caption q-mb-auto"><b>Portador:</b> {{portador.portador}}</p>
+          <p class="text-caption q-mb-auto"><b>Filial:</b> {{filial.filial}}</p>
+        </div>
+
+        <q-btn label="Consultar API" color="primary" icon="cloud_download"
+               v-if="portador.codbanco == 1"
+               :loading="buscandoApiBb" @click="consultarApiBB()" >
+          <template v-slot:loading>
+            <q-spinner-oval class="on-left" />
+            Carregando...
+          </template>
+        </q-btn>
+      </div>
       <div class="q-pa-md">
         <q-table
           class="my-sticky-dynamic"
@@ -100,6 +117,8 @@ export default {
   components: { MGLayout },
   data() {
     return {
+      portador: null,
+      filial: null,
       extratos: [],
       columns: [
         { name: 'fitid', label: 'Nº Doc', field: 'fitid' },
@@ -124,10 +143,72 @@ export default {
       perPage: 50,
       isLastPage: false,
       isLoading: false,
-      pagination: { rowsPerPage: 0 }
+      pagination: { rowsPerPage: 0 },
+      buscandoApiBb: false,
     }
   },
   methods: {
+    consultarApiBB(){
+      console.log("consultarApiBB")
+      this.buscandoApiBb = true;
+
+      this.$api.get(`v1/portador/${this.$route.params.id}/consulta-extrato`, {
+        params: {
+          mes: this.$route.params.mes,
+          ano: this.$route.params.ano
+        },
+      })
+      .then((response) => {
+        console.log("consultarApiBB.response", response)
+        const data = response.data.data;
+        var mensagem = `
+              Importados ${data.registros}
+              registros com ${data.falhas} falhas!'`;
+
+        this.$q.notify({ message: mensagem, color: 'positive' })
+        this.extratos = [];
+      })
+      .catch((error) => {
+        console.error('Erro:', error)
+        this.$q.notify({ message: error.response.data.message, color: 'negative' })
+      })
+      .finally(() => {
+        this.buscandoApiBb = false
+      })
+    },
+    getPortador(){
+      return new Promise(resolve => {
+        this.$api.get(`v1/portador/${this.$route.params.id}`)
+          .then((response) => {
+            this.portador = response.data.data
+          })
+          .catch((error) => {
+            console.error('Erro:', error)
+          })
+          .finally(() => {
+            resolve();
+          })
+      })
+
+    },
+    getFilial(){
+      return new Promise(resolve => {
+        this.$api.get(`v1/filial/${this.portador.codfilial}`, {
+          params: {
+            fields: 'filial',
+          }
+        })
+          .then((response) => {
+            this.filial = response.data
+          })
+          .catch((error) => {
+            console.error('Erro:', error)
+          })
+          .finally(() => {
+            resolve();
+          })
+      })
+    },
     listaExtratos(index, done) {
       if (this.isLoading || this.isLastPage) {
         done?.()
@@ -171,6 +252,7 @@ export default {
   },
 
   mounted() {
+    this.getPortador().then(() => this.getFilial())
   },
 }
 </script>
