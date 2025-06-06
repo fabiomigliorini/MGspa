@@ -156,12 +156,5 @@ class ExtratoBbService
         ];
     }
 
-    public static function listaExtratos($codportador, $dataInicial, $dataFinal, $per_page){
-        $extratosPage = ExtratoBancario::where('codportador', '=', $codportador)
-            ->whereBetween('lancamento', [$dataInicial, $dataFinal])
-            ->orderBy('criacao', 'desc')
-            ->paginate($per_page);
 
-        return $extratosPage;
-    }
 }

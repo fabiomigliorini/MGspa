@@ -2,23 +2,8 @@
   <MGLayout>
     <template #tituloPagina> Saldo </template>
     <template #content>
-      <div class="q-ma-md">
-        <q-skeleton  height="90px" v-if="buscandoIntervalo"/>
-        <div style="display: flex; flex-direction: column" v-else>
-          <q-btn-toggle unelevated class="q-mb-sm"
-                        v-model="anoSelecionado" :options="anos" :disable="isLoading"
-                        color="white" text-color="primary" toggle-color="primary"  />
-
-          <q-btn-toggle unelevated class="q-mb-sm"
-                        v-model="mesSelecionado" :options="meses" :disable="isLoading"
-                        color="white" text-color="primary" toggle-color="primary"  />
-        </div>
-
-      </div>
-
-      <div class="q-mx-md" style="display: flex; justify-content: end;gap:8px">
-
-        <q-btn :loading="importandoOfx" color="primary" icon="upload_file"
+      <div class="q-mx-md q-mt-md row justify-end" style="">
+        <q-btn :loading="importandoOfx" class="" color="primary" icon="upload_file"
                @click="$refs.inputArquivo.click()" label="Importar OFX">
           <template v-slot:loading>
             <q-spinner-oval class="on-left" />
@@ -30,9 +15,9 @@
                @change="uploadOfx" />
       </div>
 
-      <div class="q-pa-md">
+      <div class="q-pa-md" style="display: flex; gap: 8px">
         <q-table :columns="columns" :rows="rows" row-key="banco"
-          flat bordered hide-pagination
+          flat bordered hide-pagination style="flex-grow: 1"
           no-data-label="Nenhum dado disponível"
           :loading="isLoading || buscandoIntervalo">
 
@@ -46,18 +31,26 @@
           <!-- Colunas de Filial -->
           <template v-slot:body-cell="props">
             <q-td :props="props" class="q-pa-0" style="vertical-align: top;">
-              <div v-if="Array.isArray(props.value) && props.value.length">
-                <q-btn v-for="port in props.value" :key="port.codportador"
-                  dense flat class="text-weight-light"
-                  :to="{
+              <div v-if="Array.isArray(props.value) && props.value.length" style="display: flex;flex-direction: column;">
+                <router-link v-for="port in props.value" :key="port.codportador"
+                             style="text-decoration: none; color:dodgerblue"
+                             :to="{
+                              name: 'extrato',
+                              params: {
+                                id: port.codportador,
+                                mesAno: this.dataSelecionada.substring(3) },
+                    }">{{ formatMoney(port.saldobancario) }}</router-link>
+<!--                <q-btn v-for="port in props.value" :key="port.codportador"
+                       dense flat class="text-weight-light"
+                       :to="{
                       name: 'extrato',
                       params: {
                         id: port.codportador,
-                        ano: this.anoSelecionado, mes:
-                        this.mesSelecionado + 1 },
+                        mesAno: this.dataSelecionada.substring(3) },
                     }">
-                  {{ formatMoney(port.saldo) }}
-                </q-btn>
+                  {{ formatMoney(port.saldobancario) }}
+                </q-btn>-->
+
               </div>
               <div v-else class="text-grey">---</div>
             </q-td>
@@ -91,6 +84,8 @@
           </template>
         </q-table>
 
+        <q-date v-model="dataSelecionada" minimal flat bordered
+                mask="DD-MM-YYYY"/>
       </div>
     </template>
   </MGLayout>
@@ -99,15 +94,9 @@
 <script>
 import MGLayout from 'layouts/MGLayout.vue'
 import { formatMoney } from 'src/utils/formatters.js'
-//import { nextTick, watch } from 'vue'
-import { saldoFiltroStore } from 'src/stores/saldoFiltro'
 
 export default {
   components: { MGLayout },
-  setup() {
-    const filtro = saldoFiltroStore()
-    return { filtro }
-  },
   data() {
     return {
       isLoading: false,
@@ -118,43 +107,17 @@ export default {
       rows: [],
       footer: {},
 
-      //anoSelecionado : null,
-      //mesSelecionado : null,
-
       buscandoIntervalo: false,
       intervaloSaldos: {
         inicio: null,
         fim: null,
       },
-      importandoOfx: false
+      importandoOfx: false,
+      dataSelecionada: null
     }
   },
   methods: {
     formatMoney,
-    buscaIntervaloSaldos(){
-      this.buscandoIntervalo = true;
-      this.$api
-        .get(`v1/portador/intervalo-saldos`, {})
-        .then((response) => {
-          const intervalo = response.data;
-
-          this.intervaloSaldos = {
-            inicio: intervalo.primeira_data,
-            fim: intervalo.ultima_data,
-          }
-          if(!this.anoSelecionado){
-            this.anoSelecionado =  this.$moment().year();
-          }
-        })
-        .catch((error) => {
-          console.error('Erro:', error)
-        })
-        .finally(() => {
-          this.buscandoIntervalo = false;
-          this.listaSaldos()
-        })
-    },
-
     listaSaldos(){
       if (this.isLoading) {
         return;
@@ -164,8 +127,7 @@ export default {
       this.$api
         .get(`v1/portador/lista-saldos`, {
           params: {
-            mes: this.mesSelecionado + 1,
-            ano: this.anoSelecionado,
+            dia: this.dataSelecionada
           },
         })
         .then((response) => {
@@ -181,7 +143,6 @@ export default {
           this.isLoading = false;
         })
     },
-
     montaTabela() {
       this.columns = [
         { name: 'banco', label: 'Banco', field: 'banco', align: 'left' },
@@ -218,6 +179,7 @@ export default {
       this.rows = Object.values(linhasPorBanco);
     },
     uploadOfx(event){
+      console.log("uploadOfx")
       this.importandoOfx = true;
       const arquivos = event.target.files;
 
@@ -244,86 +206,31 @@ export default {
         })
         .catch((error) => {
           console.error('Erro:', error)
-          /*info.files.forEach((arquivo, ) => {
-            var mensagem =
-              'Falha ao importar o arquivo "' +
-              arquivo.name +
-              '"!'
-            ;
-            vm.$q.notify({
-              message: mensagem,
-              color: 'negative',
-              // position: 'top',
-            })
-          });*/
+          var mensagem = error.response.data.message
+          this.$q.notify({ message: mensagem, color: 'negative' })
         })
         .finally(() => {
+          this.$refs.inputArquivo.value = null;
           this.importandoOfx = false;
           this.listaSaldos()
         })
-    },
-  },
-  computed: {
-    anoSelecionado: {
-      get() { return this.filtro.anoSelecionado },
-      set(val) { this.filtro.anoSelecionado = val }
-    },
-    mesSelecionado: {
-      get() { return this.filtro.mesSelecionado },
-      set(val) { this.filtro.mesSelecionado = val }
-    },
-    anos(){
-      const anoInicio = this.$moment(this.intervaloSaldos.inicio).year()
-      const anoFim   = this.$moment(this.intervaloSaldos.fim).year()
-      const anos = [];
-      for (let ano = anoInicio; ano <= anoFim; ano++) {
-        anos.push(ano)
-      }
-      return anos.map(ano => {
-        return {label:ano, value: ano}
-      })
-    },
-    meses(){
-      const inicio = this.$moment(this.intervaloSaldos.inicio)
-      const fim   = this.$moment(this.intervaloSaldos.fim)
-
-      const mesInicio = (this.anoSelecionado === inicio.year() ? inicio.month() : 0)
-      const mesFim    = (this.anoSelecionado === fim.year()   ? fim.month()   : 11)
-
-      const meses = []
-      for (let mes = mesInicio; mes <= mesFim; mes++) {
-        const dt = this.$moment({ year: this.anoSelecionado, month: mes })
-        meses.push({
-          value: mes,
-          label: dt.format('MMM')
-        })
-      }
-      return meses
-    },
+    }
   },
   watch: {
-    anoSelecionado(){
-      this.mesSelecionado = this.meses[0].value
-    },
-    mesSelecionado(){
-      this.listaSaldos()
+    dataSelecionada(data){
+      this.$router.push({
+        query: {
+          data: data,
+        }
+      })
+      this.listaSaldos();
     }
   },
   mounted() {
-
-    this.buscaIntervaloSaldos()
-
-    /*watch(
-      () => [
-        this.anoSelecionado,
-        this.mesSelecionado
-      ],
-      async () => {
-
-        await nextTick()
-        this.listaSaldos()
-      }
-    )*/
+    this.dataSelecionada = this.$route.query.data
+    if(!this.dataSelecionada){
+      this.dataSelecionada = this.$moment().format('DD-MM-YYYY')
+    }
   },
 }
 </script>

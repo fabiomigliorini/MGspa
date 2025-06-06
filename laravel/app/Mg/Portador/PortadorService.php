@@ -4,6 +4,7 @@ namespace Mg\Portador;
 
 use Illuminate\Support\Facades\DB;
 use Mg\Banco\Banco;
+use OfxParser\Parser;
 
 class PortadorService
 {
@@ -57,25 +58,27 @@ class PortadorService
 
     public static function importarOfx ($ofxString)
     {
-
         // Carrega o arquivo
-        $ofxParser = new \OfxParser\Parser();
+        $ofxParser = new Parser();
         $ofx = $ofxParser->loadFromString($ofxString);
 
         // Localiza o Portador
         $bankAccount = reset($ofx->bankAccounts);
         $portador = static::buscarPortadorOfx($bankAccount->routingNumber, $bankAccount->accountNumber);
 
-        // Ignorados por enquanto
-        // $startDate = $bankAccount->statement->startDate;
-        // $endDate = $bankAccount->statement->endDate;
-
         // Get the statement transactions for the account
         $transactions = $bankAccount->statement->transactions;
+        $resultado = self::salvaTransacoes($transactions, $portador);
+        self::salvaSaldos($transactions, $bankAccount, $portador);
+
+        return $resultado;
+    }
+
+    private static function salvaTransacoes($transactions, $portador)
+    {
         $registros = 0;
         $falhas = 0;
         foreach ($transactions as $transaction) {
-
             // determina tipo do movimento
             $tipo = ExtratoBancarioTipoMovimento::firstOrNew([
                 'trntype' => $transaction->type,
@@ -99,7 +102,6 @@ class PortadorService
             if (!$mov->save()) {
                 $falhas++;
             };
-
             $registros++;
         }
 
@@ -111,48 +113,84 @@ class PortadorService
         ];
     }
 
-    public static function listaSaldos($dataInicial, $dataFinal)
+    private static function salvaSaldos($transactions, $bankAccount, $portador)
+    {
+        usort($transactions, function($a, $b) {
+            return $b->date <=> $a->date;
+        });
+
+        // Saldo final e data
+        $saldoFinal = (float)$bankAccount->balance;
+        $totalPorDia = array();
+
+        foreach ($transactions as $transaction) {
+            $dateKey = $transaction->date->format("Y-m-d");
+
+            if(!isset($totalPorDia[$dateKey])){
+                $totalPorDia[$dateKey] = 0;
+            }
+            $totalPorDia[$dateKey] += $transaction->amount;
+        }
+
+        //$saldos = array();
+        $proximoSaldo = $saldoFinal;
+        foreach ($totalPorDia as $dia => $valor) {
+            //$saldos[$dia] = $proximoSaldo;
+            $saldo = PortadorSaldo::firstOrNew([
+                'codportador' => $portador->codportador,
+                'dia' => $dia,
+            ]);
+            $saldo->saldobancario = $proximoSaldo;
+            $saldo->save();
+
+            $proximoSaldo -= $valor;
+        }
+
+        //dd($saldos);
+    }
+
+    public static function listaSaldos($dia)
     {
         $sql = '
-            SELECT
-            f.codfilial,
-            f.filial,
-            b.codbanco,
-            b.banco,
-            p.codportador,
-            p.portador,
-            COALESCE(SUM(e.valor), 0) AS saldo
-        FROM tblportador AS p
-        LEFT JOIN tblfilial AS f
-          ON p.codfilial = f.codfilial
-        LEFT JOIN tblbanco AS b
-          ON p.codbanco = b.codbanco
-        INNER JOIN tblextratobancario AS e
-          ON e.codportador = p.codportador
-         AND e.lancamento BETWEEN :data_inicial AND :data_final
-        GROUP BY
-            f.codfilial,
-            f.filial,
-            b.codbanco,
-            b.banco,
-            p.codportador,
-            p.portador
-        ORDER BY
-            f.codfilial,
-            b.codbanco,
-            p.codportador
+            select
+                p.codfilial,
+                f.filial,
+                b.codbanco,
+                    b.banco,
+                p.codportador,
+                p.portador,
+                s.saldobancario
+            from tblportador p
+                 inner join tblbanco b on (b.codbanco = p.codbanco)
+                 left join tblfilial f on (f.codfilial = p.codfilial)
+                 left join tblportadorsaldo s on (s.codportadorsaldo =
+                      (
+                          select us.codportadorsaldo
+                          from tblportadorsaldo us
+                          where us.codportador = p.codportador
+                            and us.dia <= :dia
+                          order by us.dia desc
+                          limit 1
+                      )
+                )
+            where coalesce(p.inativo, now()) >= :dia
+            order by p.codfilial, p.codbanco, p.codportador
         ';
 
         $data = DB::select($sql, [
-            'data_inicial' => $dataInicial,
-            'data_final' => $dataFinal
+            'dia' => $dia
         ]);
 
+        //dd($data);
+
         return self::montaEstruturaSaldo($data);
+        //return $data;
     }
 
     private static function montaEstruturaSaldo(array $linhas): array
     {
+        //  dd($linhas);
+       //return "";
         // monta os portadores de um banco
         $montarPortadores = function($itensBanco): array {
             return collect($itensBanco)
@@ -160,7 +198,7 @@ class PortadorService
                     return [
                         'codportador' => (int)   $registro->codportador,
                         'portador'    =>         $registro->portador,
-                        'saldo'       => (float) $registro->saldo,
+                        'saldobancario'       => (float) $registro->saldobancario,
                     ];
                 })
                 ->values()
@@ -170,7 +208,7 @@ class PortadorService
         // soma os saldos de um único banco
         $somarBanco = function($itensBanco) use ($montarPortadores): float {
             $portadores = $montarPortadores($itensBanco);
-            return array_sum(array_column($portadores, 'saldo'));
+            return array_sum(array_column($portadores, 'saldobancario'));
         };
 
         // monta a lista de bancos de uma filial
@@ -178,6 +216,7 @@ class PortadorService
             return collect($itensFilial)
                 ->groupBy('codbanco')
                 ->map(function($itensBanco) use ($montarPortadores, $somarBanco) {
+                    //($itensBanco);
                     return [
                         'codbanco'   => (int)   $itensBanco->first()->codbanco,
                         'nome'       =>         $itensBanco->first()->banco,
@@ -195,10 +234,12 @@ class PortadorService
             return array_sum(array_column($bancos, 'totalBanco'));
         };
 
+
         // monta todas as filiais
         $filiais = collect($linhas)
             ->groupBy('codfilial')
             ->map(function($itensFilial) use ($montarBancos, $somarFilial) {
+                //dd($itensFilial);
                 return [
                     'codfilial'   => (int)   $itensFilial->first()->codfilial,
                     'nome'        =>         $itensFilial->first()->filial,
@@ -215,7 +256,7 @@ class PortadorService
             ->map(function($itensBanco) use ($montarPortadores) {
                 $saldo = array_sum(array_column(
                     $montarPortadores($itensBanco),
-                    'saldo'
+                    'saldobancario'
                 ));
                 return [
                     'codbanco' => (int)   $itensBanco->first()->codbanco,
@@ -235,19 +276,29 @@ class PortadorService
         ];
     }
 
+    public static function listaMovimentacoes($codportador, $dataInicial, $dataFinal, $per_page){
+        $extratosPage = ExtratoBancario::where('codportador', '=', $codportador)
+            ->whereBetween('lancamento', [$dataInicial, $dataFinal])
+            ->orderBy('lancamento', 'asc')
+            ->paginate($per_page);
 
+        return $extratosPage;
+    }
 
-    public static function getIntervaloTotalExtratos(){
-        //TODO Where provisório porque tem uns valores errados na tabela. Ex ano que começa com 00
-        $sql = '
-            SELECT
-                MIN(lancamento) AS primeira_data,
-                MAX(lancamento) AS ultima_data
-            FROM tblextratobancario
-            WHERE EXTRACT(YEAR FROM lancamento) >= 1000
-        ';
+    public static function listaSaldosPortador($codportador, $dataInicial, $dataFinal)
+    {
+        $saldoAnterior = PortadorSaldo::select(['codportadorsaldo', 'dia', 'saldobancario'])->where('codportador', $codportador)
+            ->where('dia', '<', $dataInicial)
+            ->orderByDesc('dia')
+            ->first();
 
-        $data = DB::select($sql);
-        return $data[0];
+        $saldos = PortadorSaldo::select(['codportadorsaldo', 'dia', 'saldobancario'])->where('codportador', '=', $codportador)
+                    ->whereBetween('dia', [$dataInicial, $dataFinal])
+                    ->orderBy('dia', 'asc')->get();
+
+        return [
+            'saldos' => $saldos,
+            'saldoAnterior' => $saldoAnterior
+        ];
     }
 }

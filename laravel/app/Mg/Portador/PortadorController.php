@@ -24,6 +24,20 @@ class PortadorController extends MgController
         return new PortadorResource($portador);
     }
 
+    public function info(Request $request, $codportador)
+    {
+        $portador = Portador::findOrFail($codportador);
+
+        return response()->json([
+            'codportador'=>  $portador->codportador,
+            'portador'=>  $portador->portador,
+            'codfilial' => $portador->codfilial,
+            'filial' => optional($portador->Filial)->filial,
+            'codbanco' => $portador->codbanco,
+            'banco' => optional($portador->Banco)->banco,
+        ]);
+    }
+
     public function importarOfx(Request $request)
     {
         $request->validate([
@@ -34,6 +48,7 @@ class PortadorController extends MgController
             'arquivos.*.required' => 'Envie um arquivo!',
             'arquivos.*.mimes' => 'Somente arquivos OFX aceitos!',
         ]);
+
         $ret = [];
         foreach ($request->arquivos as $key => $arquivo) {
             $ofx = file_get_contents($arquivo->getRealPath());
@@ -73,7 +88,7 @@ class PortadorController extends MgController
         $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
         $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
 
-        $extratosPage = ExtratoBbService::listaExtratos($codportador, $dataInicial, $dataFinal, $per_page);
+        $extratosPage = PortadorService::listaMovimentacoes($codportador, $dataInicial, $dataFinal, $per_page);
 
         return response()->json([
             'data' => $extratosPage->items(),
@@ -83,20 +98,23 @@ class PortadorController extends MgController
         ]);
     }
 
-    public function getIntervaloSaldos(){
-        return PortadorService::getIntervaloTotalExtratos();
+    public function listaSaldos(Request $request){
+        $dia = Carbon::createFromFormat('d-m-Y', $request->dia);
+
+        $dados = PortadorService::listaSaldos($dia);
+
+        return new SomatorioSaldoResource($dados);
     }
 
-    public function listaSaldos(Request $request){
-        //Todo Tratar se vier vazio
+    public function listaSaldosPortador(Request $request, $codportador){
         $mes = $request->mes;
         $ano = $request->ano;
 
         $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
         $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
 
-        $dados = PortadorService::listaSaldos($dataInicial, $dataFinal);
+        $dados = PortadorService::listaSaldosPortador($codportador, $dataInicial, $dataFinal);
 
-        return new SomatorioSaldoResource($dados);
+        return $dados;
     }
 }

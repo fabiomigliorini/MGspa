@@ -4,10 +4,11 @@
     <template #content>
       <div class="q-mx-md q-mt-md"
            style="display: flex; align-items: center; justify-content: space-between;"
-           v-if="portador && filial">
+           v-if="portador">
         <div>
-          <p class="text-caption q-mb-auto"><b>Portador:</b> {{portador.portador}}</p>
-          <p class="text-caption q-mb-auto"><b>Filial:</b> {{filial.filial}}</p>
+          <p  class="text-caption q-mb-auto"><b>Portador:</b> {{portador.portador}}</p>
+          <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial}}</p>
+          <p  class="text-caption q-mb-auto"><b>Banco:</b> {{portador.banco}}</p>
         </div>
 
         <q-btn label="Consultar API" color="primary" icon="cloud_download"
@@ -19,7 +20,7 @@
           </template>
         </q-btn>
       </div>
-      <div class="q-pa-md">
+      <div class="q-pa-md" v-if="!buscandoInfo">
         <q-table
           class="my-sticky-dynamic"
           flat bordered
@@ -34,7 +35,19 @@
           :rows-per-page-options="[0]"
           @virtual-scroll="onScroll"
           loading-label="Carregando"
-        />
+          >
+          <template v-slot:body="props">
+            <q-tr :props="props" :class="props.rowIndex % 2 === 0 ? 'bg-white' : 'bg-grey-2'">
+              <q-td
+                v-for="col in props.cols"
+                :key="col.name"
+                :props="props" :class="props.row.saldo ? 'text-weight-bold' : 'text-weight-regular'"
+              >
+                {{  }}{{ col.value }}
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
       </div>
     </template>
   </MGLayout>
@@ -45,99 +58,19 @@ import MGLayout from 'layouts/MGLayout.vue'
 import { date } from 'quasar'
 import { formatMoney } from 'src/utils/formatters.js'
 
-const  formatIndicadorTipoLancamento = (val) =>{
-  switch (val){
-    case "1":
-      return "lançamento contabilizado"
-    case "2":
-      return "lançamento futuro"
-    case "3":
-      return "lançamento em processamento"
-    case "S":
-      return "saldo atual"
-    case "R":
-      return "saldo investimento resgate automático"
-    case "E":
-      return "lim. extra cartão utilizado"
-    case "A":
-      return "saldo aprovisionado do dia"
-    case "D":
-      return "saldo disponível"
-    case "L":
-      return "limite disponível"
-    case "C":
-      return "limite contratado"
-    case "U":
-      return "limite utilizado"
-    default:
-      return val
-  }
-}
-
-const formatIndicadorSinalLancamento = (val) =>{
-  switch (val){
-    case "C":
-      return "crédito"
-    case "D":
-      return "débito"
-    case "*":
-      return "valor bloqueado"
-    default:
-      return val
-  }
-}
-
-const formatIndicadorTipoPessoaContrapartida = (val) =>{
-  switch (val){
-    case "F":
-      return "pessoa física"
-    case "J":
-      return "pessoa jurídica"
-    default:
-      return val
-  }
-}
-
-const formatCpfCnpj = (val) => {
-  if(!val){
-    return val
-  }
-  const limpo = val.replace(/\D/g, '');
-
-  if (limpo.length === 11) {
-    return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  } else if (limpo.length === 14) {
-    return limpo.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-  } else {
-    return val;
-  }
-}
 
 export default {
   components: { MGLayout },
   data() {
     return {
       portador: null,
-      filial: null,
       extratos: [],
       columns: [
-        { name: 'fitid', label: 'Nº Doc', field: 'fitid' },
-        { name: 'indicadortipolancamento', label: 'Tipo Lançamento', field: 'indicadortipolancamento', format: formatIndicadorTipoLancamento },
-        { name: 'lancamento', label: 'Data Lançamento', field: 'lancamento', format: val => date.formatDate(val, 'DD-MM-YYYY') },
-        { name: 'movimento', label: 'Data Movimento', field: 'movimento', format: val => date.formatDate(val, 'DD-MM-YYYY') },
-        { name: 'codigoagenciaorigem', label: 'Ag Origem', field: 'codigoagenciaorigem' },
-        { name: 'numerolote', label: 'Nº Lote', field: 'numerolote' },
-        { name: 'codigohistorico', label: 'Cod Histórico', field: 'codigohistorico' },
-        { name: 'textodescricaohistorico', label: 'Descrição Histórico', field: 'textodescricaohistorico' },
-        { name: 'valor', label: 'Valor', field: 'valor', format: formatMoney },
-        { name: 'indicadorsinallancamento', label: 'Ind. Sinal Lançamento', field: 'indicadorsinallancamento', format: formatIndicadorSinalLancamento },
-        { name: 'textoinformacaocomplementar', label: 'Texto Complementar', field: 'textoinformacaocomplementar' },
-        { name: 'numerocpfcnpjcontrapartida', label: 'CPF/CNPJ Contrapartida', field: 'numerocpfcnpjcontrapartida', format: formatCpfCnpj },
-        { name: 'indicadortipopessoacontrapartida', label: 'Tipo Pessoa Contrapartida', field: 'indicadortipopessoacontrapartida', format: formatIndicadorTipoPessoaContrapartida },
-        { name: 'codigobancocontrapartida', label: 'Cod. Banco Contrapartida', field: 'codigobancocontrapartida' },
-        { name: 'codigoagenciacontrapartida', label: 'Ag. Contrapartida', field: 'codigoagenciacontrapartida' },
-        { name: 'numerocontacontrapartida', label: 'Conta Contrapartida', field: 'numerocontacontrapartida' },
-        { name: 'textodvcontacontrapartida', label: 'Digito Verificador', field: 'textodvcontacontrapartida' },
+        { name: 'lancamento', label: 'Data', field: 'lancamento', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
+        { name: 'observacoes', label: 'Obeservação', field: 'observacoes', align: 'left' },
+        { name: 'documento', label: 'Documento', field: 'numero' },
+        { name: 'valor', label: 'Valor', field: 'valor', format: val => val !== null ? formatMoney(val) : '' },
+        { name: 'saldo', label: 'Saldo', field: 'saldo', format: val => val !== undefined ? formatMoney(val) : '' }
       ],
       page: 1,
       perPage: 50,
@@ -145,11 +78,13 @@ export default {
       isLoading: false,
       pagination: { rowsPerPage: 0 },
       buscandoApiBb: false,
+      saldos:[],
+      saldoAnterior: null,
+      buscandoInfo: true,
     }
   },
   methods: {
     consultarApiBB(){
-      console.log("consultarApiBB")
       this.buscandoApiBb = true;
 
       this.$api.get(`v1/portador/${this.$route.params.id}/consulta-extrato`, {
@@ -167,6 +102,7 @@ export default {
 
         this.$q.notify({ message: mensagem, color: 'positive' })
         this.extratos = [];
+        this.buscaInfo();
       })
       .catch((error) => {
         console.error('Erro:', error)
@@ -176,11 +112,19 @@ export default {
         this.buscandoApiBb = false
       })
     },
-    getPortador(){
+    buscaInfo(){
+      this.buscandoInfo = true;
+      this.getPortadorInfo().then(() =>
+        this.listaSaldos().then(() => {
+          this.buscandoInfo = false
+        })
+      )
+    },
+    getPortadorInfo(){
       return new Promise(resolve => {
-        this.$api.get(`v1/portador/${this.$route.params.id}`)
+        this.$api.get(`v1/portador/${this.$route.params.id}/info`)
           .then((response) => {
-            this.portador = response.data.data
+            this.portador = response.data
           })
           .catch((error) => {
             console.error('Erro:', error)
@@ -193,6 +137,10 @@ export default {
     },
     getFilial(){
       return new Promise(resolve => {
+        if(!this.portador.codfilial){
+          resolve();
+          return;
+        }
         this.$api.get(`v1/filial/${this.portador.codfilial}`, {
           params: {
             fields: 'filial',
@@ -209,6 +157,28 @@ export default {
           })
       })
     },
+    listaSaldos(){
+      return new Promise(resolve => {
+        const mesAno = this.$route.params.mesAno;
+        this.$api
+          .get(`v1/portador/${this.$route.params.id}/saldos-portador`, {
+            params: {
+              mes: mesAno.substring(0,2),
+              ano: mesAno.substring(3)
+            },
+          })
+          .then((response) => {
+            this.saldos = response.data.saldos;
+            this.saldoAnterior = response.data.saldoAnterior;
+          }).catch((error) => {
+            console.error('Erro:', error)
+          })
+          .finally(() => {
+            //this.isLoading = false;
+            resolve();
+          })
+      })
+    },
     listaExtratos(index, done) {
       if (this.isLoading || this.isLastPage) {
         done?.()
@@ -216,20 +186,72 @@ export default {
       }
 
       this.isLoading = true
+      const mesAno = this.$route.params.mesAno;
       this.$api
         .get(`v1/portador/${this.$route.params.id}/extratos`, {
           params: {
             page: this.page,
             limit: this.perPage,
-            mes: this.$route.params.mes,
-            ano: this.$route.params.ano
+            mes: mesAno.substring(0,2),
+            ano: mesAno.substring(3)
           },
         })
         .then((response) => {
           const novosExtratos = response.data.data
-          this.extratos.push(...novosExtratos)
 
           this.isLastPage = response.data.current_page >= response.data.last_page
+          const extratosComSaldos = [];
+
+          if(this.page === 1 && this.saldoAnterior){
+            extratosComSaldos.push({
+              lancamento: this.saldoAnterior.dia,
+              observacoes: 'SALDO ANTERIOR',
+              documento: "",
+              valor: null,
+              saldo: this.saldoAnterior.saldobancario
+            })
+          }
+
+          let diaAtual = null;
+          for(const extrato of novosExtratos){
+            const diaExtrato = new Date(extrato.lancamento);
+            diaExtrato.setHours(0, 0, 0, 0)
+
+            if(diaAtual == null ||  diaAtual.getTime() === diaExtrato.getTime()){
+              extratosComSaldos.push(extrato);
+            }else{
+              let saldo = this.saldos.find((saldo) => {
+                  let saldoDia = new Date(saldo.dia)
+                  saldoDia.setHours(0, 0, 0, 0)
+
+                  return saldoDia.getTime() === diaAtual.getTime();
+                })
+
+              extratosComSaldos.push({
+                lancamento: saldo.dia,
+                observacoes: 'SALDO',
+                documento: "",
+                valor: null,
+                saldo: saldo.saldobancario
+              }, extrato);
+            }
+            diaAtual = diaExtrato;
+          }
+
+          if(this.isLastPage){
+            let ultimoSaldo =  this.saldos[this.saldos.length - 1];
+            if(ultimoSaldo){
+              extratosComSaldos.push({
+                lancamento: ultimoSaldo.dia,
+                observacoes: 'SALDO',
+                documento: "",
+                valor: null,
+                saldo: ultimoSaldo.saldobancario
+              })
+            }
+          }
+
+          this.extratos.push(...extratosComSaldos)
           this.page = this.isLastPage ? this.page : this.page + 1
         })
         .catch((error) => {
@@ -252,7 +274,7 @@ export default {
   },
 
   mounted() {
-    this.getPortador().then(() => this.getFilial())
+    this.buscaInfo()
   },
 }
 </script>
