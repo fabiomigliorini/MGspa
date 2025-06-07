@@ -33,7 +33,7 @@
             <q-td :props="props" class="q-pa-0" style="vertical-align: top;">
               <div v-if="Array.isArray(props.value) && props.value.length" style="display: flex;flex-direction: column;">
                 <router-link v-for="port in props.value" :key="port.codportador"
-                             style="text-decoration: none; color:dodgerblue"
+                             style="text-decoration: none; color:dodgerblue" :class="moneyTextColor(port.saldobancario)"
                              :to="{
                               name: 'extrato',
                               params: {
@@ -58,7 +58,7 @@
 
           <!-- Coluna Total por Banco -->
           <template v-slot:body-cell-totalBanco="props">
-            <q-td :props="props" class="text-weight-bold bg-yellow-1" style="vertical-align: top;">
+            <q-td :props="props" :class="'text-weight-bold bg-yellow-1 ' + moneyTextColor(props.value)" style="vertical-align: top;">
               {{ formatMoney(props.value) }}
             </q-td>
           </template>
@@ -69,11 +69,11 @@
 
               <q-td key="banco">Total por Filial</q-td>
 
-              <q-td v-for="f in filiais" :key="f.codfilial" align="right">
+              <q-td v-for="f in filiais" :key="f.codfilial" align="right" :class="moneyTextColor(f.totalFilial)">
                 {{ formatMoney(f.totalFilial) }}
               </q-td>
 
-              <q-td align="right">
+              <q-td align="right" :class="moneyTextColor(totalGeral)">
                 {{ formatMoney(totalGeral) }}
               </q-td>
             </q-tr>
@@ -118,6 +118,15 @@ export default {
   },
   methods: {
     formatMoney,
+    moneyTextColor(value){
+      let classes = ""
+      if(value >= 0){
+        //classes += ' text-blue'
+      }else{
+        classes += ' text-red'
+      }
+      return classes
+    },
     listaSaldos(){
       if (this.isLoading) {
         return;

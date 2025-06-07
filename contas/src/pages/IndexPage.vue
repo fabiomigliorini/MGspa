@@ -38,7 +38,7 @@
           <template v-slot:body="props">
             <q-tr :props="props" :class="props.rowIndex % 2 === 0 ? 'bg-white' : 'bg-grey-2'">
               <q-td v-for="col in props.cols" :key="col.name" :props="props"
-                :class="props.row.saldo ? 'text-weight-bold' : 'text-weight-regular'">
+                :class="moneyTextColor(props, col)">
                 {{ col.value }}
               </q-td>
             </q-tr>
@@ -64,7 +64,7 @@ export default {
       columns: [
         { name: 'lancamento', label: 'Data', field: 'lancamento', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
         { name: 'observacoes', label: 'Obeservação', field: 'observacoes', align: 'left' },
-        { name: 'documento', label: 'Documento', field: 'numero' },
+        { name: 'documento', label: 'Documento', field: 'numero', align: 'left' },
         { name: 'valor', label: 'Valor', field: 'valor', format: val => val !== null ? formatMoney(val) : '' },
         { name: 'saldo', label: 'Saldo', field: 'saldo', format: val => val !== undefined ? formatMoney(val) : '' }
       ],
@@ -80,6 +80,23 @@ export default {
     }
   },
   methods: {
+    moneyTextColor(props, col){
+      let classes = ""
+      if(col.name === 'valor' || col.name === 'saldo') {
+        let value = col.value.replace(/\s/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.');
+        if(value > 0){
+          classes += ' text-blue'
+        }else{
+          classes += ' text-red'
+        }
+      }
+      if(props.row.saldo){
+        classes += ' text-weight-bold'
+      }else{
+        classes += ' text-weight-regular'
+      }
+      return classes
+    },
     consultarApiBB(){
       this.buscandoApiBb = true;
       const mesAno = this.$route.params.mesAno;
