@@ -21,7 +21,7 @@
         </q-btn>
       </div>
       <div class="q-pa-md" v-if="!buscandoInfo">
-        <q-table
+        <q-table ref="tabela"
           class="my-sticky-dynamic"
           flat bordered
           :rows="extratos"
@@ -34,16 +34,12 @@
           :pagination="pagination"
           :rows-per-page-options="[0]"
           @virtual-scroll="onScroll"
-          loading-label="Carregando"
-          >
+          loading-label="Carregando">
           <template v-slot:body="props">
             <q-tr :props="props" :class="props.rowIndex % 2 === 0 ? 'bg-white' : 'bg-grey-2'">
-              <q-td
-                v-for="col in props.cols"
-                :key="col.name"
-                :props="props" :class="props.row.saldo ? 'text-weight-bold' : 'text-weight-regular'"
-              >
-                {{  }}{{ col.value }}
+              <q-td v-for="col in props.cols" :key="col.name" :props="props"
+                :class="props.row.saldo ? 'text-weight-bold' : 'text-weight-regular'">
+                {{ col.value }}
               </q-td>
             </q-tr>
           </template>
@@ -86,23 +82,21 @@ export default {
   methods: {
     consultarApiBB(){
       this.buscandoApiBb = true;
-
+      const mesAno = this.$route.params.mesAno;
       this.$api.get(`v1/portador/${this.$route.params.id}/consulta-extrato`, {
         params: {
-          mes: this.$route.params.mes,
-          ano: this.$route.params.ano
+          mes: mesAno.substring(0,2),
+          ano: mesAno.substring(3)
         },
       })
       .then((response) => {
-        console.log("consultarApiBB.response", response)
-        const data = response.data.data;
+        const data = response.data;
         var mensagem = `
               Importados ${data.registros}
               registros com ${data.falhas} falhas!'`;
 
         this.$q.notify({ message: mensagem, color: 'positive' })
         this.extratos = [];
-        this.buscaInfo();
       })
       .catch((error) => {
         console.error('Erro:', error)
@@ -110,6 +104,8 @@ export default {
       })
       .finally(() => {
         this.buscandoApiBb = false
+        this.isLastPage = false;
+        this.buscaInfo();
       })
     },
     buscaInfo(){
@@ -134,28 +130,6 @@ export default {
           })
       })
 
-    },
-    getFilial(){
-      return new Promise(resolve => {
-        if(!this.portador.codfilial){
-          resolve();
-          return;
-        }
-        this.$api.get(`v1/filial/${this.portador.codfilial}`, {
-          params: {
-            fields: 'filial',
-          }
-        })
-          .then((response) => {
-            this.filial = response.data
-          })
-          .catch((error) => {
-            console.error('Erro:', error)
-          })
-          .finally(() => {
-            resolve();
-          })
-      })
     },
     listaSaldos(){
       return new Promise(resolve => {

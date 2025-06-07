@@ -179,7 +179,6 @@ export default {
       this.rows = Object.values(linhasPorBanco);
     },
     uploadOfx(event){
-      console.log("uploadOfx")
       this.importandoOfx = true;
       const arquivos = event.target.files;
 
