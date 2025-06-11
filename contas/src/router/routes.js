@@ -13,6 +13,12 @@ const routes = [
       {
         path: "",
         name: "inicio",
+        component: () => import('pages/SaldoPage.vue'),
+
+      },
+      {
+        path: "extrato/:id/:mesAno",
+        name: "extrato",
         component: () => import('pages/IndexPage.vue')
       }
     ],

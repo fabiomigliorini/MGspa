@@ -1,9 +1,6 @@
 <script setup>
 
 import { authStore } from 'stores/auth'
-import moment from 'moment';
-import 'moment/min/locales';
-moment.locale("pt-br")
 
 const auth = authStore();
 
@@ -59,7 +56,7 @@ const auth = authStore();
                 <template v-if="auth.verificaPermissaoUsuario('Recursos Humanos')">
                     <q-separator inset color="yelllow-6" />
                     <q-item class="q-px-sm">
-                        <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="'/ferias/' + moment().year()">
+                        <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="'/ferias/' + $moment().year()">
                             <q-icon name="hotel" size="35px" />
                             <div>Férias</div>
                         </q-btn>

@@ -6,6 +6,7 @@ use Exception;
 use Carbon\Carbon;
 use Mg\Portador\ExtratoBancario;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorSaldo;
 
 class ExtratoBbService
 {
@@ -36,9 +37,8 @@ class ExtratoBbService
         $numeroPaginaSolicitacao = 1;
         $registros = 0;
         $falhas = 0;
-
+        //  dd($dataInicioSolicitacao, $dataFimSolicitacao);
         do {
-
             $bbtoken = static::verificaTokenValido($portador);
 
             $extrato = ExtratoBbApiService::contaCorrente(
@@ -50,7 +50,9 @@ class ExtratoBbService
                 $dataFimSolicitacao,
                 $numeroPaginaSolicitacao
             );
-
+            if (!$extrato) {
+                throw new Exception("Erro ao consultar extrato na API");
+            }
             if (isset($extrato['erros'])) {
                 throw new Exception($extrato['erros'][0]['mensagem'], 1);
             }
@@ -61,53 +63,27 @@ class ExtratoBbService
             //     continue;
             // }
             foreach ($extrato['listaLancamento'] as $lancamento) {
-
-                /* $trntype = null;
-                 switch ($lancamento['indicadorSinalLancamento']){
-                     case 'C':
-                         $trntype = 'CREDIT';
-                         break;
-                     case 'D':
-                         $trntype = 'DEBIT';
-                         break;
-                     case '*':
-                         break;
-                 }
-                 $tipo = ExtratoBancarioTipoMovimento::firstOrNew([
-                     'trntype' => $trntype,
-                 ]);*/
-
-                 $extratoBancario = ExtratoBancario::firstOrNew([
-                    'codportador' => $portador->codportador,
-                    'fitid' => $lancamento['numeroDocumento'],
-                 ]);
-
-                //$extratoBancario->codextratobancariotipomovimento = $tipo->codextratobancariotipomovimento;
-                $extratoBancario->indicadortipolancamento = $lancamento['indicadorTipoLancamento'];
-                $extratoBancario->lancamento = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);
-                if ($lancamento['dataMovimento'] != '0') {
-                    $extratoBancario->movimento = Carbon::createFromFormat('dmY', $lancamento['dataMovimento']);
+                //Doc: https://apoio.developers.bb.com.br/referency/post/647f7847de39c800131d84ad
+                if($lancamento['codigoHistorico'] == '0'){
+                    //Código de histórico 0 – traz o saldo imediatamente anterior ao período pesquisado,
+                    //e/ou o(s) saldo(s) parcial(is) dos dias ao longo do período pesquisado
+                    if($lancamento['textoDescricaoHistorico'] == 'Saldo do dia'){
+                        if (!self::salvaSaldo($portador->codportador, $lancamento)) {
+                            $falhas++;
+                        };
+                        $registros++;
+                    }else{
+                        //Saldo anterior, não fazer nada.
+                    }
+                }else if($lancamento['codigoHistorico'] == '999'){
+                    //Código de histórico 999 – traz o saldo final do período pesquisado
+                    //Não fazer nada
+                }else{
+                    if (!self::salvaExtrato($portador->codportador, $lancamento)) {
+                        $falhas++;
+                    };
+                    $registros++;
                 }
-                $extratoBancario->codigoagenciaorigem = $lancamento['codigoAgenciaOrigem'];
-                $extratoBancario->numerolote = $lancamento['numeroLote'];
-                //$extratoBancario->numeroDocumento = $lancamento['numeroDocumento'];
-                $extratoBancario->codigohistorico = $lancamento['codigoHistorico'];
-                $extratoBancario->textodescricaohistorico = $lancamento['textoDescricaoHistorico'];
-                $extratoBancario->valor = $lancamento['valorLancamento'];
-                $extratoBancario->indicadorsinallancamento = $lancamento['indicadorSinalLancamento'];
-                $extratoBancario->textoinformacaocomplementar = $lancamento['textoInformacaoComplementar'];
-                $extratoBancario->numerocpfcnpjcontrapartida = $lancamento['numeroCpfCnpjContrapartida'];
-                $extratoBancario->indicadortipopessoacontrapartida = $lancamento['indicadorTipoPessoaContrapartida'];
-                $extratoBancario->codigobancocontrapartida = $lancamento['codigoBancoContrapartida'];
-                $extratoBancario->codigoagenciacontrapartida = $lancamento['codigoAgenciaContrapartida'];
-                $extratoBancario->numerocontacontrapartida = $lancamento['numeroContaContrapartida'];
-                $extratoBancario->textodvcontacontrapartida = $lancamento['textoDvContaContrapartida'];
-
-                if (!$extratoBancario->save()) {
-                    $falhas++;
-                };
-
-                $registros++;
             }
 
             $numeroPaginaSolicitacao = $extrato['numeroPaginaProximo'];
@@ -122,11 +98,46 @@ class ExtratoBbService
         ];
     }
 
-    public static function listaExtratos($codportador, $per_page){
-        $extratosPage = ExtratoBancario::where('codportador', '=', $codportador
-        )->orderBy('criacao', 'desc'
-        )->paginate($per_page);
+    public static function salvaSaldo($codPortador, $lancamento)
+    {
+        $portadorSaldo = PortadorSaldo::firstOrNew([
+            'codportador' => $codPortador,
+            'dia' => Carbon::createFromFormat('dmY', $lancamento['dataLancamento'])
+        ]);
 
-        return $extratosPage;
+        $portadorSaldo->saldobancario = $lancamento['valorLancamento'];
+
+        return $portadorSaldo->save();
     }
+    public static function salvaExtrato($codPortador, $lancamento)
+    {
+        $extratoBancario = ExtratoBancario::firstOrNew([
+            'codportador' => $codPortador,
+            'fitid' => $lancamento['numeroDocumento'],
+        ]);
+
+        //$extratoBancario->codextratobancariotipomovimento = $tipo->codextratobancariotipomovimento;
+        $extratoBancario->indicadortipolancamento = $lancamento['indicadorTipoLancamento'];
+        $extratoBancario->lancamento = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);;
+        if ($lancamento['dataMovimento'] != '0') {
+            $extratoBancario->movimento = Carbon::createFromFormat('dmY', $lancamento['dataMovimento']);
+        }
+        $extratoBancario->codigoagenciaorigem = $lancamento['codigoAgenciaOrigem'];
+        $extratoBancario->numero = $lancamento['numeroLote'];
+        $extratoBancario->codigohistorico = $lancamento['codigoHistorico'];;
+        $extratoBancario->observacoes = $lancamento['textoDescricaoHistorico'];
+        $extratoBancario->valor = $lancamento['valorLancamento'];
+        $extratoBancario->indicadorsinallancamento = $lancamento['indicadorSinalLancamento'];
+        $extratoBancario->textoinformacaocomplementar = $lancamento['textoInformacaoComplementar'];
+        $extratoBancario->numerocpfcnpjcontrapartida = $lancamento['numeroCpfCnpjContrapartida'];
+        $extratoBancario->indicadortipopessoacontrapartida = $lancamento['indicadorTipoPessoaContrapartida'];
+        $extratoBancario->codigobancocontrapartida = $lancamento['codigoBancoContrapartida'];
+        $extratoBancario->codigoagenciacontrapartida = $lancamento['codigoAgenciaContrapartida'];
+        $extratoBancario->numerocontacontrapartida = $lancamento['numeroContaContrapartida'];
+        $extratoBancario->textodvcontacontrapartida = $lancamento['textoDvContaContrapartida'];
+
+        return $extratoBancario->save();
+    }
+
+
 }

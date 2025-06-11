@@ -3,6 +3,7 @@
 namespace Mg\Portador;
 
 use App\Mg\Portador\ExtratoBbService;
+use App\Mg\Portador\SomatorioSaldoResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -23,6 +24,20 @@ class PortadorController extends MgController
         return new PortadorResource($portador);
     }
 
+    public function info(Request $request, $codportador)
+    {
+        $portador = Portador::findOrFail($codportador);
+
+        return response()->json([
+            'codportador'=>  $portador->codportador,
+            'portador'=>  $portador->portador,
+            'codfilial' => $portador->codfilial,
+            'filial' => optional($portador->Filial)->filial,
+            'codbanco' => $portador->codbanco,
+            'banco' => optional($portador->Banco)->banco,
+        ]);
+    }
+
     public function importarOfx(Request $request)
     {
         $request->validate([
@@ -33,6 +48,7 @@ class PortadorController extends MgController
             'arquivos.*.required' => 'Envie um arquivo!',
             'arquivos.*.mimes' => 'Somente arquivos OFX aceitos!',
         ]);
+
         $ret = [];
         foreach ($request->arquivos as $key => $arquivo) {
             $ofx = file_get_contents($arquivo->getRealPath());
@@ -41,31 +57,38 @@ class PortadorController extends MgController
         return $ret;
     }
 
-    public function consultaExtrato(Request $request)
+    public function consultaExtrato(Request $request, $codportador)
     {
 
-        //$portador = new Portador();
-        $portador = Portador::findOrFail(1);
+        $homologacao = true;
+        $mes = $request->mes;
+        $ano = $request->ano;
 
-        $portador->bbdevappkey = 'd1fa18b4902e4deab7107b2450e21995';
-        $portador->bbclientid = 'eyJpZCI6ImY5MzRhZTktNDdhZi0iLCJjb2RpZ29QdWJsaWNhZG9yIjowLCJjb2RpZ29Tb2Z0d2FyZSI6MTM0MDM5LCJzZXF1ZW5jaWFsSW5zdGFsYWNhbyI6MX0';
-        $portador->bbclientsecret = 'eyJpZCI6IiIsImNvZGlnb1B1YmxpY2Fkb3IiOjAsImNvZGlnb1NvZnR3YXJlIjoxMzQwMzksInNlcXVlbmNpYWxJbnN0YWxhY2FvIjoxLCJzZXF1ZW5jaWFsQ3JlZGVuY2lhbCI6MSwiYW1iaWVudGUiOiJob21vbG9nYWNhbyIsImlhdCI6MTc0NTY3NDY0MzE0OH0';
-        $portador->agencia = '1505';
-        $portador->conta = '1348';
+        $portador = Portador::findOrFail($codportador);
 
-        $dataInicioMovimento = Carbon::now()->subDays(16);
-        //$dataInicioMovimento = null;
-        $dataFimMovimento = Carbon::now()->subDays(0);
-        //$dataFimMovimento = null;
-        return ExtratoBbService::consultarExtrato($portador, $dataInicioMovimento, $dataFimMovimento);
+        if($homologacao){
+            $portador->bbdevappkey = 'd1fa18b4902e4deab7107b2450e21995';
+            $portador->bbclientid = 'eyJpZCI6ImY5MzRhZTktNDdhZi0iLCJjb2RpZ29QdWJsaWNhZG9yIjowLCJjb2RpZ29Tb2Z0d2FyZSI6MTM0MDM5LCJzZXF1ZW5jaWFsSW5zdGFsYWNhbyI6MX0';
+            $portador->bbclientsecret = 'eyJpZCI6IiIsImNvZGlnb1B1YmxpY2Fkb3IiOjAsImNvZGlnb1NvZnR3YXJlIjoxMzQwMzksInNlcXVlbmNpYWxJbnN0YWxhY2FvIjoxLCJzZXF1ZW5jaWFsQ3JlZGVuY2lhbCI6MSwiYW1iaWVudGUiOiJob21vbG9nYWNhbyIsImlhdCI6MTc0NTY3NDY0MzE0OH0';
+            $portador->agencia = '1505';
+            $portador->conta = '1348';
+        }
 
+        $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
+        $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
 
+        return ExtratoBbService::consultarExtrato($portador, $dataInicial, $dataFinal);
     }
 
     public function listaExtratos(Request $request, $codportador){
         $per_page = $request->limit??50;
+        $mes = $request->mes;
+        $ano = $request->ano;
 
-        $extratosPage = ExtratoBbService::listaExtratos($codportador, $per_page);
+        $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
+        $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
+
+        $extratosPage = PortadorService::listaMovimentacoes($codportador, $dataInicial, $dataFinal, $per_page);
 
         return response()->json([
             'data' => $extratosPage->items(),
@@ -73,5 +96,25 @@ class PortadorController extends MgController
             'last_page' => $extratosPage->lastPage(),
             'total' => $extratosPage->total()
         ]);
+    }
+
+    public function listaSaldos(Request $request){
+        $dia = Carbon::createFromFormat('d-m-Y', $request->dia);
+
+        $dados = PortadorService::listaSaldos($dia);
+
+        return new SomatorioSaldoResource($dados);
+    }
+
+    public function listaSaldosPortador(Request $request, $codportador){
+        $mes = $request->mes;
+        $ano = $request->ano;
+
+        $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
+        $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
+
+        $dados = PortadorService::listaSaldosPortador($codportador, $dataInicial, $dataFinal);
+
+        return $dados;
     }
 }

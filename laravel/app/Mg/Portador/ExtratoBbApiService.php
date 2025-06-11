@@ -61,8 +61,8 @@ class ExtratoBbApiService
             . '&numeroPaginaSolicitacao=' . $numeroPaginaSolicitacao;
 
         if($dataInicioSolicitacao && $dataFimSolicitacao){
-            $url = $url . '&dataInicioSolicitacao=' . $dataInicioSolicitacao->format('dmY')
-                . '&dataFimSolicitacao=' . $dataFimSolicitacao->format('dmY');
+            $url = $url . '&dataInicioSolicitacao=' . (int)$dataInicioSolicitacao->format('dmY')
+                . '&dataFimSolicitacao=' . (int)$dataFimSolicitacao->format('dmY');
         }
 
         $auth = "Authorization: Bearer {$token}";
