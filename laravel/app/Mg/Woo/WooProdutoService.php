@@ -50,6 +50,7 @@ class WooProdutoService
         // $product->short_description = 'Caderno premium com temática Fortnite.';
         $product->sku = '#' . str_pad($prod->codproduto, 6, '0', STR_PAD_LEFT);
         // $product->price = $prod->preco;
+        // TODO: Preco com diferencial de 3%
         $product->regular_price = "{$prod->preco}";
         // $product->sale_price = '29.99';
         // $product->date_on_sale_from = '2025-06-01T00:00:00';
@@ -110,7 +111,11 @@ class WooProdutoService
             if (empty($pv->variacao)) {
                 continue;
             }
-            $product->tags[] = (object) ['name' => $pv->variacao];
+            $descr = $pv->variacao;
+            if (empty($descr)) {
+                $descr = $pv->codprodutovariacao;
+            }
+            $product->tags[] = (object) ['name' => "{$descr}"];
         }
 
         // Variacoes como atributos
@@ -124,7 +129,11 @@ class WooProdutoService
                 'visible' => true,
             ];
             foreach ($variacoes as $var) {
-                $product->attributes[0]->options[] = $var->variacao;
+                $descr = $var->variacao;
+                if (empty($descr)) {
+                    $descr = $var->codprodutovariacao;
+                }
+                $product->attributes[0]->options[] = "{$descr}";
             }
         }
 
@@ -226,7 +235,6 @@ class WooProdutoService
 
     public function exportar()
     {
-
         $this->exportarProduto();
         $this->exportarImagens();
         $this->exportarVariacoes();
@@ -266,7 +274,7 @@ class WooProdutoService
         WooProdutoImagem::where('codwooproduto', $this->wp->codwooproduto)->whereNotIn('id', $ids)->delete();
 
         // montar um array com todas as imagens que não foram enviadas ainda
-        $product = new stdClass(['images' => []]);
+        $images = [];
         $codprodutoimagem = [];
         foreach ($this->wp->Produto->ProdutoImagemS()->orderBy('codprodutoimagem', 'ASC')->get() as $pi) {
             $wpi = WooProdutoImagem::where(['codprodutoimagem' => $pi->codprodutoimagem])->first();
@@ -274,7 +282,7 @@ class WooProdutoService
                 continue;
             }
             $codprodutoimagem[] = $pi->codprodutoimagem;
-            $product->images[] =  (object) [
+            $images[] =  (object) [
                 'src' => 'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' . $pi->Imagem->arquivo
             ];
         }
@@ -284,18 +292,27 @@ class WooProdutoService
             return;
         }
 
-        // envia todas as novas imagens pro Woo
-        $this->api->putProduto($this->wp->id, $product);
-        $ro = $this->api->responseObject;
+        // quebra o array de imagens pra enviar em blocos (chunks) de 10 em 10 imagens
+        $cImages = array_chunk($images, 10);
+        $cCodprodutoimagem = array_chunk($codprodutoimagem, 10);
 
-        // percorre as imagens criadas salvando na tabela de/para
-        for ($i = 0; $i < sizeof($codprodutoimagem); $i++) {
-            $wpi = WooProdutoImagem::firstOrCreate([
-                'codprodutoimagem' => $codprodutoimagem[$i],
-                'codwooproduto' => $this->wp->codwooproduto,
-                'id' => $ro->images[$i]->id,
-            ]);
-        }
+        // percorre os blocos
+        foreach ($cImages as $iChunk => $chunk) {
+
+            // envia todas as novas imagens pro Woo
+            $product = ['images' => $chunk];
+            $this->api->putProduto($this->wp->id, $product);
+            $ro = $this->api->responseObject;
+
+            // percorre as imagens criadas salvando na tabela de/para
+            for ($i = 0; $i < sizeof($chunk); $i++) {
+                $wpi = WooProdutoImagem::firstOrCreate([
+                    'codprodutoimagem' => $cCodprodutoimagem[$iChunk][$i],
+                    'codwooproduto' => $this->wp->codwooproduto,
+                    'id' => $ro->images[$i]->id,
+                ]);
+            }
+        } 
 
         // faz um novo put com todos os id de imagens
         $product = new stdClass(['images' => []]);
