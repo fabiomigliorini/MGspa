@@ -151,12 +151,12 @@ class PortadorService
 
     public static function listaSaldos($dia)
     {
-        $sql = '
+        $sql = "
             select
                 p.codfilial,
                 f.filial,
                 b.codbanco,
-                    b.banco,
+                b.banco,
                 p.codportador,
                 p.portador,
                 s.saldobancario
@@ -175,7 +175,7 @@ class PortadorService
                 )
             where coalesce(p.inativo, now()) >= :dia
             order by p.codfilial, p.codbanco, p.codportador
-        ';
+        ";
 
         $data = DB::select($sql, [
             'dia' => $dia
@@ -189,8 +189,6 @@ class PortadorService
 
     private static function montaEstruturaSaldo(array $linhas): array
     {
-        //  dd($linhas);
-       //return "";
         // monta os portadores de um banco
         $montarPortadores = function($itensBanco): array {
             return collect($itensBanco)
@@ -216,7 +214,6 @@ class PortadorService
             return collect($itensFilial)
                 ->groupBy('codbanco')
                 ->map(function($itensBanco) use ($montarPortadores, $somarBanco) {
-                    //($itensBanco);
                     return [
                         'codbanco'   => (int)   $itensBanco->first()->codbanco,
                         'nome'       =>         $itensBanco->first()->banco,
@@ -276,11 +273,10 @@ class PortadorService
         ];
     }
 
-    public static function listaMovimentacoes($codportador, $dataInicial, $dataFinal, $per_page){
+    public static function listaMovimentacoes($codportador, $dataInicial, $dataFinal){
         $extratosPage = ExtratoBancario::where('codportador', '=', $codportador)
             ->whereBetween('lancamento', [$dataInicial, $dataFinal])
-            ->orderBy('lancamento', 'asc')
-            ->paginate($per_page);
+            ->orderBy('lancamento', 'asc')->get();
 
         return $extratosPage;
     }
@@ -300,5 +296,19 @@ class PortadorService
             'saldos' => $saldos,
             'saldoAnterior' => $saldoAnterior
         ];
+    }
+
+    public static function getIntervaloTotalExtratos(){
+        //TODO Where provisório porque tem uns valores errados na tabela. Ex ano que começa com 00
+        $sql = '
+            SELECT
+                MIN(lancamento) AS primeira_data,
+                MAX(lancamento) AS ultima_data
+            FROM tblextratobancario
+            WHERE EXTRACT(YEAR FROM lancamento) >= 1000
+        ';
+
+        $data = DB::select($sql);
+        return $data[0];
     }
 }

@@ -2,39 +2,41 @@
   <MGLayout>
     <template #tituloPagina> Extrato </template>
     <template #content>
-      <div class="q-mx-md q-mt-md"
-           style="display: flex; align-items: center; justify-content: space-between;"
-           v-if="portador">
+      <div class="q-mx-md q-mt-md" v-if="portador">
         <div>
           <p  class="text-caption q-mb-auto"><b>Portador:</b> {{portador.portador}}</p>
-          <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial}}</p>
+          <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial ? portador.filial : 'Sem Filial'}}</p>
           <p  class="text-caption q-mb-auto"><b>Banco:</b> {{portador.banco}}</p>
         </div>
 
-        <q-btn label="Consultar API" color="primary" icon="cloud_download"
-               v-if="portador.codbanco == 1"
-               :loading="buscandoApiBb" @click="consultarApiBB()" >
-          <template v-slot:loading>
-            <q-spinner-oval class="on-left" />
-            Carregando...
-          </template>
-        </q-btn>
       </div>
+      <div class="flex items-center">
+        <q-select v-model="diaSelecionado" :options="diasDoMes"
+                  label="Dia" style="width: 100px" class="q-mx-md" @update:model-value="scrollParaDia" />
+
+        <div>
+          <q-btn round flat size="md" icon="chevron_left" @click="mesAnterior" :disable="!mesAnteriorHabilitado" />
+          <q-btn round flat size="md" icon="chevron_right" @click="mesSeguinte" :disable="!mesSeguinteHabilitado"/>
+        </div>
+
+        <q-tabs
+          v-model="mesAnoSelecionado"
+          no-caps active-color="primary"
+          class="q-mx-md">
+          <q-tab v-for="mesAno in intervalo" :key="mesAno.name" :name="mesAno.name" :label="mesAno.label" />
+        </q-tabs>
+      </div>
+
+
       <div class="q-pa-md" v-if="!buscandoInfo">
         <q-table ref="tabela"
           class="my-sticky-dynamic"
           flat bordered
           :rows="extratos"
           :columns="columns"
-          :loading="isLoading"
-          row-key="codextratobancario"
-          virtual-scroll
-          :virtual-scroll-item-size="48"
-          :virtual-scroll-sticky-size-start="48"
-          :pagination="pagination"
-          :rows-per-page-options="[0]"
-          @virtual-scroll="onScroll"
-          loading-label="Carregando">
+          :loading="isLoading" virtual-scroll
+          row-key="codextratobancario" :rows-per-page-options="[0]"
+          loading-label="Carregando" hide-bottom>
           <template v-slot:body="props">
             <q-tr :props="props" :class="props.rowIndex % 2 === 0 ? 'bg-white' : 'bg-grey-2'">
               <q-td v-for="col in props.cols" :key="col.name" :props="props"
@@ -45,6 +47,15 @@
           </template>
         </q-table>
       </div>
+
+      <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="portador">
+        <q-btn fab icon="cloud_download" color="primary" v-if="portador.codbanco == 1"
+               :loading="buscandoApiBb" @click="consultarApiBB()">
+          <template v-slot:loading>
+            <q-spinner-oval  />
+          </template>
+        </q-btn>
+      </q-page-sticky>
     </template>
   </MGLayout>
 </template>
@@ -62,24 +73,109 @@ export default {
       portador: null,
       extratos: [],
       columns: [
-        { name: 'lancamento', label: 'Data', field: 'lancamento', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
+        { name: 'lancamento', sortable: true, label: 'Dia', field: 'lancamento', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
         { name: 'observacoes', label: 'Obeservação', field: 'observacoes', align: 'left' },
         { name: 'documento', label: 'Documento', field: 'numero', align: 'left' },
         { name: 'valor', label: 'Valor', field: 'valor', format: val => val !== null ? formatMoney(val) : '' },
         { name: 'saldo', label: 'Saldo', field: 'saldo', format: val => val !== undefined ? formatMoney(val) : '' }
       ],
-      page: 1,
-      perPage: 50,
-      isLastPage: false,
       isLoading: false,
-      pagination: { rowsPerPage: 0 },
       buscandoApiBb: false,
       saldos:[],
       saldoAnterior: null,
       buscandoInfo: true,
+      buscandoIntervalo: false,
+      mesAnoSelecionado: null,
+      intervalo: null,
+      diaSelecionado: null,
+      diasDoMes: [],
+    }
+  },
+  watch:{
+    mesAnoSelecionado(value){
+      this.$router.push({
+        params:{
+          mesAno: value,
+        }
+      })
+    },
+    '$route.params.mesAno'(value) {
+      this.mesAnoSelecionado = value
+      this.buscaExtratos();
+    },
+  },
+  computed: {
+    mesAnteriorHabilitado(){
+      if(!this.intervalo){
+        return
+      }
+      const mesAtualIndex = this.intervalo.findIndex(mes => mes.name === this.mesAnoSelecionado)
+      return mesAtualIndex > 0
+    },
+    mesSeguinteHabilitado(){
+      if(!this.intervalo){
+        return
+      }
+      const mesAtualIndex = this.intervalo.findIndex(mes => mes.name === this.mesAnoSelecionado)
+      return mesAtualIndex < this.intervalo.length - 1
+
     }
   },
   methods: {
+    mesAnterior(){
+      const mesAtualIndex = this.intervalo.findIndex(mes => mes.name === this.mesAnoSelecionado)
+      if(mesAtualIndex > 0) {
+        this.mesAnoSelecionado = this.intervalo[mesAtualIndex - 1].name;
+      }
+    },
+    mesSeguinte(){
+      const mesAtualIndex = this.intervalo.findIndex(mes => mes.name === this.mesAnoSelecionado)
+      if(mesAtualIndex < this.intervalo.length - 1) {
+        this.mesAnoSelecionado = this.intervalo[mesAtualIndex + 1].name;
+      }
+    },
+    scrollParaDia(dataSelecionada) {
+      const dataAlvo = `${dataSelecionada}-${this.mesAnoSelecionado}`;
+
+      const index = this.extratos.findIndex(item =>
+        this.$moment(item.lancamento).format('DD-MM-YYYY').startsWith(dataAlvo)
+      );
+
+      this.$refs.tabela.scrollTo(index, 'start-force');
+    },
+    criaListaIntervalo(intervalo){
+      let dataInicial = this.$moment(intervalo.primeira_data);
+      const dataFinal = this.$moment(intervalo.ultima_data);
+
+      const meses = [];
+
+      while (dataInicial.isSameOrBefore(dataFinal, 'month')) {
+        meses.push({
+          name: dataInicial.format('MM-YYYY'),
+          label: dataInicial.format('MMM/YY').toUpperCase()
+        });
+        dataInicial = dataInicial.add(1, 'month');
+      }
+      this.intervalo = meses;
+    },
+    buscaIntervaloSaldos(){
+      this.buscandoIntervalo = true;
+      return new Promise(resolve => {
+        this.$api
+          .get(`v1/portador/intervalo-saldos`, {})
+          .then((response) => {
+            const intervalo = response.data;
+            this.criaListaIntervalo(intervalo);
+          })
+          .catch((error) => {
+            console.error('Erro:', error)
+          })
+          .finally(() => {
+            this.buscandoIntervalo = false;
+            resolve()
+          })
+      });
+    },
     moneyTextColor(props, col){
       let classes = ""
       if(col.name === 'valor' || col.name === 'saldo') {
@@ -121,17 +217,8 @@ export default {
       })
       .finally(() => {
         this.buscandoApiBb = false
-        this.isLastPage = false;
-        this.buscaInfo();
+        this.buscaExtratos();
       })
-    },
-    buscaInfo(){
-      this.buscandoInfo = true;
-      this.getPortadorInfo().then(() =>
-        this.listaSaldos().then(() => {
-          this.buscandoInfo = false
-        })
-      )
     },
     getPortadorInfo(){
       return new Promise(resolve => {
@@ -148,7 +235,7 @@ export default {
       })
 
     },
-    listaSaldos(){
+    buscaSaldos(){
       return new Promise(resolve => {
         const mesAno = this.$route.params.mesAno;
         this.$api
@@ -170,30 +257,34 @@ export default {
           })
       })
     },
-    listaExtratos(index, done) {
-      if (this.isLoading || this.isLastPage) {
+    async buscaExtratos(index, done) {
+      if (this.isLoading) {
         done?.()
         return
       }
+      this.extratos = []
+      this.diasDoMes = []
+      this.saldos = []
+      this.saldoAnterior = null
+
+      await this.buscaIntervaloSaldos();
+      await this.buscaSaldos();
 
       this.isLoading = true
       const mesAno = this.$route.params.mesAno;
       this.$api
         .get(`v1/portador/${this.$route.params.id}/extratos`, {
           params: {
-            page: this.page,
-            limit: this.perPage,
             mes: mesAno.substring(0,2),
             ano: mesAno.substring(3)
           },
         })
         .then((response) => {
-          const novosExtratos = response.data.data
+          const novosExtratos = response.data
 
-          this.isLastPage = response.data.current_page >= response.data.last_page
           const extratosComSaldos = [];
 
-          if(this.page === 1 && this.saldoAnterior){
+          if(this.saldoAnterior){
             extratosComSaldos.push({
               lancamento: this.saldoAnterior.dia,
               observacoes: 'SALDO ANTERIOR',
@@ -207,6 +298,12 @@ export default {
           for(const extrato of novosExtratos){
             const diaExtrato = new Date(extrato.lancamento);
             diaExtrato.setHours(0, 0, 0, 0)
+
+            //Cria lista de dias
+            const diaFormatado = String(diaExtrato.getDate()).padStart(2, '0');
+            if(!this.diasDoMes.includes(diaFormatado)){
+              this.diasDoMes.push(diaFormatado);
+            }
 
             if(diaAtual == null ||  diaAtual.getTime() === diaExtrato.getTime()){
               extratosComSaldos.push(extrato);
@@ -229,43 +326,36 @@ export default {
             diaAtual = diaExtrato;
           }
 
-          if(this.isLastPage){
-            let ultimoSaldo =  this.saldos[this.saldos.length - 1];
-            if(ultimoSaldo){
-              extratosComSaldos.push({
-                lancamento: ultimoSaldo.dia,
-                observacoes: 'SALDO',
-                documento: "",
-                valor: null,
-                saldo: ultimoSaldo.saldobancario
-              })
-            }
+          let ultimoSaldo =  this.saldos[this.saldos.length - 1];
+          if(ultimoSaldo){
+            extratosComSaldos.push({
+              lancamento: ultimoSaldo.dia,
+              observacoes: 'SALDO',
+              documento: "",
+              valor: null,
+              saldo: ultimoSaldo.saldobancario
+            })
           }
 
-          this.extratos.push(...extratosComSaldos)
-          this.page = this.isLastPage ? this.page : this.page + 1
+          this.extratos = extratosComSaldos
+          this.diaSelecionado = this.diasDoMes[0];
         })
         .catch((error) => {
           console.error('Erro:', error)
-          this.isLastPage = true
         })
         .finally(() => {
           this.isLoading = false;
           done?.()
         })
     },
-    onScroll({ to, ref }) {
-      const lastIndex = this.extratos.length - 1
-      if (to < lastIndex - 5 || this.isLoading) return
-
-      this.listaExtratos(() => {
-        this.$nextTick(() => ref.refresh())
-      })
-    }
   },
-
   mounted() {
-    this.buscaInfo()
+    this.buscandoInfo = true;
+    this.getPortadorInfo().then(() => {
+      this.buscandoInfo = false;
+      this.buscaExtratos();
+    })
+    this.mesAnoSelecionado = this.$route.params.mesAno
   },
 }
 </script>

@@ -81,21 +81,20 @@ class PortadorController extends MgController
     }
 
     public function listaExtratos(Request $request, $codportador){
-        $per_page = $request->limit??50;
+        //$per_page = $request->limit??50;
         $mes = $request->mes;
         $ano = $request->ano;
 
         $dataInicial = Carbon::create($ano, $mes, 1)->startOfDay();
         $dataFinal   = Carbon::create($ano, $mes, 1)->endOfMonth()->endOfDay();
 
-        $extratosPage = PortadorService::listaMovimentacoes($codportador, $dataInicial, $dataFinal, $per_page);
+        $extratosPage = PortadorService::listaMovimentacoes($codportador, $dataInicial, $dataFinal);
 
-        return response()->json([
-            'data' => $extratosPage->items(),
-            'current_page' => $extratosPage->currentPage(),
-            'last_page' => $extratosPage->lastPage(),
-            'total' => $extratosPage->total()
-        ]);
+        return $extratosPage;
+    }
+
+    public function getIntervaloSaldos(){
+        return PortadorService::getIntervaloTotalExtratos();
     }
 
     public function listaSaldos(Request $request){
