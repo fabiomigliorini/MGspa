@@ -234,8 +234,10 @@ class WooProdutoService
 
     public function exportarProduto()
     {
+        // monta objeto do produto
         $product = static::build($this->prod);
 
+        // decide se altera ou cria
         if ($this->wp) {
             // PUT
             $this->api->putProduto($this->wp->id, $product);
@@ -244,12 +246,16 @@ class WooProdutoService
             $this->api->postProduto($product);
         }
         $ro = $this->api->responseObject;
-        dd($ro);
+
+        // salva na tabela de de/para
         $this->wp = WooProduto::firstOrCreate([
             'codproduto' => $this->prod->codproduto,
             'codprodutovariacao' => null,
             'id' => $ro->id,
         ]);
+
+        // retorna 
+        return true;
     }
 
     public function exportarImagens()
@@ -300,15 +306,13 @@ class WooProdutoService
             ];
         }
         $this->api->putProduto($this->wp->id, $product);
+
+        // retorna 
+        return true;
     }
 
     public function exportarVariacoes()
     {
-        // $this->api->getProduto($this->wp->id);
-        // $this->api->getProduto(1669);
-        // $this->api->getProduto(1646);
-        // $this->api->getProduto(1683);
-        // dd($this->api->responseObject);
 
         $pvs = $this->prod->ProdutoVariacaoS()->whereNull('inativo')->orderBy('variacao', 'desc')->get();
         if (sizeof($pvs) == 1) {
@@ -319,7 +323,10 @@ class WooProdutoService
         $attribute_id = env('WOO_ATTRIBUTE_ID');
         $ids = [];
 
+        // percorre todas variacoes
         foreach ($pvs as $pv) {
+
+            // decide a imagem
             $image = null;
             if ($pv->codprodutoimagem) {
                 $wpi = WooProdutoImagem::where('codprodutoimagem', $pv->codprodutoimagem)->first();
@@ -329,6 +336,8 @@ class WooProdutoService
                     ];
                 }
             }
+
+            // monta o objeto pro json
             $var = (object) [
                 "regular_price" => "55.00",
                 "image" => $image,
@@ -344,10 +353,13 @@ class WooProdutoService
                 "sku" => '#' . str_pad($pv->codprodutovariacao, 8, '0', STR_PAD_LEFT),
             ];
 
+            // busca o id do woo se já foi exportado
             $wpv = WooProduto::where([
                 'codproduto' => $this->prod->codproduto,
                 'codprodutovariacao' => $pv->codprodutovariacao,
             ])->first();
+
+            // tenta fazer o put ou post
             if ($wpv) {
                 try {
                     $this->api->putProductVariations($this->wp->id, $wpv->id, $var);
@@ -360,6 +372,8 @@ class WooProdutoService
             } else {
                 $this->api->postProductVariations($this->wp->id, $var);
             }
+
+            // salva na tabela local o id criado
             $id = $this->api->responseObject->id;
             $wpv = WooProduto::firstOrCreate([
                 'codproduto' => $this->prod->codproduto,
@@ -368,21 +382,14 @@ class WooProdutoService
             ]);
         }
 
+        // faz um put relacionando as variacoes
         $ids = WooProduto::where('codproduto', $this->prod->codproduto)->whereNotNull('codprodutovariacao')->select('id')->get()->pluck('id')->toArray();
-
         $this->api->putProduto($this->wp->id, (object) [
             'variations' => $ids
         ]);
 
-        dd($this->api->responseObject);
+        // retorna
+        return true;
     }
 
-    public function criarTermo($attribute_id, $name)
-    {
-        $term = (object) [
-            'name' => $name
-        ];
-        $this->api->postAttributeTerms($attribute_id, $term);
-        return $this->api->responseObject;
-    }
 }
