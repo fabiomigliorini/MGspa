@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Sep/2024 15:11:30
+ * Date: 11/Jun/2025 10:00:27
  */
 
 namespace Mg\Produto;
@@ -13,6 +13,7 @@ use Mg\Produto\ProdutoHistoricoPreco;
 use Mg\Produto\ProdutoImagem;
 use Mg\Produto\ProdutoVariacao;
 use Mg\Mercos\MercosProduto;
+use Mg\Woo\WooProduto;
 use Mg\NaturezaOperacao\Cest;
 use Mg\Marca\Marca;
 use Mg\NaturezaOperacao\Ncm;
@@ -207,6 +208,11 @@ class Produto extends MgModel
     public function ProdutoVariacaoS()
     {
         return $this->hasMany(ProdutoVariacao::class, 'codproduto', 'codproduto');
+    }
+
+    public function WooProdutoS()
+    {
+        return $this->hasMany(WooProduto::class, 'codproduto', 'codproduto');
     }
 
 }
