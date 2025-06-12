@@ -1,6 +1,6 @@
 <template>
   <MGLayout>
-    <template #tituloPagina> Saldo </template>
+    <template #tituloPagina> Saldos </template>
     <template #content>
       <div class="q-pa-md" style="display: flex; gap: 8px">
         <q-table :columns="columns" :rows="rows" row-key="banco"

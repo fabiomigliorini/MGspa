@@ -13,13 +13,13 @@ const routes = [
       {
         path: "",
         name: "inicio",
-        component: () => import('pages/SaldoPage.vue'),
+        component: () => import('pages/SaldosPage.vue'),
 
       },
       {
         path: "extrato/:id/:mesAno",
         name: "extrato",
-        component: () => import('pages/IndexPage.vue')
+        component: () => import('pages/MovimentacoesPage.vue')
       }
     ],
     meta: {

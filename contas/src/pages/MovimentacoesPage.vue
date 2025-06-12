@@ -1,7 +1,8 @@
 <template>
   <MGLayout>
-    <template #tituloPagina> Extrato </template>
+    <template #tituloPagina> Movimentações </template>
     <template #content>
+
       <div class="q-mx-md q-mt-md" v-if="portador">
         <div>
           <p  class="text-caption q-mb-auto"><b>Portador:</b> {{portador.portador}}</p>
