@@ -71,8 +71,10 @@
           </template>
         </q-table>
 
-        <q-date v-model="dataSelecionada" minimal flat bordered
-                mask="DD-MM-YYYY"/>
+        <q-date v-model="dataSelecionada" minimal flat bordered v-if="intervalo"
+                mask="DD-MM-YYYY"
+                :navigation-min-year-month="$moment(intervalo.primeira_data).format('YYYY/MM')"
+                :navigation-max-year-month="$moment(intervalo.ultima_data).format('YYYY/MM')"/>
       </div>
 
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
@@ -82,9 +84,6 @@
             <q-spinner-oval  />
           </template>
         </q-btn>
-
-        <input ref="inputArquivo" type="file" accept=".ofx" style="display: none"
-               @change="uploadOfx" />
       </q-page-sticky>
 
       <q-dialog v-model="ofxDialog" persistent>
@@ -170,20 +169,39 @@ export default {
       ofxDialog: false,
       falhaImportacaoOfx: false,
       enviandoOfx:false,
+      intervalo: null,
     }
   },
   methods: {
     authStore,
+    buscaIntervaloSaldos(){
+      //this.buscandoIntervalo = true;
+      this.$api
+        .get(`v1/portador/intervalo-saldos`, {})
+        .then((response) => {
+          const intervalo = response.data;
+          console.log("intervalo", intervalo);
+          //this.criaListaIntervalo(intervalo);
+          this.intervalo = intervalo;
+        })
+        .catch((error) => {
+          console.error('Erro:', error)
+        })
+        .finally(() => {
+          //this.buscandoIntervalo = false;
+          //resolve()
+        })
+    },
     openDialog() {
       this.falhaImportacaoOfx = false;
       this.ofxDialog = true;
     },
     finalImportacaoOfx: function() {
-      console.log("finalImportacaoOfx")
       this.enviandoOfx = false;
       if (!this.falhaImportacaoOfx) {
         this.ofxDialog = false;
       }
+      this.buscaIntervaloSaldos();
       this.listaSaldos();
     },
 
@@ -292,42 +310,6 @@ export default {
 
       this.rows = Object.values(linhasPorBanco);
     },
-    uploadOfx(event){
-      this.importandoOfx = true;
-      const arquivos = event.target.files;
-
-      const formData = new FormData();
-      for (let i = 0; i < arquivos.length; i++) {
-        formData.append('arquivos[]', arquivos[i]);
-      }
-
-      this.$api.post(`v1/portador/importar-ofx`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
-        .then((response) => {
-          const resp = response.data;
-
-          Object.keys(resp).forEach(arquivo => {
-            var mensagem = `
-              Importados ${resp[arquivo].registros}
-              registros no portador ${resp[arquivo].portador}
-              com ${resp[arquivo].falhas} falhas!'`;
-
-            this.$q.notify({ message: mensagem, color: 'positive' })
-          })
-
-        })
-        .catch((error) => {
-          console.error('Erro:', error)
-          var mensagem = error.response.data.message
-          this.$q.notify({ message: mensagem, color: 'negative' })
-        })
-        .finally(() => {
-          this.$refs.inputArquivo.value = null;
-          this.importandoOfx = false;
-          this.listaSaldos()
-        })
-    }
   },
   computed: {
     urlUploadOfx: function () {
@@ -349,6 +331,7 @@ export default {
     if(!this.dataSelecionada){
       this.dataSelecionada = this.$moment().format('DD-MM-YYYY')
     }
+    this.buscaIntervaloSaldos();
   },
 }
 </script>
