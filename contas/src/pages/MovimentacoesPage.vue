@@ -4,6 +4,11 @@
     <template #content>
 
       <div class="q-mx-md q-mt-md" v-if="portador">
+        <q-breadcrumbs class="q-mb-md">
+          <q-breadcrumbs-el label="Inicio" icon="home" to="/" />
+          <q-breadcrumbs-el label="Movimentações"  />
+        </q-breadcrumbs>
+
         <div>
           <p  class="text-caption q-mb-auto"><b>Portador:</b> {{portador.portador}}</p>
           <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial ? portador.filial : 'Sem Filial'}}</p>
