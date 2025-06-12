@@ -118,7 +118,7 @@ class ExtratoBbService
 
         //$extratoBancario->codextratobancariotipomovimento = $tipo->codextratobancariotipomovimento;
         $extratoBancario->indicadortipolancamento = $lancamento['indicadorTipoLancamento'];
-        $extratoBancario->lancamento = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);;
+        $extratoBancario->dia = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);;
         if ($lancamento['dataMovimento'] != '0') {
             $extratoBancario->movimento = Carbon::createFromFormat('dmY', $lancamento['dataMovimento']);
         }

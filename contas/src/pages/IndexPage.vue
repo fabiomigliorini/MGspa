@@ -74,7 +74,7 @@ export default {
       portador: null,
       extratos: [],
       columns: [
-        { name: 'lancamento', sortable: true, label: 'Dia', field: 'lancamento', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
+        { name: 'dia', sortable: true, label: 'Dia', field: 'dia', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
         { name: 'observacoes', label: 'Obeservação', field: 'observacoes', align: 'left' },
         { name: 'documento', label: 'Documento', field: 'numero', align: 'left' },
         { name: 'valor', label: 'Valor', field: 'valor', format: val => val !== null ? formatMoney(val) : '' },
@@ -168,7 +168,7 @@ export default {
       const dataAlvo = `${dataSelecionada}-${this.mesAnoSelecionado}`;
 
       const index = this.extratos.findIndex(item =>
-        this.$moment(item.lancamento).format('DD-MM-YYYY').startsWith(dataAlvo)
+        this.$moment(item.dia).format('DD-MM-YYYY').startsWith(dataAlvo)
       );
 
       this.$refs.tabela.scrollTo(index, 'start-force');
@@ -316,7 +316,7 @@ export default {
 
           if(this.saldoAnterior){
             extratosComSaldos.push({
-              lancamento: this.saldoAnterior.dia,
+              dia: this.saldoAnterior.dia,
               observacoes: 'SALDO ANTERIOR',
               documento: "",
               valor: null,
@@ -326,7 +326,7 @@ export default {
 
           let diaAtual = null;
           for(const extrato of novosExtratos){
-            const diaExtrato = new Date(extrato.lancamento);
+            const diaExtrato = new Date(extrato.dia);
             diaExtrato.setHours(0, 0, 0, 0)
 
             //Cria lista de dias
@@ -346,7 +346,7 @@ export default {
                 })
 
               extratosComSaldos.push({
-                lancamento: saldo.dia,
+                dia: saldo.dia,
                 observacoes: 'SALDO',
                 documento: "",
                 valor: null,
@@ -359,7 +359,7 @@ export default {
           let ultimoSaldo =  this.saldos[this.saldos.length - 1];
           if(ultimoSaldo){
             extratosComSaldos.push({
-              lancamento: ultimoSaldo.dia,
+              dia: ultimoSaldo.dia,
               observacoes: 'SALDO',
               documento: "",
               valor: null,

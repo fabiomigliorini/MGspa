@@ -95,7 +95,7 @@ class PortadorService
                 'fitid' => $transaction->uniqueId,
             ]);
             $mov->codextratobancariotipomovimento = $tipo->codextratobancariotipomovimento;
-            $mov->lancamento = $transaction->date;
+            $mov->dia = $transaction->date;
             $mov->valor =  $transaction->amount;
             $mov->numero =  $transaction->checkNumber;
             $mov->observacoes =  $transaction->memo;
@@ -275,8 +275,8 @@ class PortadorService
 
     public static function listaMovimentacoes($codportador, $dataInicial, $dataFinal){
         $extratosPage = ExtratoBancario::where('codportador', '=', $codportador)
-            ->whereBetween('lancamento', [$dataInicial, $dataFinal])
-            ->orderBy('lancamento', 'asc')->get();
+            ->whereBetween('dia', [$dataInicial, $dataFinal])
+            ->orderBy('dia', 'asc')->get();
 
         return $extratosPage;
     }
@@ -302,10 +302,10 @@ class PortadorService
         //TODO Where provisório porque tem uns valores errados na tabela. Ex ano que começa com 00
         $sql = '
             SELECT
-                MIN(lancamento) AS primeira_data,
-                MAX(lancamento) AS ultima_data
+                MIN(dia) AS primeira_data,
+                MAX(dia) AS ultima_data
             FROM tblextratobancario
-            WHERE EXTRACT(YEAR FROM lancamento) >= 1000
+            WHERE EXTRACT(YEAR FROM dia) >= 1000
         ';
 
         $data = DB::select($sql);
