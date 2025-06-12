@@ -11,20 +11,17 @@
 
       </div>
       <div class="flex items-center">
+        <q-btn round flat size="md" icon="chevron_left" @click="diaAnterior" :disable="!diaAnteriorHabilitado" />
         <q-select v-model="diaSelecionado" :options="diasDoMes"
-                  label="Dia" style="width: 100px" class="q-mx-md" @update:model-value="scrollParaDia" />
+                  label="Dia" style="width: 60px" class="q-mx-md" @update:model-value="scrollParaDia" />
+        <q-btn round flat size="md" icon="chevron_right" @click="diaSeguinte" :disable="!diaSeguinteHabilitado"/>
 
-        <div>
-          <q-btn round flat size="md" icon="chevron_left" @click="mesAnterior" :disable="!mesAnteriorHabilitado" />
-          <q-btn round flat size="md" icon="chevron_right" @click="mesSeguinte" :disable="!mesSeguinteHabilitado"/>
-        </div>
 
-        <q-tabs
-          v-model="mesAnoSelecionado"
-          no-caps active-color="primary"
-          class="q-mx-md">
+        <q-btn round flat size="md" icon="chevron_left" @click="mesAnterior" :disable="!mesAnteriorHabilitado" />
+        <q-tabs v-model="mesAnoSelecionado" no-caps active-color="primary" class="q-mx-md">
           <q-tab v-for="mesAno in intervalo" :key="mesAno.name" :name="mesAno.name" :label="mesAno.label" />
         </q-tabs>
+        <q-btn round flat size="md" icon="chevron_right" @click="mesSeguinte" :disable="!mesSeguinteHabilitado"/>
       </div>
 
 
@@ -105,6 +102,21 @@ export default {
     },
   },
   computed: {
+    diaAnteriorHabilitado(){
+      if(!this.diasDoMes){
+        return
+      }
+      const diaAtualIndex = this.diasDoMes.findIndex(dia => dia === this.diaSelecionado)
+      return diaAtualIndex > 0
+    },
+    diaSeguinteHabilitado(){
+      if(!this.diasDoMes){
+        return
+      }
+      const diaAtualIndex = this.diasDoMes.findIndex(dia => dia === this.diaSelecionado)
+      return diaAtualIndex < this.diasDoMes.length - 1
+
+    },
     mesAnteriorHabilitado(){
       if(!this.intervalo){
         return
@@ -122,6 +134,20 @@ export default {
     }
   },
   methods: {
+    diaAnterior(){
+      const diaAtualIndex = this.diasDoMes.findIndex(dia => dia === this.diaSelecionado)
+      if(diaAtualIndex > 0) {
+        this.diaSelecionado = this.diasDoMes[diaAtualIndex - 1];
+        this.scrollParaDia(this.diaSelecionado);
+      }
+    },
+    diaSeguinte(){
+      const diaAtualIndex = this.diasDoMes.findIndex(dia => dia === this.diaSelecionado)
+      if(diaAtualIndex < this.diasDoMes.length - 1) {
+        this.diaSelecionado = this.diasDoMes[diaAtualIndex + 1];
+        this.scrollParaDia(this.diaSelecionado);
+      }
+    },
     mesAnterior(){
       const mesAtualIndex = this.intervalo.findIndex(mes => mes.name === this.mesAnoSelecionado)
       if(mesAtualIndex > 0) {
