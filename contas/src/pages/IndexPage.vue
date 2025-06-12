@@ -51,6 +51,10 @@
           <template v-slot:loading>
             <q-spinner-oval  />
           </template>
+
+          <q-tooltip anchor="center left" self="center right">
+            Consultar API
+          </q-tooltip>
         </q-btn>
       </q-page-sticky>
     </template>

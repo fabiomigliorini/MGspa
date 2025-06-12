@@ -83,6 +83,9 @@
           <template v-slot:loading>
             <q-spinner-oval  />
           </template>
+          <q-tooltip anchor="center left" self="center right">
+            Importar OFX
+          </q-tooltip>
         </q-btn>
       </q-page-sticky>
 
