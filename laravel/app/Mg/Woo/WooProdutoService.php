@@ -230,7 +230,7 @@ class WooProdutoService
         $data = DB::select($sql, [
             'codprodutovariacao' => $pv->codprodutovariacao,
         ]);
-        return (float) $data[0]->saldoquantidade;
+        return floor($data[0]->saldoquantidade);
     }
 
     public function exportar()
@@ -247,8 +247,17 @@ class WooProdutoService
 
         // decide se altera ou cria
         if ($this->wp) {
-            // PUT
-            $this->api->putProduto($this->wp->id, $product);
+            try {
+                // PUT
+                $this->api->putProduto($this->wp->id, $product);
+            } catch (\Throwable $th) {
+                // se ID Invalido (excluido no Woo), tenta POST
+                $msg = json_decode($th->getMessage());
+                if ($msg->code == 'woocommerce_rest_product_invalid_id') {
+                    $this->wp->delete();
+                    $this->api->postProduto($product);
+                }
+            }
         } else {
             // POST
             $this->api->postProduto($product);
@@ -312,7 +321,7 @@ class WooProdutoService
                     'id' => $ro->images[$i]->id,
                 ]);
             }
-        } 
+        }
 
         // faz um novo put com todos os id de imagens
         $product = new stdClass(['images' => []]);
@@ -354,15 +363,21 @@ class WooProdutoService
                 }
             }
 
+            // se nao tem descricao, coloca o codigo dela como descricao
+            $descr = $pv->variacao;
+            if (empty($descr)) {
+                $descr = $pv->codprodutovariacao;
+            }
+
             // monta o objeto pro json
             $var = (object) [
-                "regular_price" => "55.00",
+                "regular_price" => "{$this->prod->preco}",
                 "image" => $image,
                 "attributes" => [
                     (object) [
                         "id" => $attribute_id,
                         // "name" => "Cor",
-                        "option" => $pv->variacao
+                        "option" => "{$descr}"
                     ]
                 ],
                 "stock_quantity" => static::estoque($pv),
@@ -408,5 +423,4 @@ class WooProdutoService
         // retorna
         return true;
     }
-
 }
