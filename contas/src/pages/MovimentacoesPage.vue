@@ -80,7 +80,7 @@ export default {
       portador: null,
       extratos: [],
       columns: [
-        { name: 'dia', sortable: true, label: 'Dia', field: 'dia', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
+        { name: 'dia', label: 'Dia', field: 'dia', align: 'left', format: val => date.formatDate(val, 'DD/MM/YYYY') },
         { name: 'observacoes', label: 'Obeservação', field: 'observacoes', align: 'left' },
         { name: 'documento', label: 'Documento', field: 'numero', align: 'left' },
         { name: 'valor', label: 'Valor', field: 'valor', format: val => val !== null ? formatMoney(val) : '' },
@@ -316,7 +316,8 @@ export default {
           },
         })
         .then((response) => {
-          const novosExtratos = response.data
+          let novosExtratos = response.data
+          novosExtratos = novosExtratos.reverse();
 
           const extratosComSaldos = [];
 
@@ -362,7 +363,7 @@ export default {
             diaAtual = diaExtrato;
           }
 
-          let ultimoSaldo =  this.saldos[this.saldos.length - 1];
+          let ultimoSaldo =  this.saldos[0];
           if(ultimoSaldo){
             extratosComSaldos.push({
               dia: ultimoSaldo.dia,
