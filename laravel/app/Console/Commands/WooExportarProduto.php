@@ -54,14 +54,6 @@ class WooExportarProduto extends Command
             foreach ($cods as $cod) {
                 $this->exportar($cod->codproduto);
             }
-            dd($cods);
-            $offset = 0;
-            $limit = 50;
-            while ($ps = Produto::where('site', true)->whereNull('inativo')->orderBy('codproduto')->offset($offset)->limit($limit)->get()) {
-                foreach ($ps as $prod) {
-                }
-                $offset += $limit;
-            }
         }
 
         return true;
