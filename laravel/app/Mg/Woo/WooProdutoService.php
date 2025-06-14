@@ -12,12 +12,13 @@ class WooProdutoService
 
     protected WooApi $api;
     protected Produto $prod;
-    // protected WooProduto $wp;
     protected $wp;
+    protected float $fatorPreco;
 
-    public function __construct(Produto $prod)
+    public function __construct(Produto $prod, float $fatorPreco = null)
     {
         $this->prod = $prod;
+        $this->fatorPreco = $fatorPreco ?? ((float) env('WOO_FATOR_PRECO', 1));
         $this->wp = WooProduto::where('codproduto', $prod->codproduto)->whereNull('codprodutovariacao')->first();
         $this->api = new WooApi();
     }
@@ -50,8 +51,7 @@ class WooProdutoService
         // $product->short_description = 'Caderno premium com temática Fortnite.';
         $product->sku = '#' . str_pad($prod->codproduto, 6, '0', STR_PAD_LEFT);
         // $product->price = $prod->preco;
-        // TODO: Preco com diferencial de 3%
-        $product->regular_price = "{$prod->preco}";
+        $product->regular_price = $this->preco($prod->preco);
         // $product->sale_price = '29.99';
         // $product->date_on_sale_from = '2025-06-01T00:00:00';
         // $product->date_on_sale_from_gmt = '2025-06-01T04:00:00';
@@ -137,7 +137,6 @@ class WooProdutoService
             }
         }
 
-
         // Default Attributes (para produtos variáveis)
         // $product->default_attributes = []; // Pode ser preenchido se o produto for variável
 
@@ -214,6 +213,12 @@ class WooProdutoService
         // $product->_links->collection[0]->href = 'https://sinopel.mrxempresas.com.br/wp-json/wc/v3/products';
 
         return $product;
+    }
+
+    public function preco($preco)
+    {
+        $ret = round($preco * $this->fatorPreco, 2);
+        return "{$ret}";
     }
 
     public static function estoque(ProdutoVariacao $pv)
@@ -371,7 +376,7 @@ class WooProdutoService
 
             // monta o objeto pro json
             $var = (object) [
-                "regular_price" => "{$this->prod->preco}",
+                "regular_price" => $this->preco($this->prod->preco),
                 "image" => $image,
                 "attributes" => [
                     (object) [
