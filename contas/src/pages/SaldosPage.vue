@@ -163,10 +163,6 @@ export default {
       footer: {},
 
       buscandoIntervalo: false,
-      intervaloSaldos: {
-        inicio: null,
-        fim: null,
-      },
       importandoOfx: false,
       dataSelecionada: null,
       ofxDialog: false,

@@ -23,11 +23,13 @@
         <q-btn round flat size="md" icon="chevron_right" @click="diaSeguinte" :disable="!diaSeguinteHabilitado"/>
 
 
-        <q-btn round flat size="md" icon="chevron_left" @click="mesAnterior" :disable="!mesAnteriorHabilitado" />
-        <q-tabs v-model="mesAnoSelecionado" no-caps active-color="primary" class="q-mx-md">
-          <q-tab v-for="mesAno in intervalo" :key="mesAno.name" :name="mesAno.name" :label="mesAno.label" />
-        </q-tabs>
-        <q-btn round flat size="md" icon="chevron_right" @click="mesSeguinte" :disable="!mesSeguinteHabilitado"/>
+        <div v-if="intervalo?.length > 0" class="flex" >
+          <q-btn round flat size="md" icon="chevron_left" @click="mesAnterior" :disable="!mesAnteriorHabilitado" />
+          <q-tabs v-model="mesAnoSelecionado" no-caps active-color="primary" class="q-mx-md">
+            <q-tab v-for="mesAno in intervalo" :key="mesAno.name" :name="mesAno.name" :label="mesAno.label" />
+          </q-tabs>
+          <q-btn round flat size="md" icon="chevron_right" @click="mesSeguinte" :disable="!mesSeguinteHabilitado"/>
+        </div>
       </div>
 
 
@@ -345,8 +347,9 @@ export default {
             if(diaAtual == null ||  diaAtual.getTime() === diaExtrato.getTime()){
               extratosComSaldos.push(extrato);
             }else{
-              let saldo = this.saldos.find((saldo) => {
-                  let saldoDia = new Date(saldo.dia)
+
+              let saldo = this.saldos.find((s) => {
+                  let saldoDia = new Date(s.dia)
                   saldoDia.setHours(0, 0, 0, 0)
 
                   return saldoDia.getTime() === diaAtual.getTime();
