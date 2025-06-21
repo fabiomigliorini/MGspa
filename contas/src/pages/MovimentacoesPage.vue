@@ -1,20 +1,14 @@
 <template>
   <MGLayout>
-    <template #tituloPagina> Movimentações </template>
+    <template #tituloPagina>
+      <q-btn flat round dense  icon="arrow_back" @click="$router.push('/')" /> {{portador?.portador}}
+    </template>
     <template #content>
-
       <div class="q-mx-md q-mt-md" v-if="portador">
-        <q-breadcrumbs class="q-mb-md">
-          <q-breadcrumbs-el label="Inicio" icon="home" to="/" />
-          <q-breadcrumbs-el label="Movimentações"  />
-        </q-breadcrumbs>
-
         <div>
-          <p  class="text-caption q-mb-auto"><b>Portador:</b> {{portador.portador}}</p>
-          <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial ? portador.filial : 'Sem Filial'}}</p>
-          <p  class="text-caption q-mb-auto"><b>Banco:</b> {{portador.banco}}</p>
+          <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial ? portador.filial : 'Sem Filial'}} | <b>Banco:</b> {{portador.banco}}</p>
+          <p  class="text-caption q-mb-auto"> </p>
         </div>
-
       </div>
       <div class="flex items-center">
         <q-btn round flat size="md" icon="chevron_left" @click="diaAnterior" :disable="!diaAnteriorHabilitado" />
@@ -31,7 +25,6 @@
           <q-btn round flat size="md" icon="chevron_right" @click="mesSeguinte" :disable="!mesSeguinteHabilitado"/>
         </div>
       </div>
-
 
       <div class="q-pa-md" v-if="!buscandoInfo">
         <q-table ref="tabela"
@@ -73,7 +66,6 @@
 import MGLayout from 'layouts/MGLayout.vue'
 import { date } from 'quasar'
 import { formatMoney } from 'src/utils/formatters.js'
-
 
 export default {
   components: { MGLayout },
@@ -318,8 +310,7 @@ export default {
           },
         })
         .then((response) => {
-          let novosExtratos = response.data
-          novosExtratos = novosExtratos.reverse();
+          let novosExtratos = response.data;
 
           const extratosComSaldos = [];
 
@@ -366,7 +357,7 @@ export default {
             diaAtual = diaExtrato;
           }
 
-          let ultimoSaldo =  this.saldos[0];
+          let ultimoSaldo =  this.saldos[this.saldos.length - 1];
           if(ultimoSaldo){
             extratosComSaldos.push({
               dia: ultimoSaldo.dia,
@@ -401,7 +392,7 @@ export default {
 </script>
 <style lang="sass">
 .my-sticky-dynamic
-  height: calc(100vh - 80px)
+  height: calc(100vh - 210px)
 
   .q-table__top,
   .q-table__bottom,
