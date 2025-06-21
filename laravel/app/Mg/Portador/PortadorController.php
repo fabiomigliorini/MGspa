@@ -60,7 +60,7 @@ class PortadorController extends MgController
     public function consultaExtrato(Request $request, $codportador)
     {
 
-        $homologacao = true;
+        $homologacao = false;
         $mes = $request->mes;
         $ano = $request->ano;
 

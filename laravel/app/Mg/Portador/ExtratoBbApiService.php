@@ -80,7 +80,7 @@ class ExtratoBbApiService
             CURLOPT_CUSTOMREQUEST => "GET",
             CURLOPT_HTTPHEADER => [
                 $auth,
-                "x-br-com-bb-ipa-mciteste: 178961031", //Todo somente no ambiente de homologação
+                //"x-br-com-bb-ipa-mciteste: 178961031", //Todo somente no ambiente de homologação
                 "Content-Type: application/json"
             ],
         ];
