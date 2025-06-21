@@ -219,19 +219,6 @@ class WooApi
         return $this->status == 201;
     }
 
-    public function postAttributeTerms($attribute_id, $term)
-    {
-        // monta URL
-        $url = $this->url . "wc/v3/products/attributes/{$attribute_id}/terms";
-
-        // aborta caso erro na requisicao
-        if (!$this->post($url, $term)) {
-            throw new Exception(json_encode($this->responseObject), 1);
-        }
-        return $this->status == 201;
-    }
-
-
     public function putProductVariations($product_id, $id, $variation)
     {
         // monta URL

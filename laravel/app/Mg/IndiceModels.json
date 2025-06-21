@@ -4280,6 +4280,11 @@
                 "tabela": "tblmercosproduto",
                 "coluna": "codproduto",
                 "metodo": "MercosProdutoS"
+            },
+            "tblwooproduto.codproduto": {
+                "tabela": "tblwooproduto",
+                "coluna": "codproduto",
+                "metodo": "WooProdutoS"
             }
         }
     },
@@ -6492,6 +6497,16 @@
                 "tabela": "tblprodutovariacao",
                 "coluna": "codprodutoimagem",
                 "metodo": "ProdutoVariacaoS"
+            },
+            "tblprodutoimagemprodutovariacao.codprodutoimagem": {
+                "tabela": "tblprodutoimagemprodutovariacao",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoImagemProdutoVariacaoS"
+            },
+            "tblwooprodutoimagem.codprodutoimagem": {
+                "tabela": "tblwooprodutoimagem",
+                "coluna": "codprodutoimagem",
+                "metodo": "WooProdutoImagemS"
             }
         }
     },
@@ -8317,7 +8332,28 @@
         "namespace": "Mg\\Produto",
         "classe": "ProdutoImagemProdutoVariacao",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Produto\/ProdutoImagemProdutoVariacao.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codprodutoimagem": {
+                "tabela": "tblprodutoimagem",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoImagem"
+            },
+            "codprodutovariacao": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codprodutovariacao",
+                "metodo": "ProdutoVariacao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblauthitem": {
@@ -8585,6 +8621,52 @@
                 "tabela": "tblportador",
                 "coluna": "codportador",
                 "metodo": "Portador"
+            }
+        },
+        "hasMany": []
+    },
+    "tblwooproduto": {
+        "tabela": "tblwooproduto",
+        "campocodigo": "codwooproduto",
+        "namespace": "Mg\\Woo",
+        "classe": "WooProduto",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Woo\/WooProduto.php",
+        "belongsTo": {
+            "codproduto": {
+                "tabela": "tblproduto",
+                "coluna": "codproduto",
+                "metodo": "Produto"
+            },
+            "codprodutovariacao": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codprodutovariacao",
+                "metodo": "ProdutoVariacao"
+            }
+        },
+        "hasMany": {
+            "tblwooprodutoimagem.codwooproduto": {
+                "tabela": "tblwooprodutoimagem",
+                "coluna": "codwooproduto",
+                "metodo": "WooProdutoImagemS"
+            }
+        }
+    },
+    "tblwooprodutoimagem": {
+        "tabela": "tblwooprodutoimagem",
+        "campocodigo": "codwooprodutoimagem",
+        "namespace": "Mg\\Woo",
+        "classe": "WooProdutoImagem",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Woo\/WooProdutoImagem.php",
+        "belongsTo": {
+            "codprodutoimagem": {
+                "tabela": "tblprodutoimagem",
+                "coluna": "codprodutoimagem",
+                "metodo": "ProdutoImagem"
+            },
+            "codwooproduto": {
+                "tabela": "tblwooproduto",
+                "coluna": "codwooproduto",
+                "metodo": "WooProduto"
             }
         },
         "hasMany": []

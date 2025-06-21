@@ -1,13 +1,13 @@
 <?php
-
 /**
  * Created by php artisan gerador:model.
- * Date: 04/Jun/2025 10:29:55
+ * Date: 11/Jun/2025 10:00:12
  */
 
 namespace Mg\Woo;
 
 use Mg\MgModel;
+use Mg\Woo\WooProdutoImagem;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoVariacao;
 
@@ -24,9 +24,8 @@ class WooProduto extends MgModel
     ];
 
     protected $dates = [
-        'criacao',
-        'alteracao'
-
+        'alteracao',
+        'criacao'
     ];
 
     protected $casts = [
@@ -51,8 +50,10 @@ class WooProduto extends MgModel
     }
 
 
+    // Tabelas Filhas
     public function WooProdutoImagemS()
     {
         return $this->hasMany(WooProdutoImagem::class, 'codwooproduto', 'codwooproduto');
     }
+
 }

@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Mg\Produto\Produto;
+use Mg\Mercos\MercosProduto;
 use Mg\Woo\WooProdutoService;
 
 /*
@@ -11,6 +13,7 @@ use App\Mg\Portador\ExtratoBbService;
 use Mg\Portador\Portador;
 use Exception;
 */
+
 class WooExportarProduto extends Command
 {
     /**
@@ -44,19 +47,29 @@ class WooExportarProduto extends Command
      */
     public function handle()
     {
-
-
-        $codproduto = $this->option('codproduto')??null;
-        $prod = Produto::findOrFail($codproduto);
-
-        $wps = new WooProdutoService($prod);
-        $wps->exportar();
-    
-
-        die($codproduto);
-
-        die('aqi');
+        if ($cod = $this->option('codproduto') ?? null) {
+            $this->exportar($cod);
+        } else {
+            $cods = MercosProduto::whereNull('inativo')->select('codproduto')->distinct()->orderBy('codproduto')->get();
+            foreach ($cods as $cod) {
+                $this->exportar($cod->codproduto);
+            }
+        }
 
         return true;
+    }
+
+    private function exportar($codproduto)
+    {
+        $prod = Produto::findOrFail($codproduto);
+        Log::info("Exportando para Woo produto {$prod->codproduto} - '{$prod->produto}'!");
+        try {
+            $wps = new WooProdutoService($prod);
+            $wps->exportar();
+        } catch (\Throwable $th) {
+            Log::error("Falha ao exportar para Woo produto {$prod->codproduto} - '{$prod->produto}'!");
+            $msg = $th->getMessage();
+            Log::error("{$msg}");
+        }
     }
 }

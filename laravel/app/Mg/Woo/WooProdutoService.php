@@ -12,12 +12,13 @@ class WooProdutoService
 
     protected WooApi $api;
     protected Produto $prod;
-    // protected WooProduto $wp;
     protected $wp;
+    protected float $fatorPreco;
 
-    public function __construct(Produto $prod)
+    public function __construct(Produto $prod, float $fatorPreco = null)
     {
         $this->prod = $prod;
+        $this->fatorPreco = $fatorPreco ?? ((float) env('WOO_FATOR_PRECO', 1));
         $this->wp = WooProduto::where('codproduto', $prod->codproduto)->whereNull('codprodutovariacao')->first();
         $this->api = new WooApi();
     }
@@ -50,7 +51,7 @@ class WooProdutoService
         // $product->short_description = 'Caderno premium com temática Fortnite.';
         $product->sku = '#' . str_pad($prod->codproduto, 6, '0', STR_PAD_LEFT);
         // $product->price = $prod->preco;
-        $product->regular_price = "{$prod->preco}";
+        $product->regular_price = $this->preco($prod->preco);
         // $product->sale_price = '29.99';
         // $product->date_on_sale_from = '2025-06-01T00:00:00';
         // $product->date_on_sale_from_gmt = '2025-06-01T04:00:00';
@@ -110,7 +111,11 @@ class WooProdutoService
             if (empty($pv->variacao)) {
                 continue;
             }
-            $product->tags[] = (object) ['name' => $pv->variacao];
+            $descr = $pv->variacao;
+            if (empty($descr)) {
+                $descr = $pv->codprodutovariacao;
+            }
+            $product->tags[] = (object) ['name' => "{$descr}"];
         }
 
         // Variacoes como atributos
@@ -124,10 +129,13 @@ class WooProdutoService
                 'visible' => true,
             ];
             foreach ($variacoes as $var) {
-                $product->attributes[0]->options[] = $var->variacao;
+                $descr = $var->variacao;
+                if (empty($descr)) {
+                    $descr = $var->codprodutovariacao;
+                }
+                $product->attributes[0]->options[] = "{$descr}";
             }
         }
-
 
         // Default Attributes (para produtos variáveis)
         // $product->default_attributes = []; // Pode ser preenchido se o produto for variável
@@ -207,6 +215,12 @@ class WooProdutoService
         return $product;
     }
 
+    public function preco($preco)
+    {
+        $ret = round($preco * $this->fatorPreco, 2);
+        return "{$ret}";
+    }
+
     public static function estoque(ProdutoVariacao $pv)
     {
         $locais = env('WOO_API_CODESTOQUELOCAL_DISPONIVEL');
@@ -221,12 +235,11 @@ class WooProdutoService
         $data = DB::select($sql, [
             'codprodutovariacao' => $pv->codprodutovariacao,
         ]);
-        return (float) $data[0]->saldoquantidade;
+        return floor($data[0]->saldoquantidade);
     }
 
     public function exportar()
     {
-
         $this->exportarProduto();
         $this->exportarImagens();
         $this->exportarVariacoes();
@@ -234,22 +247,37 @@ class WooProdutoService
 
     public function exportarProduto()
     {
+        // monta objeto do produto
         $product = static::build($this->prod);
 
+        // decide se altera ou cria
         if ($this->wp) {
-            // PUT
-            $this->api->putProduto($this->wp->id, $product);
+            try {
+                // PUT
+                $this->api->putProduto($this->wp->id, $product);
+            } catch (\Throwable $th) {
+                // se ID Invalido (excluido no Woo), tenta POST
+                $msg = json_decode($th->getMessage());
+                if ($msg->code == 'woocommerce_rest_product_invalid_id') {
+                    $this->wp->delete();
+                    $this->api->postProduto($product);
+                }
+            }
         } else {
             // POST
             $this->api->postProduto($product);
         }
         $ro = $this->api->responseObject;
-        dd($ro);
+
+        // salva na tabela de de/para
         $this->wp = WooProduto::firstOrCreate([
             'codproduto' => $this->prod->codproduto,
             'codprodutovariacao' => null,
             'id' => $ro->id,
         ]);
+
+        // retorna 
+        return true;
     }
 
     public function exportarImagens()
@@ -260,7 +288,7 @@ class WooProdutoService
         WooProdutoImagem::where('codwooproduto', $this->wp->codwooproduto)->whereNotIn('id', $ids)->delete();
 
         // montar um array com todas as imagens que não foram enviadas ainda
-        $product = new stdClass(['images' => []]);
+        $images = [];
         $codprodutoimagem = [];
         foreach ($this->wp->Produto->ProdutoImagemS()->orderBy('codprodutoimagem', 'ASC')->get() as $pi) {
             $wpi = WooProdutoImagem::where(['codprodutoimagem' => $pi->codprodutoimagem])->first();
@@ -268,7 +296,7 @@ class WooProdutoService
                 continue;
             }
             $codprodutoimagem[] = $pi->codprodutoimagem;
-            $product->images[] =  (object) [
+            $images[] =  (object) [
                 'src' => 'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' . $pi->Imagem->arquivo
             ];
         }
@@ -278,17 +306,26 @@ class WooProdutoService
             return;
         }
 
-        // envia todas as novas imagens pro Woo
-        $this->api->putProduto($this->wp->id, $product);
-        $ro = $this->api->responseObject;
+        // quebra o array de imagens pra enviar em blocos (chunks) de 10 em 10 imagens
+        $cImages = array_chunk($images, 10);
+        $cCodprodutoimagem = array_chunk($codprodutoimagem, 10);
 
-        // percorre as imagens criadas salvando na tabela de/para
-        for ($i = 0; $i < sizeof($codprodutoimagem); $i++) {
-            $wpi = WooProdutoImagem::firstOrCreate([
-                'codprodutoimagem' => $codprodutoimagem[$i],
-                'codwooproduto' => $this->wp->codwooproduto,
-                'id' => $ro->images[$i]->id,
-            ]);
+        // percorre os blocos
+        foreach ($cImages as $iChunk => $chunk) {
+
+            // envia todas as novas imagens pro Woo
+            $product = ['images' => $chunk];
+            $this->api->putProduto($this->wp->id, $product);
+            $ro = $this->api->responseObject;
+
+            // percorre as imagens criadas salvando na tabela de/para
+            for ($i = 0; $i < sizeof($chunk); $i++) {
+                $wpi = WooProdutoImagem::firstOrCreate([
+                    'codprodutoimagem' => $cCodprodutoimagem[$iChunk][$i],
+                    'codwooproduto' => $this->wp->codwooproduto,
+                    'id' => $ro->images[$i]->id,
+                ]);
+            }
         }
 
         // faz um novo put com todos os id de imagens
@@ -300,15 +337,13 @@ class WooProdutoService
             ];
         }
         $this->api->putProduto($this->wp->id, $product);
+
+        // retorna 
+        return true;
     }
 
     public function exportarVariacoes()
     {
-        // $this->api->getProduto($this->wp->id);
-        // $this->api->getProduto(1669);
-        // $this->api->getProduto(1646);
-        // $this->api->getProduto(1683);
-        // dd($this->api->responseObject);
 
         $pvs = $this->prod->ProdutoVariacaoS()->whereNull('inativo')->orderBy('variacao', 'desc')->get();
         if (sizeof($pvs) == 1) {
@@ -319,7 +354,10 @@ class WooProdutoService
         $attribute_id = env('WOO_ATTRIBUTE_ID');
         $ids = [];
 
+        // percorre todas variacoes
         foreach ($pvs as $pv) {
+
+            // decide a imagem
             $image = null;
             if ($pv->codprodutoimagem) {
                 $wpi = WooProdutoImagem::where('codprodutoimagem', $pv->codprodutoimagem)->first();
@@ -329,14 +367,22 @@ class WooProdutoService
                     ];
                 }
             }
+
+            // se nao tem descricao, coloca o codigo dela como descricao
+            $descr = $pv->variacao;
+            if (empty($descr)) {
+                $descr = $pv->codprodutovariacao;
+            }
+
+            // monta o objeto pro json
             $var = (object) [
-                "regular_price" => "55.00",
+                "regular_price" => $this->preco($this->prod->preco),
                 "image" => $image,
                 "attributes" => [
                     (object) [
                         "id" => $attribute_id,
                         // "name" => "Cor",
-                        "option" => $pv->variacao
+                        "option" => "{$descr}"
                     ]
                 ],
                 "stock_quantity" => static::estoque($pv),
@@ -344,10 +390,13 @@ class WooProdutoService
                 "sku" => '#' . str_pad($pv->codprodutovariacao, 8, '0', STR_PAD_LEFT),
             ];
 
+            // busca o id do woo se já foi exportado
             $wpv = WooProduto::where([
                 'codproduto' => $this->prod->codproduto,
                 'codprodutovariacao' => $pv->codprodutovariacao,
             ])->first();
+
+            // tenta fazer o put ou post
             if ($wpv) {
                 try {
                     $this->api->putProductVariations($this->wp->id, $wpv->id, $var);
@@ -360,6 +409,8 @@ class WooProdutoService
             } else {
                 $this->api->postProductVariations($this->wp->id, $var);
             }
+
+            // salva na tabela local o id criado
             $id = $this->api->responseObject->id;
             $wpv = WooProduto::firstOrCreate([
                 'codproduto' => $this->prod->codproduto,
@@ -368,21 +419,13 @@ class WooProdutoService
             ]);
         }
 
+        // faz um put relacionando as variacoes
         $ids = WooProduto::where('codproduto', $this->prod->codproduto)->whereNotNull('codprodutovariacao')->select('id')->get()->pluck('id')->toArray();
-
         $this->api->putProduto($this->wp->id, (object) [
             'variations' => $ids
         ]);
 
-        dd($this->api->responseObject);
-    }
-
-    public function criarTermo($attribute_id, $name)
-    {
-        $term = (object) [
-            'name' => $name
-        ];
-        $this->api->postAttributeTerms($attribute_id, $term);
-        return $this->api->responseObject;
+        // retorna
+        return true;
     }
 }

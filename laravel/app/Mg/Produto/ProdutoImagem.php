@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:03:14
+ * Date: 11/Jun/2025 10:01:14
  */
 
 namespace Mg\Produto;
@@ -10,6 +10,8 @@ use Mg\MgModel;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoEmbalagem;
 use Mg\Produto\ProdutoVariacao;
+use Mg\Produto\ProdutoImagemProdutoVariacao;
+use Mg\Woo\WooProdutoImagem;
 use Mg\Imagem\Imagem;
 use Mg\Usuario\Usuario;
 
@@ -73,9 +75,19 @@ class ProdutoImagem extends MgModel
         return $this->hasMany(ProdutoEmbalagem::class, 'codprodutoimagem', 'codprodutoimagem');
     }
 
+    public function ProdutoImagemProdutoVariacaoS()
+    {
+        return $this->hasMany(ProdutoImagemProdutoVariacao::class, 'codprodutoimagem', 'codprodutoimagem');
+    }
+
     public function ProdutoVariacaoS()
     {
         return $this->hasMany(ProdutoVariacao::class, 'codprodutoimagem', 'codprodutoimagem');
+    }
+
+    public function WooProdutoImagemS()
+    {
+        return $this->hasMany(WooProdutoImagem::class, 'codprodutoimagem', 'codprodutoimagem');
     }
 
 }

@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 04/Jun/2025 10:29:55
+ * Date: 11/Jun/2025 10:00:03
  */
 
 namespace Mg\Woo;
 
 use Mg\MgModel;
 use Mg\Produto\ProdutoImagem;
+use Mg\Woo\WooProduto;
 
 class WooProdutoImagem extends MgModel
 {
@@ -16,35 +17,35 @@ class WooProdutoImagem extends MgModel
 
 
     protected $fillable = [
-        'codwooproduto',
         'codprodutoimagem',
+        'codwooproduto',
         'id'
     ];
 
     protected $dates = [
-        'criacao',
-        'alteracao'
+        'alteracao',
+        'criacao'
     ];
 
     protected $casts = [
-        'codwooprodutoimagem' => 'integer',
-        'codwooproduto' => 'integer',
         'codprodutoimagem' => 'integer',
-        'codusuariocriacao' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'id' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'codwooproduto' => 'integer',
+        'codwooprodutoimagem' => 'integer',
+        'id' => 'integer'
     ];
 
 
     // Chaves Estrangeiras
-    public function WooProduto()
-    {
-        return $this->belongsTo(WooProduto::class, 'codwooproduto', 'codwooproduto');
-    }
-
     public function ProdutoImagem()
     {
         return $this->belongsTo(ProdutoImagem::class, 'codprodutoimagem', 'codprodutoimagem');
+    }
+
+    public function WooProduto()
+    {
+        return $this->belongsTo(WooProduto::class, 'codwooproduto', 'codwooproduto');
     }
 
 }
