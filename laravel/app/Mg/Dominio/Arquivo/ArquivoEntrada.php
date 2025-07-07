@@ -184,7 +184,7 @@ class ArquivoEntrada extends Arquivo
             // e zera valor total segmento
             if ($seg->valortotal == 0) {
                 $valorTotalSegmento = 0;
-                $acum = DominioAcumulador::where('codcfop', $doc->codcfop)->first();
+                $acum = DominioAcumulador::where('codcfop', $seg->codcfop)->first();
 
             // se nao totaliza o segmento e busca tributacao
             } else {
@@ -213,7 +213,7 @@ class ArquivoEntrada extends Arquivo
 
             // se mesmo assim nao achou, nao pode continuar
             if (!$acum) {
-                throw new \Exception("Sem Acumulador para CFOP '{$seg->codcfop}' CST '{$seg->icmscst}' NF '{$doc->numero}' Pessoa '{$doc->pessoa}'!", 1);
+                throw new \Exception("Sem Acumulador para CFOP '{$seg->codcfop}' CST '{$seg->icmscst}' NF '{$doc->numero}' Pessoa '{$doc->pessoa}' #NF '{$doc->codnotafiscal}'!", 1);
             }
 
             // se for nota inutilizada ou cancelada utiliza valor 0
