@@ -49,13 +49,17 @@ class PixController
 
     public function consultarPix (Request $request, $codportador)
     {
-        $portador = Portador::findOrFail($codportador);
         if ($inicio = $request->inicio) {
             $inicio = Carbon::parse($inicio);
+        } else {
+            $inicio = Carbon::today()->addDays(-1);
         }
         if ($fim = $request->fim) {
             $fim = Carbon::parse($fim);
+        } else {
+            $fim = Carbon::today()->endOfDay();
         }
+        $portador = Portador::findOrFail($codportador);
         $ret = PixService::consultarPix(
             $portador,
             $inicio,
@@ -71,14 +75,18 @@ class PixController
 
     public function consultarPixTodos (Request $request)
     {
+        if ($inicio = $request->inicio) {
+            $inicio = Carbon::parse($inicio);
+        } else {
+            $inicio = Carbon::today()->addDays(-1);
+        }
+        if ($fim = $request->fim) {
+            $fim = Carbon::parse($fim);
+        } else {
+            $fim = Carbon::today()->endOfDay();
+        }
         $portadores = Portador::ativo()->whereNotNull('pixdict')->get();
         foreach ($portadores as $portador) {
-            if ($inicio = $request->inicio) {
-                $inicio = Carbon::parse($inicio);
-            }
-            if ($fim = $request->fim) {
-                $fim = Carbon::parse($fim);
-            }
             $ret = PixService::consultarPix(
                 $portador,
                 $inicio,
