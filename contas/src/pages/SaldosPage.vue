@@ -1,20 +1,7 @@
 <template>
   <MGLayout>
-    <template #tituloPagina> Saldo </template>
+    <template #tituloPagina> Saldos </template>
     <template #content>
-      <div class="q-mx-md q-mt-md row justify-end" style="">
-        <q-btn :loading="importandoOfx" class="" color="primary" icon="upload_file"
-               @click="$refs.inputArquivo.click()" label="Importar OFX">
-          <template v-slot:loading>
-            <q-spinner-oval class="on-left" />
-            Processando...
-          </template>
-        </q-btn>
-
-        <input ref="inputArquivo" type="file" accept=".ofx" style="display: none"
-               @change="uploadOfx" />
-      </div>
-
       <div class="q-pa-md" style="display: flex; gap: 8px">
         <q-table :columns="columns" :rows="rows" row-key="banco"
           flat bordered hide-pagination style="flex-grow: 1"
@@ -84,9 +71,76 @@
           </template>
         </q-table>
 
-        <q-date v-model="dataSelecionada" minimal flat bordered
-                mask="DD-MM-YYYY"/>
+        <q-date v-model="dataSelecionada" minimal flat bordered v-if="intervalo"
+                mask="DD-MM-YYYY"
+                :navigation-min-year-month="$moment(intervalo.primeira_data).format('YYYY/MM')"
+                :navigation-max-year-month="$moment(intervalo.ultima_data).format('YYYY/MM')"/>
       </div>
+
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn fab :loading="importandoOfx" class="" color="primary" icon="upload_file"
+               @click="openDialog">
+          <template v-slot:loading>
+            <q-spinner-oval  />
+          </template>
+          <q-tooltip anchor="center left" self="center right">
+            Importar OFX
+          </q-tooltip>
+        </q-btn>
+      </q-page-sticky>
+
+      <q-dialog v-model="ofxDialog" persistent>
+        <q-card style="min-width: 800px">
+          <q-card-section>
+            <q-uploader
+                ref="uploader"
+                :url="urlUploadOfx"
+                field-name="arquivos[]"
+                accept=".ofx"
+                label="Importar Arquivos OFX"
+                @finish="finalImportacaoOfx"
+                @uploaded="ofxImportado"
+                @failed="ofxFalha"
+                @uploading="enviandoOfx = true"
+                :headers="[{name:'Authorization', 'value':`Bearer ${authStore().token}`}]"
+                multiple
+                flat style="width: 100%">
+<!--              <template v-slot:list="scope">
+                <q-list separator>
+                  <q-item v-for="file in scope.files" :key="file.__key">
+                    <q-item-section>
+                      <q-item-label class="full-width ellipsis">
+                        {{ file.name }}
+                      </q-item-label>
+
+                      <q-item-label caption>
+                        Status: {{ file.__status }}
+                        <span v-if="file.error" class="text-negative"> - Erro: {{ file.error }}</span>
+                      </q-item-label>
+                    </q-item-section>
+
+                    <q-item-section top side>
+                      <q-btn
+                        class="gt-xs"
+                        size="12px"
+                        flat
+                        dense
+                        round
+                        icon="delete"
+                        @click="scope.removeFile(file)"
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </template>-->
+            </q-uploader>
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Fechar" color="primary" v-close-popup :disable="enviandoOfx" />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </template>
   </MGLayout>
 </template>
@@ -94,6 +148,7 @@
 <script>
 import MGLayout from 'layouts/MGLayout.vue'
 import { formatMoney } from 'src/utils/formatters.js'
+import { authStore } from 'stores/auth'
 
 export default {
   components: { MGLayout },
@@ -108,15 +163,82 @@ export default {
       footer: {},
 
       buscandoIntervalo: false,
-      intervaloSaldos: {
-        inicio: null,
-        fim: null,
-      },
       importandoOfx: false,
-      dataSelecionada: null
+      dataSelecionada: null,
+      ofxDialog: false,
+      falhaImportacaoOfx: false,
+      enviandoOfx:false,
+      intervalo: null,
     }
   },
   methods: {
+    authStore,
+    buscaIntervaloSaldos(){
+      //this.buscandoIntervalo = true;
+      this.$api
+        .get(`v1/portador/intervalo-saldos`, {})
+        .then((response) => {
+          const intervalo = response.data;
+          console.log("intervalo", intervalo);
+          //this.criaListaIntervalo(intervalo);
+          this.intervalo = intervalo;
+        })
+        .catch((error) => {
+          console.error('Erro:', error)
+        })
+        .finally(() => {
+          //this.buscandoIntervalo = false;
+          //resolve()
+        })
+    },
+    openDialog() {
+      this.falhaImportacaoOfx = false;
+      this.ofxDialog = true;
+    },
+    finalImportacaoOfx: function() {
+      this.enviandoOfx = false;
+      if (!this.falhaImportacaoOfx) {
+        this.ofxDialog = false;
+      }
+      this.buscaIntervaloSaldos();
+      this.listaSaldos();
+    },
+
+    ofxImportado: function(info) {
+      const vm = this;
+      const resp = JSON.parse(info.xhr.response);
+      Object.keys(resp).forEach(arquivo => {
+        var mensagem =
+          'Importados ' +
+          resp[arquivo].registros +
+          ' registros no portador "' +
+          resp[arquivo].portador +
+          '" com ' +
+          resp[arquivo].falhas +
+          ' falhas!'
+        ;
+        vm.$q.notify({
+          message: mensagem,
+          color: 'positive',
+        })
+      });
+    },
+
+    ofxFalha: function(response) {
+      this.falhaImportacaoOfx = true;
+      const vm = this;
+      response.files.forEach((arquivo, i) => {
+        var mensagem =
+          'Falha ao importar o arquivo "' +
+          arquivo.name +
+          '"!'
+        ;
+        vm.$q.notify({
+          message: mensagem,
+          color: 'negative',
+        })
+      });
+    },
     formatMoney,
     moneyTextColor(value){
       let classes = ""
@@ -156,7 +278,7 @@ export default {
       this.columns = [
         { name: 'banco', label: 'Banco', field: 'banco', align: 'left' },
         ...this.filiais.map((filial, idx) => ({
-          name: String(idx), label: filial.nome, field: String(idx), align: 'right'
+          name: String(idx), label: filial.nome ? filial.nome : 'Sem Filial', field: String(idx), align: 'right'
         })),
         { name: 'totalBanco',  label: 'Total Banco', field: 'totalBanco',  align: 'right' }
       ];
@@ -187,58 +309,28 @@ export default {
 
       this.rows = Object.values(linhasPorBanco);
     },
-    uploadOfx(event){
-      this.importandoOfx = true;
-      const arquivos = event.target.files;
-
-      const formData = new FormData();
-      for (let i = 0; i < arquivos.length; i++) {
-        formData.append('arquivos[]', arquivos[i]);
-      }
-
-      this.$api.post(`v1/portador/importar-ofx`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
-        .then((response) => {
-          const resp = response.data;
-
-          Object.keys(resp).forEach(arquivo => {
-            var mensagem = `
-              Importados ${resp[arquivo].registros}
-              registros no portador ${resp[arquivo].portador}
-              com ${resp[arquivo].falhas} falhas!'`;
-
-            this.$q.notify({ message: mensagem, color: 'positive' })
-          })
-
-        })
-        .catch((error) => {
-          console.error('Erro:', error)
-          var mensagem = error.response.data.message
-          this.$q.notify({ message: mensagem, color: 'negative' })
-        })
-        .finally(() => {
-          this.$refs.inputArquivo.value = null;
-          this.importandoOfx = false;
-          this.listaSaldos()
-        })
-    }
+  },
+  computed: {
+    urlUploadOfx: function () {
+      return process.env.API_URL + 'v1/portador/importar-ofx';
+    },
   },
   watch: {
     dataSelecionada(data){
       this.$router.push({
         query: {
-          data: data,
+          dia: data,
         }
       })
       this.listaSaldos();
     }
   },
   mounted() {
-    this.dataSelecionada = this.$route.query.data
+    this.dataSelecionada = this.$route.query.dia
     if(!this.dataSelecionada){
       this.dataSelecionada = this.$moment().format('DD-MM-YYYY')
     }
+    this.buscaIntervaloSaldos();
   },
 }
 </script>

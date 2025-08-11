@@ -40,6 +40,44 @@ class PdvNegocioService
         return static::negocioAberto($negocio, $data, $pdv);
     }
 
+    // Verifica se o somatorio dos itens bate com o negocio
+    public static function confereTotais(Negocio $negocio)
+    {
+        $sql = '
+            select 
+                sum(npb.valorprodutos) as valorprodutos,
+                sum(npb.valordesconto) as valordesconto,
+                sum(npb.valorfrete ) as valorfrete,
+                sum(npb.valoroutras ) as valoroutras,
+                sum(npb.valorseguro) as valorseguro,
+                sum(npb.valortotal) as valortotal
+            from tblnegocioprodutobarra npb
+            where npb.codnegocio = :codnegocio
+            and npb.inativo is null
+        ';
+        $tot = DB::select($sql, [
+          'codnegocio' => $negocio->codnegocio
+        ])[0];
+        if ($negocio->valorprodutos != floatval($tot->valorprodutos)) {
+            return false;
+        }
+        if ($negocio->valordesconto != floatval($tot->valordesconto)) {
+            return false;
+        }
+        if ($negocio->valorfrete != floatval($tot->valorfrete)) {
+            return false;
+        }
+        if ($negocio->valoroutras != floatval($tot->valoroutras)) {
+            return false;
+        }
+        if ($negocio->valorseguro != floatval($tot->valorseguro)) {
+            return false;
+        }
+        if ($negocio->valortotal != floatval($tot->valortotal)) {
+            return false;
+        }
+        return true;
+    }
 
     public static function negocioAberto(Negocio $negocio, $data, Pdv $pdv)
     {
@@ -65,6 +103,10 @@ class PdvNegocioService
             $npb->fill($item);
             $npb->codnegocio = $negocio->codnegocio;
             $npb->save();
+        }
+
+        if (!static::confereTotais($negocio)) {
+            throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
         }
 
         // importa os pagamentos
@@ -170,6 +212,10 @@ class PdvNegocioService
         if ($negocio->NegocioProdutoBarras()->whereNull('inativo')->count() == 0) {
             throw new Exception('Não foi informado nenhum produto neste negócio!', 1);
         }
+
+        if (!static::confereTotais($negocio)) {
+            throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
+        }        
 
         // validacoes de venda
         if ($negocio->NaturezaOperacao->venda == true) {

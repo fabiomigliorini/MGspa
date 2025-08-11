@@ -77,7 +77,12 @@ class ExtratoBbService
                     }
                 }else if($lancamento['codigoHistorico'] == '999'){
                     //Código de histórico 999 – traz o saldo final do período pesquisado
-                    //Não fazer nada
+                    if($lancamento['textoDescricaoHistorico'] == 'S A L D O'){
+                        if (!self::salvaSaldo($portador->codportador, $lancamento)) {
+                            $falhas++;
+                        };
+                        $registros++;
+                    }
                 }else{
                     if (!self::salvaExtrato($portador->codportador, $lancamento)) {
                         $falhas++;
@@ -118,7 +123,7 @@ class ExtratoBbService
 
         //$extratoBancario->codextratobancariotipomovimento = $tipo->codextratobancariotipomovimento;
         $extratoBancario->indicadortipolancamento = $lancamento['indicadorTipoLancamento'];
-        $extratoBancario->lancamento = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);;
+        $extratoBancario->dia = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);;
         if ($lancamento['dataMovimento'] != '0') {
             $extratoBancario->movimento = Carbon::createFromFormat('dmY', $lancamento['dataMovimento']);
         }
