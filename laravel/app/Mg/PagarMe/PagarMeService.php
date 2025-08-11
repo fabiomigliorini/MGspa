@@ -479,35 +479,45 @@ class PagarMeService
         $valorpagamento = null;
         $valorcancelamento = null;
         switch (strtolower($status)) {
-            case 'paid':
-                $valorpagamento = $valor;
-                break;
-
             case 'canceled':
+            case 'refunded':
                 $valorcancelamento = $valor;
+                break;
+            case 'paid':
+            case 'captured':
+            default:
+                $valorpagamento = $valor;
                 break;
         }
 
         // Busca na filial transacao com aquele id
-        $pp = PagarMePagamento::updateOrCreate([
-            'idtransacao' => $idtransacao,
-            'codfilial' => $codfilial,
-        ], [
-            'codpagarmebandeira' => $codpagarmebandeira,
-            'codpagarmepos' => $codpagarmepos,
-            'jurosloja' => $jurosloja,
-            'parcelas' => $parcelas,
-            'tipo' => $tipo,
-            'codpagarmepedido' => $codpagarmepedido,
-            'autorizacao' => $autorizacao,
-            'identificador' => $identificador,
-            'nsu' => $nsu,
-            'nome' => $nome,
-            'transacao' => $transacao,
-            'valorpagamento' => $valorpagamento,
-            'valorcancelamento' => $valorcancelamento,
-        ]);
+        $q = PagarMePagamento::where('nsu', $nsu)->where('autorizacao', $autorizacao);
+        if ($valorcancelamento > 0) {
+            $q->where('valorcancelamento', $valorcancelamento);
+        } else {
+            $q->where('valorpagamento', $valorpagamento);
+        }
+        $pp = $q->firstOrNew();
 
+        // popula os dados da transacao
+        $pp->idtransacao = $idtransacao;
+        $pp->codfilial = $codfilial;
+        $pp->codpagarmebandeira = $codpagarmebandeira;
+        $pp->codpagarmepos = $codpagarmepos;
+        $pp->jurosloja = $jurosloja;
+        $pp->parcelas = $parcelas;
+        $pp->tipo = $tipo;
+        $pp->codpagarmepedido = $codpagarmepedido;
+        $pp->autorizacao = $autorizacao;
+        $pp->identificador = $identificador;
+        $pp->nsu = $nsu;
+        $pp->nome = $nome;
+        $pp->transacao = $transacao;
+        $pp->valorpagamento = $valorpagamento;
+        $pp->valorcancelamento = $valorcancelamento;
+
+        // salva e retorna
+        $pp->save();        
         return $pp;
     }
 
@@ -527,11 +537,12 @@ class PagarMeService
         $valorcancelado = null;
         foreach ($api->response->charges ?? [] as $charge) {
             if (isset($charge->paid_amount)) {
-                $valorpago += $charge->paid_amount / 100;
+                $valorpago = $charge->paid_amount / 100;
             }
             if (isset($charge->canceled_amount)) {
-                $valorcancelado += $charge->canceled_amount / 100;
+                $valorcancelado = $charge->canceled_amount / 100;
             }
+
             if (isset($charge->last_transaction)) {
 
                 // POS
@@ -540,7 +551,7 @@ class PagarMeService
                     $charge->metadata->terminal_serial_number
                 );
 
-                $pp = PagarMeService::alteraOuCriaPagamento(
+                PagarMeService::alteraOuCriaPagamento(
                     $charge->last_transaction->id,
                     $ped->codfilial,
                     $pos->codpagarmepos,

@@ -2,12 +2,6 @@
 
 namespace Mg\PagarMe;
 
-use Illuminate\Support\Facades\Storage;
-
-use Mg\Filial\Filial;
-
-use Carbon\Carbon;
-
 class PagarMeWebhookService
 {
 
