@@ -55,6 +55,11 @@ class NotaFiscalService
         return (!empty($nota->nfeautorizacao)) && (empty($nota->nfecancelamento)) && (empty($nota->nfeinutilizacao));
     }
 
+    public static function isDigitacao(NotaFiscal $nota)
+    {
+        return (empty($nota->numero) && ($nota->emitida));
+    }
+
     public static function isCanceladaInutilizada(NotaFiscal $nota)
     {
         return (!empty($nota->nfecancelamento)) || (!empty($nota->nfeinutilizacao));

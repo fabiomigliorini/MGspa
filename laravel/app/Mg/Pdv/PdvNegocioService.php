@@ -355,6 +355,9 @@ class PdvNegocioService
                 if (NotaFiscalService::isAtiva($nfpb->NotaFiscal)) {
                     throw new Exception("Negócio possui Nota Fiscal ativa!", 1);
                 }
+                if (NotaFiscalService::isDigitacao($nfpb->NotaFiscal)) {
+                    throw new Exception("Negócio possui Nota Fiscal em ditação!", 1);
+                }
             }
         }
 
