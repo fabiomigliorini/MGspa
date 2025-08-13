@@ -342,4 +342,18 @@ class NotaFiscalService
         }
         return $nf->delete();
     }
+
+    public static function notasDoNegocio ($codnegocio)
+    {
+        // A query SQL que você forneceu
+        $sql = "
+            select distinct nf.*
+            from tblnegocioprodutobarra npb
+            inner join tblnotafiscalprodutobarra nfpb on (nfpb.codnegocioprodutobarra = npb.codnegocioprodutobarra)
+            inner join tblnotafiscal nf on (nf.codnotafiscal = nfpb.codnotafiscal)
+            where npb.codnegocio = :codnegocio
+        ";
+        $nfs = NotaFiscal::fromQuery($sql, ['codnegocio' => $codnegocio]);
+        return $nfs;
+    }
 }

@@ -228,8 +228,6 @@ class PdvController
 
     public function deleteNegocio(PdvRequest $request, $codnegocio)
     {
-        DB::beginTransaction();
-        $pdv = PdvService::autoriza($request->pdv);
         $request->validate([
             'justificativa' => [
                 'required',
@@ -237,7 +235,9 @@ class PdvController
                 'min:15',
             ]
         ]);
+        $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($codnegocio);
+        DB::beginTransaction();
         $negocio = PdvNegocioService::cancelar($negocio, $pdv, $request->justificativa);
         DB::commit();
         return new NegocioResource($negocio);

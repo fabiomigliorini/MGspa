@@ -56,7 +56,7 @@ class PdvNegocioService
             and npb.inativo is null
         ';
         $tot = DB::select($sql, [
-          'codnegocio' => $negocio->codnegocio
+            'codnegocio' => $negocio->codnegocio
         ])[0];
         if ($negocio->valorprodutos != floatval($tot->valorprodutos)) {
             return false;
@@ -215,7 +215,7 @@ class PdvNegocioService
 
         if (!static::confereTotais($negocio)) {
             throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
-        }        
+        }
 
         // validacoes de venda
         if ($negocio->NaturezaOperacao->venda == true) {
@@ -335,7 +335,7 @@ class PdvNegocioService
         if ($negocio->codpdv == $pdv->codpdv) {
             throw new Exception("Este negócio já está vinculado à este PDV!", 1);
         }
-        
+
         $negocio->codpdv = $pdv->codpdv;
         $negocio->lancamento = Carbon::now();
         $negocio->save();
@@ -350,14 +350,12 @@ class PdvNegocioService
             throw new Exception("Status do Negócio Não Permite Cancelamento!", 1);
         }
 
-        foreach ($negocio->NegocioProdutoBarraS as $npb) {
-            foreach ($npb->NotaFiscalProdutoBarraS as $nfpb) {
-                if (NotaFiscalService::isAtiva($nfpb->NotaFiscal)) {
-                    throw new Exception("Negócio possui Nota Fiscal ativa!", 1);
-                }
-                if (NotaFiscalService::isDigitacao($nfpb->NotaFiscal)) {
-                    throw new Exception("Negócio possui Nota Fiscal em ditação!", 1);
-                }
+        $nfs = NotaFiscalService::notasDoNegocio($negocio->codnegocio);
+        foreach ($nfs as $nf) {
+            if (NotaFiscalService::isAtiva($nf)) {
+                throw new Exception("Negócio possui Nota Fiscal ativa!", 1);
+            } else if (NotaFiscalService::isDigitacao($nf)) {
+                NotaFiscalService::excluir($nf);
             }
         }
 
