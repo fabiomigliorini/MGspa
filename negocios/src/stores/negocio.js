@@ -919,6 +919,7 @@ export const negocioStore = defineStore("negocio", {
       } else {
         this.negocio.cpf = null;
       }
+      await this.carregarChavesEstrangeiras();
       // se tiver desconto e o negócio ainda estiver aberto
       const desconto = parseFloat(this.negocio.Pessoa.desconto);
       if (desconto > 0 && this.negocio.codnegociostatus == 1) {
@@ -927,7 +928,6 @@ export const negocioStore = defineStore("negocio", {
           this.itemRecalcularValorProdutos(item);
         });
       }
-      await this.carregarChavesEstrangeiras();
       await this.salvar();
     },
 

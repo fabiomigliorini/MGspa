@@ -10,6 +10,7 @@ TODO Adicionar CODPORTADOR na Manutenção de PDV
 TODO Não deixar Movimentar Dinheiro quando PDV não tiver Portador
 
 IMPORTANTES
+TODO Integração PIX Sicredi
 TODO Bolar uma maneira de sincronizar pessoas novas para pegar cadastro recem feito
 TODO Excluir transferencia de entrada quando transferencia de saida for cancelada
 TODO fazer venda de vale compras
@@ -100,3 +101,6 @@ FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistem
 [X] BUG Nos Xerox a listagem de negocios abertos esta ficando enorme - computador fica lento
 [X] BUG Nao esta gerando movimento de estoque nas devoluções
 [X] BUG Quando faz uma devolucao, o usuario fica o da venda original e nao do caixa que está realizando a devolucao
+[X] BUG Deixando Cancelar negocio com nota cancelada
+[X] BUG Adicionando pagamento duplicado memsa autorizacao
+[X] BUG Perdendo ultimo produto
