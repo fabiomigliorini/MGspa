@@ -913,19 +913,38 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async informarPessoa(codpessoa, cpf) {
+      // atribui o cliente/cpf no negocio
       this.negocio.codpessoa = codpessoa;
       if (codpessoa == 1) {
         this.negocio.cpf = cpf;
       } else {
         this.negocio.cpf = null;
       }
+
+      // pega desconto do cliente antigo e do novo
+      const descontoClienteAntigo = parseFloat(this.negocio.Pessoa.desconto);
       await this.carregarChavesEstrangeiras();
-      // se tiver desconto e o negócio ainda estiver aberto
-      const desconto = parseFloat(this.negocio.Pessoa.desconto);
-      if (desconto > 0 && this.negocio.codnegociostatus == 1) {
+      const descontoClienteNovo = parseFloat(this.negocio.Pessoa.desconto);
+
+      // se negocio nao estiver aberto retorna
+      if (this.negocio.codnegociostatus != 1) {
+        await this.salvar();
+        return;
+      }
+
+      // se novo cliente tem desconto, aplica o desconto dele
+      if (descontoClienteNovo > 0) {
         this.negocio.itens.forEach((item) => {
-          item.percentualdesconto = desconto;
+          item.percentualdesconto = descontoClienteNovo;
           this.itemRecalcularValorProdutos(item);
+        });
+      } else if (descontoClienteAntigo > 0) {
+        this.negocio.itens.forEach((item) => {
+          // se o desconto dos itens era o desconto do cliente antigo, retira o desconto
+          if (item.percentualdesconto == descontoClienteAntigo) {
+            item.percentualdesconto = null;
+            this.itemRecalcularValorProdutos(item);
+          }
         });
       }
       await this.salvar();
