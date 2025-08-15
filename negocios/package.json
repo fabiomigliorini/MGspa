@@ -1,6 +1,6 @@
 {
   "name": "negocios",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "description": "Controle de Negocios MG Papelaria",
   "productName": "Negocios",
   "author": "MG Papelaria",
@@ -21,16 +21,16 @@
     "moment": "^2.29.4",
     "pinia": "^2.0.11",
     "pinia-plugin-persistedstate": "^3.2.0",
-    "quasar": "^2.17.0",
     "qrcode": "^1.5.4",
+    "quasar": "^2.17.0",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0"
   },
   "devDependencies": {
-    "@quasar/app-vite": "^1.11.0",
+    "@quasar/app-vite": "^2.3.0",
     "autoprefixer": "^10.4.2",
     "dotenv": "^16.3.1",
-    "eslint": "^8.57.1",
+    "eslint": "^9.33.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-vue": "^9.0.0",
     "postcss": "^8.4.14",
@@ -47,5 +47,14 @@
     "node": "^18 || ^16 || ^14.19",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "tmp": "0.2.4",
+      "glob": "^10.4.5",
+      "inflight": "^1.0.7",
+      "source-map": "0.7.6",
+      "sourcemap-codec": "1.4.8"
+    }
   }
 }
