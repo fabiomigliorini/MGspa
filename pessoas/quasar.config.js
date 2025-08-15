@@ -31,7 +31,7 @@ module.exports = configure(function (ctx) {
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       // 'ionicons-v4',
-      'mdi-v5',
+      "mdi-v5",
       // 'fontawesome-v6',
       // 'eva-icons',
       // 'themify',
@@ -92,7 +92,7 @@ module.exports = configure(function (ctx) {
         // loading: '' /* look at QuasarConfOptions from the API card */
       },
 
-      iconSet: 'material-icons', // Quasar icon set
+      iconSet: "material-icons", // Quasar icon set
       // lang: 'en-US', // Quasar language pack
       lang: "pt-BR", // Quasar language pack
 
@@ -138,7 +138,7 @@ module.exports = configure(function (ctx) {
 
     // https://v2.quasar.dev/quasar-cli-webpack/developing-pwa/configuring-pwa
     pwa: {
-      workboxPluginMode: "GenerateSW", // 'GenerateSW' or 'InjectManifest'
+      workboxMode: "GenerateSW", // 'GenerateSW' or 'InjectManifest'
       workboxOptions: {}, // only for GenerateSW
 
       // for the custom service worker ONLY (/src-pwa/custom-service-worker.[js|ts])

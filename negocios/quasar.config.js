@@ -8,12 +8,9 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-//const { configure } = require("quasar/wrappers");
-import { configure } from "quasar/wrappers";
-import dotenv from "dotenv";
+const { configure } = require("quasar/wrappers");
 
-//module.exports = configure(function (/* ctx */) {
-export default configure(function (/* ctx */) {
+module.exports = configure(function (/* ctx */) {
   return {
     eslint: {
       // fix: true,
@@ -51,8 +48,7 @@ export default configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
-      //env: require("dotenv").config().parsed,
-      env: dotenv.config().parsed,	    
+      env: require("dotenv").config().parsed,
       target: {
         browser: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
         node: "node16",
