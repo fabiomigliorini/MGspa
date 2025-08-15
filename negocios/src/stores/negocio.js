@@ -375,12 +375,17 @@ export const negocioStore = defineStore("negocio", {
 
     async recalcularTroco() {
       const pagar = this.valorapagar;
-      const troco = pagar < 0 ? Math.abs(pagar) : null;
-      this.negocio.pagamentos.forEach((pag) => {
-        if (pag.codformapagamento == process.env.CODFORMAPAGAMENTO_DINHEIRO) {
-          pag.valortroco = troco;
-        }
-      });
+      let troco = pagar < 0 ? Math.abs(pagar) : null;
+      this.negocio.pagamentos
+        .filter(
+          (pag) =>
+            pag.codformapagamento == process.env.CODFORMAPAGAMENTO_DINHEIRO
+        )
+        .sort((a, b) => b.valorpagamento - a.valorpagamento) // ordem decrescente
+        .forEach((pag) => {
+          pag.valortroco = Math.min(troco, pag.valorpagamento);
+          troco -= pag.valortroco;
+        });
     },
 
     async carregarPrimeiroVazio() {
