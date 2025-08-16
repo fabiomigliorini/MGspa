@@ -27,6 +27,7 @@ const dialogRomaneio = ref(false);
 const dialogVale = ref(false);
 const dialogComanda = ref(false);
 const listagemNotasRef = ref(null);
+const dialogOrcamentoSelecionar = ref(false);
 const dialogOrcamento = ref(false);
 const iFrameOrcamentoRef = ref(null);
 const dialogOrcamentoTermica = ref(false);
@@ -129,7 +130,7 @@ const vazioOuCriar = async () => {
   try {
     var audio = new Audio("novo.mp3");
     audio.play();
-  } catch (error) {}
+  } catch (error) { }
   router.push("/offline/" + neg.uuid);
 };
 
@@ -146,7 +147,7 @@ const duplicar = async () => {
       router.push("/offline/" + sNegocio.negocio.uuid);
       var audio = new Audio("novo.mp3");
       audio.play();
-    } catch (error) {}
+    } catch (error) { }
   });
 };
 
@@ -180,6 +181,7 @@ const fecharDialogs = async () => {
   dialogRomaneio.value = false;
   dialogVale.value = false;
   dialogComanda.value = false;
+  dialogOrcamentoSelecionar.value = false;
   dialogOrcamento.value = false;
   dialogOrcamentoTermica.value = false;
 };
@@ -361,28 +363,13 @@ const vale = async () => {
   dialogVale.value = true;
 };
 
-const orcamento = async () => {
-  Dialog.create({
-    title: "Selecione uma opção",
-    message: "Selecione o tipo de impressão para o orçamento",
-    options: {
-      type: "radio",
-      isValid: (val) => val !== undefined,
-      items: [
-        { label: "Impressora Papel A4", value: "papela4" },
-        { label: "Impressora Térmica", value: "termica" },
-      ],
-    },
-    cancel: true,
-  }).onOk((data) => {
-    if (data == "papela4") {
-      fecharDialogs();
-      dialogOrcamento.value = true;
-    } else {
-      fecharDialogs();
-      dialogOrcamentoTermica.value = true;
-    }
-  });
+const selecionarOrcamento = (tipo) => {
+  fecharDialogs();
+  if (tipo === "papela4") {
+    dialogOrcamento.value = true;
+  } else {
+    dialogOrcamentoTermica.value = true;
+  }
 };
 
 const comanda = async () => {
@@ -412,9 +399,9 @@ const comanda = async () => {
 const imprimirRomaneio = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
-      sNegocio.negocio.codnegocio +
-      "/romaneio/" +
-      sNegocio.padrao.impressora
+    sNegocio.negocio.codnegocio +
+    "/romaneio/" +
+    sNegocio.padrao.impressora
   );
   Notify.create({
     type: "positive",
@@ -428,9 +415,9 @@ const imprimirRomaneio = async () => {
 const imprimirVale = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
-      sNegocio.negocio.codnegocio +
-      "/vale/" +
-      sNegocio.padrao.impressora
+    sNegocio.negocio.codnegocio +
+    "/vale/" +
+    sNegocio.padrao.impressora
   );
   Notify.create({
     type: "positive",
@@ -444,9 +431,9 @@ const imprimirVale = async () => {
 const imprimirComanda = async () => {
   await api.post(
     "/api/v1/pdv/negocio/" +
-      sNegocio.negocio.codnegocio +
-      "/comanda/" +
-      sNegocio.padrao.impressora
+    sNegocio.negocio.codnegocio +
+    "/comanda/" +
+    sNegocio.padrao.impressora
   );
   Notify.create({
     type: "positive",
@@ -597,35 +584,18 @@ onUnmounted(() => {
     <div class="q-pa-md q-col-gutter-md">
       <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
         Notas, Títulos e Documentos anexos
-        <q-btn
-          flat
-          color="primary"
-          @click="listagemNotasRef.nova(65)"
-          icon="mdi-script-text-outline"
-          size="md"
-          dense
-        >
+        <q-btn flat color="primary" @click="listagemNotasRef.nova(65)" icon="mdi-script-text-outline" size="md" dense>
           <q-tooltip class="bg-accent">Nova NFCe (Cupom)</q-tooltip>
         </q-btn>
-        <q-btn
-          flat
-          color="primary"
-          @click="listagemNotasRef.nova(55)"
-          icon="mdi-file-document-outline"
-          size="md"
-          dense
-        >
+        <q-btn flat color="primary" @click="listagemNotasRef.nova(55)" icon="mdi-file-document-outline" size="md" dense>
           <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
         </q-btn>
       </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
-      <div
-        class="row q-col-gutter-md q-px-md"
-        v-if="
-          sNegocio.negocio.codnegociostatus == 2 ||
-          sNegocio.negocio.codnegociostatus == 3
-        "
-      >
+      <div class="row q-col-gutter-md q-px-md" v-if="
+        sNegocio.negocio.codnegociostatus == 2 ||
+        sNegocio.negocio.codnegociostatus == 3
+      ">
         <listagem-notas ref="listagemNotasRef" />
         <listagem-titulos />
         <listagem-anexos v-if="sNegocio.negocio.anexos" />
@@ -637,49 +607,29 @@ onUnmounted(() => {
 
     <!-- ROMANEIO -->
     <q-dialog v-model="dialogRomaneio" full-height>
-      <q-card style="height: 100%">
-        <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            style="width: 100%; height: 100%; border: none"
-            :src="urlRomaneio"
-          ></iframe>
+      <q-card class="full-height column" style="width: 500px;">
+        <q-card-section class="col column no-wrap q-pa-sm">
+          <iframe class="col no-border" :src="urlRomaneio"></iframe>
         </q-card-section>
-
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirRomaneio()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirRomaneio()"
+            :disable="sNegocio.padrao.impressora == null" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
+
       </q-card>
     </q-dialog>
 
     <!-- VALE -->
     <q-dialog v-model="dialogVale" full-height>
-      <q-card style="height: 100%">
-        <!-- <q-card-section>
-          <div class="text-h6">Romaneio</div>
-        </q-card-section> -->
-
-        <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            style="width: 100%; height: 100%; border: none"
-            :src="urlVale"
-          ></iframe>
+      <q-card class="full-height column" style="width: 500px;">
+        <q-card-section class="col column no-wrap q-pa-sm">
+          <iframe class="col no-border" :src="urlVale"></iframe>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirVale()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirVale()"
+            :disable="sNegocio.padrao.impressora == null" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -687,197 +637,116 @@ onUnmounted(() => {
 
     <!-- COMANDA -->
     <q-dialog v-model="dialogComanda" full-height>
-      <q-card style="height: 100%">
-        <!-- <q-card-section>
-          <div class="text-h6">Romaneio</div>
-        </q-card-section> -->
-
-        <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            style="width: 100%; height: 100%; border: none"
-            :src="urlComanda"
-          ></iframe>
+      <q-card class="full-height column" style="width: 500px;">
+        <q-card-section class="col column no-wrap q-pa-sm">
+          <iframe class="col no-border" :src="urlComanda"></iframe>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirComanda()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirComanda()"
+            :disable="sNegocio.padrao.impressora == null" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- ORCAMENTO SELECIONAR -->
+    <q-dialog v-model="dialogOrcamentoSelecionar">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Selecione uma opção</div>
+        </q-card-section>
+        <q-card-section>
+          <p>Selecione o tipo de impressão para o orçamento.</p>
+        </q-card-section>
+        <q-card-actions align="center">
+          <q-btn color="primary" flat label="Papel A4" @click="selecionarOrcamento('papela4')" />
+          <q-btn color="primary" flat label="Térmica" @click="selecionarOrcamento('termica')" />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
     <!-- ORCAMENTO -->
     <q-dialog v-model="dialogOrcamento" full-height full-width>
-      <q-card style="height: 100%">
-        <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            ref="iFrameOrcamentoRef"
-            style="width: 100%; height: 100%; border: none"
-            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento'"
-          ></iframe>
+      <q-card class="full-height column">
+        <q-card-section class="col column no-wrap q-pa-sm">
+          <iframe ref="iFrameOrcamentoRef" class="col no-border"
+            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento'" />
         </q-card-section>
-
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirOrcamento()"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirOrcamento()" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
-    <!-- Orçamento Termica -->
+    <!-- ORCAMENTO TERMICA -->
     <q-dialog v-model="dialogOrcamentoTermica" full-height>
-      <q-card style="height: 100%; width: 360px">
-        <q-card-section style="height: 91%" class="q-pb-none">
-          <iframe
-            ref="iFrameOrcamentoTermicaRef"
-            style="width: 100%; height: 100%; border: none"
-            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento-termica'"
-          ></iframe>
+      <q-card class="full-height column" style="width: 500px">
+        <q-card-section class="col column no-wrap q-pa-sm">
+          <iframe ref="iFrameOrcamentoTermicaRef" class="col no-border"
+            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento-termica'"></iframe>
         </q-card-section>
-
         <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirOrcamentoTermica()"
-          />
+          <q-btn color="primary" flat label="Imprimir" @click="imprimirOrcamentoTermica()" />
           <q-btn color="primary" flat label="Fechar" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
-    <q-page-scroller
-      position="bottom-left"
-      :scroll-offset="150"
-      :offset="[18, 18]"
-    >
+    <q-page-scroller position="bottom-left" :scroll-offset="150" :offset="[18, 18]">
       <q-btn fab icon="keyboard_arrow_up" color="secondary" />
     </q-page-scroller>
 
-    <q-page-sticky
-      position="bottom-right"
-      :offset="[18, 18]"
-      v-if="sNegocio.negocio"
-    >
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="sNegocio.negocio">
       <div class="q-gutter-sm">
         <!-- DUPLICAR -->
-        <q-btn
-          fab
-          icon="content_copy"
-          color="secondary"
-          @click="duplicar()"
-          v-if="sNegocio.itensAtivos.length > 0"
-        >
+        <q-btn fab icon="content_copy" color="secondary" @click="duplicar()" v-if="sNegocio.itensAtivos.length > 0">
           <q-tooltip class="bg-accent">Duplicar</q-tooltip>
         </q-btn>
 
-        <q-fab
-          color="accent"
-          icon="print"
-          direction="up"
-          v-if="sNegocio.itensAtivos.length > 0"
-        >
+        <q-fab color="accent" icon="print" direction="up" v-if="sNegocio.itensAtivos.length > 0">
           <!-- COMANDA -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Comanda (F4)"
-            label-position="left"
-            icon="receipt"
-            color="accent"
-            @click="comanda()"
-            v-if="
+          <q-fab-action external-label label-class="bg-accent" label="Comanda (F4)" label-position="left" icon="receipt"
+            color="accent" @click="comanda()" v-if="
               sNegocio.negocio.sincronizado > 0 &&
               sNegocio.negocio.codnegociostatus == 1
-            "
-          />
+            " />
 
           <!-- ROMANEIO -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Romaneio"
-            label-position="left"
-            icon="print"
-            color="accent"
-            @click="romaneio()"
-            v-if="sNegocio.negocio.codnegociostatus == 2"
-          />
+          <q-fab-action external-label label-class="bg-accent" label="Romaneio" label-position="left" icon="print"
+            color="accent" @click="romaneio()" v-if="sNegocio.negocio.codnegociostatus == 2" />
 
           <!-- ORCAMENTO -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Orçamento"
-            label-position="left"
-            icon="mdi-clipboard-edit-outline"
-            color="accent"
-            @click="orcamento()"
-            v-if="
+          <q-fab-action external-label label-class="bg-accent" label="Orçamento" label-position="left"
+            icon="mdi-clipboard-edit-outline" color="accent" @click="dialogOrcamentoSelecionar = true" v-if="
               sNegocio.itensAtivos.length > 0 &&
               sNegocio.negocio.codnegociostatus != 3
-            "
-          />
+            " />
 
           <!-- VALE -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Vale Compras"
-            label-position="left"
-            icon="mdi-ticket"
-            color="accent"
-            @click="vale()"
-            v-if="sNegocio.negocio.codnegociostatus == 2"
-          />
+          <q-fab-action external-label label-class="bg-accent" label="Vale Compras" label-position="left"
+            icon="mdi-ticket" color="accent" @click="vale()" v-if="sNegocio.negocio.codnegociostatus == 2" />
         </q-fab>
 
         <!-- FECHAR -->
-        <q-btn
-          fab
-          icon="send"
-          color="primary"
-          @click="fechar()"
-          v-if="sNegocio.itensAtivos.length > 0 && sNegocio.podeEditar"
-        >
+        <q-btn fab icon="send" color="primary" @click="fechar()"
+          v-if="sNegocio.itensAtivos.length > 0 && sNegocio.podeEditar">
           <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
         </q-btn>
 
         <!-- CANCELAR -->
-        <q-btn
-          fab
-          icon="delete"
-          color="negative"
-          @click="cancelar()"
-          v-if="sNegocio.podeEditar || sNegocio.negocio.codnegociostatus == 2"
-        >
+        <q-btn fab icon="delete" color="negative" @click="cancelar()"
+          v-if="sNegocio.podeEditar || sNegocio.negocio.codnegociostatus == 2">
           <q-tooltip class="bg-accent">Cancelar Negócio</q-tooltip>
         </q-btn>
 
-        <q-btn
-          fab
-          icon="assignment_returned"
-          color="warning"
-          :to="route.params.uuid + '/devolucao/'"
-          :itensDevolucao="sNegocio.negocio"
-          v-if="
+        <q-btn fab icon="assignment_returned" color="warning" :to="route.params.uuid + '/devolucao/'"
+          :itensDevolucao="sNegocio.negocio" v-if="
             sNegocio.itensAtivos.length > 0 &&
             sNegocio.negocio.codnegociostatus == 2 &&
             sNegocio.negocio.venda
-          "
-        >
+          ">
           <q-tooltip class="bg-accent">Devolução</q-tooltip>
         </q-btn>
       </div>
