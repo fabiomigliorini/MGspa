@@ -1,4 +1,3 @@
-BUG Quando login expira, continua mostrando como se estivesse logado
 BUG Quando webhook da pagarme manda o pagamento e o usuario está digitando a autorizacao ao mesmo tempo, acaba ficando duplicada a forma de pagamento. fazer com que o sistema nao deixe um negocio fechar se tiver troco quando o paamento é cartao poderia evitar problema de gerar a nota com valor de pagamento maior do que a venda.
 BUG Mostrar erro quando pessoa não tem endereço ou telefone cadastrado e usuario quiser fazer devolução
 
@@ -104,3 +103,4 @@ FIXME quando coloca no slow 3g e lanca varios itens em varios negocios, o sistem
 [X] BUG Perdendo ultimo produto
 [X] BUG Quando adiciona dois pagamentos em dinheiro, esta calculando o troco nos dois tblnegocioformapagamento, duplicando o valor total
 [X] BUG Quando abre venda de outro PDV, está trazendo os itens em ordem inversa ao que foi adicionado no PDV Original. Os ultimos vem primeiro.
+[X] BUG Quando login expira, continua mostrando como se estivesse logado
