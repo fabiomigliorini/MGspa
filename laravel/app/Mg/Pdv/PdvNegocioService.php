@@ -219,7 +219,6 @@ class PdvNegocioService
 
         // validacoes de venda
         if ($negocio->NaturezaOperacao->venda == true) {
-
             // valida se tem CPF/CNPJ
             if (($negocio->valortotal >= 1000) && (empty($negocio->Pessoa->cnpj)) && (empty($negocio->cpf))) {
                 throw new Exception('Obrigatório Identificar CPF para vendas acima de R$ 1.000,00!', 1);
@@ -228,21 +227,31 @@ class PdvNegocioService
 
         if ($negocio->NaturezaOperacao->financeiro == true) {
 
-            //Calcula total pagamentos à vista e à prazo
-            $valorPagamentos = 0;
+            // 1. Inicializa os totalizadores de pagamento
+            $valorPagamentosLiquidos = 0; // Total pago, descontando o troco
             $valorPagamentosPrazo = 0;
             $valorLimiteCredito = 0;
+
+            // 2. Itera sobre os pagamentos para validações e cálculo dos totais
             foreach ($negocio->NegocioFormaPagamentos as $nfp) {
-                $valorPagamentos += $nfp->valortotal;
-                if ($nfp->prazo && $nfp->parcelas > 1 && $negocio->codpessoa == 1) {
-                    throw new Exception('Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!', 1);
+                // Validações de regra de negócio
+                if ($negocio->codpessoa == 1) { // Consumidor final
+                    if ($nfp->prazo && $nfp->parcelas > 1) {
+                        throw new Exception('Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!', 1);
+                    }
+                    if ($nfp->FormaPagamento->boleto) {
+                        throw new Exception('Somente é permitido Boleto para Pessoas ou Empresas Cadastradas!', 1);
+                    }
+                    if ($nfp->FormaPagamento->fechamento) {
+                        throw new Exception('Somente é permitido Fechamento para Pessoas ou Empresas Cadastradas!', 1);
+                    }
                 }
-                if ($nfp->FormaPagamento->boleto && $negocio->codpessoa == 1) {
-                    throw new Exception('Somente é permitido Boleto para Pessoas ou Empresas Cadastradas!', 1);
-                }
-                if ($nfp->FormaPagamento->fechamento && $negocio->codpessoa == 1) {
-                    throw new Exception('Somente é permitido Fechamento para Pessoas ou Empresas Cadastradas!', 1);
-                }
+
+                // Cálculo dos totais
+                // O valor que realmente cobre o negócio é o valor total pago menos o troco
+                $valorPagamentosLiquidos += $nfp->valortotal - $nfp->valortroco;
+
+                // Acumula os valores a prazo
                 if (!$nfp->FormaPagamento->avista) {
                     $valorPagamentosPrazo += $nfp->valorpagamento;
                     if (!$nfp->FormaPagamento->entrega && !$nfp->FormaPagamento->pix) {
@@ -251,20 +260,25 @@ class PdvNegocioService
                 }
             }
 
-            //valida total pagamentos
-            if (($negocio->valortotal - $valorPagamentos) >= 0.01) {
-                $valorPagamentos = formataNumero($valorPagamentos, 2);
-                $valorTotal = formataNumero($negocio->valortotal, 2);
-                throw new Exception("O valor dos Pagamentos ({$valorPagamentos}) é inferior ao Total ({$valorTotal})!", 1);
+            // 3. Validação principal: total do negócio vs. total líquido dos pagamentos
+            // Usa uma pequena tolerância para evitar erros de ponto flutuante
+            $tolerancia = 0.01; // 1 centavo
+
+            if (($valorPagamentosLiquidos - $negocio->valortotal) >= $tolerancia) {
+                $valorPagamentosFormatado = formataNumero($valorPagamentosLiquidos, 2);
+                $valorTotalFormatado = formataNumero($negocio->valortotal, 2);
+                throw new Exception("O valor dos Pagamentos ({$valorPagamentosFormatado}) é superior ao Total ({$valorTotalFormatado})!", 1);
             }
 
-            if (($valorPagamentosPrazo - $negocio->valortotal) >= 0.01) {
-                $valorPagamentos = formataNumero($valorPagamentosPrazo, 2);
-                $valorTotal = formataNumero($negocio->valortotal, 2);
-                throw new Exception("O valor à prazo ({$valorPagamentos}) é superior ao Total ({$valorTotal})!", 1);
+            // 4. Validação do valor total à prazo
+            $diferencaPrazo = abs($valorPagamentosPrazo - $negocio->valortotal);
+            if ($valorPagamentosPrazo > $negocio->valortotal && $diferencaPrazo >= $tolerancia) {
+                $valorPagamentosPrazoFormatado = formataNumero($valorPagamentosPrazo, 2);
+                $valorTotalFormatado = formataNumero($negocio->valortotal, 2);
+                throw new Exception("O valor à prazo ({$valorPagamentosPrazoFormatado}) é superior ao Total ({$valorTotalFormatado})!", 1);
             }
 
-            // valida se tem limite de credito
+            // 5. Validação de limite de crédito
             if (!PdvNegocioPrazoService::avaliaLimiteCredito($negocio->Pessoa, $valorLimiteCredito)) {
                 throw new Exception('Solicite Liberação de Crédito ao Departamento Financeiro!', 1);
             }
