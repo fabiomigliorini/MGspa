@@ -129,7 +129,7 @@
 
     <!-- PRODUTOS -->
     <h2>Produtos</h2>
-    @foreach ($negocio->NegocioProdutoBarraS()->whereNull('inativo')->get() as $npb)
+    @foreach ($negocio->NegocioProdutoBarraS()->whereNull('inativo')->orderBy('criacao', 'desc')->get() as $npb)
         <div style="margin-bottom: 0.2cm; border-bottom: 0.5px dashed black; ">
             {{ $npb->ProdutoBarra->barras }} -
             <b>{{ $npb->ProdutoBarra->descricao }}</b><br>
@@ -180,13 +180,13 @@
         @endif
 
         <!-- TOTAL -->
-        <div style="margin-top: 5px; margin-bottom: 5px; font-size: 12pt; background: black; color: white; padding: 5px">
+        <div
+            style="margin-top: 5px; margin-bottom: 5px; font-size: 12pt; background: black; color: white; padding: 5px">
             <b>Total R$ {{ formataNumero($negocio->valortotal, 2) }}</b>
         </div>
 
         <!-- PAGAMENTOS -->
         @foreach ($negocio->NegocioFormaPagamentoS as $pag)
-
             <!-- JUROS -->
             @if (!empty($pag->valorjuros))
                 Juros
@@ -204,9 +204,8 @@
                 Troco
                 R$ {{ formataNumero($pag->valortroco, 2) }}
             @endif
-            
-            <br>
 
+            <br>
         @endforeach
 
     </div>
@@ -218,16 +217,16 @@
 
     @foreach ($anexos['confissao'] as $img)
         <h1 style="page-break-before: always;">Assinatura</h1>
-        <img src="{{ $img }}"  style="width: 100%; ">
+        <img src="{{ $img }}" style="width: 100%; ">
     @endforeach
 
     @foreach ($anexos['imagem'] as $img)
         <h1 style="page-break-before: always;">Imagem Anexada</h1>
-        <img src="{{ $img }}"  style="width: 100%; ">
+        <img src="{{ $img }}" style="width: 100%; ">
     @endforeach
 
     <!-- TITULOS -->
-    @if ($confissao) 
+    @if ($confissao)
         @foreach ($negocio->NegocioFormaPagamentos as $nfp)
             @foreach ($nfp->Titulos()->orderBy('vencimento')->get() as $titulo)
                 <!-- CABECALHO VENCIMENTOS -->
