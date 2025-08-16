@@ -51,17 +51,17 @@ export const negocioStore = defineStore("negocio", {
       if (!this.negocio) {
         return [];
       }
-      return this.negocio.itens.filter((item) => {
-        return item.inativo == null;
-      });
+      return this.negocio.itens
+        .filter((item) => item.inativo == null)
+        .sort((a, b) => b.criacao.localeCompare(a.criacao));
     },
     itensInativos() {
       if (!this.negocio) {
         return [];
       }
-      return this.negocio.itens.filter((item) => {
-        return item.inativo != null;
-      });
+      return this.negocio.itens
+        .filter((item) => item.inativo != null)
+        .sort((a, b) => b.inativo.localeCompare(a.inativo));
     },
     podeEditar() {
       return (
