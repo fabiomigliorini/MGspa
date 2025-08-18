@@ -262,12 +262,12 @@ class PdvNegocioService
 
             // 3. Validação principal: total do negócio vs. total líquido dos pagamentos
             // Usa uma pequena tolerância para evitar erros de ponto flutuante
-            $tolerancia = 0.01; // 1 centavo
+            $tolerancia = 0.009999999999999; // 1 centavo
 
-            if (($valorPagamentosLiquidos - $negocio->valortotal) >= $tolerancia) {
+            if (abs($valorPagamentosLiquidos - $negocio->valortotal) > $tolerancia) {
                 $valorPagamentosFormatado = formataNumero($valorPagamentosLiquidos, 2);
                 $valorTotalFormatado = formataNumero($negocio->valortotal, 2);
-                throw new Exception("O valor dos Pagamentos ({$valorPagamentosFormatado}) é superior ao Total ({$valorTotalFormatado})!", 1);
+                throw new Exception("O valor dos Pagamentos ({$valorPagamentosFormatado}) não bate com o Total ({$valorTotalFormatado})!", 1);
             }
 
             // 4. Validação do valor total à prazo
