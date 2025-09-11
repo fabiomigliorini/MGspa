@@ -100,7 +100,6 @@ class WooApi
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $http_header);
         curl_setopt($ch, CURLOPT_USERPWD, $this->key . ":" . $this->secret); // Autenticação Basic
-
         curl_setopt($ch, CURLOPT_TIMEOUT, 90);
 
         // Executa
@@ -229,7 +228,7 @@ class WooApi
             throw new Exception(json_encode($this->responseObject), 1);
         }
         return $this->status == 201;
-    }   
+    }
 
     public function postProductVariations($product_id, $variation)
     {
@@ -241,5 +240,18 @@ class WooApi
             throw new Exception(json_encode($this->responseObject), 1);
         }
         return $this->status == 201;
-    }    
+    }
+
+    public function getBrands()
+    {
+        // monta URL
+        $url = $this->url . 'wc/v3/brand';
+
+        // aborta caso erro na requisicao
+        if (!$this->get($url)) {
+            throw new Exception(json_encode($this->responseObject), 1);
+        }
+        dd($this->responseObject);
+        return $this->status == 201;
+    }
 }

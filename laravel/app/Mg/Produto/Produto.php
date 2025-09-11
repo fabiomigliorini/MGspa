@@ -53,6 +53,7 @@ class Produto extends MgModel
         'comissao',
         'conferenciaperiodica',
         'descricaosite',
+        'titulosite',
         'estoque',
         'importado',
         'inativo',

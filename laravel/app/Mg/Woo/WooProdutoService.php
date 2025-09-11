@@ -12,7 +12,7 @@ class WooProdutoService
 
     protected WooApi $api;
     protected Produto $prod;
-    protected $wp;
+    protected ?WooProduto $wp;
     protected float $fatorPreco;
 
     public function __construct(Produto $prod, float $fatorPreco = null)
@@ -32,7 +32,7 @@ class WooProdutoService
         // Propriedades básicas
         $product = new stdClass;
         // $product->id = 9999; // IDs geralmente não são alterados, mas para demonstração
-        $product->name = $prod->produto;
+        $product->name = $prod->titulosite??$prod->produto;
         // $product->slug = 'caderno-fortnite-max-edicao-2025';
         // $product->permalink = 'https://sinopel.mrxempresas.com.br/p/caderno-fortnite-max-edicao-2025/';
         // $product->date_created = '2025-06-04T10:00:00'; // Mudando a data para hoje
@@ -47,7 +47,19 @@ class WooProdutoService
         $product->status = 'publish'; // 'publish' ou 'draft'
         // $product->featured = true; // Mudar para destacado
         // $product->catalog_visibility = 'hidden'; // Mudar para escondido no catálogo
-        $product->description = $prod->descricaosite;
+        $desc = $prod->descricaosite;
+
+        // Codigos de Barras
+        if (!empty($desc)) {
+            $desc .= "\n\n\n";
+        }
+        $desc .= "<b>Códigos de Barras:</b>\n";
+        $desc .= $this->gerarTabelaBarras();
+        if (!empty($prod->titulosite)) {
+            $desc .= "\n\n<b>{$prod->produto}</b>";
+        }
+        $product->description = $desc;
+
         // $product->short_description = 'Caderno premium com temática Fortnite.';
         $product->sku = '#' . str_pad($prod->codproduto, 6, '0', STR_PAD_LEFT);
         // $product->price = $prod->preco;
@@ -154,20 +166,6 @@ class WooProdutoService
         // Related IDs
         // $product->related_ids = [1800, 1801, 1802]; // Novos IDs relacionados
 
-        // Meta Data (array de objetos) - Modificar valores existentes ou adicionar novos
-        // TODO: Preco por embalagem
-        // Exemplo: Modificando 'fixed_price_rules' e 'teste_opcao'
-        // $product->meta_data = new stdClass;
-        // foreach ($product->meta_data as $key => $meta_item) {
-        //     if ($meta_item->key === '_fixed_price_rules') {
-        //         $product->meta_data[$key]->value = (object)['20' => '25', '50' => '20']; // Novas regras de preço
-        //     } elseif ($meta_item->key === '_infixs_correios_automatico_ncm') {
-        //         $product->meta_data[$key]->value = '1234567890'; // Novo NCM
-        //     } elseif ($meta_item->key === 'teste_opcao') {
-        //         $product->meta_data[$key]->value = 'capa nova, capa exclusiva'; // Novo valor para teste_opcao
-        //     }
-        // }
-
         // Adicionar um novo meta_data
         // $product->meta_data[] = (object)[
         //     'id' => 99999, // Um ID hipotético, o WooCommerce atribui um real
@@ -175,24 +173,27 @@ class WooProdutoService
         //     'value' => 'Este é um novo campo customizado.'
         // ];
 
-
         // $product->stock_status = 'outofstock'; // Mudar para fora de estoque (apenas para exemplo)
         // $product->has_options = true;
         // $product->post_password = 'senhaforte'; // Definir uma senha
         // $product->global_unique_id = 'uniq-prod-xyz-123';
 
         // Tiered Pricing
-        // TODO Preco por embalagem
-        // $product->tiered_pricing_type = 'percentage'; // Mudar o tipo
-        // $product->tiered_pricing_fixed_rules = (object)['20' => '25', '50' => '20']; // Atualizando regras de preço escalonado
-        // $product->tiered_pricing_product_settings = new stdClass;
-        // $product->tiered_pricing_product_settings->layout = 'compact'; // Alterando layout
-        // $product->tiered_pricing_product_settings->base_unit_name = new stdClass;
-        // $product->tiered_pricing_product_settings->base_unit_name->singular = 'unidade';
-        // $product->tiered_pricing_product_settings->base_unit_name->plural = 'unidades';
-        // $product->tiered_pricing_minimum_quantity = 5;
-        // $product->tiered_pricing_roles_data = []; // Pode ser preenchido
-        // $product->tiered_pricing_percentage_rules = (object)['10' => '5', '20' => '10']; // Exemplo de regras percentuais
+        $product->tiered_pricing_type = 'fixed';
+        $product->tiered_pricing_fixed_rules = (object)[];
+        $ultimoPreco = $prod->preco;
+        foreach ($prod->ProdutoEmbalagemS()->orderBy('quantidade')->get() as $pe) {
+            if (empty($pe->preco)) {
+                continue;
+            }
+            $preco = round($pe->preco / $pe->quantidade, 2);
+            if ($ultimoPreco <= $preco) {
+                continue;
+            }
+            $product->tiered_pricing_fixed_rules->{$pe->quantidade} = $this->preco($preco);
+            $ultimoPreco = $preco;
+        }
+
 
         // Brands (se houver)
         // Exemplo: Adicionar uma marca
@@ -215,6 +216,99 @@ class WooProdutoService
         return $product;
     }
 
+    public function gerarTabelaBarras()
+    {
+
+        $sql = "
+            SELECT
+                pv.codprodutovariacao,
+                pv.variacao,
+                pb.barras,
+                um.unidademedida,
+                pe.quantidade 
+            FROM
+                tblproduto p
+            INNER JOIN
+                tblprodutobarra pb ON (pb.codproduto = p.codproduto)
+            INNER JOIN
+                tblprodutovariacao pv ON (pv.codprodutovariacao = pb.codprodutovariacao)
+            LEFT JOIN
+                tblprodutoembalagem pe ON (pe.codprodutoembalagem = pb.codprodutoembalagem)
+            INNER JOIN
+                tblunidademedida um ON (um.codunidademedida = coalesce(pe.codunidademedida, p.codunidademedida))
+            WHERE
+                p.codproduto = :codproduto
+            ORDER BY
+                pv.variacao NULLS FIRST,
+                pe.quantidade NULLS FIRST,
+                pb.barras
+        ";
+
+        $colecao = collect(DB::select($sql, ['codproduto' => $this->prod->codproduto]));
+
+        // 1. Coleta as informações de cabeçalho, incluindo a quantidade para ordenação.
+        $headersInfo = $colecao
+            ->map(function ($item) {
+                return [
+                    'header' => "{$item->unidademedida} (" . ($item->quantidade ? number_format($item->quantidade, 0, ',', '.') : 'Avulso') . ")",
+                    'quantidade' => $item->quantidade ?? -1, // Usa -1 para "Avulso" para que fique no início
+                ];
+            })
+            ->unique('header')
+            ->sortBy('quantidade') // Ordena pela quantidade
+            ->values();
+
+        // 2. Extrai apenas os nomes dos cabeçalhos para o loop de exibição
+        $headers = $headersInfo->pluck('header');
+
+        // 3. Agrupa a collection por variação (Cor)
+        $dadosAgrupados = $colecao->groupBy('variacao');
+
+        // 4. Inicializa a variável para o HTML
+        $htmlTabela = '';
+
+        if ($dadosAgrupados->isNotEmpty()) {
+            $htmlTabela .= '<table>';
+
+            // Cabeçalho da tabela (thead)
+            $htmlTabela .= '<thead><tr>';
+            $htmlTabela .= '<th>Variação</th>';
+            foreach ($headers as $header) {
+                $htmlTabela .= '<th>' . htmlspecialchars($header) . '</th>';
+            }
+            $htmlTabela .= '</tr></thead>';
+
+            // Corpo da tabela (tbody)
+            $htmlTabela .= '<tbody>';
+            foreach ($dadosAgrupados as $variacao => $items) {
+                $htmlTabela .= '<tr>';
+                $htmlTabela .= '<td>' . htmlspecialchars($variacao) . '</td>';
+
+                // Mapeia os itens da variação para as colunas
+                $itemsPorHeader = [];
+                foreach ($items as $item) {
+                    $quantidade = $item->quantidade ? number_format($item->quantidade, 0, ',', '.') : 'Avulso';
+                    $headerItem = "{$item->unidademedida} ({$quantidade})";
+                    $itemsPorHeader[$headerItem][] = $item->barras;
+                }
+
+                foreach ($headers as $header) {
+                    $barras = implode(', ', $itemsPorHeader[$header] ?? []);
+                    $htmlTabela .= '<td>' . htmlspecialchars($barras) . '</td>';
+                }
+
+                $htmlTabela .= '</tr>';
+            }
+            $htmlTabela .= '</tbody>';
+
+            // Fim da tabela
+            $htmlTabela .= '</table>';
+        } else {
+            $htmlTabela .= '<p>Nenhum dado encontrado para exibir.</p>';
+        }
+
+        return $htmlTabela;
+    }
     public function preco($preco)
     {
         $ret = round($preco * $this->fatorPreco, 2);
@@ -301,39 +395,50 @@ class WooProdutoService
             ];
         }
 
-        // se nao tem nenhuma imagem nova, cai fora
-        if (sizeof($codprodutoimagem) == 0) {
-            return;
-        }
+        // se tem imagem nova, faz upload das novas
+        if (sizeof($codprodutoimagem) > 0) {
 
-        // quebra o array de imagens pra enviar em blocos (chunks) de 10 em 10 imagens
-        $cImages = array_chunk($images, 10);
-        $cCodprodutoimagem = array_chunk($codprodutoimagem, 10);
+            // quebra o array de imagens pra enviar em blocos (chunks) de 10 em 10 imagens
+            $cImages = array_chunk($images, 10);
+            $cCodprodutoimagem = array_chunk($codprodutoimagem, 10);
 
-        // percorre os blocos
-        foreach ($cImages as $iChunk => $chunk) {
+            // percorre os blocos
+            foreach ($cImages as $iChunk => $chunk) {
 
-            // envia todas as novas imagens pro Woo
-            $product = ['images' => $chunk];
-            $this->api->putProduto($this->wp->id, $product);
-            $ro = $this->api->responseObject;
+                // envia todas as novas imagens pro Woo
+                $product = ['images' => $chunk];
+                $this->api->putProduto($this->wp->id, $product);
+                $ro = $this->api->responseObject;
 
-            // percorre as imagens criadas salvando na tabela de/para
-            for ($i = 0; $i < sizeof($chunk); $i++) {
-                $wpi = WooProdutoImagem::firstOrCreate([
-                    'codprodutoimagem' => $cCodprodutoimagem[$iChunk][$i],
-                    'codwooproduto' => $this->wp->codwooproduto,
-                    'id' => $ro->images[$i]->id,
-                ]);
+                // percorre as imagens criadas salvando na tabela de/para
+                for ($i = 0; $i < sizeof($chunk); $i++) {
+                    $wpi = WooProdutoImagem::firstOrCreate([
+                        'codprodutoimagem' => $cCodprodutoimagem[$iChunk][$i],
+                        'codwooproduto' => $this->wp->codwooproduto,
+                        'id' => $ro->images[$i]->id,
+                    ]);
+                }
             }
         }
 
         // faz um novo put com todos os id de imagens
         $product = new stdClass(['images' => []]);
         $wpis = WooProdutoImagem::where('codwooproduto', $this->wp->codwooproduto)->orderBy('codprodutoimagem')->get();
+        $i = 1;
+        $codprodutoimagem = null;
+        if ($pv = $this->prod->ProdutoVariacaoS[0]) {
+            $codprodutoimagem = $pv->codprodutoimagem;
+        }
         foreach ($wpis as $wpi) {
+            if ($wpi->codprodutoimagem == $codprodutoimagem) {
+                $position = 0;
+            } else {
+                $position = $i;
+                $i++;
+            }
             $product->images[] =  (object) [
-                'id' => $wpi->id
+                'id' => $wpi->id,
+                'position' => $position
             ];
         }
         $this->api->putProduto($this->wp->id, $product);

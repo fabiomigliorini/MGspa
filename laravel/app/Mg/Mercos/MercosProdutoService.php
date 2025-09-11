@@ -32,7 +32,7 @@ class MercosProdutoService {
         $api = new MercosApi();
 
         $p = Produto::findOrFail($codproduto);
-        $nome = $p->produto;
+        $nome = $p->titulosite??$p->produto;
         $preco_tabela = (double)$p->preco;
         $codigo = formataCodigo($codproduto, 6);
         $codigo .= '-' . formataCodigo($codprodutovariacao, 8);
