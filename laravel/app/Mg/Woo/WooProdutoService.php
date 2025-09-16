@@ -2,10 +2,13 @@
 
 namespace Mg\Woo;
 
+use stdClass;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
+
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoVariacao;
-use stdClass;
-use Illuminate\Support\Facades\DB;
 
 class WooProdutoService
 {
@@ -14,6 +17,7 @@ class WooProdutoService
     protected Produto $prod;
     protected ?WooProduto $wp;
     protected float $fatorPreco;
+    protected Carbon $exportacao;
 
     public function __construct(Produto $prod, float $fatorPreco = null)
     {
@@ -21,6 +25,7 @@ class WooProdutoService
         $this->fatorPreco = $fatorPreco ?? ((float) env('WOO_FATOR_PRECO', 1));
         $this->wp = WooProduto::where('codproduto', $prod->codproduto)->whereNull('codprodutovariacao')->first();
         $this->api = new WooApi();
+        $this->exportacao = Carbon::now();
     }
 
     public function build()
@@ -32,7 +37,7 @@ class WooProdutoService
         // Propriedades básicas
         $product = new stdClass;
         // $product->id = 9999; // IDs geralmente não são alterados, mas para demonstração
-        $product->name = $prod->titulosite??$prod->produto;
+        $product->name = $prod->titulosite ?? $prod->produto;
         // $product->slug = 'caderno-fortnite-max-edicao-2025';
         // $product->permalink = 'https://sinopel.mrxempresas.com.br/p/caderno-fortnite-max-edicao-2025/';
         // $product->date_created = '2025-06-04T10:00:00'; // Mudando a data para hoje
@@ -100,7 +105,6 @@ class WooProdutoService
         // $product->shipping_class_id = 123; // Novo ID de classe de envio
         $product->reviews_allowed = true;
 
-        // TODO: Pegar produtos mais vendidos em conjunto pra colocar aqui
         // $product->upsell_ids = [1600, 1601]; // Novos IDs de upsell
         // $product->cross_sell_ids = [1700, 1701]; // Novos IDs de cross-sell
         // $product->parent_id = 0;
@@ -113,7 +117,7 @@ class WooProdutoService
 
         // Tags (array) - Adicionar novas tags
         $product->tags = [(object) ['name' => $this->prod->Marca->marca]];
-        $strings = preg_replace("/[^A-Za-z0-9 ]/", " ", $this->prod->produto);
+        $strings = preg_replace("/[^A-Za-z0-9 ]/", " ", $this->prod->produto) . ' ' . preg_replace("/[^A-Za-z0-9 ]/", " ", $this->prod->titulosite);
         $strings = trim(preg_replace('/[\s]+/mu', ' ', $strings));
         $strings = explode(' ', $strings);
         foreach ($strings as $str) {
@@ -370,6 +374,11 @@ class WooProdutoService
             'id' => $ro->id,
         ]);
 
+        // marca data da exportacao
+        $this->wp->update([
+            'exportacao' => $this->exportacao
+        ]);
+
         // retorna 
         return true;
     }
@@ -420,6 +429,9 @@ class WooProdutoService
                 }
             }
         }
+
+        // apaga imagens excluidas
+        WooProdutoImagem::where('codwooproduto', $this->wp->codwooproduto)->whereNull('codprodutoimagem')->delete();
 
         // faz um novo put com todos os id de imagens
         $product = new stdClass(['images' => []]);
@@ -521,6 +533,11 @@ class WooProdutoService
                 'codproduto' => $this->prod->codproduto,
                 'codprodutovariacao' => $pv->codprodutovariacao,
                 'id' => $id,
+            ]);
+
+            // marca data da exportacao
+            $wpv->update([
+                'exportacao' => $this->exportacao
             ]);
         }
 
