@@ -2,6 +2,7 @@
 
 namespace Mg\Woo;
 
+use Illuminate\Database\Eloquent\Collection;
 use stdClass;
 
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,8 @@ class WooProdutoService
     protected ?WooProduto $wp;
     protected float $fatorPreco;
     protected Carbon $exportacao;
+    protected bool $variacao = false;
+    protected Collection $variacoes;
 
     public function __construct(Produto $prod, float $fatorPreco = null)
     {
@@ -26,13 +29,15 @@ class WooProdutoService
         $this->wp = WooProduto::where('codproduto', $prod->codproduto)->whereNull('codprodutovariacao')->first();
         $this->api = new WooApi();
         $this->exportacao = Carbon::now();
+        $this->variacoes = $prod->ProdutoVariacaoS()->whereNull('inativo')->get();
+        $this->variacao = ($this->variacoes->count() > 1);
     }
 
     public function build()
     {
         $prod = $this->prod;
-        $variacoes = $prod->ProdutoVariacaoS()->whereNull('inativo')->get();
-        $variacao = ($variacoes->count() > 1);
+        $variacoes = $this->variacoes;
+        $variacao = $this->variacao;
 
         // Propriedades básicas
         $product = new stdClass;
@@ -276,7 +281,9 @@ class WooProdutoService
 
             // Cabeçalho da tabela (thead)
             $htmlTabela .= '<thead><tr>';
-            $htmlTabela .= '<th>Variação</th>';
+            if ($this->variacao) {
+                $htmlTabela .= '<th>Variação</th>';
+            }
             foreach ($headers as $header) {
                 $htmlTabela .= '<th>' . htmlspecialchars($header) . '</th>';
             }
@@ -286,10 +293,12 @@ class WooProdutoService
             $htmlTabela .= '<tbody>';
             foreach ($dadosAgrupados as $variacao => $items) {
                 $htmlTabela .= '<tr>';
-                if (empty($variacao)) {
-                    $variacao = "{Sem Variação}";
+                if ($this->variacao) {
+                    if (empty($variacao)) {
+                        $variacao = "{Sem Variação}";
+                    }
+                    $htmlTabela .= '<td>' . htmlspecialchars($variacao) . '</td>';
                 }
-                $htmlTabela .= '<td>' . htmlspecialchars($variacao) . '</td>';
 
                 // Mapeia os itens da variação para as colunas
                 $itemsPorHeader = [];
@@ -507,7 +516,7 @@ class WooProdutoService
                 ],
                 "stock_quantity" => static::estoque($pv),
                 "manage_stock" => true,
-                "sku" => '#' . str_pad($pv->codprodutovariacao, 8, '0', STR_PAD_LEFT),
+                "sku" => '#' . str_pad($pv->codproduto, 6, '0', STR_PAD_LEFT) . '-' . str_pad($pv->codprodutovariacao, 8, '0', STR_PAD_LEFT),
             ];
 
             // busca o id do woo se já foi exportado
