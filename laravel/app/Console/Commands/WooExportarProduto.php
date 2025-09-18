@@ -93,7 +93,7 @@ class WooExportarProduto extends Command
                 pv.codproduto
                 --, p.alteracao, wp.exportacao 
             from tblprodutovariacao pv
-            inner join tblwooproduto wp on (wp.codprodutovariacao = pv.codprodutovariacao)
+            inner join tblwooproduto wp on (wp.codproduto = pv.codproduto)
             where pv.alteracao >= wp.exportacao 
             order by 1
         ';

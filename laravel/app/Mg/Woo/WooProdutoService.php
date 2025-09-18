@@ -286,6 +286,9 @@ class WooProdutoService
             $htmlTabela .= '<tbody>';
             foreach ($dadosAgrupados as $variacao => $items) {
                 $htmlTabela .= '<tr>';
+                if (empty($variacao)) {
+                    $variacao = "{Sem Variação}";
+                }
                 $htmlTabela .= '<td>' . htmlspecialchars($variacao) . '</td>';
 
                 // Mapeia os itens da variação para as colunas
