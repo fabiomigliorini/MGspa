@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Sep/2025 17:30:56
+ * Date: 22/Sep/2025 17:59:14
  */
 
 namespace Mg\Woo;
@@ -10,6 +10,7 @@ use Mg\MgModel;
 use Mg\Woo\WooProdutoImagem;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoVariacao;
+use Mg\Produto\ProdutoBarra;
 
 class WooProduto extends MgModel
 {
@@ -19,11 +20,16 @@ class WooProduto extends MgModel
 
     protected $fillable = [
         'codproduto',
+        'codprodutobarraunidade',
         'codprodutovariacao',
         'exportacao',
         'id',
         'inativo',
-        'integracao'
+        'integracao',
+        'margempacote',
+        'margemunidade',
+        'quantidadeembalagem',
+        'quantidadepacote'
     ];
 
     protected $dates = [
@@ -35,11 +41,16 @@ class WooProduto extends MgModel
 
     protected $casts = [
         'codproduto' => 'integer',
+        'codprodutobarraunidade' => 'integer',
         'codprodutovariacao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codwooproduto' => 'integer',
-        'id' => 'integer'
+        'id' => 'integer',
+        'margempacote' => 'float',
+        'margemunidade' => 'float',
+        'quantidadeembalagem' => 'float',
+        'quantidadepacote' => 'float'
     ];
 
 
@@ -47,6 +58,11 @@ class WooProduto extends MgModel
     public function Produto()
     {
         return $this->belongsTo(Produto::class, 'codproduto', 'codproduto');
+    }
+
+    public function ProdutoBarraUnidade()
+    {
+        return $this->belongsTo(ProdutoBarra::class, 'codprodutobarraunidade', 'codprodutobarra');
     }
 
     public function ProdutoVariacao()

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 11/Jun/2025 10:00:27
+ * Date: 22/Sep/2025 17:56:55
  */
 
 namespace Mg\Produto;
@@ -53,7 +53,6 @@ class Produto extends MgModel
         'comissao',
         'conferenciaperiodica',
         'descricaosite',
-        'titulosite',
         'estoque',
         'importado',
         'inativo',
@@ -68,6 +67,7 @@ class Produto extends MgModel
         'referencia',
         'revisao',
         'site',
+        'titulosite',
         'vendesite'
     ];
 

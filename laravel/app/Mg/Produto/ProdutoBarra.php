@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:34:49
+ * Date: 22/Sep/2025 17:58:36
  */
 
 namespace Mg\Produto;
@@ -14,6 +14,8 @@ use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroProdutoBarra;
 use Mg\ValeCompra\ValeCompraModeloProdutoBarra;
 use Mg\ValeCompra\ValeCompraProdutoBarra;
+use Mg\Produto\Prancheta;
+use Mg\Woo\WooProduto;
 use Mg\Marca\Marca;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoEmbalagem;
@@ -50,6 +52,7 @@ class ProdutoBarra extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
     ];
+
 
     // Chaves Estrangeiras
     public function Marca()
@@ -109,6 +112,11 @@ class ProdutoBarra extends MgModel
         return $this->hasMany(NotaFiscalTerceiroProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
+    public function PranchetaS()
+    {
+        return $this->hasMany(Prancheta::class, 'codprodutobarra', 'codprodutobarra');
+    }
+
     public function ValeCompraModeloProdutoBarraS()
     {
         return $this->hasMany(ValeCompraModeloProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
@@ -117,6 +125,11 @@ class ProdutoBarra extends MgModel
     public function ValeCompraProdutoBarraS()
     {
         return $this->hasMany(ValeCompraProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
+    }
+
+    public function WooProdutoUnidadeS()
+    {
+        return $this->hasMany(WooProduto::class, 'codprodutobarraunidade', 'codprodutobarra');
     }
 
     // Atributo descricao
