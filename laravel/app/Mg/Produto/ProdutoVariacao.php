@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:23:58
+ * Date: 22/Sep/2025 17:32:36
  */
 
 namespace Mg\Produto;
@@ -10,6 +10,9 @@ use Mg\MgModel;
 use Mg\Estoque\EstoqueLocalProdutoVariacao;
 use Mg\Pedido\PedidoItem;
 use Mg\Produto\ProdutoBarra;
+use Mg\Mercos\MercosProduto;
+use Mg\Produto\ProdutoImagemProdutoVariacao;
+use Mg\Woo\WooProduto;
 use Mg\Marca\Marca;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoImagem;
@@ -113,6 +116,11 @@ class ProdutoVariacao extends MgModel
         return $this->hasMany(EstoqueLocalProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
     }
 
+    public function MercosProdutoS()
+    {
+        return $this->hasMany(MercosProduto::class, 'codprodutovariacao', 'codprodutovariacao');
+    }
+
     public function PedidoItemS()
     {
         return $this->hasMany(PedidoItem::class, 'codprodutovariacao', 'codprodutovariacao');
@@ -121,6 +129,16 @@ class ProdutoVariacao extends MgModel
     public function ProdutoBarraS()
     {
         return $this->hasMany(ProdutoBarra::class, 'codprodutovariacao', 'codprodutovariacao');
+    }
+
+    public function ProdutoImagemProdutoVariacaoS()
+    {
+        return $this->hasMany(ProdutoImagemProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
+    }
+
+    public function WooProdutoS()
+    {
+        return $this->hasMany(WooProduto::class, 'codprodutovariacao', 'codprodutovariacao');
     }
 
 }

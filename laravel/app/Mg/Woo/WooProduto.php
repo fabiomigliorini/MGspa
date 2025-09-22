@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Sep/2025 17:51:08
+ * Date: 22/Sep/2025 17:30:56
  */
 
 namespace Mg\Woo;
@@ -21,13 +21,16 @@ class WooProduto extends MgModel
         'codproduto',
         'codprodutovariacao',
         'exportacao',
-        'id'
+        'id',
+        'inativo',
+        'integracao'
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
-        'exportacao'
+        'exportacao',
+        'inativo'
     ];
 
     protected $casts = [

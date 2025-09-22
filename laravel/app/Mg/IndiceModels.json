@@ -6567,6 +6567,21 @@
                 "tabela": "tblprodutobarra",
                 "coluna": "codprodutovariacao",
                 "metodo": "ProdutoBarraS"
+            },
+            "tblmercosproduto.codprodutovariacao": {
+                "tabela": "tblmercosproduto",
+                "coluna": "codprodutovariacao",
+                "metodo": "MercosProdutoS"
+            },
+            "tblprodutoimagemprodutovariacao.codprodutovariacao": {
+                "tabela": "tblprodutoimagemprodutovariacao",
+                "coluna": "codprodutovariacao",
+                "metodo": "ProdutoImagemProdutoVariacaoS"
+            },
+            "tblwooproduto.codprodutovariacao": {
+                "tabela": "tblwooproduto",
+                "coluna": "codprodutovariacao",
+                "metodo": "WooProdutoS"
             }
         }
     },
