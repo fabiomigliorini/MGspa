@@ -4441,6 +4441,16 @@
                 "tabela": "tblvalecompraprodutobarra",
                 "coluna": "codprodutobarra",
                 "metodo": "ValeCompraProdutoBarraS"
+            },
+            "tblprancheta.codprodutobarra": {
+                "tabela": "tblprancheta",
+                "coluna": "codprodutobarra",
+                "metodo": "PranchetaS"
+            },
+            "tblwooproduto.codprodutobarraunidade": {
+                "tabela": "tblwooproduto",
+                "coluna": "codprodutobarraunidade",
+                "metodo": "WooProdutoUnidadeS"
             }
         }
     },
@@ -8656,6 +8666,11 @@
                 "tabela": "tblprodutovariacao",
                 "coluna": "codprodutovariacao",
                 "metodo": "ProdutoVariacao"
+            },
+            "codprodutobarraunidade": {
+                "tabela": "tblprodutobarra",
+                "coluna": "codprodutobarraunidade",
+                "metodo": "ProdutoBarraUnidade"
             }
         },
         "hasMany": {
