@@ -25,6 +25,11 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
             }
         },
         "hasMany": {
@@ -2813,6 +2818,11 @@
                 "tabela": "tblmetavendedor",
                 "coluna": "codpessoa",
                 "metodo": "MetaVendedorS"
+            },
+            "tblportador.codpessoa": {
+                "tabela": "tblportador",
+                "coluna": "codpessoa",
+                "metodo": "PortadorS"
             }
         }
     },

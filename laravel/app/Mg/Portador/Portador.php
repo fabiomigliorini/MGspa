@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/May/2025 15:57:17
+ * Date: 24/Sep/2025 12:03:50
  */
 
 namespace Mg\Portador;
@@ -24,6 +24,7 @@ use Mg\Pdv\Pdv;
 use Mg\Portador\PortadorSaldo;
 use Mg\Banco\Banco;
 use Mg\Filial\Filial;
+use Mg\Pessoa\Pessoa;
 
 class Portador extends MgModel
 {
@@ -46,6 +47,7 @@ class Portador extends MgModel
         'carteiravariacao',
         'codbanco',
         'codfilial',
+        'codpessoa',
         'conta',
         'contadigito',
         'convenio',
@@ -71,6 +73,7 @@ class Portador extends MgModel
         'carteiravariacao' => 'integer',
         'codbanco' => 'integer',
         'codfilial' => 'integer',
+        'codpessoa' => 'integer',
         'codportador' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -90,6 +93,11 @@ class Portador extends MgModel
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
     }
 
     public function UsuarioAlteracao()

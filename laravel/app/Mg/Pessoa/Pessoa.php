@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Oct/2024 14:47:26
+ * Date: 24/Sep/2025 12:04:07
  */
 
 namespace Mg\Pessoa;
@@ -39,6 +39,7 @@ use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Colaborador\Colaborador;
 use Mg\NotaFiscal\NotaFiscalPagamento;
 use Mg\Meta\MetaVendedor;
+use Mg\Portador\Portador;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -361,6 +362,11 @@ class Pessoa extends MgModel
     public function PessoaTelefoneS()
     {
         return $this->hasMany(PessoaTelefone::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function PortadorS()
+    {
+        return $this->hasMany(Portador::class, 'codpessoa', 'codpessoa');
     }
 
     public function RegistroSpcS()
