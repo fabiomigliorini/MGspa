@@ -800,6 +800,15 @@ class NFePHPMakeService
                 $std->cAut = $nfp->autorizacao;
             }
 
+            // Se PIX
+            if (in_array($nfp->tipo, [17])) {
+                $std->tpIntegra = $nfp->integracao?1:2;
+                if (!empty($nfp->codpessoa)) {
+                    $std->CNPJ = str_pad($nfp->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+                }
+                $std->cAut = $nfp->autorizacao;
+            }            
+
             // adiciona pagamento
             $nfe->tagdetPag($std); 
             $pagamentos++;

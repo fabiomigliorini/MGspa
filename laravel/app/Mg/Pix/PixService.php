@@ -289,6 +289,9 @@ class PixService
         $nfp->integracao = true;
         $nfp->avista = true;
         $nfp->codformapagamento = $fp->codformapagamento;
+        // $nfp->codportador = $cob->codportador;
+        $nfp->codpessoa = $cob->Portador->codpessoa;
+        $nfp->autorizacao = $cob->PixS[0]->e2eid;
         $nfp->save();
         $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
     }
