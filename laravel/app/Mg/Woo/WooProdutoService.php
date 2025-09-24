@@ -7,7 +7,7 @@ use stdClass;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
-
+use Illuminate\Support\Facades\Log;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoVariacao;
 
@@ -31,6 +31,51 @@ class WooProdutoService
         $this->exportacao = Carbon::now();
         $this->variacoes = $prod->ProdutoVariacaoS()->whereNull('inativo')->get();
         $this->variacao = ($this->variacoes->count() > 1);
+    }
+
+    public function buildParcial()
+    {
+        $prod = $this->prod;
+        $product = new stdClass();
+
+        $product->regular_price = $this->preco($prod->preco, $this->wp->quantidadeembalagem, $this->wp->margemunidade);
+        // $product->stock_quantity = "4750";
+        if (empty($this->wp->codprodutovariacao)) {
+            $pv = $prod->ProdutoVariacaoS[0];
+        } else {
+            $pv = $this->wp->ProdutoVariacao;
+        }
+        $product->stock_quantity = static::estoque($pv, $this->wp->quantidadeembalagem);
+        // $product->stock_status = "instock";
+        // $product->purchasable = true;
+
+        $product->dimensions = new stdClass();
+        $product->dimensions->length = "{$prod->profundidade}";
+        $product->dimensions->width = "{$prod->largura}";
+        $product->dimensions->height = "{$prod->altura}";
+
+        if ($product->dimensions->length <= $product->dimensions->width && $product->dimensions->length <= $product->dimensions->height) {
+            $product->dimensions->length /= $this->wp->quantidadeembalagem;
+            $product->dimensions->length = "{$product->dimensions->length}";
+        } elseif ($product->dimensions->width < $product->dimensions->length && $product->dimensions->width < $product->dimensions->height) {
+            $product->dimensions->width /= $this->wp->quantidadeembalagem;
+            $product->dimensions->width = "{$product->dimensions->width}";
+        } else {
+            $product->dimensions->height /= $this->wp->quantidadeembalagem;
+            $product->dimensions->height = "{$product->dimensions->height}";
+        }
+        $peso = $prod->peso / $this->wp->quantidadeembalagem;
+        $product->weight = "{$peso}";
+
+        $product->tiered_pricing_type = "fixed";
+        $product->tiered_pricing_fixed_rules = new stdClass();
+        if ($this->wp->quantidadepacote) {
+            $product->tiered_pricing_fixed_rules->{$this->wp->quantidadepacote} = $this->preco($prod->preco, $this->wp->quantidadeembalagem, $this->wp->margempacote);
+        }
+        if ($this->wp->quantidadeembalagem > 1) {
+            $product->tiered_pricing_fixed_rules->{$this->wp->quantidadeembalagem} = $this->preco($prod->preco, $this->wp->quantidadeembalagem);
+        }
+        return $product;
     }
 
     public function build()
@@ -325,13 +370,14 @@ class WooProdutoService
 
         return $htmlTabela;
     }
-    public function preco($preco)
+
+    public function preco(float $preco, float $quantidade = 1, float $margemadicional = 0)
     {
-        $ret = round($preco * $this->fatorPreco, 2);
+        $ret = round(($preco * $this->fatorPreco * (1 + ($margemadicional / 100))) / $quantidade, 4);
         return "{$ret}";
     }
 
-    public static function estoque(ProdutoVariacao $pv)
+    public static function estoque(ProdutoVariacao $pv, float $multiplicador = 1)
     {
         $locais = env('WOO_API_CODESTOQUELOCAL_DISPONIVEL');
         $sql = '
@@ -345,14 +391,48 @@ class WooProdutoService
         $data = DB::select($sql, [
             'codprodutovariacao' => $pv->codprodutovariacao,
         ]);
-        return floor($data[0]->saldoquantidade);
+        return floor($data[0]->saldoquantidade * $multiplicador);
     }
 
     public function exportar()
     {
+        if (!$this->wp) {
+            return $this->exportarCompleto();
+        }
+        if ($this->wp->integracao == 'P') {
+            Log::debug('Parcial');
+            return $this->exportarParcial();
+        }
+        return $this->exportarCompleto();
+    }
+
+    public function exportarParcial()
+    {
+        // monta objeto do produto
+        $product = static::buildParcial($this->prod);
+
+        Log::debug(json_encode($product));
+
+        if ($this->wp->idvariation) {
+            Log::debug("Product {$this->wp->id}, Variation {$this->wp->idvariation}");
+            $this->api->putProductVariations($this->wp->id, $this->wp->idvariation, $product);
+        } else {
+            Log::debug('Product');
+            $this->api->putProduto($this->wp->id, $product);
+        }
+
+        // marca data da exportacao
+        $this->wp->update([
+            'exportacao' => $this->exportacao
+        ]);
+    }
+
+    public function exportarCompleto()
+    {
         $this->exportarProduto();
         $this->exportarImagens();
         $this->exportarVariacoes();
+        return true;
     }
 
     public function exportarProduto()

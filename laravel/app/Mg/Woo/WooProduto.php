@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Sep/2025 17:59:14
+ * Date: 22/Sep/2025 18:58:07
  */
 
 namespace Mg\Woo;
@@ -24,6 +24,7 @@ class WooProduto extends MgModel
         'codprodutovariacao',
         'exportacao',
         'id',
+        'idvariation',
         'inativo',
         'integracao',
         'margempacote',
@@ -47,6 +48,7 @@ class WooProduto extends MgModel
         'codusuariocriacao' => 'integer',
         'codwooproduto' => 'integer',
         'id' => 'integer',
+        'idvariation' => 'integer',
         'margempacote' => 'float',
         'margemunidade' => 'float',
         'quantidadeembalagem' => 'float',
