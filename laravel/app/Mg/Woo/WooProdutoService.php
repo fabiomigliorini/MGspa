@@ -47,7 +47,7 @@ class WooProdutoService
         }
         $product->stock_quantity = static::estoque($pv, $this->wp->quantidadeembalagem);
         // $product->stock_status = "instock";
-        // $product->purchasable = true;
+        $product->purchasable = ($product->stock_quantity > 0);
 
         $product->dimensions = new stdClass();
         $product->dimensions->length = "{$prod->profundidade}";
@@ -103,16 +103,15 @@ class WooProdutoService
         // $product->featured = true; // Mudar para destacado
         // $product->catalog_visibility = 'hidden'; // Mudar para escondido no catálogo
         $desc = $prod->descricaosite;
+        if (!empty($prod->titulosite)) {
+            $desc .= "<hr style='border: none; border-top: 1px solid #ccc; height: 0; margin: 15px 0;'><h2>Descrição Interna:</h2> {$prod->produto}";
+        }
 
         // Codigos de Barras
         if (!empty($desc)) {
-            $desc .= "\n\n\n";
+            $desc .= "<hr style='border: none; border-top: 1px solid #ccc; height: 0; margin: 15px 0;'>";
         }
-        $desc .= "<b>Códigos de Barras:</b>\n";
-        $desc .= $this->gerarTabelaBarras();
-        if (!empty($prod->titulosite)) {
-            $desc .= "\n\n<b>{$prod->produto}</b>";
-        }
+        $desc .= $this->gerarListagemBarrasCompacta();
         $product->description = $desc;
 
         // $product->short_description = 'Caderno premium com temática Fortnite.';
@@ -139,6 +138,7 @@ class WooProdutoService
         $product->manage_stock = $prod->estoque;
         if ($prod->estoque && !$variacao) {
             $product->stock_quantity = static::estoque($prod->ProdutoVariacaoS[0]); // Novo estoque
+            $product->purchasable = ($product->stock_quantity > 0);
         }
         $product->backorders = 'no'; // Se Permite venda sem estoque
         // $product->low_stock_amount = 10;
@@ -270,9 +270,8 @@ class WooProdutoService
         return $product;
     }
 
-    public function gerarTabelaBarras()
+    public function gerarListagemBarrasCompacta()
     {
-
         $sql = "
             SELECT
                 pv.codprodutovariacao,
@@ -300,75 +299,57 @@ class WooProdutoService
 
         $colecao = collect(DB::select($sql, ['codproduto' => $this->prod->codproduto]));
 
-        // 1. Coleta as informações de cabeçalho, incluindo a quantidade para ordenação.
-        $headersInfo = $colecao
-            ->map(function ($item) {
-                return [
-                    'header' => "{$item->unidademedida} (" . ($item->quantidade ? number_format($item->quantidade, 0, ',', '.') : 'Avulso') . ")",
-                    'quantidade' => $item->quantidade ?? -1, // Usa -1 para "Avulso" para que fique no início
-                ];
-            })
-            ->unique('header')
-            ->sortBy('quantidade') // Ordena pela quantidade
-            ->values();
+        $htmlListagem = '<h2>Códigos de Barras:</h2>';
 
-        // 2. Extrai apenas os nomes dos cabeçalhos para o loop de exibição
-        $headers = $headersInfo->pluck('header');
+        if ($colecao->isNotEmpty()) {
+            
+            // Agrupa por Variação e depois por Unidade/Quantidade
+            $dadosAgrupados = $colecao->groupBy('variacao');
 
-        // 3. Agrupa a collection por variação (Cor)
-        $dadosAgrupados = $colecao->groupBy('variacao');
+            // Usa <ul> para a lista principal de Variações
+            $htmlListagem .= '<ul style="list-style: none; ">';
 
-        // 4. Inicializa a variável para o HTML
-        $htmlTabela = '';
-
-        if ($dadosAgrupados->isNotEmpty()) {
-            $htmlTabela .= '<table>';
-
-            // Cabeçalho da tabela (thead)
-            $htmlTabela .= '<thead><tr>';
-            if ($this->variacao) {
-                $htmlTabela .= '<th>Variação</th>';
-            }
-            foreach ($headers as $header) {
-                $htmlTabela .= '<th>' . htmlspecialchars($header) . '</th>';
-            }
-            $htmlTabela .= '</tr></thead>';
-
-            // Corpo da tabela (tbody)
-            $htmlTabela .= '<tbody>';
             foreach ($dadosAgrupados as $variacao => $items) {
-                $htmlTabela .= '<tr>';
-                if ($this->variacao) {
-                    if (empty($variacao)) {
-                        $variacao = "{Sem Variação}";
-                    }
-                    $htmlTabela .= '<td>' . htmlspecialchars($variacao) . '</td>';
-                }
+                
+                // 1. Título do Bloco (Variação)
+                $tituloVariacao = empty($variacao) ? $this->prod->produto : htmlspecialchars($variacao);
+                
+                // Abre o item da lista principal e usa o título como um forte marcador
+                $htmlListagem .= '<li style="margin-top: 10px;">';
+                $htmlListagem .= "<strong>{$tituloVariacao}</strong>";
+                
+                // 2. Lista de Detalhes (Unidade/Caixa)
+                $htmlListagem .= '<ul style="margin-top: 5px; list-style: disc; padding-left: 20px;">'; 
 
-                // Mapeia os itens da variação para as colunas
-                $itemsPorHeader = [];
-                foreach ($items as $item) {
-                    $quantidade = $item->quantidade ? number_format($item->quantidade, 0, ',', '.') : 'Avulso';
-                    $headerItem = "{$item->unidademedida} ({$quantidade})";
-                    $itemsPorHeader[$headerItem][] = $item->barras;
-                }
+                // Agrupa os itens da variação por Unidade/Quantidade
+                $itemsAgrupados = $items
+                    ->map(function ($item) {
+                        return [
+                            'display_name' => "{$item->unidademedida} (" . ($item->quantidade ? number_format($item->quantidade, 0, ',', '.') : 'Avulso') . ")",
+                            'barras' => $item->barras,
+                            'quantidade_ordem' => $item->quantidade ?? -1,
+                        ];
+                    })
+                    ->sortBy('quantidade_ordem')
+                    ->groupBy('display_name');
 
-                foreach ($headers as $header) {
-                    $barras = implode(', ', $itemsPorHeader[$header] ?? []);
-                    $htmlTabela .= '<td>' . htmlspecialchars($barras) . '</td>';
+                foreach ($itemsAgrupados as $header => $barrasData) {
+                    $codigos = $barrasData->pluck('barras')->map('htmlspecialchars')->implode(', ');
+                    
+                    // Exibe a informação como um item de lista simples
+                    $htmlListagem .= "<li>{$header}: {$codigos}</li>";
                 }
-
-                $htmlTabela .= '</tr>';
+                
+                $htmlListagem .= '</ul>';
+                $htmlListagem .= '</li>';
             }
-            $htmlTabela .= '</tbody>';
-
-            // Fim da tabela
-            $htmlTabela .= '</table>';
+            
+            $htmlListagem .= '</ul>';
         } else {
-            $htmlTabela .= '<p>Nenhum dado encontrado para exibir.</p>';
+            $htmlListagem .= '<p>Nenhum código de barras encontrado.</p>';
         }
 
-        return $htmlTabela;
+        return $htmlListagem;
     }
 
     public function preco(float $preco, float $quantidade = 1, float $margemadicional = 0)
@@ -583,6 +564,8 @@ class WooProdutoService
                 $descr = $pv->codprodutovariacao;
             }
 
+            $stock_quantity = static::estoque($pv);
+
             // monta o objeto pro json
             $var = (object) [
                 "regular_price" => $this->preco($this->prod->preco),
@@ -594,7 +577,8 @@ class WooProdutoService
                         "option" => "{$descr}"
                     ]
                 ],
-                "stock_quantity" => static::estoque($pv),
+                "stock_quantity" => $stock_quantity,
+                "purchasable" => ($stock_quantity > 0),
                 "manage_stock" => true,
                 "sku" => '#' . str_pad($pv->codproduto, 6, '0', STR_PAD_LEFT) . '-' . str_pad($pv->codprodutovariacao, 8, '0', STR_PAD_LEFT),
             ];
