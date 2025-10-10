@@ -118,11 +118,11 @@ class BoletoBbPdf
 
             // Parâmetros recomendáveis
             'descricaoDemonstrativo' => array( // Até 5
-                'Sujeito à multa e juros após o vencimento.',
+                'Sujeito à multa de 5%, mais juros de 5% ao mês após o vencimento.',
             ),
 
             'instrucoes' => [  // Até 8
-                'Sujeito à multa e juros após o vencimento.',
+                'Sujeito à multa de 5%, mais juros de 5% ao mês após o vencimento.',
             ],
 
             // Parâmetros opcionais
