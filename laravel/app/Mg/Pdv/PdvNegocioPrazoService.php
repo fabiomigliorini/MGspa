@@ -116,10 +116,10 @@ class PdvNegocioPrazoService
                 // calcula data de vencimento
                 if ($nfp->FormaPagamento->fechamento) {
                     $vencimento = (clone $dataInicial)->addMonths($i)->endOfMonth();
-                } elseif ($nfp->FormaPagamento->diasentreparcelas == 30) {
+                } elseif ($nfp->dias == 30) {
                     $vencimento = (clone $dataInicial)->addMonths($i);
                 } else {
-                    $vencimento = (clone $dataInicial)->addDays($nfp->FormaPagamento->diasentreparcelas * $i);
+                    $vencimento = (clone $dataInicial)->addDays($nfp->dias * $i);
                 }
 
                 // calcula o tipo de titulo

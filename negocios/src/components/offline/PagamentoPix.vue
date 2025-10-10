@@ -62,7 +62,8 @@ const pixChave = async () => {
     null, // bandeira
     null, // autorizacao
     1, // parcelas
-    valorPagamento.value // valorparcela
+    valorPagamento.value, // valorparcela
+    null // dias // valorparcela
   );
 };
 
@@ -123,54 +124,25 @@ const whatsapp = () => {
 </script>
 <template>
   <!-- DIALOG -->
-  <q-dialog
-    v-model="sNegocio.dialog.pagamentoPix"
-    @before-show="inicializarValores()"
-  >
+  <q-dialog v-model="sNegocio.dialog.pagamentoPix" @before-show="inicializarValores()">
     <q-card>
       <q-form @submit="salvar()" ref="formPix">
         <q-card-section>
           <q-list>
             <q-item>
               <q-item-section>
-                <q-input
-                  prefix="R$"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  :max="sNegocio.valorapagar"
-                  borderless
-                  v-model.number="valorPagamento"
-                  :rules="valorRule"
-                  autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary"
-                />
+                <q-input prefix="R$" type="number" step="0.01" min="0.01" :max="sNegocio.valorapagar" borderless
+                  v-model.number="valorPagamento" :rules="valorRule" autofocus
+                  input-class="text-h2 text-weight-bolder text-right text-primary" />
               </q-item-section>
             </q-item>
           </q-list>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="primary"
-            @click="sNegocio.dialog.pagamentoPix = false"
-            tabindex="-1"
-          />
-          <q-btn
-            type="button"
-            flat
-            label="PIX Pela Chave (Manual)"
-            @click="pixChave()"
-            color="primary"
-          />
-          <q-btn
-            type="submit"
-            flat
-            label="PIX Automático (QR CODE)"
-            color="primary"
-          />
+          <q-btn flat label="Cancelar" color="primary" @click="sNegocio.dialog.pagamentoPix = false" tabindex="-1" />
+          <q-btn type="button" flat label="PIX Pela Chave (Manual)" @click="pixChave()" color="primary" />
+          <q-btn type="submit" flat label="PIX Automático (QR CODE)" color="primary" />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -275,15 +247,9 @@ const whatsapp = () => {
           </template>
         </template>
         <template v-else>
-          <q-img
-            v-if="sPix.pixCob.qrcode"
-            class="q-my-lg"
-            :src="
-              'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' +
-              sPix.pixCob.qrcode
-            "
-            ratio="1"
-          />
+          <q-img v-if="sPix.pixCob.qrcode" class="q-my-lg" :src="'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' +
+            sPix.pixCob.qrcode
+            " ratio="1" />
           <q-list>
             <!-- ID -->
             <q-item>
@@ -323,51 +289,13 @@ const whatsapp = () => {
       </q-card-section>
       <q-card-actions align="right">
         <template v-if="sPix.pixCob.status != 'CONCLUIDA'">
-          <q-btn
-            flat
-            label="transmitir"
-            color="primary"
-            @click="transmitir()"
-            tabindex="-1"
-          />
-          <q-btn
-            flat
-            label="whatsapp"
-            color="primary"
-            @click="whatsapp()"
-            tabindex="-1"
-            class="mobile-only"
-          />
-          <q-btn
-            flat
-            label="Mensagem"
-            color="primary"
-            @click="mensagem()"
-            tabindex="-1"
-            class="desktop-only"
-          />
-          <q-btn
-            flat
-            label="imprimir"
-            color="primary"
-            @click="imprimir()"
-            tabindex="-1"
-          />
+          <q-btn flat label="transmitir" color="primary" @click="transmitir()" tabindex="-1" />
+          <q-btn flat label="whatsapp" color="primary" @click="whatsapp()" tabindex="-1" class="mobile-only" />
+          <q-btn flat label="Mensagem" color="primary" @click="mensagem()" tabindex="-1" class="desktop-only" />
+          <q-btn flat label="imprimir" color="primary" @click="imprimir()" tabindex="-1" />
         </template>
-        <q-btn
-          flat
-          label="consultar"
-          color="primary"
-          @click="consultar()"
-          ref="btnConsultarRef"
-        />
-        <q-btn
-          flat
-          label="Fechar"
-          color="primary"
-          @click="sPix.dialog.detalhesPixCob = false"
-          tabindex="-1"
-        />
+        <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
+        <q-btn flat label="Fechar" color="primary" @click="sPix.dialog.detalhesPixCob = false" tabindex="-1" />
       </q-card-actions>
     </q-card>
   </q-dialog>

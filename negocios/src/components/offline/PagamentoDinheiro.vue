@@ -47,15 +47,13 @@ const salvar = () => {
     null, // bandeira
     null, // autorizacao
     null, // parcelas
-    null // valorparcela
+    null, // valorparcela
+    null // dias // valorparcela
   );
 };
 </script>
 <template>
-  <q-dialog
-    v-model="sNegocio.dialog.pagamentoDinheiro"
-    @before-show="inicializarValores()"
-  >
+  <q-dialog v-model="sNegocio.dialog.pagamentoDinheiro" @before-show="inicializarValores()">
     <q-card>
       <q-form @submit="salvar()">
         <q-card-section>
@@ -65,9 +63,7 @@ const salvar = () => {
                 R$
               </q-item-section>
               <q-item-section>
-                <q-item-label
-                  class="text-h2 text-primary text-weight-bolder text-right"
-                >
+                <q-item-label class="text-h2 text-primary text-weight-bolder text-right">
                   {{
                     new Intl.NumberFormat("pt-BR", {
                       style: "decimal",
@@ -87,19 +83,10 @@ const salvar = () => {
                 R$
               </q-item-section>
               <q-item-section>
-                <q-item-label
-                  class="text-h2 text-primary text-weight-bolder text-right"
-                >
-                  <q-input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    borderless
-                    v-model.number="valorPagamento"
-                    :rules="maiorQueZeroRule"
-                    autofocus
-                    input-class="text-h2 text-weight-bolder text-right text-primary"
-                  >
+                <q-item-label class="text-h2 text-primary text-weight-bolder text-right">
+                  <q-input type="number" step="0.01" min="0" borderless v-model.number="valorPagamento"
+                    :rules="maiorQueZeroRule" autofocus
+                    input-class="text-h2 text-weight-bolder text-right text-primary">
                     <template v-slot:error>
                       <div class="text-right">Valor inválido!</div>
                     </template>
@@ -116,10 +103,7 @@ const salvar = () => {
                 R$
               </q-item-section>
               <q-item-section>
-                <q-item-label
-                  :class="valorSaldoClass"
-                  class="text-h2 text-weight-bolder text-right"
-                >
+                <q-item-label :class="valorSaldoClass" class="text-h2 text-weight-bolder text-right">
                   {{
                     new Intl.NumberFormat("pt-BR", {
                       style: "decimal",
@@ -137,13 +121,8 @@ const salvar = () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="primary"
-            @click="sNegocio.dialog.pagamentoDinheiro = false"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="primary" @click="sNegocio.dialog.pagamentoDinheiro = false"
+            tabindex="-1" />
           <q-btn type="submit" flat label="Salvar" color="primary" />
         </q-card-actions>
       </q-form>

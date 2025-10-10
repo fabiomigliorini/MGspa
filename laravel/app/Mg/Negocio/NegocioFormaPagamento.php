@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Jan/2025 11:05:48
+ * Date: 10/Oct/2025 18:53:36
  */
 
 namespace Mg\Negocio;
@@ -39,6 +39,7 @@ class NegocioFormaPagamento extends MgModel
         'codsauruspedido',
         'codstonetransacao',
         'codtitulo',
+        'dias',
         'integracao',
         'parcelas',
         'tipo',
@@ -70,6 +71,7 @@ class NegocioFormaPagamento extends MgModel
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'dias' => 'integer',
         'integracao' => 'boolean',
         'parcelas' => 'integer',
         'tipo' => 'integer',

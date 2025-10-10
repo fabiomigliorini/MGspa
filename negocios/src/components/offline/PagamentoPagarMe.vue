@@ -248,7 +248,8 @@ const salvarManual = async () => {
     pagamento.value.bandeira, // bandeira
     pagamento.value.autorizacao, // autorizacao
     pagamento.value.parcelas,
-    pagamento.value.valorparcela
+    pagamento.value.valorparcela, // valorparcela
+    null // dias
   );
   sNegocio.dialog.pagamentoCartaoManual = false;
 };

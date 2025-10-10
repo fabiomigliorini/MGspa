@@ -217,122 +217,50 @@ const creditCardColorPagamento = (pag) => {
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6"></div>
             <div class="col-6">
-              <q-input
-                disable
-                type="number"
-                step="0.01"
-                min="0.01"
-                outlined
-                v-model.number="edicao.valorprodutos"
-                prefix="R$"
-                label="Total Produtos"
-                input-class="text-right"
-                :rules="preenchimentoObrigatorioRule"
-              />
+              <q-input disable type="number" step="0.01" min="0.01" outlined v-model.number="edicao.valorprodutos"
+                prefix="R$" label="Total Produtos" input-class="text-right" :rules="preenchimentoObrigatorioRule" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                type="number"
-                step="0.1"
-                min="0"
-                max="99.9"
-                outlined
-                v-model.number="edicao.percentualdesconto"
-                label="% Desc"
-                input-class="text-right"
-                suffix="%"
-                :rules="maiorQueZeroRule"
-                @change="recalcularValorDesconto()"
-                autofocus
-              />
+              <q-input type="number" step="0.1" min="0" max="99.9" outlined v-model.number="edicao.percentualdesconto"
+                label="% Desc" input-class="text-right" suffix="%" :rules="maiorQueZeroRule"
+                @change="recalcularValorDesconto()" autofocus />
             </div>
             <div class="col-6">
-              <q-input
-                type="number"
-                step="0.01"
-                :max="edicao.valorprodutos - 0.01"
-                outlined
-                v-model.number="edicao.valordesconto"
-                prefix="R$"
-                label="Desconto"
-                input-class="text-right"
-                :rules="maiorQueZeroRule"
-                @change="recalcularPercentualDesconto()"
-              />
+              <q-input type="number" step="0.01" :max="edicao.valorprodutos - 0.01" outlined
+                v-model.number="edicao.valordesconto" prefix="R$" label="Desconto" input-class="text-right"
+                :rules="maiorQueZeroRule" @change="recalcularPercentualDesconto()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                type="number"
-                step="0.01"
-                outlined
-                v-model.number="edicao.valorfrete"
-                prefix="R$"
-                label="Frete"
-                input-class="text-right"
-                :rules="maiorQueZeroRule"
-                @change="recalcularValorTotal()"
-              />
+              <q-input type="number" step="0.01" outlined v-model.number="edicao.valorfrete" prefix="R$" label="Frete"
+                input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                type="number"
-                step="0.01"
-                outlined
-                v-model.number="edicao.valorseguro"
-                prefix="R$"
-                label="Seguro"
-                input-class="text-right"
-                :rules="maiorQueZeroRule"
-                @change="recalcularValorTotal()"
-              />
+              <q-input type="number" step="0.01" outlined v-model.number="edicao.valorseguro" prefix="R$" label="Seguro"
+                input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                type="number"
-                step="0.01"
-                outlined
-                v-model.number="edicao.valoroutras"
-                prefix="R$"
-                label="Outras"
-                input-class="text-right"
-                :rules="maiorQueZeroRule"
-                @change="recalcularValorTotal()"
-              />
+              <q-input type="number" step="0.01" outlined v-model.number="edicao.valoroutras" prefix="R$" label="Outras"
+                input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                type="number"
-                step="0.01"
-                outlined
-                v-model.number="edicao.valortotal"
-                prefix="R$"
-                label="Total"
-                input-class="text-right"
-                :rules="preenchimentoObrigatorioRule"
-                @change="recalcularValorTotal()"
-              />
+              <q-input type="number" step="0.01" outlined v-model.number="edicao.valortotal" prefix="R$" label="Total"
+                input-class="text-right" :rules="preenchimentoObrigatorioRule" @change="recalcularValorTotal()" />
             </div>
           </div>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="primary"
-            @click="sNegocio.dialog.valores = false"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="primary" @click="sNegocio.dialog.valores = false" tabindex="-1" />
           <q-btn type="submit" flat label="Salvar" color="primary" />
         </q-card-actions>
       </q-form>
@@ -350,12 +278,10 @@ const creditCardColorPagamento = (pag) => {
   <template v-if="sNegocio.negocio">
     <!-- TOTAIS -->
     <q-list dense class="q-mt-md">
-      <q-item
-        v-if="
-          parseFloat(sNegocio.negocio.valorprodutos) -
-          parseFloat(sNegocio.negocio.valortotal)
-        "
-      >
+      <q-item v-if="
+        parseFloat(sNegocio.negocio.valorprodutos) -
+        parseFloat(sNegocio.negocio.valortotal)
+      ">
         <q-item-section>
           <q-item-label caption>Produtos</q-item-label>
         </q-item-section>
@@ -458,18 +384,10 @@ const creditCardColorPagamento = (pag) => {
       </q-item>
 
       <!-- TOTAL -->
-      <q-item
-        @click="editarValores()"
-        v-ripple
-        :clickable="sNegocio.podeEditar"
-      >
+      <q-item @click="editarValores()" v-ripple :clickable="sNegocio.podeEditar">
         <q-item-section class="text-right">
-          <Transition
-            mode="out-in"
-            :duration="{ enter: 300, leave: 300 }"
-            leave-active-class="animated bounceOut"
-            enter-active-class="animated bounceIn"
-          >
+          <Transition mode="out-in" :duration="{ enter: 300, leave: 300 }" leave-active-class="animated bounceOut"
+            enter-active-class="animated bounceIn">
             <q-item-label class="" :key="sNegocio.negocio.valortotal">
               <span class="float-left text-grey">R$ </span>
               <span class="text-h3 text-primary text-weight-bolder">
@@ -491,10 +409,31 @@ const creditCardColorPagamento = (pag) => {
         <template v-for="pag in sNegocio.negocio.pagamentos" :key="pag.uuid">
           <q-item>
             <q-item-section>
-              <q-item-label caption>
+              <q-item-label caption class="ellipsis">
                 {{ pag.formapagamento }}
-                {{ pag.nometipo }}
-                <template v-if="pag.parceiro"> | {{ pag.parceiro }} </template>
+              </q-item-label>
+              <q-item-label caption v-if="pag.parceiro" class="ellipsis">
+                {{ pag.parceiro }}
+              </q-item-label>
+              <q-item-label caption v-if="pag.parcelas > 1" class="ellipsis">
+                {{ pag.parcelas }}
+                x de R$
+                {{
+                  new Intl.NumberFormat("pt-BR", {
+                    style: "decimal",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(pag.valorparcela)
+                }}
+              </q-item-label>
+              <q-item-label caption v-else-if="pag.dias && pag.dias != 30">
+                {{ pag.dias }} Dias
+              </q-item-label>
+              <q-item-label caption v-if="pag.autorizacao" class="ellipsis">
+                <span v-if="pag.nomebandeira">
+                  {{ pag.nomebandeira }}
+                </span>
+                {{ pag.autorizacao }}
               </q-item-label>
             </q-item-section>
             <q-item-section class="text-right">
@@ -506,45 +445,15 @@ const creditCardColorPagamento = (pag) => {
                     maximumFractionDigits: 2,
                   }).format(pag.valortotal)
                 }}
-                <q-btn
-                  flat
-                  round
-                  @click="excluirPagamento(pag)"
-                  icon="delete"
-                  size="sm"
-                  v-if="
-                    !pag.integracao && sNegocio.negocio.codnegociostatus == 1
-                  "
-                />
+                <q-btn flat round @click="excluirPagamento(pag)" icon="delete" size="sm" v-if="
+                  !pag.integracao && sNegocio.negocio.codnegociostatus == 1
+                " />
               </q-item-label>
               <q-item-label caption v-if="pag.codtitulo">
-                <q-btn
-                  :href="urlTitulo(pag.codtitulo)"
-                  target="_blank"
-                  :label="pag.codtitulo"
-                  flat
-                  size="sm"
-                  dense
-                  icon-right="launch"
-                />
+                <q-btn :href="urlTitulo(pag.codtitulo)" target="_blank" :label="pag.codtitulo" flat size="sm" dense
+                  icon-right="launch" />
               </q-item-label>
-              <q-item-label caption v-if="pag.autorizacao">
-                <template v-if="pag.nomebandeira">
-                  {{ pag.nomebandeira }}:
-                </template>
-                {{ pag.autorizacao }}
-              </q-item-label>
-              <q-item-label caption v-if="pag.parcelas > 1">
-                {{ pag.parcelas }}
-                x de R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(pag.valorparcela)
-                }}
-              </q-item-label>
+
             </q-item-section>
           </q-item>
         </template>
@@ -570,27 +479,14 @@ const creditCardColorPagamento = (pag) => {
     </q-list>
 
     <!-- BOTOES DE ADICIONAR PAGAMENTO -->
-    <q-list
-      class="q-pa-md q-gutter-sm text-right"
-      v-if="sNegocio.negocio.financeiro && sNegocio.podeEditar"
-    >
+    <q-list class="q-pa-md q-gutter-sm text-right" v-if="sNegocio.negocio.financeiro && sNegocio.podeEditar">
       <!-- BOTAO DINHEIRO -->
-      <q-btn
-        round
-        @click="dialogPagamentoDinheiro()"
-        icon="local_atm"
-        color="primary"
-      >
+      <q-btn round @click="dialogPagamentoDinheiro()" icon="local_atm" color="primary">
         <q-tooltip class="bg-accent">Dinheiro (F6)</q-tooltip>
       </q-btn>
 
       <!-- BOTAO CARTAO -->
-      <q-btn
-        round
-        icon="credit_card"
-        @click="dialogPagamento()"
-        color="primary"
-      >
+      <q-btn round icon="credit_card" @click="dialogPagamento()" color="primary">
         <q-tooltip class="bg-accent">Cartão (F7)</q-tooltip>
       </q-btn>
 
@@ -600,35 +496,20 @@ const creditCardColorPagamento = (pag) => {
       </q-btn>
 
       <!-- BOTAO PRAZO -->
-      <q-btn
-        round
-        icon="receipt"
-        @click="dialogPagamentoPrazo()"
-        color="primary"
-      >
+      <q-btn round icon="receipt" @click="dialogPagamentoPrazo()" color="primary">
         <q-tooltip class="bg-accent">À Prazo (F9)</q-tooltip>
       </q-btn>
 
       <!-- BOTAO VALE -->
-      <q-btn
-        round
-        @click="dialogPagamentoVale()"
-        icon="mdi-ticket"
-        color="primary"
-      >
+      <q-btn round @click="dialogPagamentoVale()" icon="mdi-ticket" color="primary">
         <q-tooltip class="bg-accent">Vale Compras </q-tooltip>
       </q-btn>
     </q-list>
 
     <!-- LISTAGEM DE PAGAMENTOS -->
     <q-list>
-      <q-item
-        v-for="cob in sNegocio.negocio.pixCob"
-        :key="cob.codpixcob"
-        clickable
-        v-ripple
-        @click="dialogDetalhesPixCob(cob)"
-      >
+      <q-item v-for="cob in sNegocio.negocio.pixCob" :key="cob.codpixcob" clickable v-ripple
+        @click="dialogDetalhesPixCob(cob)">
         <q-item-section avatar top>
           <q-btn round :color="qrCodeColor(cob)" icon="qr_code" />
         </q-item-section>
@@ -671,10 +552,7 @@ const creditCardColorPagamento = (pag) => {
         </template>
       </q-item>
 
-      <template
-        v-for="ped in sNegocio.negocio.PagarMePedidoS"
-        :key="ped.codpagarmepedido"
-      >
+      <template v-for="ped in sNegocio.negocio.PagarMePedidoS" :key="ped.codpagarmepedido">
         <template v-if="ped.status != 2">
           <q-item clickable v-ripple @click="dialogDetalhesPagarMePedido(ped)">
             <q-item-section avatar top>
@@ -721,19 +599,10 @@ const creditCardColorPagamento = (pag) => {
           </q-item>
         </template>
         <template v-else>
-          <q-item
-            clickable
-            v-ripple
-            @click="dialogDetalhesPagarMePedido(ped)"
-            v-for="pag in ped.PagarMePagamentoS"
-            :key="pag.codpagarmepagamento"
-          >
+          <q-item clickable v-ripple @click="dialogDetalhesPagarMePedido(ped)" v-for="pag in ped.PagarMePagamentoS"
+            :key="pag.codpagarmepagamento">
             <q-item-section avatar top>
-              <q-btn
-                round
-                :color="creditCardColorPagamento(pag)"
-                icon="credit_card"
-              />
+              <q-btn round :color="creditCardColorPagamento(pag)" icon="credit_card" />
             </q-item-section>
             <q-item-section>
               <q-item-label lines="1" v-if="pag.valorpagamento">
@@ -745,11 +614,7 @@ const creditCardColorPagamento = (pag) => {
                   }).format(pag.valorpagamento)
                 }}
               </q-item-label>
-              <q-item-label
-                lines="1"
-                v-if="pag.valorcancelamento"
-                class="text-negative"
-              >
+              <q-item-label lines="1" v-if="pag.valorcancelamento" class="text-negative">
                 {{
                   new Intl.NumberFormat("pt-BR", {
                     style: "decimal",
@@ -794,10 +659,7 @@ const creditCardColorPagamento = (pag) => {
         </template>
       </template>
 
-      <template
-        v-for="ped in sNegocio.negocio.SaurusPedidoS"
-        :key="ped.codsauruspedido"
-      >
+      <template v-for="ped in sNegocio.negocio.SaurusPedidoS" :key="ped.codsauruspedido">
         <template v-if="ped.status != 2">
           <q-item clickable v-ripple @click="dialogDetalhesSaurusPedido(ped)">
             <q-item-section avatar top>
@@ -844,19 +706,10 @@ const creditCardColorPagamento = (pag) => {
           </q-item>
         </template>
         <template v-else>
-          <q-item
-            clickable
-            v-ripple
-            @click="dialogDetalhesSaurusPedido(ped)"
-            v-for="pag in ped.SaurusPagamentoS"
-            :key="pag.codsauruspagamento"
-          >
+          <q-item clickable v-ripple @click="dialogDetalhesSaurusPedido(ped)" v-for="pag in ped.SaurusPagamentoS"
+            :key="pag.codsauruspagamento">
             <q-item-section avatar top>
-              <q-btn
-                round
-                :color="creditCardColorPagamento(pag)"
-                icon="credit_card"
-              />
+              <q-btn round :color="creditCardColorPagamento(pag)" icon="credit_card" />
             </q-item-section>
             <q-item-section>
               <q-item-label lines="1" v-if="pag.valortotal">
@@ -868,11 +721,7 @@ const creditCardColorPagamento = (pag) => {
                   }).format(pag.valortotal)
                 }}
               </q-item-label>
-              <q-item-label
-                lines="1"
-                v-if="pag.valorcancelamento"
-                class="text-negative"
-              >
+              <q-item-label lines="1" v-if="pag.valorcancelamento" class="text-negative">
                 {{
                   new Intl.NumberFormat("pt-BR", {
                     style: "decimal",

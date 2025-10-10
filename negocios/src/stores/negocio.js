@@ -1051,7 +1051,8 @@ export const negocioStore = defineStore("negocio", {
       bandeira,
       autorizacao,
       parcelas,
-      valorparcela
+      valorparcela,
+      dias
     ) {
       await this.recarregar();
 
@@ -1107,6 +1108,7 @@ export const negocioStore = defineStore("negocio", {
         autorizacao: autorizacao,
         parcelas: parcelas,
         valorparcela: valorparcela,
+        dias: dias,
       };
       this.negocio.pagamentos.push(pagamento);
 

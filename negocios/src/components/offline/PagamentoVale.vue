@@ -114,7 +114,8 @@ const salvar = () => {
     null, // bandeira
     null, // autorizacao
     null, // parcelas
-    null // valorparcela
+    null, // valorparcela
+    null // dias
   );
   if (sNegocio.negocio.codpessoa == 1) {
     sNegocio.informarPessoa(
