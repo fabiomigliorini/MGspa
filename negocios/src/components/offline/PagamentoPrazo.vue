@@ -56,8 +56,8 @@ const formas = ref([
     icone: "calendar_month",
     valorMinimoParcela: 50,
     valorMinimo: 0,
-    maximoParcelas: 1,
-    maximoParcelasSemJuros: 1,
+    maximoParcelas: 4,
+    maximoParcelasSemJuros: 4,
     abonarJurosAcima: 0,
     parcelaDez: false,
     tipo: 5, // Credito Loja
@@ -69,9 +69,9 @@ const formas = ref([
     icone: "account_balance",
     valorMinimoParcela: 100,
     valorMinimo: 70,
-    maximoParcelas: 6,
+    maximoParcelas: 4,
     maximoParcelasSemJuros: 4,
-    abonarJurosAcima: 500,
+    abonarJurosAcima: 0,
     parcelaDez: true,
     tipo: 15, // Boleto Bancario
     diasAvulsos: [7, 10, 15]
@@ -181,18 +181,6 @@ const calcularParcelas = async () => {
     return;
   }
 
-  if (forma.value.codformapagamento == process.env.CODFORMAPAGAMENTO_FECHAMENTO) {
-    parcelamentoDisponivel.value.push({
-      parcelas: 1,
-      valorjuros: 0,
-      valorparcela: valor,
-      label: 'Final do Mês',
-      dias: 30
-    });
-    pagamento.value.parcelas = 0;
-    return;
-  }
-
   let i = 0;
   for (let i of forma.value.diasAvulsos) {
     parcelamentoDisponivel.value.push({
@@ -216,12 +204,22 @@ const calcularParcelas = async () => {
     if (valorparcela < valorMinimoParcela && i > 1) {
       break;
     }
-    label += i * 30 + '/'
+    if (forma.value.codformapagamento == process.env.CODFORMAPAGAMENTO_FECHAMENTO) {
+      if (i > 1) {
+        label = label.slice(0, -3) + '/'
+      }
+      label += moment().add(5, 'days').add(i, 'month').endOf('month').format('MMM/YY');
+    } else {
+      if (i > 1) {
+        label = label.slice(0, -5) + '/'
+      }
+      label += i * 30 + ' Dias'
+    }
     parcelamentoDisponivel.value.push({
       parcelas: i,
       valorjuros: valorjuros,
       valorparcela: valorparcela,
-      label: label.slice(0, -1) + ' Dias',
+      label: label,
       dias: 30
     });
   }
@@ -299,24 +297,23 @@ const salvar = async () => {
                 <div class="col-xs-12 col-sm-6">
 
                   <!-- OBSERVACOES -->
-                  <!-- <div class="row text-caption text-grey-8" v-if="isEntrega">
-                    Cliente vai pagar na entrega.
+                  <div class="row text-caption text-grey-8" v-if="isEntrega">
+                    Cliente vai pagar no momento da entrega ou retirada do produto.
                   </div>
                   <div class="row text-caption text-grey-8" v-if="isFechamento">
-                    Financeiro cuidará da cobrança.
+                    Financeiro cuidará da cobrança. Serão somadas todas as compras do período e emitida a Nota Fiscal
+                    com todas as compras no final do mês com vencimento para o último dia do mês subsequente.
                   </div>
                   <div class="row text-caption text-grey-8" v-if="isCarteira">
-                    Mínimo: R$ 30,00. <br />
+                    Valor Mínimo: R$ 30,00. <br />
                     Parcelado: R$ 50,00/Parcela. <br />
                     Até 4 Parcelas. <br />
                   </div>
                   <div class="row text-caption text-grey-8" v-if="isBoleto">
-                    Mínimo: R$ 70,00. <br />
+                    Valor Mínimo: R$ 70,00. <br />
                     Parcelado: R$ 100,00/Parcela. <br />
-                    Até 4 Parcelas Sem Juros. <br />
-                    Até 6 Parcelas Com Juros. <br />
-                    Parcelas acima de R$ 500,00 abonam juros. <br />
-                  </div> -->
+                    Máximo 4 Parcelas. <br />
+                  </div>
 
                   <!-- PARCELAS -->
                   <q-list>
