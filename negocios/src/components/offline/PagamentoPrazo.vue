@@ -175,7 +175,7 @@ const calcularParcelas = async () => {
       valorjuros: 0,
       valorparcela: valor,
       label: 'Cliente paga na entrega',
-      dias: 30
+      dias: 0
     });
     pagamento.value.parcelas = 0;
     return;
