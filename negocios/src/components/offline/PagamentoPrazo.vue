@@ -54,7 +54,7 @@ const formas = ref([
     codformapagamento: process.env.CODFORMAPAGAMENTO_FECHAMENTO,
     nome: "Fechamento Mensal",
     icone: "calendar_month",
-    valorMinimoParcela: 50,
+    valorMinimoParcela: 40,
     valorMinimo: 0,
     maximoParcelas: 4,
     maximoParcelasSemJuros: 4,
