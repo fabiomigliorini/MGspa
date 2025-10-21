@@ -143,6 +143,14 @@ class BoletoBbService
         // monta "nossonumero"
         $nossonumero = static::atribuirNossoNumero($titulo);
 
+        // Amarra nossonumero ao titulo
+        $tituloBoleto = TituloBoleto::firstOrNew([
+            'nossonumero' => $nossonumero,
+            'codportador' => $titulo->codportador
+        ]);
+        $tituloBoleto->codtitulo = $titulo->codtitulo;
+        $tituloBoleto->save();
+
         $telefone = ($titulo->Pessoa->telefone1??$titulo->Pessoa->telefone2)??$titulo->Pessoa->telefone3;
         $telefone = preg_replace('/\D/', '', $telefone);
 
@@ -165,7 +173,7 @@ class BoletoBbService
             $titulo->Pessoa->cepcobranca,
             $titulo->Pessoa->CidadeCobranca->cidade,
             $titulo->Pessoa->bairrocobranca,
-            $titulo->Pessoa->CidadeCobranca->Estado->sigla,
+                    $titulo->Pessoa->CidadeCobranca->Estado->sigla,
             $telefone
         );
 
@@ -175,10 +183,6 @@ class BoletoBbService
         }
 
         // armazena dados do registro
-        $tituloBoleto = TituloBoleto::firstOrNew([
-            'nossonumero' => $nossonumero,
-            'codportador' => $titulo->codportador
-        ]);
         $tituloBoleto->codtitulo = $titulo->codtitulo;
         $tituloBoleto->linhadigitavel = $ret['linhaDigitavel'];
         $tituloBoleto->barras = $ret['codigoBarraNumerico'];
