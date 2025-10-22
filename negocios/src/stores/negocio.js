@@ -53,7 +53,7 @@ export const negocioStore = defineStore("negocio", {
       }
       return this.negocio.itens
         .filter((item) => item.inativo == null)
-        .sort((a, b) => b.criacao.localeCompare(a.criacao));
+        .sort((a, b) => b.ordenacao.localeCompare(a.ordenacao));
     },
     itensInativos() {
       if (!this.negocio) {
@@ -686,6 +686,7 @@ export const negocioStore = defineStore("negocio", {
         item = item[0];
         item.quantidade = parseFloat(item.quantidade) + parseFloat(quantidade);
         item.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
+        item.ordenacao = item.alteracao;
       } else {
         var item = {
           uuid: uid(),
@@ -704,6 +705,8 @@ export const negocioStore = defineStore("negocio", {
           valoroutras: null,
           valortotal: null,
           criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
+          alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
+          ordenacao: moment().format("YYYY-MM-DD HH:mm:ss"),
           inativo: null,
         };
         try {

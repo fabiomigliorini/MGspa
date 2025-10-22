@@ -1,8 +1,7 @@
 <?php
-
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Dec/2024 09:40:21
+ * Date: 22/Oct/2025 19:13:21
  */
 
 namespace Mg\Negocio;
@@ -10,6 +9,7 @@ namespace Mg\Negocio;
 use Mg\MgModel;
 use Mg\CupomFiscal\CupomFiscalProdutoBarra;
 use Mg\Estoque\EstoqueMovimento;
+use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioProdutoBarraPedidoItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\Mercos\MercosPedidoItem;
@@ -31,6 +31,7 @@ class NegocioProdutoBarra extends MgModel
         'conferencia',
         'inativo',
         'observacoes',
+        'ordenacao',
         'percentualdesconto',
         'quantidade',
         'uuid',
@@ -47,7 +48,8 @@ class NegocioProdutoBarra extends MgModel
         'alteracao',
         'conferencia',
         'criacao',
-        'inativo'
+        'inativo',
+        'ordenacao'
     ];
 
     protected $casts = [
@@ -132,4 +134,5 @@ class NegocioProdutoBarra extends MgModel
     {
         return $this->hasMany(NotaFiscalProdutoBarra::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
     }
+
 }

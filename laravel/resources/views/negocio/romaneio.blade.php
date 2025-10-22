@@ -129,7 +129,7 @@
 
     <!-- PRODUTOS -->
     <h2>Produtos</h2>
-    @foreach ($negocio->NegocioProdutoBarraS()->whereNull('inativo')->orderBy('criacao', 'desc')->get() as $npb)
+    @foreach ($negocio->NegocioProdutoBarraS()->whereNull('inativo')->orderBy('ordenacao', 'desc')->get() as $npb)
         <div style="margin-bottom: 0.2cm; border-bottom: 0.5px dashed black; ">
             {{ $npb->ProdutoBarra->barras }} -
             <b>{{ $npb->ProdutoBarra->descricao }}</b><br>

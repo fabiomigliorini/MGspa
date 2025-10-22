@@ -162,7 +162,7 @@ class NotaFiscalService
         $itens = $negocio
             ->NegocioProdutoBarras()
             ->whereNull('inativo')
-            ->orderBy('alteracao')
+            ->orderBy('ordenacao', 'desc')
             ->orderBy('codnegocioprodutobarra')
             ->get();
 
