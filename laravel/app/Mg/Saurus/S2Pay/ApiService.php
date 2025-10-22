@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Log;
 
 class ApiService 
 {
+
+    const TIMEOUT = 1;
+
     public static function functionAutorizacao($chavePDV, $cnpj) {
         $chave = base64_encode($chavePDV . '|' . str_pad($cnpj, 14, '0', STR_PAD_LEFT));
 
@@ -23,7 +26,7 @@ class ApiService
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => "",
                 CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 5,
+                CURLOPT_TIMEOUT => static::TIMEOUT,
                 CURLOPT_SSL_VERIFYHOST => 0,
                 CURLOPT_SSL_VERIFYPEER => 0,	    
                 CURLOPT_FOLLOWLOCATION => true,
@@ -73,7 +76,7 @@ class ApiService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
+            CURLOPT_TIMEOUT => static::TIMEOUT,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,	    
             CURLOPT_FOLLOWLOCATION => true,
@@ -112,7 +115,7 @@ class ApiService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
+            CURLOPT_TIMEOUT => static::TIMEOUT,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,	    
             CURLOPT_FOLLOWLOCATION => true,
@@ -171,7 +174,7 @@ class ApiService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
+            CURLOPT_TIMEOUT => static::TIMEOUT,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,	    
             CURLOPT_FOLLOWLOCATION => true,
@@ -204,7 +207,7 @@ class ApiService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
+            CURLOPT_TIMEOUT => static::TIMEOUT,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,	    
             CURLOPT_FOLLOWLOCATION => true,

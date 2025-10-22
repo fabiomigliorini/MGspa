@@ -103,11 +103,14 @@ class SaurusService
             $pdv->save();
         }
 
-        $pedido = ApiService::functionPedidoCriar($ped, $pdv, $pos);
-        
-        $ped->id = $pedido->response->id;
-
-        $ped->save();
+        // quando da timeout ou algum erro na saurus, retorna o pedido mesmo assim
+        try {
+            $pedido = ApiService::functionPedidoCriar($ped, $pdv, $pos);
+            $ped->id = $pedido->response->id;
+            $ped->save();
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
 
         return $ped;
     }
