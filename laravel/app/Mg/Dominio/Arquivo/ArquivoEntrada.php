@@ -254,6 +254,7 @@ class ArquivoEntrada extends Arquivo
                    	 , tblnotafiscalprodutobarra.valorfrete
                    	 , tblnotafiscalprodutobarra.valorseguro
                    	 , tblnotafiscalprodutobarra.valoroutras
+                   	 , tblnotafiscalprodutobarra.ordem
                 from tblnotafiscalprodutobarra
                 left join tblprodutobarra on (tblprodutobarra.codprodutobarra = tblnotafiscalprodutobarra.codprodutobarra)
                 left join tblprodutoembalagem on (tblprodutoembalagem.codprodutoembalagem = tblprodutobarra.codprodutoembalagem)
@@ -322,7 +323,7 @@ class ArquivoEntrada extends Arquivo
     public function criaRegistroProduto ($doc, $nSeq, $seg, $nSeg, $acum, $prod, $valorTotalProduto)
     {
         $reg = new RegistroEntradaProduto();
-        $reg->sequencial = $nSeq;
+        $reg->sequencial = $prod->ordem;
         $reg->codigoProduto = $prod->codproduto;
 
         // codigo do produto com quantidade embalagem concatenada
