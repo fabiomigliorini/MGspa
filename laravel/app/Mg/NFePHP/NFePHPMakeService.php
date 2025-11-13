@@ -736,18 +736,19 @@ class NFePHPMakeService
             $dups = [];
             $nDup = 0;
             foreach ($nf->NotaFiscalDuplicatasS()->orderBy('vencimento')->orderBy('fatura')->orderBy('codnotafiscalduplicatas')->get() as $nfd) {
+                // Erro cStat 853 quando vencimento <= a hoje
+                // Se duplicata tiver vencimento <= hoje ocorre Rejeicao
+                // 898 - Rejeicao: Data de vencimento da parcela nao informada ou menor que Data de Autorizacao
+                if (!$nfd->vencimento->isFuture()) {
+                    continue;
+                }
+
                 // Duplicatas
                 $std = new stdClass();
                 $nDup++;
                 $std->nDup = mascarar($nDup, '###');
                 $nFat = Strings::replaceSpecialsChars($nfd->fatura);
-                // Se duplicata tiver vencimento <= hoje ocorre Rejeicao
-                // 898 - Rejeicao: Data de vencimento da parcela nao informada ou menor que Data de Autorizacao
-                if ($nfd->vencimento->isPast()) {
-                    $std->dVenc = date('Y-m-d');
-                } else {
-                    $std->dVenc = $nfd->vencimento->format('Y-m-d');
-                }
+                $std->dVenc = $nfd->vencimento->format('Y-m-d');
                 $std->vDup = number_format($nfd->valor, 2, '.', '');
                 $totalPrazo += $nfd->valor;
                 $dups[] = $std;
