@@ -37,6 +37,9 @@ class NFePHPValidacaoService
         if (!empty($nf->Pessoa->ie)) {
             throw new \Exception('Não é permitida emissão de NFCe para Pessoas com Inscrição Estadual!');
         }
+        if (!$nf->Pessoa->fisica) {
+            throw new \Exception('Não é permitida emissão de NFCe para CNPJ!');
+        }        
         return true;
     }
 
