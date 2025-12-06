@@ -32,6 +32,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('pix:consultar --horas=36')->everyTenMinutes();
         $schedule->command('aniversariantes:individual')->dailyAt('08:00');
         $schedule->command('aniversariantes:geral')->dailyAt('08:00');
+        $schedule->command('ranking:refresh')
+            ->dailyAt('05:00')
+            ->runInBackground() // Recomendado para tarefas longas
+            ->withoutOverlapping();
     }
 
     /**
@@ -41,7 +45,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
         require base_path('routes/console.php');
     }
 }

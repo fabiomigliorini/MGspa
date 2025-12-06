@@ -26,7 +26,7 @@ class WooProdutoService
     {
         $this->prod = $prod;
         $this->fatorPreco = $fatorPreco ?? ((float) env('WOO_FATOR_PRECO', 1));
-        $this->wp = WooProduto::where('codproduto', $prod->codproduto)->whereNull('codprodutovariacao')->first();
+        $this->wp = WooProduto::where('codproduto', $prod->codproduto)->whereNull('inativo')->whereNull('codprodutovariacao')->first();
         $this->api = new WooApi();
         $this->exportacao = Carbon::now();
         $this->variacoes = $prod->ProdutoVariacaoS()->whereNull('inativo')->get();
@@ -88,6 +88,7 @@ class WooProdutoService
         $product = new stdClass;
         // $product->id = 9999; // IDs geralmente não são alterados, mas para demonstração
         $product->name = $prod->titulosite ?? $prod->produto;
+        $product->sku = '#' . str_pad($prod->codproduto, 6, '0', STR_PAD_LEFT);
         // $product->slug = 'caderno-fortnite-max-edicao-2025';
         // $product->permalink = 'https://sinopel.mrxempresas.com.br/p/caderno-fortnite-max-edicao-2025/';
         // $product->date_created = '2025-06-04T10:00:00'; // Mudando a data para hoje
@@ -103,9 +104,7 @@ class WooProdutoService
         // $product->featured = true; // Mudar para destacado
         // $product->catalog_visibility = 'hidden'; // Mudar para escondido no catálogo
         $desc = $prod->descricaosite;
-        if (!empty($prod->titulosite)) {
-            $desc .= "<hr style='border: none; border-top: 1px solid #ccc; height: 0; margin: 15px 0;'><h2>Descrição Interna:</h2> {$prod->produto}";
-        }
+        $desc .= "<hr style='border: none; border-top: 1px solid #ccc; height: 0; margin: 15px 0;'><h2>Descrição Interna:</h2> {$product->sku} - {$prod->produto}";
 
         // Codigos de Barras
         if (!empty($desc)) {
@@ -115,7 +114,6 @@ class WooProdutoService
         $product->description = $desc;
 
         // $product->short_description = 'Caderno premium com temática Fortnite.';
-        $product->sku = '#' . str_pad($prod->codproduto, 6, '0', STR_PAD_LEFT);
         // $product->price = $prod->preco;
         $product->regular_price = $this->preco($prod->preco);
         // $product->sale_price = '29.99';
@@ -136,8 +134,13 @@ class WooProdutoService
         // $product->tax_status = 'taxable';
         // $product->tax_class = 'reduced-rate';
         $product->manage_stock = $prod->estoque;
-        if ($prod->estoque && !$variacao) {
-            $product->stock_quantity = static::estoque($prod->ProdutoVariacaoS[0]); // Novo estoque
+        if ($prod->estoque) {
+            if ($variacao) {
+                // Fixo para poder aparecer na listagem. se produto pai não tiver estoque o woocommerce não lista
+                $product->stock_quantity = 1;
+            } else {
+                $product->stock_quantity = static::estoque($prod->ProdutoVariacaoS[0]); // Novo estoque
+            }
             $product->purchasable = ($product->stock_quantity > 0);
         }
         $product->backorders = 'no'; // Se Permite venda sem estoque
@@ -212,7 +215,15 @@ class WooProdutoService
         // Grouped Products
         // $product->grouped_products = [];
 
-        // $product->menu_order = 1;
+        $res = DB::select(
+            "SELECT ranking FROM MvRankingVendasProduto WHERE codproduto = ?",
+            [$prod->codproduto]
+        );
+        $product->menu_order = 9999999999;
+        if ($res != null) {
+            $product->menu_order = $res[0]->ranking;
+        }
+
         // TODO: Avaliar se pode colocar um destaque quando tem preco diferenciado por embalagem
         // TODO: Avaliar se pode colocar um destaque quando tem preco à vista
         // $product->price_html = '<span class="new-price">R$ 29,99</span>';
@@ -302,7 +313,7 @@ class WooProdutoService
         $htmlListagem = '<h2>Códigos de Barras:</h2>';
 
         if ($colecao->isNotEmpty()) {
-            
+
             // Agrupa por Variação e depois por Unidade/Quantidade
             $dadosAgrupados = $colecao->groupBy('variacao');
 
@@ -310,16 +321,16 @@ class WooProdutoService
             $htmlListagem .= '<ul style="list-style: none; ">';
 
             foreach ($dadosAgrupados as $variacao => $items) {
-                
+
                 // 1. Título do Bloco (Variação)
                 $tituloVariacao = empty($variacao) ? $this->prod->produto : htmlspecialchars($variacao);
-                
+
                 // Abre o item da lista principal e usa o título como um forte marcador
                 $htmlListagem .= '<li style="margin-top: 10px;">';
                 $htmlListagem .= "<strong>{$tituloVariacao}</strong>";
-                
+
                 // 2. Lista de Detalhes (Unidade/Caixa)
-                $htmlListagem .= '<ul style="margin-top: 5px; list-style: disc; padding-left: 20px;">'; 
+                $htmlListagem .= '<ul style="margin-top: 5px; list-style: disc; padding-left: 20px;">';
 
                 // Agrupa os itens da variação por Unidade/Quantidade
                 $itemsAgrupados = $items
@@ -335,15 +346,15 @@ class WooProdutoService
 
                 foreach ($itemsAgrupados as $header => $barrasData) {
                     $codigos = $barrasData->pluck('barras')->map('htmlspecialchars')->implode(', ');
-                    
+
                     // Exibe a informação como um item de lista simples
                     $htmlListagem .= "<li>{$header}: {$codigos}</li>";
                 }
-                
+
                 $htmlListagem .= '</ul>';
                 $htmlListagem .= '</li>';
             }
-            
+
             $htmlListagem .= '</ul>';
         } else {
             $htmlListagem .= '<p>Nenhum código de barras encontrado.</p>';
@@ -466,11 +477,13 @@ class WooProdutoService
         // montar um array com todas as imagens que não foram enviadas ainda
         $images = [];
         $codprodutoimagem = [];
-        foreach ($this->wp->Produto->ProdutoImagemS()->orderBy('codprodutoimagem', 'ASC')->get() as $pi) {
-            $wpi = WooProdutoImagem::where(['codprodutoimagem' => $pi->codprodutoimagem])->first();
+        $pis = $this->wp->Produto->ProdutoImagemS()->orderBy('codprodutoimagem', 'ASC')->get();
+        foreach ($pis as $pi) {
+            $wpi = WooProdutoImagem::where(['codprodutoimagem' => $pi->codprodutoimagem, 'codwooproduto' => $this->wp->codwooproduto])->first();
             if ($wpi) {
                 continue;
             }
+            Log::info("Imagem nova para o Woo: {$pi->codprodutoimagem} - {$pi->Imagem->arquivo}");
             $codprodutoimagem[] = $pi->codprodutoimagem;
             $images[] =  (object) [
                 'src' => 'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' . $pi->Imagem->arquivo
