@@ -434,17 +434,7 @@ class WooProdutoService
 
         // decide se altera ou cria
         if ($this->wp) {
-            try {
-                // PUT
-                $this->api->putProduto($this->wp->id, $product);
-            } catch (\Throwable $th) {
-                // se ID Invalido (excluido no Woo), tenta POST
-                $msg = json_decode($th->getMessage());
-                if ($msg->code == 'woocommerce_rest_product_invalid_id') {
-                    $this->wp->delete();
-                    $this->api->postProduto($product);
-                }
-            }
+            $this->api->putProduto($this->wp->id, $product);
         } else {
             // POST
             $this->api->postProduto($product);
