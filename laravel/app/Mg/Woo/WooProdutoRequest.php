@@ -5,6 +5,8 @@ namespace Mg\Woo;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule; // Adicionar o Rule para regras condicionais
 
+use Mg\Produto\ProdutoBarra;
+
 class WooProdutoRequest extends FormRequest
 {
     /**
@@ -27,18 +29,21 @@ class WooProdutoRequest extends FormRequest
      */
     public function rules()
     {
-        // 1. Pega o valor do parâmetro da rota.
-        // Assumindo que sua rota de PUT é 'produto/{codwooproduto}', o nome do parâmetro é 'codwooproduto'.
         $primaryKeyValue = $this->route('codwooproduto');
+        $tableName = 'tblwooproduto';
 
-        // 2. Monta a regra de unicidade para o campo 'id' (ID do Woo).
-        $idUniqueRule = Rule::unique('tblwooproduto', 'id');
-        $idVariationUniqueRule = Rule::unique('tblwooproduto', 'idvariation');
+        // 1. REGRAS DE UNICIDADE COMPOSTA
+        // A combinação das colunas 'id' E 'idvariation' DEVE ser única.
+        $uniqueCompositeRule = Rule::unique($tableName)->where(function ($query) {
+            // O valor do campo 'idvariation' (que é 'nullable') deve ser buscado aqui
+            $query->where('idvariation', $this->idvariation);
+        });
 
-        // Verifica se estamos em um update (o parâmetro da rota existe)
+        // 2. TRATAMENTO DO UPDATE (PUT/PATCH)
         if ($this->method() === 'PUT' || $this->method() === 'PATCH') {
-            $idUniqueRule->ignore($primaryKeyValue, 'codwooproduto');
-            $idVariationUniqueRule->ignore($primaryKeyValue, 'codwooproduto');
+            // O método 'ignore' deve ser aplicado à regra de unicidade composta.
+            // Ele vai ignorar o registro atual baseado na chave primária 'codwooproduto'.
+            $uniqueCompositeRule->ignore($primaryKeyValue, 'codwooproduto');
         }
 
         return [
@@ -63,21 +68,25 @@ class WooProdutoRequest extends FormRequest
             'id' => [
                 'required',
                 'integer',
-                $idUniqueRule, // Usa a regra dinâmica (com exceção no PUT)
+                $uniqueCompositeRule, // Usa a regra dinâmica (com exceção no PUT)
             ],
 
             'idvariation' => [
                 'nullable',
                 'integer',
-                // Aplica a regra de unicidade se o campo for preenchido
-                'exclude_if:idvariation,null',
-                $idVariationUniqueRule,
+                // Não precisamos de 'exclude_if:idvariation,null' aqui se a coluna for nullable no DB.
+                // A regra de unicidade composta em 'id' já trata a combinação.
             ],
 
             'integracao' => [
                 'required',
                 'string',
                 'max:1'
+            ],
+
+            'barrasunidade' => [
+                'nullable',
+                'exists:tblprodutobarra,barras'
             ],
 
             // Campos NULLABLE (mas que você pode querer validar o formato se vierem):
@@ -97,7 +106,8 @@ class WooProdutoRequest extends FormRequest
     {
         return [
             'codproduto.required' => 'O código do produto principal é obrigatório.',
-            'id.unique' => 'O ID do produto Woo já existe.'
+            'id.unique' => 'O ID do produto Woo já existe.',
+            'barrasunidade.exists' => 'O código de barras da unidade não foi localizado em nenhum cadastro.'
         ];
     }
 
@@ -127,7 +137,22 @@ class WooProdutoRequest extends FormRequest
             'quantidadepacote',
         ];
 
+        $ret = array_intersect_key($validatedData, array_flip($allowedFields));
+        $ret['codprodutobarraunidade'] = $this->buscarCodProdutoBarra($this->barrasunidade);
+
         // 3. Retorna APENAS os campos permitidos que estavam nos dados validados.
-        return array_intersect_key($validatedData, array_flip($allowedFields));
+        return $ret;
+    }
+
+    public function buscarCodProdutoBarra($barrasunidade)
+    {
+        if (empty($barrasunidade)) {
+            return null;
+        }
+        $pb = ProdutoBarra::where('barras', $barrasunidade)->first();
+        if (!$pb) {
+            throw new \Exception("Código de barras informado não existe!", 1);
+        }
+        return $pb->codprodutobarra;
     }
 }

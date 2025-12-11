@@ -27,6 +27,10 @@ class WooApi
     public $responseObject;
     public $status;
 
+    public $error;
+    public $errno;
+    public $headers;
+
     /**
      * Construtor
      */
@@ -177,7 +181,7 @@ class WooApi
 
         // aborta caso erro na requisicao
         if (!$this->post($url, $produto)) {
-            throw new Exception(json_encode($this->responseObject), 1);
+            $this->trataRetorno(null, null, null);
         }
         return $this->status == 201;
     }
@@ -189,7 +193,7 @@ class WooApi
 
         // aborta caso erro na requisicao
         if (!$this->put($url, $produto)) {
-            throw new Exception(json_encode($this->responseObject), 1);
+            $this->trataRetorno($id, null, null);
         }
         return $this->status == 201;
     }
@@ -225,9 +229,29 @@ class WooApi
 
         // aborta caso erro na requisicao
         if (!$this->post($url, $variation)) {
-            throw new Exception(json_encode($this->responseObject), 1);
+            $this->trataRetorno($product_id, $id, $variation);
         }
         return $this->status == 201;
+    }
+
+    public function trataRetorno($product_id, $id, $variation)
+    {
+        try {
+            $code = $this->responseObject->code;
+        } catch (\Throwable $th) {
+        }
+        switch ($code) {
+            case 'woocommerce_rest_product_variation_invalid_id':
+                throw new Exception("A combinação de ID produto {$product_id}, variação {$id} não foi encontrada no WOO.", 1);
+                break;
+            case 'woocommerce_rest_product_invalid_id':
+                throw new Exception("O produto ID {$product_id} não foi encontrado no WOO.", 1);
+                break;
+            default:
+                throw new Exception(json_encode($this->responseObject), 1);
+                break;
+        }
+        return true;
     }
 
     public function postProductVariations($product_id, $variation)
@@ -237,7 +261,7 @@ class WooApi
 
         // aborta caso erro na requisicao
         if (!$this->post($url, $variation)) {
-            throw new Exception(json_encode($this->responseObject), 1);
+            $this->trataRetorno($product_id, null, $variation);
         }
         return $this->status == 201;
     }
