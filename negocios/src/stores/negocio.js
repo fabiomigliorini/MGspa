@@ -844,78 +844,113 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async aplicarValores(valordesconto, valorfrete, valorseguro, valoroutras) {
-      var percentualdesconto = null;
-      var percentualfrete = null;
-      var percentualseguro = null;
-      var percentualoutras = null;
-
-      var saldodesconto = valordesconto;
-      var saldofrete = valorfrete;
-      var saldoseguro = valorseguro;
-      var saldooutras = valoroutras;
+      // Função auxiliar para garantir arredondamento preciso de ponto flutuante
+      const roundToTwoDecimals = (num) => {
+        if (num === null || num === undefined) return 0;
+        // Utiliza a técnica de multiplicar/arredondar/dividir para precisão
+        return parseFloat((Math.round(num * 100) / 100).toFixed(2));
+      };
 
       await this.recarregar();
 
-      if (valordesconto && this.negocio.valorprodutos) {
-        percentualdesconto = valordesconto / this.negocio.valorprodutos;
-      }
-      if (valorfrete && this.negocio.valorprodutos) {
-        percentualfrete = valorfrete / this.negocio.valorprodutos;
-      }
-      if (valorseguro && this.negocio.valorprodutos) {
-        percentualseguro = valorseguro / this.negocio.valorprodutos;
-      }
-      if (valoroutras && this.negocio.valorprodutos) {
-        percentualoutras = valoroutras / this.negocio.valorprodutos;
-      }
+      const totalProdutos = this.negocio.valorprodutos;
 
-      const ultimo = this.itensAtivos.length - 1;
-      for (let index = 0; index <= ultimo; index++) {
-        const item = this.itensAtivos[index];
-        if (!percentualdesconto) {
-          item.valordesconto = null;
-        } else if (index == ultimo) {
-          item.percentualdesconto = Math.round(percentualdesconto * 100);
-          item.valordesconto = Math.round(saldodesconto * 100) / 100;
-        } else {
-          item.percentualdesconto = Math.round(percentualdesconto * 100);
-          item.valordesconto =
-            Math.round(item.valorprodutos * percentualdesconto * 100) / 100;
-          saldodesconto -= item.valordesconto;
+      // 1. ORDENAÇÃO: Cria uma cópia e ordena os itens do menor para o maior valor do produto.
+      // O maior item (ou um dos maiores) irá absorver o erro de arredondamento.
+      const itensOrdenados = [...this.itensAtivos].sort(
+        (a, b) => a.valorprodutos - b.valorprodutos
+      );
+      const ultimoIndex = itensOrdenados.length - 1;
+
+      // 2. Inicialização de Valores e Saldos (Garantindo Absoluto e Arredondamento)
+      const valoresTotais = {
+        desconto: roundToTwoDecimals(Math.abs(valordesconto || 0)),
+        frete: roundToTwoDecimals(Math.abs(valorfrete || 0)),
+        seguro: roundToTwoDecimals(Math.abs(valorseguro || 0)),
+        outras: roundToTwoDecimals(Math.abs(valoroutras || 0)),
+      };
+
+      const saldos = { ...valoresTotais };
+
+      // 3. Cálculo dos Percentuais
+      const percentuais = {
+        desconto:
+          totalProdutos > 0 ? valoresTotais.desconto / totalProdutos : 0,
+        frete: totalProdutos > 0 ? valoresTotais.frete / totalProdutos : 0,
+        seguro: totalProdutos > 0 ? valoresTotais.seguro / totalProdutos : 0,
+        outras: totalProdutos > 0 ? valoresTotais.outras / totalProdutos : 0,
+      };
+
+      // --- Função Auxiliar para Rateio Robusto ---
+      const aplicarRateio = (
+        item,
+        index,
+        percentual,
+        saldoKey,
+        valorKey,
+        percentualKey = null
+      ) => {
+        const saldoAtual = saldos[saldoKey];
+        const totalRateavel = valoresTotais[saldoKey];
+
+        if (totalRateavel === 0 || totalProdutos === 0) {
+          item[valorKey] = 0;
+          if (percentualKey) item[percentualKey] = 0;
+          return;
         }
 
-        if (!percentualfrete) {
-          item.valorfrete = null;
-        } else if (index == ultimo) {
-          item.valorfrete = Math.round(saldofrete * 100) / 100;
+        if (index === ultimoIndex) {
+          // NO ÚLTIMO ITEM: Atribui o saldo restante (o valor final exato).
+          // Arredonda para garantir 0.00 se o saldo for um número negativo de precisão flutuante.
+          item[valorKey] = roundToTwoDecimals(saldoAtual);
         } else {
-          item.valorfrete =
-            Math.round(item.valorprodutos * percentualfrete * 100) / 100;
-          saldofrete -= item.valorfrete;
+          // Nos itens anteriores:
+          // 1. Calcula o valor proporcional.
+          let valorRateadoBruto = item.valorprodutos * percentual;
+
+          // 2. Controla o Saldo: O valor rateado nunca pode ser maior que o saldo restante.
+          let valorRateadoControlado = Math.min(valorRateadoBruto, saldoAtual);
+
+          // 3. Arredonda o valor a ser atribuído.
+          let valorAtribuido = roundToTwoDecimals(valorRateadoControlado);
+
+          item[valorKey] = valorAtribuido;
+
+          // 4. Subtrai o valor ARREDONDADO do saldo e arredonda o próprio saldo.
+          saldos[saldoKey] -= valorAtribuido;
+          saldos[saldoKey] = roundToTwoDecimals(saldos[saldoKey]);
         }
 
-        if (!percentualseguro) {
-          item.valorseguro = null;
-        } else if (index == ultimo) {
-          item.valorseguro = Math.round(saldoseguro * 100) / 100;
-        } else {
-          item.valorseguro =
-            Math.round(item.valorprodutos * percentualseguro * 100) / 100;
-          saldoseguro -= item.valorseguro;
+        if (percentualKey) {
+          item[percentualKey] = roundToTwoDecimals(percentual * 100);
         }
+      };
 
-        if (!percentualoutras) {
-          item.valoroutras = null;
-        } else if (index == ultimo) {
-          item.valoroutras = Math.round(saldooutras * 100) / 100;
-        } else {
-          item.valoroutras =
-            Math.round(item.valorprodutos * percentualoutras * 100) / 100;
-          saldooutras -= item.valoroutras;
-        }
+      // 4. Loop Principal (usando itens ordenados)
+      for (let index = 0; index <= ultimoIndex; index++) {
+        const item = itensOrdenados[index]; // Usa o item ORDENADO
 
+        aplicarRateio(
+          item,
+          index,
+          percentuais.desconto,
+          "desconto",
+          "valordesconto",
+          "percentualdesconto"
+        );
+        aplicarRateio(item, index, percentuais.frete, "frete", "valorfrete");
+        aplicarRateio(item, index, percentuais.seguro, "seguro", "valorseguro");
+        aplicarRateio(item, index, percentuais.outras, "outras", "valoroutras");
+
+        // Note: Se o 'item' é uma referência ao objeto original, ele será atualizado.
+        // Se a referência foi perdida (dependendo da sua implementação de this.itensAtivos),
+        // pode ser necessário atualizar a lista original após o loop.
+        // Assumo que a atualização do 'item' altera a referência dentro de 'this.itensAtivos'.
         this.itemRecalcularValorTotal(item);
       }
+
+      // 5. Opcional: Se 'itemRecalcularValorTotal' for o método que atualiza a lista principal,
+      // esta etapa final de recálculo e salvamento é crucial.
       await this.recalcularValorTotal();
       this.salvar();
     },
