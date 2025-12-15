@@ -21,14 +21,23 @@ class WooPedidoService
     }
 
     // Bucar todos novos pedidos no woocommerce
-    public function buscarNovosPedidos()
+    public function buscarNovos()
     {
-        $this->api->getOrders(["pending", "processing", "on-hold"]);
-        $orders = $this->api->responseObject;
-        foreach ($orders as $order) {
-            $this->parsePedido($order);
-        }
-        return true;
+        $wps = [];
+        $page = 1;
+        do {
+            $this->api->getOrders($page, ["pending", "processing", "on-hold"]);
+            $orders = $this->api->responseObject;
+            foreach ($orders as $order) {
+                $wps[] = $this->parsePedido($order);
+            }
+            $page++;
+            // previne loop infinito
+            if ($page > 10) {
+                break;
+            }
+        } while (sizeof($orders) == WooApi::PER_PAGE);
+        return $wps;
     }
 
     // buscar um pedido especifico no woocommerce
@@ -70,7 +79,7 @@ class WooPedidoService
 
         // gera o negocio vinculado ao pedido do woo
         $this->importarNegocio($wp);
-        
+
         return $wp;
     }
 

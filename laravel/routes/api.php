@@ -51,14 +51,19 @@ Route::group(['prefix' => 'v1'], function () {
     //WOO
     Route::group(['prefix' => 'woo'], function () {
 
-        /* Woo Produto */
+        // Woo Produto
         Route::post('produto/{codproduto}/exportar', '\Mg\Woo\WooProdutoController@exportar');
         Route::post('produto/', '\Mg\Woo\WooProdutoController@store');
         Route::put('produto/{codwooproduto}', '\Mg\Woo\WooProdutoController@update');
-        // Route::delete('produto/{codwooproduto}', '\Mg\Woo\WooProdutoController@destroy');
         Route::delete('produto/{id}/inativo', '\Mg\Woo\WooProdutoController@ativar');
         Route::post('produto/{id}/inativo', '\Mg\Woo\WooProdutoController@inativar');
         
+        // Woo Pedidos
+        Route::get('pedido', '\Mg\Woo\WooPedidoController@index');
+        Route::post('pedido/buscar-novos', '\Mg\Woo\WooPedidoController@buscarNovos');
+        Route::post('pedido/{id}/reprocessar', '\Mg\Woo\WooPedidoController@reprocessar');
+        Route::put('pedido/{id}/status', '\Mg\Woo\WooPedidoController@status');
+
     });
 
     // Pessoa

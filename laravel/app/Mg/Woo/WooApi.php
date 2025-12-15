@@ -14,6 +14,7 @@ use Exception;
  */
 class WooApi
 {
+    const PER_PAGE = 20;
 
     protected $debug = false;
     protected $url;
@@ -280,12 +281,16 @@ class WooApi
     }
 
     //Pedidos
-    public function getOrders($status = null)
+    public function getOrders($page = 1, $status = null)
     {
         // monta URL
         $url = $this->url . 'wc/v3/orders';
 
-        $data = [];
+        $data = [
+            'page' => $page,
+            'per_page' => STATIC::PER_PAGE,
+        ];
+
         if (!empty($status)) {
             $data['status'] = is_array($status) ? implode(',', $status) : $status;
         }

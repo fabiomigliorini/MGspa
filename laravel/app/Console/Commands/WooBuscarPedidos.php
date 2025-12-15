@@ -45,7 +45,7 @@ class WooBuscarPedidos extends Command
         if ($id = $this->option('id') ?? null) {
             $wps->buscarPedido($id);
         } else {
-            $wps->buscarNovosPedidos();
+            $wps->buscarNovos();
         }        
         return true;
     }
