@@ -98,12 +98,24 @@ const valorMax = [
   },
 ];
 
-const salvar = () => {
+const salvar = async () => {
+
+  // informa a pessoa do vale, se for consumidor final
+  if (sNegocio.negocio.codpessoa == 1) {
+    await sNegocio.informarPessoa(
+      titulo.value.codpessoa,
+      null, //cpf
+    );
+  }
+
+  // calcula o troco, se houver
   var valortroco = null;
   if (valorSaldo.value < 0) {
     valortroco = Math.round(Math.abs(valorSaldo.value * 100)) / 100;
   }
-  sNegocio.adicionarPagamento(
+
+  // informa o pagamento
+  await sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_VALE), // codformapagamento Vale
     12, // tipo tPag Vale Presente
     codtituloVale.value,
@@ -117,12 +129,8 @@ const salvar = () => {
     null, // valorparcela
     null // dias
   );
-  if (sNegocio.negocio.codpessoa == 1) {
-    sNegocio.informarPessoa(
-      titulo.value.codpessoa,
-      null, //cpf
-    );
-  }
+
+  // fecha dialog
   sNegocio.dialog.pagamentoVale = false;
 };
 
