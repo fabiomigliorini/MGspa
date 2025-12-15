@@ -278,4 +278,36 @@ class WooApi
         dd($this->responseObject);
         return $this->status == 201;
     }
+
+    //Pedidos
+    public function getOrders($status = null)
+    {
+        // monta URL
+        $url = $this->url . 'wc/v3/orders';
+
+        $data = [];
+        if (!empty($status)) {
+            $data['status'] = is_array($status) ? implode(',', $status) : $status;
+        }
+
+        // aborta caso erro na requisicao
+        if (!$this->get($url, $data)) {
+            throw new Exception(json_encode($this->responseObject), 1);
+        }
+
+        return $this->status == 201;
+    }
+
+    public function getOrder($id)
+    {
+        // monta URL
+        $url = $this->url . 'wc/v3/orders/' . $id;
+
+        // aborta caso erro na requisicao
+        if (!$this->get($url)) {
+            throw new Exception(json_encode($this->responseObject), 1);
+        }
+
+        return $this->status == 201;
+    }    
 }

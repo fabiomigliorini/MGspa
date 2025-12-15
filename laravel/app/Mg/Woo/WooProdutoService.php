@@ -4,12 +4,14 @@ namespace Mg\Woo;
 
 use Illuminate\Database\Eloquent\Collection;
 use stdClass;
+use Exception;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoVariacao;
+use Mg\Produto\ProdutoBarra;
 
 class WooProdutoService
 {
@@ -628,5 +630,35 @@ class WooProdutoService
 
         // retorna
         return true;
+    }
+
+    public static function descobrirProdutoBarra($product_id, $variation_id)
+    {
+        if (!empty($variation_id)) {
+            $wp = WooProduto::where('id', $product_id)
+                ->where('idvariation', $variation_id)
+                ->first();
+        } else {
+            $wp = WooProduto::where('id', $product_id)
+                ->whereNull('idvariation')
+                ->first();
+        }
+        if (!$wp) {
+            return ProdutoBarra::findOrFail(env('WOO_CODPRODUTOBARRA_NAO_CADASTRADO'));
+        }
+        if (!empty($wp->codprodutobarraunidade)) {
+            return $wp->ProdutoBarraUnidade;
+        }
+        if (empty($wp->codprodutovariacao)) {
+            $pv = $wp->Produto->ProdutoVariacaoS()->first();
+        } else {
+            $pv = $wp->ProdutoVariacao;
+        }
+        if (!$pv) {
+            return ProdutoBarra::findOrFail(env('WOO_CODPRODUTOBARRA_NAO_CADASTRADO'));
+            // throw new Exception("Impossivel localizar variação do produto!", 1);
+        }
+        $pb = $pv->ProdutoBarraS()->where(   'codprodutoembalagem', null)->first();
+        return $pb;
     }
 }
