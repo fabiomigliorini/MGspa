@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:33:09
+ * Date: 12/Dec/2025 11:17:24
  */
 
 namespace Mg\Negocio;
@@ -17,6 +17,7 @@ use Mg\Stone\StonePreTransacao;
 use Mg\Mercos\MercosPedido;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Saurus\SaurusPedido;
+use Mg\Woo\WooPedidoNegocio;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -239,6 +240,11 @@ class Negocio extends MgModel
     public function StonePreTransacaoS()
     {
         return $this->hasMany(StonePreTransacao::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function WooPedidoNegocioS()
+    {
+        return $this->hasMany(WooPedidoNegocio::class, 'codnegocio', 'codnegocio');
     }
 
 }

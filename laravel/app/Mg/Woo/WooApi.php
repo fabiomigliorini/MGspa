@@ -14,6 +14,7 @@ use Exception;
  */
 class WooApi
 {
+    const PER_PAGE = 20;
 
     protected $debug = false;
     protected $url;
@@ -278,4 +279,40 @@ class WooApi
         dd($this->responseObject);
         return $this->status == 201;
     }
+
+    //Pedidos
+    public function getOrders($page = 1, $status = null)
+    {
+        // monta URL
+        $url = $this->url . 'wc/v3/orders';
+
+        $data = [
+            'page' => $page,
+            'per_page' => STATIC::PER_PAGE,
+        ];
+
+        if (!empty($status)) {
+            $data['status'] = is_array($status) ? implode(',', $status) : $status;
+        }
+
+        // aborta caso erro na requisicao
+        if (!$this->get($url, $data)) {
+            throw new Exception(json_encode($this->responseObject), 1);
+        }
+
+        return $this->status == 201;
+    }
+
+    public function getOrder($id)
+    {
+        // monta URL
+        $url = $this->url . 'wc/v3/orders/' . $id;
+
+        // aborta caso erro na requisicao
+        if (!$this->get($url)) {
+            throw new Exception(json_encode($this->responseObject), 1);
+        }
+
+        return $this->status == 201;
+    }    
 }

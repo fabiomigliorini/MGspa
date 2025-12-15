@@ -3499,6 +3499,11 @@
                 "tabela": "tblsauruspedido",
                 "coluna": "codnegocio",
                 "metodo": "SaurusPedidoS"
+            },
+            "tblwoopedidonegocio.codnegocio": {
+                "tabela": "tblwoopedidonegocio",
+                "coluna": "codnegocio",
+                "metodo": "WooPedidoNegocioS"
             }
         }
     },
@@ -8707,6 +8712,62 @@
                 "tabela": "tblwooproduto",
                 "coluna": "codwooproduto",
                 "metodo": "WooProduto"
+            }
+        },
+        "hasMany": []
+    },
+    "tblwoopedido": {
+        "tabela": "tblwoopedido",
+        "campocodigo": "codwoopedido",
+        "namespace": "Mg\\Woo",
+        "classe": "WooPedido",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Woo\/WooPedido.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblwoopedidonegocio.codwoopedido": {
+                "tabela": "tblwoopedidonegocio",
+                "coluna": "codwoopedido",
+                "metodo": "WooPedidoNegocioS"
+            }
+        }
+    },
+    "tblwoopedidonegocio": {
+        "tabela": "tblwoopedidonegocio",
+        "campocodigo": "codwoopedidonegocio",
+        "namespace": "Mg\\Woo",
+        "classe": "WooPedidoNegocio",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Woo\/WooPedidoNegocio.php",
+        "belongsTo": {
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codwoopedido": {
+                "tabela": "tblwoopedido",
+                "coluna": "codwoopedido",
+                "metodo": "WooPedido"
             }
         },
         "hasMany": []
