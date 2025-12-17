@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 12/Dec/2025 11:16:56
+ * Date: 17/Dec/2025 11:00:37
  */
 
 namespace Mg\Woo;
@@ -17,6 +17,7 @@ class WooPedido extends MgModel
 
 
     protected $fillable = [
+        'alteracaowoo',
         'cidade',
         'criacaowoo',
         'entrega',
@@ -31,6 +32,7 @@ class WooPedido extends MgModel
 
     protected $dates = [
         'alteracao',
+        'alteracaowoo',
         'criacao',
         'criacaowoo'
     ];

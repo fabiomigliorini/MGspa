@@ -15,7 +15,7 @@ class WooBuscarPedidos extends Command
      *
      * @var string
      */
-    protected $signature = 'woo:buscar-pedidos {--id=} ';
+    protected $signature = 'woo:buscar-pedidos {--id=} {--novos} {--por-alteracao}';
 
     /**
      * The console command description.
@@ -44,9 +44,15 @@ class WooBuscarPedidos extends Command
         $wps = new WooPedidoService(); 
         if ($id = $this->option('id') ?? null) {
             $wps->buscarPedido($id);
-        } else {
+            return true;
+        } 
+
+        if ($this->option('novos')) {
             $wps->buscarNovos();
-        }        
+            return true;
+        }
+
+        $wps->buscarPorAlteracao();
         return true;
     }
 
