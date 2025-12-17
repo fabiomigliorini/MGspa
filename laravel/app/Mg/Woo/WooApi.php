@@ -315,4 +315,18 @@ class WooApi
 
         return $this->status == 201;
     }    
+
+    // altera status do pedido
+    public function putOrder(int $id, array $data)
+    {
+        // monta URL
+        $url = $this->url . 'wc/v3/orders/' . $id;
+
+        // aborta caso erro na requisicao
+        if (!$this->put($url, $data)) {
+            throw new Exception(json_encode($this->responseObject), 1);
+        }
+        
+        return $this->status == 201;
+    }
 }

@@ -62,8 +62,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('pedido', '\Mg\Woo\WooPedidoController@index');
         Route::post('pedido/buscar-novos', '\Mg\Woo\WooPedidoController@buscarNovos');
         Route::post('pedido/{id}/reprocessar', '\Mg\Woo\WooPedidoController@reprocessar');
-        Route::put('pedido/{id}/status', '\Mg\Woo\WooPedidoController@status');
-
+        Route::put('pedido/{id}/status', '\Mg\Woo\WooPedidoController@alteraStatus');
     });
 
     // Pessoa

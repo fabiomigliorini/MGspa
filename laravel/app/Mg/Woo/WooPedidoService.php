@@ -225,4 +225,13 @@ class WooPedidoService
         // retorna só sucesso
         return true;
     }
+
+    function alterarStatus(WooPedido $wp, String $status)
+    {
+        // chama API do Woo
+        $api = new WooApi();
+        $api->putOrder($wp->id, ['status' => $status]);
+        $this->parsePedido($api->responseObject);
+        return $wp->fresh();
+    }
 }

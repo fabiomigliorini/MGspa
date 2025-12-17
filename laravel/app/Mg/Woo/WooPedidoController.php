@@ -3,7 +3,6 @@
 namespace Mg\Woo;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class WooPedidoController extends Controller
 {
@@ -66,9 +65,9 @@ class WooPedidoController extends Controller
         }
 
         // busca pedido no woo  
-        $wps = new WooPedidoService(); 
+        $wps = new WooPedidoService();
         $wps->buscarPedido($id);
-    
+
         // verifica se foi importado 
         $pedido = WooPedido::where('id', (int) $id)->first();
         if (!$pedido) {
@@ -82,11 +81,33 @@ class WooPedidoController extends Controller
     public function buscarNovos()
     {
         // busca novos pedidos no woo  
-        $wps = new WooPedidoService(); 
+        $wps = new WooPedidoService();
         $peds = $wps->buscarNovos();
 
         // retorna formatado
         return WooPedidoResource::collection($peds);
     }
 
+    //alterar status do pedido
+    public function alteraStatus(WooPedidoStatusRequest $request, $id)
+    {
+        // valida id
+        $id = (int) $id;
+        if (!$id) {
+            return response()->json(['message' => 'ID inválido'], 400);
+        }
+
+        // acha pedido
+        $pedido = WooPedido::where('id', (int) $id)->first();
+        if (!$pedido) {
+            return response()->json(['message' => 'Pedido não encontrado'], 404);
+        }
+
+        // altera status
+        $wps = new WooPedidoService();
+        $pedido = $wps->alterarStatus($pedido, $request->status);
+
+        // retorna pedido com status alterado
+        return new WooPedidoResource($pedido);
+    }
 }
