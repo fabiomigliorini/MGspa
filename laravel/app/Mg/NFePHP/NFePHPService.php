@@ -775,7 +775,73 @@ class NFePHPService extends MgService
         $pathDanfe = NFePHPPathService::pathDanfe($nf, true);
         file_put_contents($pathDanfe, $pdf);
 
+        // Quebra o PDF em várias páginas se necessário
+        if ($nf->modelo == NotaFiscalService::MODELO_NFCE) {
+            static::quebraPdfDanfePaginas($pathDanfe);
+        }
+
+        // retorna o caminho do PDF
         return $pathDanfe;
+    }
+
+    public static function quebraPdfDanfePaginas(string $pathDanfe): void
+    {
+        if (!file_exists($pathDanfe)) {
+            throw new \RuntimeException("PDF não encontrado: {$pathDanfe}");
+        }
+
+        // Conversão mm → pt
+        // 1 mm = 2.834645669 pt
+        $mmToPt = 2.834645669;
+        $alturaMaxPt = 297 * $mmToPt; // A4
+
+        // 1️⃣ Lê dimensões do PDF
+        exec('/usr/bin/pdfinfo ' . escapeshellarg($pathDanfe), $info, $ret);
+        if ($ret !== 0) {
+            throw new \RuntimeException('Erro ao executar pdfinfo');
+        }
+
+        $larguraPt = null;
+        $alturaPt  = null;
+
+        foreach ($info as $line) {
+            if (preg_match('/Page size:\s+([\d.]+)\s+x\s+([\d.]+)\s+pts/i', $line, $m)) {
+                $larguraPt = (float)$m[1];
+                $alturaPt  = (float)$m[2];
+                break;
+            }
+        }
+
+        if (!$larguraPt || !$alturaPt) {
+            throw new \RuntimeException('Não foi possível detectar o tamanho da página do PDF');
+        }
+
+        // 2️⃣ Calcula número de páginas verticais
+        $paginasVerticais = (int) ceil($alturaPt / $alturaMaxPt);
+
+        // Se já for A4 ou menor, não precisa quebrar
+        if ($paginasVerticais <= 1) {
+            return;
+        }
+
+        // 3️⃣ Arquivo temporário (não sobrescreve em caso de erro)
+        $tmpOutput = $pathDanfe . '.tmp.pdf';
+
+        // 4️⃣ Executa mutool
+        $cmd = sprintf(
+            '/usr/bin/mutool poster -x 1 -y %d %s %s',
+            $paginasVerticais,
+            escapeshellarg($pathDanfe),
+            escapeshellarg($tmpOutput)
+        );
+
+        exec($cmd, $out, $ret);
+        if ($ret !== 0 || !file_exists($tmpOutput)) {
+            throw new \RuntimeException('Erro ao executar mutool');
+        }
+
+        // 5️⃣ Substitui o arquivo original
+        rename($tmpOutput, $pathDanfe);
     }
 
     public static function imprimir(NotaFiscal $nf, $impressora = null)
