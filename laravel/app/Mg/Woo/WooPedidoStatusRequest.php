@@ -20,6 +20,7 @@ class WooPedidoStatusRequest extends FormRequest
             'refunded', // Reembolsado
             'failed', // Falhou
             // Adicione outros status personalizados aqui
+            'shipped', // A caminho
         ];
 
         return [

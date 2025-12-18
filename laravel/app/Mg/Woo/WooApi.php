@@ -281,7 +281,7 @@ class WooApi
     }
 
     //Pedidos
-    public function getOrders($page = 1, String $status = null, String $modified_after = null)
+    public function getOrders($page = 1, ? array $status = null, ? String $modified_after = null)
     {
         // monta URL
         $url = $this->url . 'wc/v3/orders';
