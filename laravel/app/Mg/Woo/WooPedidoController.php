@@ -12,12 +12,12 @@ class WooPedidoController extends Controller
         $qry = WooPedido::query();
 
         // filtra id
-        if ($request->has('id')) {
+        if (!empty($request->id)) {
             $qry->where('id', $request->id);
         }
 
         // filtra status
-        if ($request->has('status')) {
+        if (!empty($request->status)) {
             $status = $request->status;
             if (!is_array($status)) {
                 $status = [$status];
@@ -26,7 +26,7 @@ class WooPedidoController extends Controller
         }
 
         // filtra nome
-        if ($request->has('nome')) {
+        if (!empty($request->nome)) {
             $palavras = $request->nome;
             foreach (explode(' ', $palavras) as $palavra) {
                 $qry->where('nome', 'ilike', '%' . $palavra . '%');
@@ -34,18 +34,18 @@ class WooPedidoController extends Controller
         }
 
         // filtra data
-        if ($request->has('criacaowoo_de')) {
+        if (!empty($request->criacaowoo_de)) {
             $qry->where('criacaowoo', '>=', "{$request->criacaowoo_de} 00:00:00");
         }
-        if ($request->has('criacaowoo_ate')) {
+        if (!empty($request->criacaowoo_ate)) {
             $qry->where('criacaowoo', '<=', "{$request->criacaowoo_ate} 23:59:59");
         }
 
         // valor total
-        if ($request->has('valortotal_de')) {
+        if (!empty($request->valortotal_de)) {
             $qry->where('valortotal', '>=', $request->valortotal_de);
         }
-        if ($request->has('valortotal_ate')) {
+        if (!empty($request->valortotal_ate)) {
             $qry->where('valortotal', '<=', $request->valortotal_ate);
         }
 
