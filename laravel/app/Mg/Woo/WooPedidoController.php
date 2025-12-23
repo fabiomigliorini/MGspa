@@ -74,15 +74,27 @@ class WooPedidoController extends Controller
             return response()->json(['message' => 'Pedido não encontrado'], 404);
         }
 
+        $wps->importarNegocio($pedido, true);
+
         // retorna formatado
         return new WooPedidoResource($pedido);
     }
 
     public function buscarNovos()
     {
-        // busca novos pedidos no woo  
+        // busca novos pedidos no woo pelo status
         $wps = new WooPedidoService();
         $peds = $wps->buscarNovos();
+
+        // retorna formatado
+        return WooPedidoResource::collection($peds);
+    }
+
+    public function buscarPorAlteracao()
+    {
+        // busca novos pedidos no woo pela data de alteracao
+        $wps = new WooPedidoService();
+        $peds = $wps->buscarPorAlteracao();
 
         // retorna formatado
         return WooPedidoResource::collection($peds);

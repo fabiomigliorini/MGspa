@@ -61,6 +61,7 @@ Route::group(['prefix' => 'v1'], function () {
         // Woo Pedidos
         Route::get('pedido', '\Mg\Woo\WooPedidoController@index');
         Route::post('pedido/buscar-novos', '\Mg\Woo\WooPedidoController@buscarNovos');
+        Route::post('pedido/buscar-por-alteracao', '\Mg\Woo\WooPedidoController@buscarPorAlteracao');
         Route::post('pedido/{id}/reprocessar', '\Mg\Woo\WooPedidoController@reprocessar');
         Route::put('pedido/{id}/status', '\Mg\Woo\WooPedidoController@alteraStatus');
     });

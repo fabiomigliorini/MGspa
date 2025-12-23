@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 use Mg\Estoque\EstoqueLocal;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -44,7 +45,7 @@ class WooPedidoService
         return $wps;
     }
 
-    public function descobreDataUltimaSincronizacaoPedidos() 
+    public function descobreDataUltimaSincronizacaoPedidos()
     {
         $sync = Cache::get(static::CACHE_ORDERS_SYNC);
         if (!empty($sync)) {
@@ -100,7 +101,6 @@ class WooPedidoService
             if ($page > 100) {
                 break;
             }
-
         } while (sizeof($orders) == WooApi::PER_PAGE);
 
         // salva data da ultima execucao
@@ -159,7 +159,7 @@ class WooPedidoService
     }
 
     // gera o negocio vinculado ao pedido do woo
-    public function importarNegocio(WooPedido $wp)
+    public function importarNegocio(WooPedido $wp, bool $forcarImportacao = false)
     {
         // Verifica se existem negocios vinculados ao pedido
         $wpns = WooPedidoNegocio::where([
@@ -167,25 +167,31 @@ class WooPedidoService
         ])->get();
 
         // Se já houver um Negocio aberto ou fechado, ignora
+        $criar = true;
         foreach ($wpns as $wpn) {
-            if (in_array($wpn->Negocio->codnegociostatus, [1, 2])) {
+
+            // se já tem um negocio fechado abandona
+            if ($wpn->Negocio->codnegociostatus == 2) {
                 return true;
+            }
+
+            // if forcar
+            if ($wpn->Negocio->codnegociostatus == 1) {
+                if (!$forcarImportacao) {
+                    return true;
+                }
+                $n = $wpn->Negocio;
+                $criar = false;
+                break;
             }
         }
 
-        // se nao achou cria    
-        if (!isset($wpn)) {
-            $wpn = new WooPedidoNegocio([
-                'codwoopedido' => $wp->codwoopedido,
-            ]);
-        }
-
-        // Se não existir, cria um novo Negocio
-        if ($wpn->exists) {
-            $n = $wpn->Negocio;
-        } else {
+        if ($criar) {
+            // busca local e natureza
             $el = EstoqueLocal::findOrFail(env('WOO_CODESTOQUELOCAL'));
             $no = NaturezaOperacao::findOrFail(env('WOO_CODNATUREZAOPERACAO'));
+
+            // cria o negocio
             $n = Negocio::create([
                 'codpessoa' => 1, // TODO: Definir cliente correto
                 'codnegociostatus' => 1, // Novo
@@ -203,11 +209,13 @@ class WooPedidoService
                 'uuid' => Str::uuid(),
                 'codpdv' => env('WOO_CODPDV'),
             ]);
-        }
 
-        // Amarra o Negocio ao Pedido do Woo
-        $wpn->codnegocio = $n->codnegocio;
-        $wpn->save();
+            // Amarra o Negocio ao Pedido do Woo
+            $wpn = WooPedidoNegocio::create([
+                'codwoopedido' => $wp->codwoopedido,
+                'codnegocio' => $n->codnegocio,
+            ]);
+        }
 
         // calcula a distribuicao do frete entre os itens do pedido
         $order = json_decode($wp->jsonwoo);
