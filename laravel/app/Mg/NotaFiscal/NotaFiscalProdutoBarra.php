@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Dec/2025 16:19:38
+ * Date: 24/Dec/2025 16:39:35
  */
 
 namespace Mg\NotaFiscal;
@@ -23,6 +23,7 @@ class NotaFiscalProdutoBarra extends MgModel
 
     protected $fillable = [
         'cbsbase',
+        'cbscst',
         'cbspercentual',
         'cbsvalor',
         'certidaosefazmt',
@@ -48,6 +49,7 @@ class NotaFiscalProdutoBarra extends MgModel
         'iagrokg',
         'iagrovalor',
         'ibsbase',
+        'ibscst',
         'ibspercentual',
         'ibsvalor',
         'icmsbase',
@@ -67,6 +69,7 @@ class NotaFiscalProdutoBarra extends MgModel
         'irpjpercentual',
         'irpjvalor',
         'isbase',
+        'iscst',
         'ispercentual',
         'isvalor',
         'observacoes',
