@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jul/2020 09:17:13
+ * Date: 24/Dec/2025 16:20:03
  */
 
 namespace Mg\NaturezaOperacao;
@@ -24,6 +24,8 @@ class TributacaoNaturezaOperacao extends MgModel
         'acumuladordominioprazo',
         'acumuladordominiovista',
         'bit',
+        'cbscst',
+        'cbspercentual',
         'certidaosefazmt',
         'codcfop',
         'codestado',
@@ -38,6 +40,8 @@ class TributacaoNaturezaOperacao extends MgModel
         'funruralpercentual',
         'historicodominio',
         'iagrokg',
+        'ibscst',
+        'ibspercentual',
         'icmsbase',
         'icmscst',
         'icmslpbase',
@@ -46,6 +50,8 @@ class TributacaoNaturezaOperacao extends MgModel
         'icmspercentual',
         'ipicst',
         'irpjpercentual',
+        'iscst',
+        'ispercentual',
         'movimentacaocontabil',
         'movimentacaofisica',
         'ncm',
@@ -64,6 +70,7 @@ class TributacaoNaturezaOperacao extends MgModel
         'acumuladordominioprazo' => 'integer',
         'acumuladordominiovista' => 'integer',
         'bit' => 'boolean',
+        'cbspercentual' => 'float',
         'certidaosefazmt' => 'boolean',
         'codcfop' => 'integer',
         'codestado' => 'integer',
@@ -79,6 +86,7 @@ class TributacaoNaturezaOperacao extends MgModel
         'fethabkg' => 'float',
         'funruralpercentual' => 'float',
         'iagrokg' => 'float',
+        'ibspercentual' => 'float',
         'icmsbase' => 'float',
         'icmscst' => 'float',
         'icmslpbase' => 'float',
@@ -87,6 +95,7 @@ class TributacaoNaturezaOperacao extends MgModel
         'icmspercentual' => 'float',
         'ipicst' => 'float',
         'irpjpercentual' => 'float',
+        'ispercentual' => 'float',
         'movimentacaocontabil' => 'boolean',
         'movimentacaofisica' => 'boolean',
         'piscst' => 'float',

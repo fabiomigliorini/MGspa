@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2024 18:26:23
+ * Date: 24/Dec/2025 16:19:38
  */
 
 namespace Mg\NotaFiscal;
@@ -22,6 +22,9 @@ class NotaFiscalProdutoBarra extends MgModel
 
 
     protected $fillable = [
+        'cbsbase',
+        'cbspercentual',
+        'cbsvalor',
         'certidaosefazmt',
         'codcfop',
         'codnegocioprodutobarra',
@@ -44,6 +47,9 @@ class NotaFiscalProdutoBarra extends MgModel
         'funruralvalor',
         'iagrokg',
         'iagrovalor',
+        'ibsbase',
+        'ibspercentual',
+        'ibsvalor',
         'icmsbase',
         'icmsbasepercentual',
         'icmscst',
@@ -60,7 +66,11 @@ class NotaFiscalProdutoBarra extends MgModel
         'irpjbase',
         'irpjpercentual',
         'irpjvalor',
+        'isbase',
+        'ispercentual',
+        'isvalor',
         'observacoes',
+        'ordem',
         'pedido',
         'pedidoitem',
         'pisbase',
@@ -84,6 +94,9 @@ class NotaFiscalProdutoBarra extends MgModel
     ];
 
     protected $casts = [
+        'cbsbase' => 'float',
+        'cbspercentual' => 'float',
+        'cbsvalor' => 'float',
         'certidaosefazmt' => 'boolean',
         'codcfop' => 'integer',
         'codnegocioprodutobarra' => 'integer',
@@ -107,6 +120,9 @@ class NotaFiscalProdutoBarra extends MgModel
         'funruralvalor' => 'float',
         'iagrokg' => 'float',
         'iagrovalor' => 'float',
+        'ibsbase' => 'float',
+        'ibspercentual' => 'float',
+        'ibsvalor' => 'float',
         'icmsbase' => 'float',
         'icmsbasepercentual' => 'float',
         'icmscst' => 'float',
@@ -123,6 +139,10 @@ class NotaFiscalProdutoBarra extends MgModel
         'irpjbase' => 'float',
         'irpjpercentual' => 'float',
         'irpjvalor' => 'float',
+        'isbase' => 'float',
+        'ispercentual' => 'float',
+        'isvalor' => 'float',
+        'ordem' => 'integer',
         'pedidoitem' => 'integer',
         'pisbase' => 'float',
         'piscst' => 'float',
