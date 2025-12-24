@@ -8,8 +8,8 @@ use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
 use Mg\Pdv\PdvAnexoService;
-use Mg\Saurus\SaurusPedido;
 use Mg\Saurus\SaurusPedidoResource;
+use Mg\Woo\WooPedidoResource;
 
 class NegocioResource extends Resource
 {
@@ -66,6 +66,10 @@ class NegocioResource extends Resource
                 'faturamentoid'
             ]);
         }
+        $ret['WooPedidoS'] = [];
+        foreach ($this->WooPedidoNegocioS as $wpn) {
+            $ret['WooPedidoS'][] = new WooPedidoResource($wpn->WooPedido);
+        }        
         //  = MercosPedidoResource
         return $ret;
     }

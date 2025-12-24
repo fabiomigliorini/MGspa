@@ -1,4 +1,18 @@
 const routes = [
+  // WOOCOMMERCE
+  {
+    path: "/woo",
+    component: () => import("layouts/WooLayout.vue"),
+    children: [{ path: "", component: () => import("pages/WooPage.vue") }],
+  },
+  {
+    path: "/woo/painel",
+    component: () => import("layouts/WooPainelLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/WooPainelPage.vue") },
+    ],
+  },
+
   // OFFLINE
   {
     path: "/",
@@ -58,7 +72,10 @@ const routes = [
       { path: "padrao/", component: () => import("pages/PadraoPage.vue") },
       { path: "pdv/", component: () => import("pages/PdvPage.vue") },
       { path: "pagar-me/", component: () => import("pages/PagarMePage.vue") },
-      { path: "saurus-s2-pay/", component: () => import("pages/SaurusS2PayPage.vue") },
+      {
+        path: "saurus-s2-pay/",
+        component: () => import("pages/SaurusS2PayPage.vue"),
+      },
       {
         path: "prancheta/",
         component: () => import("pages/PranchetaPage.vue"),

@@ -48,24 +48,6 @@ Route::group(['prefix' => 'v1/auth'], function () {
 
 Route::group(['prefix' => 'v1'], function () {
 
-    //WOO
-    Route::group(['prefix' => 'woo'], function () {
-
-        // Woo Produto
-        Route::post('produto/{codproduto}/exportar', '\Mg\Woo\WooProdutoController@exportar');
-        Route::post('produto/', '\Mg\Woo\WooProdutoController@store');
-        Route::put('produto/{codwooproduto}', '\Mg\Woo\WooProdutoController@update');
-        Route::delete('produto/{id}/inativo', '\Mg\Woo\WooProdutoController@ativar');
-        Route::post('produto/{id}/inativo', '\Mg\Woo\WooProdutoController@inativar');
-        
-        // Woo Pedidos
-        Route::get('pedido', '\Mg\Woo\WooPedidoController@index');
-        Route::post('pedido/buscar-novos', '\Mg\Woo\WooPedidoController@buscarNovos');
-        Route::post('pedido/{id}/reprocessar', '\Mg\Woo\WooPedidoController@reprocessar');
-        Route::put('pedido/{id}/status', '\Mg\Woo\WooPedidoController@status');
-
-    });
-
     // Pessoa
     Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
     Route::get('pessoa/verifica-ie-sefaz', '\Mg\Pessoa\PessoaController@verificaIeSefaz');
@@ -184,19 +166,25 @@ Route::group(['prefix' => 'v1'], function () {
 Route::group(['middleware' => ['auth:api', 'cors']], function () {
     Route::group(['prefix' => 'v1'], function () {
 
-        // //WOO
-        // Route::group(['prefix' => 'woo'], function () {
+        //WOO
+        Route::group(['prefix' => 'woo'], function () {
 
-        //     /* Woo Produto */
-        //     Route::post('produto/{codproduto}/exportar', 'ProdutoVariacaoController@exportar');
-        //     Route::post('produto/', 'ProdutoVariacaoController@store');
-        //     Route::put('produto/{codwooproduto}', '\Mg\Woo\WooProdutoController@update');
-        //     // Route::delete('produto/{codwooproduto}', 'ProdutoVariacaoController@destroy');
-        //     Route::delete('produto/{id}/inativo', 'WooProdutoController@ativar');
-        //     Route::post('produto/{id}/inativo', 'WooProdutoController@inativar');        
+            // Woo Produto
+            Route::post('produto/{codproduto}/exportar', '\Mg\Woo\WooProdutoController@exportar');
+            Route::post('produto/', '\Mg\Woo\WooProdutoController@store');
+            Route::put('produto/{codwooproduto}', '\Mg\Woo\WooProdutoController@update');
+            Route::delete('produto/{id}/inativo', '\Mg\Woo\WooProdutoController@ativar');
+            Route::post('produto/{id}/inativo', '\Mg\Woo\WooProdutoController@inativar');
 
-        // });
-
+            // Woo Pedidos
+            Route::get('pedido', '\Mg\Woo\WooPedidoController@index');
+            Route::get('pedido/painel', '\Mg\Woo\WooPedidoController@painel');
+            Route::post('pedido/buscar-novos', '\Mg\Woo\WooPedidoController@buscarNovos');
+            Route::post('pedido/buscar-por-alteracao', '\Mg\Woo\WooPedidoController@buscarPorAlteracao');
+            Route::post('pedido/{id}/reprocessar', '\Mg\Woo\WooPedidoController@reprocessar');
+            Route::put('pedido/{id}/status', '\Mg\Woo\WooPedidoController@alteraStatus');
+        });
+        
         //PDV
         Route::group(['prefix' => 'pdv'], function () {
             Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');

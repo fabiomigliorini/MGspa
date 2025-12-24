@@ -69,7 +69,7 @@ class WooPedidoRequest extends FormRequest
                 'nullable',
                 'numeric',
                 'min:0',
-                'after_or_equal:valortotal_de' // Garante que o valor 'ate' seja posterior ou igual ao valor 'de'.
+                'gte:valortotal_de' // Garante que o valor 'ate' seja maior ou igual ao valor 'de'.
             ],
         ];
     }

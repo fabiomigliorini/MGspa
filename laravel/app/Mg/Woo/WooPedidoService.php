@@ -4,6 +4,8 @@ namespace Mg\Woo;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 use Mg\Estoque\EstoqueLocal;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -13,6 +15,7 @@ use Mg\Negocio\NegocioProdutoBarra;
 class WooPedidoService
 {
 
+    const CACHE_ORDERS_SYNC = 'woo_api_orders_sync';
     protected WooApi $api;
 
     public function __construct()
@@ -23,6 +26,7 @@ class WooPedidoService
     // Bucar todos novos pedidos no woocommerce
     public function buscarNovos()
     {
+        Log::info("buscando Woo Pedidos por Status Pending/Processing/On-Hold!");
         $wps = [];
         $page = 1;
         do {
@@ -40,9 +44,75 @@ class WooPedidoService
         return $wps;
     }
 
+    public function descobreDataUltimaSincronizacaoPedidos()
+    {
+        $sync = Cache::get(static::CACHE_ORDERS_SYNC);
+        if (!empty($sync)) {
+            return Carbon::parse($sync, 'GMT');
+        }
+        $alteracaowoo = WooPedido::max('alteracaowoo');
+        if (!empty($alteracaowoo)) {
+            return Carbon::parse($alteracaowoo)->setTimezone('GMT')->addDays(-15)->startOfDay();
+        }
+        return Carbon::now()->addDays(-30)->setTimezone('GMT')->startOfDay();
+    }
+
+    // Bucar todos novos pedidos no woocommerce
+    public function buscarPorAlteracao()
+    {
+        // linicliza array de pedidos importados
+        $wps = [];
+
+        // controle de paginacao
+        $page = 1;
+
+        // descobre a ultima data de importacao
+        $alteracao = $this->descobreDataUltimaSincronizacaoPedidos();
+        $ultima = $alteracao->copy();
+        $alteracao = $alteracao->toIso8601String();
+
+        // log desde quando esta buscando
+        Log::info("buscando Woo Pedidos desde {$alteracao} (UTC)!");
+
+        do {
+
+            // busca pela alteracao
+            $this->api->getOrders($page, null, $alteracao);
+
+            // percorre todos pedidos que a api mandou
+            $orders = $this->api->responseObject;
+            foreach ($orders as $order) {
+
+                // importa no nosso banco os dados da api
+                $wp = $this->parsePedido($order);
+
+                // verifica se a alteracao do pedido é maior do que a a requisicao
+                $ultima = $ultima->max($wp->alteracaowoo->copy()->setTimezone('GMT'));
+
+                // acumula o pedido importado no array
+                $wps[] = $wp;
+            }
+
+            // vai pra proxima pagina 
+            $page++;
+
+            // previne loop infinito
+            if ($page > 100) {
+                break;
+            }
+        } while (sizeof($orders) == WooApi::PER_PAGE);
+
+        // salva data da ultima execucao
+        Cache::forever(static::CACHE_ORDERS_SYNC, $ultima);
+
+        // retorna listagem dos pedidos importados
+        return $wps;
+    }
+
     // buscar um pedido especifico no woocommerce
     public function buscarPedido(Int $id)
     {
+        Log::info("buscando Woo Pedidos pelo ID {$id}!");
         $this->api->getOrder($id);
         $this->parsePedido($this->api->responseObject);
         return true;
@@ -51,16 +121,20 @@ class WooPedidoService
     // processa o pedido retornado pela API
     public function parsePedido(object $order)
     {
+        Log::info("Parse WooPedido {$order->id}!");
+
         // busca se ele já existe na tabela local
         $wp = WooPedido::firstOrNew([
             'id' => $order->id,
         ]);
 
         // preenche os dados do pedido
-        $criacaowoo = Carbon::parse(@$order->date_created, 'UTC')->setTimezone(config('app.timezone'));
+        $criacaowoo = Carbon::parse(@$order->date_created_gmt, 'UTC')->setTimezone(config('app.timezone'));
+        $alteracaowoo = Carbon::parse(@$order->date_modified_gmt, 'UTC')->setTimezone(config('app.timezone'));
         $wp->fill([
             'status' => trim(substr(@$order->status, 0, 50)),
             'criacaowoo' => $criacaowoo,
+            'alteracaowoo' => $alteracaowoo,
             'valorfrete' => @$order->shipping_total,
             'valortotal' => @$order->total,
             'nome' => trim(substr(@$order->billing->first_name . ' ' . @$order->billing->last_name, 0, 200)),
@@ -84,7 +158,7 @@ class WooPedidoService
     }
 
     // gera o negocio vinculado ao pedido do woo
-    public function importarNegocio(WooPedido $wp)
+    public function importarNegocio(WooPedido $wp, bool $forcarImportacao = false)
     {
         // Verifica se existem negocios vinculados ao pedido
         $wpns = WooPedidoNegocio::where([
@@ -92,25 +166,31 @@ class WooPedidoService
         ])->get();
 
         // Se já houver um Negocio aberto ou fechado, ignora
+        $criar = true;
         foreach ($wpns as $wpn) {
-            if (in_array($wpn->Negocio->codnegociostatus, [1, 2])) {
+
+            // se já tem um negocio fechado abandona
+            if ($wpn->Negocio->codnegociostatus == 2) {
                 return true;
+            }
+
+            // if forcar
+            if ($wpn->Negocio->codnegociostatus == 1) {
+                if (!$forcarImportacao) {
+                    return true;
+                }
+                $n = $wpn->Negocio;
+                $criar = false;
+                break;
             }
         }
 
-        // se nao achou cria    
-        if (!isset($wpn)) {
-            $wpn = new WooPedidoNegocio([
-                'codwoopedido' => $wp->codwoopedido,
-            ]);
-        }
-
-        // Se não existir, cria um novo Negocio
-        if ($wpn->exists) {
-            $n = $wpn->Negocio;
-        } else {
+        if ($criar) {
+            // busca local e natureza
             $el = EstoqueLocal::findOrFail(env('WOO_CODESTOQUELOCAL'));
             $no = NaturezaOperacao::findOrFail(env('WOO_CODNATUREZAOPERACAO'));
+
+            // cria o negocio
             $n = Negocio::create([
                 'codpessoa' => 1, // TODO: Definir cliente correto
                 'codnegociostatus' => 1, // Novo
@@ -128,11 +208,13 @@ class WooPedidoService
                 'uuid' => Str::uuid(),
                 'codpdv' => env('WOO_CODPDV'),
             ]);
-        }
 
-        // Amarra o Negocio ao Pedido do Woo
-        $wpn->codnegocio = $n->codnegocio;
-        $wpn->save();
+            // Amarra o Negocio ao Pedido do Woo
+            $wpn = WooPedidoNegocio::create([
+                'codwoopedido' => $wp->codwoopedido,
+                'codnegocio' => $n->codnegocio,
+            ]);
+        }
 
         // calcula a distribuicao do frete entre os itens do pedido
         $order = json_decode($wp->jsonwoo);
@@ -140,7 +222,6 @@ class WooPedidoService
         $valorfrete = $order->shipping_total;
         $saldofrete = $valorfrete;
         foreach ($order->line_items as $item) {
-            // dd($item);
             $item->valorfrete = round($valorfrete * ($item->total / $valorprodutos), 2);
             $saldofrete -= $item->valorfrete;
             // Ajusta o ultimo item para garantir que o valor do frete some corretamente
@@ -224,5 +305,14 @@ class WooPedidoService
 
         // retorna só sucesso
         return true;
+    }
+
+    function alterarStatus(WooPedido $wp, String $status)
+    {
+        // chama API do Woo
+        $api = new WooApi();
+        $api->putOrder($wp->id, ['status' => $status]);
+        $this->parsePedido($api->responseObject);
+        return $wp->fresh();
     }
 }

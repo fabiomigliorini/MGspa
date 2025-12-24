@@ -21,6 +21,7 @@ class WooPedidoResource extends JsonResource
             'id' => $this->id,
             'status' => $this->status,
             'criacaowoo' => $this->criacaowoo ? $this->criacaowoo->format('Y-m-d H:i:s') : null,
+            'alteracaowoo' => $this->alteracaowoo ? $this->alteracaowoo->format('Y-m-d H:i:s') : null,
             'valortotal' => (float) $this->valortotal, // numeric(14, 2)
             'nome' => $this->nome,
             'cidade' => $this->cidade,

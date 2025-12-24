@@ -281,7 +281,7 @@ class WooApi
     }
 
     //Pedidos
-    public function getOrders($page = 1, $status = null)
+    public function getOrders($page = 1, ? array $status = null, ? String $modified_after = null)
     {
         // monta URL
         $url = $this->url . 'wc/v3/orders';
@@ -289,10 +289,15 @@ class WooApi
         $data = [
             'page' => $page,
             'per_page' => STATIC::PER_PAGE,
+            'dates_are_gmt' => true,
         ];
 
         if (!empty($status)) {
             $data['status'] = is_array($status) ? implode(',', $status) : $status;
+        }
+
+        if (!empty($modified_after)) {
+            $data['modified_after'] = $modified_after;
         }
 
         // aborta caso erro na requisicao
@@ -315,4 +320,18 @@ class WooApi
 
         return $this->status == 201;
     }    
+
+    // altera status do pedido
+    public function putOrder(int $id, array $data)
+    {
+        // monta URL
+        $url = $this->url . 'wc/v3/orders/' . $id;
+
+        // aborta caso erro na requisicao
+        if (!$this->put($url, $data)) {
+            throw new Exception(json_encode($this->responseObject), 1);
+        }
+
+        return $this->status == 201;
+    }
 }

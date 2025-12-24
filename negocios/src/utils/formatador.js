@@ -262,3 +262,18 @@ export const removerAcentos = (str) => {
   }
   return str.normalize("NFD").replace(/\p{Mn}/gu, "");
 };
+
+export const formataNumero = (value, digitos = 0) => {
+  if (value === null || value === undefined || value === "") return "";
+  const n = Number(
+    String(value)
+      .replace(/[^0-9,-\.]/g, "")
+      .replace(/,/g, ".")
+  );
+  if (Number.isNaN(n)) return value;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "decimal",
+    minimumFractionDigits: digitos,
+    maximumFractionDigits: digitos,
+  }).format(n);
+};
