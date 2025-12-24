@@ -2,7 +2,9 @@ import { defineStore } from "pinia";
 import { api } from "src/boot/axios";
 import { Notify } from "quasar";
 import { unionBy, orderBy } from "lodash";
+import { negocioStore } from "./negocio";
 import moment from "moment";
+const sNegocio = negocioStore();
 
 export const wooStore = defineStore("woo", {
   persist: false,
@@ -10,18 +12,54 @@ export const wooStore = defineStore("woo", {
   state: () => ({
     opcoes: {
       status: [
-        { label: "Pagamento Pendente", value: "pending" },
-        { label: "Processando", value: "processing" },
-        { label: "Aguardando", value: "on-hold" },
-        { label: "Concluído", value: "completed" },
-        { label: "Cancelado", value: "cancelled" },
-        { label: "Reembolsado", value: "refunded" },
-        { label: "Malsucedido", value: "failed" },
-        { label: "Rascunho", value: "checkout-draft" },
+        // {
+        //   ordem: 1,
+        //   label: "Cliente Ainda Comprando",
+        //   value: "checkout-draft",
+        //   cor: "bg-grey",
+        // },
+        {
+          ordem: 2,
+          label: "Aguardando Cliente Pagar",
+          value: "pending",
+          cor: "bg-purple",
+        },
+        {
+          ordem: 3,
+          label: "Aguardando Confirmação Pagamento",
+          value: "on-hold",
+          cor: "bg-orange",
+        },
+        {
+          ordem: 4,
+          label: "Em Separação",
+          value: "processing",
+          cor: "bg-orange",
+        },
+        {
+          ordem: 5,
+          label: "Concluído",
+          value: "completed",
+          cor: "bg-secondary",
+        },
+        {
+          ordem: 6,
+          label: "Cancelado",
+          value: "cancelled",
+          cor: "bg-negative",
+        },
+        {
+          ordem: 7,
+          label: "Reembolsado",
+          value: "refunded",
+          cor: "bg-negative",
+        },
+        { ordem: 8, label: "Falha", value: "failed", cor: "bg-negative" },
       ],
     },
     filtro: {},
     pedidos: [],
+    pedido: {},
     orcamentos: [],
     paginacao: {
       current_page: 0,
@@ -34,16 +72,50 @@ export const wooStore = defineStore("woo", {
     },
   }),
 
-  getters: {
+  getters: {},
+
+  actions: {
     pedidosPorIdDesc() {
       return orderBy(this.pedidos, ["id"], ["desc"]);
     },
-  },
 
-  actions: {
+    colunasKanban() {
+      const ret = this.opcoes.status;
+      return orderBy(ret, ["ordem"], ["asc"]);
+    },
+
+    async refreshPedido() {
+      if (!this.pedido) {
+        return true;
+      }
+
+      // atualiza pedido aberto no modal
+      this.pedido = this.pedidos.find(
+        (p) => p.codwoopedido == this.pedido.codwoopedido
+      );
+
+      // atualiza dados do pedido se estiver
+      // vinculado com o negocio aberto
+      if (sNegocio.negocio) {
+        if (sNegocio.negocio.WooPedidoS) {
+          const i = sNegocio.negocio.WooPedidoS.findIndex(
+            (p) => (p.codwoopedido = this.pedido.codwoopedido)
+          );
+          if (i > -1) {
+            await sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio);
+          }
+        }
+      }
+    },
+
     statusLabel(value) {
       const item = this.opcoes.status.find((i) => i.value == value);
       return item.label;
+    },
+
+    statusColor(value) {
+      const item = this.opcoes.status.find((i) => i.value == value);
+      return item.cor;
     },
 
     async inicializaFiltro() {
@@ -73,8 +145,7 @@ export const wooStore = defineStore("woo", {
     async getPedidos() {
       this.paginacao.current_page = 0;
       this.paginacao.last_page = 99999;
-      this.pedidos = [];
-      await this.getPedidosPaginacao();
+      return await this.getPedidosPaginacao();
     },
 
     async getPedidosPaginacao() {
@@ -86,8 +157,38 @@ export const wooStore = defineStore("woo", {
         const { data } = await api.get("/api/v1/woo/pedido", {
           params: filtro,
         });
-        this.pedidos = this.pedidos.concat(data.data);
+        if (this.paginacao.current_page == 0) {
+          this.pedidos = data.data;
+        } else {
+          this.pedidos = unionBy(data.data, this.pedidos, "codwoopedido");
+        }
         this.paginacao = data.meta;
+        this.refreshPedido();
+        return true;
+      } catch (error) {
+        console.log(error);
+        var message = error?.response?.data?.message;
+        if (!message) {
+          message = error?.message;
+        }
+        Notify.create({
+          type: "negative",
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: "close", color: "white" }],
+        });
+        this.paginacao.current_page = 9999;
+        this.paginacao.last_page = 0;
+        return false;
+      }
+    },
+
+    async getPedidosPainel() {
+      try {
+        const { data } = await api.get("/api/v1/woo/pedido/painel");
+        this.pedidos = unionBy(data.data, this.pedidos, "codwoopedido");
+        this.refreshPedido();
+        return data.data.length;
       } catch (error) {
         var message = error?.response?.data?.message;
         if (!message) {
@@ -108,9 +209,8 @@ export const wooStore = defineStore("woo", {
         const { data } = await api.post(
           "/api/v1/woo/pedido/" + id + "/reprocessar"
         );
-        const ped = data.data;
-        const i = this.pedidos.findIndex((item) => item.id == id);
-        this.pedidos[i] = ped;
+        this.pedidos = unionBy([data.data], this.pedidos, "codwoopedido");
+        this.refreshPedido();
         return true;
       } catch (error) {
         console.log(error);
@@ -132,6 +232,7 @@ export const wooStore = defineStore("woo", {
       try {
         const { data } = await api.post("/api/v1/woo/pedido/buscar-novos");
         this.pedidos = unionBy(data.data, this.pedidos, "codwoopedido");
+        this.refreshPedido();
         return data.data.length;
       } catch (error) {
         console.log(error);
@@ -155,6 +256,7 @@ export const wooStore = defineStore("woo", {
           "/api/v1/woo/pedido/buscar-por-alteracao"
         );
         this.pedidos = unionBy(data.data, this.pedidos, "codwoopedido");
+        this.refreshPedido();
         return data.data.length;
       } catch (error) {
         console.log(error);
@@ -177,11 +279,8 @@ export const wooStore = defineStore("woo", {
         const { data } = await api.put("/api/v1/woo/pedido/" + id + "/status", {
           status,
         });
-        const ped = data.data;
-        const i = this.pedidos.findIndex((item) => item.id == id);
-        if (i !== -1) {
-          this.pedidos[i] = ped;
-        }
+        this.pedidos = unionBy([data.data], this.pedidos, "codwoopedido");
+        this.refreshPedido();
         return true;
       } catch (error) {
         console.log(error);

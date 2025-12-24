@@ -6,7 +6,6 @@ const sWoo = wooStore();
 
 const props = defineProps({
   modelValue: Boolean,
-  pedido: Object,
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -23,76 +22,67 @@ const statusOptions = ref([...sWoo.opcoes.status]);
 
 //Alterar Status
 const changeStatus = async (statusValue) => {
-  if (!props.pedido?.id) return;
-
-  const ok = await sWoo.alterarStatus(props.pedido.id, statusValue);
+  const ok = await sWoo.alterarStatus(sWoo.pedido.id, statusValue);
   if (ok) {
     Notify.create({
       type: "positive",
       message:
         "Pedido " +
-        props.pedido.id +
+        sWoo.pedido.id +
         " teve o status alterado para " +
         statusValue +
         ".",
       timeout: 3000,
       actions: [{ icon: "close", color: "white" }],
     });
-    console.log("AQUI");
-
     close(); // fecha o modal após sucesso
     return;
   }
 };
 </script>
-
 <template>
-  <q-dialog v-model="show" persistent>
-    <q-card style="height: 480px; width: 600px" class="column no-wrap">
-      <q-card-section>
-        <q-item-label class="text-h6 text-primary">
-          Alterar Status do pedido:
-        </q-item-label>
+  <q-dialog v-model="show" transition-show="scale" transition-hide="scale">
+    <q-card style="width: 500px; max-width: 90vw">
+      <q-card-section class="q-pa-md">
+        <div class="text-grey-8 q-mb-md">
+          Selecione o novo status para este pedido:
+        </div>
+
+        <div class="row q-col-gutter-sm">
+          <div v-for="opt in statusOptions" :key="opt.value" class="col-6">
+            <q-item
+              clickable
+              v-ripple
+              @click="changeStatus(opt.value)"
+              class="full-height"
+              :class="
+                sWoo.pedido.status === opt.value ? 'bg-blue-2' : 'bg-grey-3'
+              "
+            >
+              <q-item-section avatar>
+                <q-avatar :color="opt.cor.replace('bg-', '')">
+                  <q-icon
+                    name="check"
+                    color="white"
+                    size="md"
+                    v-if="sWoo.pedido.status === opt.value"
+                  />
+                </q-avatar>
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label class="text-weight-medium text-grey-9">
+                  {{ opt.label }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </div>
+        </div>
       </q-card-section>
-      <q-separator />
-      <q-card-section class="col q-pa-md text-h6">
-        <q-item>
-          <q-item-section>
-            <q-card-label class="text-grey-7"
-              >ID do pedido: #{{ pedido.id }}
-            </q-card-label>
-          </q-item-section>
-        </q-item>
-        <q-separator />
-        <q-item>
-          <q-item-section>
-            <div class="text-subtitle2 q-mb-sm">
-              Alterar status do pedido para:
-            </div>
-            <div class="row q-col-gutter-sm">
-              <div
-                v-for="opt in statusOptions"
-                :key="opt.value"
-                class="col-auto"
-              >
-                <q-btn
-                  outline
-                  size="sm"
-                  color="primary"
-                  :label="opt.label"
-                  @click="changeStatus(opt.value)"
-                />
-              </div>
-            </div>
-          </q-item-section>
-        </q-item>
-      </q-card-section>
-      <q-separator />
-      <q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Fechar" color="primary" @click="close" />
-        </q-card-actions>
-      </q-card-section>
+
+      <q-card-actions align="right" class="bg-grey-1 q-pa-sm">
+        <q-btn flat label="Cancelar" color="negative" v-close-popup />
+      </q-card-actions>
     </q-card>
   </q-dialog>
 </template>

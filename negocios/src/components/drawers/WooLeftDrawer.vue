@@ -51,8 +51,8 @@ const buscarPorAlteracao = async () => {
 <template>
   <q-list>
     <!-- TITULO -->
-    <q-item-label header
-      >Filtro
+    <q-item-label header>
+      Filtro
 
       <q-btn
         flat
@@ -60,6 +60,7 @@ const buscarPorAlteracao = async () => {
         size="small"
         color="primary"
         icon="mdi-cart-plus"
+        class="q-ml-md"
         @click="buscarPorAlteracao(pedido)"
       >
         <q-tooltip>
@@ -78,6 +79,17 @@ const buscarPorAlteracao = async () => {
         <q-tooltip>
           Busca pedidos no Woo pelo status de Pendente/Processando/Aguardando.
         </q-tooltip>
+      </q-btn>
+
+      <q-btn
+        flat
+        dense
+        size="small"
+        color="primary"
+        icon="mdi-view-column-outline"
+        to="/woo/painel"
+      >
+        <q-tooltip> Painel de controle. </q-tooltip>
       </q-btn>
     </q-item-label>
 
@@ -195,7 +207,4 @@ const buscarPorAlteracao = async () => {
       </q-item-section>
     </q-item>
   </q-list>
-  <pre>
-    {{ sWoo.filtro }}
-  </pre>
 </template>

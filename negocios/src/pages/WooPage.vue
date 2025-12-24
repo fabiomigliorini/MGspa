@@ -4,8 +4,7 @@ import { wooStore } from "src/stores/woo";
 import { formataNumero } from "src/utils/formatador";
 import { Notify, debounce } from "quasar";
 import moment from "moment/min/moment-with-locales";
-import PedidoModal from "src/components/modals/WooInfoModal.vue";
-import ChangeStatus from "src/components/modals/WooChangeStatusModal.vue";
+import WooInfoModal from "src/components/modals/WooInfoModal.vue";
 moment.locale("pt-br");
 
 const sWoo = wooStore();
@@ -53,46 +52,13 @@ onMounted(() => {
 });
 
 // controle do modal
-const selectedPedido = ref(null);
 const showPedidoModal = ref(false);
-const showChangeStatus = ref(false);
 
 // Reprocessar o pedido
 function openPedido(p) {
-  selectedPedido.value = p;
+  sWoo.pedido = p;
   showPedidoModal.value = true;
 }
-
-// Mudar o Status do pedido
-function openStatus(p) {
-  selectedPedido.value = p;
-  showChangeStatus.value = true;
-}
-
-const classPeloStatus = (status) => {
-  switch (status) {
-    case "cancelled":
-    case "refunded":
-    case "failed":
-    case "trash":
-      return "bg-negative text-white";
-
-    case "pending":
-      return "bg-accent";
-
-    case "on-hold":
-      return "bg-warning";
-
-    case "processing":
-      return "bg-info text-white";
-
-    case "completed":
-      return "bg-secondary text-white";
-
-    default:
-      return "bg-grey-6 text-white";
-  }
-};
 </script>
 
 <template>
@@ -101,127 +67,111 @@ const classPeloStatus = (status) => {
       v-if="sWoo.pedidos.length == 0"
       class="absolute-center text-grey text-center"
     >
-      <q-icon name="do_not_disturb" color="" size="300px" />
-      <h3>Nenhum registro localizado!</h3>
+      <q-icon name="do_not_disturb" size="200px" />
+      <h4 class="q-ma-none">Nenhum registro localizado!</h4>
     </div>
-    <q-list v-else>
-      <q-infinite-scroll @load="onLoad" ref="scrollRef">
-        <div class="row q-col-gutter-sm">
-          <template
-            v-for="pedido in sWoo.pedidosPorIdDesc"
-            :key="pedido.codwoopedido"
-          >
-            <!--Paginação inicial col-4-->
-            <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
-              <!--CARDS-->
-              <q-card flat bordered>
-                <!--TITULO E DESTAQUES-->
-                <q-item class="full-width q-mb-none" style="height: 60px">
-                  <q-item-section avatar>
-                    <q-avatar :class="classPeloStatus(pedido.status)" />
-                  </q-item-section>
-                  <q-item-section side class="ellipsis text-grey-10 text-right">
-                    <q-item-label>
-                      R$ {{ formataNumero(pedido.valortotal, 2) }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item
-                  class="full-width q-mt-none q-pt-none"
-                  style="height: 60px"
-                >
-                  <q-item-section>
-                    <q-item-label class="text-bold text-grey-9 ellipsis">
-                      {{ pedido.nome }}
-                    </q-item-label>
-                    <q-item-label caption class="text-grey-8">
-                      {{ sWoo.statusLabel(pedido.status) }}
-                      {{ moment(pedido.alteracaowoo).fromNow() }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-separator />
 
-                <!--DESCRIÇÃO DO PEDIDO-->
-                <q-card-section style="min-height: 180px">
-                  <q-item-label class="text-caption text-grey-7">
-                    Criado {{ moment(pedido.criacaowoo).fromNow() }} ({{
-                      moment(pedido.criacaowoo).format("LLL")
-                    }})
+    <q-infinite-scroll v-else @load="onLoad" ref="scrollRef">
+      <div class="row q-col-gutter-sm">
+        <template
+          v-for="pedido in sWoo.pedidosPorIdDesc()"
+          :key="pedido.codwoopedido"
+        >
+          <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2">
+            <q-card
+              flat
+              bordered
+              v-ripple
+              @click="openPedido(pedido)"
+              class="full-height cursor-pointer relative-position column no-wrap"
+            >
+              <q-item class="q-pb-none">
+                <q-item-section avatar>
+                  <q-avatar
+                    :class="sWoo.statusColor(pedido.status)"
+                    size="24px"
+                  />
+                </q-item-section>
+                <q-item-section
+                  side
+                  class="text-grey-10 text-bold text-subtitle1"
+                >
+                  {{ formataNumero(pedido.valortotal, 2) }}
+                </q-item-section>
+              </q-item>
+
+              <q-item class="q-pt-none q-mt-xs">
+                <q-item-section>
+                  <q-item-label class="text-bold text-grey-9 ellipsis">
+                    {{ pedido.nome }}
                   </q-item-label>
-                  <q-item-label class="text-caption text-grey-7">
-                    ID: {{ pedido.id }}
+                  <q-item-label caption class="text-grey-8">
+                    {{ sWoo.statusLabel(pedido.status) }} •
+                    {{ moment(pedido.alteracaowoo).fromNow() }}
                   </q-item-label>
-                  <q-item-label class="text-caption text-grey-7">
+                </q-item-section>
+              </q-item>
+
+              <q-separator inset class="q-mx-md" />
+
+              <q-card-section class="q-py-sm text-caption text-grey-7">
+                <div class="row q-col-gutter-xs">
+                  <div class="col-12">#{{ pedido.id }}</div>
+                  <div class="col-12">
+                    {{ moment(pedido.criacaowoo).format("LLLL") }}
+                  </div>
+                  <div class="col-12">
                     {{ pedido.pagamento }}
-                  </q-item-label>
-                  <q-item-label class="text-caption text-grey-7">
+                  </div>
+                  <div class="col-12 ellipsis-2-lines">
                     {{ pedido.entrega }}
-                  </q-item-label>
-                </q-card-section>
-                <q-separator />
-                <template
-                  v-for="negocio in pedido.negocios"
-                  :key="negocio.codnegocio"
-                >
-                  <q-item
-                    :to="'/negocio/' + negocio.codnegocio"
-                    class="text-caption text-grey-7 q-pa-md"
+                  </div>
+                </div>
+              </q-card-section>
+
+              <q-list dense class="q-pb-sm">
+                <template v-if="pedido.negocios && pedido.negocios.length > 0">
+                  <template
+                    v-for="negocio in pedido.negocios"
+                    :key="negocio.codnegocio"
                   >
-                    Negocio: #{{ negocio.codnegocio }} |
-                    {{ negocio.negociostatus }} |
-                    {{ formataNumero(negocio.valor, 2) }}
-                  </q-item>
+                    <q-separator inset class="q-my-xs" />
+                    <q-item
+                      :to="'/negocio/' + negocio.codnegocio"
+                      @click.stop
+                      clickable
+                      class="text-caption"
+                    >
+                      <q-item-section>
+                        <q-item-label caption>
+                          #{{ negocio.codnegocio }}
+                        </q-item-label>
+                        <q-item-label caption>
+                          {{ negocio.negociostatus }}
+                        </q-item-label>
+                      </q-item-section>
+                      <q-item-section side>
+                        {{ formataNumero(negocio.valor, 2) }}
+                      </q-item-section>
+                    </q-item>
+                  </template>
                 </template>
-                <q-separator />
+                <q-item v-else>
+                  <q-item-section class="text-caption text-italic text-grey-5">
+                    Nenhum vínculo
+                  </q-item-section>
+                </q-item>
+              </q-list>
 
-                <!--AÇÕES DO PEDIDO-->
-                <q-card-actions
-                  class="justify-center items-center q-gutter-lg"
-                  style="padding: 5px"
-                >
-                  <q-btn
-                    flat
-                    round
-                    color="primary"
-                    icon="mdi-web"
-                    :href="
-                      'https://sinopel.mrxempresas.com.br/wp-admin/admin.php?page=wc-orders&action=edit&id=' +
-                      pedido.id
-                    "
-                    target="_blank"
-                  ></q-btn>
-                  <q-btn
-                    flat
-                    round
-                    color="primary"
-                    icon="mdi-compare-horizontal"
-                    @click="openStatus(pedido)"
-                  />
-                  <q-btn
-                    flat
-                    round
-                    color="primary"
-                    icon="mdi-refresh"
-                    @click="reprocessarPedido(pedido)"
-                  />
-                  <q-btn
-                    flat
-                    round
-                    color="primary"
-                    icon="mdi-information-outline"
-                    @click="openPedido(pedido)"
-                  />
-                </q-card-actions>
-              </q-card>
-            </div>
-          </template>
-        </div>
-      </q-infinite-scroll>
+              <q-space />
 
-      <!--Abertura dos modais-->
-      <pedido-modal v-model="showPedidoModal" :pedido="selectedPedido" />
-      <change-status v-model="showChangeStatus" :pedido="selectedPedido" />
-    </q-list>
+              <q-separator inset class="q-mx-md" />
+            </q-card>
+          </div>
+        </template>
+      </div>
+    </q-infinite-scroll>
+
+    <woo-info-modal v-model="showPedidoModal" />
   </q-page>
 </template>

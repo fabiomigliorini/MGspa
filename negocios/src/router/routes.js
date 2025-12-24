@@ -1,4 +1,18 @@
 const routes = [
+  // WOOCOMMERCE
+  {
+    path: "/woo",
+    component: () => import("layouts/WooLayout.vue"),
+    children: [{ path: "", component: () => import("pages/WooPage.vue") }],
+  },
+  {
+    path: "/woo/painel",
+    component: () => import("layouts/WooPainelLayout.vue"),
+    children: [
+      { path: "", component: () => import("pages/WooPainelPage.vue") },
+    ],
+  },
+
   // OFFLINE
   {
     path: "/",
@@ -67,13 +81,6 @@ const routes = [
         component: () => import("pages/PranchetaPage.vue"),
       },
     ],
-  },
-
-  // WOOCOMMERCE
-  {
-    path: "/woo",
-    component: () => import("layouts/WooLayout.vue"),
-    children: [{ path: "", component: () => import("pages/WooPage.vue") }],
   },
 
   // LISTAGEM NEGOCIOS

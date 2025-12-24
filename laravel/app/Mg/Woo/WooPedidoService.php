@@ -6,7 +6,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 use Mg\Estoque\EstoqueLocal;
 use Mg\NaturezaOperacao\NaturezaOperacao;

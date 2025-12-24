@@ -56,6 +56,25 @@ class WooPedidoController extends Controller
         return WooPedidoResource::collection($peds);
     }
 
+    public function painel(WooPedidoRequest $request)
+    {
+        // pedidos "em aberto"
+        $peds = WooPedido::whereIn('status', [
+            'pending',
+            'processing',
+            'on-hold'
+        ])->get();
+
+        // 10 ultimos pedidos "finalizados" de cada status
+        foreach (['completed', 'cancelled', 'refunded', 'failed'] as $status) {
+            $part = WooPedido::where('status', $status)->orderBy('alteracaowoo', 'desc')->limit(10)->get();
+            $peds = $peds->merge($part);
+        }
+
+        // retorna formatado
+        return WooPedidoResource::collection($peds);
+    }
+
     public function reprocessar($id)
     {
         // valida id
