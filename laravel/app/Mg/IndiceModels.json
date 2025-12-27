@@ -8789,11 +8789,6 @@
         "classe": "TributacaoRegra",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Tributacao\/TributacaoRegra.php",
         "belongsTo": {
-            "codentetributante": {
-                "tabela": "tblentetributante",
-                "coluna": "codentetributante",
-                "metodo": "EntreTributante"
-            },
             "codnaturezaoperacao": {
                 "tabela": "tblnaturezaoperacao",
                 "coluna": "codnaturezaoperacao",
@@ -8816,37 +8811,6 @@
             }
         },
         "hasMany": []
-    },
-    "tblentetributante": {
-        "tabela": "tblentetributante",
-        "campocodigo": "codentetributante",
-        "namespace": "Mg\\Tributacao",
-        "classe": "EntreTributante",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Tributacao\/EntreTributante.php",
-        "belongsTo": {
-            "codusuarioalteracao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "UsuarioAlteracao"
-            },
-            "codusuariocriacao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuariocriacao",
-                "metodo": "UsuarioCriacao"
-            }
-        },
-        "hasMany": {
-            "tblnotafiscalitemtributo.codentetributante": {
-                "tabela": "tblnotafiscalitemtributo",
-                "coluna": "codentetributante",
-                "metodo": "NotaFiscalItemTributoS"
-            },
-            "tbltributacaoregra.codentetributante": {
-                "tabela": "tbltributacaoregra",
-                "coluna": "codentetributante",
-                "metodo": "TributacaoRegraS"
-            }
-        }
     },
     "tbltributo": {
         "tabela": "tbltributo",
@@ -8886,11 +8850,6 @@
         "classe": "NotaFiscalItemTributo",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalItemTributo.php",
         "belongsTo": {
-            "codentetributante": {
-                "tabela": "tblentetributante",
-                "coluna": "codentetributante",
-                "metodo": "EntreTributante"
-            },
             "codnotafiscalprodutobarra": {
                 "tabela": "tblnotafiscalprodutobarra",
                 "coluna": "codnotafiscalprodutobarra",

@@ -1,13 +1,12 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Dec/2025 18:54:14
+ * Date: 27/Dec/2025 10:51:41
  */
 
 namespace Mg\NotaFiscal;
 
 use Mg\MgModel;
-use Mg\Tributacao\EntreTributante;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\Tributacao\Tributo;
 use Mg\Usuario\Usuario;
@@ -25,7 +24,6 @@ class NotaFiscalItemTributo extends MgModel
         'basereducaopercentual',
         'beneficiocodigo',
         'cclasstrib',
-        'codentetributante',
         'codnotafiscalprodutobarra',
         'codtributo',
         'cst',
@@ -45,7 +43,6 @@ class NotaFiscalItemTributo extends MgModel
         'base' => 'float',
         'basereducao' => 'float',
         'basereducaopercentual' => 'float',
-        'codentetributante' => 'integer',
         'codnotafiscalitemtributo' => 'integer',
         'codnotafiscalprodutobarra' => 'integer',
         'codtributo' => 'integer',
@@ -58,11 +55,6 @@ class NotaFiscalItemTributo extends MgModel
 
 
     // Chaves Estrangeiras
-    public function EntreTributante()
-    {
-        return $this->belongsTo(EntreTributante::class, 'codentetributante', 'codentetributante');
-    }
-
     public function NotaFiscalProdutoBarra()
     {
         return $this->belongsTo(NotaFiscalProdutoBarra::class, 'codnotafiscalprodutobarra', 'codnotafiscalprodutobarra');

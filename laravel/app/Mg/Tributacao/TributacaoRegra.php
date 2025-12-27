@@ -1,13 +1,12 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Dec/2025 18:54:43
+ * Date: 27/Dec/2025 10:51:19
  */
 
 namespace Mg\Tributacao;
 
 use Mg\MgModel;
-use Mg\Tributacao\EntreTributante;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Tributacao\Tributo;
 use Mg\Usuario\Usuario;
@@ -24,7 +23,6 @@ class TributacaoRegra extends MgModel
         'beneficiocodigo',
         'cclasstrib',
         'codcidadedestino',
-        'codentetributante',
         'codestadodestino',
         'codnaturezaoperacao',
         'codtipoproduto',
@@ -49,7 +47,6 @@ class TributacaoRegra extends MgModel
         'aliquota' => 'float',
         'basepercentual' => 'float',
         'codcidadedestino' => 'integer',
-        'codentetributante' => 'integer',
         'codestadodestino' => 'integer',
         'codnaturezaoperacao' => 'integer',
         'codtipoproduto' => 'integer',
@@ -62,11 +59,6 @@ class TributacaoRegra extends MgModel
 
 
     // Chaves Estrangeiras
-    public function EntreTributante()
-    {
-        return $this->belongsTo(EntreTributante::class, 'codentetributante', 'codentetributante');
-    }
-
     public function NaturezaOperacao()
     {
         return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');

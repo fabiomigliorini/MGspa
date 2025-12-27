@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Dec/2025 18:55:29
+ * Date: 27/Dec/2025 10:49:43
  */
 
 namespace Mg\NaturezaOperacao;

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Dec/2025 18:55:15
+ * Date: 27/Dec/2025 10:51:27
  */
 
 namespace Mg\Tributacao;
@@ -19,7 +19,8 @@ class Tributo extends MgModel
 
     protected $fillable = [
         'codigo',
-        'descricao'
+        'descricao',
+        'ente'
     ];
 
     protected $dates = [
