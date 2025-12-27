@@ -1,23 +1,13 @@
 <template>
-  <mg-layout drawer>
-  <h1>TESTE</h1>
-  <template #tituloPagina>
-    Notas Fiscais
-  </template>
-
-  <template #content>
-  <h1>Notas Fiscais</h1>
-</template>
-</mg-layout>
+  <q-page class="flex flex-center">
+    <img
+      alt="Quasar logo"
+      src="~assets/quasar-logo-vertical.svg"
+      style="width: 200px; height: 200px"
+    />
+  </q-page>
 </template>
 
-<script>
-import { defineComponent, defineAsyncComponent } from 'vue'
-
-export default defineComponent({
-  name: 'IndexPage',
-  components: {
-    MgLayout: defineAsyncComponent(() => import('layouts/MgLayout.vue'))
-  }
-})
+<script setup>
+//
 </script>

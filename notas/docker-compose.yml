@@ -1,17 +1,19 @@
-version: '3.7'
 services:
-    quasar-notas:
-        build: ./
-        restart: unless-stopped
-        tty: true
-        volumes:
-            - /opt/www:/opt/www
-            - /tmp:/tmp/host
-            - /media/publico:/media/publico
-            - /etc/timezone:/etc/timezone:ro
-            - /etc/localtime:/etc/localtime:ro
-            - /usr/share/zoneinfo:/usr/share/zoneinfo
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        ports:
-            - "8085:8085"
+  notas:
+    build: ./
+    container_name: notas
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - /opt/www:/opt/www
+      - /tmp:/tmp/host
+      - /media/publico:/media/publico
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8082:8082"
+
+
