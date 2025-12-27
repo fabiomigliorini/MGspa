@@ -916,12 +916,13 @@ class NFePHPMakeService
         foreach ($tributos as $t) {
 
             $codigoTributo = $t->Tributo->codigo;
+            $enteTributo   = $t->Tributo->ente; // 👈 NOVO (FEDERAL | ESTADUAL | MUNICIPAL)
 
             // ================== IBS / CBS ==================
             if (in_array($codigoTributo, ['IBS', 'CBS'])) {
 
                 if (!$stdIBSCBS) {
-                    $stdIBSCBS = new stdClass();
+                    $stdIBSCBS = new \stdClass();
                     $stdIBSCBS->item = $nItem;
                     $stdIBSCBS->CST = $t->cst;
                     $stdIBSCBS->cClassTrib = $t->cclasstrib;
@@ -949,22 +950,25 @@ class NFePHPMakeService
                     }
                 }
 
-                $et = $t->EntreTributante;
-
+                // ---------- IBS ----------
                 if ($codigoTributo === 'IBS') {
-                    if ($et->tipo === 'ESTADO') {
+
+                    if ($enteTributo === 'ESTADUAL') {
                         $stdIBSCBS->gIBSUF_pIBSUF = number_format($t->aliquota, 4, '.', '');
                         $stdIBSCBS->gIBSUF_vIBSUF = number_format($t->valor, 2, '.', '');
                         $vIBS += $t->valor;
                     }
-                    if ($et->tipo === 'MUNICIPIO') {
+
+                    if ($enteTributo === 'MUNICIPAL') {
                         $stdIBSCBS->gIBSMun_pIBSMun = number_format($t->aliquota, 4, '.', '');
                         $stdIBSCBS->gIBSMun_vIBSMun = number_format($t->valor, 2, '.', '');
                         $vIBS += $t->valor;
                     }
                 }
 
+                // ---------- CBS ----------
                 if ($codigoTributo === 'CBS') {
+                    // CBS é sempre FEDERAL
                     $stdIBSCBS->gCBS_pCBS = number_format($t->aliquota, 4, '.', '');
                     $stdIBSCBS->gCBS_vCBS = number_format($t->valor, 2, '.', '');
                 }
