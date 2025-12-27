@@ -3322,6 +3322,11 @@
                 "tabela": "tbltributacaonaturezaoperacao",
                 "coluna": "codnaturezaoperacao",
                 "metodo": "TributacaoNaturezaOperacaoS"
+            },
+            "tbltributacaoregra.codnaturezaoperacao": {
+                "tabela": "tbltributacaoregra",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "TributacaoRegraS"
             }
         }
     },
@@ -3998,6 +4003,11 @@
                 "tabela": "tblnotafiscalprodutobarra",
                 "coluna": "codnotafiscalprodutobarraorigem",
                 "metodo": "NotaFiscalProdutoBarraS"
+            },
+            "tblnotafiscalitemtributo.codnotafiscalprodutobarra": {
+                "tabela": "tblnotafiscalitemtributo",
+                "coluna": "codnotafiscalprodutobarra",
+                "metodo": "NotaFiscalItemTributoS"
             }
         }
     },
@@ -8768,6 +8778,138 @@
                 "tabela": "tblwoopedido",
                 "coluna": "codwoopedido",
                 "metodo": "WooPedido"
+            }
+        },
+        "hasMany": []
+    },
+    "tbltributacaoregra": {
+        "tabela": "tbltributacaoregra",
+        "campocodigo": "codtributacaoregra",
+        "namespace": "Mg\\Tributacao",
+        "classe": "TributacaoRegra",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Tributacao\/TributacaoRegra.php",
+        "belongsTo": {
+            "codentetributante": {
+                "tabela": "tblentetributante",
+                "coluna": "codentetributante",
+                "metodo": "EntreTributante"
+            },
+            "codnaturezaoperacao": {
+                "tabela": "tblnaturezaoperacao",
+                "coluna": "codnaturezaoperacao",
+                "metodo": "NaturezaOperacao"
+            },
+            "codtributo": {
+                "tabela": "tbltributo",
+                "coluna": "codtributo",
+                "metodo": "Tributo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
+    },
+    "tblentetributante": {
+        "tabela": "tblentetributante",
+        "campocodigo": "codentetributante",
+        "namespace": "Mg\\Tributacao",
+        "classe": "EntreTributante",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Tributacao\/EntreTributante.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnotafiscalitemtributo.codentetributante": {
+                "tabela": "tblnotafiscalitemtributo",
+                "coluna": "codentetributante",
+                "metodo": "NotaFiscalItemTributoS"
+            },
+            "tbltributacaoregra.codentetributante": {
+                "tabela": "tbltributacaoregra",
+                "coluna": "codentetributante",
+                "metodo": "TributacaoRegraS"
+            }
+        }
+    },
+    "tbltributo": {
+        "tabela": "tbltributo",
+        "campocodigo": "codtributo",
+        "namespace": "Mg\\Tributacao",
+        "classe": "Tributo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Tributacao\/Tributo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnotafiscalitemtributo.codtributo": {
+                "tabela": "tblnotafiscalitemtributo",
+                "coluna": "codtributo",
+                "metodo": "NotaFiscalItemTributoS"
+            },
+            "tbltributacaoregra.codtributo": {
+                "tabela": "tbltributacaoregra",
+                "coluna": "codtributo",
+                "metodo": "TributacaoRegraS"
+            }
+        }
+    },
+    "tblnotafiscalitemtributo": {
+        "tabela": "tblnotafiscalitemtributo",
+        "campocodigo": "codnotafiscalitemtributo",
+        "namespace": "Mg\\NotaFiscal",
+        "classe": "NotaFiscalItemTributo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NotaFiscal\/NotaFiscalItemTributo.php",
+        "belongsTo": {
+            "codentetributante": {
+                "tabela": "tblentetributante",
+                "coluna": "codentetributante",
+                "metodo": "EntreTributante"
+            },
+            "codnotafiscalprodutobarra": {
+                "tabela": "tblnotafiscalprodutobarra",
+                "coluna": "codnotafiscalprodutobarra",
+                "metodo": "NotaFiscalProdutoBarra"
+            },
+            "codtributo": {
+                "tabela": "tbltributo",
+                "coluna": "codtributo",
+                "metodo": "Tributo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
             }
         },
         "hasMany": []

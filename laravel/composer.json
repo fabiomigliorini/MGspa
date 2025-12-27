@@ -23,7 +23,7 @@
         "nfephp-org/sped-da": "^1.1",
         "nfephp-org/sped-ibpt": "^2.0",
         "nfephp-org/sped-mdfe": "^4.1",
-        "nfephp-org/sped-nfe": "^5.1",
+        "nfephp-org/sped-nfe": "^5.2",
         "openboleto/openboleto": "dev-master",
         "phpoffice/phpspreadsheet": "^1.28",
         "picqer/php-barcode-generator": "^2.4",

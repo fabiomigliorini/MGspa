@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Dec/2025 16:39:35
+ * Date: 26/Dec/2025 18:53:57
  */
 
 namespace Mg\NotaFiscal;
@@ -9,6 +9,7 @@ namespace Mg\NotaFiscal;
 use Mg\MgModel;
 use Mg\Estoque\EstoqueMovimento;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
+use Mg\NotaFiscal\NotaFiscalItemTributo;
 use Mg\NaturezaOperacao\Cfop;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NotaFiscal\NotaFiscal;
@@ -22,10 +23,6 @@ class NotaFiscalProdutoBarra extends MgModel
 
 
     protected $fillable = [
-        'cbsbase',
-        'cbscst',
-        'cbspercentual',
-        'cbsvalor',
         'certidaosefazmt',
         'codcfop',
         'codnegocioprodutobarra',
@@ -48,10 +45,6 @@ class NotaFiscalProdutoBarra extends MgModel
         'funruralvalor',
         'iagrokg',
         'iagrovalor',
-        'ibsbase',
-        'ibscst',
-        'ibspercentual',
-        'ibsvalor',
         'icmsbase',
         'icmsbasepercentual',
         'icmscst',
@@ -68,10 +61,6 @@ class NotaFiscalProdutoBarra extends MgModel
         'irpjbase',
         'irpjpercentual',
         'irpjvalor',
-        'isbase',
-        'iscst',
-        'ispercentual',
-        'isvalor',
         'observacoes',
         'ordem',
         'pedido',
@@ -97,9 +86,6 @@ class NotaFiscalProdutoBarra extends MgModel
     ];
 
     protected $casts = [
-        'cbsbase' => 'float',
-        'cbspercentual' => 'float',
-        'cbsvalor' => 'float',
         'certidaosefazmt' => 'boolean',
         'codcfop' => 'integer',
         'codnegocioprodutobarra' => 'integer',
@@ -123,9 +109,6 @@ class NotaFiscalProdutoBarra extends MgModel
         'funruralvalor' => 'float',
         'iagrokg' => 'float',
         'iagrovalor' => 'float',
-        'ibsbase' => 'float',
-        'ibspercentual' => 'float',
-        'ibsvalor' => 'float',
         'icmsbase' => 'float',
         'icmsbasepercentual' => 'float',
         'icmscst' => 'float',
@@ -142,9 +125,6 @@ class NotaFiscalProdutoBarra extends MgModel
         'irpjbase' => 'float',
         'irpjpercentual' => 'float',
         'irpjvalor' => 'float',
-        'isbase' => 'float',
-        'ispercentual' => 'float',
-        'isvalor' => 'float',
         'ordem' => 'integer',
         'pedidoitem' => 'integer',
         'pisbase' => 'float',
@@ -204,6 +184,11 @@ class NotaFiscalProdutoBarra extends MgModel
     public function EstoqueMovimentoS()
     {
         return $this->hasMany(EstoqueMovimento::class, 'codnotafiscalprodutobarra', 'codnotafiscalprodutobarra');
+    }
+
+    public function NotaFiscalItemTributoS()
+    {
+        return $this->hasMany(NotaFiscalItemTributo::class, 'codnotafiscalprodutobarra', 'codnotafiscalprodutobarra');
     }
 
     public function NotaFiscalProdutoBarraS()

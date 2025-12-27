@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 30/Jan/2024 18:04:28
+ * Date: 26/Dec/2025 18:55:29
  */
 
 namespace Mg\NaturezaOperacao;
@@ -12,6 +12,7 @@ use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
+use Mg\Tributacao\TributacaoRegra;
 use Mg\ContaContabil\ContaContabil;
 use Mg\Estoque\EstoqueMovimentoTipo;
 use Mg\Titulo\TipoTitulo;
@@ -132,6 +133,11 @@ class NaturezaOperacao extends MgModel
     public function TributacaoNaturezaOperacaoS()
     {
         return $this->hasMany(TributacaoNaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
+    }
+
+    public function TributacaoRegraS()
+    {
+        return $this->hasMany(TributacaoRegra::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
     }
 
 }

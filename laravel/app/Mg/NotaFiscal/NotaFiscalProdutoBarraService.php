@@ -4,6 +4,7 @@ namespace Mg\NotaFiscal;
 
 use DB;
 use Exception;
+use Mg\Tributacao\TributacaoService;
 // use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
 
 use Mg\Filial\Filial;
@@ -155,6 +156,8 @@ class NotaFiscalProdutoBarraService
                     $nfpb->irpjpercentual = $trib->irpjpercentual;
                     $nfpb->irpjvalor = round(($nfpb->irpjbase * $nfpb->irpjpercentual) / 100, 2);
                 }
+
+                TributacaoService::recalcularTributosItem($nfpb);
             }
         } else {
             $nfpb->csosn = $trib->csosn;

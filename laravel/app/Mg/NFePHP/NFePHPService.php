@@ -43,7 +43,7 @@ class NFePHPService extends MgService
     public static function criar(NotaFiscal $nf, $offline = false)
     {
         // Instancia Tools para a configuracao e certificado
-        $tools = NFePHPConfigService::instanciaTools($nf->Filial);
+        $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
         $tools->model($nf->modelo);
 
         // Cria Arquivo XML
@@ -65,7 +65,7 @@ class NFePHPService extends MgService
     {
 
         // Instancia Tools para a configuracao e certificado
-        $tools = NFePHPConfigService::instanciaTools($nf->Filial);
+        $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
         $tools->model($nf->modelo);
 
         // valida se existe Chave da NFe
@@ -128,7 +128,7 @@ class NFePHPService extends MgService
     public static function enviarSincrono(NotaFiscal $nf)
     {
         // Instancia Tools para a configuracao e certificado
-        $tools = NFePHPConfigService::instanciaTools($nf->Filial);
+        $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
         $tools->model($nf->modelo);
 
         // valida se existe Chave da NFe

@@ -9,7 +9,7 @@ use Mg\Filial\Filial;
 
 class NFePHPConfigService
 {
-    public static function config(Filial $filial, $versao = '4.00')
+    public static function config(Filial $filial, $versao = '4.00', $schemes = null)
     {
         if (!$filial->Pessoa->fisica) {
             if (empty($filial->nfcetoken)) {
@@ -53,13 +53,18 @@ class NFePHPConfigService
             $config['versao'] = '3.10';
         }
 
+        // If caller requested a specific schemes (e.g. PL_010_V4 to enable IBSCBS)
+        if (!empty($schemes)) {
+            $config['schemes'] = $schemes;
+        }
+
         return json_encode($config);
     }
 
-    public static function instanciaTools(Filial $filial, $versao = '4.00')
+    public static function instanciaTools(Filial $filial, $versao = '4.00', $schemes = null)
     {
         // Monta Configuracao da Filial
-        $config = static::config($filial, $versao);
+        $config = static::config($filial, $versao, $schemes);
 
         // Le Certificado Digital
         $arquivo = env('NFE_PHP_PATH') . "/Certs/{$filial->codfilial}.pfx";
