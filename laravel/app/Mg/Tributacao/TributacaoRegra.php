@@ -6,6 +6,8 @@
 
 namespace Mg\Tributacao;
 
+use Mg\Cidade\Cidade;
+use Mg\Cidade\Estado;
 use Mg\MgModel;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Tributacao\Tributo;
@@ -67,6 +69,16 @@ class TributacaoRegra extends MgModel
     public function Tributo()
     {
         return $this->belongsTo(Tributo::class, 'codtributo', 'codtributo');
+    }
+
+    public function CidadeDestino()
+    {
+        return $this->belongsTo(Cidade::class, 'codcidadedestino', 'codcidade');
+    }
+
+    public function EstadoDestino()
+    {
+        return $this->belongsTo(Estado::class, 'codestadodestino', 'codestado');
     }
 
     public function UsuarioAlteracao()

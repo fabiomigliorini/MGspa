@@ -125,7 +125,7 @@ async function buscarNotas() {
 
   try {
     // Aqui você faria a chamada para a API
-    // const response = await api.get('v1/notas')
+    // const response = await api.get('notas')
     // notas.value = response.data
 
     // Dados mockados para teste

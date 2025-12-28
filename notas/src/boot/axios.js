@@ -5,10 +5,11 @@ import { Notify } from 'quasar'
 
 // Cria instância da API
 const api = axios.create({
-  baseURL: process.env.DEV ? '/api' : process.env.API_URL
+  baseURL: process.env.API_URL,
 })
 
-export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
+export default boot(({ app }) => {
+  // <-- REMOVE 'router' aqui
 
   // ===== REQUEST INTERCEPTOR =====
   api.interceptors.request.use(
@@ -23,7 +24,7 @@ export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
     },
     (error) => {
       return Promise.reject(error)
-    }
+    },
   )
 
   // ===== RESPONSE INTERCEPTOR =====
@@ -38,7 +39,8 @@ export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
         const status = error.response.status
 
         switch (status) {
-          case 401: {  // <-- ADICIONE { } para criar bloco
+          case 401: {
+            // <-- ADICIONE { } para criar bloco
             // Token inválido ou expirado
             console.warn('Token expirado ou inválido (401)')
             authStore.setToken(null)
@@ -47,7 +49,7 @@ export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
             Notify.create({
               type: 'negative',
               message: 'Sessão expirada. Faça login novamente.',
-              position: 'top'
+              position: 'top',
             })
 
             // Redireciona para login
@@ -56,13 +58,13 @@ export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
               window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
             }, 1500)
             break
-          }  // <-- FECHE o bloco
+          } // <-- FECHE o bloco
 
           case 403:
             Notify.create({
               type: 'negative',
               message: 'Você não tem permissão para esta ação',
-              position: 'top'
+              position: 'top',
             })
             break
 
@@ -78,7 +80,7 @@ export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
             Notify.create({
               type: 'negative',
               message: 'Erro no servidor. Tente novamente.',
-              position: 'top'
+              position: 'top',
             })
             break
         }
@@ -86,12 +88,12 @@ export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
         Notify.create({
           type: 'negative',
           message: 'Erro de conexão. Verifique sua internet.',
-          position: 'top'
+          position: 'top',
         })
       }
 
       return Promise.reject(error)
-    }
+    },
   )
 
   // Disponibiliza globalmente
