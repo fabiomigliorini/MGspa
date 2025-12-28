@@ -78,8 +78,17 @@ export default defineConfig((/* ctx */) => {
     devServer: {
       https: true,
       port: 8082,
-      // host: 'notas-dev.mgpapelaria.com.br',
-      // open: true, // opens browser window automatically
+      open: false,
+      host: '0.0.0.0',
+
+      // ADICIONE ISSO:
+      proxy: {
+        '/api': {
+          target: 'https://api-mgspa-dev.mgpapelaria.com.br',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
