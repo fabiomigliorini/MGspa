@@ -80,15 +80,6 @@ export default defineConfig((/* ctx */) => {
       port: 8082,
       open: false,
       host: '0.0.0.0',
-
-      // ADICIONE ISSO:
-      proxy: {
-        '/api': {
-          target: 'https://api-mgspa-dev.mgpapelaria.com.br',
-          changeOrigin: true,
-          secure: false
-        }
-      }
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
@@ -97,6 +88,7 @@ export default defineConfig((/* ctx */) => {
 
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
+      lang: 'pt-BR', // Quasar language pack
 
       // For special cases outside of where the auto-import strategy can have an impact
       // (like functional components as one of the examples),
@@ -106,7 +98,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ['Notify', 'LoadingBar', 'Dialog'],
     },
 
     // animations: 'all', // --- includes all animations

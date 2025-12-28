@@ -1,24 +1,102 @@
-import { defineBoot } from '#q-app/wrappers'
+import { boot } from 'quasar/wrappers'
 import axios from 'axios'
+import { useAuthStore } from 'src/stores/auth'
+import { Notify } from 'quasar'
 
-// Be careful when using SSR for cross-request state pollution
-// due to creating a Singleton instance here;
-// If any client changes this (global) instance, it might be a
-// good idea to move this instance creation inside of the
-// "export default () => {}" function below (which runs individually
-// for each client)
-const api = axios.create({ baseURL: 'https://api.example.com' })
+// Cria instância da API
+const api = axios.create({
+  baseURL: process.env.DEV ? '/api' : process.env.API_URL
+})
 
-export default defineBoot(({ app }) => {
-  // for use inside Vue files (Options API) through this.$axios and this.$api
+export default boot(({ app }) => {  // <-- REMOVE 'router' aqui
 
+  // ===== REQUEST INTERCEPTOR =====
+  api.interceptors.request.use(
+    (config) => {
+      const authStore = useAuthStore()
+
+      if (authStore.token) {
+        config.headers.Authorization = `Bearer ${authStore.token}`
+      }
+
+      return config
+    },
+    (error) => {
+      return Promise.reject(error)
+    }
+  )
+
+  // ===== RESPONSE INTERCEPTOR =====
+  api.interceptors.response.use(
+    (response) => {
+      return response
+    },
+    (error) => {
+      const authStore = useAuthStore()
+
+      if (error.response) {
+        const status = error.response.status
+
+        switch (status) {
+          case 401: {  // <-- ADICIONE { } para criar bloco
+            // Token inválido ou expirado
+            console.warn('Token expirado ou inválido (401)')
+            authStore.setToken(null)
+            authStore.user = null
+
+            Notify.create({
+              type: 'negative',
+              message: 'Sessão expirada. Faça login novamente.',
+              position: 'top'
+            })
+
+            // Redireciona para login
+            const currentUrl = encodeURIComponent(window.location.origin + '/#/login')
+            setTimeout(() => {
+              window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
+            }, 1500)
+            break
+          }  // <-- FECHE o bloco
+
+          case 403:
+            Notify.create({
+              type: 'negative',
+              message: 'Você não tem permissão para esta ação',
+              position: 'top'
+            })
+            break
+
+          case 404:
+            console.warn('Recurso não encontrado (404):', error.config.url)
+            break
+
+          case 422:
+            // Erros de validação - será tratado no componente
+            break
+
+          case 500:
+            Notify.create({
+              type: 'negative',
+              message: 'Erro no servidor. Tente novamente.',
+              position: 'top'
+            })
+            break
+        }
+      } else if (error.request) {
+        Notify.create({
+          type: 'negative',
+          message: 'Erro de conexão. Verifique sua internet.',
+          position: 'top'
+        })
+      }
+
+      return Promise.reject(error)
+    }
+  )
+
+  // Disponibiliza globalmente
   app.config.globalProperties.$axios = axios
-  // ^ ^ ^ this will allow you to use this.$axios (for Vue Options API form)
-  //       so you won't necessarily have to import axios in each vue file
-
   app.config.globalProperties.$api = api
-  // ^ ^ ^ this will allow you to use this.$api (for Vue Options API form)
-  //       so you can easily perform requests against your app's API
 })
 
 export { api }

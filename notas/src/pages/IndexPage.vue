@@ -1,73 +1,54 @@
 <template>
-  <q-page class="flex flex-center">
-    <div class="text-center q-pa-md" style="max-width: 500px;">
-      <h4>Bem-vindo ao Sistema de Notas!</h4>
-
-      <div v-if="authStore.loading" class="q-mt-md">
-        <q-spinner color="primary" size="3em" />
-        <p>Validando...</p>
-      </div>
-
-      <div v-else-if="authStore.user" class="q-mt-md">
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">✅ Você está autenticado!</div>
-            <div class="text-subtitle2 q-mt-sm">
-              Usuário: <strong>{{ authStore.user.usuario }}</strong>
-            </div>
+  <q-page class="q-pa-md">
+    <div class="row q-col-gutter-md">
+      <!-- Card de Boas-vindas -->
+      <div class="col-12">
+        <q-card flat bordered>
+          <q-card-section class="bg-primary text-white">
+            <div class="text-h4">Bem-vindo, {{ user?.usuario }}! 👋</div>
+            <div class="text-subtitle1">Sistema de Notas Fiscais e Documentos Eletrônicos</div>
           </q-card-section>
-
-          <q-card-section v-if="authStore.user.permissoes">
-            <div class="text-caption text-grey-7">Permissões:</div>
-            <q-chip
-              v-for="perm in authStore.user.permissoes"
-              :key="perm.grupousuario"
-              color="primary"
-              text-color="white"
-              size="sm"
-            >
-              {{ perm.grupousuario }}
-            </q-chip>
-          </q-card-section>
-
-          <q-card-actions>
-            <q-btn
-              color="negative"
-              label="Sair"
-              @click="authStore.logout()"
-              icon="logout"
-            />
-          </q-card-actions>
         </q-card>
       </div>
 
-      <div v-else class="q-mt-md">
-        <p>❌ Você não está autenticado.</p>
-        <q-btn
-          color="primary"
-          label="Fazer Login"
-          icon="login"
-          @click="goLogin"
-        />
-      </div>
+      <!-- Ações Rápidas -->
+      <!-- <div class="col-12">
+        <q-card flat bordered>
+          <q-card-section>
+            <div class="text-h6 q-mb-md">Ações Rápidas</div>
+            <div class="row q-gutter-md">
+              <q-btn
+                v-if="hasPermission('Financeiro') || isAdmin"
+                color="primary"
+                icon="description"
+                label="Notas Fiscais"
+                size="lg"
+                unelevated
+                :to="{ name: 'notas' }"
+              />
+              <q-btn
+                color="secondary"
+                icon="settings"
+                label="Configurações"
+                size="lg"
+                unelevated
+                @click="$q.notify('Em breve')"
+              />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div> -->
     </div>
   </q-page>
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
-import { useAuthStore } from 'src/stores/auth'
+import { useAuth } from 'src/composables/useAuth'
 
-const authStore = useAuthStore()
-
-function goLogin() {
-  const currentUrl = encodeURIComponent(window.location.origin + '/#/login')
-  window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
-}
+const { user, validateToken } = useAuth()
 
 onMounted(async () => {
-  if (authStore.token) {
-    await authStore.validateToken()
-  }
+  await validateToken()
 })
 </script>
