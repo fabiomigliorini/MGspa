@@ -53,5 +53,17 @@ export const useAuthStore = defineStore('auth', () => {
     window.location.href = process.env.API_AUTH_URL + '/login'
   }
 
-  return { token, user, loading, setToken, validateToken, logout }
+  function hasAnyPermission(permissionsList) {
+    if (!user.value?.permissoes) return false
+
+    const userPermissions = user.value.permissoes.map(p => p.grupousuario)
+
+    // Administrador tem acesso a tudo
+    if (userPermissions.includes('Administrador')) return true
+
+    // Verifica se tem pelo menos uma das permissões
+    return permissionsList.some(p => userPermissions.includes(p))
+  }
+
+  return { token, user, loading, setToken, validateToken, logout, hasAnyPermission }
 })

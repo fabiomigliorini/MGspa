@@ -3,17 +3,30 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
+      {
+        path: '',
+        name: 'home',
+        component: () => import('pages/IndexPage.vue'),
+        meta: { auth: true }  // <-- Requer autenticação
+      },
+      {
+        path: 'admin',
+        name: 'admin',
+        component: () => import('pages/IndexPage.vue'), // Reutiliza por enquanto
+        meta: {
+          auth: true,
+          permissions: ['Administrador']  // <-- Só admins
+        }
+      }
     ]
   },
 
-  // Rota de login (ADICIONE ESTA)
   {
     path: '/login',
+    name: 'login',
     component: () => import('pages/LoginPage.vue')
   },
 
-  // Always leave this as last one
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue')
