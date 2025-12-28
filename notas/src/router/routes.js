@@ -1,47 +1,46 @@
+import NotasFiltrosDrawer from 'src/components/drawers/NotasFiltrosDrawer.vue'
+import NotasDetalhesDrawer from 'src/components/drawers/NotasDetalhesDrawer.vue'
+
 const routes = [
-
-  // ROTAS LIVRES
-  {
-    path: '/login', name: 'login',
-    component: () => import('pages/Login.vue')
-  },
-
-  // ROTAS AUTENTICADAS
   {
     path: '/',
+    component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', name: 'inicio', component: () => import('pages/IndexPage.vue') },
+      {
+        path: '',
+        name: 'home',
+        component: () => import('pages/IndexPage.vue'),
+        meta: {
+          auth: true,
+          // SEM drawers = botões desabilitados
+        },
+      },
+      {
+        path: 'notas',
+        name: 'notas',
+        component: () => import('pages/NotasPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+          leftDrawer: NotasFiltrosDrawer, // <-- Drawer esquerda
+          rightDrawer: NotasDetalhesDrawer, // <-- Drawer direita
+        },
+      },
     ],
-    meta: {
-      auth: true
-    }
   },
-  // Always leave this as last one,
-  // but you can also remove it
+
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('pages/LoginPage.vue'),
+    meta: { auth: false },
+  },
+
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
+    name: 'error404',
+    component: () => import('pages/ErrorNotFound.vue'),
   },
 ]
 
 export default routes
-
-
-// const routes = [
-//   {
-//     path: '/',
-//     component: () => import('pages/Login.vue'),
-//     children: [
-//       { path: '', component: () => import('pages/IndexPage.vue') }
-//     ]
-//   },
-
-//   // Always leave this as last one,
-//   // but you can also remove it
-//   {
-//     path: '/:catchAll(.*)*',
-//     component: () => import('pages/ErrorNotFound.vue')
-//   }
-// ]
-
-// export default routes

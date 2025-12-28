@@ -1,19 +1,7 @@
 import { route } from 'quasar/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-import { guardaToken } from 'src/stores'
-import { api } from 'src/boot/axios'
-
-/*
- * If not building with SSR mode, you can
- * directly export the Router instantiation;
- *
- * The function below can be async too; either use
- * async/await or return a Promise which resolves
- * with the Router instance.
- * 
- * 
- */
+import { useAuthStore } from 'src/stores/auth'
 
 export default route(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
@@ -23,44 +11,70 @@ export default route(function (/* { store, ssrContext } */) {
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
-
-    // Leave this as is and make changes in quasar.conf.js instead!
-    // quasar.conf.js -> build -> vueRouterMode
-    // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 
-
+  // Guard global - verifica autenticação antes de cada rota
   Router.beforeEach(async (to, from, next) => {
+    const authStore = useAuthStore()
 
-    if (to.meta?.auth) {
-      const auth = guardaToken()
-
-      if (auth.token) {
-        const EstaAutenticado = await auth.verificaToken()
-
-        if (EstaAutenticado) {
-          auth.usuarioLogado = EstaAutenticado
-          auth.username(EstaAutenticado.usuario)
-
-          // Envia sempre o Token em todas as requisições
-          api.defaults.headers.common['Authorization'] = 'Bearer ' + auth.token
-          // api.defaults.headers.put['Access-Control-Allow-Origin'] = '*'
-          // api.defaults.headers.put['Content-Type'] ='application/json;charset=utf-8'
-          // api.defaults.withCredentials = true
-          next()
-        } else {
-          api.defaults.headers.common['Authorization'] = ''
-          next({ name: 'login' })
-        }
-      } else {
-        api.defaults.headers.common['Authorization'] = ''
-        next({ name: 'login' })
-      }
-    } else {
-      next()
+    // Proteção contra loop infinito
+    const loopCheck = sessionStorage.getItem('login_redirect_check')
+    if (loopCheck && parseInt(loopCheck) > 3) {
+      console.error('Loop infinito detectado! Limpando e parando...')
+      sessionStorage.removeItem('login_redirect_check')
+      alert('Erro: Loop infinito detectado. Entre em contato com o suporte.')
+      return next(false)
     }
 
+    // Se estiver indo para /login, deixa passar SEM verificações
+    if (to.path === '/login') {
+      sessionStorage.removeItem('login_redirect_check')
+      return next()
+    }
+
+    // Se a rota requer autenticação
+    if (to.meta?.auth) {
+      // Verifica se tem token
+      if (!authStore.token) {
+        console.log('Sem token, redirecionando para login...')
+
+        // Incrementa contador de redirects
+        const count = parseInt(loopCheck || 0) + 1
+        sessionStorage.setItem('login_redirect_check', count)
+
+        const currentUrl = encodeURIComponent(window.location.origin + '/#/login')
+        window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
+        return next(false)
+      }
+
+      // Se chegou aqui, tem token - limpa o contador
+      sessionStorage.removeItem('login_redirect_check')
+
+      // Valida o token (se ainda não tiver dados do usuário)
+      if (!authStore.user) {
+        const isValid = await authStore.validateToken()
+
+        if (!isValid) {
+          console.log('Token inválido, redirecionando para login...')
+          const currentUrl = encodeURIComponent(window.location.origin + '/#/login')
+          window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
+          return next(false)
+        }
+      }
+
+      // Verifica permissões específicas (se definidas na rota)
+      if (to.meta?.permissions && to.meta.permissions.length > 0) {
+        const hasPermission = authStore.hasAnyPermission(to.meta.permissions)
+
+        if (!hasPermission) {
+          console.warn('Usuário sem permissão para:', to.path)
+          return next({ name: 'home' })
+        }
+      }
+    }
+
+    next()
   })
 
   return Router
