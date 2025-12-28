@@ -1,3 +1,6 @@
+import NotasFiltrosDrawer from 'src/components/drawers/NotasFiltrosDrawer.vue'
+import NotasDetalhesDrawer from 'src/components/drawers/NotasDetalhesDrawer.vue'
+
 const routes = [
   {
     path: '/',
@@ -7,30 +10,37 @@ const routes = [
         path: '',
         name: 'home',
         component: () => import('pages/IndexPage.vue'),
-        meta: { auth: true }  // <-- Requer autenticação
-      },
-      {
-        path: 'admin',
-        name: 'admin',
-        component: () => import('pages/IndexPage.vue'), // Reutiliza por enquanto
         meta: {
           auth: true,
-          permissions: ['Administrador']  // <-- Só admins
-        }
-      }
-    ]
+          // SEM drawers = botões desabilitados
+        },
+      },
+      {
+        path: 'notas',
+        name: 'notas',
+        component: () => import('pages/NotasPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+          leftDrawer: NotasFiltrosDrawer, // <-- Drawer esquerda
+          rightDrawer: NotasDetalhesDrawer, // <-- Drawer direita
+        },
+      },
+    ],
   },
 
   {
     path: '/login',
     name: 'login',
-    component: () => import('pages/LoginPage.vue')
+    component: () => import('pages/LoginPage.vue'),
+    meta: { auth: false },
   },
 
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
-  }
+    name: 'error404',
+    component: () => import('pages/ErrorNotFound.vue'),
+  },
 ]
 
 export default routes

@@ -3,102 +3,68 @@
     <!-- Header -->
     <q-header elevated class="bg-primary text-white">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
+        <!-- Hamburger ESQUERDO -->
+        <q-btn
+          dense
+          flat
+          round
+          icon="menu"
+          @click="leftDrawerOpen = !leftDrawerOpen"
+          :disable="!$route.meta.leftDrawer"
+        />
 
-        <q-toolbar-title>
-          <q-icon name="description" size="sm" class="q-mr-sm" />
-          Sistema de Notas Fiscais
+        <q-toolbar-title class="q-ml-sm">
+          <q-avatar size="36px" class="q-mr-sm">
+            <img src="/MGPapelariaQuadrado.svg" alt="MG Papelaria" />
+          </q-avatar>
+          Notas & Documentos Fiscais
         </q-toolbar-title>
 
-        <div v-if="isAuthenticated">
-          <q-btn round flat icon="account_circle">
-            <q-menu>
-              <q-list style="width: 250px">
-                <!-- Avatar e Nome -->
-                <q-item>
-                  <q-item-section avatar>
-                    <q-avatar color="primary" text-color="white" size="50px">
-                      {{ user?.usuario?.charAt(0).toUpperCase() }}
-                    </q-avatar>
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label class="text-weight-bold">{{ user?.usuario }}</q-item-label>
-                    <q-item-label caption v-if="isAdmin">
-                      <q-icon name="star" size="xs" color="amber" /> Administrador
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
+        <!-- Menu do Usuário -->
+        <user-menu />
 
-                <q-separator />
+        <!-- App Launcher -->
+        <app-launcher />
 
-                <!-- Permissões -->
-                <q-item>
-                  <q-item-section>
-                    <q-item-label overline class="text-grey-7">Permissões</q-item-label>
-                    <div class="row q-gutter-xs q-mt-xs">
-                      <q-chip
-                        v-for="perm in permissions"
-                        :key="perm"
-                        size="sm"
-                        color="primary"
-                        text-color="white"
-                        dense
-                      >
-                        {{ perm }}
-                      </q-chip>
-                    </div>
-                  </q-item-section>
-                </q-item>
-
-                <q-separator />
-
-                <!-- Logout -->
-                <q-item clickable v-close-popup @click="handleLogout">
-                  <q-item-section avatar>
-                    <q-icon name="logout" color="negative" />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>Sair</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
-        </div>
+        <!-- Hamburger DIREITO -->
+        <q-btn
+          dense
+          flat
+          round
+          icon="menu"
+          @click="rightDrawerOpen = !rightDrawerOpen"
+          :disable="!$route.meta.rightDrawer"
+        />
       </q-toolbar>
     </q-header>
 
-    <!-- Menu Lateral LIMPO -->
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-grey-2">
+    <!-- Drawer ESQUERDA -->
+    <q-drawer
+      v-if="$route.meta.leftDrawer"
+      v-model="leftDrawerOpen"
+      show-if-above
+      bordered
+      class="bg-grey-2"
+      :width="280"
+    >
       <q-scroll-area class="fit">
-        <q-list>
-          <q-item-label header>Menu</q-item-label>
+        <component :is="$route.meta.leftDrawer" />
+      </q-scroll-area>
+    </q-drawer>
 
-          <!-- Home -->
-          <q-item clickable :to="{ name: 'home' }" exact active-class="bg-primary text-white">
-            <q-item-section avatar>
-              <q-icon name="home" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Início</q-item-label>
-            </q-item-section>
-          </q-item>
-
-          <!-- Notas Fiscais (se tiver permissão) -->
-          <q-item
-            v-if="hasPermission('Financeiro') || isAdmin"
-            clickable
-            :to="{ name: 'notas' }"
-            active-class="bg-primary text-white"
-          >
-            <q-item-section avatar>
-              <q-icon name="description" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Notas Fiscais</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
+    <!-- Drawer DIREITA -->
+    <q-drawer
+      v-if="$route.meta.rightDrawer"
+      v-model="rightDrawerOpen"
+      side="right"
+      bordered
+      overlay
+      behavior="mobile"
+      class="bg-grey-2"
+      :width="350"
+    >
+      <q-scroll-area class="fit">
+        <component :is="$route.meta.rightDrawer" />
       </q-scroll-area>
     </q-drawer>
 
@@ -111,31 +77,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useAuth } from 'src/composables/useAuth'
-import { Dialog } from 'quasar'
+import AppLauncher from 'src/components/AppLauncher.vue'
+import UserMenu from 'src/components/UserMenu.vue'
 
-const { user, isAuthenticated, isAdmin, permissions, hasPermission, logout } = useAuth()
 const leftDrawerOpen = ref(false)
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
-
-function handleLogout() {
-  Dialog.create({
-    title: 'Confirmar',
-    message: 'Deseja realmente sair do sistema?',
-    cancel: {
-      label: 'Cancelar',
-      flat: true,
-    },
-    ok: {
-      label: 'Sair',
-      color: 'negative',
-    },
-    persistent: true,
-  }).onOk(() => {
-    logout()
-  })
-}
+const rightDrawerOpen = ref(false)
 </script>

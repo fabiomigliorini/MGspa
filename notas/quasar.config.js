@@ -80,6 +80,13 @@ export default defineConfig((/* ctx */) => {
       port: 8082,
       open: false,
       host: '0.0.0.0',
+      client: {
+        webSocketURL: 'ws://sistema-dev.mgpapelaria.com.br:8082/ws', // <-- URL COMPLETA como string
+        overlay: {
+          warnings: false,
+          errors: true,
+        },
+      },
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
@@ -135,7 +142,26 @@ export default defineConfig((/* ctx */) => {
       // manualStoreHydration: true,
       // manualPostHydrationTrigger: true,
 
-      pwa: false,
+      pwa: {
+        workboxMode: 'GenerateSW', // ou 'InjectManifest' para mais controle
+        injectPwaMetaTags: true,
+        swFilename: 'sw.js',
+        manifestFilename: 'manifest.json',
+        useCredentialsForManifestTag: false,
+
+        extendManifestJson(json) {
+          json.name = 'MG Papelaria - Notas Fiscais'
+          json.short_name = 'MG Notas'
+          json.description = 'Sistema de Notas Fiscais e Documentos Eletrônicos'
+          json.theme_color = '#1976D2'
+          json.background_color = '#ffffff'
+        },
+
+        extendGenerateSWOptions(cfg) {
+          cfg.skipWaiting = true
+          cfg.clientsClaim = true
+        },
+      },
       // pwaOfflineHtmlFilename: 'offline.html', // do NOT use index.html as name!
 
       // pwaExtendGenerateSWOptions (cfg) {},
