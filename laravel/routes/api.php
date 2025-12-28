@@ -77,6 +77,12 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
     Route::get('nfe-terceiro/{codnfeterceiro}/danfe', '\Mg\NfeTerceiro\NfeTerceiroController@danfe');
 
+    // TRIBUTACAO
+    Route::prefix('tributacao')->group(function () {
+        Route::apiResource('tributo', '\Mg\Tributacao\TributoController');
+        Route::apiResource('regra', '\Mg\Tributacao\TributacaoRegraController');
+    });
+
     // Negocio
     Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
     Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');
@@ -184,7 +190,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('pedido/{id}/reprocessar', '\Mg\Woo\WooPedidoController@reprocessar');
             Route::put('pedido/{id}/status', '\Mg\Woo\WooPedidoController@alteraStatus');
         });
-        
+
         //PDV
         Route::group(['prefix' => 'pdv'], function () {
             Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
