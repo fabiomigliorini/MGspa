@@ -18,10 +18,11 @@ class TributacaoRegraRequest extends FormRequest
         return [
             'codtributo'          => 'required|integer|exists:tbltributo,codtributo',
             'codnaturezaoperacao' => 'nullable|integer',
+            'codtipoproduto'      => 'nullable|integer',
             'ncm'                 => 'nullable|string|max:10',
             'codestadodestino'    => 'nullable|integer',
             'codcidadedestino'    => 'nullable|integer',
-            'tipocliente'         => 'nullable|string|max:2',
+            'tipocliente'         => 'nullable|string|min:3|max:3',
 
             'basepercentual'      => 'required|numeric|min:0|max:100',
             'aliquota'            => 'required|numeric|min:0',

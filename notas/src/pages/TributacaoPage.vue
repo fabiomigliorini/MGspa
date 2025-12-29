@@ -10,10 +10,8 @@
       <q-card flat square class="bg-white">
         <q-tabs
           v-model="store.activeTab"
-          class="text-grey-7"
-          active-color="primary"
-          indicator-color="primary"
-          align="left"
+          class="bg-primary text-white shadow-2"
+          align="center"
           @update:model-value="onTabChange"
         >
           <!-- Tabs dinâmicas dos tributos -->
@@ -27,7 +25,8 @@
           </q-tab>
 
           <!-- Tab para adicionar novo tributo -->
-          <q-btn flat color="primary" @click="novoTributo">Adicionar</q-btn>
+          <!-- <q-btn flat color="white" icon="add" @click="novoTributo">Novo Tributo</q-btn> -->
+          <q-btn flat icon="add" label="Novo Tributo" unelevated @click="novoTributo" />
         </q-tabs>
       </q-card>
 
@@ -63,7 +62,7 @@
           <q-separator />
 
           <!-- Tabela com Scroll Infinito -->
-          <q-scroll-area :style="`height: ${tableHeight}px`" @scroll="onScroll">
+          <q-infinite-scroll @load="onLoad" :offset="250">
             <q-table
               :rows="store.currentRegras"
               :columns="columns"
@@ -74,31 +73,77 @@
               virtual-scroll
               :rows-per-page-options="[0]"
             >
-              <!-- Coluna NCM -->
-              <template v-slot:body-cell-ncm="props">
+              <!-- Coluna Incide Sobre (consolidada) -->
+              <template v-slot:body-cell-incide_sobre="props">
                 <q-td :props="props">
-                  <span class="text-mono">{{ props.value || '-' }}</span>
-                </q-td>
-              </template>
+                  <div class="column q-gutter-xs">
+                    <!-- 1. Natureza de Operação -->
+                    <div v-if="props.row.codnaturezaoperacao" class="row items-center q-gutter-xs">
+                      <q-badge color="blue-grey-7" outline dense>
+                        {{ props.row.codnaturezaoperacao }}
+                      </q-badge>
+                      <span class="text-caption text-grey-7">
+                        {{ props.row.naturezaOperacao?.naturezaoperacao || 'Nat. Op.' }}
+                      </span>
+                    </div>
 
-              <!-- Coluna Estado Destino -->
-              <template v-slot:body-cell-codestadodestino="props">
-                <q-td :props="props">
-                  <q-badge v-if="props.row.EstadoDestino" color="blue-grey-5">
-                    {{ props.row.EstadoDestino.sigla }}
-                  </q-badge>
-                  <span v-else class="text-grey-5">-</span>
-                </q-td>
-              </template>
+                    <!-- 2. Estado Destino -->
+                    <div v-if="props.row.codestadodestino" class="row items-center q-gutter-xs">
+                      <q-badge color="indigo" outline dense>UF</q-badge>
+                      <span class="text-caption">
+                        {{ props.row.estadoDestino?.sigla || props.row.codestadodestino }}
+                      </span>
+                    </div>
 
-              <!-- Coluna Cidade Destino -->
-              <template v-slot:body-cell-codcidadedestino="props">
-                <q-td :props="props">
-                  <q-badge v-if="props.row.CidadeDestino" color="blue-grey-5">
-                    {{ props.row.CidadeDestino?.cidade }} /
-                    {{ props.row.CidadeDestino?.uf }}
-                  </q-badge>
-                  <span v-else class="text-grey-5">-</span>
+                    <!-- 3. Cidade Destino -->
+                    <div v-if="props.row.codcidadedestino" class="row items-center q-gutter-xs">
+                      <q-badge color="indigo" outline dense>Cidade</q-badge>
+                      <span class="text-caption">
+                        {{ props.row.cidadeDestino?.cidade || `#${props.row.codcidadedestino}` }}
+                      </span>
+                    </div>
+
+                    <!-- 4. Tipo de Produto -->
+                    <div v-if="props.row.codtipoproduto" class="row items-center q-gutter-xs">
+                      <q-badge color="purple" outline dense>
+                        {{ props.row.codtipoproduto }}
+                      </q-badge>
+                      <span class="text-caption text-grey-7">
+                        {{ props.row.tipoProduto?.tipoproduto || 'Tipo Produto' }}
+                      </span>
+                    </div>
+
+                    <!-- 5. Tipo de Cliente -->
+                    <div v-if="props.row.tipocliente" class="row items-center q-gutter-xs">
+                      <q-badge :color="getTipoClienteColor(props.row.tipocliente)" outline dense>
+                        {{ props.row.tipocliente }}
+                      </q-badge>
+                      <span class="text-caption">
+                        {{ getTipoClienteLabel(props.row.tipocliente) }}
+                      </span>
+                    </div>
+
+                    <!-- 6. NCM -->
+                    <div v-if="props.row.ncm" class="row items-center q-gutter-xs">
+                      <q-badge color="deep-orange" outline dense>NCM</q-badge>
+                      <span class="text-caption text-mono">{{ props.row.ncm }}</span>
+                    </div>
+
+                    <!-- Regra Genérica (nenhum critério específico) -->
+                    <div
+                      v-if="
+                        !props.row.codnaturezaoperacao &&
+                        !props.row.codestadodestino &&
+                        !props.row.codcidadedestino &&
+                        !props.row.codtipoproduto &&
+                        !props.row.tipocliente &&
+                        !props.row.ncm
+                      "
+                    >
+                      <q-badge color="grey-5" outline dense>REGRA GENÉRICA</q-badge>
+                      <div class="text-caption text-grey-6">Aplica-se a todos os casos</div>
+                    </div>
+                  </div>
                 </q-td>
               </template>
 
@@ -108,6 +153,14 @@
                   <q-badge v-if="props.value" color="primary" outline>
                     {{ props.value }}
                   </q-badge>
+                  <span v-else class="text-grey-5">-</span>
+                </q-td>
+              </template>
+
+              <!-- Coluna Classificação Tributária -->
+              <template v-slot:body-cell-cclasstrib="props">
+                <q-td :props="props">
+                  <span v-if="props.value" class="text-mono">{{ props.value }}</span>
                   <span v-else class="text-grey-5">-</span>
                 </q-td>
               </template>
@@ -143,6 +196,21 @@
                   <q-badge v-if="props.value" color="orange" outline>
                     {{ props.value }}
                   </q-badge>
+                  <span v-else class="text-grey-5">-</span>
+                </q-td>
+              </template>
+
+              <!-- Coluna Vigência -->
+              <template v-slot:body-cell-vigenciainicio="props">
+                <q-td :props="props">
+                  <div v-if="props.row.vigenciainicio">
+                    <div class="text-caption">
+                      {{ formatDate(props.row.vigenciainicio) }}
+                    </div>
+                    <div v-if="props.row.vigenciafim" class="text-caption text-grey-6">
+                      até {{ formatDate(props.row.vigenciafim) }}
+                    </div>
+                  </div>
                   <span v-else class="text-grey-5">-</span>
                 </q-td>
               </template>
@@ -218,7 +286,7 @@
               <div class="text-h6 text-grey-6 q-mt-md">Nenhuma regra cadastrada</div>
               <div class="text-caption text-grey-6">Clique em "Nova Regra" para começar</div>
             </div>
-          </q-scroll-area>
+          </q-infinite-scroll>
         </q-card>
       </div>
     </template>
@@ -292,7 +360,7 @@
 
     <!-- Dialog para Regra (Nova/Editar) -->
     <q-dialog v-model="regraDialog" persistent>
-      <q-card style="width: 600px">
+      <q-card style="min-width: 800px">
         <q-card-section class="bg-primary text-white">
           <div class="text-h6">
             {{ regraDialogMode === 'create' ? 'Nova Regra' : 'Editar Regra' }}
@@ -304,14 +372,52 @@
 
         <q-separator />
 
-        <q-card-section class="q-pt-md">
-          <!-- Chave de busca da regra -->
-          <div class="text-caption text-grey-7 q-mb-sm">Incide sobre</div>
-          <div class="row q-col-gutter-md">
-            <!-- NCM -->
+        <q-card-section class="q-pt-md q-pb-md">
+          <!-- Chave de busca da regra - ORDEM DO MOTOR -->
+          <div class="text-caption text-grey-7 q-mb-sm">
+            Incide sobre (ordem de prioridade do motor)
+          </div>
+          <div class="row q-col-gutter-md q-mb-sm">
+            <!-- 1. NATUREZA DE OPERAÇÃO (maior prioridade) -->
+            <SelectNaturezaOperacao
+              v-model="regraForm.codnaturezaoperacao"
+              label="1. Natureza de Operação"
+              custom-class="col-5"
+            />
+
+            <!-- 2. ESTADO DESTINO -->
+            <SelectEstado
+              v-model="regraForm.codestadodestino"
+              label="2. Estado Destino"
+              custom-class="col-3"
+              @clear="regraForm.codcidadedestino = null"
+            />
+
+            <!-- 3. CIDADE DESTINO -->
+            <SelectCidade
+              v-model="regraForm.codcidadedestino"
+              label="3. Cidade Destino"
+              custom-class="col-4"
+            />
+
+            <!-- 4. TIPO DE PRODUTO -->
+            <SelectTipoProduto
+              v-model="regraForm.codtipoproduto"
+              label="4. Tipo de Produto"
+              custom-class="col-5"
+            />
+
+            <!-- 5. TIPO DE CLIENTE -->
+            <SelectTipoCliente
+              v-model="regraForm.tipocliente"
+              label="5. Tipo de Cliente"
+              custom-class="col-3"
+            />
+
+            <!-- 6. NCM (menor prioridade, considera tamanho) -->
             <q-input
               v-model="regraForm.ncm"
-              label="NCM"
+              label="6. NCM"
               outlined
               clearable
               placeholder="12345678"
@@ -323,30 +429,15 @@
               ]"
               lazy-rules
               bottom-slots
-              class="q-mb-sm col-4"
+              class="col-4"
               input-class="text-center"
-            />
-
-            <!-- ESTADO -->
-            <SelectEstado
-              v-model="regraForm.codestadodestino"
-              label="UF"
-              placeholder="Selecione UF"
-              custom-class="q-mb-sm col-3"
-              @clear="regraForm.codcidadedestino = null"
-            />
-
-            <!-- CIDADE -->
-            <SelectCidade
-              v-model="regraForm.codcidadedestino"
-              label="Cidade"
-              placeholder="Digite para buscar"
-              custom-class="q-mb-sm col-5"
             />
           </div>
 
-          <div class="text-caption text-grey-7 q-mb-sm">Classificação, Alíquotas e Benefício</div>
-          <div class="row q-col-gutter-md">
+          <div class="text-caption text-grey-7 q-mb-sm q-mt-sm">
+            Classificação, Alíquotas e Benefício
+          </div>
+          <div class="row q-col-gutter-md q-mb-sm">
             <!-- CST -->
             <q-input
               v-model="regraForm.cst"
@@ -361,7 +452,7 @@
               ]"
               lazy-rules
               bottom-slots
-              class="q-mb-sm col-3"
+              class="col-2"
               input-class="text-center"
             />
 
@@ -379,17 +470,10 @@
               ]"
               lazy-rules
               bottom-slots
-              class="q-mb-sm col-5"
+              class="col-2"
               input-class="text-center"
             />
 
-            <!-- SE GERA CREDITO -->
-            <div class="q-mb-sm col-4" style="height: 56px; display: flex; align-items: center">
-              <q-toggle v-model="regraForm.geracredito" label="Gera crédito" color="primary" />
-            </div>
-          </div>
-
-          <div class="row q-col-gutter-md">
             <!-- Base Percentual -->
             <q-input
               v-model.number="regraForm.basepercentual"
@@ -401,13 +485,14 @@
               step="0.01"
               placeholder="Ex: 100%"
               bottom-slots
-              class="q-mb-sm col-3"
+              class="col-2"
               input-class="text-right"
             />
+
             <!-- Alíquota -->
             <q-input
               v-model.number="regraForm.aliquota"
-              label="Alíquota (%) "
+              label="Alíquota (%)"
               outlined
               type="number"
               min="0"
@@ -415,34 +500,36 @@
               step="0.01"
               placeholder="Ex: 8.5"
               bottom-slots
-              class="q-mb-sm col-3"
+              class="col-2"
               input-class="text-right"
             />
+
+            <!-- SE GERA CREDITO -->
+            <div class="col-4" style="height: 56px; display: flex; align-items: center">
+              <q-toggle v-model="regraForm.geracredito" label="Gera crédito" color="primary" />
+            </div>
+
             <!-- Benefício -->
             <q-input
               v-model="regraForm.beneficiocodigo"
-              label="Código Benefício"
+              label="Benefício"
               outlined
               clearable
               placeholder="Ex: BE001"
               bottom-slots
-              class="q-mb-sm col-6"
+              class="col-4"
             />
-          </div>
 
-          <!-- VIGENCIA -->
-          <div class="text-caption text-grey-7 q-mb-sm">Vigência</div>
-          <div class="row q-col-gutter-md">
             <!-- Vigência Início -->
             <q-input
               v-model="regraForm.vigenciainicio"
-              label="Do dia"
+              label="Vigente do dia"
               outlined
               clearable
               placeholder="DD/MM/AAAA"
               mask="##/##/####"
               bottom-slots
-              class="q-mb-sm col-6"
+              class="col-4"
               input-class="text-center"
             >
               <template v-slot:append>
@@ -457,6 +544,7 @@
                 </q-icon>
               </template>
             </q-input>
+
             <!-- Vigência Fim -->
             <q-input
               v-model="regraForm.vigenciafim"
@@ -466,7 +554,7 @@
               placeholder="DD/MM/AAAA"
               mask="##/##/####"
               bottom-slots
-              class="q-mb-sm col-6"
+              class="col-4"
               input-class="text-center"
             >
               <template v-slot:append>
@@ -481,16 +569,14 @@
                 </q-icon>
               </template>
             </q-input>
-          </div>
 
-          <div class="row q-col-gutter-md">
             <!-- Observações -->
             <q-input
               v-model="regraForm.observacoes"
               label="Observações"
               outlined
               type="textarea"
-              rows="4"
+              rows="2"
               clearable
               placeholder="Observações sobre esta regra"
               bottom-slots
@@ -498,8 +584,6 @@
             />
           </div>
         </q-card-section>
-
-        <q-separator />
 
         <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Cancelar" v-close-popup />
@@ -518,11 +602,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
 import SelectEstado from 'src/components/selects/SelectEstado.vue'
 import SelectCidade from 'src/components/selects/SelectCidade.vue'
+import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
+import SelectTipoProduto from 'src/components/selects/SelectTipoProduto.vue'
+import SelectTipoCliente from 'src/components/selects/SelectTipoCliente.vue'
 
 const $q = useQuasar()
 const store = useTributacaoStore()
@@ -530,30 +617,24 @@ const store = useTributacaoStore()
 // Colunas da tabela
 const columns = [
   {
-    name: 'ncm',
-    label: 'NCM',
-    field: 'ncm',
+    name: 'incide_sobre',
+    label: 'Incide Sobre',
+    field: 'codnaturezaoperacao',
     align: 'left',
-    sortable: true,
-  },
-  {
-    name: 'codestadodestino',
-    label: 'Estado',
-    field: 'codestadodestino',
-    align: 'center',
-    sortable: true,
-  },
-  {
-    name: 'codcidadedestino',
-    label: 'Cidade',
-    field: 'codcidadedestino',
-    align: 'left',
-    sortable: true,
+    sortable: false,
+    style: 'min-width: 300px',
   },
   {
     name: 'cst',
     label: 'CST',
     field: 'cst',
+    align: 'center',
+    sortable: true,
+  },
+  {
+    name: 'cclasstrib',
+    label: 'Class. Trib.',
+    field: 'cclasstrib',
     align: 'center',
     sortable: true,
   },
@@ -586,31 +667,24 @@ const columns = [
     sortable: true,
   },
   {
+    name: 'vigenciainicio',
+    label: 'Vigência',
+    field: 'vigenciainicio',
+    align: 'center',
+    sortable: true,
+  },
+  {
     name: 'actions',
     label: 'Ações',
     align: 'center',
   },
 ]
 
-// Altura da tabela (dinâmica)
-const tableHeight = ref(600)
-
-const updateTableHeight = () => {
-  // 280px = header + toolbar + tabs + padding
-  tableHeight.value = window.innerHeight - 280
-}
-
+// Inicialização
 onMounted(() => {
-  updateTableHeight()
-  window.addEventListener('resize', updateTableHeight)
   inicializar()
 })
 
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateTableHeight)
-})
-
-// Inicialização
 const inicializar = async () => {
   try {
     await store.fetchTributos()
@@ -627,22 +701,18 @@ const inicializar = async () => {
 }
 
 // Scroll infinito
-const onScroll = (info) => {
-  const { verticalPercentage } = info
-
-  if (verticalPercentage > 0.8 && !store.currentPagination?.loading) {
-    if (store.currentPagination?.hasMore) {
-      store.loadMore()
-    }
+const onLoad = async (_index, done) => {
+  if (!store.currentPagination?.hasMore) {
+    done(true) // Para o infinite scroll
+    return
   }
+
+  await store.loadMore()
+  done(!store.currentPagination?.hasMore) // Para se não houver mais dados
 }
 
 // Mudança de tab
 const onTabChange = (newTab) => {
-  // Ignora a mudança se for a tab __new__
-  if (newTab === '__new__') {
-    return
-  }
   store.setActiveTab(newTab)
 }
 
@@ -652,6 +722,52 @@ const formatPercent = (value) => {
   return `${parseFloat(value).toFixed(2)}%`
 }
 
+const formatDate = (value) => {
+  if (!value) return '-'
+  // Converte ISO string para DD/MM/YYYY
+  const date = new Date(value)
+  return date.toLocaleDateString('pt-BR')
+}
+
+// Converte ISO date (YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS) para DD/MM/YYYY
+const isoToFormDate = (isoDate) => {
+  if (!isoDate) return null
+  const date = new Date(isoDate)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+// Converte DD/MM/YYYY para YYYY-MM-DD
+const formDateToIso = (formDate) => {
+  if (!formDate || formDate.length !== 10) return null
+  const [day, month, year] = formDate.split('/')
+  return `${year}-${month}-${day}`
+}
+
+// Retorna a cor do badge de tipo de cliente
+const getTipoClienteColor = (tipo) => {
+  const colors = {
+    PFC: 'blue',
+    PFN: 'cyan',
+    PJC: 'green',
+    PJN: 'teal',
+  }
+  return colors[tipo] || 'grey'
+}
+
+// Retorna o label descritivo do tipo de cliente
+const getTipoClienteLabel = (tipo) => {
+  const labels = {
+    PFC: 'Pessoa Física Contribuinte',
+    PFN: 'Pessoa Física Não Contribuinte',
+    PJC: 'Pessoa Jurídica Contribuinte',
+    PJN: 'Pessoa Jurídica Não Contribuinte',
+  }
+  return labels[tipo] || 'Desconhecido'
+}
+
 // ========== REGRAS ==========
 const regraDialog = ref(false)
 const regraDialogMode = ref('create') // 'create' | 'edit'
@@ -659,9 +775,11 @@ const regraForm = ref({
   codtributacaoregra: null,
   codtributo: null,
   codnaturezaoperacao: null,
+  codtipoproduto: null,
   ncm: null,
   codestadodestino: null,
   codcidadedestino: null,
+  tipocliente: null,
   basepercentual: null,
   aliquota: null,
   cst: null,
@@ -679,9 +797,11 @@ const novaRegra = () => {
     codtributacaoregra: null,
     codtributo: store.activeTab,
     codnaturezaoperacao: null,
+    codtipoproduto: null,
     ncm: '',
     codestadodestino: null,
     codcidadedestino: null,
+    tipocliente: null,
     basepercentual: 100,
     aliquota: null,
     cst: '',
@@ -701,9 +821,11 @@ const editarRegra = (regra) => {
     codtributacaoregra: regra.codtributacaoregra,
     codtributo: regra.tributo?.codtributo || store.activeTab,
     codnaturezaoperacao: regra.codnaturezaoperacao,
+    codtipoproduto: regra.codtipoproduto,
     ncm: regra.ncm,
     codestadodestino: regra.codestadodestino,
     codcidadedestino: regra.codcidadedestino,
+    tipocliente: regra.tipocliente,
     basepercentual: regra.basepercentual,
     aliquota: regra.aliquota,
     cst: regra.cst,
@@ -711,9 +833,10 @@ const editarRegra = (regra) => {
     geracredito: regra.geracredito,
     beneficiocodigo: regra.beneficiocodigo,
     observacoes: regra.observacoes,
-    vigenciainicio: regra.vigenciainicio,
-    vigenciafim: regra.vigenciafim,
+    vigenciainicio: isoToFormDate(regra.vigenciainicio),
+    vigenciafim: isoToFormDate(regra.vigenciafim),
   }
+  console.log(regraForm)
   regraDialog.value = true
 }
 
@@ -752,15 +875,22 @@ const salvarRegra = async () => {
   }
 
   try {
+    // Prepara os dados para envio convertendo as datas
+    const dataToSend = {
+      ...regraForm.value,
+      vigenciainicio: formDateToIso(regraForm.value.vigenciainicio),
+      vigenciafim: formDateToIso(regraForm.value.vigenciafim),
+    }
+
     if (regraDialogMode.value === 'create') {
-      await store.createRegra(regraForm.value)
+      await store.createRegra(dataToSend)
       $q.notify({
         type: 'positive',
         message: 'Regra criada com sucesso',
         icon: 'check_circle',
       })
     } else {
-      await store.updateRegra(regraForm.value.codtributacaoregra, regraForm.value)
+      await store.updateRegra(regraForm.value.codtributacaoregra, dataToSend)
       $q.notify({
         type: 'positive',
         message: 'Regra atualizada com sucesso',
@@ -777,21 +907,29 @@ const salvarRegra = async () => {
   }
 }
 
-const duplicarRegra = async (regra) => {
-  try {
-    await store.duplicateRegra(regra.codtributacaoregra)
-    $q.notify({
-      type: 'positive',
-      message: 'Regra duplicada com sucesso',
-      icon: 'check_circle',
-    })
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao duplicar regra',
-      caption: error.message,
-    })
+const duplicarRegra = (regra) => {
+  // Abre o formulário de nova regra com os dados da regra existente
+  regraDialogMode.value = 'create'
+  regraForm.value = {
+    codtributacaoregra: null, // Não copia o ID
+    codtributo: regra.tributo?.codtributo || store.activeTab,
+    codnaturezaoperacao: regra.codnaturezaoperacao,
+    codtipoproduto: regra.codtipoproduto,
+    ncm: regra.ncm,
+    codestadodestino: regra.codestadodestino,
+    codcidadedestino: regra.codcidadedestino,
+    tipocliente: regra.tipocliente,
+    basepercentual: regra.basepercentual,
+    aliquota: regra.aliquota,
+    cst: regra.cst,
+    cclasstrib: regra.cclasstrib,
+    geracredito: regra.geracredito,
+    beneficiocodigo: regra.beneficiocodigo,
+    observacoes: regra.observacoes,
+    vigenciainicio: isoToFormDate(regra.vigenciainicio),
+    vigenciafim: isoToFormDate(regra.vigenciafim),
   }
+  regraDialog.value = true
 }
 
 const confirmarExclusao = (regra) => {

@@ -12,7 +12,7 @@
     map-options
     use-input
     input-debounce="500"
-    @filter="filterCidades"
+    @filter="filterNaturezaOperacao"
     :placeholder="placeholder"
     :bottom-slots="bottomSlots"
     :class="customClass"
@@ -21,13 +21,34 @@
     :loading="loading"
     :dense="dense"
   >
+    <template v-slot:option="scope">
+      <q-item v-bind="scope.itemProps">
+        <q-item-section avatar>
+          <q-icon
+            :name="scope.opt.operacao === 'Entrada' ? 'arrow_downward' : 'arrow_upward'"
+            :color="scope.opt.operacao === 'Entrada' ? 'blue' : 'green'"
+          />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label
+            caption
+            :class="scope.opt.operacao === 'Entrada' ? 'text-blue' : 'text-green'"
+          >
+            {{ scope.opt.operacao }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+
     <template v-slot:selected-item="scope">
       <q-chip
         removable
         dense
         @remove="handleUpdate(null)"
-        color="primary"
+        :color="scope.opt.operacao === 'Entrada' ? 'blue' : 'green'"
         text-color="white"
+        :icon="scope.opt.operacao === 'Entrada' ? 'arrow_downward' : 'arrow_upward'"
       >
         {{ truncateLabel(scope.opt.label) }}
       </q-chip>
@@ -53,7 +74,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { useSelectCidadeStore } from 'stores/selects/cidade'
+import { useSelectNaturezaOperacaoStore } from 'stores/selects/naturezaOperacao'
 
 const props = defineProps({
   modelValue: {
@@ -62,7 +83,7 @@ const props = defineProps({
   },
   label: {
     type: String,
-    default: 'Cidade',
+    default: 'Natureza de Operação',
   },
   placeholder: {
     type: String,
@@ -96,36 +117,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'clear'])
 
-const cidadeStore = useSelectCidadeStore()
+const naturezaOperacaoStore = useSelectNaturezaOperacaoStore()
 const options = ref([])
 const loading = ref(false)
 
-// Função para truncar o label mantendo a UF visível
+// Função para truncar o label
 const truncateLabel = (label) => {
   if (!label) return ''
-
-  // Verifica se tem "/" para separar cidade de UF
-  const parts = label.split('/')
-  if (parts.length === 2) {
-    const cidade = parts[0].trim()
-    const uf = parts[1].trim()
-
-    // Se a cidade for muito longa, abrevia
-    if (cidade.length > props.maxChars) {
-      return cidade.substring(0, props.maxChars) + '.../' + uf
-    }
-    return label
-  }
-
-  // Se não tem /, abrevia normalmente
-  const maxTotal = props.maxChars + 3 // +3 para dar um pouco mais de espaço
-  return label.length > maxTotal ? label.substring(0, maxTotal) + '...' : label
+  return label.length > props.maxChars ? label.substring(0, props.maxChars) + '...' : label
 }
 
-// Carrega a cidade quando há um modelValue inicial
+// Carrega a natureza de operação quando há um modelValue inicial
 onMounted(async () => {
   if (props.modelValue) {
-    await loadCidade(props.modelValue)
+    await loadNaturezaOperacao(props.modelValue)
   }
 })
 
@@ -137,31 +142,31 @@ watch(
       // Se mudou o valor e não está nas options, carrega
       const exists = options.value.find((o) => o.value === newValue)
       if (!exists) {
-        await loadCidade(newValue)
+        await loadNaturezaOperacao(newValue)
       }
     }
   },
 )
 
-const loadCidade = async (codcidade) => {
+const loadNaturezaOperacao = async (codnaturezaoperacao) => {
   try {
     loading.value = true
-    const cidade = await cidadeStore.fetch(codcidade)
-    if (cidade) {
-      // Adiciona a cidade nas options se não existir
-      const exists = options.value.find((o) => o.value === cidade.value)
+    const natureza = await naturezaOperacaoStore.fetch(codnaturezaoperacao)
+    if (natureza) {
+      // Adiciona a natureza de operação nas options se não existir
+      const exists = options.value.find((o) => o.value === natureza.value)
       if (!exists) {
-        options.value = [cidade]
+        options.value = [natureza]
       }
     }
   } catch (error) {
-    console.error('Erro ao carregar cidade:', error)
+    console.error('Erro ao carregar natureza de operação:', error)
   } finally {
     loading.value = false
   }
 }
 
-const filterCidades = async (val, update) => {
+const filterNaturezaOperacao = async (val, update) => {
   if (!val || val.length < 2) {
     update(() => {
       options.value = []
@@ -172,9 +177,9 @@ const filterCidades = async (val, update) => {
   update(async () => {
     try {
       loading.value = true
-      options.value = await cidadeStore.search(val)
+      options.value = await naturezaOperacaoStore.search(val)
     } catch (error) {
-      console.error('Erro ao buscar cidades:', error)
+      console.error('Erro ao buscar natureza de operação:', error)
       options.value = []
     } finally {
       loading.value = false

@@ -39,7 +39,9 @@ class TributacaoService
             $nota->Pessoa->codcidade,
             $nota->Pessoa->Cidade->codestado,
             Carbon::parse($nota->emissao),
-            $produto->Ncm->ncm
+            $produto->Ncm->ncm,
+            $nota->Pessoa->tipocliente,
+            $produto->codtipoproduto
         );
 
         foreach ($regras as $regra) {
@@ -76,7 +78,9 @@ class TributacaoService
         int $codcidade,
         int $codestado,
         Carbon $data,
-        string $ncm
+        string $ncm,
+        ?string $tipocliente = null,
+        ?int $codtipoproduto = null
     ): array {
         $sql = <<<SQL
             SELECT DISTINCT ON (r.codtributo)
@@ -86,15 +90,19 @@ class TributacaoService
                 (r.codnaturezaoperacao IS NULL OR r.codnaturezaoperacao = :codnatureza)
             AND (r.codestadodestino IS NULL OR r.codestadodestino = :codestado)
             AND (r.codcidadedestino IS NULL OR r.codcidadedestino = :codcidade)
+            AND (r.tipocliente IS NULL OR r.tipocliente = :tipocliente)
+            AND (r.codtipoproduto IS NULL OR r.codtipoproduto = :codtipoproduto)
             AND r.vigenciainicio <= :emissao
             AND (r.vigenciafim IS NULL OR r.vigenciafim >= :emissao)
             AND (r.ncm IS NULL OR :ncm LIKE r.ncm || '%')
             ORDER BY
                 r.codtributo,
-                LENGTH(r.ncm) DESC NULLS LAST,
-                r.codcidadedestino DESC NULLS LAST,
+                r.codnaturezaoperacao DESC NULLS LAST,
                 r.codestadodestino DESC NULLS LAST,
-                r.codnaturezaoperacao DESC NULLS LAST
+                r.codcidadedestino DESC NULLS LAST,
+                r.codtipoproduto DESC NULLS LAST,
+                r.tipocliente DESC NULLS LAST,
+                LENGTH(r.ncm) DESC NULLS LAST
         SQL;
 
         // dd([
@@ -103,7 +111,9 @@ class TributacaoService
         //     'codcidade'   => $codcidade,
         //     'codestado'   => $codestado,
         //     'emissao'     => $data->toDateString(),
-        //     'ncm'         => $ncm
+        //     'ncm'         => $ncm,
+        //     'tipocliente' => $tipocliente,
+        //     'codtipoproduto' => $codtipoproduto
         // ]);
         return DB::select($sql, [
             'codnatureza' => $codnaturezaoperacao,
@@ -111,6 +121,8 @@ class TributacaoService
             'codestado'   => $codestado,
             'emissao'     => $data->toDateString(),
             'ncm'         => $ncm,
+            'tipocliente' => $tipocliente,
+            'codtipoproduto' => $codtipoproduto,
         ]);
     }
 
@@ -207,14 +219,18 @@ class TributacaoService
         int $codestado,
         string $ncm,
         float $valorVenda,
-        ?Carbon $data = null
+        ?Carbon $data = null,
+        ?string $tipocliente = null,
+        ?int $codtipoproduto = null
     ): array {
         $regras = $this->resolverRegras(
             $codnaturezaoperacao,
             $codcidade,
             $codestado,
             $data ?? Carbon::now(),
-            $ncm
+            $ncm,
+            $tipocliente,
+            $codtipoproduto
         );
 
         $resultado = [];

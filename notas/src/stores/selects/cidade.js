@@ -1,63 +1,19 @@
 import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
 
-export const useSelectsStore = defineStore('selects', {
+export const useSelectCidadeStore = defineStore('selectCidade', {
   state: () => ({
-    // Cache de estados
-    estados: [],
-    estadosLoaded: false,
-
     // Cache de cidades por busca
     cidadesCache: {},
   }),
 
+  getters: {},
+
   actions: {
-    /**
-     * Busca todos os estados
-     */
-    async fetchEstados(force = false) {
-      // Se já carregou e não é force, retorna o cache
-      if (this.estadosLoaded && !force) {
-        return this.estados
-      }
-
-      try {
-        const response = await api.get('/select/estado')
-        this.estados = response.data.map((item) => ({
-          label: item.sigla,
-          value: item.value,
-          sigla: item.sigla,
-          nome: item.label,
-        }))
-        this.estadosLoaded = true
-        return this.estados
-      } catch (error) {
-        console.error('Erro ao buscar estados:', error)
-        throw error
-      }
-    },
-
-    /**
-     * Busca um estado específico por código
-     */
-    async fetchEstado(codestado) {
-      // Verifica se já tem no cache
-      if (this.estadosLoaded) {
-        const estado = this.estados.find((e) => e.value === codestado)
-        if (estado) {
-          return estado
-        }
-      }
-
-      // Se não tem no cache, carrega todos
-      await this.fetchEstados()
-      return this.estados.find((e) => e.value === codestado)
-    },
-
     /**
      * Busca cidades por texto
      */
-    async searchCidades(busca) {
+    async search(busca) {
       if (!busca || busca.length < 2) {
         return []
       }
@@ -89,7 +45,7 @@ export const useSelectsStore = defineStore('selects', {
     /**
      * Busca uma cidade específica por código
      */
-    async fetchCidade(codcidade) {
+    async fetch(codcidade) {
       try {
         const response = await api.get('/select/cidade', {
           params: { codcidade },
@@ -108,9 +64,9 @@ export const useSelectsStore = defineStore('selects', {
     },
 
     /**
-     * Limpa o cache de cidades
+     * Limpa o cache
      */
-    clearCidadesCache() {
+    clear() {
       this.cidadesCache = {}
     },
   },

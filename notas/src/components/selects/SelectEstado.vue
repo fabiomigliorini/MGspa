@@ -18,6 +18,7 @@
     :disable="disable"
     :readonly="readonly"
     :loading="loading"
+    :dense="dense"
   >
     <template v-slot:no-option>
       <q-item>
@@ -37,7 +38,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { useSelectsStore } from 'stores/selects'
+import { useSelectEstadoStore } from 'stores/selects/estado'
 
 const props = defineProps({
   modelValue: {
@@ -50,7 +51,7 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: 'Selecione UF',
+    default: null,
   },
   bottomSlots: {
     type: Boolean,
@@ -68,11 +69,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  dense: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'clear'])
 
-const selectsStore = useSelectsStore()
+const estadoStore = useSelectEstadoStore()
 const options = ref([])
 const loading = ref(false)
 
@@ -94,7 +99,7 @@ watch(
 const loadEstados = async () => {
   try {
     loading.value = true
-    options.value = await selectsStore.fetchEstados()
+    options.value = await estadoStore.search()
   } catch (error) {
     console.error('Erro ao carregar estados:', error)
     options.value = []
@@ -105,18 +110,17 @@ const loadEstados = async () => {
 
 const filterEstados = async (val, update) => {
   update(async () => {
-    if (!selectsStore.estadosLoaded) {
+    if (!estadoStore.estadosLoaded) {
       await loadEstados()
     } else {
       // Filtra localmente
       if (val === '') {
-        options.value = selectsStore.estados
+        options.value = estadoStore.estados
       } else {
         const needle = val.toLowerCase()
-        options.value = selectsStore.estados.filter(
+        options.value = estadoStore.estados.filter(
           (v) =>
-            v.sigla.toLowerCase().indexOf(needle) > -1 ||
-            v.nome.toLowerCase().indexOf(needle) > -1,
+            v.sigla.toLowerCase().indexOf(needle) > -1 || v.nome.toLowerCase().indexOf(needle) > -1,
         )
       }
     }

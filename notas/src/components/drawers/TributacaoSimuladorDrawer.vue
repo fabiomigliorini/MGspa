@@ -26,7 +26,6 @@
             clearable
             use-input
             input-debounce="300"
-            placeholder="Selecione ou busque"
             :options="naturezaOptions"
             @filter="filterNatureza"
             :rules="[(val) => !!val || 'Campo obrigatório']"
@@ -49,7 +48,6 @@
             clearable
             use-input
             input-debounce="300"
-            placeholder="Selecione ou busque"
             :options="cidadeOptions"
             @filter="filterCidade"
             :rules="[(val) => !!val || 'Campo obrigatório']"

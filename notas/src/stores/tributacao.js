@@ -18,9 +18,11 @@ export const useTributacaoStore = defineStore('tributacao', {
     // Filtros
     filters: {
       codnaturezaoperacao: null,
+      codtipoproduto: null,
       ncm: null,
       codcidadedestino: null,
       codestadodestino: null,
+      tipocliente: null, // 'PFC' | 'PFN' | 'PJC' | 'PJN' | null
       basepercentual: null,
       aliquota: null,
       cst: null,
@@ -73,7 +75,23 @@ export const useTributacaoStore = defineStore('tributacao', {
       const params = {}
       Object.entries(state.filters).forEach(([key, value]) => {
         if (value !== null && value !== '') {
-          params[key] = value
+          // Converte o filtro de vigência para o formato esperado pelo backend
+          if (key === 'vigencia') {
+            const hoje = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+
+            if (value === 'vigente') {
+              // Vigentes hoje
+              params.vigencia_em = hoje
+            } else if (value === 'futuro') {
+              // Futuras: vigenciainicio > hoje
+              params.vigenciainicio_maior_que = hoje
+            } else if (value === 'expirado') {
+              // Expiradas: vigenciafim < hoje
+              params.vigenciafim_menor_que = hoje
+            }
+          } else {
+            params[key] = value
+          }
         }
       })
       return params
@@ -247,9 +265,11 @@ export const useTributacaoStore = defineStore('tributacao', {
     async clearFilters() {
       this.filters = {
         codnaturezaoperacao: null,
+        codtipoproduto: null,
         ncm: null,
         codcidadedestino: null,
         codestadodestino: null,
+        tipocliente: null,
         basepercentual: null,
         aliquota: null,
         cst: null,
