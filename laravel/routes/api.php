@@ -83,6 +83,27 @@ Route::group(['prefix' => 'v1'], function () {
         Route::apiResource('regra', '\Mg\Tributacao\TributacaoRegraController');
     });
 
+    // NOTA FISCAL
+    Route::prefix('nota-fiscal')->group(function () {
+        Route::apiResource('/', '\Mg\NotaFiscal\NotaFiscalController')->parameters(['' => 'codnotafiscal']);
+
+        // Relacionamentos nested
+        Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')
+            ->parameters(['item' => 'codnotafiscalprodutobarra']);
+
+        Route::apiResource('{codnotafiscal}/pagamento', '\Mg\NotaFiscal\NotaFiscalPagamentoController')
+            ->parameters(['pagamento' => 'codnotafiscalpagamento']);
+
+        Route::apiResource('{codnotafiscal}/duplicata', '\Mg\NotaFiscal\NotaFiscalDuplicatasController')
+            ->parameters(['duplicata' => 'codnotafiscalduplicatas']);
+
+        Route::apiResource('{codnotafiscal}/referenciada', '\Mg\NotaFiscal\NotaFiscalReferenciadaController')
+            ->parameters(['referenciada' => 'codnotafiscalreferenciada']);
+
+        Route::apiResource('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController')
+            ->parameters(['carta-correcao' => 'codnotafiscalcartacorrecao']);
+    });
+
     // Negocio
     Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
     Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');

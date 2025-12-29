@@ -61,7 +61,7 @@
 
 <script setup>
 const emissoesItems = [
-  // { label: 'Notas Fiscais', icon: 'description', color: 'blue', to: '/notas' },
+  { label: 'Notas Fiscais', icon: 'description', color: 'blue', to: '/notas' },
   // { label: 'DFe Recebidos', icon: 'inbox', color: 'green', to: '/dfe-recebidos' },
   // { label: 'NFe Terceiros', icon: 'people', color: 'orange', to: '/nfe-terceiros' },
   // { label: 'MDFe', icon: 'local_shipping', color: 'red', to: '/mdfe' },
