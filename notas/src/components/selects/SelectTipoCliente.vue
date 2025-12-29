@@ -69,7 +69,7 @@
 import { computed } from 'vue'
 import { useSelectTipoClienteStore } from 'stores/selects/tipoCliente'
 
-const props = defineProps({
+defineProps({
   modelValue: {
     type: String,
     default: null,
