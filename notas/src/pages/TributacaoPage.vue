@@ -72,6 +72,7 @@
               :loading="store.currentPagination?.loading"
               virtual-scroll
               :rows-per-page-options="[0]"
+              wrap-cells
             >
               <!-- Coluna Incide Sobre (consolidada) -->
               <template v-slot:body-cell-incide_sobre="props">
@@ -147,56 +148,59 @@
                 </q-td>
               </template>
 
-              <!-- Coluna CST -->
-              <template v-slot:body-cell-cst="props">
+              <!-- Coluna CST / Classificação Tributária -->
+              <template v-slot:body-cell-cst_classtrib="props">
                 <q-td :props="props">
-                  <q-badge v-if="props.value" color="primary" outline>
-                    {{ props.value }}
-                  </q-badge>
-                  <span v-else class="text-grey-5">-</span>
+                  <div class="text-center">
+                    <div v-if="props.row.cst" class="text-weight-medium text-primary">
+                      {{ props.row.cst }}
+                    </div>
+                    <div v-if="props.row.cclasstrib" class="text-mono text-caption text-grey-7">
+                      {{ props.row.cclasstrib }}
+                    </div>
+                    <span v-if="!props.row.cst && !props.row.cclasstrib" class="text-grey-5"
+                      >-</span
+                    >
+                  </div>
                 </q-td>
               </template>
 
-              <!-- Coluna Classificação Tributária -->
-              <template v-slot:body-cell-cclasstrib="props">
+              <!-- Coluna Alíquota / Base -->
+              <template v-slot:body-cell-aliquota_base="props">
                 <q-td :props="props">
-                  <span v-if="props.value" class="text-mono">{{ props.value }}</span>
-                  <span v-else class="text-grey-5">-</span>
+                  <div class="text-center">
+                    <div v-if="props.row.aliquota !== null" class="text-weight-medium text-mono">
+                      {{ formatPercent(props.row.aliquota) }}
+                    </div>
+                    <div
+                      v-if="props.row.basepercentual !== null && props.row.basepercentual !== 100"
+                      class="text-caption text-grey-7 text-mono"
+                    >
+                      Base: {{ formatPercent(props.row.basepercentual) }}
+                    </div>
+                    <span
+                      v-if="props.row.aliquota === null && props.row.basepercentual === null"
+                      class="text-grey-5"
+                    >
+                      -
+                    </span>
+                  </div>
                 </q-td>
               </template>
 
-              <!-- Coluna Alíquota -->
-              <template v-slot:body-cell-aliquota="props">
-                <q-td :props="props" class="text-weight-medium text-mono">
-                  {{ formatPercent(props.value) }}
-                </q-td>
-              </template>
-
-              <!-- Coluna Base Percentual -->
-              <template v-slot:body-cell-basepercentual="props">
-                <q-td :props="props" class="text-mono">
-                  {{ formatPercent(props.value) }}
-                </q-td>
-              </template>
-
-              <!-- Coluna Gera Crédito -->
-              <template v-slot:body-cell-geracredito="props">
+              <!-- Coluna Crédito / Benefício -->
+              <template v-slot:body-cell-credito_beneficio="props">
                 <q-td :props="props">
-                  <q-icon
-                    :name="props.value ? 'check_circle' : 'cancel'"
-                    :color="props.value ? 'positive' : 'grey-5'"
-                    size="sm"
-                  />
-                </q-td>
-              </template>
-
-              <!-- Coluna Benefício -->
-              <template v-slot:body-cell-beneficiocodigo="props">
-                <q-td :props="props">
-                  <q-badge v-if="props.value" color="orange" outline>
-                    {{ props.value }}
-                  </q-badge>
-                  <span v-else class="text-grey-5">-</span>
+                  <div class="column q-gutter-xs items-center">
+                    <q-icon
+                      :name="props.row.geracredito ? 'check_circle' : 'cancel'"
+                      :color="props.row.geracredito ? 'positive' : 'grey-5'"
+                      size="sm"
+                    />
+                    <q-badge v-if="props.row.beneficiocodigo" color="orange" outline dense>
+                      {{ props.row.beneficiocodigo }}
+                    </q-badge>
+                  </div>
                 </q-td>
               </template>
 
@@ -622,47 +626,25 @@ const columns = [
     field: 'codnaturezaoperacao',
     align: 'left',
     sortable: false,
-    style: 'min-width: 300px',
   },
   {
-    name: 'cst',
+    name: 'cst_classtrib',
     label: 'CST',
     field: 'cst',
     align: 'center',
     sortable: true,
   },
   {
-    name: 'cclasstrib',
-    label: 'Class. Trib.',
-    field: 'cclasstrib',
-    align: 'center',
-    sortable: true,
-  },
-  {
-    name: 'aliquota',
+    name: 'aliquota_base',
     label: 'Alíquota',
     field: 'aliquota',
-    align: 'right',
-    sortable: true,
-  },
-  {
-    name: 'basepercentual',
-    label: 'Base %',
-    field: 'basepercentual',
-    align: 'right',
-    sortable: true,
-  },
-  {
-    name: 'geracredito',
-    label: 'Crédito',
-    field: 'geracredito',
     align: 'center',
     sortable: true,
   },
   {
-    name: 'beneficiocodigo',
-    label: 'Benefício',
-    field: 'beneficiocodigo',
+    name: 'credito_beneficio',
+    label: 'Crédito',
+    field: 'geracredito',
     align: 'center',
     sortable: true,
   },
