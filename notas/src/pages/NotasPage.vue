@@ -1,68 +1,3 @@
-<template>
-  <q-page class="q-pa-md">
-    <div class="row q-col-gutter-md">
-      <!-- Título -->
-      <div class="col-12">
-        <div class="text-h4 q-mb-md">Notas Fiscais</div>
-      </div>
-
-      <!-- Tabela de Notas -->
-      <div class="col-12">
-        <q-card flat bordered>
-          <q-table
-            :rows="notas"
-            :columns="columns"
-            row-key="id"
-            :loading="loading"
-            flat
-            :pagination="{ rowsPerPage: 10 }"
-          >
-            <template v-slot:body-cell-status="props">
-              <q-td :props="props">
-                <q-badge :color="getStatusColor(props.value)">
-                  {{ props.value }}
-                </q-badge>
-              </q-td>
-            </template>
-
-            <template v-slot:body-cell-actions="props">
-              <q-td :props="props">
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="visibility"
-                  color="primary"
-                  @click="visualizar(props.row)"
-                >
-                  <q-tooltip>Visualizar</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="download"
-                  color="positive"
-                  @click="download(props.row)"
-                >
-                  <q-tooltip>Download</q-tooltip>
-                </q-btn>
-              </q-td>
-            </template>
-
-            <template v-slot:no-data>
-              <div class="full-width row flex-center q-gutter-sm text-grey-7">
-                <q-icon size="2em" name="description" />
-                <span>Nenhuma nota fiscal encontrada</span>
-              </div>
-            </template>
-          </q-table>
-        </q-card>
-      </div>
-    </div>
-  </q-page>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
@@ -201,3 +136,67 @@ onMounted(() => {
   buscarNotas()
 })
 </script>
+<template>
+  <q-page class="q-pa-md">
+    <div class="row q-col-gutter-md">
+      <!-- Título -->
+      <div class="col-12">
+        <div class="text-h4 q-mb-md">Notas Fiscais</div>
+      </div>
+
+      <!-- Tabela de Notas -->
+      <div class="col-12">
+        <q-card flat bordered>
+          <q-table
+            :rows="notas"
+            :columns="columns"
+            row-key="id"
+            :loading="loading"
+            flat
+            :pagination="{ rowsPerPage: 10 }"
+          >
+            <template v-slot:body-cell-status="props">
+              <q-td :props="props">
+                <q-badge :color="getStatusColor(props.value)">
+                  {{ props.value }}
+                </q-badge>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-actions="props">
+              <q-td :props="props">
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="visibility"
+                  color="primary"
+                  @click="visualizar(props.row)"
+                >
+                  <q-tooltip>Visualizar</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="download"
+                  color="positive"
+                  @click="download(props.row)"
+                >
+                  <q-tooltip>Download</q-tooltip>
+                </q-btn>
+              </q-td>
+            </template>
+
+            <template v-slot:no-data>
+              <div class="full-width row flex-center q-gutter-sm text-grey-7">
+                <q-icon size="2em" name="description" />
+                <span>Nenhuma nota fiscal encontrada</span>
+              </div>
+            </template>
+          </q-table>
+        </q-card>
+      </div>
+    </div>
+  </q-page>
+</template>

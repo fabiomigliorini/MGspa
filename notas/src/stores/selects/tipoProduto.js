@@ -25,7 +25,7 @@ export const useSelectTipoProdutoStore = defineStore('selectTipoProduto', {
       }
 
       try {
-        const response = await api.get('/select/tipo-produto', {
+        const response = await api.get('v1/select/tipo-produto', {
           params: { busca },
         })
         const tipos = response.data.map((item) => ({
@@ -47,7 +47,7 @@ export const useSelectTipoProdutoStore = defineStore('selectTipoProduto', {
      */
     async fetch(codtipoproduto) {
       try {
-        const response = await api.get('/select/tipo-produto', {
+        const response = await api.get('v1/select/tipo-produto', {
           params: { codtipoproduto },
         })
         if (response.data.length > 0) {

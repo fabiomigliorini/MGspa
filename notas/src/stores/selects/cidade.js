@@ -25,7 +25,7 @@ export const useSelectCidadeStore = defineStore('selectCidade', {
       }
 
       try {
-        const response = await api.get('/select/cidade', {
+        const response = await api.get('v1/select/cidade', {
           params: { cidade: busca },
         })
         const cidades = response.data.map((item) => ({
@@ -47,7 +47,7 @@ export const useSelectCidadeStore = defineStore('selectCidade', {
      */
     async fetch(codcidade) {
       try {
-        const response = await api.get('/select/cidade', {
+        const response = await api.get('v1/select/cidade', {
           params: { codcidade },
         })
         if (response.data.length > 0) {

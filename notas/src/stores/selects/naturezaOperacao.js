@@ -25,7 +25,7 @@ export const useSelectNaturezaOperacaoStore = defineStore('selectNaturezaOperaca
       }
 
       try {
-        const response = await api.get('/select/natureza-operacao', {
+        const response = await api.get('v1/select/natureza-operacao', {
           params: { busca },
         })
         const naturezas = response.data.map((item) => ({
@@ -48,7 +48,7 @@ export const useSelectNaturezaOperacaoStore = defineStore('selectNaturezaOperaca
      */
     async fetch(codnaturezaoperacao) {
       try {
-        const response = await api.get('/select/natureza-operacao', {
+        const response = await api.get('v1/select/natureza-operacao', {
           params: { codnaturezaoperacao },
         })
         if (response.data.length > 0) {

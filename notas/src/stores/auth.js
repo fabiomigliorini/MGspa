@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     loading.value = true
     try {
-      const response = await api.get('auth/user', {
+      const response = await api.get('v1/auth/user', {
         headers: { Authorization: `Bearer ${token.value}` },
       })
 

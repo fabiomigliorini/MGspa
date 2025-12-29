@@ -21,7 +21,7 @@ export const useSelectEstadoStore = defineStore('selectEstado', {
       }
 
       try {
-        const response = await api.get('/select/estado')
+        const response = await api.get('v1/select/estado')
         this.estados = response.data.map((item) => ({
           label: item.sigla,
           value: item.value,

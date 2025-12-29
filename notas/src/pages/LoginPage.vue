@@ -1,12 +1,3 @@
-<template>
-  <q-page class="flex flex-center">
-    <div class="text-center">
-      <q-spinner color="primary" size="3em" />
-      <p class="q-mt-md">{{ status }}</p>
-    </div>
-  </q-page>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -44,3 +35,12 @@ onMounted(() => {
   }, 500)
 })
 </script>
+
+<template>
+  <q-page class="flex flex-center">
+    <div class="text-center">
+      <q-spinner color="primary" size="3em" />
+      <p class="q-mt-md">{{ status }}</p>
+    </div>
+  </q-page>
+</template>

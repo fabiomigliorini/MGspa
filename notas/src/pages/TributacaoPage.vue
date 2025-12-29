@@ -1,3 +1,461 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useTributacaoStore } from 'stores/tributacao'
+import { useQuasar } from 'quasar'
+import SelectEstado from 'src/components/selects/SelectEstado.vue'
+import SelectCidade from 'src/components/selects/SelectCidade.vue'
+import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
+import SelectTipoProduto from 'src/components/selects/SelectTipoProduto.vue'
+import SelectTipoCliente from 'src/components/selects/SelectTipoCliente.vue'
+
+const $q = useQuasar()
+const store = useTributacaoStore()
+
+// Colunas da tabela
+const columns = [
+  {
+    name: 'incide_sobre',
+    label: 'Incide Sobre',
+    field: 'codnaturezaoperacao',
+    align: 'left',
+    sortable: false,
+  },
+  {
+    name: 'cst_classtrib',
+    label: 'CST',
+    field: 'cst',
+    align: 'center',
+    sortable: true,
+  },
+  {
+    name: 'aliquota_base',
+    label: 'Alíquota',
+    field: 'aliquota',
+    align: 'center',
+    sortable: true,
+  },
+  {
+    name: 'credito_beneficio',
+    label: 'Crédito',
+    field: 'geracredito',
+    align: 'center',
+    sortable: true,
+  },
+  {
+    name: 'vigenciainicio',
+    label: 'Vigência',
+    field: 'vigenciainicio',
+    align: 'center',
+    sortable: true,
+  },
+  {
+    name: 'actions',
+    label: 'Ações',
+    align: 'center',
+  },
+]
+
+// Inicialização
+onMounted(() => {
+  inicializar()
+})
+
+const inicializar = async () => {
+  try {
+    await store.fetchTributos()
+    if (store.activeTab) {
+      await store.fetchRegras(true)
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao carregar dados',
+      caption: error.message,
+    })
+  }
+}
+
+// Scroll infinito
+const onLoad = async (_index, done) => {
+  if (!store.currentPagination?.hasMore) {
+    done(true) // Para o infinite scroll
+    return
+  }
+
+  await store.loadMore()
+  done(!store.currentPagination?.hasMore) // Para se não houver mais dados
+}
+
+// Mudança de tab
+const onTabChange = (newTab) => {
+  store.setActiveTab(newTab)
+}
+
+// Formatação
+const formatPercent = (value) => {
+  if (value === null || value === undefined) return '-'
+  return `${parseFloat(value).toFixed(2)}%`
+}
+
+const formatDate = (value) => {
+  if (!value) return '-'
+  // Converte ISO string para DD/MM/YYYY
+  const date = new Date(value)
+  return date.toLocaleDateString('pt-BR')
+}
+
+// Converte ISO date (YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS) para DD/MM/YYYY
+const isoToFormDate = (isoDate) => {
+  if (!isoDate) return null
+  const date = new Date(isoDate)
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+// Converte DD/MM/YYYY para YYYY-MM-DD
+const formDateToIso = (formDate) => {
+  if (!formDate || formDate.length !== 10) return null
+  const [day, month, year] = formDate.split('/')
+  return `${year}-${month}-${day}`
+}
+
+// Retorna a cor do badge de tipo de cliente
+const getTipoClienteColor = (tipo) => {
+  const colors = {
+    PFC: 'blue',
+    PFN: 'cyan',
+    PJC: 'green',
+    PJN: 'teal',
+  }
+  return colors[tipo] || 'grey'
+}
+
+// Retorna o label descritivo do tipo de cliente
+const getTipoClienteLabel = (tipo) => {
+  const labels = {
+    PFC: 'Pessoa Física Contribuinte',
+    PFN: 'Pessoa Física Não Contribuinte',
+    PJC: 'Pessoa Jurídica Contribuinte',
+    PJN: 'Pessoa Jurídica Não Contribuinte',
+  }
+  return labels[tipo] || 'Desconhecido'
+}
+
+// ========== REGRAS ==========
+const regraDialog = ref(false)
+const regraDialogMode = ref('create') // 'create' | 'edit'
+const regraForm = ref({
+  codtributacaoregra: null,
+  codtributo: null,
+  codnaturezaoperacao: null,
+  codtipoproduto: null,
+  ncm: null,
+  codestadodestino: null,
+  codcidadedestino: null,
+  tipocliente: null,
+  basepercentual: null,
+  aliquota: null,
+  cst: null,
+  cclasstrib: null,
+  geracredito: false,
+  beneficiocodigo: null,
+  observacoes: null,
+  vigenciainicio: null,
+  vigenciafim: null,
+})
+
+const novaRegra = () => {
+  regraDialogMode.value = 'create'
+  regraForm.value = {
+    codtributacaoregra: null,
+    codtributo: store.activeTab,
+    codnaturezaoperacao: null,
+    codtipoproduto: null,
+    ncm: '',
+    codestadodestino: null,
+    codcidadedestino: null,
+    tipocliente: null,
+    basepercentual: 100,
+    aliquota: null,
+    cst: '',
+    cclasstrib: '',
+    geracredito: false,
+    beneficiocodigo: null,
+    observacoes: null,
+    vigenciainicio: null,
+    vigenciafim: null,
+  }
+  regraDialog.value = true
+}
+
+const editarRegra = (regra) => {
+  regraDialogMode.value = 'edit'
+  regraForm.value = {
+    codtributacaoregra: regra.codtributacaoregra,
+    codtributo: regra.tributo?.codtributo || store.activeTab,
+    codnaturezaoperacao: regra.codnaturezaoperacao,
+    codtipoproduto: regra.codtipoproduto,
+    ncm: regra.ncm,
+    codestadodestino: regra.codestadodestino,
+    codcidadedestino: regra.codcidadedestino,
+    tipocliente: regra.tipocliente,
+    basepercentual: regra.basepercentual,
+    aliquota: regra.aliquota,
+    cst: regra.cst,
+    cclasstrib: regra.cclasstrib,
+    geracredito: regra.geracredito,
+    beneficiocodigo: regra.beneficiocodigo,
+    observacoes: regra.observacoes,
+    vigenciainicio: isoToFormDate(regra.vigenciainicio),
+    vigenciafim: isoToFormDate(regra.vigenciafim),
+  }
+  console.log(regraForm)
+  regraDialog.value = true
+}
+
+const salvarRegra = async () => {
+  // Validações
+  if (!regraForm.value.codtributo) {
+    $q.notify({
+      type: 'warning',
+      message: 'Tributo não selecionado',
+    })
+    return
+  }
+
+  if (!regraForm.value.cclasstrib || regraForm.value.cclasstrib.length !== 6) {
+    $q.notify({
+      type: 'warning',
+      message: 'Classificação Tributária deve ter 6 dígitos',
+    })
+    return
+  }
+
+  if (!regraForm.value.cst || regraForm.value.cst.length !== 3) {
+    $q.notify({
+      type: 'warning',
+      message: 'CST deve ter 3 dígitos',
+    })
+    return
+  }
+
+  if (regraForm.value.ncm && (regraForm.value.ncm.length < 2 || regraForm.value.ncm.length > 8)) {
+    $q.notify({
+      type: 'warning',
+      message: 'NCM deve ter entre 2 e 8 dígitos',
+    })
+    return
+  }
+
+  try {
+    // Prepara os dados para envio convertendo as datas
+    const dataToSend = {
+      ...regraForm.value,
+      vigenciainicio: formDateToIso(regraForm.value.vigenciainicio),
+      vigenciafim: formDateToIso(regraForm.value.vigenciafim),
+    }
+
+    if (regraDialogMode.value === 'create') {
+      await store.createRegra(dataToSend)
+      $q.notify({
+        type: 'positive',
+        message: 'Regra criada com sucesso',
+        icon: 'check_circle',
+      })
+    } else {
+      await store.updateRegra(regraForm.value.codtributacaoregra, dataToSend)
+      $q.notify({
+        type: 'positive',
+        message: 'Regra atualizada com sucesso',
+        icon: 'check_circle',
+      })
+    }
+    regraDialog.value = false
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: `Erro ao ${regraDialogMode.value === 'create' ? 'criar' : 'atualizar'} regra`,
+      caption: error.message,
+    })
+  }
+}
+
+const duplicarRegra = (regra) => {
+  // Abre o formulário de nova regra com os dados da regra existente
+  regraDialogMode.value = 'create'
+  regraForm.value = {
+    codtributacaoregra: null, // Não copia o ID
+    codtributo: regra.tributo?.codtributo || store.activeTab,
+    codnaturezaoperacao: regra.codnaturezaoperacao,
+    codtipoproduto: regra.codtipoproduto,
+    ncm: regra.ncm,
+    codestadodestino: regra.codestadodestino,
+    codcidadedestino: regra.codcidadedestino,
+    tipocliente: regra.tipocliente,
+    basepercentual: regra.basepercentual,
+    aliquota: regra.aliquota,
+    cst: regra.cst,
+    cclasstrib: regra.cclasstrib,
+    geracredito: regra.geracredito,
+    beneficiocodigo: regra.beneficiocodigo,
+    observacoes: regra.observacoes,
+    vigenciainicio: isoToFormDate(regra.vigenciainicio),
+    vigenciafim: isoToFormDate(regra.vigenciafim),
+  }
+  regraDialog.value = true
+}
+
+const confirmarExclusao = (regra) => {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: 'Deseja realmente excluir esta regra?',
+    cancel: {
+      flat: true,
+      label: 'Cancelar',
+    },
+    ok: {
+      unelevated: true,
+      label: 'Excluir',
+      color: 'negative',
+    },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      console.log(regra.codtributacaoregra)
+      await store.deleteRegra(regra.codtributacaoregra)
+      $q.notify({
+        type: 'positive',
+        message: 'Regra excluída com sucesso',
+        icon: 'check_circle',
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao excluir regra',
+        caption: error.message,
+      })
+    }
+  })
+}
+
+// ========== TRIBUTOS ==========
+const tributoDialog = ref(false)
+const tributoDialogMode = ref('create') // 'create' | 'edit'
+const tributoForm = ref({
+  codtributo: null,
+  codigo: '',
+  descricao: '',
+  ente: null,
+})
+
+const novoTributo = () => {
+  tributoDialogMode.value = 'create'
+  tributoForm.value = {
+    codtributo: null,
+    codigo: '',
+    descricao: '',
+    ente: null,
+  }
+  tributoDialog.value = true
+}
+
+const editarTributo = (tributo) => {
+  tributoDialogMode.value = 'edit'
+  tributoForm.value = {
+    codtributo: tributo.codtributo,
+    codigo: tributo.codigo,
+    descricao: tributo.descricao,
+    ente: tributo.ente,
+  }
+  tributoDialog.value = true
+}
+
+const salvarTributo = async () => {
+  // Validação simples
+  if (!tributoForm.value.codigo || !tributoForm.value.descricao || !tributoForm.value.ente) {
+    $q.notify({
+      type: 'warning',
+      message: 'Preencha todos os campos obrigatórios',
+    })
+    return
+  }
+
+  try {
+    if (tributoDialogMode.value === 'create') {
+      await store.createTributo({
+        codigo: tributoForm.value.codigo,
+        descricao: tributoForm.value.descricao,
+        ente: tributoForm.value.ente,
+      })
+      $q.notify({
+        type: 'positive',
+        message: 'Tributo criado com sucesso',
+        icon: 'check_circle',
+      })
+    } else {
+      await store.updateTributo(tributoForm.value.codtributo, {
+        codigo: tributoForm.value.codigo,
+        descricao: tributoForm.value.descricao,
+        ente: tributoForm.value.ente,
+      })
+      $q.notify({
+        type: 'positive',
+        message: 'Tributo atualizado com sucesso',
+        icon: 'check_circle',
+      })
+    }
+    tributoDialog.value = false
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: `Erro ao ${tributoDialogMode.value === 'create' ? 'criar' : 'atualizar'} tributo`,
+      caption: error.message,
+    })
+  }
+}
+
+const confirmarExclusaoTributo = () => {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: `Deseja realmente excluir o tributo ${tributoForm.value.codigo}? Todas as regras associadas serão perdidas.`,
+    cancel: {
+      flat: true,
+      label: 'Cancelar',
+    },
+    ok: {
+      unelevated: true,
+      label: 'Excluir',
+      color: 'negative',
+    },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await store.deleteTributo(tributoForm.value.codtributo)
+      $q.notify({
+        type: 'positive',
+        message: 'Tributo excluído com sucesso',
+        icon: 'check_circle',
+      })
+      tributoDialog.value = false
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao excluir tributo',
+        caption: error.message,
+      })
+    }
+  })
+}
+</script>
+
+<style scoped>
+.text-mono {
+  font-family: 'Courier New', monospace;
+}
+</style>
+
 <template>
   <q-page class="bg-grey-1">
     <!-- Loading inicial dos tributos -->
@@ -604,461 +1062,3 @@
     </q-dialog>
   </q-page>
 </template>
-
-<script setup>
-import { ref, onMounted } from 'vue'
-import { useTributacaoStore } from 'stores/tributacao'
-import { useQuasar } from 'quasar'
-import SelectEstado from 'src/components/selects/SelectEstado.vue'
-import SelectCidade from 'src/components/selects/SelectCidade.vue'
-import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
-import SelectTipoProduto from 'src/components/selects/SelectTipoProduto.vue'
-import SelectTipoCliente from 'src/components/selects/SelectTipoCliente.vue'
-
-const $q = useQuasar()
-const store = useTributacaoStore()
-
-// Colunas da tabela
-const columns = [
-  {
-    name: 'incide_sobre',
-    label: 'Incide Sobre',
-    field: 'codnaturezaoperacao',
-    align: 'left',
-    sortable: false,
-  },
-  {
-    name: 'cst_classtrib',
-    label: 'CST',
-    field: 'cst',
-    align: 'center',
-    sortable: true,
-  },
-  {
-    name: 'aliquota_base',
-    label: 'Alíquota',
-    field: 'aliquota',
-    align: 'center',
-    sortable: true,
-  },
-  {
-    name: 'credito_beneficio',
-    label: 'Crédito',
-    field: 'geracredito',
-    align: 'center',
-    sortable: true,
-  },
-  {
-    name: 'vigenciainicio',
-    label: 'Vigência',
-    field: 'vigenciainicio',
-    align: 'center',
-    sortable: true,
-  },
-  {
-    name: 'actions',
-    label: 'Ações',
-    align: 'center',
-  },
-]
-
-// Inicialização
-onMounted(() => {
-  inicializar()
-})
-
-const inicializar = async () => {
-  try {
-    await store.fetchTributos()
-    if (store.activeTab) {
-      await store.fetchRegras(true)
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao carregar dados',
-      caption: error.message,
-    })
-  }
-}
-
-// Scroll infinito
-const onLoad = async (_index, done) => {
-  if (!store.currentPagination?.hasMore) {
-    done(true) // Para o infinite scroll
-    return
-  }
-
-  await store.loadMore()
-  done(!store.currentPagination?.hasMore) // Para se não houver mais dados
-}
-
-// Mudança de tab
-const onTabChange = (newTab) => {
-  store.setActiveTab(newTab)
-}
-
-// Formatação
-const formatPercent = (value) => {
-  if (value === null || value === undefined) return '-'
-  return `${parseFloat(value).toFixed(2)}%`
-}
-
-const formatDate = (value) => {
-  if (!value) return '-'
-  // Converte ISO string para DD/MM/YYYY
-  const date = new Date(value)
-  return date.toLocaleDateString('pt-BR')
-}
-
-// Converte ISO date (YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS) para DD/MM/YYYY
-const isoToFormDate = (isoDate) => {
-  if (!isoDate) return null
-  const date = new Date(isoDate)
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}/${month}/${year}`
-}
-
-// Converte DD/MM/YYYY para YYYY-MM-DD
-const formDateToIso = (formDate) => {
-  if (!formDate || formDate.length !== 10) return null
-  const [day, month, year] = formDate.split('/')
-  return `${year}-${month}-${day}`
-}
-
-// Retorna a cor do badge de tipo de cliente
-const getTipoClienteColor = (tipo) => {
-  const colors = {
-    PFC: 'blue',
-    PFN: 'cyan',
-    PJC: 'green',
-    PJN: 'teal',
-  }
-  return colors[tipo] || 'grey'
-}
-
-// Retorna o label descritivo do tipo de cliente
-const getTipoClienteLabel = (tipo) => {
-  const labels = {
-    PFC: 'Pessoa Física Contribuinte',
-    PFN: 'Pessoa Física Não Contribuinte',
-    PJC: 'Pessoa Jurídica Contribuinte',
-    PJN: 'Pessoa Jurídica Não Contribuinte',
-  }
-  return labels[tipo] || 'Desconhecido'
-}
-
-// ========== REGRAS ==========
-const regraDialog = ref(false)
-const regraDialogMode = ref('create') // 'create' | 'edit'
-const regraForm = ref({
-  codtributacaoregra: null,
-  codtributo: null,
-  codnaturezaoperacao: null,
-  codtipoproduto: null,
-  ncm: null,
-  codestadodestino: null,
-  codcidadedestino: null,
-  tipocliente: null,
-  basepercentual: null,
-  aliquota: null,
-  cst: null,
-  cclasstrib: null,
-  geracredito: false,
-  beneficiocodigo: null,
-  observacoes: null,
-  vigenciainicio: null,
-  vigenciafim: null,
-})
-
-const novaRegra = () => {
-  regraDialogMode.value = 'create'
-  regraForm.value = {
-    codtributacaoregra: null,
-    codtributo: store.activeTab,
-    codnaturezaoperacao: null,
-    codtipoproduto: null,
-    ncm: '',
-    codestadodestino: null,
-    codcidadedestino: null,
-    tipocliente: null,
-    basepercentual: 100,
-    aliquota: null,
-    cst: '',
-    cclasstrib: '',
-    geracredito: false,
-    beneficiocodigo: null,
-    observacoes: null,
-    vigenciainicio: null,
-    vigenciafim: null,
-  }
-  regraDialog.value = true
-}
-
-const editarRegra = (regra) => {
-  regraDialogMode.value = 'edit'
-  regraForm.value = {
-    codtributacaoregra: regra.codtributacaoregra,
-    codtributo: regra.tributo?.codtributo || store.activeTab,
-    codnaturezaoperacao: regra.codnaturezaoperacao,
-    codtipoproduto: regra.codtipoproduto,
-    ncm: regra.ncm,
-    codestadodestino: regra.codestadodestino,
-    codcidadedestino: regra.codcidadedestino,
-    tipocliente: regra.tipocliente,
-    basepercentual: regra.basepercentual,
-    aliquota: regra.aliquota,
-    cst: regra.cst,
-    cclasstrib: regra.cclasstrib,
-    geracredito: regra.geracredito,
-    beneficiocodigo: regra.beneficiocodigo,
-    observacoes: regra.observacoes,
-    vigenciainicio: isoToFormDate(regra.vigenciainicio),
-    vigenciafim: isoToFormDate(regra.vigenciafim),
-  }
-  console.log(regraForm)
-  regraDialog.value = true
-}
-
-const salvarRegra = async () => {
-  // Validações
-  if (!regraForm.value.codtributo) {
-    $q.notify({
-      type: 'warning',
-      message: 'Tributo não selecionado',
-    })
-    return
-  }
-
-  if (!regraForm.value.cclasstrib || regraForm.value.cclasstrib.length !== 6) {
-    $q.notify({
-      type: 'warning',
-      message: 'Classificação Tributária deve ter 6 dígitos',
-    })
-    return
-  }
-
-  if (!regraForm.value.cst || regraForm.value.cst.length !== 3) {
-    $q.notify({
-      type: 'warning',
-      message: 'CST deve ter 3 dígitos',
-    })
-    return
-  }
-
-  if (regraForm.value.ncm && (regraForm.value.ncm.length < 2 || regraForm.value.ncm.length > 8)) {
-    $q.notify({
-      type: 'warning',
-      message: 'NCM deve ter entre 2 e 8 dígitos',
-    })
-    return
-  }
-
-  try {
-    // Prepara os dados para envio convertendo as datas
-    const dataToSend = {
-      ...regraForm.value,
-      vigenciainicio: formDateToIso(regraForm.value.vigenciainicio),
-      vigenciafim: formDateToIso(regraForm.value.vigenciafim),
-    }
-
-    if (regraDialogMode.value === 'create') {
-      await store.createRegra(dataToSend)
-      $q.notify({
-        type: 'positive',
-        message: 'Regra criada com sucesso',
-        icon: 'check_circle',
-      })
-    } else {
-      await store.updateRegra(regraForm.value.codtributacaoregra, dataToSend)
-      $q.notify({
-        type: 'positive',
-        message: 'Regra atualizada com sucesso',
-        icon: 'check_circle',
-      })
-    }
-    regraDialog.value = false
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: `Erro ao ${regraDialogMode.value === 'create' ? 'criar' : 'atualizar'} regra`,
-      caption: error.message,
-    })
-  }
-}
-
-const duplicarRegra = (regra) => {
-  // Abre o formulário de nova regra com os dados da regra existente
-  regraDialogMode.value = 'create'
-  regraForm.value = {
-    codtributacaoregra: null, // Não copia o ID
-    codtributo: regra.tributo?.codtributo || store.activeTab,
-    codnaturezaoperacao: regra.codnaturezaoperacao,
-    codtipoproduto: regra.codtipoproduto,
-    ncm: regra.ncm,
-    codestadodestino: regra.codestadodestino,
-    codcidadedestino: regra.codcidadedestino,
-    tipocliente: regra.tipocliente,
-    basepercentual: regra.basepercentual,
-    aliquota: regra.aliquota,
-    cst: regra.cst,
-    cclasstrib: regra.cclasstrib,
-    geracredito: regra.geracredito,
-    beneficiocodigo: regra.beneficiocodigo,
-    observacoes: regra.observacoes,
-    vigenciainicio: isoToFormDate(regra.vigenciainicio),
-    vigenciafim: isoToFormDate(regra.vigenciafim),
-  }
-  regraDialog.value = true
-}
-
-const confirmarExclusao = (regra) => {
-  $q.dialog({
-    title: 'Confirmar exclusão',
-    message: 'Deseja realmente excluir esta regra?',
-    cancel: {
-      flat: true,
-      label: 'Cancelar',
-    },
-    ok: {
-      unelevated: true,
-      label: 'Excluir',
-      color: 'negative',
-    },
-    persistent: true,
-  }).onOk(async () => {
-    try {
-      console.log(regra.codtributacaoregra)
-      await store.deleteRegra(regra.codtributacaoregra)
-      $q.notify({
-        type: 'positive',
-        message: 'Regra excluída com sucesso',
-        icon: 'check_circle',
-      })
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao excluir regra',
-        caption: error.message,
-      })
-    }
-  })
-}
-
-// ========== TRIBUTOS ==========
-const tributoDialog = ref(false)
-const tributoDialogMode = ref('create') // 'create' | 'edit'
-const tributoForm = ref({
-  codtributo: null,
-  codigo: '',
-  descricao: '',
-  ente: null,
-})
-
-const novoTributo = () => {
-  tributoDialogMode.value = 'create'
-  tributoForm.value = {
-    codtributo: null,
-    codigo: '',
-    descricao: '',
-    ente: null,
-  }
-  tributoDialog.value = true
-}
-
-const editarTributo = (tributo) => {
-  tributoDialogMode.value = 'edit'
-  tributoForm.value = {
-    codtributo: tributo.codtributo,
-    codigo: tributo.codigo,
-    descricao: tributo.descricao,
-    ente: tributo.ente,
-  }
-  tributoDialog.value = true
-}
-
-const salvarTributo = async () => {
-  // Validação simples
-  if (!tributoForm.value.codigo || !tributoForm.value.descricao || !tributoForm.value.ente) {
-    $q.notify({
-      type: 'warning',
-      message: 'Preencha todos os campos obrigatórios',
-    })
-    return
-  }
-
-  try {
-    if (tributoDialogMode.value === 'create') {
-      await store.createTributo({
-        codigo: tributoForm.value.codigo,
-        descricao: tributoForm.value.descricao,
-        ente: tributoForm.value.ente,
-      })
-      $q.notify({
-        type: 'positive',
-        message: 'Tributo criado com sucesso',
-        icon: 'check_circle',
-      })
-    } else {
-      await store.updateTributo(tributoForm.value.codtributo, {
-        codigo: tributoForm.value.codigo,
-        descricao: tributoForm.value.descricao,
-        ente: tributoForm.value.ente,
-      })
-      $q.notify({
-        type: 'positive',
-        message: 'Tributo atualizado com sucesso',
-        icon: 'check_circle',
-      })
-    }
-    tributoDialog.value = false
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: `Erro ao ${tributoDialogMode.value === 'create' ? 'criar' : 'atualizar'} tributo`,
-      caption: error.message,
-    })
-  }
-}
-
-const confirmarExclusaoTributo = () => {
-  $q.dialog({
-    title: 'Confirmar exclusão',
-    message: `Deseja realmente excluir o tributo ${tributoForm.value.codigo}? Todas as regras associadas serão perdidas.`,
-    cancel: {
-      flat: true,
-      label: 'Cancelar',
-    },
-    ok: {
-      unelevated: true,
-      label: 'Excluir',
-      color: 'negative',
-    },
-    persistent: true,
-  }).onOk(async () => {
-    try {
-      await store.deleteTributo(tributoForm.value.codtributo)
-      $q.notify({
-        type: 'positive',
-        message: 'Tributo excluído com sucesso',
-        icon: 'check_circle',
-      })
-      tributoDialog.value = false
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao excluir tributo',
-        caption: error.message,
-      })
-    }
-  })
-}
-</script>
-
-<style scoped>
-.text-mono {
-  font-family: 'Courier New', monospace;
-}
-</style>

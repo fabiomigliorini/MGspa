@@ -125,7 +125,7 @@ export const useTributacaoStore = defineStore('tributacao', {
         this.tributosLoading = true
         this.error = null
 
-        const response = await api.get('/tributacao/tributo')
+        const response = await api.get('v1/tributacao/tributo')
         this.tributos = response.data.data || response.data || []
 
         // Inicializa paginação para cada tributo
@@ -193,7 +193,7 @@ export const useTributacaoStore = defineStore('tributacao', {
           per_page: this.pagination[tributo].perPage,
         }
 
-        const response = await api.get('/tributacao/regra', { params })
+        const response = await api.get('v1/tributacao/regra', { params })
 
         const newRegras = response.data.data || []
 
@@ -308,7 +308,7 @@ export const useTributacaoStore = defineStore('tributacao', {
     async createRegra(data) {
       try {
         this.isLoading = true
-        const response = await api.post('/tributacao/regra', data)
+        const response = await api.post('v1/tributacao/regra', data)
 
         // Pega a regra do response (pode ser data.data ou só data)
         const regra = response.data.data || response.data
@@ -332,7 +332,7 @@ export const useTributacaoStore = defineStore('tributacao', {
     async updateRegra(codtributacaoregra, data) {
       try {
         this.isLoading = true
-        const response = await api.put(`/tributacao/regra/${codtributacaoregra}`, data)
+        const response = await api.put(`v1/tributacao/regra/${codtributacaoregra}`, data)
 
         // Pega a regra do response (pode ser data.data ou só data)
         const regra = response.data.data || response.data
@@ -362,7 +362,7 @@ export const useTributacaoStore = defineStore('tributacao', {
     async deleteRegra(codtributacaoregra) {
       try {
         this.isLoading = true
-        await api.delete(`/tributacao/regra/${codtributacaoregra}`)
+        await api.delete(`v1/tributacao/regra/${codtributacaoregra}`)
 
         // Remove a regra de todas as abas
         Object.keys(this.regras).forEach((tributo) => {
@@ -388,7 +388,7 @@ export const useTributacaoStore = defineStore('tributacao', {
         this.isLoading = true
         this.error = null
 
-        const response = await api.post('/tributacao/tributo', data)
+        const response = await api.post('v1/tributacao/tributo', data)
         const novoTributo = response.data.data || response.data
 
         // Adiciona o novo tributo na lista
@@ -417,7 +417,7 @@ export const useTributacaoStore = defineStore('tributacao', {
         this.isLoading = true
         this.error = null
 
-        const response = await api.put(`/tributacao/tributo/${codtributo}`, data)
+        const response = await api.put(`v1/tributacao/tributo/${codtributo}`, data)
         const tributoAtualizado = response.data.data || response.data
 
         // Encontra o índice do tributo na lista
@@ -475,7 +475,7 @@ export const useTributacaoStore = defineStore('tributacao', {
           throw new Error('Tributo não encontrado')
         }
 
-        await api.delete(`/tributacao/tributo/${codtributo}`)
+        await api.delete(`v1/tributacao/tributo/${codtributo}`)
 
         // Remove o tributo da lista
         this.tributos = this.tributos.filter((t) => t.codtributo !== codtributo)
