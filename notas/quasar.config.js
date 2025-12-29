@@ -81,11 +81,15 @@ export default defineConfig((/* ctx */) => {
       open: false,
       host: '0.0.0.0',
       client: {
-        webSocketURL: 'ws://sistema-dev.mgpapelaria.com.br:8082/ws', // <-- URL COMPLETA como string
         overlay: {
           warnings: false,
           errors: true,
         },
+      },
+      hmr: {
+        protocol: 'wss',
+        host: 'sistema-dev.mgpapelaria.com.br',
+        port: 8082,
       },
     },
 
