@@ -490,7 +490,7 @@ const confirmarExclusaoTributo = () => {
 
       <!-- Conteúdo da Tab Ativa -->
       <div class="q-pa-md">
-        <q-card flat bordered>
+        <q-card flat>
           <!-- Header da tabela -->
           <q-card-section class="row items-center justify-between">
             <div class="row items-center q-gutter-sm">
@@ -514,7 +514,6 @@ const confirmarExclusaoTributo = () => {
                 <q-tooltip>Editar tributo</q-tooltip>
               </q-btn>
             </div>
-            <q-btn color="primary" icon="add" label="Nova Regra" unelevated @click="novaRegra" />
           </q-card-section>
 
           <q-separator />
@@ -751,6 +750,18 @@ const confirmarExclusaoTributo = () => {
           </q-infinite-scroll>
         </q-card>
       </div>
+
+      <!-- FAB para Nova Regra -->
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn
+          fab
+          icon="add"
+          color="primary"
+          @click="novaRegra"
+        >
+          <q-tooltip>Nova Regra</q-tooltip>
+        </q-btn>
+      </q-page-sticky>
     </template>
 
     <!-- Estado vazio (sem tributos) -->

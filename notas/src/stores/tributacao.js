@@ -2,6 +2,9 @@ import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
 
 export const useTributacaoStore = defineStore('tributacao', {
+  persist: {
+    paths: ['filters']
+  },
   state: () => ({
     // Lista de tributos disponíveis (vem da API)
     tributos: [],

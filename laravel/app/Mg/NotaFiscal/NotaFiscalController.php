@@ -98,7 +98,6 @@ class NotaFiscalController extends Controller
         $sortOrder = $request->get('order', 'desc');
         $query->orderBy($sortField, $sortOrder);
         $query->orderByDesc('codnotafiscal');
-        // dd($query->toSql());
 
         return NotaFiscalResource::collection(
             $query->paginate($request->get('per_page', 20))

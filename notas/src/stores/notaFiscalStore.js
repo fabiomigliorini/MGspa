@@ -7,6 +7,9 @@ import notaFiscalReferenciadaService from '../services/notaFiscalReferenciadaSer
 import notaFiscalCartaCorrecaoService from '../services/notaFiscalCartaCorrecaoService'
 
 export const useNotaFiscalStore = defineStore('notaFiscal', {
+  persist: {
+    paths: ['filters']
+  },
   state: () => ({
     // Lista de notas fiscais
     notas: [],

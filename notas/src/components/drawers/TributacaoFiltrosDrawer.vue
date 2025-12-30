@@ -61,9 +61,23 @@ const limparFiltros = async () => {
         <q-icon name="filter_list" class="q-mr-sm" />
         Filtros
       </div>
-      <div class="text-caption">
-        {{ store.activeFiltersCount }}
-        {{ store.activeFiltersCount === 1 ? 'filtro ativo' : 'filtros ativos' }}
+      <div class="row items-center justify-between">
+        <div class="text-caption">
+          {{ store.activeFiltersCount }}
+          {{ store.activeFiltersCount === 1 ? 'filtro ativo' : 'filtros ativos' }}
+        </div>
+        <q-btn
+          v-if="store.hasActiveFilters"
+          flat
+          dense
+          round
+          icon="close"
+          color="white"
+          size="sm"
+          @click="limparFiltros"
+        >
+          <q-tooltip>Limpar Filtros</q-tooltip>
+        </q-btn>
       </div>
     </div>
 
@@ -232,19 +246,6 @@ const limparFiltros = async () => {
           map-options
         />
       </div>
-
-      <q-btn
-        outline
-        color="grey-8"
-        label="Limpar Filtros"
-        icon="clear"
-        class="full-width"
-        @click="limparFiltros"
-        :disable="!store.hasActiveFilters"
-      />
     </div>
-
-    <!-- Footer com botões -->
-    <div class="q-pa-md"></div>
   </div>
 </template>
