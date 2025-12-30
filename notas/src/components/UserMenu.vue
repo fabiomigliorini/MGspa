@@ -1,3 +1,22 @@
+<script setup>
+import { useAuth } from 'src/composables/useAuth'
+import { Dialog } from 'quasar'
+
+const { user, isAuthenticated, isAdmin, permissions, logout } = useAuth()
+
+function handleLogout() {
+  Dialog.create({
+    title: 'Confirmar',
+    message: 'Deseja realmente sair do sistema?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Sair', color: 'negative' },
+    persistent: true,
+  }).onOk(() => {
+    logout()
+  })
+}
+</script>
+
 <template>
   <q-btn v-if="isAuthenticated" round flat icon="account_circle">
     <q-menu>
@@ -53,22 +72,3 @@
     </q-menu>
   </q-btn>
 </template>
-
-<script setup>
-import { useAuth } from 'src/composables/useAuth'
-import { Dialog } from 'quasar'
-
-const { user, isAuthenticated, isAdmin, permissions, logout } = useAuth()
-
-function handleLogout() {
-  Dialog.create({
-    title: 'Confirmar',
-    message: 'Deseja realmente sair do sistema?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Sair', color: 'negative' },
-    persistent: true,
-  }).onOk(() => {
-    logout()
-  })
-}
-</script>

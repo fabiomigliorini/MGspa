@@ -1,3 +1,28 @@
+<script setup>
+const emissoesItems = [
+  { label: 'Notas Fiscais', icon: 'description', color: 'blue', to: '/notas' },
+  // { label: 'DFe Recebidos', icon: 'inbox', color: 'green', to: '/dfe-recebidos' },
+  // { label: 'NFe Terceiros', icon: 'people', color: 'orange', to: '/nfe-terceiros' },
+  // { label: 'MDFe', icon: 'local_shipping', color: 'red', to: '/mdfe' },
+]
+
+const cadastrosItems = [
+  // { label: 'Motoristas', icon: 'person', color: 'blue', to: '/motoristas' },
+  // { label: 'Veículos', icon: 'directions_car', color: 'indigo', to: '/veiculos' },
+  // { label: 'Conjuntos', icon: 'category', color: 'purple', to: '/conjuntos' },
+]
+
+const fiscaisItems = [
+  { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
+  // { label: 'Naturezas', icon: 'inventory', color: 'teal', to: '/naturezas' },
+  // { label: 'Regras Trib.', icon: 'rule', color: 'cyan', to: '/regras-tributarias' },
+  // { label: 'CFOP', icon: 'code', color: 'blue', to: '/cfop' },
+  // { label: 'Localidades', icon: 'public', color: 'indigo', to: '/localidades' },
+  // { label: 'Tributações', icon: 'calculate', color: 'purple', to: '/tributacoes' },
+  // { label: 'Certidões', icon: 'verified', color: 'pink', to: '/certidoes' },
+]
+</script>
+
 <template>
   <q-btn flat round dense icon="apps">
     <q-menu anchor="bottom left" self="top left" :offset="[0, 8]" max-width="400px">
@@ -58,31 +83,6 @@
     </q-menu>
   </q-btn>
 </template>
-
-<script setup>
-const emissoesItems = [
-  { label: 'Notas Fiscais', icon: 'description', color: 'blue', to: '/notas' },
-  // { label: 'DFe Recebidos', icon: 'inbox', color: 'green', to: '/dfe-recebidos' },
-  // { label: 'NFe Terceiros', icon: 'people', color: 'orange', to: '/nfe-terceiros' },
-  // { label: 'MDFe', icon: 'local_shipping', color: 'red', to: '/mdfe' },
-]
-
-const cadastrosItems = [
-  // { label: 'Motoristas', icon: 'person', color: 'blue', to: '/motoristas' },
-  // { label: 'Veículos', icon: 'directions_car', color: 'indigo', to: '/veiculos' },
-  // { label: 'Conjuntos', icon: 'category', color: 'purple', to: '/conjuntos' },
-]
-
-const fiscaisItems = [
-  { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
-  // { label: 'Naturezas', icon: 'inventory', color: 'teal', to: '/naturezas' },
-  // { label: 'Regras Trib.', icon: 'rule', color: 'cyan', to: '/regras-tributarias' },
-  // { label: 'CFOP', icon: 'code', color: 'blue', to: '/cfop' },
-  // { label: 'Localidades', icon: 'public', color: 'indigo', to: '/localidades' },
-  // { label: 'Tributações', icon: 'calculate', color: 'purple', to: '/tributacoes' },
-  // { label: 'Certidões', icon: 'verified', color: 'pink', to: '/certidoes' },
-]
-</script>
 
 <style scoped>
 .app-launcher-item {

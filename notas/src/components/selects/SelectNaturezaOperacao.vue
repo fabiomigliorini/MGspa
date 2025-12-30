@@ -1,77 +1,3 @@
-<template>
-  <q-select
-    :model-value="modelValue"
-    @update:model-value="handleUpdate"
-    :label="label"
-    outlined
-    clearable
-    :options="options"
-    option-value="value"
-    option-label="label"
-    emit-value
-    map-options
-    use-input
-    input-debounce="500"
-    @filter="filterNaturezaOperacao"
-    :placeholder="placeholder"
-    :bottom-slots="bottomSlots"
-    :class="customClass"
-    :disable="disable"
-    :readonly="readonly"
-    :loading="loading"
-    :dense="dense"
-  >
-    <template v-slot:option="scope">
-      <q-item v-bind="scope.itemProps">
-        <q-item-section avatar>
-          <q-icon
-            :name="scope.opt.operacao === 'Entrada' ? 'arrow_downward' : 'arrow_upward'"
-            :color="scope.opt.operacao === 'Entrada' ? 'blue' : 'green'"
-          />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label>{{ scope.opt.label }}</q-item-label>
-          <q-item-label
-            caption
-            :class="scope.opt.operacao === 'Entrada' ? 'text-blue' : 'text-green'"
-          >
-            {{ scope.opt.operacao }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-    </template>
-
-    <template v-slot:selected-item="scope">
-      <q-chip
-        removable
-        dense
-        @remove="handleUpdate(null)"
-        :color="scope.opt.operacao === 'Entrada' ? 'blue' : 'green'"
-        text-color="white"
-        :icon="scope.opt.operacao === 'Entrada' ? 'arrow_downward' : 'arrow_upward'"
-      >
-        {{ truncateLabel(scope.opt.label) }}
-      </q-chip>
-    </template>
-
-    <template v-slot:no-option>
-      <q-item>
-        <q-item-section class="text-grey">
-          {{ options.length === 0 ? 'Digite ao menos 2 caracteres' : 'Nenhum resultado' }}
-        </q-item-section>
-      </q-item>
-    </template>
-
-    <template v-if="$slots.prepend" v-slot:prepend>
-      <slot name="prepend" />
-    </template>
-
-    <template v-if="$slots.append" v-slot:append>
-      <slot name="append" />
-    </template>
-  </q-select>
-</template>
-
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useSelectNaturezaOperacaoStore } from 'stores/selects/naturezaOperacao'
@@ -194,3 +120,77 @@ const handleUpdate = (value) => {
   }
 }
 </script>
+
+<template>
+  <q-select
+    :model-value="modelValue"
+    @update:model-value="handleUpdate"
+    :label="label"
+    outlined
+    clearable
+    :options="options"
+    option-value="value"
+    option-label="label"
+    emit-value
+    map-options
+    use-input
+    input-debounce="500"
+    @filter="filterNaturezaOperacao"
+    :placeholder="placeholder"
+    :bottom-slots="bottomSlots"
+    :class="customClass"
+    :disable="disable"
+    :readonly="readonly"
+    :loading="loading"
+    :dense="dense"
+  >
+    <template v-slot:option="scope">
+      <q-item v-bind="scope.itemProps">
+        <q-item-section avatar>
+          <q-icon
+            :name="scope.opt.operacao === 'Entrada' ? 'arrow_downward' : 'arrow_upward'"
+            :color="scope.opt.operacao === 'Entrada' ? 'blue' : 'green'"
+          />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label
+            caption
+            :class="scope.opt.operacao === 'Entrada' ? 'text-blue' : 'text-green'"
+          >
+            {{ scope.opt.operacao }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+
+    <template v-slot:selected-item="scope">
+      <q-chip
+        removable
+        dense
+        @remove="handleUpdate(null)"
+        :color="scope.opt.operacao === 'Entrada' ? 'blue' : 'green'"
+        text-color="white"
+        :icon="scope.opt.operacao === 'Entrada' ? 'arrow_downward' : 'arrow_upward'"
+      >
+        {{ truncateLabel(scope.opt.label) }}
+      </q-chip>
+    </template>
+
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey">
+          {{ options.length === 0 ? 'Digite ao menos 2 caracteres' : 'Nenhum resultado' }}
+        </q-item-section>
+      </q-item>
+    </template>
+
+    <template v-if="$slots.prepend" v-slot:prepend>
+      <slot name="prepend" />
+    </template>
+
+    <template v-if="$slots.append" v-slot:append>
+      <slot name="append" />
+    </template>
+  </q-select>
+</template>

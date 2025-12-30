@@ -29,6 +29,13 @@ class NotaFiscalResource extends JsonResource
             'emissao' => $this->emissao,
             'saida' => $this->saida,
 
+            'valorprodutos' => $this->valorprodutos,
+            'valorfrete' => $this->valorfrete,
+            'valorseguro' => $this->valorseguro,
+            'valoroutros' => $this->valoroutros,
+            'valordesconto' => $this->valordesconto,
+            'valortotal' => $this->valortotal,
+
             'status' => $this->getStatus(),
 
             'criacao' => $this->criacao,

@@ -596,6 +596,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('select/cidade', '\Mg\Select\SelectCidadeController@index');
         Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
+        Route::get('select/estoque-local', '\Mg\Select\SelectEstoqueLocalController@index');
         Route::get('select/estado', '\Mg\Select\SelectEstadoController@index');
         Route::get('select/veiculo-tipo', '\Mg\Select\SelectVeiculoTipoController@index');
         Route::get('select/veiculo', '\Mg\Select\SelectVeiculoController@index');

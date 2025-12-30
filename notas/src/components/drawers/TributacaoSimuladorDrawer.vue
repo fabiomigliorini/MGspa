@@ -1,3 +1,154 @@
+<script setup>
+import { ref, computed } from 'vue'
+import { useQuasar, date } from 'quasar'
+
+const $q = useQuasar()
+
+// Formulário
+const form = ref({
+  codnaturezaoperacao: null,
+  codcidadedestino: null,
+  barras: '',
+  data: date.formatDate(Date.now(), 'DD/MM/YYYY'),
+  valorBase: null,
+})
+
+// Options para autocomplete
+const naturezaOptions = ref([])
+const cidadeOptions = ref([])
+
+// Estado
+const loading = ref(false)
+const resultados = ref([])
+
+// Computed
+const isFormValid = computed(() => {
+  return (
+    form.value.codnaturezaoperacao &&
+    form.value.codcidadedestino &&
+    form.value.barras &&
+    form.value.data &&
+    form.value.valorBase > 0
+  )
+})
+
+const totalGeral = computed(() => {
+  return resultados.value.reduce((total, r) => total + (r.valor || 0), 0)
+})
+
+// Métodos
+const filterNatureza = (val, update) => {
+  update(() => {
+    // TODO: Buscar da API
+    naturezaOptions.value = []
+  })
+}
+
+const filterCidade = (val, update) => {
+  update(() => {
+    // TODO: Buscar da API
+    cidadeOptions.value = []
+  })
+}
+
+const calcular = async () => {
+  if (!isFormValid.value) {
+    $q.notify({
+      type: 'warning',
+      message: 'Preencha todos os campos obrigatórios',
+    })
+    return
+  }
+
+  try {
+    loading.value = true
+
+    // TODO: Chamar API de cálculo
+    // const response = await api.post('/tributacao/simular', form.value)
+
+    // Mock de resultados
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    resultados.value = [
+      {
+        tributo: 'CBS',
+        basereducaopercentual: 0,
+        basereducao: 0,
+        base: form.value.valorBase,
+        aliquota: 8.5,
+        valor: form.value.valorBase * 0.085,
+        cst: '01',
+        cclasstrib: 'XXXX',
+        geracredito: true,
+        valorcredito: form.value.valorBase * 0.085,
+        beneficiocodigo: null,
+        fundamentolegal: 'Lei Complementar nº XXX/2024',
+      },
+      {
+        tributo: 'IBS Estadual',
+        basereducaopercentual: 0,
+        basereducao: 0,
+        base: form.value.valorBase,
+        aliquota: 17.5,
+        valor: form.value.valorBase * 0.175,
+        cst: '01',
+        cclasstrib: 'YYYY',
+        geracredito: true,
+        valorcredito: form.value.valorBase * 0.175,
+        beneficiocodigo: null,
+        fundamentolegal: 'Lei Complementar nº XXX/2024',
+      },
+      {
+        tributo: 'IBS Municipal',
+        basereducaopercentual: 30,
+        basereducao: form.value.valorBase * 0.3,
+        base: form.value.valorBase * 0.7,
+        aliquota: 5.5,
+        valor: form.value.valorBase * 0.7 * 0.055,
+        cst: '02',
+        cclasstrib: 'ZZZZ',
+        geracredito: false,
+        valorcredito: null,
+        beneficiocodigo: 'BE001',
+        fundamentolegal: 'Lei Municipal nº XXX/2024',
+      },
+    ]
+
+    $q.notify({
+      type: 'positive',
+      message: 'Cálculo realizado com sucesso',
+      icon: 'check_circle',
+    })
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao calcular tributos',
+      caption: error.message,
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+const limparResultados = () => {
+  resultados.value = []
+}
+
+// Formatação
+const formatCurrency = (value) => {
+  if (value === null || value === undefined) return 'R$ 0,00'
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value)
+}
+
+const formatPercent = (value) => {
+  if (value === null || value === undefined) return '0,00%'
+  return `${parseFloat(value).toFixed(2)}%`
+}
+</script>
+
 <template>
   <div class="column full-height">
     <!-- Header -->
@@ -276,154 +427,3 @@
     </q-scroll-area>
   </div>
 </template>
-
-<script setup>
-import { ref, computed } from 'vue'
-import { useQuasar, date } from 'quasar'
-
-const $q = useQuasar()
-
-// Formulário
-const form = ref({
-  codnaturezaoperacao: null,
-  codcidadedestino: null,
-  barras: '',
-  data: date.formatDate(Date.now(), 'DD/MM/YYYY'),
-  valorBase: null,
-})
-
-// Options para autocomplete
-const naturezaOptions = ref([])
-const cidadeOptions = ref([])
-
-// Estado
-const loading = ref(false)
-const resultados = ref([])
-
-// Computed
-const isFormValid = computed(() => {
-  return (
-    form.value.codnaturezaoperacao &&
-    form.value.codcidadedestino &&
-    form.value.barras &&
-    form.value.data &&
-    form.value.valorBase > 0
-  )
-})
-
-const totalGeral = computed(() => {
-  return resultados.value.reduce((total, r) => total + (r.valor || 0), 0)
-})
-
-// Métodos
-const filterNatureza = (val, update) => {
-  update(() => {
-    // TODO: Buscar da API
-    naturezaOptions.value = []
-  })
-}
-
-const filterCidade = (val, update) => {
-  update(() => {
-    // TODO: Buscar da API
-    cidadeOptions.value = []
-  })
-}
-
-const calcular = async () => {
-  if (!isFormValid.value) {
-    $q.notify({
-      type: 'warning',
-      message: 'Preencha todos os campos obrigatórios',
-    })
-    return
-  }
-
-  try {
-    loading.value = true
-
-    // TODO: Chamar API de cálculo
-    // const response = await api.post('/tributacao/simular', form.value)
-
-    // Mock de resultados
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    resultados.value = [
-      {
-        tributo: 'CBS',
-        basereducaopercentual: 0,
-        basereducao: 0,
-        base: form.value.valorBase,
-        aliquota: 8.5,
-        valor: form.value.valorBase * 0.085,
-        cst: '01',
-        cclasstrib: 'XXXX',
-        geracredito: true,
-        valorcredito: form.value.valorBase * 0.085,
-        beneficiocodigo: null,
-        fundamentolegal: 'Lei Complementar nº XXX/2024',
-      },
-      {
-        tributo: 'IBS Estadual',
-        basereducaopercentual: 0,
-        basereducao: 0,
-        base: form.value.valorBase,
-        aliquota: 17.5,
-        valor: form.value.valorBase * 0.175,
-        cst: '01',
-        cclasstrib: 'YYYY',
-        geracredito: true,
-        valorcredito: form.value.valorBase * 0.175,
-        beneficiocodigo: null,
-        fundamentolegal: 'Lei Complementar nº XXX/2024',
-      },
-      {
-        tributo: 'IBS Municipal',
-        basereducaopercentual: 30,
-        basereducao: form.value.valorBase * 0.3,
-        base: form.value.valorBase * 0.7,
-        aliquota: 5.5,
-        valor: form.value.valorBase * 0.7 * 0.055,
-        cst: '02',
-        cclasstrib: 'ZZZZ',
-        geracredito: false,
-        valorcredito: null,
-        beneficiocodigo: 'BE001',
-        fundamentolegal: 'Lei Municipal nº XXX/2024',
-      },
-    ]
-
-    $q.notify({
-      type: 'positive',
-      message: 'Cálculo realizado com sucesso',
-      icon: 'check_circle',
-    })
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao calcular tributos',
-      caption: error.message,
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-const limparResultados = () => {
-  resultados.value = []
-}
-
-// Formatação
-const formatCurrency = (value) => {
-  if (value === null || value === undefined) return 'R$ 0,00'
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
-
-const formatPercent = (value) => {
-  if (value === null || value === undefined) return '0,00%'
-  return `${parseFloat(value).toFixed(2)}%`
-}
-</script>

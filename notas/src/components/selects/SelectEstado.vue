@@ -1,41 +1,3 @@
-<template>
-  <q-select
-    :model-value="modelValue"
-    @update:model-value="handleUpdate"
-    :label="label"
-    outlined
-    clearable
-    :options="options"
-    option-value="value"
-    option-label="sigla"
-    emit-value
-    map-options
-    use-input
-    @filter="filterEstados"
-    :placeholder="placeholder"
-    :bottom-slots="bottomSlots"
-    :class="customClass"
-    :disable="disable"
-    :readonly="readonly"
-    :loading="loading"
-    :dense="dense"
-  >
-    <template v-slot:no-option>
-      <q-item>
-        <q-item-section class="text-grey"> Nenhum resultado </q-item-section>
-      </q-item>
-    </template>
-
-    <template v-if="$slots.prepend" v-slot:prepend>
-      <slot name="prepend" />
-    </template>
-
-    <template v-if="$slots.append" v-slot:append>
-      <slot name="append" />
-    </template>
-  </q-select>
-</template>
-
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useSelectEstadoStore } from 'stores/selects/estado'
@@ -134,3 +96,41 @@ const handleUpdate = (value) => {
   }
 }
 </script>
+
+<template>
+  <q-select
+    :model-value="modelValue"
+    @update:model-value="handleUpdate"
+    :label="label"
+    outlined
+    clearable
+    :options="options"
+    option-value="value"
+    option-label="sigla"
+    emit-value
+    map-options
+    use-input
+    @filter="filterEstados"
+    :placeholder="placeholder"
+    :bottom-slots="bottomSlots"
+    :class="customClass"
+    :disable="disable"
+    :readonly="readonly"
+    :loading="loading"
+    :dense="dense"
+  >
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey"> Nenhum resultado </q-item-section>
+      </q-item>
+    </template>
+
+    <template v-if="$slots.prepend" v-slot:prepend>
+      <slot name="prepend" />
+    </template>
+
+    <template v-if="$slots.append" v-slot:append>
+      <slot name="append" />
+    </template>
+  </q-select>
+</template>

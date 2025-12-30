@@ -1,0 +1,537 @@
+{
+  "info": {
+    "name": "Nota Fiscal API - Completa",
+    "description": "Coleção completa para testar API de Notas Fiscais e seus relacionamentos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-mgspa-dev.mgpapelaria.com.br/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "codnotafiscal",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "codnotafiscalprodutobarra",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "codnotafiscalpagamento",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Nota Fiscal (CRUD Principal)",
+      "item": [
+        {
+          "name": "Listar Notas Fiscais",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal?page=1&per_page=20&sort=saida&order=desc",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "20" },
+                { "key": "sort", "value": "saida" },
+                { "key": "order", "value": "desc" },
+                { "key": "codfilial", "value": "1", "disabled": true },
+                { "key": "codpessoa", "value": "123", "disabled": true },
+                { "key": "emitida", "value": "true", "disabled": true },
+                { "key": "modelo", "value": "55", "disabled": true },
+                {
+                  "key": "status",
+                  "value": "Autorizada",
+                  "description": "Autorizada | Cancelada | Inutilizada | Pendente",
+                  "disabled": true
+                },
+                { "key": "emissao_inicio", "value": "2024-01-01", "disabled": true },
+                { "key": "emissao_fim", "value": "2024-12-31", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Visualizar Nota Fiscal",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal"]
+            }
+          }
+        },
+        {
+          "name": "Criar Nota Fiscal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codfilial\": 1,\n  \"codestoquelocal\": 1,\n  \"codpessoa\": 123,\n  \"codnaturezaoperacao\": 1,\n  \"codoperacao\": 1,\n  \"emitida\": true,\n  \"modelo\": \"55\",\n  \"serie\": \"1\",\n  \"numero\": null,\n  \"emissao\": \"2024-12-29\",\n  \"saida\": \"2024-12-29\",\n  \"valordesconto\": 0,\n  \"valorfrete\": 0,\n  \"valorseguro\": 0,\n  \"valoroutras\": 0,\n  \"informacoescontribuinte\": \"Observações\",\n  \"frete\": 9\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Nota Fiscal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"informacoescontribuinte\": \"Observações atualizadas\",\n  \"valordesconto\": 10.50\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal"]
+            }
+          }
+        },
+        {
+          "name": "Deletar Nota Fiscal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Itens da Nota (Produtos)",
+      "item": [
+        {
+          "name": "Listar Itens",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/item",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "item"]
+            }
+          }
+        },
+        {
+          "name": "Visualizar Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/item/{{codnotafiscalprodutobarra}}",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "item", "{{codnotafiscalprodutobarra}}"]
+            }
+          }
+        },
+        {
+          "name": "Adicionar Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codprodutobarra\": 123,\n  \"codcfop\": 5102,\n  \"ordem\": 1,\n  \"quantidade\": 10,\n  \"valorunitario\": 50.00,\n  \"valortotal\": 500.00,\n  \"valordesconto\": 0,\n  \"csosn\": \"102\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/item",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "item"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade\": 15,\n  \"valorunitario\": 45.00,\n  \"valortotal\": 675.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/item/{{codnotafiscalprodutobarra}}",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "item", "{{codnotafiscalprodutobarra}}"]
+            }
+          }
+        },
+        {
+          "name": "Deletar Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/item/{{codnotafiscalprodutobarra}}",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "item", "{{codnotafiscalprodutobarra}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Pagamentos",
+      "item": [
+        {
+          "name": "Listar Pagamentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/pagamento",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "pagamento"]
+            }
+          }
+        },
+        {
+          "name": "Visualizar Pagamento",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/pagamento/{{codnotafiscalpagamento}}",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "pagamento", "{{codnotafiscalpagamento}}"]
+            }
+          }
+        },
+        {
+          "name": "Adicionar Pagamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": 1,\n  \"descricao\": \"Dinheiro\",\n  \"valorpagamento\": 500.00,\n  \"avista\": true,\n  \"troco\": 0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/pagamento",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "pagamento"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Pagamento",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valorpagamento\": 550.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/pagamento/{{codnotafiscalpagamento}}",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "pagamento", "{{codnotafiscalpagamento}}"]
+            }
+          }
+        },
+        {
+          "name": "Deletar Pagamento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/pagamento/{{codnotafiscalpagamento}}",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "pagamento", "{{codnotafiscalpagamento}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Duplicatas",
+      "item": [
+        {
+          "name": "Listar Duplicatas",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/duplicata",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "duplicata"]
+            }
+          }
+        },
+        {
+          "name": "Adicionar Duplicata",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fatura\": \"001/01\",\n  \"valor\": 250.00,\n  \"vencimento\": \"2025-01-30\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/duplicata",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "duplicata"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Duplicata",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vencimento\": \"2025-02-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/duplicata/1",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "duplicata", "1"]
+            }
+          }
+        },
+        {
+          "name": "Deletar Duplicata",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/duplicata/1",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "duplicata", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Notas Referenciadas",
+      "item": [
+        {
+          "name": "Listar Notas Referenciadas",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/referenciada",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "referenciada"]
+            }
+          }
+        },
+        {
+          "name": "Adicionar Nota Referenciada",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nfechave\": \"35241234567890123456789012345678901234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/referenciada",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "referenciada"]
+            }
+          }
+        },
+        {
+          "name": "Deletar Nota Referenciada",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/referenciada/1",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "referenciada", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Cartas de Correção",
+      "item": [
+        {
+          "name": "Listar Cartas de Correção",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/carta-correcao",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "carta-correcao"]
+            }
+          }
+        },
+        {
+          "name": "Adicionar Carta de Correção",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Correção do endereço de entrega informado incorretamente na nota fiscal\",\n  \"data\": \"2025-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/carta-correcao",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "carta-correcao"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Carta de Correção",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Texto da correção atualizado\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/carta-correcao/1",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "carta-correcao", "1"]
+            }
+          }
+        },
+        {
+          "name": "Deletar Carta de Correção",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/nota-fiscal/:codnotafiscal/carta-correcao/1",
+              "host": ["{{base_url}}"],
+              "path": ["nota-fiscal", ":codnotafiscal", "carta-correcao", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

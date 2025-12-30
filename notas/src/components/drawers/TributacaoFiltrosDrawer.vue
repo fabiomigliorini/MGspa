@@ -1,3 +1,58 @@
+<script setup>
+import { watch } from 'vue'
+import { useTributacaoStore } from 'stores/tributacao'
+import { useQuasar } from 'quasar'
+import { useDebounceFn } from '@vueuse/core'
+import SelectEstado from 'components/selects/SelectEstado.vue'
+import SelectCidade from 'components/selects/SelectCidade.vue'
+import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
+import SelectTipoProduto from 'components/selects/SelectTipoProduto.vue'
+import SelectTipoCliente from 'components/selects/SelectTipoCliente.vue'
+
+const $q = useQuasar()
+const store = useTributacaoStore()
+
+// Função debounced para aplicar filtros automaticamente
+const debouncedApplyFilters = useDebounceFn(async () => {
+  try {
+    await store.applyFilters()
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao aplicar filtros',
+      caption: error.message,
+    })
+  }
+}, 800) // 800ms de debounce
+
+// Watch nos filtros para aplicar automaticamente
+watch(
+  () => store.filters,
+  () => {
+    debouncedApplyFilters()
+  },
+  { deep: true },
+)
+
+const limparFiltros = async () => {
+  try {
+    await store.clearFilters()
+    $q.notify({
+      type: 'info',
+      message: 'Filtros limpos',
+      icon: 'info',
+      timeout: 1000,
+    })
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao limpar filtros',
+      caption: error.message,
+    })
+  }
+}
+</script>
+
 <template>
   <div class="column full-height">
     <!-- Header -->
@@ -193,58 +248,3 @@
     <div class="q-pa-md"></div>
   </div>
 </template>
-
-<script setup>
-import { watch } from 'vue'
-import { useTributacaoStore } from 'stores/tributacao'
-import { useQuasar } from 'quasar'
-import { useDebounceFn } from '@vueuse/core'
-import SelectEstado from 'components/selects/SelectEstado.vue'
-import SelectCidade from 'components/selects/SelectCidade.vue'
-import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
-import SelectTipoProduto from 'components/selects/SelectTipoProduto.vue'
-import SelectTipoCliente from 'components/selects/SelectTipoCliente.vue'
-
-const $q = useQuasar()
-const store = useTributacaoStore()
-
-// Função debounced para aplicar filtros automaticamente
-const debouncedApplyFilters = useDebounceFn(async () => {
-  try {
-    await store.applyFilters()
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao aplicar filtros',
-      caption: error.message,
-    })
-  }
-}, 800) // 800ms de debounce
-
-// Watch nos filtros para aplicar automaticamente
-watch(
-  () => store.filters,
-  () => {
-    debouncedApplyFilters()
-  },
-  { deep: true },
-)
-
-const limparFiltros = async () => {
-  try {
-    await store.clearFilters()
-    $q.notify({
-      type: 'info',
-      message: 'Filtros limpos',
-      icon: 'info',
-      timeout: 1000,
-    })
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao limpar filtros',
-      caption: error.message,
-    })
-  }
-}
-</script>

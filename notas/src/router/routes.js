@@ -28,6 +28,69 @@ const routes = [
           rightDrawer: NotasDetalhesDrawer, // <-- Drawer direita
         },
       },
+      {
+        path: 'notas/criar',
+        name: 'nota-fiscal-create',
+        component: () => import('pages/NotaFiscalFormPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal',
+        name: 'nota-fiscal-view',
+        component: () => import('pages/NotaFiscalViewPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/editar',
+        name: 'nota-fiscal-edit',
+        component: () => import('pages/NotaFiscalFormPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/item/adicionar',
+        name: 'nota-fiscal-item-adicionar',
+        component: () => import('pages/items/ItemFormAdicionarPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/item/:codnotafiscalprodutobarra/dados',
+        name: 'nota-fiscal-item-dados',
+        component: () => import('pages/items/ItemFormDadosPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/item/:codnotafiscalprodutobarra/tributos-legado',
+        name: 'nota-fiscal-item-tributos-legado',
+        component: () => import('pages/items/ItemFormTributosLegadoPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/item/:codnotafiscalprodutobarra/tributos',
+        name: 'nota-fiscal-item-tributos',
+        component: () => import('pages/items/ItemFormTributosPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
     ],
   },
 

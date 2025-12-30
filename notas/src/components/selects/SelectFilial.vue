@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useSelectTipoProdutoStore } from 'stores/selects/tipoProduto'
+import { ref, onMounted } from 'vue'
+import { useSelectFilialStore } from 'stores/selects/filial'
 
 const props = defineProps({
   modelValue: {
@@ -9,7 +9,7 @@ const props = defineProps({
   },
   label: {
     type: String,
-    default: 'Tipo de Produto',
+    default: 'Filial',
   },
   placeholder: {
     type: String,
@@ -37,13 +37,13 @@ const props = defineProps({
   },
   maxChars: {
     type: Number,
-    default: 12,
+    default: 20,
   },
 })
 
 const emit = defineEmits(['update:modelValue', 'clear'])
 
-const tipoProdutoStore = useSelectTipoProdutoStore()
+const filialStore = useSelectFilialStore()
 const options = ref([])
 const loading = ref(false)
 
@@ -53,64 +53,28 @@ const truncateLabel = (label) => {
   return label.length > props.maxChars ? label.substring(0, props.maxChars) + '...' : label
 }
 
-// Carrega o tipo de produto quando há um modelValue inicial
+// Carrega todas as filiais ao montar o componente
 onMounted(async () => {
-  if (props.modelValue) {
-    await loadTipoProduto(props.modelValue)
-  }
-})
-
-// Recarrega quando o modelValue muda (para caso seja setado externamente)
-watch(
-  () => props.modelValue,
-  async (newValue, oldValue) => {
-    if (newValue && newValue !== oldValue) {
-      // Se mudou o valor e não está nas options, carrega
-      const exists = options.value.find((o) => o.value === newValue)
-      if (!exists) {
-        await loadTipoProduto(newValue)
-      }
-    }
-  },
-)
-
-const loadTipoProduto = async (codtipoproduto) => {
   try {
     loading.value = true
-    console.log('[SelectTipoProduto] Carregando tipo produto:', codtipoproduto)
-    const tipo = await tipoProdutoStore.fetch(codtipoproduto)
-    console.log('[SelectTipoProduto] Tipo produto carregado:', tipo)
-    if (tipo) {
-      // Adiciona o tipo de produto nas options se não existir
-      const exists = options.value.find((o) => o.value === tipo.value)
-      if (!exists) {
-        options.value = [tipo]
-      }
-    }
+    await filialStore.loadAll()
+    // Inicializa com todas as filiais
+    options.value = filialStore.filiais
   } catch (error) {
-    console.error('Erro ao carregar tipo de produto:', error)
+    console.error('Erro ao carregar filiais:', error)
   } finally {
     loading.value = false
   }
-}
+})
 
-const filterTipoProduto = async (val, update) => {
-  if (!val || val.length < 2) {
-    update(() => {
-      options.value = []
-    })
-    return
-  }
-
-  update(async () => {
-    try {
-      loading.value = true
-      options.value = await tipoProdutoStore.search(val)
-    } catch (error) {
-      console.error('Erro ao buscar tipo de produto:', error)
-      options.value = []
-    } finally {
-      loading.value = false
+const filterFilial = (val, update) => {
+  update(() => {
+    if (!val) {
+      // Se não tem busca, mostra todas
+      options.value = filialStore.filiais
+    } else {
+      // Filtra localmente
+      options.value = filialStore.filter(val)
     }
   })
 }
@@ -137,7 +101,7 @@ const handleUpdate = (value) => {
     map-options
     use-input
     input-debounce="500"
-    @filter="filterTipoProduto"
+    @filter="filterFilial"
     :placeholder="placeholder"
     :bottom-slots="bottomSlots"
     :class="customClass"
@@ -146,22 +110,37 @@ const handleUpdate = (value) => {
     :loading="loading"
     :dense="dense"
   >
-    <template v-slot:selected-item="scope">
-      <span :title="scope.opt.label">{{ truncateLabel(scope.opt.label) }}</span>
-    </template>
-
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
+        <q-item-section avatar>
+          <q-icon name="store" color="primary" />
+        </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label caption class="text-grey-7">
+            Código: {{ scope.opt.value }}
+          </q-item-label>
         </q-item-section>
       </q-item>
+    </template>
+
+    <template v-slot:selected-item="scope">
+      <q-chip
+        removable
+        dense
+        @remove="handleUpdate(null)"
+        color="primary"
+        text-color="white"
+        icon="store"
+      >
+        {{ truncateLabel(scope.opt.label) }}
+      </q-chip>
     </template>
 
     <template v-slot:no-option>
       <q-item>
         <q-item-section class="text-grey">
-          {{ options.length === 0 ? 'Digite ao menos 2 caracteres' : 'Nenhum resultado' }}
+          Nenhuma filial encontrada
         </q-item-section>
       </q-item>
     </template>

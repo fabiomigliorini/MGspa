@@ -1,3 +1,12 @@
+<script setup>
+import { ref } from 'vue'
+import AppLauncher from 'src/components/AppLauncher.vue'
+import UserMenu from 'src/components/UserMenu.vue'
+
+const leftDrawerOpen = ref(false)
+const rightDrawerOpen = ref(false)
+</script>
+
 <template>
   <q-layout view="hHh lpR fFf">
     <!-- Header -->
@@ -74,12 +83,3 @@
     </q-page-container>
   </q-layout>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import AppLauncher from 'src/components/AppLauncher.vue'
-import UserMenu from 'src/components/UserMenu.vue'
-
-const leftDrawerOpen = ref(false)
-const rightDrawerOpen = ref(false)
-</script>
