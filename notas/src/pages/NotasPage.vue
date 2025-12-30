@@ -9,108 +9,23 @@ const $q = useQuasar()
 const notaFiscalStore = useNotaFiscalStore()
 
 // State
-const loading = computed(() => notaFiscalStore.loading.notas)
+const loading = computed(() => notaFiscalStore.pagination.loading)
 const notas = computed(() => notaFiscalStore.notas)
-const pagination = computed({
-  get: () => notaFiscalStore.pagination,
-  set: (val) => {
-    notaFiscalStore.pagination = val
-  }
-})
-
-const hasActiveFilters = computed(() => {
-  const filters = notaFiscalStore.filters
-  return !!(filters.search || filters.modelo || filters.situacao || filters.dataInicial || filters.dataFinal)
-})
-
-// Colunas da tabela
-const columns = [
-  {
-    name: 'modelo',
-    label: 'Modelo',
-    field: 'modelo',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'numero',
-    label: 'Número',
-    field: 'numero',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'serie',
-    label: 'Série',
-    field: 'serie',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'emissao',
-    label: 'Data Emissão',
-    field: 'emissao',
-    align: 'left',
-    sortable: true
-  },
-  {
-    name: 'destinatario',
-    label: 'Destinatário',
-    field: row => row.pessoa?.fantasia || row.pessoa?.pessoa || 'Sem destinatário',
-    align: 'left',
-    sortable: false
-  },
-  {
-    name: 'naturezaoperacao',
-    label: 'Natureza',
-    field: row => row.naturezaOperacao?.naturezaoperacao || '-',
-    align: 'left',
-    sortable: false
-  },
-  {
-    name: 'status',
-    label: 'Situação',
-    field: 'status',
-    align: 'center',
-    sortable: true
-  },
-  {
-    name: 'valorprodutos',
-    label: 'Valor Produtos',
-    field: 'valorprodutos',
-    align: 'right',
-    sortable: true
-  },
-  {
-    name: 'acoes',
-    label: 'Ações',
-    align: 'center',
-    sortable: false
-  }
-]
+const hasActiveFilters = computed(() => notaFiscalStore.hasActiveFilters)
 
 // Methods
-const fetchNotas = async () => {
+const onLoad = async (index, done) => {
   try {
     await notaFiscalStore.fetchNotas()
+    done(!notaFiscalStore.pagination.hasMore)
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: 'Erro ao carregar notas fiscais',
-      caption: error.response?.data?.message || error.message
+      message: 'Erro ao carregar notas',
+      caption: error.message
     })
+    done(true)
   }
-}
-
-const handleTableRequest = (props) => {
-  const { page, rowsPerPage } = props.pagination
-  pagination.value.page = page
-  pagination.value.rowsPerPage = rowsPerPage
-  fetchNotas()
-}
-
-const handlePageChange = () => {
-  fetchNotas()
 }
 
 const handleCreateNota = () => {
@@ -145,7 +60,6 @@ const handleDeleteNota = (nota) => {
         type: 'positive',
         message: 'Nota fiscal excluída com sucesso'
       })
-      fetchNotas()
     } catch (error) {
       $q.notify({
         type: 'negative',
@@ -191,8 +105,18 @@ const formatCurrency = (value) => {
 }
 
 // Lifecycle
-onMounted(() => {
-  fetchNotas()
+onMounted(async () => {
+  if (!notaFiscalStore.initialLoadDone) {
+    try {
+      await notaFiscalStore.fetchNotas(true)
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao carregar notas fiscais',
+        caption: error.response?.data?.message || error.message
+      })
+    }
+  }
 })
 </script>
 
@@ -214,27 +138,37 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="row justify-center q-py-xl">
+    <!-- Loading inicial -->
+    <div v-if="loading && notas.length === 0" class="row justify-center q-py-xl">
       <q-spinner color="primary" size="3em" />
     </div>
 
-    <!-- Lista de Notas (Cards para Mobile) -->
-    <div v-else-if="notas.length > 0">
-      <!-- Mobile: Cards -->
-      <div class="lt-md">
-        <q-card
+    <!-- Empty State -->
+    <q-card v-else-if="notas.length === 0" flat bordered class="q-pa-xl text-center">
+      <q-icon name="description" size="4em" color="grey-5" />
+      <div class="text-h6 text-grey-7 q-mt-md">Nenhuma nota fiscal encontrada</div>
+      <div class="text-caption text-grey-6 q-mt-sm">
+        {{ hasActiveFilters ? 'Tente ajustar os filtros no menu lateral' : 'Clique em "Nova Nota" para criar sua primeira nota fiscal' }}
+      </div>
+    </q-card>
+
+    <!-- Lista de Notas com Scroll Infinito -->
+    <q-infinite-scroll v-else @load="onLoad" :offset="250">
+      <q-list separator>
+        <q-item
           v-for="nota in notas"
           :key="nota.codnotafiscal"
-          class="q-mb-md cursor-pointer"
+          clickable
           @click="handleViewNota(nota.codnotafiscal)"
+          class="q-pa-md"
         >
-          <q-card-section>
+          <q-item-section>
+            <!-- Cabeçalho: Modelo, Número, Série e Status -->
             <div class="row items-center q-mb-sm">
               <div class="col">
-                <div class="text-weight-bold">
+                <div class="text-subtitle1 text-weight-medium">
                   {{ nota.modelo }} Nº {{ nota.numero }}
-                  <span v-if="nota.serie"> / Série {{ nota.serie }}</span>
+                  <span v-if="nota.serie" class="text-grey-7"> / Série {{ nota.serie }}</span>
                 </div>
               </div>
               <div class="col-auto">
@@ -244,178 +178,104 @@ onMounted(() => {
               </div>
             </div>
 
-            <div class="text-caption text-grey-7 q-mb-xs">
-              <q-icon name="calendar_today" size="xs" class="q-mr-xs" />
-              {{ formatDate(nota.emissao) }}
-            </div>
+            <!-- Informações principais -->
+            <div class="row q-col-gutter-sm q-mb-sm">
+              <!-- Data de Emissão -->
+              <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-caption text-grey-7">
+                  <q-icon name="calendar_today" size="xs" class="q-mr-xs" />
+                  Data Emissão
+                </div>
+                <div class="text-body2">{{ formatDate(nota.emissao) }}</div>
+              </div>
 
-            <div class="text-caption text-grey-7 q-mb-xs">
-              <q-icon name="person" size="xs" class="q-mr-xs" />
-              {{ nota.pessoa?.fantasia || nota.pessoa?.pessoa || 'Sem destinatário' }}
-            </div>
+              <!-- Destinatário -->
+              <div class="col-12 col-sm-6 col-md-4">
+                <div class="text-caption text-grey-7">
+                  <q-icon name="person" size="xs" class="q-mr-xs" />
+                  Destinatário
+                </div>
+                <div class="text-body2 ellipsis">
+                  {{ nota.pessoa?.fantasia || nota.pessoa?.pessoa || 'Sem destinatário' }}
+                </div>
+              </div>
 
-            <div class="text-caption text-grey-7 q-mb-sm">
-              <q-icon name="description" size="xs" class="q-mr-xs" />
-              {{ nota.naturezaOperacao?.naturezaoperacao || 'Sem natureza' }}
-            </div>
+              <!-- Natureza de Operação -->
+              <div class="col-12 col-sm-6 col-md-3">
+                <div class="text-caption text-grey-7">
+                  <q-icon name="description" size="xs" class="q-mr-xs" />
+                  Natureza
+                </div>
+                <div class="text-body2 ellipsis">
+                  {{ nota.naturezaOperacao?.naturezaoperacao || 'Sem natureza' }}
+                </div>
+              </div>
 
-            <div class="row items-center">
-              <div class="col">
-                <div class="text-weight-bold text-primary">
+              <!-- Valor -->
+              <div class="col-12 col-sm-6 col-md-2">
+                <div class="text-caption text-grey-7">Valor Produtos</div>
+                <div class="text-subtitle1 text-weight-bold text-primary">
                   R$ {{ formatCurrency(nota.valorprodutos) }}
                 </div>
               </div>
-              <div class="col-auto">
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="more_vert"
-                  @click.stop="handleShowMenu()"
-                >
-                  <q-menu>
-                    <q-list style="min-width: 150px">
-                      <q-item clickable v-close-popup @click="handleViewNota(nota.codnotafiscal)">
-                        <q-item-section avatar>
-                          <q-icon name="visibility" />
-                        </q-item-section>
-                        <q-item-section>Visualizar</q-item-section>
-                      </q-item>
-
-                      <q-item
-                        clickable
-                        v-close-popup
-                        @click="handleEditNota(nota.codnotafiscal)"
-                        :disable="isNotaBloqueada(nota)"
-                      >
-                        <q-item-section avatar>
-                          <q-icon name="edit" />
-                        </q-item-section>
-                        <q-item-section>Editar</q-item-section>
-                      </q-item>
-
-                      <q-separator />
-
-                      <q-item
-                        clickable
-                        v-close-popup
-                        @click="handleDeleteNota(nota)"
-                        :disable="isNotaBloqueada(nota)"
-                      >
-                        <q-item-section avatar>
-                          <q-icon name="delete" color="negative" />
-                        </q-item-section>
-                        <q-item-section class="text-negative">Excluir</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
-              </div>
             </div>
-          </q-card-section>
-        </q-card>
-      </div>
+          </q-item-section>
 
-      <!-- Desktop: Tabela -->
-      <q-table
-        class="gt-sm"
-        :rows="notas"
-        :columns="columns"
-        :loading="loading"
-        :pagination="pagination"
-        @request="handleTableRequest"
-        row-key="codnotafiscal"
-        flat
-        bordered
-      >
-        <!-- Situação com badge -->
-        <template v-slot:body-cell-status="props">
-          <q-td :props="props">
-            <q-badge :color="getSituacaoColor(props.value)">
-              {{ props.value }}
-            </q-badge>
-          </q-td>
-        </template>
-
-        <!-- Data formatada -->
-        <template v-slot:body-cell-emissao="props">
-          <q-td :props="props">
-            {{ formatDate(props.value) }}
-          </q-td>
-        </template>
-
-        <!-- Valor formatado -->
-        <template v-slot:body-cell-valorprodutos="props">
-          <q-td :props="props">
-            R$ {{ formatCurrency(props.value) }}
-          </q-td>
-        </template>
-
-        <!-- Ações -->
-        <template v-slot:body-cell-acoes="props">
-          <q-td :props="props">
+          <!-- Ações -->
+          <q-item-section side>
             <q-btn
               flat
               round
               dense
-              icon="visibility"
-              color="primary"
-              @click="handleViewNota(props.row.codnotafiscal)"
+              icon="more_vert"
+              @click.stop="handleShowMenu()"
             >
-              <q-tooltip>Visualizar</q-tooltip>
+              <q-menu>
+                <q-list style="min-width: 150px">
+                  <q-item clickable v-close-popup @click="handleViewNota(nota.codnotafiscal)">
+                    <q-item-section avatar>
+                      <q-icon name="visibility" />
+                    </q-item-section>
+                    <q-item-section>Visualizar</q-item-section>
+                  </q-item>
+
+                  <q-item
+                    clickable
+                    v-close-popup
+                    @click="handleEditNota(nota.codnotafiscal)"
+                    :disable="isNotaBloqueada(nota)"
+                  >
+                    <q-item-section avatar>
+                      <q-icon name="edit" />
+                    </q-item-section>
+                    <q-item-section>Editar</q-item-section>
+                  </q-item>
+
+                  <q-separator />
+
+                  <q-item
+                    clickable
+                    v-close-popup
+                    @click="handleDeleteNota(nota)"
+                    :disable="isNotaBloqueada(nota)"
+                  >
+                    <q-item-section avatar>
+                      <q-icon name="delete" color="negative" />
+                    </q-item-section>
+                    <q-item-section class="text-negative">Excluir</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
             </q-btn>
+          </q-item-section>
+        </q-item>
+      </q-list>
 
-            <q-btn
-              flat
-              round
-              dense
-              icon="edit"
-              color="primary"
-              @click="handleEditNota(props.row.codnotafiscal)"
-              :disable="isNotaBloqueada(props.row)"
-            >
-              <q-tooltip>Editar</q-tooltip>
-            </q-btn>
-
-            <q-btn
-              flat
-              round
-              dense
-              icon="delete"
-              color="negative"
-              @click="handleDeleteNota(props.row)"
-              :disable="isNotaBloqueada(props.row)"
-            >
-              <q-tooltip>Excluir</q-tooltip>
-            </q-btn>
-          </q-td>
-        </template>
-      </q-table>
-
-      <!-- Paginação Mobile -->
-      <div class="lt-md q-mt-md">
-        <q-pagination
-          v-model="pagination.page"
-          :max="Math.ceil(pagination.rowsNumber / pagination.rowsPerPage)"
-          :max-pages="5"
-          direction-links
-          boundary-links
-          @update:model-value="handlePageChange"
-        />
-
-        <div class="text-center text-caption text-grey-7 q-mt-sm">
-          Total: {{ pagination.rowsNumber }} registros
+      <template v-slot:loading>
+        <div class="row justify-center q-my-md">
+          <q-spinner-dots color="primary" size="40px" />
         </div>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <q-card v-else flat bordered class="q-pa-xl text-center">
-      <q-icon name="description" size="4em" color="grey-5" />
-      <div class="text-h6 text-grey-7 q-mt-md">Nenhuma nota fiscal encontrada</div>
-      <div class="text-caption text-grey-6 q-mt-sm">
-        {{ hasActiveFilters ? 'Tente ajustar os filtros no menu lateral' : 'Clique em "Nova Nota" para criar sua primeira nota fiscal' }}
-      </div>
-    </q-card>
+      </template>
+    </q-infinite-scroll>
   </q-page>
 </template>

@@ -33,6 +33,12 @@ class NotaFiscalController extends Controller
             $query->where('codpessoa', $request->codpessoa);
         }
 
+        if ($request->filled('codgrupoeconomico')) {
+            $query->whereHas('Pessoa', function($q) use ($request) {
+                $q->where('codgrupoeconomico', $request->codgrupoeconomico);
+            });
+        }
+
         if ($request->filled('codnaturezaoperacao')) {
             $query->where('codnaturezaoperacao', $request->codnaturezaoperacao);
         }
@@ -59,19 +65,27 @@ class NotaFiscalController extends Controller
         }
 
         if ($request->filled('emissao_inicio')) {
-            $query->whereDate('emissao', '>=', $request->emissao_inicio);
+            $query->where('emissao', '>=', "$request->emissao_inicio 00:00:00");
         }
 
         if ($request->filled('emissao_fim')) {
-            $query->whereDate('emissao', '<=', $request->emissao_fim);
+            $query->where('emissao', '<=', "$request->emissao_fim 23:59:59");
         }
 
         if ($request->filled('saida_inicio')) {
-            $query->whereDate('saida', '>=', $request->saida_inicio);
+            $query->where('saida', '>=', "$request->saida_inicio 00:00:00");
         }
 
         if ($request->filled('saida_fim')) {
-            $query->whereDate('saida', '<=', $request->saida_fim);
+            $query->where('saida', '<=', "$request->saida_fim 23:59:59");
+        }
+
+        if ($request->filled('valortotal_inicio')) {
+            $query->where('valortotal', '>=', $request->valortotal_inicio);
+        }
+
+        if ($request->filled('valortotal_fim')) {
+            $query->where('valortotal', '<=', $request->valortotal_fim);
         }
 
         // Filtro de status
@@ -100,6 +114,8 @@ class NotaFiscalController extends Controller
         $sortField = $request->get('sort', 'saida');
         $sortOrder = $request->get('order', 'desc');
         $query->orderBy($sortField, $sortOrder);
+        $query->orderByDesc('codnotafiscal');
+        // dd($query->toSql());
 
         return NotaFiscalResource::collection(
             $query->paginate($request->get('per_page', 20))

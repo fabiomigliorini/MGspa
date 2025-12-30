@@ -12,16 +12,41 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     notas: [],
     pagination: {
       page: 1,
-      rowsPerPage: 20,
-      rowsNumber: 0
+      perPage: 20,
+      hasMore: true,
+      loading: false,
+      total: 0
     },
     filters: {
-      search: '',
-      dataInicial: null,
-      dataFinal: null,
+      // Filtros de busca
+      numero: null,
+      serie: null,
+      nfechave: null,
+
+      // Filtros de relacionamento
+      codfilial: null,
+      codpessoa: null,
+      codgrupoeconomico: null,
+      codnaturezaoperacao: null,
+      codoperacao: null,
+
+      // Filtros de tipo
       modelo: null,
-      situacao: null
+      emitida: null,
+      status: null,
+
+      // Filtros de data
+      emissao_inicio: null,
+      emissao_fim: null,
+      saida_inicio: null,
+      saida_fim: null,
+
+      // Filtros de valor
+      valortotal_inicio: null,
+      valortotal_fim: null
     },
+    // Flag para controlar se já foi carregado
+    initialLoadDone: false,
 
     // Nota fiscal atual
     currentNota: null,
@@ -43,7 +68,6 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
 
     // Loading states
     loading: {
-      notas: false,
       nota: false,
       itens: false,
       pagamentos: false,
@@ -57,7 +81,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     // Verifica se a nota está bloqueada para edição
     notaBloqueada: (state) => {
       if (!state.currentNota) return false
-      return ['Autorizada', 'Cancelada', 'Inutilizada'].includes(state.currentNota.situacao)
+      return ['Autorizada', 'Cancelada', 'Inutilizada'].includes(state.currentNota.status)
     },
 
     // Total de itens
@@ -82,37 +106,72 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       return state.duplicatas.reduce((total, dup) => {
         return total + (parseFloat(dup.valor) || 0)
       }, 0)
+    },
+
+    // Verifica se há filtros ativos
+    hasActiveFilters: (state) => {
+      return Object.values(state.filters).some((value) => value !== null && value !== '')
+    },
+
+    // Conta quantos filtros estão ativos
+    activeFiltersCount: (state) => {
+      return Object.values(state.filters).filter((value) => value !== null && value !== '').length
     }
   },
 
   actions: {
     // ==================== NOTAS FISCAIS ====================
 
-    async fetchNotas(params = {}) {
-      this.loading.notas = true
+    async fetchNotas(reset = false) {
+      // Se já está carregando ou não tem mais dados, retorna
+      if (this.pagination.loading || (!reset && !this.pagination.hasMore)) {
+        return
+      }
+
+      // Se é reset, limpa os dados
+      if (reset) {
+        this.notas = []
+        this.pagination.page = 1
+        this.pagination.hasMore = true
+      }
+
       try {
-        const mergedParams = {
+        this.pagination.loading = true
+
+        const params = {
           ...this.filters,
           page: this.pagination.page,
-          per_page: this.pagination.rowsPerPage,
-          ...params
+          per_page: this.pagination.perPage
         }
 
-        const response = await notaFiscalService.list(mergedParams)
+        const response = await notaFiscalService.list(params)
 
-        this.notas = response.data
-        this.pagination = {
-          page: response.meta.current_page,
-          rowsPerPage: response.meta.per_page,
-          rowsNumber: response.meta.total
+        const newNotas = response.data || []
+
+        // Adiciona novas notas à lista existente
+        if (reset) {
+          this.notas = newNotas
+        } else {
+          this.notas.push(...newNotas)
         }
+
+        // Atualiza paginação
+        this.pagination.total = response.meta.total
+        this.pagination.hasMore = response.meta.current_page < response.meta.last_page
+
+        // Incrementa página para próxima busca
+        if (this.pagination.hasMore) {
+          this.pagination.page++
+        }
+
+        this.initialLoadDone = true
 
         return response
       } catch (error) {
         console.error('Erro ao buscar notas fiscais:', error)
         throw error
       } finally {
-        this.loading.notas = false
+        this.pagination.loading = false
       }
     },
 
@@ -135,6 +194,11 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         const response = await notaFiscalService.create(data)
         this.currentNota = response.data
+
+        // Adiciona no início da lista
+        this.notas.unshift(response.data)
+        this.pagination.total++
+
         return response.data
       } catch (error) {
         console.error('Erro ao criar nota fiscal:', error)
@@ -172,6 +236,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
 
         // Remove da lista
         this.notas = this.notas.filter(n => n.codnotafiscal !== codnotafiscal)
+        this.pagination.total--
 
         // Limpa a nota atual se for a mesma
         if (this.currentNota?.codnotafiscal === codnotafiscal) {
@@ -187,16 +252,40 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
 
     setFilters(filters) {
       this.filters = { ...this.filters, ...filters }
+      // Reset quando altera filtros
+      this.initialLoadDone = false
     },
 
     clearFilters() {
       this.filters = {
-        search: '',
-        dataInicial: null,
-        dataFinal: null,
+        // Filtros de busca
+        numero: null,
+        serie: null,
+        nfechave: null,
+
+        // Filtros de relacionamento
+        codfilial: null,
+        codpessoa: null,
+        codgrupoeconomico: null,
+        codnaturezaoperacao: null,
+        codoperacao: null,
+
+        // Filtros de tipo
         modelo: null,
-        situacao: null
+        emitida: null,
+        status: null,
+
+        // Filtros de data
+        emissao_inicio: null,
+        emissao_fim: null,
+        saida_inicio: null,
+        saida_fim: null,
+
+        // Filtros de valor
+        valortotal_inicio: null,
+        valortotal_fim: null
       }
+      this.initialLoadDone = false
     },
 
     clearCurrentNota() {

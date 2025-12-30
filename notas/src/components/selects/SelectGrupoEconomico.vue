@@ -1,19 +1,15 @@
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
-import { useSelectEstoqueLocalStore } from 'stores/selects/estoqueLocal'
+import { ref, onMounted, watch } from 'vue'
+import { useSelectGrupoEconomicoStore } from 'stores/selects/grupoEconomico'
 
 const props = defineProps({
   modelValue: {
     type: [Number, String],
     default: null,
   },
-  codfilial: {
-    type: [Number, String],
-    default: null,
-  },
   label: {
     type: String,
-    default: 'Local de Estoque',
+    default: 'Grupo Econômico',
   },
   placeholder: {
     type: String,
@@ -47,7 +43,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'clear'])
 
-const estoqueLocalStore = useSelectEstoqueLocalStore()
+const grupoEconomicoStore = useSelectGrupoEconomicoStore()
 const options = ref([])
 const loading = ref(false)
 
@@ -57,60 +53,62 @@ const truncateLabel = (label) => {
   return label.length > props.maxChars ? label.substring(0, props.maxChars) + '...' : label
 }
 
-// Computed para locais filtrados por filial
-const locaisFiltrados = computed(() => {
-  if (props.codfilial) {
-    return estoqueLocalStore.filterByFilial(props.codfilial)
-  }
-  return estoqueLocalStore.locais
-})
-
-// Carrega todos os locais de estoque ao montar o componente
+// Carrega o grupo econômico quando há um modelValue inicial
 onMounted(async () => {
-  try {
-    loading.value = true
-    await estoqueLocalStore.loadAll()
-    // Inicializa com locais filtrados por filial
-    options.value = locaisFiltrados.value
-  } catch (error) {
-    console.error('Erro ao carregar locais de estoque:', error)
-  } finally {
-    loading.value = false
+  if (props.modelValue) {
+    await loadGrupoEconomico(props.modelValue)
   }
 })
 
-// Observa mudanças no codfilial
+// Recarrega quando o modelValue muda (para caso seja setado externamente)
 watch(
-  () => props.codfilial,
-  (newCodfilial, oldCodfilial) => {
-    if (newCodfilial !== oldCodfilial) {
-      // Atualiza as opções filtradas
-      options.value = locaisFiltrados.value
-
-      // Se houver apenas uma opção após o filtro, seleciona automaticamente
-      if (locaisFiltrados.value.length === 1) {
-        emit('update:modelValue', locaisFiltrados.value[0].value)
-      }
-      // Se a opção selecionada não está mais disponível, limpa a seleção
-      else if (props.modelValue) {
-        const exists = locaisFiltrados.value.find((l) => l.value === props.modelValue)
-        if (!exists) {
-          emit('update:modelValue', null)
-          emit('clear')
-        }
+  () => props.modelValue,
+  async (newValue, oldValue) => {
+    if (newValue && newValue !== oldValue) {
+      // Se mudou o valor e não está nas options, carrega
+      const exists = options.value.find((o) => o.value === newValue)
+      if (!exists) {
+        await loadGrupoEconomico(newValue)
       }
     }
   },
 )
 
-const filterEstoqueLocal = (val, update) => {
-  update(() => {
-    if (!val) {
-      // Se não tem busca, mostra locais filtrados por filial
-      options.value = locaisFiltrados.value
-    } else {
-      // Filtra por filial e texto
-      options.value = estoqueLocalStore.filterByFilialAndText(props.codfilial, val)
+const loadGrupoEconomico = async (codgrupoeconomico) => {
+  try {
+    loading.value = true
+    const grupo = await grupoEconomicoStore.fetch(codgrupoeconomico)
+    if (grupo) {
+      // Adiciona o grupo econômico nas options se não existir
+      const exists = options.value.find((o) => o.value === grupo.value)
+      if (!exists) {
+        options.value = [grupo]
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar grupo econômico:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const filterGrupoEconomico = async (val, update) => {
+  if (!val || val.length < 2) {
+    update(() => {
+      options.value = []
+    })
+    return
+  }
+
+  update(async () => {
+    try {
+      loading.value = true
+      options.value = await grupoEconomicoStore.search(val)
+    } catch (error) {
+      console.error('Erro ao buscar grupo econômico:', error)
+      options.value = []
+    } finally {
+      loading.value = false
     }
   })
 }
@@ -137,7 +135,7 @@ const handleUpdate = (value) => {
     map-options
     use-input
     input-debounce="500"
-    @filter="filterEstoqueLocal"
+    @filter="filterGrupoEconomico"
     :placeholder="placeholder"
     :bottom-slots="bottomSlots"
     :class="customClass"
@@ -149,7 +147,7 @@ const handleUpdate = (value) => {
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section avatar>
-          <q-icon name="warehouse" color="orange" />
+          <q-icon name="corporate_fare" color="indigo" />
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
@@ -163,9 +161,9 @@ const handleUpdate = (value) => {
         removable
         dense
         @remove="handleUpdate(null)"
-        color="orange"
+        color="indigo"
         text-color="white"
-        icon="warehouse"
+        icon="corporate_fare"
       >
         {{ truncateLabel(scope.opt.label) }}
       </q-chip>
@@ -173,7 +171,9 @@ const handleUpdate = (value) => {
 
     <template v-slot:no-option>
       <q-item>
-        <q-item-section class="text-grey"> Nenhum local de estoque encontrado </q-item-section>
+        <q-item-section class="text-grey">
+          {{ options.length === 0 ? 'Digite ao menos 2 caracteres' : 'Nenhum resultado' }}
+        </q-item-section>
       </q-item>
     </template>
 

@@ -24,11 +24,12 @@ export const useSelectEstoqueLocalStore = defineStore('selectEstoqueLocal', {
       try {
         const response = await api.get('v1/select/estoque-local')
 
-        // Mapeia e ordena por value
+        // Mapeia e ordena por value, mantendo o codfilial
         this.locais = response.data
           .map((item) => ({
             label: item.label,
             value: item.value,
+            codfilial: item.codfilial,
           }))
           .sort((a, b) => a.value - b.value)
 
@@ -55,6 +56,42 @@ export const useSelectEstoqueLocalStore = defineStore('selectEstoqueLocal', {
           local.value.toString().includes(buscaLower)
         )
       })
+    },
+
+    /**
+     * Filtra estoques locais por filial
+     */
+    filterByFilial(codfilial) {
+      if (!codfilial) {
+        return this.locais
+      }
+
+      return this.locais.filter((local) => local.codfilial === codfilial)
+    },
+
+    /**
+     * Filtra estoques locais por filial e texto
+     */
+    filterByFilialAndText(codfilial, busca) {
+      let resultado = this.locais
+
+      // Filtra por filial se fornecido
+      if (codfilial) {
+        resultado = resultado.filter((local) => local.codfilial === codfilial)
+      }
+
+      // Filtra por texto se fornecido
+      if (busca) {
+        const buscaLower = busca.toLowerCase()
+        resultado = resultado.filter((local) => {
+          return (
+            local.label.toLowerCase().includes(buscaLower) ||
+            local.value.toString().includes(buscaLower)
+          )
+        })
+      }
+
+      return resultado
     },
 
     /**

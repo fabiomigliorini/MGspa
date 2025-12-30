@@ -5,7 +5,7 @@ import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
 import SelectNaturezaOperacao from '../components/selects/SelectNaturezaOperacao.vue'
 import SelectFilial from '../components/selects/SelectFilial.vue'
-// import SelectLocalEstoque from '../components/selects/SelectLocalEstoque.vue'
+import SelectEstoqueLocal from '../components/selects/SelectEstoqueLocal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -259,14 +259,15 @@ onMounted(() => {
               <SelectFilial v-model="form.codfilial" label="Filial *" :disable="notaBloqueada" />
             </div>
 
-            <!-- Local de Estoque
+            <!-- Local de Estoque -->
             <div class="col-12 col-sm-6">
-              <SelectLocalEstoque
+              <SelectEstoqueLocal
                 v-model="form.codestoquelocal"
+                :codfilial="form.codfilial"
                 label="Local de Estoque"
                 :disable="notaBloqueada"
               />
-            </div> -->
+            </div>
 
             <!-- Modelo -->
             <div class="col-12 col-sm-4">
