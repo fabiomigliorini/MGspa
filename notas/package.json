@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
+    "@vueuse/core": "^14.1.0",
     "axios": "^1.2.1",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.7.1",

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Dec/2025 10:51:19
+ * Date: 28/Dec/2025 23:31:08
  */
 
 namespace Mg\Tributacao;
@@ -10,6 +10,9 @@ use Mg\MgModel;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Tributacao\Tributo;
 use Mg\Usuario\Usuario;
+use Mg\Cidade\Cidade;
+use Mg\Cidade\Estado;
+use Mg\Produto\TipoProduto;
 
 class TributacaoRegra extends MgModel
 {
@@ -59,9 +62,24 @@ class TributacaoRegra extends MgModel
 
 
     // Chaves Estrangeiras
+    public function CidadeDestino()
+    {
+        return $this->belongsTo(Cidade::class, 'codcidadedestino', 'codcidade');
+    }
+
+    public function EstadoDestino()
+    {
+        return $this->belongsTo(Estado::class, 'codestadodestino', 'codestado');
+    }
+
     public function NaturezaOperacao()
     {
         return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
+    }
+
+    public function TipoProduto()
+    {
+        return $this->belongsTo(TipoProduto::class, 'codtipoproduto', 'codtipoproduto');
     }
 
     public function Tributo()

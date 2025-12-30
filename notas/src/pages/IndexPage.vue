@@ -1,3 +1,14 @@
+<script setup>
+import { onMounted } from 'vue'
+import { useAuth } from 'src/composables/useAuth'
+
+const { user, validateToken } = useAuth()
+
+onMounted(async () => {
+  await validateToken()
+})
+</script>
+
 <template>
   <q-page class="q-pa-md">
     <div class="row q-col-gutter-md">
@@ -13,13 +24,4 @@
   </q-page>
 </template>
 
-<script setup>
-import { onMounted } from 'vue'
-import { useAuth } from 'src/composables/useAuth'
 
-const { user, validateToken } = useAuth()
-
-onMounted(async () => {
-  await validateToken()
-})
-</script>

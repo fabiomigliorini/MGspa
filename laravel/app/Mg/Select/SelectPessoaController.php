@@ -25,11 +25,14 @@ class SelectPessoaController extends Controller
                 p.numero,
                 p.complemento,
                 p.bairro,
+                p.codgrupoeconomico,
+                ge.grupoeconomico,
                 c.cidade,
                 e.sigla as uf,
                 p.vendedor,
                 p.inativo
             from tblpessoa p
+            left join tblgrupoeconomico ge on (ge.codgrupoeconomico = p.codgrupoeconomico)
             left join tblcidade c on (c.codcidade = p.codcidade)
             left join tblestado e on (e.codestado = c.codestado)
         ";

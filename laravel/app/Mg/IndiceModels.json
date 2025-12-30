@@ -8808,6 +8808,21 @@
                 "tabela": "tblusuario",
                 "coluna": "codusuariocriacao",
                 "metodo": "UsuarioCriacao"
+            },
+            "codcidadedestino": {
+                "tabela": "tblcidade",
+                "coluna": "codcidadedestino",
+                "metodo": "CidadeDestino"
+            },
+            "codestadodestino": {
+                "tabela": "tblestado",
+                "coluna": "codestadodestino",
+                "metodo": "EstadoDestino"
+            },
+            "codtipoproduto": {
+                "tabela": "tbltipoproduto",
+                "coluna": "codtipoproduto",
+                "metodo": "TipoProduto"
             }
         },
         "hasMany": []

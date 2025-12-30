@@ -83,6 +83,27 @@ Route::group(['prefix' => 'v1'], function () {
         Route::apiResource('regra', '\Mg\Tributacao\TributacaoRegraController');
     });
 
+    // NOTA FISCAL
+    Route::prefix('nota-fiscal')->group(function () {
+        Route::apiResource('/', '\Mg\NotaFiscal\NotaFiscalController')->parameters(['' => 'codnotafiscal']);
+
+        // Relacionamentos nested
+        Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')
+            ->parameters(['item' => 'codnotafiscalprodutobarra']);
+
+        Route::apiResource('{codnotafiscal}/pagamento', '\Mg\NotaFiscal\NotaFiscalPagamentoController')
+            ->parameters(['pagamento' => 'codnotafiscalpagamento']);
+
+        Route::apiResource('{codnotafiscal}/duplicata', '\Mg\NotaFiscal\NotaFiscalDuplicatasController')
+            ->parameters(['duplicata' => 'codnotafiscalduplicatas']);
+
+        Route::apiResource('{codnotafiscal}/referenciada', '\Mg\NotaFiscal\NotaFiscalReferenciadaController')
+            ->parameters(['referenciada' => 'codnotafiscalreferenciada']);
+
+        Route::apiResource('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController')
+            ->parameters(['carta-correcao' => 'codnotafiscalcartacorrecao']);
+    });
+
     // Negocio
     Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
     Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');
@@ -575,12 +596,16 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('select/cidade', '\Mg\Select\SelectCidadeController@index');
         Route::get('select/impressora', '\Mg\Select\SelectImpressoraController@index');
         Route::get('select/filial', '\Mg\Select\SelectFilialController@index');
+        Route::get('select/estoque-local', '\Mg\Select\SelectEstoqueLocalController@index');
         Route::get('select/estado', '\Mg\Select\SelectEstadoController@index');
         Route::get('select/veiculo-tipo', '\Mg\Select\SelectVeiculoTipoController@index');
         Route::get('select/veiculo', '\Mg\Select\SelectVeiculoController@index');
         Route::get('select/produto-barra', '\Mg\Select\SelectProdutoBarraController@index');
         Route::get('select/usuario', '\Mg\Select\SelectUsuarioController@index');
         Route::get('select/portador', '\Mg\Select\SelectPortadorController@index');
+        Route::get('select/natureza-operacao', '\Mg\Select\SelectNaturezaOperacaoController@index');
+        Route::get('select/grupo-economico', '\Mg\Select\SelectGrupoEconomicoController@index');
+        Route::get('select/tipo-produto', '\Mg\Select\SelectTipoProdutoController@index');
 
         Route::get('veiculo', '\Mg\Veiculo\VeiculoController@index');
         Route::get('veiculo/{id}', '\Mg\Veiculo\VeiculoController@show');

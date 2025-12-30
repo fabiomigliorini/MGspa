@@ -22,6 +22,14 @@ use Mg\Negocio\NegocioService;
 
 class NotaFiscalService
 {
+    // Status da Nota Fiscal
+    const STATUS_LANCADA          = 'LAN'; // Lançada (emitida = false)
+    const STATUS_DIGITACAO        = 'DIG'; // Em Digitação (emitida = true e numero vazio)
+    const STATUS_ERRO             = 'ERR'; // Não Autorizada (emitida = true, tem número, sem autorização)
+    const STATUS_AUTORIZADA       = 'AUT'; // Autorizada (nfeautorizacao preenchido e não cancelada/inutilizada)
+    const STATUS_CANCELADA        = 'CAN'; // Cancelada (nfecancelamento preenchido)
+    const STATUS_INUTILIZADA      = 'INU'; // Inutilizada (nfeinutilizacao preenchido)
+
     const MODELO_NFE              = 55;
     const MODELO_NFCE             = 65;
 
@@ -39,7 +47,80 @@ class NotaFiscalService
     const TPEMIS_SVC_RS           = 7; // Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
     const TPEMIS_OFFLINE          = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
 
-    public static function isAtiva(NotaFiscal $nota)
+    /**
+     * Calcula o status atual da nota baseado nos campos
+     */
+    public static function calcularStatus(NotaFiscal $nota): string
+    {
+        if (!$nota->emitida) {
+            return static::STATUS_LANCADA;
+        }
+
+        if (!empty($nota->nfeinutilizacao)) {
+            return static::STATUS_INUTILIZADA;
+        }
+
+        if (!empty($nota->nfecancelamento)) {
+            return static::STATUS_CANCELADA;
+        }
+
+        if (!empty($nota->nfeautorizacao)) {
+            return static::STATUS_AUTORIZADA;
+        }
+
+        if (empty($nota->numero)) {
+            return static::STATUS_DIGITACAO;
+        }
+
+        return static::STATUS_ERRO;
+    }
+
+    /**
+     * Atualiza o campo status da nota
+     */
+    public static function atualizarStatus(NotaFiscal $nota): void
+    {
+        $novoStatus = static::calcularStatus($nota);
+
+        if ($nota->status !== $novoStatus) {
+            $nota->status = $novoStatus;
+            $nota->saveQuietly(); // Salva sem disparar eventos
+        }
+    }
+
+    /**
+     * Retorna o status atual da nota (DEPRECATED: use $nota->status)
+     * @deprecated Use o campo $nota->status ao invés deste método
+     */
+    public static function getStatusNota(NotaFiscal $nota): string
+    {
+        // Retorna o status calculado para compatibilidade
+        return static::calcularStatus($nota);
+    }
+
+    public static function isInutilizada(NotaFiscal $nota): bool
+    {
+        return !empty($nota->nfeinutilizacao);
+    }
+
+    public static function isCancelada(NotaFiscal $nota): bool
+    {
+        return !empty($nota->nfecancelamento);
+    }
+
+    public static function isAutorizada(NotaFiscal $nota): bool
+    {
+        return !empty($nota->nfeautorizacao)
+            && !static::isCancelada($nota)
+            && !static::isInutilizada($nota);
+    }
+
+    public static function isCanceladaInutilizada(NotaFiscal $nota): bool
+    {
+        return static::isCancelada($nota) || static::isInutilizada($nota);
+    }
+
+    public static function isAtiva(NotaFiscal $nota): bool
     {
         if (static::isAutorizada($nota)) {
             return true;
@@ -50,19 +131,9 @@ class NotaFiscalService
         return false;
     }
 
-    public static function isAutorizada(NotaFiscal $nota)
-    {
-        return (!empty($nota->nfeautorizacao)) && (empty($nota->nfecancelamento)) && (empty($nota->nfeinutilizacao));
-    }
-
-    public static function isDigitacao(NotaFiscal $nota)
+    public static function isDigitacao(NotaFiscal $nota): bool
     {
         return (empty($nota->numero) && ($nota->emitida));
-    }
-
-    public static function isCanceladaInutilizada(NotaFiscal $nota)
-    {
-        return (!empty($nota->nfecancelamento)) || (!empty($nota->nfeinutilizacao));
     }
 
     // Gera nota fiscal a partir do negocio
@@ -253,14 +324,13 @@ class NotaFiscalService
                     $notaItem->valorseguro = $item->valorseguro;
                     $notaItem->valoroutras = $item->valoroutras;
                 }
-    
+
                 // verifica se tem juros pra jogar no outras
                 if ($percJuros > 0) {
                     $juros = round($item->valortotal * $percJuros, 2);
                     $notaItem->valoroutras += $juros;
                     $totalJuros += $juros;
                 }
-    
             }
 
             // calcula tributacao
@@ -268,7 +338,6 @@ class NotaFiscalService
 
             // salva o item da nf
             $notaItem->save();
-
         }
 
         if (empty($nota->codnotafiscal)) {
@@ -330,10 +399,9 @@ class NotaFiscalService
         // salva no Banco e retorna
         DB::commit();
         return $nota;
-
     }
 
-    public static function excluir(NotaFiscal $nf) 
+    public static function excluir(NotaFiscal $nf)
     {
         if ($nf->emitida) {
             if (!empty($nf->numero)) {
@@ -343,7 +411,7 @@ class NotaFiscalService
         return $nf->delete();
     }
 
-    public static function notasDoNegocio ($codnegocio)
+    public static function notasDoNegocio($codnegocio)
     {
         // A query SQL que você forneceu
         $sql = "
