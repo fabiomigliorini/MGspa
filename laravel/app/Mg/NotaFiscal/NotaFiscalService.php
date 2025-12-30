@@ -22,6 +22,14 @@ use Mg\Negocio\NegocioService;
 
 class NotaFiscalService
 {
+    // Status da Nota Fiscal
+    const STATUS_LANCADA          = 'LAN'; // Lançada (emitida = false)
+    const STATUS_DIGITACAO        = 'DIG'; // Em Digitação (emitida = true e numero vazio)
+    const STATUS_ERRO             = 'ERR'; // Não Autorizada (emitida = true, tem número, sem autorização)
+    const STATUS_AUTORIZADA       = 'AUT'; // Autorizada (nfeautorizacao preenchido e não cancelada/inutilizada)
+    const STATUS_CANCELADA        = 'CAN'; // Cancelada (nfecancelamento preenchido)
+    const STATUS_INUTILIZADA      = 'INU'; // Inutilizada (nfeinutilizacao preenchido)
+
     const MODELO_NFE              = 55;
     const MODELO_NFCE             = 65;
 
@@ -40,31 +48,54 @@ class NotaFiscalService
     const TPEMIS_OFFLINE          = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
 
     /**
-     * Retorna o status atual da nota
+     * Calcula o status atual da nota baseado nos campos
      */
-    public static function getStatusNota(NotaFiscal $nota): string
+    public static function calcularStatus(NotaFiscal $nota): string
     {
         if (!$nota->emitida) {
-            return 'Lançada';
+            return static::STATUS_LANCADA;
         }
 
-        if (static::isInutilizada($nota)) {
-            return 'Inutilizada';
+        if (!empty($nota->nfeinutilizacao)) {
+            return static::STATUS_INUTILIZADA;
         }
 
-        if (static::isCancelada($nota)) {
-            return 'Cancelada';
+        if (!empty($nota->nfecancelamento)) {
+            return static::STATUS_CANCELADA;
         }
 
-        if (static::isAutorizada($nota)) {
-            return 'Autorizada';
+        if (!empty($nota->nfeautorizacao)) {
+            return static::STATUS_AUTORIZADA;
         }
 
         if (empty($nota->numero)) {
-            'Em Digitação';
+            return static::STATUS_DIGITACAO;
         }
 
-        return 'Não Autorizada';
+        return static::STATUS_ERRO;
+    }
+
+    /**
+     * Atualiza o campo status da nota
+     */
+    public static function atualizarStatus(NotaFiscal $nota): void
+    {
+        $novoStatus = static::calcularStatus($nota);
+
+        if ($nota->status !== $novoStatus) {
+            $nota->status = $novoStatus;
+            $nota->saveQuietly(); // Salva sem disparar eventos
+        }
+    }
+
+    /**
+     * Retorna o status atual da nota (DEPRECATED: use $nota->status)
+     * @deprecated Use o campo $nota->status ao invés deste método
+     */
+    public static function getStatusNota(NotaFiscal $nota): string
+    {
+        // Retorna o status calculado para compatibilidade
+        return static::calcularStatus($nota);
     }
 
     public static function isInutilizada(NotaFiscal $nota): bool

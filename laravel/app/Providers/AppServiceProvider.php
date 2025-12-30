@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscal\Observers\NotaFiscalObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        // Registra o Observer para NotaFiscal
+        NotaFiscal::observe(NotaFiscalObserver::class);
     }
 }

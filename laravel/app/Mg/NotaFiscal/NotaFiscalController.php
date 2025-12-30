@@ -90,24 +90,7 @@ class NotaFiscalController extends Controller
 
         // Filtro de status
         if ($request->filled('status')) {
-            $status = $request->status;
-
-            switch ($status) {
-                case 'Autorizada':
-                    $query->whereNotNull('nfeautorizacao');
-                    break;
-                case 'Cancelada':
-                    $query->whereNotNull('nfecancelamento');
-                    break;
-                case 'Inutilizada':
-                    $query->whereNotNull('nfeinutilizacao');
-                    break;
-                case 'Pendente':
-                    $query->whereNull('nfeautorizacao')
-                        ->whereNull('nfecancelamento')
-                        ->whereNull('nfeinutilizacao');
-                    break;
-            }
+            $query->where('status', $request->status);
         }
 
         // Ordenação

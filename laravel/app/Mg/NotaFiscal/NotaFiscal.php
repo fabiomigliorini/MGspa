@@ -68,6 +68,7 @@ class NotaFiscal extends MgModel
         'placa',
         'saida',
         'serie',
+        'status',
         'tpemis',
         'valordesconto',
         'valorfrete',

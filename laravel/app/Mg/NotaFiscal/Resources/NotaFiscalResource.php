@@ -36,7 +36,7 @@ class NotaFiscalResource extends JsonResource
             'valordesconto' => $this->valordesconto,
             'valortotal' => $this->valortotal,
 
-            'status' => $this->getStatus(),
+            'status' => $this->status,
 
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
@@ -77,10 +77,5 @@ class NotaFiscalResource extends JsonResource
         }
 
         return $this->Operacao?->only(['codoperacao', 'operacao']);
-    }
-
-    private function getStatus(): string
-    {
-        return NotaFiscalService::getStatusNota($this->resource);
     }
 }
