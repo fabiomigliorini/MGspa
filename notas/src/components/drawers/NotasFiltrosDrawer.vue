@@ -44,10 +44,12 @@ const modeloOptions = [
 ]
 
 const statusOptions = [
-  { label: 'Pendente', value: 'Pendente' },
-  { label: 'Autorizada', value: 'Autorizada' },
-  { label: 'Cancelada', value: 'Cancelada' },
-  { label: 'Inutilizada', value: 'Inutilizada' },
+  { label: 'Lançada', value: 'LAN' },
+  { label: 'Em Digitação', value: 'DIG' },
+  { label: 'Não Autorizada', value: 'ERR' },
+  { label: 'Autorizada', value: 'AUT' },
+  { label: 'Cancelada', value: 'CAN' },
+  { label: 'Inutilizada', value: 'INU' },
 ]
 
 const emitidaOptions = [
