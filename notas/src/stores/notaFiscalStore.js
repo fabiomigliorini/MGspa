@@ -182,9 +182,18 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     },
 
     async fetchNota(codnotafiscal) {
+      // Converte para número para garantir comparação correta
+      const codnotafiscalNum = parseInt(codnotafiscal)
+
+      // Verifica se a nota já está carregada na store
+      if (this.currentNota && this.currentNota.codnotafiscal === codnotafiscalNum) {
+        // Nota já está carregada, retorna sem fazer nova requisição
+        return this.currentNota
+      }
+
       this.loading.nota = true
       try {
-        const response = await notaFiscalService.get(codnotafiscal)
+        const response = await notaFiscalService.get(codnotafiscalNum)
         // O backend já retorna todos os dados relacionados no objeto
         this.currentNota = response.data
         return response.data

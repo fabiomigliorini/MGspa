@@ -85,6 +85,17 @@ export const formatDate = (value) => {
 }
 
 /**
+ * Formata um número como percentual
+ * @param {number|string} value - Valor a ser formatado
+ * @param {number} decimals - Número de casas decimais (padrão: 2)
+ * @returns {string} Percentual formatado (ex: "12.34%") ou "-"
+ */
+export const formatPercent = (value, decimals = 2) => {
+  if (value === null || value === undefined) return '-'
+  return `${parseFloat(value).toFixed(decimals)}%`
+}
+
+/**
  * Formata um número de nota fiscal com zeros à esquerda
  * @param {number|string} numero - Número da nota fiscal
  * @returns {string} Número formatado com 8 dígitos
@@ -103,4 +114,143 @@ export const formatChave = (chave) => {
   if (!chave) return '-'
   // Formata a chave em grupos de 4 dígitos
   return chave.match(/.{1,4}/g)?.join(' ') || chave
+}
+
+export const formatProtocolo = (protocolo) => {
+  if (!protocolo) return '-'
+  // Formata o protocolo em grupos de 4 dígitos
+  return protocolo.match(/.{1,5}/g)?.join(' ') || protocolo
+}
+
+export const formatCnpjCpf = (cnpj, fisica) => {
+  if (!cnpj) return ''
+  const str = cnpj.toString().padStart(fisica ? 11 : 14, '0')
+  if (fisica) {
+    // CPF: 000.000.000-00
+    return str.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  } else {
+    // CNPJ: 00.000.000/0000-00
+    return str.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+  }
+}
+
+/**
+ * Formata Inscrição Estadual de acordo com o padrão de cada estado brasileiro
+ * @param {string|number} ie - Inscrição Estadual
+ * @param {string} uf - Sigla do estado (AC, AL, AM, etc.)
+ * @returns {string} IE formatada ou valor original se não houver formatação específica
+ */
+export const formatInscricaoEstadual = (ie, uf) => {
+  if (!ie) return ''
+
+  // Remove caracteres não numéricos e converte para string
+  const ieStr = ie.toString().replace(/\D/g, '')
+  if (!ieStr) return ''
+
+  // Se não tiver UF, retorna sem formatação
+  if (!uf) return ieStr
+
+  const ufUpper = uf.toUpperCase()
+
+  try {
+    switch (ufUpper) {
+      case 'AC': // Acre - 13 dígitos - 00.000.000/000-00
+        return ieStr
+          .padStart(13, '0')
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3/$4-$5')
+
+      case 'AL': // Alagoas - 9 dígitos - 000000000
+        return ieStr.padStart(9, '0')
+
+      case 'AP': // Amapá - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'AM': // Amazonas - 9 dígitos - 00.000.000-0
+        return ieStr.padStart(9, '0').replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4')
+
+      case 'BA': // Bahia - 8 ou 9 dígitos - 000000-00 ou 0000000-00
+        if (ieStr.length <= 8) {
+          return ieStr.padStart(8, '0').replace(/(\d{6})(\d{2})/, '$1-$2')
+        }
+        return ieStr.padStart(9, '0').replace(/(\d{7})(\d{2})/, '$1-$2')
+
+      case 'CE': // Ceará - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'DF': // Distrito Federal - 13 dígitos - 00000000000-00
+        return ieStr.padStart(13, '0').replace(/(\d{11})(\d{2})/, '$1-$2')
+
+      case 'ES': // Espírito Santo - 9 dígitos - 000000000
+        return ieStr.padStart(9, '0')
+
+      case 'GO': // Goiás - 9 dígitos - 00.000.000-0
+        return ieStr.padStart(9, '0').replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4')
+
+      case 'MA': // Maranhão - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'MT': // Mato Grosso - 11 dígitos - 0000000000-0
+        return ieStr.padStart(11, '0').replace(/(\d{10})(\d{1})/, '$1-$2')
+
+      case 'MS': // Mato Grosso do Sul - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'MG': // Minas Gerais - 13 dígitos - 000.000.000/0000
+        return ieStr.padStart(13, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4')
+
+      case 'PA': // Pará - 9 dígitos - 00-000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{2})(\d{6})(\d{1})/, '$1-$2-$3')
+
+      case 'PB': // Paraíba - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'PR': // Paraná - 10 dígitos - 000.00000-00
+        return ieStr.padStart(10, '0').replace(/(\d{3})(\d{5})(\d{2})/, '$1.$2-$3')
+
+      case 'PE': // Pernambuco - 9 dígitos - 0000000-00
+        return ieStr.padStart(9, '0').replace(/(\d{7})(\d{2})/, '$1-$2')
+
+      case 'PI': // Piauí - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'RJ': // Rio de Janeiro - 8 dígitos - 00.000.00-0
+        return ieStr.padStart(8, '0').replace(/(\d{2})(\d{3})(\d{2})(\d{1})/, '$1.$2.$3-$4')
+
+      case 'RN': // Rio Grande do Norte - 9 ou 10 dígitos - 00.000.000-0 ou 00.0.000.000-0
+        if (ieStr.length <= 9) {
+          return ieStr.padStart(9, '0').replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4')
+        }
+        return ieStr
+          .padStart(10, '0')
+          .replace(/(\d{2})(\d{1})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3.$4-$5')
+
+      case 'RS': // Rio Grande do Sul - 10 dígitos - 000/0000000
+        return ieStr.padStart(10, '0').replace(/(\d{3})(\d{7})/, '$1/$2')
+
+      case 'RO': // Rondônia - 14 dígitos - 0000000000000-0
+        return ieStr.padStart(14, '0').replace(/(\d{13})(\d{1})/, '$1-$2')
+
+      case 'RR': // Roraima - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'SC': // Santa Catarina - 9 dígitos - 000.000.000
+        return ieStr.padStart(9, '0').replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3')
+
+      case 'SP': // São Paulo - 12 dígitos - 000.000.000.000
+        return ieStr.padStart(12, '0').replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, '$1.$2.$3.$4')
+
+      case 'SE': // Sergipe - 9 dígitos - 00000000-0
+        return ieStr.padStart(9, '0').replace(/(\d{8})(\d{1})/, '$1-$2')
+
+      case 'TO': // Tocantins - 11 dígitos - 00000000000
+        return ieStr.padStart(11, '0')
+
+      default:
+        return ieStr
+    }
+  } catch (error) {
+    // Em caso de erro, retorna o valor original
+    console.log(error)
+    return ieStr
+  }
 }

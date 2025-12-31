@@ -19,7 +19,7 @@ const imagem = computed(() => {
   if (props.item.produtoBarra?.imagem) {
     return props.item.produtoBarra?.imagem
   }
-  return 'https://cdn.quasar.dev/img/mountains.jpg'
+  return '/produtoSemImagem.png'
 })
 
 const tabRural = computed(() => {
@@ -41,21 +41,22 @@ onMounted(() => {
 <template>
 
   <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
-    <q-card class="full-height flex column">
-      <q-img :src="imagem" class="bg-grey-2" :ratio="4 / 3">
-        <div class="absolute-bottom">
-          <div class="text-h6">
-            <template v-if="item.ordem">
-              {{ item.ordem }})
-            </template>
-            <template v-if="item.descricaoalternativa">
+    <q-card flat bordered class="full-height flex column">
+      <q-img :src="imagem" class="bg-grey-3" :ratio="4 / 2">
+        <div class="absolute-top">
+          <div class="text-body1">
+            <q-avatar color="yellow-8" text-color="indigo" size="md" class="q-mr-sm"
+              style="flex-shrink: 0; font-weight: bold;">
+              {{ item.ordem }}
+            </q-avatar>
+            <span v-if="item.descricaoalternativa" class="text-weight-bold">
               {{ item.descricaoalternativa }}
-            </template>
-            <span :class="item.descricaoalternativa ? 'text-strike' : null">
+            </span>
+            <span :class="item.descricaoalternativa ? 'text-strike' : null" class="text-weight-bold">
               {{ item.produtoBarra?.descricao }}
             </span>
           </div>
-          <div class="text-subtitle2">
+          <div class="text-caption">
             {{ item.produtoBarra?.barras || '-' }}
 
           </div>
@@ -77,37 +78,37 @@ onMounted(() => {
           <!-- Valor Unitário -->
           <div class="col-4">
             <div class="text-caption text-grey-7">Unitário</div>
-            <div class="text-body2">R$ {{ formatCurrency(item.valorunitario) }}</div>
+            <div class="text-body2"> {{ formatCurrency(item.valorunitario) }}</div>
           </div>
 
           <!-- Total -->
           <div class="col-4">
             <div class="text-caption text-grey-7">Total</div>
-            <div class="text-body2 text-primary text-weight-bold">R$ {{ formatCurrency(item.valortotal) }}</div>
+            <div class="text-body1 text-primary text-weight-bold"> {{ formatCurrency(item.valortotal) }}</div>
           </div>
 
           <!-- Desconto -->
           <div class="col-4" v-if="item.valordesconto">
             <div class="text-caption text-grey-7">Desconto</div>
-            <div class="text-caption">R$ {{ formatCurrency(item.valordesconto) }}</div>
+            <div class="text-caption"> {{ formatCurrency(item.valordesconto) }}</div>
           </div>
 
           <!-- Frete -->
           <div class="col-4" v-if="item.valorfrete">
             <div class="text-caption text-grey-7">Frete</div>
-            <div class="text-caption">R$ {{ formatCurrency(item.valorfrete) }}</div>
+            <div class="text-caption"> {{ formatCurrency(item.valorfrete) }}</div>
           </div>
 
           <!-- Seguro -->
           <div class="col-4" v-if="item.valorseguro">
             <div class="text-caption text-grey-7">Seguro</div>
-            <div class="text-bodycaption2">R$ {{ formatCurrency(item.valorseguro) }}</div>
+            <div class="text-bodycaption2"> {{ formatCurrency(item.valorseguro) }}</div>
           </div>
 
           <!-- Outras Despesas -->
           <div class="col-4" v-if="item.valoroutras">
             <div class="text-caption text-grey-7">Outras Despesas</div>
-            <div class="text-caption">R$ {{ formatCurrency(item.valoroutras) }}</div>
+            <div class="text-caption"> {{ formatCurrency(item.valoroutras) }}</div>
           </div>
 
 
@@ -197,7 +198,7 @@ onMounted(() => {
               <div v-if="item.icmsbase" class="col-6">
                 <div class="text-caption text-grey-7">Base</div>
                 <div class="text-caption ellipsis">
-                  R$ {{ formatCurrency(item.icmsbase) }}
+                  {{ formatCurrency(item.icmsbase) }}
                   <template v-if="item.icmsbasepercentual && item.icmsbasepercentual != 100">
                     ({{ formatDecimal(item.icmsbasepercentual, 2) }}%)
                   </template>
@@ -213,13 +214,13 @@ onMounted(() => {
               <!-- ICMS Valor -->
               <div v-if="item.icmsvalor" class="col-4">
                 <div class="text-caption text-grey-7">Valor</div>
-                <div class="text-caption ellipsis text-weight-bold">R$ {{ formatCurrency(item.icmsvalor) }}</div>
+                <div class="text-caption ellipsis text-weight-bold"> {{ formatCurrency(item.icmsvalor) }}</div>
               </div>
 
               <!-- ICMS ST Base -->
               <div v-if="item.icmsstbase" class="col-6 col-sm-6">
                 <div class="text-caption text-grey-7">Base ST</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.icmsstbase) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.icmsstbase) }}</div>
               </div>
 
               <!-- ICMS ST % -->
@@ -231,7 +232,7 @@ onMounted(() => {
               <!-- ICMS ST Valor -->
               <div v-if="item.icmsstvalor" class="col-4">
                 <div class="text-caption text-grey-7">Valor ST</div>
-                <div class="text-caption text-weight-bold">R$ {{ formatCurrency(item.icmsstvalor) }}</div>
+                <div class="text-caption text-weight-bold"> {{ formatCurrency(item.icmsstvalor) }}</div>
               </div>
 
             </div>
@@ -249,7 +250,7 @@ onMounted(() => {
               <!-- IPI Base -->
               <div v-if="item.ipibase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.ipibase) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.ipibase) }}</div>
               </div>
 
               <!-- IPI % -->
@@ -261,13 +262,13 @@ onMounted(() => {
               <!-- IPI Valor -->
               <div v-if="item.ipivalor" class="col-3">
                 <div class="text-caption text-grey-7">Valor</div>
-                <div class="text-caption text-weight-bold">R$ {{ formatCurrency(item.ipivalor) }}</div>
+                <div class="text-caption text-weight-bold"> {{ formatCurrency(item.ipivalor) }}</div>
               </div>
 
               <!-- IPI Devolução Valor -->
               <div v-if="item.ipidevolucaovalor" class="col-3">
                 <div class="text-caption text-grey-7">Vlr. Devolução</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.ipidevolucaovalor) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.ipidevolucaovalor) }}</div>
               </div>
             </div>
           </q-tab-panel>
@@ -280,7 +281,7 @@ onMounted(() => {
               <!-- PIS Base -->
               <div v-if="item.pisbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.pisbase) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.pisbase) }}</div>
               </div>
 
               <!-- PIS % -->
@@ -292,7 +293,7 @@ onMounted(() => {
               <!-- PIS Valor -->
               <div v-if="item.pisvalor" class="col-3">
                 <div class="text-caption text-grey-7">PIS</div>
-                <div class="text-caption text-weight-bold">R$ {{ formatCurrency(item.pisvalor) }}</div>
+                <div class="text-caption text-weight-bold"> {{ formatCurrency(item.pisvalor) }}</div>
               </div>
 
               <!-- PIS CST -->
@@ -307,7 +308,7 @@ onMounted(() => {
               <!-- COFINS Base -->
               <div v-if="item.cofinsbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.cofinsbase) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.cofinsbase) }}</div>
               </div>
 
               <!-- COFINS % -->
@@ -319,7 +320,7 @@ onMounted(() => {
               <!-- COFINS Valor -->
               <div v-if="item.cofinsvalor" class="col-3">
                 <div class="text-caption text-grey-7">COFINS</div>
-                <div class="text-caption text-weight-bold">R$ {{ formatCurrency(item.cofinsvalor) }}</div>
+                <div class="text-caption text-weight-bold"> {{ formatCurrency(item.cofinsvalor) }}</div>
               </div>
 
               <!-- COFINS CST -->
@@ -334,7 +335,7 @@ onMounted(() => {
               <!-- IRPJ Base -->
               <div v-if="item.irpjbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.irpjbase) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.irpjbase) }}</div>
               </div>
 
               <!-- IRPJ % -->
@@ -346,7 +347,7 @@ onMounted(() => {
               <!-- IRPJ Valor -->
               <div v-if="item.irpjvalor" class="col-6">
                 <div class="text-caption text-grey-7">IRPJ</div>
-                <div class="text-caption text-weight-bold">R$ {{ formatCurrency(item.irpjvalor) }}</div>
+                <div class="text-caption text-weight-bold"> {{ formatCurrency(item.irpjvalor) }}</div>
               </div>
 
               <!-- CSLL -->
@@ -354,7 +355,7 @@ onMounted(() => {
               <!-- CSLL Base -->
               <div v-if="item.csllbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.csllbase) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.csllbase) }}</div>
               </div>
 
               <!-- CSLL % -->
@@ -366,7 +367,7 @@ onMounted(() => {
               <!-- CSLL Valor -->
               <div v-if="item.csllvalor" class="col-6">
                 <div class="text-caption text-grey-7">CSLL</div>
-                <div class="text-caption text-weight-bold">R$ {{ formatCurrency(item.csllvalor) }}</div>
+                <div class="text-caption text-weight-bold"> {{ formatCurrency(item.csllvalor) }}</div>
               </div>
 
             </div>
@@ -386,7 +387,7 @@ onMounted(() => {
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Base</div>
                   <div class="text-caption">
-                    R$ {{ formatCurrency(trib.base) }}
+                    {{ formatCurrency(trib.base) }}
                   </div>
                 </div>
 
@@ -399,7 +400,7 @@ onMounted(() => {
                 <!-- Valor -->
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Valor</div>
-                  <div class="text-caption text-weight-bold">R$ {{ formatCurrency(trib.valor) }}</div>
+                  <div class="text-caption text-weight-bold"> {{ formatCurrency(trib.valor) }}</div>
                 </div>
 
 
@@ -414,7 +415,7 @@ onMounted(() => {
                 <!-- valorcredito -->
                 <div v-if="trib.valorcredito" class="col-4">
                   <div class="text-caption text-grey-7">Crédito</div>
-                  <div class="text-caption text-weight-bold">R$ {{ formatCurrency(trib.valorcredito) }}</div>
+                  <div class="text-caption text-weight-bold"> {{ formatCurrency(trib.valorcredito) }}</div>
                 </div>
 
 
@@ -434,7 +435,7 @@ onMounted(() => {
                 <div v-if="trib.basereducao" class="col-3">
                   <div class="text-caption text-grey-7">Base</div>
                   <div class="text-caption">
-                    R$ {{ formatCurrency(trib.basereducao) }}
+                    {{ formatCurrency(trib.basereducao) }}
                     <template v-if="trib.basereducaopercentual">
                       ({{ formatDecimal(trib.basereducaopercentual, 2) }}%)
                     </template>
@@ -475,7 +476,7 @@ onMounted(() => {
 
               <div v-if="item.funruralvalor" class="col-6">
                 <div class="text-caption text-grey-7">Funrural</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.funruralvalor) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.funruralvalor) }}</div>
               </div>
 
               <!-- Senar -->
@@ -486,7 +487,7 @@ onMounted(() => {
 
               <div v-if="item.senarvalor" class="col-6">
                 <div class="text-caption text-grey-7">Senar</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.senarvalor) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.senarvalor) }}</div>
               </div>
 
               <!-- Fethab -->
@@ -498,7 +499,7 @@ onMounted(() => {
               <!-- Fethab Valor -->
               <div v-if="item.fethabvalor" class="col-6">
                 <div class="text-caption text-grey-7">Fethab</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.fethabvalor) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.fethabvalor) }}</div>
               </div>
 
               <!-- IAgro -->
@@ -509,7 +510,7 @@ onMounted(() => {
 
               <div v-if="item.iagrovalor" class="col-6">
                 <div class="text-caption text-grey-7">IAgro</div>
-                <div class="text-caption">R$ {{ formatCurrency(item.iagrovalor) }}</div>
+                <div class="text-caption"> {{ formatCurrency(item.iagrovalor) }}</div>
               </div>
             </div>
           </q-tab-panel>
@@ -518,11 +519,14 @@ onMounted(() => {
       </q-card-section>
       <q-separator />
 
-      <q-card-actions>
-        <q-btn flat icon=" edit" label="Editar" color="primary" :disable="notaBloqueada" @click="emit('edit', item)">
+      <q-card-actions align="right">
+        <q-btn flat dense round icon="edit" color="primary" size="sm" :disable="notaBloqueada"
+          @click="emit('edit', item)">
+          <q-tooltip>Editar</q-tooltip>
         </q-btn>
-        <q-btn flat icon="delete" label="Excluir" color="negative" :disable="notaBloqueada"
+        <q-btn flat dense round icon="delete" color="negative" size="sm" :disable="notaBloqueada"
           @click="emit('delete', item)">
+          <q-tooltip>Excluir</q-tooltip>
         </q-btn>
       </q-card-actions>
 

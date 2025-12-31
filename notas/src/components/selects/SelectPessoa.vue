@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useSelectPessoaStore } from 'stores/selects/pessoa'
+import { formatCnpjCpf } from 'src/utils/formatters'
 
 const props = defineProps({
   modelValue: {
@@ -137,54 +138,23 @@ const handleUpdate = (value) => {
   }
 }
 
-const formatCnpj = (cnpj, fisica) => {
-  if (!cnpj) return ''
-  const str = cnpj.toString().padStart(fisica ? 11 : 14, '0')
-  if (fisica) {
-    // CPF: 000.000.000-00
-    return str.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-  } else {
-    // CNPJ: 00.000.000/0000-00
-    return str.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
-  }
-}
+
 </script>
 
 <template>
-  <q-select
-    :model-value="modelValue"
-    @update:model-value="handleUpdate"
-    :label="label"
-    outlined
-    clearable
-    :options="options"
-    option-value="value"
-    option-label="label"
-    emit-value
-    map-options
-    use-input
-    input-debounce="500"
-    @filter="filterPessoa"
-    :placeholder="placeholder"
-    :bottom-slots="bottomSlots"
-    :class="customClass"
-    :disable="disable"
-    :readonly="readonly"
-    :loading="loading"
-    :dense="dense"
-  >
+  <q-select :model-value="modelValue" @update:model-value="handleUpdate" :label="label" outlined clearable
+    :options="options" option-value="value" option-label="label" emit-value map-options use-input input-debounce="500"
+    @filter="filterPessoa" :placeholder="placeholder" :bottom-slots="bottomSlots" :class="customClass"
+    :disable="disable" :readonly="readonly" :loading="loading" :dense="dense">
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section avatar>
-          <q-icon
-            :name="scope.opt.fisica ? 'person' : 'business'"
-            :color="scope.opt.fisica ? 'blue' : 'purple'"
-          />
+          <q-icon :name="scope.opt.fisica ? 'person' : 'business'" :color="scope.opt.fisica ? 'blue' : 'purple'" />
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
           <q-item-label caption class="text-grey-7">
-            {{ formatCnpj(scope.opt.cnpj, scope.opt.fisica) }}
+            {{ formatCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
             <span v-if="scope.opt.ie">
               | IE: {{ scope.opt.ie }}
             </span>
@@ -203,14 +173,8 @@ const formatCnpj = (cnpj, fisica) => {
     </template>
 
     <template v-slot:selected-item="scope">
-      <q-chip
-        removable
-        dense
-        @remove="handleUpdate(null)"
-        :color="scope.opt.fisica ? 'blue' : 'purple'"
-        text-color="white"
-        :icon="scope.opt.fisica ? 'person' : 'business'"
-      >
+      <q-chip removable dense @remove="handleUpdate(null)" :color="scope.opt.fisica ? 'blue' : 'purple'"
+        text-color="white" :icon="scope.opt.fisica ? 'person' : 'business'">
         {{ truncateLabel(scope.opt.label) }}
       </q-chip>
     </template>

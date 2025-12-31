@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useQuasar, date } from 'quasar'
+import { formatPercent, formatCurrency } from 'src/utils/formatters'
 
 const $q = useQuasar()
 
@@ -132,20 +133,6 @@ const calcular = async () => {
 
 const limparResultados = () => {
   resultados.value = []
-}
-
-// Formatação
-const formatCurrency = (value) => {
-  if (value === null || value === undefined) return 'R$ 0,00'
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
-
-const formatPercent = (value) => {
-  if (value === null || value === undefined) return '0,00%'
-  return `${parseFloat(value).toFixed(2)}%`
 }
 </script>
 

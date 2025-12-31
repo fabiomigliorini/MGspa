@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
+import { formatPercent, formatDate } from 'src/utils/formatters'
 import SelectEstado from 'src/components/selects/SelectEstado.vue'
 import SelectCidade from 'src/components/selects/SelectCidade.vue'
 import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
@@ -89,19 +90,6 @@ const onLoad = async (_index, done) => {
 // Mudança de tab
 const onTabChange = (newTab) => {
   store.setActiveTab(newTab)
-}
-
-// Formatação
-const formatPercent = (value) => {
-  if (value === null || value === undefined) return '-'
-  return `${parseFloat(value).toFixed(2)}%`
-}
-
-const formatDate = (value) => {
-  if (!value) return '-'
-  // Converte ISO string para DD/MM/YYYY
-  const date = new Date(value)
-  return date.toLocaleDateString('pt-BR')
 }
 
 // Converte ISO date (YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS) para DD/MM/YYYY

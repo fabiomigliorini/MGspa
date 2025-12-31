@@ -3,8 +3,8 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
-// import { getStatusLabel, getStatusColor, getModeloLabel, isNotaBloqueada } from '../constants/notaFiscal'
 import { getStatusLabel, getStatusColor, getModeloLabel } from '../constants/notaFiscal'
+import { formatDateTime, formatDate, formatCurrency, formatNumero } from 'src/utils/formatters'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -71,43 +71,6 @@ const handleCreateNota = () => {
 // const handleShowMenu = () => {
 //   // Evento é capturado pelo @click.stop no botão
 // }
-
-const formatDateTime = (value) => {
-  if (!value) return '-'
-  const dateObj = new Date(value)
-  return dateObj.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
-}
-
-const formatDate = (value) => {
-  if (!value) return '-'
-  const dateObj = new Date(value)
-  return dateObj.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
-}
-
-
-const formatCurrency = (value) => {
-  if (!value) return '0,00'
-  return parseFloat(value).toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
-}
-
-const formatNumero = (numero) => {
-  if (!numero) return '00000000'
-  return String(numero).padStart(8, '0')
-}
 
 // Lifecycle
 onMounted(async () => {

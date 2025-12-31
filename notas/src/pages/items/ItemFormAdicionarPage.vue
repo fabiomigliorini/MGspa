@@ -3,6 +3,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../../stores/notaFiscalStore'
+import { formatCurrency } from 'src/utils/formatters'
 
 const router = useRouter()
 const route = useRoute()
@@ -115,14 +116,6 @@ const handleCancel = () => {
   router.push({
     name: 'nota-fiscal-view',
     params: { codnotafiscal: route.params.codnotafiscal }
-  })
-}
-
-const formatCurrency = (value) => {
-  if (!value) return '0,00'
-  return parseFloat(value).toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
   })
 }
 

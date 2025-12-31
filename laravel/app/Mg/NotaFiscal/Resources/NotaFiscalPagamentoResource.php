@@ -4,6 +4,9 @@ namespace Mg\NotaFiscal\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+use Mg\Negocio\NegocioFormaPagamentoService;
+use Mg\NotaFiscal\NotaFiscalPagamento;
+
 class NotaFiscalPagamentoResource extends JsonResource
 {
     public function toArray($request): array
@@ -12,9 +15,11 @@ class NotaFiscalPagamentoResource extends JsonResource
             'codnotafiscalpagamento' => $this->codnotafiscalpagamento,
             'codnotafiscal' => $this->codnotafiscal,
             'codpessoa' => $this->codpessoa,
+            'fantasia' => $this->Pessoa?->fantasia,
 
             // Dados do Pagamento
             'tipo' => $this->tipo,
+            'tipodescricao' => NegocioFormaPagamentoService::TIPOS[$this->tipo] ?? null,
             'descricao' => $this->descricao,
             'valorpagamento' => $this->valorpagamento,
             'avista' => $this->avista,
@@ -22,29 +27,13 @@ class NotaFiscalPagamentoResource extends JsonResource
 
             // Cartão
             'bandeira' => $this->bandeira,
+            'bandeiradescricao' => NegocioFormaPagamentoService::BANDEIRAS[$this->bandeira] ?? null,
             'autorizacao' => $this->autorizacao,
             'integracao' => $this->integracao,
-
-            // Relacionamentos
-            'pessoa' => $this->formatPessoa(),
 
             // Timestamps
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
         ];
-    }
-
-    private function formatPessoa(): ?array
-    {
-        if (!$this->relationLoaded('Pessoa')) {
-            return null;
-        }
-
-        return $this->Pessoa?->only([
-            'codpessoa',
-            'pessoa',
-            'fantasia',
-            'cnpj',
-        ]);
     }
 }

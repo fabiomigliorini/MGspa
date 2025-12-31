@@ -95,6 +95,7 @@ const loadFormData = async () => {
   if (isEditMode.value) {
     loading.value = true
     try {
+      // A verificação de cache é feita dentro do fetchNota
       await notaFiscalStore.fetchNota(route.params.codnotafiscal)
 
       if (nota.value) {
