@@ -34,10 +34,6 @@ const handleCreateNota = () => {
   router.push({ name: 'nota-fiscal-create' })
 }
 
-const handleViewNota = (codnotafiscal) => {
-  router.push({ name: 'nota-fiscal-view', params: { codnotafiscal } })
-}
-
 // const handleEditNota = (codnotafiscal) => {
 //   router.push({ name: 'nota-fiscal-edit', params: { codnotafiscal } })
 // }
@@ -130,13 +126,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page padding>
+  <q-page>
     <!-- Header com título -->
-    <div class="row items-center q-mb-md">
-      <div class="col">
-        <div class="text-h5">Notas Fiscais</div>
-      </div>
-    </div>
+    <div class="text-h5 q-mb-md q-pa-md">Notas Fiscais</div>
 
     <!-- Loading inicial -->
     <div v-if="loading && notas.length === 0" class="row justify-center q-py-xl">
@@ -160,7 +152,8 @@ onMounted(async () => {
     <!-- Lista de Notas com Scroll Infinito -->
     <q-infinite-scroll v-else @load="onLoad" :offset="250">
       <q-list separator>
-        <q-item v-for="nota in notas" :key="nota.codnotafiscal" clickable @click="handleViewNota(nota.codnotafiscal)">
+        <q-item hoverable v-for="nota in notas" :key="nota.codnotafiscal" clickable
+          :to="'/notas/' + nota.codnotafiscal">
           <q-item-section>
 
             <!-- Cabeçalho: Modelo, Número, Série, Filial e Status -->

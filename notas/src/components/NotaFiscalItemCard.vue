@@ -40,9 +40,9 @@ onMounted(() => {
 
 <template>
 
-  <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+  <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
     <q-card class="full-height flex column">
-      <q-img :src="imagem" class="bg-grey-2">
+      <q-img :src="imagem" class="bg-grey-2" :ratio="4 / 3">
         <div class="absolute-bottom">
           <div class="text-h6">
             <template v-if="item.ordem">

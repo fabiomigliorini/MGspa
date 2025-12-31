@@ -31,8 +31,14 @@ const referenciadas = computed(() => notaFiscalStore.referenciadas)
 
 const loadingNota = computed(() => notaFiscalStore.loading.nota)
 
-// Paginação client-side dos itens
-const itensPorPagina = ref(20)
+// Paginação client-side dos itens - dinâmica por breakpoint
+const itensPorPagina = computed(() => {
+  if ($q.screen.xs) return 1  // Desktop pequeno: 4 por linha = 3 linhas
+  if ($q.screen.sm) return 3  // Tablet: 3 por linha = 4 linhas
+  if ($q.screen.md) return 4   // Mobile: 1 por linha = 6 linhas
+  // if ($q.screen.lg) return 6   // Mobile: 1 por linha = 6 linhas
+  return 6                     // Desktop grande (lg/xl): 6 por linha = 2 linhas
+})
 const paginaAtualItens = ref(1)
 
 const totalPaginasItens = computed(() => Math.ceil(itens.value.length / itensPorPagina.value))
@@ -576,16 +582,16 @@ onMounted(() => {
 
       <!-- Produtos / Serviços -->
       <div class="row items-center justify-between q-mb-md">
-        <div>
-          <span class="text-h5 q-ml-sm">
+        <div class="q-mb-md">
+          <span class="text-h5 ">
             Itens
           </span>
           <q-badge color="primary" class="q-ml-sm">{{ itens.length }}</q-badge>
         </div>
 
         <!-- Paginação no topo (mobile/desktop) -->
-        <div v-if="totalPaginasItens > 1">
-          <q-pagination v-model="paginaAtualItens" :max="totalPaginasItens" :max-pages="5" direction-links
+        <div class="flex justify-end q-mb-md" v-if="totalPaginasItens > 1">
+          <q-pagination size="md" v-model="paginaAtualItens" :max="totalPaginasItens" :max-pages="5" direction-links
             boundary-links @update:model-value="mudarPaginaItens" />
         </div>
       </div>
@@ -616,8 +622,8 @@ onMounted(() => {
         </div>
 
         <!-- Paginação no rodapé -->
-        <div v-if="totalPaginasItens > 1" class="row justify-center q-mt-md">
-          <q-pagination v-model="paginaAtualItens" :max="totalPaginasItens" :max-pages="7" direction-links
+        <div v-if="totalPaginasItens > 1" class="flex justify-center q-mt-md">
+          <q-pagination size="md" v-model="paginaAtualItens" :max="totalPaginasItens" :max-pages="5" direction-links
             boundary-links @update:model-value="mudarPaginaItens" />
         </div>
 
