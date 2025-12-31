@@ -108,6 +108,14 @@ class NotaFiscalProdutoBarraResource extends JsonResource
             return null;
         }
 
+        // dd($produtoBarra->ProdutoVariacao);
+
+        if ($imagem = $produtoBarra->ProdutoVariacao?->ProdutoImagem?->Imagem?->arquivo) {
+            $imagem = "https://sistema.mgpapelaria.com.br/MGLara/public/imagens/{$imagem}";
+        } else {
+            $imagem = null;
+        };
+
         return [
             'codprodutobarra' => $produtoBarra->codprodutobarra,
             'barras' => $produtoBarra->barras,
@@ -119,6 +127,7 @@ class NotaFiscalProdutoBarraResource extends JsonResource
             'produto' => $produtoBarra->relationLoaded('Produto')
                 ? $produtoBarra->Produto?->only(['codproduto', 'produto'])
                 : null,
+            'imagem' => $imagem,
             // 'unidade' => $produtoBarra->relationLoaded('Unidade')
             //     ? $produtoBarra->Unidade?->only(['codunidade', 'unidade', 'sigla'])
             //     : null,

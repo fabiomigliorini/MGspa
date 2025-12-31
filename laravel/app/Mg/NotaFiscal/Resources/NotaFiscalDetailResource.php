@@ -64,7 +64,10 @@ class NotaFiscalDetailResource extends JsonResource
             'frete' => $this->frete,
             'codtransportador' => $this->codtransportador,
             'transportador' => $this->formatTransportador(),
-            'volume' => $this->volume,
+            'volumes' => $this->volumes,
+            'volumesespecie' => $this->volumesespecie,
+            'volumesmarca' => $this->volumesmarca,
+            'volumesnumero' => $this->volumesnumero,
             'pesobruto' => $this->pesobruto,
             'pesoliquido' => $this->pesoliquido,
             'placa' => $this->placa,
@@ -73,11 +76,14 @@ class NotaFiscalDetailResource extends JsonResource
 
             // NFe
             'nfeautorizacao' => $this->nfeautorizacao,
+            'nfedataautorizacao' => $this->nfedataautorizacao,
             'nfecancelamento' => $this->nfecancelamento,
+            'nfedatacancelamento' => $this->nfedatacancelamento,
             'nfeinutilizacao' => $this->nfeinutilizacao,
-            'nfexml' => $this->nfexml,
-            'nfeprotocolo' => $this->nfeprotocolo,
-            'nferejeicao' => $this->nferejeicao,
+            'nfedatainutilizacao' => $this->nfedatainutilizacao,
+            // 'nfexml' => $this->nfexml,
+            // 'nfeprotocolo' => $this->nfeprotocolo,
+            // 'nferejeicao' => $this->nferejeicao,
 
             // Status
             'status' => $this->getStatus(),
@@ -129,20 +135,26 @@ class NotaFiscalDetailResource extends JsonResource
             return null;
         }
 
-        return $this->Pessoa?->only([
+        $ret = $this->Pessoa?->only([
             'codpessoa',
             'pessoa',
             'fantasia',
             'cnpj',
+            'fisica',
             'ie',
             'endereco',
             'numero',
             'bairro',
             'complemento',
             'cep',
-            'telefone',
+            'telefone1',
             'email',
         ]);
+
+        $ret['cidade'] = $this->Pessoa?->Cidade?->cidade;   
+        $ret['uf'] = $this->Pessoa?->Cidade?->Estado?->sigla;   
+
+        return $ret;
     }
 
     private function formatNaturezaOperacao(): ?array
