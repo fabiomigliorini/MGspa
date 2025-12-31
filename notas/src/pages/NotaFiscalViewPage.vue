@@ -169,11 +169,6 @@ const handleDelete = () => {
   })
 }
 
-const handleEditItem = (item) => {
-  // TODO: Implementar edição de item
-  console.log('Editar item:', item)
-}
-
 const handleDeleteItem = (item) => {
   $q.dialog({
     title: 'Confirmar exclusão',
@@ -904,7 +899,7 @@ onMounted(() => {
       <!-- Cards dos Itens -->
       <div v-else class="row q-col-gutter-md">
         <NotaFiscalItemCard v-for="item in itensPaginados" :key="item.codnotafiscalprodutobarra" :item="item"
-          :nota-bloqueada="notaBloqueada" @edit="handleEditItem" @delete="handleDeleteItem" />
+          :nota-bloqueada="notaBloqueada" @delete="handleDeleteItem" />
       </div>
 
 

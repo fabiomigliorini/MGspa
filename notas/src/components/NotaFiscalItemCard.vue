@@ -26,7 +26,7 @@ const tabRural = computed(() => {
   return props.item.funruralpercentual || props.item.senarpercentual || props.item.fethabkg || props.item.iagrokg
 })
 
-const emit = defineEmits(['edit', 'delete'])
+const emit = defineEmits(['delete'])
 
 const tab = ref('icms')
 
@@ -520,8 +520,22 @@ onMounted(() => {
       <q-separator />
 
       <q-card-actions align="right">
-        <q-btn flat dense round icon="edit" color="primary" size="sm" :disable="notaBloqueada"
-          @click="emit('edit', item)">
+        <q-btn
+          flat
+          dense
+          round
+          icon="edit"
+          color="primary"
+          size="sm"
+          :disable="notaBloqueada"
+          :to="{
+            name: 'nota-fiscal-item-detalhes',
+            params: {
+              codnotafiscal: item.codnotafiscal,
+              codnotafiscalitem: item.codnotafiscalprodutobarra
+            }
+          }"
+        >
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
         <q-btn flat dense round icon="delete" color="negative" size="sm" :disable="notaBloqueada"

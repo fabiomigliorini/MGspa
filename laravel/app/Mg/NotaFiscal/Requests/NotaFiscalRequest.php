@@ -21,8 +21,8 @@ class NotaFiscalRequest extends FormRequest
             'codoperacao' => 'required|integer|exists:tbloperacao,codoperacao',
 
             'emitida' => 'required|boolean',
-            'modelo' => 'required|string|max:10',
-            'serie' => 'required|string|max:10',
+            'modelo' => 'required|integer|in:55,65',
+            'serie' => 'required|integer',
             'numero' => 'nullable|integer',
             'nfechave' => 'nullable|string|max:44',
 

@@ -91,6 +91,42 @@ const routes = [
           permissions: ['Administrador', 'Financeiro'],
         },
       },
+      {
+        path: 'notas/:codnotafiscal/item/:codnotafiscalitem/detalhes',
+        name: 'nota-fiscal-item-detalhes',
+        component: () => import('pages/NotaFiscalItem/NotaFiscalItemDetalhesFormPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/item/:codnotafiscalitem/impostos',
+        name: 'nota-fiscal-item-impostos',
+        component: () => import('pages/NotaFiscalItem/NotaFiscalItemImpostosFormPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/item/:codnotafiscalitem/impostos-rural',
+        name: 'nota-fiscal-item-impostos-rural',
+        component: () => import('pages/NotaFiscalItem/NotaFiscalItemImpostosRuralFormPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
+      {
+        path: 'notas/:codnotafiscal/item/:codnotafiscalitem/impostos-reforma',
+        name: 'nota-fiscal-item-impostos-reforma',
+        component: () => import('pages/NotaFiscalItem/NotaFiscalItemImpostosReformaFormPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro'],
+        },
+      },
     ],
   },
 
