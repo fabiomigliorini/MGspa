@@ -117,7 +117,7 @@ class NotaFiscalController extends Controller
                 'EstadoPlaca',
                 'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
                 'NotaFiscalProdutoBarraS.Cfop',
-                'NotaFiscalProdutoBarraS.NotaFiscalItemTributos.Tributo',
+                'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
                 'NotaFiscalPagamentoS',
                 'NotaFiscalDuplicatasS',
                 'NotaFiscalReferenciadaS',

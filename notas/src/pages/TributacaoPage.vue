@@ -211,7 +211,6 @@ const editarRegra = (regra) => {
     vigenciainicio: isoToFormDate(regra.vigenciainicio),
     vigenciafim: isoToFormDate(regra.vigenciafim),
   }
-  console.log(regraForm)
   regraDialog.value = true
 }
 
@@ -466,18 +465,10 @@ const confirmarExclusaoTributo = () => {
     <template v-if="!store.tributosLoading && store.tributos.length > 0">
       <!-- Tabs dos Tributos -->
       <q-card flat square class="bg-white">
-        <q-tabs
-          v-model="store.activeTab"
-          class="bg-primary text-white shadow-2"
-          align="center"
-          @update:model-value="onTabChange"
-        >
+        <q-tabs v-model="store.activeTab" class="bg-primary text-white shadow-2" align="center"
+          @update:model-value="onTabChange">
           <!-- Tabs dinâmicas dos tributos -->
-          <q-tab
-            v-for="tributo in store.tributos"
-            :key="tributo.codtributo"
-            :name="tributo.codtributo"
-          >
+          <q-tab v-for="tributo in store.tributos" :key="tributo.codtributo" :name="tributo.codtributo">
             <span>{{ tributo.codigo }} {{ tributo.ente }}</span>
             <q-tooltip>{{ tributo.descricao }} - {{ tributo.ente }}</q-tooltip>
           </q-tab>
@@ -502,15 +493,7 @@ const confirmarExclusaoTributo = () => {
                   {{ store.currentTributo?.ente }}
                 </div>
               </div>
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                icon="edit"
-                color="grey-7"
-                @click="editarTributo(store.currentTributo)"
-              >
+              <q-btn flat dense round size="sm" icon="edit" color="grey-7" @click="editarTributo(store.currentTributo)">
                 <q-tooltip>Editar tributo</q-tooltip>
               </q-btn>
             </div>
@@ -520,17 +503,8 @@ const confirmarExclusaoTributo = () => {
 
           <!-- Tabela com Scroll Infinito -->
           <q-infinite-scroll @load="onLoad" :offset="250">
-            <q-table
-              :rows="store.currentRegras"
-              :columns="columns"
-              row-key="codtributacaoregra"
-              flat
-              hide-pagination
-              :loading="store.currentPagination?.loading"
-              virtual-scroll
-              :rows-per-page-options="[0]"
-              wrap-cells
-            >
+            <q-table :rows="store.currentRegras" :columns="columns" row-key="codtributacaoregra" flat hide-pagination
+              :loading="store.currentPagination?.loading" virtual-scroll :rows-per-page-options="[0]" wrap-cells>
               <!-- Coluna Incide Sobre (consolidada) -->
               <template v-slot:body-cell-incide_sobre="props">
                 <q-td :props="props">
@@ -588,16 +562,14 @@ const confirmarExclusaoTributo = () => {
                     </div>
 
                     <!-- Regra Genérica (nenhum critério específico) -->
-                    <div
-                      v-if="
-                        !props.row.codnaturezaoperacao &&
-                        !props.row.codestadodestino &&
-                        !props.row.codcidadedestino &&
-                        !props.row.codtipoproduto &&
-                        !props.row.tipocliente &&
-                        !props.row.ncm
-                      "
-                    >
+                    <div v-if="
+                      !props.row.codnaturezaoperacao &&
+                      !props.row.codestadodestino &&
+                      !props.row.codcidadedestino &&
+                      !props.row.codtipoproduto &&
+                      !props.row.tipocliente &&
+                      !props.row.ncm
+                    ">
                       <q-badge color="grey-5" outline dense>REGRA GENÉRICA</q-badge>
                       <div class="text-caption text-grey-6">Aplica-se a todos os casos</div>
                     </div>
@@ -615,9 +587,7 @@ const confirmarExclusaoTributo = () => {
                     <div v-if="props.row.cclasstrib" class="text-mono text-caption text-grey-7">
                       {{ props.row.cclasstrib }}
                     </div>
-                    <span v-if="!props.row.cst && !props.row.cclasstrib" class="text-grey-5"
-                      >-</span
-                    >
+                    <span v-if="!props.row.cst && !props.row.cclasstrib" class="text-grey-5">-</span>
                   </div>
                 </q-td>
               </template>
@@ -629,16 +599,11 @@ const confirmarExclusaoTributo = () => {
                     <div v-if="props.row.aliquota !== null" class="text-weight-medium text-mono">
                       {{ formatPercent(props.row.aliquota) }}
                     </div>
-                    <div
-                      v-if="props.row.basepercentual !== null && props.row.basepercentual !== 100"
-                      class="text-caption text-grey-7 text-mono"
-                    >
+                    <div v-if="props.row.basepercentual !== null && props.row.basepercentual !== 100"
+                      class="text-caption text-grey-7 text-mono">
                       Base: {{ formatPercent(props.row.basepercentual) }}
                     </div>
-                    <span
-                      v-if="props.row.aliquota === null && props.row.basepercentual === null"
-                      class="text-grey-5"
-                    >
+                    <span v-if="props.row.aliquota === null && props.row.basepercentual === null" class="text-grey-5">
                       -
                     </span>
                   </div>
@@ -649,11 +614,8 @@ const confirmarExclusaoTributo = () => {
               <template v-slot:body-cell-credito_beneficio="props">
                 <q-td :props="props">
                   <div class="column q-gutter-xs items-center">
-                    <q-icon
-                      :name="props.row.geracredito ? 'check_circle' : 'cancel'"
-                      :color="props.row.geracredito ? 'positive' : 'grey-5'"
-                      size="sm"
-                    />
+                    <q-icon :name="props.row.geracredito ? 'check_circle' : 'cancel'"
+                      :color="props.row.geracredito ? 'positive' : 'grey-5'" size="sm" />
                     <q-badge v-if="props.row.beneficiocodigo" color="orange" outline dense>
                       {{ props.row.beneficiocodigo }}
                     </q-badge>
@@ -680,37 +642,15 @@ const confirmarExclusaoTributo = () => {
               <template v-slot:body-cell-actions="props">
                 <q-td :props="props">
                   <div class="row no-wrap q-gutter-xs">
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="edit"
-                      color="primary"
-                      size="sm"
-                      @click="editarRegra(props.row)"
-                    >
+                    <q-btn flat dense round icon="edit" color="primary" size="sm" @click="editarRegra(props.row)">
                       <q-tooltip>Editar</q-tooltip>
                     </q-btn>
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="content_copy"
-                      color="blue-grey"
-                      size="sm"
-                      @click="duplicarRegra(props.row)"
-                    >
+                    <q-btn flat dense round icon="content_copy" color="blue-grey" size="sm"
+                      @click="duplicarRegra(props.row)">
                       <q-tooltip>Duplicar</q-tooltip>
                     </q-btn>
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="delete"
-                      color="negative"
-                      size="sm"
-                      @click="confirmarExclusao(props.row)"
-                    >
+                    <q-btn flat dense round icon="delete" color="negative" size="sm"
+                      @click="confirmarExclusao(props.row)">
                       <q-tooltip>Excluir</q-tooltip>
                     </q-btn>
                   </div>
@@ -730,19 +670,15 @@ const confirmarExclusaoTributo = () => {
             </div>
 
             <!-- Indicador de fim dos dados -->
-            <div
-              v-else-if="!store.currentPagination?.hasMore && store.currentRegras.length > 0"
-              class="q-pa-md text-center text-grey-6"
-            >
+            <div v-else-if="!store.currentPagination?.hasMore && store.currentRegras.length > 0"
+              class="q-pa-md text-center text-grey-6">
               <q-icon name="check_circle" size="sm" class="q-mr-xs" />
               Todos os registros carregados
             </div>
 
             <!-- Sem dados -->
-            <div
-              v-else-if="!store.currentPagination?.loading && store.currentRegras.length === 0"
-              class="q-pa-xl text-center"
-            >
+            <div v-else-if="!store.currentPagination?.loading && store.currentRegras.length === 0"
+              class="q-pa-xl text-center">
               <q-icon name="inbox" size="64px" color="grey-5" />
               <div class="text-h6 text-grey-6 q-mt-md">Nenhuma regra cadastrada</div>
               <div class="text-caption text-grey-6">Clique em "Nova Regra" para começar</div>
@@ -753,22 +689,14 @@ const confirmarExclusaoTributo = () => {
 
       <!-- FAB para Nova Regra -->
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn
-          fab
-          icon="add"
-          color="primary"
-          @click="novaRegra"
-        >
+        <q-btn fab icon="add" color="primary" @click="novaRegra">
           <q-tooltip>Nova Regra</q-tooltip>
         </q-btn>
       </q-page-sticky>
     </template>
 
     <!-- Estado vazio (sem tributos) -->
-    <div
-      v-else-if="!store.tributosLoading && store.tributos.length === 0"
-      class="q-pa-xl text-center"
-    >
+    <div v-else-if="!store.tributosLoading && store.tributos.length === 0" class="q-pa-xl text-center">
       <q-icon name="warning" size="64px" color="grey-5" />
       <div class="text-h6 text-grey-6 q-mt-md">Nenhum tributo configurado</div>
       <div class="text-caption text-grey-6 q-mb-md">Configure os tributos para começar</div>
@@ -785,48 +713,20 @@ const confirmarExclusaoTributo = () => {
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-input
-            v-model="tributoForm.codigo"
-            label="Sigla *"
-            outlined
-            maxlength="10"
-            counter
-            :rules="[(val) => !!val || 'Campo obrigatório']"
-          />
-          <q-input
-            v-model="tributoForm.descricao"
-            label="Descrição *"
-            outlined
-            class="q-mt-md"
-            :rules="[(val) => !!val || 'Campo obrigatório']"
-          />
-          <q-select
-            v-model="tributoForm.ente"
-            label="Ente *"
-            :options="['FEDERAL', 'ESTADUAL', 'MUNICIPAL']"
-            outlined
-            class="q-mt-md"
-            :rules="[(val) => !!val || 'Campo obrigatório']"
-          />
+          <q-input v-model="tributoForm.codigo" label="Sigla *" outlined maxlength="10" counter
+            :rules="[(val) => !!val || 'Campo obrigatório']" />
+          <q-input v-model="tributoForm.descricao" label="Descrição *" outlined class="q-mt-md"
+            :rules="[(val) => !!val || 'Campo obrigatório']" />
+          <q-select v-model="tributoForm.ente" label="Ente *" :options="['FEDERAL', 'ESTADUAL', 'MUNICIPAL']" outlined
+            class="q-mt-md" :rules="[(val) => !!val || 'Campo obrigatório']" />
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            v-if="tributoDialogMode === 'edit'"
-            flat
-            label="Excluir"
-            color="negative"
-            @click="confirmarExclusaoTributo"
-          />
+          <q-btn v-if="tributoDialogMode === 'edit'" flat label="Excluir" color="negative"
+            @click="confirmarExclusaoTributo" />
           <q-space />
           <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn
-            unelevated
-            label="Salvar"
-            color="primary"
-            @click="salvarTributo"
-            :loading="store.isLoading"
-          />
+          <q-btn unelevated label="Salvar" color="primary" @click="salvarTributo" :loading="store.isLoading" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -852,59 +752,28 @@ const confirmarExclusaoTributo = () => {
           </div>
           <div class="row q-col-gutter-md q-mb-sm">
             <!-- 1. NATUREZA DE OPERAÇÃO (maior prioridade) -->
-            <SelectNaturezaOperacao
-              v-model="regraForm.codnaturezaoperacao"
-              label="1. Natureza de Operação"
-              custom-class="col-5"
-            />
+            <SelectNaturezaOperacao v-model="regraForm.codnaturezaoperacao" label="1. Natureza de Operação"
+              custom-class="col-5" />
 
             <!-- 2. ESTADO DESTINO -->
-            <SelectEstado
-              v-model="regraForm.codestadodestino"
-              label="2. Estado Destino"
-              custom-class="col-3"
-              @clear="regraForm.codcidadedestino = null"
-            />
+            <SelectEstado v-model="regraForm.codestadodestino" label="2. Estado Destino" custom-class="col-3"
+              @clear="regraForm.codcidadedestino = null" />
 
             <!-- 3. CIDADE DESTINO -->
-            <SelectCidade
-              v-model="regraForm.codcidadedestino"
-              label="3. Cidade Destino"
-              custom-class="col-4"
-            />
+            <SelectCidade v-model="regraForm.codcidadedestino" label="3. Cidade Destino" custom-class="col-4" />
 
             <!-- 4. TIPO DE PRODUTO -->
-            <SelectTipoProduto
-              v-model="regraForm.codtipoproduto"
-              label="4. Tipo de Produto"
-              custom-class="col-5"
-            />
+            <SelectTipoProduto v-model="regraForm.codtipoproduto" label="4. Tipo de Produto" custom-class="col-5" />
 
             <!-- 5. TIPO DE CLIENTE -->
-            <SelectTipoCliente
-              v-model="regraForm.tipocliente"
-              label="5. Tipo de Cliente"
-              custom-class="col-3"
-            />
+            <SelectTipoCliente v-model="regraForm.tipocliente" label="5. Tipo de Cliente" custom-class="col-3" />
 
             <!-- 6. NCM (menor prioridade, considera tamanho) -->
-            <q-input
-              v-model="regraForm.ncm"
-              label="6. NCM"
-              outlined
-              clearable
-              placeholder="12345678"
-              maxlength="8"
-              mask="########"
-              :rules="[
+            <q-input v-model="regraForm.ncm" label="6. NCM" outlined clearable placeholder="12345678" maxlength="8"
+              mask="########" :rules="[
                 (val) =>
                   !val || (val.length >= 2 && val.length <= 8) || 'Deve ter entre 2 e 8 dígitos',
-              ]"
-              lazy-rules
-              bottom-slots
-              class="col-4"
-              input-class="text-center"
-            />
+              ]" lazy-rules bottom-slots class="col-4" input-class="text-center" />
           </div>
 
           <div class="text-caption text-grey-7 q-mb-sm q-mt-sm">
@@ -912,70 +781,25 @@ const confirmarExclusaoTributo = () => {
           </div>
           <div class="row q-col-gutter-md q-mb-sm">
             <!-- CST -->
-            <q-input
-              v-model="regraForm.cst"
-              label="CST *"
-              outlined
-              maxlength="3"
-              placeholder="000"
-              mask="###"
-              :rules="[
-                (val) => !!val || 'Campo obrigatório',
-                (val) => val?.length === 3 || 'Deve ter 3 dígitos',
-              ]"
-              lazy-rules
-              bottom-slots
-              class="col-2"
-              input-class="text-center"
-            />
+            <q-input v-model="regraForm.cst" label="CST *" outlined maxlength="3" placeholder="000" mask="###" :rules="[
+              (val) => !!val || 'Campo obrigatório',
+              (val) => val?.length === 3 || 'Deve ter 3 dígitos',
+            ]" lazy-rules bottom-slots class="col-2" input-class="text-center" />
 
             <!-- Classificação Tributária -->
-            <q-input
-              v-model="regraForm.cclasstrib"
-              label="Classificação Tributária *"
-              outlined
-              maxlength="6"
-              placeholder="000000"
-              mask="######"
-              :rules="[
+            <q-input v-model="regraForm.cclasstrib" label="Classificação Tributária *" outlined maxlength="6"
+              placeholder="000000" mask="######" :rules="[
                 (val) => !!val || 'Campo obrigatório',
                 (val) => val?.length === 6 || 'Deve ter 6 dígitos',
-              ]"
-              lazy-rules
-              bottom-slots
-              class="col-2"
-              input-class="text-center"
-            />
+              ]" lazy-rules bottom-slots class="col-2" input-class="text-center" />
 
             <!-- Base Percentual -->
-            <q-input
-              v-model.number="regraForm.basepercentual"
-              label="Base (%)"
-              outlined
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              placeholder="Ex: 100%"
-              bottom-slots
-              class="col-2"
-              input-class="text-right"
-            />
+            <q-input v-model.number="regraForm.basepercentual" label="Base (%)" outlined type="number" min="0" max="100"
+              step="0.01" placeholder="Ex: 100%" bottom-slots class="col-2" input-class="text-right" />
 
             <!-- Alíquota -->
-            <q-input
-              v-model.number="regraForm.aliquota"
-              label="Alíquota (%)"
-              outlined
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              placeholder="Ex: 8.5"
-              bottom-slots
-              class="col-2"
-              input-class="text-right"
-            />
+            <q-input v-model.number="regraForm.aliquota" label="Alíquota (%)" outlined type="number" min="0" max="100"
+              step="0.01" placeholder="Ex: 8.5" bottom-slots class="col-2" input-class="text-right" />
 
             <!-- SE GERA CREDITO -->
             <div class="col-4" style="height: 56px; display: flex; align-items: center">
@@ -983,28 +807,12 @@ const confirmarExclusaoTributo = () => {
             </div>
 
             <!-- Benefício -->
-            <q-input
-              v-model="regraForm.beneficiocodigo"
-              label="Benefício"
-              outlined
-              clearable
-              placeholder="Ex: BE001"
-              bottom-slots
-              class="col-4"
-            />
+            <q-input v-model="regraForm.beneficiocodigo" label="Benefício" outlined clearable placeholder="Ex: BE001"
+              bottom-slots class="col-4" />
 
             <!-- Vigência Início -->
-            <q-input
-              v-model="regraForm.vigenciainicio"
-              label="Vigente do dia"
-              outlined
-              clearable
-              placeholder="DD/MM/AAAA"
-              mask="##/##/####"
-              bottom-slots
-              class="col-4"
-              input-class="text-center"
-            >
+            <q-input v-model="regraForm.vigenciainicio" label="Vigente do dia" outlined clearable
+              placeholder="DD/MM/AAAA" mask="##/##/####" bottom-slots class="col-4" input-class="text-center">
               <template v-slot:append>
                 <q-icon name="event" class="cursor-pointer">
                   <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -1019,17 +827,8 @@ const confirmarExclusaoTributo = () => {
             </q-input>
 
             <!-- Vigência Fim -->
-            <q-input
-              v-model="regraForm.vigenciafim"
-              label="Até o dia"
-              outlined
-              clearable
-              placeholder="DD/MM/AAAA"
-              mask="##/##/####"
-              bottom-slots
-              class="col-4"
-              input-class="text-center"
-            >
+            <q-input v-model="regraForm.vigenciafim" label="Até o dia" outlined clearable placeholder="DD/MM/AAAA"
+              mask="##/##/####" bottom-slots class="col-4" input-class="text-center">
               <template v-slot:append>
                 <q-icon name="event" class="cursor-pointer">
                   <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -1044,30 +843,15 @@ const confirmarExclusaoTributo = () => {
             </q-input>
 
             <!-- Observações -->
-            <q-input
-              v-model="regraForm.observacoes"
-              label="Observações"
-              outlined
-              type="textarea"
-              rows="2"
-              clearable
-              placeholder="Observações sobre esta regra"
-              bottom-slots
-              class="col-12"
-            />
+            <q-input v-model="regraForm.observacoes" label="Observações" outlined type="textarea" rows="2" clearable
+              placeholder="Observações sobre esta regra" bottom-slots class="col-12" />
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn
-            unelevated
-            label="Salvar"
-            color="primary"
-            icon="save"
-            @click="salvarRegra"
-            :loading="store.isLoading"
-          />
+          <q-btn unelevated label="Salvar" color="primary" icon="save" @click="salvarRegra"
+            :loading="store.isLoading" />
         </q-card-actions>
       </q-card>
     </q-dialog>

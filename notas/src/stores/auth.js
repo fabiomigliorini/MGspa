@@ -71,8 +71,6 @@ export const useAuthStore = defineStore('auth', () => {
 
       // Faz logout no backend (SSO)
       if (tokenToUse) {
-        console.log('post')
-        console.log(`${process.env.API_AUTH_URL}/api/logout`)
         await api.post(
           `${process.env.API_AUTH_URL}/api/logout`, // <-- USA A VARIÁVEL
           {},

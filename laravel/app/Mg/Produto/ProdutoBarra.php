@@ -143,6 +143,12 @@ class ProdutoBarra extends MgModel
         return trim($descr);
     }
 
+    // Atributo unidade
+    public function getUnidadeAttribute()
+    {
+        return $this->UnidadeMedida?->sigla;
+    }
+
     // Unidade Medida
     public function UnidadeMedida()
     {

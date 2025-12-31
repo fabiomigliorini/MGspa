@@ -73,7 +73,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     },
 
     // Acessa os itens da nota atual
-    itens: (state) => state.currentNota?.notaFiscalProdutoBarras || [],
+    itens: (state) => state.currentNota?.itens || [],
 
     // Acessa os pagamentos da nota atual
     pagamentos: (state) => state.currentNota?.pagamentos || [],
@@ -88,11 +88,11 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     cartasCorrecao: (state) => state.currentNota?.cartasCorrecao || [],
 
     // Total de itens
-    totalItens: (state) => state.currentNota?.notaFiscalProdutoBarras?.length || 0,
+    totalItens: (state) => state.currentNota?.itens?.length || 0,
 
     // Valor total dos itens
     valorTotalItens: (state) => {
-      const itens = state.currentNota?.notaFiscalProdutoBarras || []
+      const itens = state.currentNota?.itens || []
       return itens.reduce((total, item) => {
         return total + (parseFloat(item.valortotal) || 0)
       }, 0)
@@ -307,7 +307,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalItemService.list(codnotafiscal)
         // Atualiza os itens no currentNota
         if (this.currentNota) {
-          this.currentNota.notaFiscalProdutoBarras = response.data
+          this.currentNota.itens = response.data
         }
         return response.data
       } catch (error) {
@@ -337,10 +337,10 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalItemService.create(codnotafiscal, data)
         // Adiciona o item no currentNota
         if (this.currentNota) {
-          if (!this.currentNota.notaFiscalProdutoBarras) {
-            this.currentNota.notaFiscalProdutoBarras = []
+          if (!this.currentNota.itens) {
+            this.currentNota.itens = []
           }
-          this.currentNota.notaFiscalProdutoBarras.push(response.data)
+          this.currentNota.itens.push(response.data)
         }
         return response.data
       } catch (error) {
@@ -361,12 +361,12 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         )
 
         // Atualiza no currentNota
-        if (this.currentNota?.notaFiscalProdutoBarras) {
-          const index = this.currentNota.notaFiscalProdutoBarras.findIndex(
+        if (this.currentNota?.itens) {
+          const index = this.currentNota.itens.findIndex(
             (i) => i.codnotafiscalprodutobarra === codnotafiscalprodutobarra,
           )
           if (index !== -1) {
-            this.currentNota.notaFiscalProdutoBarras[index] = response.data
+            this.currentNota.itens[index] = response.data
           }
         }
 
@@ -385,11 +385,10 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         await notaFiscalItemService.delete(codnotafiscal, codnotafiscalprodutobarra)
 
         // Remove do currentNota
-        if (this.currentNota?.notaFiscalProdutoBarras) {
-          this.currentNota.notaFiscalProdutoBarras =
-            this.currentNota.notaFiscalProdutoBarras.filter(
-              (i) => i.codnotafiscalprodutobarra !== codnotafiscalprodutobarra,
-            )
+        if (this.currentNota?.itens) {
+          this.currentNota.itens = this.currentNota.itens.filter(
+            (i) => i.codnotafiscalprodutobarra !== codnotafiscalprodutobarra,
+          )
         }
       } catch (error) {
         console.error('Erro ao excluir item:', error)

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Dec/2025 18:43:45
+ * Date: 31/Dec/2025 09:01:20
  */
 
 namespace Mg\NotaFiscal;

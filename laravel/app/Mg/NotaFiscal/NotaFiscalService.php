@@ -12,6 +12,7 @@ use Mg\Negocio\NegocioProdutoBarraService;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacaoService;
 use Mg\Negocio\NegocioService;
+use Mg\Tributacao\TributacaoService;
 
 // use Illuminate\Support\Facades\Auth;
 
@@ -335,6 +336,7 @@ class NotaFiscalService
 
             // calcula tributacao
             NotaFiscalProdutoBarraService::calcularTributacao($notaItem);
+            TributacaoService::recalcularTributosItem($notaItem);  // Reforma Tributaria
 
             // salva o item da nf
             $notaItem->save();
@@ -423,5 +425,14 @@ class NotaFiscalService
         ";
         $nfs = NotaFiscal::fromQuery($sql, ['codnegocio' => $codnegocio]);
         return $nfs;
+    }
+
+    public static function recalcularTributacao(NotaFiscal $nota): void
+    {
+        foreach ($nota->NotaFiscalProdutoBarraS as $nfpb) {
+            NotaFiscalProdutoBarraService::calcularTributacao($nfpb);
+            TributacaoService::recalcularTributosItem($nfpb);  // Reforma Tributaria
+            $nfpb->save();
+        }
     }
 }

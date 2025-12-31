@@ -88,7 +88,7 @@ class NotaFiscalProdutoBarraResource extends JsonResource
 
             // Relacionamentos
             'tributos' => $this->whenLoaded('NotaFiscalItemTributoS', function () {
-                return $this->NotaFiscalItemTributoS;
+                return NotaFiscalItemTributoResource::collection($this->NotaFiscalItemTributoS);
             }),
 
             // Timestamps
@@ -120,17 +120,14 @@ class NotaFiscalProdutoBarraResource extends JsonResource
             'codprodutobarra' => $produtoBarra->codprodutobarra,
             'barras' => $produtoBarra->barras,
             'descricao' => $produtoBarra->descricao,
+            'ncm' => $produtoBarra->ProdutoVariacao->Produto?->Ncm?->ncm,
+            'cest' => $produtoBarra->ProdutoVariacao->Produto?->Cest?->cest,
             'descricaoadicional' => $produtoBarra->descricaoadicional,
             'quantidade' => $produtoBarra->quantidade,
             'preco' => $produtoBarra->preco,
             'referencia' => $produtoBarra->referencia,
-            'produto' => $produtoBarra->relationLoaded('Produto')
-                ? $produtoBarra->Produto?->only(['codproduto', 'produto'])
-                : null,
             'imagem' => $imagem,
-            // 'unidade' => $produtoBarra->relationLoaded('Unidade')
-            //     ? $produtoBarra->Unidade?->only(['codunidade', 'unidade', 'sigla'])
-            //     : null,
+            'unidade' => $produtoBarra->unidade,
         ];
     }
 

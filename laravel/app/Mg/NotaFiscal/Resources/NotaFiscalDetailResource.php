@@ -151,8 +151,8 @@ class NotaFiscalDetailResource extends JsonResource
             'email',
         ]);
 
-        $ret['cidade'] = $this->Pessoa?->Cidade?->cidade;   
-        $ret['uf'] = $this->Pessoa?->Cidade?->Estado?->sigla;   
+        $ret['cidade'] = $this->Pessoa?->Cidade?->cidade;
+        $ret['uf'] = $this->Pessoa?->Cidade?->Estado?->sigla;
 
         return $ret;
     }
