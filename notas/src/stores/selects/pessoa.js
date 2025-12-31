@@ -5,6 +5,8 @@ export const useSelectPessoaStore = defineStore('selectPessoa', {
   state: () => ({
     // Cache de pessoa por busca
     pessoaCache: {},
+    // Cache acumulativo de pessoas já carregadas por código
+    pessoasById: {},
   }),
 
   getters: {},
@@ -49,8 +51,14 @@ export const useSelectPessoaStore = defineStore('selectPessoa', {
           grupoeconomico: item.grupoeconomico,
         }))
 
-        // Salva no cache
+        // Salva no cache de busca
         this.pessoaCache[cacheKey] = pessoas
+
+        // Adiciona cada pessoa ao cache por ID
+        pessoas.forEach((pessoa) => {
+          this.pessoasById[pessoa.value] = pessoa
+        })
+
         return pessoas
       } catch (error) {
         console.error('Erro ao buscar pessoa:', error)
@@ -62,13 +70,20 @@ export const useSelectPessoaStore = defineStore('selectPessoa', {
      * Busca uma pessoa específica por código
      */
     async fetch(codpessoa) {
+      // Verifica se já está no cache
+      if (this.pessoasById[codpessoa]) {
+        console.log('📦 Usando cache - Pessoa:', codpessoa)
+        return this.pessoasById[codpessoa]
+      }
+
+      console.log('🌐 Buscando da API - Pessoa:', codpessoa)
       try {
         const response = await api.get('v1/select/pessoa', {
           params: { codpessoa },
         })
         if (response.data.length > 0) {
           const item = response.data[0]
-          return {
+          const pessoa = {
             label: item.fantasia || item.pessoa,
             sublabel: item.pessoa !== item.fantasia ? item.pessoa : null,
             value: item.codpessoa,
@@ -81,6 +96,10 @@ export const useSelectPessoaStore = defineStore('selectPessoa', {
             codgrupoeconomico: item.codgrupoeconomico,
             grupoeconomico: item.grupoeconomico,
           }
+
+          // Adiciona ao cache
+          this.pessoasById[codpessoa] = pessoa
+          return pessoa
         }
         return null
       } catch (error) {
@@ -94,6 +113,7 @@ export const useSelectPessoaStore = defineStore('selectPessoa', {
      */
     clear() {
       this.pessoaCache = {}
+      this.pessoasById = {}
     },
   },
 })

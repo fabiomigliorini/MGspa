@@ -5,6 +5,8 @@ export const useSelectNaturezaOperacaoStore = defineStore('selectNaturezaOperaca
   state: () => ({
     // Cache de natureza de operação por busca
     naturezaOperacaoCache: {},
+    // Cache acumulativo de naturezas já carregadas por código
+    naturezasById: {},
   }),
 
   getters: {},
@@ -34,8 +36,14 @@ export const useSelectNaturezaOperacaoStore = defineStore('selectNaturezaOperaca
           operacao: item.operacao,
         }))
 
-        // Salva no cache
+        // Salva no cache de busca
         this.naturezaOperacaoCache[cacheKey] = naturezas
+
+        // Adiciona cada natureza ao cache por ID
+        naturezas.forEach((natureza) => {
+          this.naturezasById[natureza.value] = natureza
+        })
+
         return naturezas
       } catch (error) {
         console.error('Erro ao buscar natureza de operação:', error)
@@ -47,17 +55,28 @@ export const useSelectNaturezaOperacaoStore = defineStore('selectNaturezaOperaca
      * Busca uma natureza de operação específica por código
      */
     async fetch(codnaturezaoperacao) {
+      // Verifica se já está no cache
+      if (this.naturezasById[codnaturezaoperacao]) {
+        console.log('📦 Usando cache - Natureza de Operação:', codnaturezaoperacao)
+        return this.naturezasById[codnaturezaoperacao]
+      }
+
+      console.log('🌐 Buscando da API - Natureza de Operação:', codnaturezaoperacao)
       try {
         const response = await api.get('v1/select/natureza-operacao', {
           params: { codnaturezaoperacao },
         })
         if (response.data.length > 0) {
           const item = response.data[0]
-          return {
+          const natureza = {
             label: item.naturezaoperacao,
             value: item.codnaturezaoperacao,
             operacao: item.operacao,
           }
+
+          // Adiciona ao cache
+          this.naturezasById[codnaturezaoperacao] = natureza
+          return natureza
         }
         return null
       } catch (error) {
@@ -71,6 +90,7 @@ export const useSelectNaturezaOperacaoStore = defineStore('selectNaturezaOperaca
      */
     clear() {
       this.naturezaOperacaoCache = {}
+      this.naturezasById = {}
     },
   },
 })

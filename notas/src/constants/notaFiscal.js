@@ -128,3 +128,64 @@ export const getFreteLabel = (frete) => {
   }
   return labels[frete] || '-'
 }
+
+/**
+ * Tipos de Pagamento da NFe
+ */
+export const TIPO_PAGAMENTO_OPTIONS = [
+  { label: 'Dinheiro', value: 1 },
+  { label: 'Cheque', value: 2 },
+  { label: 'Cartão de Crédito', value: 3 },
+  { label: 'Cartão de Débito', value: 4 },
+  { label: 'Crédito Loja', value: 5 },
+  { label: 'Vale Alimentação', value: 10 },
+  { label: 'Vale Refeição', value: 11 },
+  { label: 'Vale Presente', value: 12 },
+  { label: 'Vale Combustível', value: 13 },
+  { label: 'Boleto Bancário', value: 15 },
+  { label: 'Depósito Bancário', value: 16 },
+  { label: 'PIX', value: 17 },
+  { label: 'Transferência/Carteira Digital', value: 18 },
+  { label: 'Programa de Fidelidade', value: 19 },
+  { label: 'Sem Pagamento', value: 90 },
+  { label: 'Outros', value: 99 },
+]
+
+/**
+ * Bandeiras de Cartão
+ */
+export const BANDEIRA_CARTAO_OPTIONS = [
+  { label: 'Visa', value: 1 },
+  { label: 'Mastercard', value: 2 },
+  { label: 'American Express', value: 3 },
+  { label: 'Sorocred', value: 4 },
+  { label: 'Diners Club', value: 5 },
+  { label: 'Elo', value: 6 },
+  { label: 'Hipercard', value: 7 },
+  { label: 'Aura', value: 8 },
+  { label: 'Cabal', value: 9 },
+  { label: 'Outros', value: 99 },
+]
+
+/**
+ * Retorna label do tipo de pagamento
+ */
+export const getTipoPagamentoLabel = (tipo) => {
+  const option = TIPO_PAGAMENTO_OPTIONS.find(opt => opt.value === tipo)
+  return option ? option.label : `Tipo ${tipo}`
+}
+
+/**
+ * Retorna label da bandeira do cartão
+ */
+export const getBandeiraLabel = (bandeira) => {
+  const option = BANDEIRA_CARTAO_OPTIONS.find(opt => opt.value === bandeira)
+  return option ? option.label : `Bandeira ${bandeira}`
+}
+
+/**
+ * Verifica se o tipo de pagamento requer bandeira de cartão
+ */
+export const tipoPagamentoRequerBandeira = (tipo) => {
+  return [3, 4].includes(tipo) // Crédito ou Débito
+}

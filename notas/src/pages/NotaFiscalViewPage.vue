@@ -22,6 +22,10 @@ import {
   formatProtocolo,
 } from 'src/utils/formatters'
 import NotaFiscalItemCard from '../components/NotaFiscalItemCard.vue'
+import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamentoDialog.vue'
+import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicataDialog.vue'
+import NotaFiscalReferenciadaDialog from '../components/dialogs/NotaFiscalReferenciadaDialog.vue'
+import NotaFiscalCartaCorrecaoDialog from '../components/dialogs/NotaFiscalCartaCorrecaoDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -42,9 +46,36 @@ const itens = computed(() => {
     return (a.codnotafiscalprodutobarra || 0) - (b.codnotafiscalprodutobarra || 0)
   })
 })
-const pagamentos = computed(() => notaFiscalStore.pagamentos)
-const duplicatas = computed(() => notaFiscalStore.duplicatas)
-const referenciadas = computed(() => notaFiscalStore.referenciadas)
+const pagamentos = computed(() => {
+  const pagamentosData = notaFiscalStore.pagamentos
+  // Ordena por codnotafiscalformapagamento
+  return [...pagamentosData].sort((a, b) => {
+    return (a.codnotafiscalpagamento || 0) - (b.codnotafiscalpagamento || 0)
+  })
+})
+const duplicatas = computed(() => {
+  const duplicatasData = notaFiscalStore.duplicatas
+  // Ordena por vencimento e depois por codnotafiscalduplicatas
+  return [...duplicatasData].sort((a, b) => {
+    // Primeiro compara por vencimento
+    const vencimentoA = a.vencimento ? new Date(a.vencimento).getTime() : 0
+    const vencimentoB = b.vencimento ? new Date(b.vencimento).getTime() : 0
+    if (vencimentoA !== vencimentoB) {
+      return vencimentoA - vencimentoB
+    }
+    // Se vencimento for igual, compara por codnotafiscalduplicatas
+    return (a.codnotafiscalduplicatas || 0) - (b.codnotafiscalduplicatas || 0)
+  })
+})
+const referenciadas = computed(() => {
+  const referenciadasData = notaFiscalStore.referenciadas
+  // Ordena por nfechave
+  return [...referenciadasData].sort((a, b) => {
+    const chaveA = a.nfechave || ''
+    const chaveB = b.nfechave || ''
+    return chaveA.localeCompare(chaveB)
+  })
+})
 const cartasCorrecao = computed(() => {
   const cartas = notaFiscalStore.cartasCorrecao || []
   // Ordena por sequência decrescente (maior primeiro)
@@ -96,7 +127,7 @@ const loadData = async () => {
   try {
     // O backend já retorna todos os dados relacionados (itens, pagamentos, duplicatas, referenciadas)
     // em uma única requisição, então não precisamos fazer chamadas separadas
-    // A verificação de cache é feita dentro do fetchNota
+    // A verificação de cache é feita dentro do fetchNota (usa cache se o codnotafiscal for o mesmo)
     await notaFiscalStore.fetchNota(route.params.codnotafiscal)
   } catch (error) {
     $q.notify({
@@ -167,6 +198,287 @@ const handleDeleteItem = (item) => {
       $q.notify({
         type: 'negative',
         message: 'Erro ao excluir item',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// ==================== FORMAS DE PAGAMENTO ====================
+const pagamentoDialog = ref(false)
+const pagamentoSelecionado = ref(null)
+
+const novoPagamento = () => {
+  pagamentoSelecionado.value = null
+  pagamentoDialog.value = true
+}
+
+const editarPagamento = (pagamento) => {
+  pagamentoSelecionado.value = pagamento
+  pagamentoDialog.value = true
+}
+
+const salvarPagamento = async (data) => {
+  try {
+    if (data.codnotafiscalpagamento) {
+      await notaFiscalStore.updatePagamento(
+        route.params.codnotafiscal,
+        data.codnotafiscalpagamento,
+        data
+      )
+      $q.notify({
+        type: 'positive',
+        message: 'Pagamento atualizado com sucesso',
+      })
+    } else {
+      await notaFiscalStore.createPagamento(route.params.codnotafiscal, data)
+      $q.notify({
+        type: 'positive',
+        message: 'Pagamento adicionado com sucesso',
+      })
+    }
+    pagamentoDialog.value = false
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao salvar pagamento',
+      caption: error.response?.data?.message || error.message,
+    })
+  }
+}
+
+const excluirPagamento = (pagamento) => {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: 'Deseja realmente excluir esta forma de pagamento?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Excluir', color: 'negative' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.deletePagamento(
+        route.params.codnotafiscal,
+        pagamento.codnotafiscalpagamento
+      )
+      $q.notify({
+        type: 'positive',
+        message: 'Pagamento excluído com sucesso',
+      })
+      pagamentoDialog.value = false
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao excluir pagamento',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// ==================== DUPLICATAS ====================
+const duplicataDialog = ref(false)
+const duplicataSelecionada = ref(null)
+
+const novaDuplicata = () => {
+  duplicataSelecionada.value = null
+  duplicataDialog.value = true
+}
+
+const editarDuplicata = (duplicata) => {
+  duplicataSelecionada.value = duplicata
+  duplicataDialog.value = true
+}
+
+const salvarDuplicata = async (data) => {
+  try {
+    if (data.codnotafiscalduplicatas) {
+      await notaFiscalStore.updateDuplicata(
+        route.params.codnotafiscal,
+        data.codnotafiscalduplicatas,
+        data
+      )
+      $q.notify({
+        type: 'positive',
+        message: 'Duplicata atualizada com sucesso',
+      })
+    } else {
+      await notaFiscalStore.createDuplicata(route.params.codnotafiscal, data)
+      $q.notify({
+        type: 'positive',
+        message: 'Duplicata adicionada com sucesso',
+      })
+    }
+    duplicataDialog.value = false
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao salvar duplicata',
+      caption: error.response?.data?.message || error.message,
+    })
+  }
+}
+
+const excluirDuplicata = (duplicata) => {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: 'Deseja realmente excluir esta duplicata?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Excluir', color: 'negative' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.deleteDuplicata(
+        route.params.codnotafiscal,
+        duplicata.codnotafiscalduplicatas
+      )
+      $q.notify({
+        type: 'positive',
+        message: 'Duplicata excluída com sucesso',
+      })
+      duplicataDialog.value = false
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao excluir duplicata',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// ==================== NOTAS REFERENCIADAS ====================
+const referenciadaDialog = ref(false)
+const referenciadaSelecionada = ref(null)
+
+const novaReferenciada = () => {
+  referenciadaSelecionada.value = null
+  referenciadaDialog.value = true
+}
+
+const editarReferenciada = (referenciada) => {
+  referenciadaSelecionada.value = referenciada
+  referenciadaDialog.value = true
+}
+
+const salvarReferenciada = async (data) => {
+  try {
+    if (data.codnotafiscalreferenciada) {
+      // Não há update para referenciadas, apenas create e delete
+      $q.notify({
+        type: 'warning',
+        message: 'Notas referenciadas não podem ser editadas. Exclua e crie novamente.',
+      })
+      return
+    } else {
+      await notaFiscalStore.createReferenciada(route.params.codnotafiscal, data)
+      $q.notify({
+        type: 'positive',
+        message: 'Nota referenciada adicionada com sucesso',
+      })
+    }
+    referenciadaDialog.value = false
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao salvar nota referenciada',
+      caption: error.response?.data?.message || error.message,
+    })
+  }
+}
+
+const excluirReferenciada = (referenciada) => {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: 'Deseja realmente excluir esta nota referenciada?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Excluir', color: 'negative' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.deleteReferenciada(
+        route.params.codnotafiscal,
+        referenciada.codnotafiscalreferenciada
+      )
+      $q.notify({
+        type: 'positive',
+        message: 'Nota referenciada excluída com sucesso',
+      })
+      referenciadaDialog.value = false
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao excluir nota referenciada',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// ==================== CARTAS DE CORREÇÃO ====================
+const cartaCorrecaoDialog = ref(false)
+const cartaCorrecaoSelecionada = ref(null)
+
+const novaCartaCorrecao = () => {
+  cartaCorrecaoSelecionada.value = null
+  cartaCorrecaoDialog.value = true
+}
+
+const editarCartaCorrecao = (carta) => {
+  cartaCorrecaoSelecionada.value = carta
+  cartaCorrecaoDialog.value = true
+}
+
+const salvarCartaCorrecao = async (data) => {
+  try {
+    if (data.codnotafiscalcartacorrecao) {
+      await notaFiscalStore.updateCartaCorrecao(
+        route.params.codnotafiscal,
+        data.codnotafiscalcartacorrecao,
+        data
+      )
+      $q.notify({
+        type: 'positive',
+        message: 'Carta de correção atualizada com sucesso',
+      })
+    } else {
+      await notaFiscalStore.createCartaCorrecao(route.params.codnotafiscal, data)
+      $q.notify({
+        type: 'positive',
+        message: 'Carta de correção criada com sucesso',
+      })
+    }
+    cartaCorrecaoDialog.value = false
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao salvar carta de correção',
+      caption: error.response?.data?.message || error.message,
+    })
+  }
+}
+
+const excluirCartaCorrecao = (carta) => {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: 'Deseja realmente excluir esta carta de correção?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Excluir', color: 'negative' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.deleteCartaCorrecao(
+        route.params.codnotafiscal,
+        carta.codnotafiscalcartacorrecao
+      )
+      $q.notify({
+        type: 'positive',
+        message: 'Carta de correção excluída com sucesso',
+      })
+      cartaCorrecaoDialog.value = false
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao excluir carta de correção',
         caption: error.response?.data?.message || error.message,
       })
     }
@@ -616,11 +928,17 @@ onMounted(() => {
       </div>
 
       <!-- Formas de Pagamento -->
-      <div class="q-mb-md  q-mt-lg">
-        <span class="text-h5">
-          <q-icon name="payments" size="1.5em" class="q-mr-sm" /> Formas de Pagamento
-        </span>
-        <q-badge color="primary" class="q-ml-sm">{{ pagamentos.length }}</q-badge>
+      <div class="row items-center justify-between q-mb-md q-mt-lg">
+        <div>
+          <span class="text-h5">
+            <q-icon name="payments" size="1.5em" class="q-mr-sm" /> Formas de Pagamento
+          </span>
+          <q-badge color="primary" class="q-ml-sm">{{ pagamentos.length }}</q-badge>
+          <q-btn v-if="!notaBloqueada" dense flat color="primary" icon="add" size="md" @click="novoPagamento"
+            class=" q-ml-sm">
+            <q-tooltip>Adicionar Forma de Pagamento</q-tooltip>
+          </q-btn>
+        </div>
       </div>
 
       <div v-if="pagamentos.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
@@ -630,8 +948,8 @@ onMounted(() => {
       <div v-else class="row q-col-gutter-md q-mb-md">
         <div v-for="pag in pagamentos" :key="pag.codnotafiscalpagamento" class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
 
-          <q-card flat bordered class="full-height">
-            <q-card-section>
+          <q-card flat bordered class="full-height flex column">
+            <q-card-section class="col">
               <div class="row items-center justify-between q-mb-md">
                 <div class="row items-center" style="min-width: 0; flex: 1;">
                   <q-avatar :color="getPagamentoColor(pag.tipo)" text-color="white" size="md" class="q-mr-sm"
@@ -680,11 +998,11 @@ onMounted(() => {
 
             <q-separator v-if="!notaBloqueada" />
 
-            <q-card-actions v-if="!notaBloqueada" align="right">
-              <q-btn flat dense icon="edit" color="primary" size="sm">
+            <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
+              <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarPagamento(pag)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
-              <q-btn flat dense icon="delete" color="negative" size="sm">
+              <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirPagamento(pag)">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-card-actions>
@@ -693,11 +1011,17 @@ onMounted(() => {
       </div>
 
       <!-- Duplicatas -->
-      <div class="q-mb-md q-mt-lg">
-        <span class="text-h5">
-          <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" /> Duplicatas
-        </span>
-        <q-badge color="primary" class="q-ml-sm">{{ duplicatas.length }}</q-badge>
+      <div class="row items-center justify-between q-mb-md q-mt-lg">
+        <div>
+          <span class="text-h5">
+            <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" /> Duplicatas
+          </span>
+          <q-badge color="primary" class="q-ml-sm">{{ duplicatas.length }}</q-badge>
+          <q-btn v-if="!notaBloqueada" flat dense color="primary" icon="add" size="md" @click="novaDuplicata"
+            class="q-ml-sm">
+            <q-tooltip>Adicionar Duplicata</q-tooltip>
+          </q-btn>
+        </div>
       </div>
 
       <div v-if="duplicatas.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
@@ -706,8 +1030,8 @@ onMounted(() => {
 
       <div v-else class="row q-col-gutter-md q-mb-md">
         <div v-for="dup in duplicatas" :key="dup.codnotafiscalduplicatas" class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
-          <q-card flat bordered class="full-height">
-            <q-card-section>
+          <q-card flat bordered class="full-height flex column">
+            <q-card-section class="col">
               <div class="row items-center q-mb-md">
                 <q-avatar color="indigo" text-color="white" size="md" class="q-mr-sm" style="flex-shrink: 0;">
                   <q-icon name="receipt_long" />
@@ -730,11 +1054,11 @@ onMounted(() => {
 
             <q-separator v-if="!notaBloqueada" />
 
-            <q-card-actions v-if="!notaBloqueada" align="right">
-              <q-btn flat dense icon="edit" color="primary" size="sm">
+            <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
+              <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarDuplicata(dup)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
-              <q-btn flat dense icon="delete" color="negative" size="sm">
+              <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirDuplicata(dup)">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-card-actions>
@@ -743,11 +1067,17 @@ onMounted(() => {
       </div>
 
       <!-- Notas Referenciadas -->
-      <div class="q-mb-md q-mt-lg">
-        <span class="text-h5">
-          <q-icon name="link" size="1.5em" class="q-mr-sm" /> Notas Fiscais Referenciadas
-        </span>
-        <q-badge color="primary" class="q-ml-sm">{{ referenciadas.length }}</q-badge>
+      <div class="row items-center justify-between q-mb-md q-mt-lg">
+        <div>
+          <span class="text-h5">
+            <q-icon name="link" size="1.5em" class="q-mr-sm" /> Notas Fiscais Referenciadas
+          </span>
+          <q-badge color="primary" class="q-ml-sm">{{ referenciadas.length }}</q-badge>
+          <q-btn v-if="!notaBloqueada" flat dense color="primary" icon="add" size="mg" @click="novaReferenciada"
+            class=" q-ml-sm">
+            <q-tooltip>Adicionar Nota Referenciada</q-tooltip>
+          </q-btn>
+        </div>
       </div>
 
       <div v-if="referenciadas.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
@@ -757,8 +1087,8 @@ onMounted(() => {
       <div v-else class="row q-col-gutter-md q-mb-md">
         <div v-for="ref in referenciadas" :key="ref.codnotafiscalreferenciada"
           class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
-          <q-card flat bordered class="full-height">
-            <q-card-section>
+          <q-card flat bordered class="full-height flex column">
+            <q-card-section class="col">
               <div class="row items-center q-mb-sm">
                 <q-icon name="link" size="sm" color="primary" class="q-mr-sm" />
                 <div class="text-subtitle2 text-weight-bold">
@@ -774,11 +1104,11 @@ onMounted(() => {
 
             <q-separator v-if="!notaBloqueada" />
 
-            <q-card-actions v-if="!notaBloqueada" align="right">
-              <q-btn flat dense icon="edit" color="primary" size="sm">
+            <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
+              <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarReferenciada(ref)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
-              <q-btn flat dense icon="delete" color="negative" size="sm">
+              <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirReferenciada(ref)">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-card-actions>
@@ -788,12 +1118,18 @@ onMounted(() => {
 
 
       <!-- Cartas de Correção -->
-      <div class="q-mb-md q-mt-lg">
-        <span class="text-h5">
-          <q-icon name="edit_note" size="1.5em" class="q-mr-sm" />
-          Cartas de Correção
-        </span>
-        <q-badge color="primary" class="q-ml-sm">{{ cartasCorrecao.length }}</q-badge>
+      <div class="row items-center justify-between q-mb-md q-mt-lg">
+        <div>
+          <span class="text-h5">
+            <q-icon name="edit_note" size="1.5em" class="q-mr-sm" />
+            Cartas de Correção
+          </span>
+          <q-badge color="primary" class="q-ml-sm">{{ cartasCorrecao.length }}</q-badge>
+          <q-btn v-if="!notaBloqueada" flat dense color="primary" icon="add" size="md" @click="novaCartaCorrecao"
+            class="q-ml-sm">
+            <q-tooltip>Adicionar Carta de Correção</q-tooltip>
+          </q-btn>
+        </div>
       </div>
 
       <div v-if="cartasCorrecao.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
@@ -803,8 +1139,8 @@ onMounted(() => {
       <div v-else class="row q-col-gutter-md q-mb-md">
         <div v-for="carta in cartasCorrecao" :key="carta.codnotafiscalcartacorrecao"
           class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
-          <q-card flat bordered class="full-height">
-            <q-card-section>
+          <q-card flat bordered class="full-height flex column">
+            <q-card-section class="col">
               <div class="row items-center justify-between q-mb-sm">
                 <div class="row items-center">
                   <q-icon name="edit_note" size="sm" color="primary" class="q-mr-sm" />
@@ -857,11 +1193,11 @@ onMounted(() => {
 
             <q-separator v-if="!notaBloqueada" />
 
-            <q-card-actions v-if="!notaBloqueada" align="right">
-              <q-btn flat dense icon="edit" color="primary" size="sm">
+            <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
+              <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarCartaCorrecao(carta)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
-              <q-btn flat dense icon="delete" color="negative" size="sm">
+              <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirCartaCorrecao(carta)">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-card-actions>
@@ -900,5 +1236,19 @@ onMounted(() => {
       <q-icon name="error" size="4em" color="negative" />
       <div class="text-h6 text-grey-7 q-mt-md">Nota fiscal não encontrada</div>
     </q-card>
+
+    <!-- Dialogs -->
+    <NotaFiscalPagamentoDialog v-model="pagamentoDialog" :pagamento="pagamentoSelecionado"
+      :nota-bloqueada="notaBloqueada" @save="salvarPagamento" @delete="excluirPagamento" />
+
+    <NotaFiscalDuplicataDialog v-model="duplicataDialog" :duplicata="duplicataSelecionada"
+      :nota-bloqueada="notaBloqueada" @save="salvarDuplicata" @delete="excluirDuplicata" />
+
+    <NotaFiscalReferenciadaDialog v-model="referenciadaDialog" :referenciada="referenciadaSelecionada"
+      :nota-bloqueada="notaBloqueada" @save="salvarReferenciada" @delete="excluirReferenciada" />
+
+    <NotaFiscalCartaCorrecaoDialog v-model="cartaCorrecaoDialog" :carta-correcao="cartaCorrecaoSelecionada"
+      :proxima-sequencia="maiorSequenciaCartaCorrecao + 1" :nota-bloqueada="notaBloqueada" @save="salvarCartaCorrecao"
+      @delete="excluirCartaCorrecao" />
   </q-page>
 </template>

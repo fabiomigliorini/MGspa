@@ -3,7 +3,7 @@ import { api } from 'src/boot/axios'
 
 export const useTributacaoStore = defineStore('tributacao', {
   persist: {
-    paths: ['filters']
+    pick: ['filters']
   },
   state: () => ({
     // Lista de tributos disponíveis (vem da API)

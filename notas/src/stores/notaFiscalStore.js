@@ -8,7 +8,7 @@ import notaFiscalCartaCorrecaoService from '../services/notaFiscalCartaCorrecaoS
 
 export const useNotaFiscalStore = defineStore('notaFiscal', {
   persist: {
-    paths: ['filters'],
+    pick: ['filters'],
   },
   state: () => ({
     // Lista de notas fiscais
@@ -185,7 +185,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       // Converte para número para garantir comparação correta
       const codnotafiscalNum = parseInt(codnotafiscal)
 
-      // Verifica se a nota já está carregada na store
+      // Verifica se a nota já está carregada na store E é a mesma nota
       if (this.currentNota && this.currentNota.codnotafiscal === codnotafiscalNum) {
         // Nota já está carregada, retorna sem fazer nova requisição
         return this.currentNota
@@ -440,7 +440,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.loading.pagamentos = true
       try {
         const response = await notaFiscalPagamentoService.create(codnotafiscal, data)
-        this.pagamentos.push(response.data)
+        // Adiciona na lista do currentNota
+        if (this.currentNota) {
+          if (!this.currentNota.pagamentos) {
+            this.currentNota.pagamentos = []
+          }
+          this.currentNota.pagamentos.push(response.data)
+        }
         return response.data
       } catch (error) {
         console.error('Erro ao criar pagamento:', error)
@@ -459,12 +465,14 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
           data,
         )
 
-        // Atualiza na lista
-        const index = this.pagamentos.findIndex(
-          (p) => p.codnotafiscalpagamento === codnotafiscalpagamento,
-        )
-        if (index !== -1) {
-          this.pagamentos[index] = response.data
+        // Atualiza na lista do currentNota
+        if (this.currentNota && this.currentNota.pagamentos) {
+          const index = this.currentNota.pagamentos.findIndex(
+            (p) => p.codnotafiscalpagamento === codnotafiscalpagamento,
+          )
+          if (index !== -1) {
+            this.currentNota.pagamentos[index] = response.data
+          }
         }
 
         return response.data
@@ -481,10 +489,12 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         await notaFiscalPagamentoService.delete(codnotafiscal, codnotafiscalpagamento)
 
-        // Remove da lista
-        this.pagamentos = this.pagamentos.filter(
-          (p) => p.codnotafiscalpagamento !== codnotafiscalpagamento,
-        )
+        // Remove da lista do currentNota
+        if (this.currentNota && this.currentNota.pagamentos) {
+          this.currentNota.pagamentos = this.currentNota.pagamentos.filter(
+            (p) => p.codnotafiscalpagamento !== codnotafiscalpagamento,
+          )
+        }
       } catch (error) {
         console.error('Erro ao excluir pagamento:', error)
         throw error
@@ -513,7 +523,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.loading.duplicatas = true
       try {
         const response = await notaFiscalDuplicataService.create(codnotafiscal, data)
-        this.duplicatas.push(response.data)
+        // Adiciona na lista do currentNota
+        if (this.currentNota) {
+          if (!this.currentNota.duplicatas) {
+            this.currentNota.duplicatas = []
+          }
+          this.currentNota.duplicatas.push(response.data)
+        }
         return response.data
       } catch (error) {
         console.error('Erro ao criar duplicata:', error)
@@ -532,12 +548,14 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
           data,
         )
 
-        // Atualiza na lista
-        const index = this.duplicatas.findIndex(
-          (d) => d.codnotafiscalduplicatas === codnotafiscalduplicatas,
-        )
-        if (index !== -1) {
-          this.duplicatas[index] = response.data
+        // Atualiza na lista do currentNota
+        if (this.currentNota && this.currentNota.duplicatas) {
+          const index = this.currentNota.duplicatas.findIndex(
+            (d) => d.codnotafiscalduplicatas === codnotafiscalduplicatas,
+          )
+          if (index !== -1) {
+            this.currentNota.duplicatas[index] = response.data
+          }
         }
 
         return response.data
@@ -554,10 +572,12 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         await notaFiscalDuplicataService.delete(codnotafiscal, codnotafiscalduplicatas)
 
-        // Remove da lista
-        this.duplicatas = this.duplicatas.filter(
-          (d) => d.codnotafiscalduplicatas !== codnotafiscalduplicatas,
-        )
+        // Remove da lista do currentNota
+        if (this.currentNota && this.currentNota.duplicatas) {
+          this.currentNota.duplicatas = this.currentNota.duplicatas.filter(
+            (d) => d.codnotafiscalduplicatas !== codnotafiscalduplicatas,
+          )
+        }
       } catch (error) {
         console.error('Erro ao excluir duplicata:', error)
         throw error
@@ -586,7 +606,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.loading.referenciadas = true
       try {
         const response = await notaFiscalReferenciadaService.create(codnotafiscal, data)
-        this.referenciadas.push(response.data)
+        // Adiciona na lista do currentNota
+        if (this.currentNota) {
+          if (!this.currentNota.notasReferenciadas) {
+            this.currentNota.notasReferenciadas = []
+          }
+          this.currentNota.notasReferenciadas.push(response.data)
+        }
         return response.data
       } catch (error) {
         console.error('Erro ao criar nota referenciada:', error)
@@ -601,10 +627,12 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         await notaFiscalReferenciadaService.delete(codnotafiscal, codnotafiscalreferenciada)
 
-        // Remove da lista
-        this.referenciadas = this.referenciadas.filter(
-          (r) => r.codnotafiscalreferenciada !== codnotafiscalreferenciada,
-        )
+        // Remove da lista do currentNota
+        if (this.currentNota && this.currentNota.notasReferenciadas) {
+          this.currentNota.notasReferenciadas = this.currentNota.notasReferenciadas.filter(
+            (r) => r.codnotafiscalreferenciada !== codnotafiscalreferenciada,
+          )
+        }
       } catch (error) {
         console.error('Erro ao excluir nota referenciada:', error)
         throw error
@@ -633,7 +661,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.loading.cartasCorrecao = true
       try {
         const response = await notaFiscalCartaCorrecaoService.create(codnotafiscal, data)
-        this.cartasCorrecao.push(response.data)
+        // Adiciona na lista do currentNota
+        if (this.currentNota) {
+          if (!this.currentNota.cartasCorrecao) {
+            this.currentNota.cartasCorrecao = []
+          }
+          this.currentNota.cartasCorrecao.push(response.data)
+        }
         return response.data
       } catch (error) {
         console.error('Erro ao criar carta de correção:', error)
@@ -652,12 +686,14 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
           data,
         )
 
-        // Atualiza na lista
-        const index = this.cartasCorrecao.findIndex(
-          (c) => c.codnotafiscalcartacorrecao === codnotafiscalcartacorrecao,
-        )
-        if (index !== -1) {
-          this.cartasCorrecao[index] = response.data
+        // Atualiza na lista do currentNota
+        if (this.currentNota && this.currentNota.cartasCorrecao) {
+          const index = this.currentNota.cartasCorrecao.findIndex(
+            (c) => c.codnotafiscalcartacorrecao === codnotafiscalcartacorrecao,
+          )
+          if (index !== -1) {
+            this.currentNota.cartasCorrecao[index] = response.data
+          }
         }
 
         return response.data
@@ -674,10 +710,12 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         await notaFiscalCartaCorrecaoService.delete(codnotafiscal, codnotafiscalcartacorrecao)
 
-        // Remove da lista
-        this.cartasCorrecao = this.cartasCorrecao.filter(
-          (c) => c.codnotafiscalcartacorrecao !== codnotafiscalcartacorrecao,
-        )
+        // Remove da lista do currentNota
+        if (this.currentNota && this.currentNota.cartasCorrecao) {
+          this.currentNota.cartasCorrecao = this.currentNota.cartasCorrecao.filter(
+            (c) => c.codnotafiscalcartacorrecao !== codnotafiscalcartacorrecao,
+          )
+        }
       } catch (error) {
         console.error('Erro ao excluir carta de correção:', error)
         throw error
