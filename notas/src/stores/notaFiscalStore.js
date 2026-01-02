@@ -60,9 +60,6 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     // Item em edição (usado nos forms - mantém alterações enquanto navega entre abas)
     editingItem: null,
 
-    // Tributos do item atual
-    itemTributos: [],
-
     // Loading states
     loading: {
       nota: false,
@@ -426,10 +423,6 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         )
         if (item) {
           this.currentItem = item
-          // Popula os tributos do item se existirem
-          if (item.tributos) {
-            this.itemTributos = item.tributos
-          }
           return item
         }
         throw new Error('Item não encontrado')
@@ -463,205 +456,203 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.editingItem = null
     },
 
-    async updateItemDetalhes(codnotafiscalprodutobarra, data) {
-      this.loading.itens = true
-      try {
-        const codnotafiscal = this.currentNota.codnotafiscal
-        const response = await notaFiscalItemService.update(codnotafiscal, codnotafiscalprodutobarra, data)
-        this.currentItem = response
+    // async updateItemDetalhes(codnotafiscalprodutobarra, data) {
+    //   this.loading.itens = true
+    //   try {
+    //     const codnotafiscal = this.currentNota.codnotafiscal
+    //     const response = await notaFiscalItemService.update(
+    //       codnotafiscal,
+    //       codnotafiscalprodutobarra,
+    //       data,
+    //     )
+    //     this.currentItem = response
 
-        // Atualiza no currentNota se existir
-        if (this.currentNota?.itens) {
-          const index = this.currentNota.itens.findIndex(
-            (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-          )
-          if (index !== -1) {
-            this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
-          }
-        }
+    //     // Atualiza no currentNota se existir
+    //     if (this.currentNota?.itens) {
+    //       const index = this.currentNota.itens.findIndex(
+    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
+    //       )
+    //       if (index !== -1) {
+    //         this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
+    //       }
+    //     }
 
-        return response
-      } catch (error) {
-        console.error('Erro ao atualizar detalhes do item:', error)
-        throw error
-      } finally {
-        this.loading.itens = false
-      }
-    },
+    //     return response
+    //   } catch (error) {
+    //     console.error('Erro ao atualizar detalhes do item:', error)
+    //     throw error
+    //   } finally {
+    //     this.loading.itens = false
+    //   }
+    // },
 
-    async updateItemImpostos(codnotafiscalprodutobarra, data) {
-      this.loading.itens = true
-      try {
-        const codnotafiscal = this.currentNota.codnotafiscal
-        const response = await notaFiscalItemService.update(codnotafiscal, codnotafiscalprodutobarra, data)
-        this.currentItem = response
+    // async updateItemImpostos(codnotafiscalprodutobarra, data) {
+    //   this.loading.itens = true
+    //   try {
+    //     const codnotafiscal = this.currentNota.codnotafiscal
+    //     const response = await notaFiscalItemService.update(
+    //       codnotafiscal,
+    //       codnotafiscalprodutobarra,
+    //       data,
+    //     )
+    //     this.currentItem = response
 
-        // Atualiza no currentNota se existir
-        if (this.currentNota?.itens) {
-          const index = this.currentNota.itens.findIndex(
-            (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-          )
-          if (index !== -1) {
-            this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
-          }
-        }
+    //     // Atualiza no currentNota se existir
+    //     if (this.currentNota?.itens) {
+    //       const index = this.currentNota.itens.findIndex(
+    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
+    //       )
+    //       if (index !== -1) {
+    //         this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
+    //       }
+    //     }
 
-        return response
-      } catch (error) {
-        console.error('Erro ao atualizar impostos do item:', error)
-        throw error
-      } finally {
-        this.loading.itens = false
-      }
-    },
+    //     return response
+    //   } catch (error) {
+    //     console.error('Erro ao atualizar impostos do item:', error)
+    //     throw error
+    //   } finally {
+    //     this.loading.itens = false
+    //   }
+    // },
 
-    async updateItemImpostosRural(codnotafiscalprodutobarra, data) {
-      this.loading.itens = true
-      try {
-        const codnotafiscal = this.currentNota.codnotafiscal
-        const response = await notaFiscalItemService.update(codnotafiscal, codnotafiscalprodutobarra, data)
-        this.currentItem = response
+    // async updateItemImpostosRural(codnotafiscalprodutobarra, data) {
+    //   this.loading.itens = true
+    //   try {
+    //     const codnotafiscal = this.currentNota.codnotafiscal
+    //     const response = await notaFiscalItemService.update(
+    //       codnotafiscal,
+    //       codnotafiscalprodutobarra,
+    //       data,
+    //     )
+    //     this.currentItem = response
 
-        // Atualiza no currentNota se existir
-        if (this.currentNota?.itens) {
-          const index = this.currentNota.itens.findIndex(
-            (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-          )
-          if (index !== -1) {
-            this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
-          }
-        }
+    //     // Atualiza no currentNota se existir
+    //     if (this.currentNota?.itens) {
+    //       const index = this.currentNota.itens.findIndex(
+    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
+    //       )
+    //       if (index !== -1) {
+    //         this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
+    //       }
+    //     }
 
-        return response
-      } catch (error) {
-        console.error('Erro ao atualizar impostos rurais do item:', error)
-        throw error
-      } finally {
-        this.loading.itens = false
-      }
-    },
+    //     return response
+    //   } catch (error) {
+    //     console.error('Erro ao atualizar impostos rurais do item:', error)
+    //     throw error
+    //   } finally {
+    //     this.loading.itens = false
+    //   }
+    // },
 
     // ==================== TRIBUTOS DO ITEM ====================
 
-    async fetchItemTributos(codnotafiscalprodutobarra) {
-      this.loading.itens = true
-      try {
-        // Busca os tributos do item no currentItem
-        const item = this.currentNota?.itens?.find(
-          (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-        )
-        if (item?.tributos) {
-          // Cria uma cópia profunda para evitar modificação de objetos readonly
-          this.itemTributos = JSON.parse(JSON.stringify(item.tributos))
-          return this.itemTributos
-        }
-        this.itemTributos = []
-        return []
-      } catch (error) {
-        console.error('Erro ao buscar tributos do item:', error)
-        throw error
-      } finally {
-        this.loading.itens = false
-      }
-    },
+    // async createItemTributo(codnotafiscalprodutobarra, data) {
+    //   this.loading.itens = true
+    //   try {
+    //     const codnotafiscal = this.currentNota.codnotafiscal
+    //     const response = await notaFiscalItemService.createTributo(
+    //       codnotafiscal,
+    //       codnotafiscalprodutobarra,
+    //       data,
+    //     )
 
-    async createItemTributo(codnotafiscalprodutobarra, data) {
-      this.loading.itens = true
-      try {
-        const codnotafiscal = this.currentNota.codnotafiscal
-        const response = await notaFiscalItemService.createTributo(codnotafiscal, codnotafiscalprodutobarra, data)
+    //     // Adiciona na lista local
+    //     this.editingItem?.tributos.push(response)
 
-        // Adiciona na lista local
-        this.itemTributos.push(response)
+    //     // Atualiza no currentNota.itens se existir
+    //     if (this.currentNota?.itens) {
+    //       const index = this.currentNota.itens.findIndex(
+    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
+    //       )
+    //       if (index !== -1) {
+    //         if (!this.currentNota.itens[index].tributos) {
+    //           this.currentNota.itens[index].tributos = []
+    //         }
+    //         this.currentNota.itens[index].tributos.push(response)
+    //       }
+    //     }
 
-        // Atualiza no currentNota.itens se existir
-        if (this.currentNota?.itens) {
-          const index = this.currentNota.itens.findIndex(
-            (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-          )
-          if (index !== -1) {
-            if (!this.currentNota.itens[index].tributos) {
-              this.currentNota.itens[index].tributos = []
-            }
-            this.currentNota.itens[index].tributos.push(response)
-          }
-        }
+    //     return response
+    //   } catch (error) {
+    //     console.error('Erro ao criar tributo:', error)
+    //     throw error
+    //   } finally {
+    //     this.loading.itens = false
+    //   }
+    // },
 
-        return response
-      } catch (error) {
-        console.error('Erro ao criar tributo:', error)
-        throw error
-      } finally {
-        this.loading.itens = false
-      }
-    },
+    // async updateItemTributo(codnotafiscalitemtributo, data) {
+    //   this.loading.itens = true
+    //   try {
+    //     const codnotafiscal = this.currentNota.codnotafiscal
+    //     const response = await notaFiscalItemService.updateTributo(
+    //       codnotafiscal,
+    //       codnotafiscalitemtributo,
+    //       data,
+    //     )
 
-    async updateItemTributo(codnotafiscalitemtributo, data) {
-      this.loading.itens = true
-      try {
-        const codnotafiscal = this.currentNota.codnotafiscal
-        const response = await notaFiscalItemService.updateTributo(codnotafiscal, codnotafiscalitemtributo, data)
+    //     // Atualiza na lista local
+    //     const index = this.editingItem?.tributos.findIndex(
+    //       (t) => t.codnotafiscalitemtributo === parseInt(codnotafiscalitemtributo),
+    //     )
+    //     if (index !== -1) {
+    //       this.editingItem.tributos[index] = response
+    //     }
 
-        // Atualiza na lista local
-        const index = this.itemTributos.findIndex(
-          (t) => t.codnotafiscalitemtributo === parseInt(codnotafiscalitemtributo),
-        )
-        if (index !== -1) {
-          this.itemTributos[index] = response
-        }
+    //     // Atualiza no currentNota.itens se existir
+    //     if (this.currentNota?.itens) {
+    //       for (const item of this.currentNota.itens) {
+    //         if (item.tributos) {
+    //           const tributoIndex = item.tributos.findIndex(
+    //             (t) => t.codnotafiscalitemtributo === parseInt(codnotafiscalitemtributo),
+    //           )
+    //           if (tributoIndex !== -1) {
+    //             item.tributos[tributoIndex] = response
+    //             break
+    //           }
+    //         }
+    //       }
+    //     }
 
-        // Atualiza no currentNota.itens se existir
-        if (this.currentNota?.itens) {
-          for (const item of this.currentNota.itens) {
-            if (item.tributos) {
-              const tributoIndex = item.tributos.findIndex(
-                (t) => t.codnotafiscalitemtributo === parseInt(codnotafiscalitemtributo),
-              )
-              if (tributoIndex !== -1) {
-                item.tributos[tributoIndex] = response
-                break
-              }
-            }
-          }
-        }
+    //     return response
+    //   } catch (error) {
+    //     console.error('Erro ao atualizar tributo:', error)
+    //     throw error
+    //   } finally {
+    //     this.loading.itens = false
+    //   }
+    // },
 
-        return response
-      } catch (error) {
-        console.error('Erro ao atualizar tributo:', error)
-        throw error
-      } finally {
-        this.loading.itens = false
-      }
-    },
+    // async deleteItemTributo(codnotafiscalitemtributo) {
+    //   this.loading.itens = true
+    //   try {
+    //     const codnotafiscal = this.currentNota.codnotafiscal
+    //     await notaFiscalItemService.deleteTributo(codnotafiscal, codnotafiscalitemtributo)
 
-    async deleteItemTributo(codnotafiscalitemtributo) {
-      this.loading.itens = true
-      try {
-        const codnotafiscal = this.currentNota.codnotafiscal
-        await notaFiscalItemService.deleteTributo(codnotafiscal, codnotafiscalitemtributo)
+    //     // Remove da lista local
+    //     this.editingItem.tributos = this.editingItem?.tributos.filter(
+    //       (t) => t.codnotafiscalitemtributo !== parseInt(codnotafiscalitemtributo),
+    //     )
 
-        // Remove da lista local
-        this.itemTributos = this.itemTributos.filter(
-          (t) => t.codnotafiscalitemtributo !== parseInt(codnotafiscalitemtributo),
-        )
-
-        // Remove do currentNota.itens se existir
-        if (this.currentNota?.itens) {
-          for (const item of this.currentNota.itens) {
-            if (item.tributos) {
-              item.tributos = item.tributos.filter(
-                (t) => t.codnotafiscalitemtributo !== parseInt(codnotafiscalitemtributo),
-              )
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao excluir tributo:', error)
-        throw error
-      } finally {
-        this.loading.itens = false
-      }
-    },
+    //     // Remove do currentNota.itens se existir
+    //     if (this.currentNota?.itens) {
+    //       for (const item of this.currentNota.itens) {
+    //         if (item.tributos) {
+    //           item.tributos = item.tributos.filter(
+    //             (t) => t.codnotafiscalitemtributo !== parseInt(codnotafiscalitemtributo),
+    //           )
+    //         }
+    //       }
+    //     }
+    //   } catch (error) {
+    //     console.error('Erro ao excluir tributo:', error)
+    //     throw error
+    //   } finally {
+    //     this.loading.itens = false
+    //   }
+    // },
 
     // ==================== PAGAMENTOS ====================
 

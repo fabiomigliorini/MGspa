@@ -18,7 +18,7 @@ const loading = ref(false)
 const codnotafiscal = computed(() => route.params.codnotafiscal)
 const codnotafiscalitem = computed(() => route.params.codnotafiscalitem)
 const nota = computed(() => notaFiscalStore.currentNota)
-const tributos = computed(() => notaFiscalStore.itemTributos || [])
+const tributos = computed(() => notaFiscalStore.editingItem?.tributos || [])
 const notaBloqueada = computed(() => {
   if (!nota.value) return false
   return ['AUT', 'CAN', 'INU'].includes(nota.value.status)
@@ -55,11 +55,8 @@ const loadFormData = async () => {
     // Verifica se já está editando este item
     if (!editingItem.value || editingItem.value.codnotafiscalprodutobarra !== parseInt(codnotafiscalitem.value)) {
       // Inicia a edição do item (cria cópia no store)
-      notaFiscalStore.startEditingItem(codnotafiscalitem.value)
+      await notaFiscalStore.startEditingItem(codnotafiscalitem.value)
     }
-
-    // Carrega os tributos do item
-    await notaFiscalStore.fetchItemTributos(codnotafiscalitem.value)
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -73,7 +70,7 @@ const loadFormData = async () => {
 const handleSubmit = async () => {
   loading.value = true
   try {
-    // Salva o item completo, incluindo os tributos que já estão em itemTributos
+    // Salva o item completo, incluindo os tributos que já estão em editingItem
     await notaFiscalStore.updateItemDetalhes(codnotafiscalitem.value, editingItem.value)
     $q.notify({
       type: 'positive',
@@ -116,14 +113,14 @@ const salvarTributo = async (tributoData) => {
 
     if (tributoData.codnotafiscalitemtributo) {
       // Editar
-      await notaFiscalStore.updateItemTributo(tributoData.codnotafiscalitemtributo, tributoData)
+      await notaFiscalStore.updateItem(tributoData.codnotafiscalitemtributo, tributoData)
       $q.notify({
         type: 'positive',
         message: 'Tributo atualizado com sucesso',
       })
     } else {
       // Criar
-      await notaFiscalStore.createItemTributo(codnotafiscalitem.value, tributoData)
+      await notaFiscalStore.createItem(codnotafiscalitem.value, tributoData)
       $q.notify({
         type: 'positive',
         message: 'Tributo adicionado com sucesso',
@@ -131,7 +128,6 @@ const salvarTributo = async (tributoData) => {
     }
 
     tributoDialog.value = false
-    await notaFiscalStore.fetchItemTributos(codnotafiscalitem.value)
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -157,7 +153,6 @@ const excluirTributo = async (tributo) => {
         message: 'Tributo excluído com sucesso',
       })
       tributoDialog.value = false
-      await notaFiscalStore.fetchItemTributos(codnotafiscalitem.value)
     } catch (error) {
       $q.notify({
         type: 'negative',

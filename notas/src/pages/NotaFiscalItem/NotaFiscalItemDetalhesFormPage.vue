@@ -90,13 +90,13 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     if (isEditMode.value) {
-      await notaFiscalStore.updateItemDetalhes(codnotafiscalitem.value, editingItem.value)
+      await notaFiscalStore.updateItem(codnotafiscal.value, codnotafiscalitem.value, editingItem.value)
       $q.notify({
         type: 'positive',
         message: 'Item atualizado com sucesso',
       })
       // Limpa o item em edição após salvar
-      notaFiscalStore.clearEditingItem()
+      // notaFiscalStore.clearEditingItem()
     } else {
       const newItem = await notaFiscalStore.createItem(codnotafiscal.value, editingItem.value)
       $q.notify({
@@ -104,7 +104,7 @@ const handleSubmit = async () => {
         message: 'Item criado com sucesso',
       })
       // Limpa o item em edição
-      notaFiscalStore.clearEditingItem()
+      // notaFiscalStore.clearEditingItem()
       // Redireciona para edição do item recém-criado
       router.replace({
         name: 'nota-fiscal-item-detalhes',
@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
         <!-- Header -->
         <div class="row items-center q-mb-md">
           <div class="text-h5">
-            <q-btn flat dense round icon="arrow_back" @click="handleCancel" class="q-mr-sm" size="0.8em"
+            <q-btn flat dense round icon="arrow_back" :to="`notas/{codnotafiscal}/`" class="q-mr-sm" size="0.8em"
               :disable="loading" />
             {{ isEditMode ? 'Editar Item' : 'Novo Item' }} - NFe #{{ nota?.numero }}
           </div>
