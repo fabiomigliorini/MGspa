@@ -150,8 +150,7 @@ onMounted(() => {
 
           <template v-for="trib in item.tributos" :key="trib.codnotafiscalitemtributo">
             <q-tab :label="trib.tributo?.codigo + ' (' + trib.tributo?.ente.charAt(0) + ')' || 'Tributo'"
-              :icon="getEnteIcon(trib.tributo?.ente)"
-              :name="'tributo-' + trib.codnotafiscalitemtributo" />
+              :icon="getEnteIcon(trib.tributo?.ente)" :name="'tributo-' + trib.codnotafiscalitemtributo" />
           </template>
         </q-tabs>
 
@@ -525,22 +524,13 @@ onMounted(() => {
       <q-separator />
 
       <q-card-actions align="right">
-        <q-btn
-          flat
-          dense
-          round
-          icon="edit"
-          color="primary"
-          size="sm"
-          :disable="notaBloqueada"
-          :to="{
-            name: 'nota-fiscal-item-detalhes',
-            params: {
-              codnotafiscal: item.codnotafiscal,
-              codnotafiscalitem: item.codnotafiscalprodutobarra
-            }
-          }"
-        >
+        <q-btn flat dense round icon="edit" color="primary" size="sm" :disable="notaBloqueada" :to="{
+          name: 'nota-fiscal-item-edit',
+          params: {
+            codnotafiscal: item.codnotafiscal,
+            codnotafiscalitem: item.codnotafiscalprodutobarra
+          }
+        }">
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
         <q-btn flat dense round icon="delete" color="negative" size="sm" :disable="notaBloqueada"

@@ -87,9 +87,7 @@ class NotaFiscalProdutoBarraResource extends JsonResource
             'certidaosefazmt' => $this->certidaosefazmt,
 
             // Relacionamentos
-            'tributos' => $this->whenLoaded('NotaFiscalItemTributoS', function () {
-                return NotaFiscalItemTributoResource::collection($this->NotaFiscalItemTributoS);
-            }),
+            'tributos' => NotaFiscalItemTributoResource::collection($this->NotaFiscalItemTributoS),
 
             // Timestamps
             'criacao' => $this->criacao,

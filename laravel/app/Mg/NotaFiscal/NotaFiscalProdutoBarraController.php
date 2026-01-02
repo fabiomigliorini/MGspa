@@ -75,12 +75,23 @@ class NotaFiscalProdutoBarraController extends Controller
         // Verifica se a nota está bloqueada
         $this->verificarNotaBloqueada($item->NotaFiscal);
 
-        $item->fill($request->validated());
-
         // Recalcula tributação
-        NotaFiscalProdutoBarraService::calcularTributacao($item);
-
+        $item->fill($request->validated());
         $item->save();
+
+        // salva tributos do item
+        $data = $request->all();
+        $codnotafiscalitemtributo = [];
+        foreach ($data['tributos'] as $trib) {
+            $it = NotaFiscalItemTributo::firstOrNew([
+                'codnotafiscalprodutobarra' => $codnotafiscalprodutobarra,
+                'codtributo' => $trib['codtributo']
+            ]);
+            $it->fill($trib);
+            $it->save();
+            $codnotafiscalitemtributo[] = $it->codnotafiscalitemtributo;
+        }
+        NotaFiscalItemTributo::where('codnotafiscalprodutobarra', $codnotafiscalprodutobarra)->whereNotIn('codnotafiscalitemtributo', $codnotafiscalitemtributo)->delete();
 
         return new NotaFiscalProdutoBarraResource($item->fresh());
     }

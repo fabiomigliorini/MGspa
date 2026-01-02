@@ -45,10 +45,6 @@ class NotaFiscalItemTributoResource extends JsonResource
 
     private function formatTributo(): ?array
     {
-        if (!$this->relationLoaded('Tributo')) {
-            return null;
-        }
-
         return $this->Tributo?->only([
             'codtributo',
             'codigo',

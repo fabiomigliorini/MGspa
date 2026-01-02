@@ -368,17 +368,18 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
 
     async updateItem(codnotafiscal, codnotafiscalprodutobarra, data) {
       this.loading.itens = true
+      console.log(data)
       try {
         const response = await notaFiscalItemService.update(
           codnotafiscal,
           codnotafiscalprodutobarra,
-          data,
+          data
         )
 
         // Atualiza no currentNota
         if (this.currentNota?.itens) {
           const index = this.currentNota.itens.findIndex(
-            (i) => i.codnotafiscalprodutobarra === codnotafiscalprodutobarra,
+            (i) => i.codnotafiscalprodutobarra === codnotafiscalprodutobarra
           )
           if (index !== -1) {
             this.currentNota.itens[index] = response.data
@@ -402,7 +403,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove do currentNota
         if (this.currentNota?.itens) {
           this.currentNota.itens = this.currentNota.itens.filter(
-            (i) => i.codnotafiscalprodutobarra !== codnotafiscalprodutobarra,
+            (i) => i.codnotafiscalprodutobarra !== codnotafiscalprodutobarra
           )
         }
       } catch (error) {
@@ -419,7 +420,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         // Busca o item no array currentNota.itens
         const item = this.currentNota?.itens?.find(
-          (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
+          (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra)
         )
         if (item) {
           this.currentItem = item
@@ -439,7 +440,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
      */
     startEditingItem(codnotafiscalprodutobarra) {
       const item = this.currentNota?.itens?.find(
-        (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
+        (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra)
       )
       if (item) {
         // Cria uma cópia profunda do item para edição
@@ -449,213 +450,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       return null
     },
 
-    /**
-     * Limpa o item em edição
-     */
-    clearEditingItem() {
-      this.editingItem = null
-    },
-
-    // async updateItemDetalhes(codnotafiscalprodutobarra, data) {
-    //   this.loading.itens = true
-    //   try {
-    //     const codnotafiscal = this.currentNota.codnotafiscal
-    //     const response = await notaFiscalItemService.update(
-    //       codnotafiscal,
-    //       codnotafiscalprodutobarra,
-    //       data,
-    //     )
-    //     this.currentItem = response
-
-    //     // Atualiza no currentNota se existir
-    //     if (this.currentNota?.itens) {
-    //       const index = this.currentNota.itens.findIndex(
-    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-    //       )
-    //       if (index !== -1) {
-    //         this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
-    //       }
-    //     }
-
-    //     return response
-    //   } catch (error) {
-    //     console.error('Erro ao atualizar detalhes do item:', error)
-    //     throw error
-    //   } finally {
-    //     this.loading.itens = false
-    //   }
-    // },
-
-    // async updateItemImpostos(codnotafiscalprodutobarra, data) {
-    //   this.loading.itens = true
-    //   try {
-    //     const codnotafiscal = this.currentNota.codnotafiscal
-    //     const response = await notaFiscalItemService.update(
-    //       codnotafiscal,
-    //       codnotafiscalprodutobarra,
-    //       data,
-    //     )
-    //     this.currentItem = response
-
-    //     // Atualiza no currentNota se existir
-    //     if (this.currentNota?.itens) {
-    //       const index = this.currentNota.itens.findIndex(
-    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-    //       )
-    //       if (index !== -1) {
-    //         this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
-    //       }
-    //     }
-
-    //     return response
-    //   } catch (error) {
-    //     console.error('Erro ao atualizar impostos do item:', error)
-    //     throw error
-    //   } finally {
-    //     this.loading.itens = false
-    //   }
-    // },
-
-    // async updateItemImpostosRural(codnotafiscalprodutobarra, data) {
-    //   this.loading.itens = true
-    //   try {
-    //     const codnotafiscal = this.currentNota.codnotafiscal
-    //     const response = await notaFiscalItemService.update(
-    //       codnotafiscal,
-    //       codnotafiscalprodutobarra,
-    //       data,
-    //     )
-    //     this.currentItem = response
-
-    //     // Atualiza no currentNota se existir
-    //     if (this.currentNota?.itens) {
-    //       const index = this.currentNota.itens.findIndex(
-    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-    //       )
-    //       if (index !== -1) {
-    //         this.currentNota.itens[index] = { ...this.currentNota.itens[index], ...response }
-    //       }
-    //     }
-
-    //     return response
-    //   } catch (error) {
-    //     console.error('Erro ao atualizar impostos rurais do item:', error)
-    //     throw error
-    //   } finally {
-    //     this.loading.itens = false
-    //   }
-    // },
-
-    // ==================== TRIBUTOS DO ITEM ====================
-
-    // async createItemTributo(codnotafiscalprodutobarra, data) {
-    //   this.loading.itens = true
-    //   try {
-    //     const codnotafiscal = this.currentNota.codnotafiscal
-    //     const response = await notaFiscalItemService.createTributo(
-    //       codnotafiscal,
-    //       codnotafiscalprodutobarra,
-    //       data,
-    //     )
-
-    //     // Adiciona na lista local
-    //     this.editingItem?.tributos.push(response)
-
-    //     // Atualiza no currentNota.itens se existir
-    //     if (this.currentNota?.itens) {
-    //       const index = this.currentNota.itens.findIndex(
-    //         (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
-    //       )
-    //       if (index !== -1) {
-    //         if (!this.currentNota.itens[index].tributos) {
-    //           this.currentNota.itens[index].tributos = []
-    //         }
-    //         this.currentNota.itens[index].tributos.push(response)
-    //       }
-    //     }
-
-    //     return response
-    //   } catch (error) {
-    //     console.error('Erro ao criar tributo:', error)
-    //     throw error
-    //   } finally {
-    //     this.loading.itens = false
-    //   }
-    // },
-
-    // async updateItemTributo(codnotafiscalitemtributo, data) {
-    //   this.loading.itens = true
-    //   try {
-    //     const codnotafiscal = this.currentNota.codnotafiscal
-    //     const response = await notaFiscalItemService.updateTributo(
-    //       codnotafiscal,
-    //       codnotafiscalitemtributo,
-    //       data,
-    //     )
-
-    //     // Atualiza na lista local
-    //     const index = this.editingItem?.tributos.findIndex(
-    //       (t) => t.codnotafiscalitemtributo === parseInt(codnotafiscalitemtributo),
-    //     )
-    //     if (index !== -1) {
-    //       this.editingItem.tributos[index] = response
-    //     }
-
-    //     // Atualiza no currentNota.itens se existir
-    //     if (this.currentNota?.itens) {
-    //       for (const item of this.currentNota.itens) {
-    //         if (item.tributos) {
-    //           const tributoIndex = item.tributos.findIndex(
-    //             (t) => t.codnotafiscalitemtributo === parseInt(codnotafiscalitemtributo),
-    //           )
-    //           if (tributoIndex !== -1) {
-    //             item.tributos[tributoIndex] = response
-    //             break
-    //           }
-    //         }
-    //       }
-    //     }
-
-    //     return response
-    //   } catch (error) {
-    //     console.error('Erro ao atualizar tributo:', error)
-    //     throw error
-    //   } finally {
-    //     this.loading.itens = false
-    //   }
-    // },
-
-    // async deleteItemTributo(codnotafiscalitemtributo) {
-    //   this.loading.itens = true
-    //   try {
-    //     const codnotafiscal = this.currentNota.codnotafiscal
-    //     await notaFiscalItemService.deleteTributo(codnotafiscal, codnotafiscalitemtributo)
-
-    //     // Remove da lista local
-    //     this.editingItem.tributos = this.editingItem?.tributos.filter(
-    //       (t) => t.codnotafiscalitemtributo !== parseInt(codnotafiscalitemtributo),
-    //     )
-
-    //     // Remove do currentNota.itens se existir
-    //     if (this.currentNota?.itens) {
-    //       for (const item of this.currentNota.itens) {
-    //         if (item.tributos) {
-    //           item.tributos = item.tributos.filter(
-    //             (t) => t.codnotafiscalitemtributo !== parseInt(codnotafiscalitemtributo),
-    //           )
-    //         }
-    //       }
-    //     }
-    //   } catch (error) {
-    //     console.error('Erro ao excluir tributo:', error)
-    //     throw error
-    //   } finally {
-    //     this.loading.itens = false
-    //   }
-    // },
-
     // ==================== PAGAMENTOS ====================
-
     async fetchPagamentos(codnotafiscal) {
       this.loading.pagamentos = true
       try {
@@ -709,13 +504,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalPagamentoService.update(
           codnotafiscal,
           codnotafiscalpagamento,
-          data,
+          data
         )
 
         // Atualiza na lista do currentNota
         if (this.currentNota && this.currentNota.pagamentos) {
           const index = this.currentNota.pagamentos.findIndex(
-            (p) => p.codnotafiscalpagamento === codnotafiscalpagamento,
+            (p) => p.codnotafiscalpagamento === codnotafiscalpagamento
           )
           if (index !== -1) {
             this.currentNota.pagamentos[index] = response.data
@@ -739,7 +534,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove da lista do currentNota
         if (this.currentNota && this.currentNota.pagamentos) {
           this.currentNota.pagamentos = this.currentNota.pagamentos.filter(
-            (p) => p.codnotafiscalpagamento !== codnotafiscalpagamento,
+            (p) => p.codnotafiscalpagamento !== codnotafiscalpagamento
           )
         }
       } catch (error) {
@@ -792,13 +587,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalDuplicataService.update(
           codnotafiscal,
           codnotafiscalduplicatas,
-          data,
+          data
         )
 
         // Atualiza na lista do currentNota
         if (this.currentNota && this.currentNota.duplicatas) {
           const index = this.currentNota.duplicatas.findIndex(
-            (d) => d.codnotafiscalduplicatas === codnotafiscalduplicatas,
+            (d) => d.codnotafiscalduplicatas === codnotafiscalduplicatas
           )
           if (index !== -1) {
             this.currentNota.duplicatas[index] = response.data
@@ -822,7 +617,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove da lista do currentNota
         if (this.currentNota && this.currentNota.duplicatas) {
           this.currentNota.duplicatas = this.currentNota.duplicatas.filter(
-            (d) => d.codnotafiscalduplicatas !== codnotafiscalduplicatas,
+            (d) => d.codnotafiscalduplicatas !== codnotafiscalduplicatas
           )
         }
       } catch (error) {
@@ -877,7 +672,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove da lista do currentNota
         if (this.currentNota && this.currentNota.notasReferenciadas) {
           this.currentNota.notasReferenciadas = this.currentNota.notasReferenciadas.filter(
-            (r) => r.codnotafiscalreferenciada !== codnotafiscalreferenciada,
+            (r) => r.codnotafiscalreferenciada !== codnotafiscalreferenciada
           )
         }
       } catch (error) {
@@ -930,13 +725,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalCartaCorrecaoService.update(
           codnotafiscal,
           codnotafiscalcartacorrecao,
-          data,
+          data
         )
 
         // Atualiza na lista do currentNota
         if (this.currentNota && this.currentNota.cartasCorrecao) {
           const index = this.currentNota.cartasCorrecao.findIndex(
-            (c) => c.codnotafiscalcartacorrecao === codnotafiscalcartacorrecao,
+            (c) => c.codnotafiscalcartacorrecao === codnotafiscalcartacorrecao
           )
           if (index !== -1) {
             this.currentNota.cartasCorrecao[index] = response.data
@@ -960,7 +755,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove da lista do currentNota
         if (this.currentNota && this.currentNota.cartasCorrecao) {
           this.currentNota.cartasCorrecao = this.currentNota.cartasCorrecao.filter(
-            (c) => c.codnotafiscalcartacorrecao !== codnotafiscalcartacorrecao,
+            (c) => c.codnotafiscalcartacorrecao !== codnotafiscalcartacorrecao
           )
         }
       } catch (error) {

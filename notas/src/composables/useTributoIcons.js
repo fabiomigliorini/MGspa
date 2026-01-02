@@ -1,38 +1,14 @@
 /**
  * Composable para ícones e utilidades relacionadas a tributos
  */
+import { ENTE_CONFIG, getEnteIcon, getEnteColor } from 'src/constants/notaFiscal'
 
-/**
- * Retorna o ícone apropriado para cada ente federativo
- * @param {string} ente - FEDERAL, ESTADUAL ou MUNICIPAL
- * @returns {string} Nome do ícone do Material Icons
- */
-export function getEnteIcon(ente) {
-  const icons = {
-    FEDERAL: 'account_balance',
-    ESTADUAL: 'map',
-    MUNICIPAL: 'location_city',
-  }
-  return icons[ente] || 'gavel'
-}
-
-/**
- * Retorna a cor apropriada para cada ente federativo
- * @param {string} ente - FEDERAL, ESTADUAL ou MUNICIPAL
- * @returns {string} Nome da cor do Quasar
- */
-export function getEnteColor(ente) {
-  const colors = {
-    FEDERAL: 'blue',
-    ESTADUAL: 'green',
-    MUNICIPAL: 'orange',
-  }
-  return colors[ente] || 'grey'
-}
+export { getEnteIcon, getEnteColor, ENTE_CONFIG }
 
 export default function useTributoIcons() {
   return {
     getEnteIcon,
     getEnteColor,
+    ENTE_CONFIG,
   }
 }

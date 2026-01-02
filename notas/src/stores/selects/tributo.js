@@ -3,100 +3,84 @@ import { api } from 'src/boot/axios'
 
 export const useSelectTributoStore = defineStore('selectTributo', {
   state: () => ({
-    // Cache de tributos por busca
-    tributoCache: {},
-    // Cache acumulativo de tributos já carregados por código
-    tributosById: {},
+    // Cache de todos os tributos
+    tributos: [],
+    tributosLoaded: false,
   }),
 
   getters: {},
 
   actions: {
     /**
-     * Busca tributo por texto
+     * Carrega todos os tributos (apenas uma vez)
+     */
+    async loadAll(force = false) {
+      // Se já carregou e não é force, retorna o cache
+      if (this.tributosLoaded && !force) {
+        return this.tributos
+      }
+
+      try {
+        const response = await api.get('v1/select/tributo')
+        this.tributos = response.data.map((item) => ({
+          label: `${item.codigo} - ${item.ente}`,
+          value: item.codtributo,
+          codigo: item.codigo,
+          sigla: item.sigla,
+          descricao: item.descricao,
+          ente: item.ente,
+        }))
+        this.tributosLoaded = true
+        return this.tributos
+      } catch (error) {
+        console.error('Erro ao carregar tributos:', error)
+        throw error
+      }
+    },
+
+    /**
+     * Busca tributo por texto (filtra localmente)
      */
     async search(busca) {
+      // Garante que os tributos estão carregados
+      if (!this.tributosLoaded) {
+        await this.loadAll()
+      }
+
       if (!busca || busca.length < 1) {
         return []
       }
 
-      // Verifica cache
-      const cacheKey = busca.toLowerCase()
-      if (this.tributoCache[cacheKey]) {
-        return this.tributoCache[cacheKey]
-      }
-
-      try {
-        const response = await api.get('v1/select/tributo', {
-          params: { busca },
-        })
-        const tributos = response.data.map((item) => ({
-          label: `${item.sigla} - ${item.nome}`,
-          value: item.codtributo,
-          sigla: item.sigla,
-          nome: item.nome,
-          descricao: item.descricao,
-          ente: item.ente,
-        }))
-
-        // Salva no cache de busca
-        this.tributoCache[cacheKey] = tributos
-
-        // Adiciona cada tributo ao cache por ID
-        tributos.forEach((tributo) => {
-          this.tributosById[tributo.value] = tributo
-        })
-
-        return tributos
-      } catch (error) {
-        console.error('Erro ao buscar tributo:', error)
-        throw error
-      }
+      // Filtra localmente
+      const needle = busca.toLowerCase()
+      return this.tributos.filter(
+        (t) =>
+          t.codigo?.toLowerCase().indexOf(needle) > -1 ||
+          t.sigla?.toLowerCase().indexOf(needle) > -1 ||
+          t.ente?.toLowerCase().indexOf(needle) > -1 ||
+          t.descricao?.toLowerCase().indexOf(needle) > -1,
+      )
     },
 
     /**
      * Busca um tributo específico por código
      */
     async fetch(codtributo) {
-      // Verifica se já está no cache
-      if (this.tributosById[codtributo]) {
-        console.log('📦 Usando cache - Tributo:', codtributo)
-        return this.tributosById[codtributo]
+      // Garante que os tributos estão carregados
+      if (!this.tributosLoaded) {
+        await this.loadAll()
       }
 
-      console.log('🌐 Buscando da API - Tributo:', codtributo)
-      try {
-        const response = await api.get('v1/select/tributo', {
-          params: { codtributo },
-        })
-        if (response.data.length > 0) {
-          const item = response.data[0]
-          const tributo = {
-            label: `${item.sigla} - ${item.nome}`,
-            value: item.codtributo,
-            sigla: item.sigla,
-            nome: item.nome,
-            descricao: item.descricao,
-            ente: item.ente,
-          }
-
-          // Adiciona ao cache
-          this.tributosById[codtributo] = tributo
-          return tributo
-        }
-        return null
-      } catch (error) {
-        console.error('Erro ao buscar tributo:', error)
-        throw error
-      }
+      // Busca no cache local
+      return this.tributos.find((t) => t.value === codtributo) || null
     },
 
     /**
      * Limpa o cache de tributos
      */
     clear() {
-      this.tributoCache = {}
-      this.tributosById = {}
+      this.tributos = []
+      this.tributosLoaded = false
     },
   },
 })

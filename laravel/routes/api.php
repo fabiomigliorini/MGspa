@@ -606,6 +606,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('select/natureza-operacao', '\Mg\Select\SelectNaturezaOperacaoController@index');
         Route::get('select/grupo-economico', '\Mg\Select\SelectGrupoEconomicoController@index');
         Route::get('select/tipo-produto', '\Mg\Select\SelectTipoProdutoController@index');
+        Route::get('select/tributo', '\Mg\Select\SelectTributoController@index');
 
         Route::get('veiculo', '\Mg\Veiculo\VeiculoController@index');
         Route::get('veiculo/{id}', '\Mg\Veiculo\VeiculoController@show');
