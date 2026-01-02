@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from 'vue';
 import { defineProps } from 'vue'
 import { formatCurrency, formatDecimal, formatNCM, formatCEST } from '../utils/formatters'
+import { getEnteIcon } from 'src/composables/useTributoIcons'
 
 // const props = defineProps({
 const props = defineProps({
@@ -149,6 +150,7 @@ onMounted(() => {
 
           <template v-for="trib in item.tributos" :key="trib.codnotafiscalitemtributo">
             <q-tab :label="trib.tributo?.codigo + ' (' + trib.tributo?.ente.charAt(0) + ')' || 'Tributo'"
+              :icon="getEnteIcon(trib.tributo?.ente)"
               :name="'tributo-' + trib.codnotafiscalitemtributo" />
           </template>
         </q-tabs>
@@ -422,7 +424,10 @@ onMounted(() => {
                 <!-- ENTE -->
                 <div class="col-2">
                   <div class="text-caption text-grey-7">Ente</div>
-                  <div class="text-caption ellipsis">{{ trib.tributo.ente }}</div>
+                  <div class="text-caption ellipsis row items-center q-gutter-xs">
+                    <q-icon :name="getEnteIcon(trib.tributo.ente)" size="xs" />
+                    <span>{{ trib.tributo.ente.charAt(0) }}</span>
+                  </div>
                 </div>
 
                 <!-- CCLASSTRIB -->

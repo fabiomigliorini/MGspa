@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
 import { formatPercent, formatDate } from 'src/utils/formatters'
+import { getEnteIcon } from 'src/composables/useTributoIcons'
 import SelectEstado from 'src/components/selects/SelectEstado.vue'
 import SelectCidade from 'src/components/selects/SelectCidade.vue'
 import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
@@ -337,6 +338,13 @@ const tributoForm = ref({
   ente: null,
 })
 
+// Opções de ente com ícones
+const enteOptions = [
+  { label: 'FEDERAL', value: 'FEDERAL', icon: 'account_balance' },
+  { label: 'ESTADUAL', value: 'ESTADUAL', icon: 'map' },
+  { label: 'MUNICIPAL', value: 'MUNICIPAL', icon: 'location_city' },
+]
+
 const novoTributo = () => {
   tributoDialogMode.value = 'create'
   tributoForm.value = {
@@ -453,16 +461,16 @@ const confirmarExclusaoTributo = () => {
     <template v-if="!store.tributosLoading && store.tributos.length > 0">
       <!-- Tabs dos Tributos -->
       <q-card flat square class="bg-white">
-        <q-tabs v-model="store.activeTab" class="bg-primary text-white shadow-2" align="center"
-          @update:model-value="onTabChange">
+        <q-tabs v-model="store.activeTab" class="text-grey-7 bg-grey-2" active-color="white" active-bg-color="primary"
+          indicator-color="transparent" align="left" inline-label no-caps @update:model-value="onTabChange">
           <!-- Tabs dinâmicas dos tributos -->
-          <q-tab v-for="tributo in store.tributos" :key="tributo.codtributo" :name="tributo.codtributo">
-            <span>{{ tributo.codigo }} {{ tributo.ente }}</span>
+          <q-tab v-for="tributo in store.tributos" :key="tributo.codtributo" :name="tributo.codtributo"
+            :icon="getEnteIcon(tributo.ente)" class="q-px-lg">
+            <span>{{ tributo.codigo }}</span>
             <q-tooltip>{{ tributo.descricao }} - {{ tributo.ente }}</q-tooltip>
           </q-tab>
 
           <!-- Tab para adicionar novo tributo -->
-          <!-- <q-btn flat color="white" icon="add" @click="novoTributo">Novo Tributo</q-btn> -->
           <q-btn flat icon="add" label="Novo Tributo" unelevated @click="novoTributo" />
         </q-tabs>
       </q-card>
@@ -705,8 +713,26 @@ const confirmarExclusaoTributo = () => {
             :rules="[(val) => !!val || 'Campo obrigatório']" />
           <q-input v-model="tributoForm.descricao" label="Descrição *" outlined class="q-mt-md"
             :rules="[(val) => !!val || 'Campo obrigatório']" />
-          <q-select v-model="tributoForm.ente" label="Ente *" :options="['FEDERAL', 'ESTADUAL', 'MUNICIPAL']" outlined
-            class="q-mt-md" :rules="[(val) => !!val || 'Campo obrigatório']" />
+          <q-select v-model="tributoForm.ente" label="Ente *" :options="enteOptions" outlined emit-value map-options
+            option-value="value" option-label="label" class="q-mt-md"
+            :rules="[(val) => !!val || 'Campo obrigatório']">
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section avatar>
+                  <q-icon :name="scope.opt.icon" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ scope.opt.label }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+            <template v-slot:selected>
+              <div v-if="tributoForm.ente" class="row items-center q-gutter-xs">
+                <q-icon :name="getEnteIcon(tributoForm.ente)" size="sm" />
+                <span>{{ tributoForm.ente }}</span>
+              </div>
+            </template>
+          </q-select>
         </q-card-section>
 
         <q-card-actions align="right">

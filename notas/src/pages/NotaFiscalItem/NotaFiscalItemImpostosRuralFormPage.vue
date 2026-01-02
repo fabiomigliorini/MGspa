@@ -94,35 +94,20 @@ onMounted(async () => {
 <template>
   <q-page padding>
     <q-form @submit.prevent="handleSubmit">
-      <div style="max-width: 900px; margin: 0 auto">
+      <div style="max-width: 700px; margin: 0 auto">
         <!-- Header -->
         <div class="row items-center q-mb-md">
           <div class="text-h5">
-            <q-btn
-              flat
-              dense
-              round
-              icon="arrow_back"
-              @click="handleCancel"
-              class="q-mr-sm"
-              size="0.8em"
-              :disable="loading"
-            />
+            <q-btn flat dense round icon="arrow_back" @click="handleCancel" class="q-mr-sm" size="0.8em"
+              :disable="loading" />
             Impostos Rural - Item #{{ editingItem?.ordem }} - NFe #{{ nota?.numero }}
           </div>
           <q-space />
           <q-btn flat dense color="grey-7" icon="close" @click="handleCancel" :disable="loading" class="q-mr-sm">
             <q-tooltip>Cancelar</q-tooltip>
           </q-btn>
-          <q-btn
-            unelevated
-            color="primary"
-            icon="save"
-            label="Salvar"
-            type="submit"
-            :loading="loading"
-            :disable="notaBloqueada"
-          />
+          <q-btn unelevated color="primary" icon="save" label="Salvar" type="submit" :loading="loading"
+            :disable="notaBloqueada" />
         </div>
 
         <q-banner v-if="notaBloqueada && nota" class="bg-warning text-white q-mb-md" rounded>
@@ -152,12 +137,8 @@ onMounted(async () => {
 
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-toggle
-                  v-model="editingItem.certidaosefazmt"
-                  label="Possui Certidão SEFAZ/MT"
-                  color="primary"
-                  :disable="notaBloqueada"
-                />
+                <q-toggle v-model="editingItem.certidaosefazmt" label="Possui Certidão SEFAZ/MT" color="primary"
+                  :disable="notaBloqueada" />
                 <div class="text-caption text-grey-7 q-mt-xs">
                   Produtor possui certidão de regularidade da SEFAZ Mato Grosso
                 </div>
@@ -176,33 +157,15 @@ onMounted(async () => {
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.fethabkg"
-                  label="FETHAB por Kg"
-                  outlined
-                  type="number"
-                  step="0.0001"
-                  min="0"
-                  prefix="R$"
-                  hint="Valor do FETHAB por quilograma"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.fethabkg" label="FETHAB por Kg" outlined type="number"
+                  step="0.000001" min="0" prefix="R$" hint="Valor do FETHAB por quilograma" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.fethabvalor"
-                  label="Valor Total FETHAB"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  hint="Valor total do FETHAB"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.fethabvalor" label="Valor Total FETHAB" outlined type="number"
+                  step="0.01" min="0" prefix="R$" hint="Valor total do FETHAB" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
             </div>
           </q-card-section>
@@ -218,33 +181,15 @@ onMounted(async () => {
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.iagrokg"
-                  label="IAGRO por Kg"
-                  outlined
-                  type="number"
-                  step="0.0001"
-                  min="0"
-                  prefix="R$"
-                  hint="Valor do IAGRO por quilograma"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.iagrokg" label="IAGRO por Kg" outlined type="number"
+                  step="0.000001" min="0" prefix="R$" hint="Valor do IAGRO por quilograma" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.iagrovalor"
-                  label="Valor Total IAGRO"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  hint="Valor total do IAGRO"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.iagrovalor" label="Valor Total IAGRO" outlined type="number"
+                  step="0.01" min="0" prefix="R$" hint="Valor total do IAGRO" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
             </div>
           </q-card-section>
@@ -260,34 +205,15 @@ onMounted(async () => {
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.funruralpercentual"
-                  label="Alíquota FUNRURAL"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  hint="Percentual do FUNRURAL"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.funruralpercentual" label="Alíquota FUNRURAL" outlined
+                  type="number" step="0.01" min="0" max="100" suffix="%" hint="Percentual do FUNRURAL"
+                  :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.funruralvalor"
-                  label="Valor FUNRURAL"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  hint="Valor total do FUNRURAL"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.funruralvalor" label="Valor FUNRURAL" outlined type="number"
+                  step="0.01" min="0" prefix="R$" hint="Valor total do FUNRURAL" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
             </div>
           </q-card-section>
@@ -303,34 +229,14 @@ onMounted(async () => {
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.senarpercentual"
-                  label="Alíquota SENAR"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  hint="Percentual do SENAR"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.senarpercentual" label="Alíquota SENAR" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" hint="Percentual do SENAR" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.senarvalor"
-                  label="Valor SENAR"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  hint="Valor total do SENAR"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.senarvalor" label="Valor SENAR" outlined type="number" step="0.01"
+                  min="0" prefix="R$" hint="Valor total do SENAR" :disable="notaBloqueada" input-class="text-right" />
               </div>
             </div>
           </q-card-section>

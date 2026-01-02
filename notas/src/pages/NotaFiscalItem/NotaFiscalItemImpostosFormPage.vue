@@ -95,35 +95,20 @@ onMounted(async () => {
 <template>
   <q-page padding>
     <q-form @submit.prevent="handleSubmit">
-      <div style="max-width: 900px; margin: 0 auto">
+      <div style="max-width: 700px; margin: 0 auto">
         <!-- Header -->
         <div class="row items-center q-mb-md">
           <div class="text-h5">
-            <q-btn
-              flat
-              dense
-              round
-              icon="arrow_back"
-              @click="handleCancel"
-              class="q-mr-sm"
-              size="0.8em"
-              :disable="loading"
-            />
+            <q-btn flat dense round icon="arrow_back" @click="handleCancel" class="q-mr-sm" size="0.8em"
+              :disable="loading" />
             Impostos - Item #{{ editingItem?.ordem }} - NFe #{{ nota?.numero }}
           </div>
           <q-space />
           <q-btn flat dense color="grey-7" icon="close" @click="handleCancel" :disable="loading" class="q-mr-sm">
             <q-tooltip>Cancelar</q-tooltip>
           </q-btn>
-          <q-btn
-            unelevated
-            color="primary"
-            icon="save"
-            label="Salvar"
-            type="submit"
-            :loading="loading"
-            :disable="notaBloqueada"
-          />
+          <q-btn unelevated color="primary" icon="save" label="Salvar" type="submit" :loading="loading"
+            :disable="notaBloqueada" />
         </div>
 
         <q-banner v-if="notaBloqueada && nota" class="bg-warning text-white q-mb-md" rounded>
@@ -147,90 +132,37 @@ onMounted(async () => {
             <div class="row q-col-gutter-md">
               <!-- CST / CSOSN -->
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="editingItem.icmscst"
-                  :options="ICMS_CST_OPTIONS"
-                  label="ICMS CST"
-                  outlined
-                  emit-value
-                  map-options
-                  clearable
-                  :disable="notaBloqueada"
-                />
+                <q-select v-model="editingItem.icmscst" :options="ICMS_CST_OPTIONS" label="ICMS CST" outlined emit-value
+                  map-options clearable :disable="notaBloqueada" />
               </div>
 
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="editingItem.csosn"
-                  :options="CSOSN_OPTIONS"
-                  label="CSOSN (Simples Nacional)"
-                  outlined
-                  emit-value
-                  map-options
-                  clearable
-                  :disable="notaBloqueada"
-                />
+                <q-select v-model="editingItem.csosn" :options="CSOSN_OPTIONS" label="CSOSN (Simples Nacional)" outlined
+                  emit-value map-options clearable :disable="notaBloqueada" />
               </div>
 
               <!-- Base de Cálculo -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.icmsbasepercentual"
-                  label="% Base de Cálculo"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.icmsbasepercentual" label="% Base de Cálculo" outlined
+                  type="number" step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.icmsbase"
-                  label="Base de Cálculo"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.icmsbase" label="Base de Cálculo" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Alíquota -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.icmspercentual"
-                  label="Alíquota ICMS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.icmspercentual" label="Alíquota ICMS" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor ICMS -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.icmsvalor"
-                  label="Valor ICMS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.icmsvalor" label="Valor ICMS" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- ICMS ST -->
@@ -240,46 +172,18 @@ onMounted(async () => {
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.icmsstbase"
-                  label="Base de Cálculo ST"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.icmsstbase" label="Base de Cálculo ST" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.icmsstpercentual"
-                  label="Alíquota ST"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.icmsstpercentual" label="Alíquota ST" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.icmsstvalor"
-                  label="Valor ICMS ST"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.icmsstvalor" label="Valor ICMS ST" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
             </div>
           </q-card-section>
@@ -296,78 +200,33 @@ onMounted(async () => {
             <div class="row q-col-gutter-md">
               <!-- CST -->
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="editingItem.ipicst"
-                  :options="IPI_CST_OPTIONS"
-                  label="IPI CST"
-                  outlined
-                  emit-value
-                  map-options
-                  clearable
-                  :disable="notaBloqueada"
-                />
+                <q-select v-model="editingItem.ipicst" :options="IPI_CST_OPTIONS" label="IPI CST" outlined emit-value
+                  map-options clearable :disable="notaBloqueada" />
               </div>
 
               <!-- Base de Cálculo -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.ipibase"
-                  label="Base de Cálculo"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.ipibase" label="Base de Cálculo" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Alíquota -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.ipipercentual"
-                  label="Alíquota IPI"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.ipipercentual" label="Alíquota IPI" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor IPI -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.ipivalor"
-                  label="Valor IPI"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.ipivalor" label="Valor IPI" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor Devolução -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.ipidevolucaovalor"
-                  label="Valor Devolução IPI"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  hint="Valor de IPI devolvido"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.ipidevolucaovalor" label="Valor Devolução IPI" outlined
+                  type="number" step="0.01" min="0" prefix="R$" hint="Valor de IPI devolvido" :disable="notaBloqueada"
+                  input-class="text-right" />
               </div>
             </div>
           </q-card-section>
@@ -384,62 +243,26 @@ onMounted(async () => {
             <div class="row q-col-gutter-md">
               <!-- CST -->
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="editingItem.piscst"
-                  :options="PIS_CST_OPTIONS"
-                  label="PIS CST"
-                  outlined
-                  emit-value
-                  map-options
-                  clearable
-                  :disable="notaBloqueada"
-                />
+                <q-select v-model="editingItem.piscst" :options="PIS_CST_OPTIONS" label="PIS CST" outlined emit-value
+                  map-options clearable :disable="notaBloqueada" />
               </div>
 
               <!-- Base -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.pisbase"
-                  label="Base de Cálculo"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.pisbase" label="Base de Cálculo" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Alíquota -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.pispercentual"
-                  label="Alíquota PIS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.pispercentual" label="Alíquota PIS" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.pisvalor"
-                  label="Valor PIS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.pisvalor" label="Valor PIS" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
             </div>
           </q-card-section>
@@ -456,62 +279,26 @@ onMounted(async () => {
             <div class="row q-col-gutter-md">
               <!-- CST -->
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="editingItem.cofinscst"
-                  :options="COFINS_CST_OPTIONS"
-                  label="COFINS CST"
-                  outlined
-                  emit-value
-                  map-options
-                  clearable
-                  :disable="notaBloqueada"
-                />
+                <q-select v-model="editingItem.cofinscst" :options="COFINS_CST_OPTIONS" label="COFINS CST" outlined
+                  emit-value map-options clearable :disable="notaBloqueada" />
               </div>
 
               <!-- Base -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.cofinsbase"
-                  label="Base de Cálculo"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.cofinsbase" label="Base de Cálculo" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Alíquota -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.cofinspercentual"
-                  label="Alíquota COFINS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.cofinspercentual" label="Alíquota COFINS" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.cofinsvalor"
-                  label="Valor COFINS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.cofinsvalor" label="Valor COFINS" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
             </div>
           </q-card-section>
@@ -532,46 +319,18 @@ onMounted(async () => {
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.csllbase"
-                  label="Base de Cálculo"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.csllbase" label="Base de Cálculo" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.csllpercentual"
-                  label="Alíquota CSLL"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.csllpercentual" label="Alíquota CSLL" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.csllvalor"
-                  label="Valor CSLL"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.csllvalor" label="Valor CSLL" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- IRPJ -->
@@ -581,46 +340,18 @@ onMounted(async () => {
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.irpjbase"
-                  label="Base de Cálculo"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.irpjbase" label="Base de Cálculo" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.irpjpercentual"
-                  label="Alíquota IRPJ"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.irpjpercentual" label="Alíquota IRPJ" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="editingItem.irpjvalor"
-                  label="Valor IRPJ"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.irpjvalor" label="Valor IRPJ" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
             </div>
           </q-card-section>

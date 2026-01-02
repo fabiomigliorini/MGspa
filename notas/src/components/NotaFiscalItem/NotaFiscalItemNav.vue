@@ -64,24 +64,9 @@ const navigateTo = (tab) => {
 </script>
 
 <template>
-  <q-card flat bordered class="q-mb-md">
-    <q-tabs
-      v-model="currentSection"
-      dense
-      class="text-grey"
-      active-color="primary"
-      indicator-color="primary"
-      align="justify"
-      narrow-indicator
-    >
-      <q-tab
-        v-for="tab in tabs"
-        :key="tab.name"
-        :name="tab.name"
-        :icon="tab.icon"
-        :label="tab.label"
-        @click="navigateTo(tab)"
-      />
-    </q-tabs>
-  </q-card>
+  <q-tabs v-model="currentSection" class="text-grey-7 bg-grey-2" active-color="white" active-bg-color="primary"
+    indicator-color="transparent" align="left" inline-label no-caps>
+    <q-tab v-for="tab in tabs" :key="tab.name" :name="tab.name" :icon="tab.icon" :label="tab.label"
+      @click="navigateTo(tab)" class="q-px-lg" />
+  </q-tabs>
 </template>

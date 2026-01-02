@@ -151,35 +151,20 @@ onBeforeUnmount(() => {
 <template>
   <q-page padding>
     <q-form @submit.prevent="handleSubmit">
-      <div style="max-width: 900px; margin: 0 auto">
+      <div style="max-width: 700px; margin: 0 auto">
         <!-- Header -->
         <div class="row items-center q-mb-md">
           <div class="text-h5">
-            <q-btn
-              flat
-              dense
-              round
-              icon="arrow_back"
-              @click="handleCancel"
-              class="q-mr-sm"
-              size="0.8em"
-              :disable="loading"
-            />
+            <q-btn flat dense round icon="arrow_back" @click="handleCancel" class="q-mr-sm" size="0.8em"
+              :disable="loading" />
             {{ isEditMode ? 'Editar Item' : 'Novo Item' }} - NFe #{{ nota?.numero }}
           </div>
           <q-space />
           <q-btn flat dense color="grey-7" icon="close" @click="handleCancel" :disable="loading" class="q-mr-sm">
             <q-tooltip>Cancelar</q-tooltip>
           </q-btn>
-          <q-btn
-            unelevated
-            color="primary"
-            icon="save"
-            label="Salvar"
-            type="submit"
-            :loading="loading"
-            :disable="notaBloqueada"
-          />
+          <q-btn unelevated color="primary" icon="save" label="Salvar" type="submit" :loading="loading"
+            :disable="notaBloqueada" />
         </div>
 
         <q-banner v-if="notaBloqueada && nota" class="bg-warning text-white q-mb-md" rounded>
@@ -190,11 +175,7 @@ onBeforeUnmount(() => {
         </q-banner>
 
         <!-- Navegação -->
-        <NotaFiscalItemNav
-          v-if="isEditMode"
-          :codnotafiscal="codnotafiscal"
-          :codnotafiscalitem="codnotafiscalitem"
-        />
+        <NotaFiscalItemNav v-if="isEditMode" :codnotafiscal="codnotafiscal" :codnotafiscalitem="codnotafiscalitem" />
 
         <!-- Produto e Quantidades -->
         <q-card v-if="editingItem" flat bordered class="q-mb-md">
@@ -207,81 +188,38 @@ onBeforeUnmount(() => {
             <div class="row q-col-gutter-md">
               <!-- Produto -->
               <div class="col-12">
-                <q-input
-                  v-model.number="editingItem.codprodutobarra"
-                  label="Código Produto *"
-                  outlined
-                  type="number"
-                  hint="Código do produto (codprodutobarra)"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.codprodutobarra" label="Código Produto *" outlined type="number"
+                  hint="Código do produto (codprodutobarra)" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Ordem -->
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="editingItem.ordem"
-                  label="Ordem"
-                  outlined
-                  type="number"
-                  min="0"
-                  hint="Ordem de exibição"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.ordem" label="Ordem" outlined type="number" min="0"
+                  hint="Ordem de exibição" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Quantidade -->
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="editingItem.quantidade"
-                  label="Quantidade *"
-                  outlined
-                  type="number"
-                  step="0.0001"
-                  min="0.0001"
-                  :rules="[
+                <q-input v-model.number="editingItem.quantidade" label="Quantidade *" outlined type="number"
+                  step="0.0001" min="0.0001" :rules="[
                     (val) => val !== null && val !== undefined || 'Campo obrigatório',
                     (val) => val > 0 || 'Deve ser maior que zero',
-                  ]"
-                  lazy-rules
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                  ]" lazy-rules :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor Unitário -->
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="editingItem.valorunitario"
-                  label="Valor Unitário *"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :rules="[
+                <q-input v-model.number="editingItem.valorunitario" label="Valor Unitário *" outlined type="number"
+                  step="0.000001" min="0" prefix="R$" :rules="[
                     (val) => val !== null && val !== undefined || 'Campo obrigatório',
                     (val) => val >= 0 || 'Deve ser maior ou igual a zero',
-                  ]"
-                  lazy-rules
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                  ]" lazy-rules :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor Total (calculado) -->
               <div class="col-12 col-sm-3">
-                <q-input
-                  :model-value="valorTotal.toFixed(2)"
-                  label="Valor Total"
-                  outlined
-                  readonly
-                  prefix="R$"
-                  input-class="text-right"
-                  hint="Calculado automaticamente"
-                />
+                <q-input :model-value="valorTotal.toFixed(2)" label="Valor Total" outlined readonly prefix="R$"
+                  input-class="text-right" hint="Calculado automaticamente" />
               </div>
             </div>
           </q-card-section>
@@ -298,76 +236,33 @@ onBeforeUnmount(() => {
             <div class="row q-col-gutter-md">
               <!-- Desconto -->
               <div class="col-12 col-sm-6 col-md-3">
-                <q-input
-                  v-model.number="editingItem.valordesconto"
-                  label="Desconto"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.valordesconto" label="Desconto" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Frete -->
               <div class="col-12 col-sm-6 col-md-3">
-                <q-input
-                  v-model.number="editingItem.valorfrete"
-                  label="Frete"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.valorfrete" label="Frete" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Seguro -->
               <div class="col-12 col-sm-6 col-md-3">
-                <q-input
-                  v-model.number="editingItem.valorseguro"
-                  label="Seguro"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.valorseguro" label="Seguro" outlined type="number" step="0.01"
+                  min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Outras Despesas -->
               <div class="col-12 col-sm-6 col-md-3">
-                <q-input
-                  v-model.number="editingItem.valoroutras"
-                  label="Outras Despesas"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.valoroutras" label="Outras Despesas" outlined type="number"
+                  step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Valor Total Final (calculado) -->
               <div class="col-12 col-sm-6 col-md-3">
-                <q-input
-                  :model-value="valorTotalFinal.toFixed(2)"
-                  label="Valor Total Final"
-                  outlined
-                  readonly
-                  prefix="R$"
-                  input-class="text-right text-weight-bold"
-                  hint="Total - Desconto + Frete + Seguro + Outras"
-                  bg-color="blue-grey-1"
-                />
+                <q-input :model-value="valorTotalFinal.toFixed(2)" label="Valor Total Final" outlined readonly
+                  prefix="R$" input-class="text-right text-weight-bold"
+                  hint="Total - Desconto + Frete + Seguro + Outras" bg-color="blue-grey-1" />
               </div>
             </div>
           </q-card-section>
@@ -384,44 +279,22 @@ onBeforeUnmount(() => {
             <div class="row q-col-gutter-md">
               <!-- CFOP -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.codcfop"
-                  label="Código CFOP *"
-                  outlined
-                  type="number"
-                  hint="Código do CFOP (codcfop)"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.codcfop" label="Código CFOP *" outlined type="number"
+                  hint="Código do CFOP (codcfop)" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Devolução Percentual -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="editingItem.devolucaopercentual"
-                  label="% Devolução"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  suffix="%"
-                  hint="Percentual de devolução (se aplicável)"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="editingItem.devolucaopercentual" label="% Devolução" outlined type="number"
+                  step="0.01" min="0" max="100" suffix="%" hint="Percentual de devolução (se aplicável)"
+                  :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Descrição Alternativa -->
               <div class="col-12">
-                <q-input
-                  v-model="editingItem.descricaoalternativa"
-                  label="Descrição Alternativa"
-                  outlined
-                  maxlength="120"
-                  hint="Descrição customizada para a NFe (máx. 120 caracteres)"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="editingItem.descricaoalternativa" label="Descrição Alternativa" outlined
+                  maxlength="120" hint="Descrição customizada para a NFe (máx. 120 caracteres)"
+                  :disable="notaBloqueada" />
               </div>
             </div>
           </q-card-section>
@@ -438,41 +311,21 @@ onBeforeUnmount(() => {
             <div class="row q-col-gutter-md">
               <!-- Pedido -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model="editingItem.pedido"
-                  label="Número do Pedido"
-                  outlined
-                  maxlength="15"
-                  hint="Referência ao pedido de venda/compra"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="editingItem.pedido" label="Número do Pedido" outlined maxlength="15"
+                  hint="Referência ao pedido de venda/compra" :disable="notaBloqueada" />
               </div>
 
               <!-- Item do Pedido -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model="editingItem.pedidoitem"
-                  label="Item do Pedido"
-                  outlined
-                  maxlength="6"
-                  hint="Número do item no pedido"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="editingItem.pedidoitem" label="Item do Pedido" outlined maxlength="6"
+                  hint="Número do item no pedido" :disable="notaBloqueada" />
               </div>
 
               <!-- Observações -->
               <div class="col-12">
-                <q-input
-                  v-model="editingItem.observacoes"
-                  label="Observações"
-                  outlined
-                  type="textarea"
-                  rows="3"
-                  maxlength="1500"
-                  counter
-                  hint="Informações adicionais sobre o item (máx. 1500 caracteres)"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="editingItem.observacoes" label="Observações" outlined type="textarea" rows="3"
+                  maxlength="1500" counter hint="Informações adicionais sobre o item (máx. 1500 caracteres)"
+                  :disable="notaBloqueada" />
               </div>
             </div>
           </q-card-section>

@@ -73,10 +73,8 @@ class NotaFiscalPagamentoController extends Controller
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        $status = NotaFiscalService::getStatusNota($nota);
-
-        if (in_array($status, ['Autorizada', 'Cancelada', 'Inutilizada'])) {
-            abort(422, "Não é possível modificar pagamentos de uma nota com status: {$status}");
+        if (in_array($nota->status, [NotaFiscalService::STATUS_AUTORIZADA, NotaFiscalService::STATUS_CANCELADA, NotaFiscalService::STATUS_INUTILIZADA])) {
+            abort(422, "Não é possível modificar pagamentos de uma nota com status: {$nota->status}");
         }
     }
 }

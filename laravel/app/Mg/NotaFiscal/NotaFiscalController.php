@@ -13,7 +13,11 @@ class NotaFiscalController extends Controller
     /**
      * Statuses que impedem modificações na nota
      */
-    private const STATUS_BLOQUEADOS = ['Autorizada', 'Cancelada', 'Inutilizada'];
+    private const STATUS_BLOQUEADOS = [
+        NotaFiscalService::STATUS_AUTORIZADA,
+        NotaFiscalService::STATUS_CANCELADA,
+        NotaFiscalService::STATUS_INUTILIZADA
+    ];
 
     public function index(Request $request)
     {
@@ -166,10 +170,8 @@ class NotaFiscalController extends Controller
      */
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        $status = NotaFiscalService::getStatusNota($nota);
-
-        if (in_array($status, self::STATUS_BLOQUEADOS)) {
-            abort(422, "Não é possível modificar uma nota com status: {$status}");
+        if (in_array($nota->status, self::STATUS_BLOQUEADOS)) {
+            abort(422, "Não é possível modificar uma nota com status: {$nota->status}");
         }
     }
 }

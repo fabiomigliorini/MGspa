@@ -213,7 +213,7 @@ onMounted(() => {
 <template>
   <q-page padding>
     <q-form @submit.prevent="handleSubmit">
-      <div style="max-width: 600px; margin: 0 auto;">
+      <div style="max-width: 700px; margin: 0 auto;">
         <!-- Header -->
         <div class="row items-center q-mb-md">
           <div class="text-h5">
@@ -346,12 +346,8 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Cliente/Fornecedor -->
               <div class="col-12">
-                <SelectPessoa
-                  v-model="form.codpessoa"
-                  label="Cliente/Fornecedor *"
-                  :disable="notaBloqueada"
-                  @clear="handleClearPessoa"
-                />
+                <SelectPessoa v-model="form.codpessoa" label="Cliente/Fornecedor *" :disable="notaBloqueada"
+                  @clear="handleClearPessoa" />
               </div>
 
               <!-- CPF na Nota (opcional) - Apenas para Consumidor -->
@@ -445,97 +441,48 @@ onMounted(() => {
 
               <!-- Placa -->
               <div class="col-12 col-sm-8">
-                <q-input
-                  v-model="form.placa"
-                  label="Placa do Veículo"
-                  outlined
-                  maxlength="7"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="form.placa" label="Placa do Veículo" outlined maxlength="7"
+                  :disable="notaBloqueada" />
               </div>
 
               <!-- UF Placa -->
               <div class="col-12 col-sm-4">
-                <SelectEstado
-                  v-model="form.codestadoplaca"
-                  label="UF Placa"
-                  :disable="notaBloqueada"
-                />
+                <SelectEstado v-model="form.codestadoplaca" label="UF Placa" :disable="notaBloqueada" />
               </div>
 
               <!-- Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.volumes"
-                  label="Volumes"
-                  outlined
-                  type="number"
-                  min="0"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="form.volumes" label="Volumes" outlined type="number" min="0"
+                  :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Espécie dos Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model="form.volumesespecie"
-                  label="Espécie"
-                  outlined
-                  maxlength="60"
-                  hint="Ex: Caixa, Pacote, Fardo"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="form.volumesespecie" label="Espécie" outlined maxlength="60"
+                  hint="Ex: Caixa, Pacote, Fardo" :disable="notaBloqueada" />
               </div>
 
               <!-- Marca dos Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model="form.volumesmarca"
-                  label="Marca"
-                  outlined
-                  maxlength="60"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="form.volumesmarca" label="Marca" outlined maxlength="60" :disable="notaBloqueada" />
               </div>
 
               <!-- Numeração dos Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model="form.volumesnumero"
-                  label="Numeração"
-                  outlined
-                  maxlength="60"
-                  :disable="notaBloqueada"
-                />
+                <q-input v-model="form.volumesnumero" label="Numeração" outlined maxlength="60"
+                  :disable="notaBloqueada" />
               </div>
 
               <!-- Peso Bruto -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.pesobruto"
-                  label="Peso Bruto (Kg)"
-                  outlined
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="form.pesobruto" label="Peso Bruto (Kg)" outlined type="number" step="0.001"
+                  min="0" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Peso Líquido -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.pesoliquido"
-                  label="Peso Líquido (Kg)"
-                  outlined
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
-                />
+                <q-input v-model.number="form.pesoliquido" label="Peso Líquido (Kg)" outlined type="number" step="0.001"
+                  min="0" :disable="notaBloqueada" input-class="text-right" />
               </div>
             </div>
           </q-card-section>

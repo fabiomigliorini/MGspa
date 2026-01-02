@@ -254,3 +254,9 @@ export const formatInscricaoEstadual = (ie, uf) => {
     return ieStr
   }
 }
+
+// Arredonda um número para uma quantidade específica de casas decimais
+export const round = (value, decimals = 2) => {
+  const factor = Math.pow(10, decimals)
+  return Math.round((value || 0) * factor) / factor
+}

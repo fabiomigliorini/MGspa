@@ -86,7 +86,7 @@ class NotaFiscalDetailResource extends JsonResource
             // 'nferejeicao' => $this->nferejeicao,
 
             // Status
-            'status' => $this->getStatus(),
+            'status' => $this->status,
 
             // Relacionamentos
             'itens' => $this->whenLoaded('NotaFiscalProdutoBarraS', function () {
@@ -191,10 +191,5 @@ class NotaFiscalDetailResource extends JsonResource
         }
 
         return $this->EstadoPlaca?->only(['codestado', 'estado', 'sigla']);
-    }
-
-    private function getStatus(): string
-    {
-        return NotaFiscalService::getStatusNota($this->resource);
     }
 }

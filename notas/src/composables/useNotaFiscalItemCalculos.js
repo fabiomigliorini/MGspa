@@ -1,4 +1,5 @@
 import { watch } from 'vue'
+import { round } from 'src/utils/formatters'
 
 /**
  * Composable para cálculos de impostos de itens da nota fiscal
@@ -19,7 +20,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
    * Calcula valor total (quantidade * valor unitário)
    */
   const atualizaTotal = () => {
-    form.value.valortotal = (form.value.quantidade || 0) * (form.value.valorunitario || 0)
+    form.value.valortotal = round((form.value.quantidade || 0) * (form.value.valorunitario || 0), 2)
 
     // Recalcula impostos por KG quando a quantidade muda
     atualizaImpostoKg('fethab', 'kg')
@@ -35,7 +36,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     if ((form.value.quantidade || 0) < 0.01) {
       form.value.quantidade = 1
     }
-    form.value.valorunitario = (form.value.valortotal || 0) / (form.value.quantidade || 1)
+    form.value.valorunitario = round((form.value.valortotal || 0) / (form.value.quantidade || 1), 6)
     atualizaTotalFinal()
   }
 
@@ -55,7 +56,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
 
     const novoTotalFinal = valortotal - valordesconto + valorfrete + valorseguro + valoroutras
 
-    form.value.valortotalfinal = novoTotalFinal
+    form.value.valortotalfinal = round(novoTotalFinal, 2)
 
     // Só atualiza bases se o total final mudou
     if (Math.abs(novoTotalFinal - valorTotalFinalAnterior) > 0.001) {
@@ -99,11 +100,17 @@ export function useNotaFiscalItemCalculos(form, store = null) {
       return
     }
 
+    console.log('Atualizando bases dos tributos da reforma tributária...')
+    console.log(`Total antigo: ${totalAntigo}, Total novo: ${totalNovo}`)
+    console.log(store.itemTributos)
+
     store.itemTributos.forEach((tributo) => {
+      console.log(`Atualizando tributo: ${tributo.nome}`)
       // Se não tem base nem alíquota, não faz nada
       if ((tributo.base || 0) <= 0 && (tributo.aliquota || 0) <= 0) {
         return
       }
+      console.log(`Base antiga: ${tributo.base}, Alíquota: ${tributo.aliquota}`)
 
       let novaBase = tributo.base || 0
       const basereducaopercentual = tributo.basereducaopercentual || 0
@@ -113,7 +120,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
         // Base = Total * (100 - %Redução) / 100
         const percentualBaseCalculo = 100 - basereducaopercentual
         novaBase = (totalNovo * percentualBaseCalculo) / 100
-        tributo.basereducao = totalNovo - novaBase
+        tributo.basereducao = round(totalNovo - novaBase, 2)
       } else {
         // Sem redução de base, segue a lógica padrão
         // Se a base era igual ao total anterior OU era zero, atualiza para o novo total
@@ -129,10 +136,10 @@ export function useNotaFiscalItemCalculos(form, store = null) {
       }
 
       // Atualiza a base do tributo
-      tributo.base = novaBase
+      tributo.base = round(novaBase, 2)
 
       // Recalcula o valor do tributo com base na nova base e alíquota
-      tributo.valor = (novaBase * (tributo.aliquota || 0)) / 100
+      tributo.valor = round((novaBase * (tributo.aliquota || 0)) / 100, 2)
 
       // Se gera crédito, atualiza o valor do crédito também
       if (tributo.geracredito) {
@@ -154,7 +161,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     // Recalcula o valor mantendo o percentual
     const valor = (valorprodutos * percentual) / 100
 
-    form.value[campoValor] = valor
+    form.value[campoValor] = round(valor, 2)
   }
 
   /**
@@ -203,7 +210,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
       }
     }
 
-    form.value[campoBase] = novaBase
+    form.value[campoBase] = round(novaBase, 2)
     atualizaImposto(imposto, 'base')
   }
 
@@ -222,8 +229,8 @@ export function useNotaFiscalItemCalculos(form, store = null) {
 
     const valorprodutos = form.value.valortotalfinal || 0
 
-    let base = temBase ? (form.value[campoBase] || 0) : valorprodutos
-    let basepercentual = campoBasePercentual ? (form.value[campoBasePercentual] || 100) : 100
+    let base = temBase ? form.value[campoBase] || 0 : valorprodutos
+    let basepercentual = campoBasePercentual ? form.value[campoBasePercentual] || 100 : 100
     let percentual = form.value[campoPercentual] || 0
     let valor = form.value[campoValor] || 0
 
@@ -259,13 +266,13 @@ export function useNotaFiscalItemCalculos(form, store = null) {
 
     // Atualiza os campos do formulário
     if (temBase) {
-      form.value[campoBase] = base || 0
+      form.value[campoBase] = round(base || 0, 2)
     }
-    if (campoBasePercentual) {
-      form.value[campoBasePercentual] = basepercentual || 0
-    }
-    form.value[campoPercentual] = percentual || 0
-    form.value[campoValor] = valor || 0
+    // if (campoBasePercentual) {
+    // form.value[campoBasePercentual] = round(basepercentual || 0, 2)
+    // }
+    // form.value[campoPercentual] = round(percentual || 0, 2)
+    form.value[campoValor] = round(valor || 0, 2)
   }
 
   /**
@@ -292,8 +299,8 @@ export function useNotaFiscalItemCalculos(form, store = null) {
         break
     }
 
-    form.value[campoKg] = kg || 0
-    form.value[campoValor] = valor || 0
+    // form.value[campoKg] = round(kg || 0, 6)
+    form.value[campoValor] = round(valor || 0, 2)
   }
 
   /**
@@ -312,56 +319,146 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     watch(() => form.value.valoroutras, atualizaTotalFinal)
 
     // Watchers para ICMS
-    watch(() => form.value.icmsbase, () => atualizaImposto('icms', 'base'))
-    watch(() => form.value.icmsbasepercentual, () => atualizaImposto('icms', 'basepercentual'))
-    watch(() => form.value.icmspercentual, () => atualizaImposto('icms', 'percentual'))
-    watch(() => form.value.icmsvalor, () => atualizaImposto('icms', 'valor'))
+    watch(
+      () => form.value.icmsbase,
+      () => atualizaImposto('icms', 'base'),
+    )
+    watch(
+      () => form.value.icmsbasepercentual,
+      () => atualizaImposto('icms', 'basepercentual'),
+    )
+    watch(
+      () => form.value.icmspercentual,
+      () => atualizaImposto('icms', 'percentual'),
+    )
+    watch(
+      () => form.value.icmsvalor,
+      () => atualizaImposto('icms', 'valor'),
+    )
 
     // Watchers para ICMS ST
-    watch(() => form.value.icmsstbase, () => atualizaImposto('icmsst', 'base'))
-    watch(() => form.value.icmsstpercentual, () => atualizaImposto('icmsst', 'percentual'))
-    watch(() => form.value.icmsstvalor, () => atualizaImposto('icmsst', 'valor'))
+    watch(
+      () => form.value.icmsstbase,
+      () => atualizaImposto('icmsst', 'base'),
+    )
+    watch(
+      () => form.value.icmsstpercentual,
+      () => atualizaImposto('icmsst', 'percentual'),
+    )
+    watch(
+      () => form.value.icmsstvalor,
+      () => atualizaImposto('icmsst', 'valor'),
+    )
 
     // Watchers para IPI
-    watch(() => form.value.ipibase, () => atualizaImposto('ipi', 'base'))
-    watch(() => form.value.ipipercentual, () => atualizaImposto('ipi', 'percentual'))
-    watch(() => form.value.ipivalor, () => atualizaImposto('ipi', 'valor'))
+    watch(
+      () => form.value.ipibase,
+      () => atualizaImposto('ipi', 'base'),
+    )
+    watch(
+      () => form.value.ipipercentual,
+      () => atualizaImposto('ipi', 'percentual'),
+    )
+    watch(
+      () => form.value.ipivalor,
+      () => atualizaImposto('ipi', 'valor'),
+    )
 
     // Watchers para PIS
-    watch(() => form.value.pisbase, () => atualizaImposto('pis', 'base'))
-    watch(() => form.value.pispercentual, () => atualizaImposto('pis', 'percentual'))
-    watch(() => form.value.pisvalor, () => atualizaImposto('pis', 'valor'))
+    watch(
+      () => form.value.pisbase,
+      () => atualizaImposto('pis', 'base'),
+    )
+    watch(
+      () => form.value.pispercentual,
+      () => atualizaImposto('pis', 'percentual'),
+    )
+    watch(
+      () => form.value.pisvalor,
+      () => atualizaImposto('pis', 'valor'),
+    )
 
     // Watchers para COFINS
-    watch(() => form.value.cofinsbase, () => atualizaImposto('cofins', 'base'))
-    watch(() => form.value.cofinspercentual, () => atualizaImposto('cofins', 'percentual'))
-    watch(() => form.value.cofinsvalor, () => atualizaImposto('cofins', 'valor'))
+    watch(
+      () => form.value.cofinsbase,
+      () => atualizaImposto('cofins', 'base'),
+    )
+    watch(
+      () => form.value.cofinspercentual,
+      () => atualizaImposto('cofins', 'percentual'),
+    )
+    watch(
+      () => form.value.cofinsvalor,
+      () => atualizaImposto('cofins', 'valor'),
+    )
 
     // Watchers para CSLL
-    watch(() => form.value.csllbase, () => atualizaImposto('csll', 'base'))
-    watch(() => form.value.csllpercentual, () => atualizaImposto('csll', 'percentual'))
-    watch(() => form.value.csllvalor, () => atualizaImposto('csll', 'valor'))
+    watch(
+      () => form.value.csllbase,
+      () => atualizaImposto('csll', 'base'),
+    )
+    watch(
+      () => form.value.csllpercentual,
+      () => atualizaImposto('csll', 'percentual'),
+    )
+    watch(
+      () => form.value.csllvalor,
+      () => atualizaImposto('csll', 'valor'),
+    )
 
     // Watchers para IRPJ
-    watch(() => form.value.irpjbase, () => atualizaImposto('irpj', 'base'))
-    watch(() => form.value.irpjpercentual, () => atualizaImposto('irpj', 'percentual'))
-    watch(() => form.value.irpjvalor, () => atualizaImposto('irpj', 'valor'))
+    watch(
+      () => form.value.irpjbase,
+      () => atualizaImposto('irpj', 'base'),
+    )
+    watch(
+      () => form.value.irpjpercentual,
+      () => atualizaImposto('irpj', 'percentual'),
+    )
+    watch(
+      () => form.value.irpjvalor,
+      () => atualizaImposto('irpj', 'valor'),
+    )
 
     // Watchers para FETHAB
-    watch(() => form.value.fethabkg, () => atualizaImpostoKg('fethab', 'kg'))
-    watch(() => form.value.fethabvalor, () => atualizaImpostoKg('fethab', 'valor'))
+    watch(
+      () => form.value.fethabkg,
+      () => atualizaImpostoKg('fethab', 'kg'),
+    )
+    watch(
+      () => form.value.fethabvalor,
+      () => atualizaImpostoKg('fethab', 'valor'),
+    )
 
     // Watchers para IAGRO
-    watch(() => form.value.iagrokg, () => atualizaImpostoKg('iagro', 'kg'))
-    watch(() => form.value.iagrovalor, () => atualizaImpostoKg('iagro', 'valor'))
+    watch(
+      () => form.value.iagrokg,
+      () => atualizaImpostoKg('iagro', 'kg'),
+    )
+    watch(
+      () => form.value.iagrovalor,
+      () => atualizaImpostoKg('iagro', 'valor'),
+    )
 
     // Watchers para FUNRURAL
-    watch(() => form.value.funruralpercentual, () => atualizaImposto('funrural', 'percentual'))
-    watch(() => form.value.funruralvalor, () => atualizaImposto('funrural', 'valor'))
+    watch(
+      () => form.value.funruralpercentual,
+      () => atualizaImposto('funrural', 'percentual'),
+    )
+    watch(
+      () => form.value.funruralvalor,
+      () => atualizaImposto('funrural', 'valor'),
+    )
 
     // Watchers para SENAR
-    watch(() => form.value.senarpercentual, () => atualizaImposto('senar', 'percentual'))
-    watch(() => form.value.senarvalor, () => atualizaImposto('senar', 'valor'))
+    watch(
+      () => form.value.senarpercentual,
+      () => atualizaImposto('senar', 'percentual'),
+    )
+    watch(
+      () => form.value.senarvalor,
+      () => atualizaImposto('senar', 'valor'),
+    )
   }
 
   /**
