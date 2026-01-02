@@ -87,30 +87,22 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     atualizaImpostoKg('iagro', 'kg')
 
     // Atualiza bases dos tributos da reforma tributária
-    if (store && store.itemTributos) {
-      atualizaBasesTributosReforma(totalNovo, totalAntigo)
-    }
+    atualizaBasesTributosReforma(totalNovo, totalAntigo)
   }
 
   /**
    * Atualiza as bases dos tributos da reforma tributária quando o total muda
    */
   const atualizaBasesTributosReforma = (totalNovo, totalAntigo) => {
-    if (!store || !store.itemTributos || store.itemTributos.length === 0) {
+    if (!store || !store.editingItem?.tributos || store.editingItem?.tributos.length === 0) {
       return
     }
 
-    console.log('Atualizando bases dos tributos da reforma tributária...')
-    console.log(`Total antigo: ${totalAntigo}, Total novo: ${totalNovo}`)
-    console.log(store.itemTributos)
-
-    store.itemTributos.forEach((tributo) => {
-      console.log(`Atualizando tributo: ${tributo.nome}`)
+    store.editingItem?.tributos.forEach((tributo) => {
       // Se não tem base nem alíquota, não faz nada
       if ((tributo.base || 0) <= 0 && (tributo.aliquota || 0) <= 0) {
         return
       }
-      console.log(`Base antiga: ${tributo.base}, Alíquota: ${tributo.aliquota}`)
 
       let novaBase = tributo.base || 0
       const basereducaopercentual = tributo.basereducaopercentual || 0
