@@ -497,13 +497,14 @@ onMounted(() => {
     <div v-else-if="nota">
 
       <!-- Header com Voltar -->
-      <div class="row items-center q-mb-md">
-        <div class="text-h5">
-          <q-btn flat dense round icon="arrow_back" :to="{ name: 'notas' }" class="q-mr-sm" size="0.8em" />
-          Nota
+      <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
+        <q-btn flat dense round icon="arrow_back" to="/notas" class="q-mr-sm" style="flex-shrink: 0;" />
+        <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
+          {{ getModeloLabel(nota.modelo) }}
+          {{ formatNumero(nota.numero) }}
+          - Série
+          {{ nota.serie }}
         </div>
-        <q-space />
-
         <q-btn flat dense color="primary" icon="edit"
           :to="{ name: 'nota-fiscal-edit', params: { codnotafiscal: route.params.codnotafiscal } }"
           :disable="notaBloqueada" class="q-mr-sm">

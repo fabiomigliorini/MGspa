@@ -92,7 +92,8 @@ watch(
         emit('update:modelValue', locaisFiltrados.value[0].value)
       }
       // Se a opção selecionada não está mais disponível, limpa a seleção
-      else if (props.modelValue) {
+      // MAS: só faz isso se não estiver carregando E se tiver opções carregadas
+      else if (props.modelValue && !loading.value && estoqueLocalStore.locais.length > 0) {
         const exists = locaisFiltrados.value.find((l) => l.value === props.modelValue)
         if (!exists) {
           emit('update:modelValue', null)

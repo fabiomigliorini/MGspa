@@ -8,6 +8,8 @@ import SelectFilial from '../components/selects/SelectFilial.vue'
 import SelectEstoqueLocal from '../components/selects/SelectEstoqueLocal.vue'
 import SelectPessoa from '../components/selects/SelectPessoa.vue'
 import SelectEstado from '../components/selects/SelectEstado.vue'
+import { getModeloLabel } from 'src/constants/notaFiscal'
+import { formatNumero } from 'src/utils/formatters'
 
 const router = useRouter()
 const route = useRoute()
@@ -191,14 +193,6 @@ const handleSubmit = async () => {
   }
 }
 
-const handleCancel = () => {
-  if (isEditMode.value) {
-    router.push({ name: 'nota-fiscal-view', params: { codnotafiscal: route.params.codnotafiscal } })
-  } else {
-    router.push({ name: 'notas' })
-  }
-}
-
 const handleClearPessoa = () => {
   form.value.codpessoa = 1 // Define como Consumidor ao invés de null
 }
@@ -212,21 +206,38 @@ onMounted(() => {
 
 <template>
   <q-page padding>
-    <q-form @submit.prevent="handleSubmit">
+    <q-form @submit.prevent="handleSubmit" v-if="nota">
+
+      <!-- FAB para Salvar -->
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn fab color="primary" icon="save" type="submit" :loading="loading" :disable="notaBloqueada">
+          <q-tooltip>Salvar Nota</q-tooltip>
+        </q-btn>
+      </q-page-sticky>
+
       <div style="max-width: 700px; margin: 0 auto;">
+
         <!-- Header -->
-        <div class="row items-center q-mb-md">
-          <div class="text-h5">
-            <q-btn flat dense round icon="arrow_back" @click="handleCancel" class="q-mr-sm" size="0.8em"
-              :disable="loading" />
-            {{ isEditMode ? 'Editar Nota Fiscal' : 'Nova Nota Fiscal' }}
+        <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
+          <template v-if="isEditMode">
+            <q-btn flat dense round icon="arrow_back" :to="'/notas/' + route.params.codnotafiscal" class="q-mr-sm"
+              :disable="loading" style="flex-shrink: 0;" />
+          </template>
+          <template v-else>
+            <q-btn flat dense round icon="arrow_back" to="/notas" class="q-mr-sm" size="1.5em" :disable="loading"
+              style="flex-shrink: 0;" />
+          </template>
+          <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
+            <template v-if="isEditMode">
+              {{ getModeloLabel(nota.modelo) }}
+              {{ formatNumero(nota.numero) }}
+              - Série
+              {{ nota.serie }}
+            </template>
+            <template v-else>
+              Nova Nota Fiscal
+            </template>
           </div>
-          <q-space />
-          <q-btn flat dense color="grey-7" icon="close" @click="handleCancel" :disable="loading" class="q-mr-sm">
-            <q-tooltip>Cancelar</q-tooltip>
-          </q-btn>
-          <q-btn unelevated color="primary" icon="save" label="Salvar" type="submit" :loading="loading"
-            :disable="notaBloqueada" />
         </div>
 
         <q-banner v-if="notaBloqueada && nota" class="bg-warning text-white q-mb-md" rounded>
