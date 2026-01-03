@@ -77,6 +77,17 @@ export default {
     return URL.createObjectURL(blob)
   },
 
+  async xml(codnotafiscal) {
+    // Faz o download do XML via API (com autenticação via header)
+    const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/xml`, {
+      responseType: 'blob',
+    })
+
+    // Cria um URL temporário do blob
+    const blob = new Blob([response.data], { type: 'application/xml' })
+    return URL.createObjectURL(blob)
+  },
+
   async imprimir(codnotafiscal, impressora = null) {
     const data = impressora ? { impressora } : {}
     const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/imprimir`, data)

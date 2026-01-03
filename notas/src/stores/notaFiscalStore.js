@@ -405,6 +405,15 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    async getXmlUrl(codnotafiscal) {
+      try {
+        return await notaFiscalService.xml(codnotafiscal)
+      } catch (error) {
+        console.error('Erro ao obter URL do XML:', error)
+        throw error
+      }
+    },
+
     async imprimirNfe(codnotafiscal, impressora = null) {
       try {
         const response = await notaFiscalService.imprimir(codnotafiscal, impressora)

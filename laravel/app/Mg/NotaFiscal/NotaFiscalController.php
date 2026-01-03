@@ -480,4 +480,16 @@ class NotaFiscalController extends Controller
 
         return response()->json($resultado, 200);
     }
+
+    /**
+     * Retorna o XML da nota fiscal
+     */
+    public function xml(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $xml = NFePHPService::xml($nota);
+
+        return response($xml, 200)->header('Content-Type', 'text/xml');
+    }
 }

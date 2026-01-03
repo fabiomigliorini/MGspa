@@ -101,6 +101,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::post('{codnotafiscal}/inutilizar', '\Mg\NotaFiscal\NotaFiscalController@inutilizar');
         Route::post('{codnotafiscal}/mail', '\Mg\NotaFiscal\NotaFiscalController@mail');
         Route::get('{codnotafiscal}/danfe', '\Mg\NotaFiscal\NotaFiscalController@danfe');
+        Route::get('{codnotafiscal}/xml', '\Mg\NotaFiscal\NotaFiscalController@xml');
         Route::post('{codnotafiscal}/imprimir', '\Mg\NotaFiscal\NotaFiscalController@imprimir');
 
         // Relacionamentos nested

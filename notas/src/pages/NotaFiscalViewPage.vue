@@ -786,6 +786,19 @@ const abrirDanfe = async () => {
   }
 }
 
+const abrirXml = async () => {
+  try {
+    const xmlUrl = await notaFiscalStore.getXmlUrl(nota.value.codnotafiscal)
+    window.open(xmlUrl, '_blank')
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao abrir XML',
+      caption: error?.response?.data?.message || error?.message || 'Erro desconhecido',
+    })
+  }
+}
+
 // Computed para controlar visibilidade dos botões
 const podeEnviar = computed(() => {
   return nota.value && ['DIG', 'ERR'].includes(nota.value.status)
@@ -809,6 +822,10 @@ const podeEnviarEmail = computed(() => {
 
 const podeAbrirDanfe = computed(() => {
   return nota.value && ['AUT', 'CAN'].includes(nota.value.status)
+})
+
+const podeAbrirXml = computed(() => {
+  return nota.value && nota.value.emitida && nota.value.nfechave
 })
 
 // Copiar chave da NFe
@@ -1033,18 +1050,18 @@ onUnmounted(() => {
               <div class="text-caption text-grey-7">
                 Natureza de Operação
               </div>
-              <div class="text-body1 text-weight-medium">
+              <div class="text-body2 text-weight-medium">
                 {{ nota.codoperacao === 1 ? 'Entrada' : 'Saída' }} |
                 {{ nota.naturezaOperacao?.naturezaoperacao || '-' }}
               </div>
 
               <!-- Emissao -->
               <div class="text-caption text-grey-7">Emissão</div>
-              <div class="text-body1">{{ formatDate(nota.emissao) }}</div>
+              <div class="text-body2">{{ formatDateTime(nota.emissao) }}</div>
 
               <!-- saida  -->
               <div class="text-caption text-grey-7">Saída/Entrada</div>
-              <div class="text-body1">{{ formatDateTime(nota.saida) }}</div>
+              <div class="text-body2">{{ formatDateTime(nota.saida) }}</div>
             </q-card-section>
           </q-card>
         </div>
@@ -1230,9 +1247,9 @@ onUnmounted(() => {
             </q-card-section>
 
             <!-- Botões de ação da NFe -->
-            <q-separator />
+            <q-separator v-if="nota?.emitida" />
 
-            <q-card-actions align="right">
+            <q-card-actions align="right" v-if="nota?.emitida">
               <!-- Enviar (F9) -->
               <q-btn v-if="podeEnviar" dense round flat color="positive" icon="send" @click="enviarNfe"
                 :loading="loadingNfe" class="q-mr-sm">
@@ -1249,6 +1266,11 @@ onUnmounted(() => {
               <q-btn v-if="podeAbrirDanfe" dense round flat color="primary" icon="description" @click="abrirDanfe"
                 class="q-mr-sm">
                 <q-tooltip>Abrir DANFE</q-tooltip>
+              </q-btn>
+
+              <!-- Abrir XML -->
+              <q-btn v-if="podeAbrirXml" dense round flat color="orange" icon="code" @click="abrirXml" class="q-mr-sm">
+                <q-tooltip>Abrir XML</q-tooltip>
               </q-btn>
 
               <!-- Enviar Email -->
