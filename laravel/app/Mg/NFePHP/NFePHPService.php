@@ -100,11 +100,9 @@ class NFePHPService extends MgService
             if ($respStd->cStat == 103) {
 
                 // Salva Numero do Protocolo na tabela de Nota Fiscal
-                NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-                    'nfereciboenvio' => $respStd->infRec->nRec,
-                    'nfedataenvio' => Carbon::parse($respStd->dhRecbto)
-                ]);
-                $nf = $nf->fresh();
+                $nf->nfereciboenvio = $respStd->infRec->nRec;
+                $nf->nfedataenvio = Carbon::parse($respStd->dhRecbto);
+                $nf->save(); // Dispara observers
                 $sucesso = true;
             }
 
@@ -196,10 +194,9 @@ class NFePHPService extends MgService
         $infProt = $protNFe->infProt;
 
         // Guarda no Banco de Dados informação da Autorização
-        $ret = NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-            'nfeautorizacao' => $infProt->nProt,
-            'nfedataautorizacao' => Carbon::parse($infProt->dhRecbto)
-        ]);
+        $nf->nfeautorizacao = $infProt->nProt;
+        $nf->nfedataautorizacao = Carbon::parse($infProt->dhRecbto);
+        $nf->save(); // Dispara observers
 
         // Carrega o Arquivo com o XML Assinado
         $pathAssinada = NFePHPPathService::pathNFeAssinada($nf);
@@ -225,11 +222,10 @@ class NFePHPService extends MgService
         $infProt = $protNFe->infProt;
 
         // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-            'justificativa' => $infProt->xMotivo,
-            'nfeinutilizacao' => $infProt->nProt,
-            'nfedatainutilizacao' => Carbon::parse($infProt->dhRecbto)
-        ]);
+        $nf->justificativa = $infProt->xMotivo;
+        $nf->nfeinutilizacao = $infProt->nProt;
+        $nf->nfedatainutilizacao = Carbon::parse($infProt->dhRecbto);
+        $nf->save(); // Dispara observers
 
         // Carrega o Arquivo com o XML Assinado
         $pathAssinada = NFePHPPathService::pathNFeAssinada($nf);
@@ -258,11 +254,10 @@ class NFePHPService extends MgService
         }
 
         // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-            'justificativa' => $justificativa,
-            'nfecancelamento' => $infEvento->nProt,
-            'nfedatacancelamento' => Carbon::parse($infEvento->dhRegEvento)
-        ]);
+        $nf->justificativa = $justificativa;
+        $nf->nfecancelamento = $infEvento->nProt;
+        $nf->nfedatacancelamento = Carbon::parse($infEvento->dhRegEvento);
+        $nf->save(); // Dispara observers
 
         // Pega XML do Cancelamento
         if (isset($procEventoNFe->evento)) {
@@ -281,20 +276,13 @@ class NFePHPService extends MgService
         return true;
     }
 
-    public static function vincularProtocoloInutilizacao(NotaFiscal $nf, $resp, $respStd, $justificativa)
+    public static function vincularProtocoloInutilizacao(NotaFiscal $nf, $nProt, $dhRecbto, $justificativa)
     {
-        // Verifica se tem o infInut
-        if (!isset($respStd->infInut)) {
-            return false;
-        }
-        $infInut = $respStd->infInut;
-
         // Guarda no Banco de Dados informação da Autorização
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-            'justificativa' => $justificativa,
-            'nfeinutilizacao' => $infInut->nProt,
-            'nfedatainutilizacao' => Carbon::parse($infInut->dhRecbto)
-        ]);
+        $nf->justificativa = $justificativa;
+        $nf->nfeinutilizacao = $nProt;
+        $nf->nfedatainutilizacao = $dhRecbto;
+        $nf->save(); // Dispara observers
 
         return true;
     }
@@ -357,14 +345,14 @@ class NFePHPService extends MgService
         }
 
         // Valida Cancelamento
-        if (!empty($nf->nfecancelamento)) {
-            throw new \Exception('Esta nota já está Cancelada! Impossível prosseguir com o Cancelamento!');
-        }
+        // if (!empty($nf->nfecancelamento)) {
+        //     throw new \Exception('Esta nota já está Cancelada! Impossível prosseguir com o Cancelamento!');
+        // }
 
         // Valida Inutilizacao
-        if (!empty($nf->nfeinutilizacao)) {
-            throw new \Exception('Esta nota já está Inutilizada! Impossível prosseguir com o Cancelamento!');
-        }
+        // if (!empty($nf->nfeinutilizacao)) {
+        //     throw new \Exception('Esta nota já está Inutilizada! Impossível prosseguir com o Cancelamento!');
+        // }
 
         // Instancia Tools para a configuracao e certificado
         // if ($nf->modelo == 65) {
@@ -425,19 +413,19 @@ class NFePHPService extends MgService
         }
 
         // Valida Autorização
-        if (!empty($nf->nfeautorizacao)) {
-            throw new \Exception('Esta nota já está autorizada! Impossível prosseguir com a Inutilização!');
-        }
+        // if (!empty($nf->nfeautorizacao)) {
+        //     throw new \Exception('Esta nota já está autorizada! Impossível prosseguir com a Inutilização!');
+        // }
 
         // Valida Cancelamento
-        if (!empty($nf->nfecancelamento)) {
-            throw new \Exception('Esta nota já está Cancelada! Impossível prosseguir com a Inutilização!');
-        }
+        // if (!empty($nf->nfecancelamento)) {
+        //     throw new \Exception('Esta nota já está Cancelada! Impossível prosseguir com a Inutilização!');
+        // }
 
         // Valida Inutilizacao
-        if (!empty($nf->nfeinutilizacao)) {
-            throw new \Exception('Esta nota já está Inutilizada! Impossível prosseguir com a Inutilização!');
-        }
+        // if (!empty($nf->nfeinutilizacao)) {
+        //     throw new \Exception('Esta nota já está Inutilizada! Impossível prosseguir com a Inutilização!');
+        // }
 
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPConfigService::instanciaTools($nf->Filial);
@@ -458,10 +446,14 @@ class NFePHPService extends MgService
 
             // Se Inutilizacao Homologada
             // 102 - Inutilizacao de Numero Homologado
-            if (in_array($respStd->infInut->cStat, [102])) {
-                static::vincularProtocoloInutilizacao($nf, $resp, $respStd, $justificativa);
+            if ($respStd->infInut->cStat == 102) {
+                static::vincularProtocoloInutilizacao($nf, $respStd->infInut->nProt, Carbon::parse($respStd->infInut->dhRecbto), $justificativa);
                 $nf = $nf->fresh();
                 $sucesso = true;
+            } elseif ($respStd->infInut->cStat == 256) {
+                preg_match('/\[nProt:(\d+)\]/', $respStd->infInut->xMotivo, $matches);
+                $prot = $matches[1] ?? null;
+                static::vincularProtocoloInutilizacao($nf, $prot, Carbon::parse($respStd->infInut->dhRecbto), $respStd->infInut->xMotivo);
             }
 
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
@@ -694,6 +686,8 @@ class NFePHPService extends MgService
                 }
             }
         }
+
+        $nf->update(['status' => NotaFiscalService::calcularStatus($nf)]);
 
         return (object) [
             'sucesso' => $sucesso,

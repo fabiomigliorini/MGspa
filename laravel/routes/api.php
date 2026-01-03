@@ -87,6 +87,22 @@ Route::group(['prefix' => 'v1'], function () {
     Route::prefix('nota-fiscal')->group(function () {
         Route::apiResource('/', '\Mg\NotaFiscal\NotaFiscalController')->parameters(['' => 'codnotafiscal']);
 
+        // Atualizar status
+        Route::put('{codnotafiscal}/status', '\Mg\NotaFiscal\NotaFiscalController@updateStatus');
+
+        // Duplicar nota fiscal
+        Route::post('{codnotafiscal}/duplicar', '\Mg\NotaFiscal\NotaFiscalController@duplicar');
+
+        // Ações da nota fiscal (novos endpoints)
+        Route::post('{codnotafiscal}/criar', '\Mg\NotaFiscal\NotaFiscalController@criar');
+        Route::post('{codnotafiscal}/enviar-sincrono', '\Mg\NotaFiscal\NotaFiscalController@enviarSincrono');
+        Route::post('{codnotafiscal}/consultar', '\Mg\NotaFiscal\NotaFiscalController@consultar');
+        Route::post('{codnotafiscal}/cancelar', '\Mg\NotaFiscal\NotaFiscalController@cancelar');
+        Route::post('{codnotafiscal}/inutilizar', '\Mg\NotaFiscal\NotaFiscalController@inutilizar');
+        Route::post('{codnotafiscal}/mail', '\Mg\NotaFiscal\NotaFiscalController@mail');
+        Route::get('{codnotafiscal}/danfe', '\Mg\NotaFiscal\NotaFiscalController@danfe');
+        Route::post('{codnotafiscal}/imprimir', '\Mg\NotaFiscal\NotaFiscalController@imprimir');
+
         // Relacionamentos nested
         Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')
             ->parameters(['item' => 'codnotafiscalprodutobarra']);

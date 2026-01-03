@@ -3,7 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
-import { getStatusLabel, getStatusColor, getModeloLabel } from '../constants/notaFiscal'
+import { getStatusLabel, getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
 import { formatDateTime, formatDate, formatCurrency, formatNumero } from 'src/utils/formatters'
 
 const router = useRouter()
@@ -129,6 +129,7 @@ onMounted(async () => {
                 </div>
                 <div class=" ellipsis">
                   <q-badge :color="getStatusColor(nota.status)">
+                    <q-icon :name="getStatusIcon(nota.status)" size="xs" class="q-mr-xs" />
                     {{ getStatusLabel(nota.status) }}
                   </q-badge>
                 </div>

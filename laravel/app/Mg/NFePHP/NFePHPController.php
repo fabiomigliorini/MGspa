@@ -153,7 +153,7 @@ class NFePHPController extends MgController
         return response()->json($res, 200);
     }
 
-    public function distDfe (Request $request, int $codfilial, int $nsu = null)
+    public function distDfe (Request $request, int $codfilial, ?int $nsu = null)
     {
         $filial = Filial::findOrFail($codfilial);
         return NFePHPDistDfeService::consultar($filial, $nsu);

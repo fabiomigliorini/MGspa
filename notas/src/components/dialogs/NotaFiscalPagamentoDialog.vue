@@ -128,145 +128,71 @@ watch(() => props.modelValue, (newVal) => {
         </div>
       </q-card-section>
 
-      <q-separator />
-
       <q-form @submit.prevent="handleSave">
         <q-card-section class="q-pt-md q-pb-md">
-        <div class="row q-col-gutter-md">
-          <!-- Tipo de Pagamento -->
-          <div class="col-12 col-sm-6">
-            <q-select
-              v-model="form.tipo"
-              :options="TIPO_PAGAMENTO_OPTIONS"
-              label="Tipo de Pagamento *"
-              outlined
-              emit-value
-              map-options
-              :rules="[(val) => val !== null && val !== undefined || 'Campo obrigatório']"
-              lazy-rules
-              :disable="notaBloqueada"
-              autofocus
-            />
-          </div>
+          <div class="row q-col-gutter-md">
+            <!-- Tipo de Pagamento -->
+            <div class="col-12 col-sm-6">
+              <q-select v-model="form.tipo" :options="TIPO_PAGAMENTO_OPTIONS" label="Tipo de Pagamento *" outlined
+                emit-value map-options :rules="[(val) => val !== null && val !== undefined || 'Campo obrigatório']"
+                lazy-rules :disable="notaBloqueada" autofocus />
+            </div>
 
-          <!-- Valor do Pagamento -->
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model.number="form.valorpagamento"
-              label="Valor *"
-              outlined
-              type="number"
-              min="0"
-              step="0.01"
-              prefix="R$"
-              :rules="[
-                (val) => val !== null && val !== undefined || 'Campo obrigatório',
-                (val) => val > 0 || 'Valor deve ser maior que zero',
-              ]"
-              lazy-rules
-              :disable="notaBloqueada"
-              input-class="text-right"
-            />
-          </div>
+            <!-- Valor do Pagamento -->
+            <div class="col-12 col-sm-6">
+              <q-input v-model.number="form.valorpagamento" label="Valor *" outlined type="number" min="0" step="0.01"
+                prefix="R$" :rules="[
+                  (val) => val !== null && val !== undefined || 'Campo obrigatório',
+                  (val) => val > 0 || 'Valor deve ser maior que zero',
+                ]" lazy-rules :disable="notaBloqueada" input-class="text-right" />
+            </div>
 
-          <!-- À Vista / Prazo -->
-          <div class="col-12 col-sm-6">
-            <div style="height: 56px; display: flex; align-items: center">
-              <q-toggle
-                v-model="form.avista"
-                label="Pagamento à Vista"
-                color="primary"
-                :disable="notaBloqueada"
-              />
+            <!-- À Vista / Prazo -->
+            <div class="col-12 col-sm-6">
+              <div style="height: 56px; display: flex; align-items: center">
+                <q-toggle v-model="form.avista" label="Pagamento à Vista" color="primary" :disable="notaBloqueada" />
+              </div>
+            </div>
+
+            <!-- Troco (somente para dinheiro) -->
+            <div v-if="podeTerTroco" class="col-12 col-sm-6">
+              <q-input v-model.number="form.troco" label="Troco" outlined type="number" min="0" step="0.01" prefix="R$"
+                :disable="notaBloqueada" input-class="text-right" hint="Somente para pagamento em dinheiro" />
+            </div>
+
+            <!-- Bandeira (somente para cartões) -->
+            <div v-if="requerBandeira" class="col-12 col-sm-6">
+              <q-select v-model="form.bandeira" :options="BANDEIRA_CARTAO_OPTIONS" label="Bandeira do Cartão *" outlined
+                emit-value map-options :rules="[(val) => val !== null && val !== undefined || 'Campo obrigatório']"
+                lazy-rules :disable="notaBloqueada" />
+            </div>
+
+            <!-- Autorização (somente para cartões) -->
+            <div v-if="requerAutorizacao" class="col-12 col-sm-6">
+              <q-input v-model="form.autorizacao" label="Código de Autorização" outlined maxlength="40"
+                :disable="notaBloqueada" hint="NSU, código de autorização da transação" />
+            </div>
+
+            <!-- Credenciadora / Administradora -->
+            <div class="col-12">
+              <SelectPessoa v-model="form.codpessoa" label="Credenciadora / Administradora" :disable="notaBloqueada"
+                hint="Empresa processadora do pagamento (opcional)" />
+            </div>
+
+            <!-- Descrição Adicional -->
+            <div class="col-12">
+              <q-input v-model="form.descricao" label="Descrição Adicional" outlined maxlength="100"
+                :disable="notaBloqueada" hint="Informações complementares sobre este pagamento" />
             </div>
           </div>
-
-          <!-- Troco (somente para dinheiro) -->
-          <div v-if="podeTerTroco" class="col-12 col-sm-6">
-            <q-input
-              v-model.number="form.troco"
-              label="Troco"
-              outlined
-              type="number"
-              min="0"
-              step="0.01"
-              prefix="R$"
-              :disable="notaBloqueada"
-              input-class="text-right"
-              hint="Somente para pagamento em dinheiro"
-            />
-          </div>
-
-          <!-- Bandeira (somente para cartões) -->
-          <div v-if="requerBandeira" class="col-12 col-sm-6">
-            <q-select
-              v-model="form.bandeira"
-              :options="BANDEIRA_CARTAO_OPTIONS"
-              label="Bandeira do Cartão *"
-              outlined
-              emit-value
-              map-options
-              :rules="[(val) => val !== null && val !== undefined || 'Campo obrigatório']"
-              lazy-rules
-              :disable="notaBloqueada"
-            />
-          </div>
-
-          <!-- Autorização (somente para cartões) -->
-          <div v-if="requerAutorizacao" class="col-12 col-sm-6">
-            <q-input
-              v-model="form.autorizacao"
-              label="Código de Autorização"
-              outlined
-              maxlength="40"
-              :disable="notaBloqueada"
-              hint="NSU, código de autorização da transação"
-            />
-          </div>
-
-          <!-- Credenciadora / Administradora -->
-          <div class="col-12">
-            <SelectPessoa
-              v-model="form.codpessoa"
-              label="Credenciadora / Administradora"
-              :disable="notaBloqueada"
-              hint="Empresa processadora do pagamento (opcional)"
-            />
-          </div>
-
-          <!-- Descrição Adicional -->
-          <div class="col-12">
-            <q-input
-              v-model="form.descricao"
-              label="Descrição Adicional"
-              outlined
-              maxlength="100"
-              :disable="notaBloqueada"
-              hint="Informações complementares sobre este pagamento"
-            />
-          </div>
-        </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn
-            v-if="isEditMode && !notaBloqueada"
-            flat
-            label="Excluir"
-            color="negative"
-            @click="handleDelete"
-          />
+          <q-btn v-if="isEditMode && !notaBloqueada" flat label="Excluir" color="negative" @click="handleDelete" />
           <q-space />
           <q-btn flat label="Cancelar" @click="close" />
-          <q-btn
-            unelevated
-            label="Salvar"
-            color="primary"
-            icon="save"
-            type="submit"
-            :loading="loading"
-            :disable="notaBloqueada"
-          />
+          <q-btn unelevated label="Salvar" color="primary" icon="save" type="submit" :loading="loading"
+            :disable="notaBloqueada" />
         </q-card-actions>
       </q-form>
     </q-card>

@@ -23,5 +23,68 @@ export default {
 
   async delete(codnotafiscal) {
     await api.delete(`/v1/nota-fiscal/${codnotafiscal}`)
-  }
+  },
+
+  async duplicar(codnotafiscal) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/duplicar`)
+    return response.data
+  },
+
+  // ==================== NFE ACTIONS ====================
+  async criar(codnotafiscal) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/criar`)
+    return response.data
+  },
+
+  async enviarSincrono(codnotafiscal) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/enviar-sincrono`)
+    return response.data
+  },
+
+  async consultar(codnotafiscal) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/consultar`)
+    return response.data
+  },
+
+  async cancelar(codnotafiscal, justificativa) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/cancelar`, {
+      justificativa,
+    })
+    return response.data
+  },
+
+  async inutilizar(codnotafiscal, justificativa) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/inutilizar`, {
+      justificativa,
+    })
+    return response.data
+  },
+
+  async mail(codnotafiscal, destinatario = null) {
+    const data = destinatario ? { destinatario } : {}
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/mail`, data)
+    return response.data
+  },
+
+  async danfe(codnotafiscal) {
+    // Faz o download do PDF via API (com autenticação via header)
+    const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/danfe`, {
+      responseType: 'blob', // Importante para PDFs
+    })
+
+    // Cria um URL temporário do blob
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    return URL.createObjectURL(blob)
+  },
+
+  async imprimir(codnotafiscal, impressora = null) {
+    const data = impressora ? { impressora } : {}
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/imprimir`, data)
+    return response.data
+  },
+
+  async alterarStatus(codnotafiscal, data) {
+    const response = await api.put(`/v1/nota-fiscal/${codnotafiscal}/status`, data)
+    return response.data
+  },
 }

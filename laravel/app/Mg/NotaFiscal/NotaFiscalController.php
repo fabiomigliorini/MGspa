@@ -3,10 +3,14 @@
 namespace Mg\NotaFiscal;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 use Mg\NotaFiscal\Requests\NotaFiscalRequest;
+use Mg\NotaFiscal\Requests\NotaFiscalStatusRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalResource;
 use Mg\NotaFiscal\Resources\NotaFiscalDetailResource;
-use Illuminate\Http\Request;
+use Mg\NFePHP\NFePHPService;
 
 class NotaFiscalController extends Controller
 {
@@ -151,6 +155,60 @@ class NotaFiscalController extends Controller
         return new NotaFiscalDetailResource($nota->fresh());
     }
 
+    /**
+     * Atualiza apenas o status da nota fiscal
+     */
+    public function updateStatus(NotaFiscalStatusRequest $request, int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $validated = $request->validated();
+
+        // Atualiza o status
+        $nota->status = $validated['status'];
+
+        // Atualiza os campos opcionais de NFe se foram enviados
+        if (array_key_exists('nfeautorizacao', $validated)) {
+            $nota->nfeautorizacao = $validated['nfeautorizacao'];
+        }
+        if (array_key_exists('nfedataautorizacao', $validated)) {
+            $nota->nfedataautorizacao = $validated['nfedataautorizacao'];
+        }
+        if (array_key_exists('nfecancelamento', $validated)) {
+            $nota->nfecancelamento = $validated['nfecancelamento'];
+        }
+        if (array_key_exists('nfedatacancelamento', $validated)) {
+            $nota->nfedatacancelamento = $validated['nfedatacancelamento'];
+        }
+        if (array_key_exists('nfeinutilizacao', $validated)) {
+            $nota->nfeinutilizacao = $validated['nfeinutilizacao'];
+        }
+        if (array_key_exists('nfedatainutilizacao', $validated)) {
+            $nota->nfedatainutilizacao = $validated['nfedatainutilizacao'];
+        }
+
+        $nota->save();
+
+        return new NotaFiscalDetailResource(
+            $nota->fresh([
+                'Filial',
+                'EstoqueLocal',
+                'Pessoa',
+                'NaturezaOperacao',
+                'Operacao',
+                'PessoaTransportador',
+                'EstadoPlaca',
+                'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+                'NotaFiscalProdutoBarraS.Cfop',
+                'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+                'NotaFiscalPagamentoS',
+                'NotaFiscalDuplicatasS',
+                'NotaFiscalReferenciadaS',
+                'NotaFiscalCartaCorrecaoS',
+            ])
+        );
+    }
+
     public function destroy(int $codnotafiscal)
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);
@@ -164,6 +222,30 @@ class NotaFiscalController extends Controller
     }
 
     /**
+     * Duplica uma nota fiscal
+     */
+    public function duplicar(int $codnotafiscal)
+    {
+        // Carrega a nota original com todos os relacionamentos
+        $notaOriginal = NotaFiscal::with([
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+        ])->findOrFail($codnotafiscal);
+
+        // duplica nf dentro de uma transação
+        DB::beginTransaction();
+        $notaDuplicada = NotaFiscalService::duplicar($notaOriginal);
+        DB::commit();
+
+        // retorna o resource de nf
+        return (new NotaFiscalDetailResource($notaDuplicada))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    /**
      * Verifica se a nota está em um status que impede alterações
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -173,5 +255,223 @@ class NotaFiscalController extends Controller
         if (in_array($nota->status, self::STATUS_BLOQUEADOS)) {
             abort(422, "Não é possível modificar uma nota com status: {$nota->status}");
         }
+    }
+
+    /**
+     * Cria o XML da nota fiscal
+     */
+    public function criar(Request $request, int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+        $offline = $request->boolean('offline', false);
+
+        $resultado = NFePHPService::criar($nota, $offline);
+
+        // Recarrega a nota e retorna o resource com o resultado da operação
+        $notaAtualizada = NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($codnotafiscal);
+
+        return response()->json([
+            'nota' => new NotaFiscalDetailResource($notaAtualizada),
+            'resultado' => $resultado,
+        ]);
+    }
+
+    /**
+     * Envia a nota fiscal de forma síncrona
+     */
+    public function enviarSincrono(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $resultado = NFePHPService::enviarSincrono($nota);
+
+        // Recarrega a nota e retorna o resource com o resultado da operação
+        $notaAtualizada = NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($codnotafiscal);
+
+        return response()->json([
+            'nota' => new NotaFiscalDetailResource($notaAtualizada),
+            'resultado' => $resultado,
+        ]);
+    }
+
+    /**
+     * Consulta a nota fiscal na SEFAZ
+     */
+    public function consultar(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $resultado = NFePHPService::consultar($nota);
+
+        // Recarrega a nota e retorna o resource com o resultado da operação
+        $notaAtualizada = NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($codnotafiscal);
+
+        return response()->json([
+            'nota' => new NotaFiscalDetailResource($notaAtualizada),
+            'resultado' => $resultado,
+        ]);
+    }
+
+    /**
+     * Cancela a nota fiscal
+     */
+    public function cancelar(Request $request, int $codnotafiscal)
+    {
+        $request->validate([
+            'justificativa' => 'required|string|min:15',
+        ]);
+
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $resultado = NFePHPService::cancelar($nota, $request->justificativa);
+
+        // Recarrega a nota e retorna o resource com o resultado da operação
+        $notaAtualizada = NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($codnotafiscal);
+
+        return response()->json([
+            'nota' => new NotaFiscalDetailResource($notaAtualizada),
+            'resultado' => $resultado,
+        ]);
+    }
+
+    /**
+     * Inutiliza a nota fiscal
+     */
+    public function inutilizar(Request $request, int $codnotafiscal)
+    {
+        $request->validate([
+            'justificativa' => 'required|string|min:15',
+        ]);
+
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $resultado = NFePHPService::inutilizar($nota, $request->justificativa);
+
+        // Recarrega a nota e retorna o resource com o resultado da operação
+        $notaAtualizada = NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($codnotafiscal);
+
+        return response()->json([
+            'nota' => new NotaFiscalDetailResource($notaAtualizada),
+            'resultado' => $resultado,
+        ]);
+    }
+
+    /**
+     * Envia a nota fiscal por email
+     */
+    public function mail(Request $request, int $codnotafiscal)
+    {
+        $request->validate([
+            'destinatario' => 'nullable|email',
+        ]);
+
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $resultado = \Mg\NFePHP\NFePHPMailService::mail($nota, $request->destinatario);
+
+        return response()->json($resultado, 200);
+    }
+
+    /**
+     * Gera o DANFE em PDF
+     */
+    public function danfe(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $pdfPath = NFePHPService::danfe($nota);
+
+        return response()->file($pdfPath);
+    }
+
+    /**
+     * Imprime a nota fiscal
+     */
+    public function imprimir(Request $request, int $codnotafiscal)
+    {
+        $request->validate([
+            'impressora' => 'nullable|string',
+        ]);
+
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $resultado = NFePHPService::imprimir($nota, $request->impressora);
+
+        return response()->json($resultado, 200);
     }
 }

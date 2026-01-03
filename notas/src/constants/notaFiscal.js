@@ -35,17 +35,18 @@ export const getEnteColor = (ente) => {
 }
 
 export const MODELO_OPTIONS = [
-  { label: 'NF-e (55)', value: '55' },
-  { label: 'NFC-e (65)', value: '65' },
+  { label: 'NF-e (55)', value: 55 },
+  { label: 'NFC-e (65)', value: 65 },
 ]
 
 export const STATUS_OPTIONS = [
-  { label: 'Lançada', value: 'LAN' },
-  { label: 'Em Digitação', value: 'DIG' },
-  { label: 'Não Autorizada', value: 'ERR' },
-  { label: 'Autorizada', value: 'AUT' },
-  { label: 'Cancelada', value: 'CAN' },
-  { label: 'Inutilizada', value: 'INU' },
+  { label: 'Lançada', value: 'LAN', icon: 'description', color: 'blue-grey' },
+  { label: 'Em Digitação', value: 'DIG', icon: 'edit_note', color: 'blue' },
+  { label: 'Não Autorizada', value: 'ERR', icon: 'error', color: 'deep-orange' },
+  { label: 'Autorizada', value: 'AUT', icon: 'check_circle', color: 'positive' },
+  { label: 'Cancelada', value: 'CAN', icon: 'highlight_off', color: 'negative' },
+  { label: 'Inutilizada', value: 'INU', icon: 'block', color: 'warning' },
+  { label: 'Denegada', value: 'DEN', icon: 'report', color: 'negative' },
 ]
 
 export const EMITIDA_OPTIONS = [
@@ -70,15 +71,16 @@ export const getStatusLabel = (status) => {
  * Retorna a cor do status para badges/chips
  */
 export const getStatusColor = (status) => {
-  const colors = {
-    LAN: 'blue-grey',
-    DIG: 'blue',
-    ERR: 'deep-orange',
-    AUT: 'positive',
-    CAN: 'negative',
-    INU: 'warning',
-  }
-  return colors[status] || 'grey'
+  const option = STATUS_OPTIONS.find((opt) => opt.value === status)
+  return option ? option.color : 'grey'
+}
+
+/**
+ * Retorna o ícone do status
+ */
+export const getStatusIcon = (status) => {
+  const option = STATUS_OPTIONS.find((opt) => opt.value === status)
+  return option ? option.icon : 'help'
 }
 
 /**

@@ -24,7 +24,7 @@ export default boot(({ app }) => {
     },
     (error) => {
       return Promise.reject(error)
-    },
+    }
   )
 
   // ===== RESPONSE INTERCEPTOR =====
@@ -37,6 +37,7 @@ export default boot(({ app }) => {
 
       if (error.response) {
         const status = error.response.status
+        console.error('Erro na requisição', error)
 
         switch (status) {
           case 401: {
@@ -77,11 +78,7 @@ export default boot(({ app }) => {
             break
 
           case 500:
-            Notify.create({
-              type: 'negative',
-              message: 'Erro no servidor. Tente novamente.',
-              position: 'top',
-            })
+            // Erro 500 - será tratado no componente
             break
         }
       } else if (error.request) {
@@ -93,7 +90,7 @@ export default boot(({ app }) => {
       }
 
       return Promise.reject(error)
-    },
+    }
   )
 
   // Disponibiliza globalmente

@@ -105,17 +105,8 @@ class TributacaoService
                 LENGTH(r.ncm) DESC NULLS LAST
         SQL;
 
-        // dd([
-        //     'sql'      => $sql,
-        //     'codnatureza' => $codnaturezaoperacao,
-        //     'codcidade'   => $codcidade,
-        //     'codestado'   => $codestado,
-        //     'emissao'     => $data->toDateString(),
-        //     'ncm'         => $ncm,
-        //     'tipocliente' => $tipocliente,
-        //     'codtipoproduto' => $codtipoproduto
-        // ]);
-        return DB::select($sql, [
+
+        $params = [
             'codnatureza' => $codnaturezaoperacao,
             'codcidade'   => $codcidade,
             'codestado'   => $codestado,
@@ -123,7 +114,9 @@ class TributacaoService
             'ncm'         => $ncm,
             'tipocliente' => $tipocliente,
             'codtipoproduto' => $codtipoproduto,
-        ]);
+        ];
+
+        return DB::select($sql, $params);
     }
 
     /**

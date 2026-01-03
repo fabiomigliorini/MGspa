@@ -1,15 +1,17 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
 import {
   getStatusLabel,
   getStatusColor,
+  getStatusIcon,
   getModeloLabel,
   getPagamentoIcon,
   getPagamentoColor,
   getFreteLabel,
+  STATUS_OPTIONS,
 } from '../constants/notaFiscal'
 import {
   formatCnpjCpf,
@@ -533,9 +535,439 @@ const excluirCartaCorrecao = (carta) => {
   })
 }
 
+// DUPLICAR
+const duplicarNota = () => {
+  $q.dialog({
+    title: 'Confirma duplicação',
+    message: 'Deseja realmente duplicar esta nota fsical?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Duplicar', color: 'primary' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.duplicarNota(nota.value.codnotafiscal);
+      $q.notify({
+        type: 'positive',
+        message: 'Nota fiscal duplicada!',
+      })
+      router.replace({
+        name: 'nota-fiscal-view',
+        params: {
+          codnotafiscal: nota.value.codnotafiscal,
+        },
+      })
+    } catch (error) {
+      console.log(error);
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao duplicar nota fiscal',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// ==================== NFE ACTIONS ====================
+const loadingNfe = ref(false)
+const progressoNfe = ref({ status: '', percent: 0 })
+const danfeDialog = ref(false)
+const danfeUrl = ref('')
+
+const enviarNfe = async () => {
+  loadingNfe.value = true
+  progressoNfe.value = { status: 'Criando Arquivo XML...', percent: 0 }
+
+  try {
+    // 1. Criar XML
+    const xmlResponse = await notaFiscalStore.criarNfe(nota.value.codnotafiscal)
+    progressoNfe.value = { status: 'Arquivo XML Criado...', percent: 25 }
+
+    // Verifica se é contingência offline (tpEmis = 9)
+    const parser = new DOMParser()
+    const xmlDoc = parser.parseFromString(xmlResponse, 'text/xml')
+    const tpEmis = xmlDoc.querySelector('tpEmis')?.textContent
+
+    if (tpEmis === '9') {
+      // Modo offline - apenas abre DANFE
+      await abrirDanfe()
+      // Se for NFCe, imprime
+      if (nota.value.modelo === 65) {
+        await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
+      }
+    } else {
+      // 2. Enviar para SEFAZ
+      progressoNfe.value = { status: 'Enviando NFe para Sefaz...', percent: 50 }
+      const envioResponse = await notaFiscalStore.enviarNfeSincrono(nota.value.codnotafiscal)
+
+      if (envioResponse.sucesso) {
+        // 3. Enviar Email
+        progressoNfe.value = { status: 'Enviando Email...', percent: 75 }
+        await notaFiscalStore.enviarEmailNfe(nota.value.codnotafiscal)
+
+        // 4. Imprimir se for NFCe
+        if (nota.value.modelo === 65) {
+          await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
+        }
+
+        // 5. Abrir DANFE
+        progressoNfe.value = { status: 'Finalizado...', percent: 100 }
+        await abrirDanfe()
+
+        // Recarrega a nota
+        await loadData()
+
+        $q.notify({
+          type: 'positive',
+          message: 'NFe enviada com sucesso!',
+        })
+      } else {
+        throw new Error(`${envioResponse.cStat} - ${envioResponse.xMotivo}`)
+      }
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao enviar NFe',
+      caption: error.response?.data?.message || error.message,
+    })
+  } finally {
+    loadingNfe.value = false
+    progressoNfe.value = { status: '', percent: 0 }
+  }
+}
+
+const consultarNfe = async () => {
+  try {
+    const response = await notaFiscalStore.consultarNfe(nota.value.codnotafiscal)
+
+    // Sempre mostra o resultado, independente de sucesso ou erro
+    const tipo = response.sucesso ? 'positive' : 'negative'
+    const mensagem = `${response.cStat} - ${response.xMotivo}`
+
+    $q.dialog({
+      title: 'Consulta NFe',
+      message: mensagem,
+      ok: { label: 'OK', color: tipo },
+    })
+  } catch (error) {
+    // Mostra erro 500 do backend no notify bottom
+    const mensagem = error.response?.data?.message || error.message
+
+    $q.notify({
+      type: 'negative',
+      message: mensagem,
+      position: 'bottom',
+    })
+  }
+}
+
+const cancelarNfe = async () => {
+  $q.dialog({
+    title: 'Cancelar NFe',
+    message: 'Digite a justificativa para cancelar a NFe',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val && val.length >= 15,
+    },
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar Cancelamento', color: 'negative' },
+    persistent: true,
+  }).onOk(async (justificativa) => {
+    try {
+      const response = await notaFiscalStore.cancelarNfe(nota.value.codnotafiscal, justificativa)
+
+      // Sempre mostra o resultado, independente de sucesso ou erro
+      const tipo = response.sucesso ? 'positive' : 'negative'
+      const mensagem = `${response.cStat} - ${response.xMotivo}`
+
+      $q.dialog({
+        title: 'Cancelamento NFe',
+        message: mensagem,
+        ok: { label: 'OK', color: tipo },
+      })
+    } catch (error) {
+      // Mostra erro 500 do backend no notify bottom
+      const mensagem = error.response?.data?.message || error.message
+
+      $q.notify({
+        type: 'negative',
+        message: mensagem,
+        position: 'bottom',
+      })
+    }
+  })
+}
+
+const inutilizarNfe = async () => {
+  $q.dialog({
+    title: 'Inutilizar NFe',
+    message: 'Digite a justificativa para inutilizar a NFe',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val && val.length >= 15,
+    },
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar Inutilização', color: 'negative' },
+    persistent: true,
+  }).onOk(async (justificativa) => {
+    try {
+      const response = await notaFiscalStore.inutilizarNfe(nota.value.codnotafiscal, justificativa)
+
+      // Sempre mostra o resultado, independente de sucesso ou erro
+      const tipo = response.sucesso ? 'positive' : 'negative'
+      const mensagem = `${response.cStat} - ${response.xMotivo}`
+
+      $q.dialog({
+        title: 'Inutilização NFe',
+        message: mensagem,
+        ok: { label: 'OK', color: tipo },
+      })
+    } catch (error) {
+      // Mostra erro 500 do backend no notify bottom
+      const mensagem = error.response?.data?.message || error.message
+
+      $q.notify({
+        type: 'negative',
+        message: mensagem,
+        position: 'bottom',
+      })
+    }
+  })
+}
+
+const enviarEmailNfe = async () => {
+  $q.dialog({
+    title: 'Enviar Email',
+    message: 'Digite o endereço de e-mail',
+    prompt: {
+      model: nota.value.pessoa?.email || '',
+      type: 'email',
+      outlined: true,
+    },
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Enviar', color: 'primary' },
+    persistent: true,
+  }).onOk(async (email) => {
+    try {
+      const response = await notaFiscalStore.enviarEmailNfe(nota.value.codnotafiscal, email)
+
+      const tipo = response.sucesso ? 'positive' : 'negative'
+      const mensagem = response.mensagem || 'Email enviado com sucesso'
+
+      $q.notify({
+        type: tipo,
+        message: mensagem,
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao enviar email',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+const abrirDanfe = async () => {
+  try {
+    danfeUrl.value = await notaFiscalStore.getDanfeUrl(nota.value.codnotafiscal)
+    console.log('URL do DANFE:', danfeUrl.value)
+    danfeDialog.value = true
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao abrir DANFE',
+      caption: error?.response?.data?.message || error?.message || 'Erro desconhecido',
+    })
+  }
+}
+
+// Computed para controlar visibilidade dos botões
+const podeEnviar = computed(() => {
+  return nota.value && nota.value.status === 'DIG'
+})
+
+const podeConsultar = computed(() => {
+  return nota.value && ['AUT', 'CAN', 'ERR'].includes(nota.value.status)
+})
+
+const podeCancelar = computed(() => {
+  return nota.value && nota.value.status === 'AUT'
+})
+
+const podeInutilizar = computed(() => {
+  return nota.value && nota.value.status === 'ERR'
+})
+
+const podeEnviarEmail = computed(() => {
+  return nota.value && nota.value.status === 'AUT'
+})
+
+const podeAbrirDanfe = computed(() => {
+  return nota.value && ['AUT', 'CAN'].includes(nota.value.status)
+})
+
+// Copiar chave da NFe
+const copiarChave = () => {
+  if (nota.value?.nfechave) {
+    navigator.clipboard.writeText(nota.value.nfechave)
+    $q.notify({
+      type: 'positive',
+      message: 'Chave copiada!',
+      position: 'bottom',
+      timeout: 1000,
+    })
+  }
+}
+
+// Alterar status manualmente
+const statusDialog = ref(false)
+
+const abrirDialogStatus = () => {
+  statusDialog.value = true
+}
+
+const alterarStatus = async (novoStatus) => {
+  $q.dialog({
+    title: 'Confirmar alteração',
+    message: `Tem certeza que deseja alterar o status para "${STATUS_OPTIONS.find(s => s.value === novoStatus)?.label}"?`,
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'primary' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, novoStatus)
+
+      $q.notify({
+        type: 'positive',
+        message: 'Status alterado com sucesso',
+      })
+
+      statusDialog.value = false
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao alterar status',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// Limpar autorização/cancelamento
+const limparAutorizacao = async () => {
+  $q.dialog({
+    title: 'Confirmar limpeza',
+    message: 'Tem certeza que deseja limpar a autorização e cancelamento? O status será alterado para "Erro".',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'negative' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
+        status: 'ERR',
+        nfeautorizacao: null,
+        nfedataautorizacao: null,
+        nfecancelamento: null,
+        nfedatacancelamento: null,
+      })
+
+      $q.notify({
+        type: 'positive',
+        message: 'Autorização e cancelamento limpos com sucesso',
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao limpar autorização',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// Limpar cancelamento
+const limparCancelamento = async () => {
+  $q.dialog({
+    title: 'Confirmar limpeza',
+    message: 'Tem certeza que deseja limpar o cancelamento? O status será alterado para "Autorizada".',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'negative' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
+        status: 'AUT',
+        nfecancelamento: null,
+        nfedatacancelamento: null,
+      })
+
+      $q.notify({
+        type: 'positive',
+        message: 'Cancelamento limpo com sucesso',
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao limpar cancelamento',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// Limpar inutilização
+const limparInutilizacao = async () => {
+  $q.dialog({
+    title: 'Confirmar limpeza',
+    message: 'Tem certeza que deseja limpar a inutilização? O status será alterado para "Erro".',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'negative' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
+        status: 'ERR',
+        nfeinutilizacao: null,
+        nfedatainutilizacao: null,
+      })
+
+      $q.notify({
+        type: 'positive',
+        message: 'Inutilização limpa com sucesso',
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao limpar inutilização',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
+// Atalho F9 para enviar NFe
+const handleKeyDown = (e) => {
+  if (e.key === 'F9') {
+    e.preventDefault()
+    if (podeEnviar.value && !loadingNfe.value) {
+      enviarNfe()
+    }
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   loadData()
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
 })
 </script>
 
@@ -560,10 +992,13 @@ onMounted(() => {
         </div>
         <q-btn flat dense color="primary" icon="edit"
           :to="{ name: 'nota-fiscal-edit', params: { codnotafiscal: route.params.codnotafiscal } }"
-          :disable="notaBloqueada" class="q-mr-sm">
+          v-if="!notaBloqueada" class="q-mr-sm">
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
-        <q-btn flat dense color="negative" icon="delete" @click="handleDelete" :disable="notaBloqueada">
+        <q-btn flat dense color="blue-grey" icon="content_copy" @click="duplicarNota" class="q-mr-sm">
+          <q-tooltip>Duplicar Nota Fiscal</q-tooltip>
+        </q-btn>
+        <q-btn flat dense color="negative" icon="delete" @click="handleDelete" v-if="!notaBloqueada">
           <q-tooltip>Excluir</q-tooltip>
         </q-btn>
       </div>
@@ -652,8 +1087,8 @@ onMounted(() => {
         </div>
 
         <div class="col-12 col-sm-12 col-md-6">
-          <q-card flat bordered class="q-mb-md full-height">
-            <q-card-section>
+          <q-card flat bordered class="full-height flex column">
+            <q-card-section class="col-grow">
               <!-- Chave de Acesso -->
               <template v-if="ref.nfechave">
                 <div class="text-caption text-grey-7 ">
@@ -676,6 +1111,26 @@ onMounted(() => {
               </template>
 
 
+              <!-- chave  -->
+              <template v-if="nota.nfechave">
+                <div class="text-caption text-grey-7">
+                  Chave
+                </div>
+                <div class="text-caption row items-center">
+                  <span style="font-family: monospace;">
+                    {{ formatChave(nota.nfechave) }}
+                  </span>
+                  <q-btn flat dense round size="sm" icon="content_copy" color="grey-7" class="q-ml-xs"
+                    @click="copiarChave">
+                    <q-tooltip>Copiar chave</q-tooltip>
+                  </q-btn>
+                  <span class="text-grey-7">
+                    <!--
+                    |
+                    {{ formatDateTime(nota.nfedataautorizacao) }} -->
+                  </span>
+                </div>
+              </template>
 
               <!-- STATUS -->
               <div class="text-caption text-grey-7">
@@ -683,6 +1138,7 @@ onMounted(() => {
               </div>
               <div class="text-body1">
                 <q-badge :color="getStatusColor(nota.status)" class="text-subtitle2">
+                  <q-icon :name="getStatusIcon(nota.status)" size="sm" class="q-mr-xs" />
                   {{ getStatusLabel(nota.status) }}
                 </q-badge>
               </div>
@@ -692,7 +1148,7 @@ onMounted(() => {
                 <div class="text-caption text-grey-7">
                   Autorização
                 </div>
-                <div class="text-caption">
+                <div class="text-caption row items-center">
                   <span style="font-family: monospace;">
                     {{ formatProtocolo(nota.nfeautorizacao) }}
                   </span>
@@ -701,6 +1157,10 @@ onMounted(() => {
                     |
                     {{ formatDateTime(nota.nfedataautorizacao) }}
                   </span>
+                  <q-btn flat dense round size="sm" icon="clear" color="negative" class="q-ml-xs"
+                    @click="limparAutorizacao">
+                    <q-tooltip>Limpar autorização e cancelamento</q-tooltip>
+                  </q-btn>
                 </div>
               </template>
 
@@ -709,7 +1169,7 @@ onMounted(() => {
                 <div class="text-caption text-grey-7">
                   Cancelamento
                 </div>
-                <div class="text-caption">
+                <div class="text-caption row items-center">
                   <span style="font-family: monospace;">
                     {{ formatProtocolo(nota.nfecancelamento) }}
                   </span>
@@ -717,6 +1177,10 @@ onMounted(() => {
                     |
                     {{ formatDateTime(nota.nfedatacancelamento) }}
                   </span>
+                  <q-btn flat dense round size="sm" icon="clear" color="negative" class="q-ml-xs"
+                    @click="limparCancelamento">
+                    <q-tooltip>Limpar cancelamento</q-tooltip>
+                  </q-btn>
                 </div>
               </template>
 
@@ -725,7 +1189,7 @@ onMounted(() => {
                 <div class="text-caption text-grey-7">
                   Inutilização
                 </div>
-                <div class="text-caption">
+                <div class="text-caption row items-center">
                   <span style="font-family: monospace;">
                     {{ formatProtocolo(nota.nfeinutilizacao) }}
                   </span>
@@ -733,10 +1197,70 @@ onMounted(() => {
                     |
                     {{ formatDateTime(nota.nfedatainutilizacao) }}
                   </span>
+                  <q-btn flat dense round size="sm" icon="clear" color="negative" class="q-ml-xs"
+                    @click="limparInutilizacao">
+                    <q-tooltip>Limpar inutilização</q-tooltip>
+                  </q-btn>
+                </div>
+              </template>
+
+              <!-- Justificativa  -->
+              <template v-if="nota.justificativa">
+                <div class="text-caption text-grey-7">
+                  Justificativa
+                </div>
+                <div class="text-caption row items-center">
+                  {{ nota.justificativa }}
                 </div>
               </template>
 
             </q-card-section>
+
+            <!-- Botões de ação da NFe -->
+            <q-separator />
+
+            <q-card-actions align="right">
+              <!-- Enviar (F9) -->
+              <q-btn v-if="podeEnviar" dense round flat color="positive" icon="send" @click="enviarNfe"
+                :loading="loadingNfe" class="q-mr-sm">
+                <q-tooltip>Criar XML e enviar para SEFAZ</q-tooltip>
+              </q-btn>
+
+              <!-- Consultar -->
+              <q-btn v-if="podeConsultar" dense round flat color="primary" icon="refresh" @click="consultarNfe"
+                class="q-mr-sm">
+                <q-tooltip>Consultar situação na SEFAZ</q-tooltip>
+              </q-btn>
+
+              <!-- Abrir DANFE -->
+              <q-btn v-if="podeAbrirDanfe" dense round flat color="primary" icon="description" @click="abrirDanfe"
+                class="q-mr-sm">
+                <q-tooltip>Abrir DANFE</q-tooltip>
+              </q-btn>
+
+              <!-- Enviar Email -->
+              <q-btn v-if="podeEnviarEmail" dense round flat color="primary" icon="email" @click="enviarEmailNfe"
+                class="q-mr-sm">
+                <q-tooltip>Enviar por email</q-tooltip>
+              </q-btn>
+
+              <!-- Cancelar -->
+              <q-btn v-if="podeCancelar" dense round flat color="negative" icon="cancel" @click="cancelarNfe"
+                class="q-mr-sm">
+                <q-tooltip>Cancelar NFe</q-tooltip>
+              </q-btn>
+
+              <!-- Inutilizar -->
+              <q-btn v-if="podeInutilizar" dense round flat color="warning" icon="block" @click="inutilizarNfe"
+                class="q-mr-sm">
+                <q-tooltip>Inutilizar NFe</q-tooltip>
+              </q-btn>
+
+              <!-- Alterar Status -->
+              <q-btn dense round flat color="grey-7" icon="edit_note" @click="abrirDialogStatus">
+                <q-tooltip>Alterar status manualmente</q-tooltip>
+              </q-btn>
+            </q-card-actions>
 
           </q-card>
         </div>
@@ -1064,60 +1588,63 @@ onMounted(() => {
       </div>
 
       <!-- Duplicatas -->
-      <div class="row items-center justify-between q-mb-md q-mt-lg">
-        <div>
-          <span class="text-h5">
+      <q-card flat bordered>
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6">
             <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" /> Duplicatas
-          </span>
-          <q-badge color="primary" class="q-ml-sm">{{ duplicatas.length }}</q-badge>
-          <q-btn v-if="!notaBloqueada" flat dense color="primary" icon="add" size="md" @click="novaDuplicata"
-            class="q-ml-sm">
-            <q-tooltip>Adicionar Duplicata</q-tooltip>
-          </q-btn>
-        </div>
-      </div>
+            <q-badge color="white" text-color="primary" class="q-ml-sm">{{ duplicatas.length }}</q-badge>
+            <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novaDuplicata"
+              class="q-ml-sm">
+              <q-tooltip>Adicionar Duplicata</q-tooltip>
+            </q-btn>
+          </div>
+        </q-card-section>
+        <q-card-section>
 
-      <div v-if="duplicatas.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
-        Nenhuma duplicata adicionada
-      </div>
+          <div v-if="duplicatas.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
+            Nenhuma duplicata adicionada
+          </div>
 
-      <div v-else class="row q-col-gutter-md q-mb-md">
-        <div v-for="dup in duplicatas" :key="dup.codnotafiscalduplicatas" class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
-          <q-card flat bordered class="full-height flex column">
-            <q-card-section class="col">
-              <div class="row items-center q-mb-md">
-                <q-avatar color="indigo" text-color="white" size="md" class="q-mr-sm" style="flex-shrink: 0;">
-                  <q-icon name="receipt_long" />
-                </q-avatar>
-                <div style="min-width: 0; flex: 1;">
-                  <div class="text-subtitle2 text-weight-bold ellipsis">
-                    {{ dup.fatura || '-' }}
+          <div v-else class="row q-col-gutter-md q-mb-md">
+            <div v-for="dup in duplicatas" :key="dup.codnotafiscalduplicatas"
+              class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
+              <q-card flat bordered class="full-height flex column">
+                <q-card-section class="col">
+                  <div class="row items-center q-mb-md">
+                    <q-avatar color="indigo" text-color="white" size="md" class="q-mr-sm" style="flex-shrink: 0;">
+                      <q-icon name="receipt_long" />
+                    </q-avatar>
+                    <div style="min-width: 0; flex: 1;">
+                      <div class="text-subtitle2 text-weight-bold ellipsis">
+                        {{ dup.fatura || '-' }}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div class="text-caption text-grey-7">Vencimento</div>
-              <div class="text-body2 q-mb-sm">{{ formatDate(dup.vencimento) }}</div>
+                  <div class="text-caption text-grey-7">Vencimento</div>
+                  <div class="text-body2 q-mb-sm">{{ formatDate(dup.vencimento) }}</div>
 
-              <div class="text-caption text-grey-7">Valor</div>
-              <div class="text-h5 text-primary text-weight-bold">
-                {{ formatCurrency(dup.valor) }}
-              </div>
-            </q-card-section>
+                  <div class="text-caption text-grey-7">Valor</div>
+                  <div class="text-h5 text-primary text-weight-bold">
+                    {{ formatCurrency(dup.valor) }}
+                  </div>
+                </q-card-section>
 
-            <q-separator v-if="!notaBloqueada" />
+                <q-separator v-if="!notaBloqueada" />
 
-            <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
-              <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarDuplicata(dup)">
-                <q-tooltip>Editar</q-tooltip>
-              </q-btn>
-              <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirDuplicata(dup)">
-                <q-tooltip>Excluir</q-tooltip>
-              </q-btn>
-            </q-card-actions>
-          </q-card>
-        </div>
-      </div>
+                <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
+                  <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarDuplicata(dup)">
+                    <q-tooltip>Editar</q-tooltip>
+                  </q-btn>
+                  <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirDuplicata(dup)">
+                    <q-tooltip>Excluir</q-tooltip>
+                  </q-btn>
+                </q-card-actions>
+              </q-card>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
 
       <!-- Notas Referenciadas -->
       <div class="row items-center justify-between q-mb-md q-mt-lg">
@@ -1306,5 +1833,69 @@ onMounted(() => {
     <NotaFiscalCartaCorrecaoDialog v-model="cartaCorrecaoDialog" :carta-correcao="cartaCorrecaoSelecionada"
       :proxima-sequencia="maiorSequenciaCartaCorrecao + 1" :nota-bloqueada="notaBloqueada" @save="salvarCartaCorrecao"
       @delete="excluirCartaCorrecao" />
+
+    <!-- Dialog de Progresso NFe -->
+    <q-dialog v-model="loadingNfe" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">Processando NFe</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <div class="text-body2 q-mb-md">{{ progressoNfe.status }}</div>
+          <q-linear-progress :value="progressoNfe.percent / 100" color="primary" class="q-mt-md" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog DANFE -->
+    <q-dialog v-model="danfeDialog">
+      <q-card
+        :style="nota.modelo === 65 ? 'width: 400px; max-width: 90vw; height: 90vh' : 'width: 800px; max-width: 90vw; height: 90vh'">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">{{ nota.modelo === 65 ? 'DANFE NFCe' : 'DANFE NFe' }}</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md" style="height: calc(100% - 56px)">
+          <iframe :src="danfeUrl" style="width: 100%; height: 100%; border: none" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog Alterar Status -->
+    <q-dialog v-model="statusDialog">
+      <q-card style="min-width: 450px">
+        <q-card-section>
+          <div class="text-h6">Alterar Status da NFe</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+
+          <q-banner class="bg-warning text-grey-8 rounded-borders q-mb-sm">
+            <template v-slot:avatar>
+              <q-icon name="warning" />
+            </template>
+            Não altere o status sem ter CERTEZA ABSOLUTA. A alteração pode levar à perda de dados.
+            Somente confirme a operação se você tem as informações da nota fiscal para reparar em caso de erro.
+          </q-banner>
+          <div class="text-body2 q-mb-md">Selecione o novo status:</div>
+          <div class="row q-col-gutter-sm">
+            <div v-for="status in STATUS_OPTIONS" :key="status.value" class="col-4"
+              v-show="nota.status !== status.value">
+              <q-btn unelevated :color="status.color" class="full-width" stack @click="alterarStatus(status.value)">
+                <q-icon :name="status.icon" size="md" />
+                <div class="text-caption q-mt-xs">{{ status.label }}</div>
+              </q-btn>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-7" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>

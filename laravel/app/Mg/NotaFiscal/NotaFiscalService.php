@@ -2,9 +2,11 @@
 
 namespace Mg\NotaFiscal;
 
-use DB;
 use Exception;
+use Throwable;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use Mg\Negocio\Negocio;
 use Mg\Pessoa\PessoaService;
@@ -13,13 +15,7 @@ use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacaoService;
 use Mg\Negocio\NegocioService;
 use Mg\Tributacao\TributacaoService;
-
-// use Illuminate\Support\Facades\Auth;
-
-// use Mg\Negocio\NegocioFormaPagamento;
-// use Mg\Negocio\NegocioProdutoBarra;
-// use Mg\Negocio\NegocioStatus;
-// use Mg\Titulo\BoletoBb\BoletoBbService;
+use Mg\Pessoa\Pessoa;
 
 class NotaFiscalService
 {
@@ -142,7 +138,7 @@ class NotaFiscalService
         Negocio $negocio,
         $modelo = self::MODELO_NFCE,
         $incluirPagamentos = true,
-        NotaFiscal $nota = null
+        ?NotaFiscal $nota = null
     ) {
 
         if ($modelo == static::MODELO_NFE && $negocio->codpessoa == PessoaService::CONSUMIDOR) {
@@ -434,5 +430,108 @@ class NotaFiscalService
             TributacaoService::recalcularTributosItem($nfpb);  // Reforma Tributaria
             $nfpb->save();
         }
+    }
+
+    /**
+     * Duplica uma nota fiscal, criando uma nova cópia em digitação
+     */
+    public static function duplicar(NotaFiscal $notaOriginal): NotaFiscal
+    {
+
+        // Cria a nova nota com os dados da original
+        $notaNova = new NotaFiscal();
+        $notaNova->fill($notaOriginal->getAttributes());
+
+        // Atualiza os campos específicos conforme solicitado
+        $notaNova->serie = 1;
+        $notaNova->numero = 0;
+        $notaNova->emissao = date('Y-m-d H:i:s');
+        $notaNova->saida = $notaNova->emissao;
+        $notaNova->nfechave = null;
+        $notaNova->nfereciboenvio = null;
+        $notaNova->nfedataenvio = null;
+        $notaNova->nfeautorizacao = null;
+        $notaNova->nfedataautorizacao = null;
+        $notaNova->nfecancelamento = null;
+        $notaNova->nfedatacancelamento = null;
+        $notaNova->nfeinutilizacao = null;
+        $notaNova->nfedatainutilizacao = null;
+        $notaNova->justificativa = null;
+        $notaNova->status = static::STATUS_DIGITACAO;
+
+        // Limpa outros campos relacionados à SEFAZ
+        $notaNova->nfereciboenvio = null;
+        $notaNova->nfedataenvio = null;
+        $notaNova->nfedataautorizacao = null;
+        $notaNova->nfedatacancelamento = null;
+        $notaNova->nfedatainutilizacao = null;
+        $notaNova->nfeimpressa = false;
+
+        $notaNova->save();
+        
+
+        // Duplica os itens da nota (NotaFiscalProdutoBarra)
+        foreach ($notaOriginal->NotaFiscalProdutoBarraS as $itemOriginal) {
+            $itemNovo = new NotaFiscalProdutoBarra();
+            $itemNovo->fill($itemOriginal->getAttributes());
+            $itemNovo->codnotafiscal = $notaNova->codnotafiscal;
+            $itemNovo->save();
+
+            // Duplica os tributos do item (NotaFiscalItemTributo)
+            foreach ($itemOriginal->NotaFiscalItemTributoS as $tributoOriginal) {
+                $tributoNovo = new NotaFiscalItemTributo();
+                $tributoNovo->fill($tributoOriginal->getAttributes());
+                $tributoNovo->codnotafiscalprodutobarra = $itemNovo->codnotafiscalprodutobarra;
+                $tributoNovo->save();
+            }
+        }
+
+        // Duplica as notas referenciadas
+        foreach ($notaOriginal->NotaFiscalReferenciadaS as $referenciadaOriginal) {
+            $referenciadaNova = new NotaFiscalReferenciada();
+            $referenciadaNova->fill($referenciadaOriginal->getAttributes());
+            $referenciadaNova->codnotafiscal = $notaNova->codnotafiscal;
+            $referenciadaNova->save();
+        }
+
+        // Duplica os pagamentos
+        foreach ($notaOriginal->NotaFiscalPagamentoS as $pagamentoOriginal) {
+            $pagamentoNovo = new NotaFiscalPagamento();
+            $pagamentoNovo->fill($pagamentoOriginal->getAttributes());
+            $pagamentoNovo->codnotafiscal = $notaNova->codnotafiscal;
+            $pagamentoNovo->save();
+        }
+
+        // Duplica as duplicatas
+        foreach ($notaOriginal->NotaFiscalDuplicatasS as $duplicataOriginal) {
+            $duplicataNova = new NotaFiscalDuplicatas();
+            $duplicataNova->fill($duplicataOriginal->getAttributes());
+            $duplicataNova->codnotafiscal = $notaNova->codnotafiscal;
+            $duplicataNova->save();
+        }
+
+        try {
+            NotaFiscalService::recalcularTributacao($notaNova);
+        } catch (\Throwable $th) {
+            Log::error("Erro ao recalcular tributacao da NF #{$notaNova->codnotafiscal}", $th);
+        }
+
+        // Recarrega a nota com todos os relacionamentos
+        return NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($notaNova->codnotafiscal);
     }
 }

@@ -81,6 +81,7 @@ class NotaFiscalDetailResource extends JsonResource
             'nfedatacancelamento' => $this->nfedatacancelamento,
             'nfeinutilizacao' => $this->nfeinutilizacao,
             'nfedatainutilizacao' => $this->nfedatainutilizacao,
+            'justificativa' => $this->justificativa,
             // 'nfexml' => $this->nfexml,
             // 'nfeprotocolo' => $this->nfeprotocolo,
             // 'nferejeicao' => $this->nferejeicao,

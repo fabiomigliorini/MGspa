@@ -141,7 +141,7 @@ onMounted(() => {
 
       </q-card-section>
       <q-card-section class="q-pa-none col-grow">
-        <q-tabs dense size="xs" v-model="tab" class="text-grey-7" indicator-color="primary">
+        <q-tabs dense size="xs" v-model="tab" class="text-grey-7" indicator-color="primary" active-bg-color="grey-3">
 
           <q-tab label="Rural" name="rural" v-if="tabRural" />
           <q-tab label="ICMS" name="icms" />
@@ -150,7 +150,7 @@ onMounted(() => {
 
           <template v-for="trib in item.tributos" :key="trib.codnotafiscalitemtributo">
             <q-tab :label="trib.tributo?.codigo + ' (' + trib.tributo?.ente.charAt(0) + ')' || 'Tributo'"
-              :icon="getEnteIcon(trib.tributo?.ente)" :name="'tributo-' + trib.codnotafiscalitemtributo" />
+              :name="'tributo-' + trib.codnotafiscalitemtributo" />
           </template>
         </q-tabs>
 
@@ -521,9 +521,9 @@ onMounted(() => {
 
         </q-tab-panels>
       </q-card-section>
-      <q-separator />
+      <q-separator v-if="!notaBloqueada" />
 
-      <q-card-actions align="right">
+      <q-card-actions align="right" v-if="!notaBloqueada">
         <q-btn flat dense round icon="edit" color="primary" size="sm" :disable="notaBloqueada" :to="{
           name: 'nota-fiscal-item-edit',
           params: {

@@ -272,6 +272,168 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    async duplicarNota(codnotafiscal) {
+      this.loading.nota = true
+      try {
+        // faz o post
+        const response = await notaFiscalService.duplicar(codnotafiscal)
+
+        // atualiza nota aberta
+        this.currentNota = response.data
+
+        // Atualiza na lista se existir
+        const index = this.notas.findIndex((n) => n.codnotafiscal === codnotafiscal)
+        if (index !== -1) {
+          this.notas[index] = response.data
+        } else {
+          this.notas.push(response.data)
+        }
+
+        // retorna
+        return response.data
+      } catch (error) {
+        console.error('Erro ao duplicar nota fiscal:', error)
+        throw error
+      } finally {
+        this.loading.nota = false
+      }
+    },
+
+    // ==================== NFE ACTIONS ====================
+
+    async criarNfe(codnotafiscal) {
+      try {
+        const response = await notaFiscalService.criar(codnotafiscal)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.nota) {
+          this.currentNota = response.nota
+        }
+
+        // Retorna o resultado da operação
+        return response.resultado
+      } catch (error) {
+        console.error('Erro ao criar NFe:', error)
+        throw error
+      }
+    },
+
+    async enviarNfeSincrono(codnotafiscal) {
+      try {
+        const response = await notaFiscalService.enviarSincrono(codnotafiscal)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.nota) {
+          this.currentNota = response.nota
+        }
+
+        // Retorna o resultado da operação
+        return response.resultado
+      } catch (error) {
+        console.error('Erro ao enviar NFe:', error)
+        throw error
+      }
+    },
+
+    async consultarNfe(codnotafiscal) {
+      try {
+        const response = await notaFiscalService.consultar(codnotafiscal)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.nota) {
+          this.currentNota = response.nota
+        }
+
+        // Retorna o resultado da operação
+        return response.resultado
+      } catch (error) {
+        console.error('Erro ao consultar NFe:', error)
+        throw error
+      }
+    },
+
+    async cancelarNfe(codnotafiscal, justificativa) {
+      try {
+        const response = await notaFiscalService.cancelar(codnotafiscal, justificativa)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.nota) {
+          this.currentNota = response.nota
+        }
+
+        // Retorna o resultado da operação
+        return response.resultado
+      } catch (error) {
+        console.error('Erro ao cancelar NFe:', error)
+        throw error
+      }
+    },
+
+    async inutilizarNfe(codnotafiscal, justificativa) {
+      try {
+        const response = await notaFiscalService.inutilizar(codnotafiscal, justificativa)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.nota) {
+          this.currentNota = response.nota
+        }
+
+        // Retorna o resultado da operação
+        return response.resultado
+      } catch (error) {
+        console.error('Erro ao inutilizar NFe:', error)
+        throw error
+      }
+    },
+
+    async enviarEmailNfe(codnotafiscal, destinatario = null) {
+      try {
+        const response = await notaFiscalService.mail(codnotafiscal, destinatario)
+        return response
+      } catch (error) {
+        console.error('Erro ao enviar email NFe:', error)
+        throw error
+      }
+    },
+
+    async getDanfeUrl(codnotafiscal) {
+      try {
+        return await notaFiscalService.danfe(codnotafiscal)
+      } catch (error) {
+        console.error('Erro ao obter URL do DANFE:', error)
+        throw error
+      }
+    },
+
+    async imprimirNfe(codnotafiscal, impressora = null) {
+      try {
+        const response = await notaFiscalService.imprimir(codnotafiscal, impressora)
+        return response
+      } catch (error) {
+        console.error('Erro ao imprimir NFe:', error)
+        throw error
+      }
+    },
+
+    async alterarStatusNfe(codnotafiscal, data) {
+      try {
+        // Se data for string, converte para objeto { status: data }
+        const payload = typeof data === 'string' ? { status: data } : data
+
+        const response = await notaFiscalService.alterarStatus(codnotafiscal, payload)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.data) {
+          this.currentNota = response.data
+        }
+
+        return response
+      } catch (error) {
+        console.error('Erro ao alterar status NFe:', error)
+        throw error
+      }
+    },
+
     setFilters(filters) {
       this.filters = { ...this.filters, ...filters }
       // Reset quando altera filtros

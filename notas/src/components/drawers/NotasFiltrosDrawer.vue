@@ -326,7 +326,22 @@ onMounted(() => {
           emit-value
           map-options
           :bottom-slots="false"
-        />
+        >
+          <template v-slot:option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section avatar>
+                <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ scope.opt.label }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+          <template v-slot:selected-item="scope">
+            <q-icon :name="scope.opt.icon" :color="scope.opt.color" size="xs" class="q-mr-xs" />
+            {{ scope.opt.label }}
+          </template>
+        </q-select>
       </div>
 
       <!-- Emitida -->
