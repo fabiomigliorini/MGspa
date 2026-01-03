@@ -115,95 +115,51 @@ watch(() => props.modelValue, (newVal) => {
 
       <q-form @submit.prevent="handleSave">
         <q-card-section class="q-pt-md q-pb-md">
-        <div class="row q-col-gutter-md">
-          <!-- Sequência -->
-          <div class="col-12 col-sm-4">
-            <q-input
-              v-model.number="form.sequencia"
-              label="Sequência *"
-              outlined
-              type="number"
-              min="1"
-              :rules="[
+          <div class="row q-col-gutter-md">
+            <!-- Sequência -->
+            <div class="col-12 col-sm-4">
+              <q-input v-model.number="form.sequencia" label="Sequência *" outlined type="number" min="1" :rules="[
                 (val) => !!val || 'Campo obrigatório',
                 (val) => val > 0 || 'Deve ser maior que zero',
-              ]"
-              lazy-rules
-              :disable="isEditMode || notaBloqueada"
-              hint="Sequência automática"
-              autofocus
-            />
-          </div>
+              ]" lazy-rules :disable="isEditMode" hint="Sequência automática" autofocus />
+            </div>
 
-          <!-- Texto da Correção -->
-          <div class="col-12">
-            <q-input
-              v-model="form.texto"
-              label="Texto da Correção *"
-              outlined
-              type="textarea"
-              rows="6"
-              counter
-              maxlength="1000"
-              :rules="[
-                (val) => !!val || 'Campo obrigatório',
-                (val) => val?.length >= 15 || 'Deve ter pelo menos 15 caracteres',
-              ]"
-              lazy-rules
-              :disable="isAutorizada || notaBloqueada"
-              hint="Descreva a correção a ser feita na NFe (mín. 15 caracteres)"
-            />
-          </div>
-
-          <!-- Informações da Autorização (somente leitura quando editando) -->
-          <template v-if="isEditMode && cartaCorrecao">
+            <!-- Texto da Correção -->
             <div class="col-12">
-              <q-separator class="q-my-md" />
-              <div class="text-caption text-grey-7 q-mb-sm">Informações da Transmissão</div>
+              <q-input v-model="form.texto" label="Texto da Correção *" outlined type="textarea" rows="6" counter
+                maxlength="1000" :rules="[
+                  (val) => !!val || 'Campo obrigatório',
+                  (val) => val?.length >= 15 || 'Deve ter pelo menos 15 caracteres',
+                ]" lazy-rules :disable="isAutorizada"
+                hint="Descreva a correção a ser feita na NFe (mín. 15 caracteres)" />
             </div>
 
-            <div class="col-12 col-sm-6">
-              <q-input
-                :model-value="cartaCorrecao.protocolo || 'Aguardando transmissão'"
-                label="Protocolo"
-                outlined
-                readonly
-                dense
-              />
-            </div>
+            <!-- Informações da Autorização (somente leitura quando editando) -->
+            <template v-if="isEditMode && cartaCorrecao">
+              <div class="col-12">
+                <q-separator class="q-my-md" />
+                <div class="text-caption text-grey-7 q-mb-sm">Informações da Transmissão</div>
+              </div>
 
-            <div class="col-12 col-sm-6">
-              <q-input
-                :model-value="cartaCorrecao.protocolodata || '-'"
-                label="Data do Protocolo"
-                outlined
-                readonly
-                dense
-              />
-            </div>
-          </template>
-        </div>
+              <div class="col-12 col-sm-6">
+                <q-input :model-value="cartaCorrecao.protocolo || 'Aguardando transmissão'" label="Protocolo" outlined
+                  readonly dense />
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <q-input :model-value="cartaCorrecao.protocolodata || '-'" label="Data do Protocolo" outlined readonly
+                  dense />
+              </div>
+            </template>
+          </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn
-            v-if="isEditMode && !isAutorizada && !notaBloqueada"
-            flat
-            label="Excluir"
-            color="negative"
-            @click="handleDelete"
-          />
+          <q-btn v-if="isEditMode && !isAutorizada" flat label="Excluir" color="negative" @click="handleDelete" />
           <q-space />
           <q-btn flat label="Cancelar" @click="close" />
-          <q-btn
-            unelevated
-            label="Salvar"
-            color="primary"
-            icon="save"
-            type="submit"
-            :loading="loading"
-            :disable="isAutorizada || notaBloqueada"
-          />
+          <q-btn unelevated label="Salvar" color="primary" icon="save" type="submit" :loading="loading"
+            :disable="isAutorizada" />
         </q-card-actions>
       </q-form>
     </q-card>

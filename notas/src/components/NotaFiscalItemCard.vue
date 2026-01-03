@@ -42,27 +42,29 @@ onMounted(() => {
 <template>
 
   <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
+
     <q-card flat bordered class="full-height flex column">
-      <q-img :src="imagem" class="bg-grey-3" :ratio="4 / 2">
-        <div class="absolute-top">
-          <div class="text-body1">
-            <q-avatar color="yellow-8" text-color="indigo" size="md" class="q-mr-sm"
-              style="flex-shrink: 0; font-weight: bold;">
+      <q-item class="bg-primary text-white">
+        <q-item-section avatar>
+          <q-avatar>
+            <q-avatar color="white" text-color="primary" size="md" class="q-mr-sm text-weight-bolder">
               {{ item.ordem }}
             </q-avatar>
-            <span v-if="item.descricaoalternativa" class="text-weight-bold">
-              {{ item.descricaoalternativa }}
-            </span>
-            <span :class="item.descricaoalternativa ? 'text-strike' : null" class="text-weight-bold">
+          </q-avatar>
+        </q-item-section>
+
+        <q-item-section style="height: 70px;">
+          <q-item-label lines="3">
+            {{ item.descricaoalternativa }}
+            <span :class="item.descricaoalternativa ? 'text-strike text-weight-thin' : null">
               {{ item.produtoBarra?.descricao }}
             </span>
-          </div>
-          <div class="text-caption">
-            {{ item.produtoBarra?.barras || '-' }}
-
-          </div>
-        </div>
-      </q-img>
+          </q-item-label>
+          <q-item-label caption class="text-blue-3">{{ item.produtoBarra?.barras || '-' }}</q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-img :src="imagem" class="bg-grey-3" :ratio="4 / 2" />
+      <q-separator />
       <q-card-section class="q-pa-md">
 
         <div class="row q-col-gutter-sm">
@@ -140,6 +142,7 @@ onMounted(() => {
         </div>
 
       </q-card-section>
+      <q-separator />
       <q-card-section class="q-pa-none col-grow">
         <q-tabs dense size="xs" v-model="tab" class="text-grey-7" indicator-color="primary" active-bg-color="grey-3">
 

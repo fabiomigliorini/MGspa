@@ -1,0 +1,8 @@
+- editei um item (descricao alternativa) e nao atualizou pagina principal
+- Deixar informar NFEChave quando emitida = false
+- Criar o botao do xml
+- danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
+- carta de correcao nao esta funcionando
+- fazer a "danfe" da carta de correcao
+- desabilitar mgsis
+- publicar o notas.mgpapelaria.com.br
