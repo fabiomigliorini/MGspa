@@ -26,6 +26,7 @@ import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamento
 import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicataDialog.vue'
 import NotaFiscalReferenciadaDialog from '../components/dialogs/NotaFiscalReferenciadaDialog.vue'
 import NotaFiscalCartaCorrecaoDialog from '../components/dialogs/NotaFiscalCartaCorrecaoDialog.vue'
+import NotaFiscalItemDialog from 'src/components/dialogs/NotaFiscalItemDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -167,6 +168,58 @@ const handleDelete = () => {
       })
     }
   })
+}
+
+// ==================== ITENS ====================
+const itemDialog = ref(false)
+const itemSelecionado = ref(null)
+
+const novoItem = () => {
+  itemSelecionado.value = null
+  itemDialog.value = true
+}
+
+const createItem = async (prod) => {
+  try {
+    const ret = await notaFiscalStore.createItem(route.params.codnotafiscal, {
+      codprodutobarra: prod.produto.codprodutobarra
+    })
+
+    const adicionado = [...ret.itens].sort((a, b) => {
+      // compara por codnotafiscalprodutobarra
+      return (b.codnotafiscalprodutobarra || 0) - (a.codnotafiscalprodutobarra || 0)
+    })[0]
+
+    console.log(adicionado);
+
+    console.log({
+      codnotafiscal: adicionado.codnotafiscal,
+      codnotafiscalitem: adicionado.codnotafiscalprodutobarra,
+    });
+
+    router.push({
+      name: 'nota-fiscal-item-edit',
+      params: {
+        codnotafiscal: adicionado.codnotafiscal,
+        codnotafiscalitem: adicionado.codnotafiscalprodutobarra,
+      },
+    })
+
+    $q.notify({
+      type: 'positive',
+      message: 'Item adicionado com sucesso',
+    })
+  } catch (error) {
+    console.log(error)
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao excluir item',
+      caption: error.response?.data?.message || error.message,
+    })
+  }
+
+
+
 }
 
 const handleDeleteItem = (item) => {
@@ -882,6 +935,10 @@ onMounted(() => {
             Itens
           </span>
           <q-badge color="primary" class="q-ml-sm">{{ itens.length }}</q-badge>
+          <q-btn v-if="!notaBloqueada" dense flat color="primary" icon="add" size="md" @click="novoItem"
+            class=" q-ml-sm">
+            <q-tooltip>Adicionar Item</q-tooltip>
+          </q-btn>
         </div>
 
         <!-- Paginação no topo (mobile/desktop) -->
@@ -1234,6 +1291,9 @@ onMounted(() => {
     </q-card>
 
     <!-- Dialogs -->
+    <NotaFiscalItemDialog v-model="itemDialog" :item="itemSelecionado" :nota-bloqueada="notaBloqueada"
+      @save="createItem" />
+
     <NotaFiscalPagamentoDialog v-model="pagamentoDialog" :pagamento="pagamentoSelecionado"
       :nota-bloqueada="notaBloqueada" @save="salvarPagamento" @delete="excluirPagamento" />
 

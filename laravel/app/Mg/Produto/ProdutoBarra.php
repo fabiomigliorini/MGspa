@@ -143,6 +143,18 @@ class ProdutoBarra extends MgModel
         return trim($descr);
     }
 
+    public function getPrecoAttribute()
+    {
+        if (!empty($this->codprodutoembalagem)) {
+            if (!empty($this->ProdutoEmbalagem->preco)) {
+                return $this->ProdutoEmbalagem->preco;
+            } 
+            return round($this->ProdutoVariacao->Produto->preco * $this->ProdutoEmbalagem->quantidade, 2);
+        }
+        return $this->ProdutoVariacao->Produto->preco;
+    }
+
+
     // Atributo unidade
     public function getUnidadeAttribute()
     {

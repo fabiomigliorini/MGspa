@@ -89,21 +89,11 @@ class NotaFiscalDetailResource extends JsonResource
             'status' => $this->status,
 
             // Relacionamentos
-            'itens' => $this->whenLoaded('NotaFiscalProdutoBarraS', function () {
-                return NotaFiscalProdutoBarraResource::collection($this->NotaFiscalProdutoBarraS);
-            }),
-            'pagamentos' => $this->whenLoaded('NotaFiscalPagamentoS', function () {
-                return NotaFiscalPagamentoResource::collection($this->NotaFiscalPagamentoS);
-            }),
-            'duplicatas' => $this->whenLoaded('NotaFiscalDuplicatasS', function () {
-                return NotaFiscalDuplicatasResource::collection($this->NotaFiscalDuplicatasS);
-            }),
-            'notasReferenciadas' => $this->whenLoaded('NotaFiscalReferenciadaS', function () {
-                return NotaFiscalReferenciadaResource::collection($this->NotaFiscalReferenciadaS);
-            }),
-            'cartasCorrecao' => $this->whenLoaded('NotaFiscalCartaCorrecaoS', function () {
-                return NotaFiscalCartaCorrecaoResource::collection($this->NotaFiscalCartaCorrecaoS);
-            }),
+            'itens' => NotaFiscalProdutoBarraResource::collection($this->NotaFiscalProdutoBarraS),
+            'pagamentos' => NotaFiscalPagamentoResource::collection($this->NotaFiscalPagamentoS),
+            'duplicatas' => NotaFiscalDuplicatasResource::collection($this->NotaFiscalDuplicatasS),
+            'notasReferenciadas' => NotaFiscalReferenciadaResource::collection($this->NotaFiscalReferenciadaS),
+            'cartasCorrecao' => NotaFiscalCartaCorrecaoResource::collection($this->NotaFiscalCartaCorrecaoS),
 
             // Timestamps
             'criacao' => $this->criacao,
@@ -113,28 +103,16 @@ class NotaFiscalDetailResource extends JsonResource
 
     private function formatFilial(): ?array
     {
-        if (!$this->relationLoaded('Filial')) {
-            return null;
-        }
-
         return $this->Filial?->only(['codfilial', 'filial', 'cnpj']);
     }
 
     private function formatEstoqueLocal(): ?array
     {
-        if (!$this->relationLoaded('EstoqueLocal')) {
-            return null;
-        }
-
         return $this->EstoqueLocal?->only(['codestoquelocal', 'estoquelocal']);
     }
 
     private function formatPessoa(): ?array
     {
-        if (!$this->relationLoaded('Pessoa')) {
-            return null;
-        }
-
         $ret = $this->Pessoa?->only([
             'codpessoa',
             'pessoa',
@@ -159,37 +137,21 @@ class NotaFiscalDetailResource extends JsonResource
 
     private function formatNaturezaOperacao(): ?array
     {
-        if (!$this->relationLoaded('NaturezaOperacao')) {
-            return null;
-        }
-
         return $this->NaturezaOperacao?->only(['codnaturezaoperacao', 'naturezaoperacao', 'cfop']);
     }
 
     private function formatOperacao(): ?array
     {
-        if (!$this->relationLoaded('Operacao')) {
-            return null;
-        }
-
         return $this->Operacao?->only(['codoperacao', 'operacao']);
     }
 
     private function formatTransportador(): ?array
     {
-        if (!$this->relationLoaded('PessoaTransportador')) {
-            return null;
-        }
-
         return $this->PessoaTransportador?->only(['codpessoa', 'pessoa', 'fantasia', 'cnpj', 'ie']);
     }
 
     private function formatEstadoPlaca(): ?array
     {
-        if (!$this->relationLoaded('EstadoPlaca')) {
-            return null;
-        }
-
         return $this->EstadoPlaca?->only(['codestado', 'estado', 'sigla']);
     }
 }

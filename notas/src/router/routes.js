@@ -55,33 +55,7 @@ const routes = [
           permissions: ['Administrador', 'Financeiro'],
         },
       },
-      {
-        path: 'notas/:codnotafiscal/item/adicionar',
-        name: 'nota-fiscal-item-adicionar',
-        component: () => import('pages/items/ItemFormAdicionarPage.vue'),
-        meta: {
-          auth: true,
-          permissions: ['Administrador', 'Financeiro'],
-        },
-      },
-      {
-        path: 'notas/:codnotafiscal/item/:codnotafiscalprodutobarra/dados',
-        name: 'nota-fiscal-item-dados',
-        component: () => import('pages/items/ItemFormDadosPage.vue'),
-        meta: {
-          auth: true,
-          permissions: ['Administrador', 'Financeiro'],
-        },
-      },
-      {
-        path: 'notas/:codnotafiscal/item/:codnotafiscalprodutobarra/tributos-legado',
-        name: 'nota-fiscal-item-tributos-legado',
-        component: () => import('pages/items/ItemFormTributosLegadoPage.vue'),
-        meta: {
-          auth: true,
-          permissions: ['Administrador', 'Financeiro'],
-        },
-      },
+
       {
         path: 'notas/:codnotafiscal/item/:codnotafiscalitem/edit',
         name: 'nota-fiscal-item-edit',

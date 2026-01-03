@@ -106,6 +106,16 @@ export const formatNumero = (numero) => {
 }
 
 /**
+ * Formata um codproduto com zeros à esquerda
+ * @param {number|string} numero - Número da nota fiscal
+ * @returns {string} Número formatado com 8 dígitos
+ */
+export const formatCodProduto = (numero) => {
+  if (!numero) return '#000000'
+  return '#' + String(numero).padStart(6, '0')
+}
+
+/**
  * Formata uma chave de acesso NFe em grupos de 4 dígitos
  * @param {string} chave - Chave de acesso da NFe
  * @returns {string} Chave formatada (ex: "1234 5678 9012 ...") ou "-"

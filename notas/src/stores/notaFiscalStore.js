@@ -350,12 +350,8 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.loading.itens = true
       try {
         const response = await notaFiscalItemService.create(codnotafiscal, data)
-        // Adiciona o item no currentNota
         if (this.currentNota) {
-          if (!this.currentNota.itens) {
-            this.currentNota.itens = []
-          }
-          this.currentNota.itens.push(response.data)
+          this.currentNota = response.data
         }
         return response.data
       } catch (error) {
@@ -398,13 +394,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     async deleteItem(codnotafiscal, codnotafiscalprodutobarra) {
       this.loading.itens = true
       try {
-        await notaFiscalItemService.delete(codnotafiscal, codnotafiscalprodutobarra)
-
-        // Remove do currentNota
-        if (this.currentNota?.itens) {
-          this.currentNota.itens = this.currentNota.itens.filter(
-            (i) => i.codnotafiscalprodutobarra !== codnotafiscalprodutobarra
-          )
+        const response = await notaFiscalItemService.delete(
+          codnotafiscal,
+          codnotafiscalprodutobarra
+        )
+        console.log(response)
+        if (this.currentNota) {
+          this.currentNota = response.data
         }
       } catch (error) {
         console.error('Erro ao excluir item:', error)

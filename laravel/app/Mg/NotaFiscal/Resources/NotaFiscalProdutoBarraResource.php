@@ -97,10 +97,6 @@ class NotaFiscalProdutoBarraResource extends JsonResource
 
     private function formatProdutoBarra(): ?array
     {
-        if (!$this->relationLoaded('ProdutoBarra')) {
-            return null;
-        }
-
         $produtoBarra = $this->ProdutoBarra;
         if (!$produtoBarra) {
             return null;
@@ -131,10 +127,6 @@ class NotaFiscalProdutoBarraResource extends JsonResource
 
     private function formatCfop(): ?array
     {
-        if (!$this->relationLoaded('Cfop')) {
-            return null;
-        }
-
         return $this->Cfop?->only(['codcfop', 'cfop', 'descricao']);
     }
 }

@@ -4,7 +4,11 @@ namespace Mg\NotaFiscal;
 
 use App\Http\Controllers\Controller;
 use Mg\NotaFiscal\Requests\NotaFiscalProdutoBarraRequest;
+use Mg\NotaFiscal\Requests\NotaFiscalProdutoBarraStoreRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalProdutoBarraResource;
+use Mg\NotaFiscal\Resources\NotaFiscalDetailResource;
+use Mg\Tributacao\TributacaoService;
+
 use Illuminate\Http\Request;
 
 class NotaFiscalProdutoBarraController extends Controller
@@ -44,7 +48,7 @@ class NotaFiscalProdutoBarraController extends Controller
         return new NotaFiscalProdutoBarraResource($item);
     }
 
-    public function store(NotaFiscalProdutoBarraRequest $request, int $codnotafiscal)
+    public function store(NotaFiscalProdutoBarraStoreRequest $request, int $codnotafiscal)
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
@@ -55,13 +59,40 @@ class NotaFiscalProdutoBarraController extends Controller
 
         // Calcula tributação se não foi informada
         $item = new NotaFiscalProdutoBarra($data);
-        if (empty($item->icmsvalor)) {
-            NotaFiscalProdutoBarraService::calcularTributacao($item);
+
+        // quantidade
+        if (empty($item->quantidade)) {
+            $item->quantidade = 1;
         }
 
+        // valorunitario
+        if (empty($item->valorunitario)) {
+            $item->valorunitario = $item->ProdutoBarra->preco;
+        }
+
+        // valortotal
+        if (empty($item->valortotal)) {
+            $item->valortotal =
+                ($item->valorunitario * $item->quantidade)
+                - $item->valordesconto
+                + $item->valorseguro
+                + $item->valorfrete
+                + $item->outras;
+        }
+
+        //ordem
+        if (empty($item->ordem)) {
+            $item->ordem = NotaFiscalProdutoBarra::where('codnotafiscal', $codnotafiscal)->max('ordem') + 1;
+        }
+
+        if (empty($item->codcfop)) {
+            NotaFiscalProdutoBarraService::calcularTributacao($item);
+        }
         $item->save();
 
-        return (new NotaFiscalProdutoBarraResource($item))
+        TributacaoService::recalcularTributosItem($item);
+
+        return (new NotaFiscalDetailResource($item->NotaFiscal->fresh()))
             ->response()
             ->setStatusCode(201);
     }
@@ -107,7 +138,12 @@ class NotaFiscalProdutoBarraController extends Controller
 
         $item->delete();
 
-        return response()->noContent();
+        $nf = NotaFiscal::findOrFail($codnotafiscal);
+
+        return (new NotaFiscalDetailResource($nf))
+            ->response()
+            ->setStatusCode(201);
+
     }
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void
