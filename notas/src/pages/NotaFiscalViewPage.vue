@@ -1605,7 +1605,7 @@ onUnmounted(() => {
             Nenhuma duplicata adicionada
           </div>
 
-          <div v-else class="row q-col-gutter-md q-mb-md">
+          <div v-else class="row q-col-gutter-md">
             <div v-for="dup in duplicatas" :key="dup.codnotafiscalduplicatas"
               class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
               <q-card flat bordered class="full-height flex column">
