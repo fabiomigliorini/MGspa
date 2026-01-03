@@ -124,7 +124,9 @@ class NotaFiscalProdutoBarraController extends Controller
         }
         NotaFiscalItemTributo::where('codnotafiscalprodutobarra', $codnotafiscalprodutobarra)->whereNotIn('codnotafiscalitemtributo', $codnotafiscalitemtributo)->delete();
 
-        return new NotaFiscalProdutoBarraResource($item->fresh());
+        return (new NotaFiscalDetailResource($item->NotaFiscal->fresh()))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function destroy(int $codnotafiscal, int $codnotafiscalprodutobarra)

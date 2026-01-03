@@ -6,3 +6,12 @@
 - fazer a "danfe" da carta de correcao
 - desabilitar mgsis
 - publicar o notas.mgpapelaria.com.br
+- botao pra adicionar nova nota fiscal
+- dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
+- colocar botao nossa emissao
+- ratear os valores editaveis da nota fiscal (desconto, frete, seguro, outras)
+
+DONE:
+
+- nao esta salvando as observacoes
+- nao esta trazendo as observacoes da natureza ao informar a natureza.

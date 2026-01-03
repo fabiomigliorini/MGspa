@@ -9,7 +9,11 @@
  * @returns {boolean} - true se a chave é válida
  */
 export const validarChaveNFe = (chave) => {
-  if (!chave || chave.length !== 44) {
+  if (!chave) {
+    return true
+  }
+
+  if (chave.length !== 44) {
     return false
   }
 

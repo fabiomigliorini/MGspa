@@ -48,6 +48,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  searchCnpj: {
+    type: String,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'clear', 'select'])
@@ -55,6 +59,8 @@ const emit = defineEmits(['update:modelValue', 'clear', 'select'])
 const pessoaStore = useSelectPessoaStore()
 const options = ref([])
 const loading = ref(false)
+const selectRef = ref(null)
+const optionsFromCnpj = ref([]) // Armazena opções carregadas via CNPJ
 
 // Função para truncar o label
 const truncateLabel = (label) => {
@@ -83,6 +89,42 @@ watch(
   },
 )
 
+// Watch para quando searchCnpj mudar, fazer busca automática
+watch(
+  () => props.searchCnpj,
+  async (cnpj) => {
+    if (cnpj && cnpj.length >= 11) {
+      try {
+        loading.value = true
+        const results = await pessoaStore.search(cnpj, {
+          somenteAtivos: props.somenteAtivos,
+          somenteVendedores: props.somenteVendedores,
+        })
+
+        // Armazena os resultados
+        optionsFromCnpj.value = results
+        options.value = results
+
+        // Abre o select automaticamente se houver resultados
+        if (results.length > 0 && selectRef.value) {
+          // Aguarda um pouco para garantir que o DOM foi atualizado
+          await new Promise(resolve => setTimeout(resolve, 100))
+
+          // Foca no campo e abre o popup
+          selectRef.value.focus()
+          selectRef.value.showPopup()
+        }
+      } catch (error) {
+        console.error('Erro ao buscar pessoa por CNPJ:', error)
+        optionsFromCnpj.value = []
+        options.value = []
+      } finally {
+        loading.value = false
+      }
+    }
+  },
+)
+
 const loadPessoa = async (codpessoa) => {
   try {
     loading.value = true
@@ -102,6 +144,14 @@ const loadPessoa = async (codpessoa) => {
 }
 
 const filterPessoa = async (val, update) => {
+  // Se há opções do CNPJ e o campo está vazio ou com espaço, mostra essas opções
+  if (optionsFromCnpj.value.length > 0 && (!val || val.trim().length < 2)) {
+    update(() => {
+      options.value = optionsFromCnpj.value
+    })
+    return
+  }
+
   if (!val || val.length < 2) {
     update(() => {
       options.value = []
@@ -135,6 +185,8 @@ const handleUpdate = (value) => {
     if (pessoaSelecionada) {
       emit('select', pessoaSelecionada)
     }
+    // Limpa as opções do CNPJ após a seleção
+    optionsFromCnpj.value = []
   }
 }
 
@@ -142,7 +194,7 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <q-select :model-value="modelValue" @update:model-value="handleUpdate" :label="label" outlined clearable
+  <q-select ref="selectRef" :model-value="modelValue" @update:model-value="handleUpdate" :label="label" outlined clearable
     :options="options" option-value="value" option-label="label" emit-value map-options use-input input-debounce="500"
     @filter="filterPessoa" :placeholder="placeholder" :bottom-slots="bottomSlots" :class="customClass"
     :disable="disable" :readonly="readonly" :loading="loading" :dense="dense">

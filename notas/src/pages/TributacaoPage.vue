@@ -683,12 +683,6 @@ const confirmarExclusaoTributo = () => {
         </q-card>
       </div>
 
-      <!-- FAB para Nova Regra -->
-      <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="add" color="primary" @click="novaRegra">
-          <q-tooltip>Nova Regra</q-tooltip>
-        </q-btn>
-      </q-page-sticky>
     </template>
 
     <!-- Estado vazio (sem tributos) -->
@@ -714,8 +708,7 @@ const confirmarExclusaoTributo = () => {
           <q-input v-model="tributoForm.descricao" label="Descrição *" outlined class="q-mt-md"
             :rules="[(val) => !!val || 'Campo obrigatório']" />
           <q-select v-model="tributoForm.ente" label="Ente *" :options="enteOptions" outlined emit-value map-options
-            option-value="value" option-label="label" class="q-mt-md"
-            :rules="[(val) => !!val || 'Campo obrigatório']">
+            option-value="value" option-label="label" class="q-mt-md" :rules="[(val) => !!val || 'Campo obrigatório']">
             <template v-slot:option="scope">
               <q-item v-bind="scope.itemProps">
                 <q-item-section avatar>
@@ -870,4 +863,11 @@ const confirmarExclusaoTributo = () => {
       </q-card>
     </q-dialog>
   </q-page>
+
+  <!-- FAB para Nova Regra -->
+  <q-page-sticky position="bottom-right" :offset="[18, 18]">
+    <q-btn fab icon="add" color="primary" @click="novaRegra">
+      <q-tooltip>Nova Regra</q-tooltip>
+    </q-btn>
+  </q-page-sticky>
 </template>

@@ -44,10 +44,10 @@ onMounted(() => {
   <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
 
     <q-card flat bordered class="full-height flex column">
-      <q-item class="bg-primary text-white">
+      <q-item class="bg-grey-3 ">
         <q-item-section avatar>
           <q-avatar>
-            <q-avatar color="white" text-color="primary" size="md" class="q-mr-sm text-weight-bolder">
+            <q-avatar color="primary" text-color="blue-2" size="md" class="q-mr-sm text-weight-bolder">
               {{ item.ordem }}
             </q-avatar>
           </q-avatar>
@@ -60,7 +60,7 @@ onMounted(() => {
               {{ item.produtoBarra?.descricao }}
             </span>
           </q-item-label>
-          <q-item-label caption class="text-blue-3">{{ item.produtoBarra?.barras || '-' }}</q-item-label>
+          <q-item-label caption>{{ item.produtoBarra?.barras || '-' }}</q-item-label>
         </q-item-section>
       </q-item>
       <q-img :src="imagem" class="bg-grey-3" :ratio="4 / 2" />
@@ -71,7 +71,7 @@ onMounted(() => {
 
           <!-- Quantodade -->
           <div class="col-4">
-            <div class="text-caption text-grey-7">Quantidade</div>
+            <div class="text-caption text-grey-7">Quant</div>
             <div class="text-body2">
               {{ item.quantidade }} {{ item.produtoBarra?.unidade || '-' }}
             </div>
@@ -80,7 +80,7 @@ onMounted(() => {
 
           <!-- Valor Unitário -->
           <div class="col-4">
-            <div class="text-caption text-grey-7">Unitário</div>
+            <div class="text-caption text-grey-7">Preço</div>
             <div class="text-body2"> {{ formatCurrency(item.valorunitario) }}</div>
           </div>
 

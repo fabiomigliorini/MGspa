@@ -512,7 +512,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.loading.itens = true
       try {
         const response = await notaFiscalItemService.create(codnotafiscal, data)
-        if (this.currentNota) {
+        if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
           this.currentNota = response.data
         }
         return response.data
@@ -533,17 +533,9 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
           codnotafiscalprodutobarra,
           data
         )
-
-        // Atualiza no currentNota
-        if (this.currentNota?.itens) {
-          const index = this.currentNota.itens.findIndex(
-            (i) => i.codnotafiscalprodutobarra === codnotafiscalprodutobarra
-          )
-          if (index !== -1) {
-            this.currentNota.itens[index] = response.data
-          }
+        if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
+          this.currentNota = response.data
         }
-
         return response.data
       } catch (error) {
         console.error('Erro ao atualizar item:', error)
@@ -560,10 +552,10 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
           codnotafiscal,
           codnotafiscalprodutobarra
         )
-        console.log(response)
-        if (this.currentNota) {
+        if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
           this.currentNota = response.data
         }
+        return response.data
       } catch (error) {
         console.error('Erro ao excluir item:', error)
         throw error

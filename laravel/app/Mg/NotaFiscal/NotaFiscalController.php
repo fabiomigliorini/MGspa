@@ -5,7 +5,8 @@ namespace Mg\NotaFiscal;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Mg\Filial\Filial;
+use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\NotaFiscal\Requests\NotaFiscalRequest;
 use Mg\NotaFiscal\Requests\NotaFiscalStatusRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalResource;
@@ -136,7 +137,10 @@ class NotaFiscalController extends Controller
 
     public function store(NotaFiscalRequest $request)
     {
-        $nota = NotaFiscal::create($request->validated());
+        $data = $request->validated();
+        $data['codoperacao'] = NaturezaOperacao::findOrFail($data['codnaturezaoperacao'])->codoperacao;
+        $data['serie'] = Filial::findOrFail($data['codfilial'])->nfeserie;
+        $nota = NotaFiscal::create($data);
 
         return (new NotaFiscalDetailResource($nota))
             ->response()
@@ -150,7 +154,9 @@ class NotaFiscalController extends Controller
         // Verifica se a nota está bloqueada
         $this->verificarNotaBloqueada($nota);
 
-        $nota->update($request->validated());
+        $data = $request->validated();
+        $data['codoperacao'] = NaturezaOperacao::findOrFail($data['codnaturezaoperacao'])->codoperacao;
+        $nota->update($data);
 
         return new NotaFiscalDetailResource($nota->fresh());
     }

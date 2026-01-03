@@ -35,8 +35,8 @@ export const getEnteColor = (ente) => {
 }
 
 export const MODELO_OPTIONS = [
-  { label: 'NF-e (55)', value: 55 },
-  { label: 'NFC-e (65)', value: 65 },
+  { label: 'NF-e (55)', value: '55' },
+  { label: 'NFC-e (65)', value: '65' },
 ]
 
 export const STATUS_OPTIONS = [

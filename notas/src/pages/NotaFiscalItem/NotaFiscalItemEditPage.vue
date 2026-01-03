@@ -107,14 +107,6 @@ onBeforeUnmount(() => {
 <template>
   <q-page padding>
     <q-form @submit.prevent="handleSubmit" v-if="editingItem">
-
-      <!-- FAB para Salvar -->
-      <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab color="primary" icon="save" type="submit" :loading="loading" :disable="notaBloqueada">
-          <q-tooltip>Salvar Nota</q-tooltip>
-        </q-btn>
-      </q-page-sticky>
-
       <div style="max-width: 700px; margin: 0 auto">
 
         <!-- Header -->
@@ -246,6 +238,13 @@ onBeforeUnmount(() => {
           </q-card-section>
         </q-card>
       </div>
+
+      <!-- FAB para Salvar -->
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn fab color="primary" icon="save" type="submit" :loading="loading" :disable="notaBloqueada">
+          <q-tooltip>Salvar Nota</q-tooltip>
+        </q-btn>
+      </q-page-sticky>
     </q-form>
   </q-page>
   <div class="q-my-lg">&nbsp;</div>

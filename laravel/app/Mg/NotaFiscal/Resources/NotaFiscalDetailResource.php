@@ -56,9 +56,8 @@ class NotaFiscalDetailResource extends JsonResource
             'valordesconto' => $this->valordesconto,
             'valortotal' => $this->valortotal,
 
-            // Informações Adicionais
-            'informacoescontribuinte' => $this->informacoescontribuinte,
-            'informacoesfisco' => $this->informacoesfisco,
+            // Observacoes
+            'observacoes' => $this->observacoes,
 
             // Transporte
             'frete' => $this->frete,

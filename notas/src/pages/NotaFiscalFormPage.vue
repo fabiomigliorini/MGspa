@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
@@ -10,6 +10,7 @@ import SelectPessoa from '../components/selects/SelectPessoa.vue'
 import SelectEstado from '../components/selects/SelectEstado.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
 import { formatNumero } from 'src/utils/formatters'
+import { validarChaveNFe } from 'src/utils/validators'
 
 const router = useRouter()
 const route = useRoute()
@@ -47,35 +48,7 @@ const notaBloqueada = computed(() => {
   return ['AUT', 'CAN', 'INU'].includes(nota.value.status)
 })
 
-const form = ref({
-  codfilial: null,
-  codestoquelocal: null,
-  codpessoa: null,
-  codnaturezaoperacao: null,
-  codoperacao: null,
-  modelo: '55',
-  serie: '1',
-  numero: null,
-  emissao: isoToFormDateTime(new Date().toISOString()),
-  saida: isoToFormDateTime(new Date().toISOString()),
-  cpf: null,
-  valordesconto: 0,
-  valorfrete: 0,
-  valorseguro: 0,
-  valoroutras: 0,
-  frete: 9,
-  codpessoatransportador: null,
-  placa: null,
-  codestadoplaca: null,
-  volumes: null,
-  volumesespecie: null,
-  volumesmarca: null,
-  volumesnumero: null,
-  pesobruto: null,
-  pesoliquido: null,
-  observacoes: null,
-  emitida: false,
-})
+const form = ref(null)
 
 // Options (serão carregadas via API)
 const operacoesOptions = ref([])
@@ -94,6 +67,23 @@ const freteOptions = [
   { label: '9 - Sem frete', value: 9 },
 ]
 
+// Formata erros de validação do Laravel para exibição
+const formatValidationErrors = (error) => {
+  if (error.response?.data?.errors) {
+    const errors = error.response.data.errors
+    const messages = []
+
+    for (const fieldErrors of Object.values(errors)) {
+      // fieldErrors é um array de mensagens de erro para este campo
+      messages.push(...fieldErrors)
+    }
+
+    return messages.join('\n')
+  }
+
+  return error.response?.data?.message || error.message
+}
+
 // Methods
 const loadFormData = async () => {
   if (isEditMode.value) {
@@ -109,9 +99,11 @@ const loadFormData = async () => {
           codpessoa: nota.value.codpessoa,
           codnaturezaoperacao: nota.value.codnaturezaoperacao,
           codoperacao: nota.value.codoperacao,
-          modelo: nota.value.modelo,
+          emitida: nota.value.emitida,
+          modelo: String(nota.value.modelo),
           serie: nota.value.serie,
           numero: nota.value.numero,
+          nfechave: nota.value.nfechave,
           emissao: isoToFormDateTime(nota.value.emissao),
           saida: isoToFormDateTime(nota.value.saida),
           cpf: nota.value.cpf,
@@ -130,19 +122,54 @@ const loadFormData = async () => {
           pesobruto: nota.value.pesobruto,
           pesoliquido: nota.value.pesoliquido,
           observacoes: nota.value.observacoes,
-          emitida: nota.value.emitida,
         }
       }
     } catch (error) {
+      const errorMessage = formatValidationErrors(error)
+
       $q.notify({
         type: 'negative',
         message: 'Erro ao carregar nota fiscal',
-        caption: error.response?.data?.message || error.message,
+        caption: errorMessage,
+        multiLine: true,
+        timeout: 5000,
       })
       router.push({ name: 'notas' })
     } finally {
       loading.value = false
     }
+    return true
+  }
+
+  form.value = {
+    codfilial: null,
+    codestoquelocal: null,
+    codpessoa: 1,
+    codnaturezaoperacao: 1,
+    codoperacao: null,
+    emitida: true,
+    modelo: '55',
+    serie: 1,
+    numero: 0,
+    nfechave: null,
+    emissao: isoToFormDateTime(new Date),
+    saida: isoToFormDateTime(new Date),
+    cpf: null,
+    valordesconto: null,
+    valorfrete: null,
+    valorseguro: null,
+    valoroutras: null,
+    frete: 9,
+    codpessoatransportador: null,
+    placa: null,
+    codestadoplaca: null,
+    volumes: null,
+    volumesespecie: null,
+    volumesmarca: null,
+    volumesnumero: null,
+    pesobruto: null,
+    pesoliquido: null,
+    observacoes: null,
   }
 }
 
@@ -183,10 +210,14 @@ const handleSubmit = async () => {
 
     router.push({ name: 'nota-fiscal-view', params: { codnotafiscal: route.params.codnotafiscal } })
   } catch (error) {
+    const errorMessage = formatValidationErrors(error)
+
     $q.notify({
       type: 'negative',
       message: `Erro ao ${isEditMode.value ? 'atualizar' : 'criar'} nota fiscal`,
-      caption: error.response?.data?.message || error.message,
+      caption: errorMessage,
+      multiLine: true,
+      timeout: 5000,
     })
   } finally {
     loading.value = false
@@ -197,8 +228,64 @@ const handleClearPessoa = () => {
   form.value.codpessoa = 1 // Define como Consumidor ao invés de null
 }
 
+// Limpa caracteres não numéricos ao colar
+const handlePaste = (evt) => {
+  const pastedText = evt.clipboardData?.getData('text')
+  if (pastedText) {
+    evt.preventDefault()
+    const cleanedText = pastedText.replace(/\D/g, '').substring(0, 44)
+    form.value.nfechave = cleanedText
+  }
+}
+
+const resetNumero = () => {
+  if (isEditMode.value) {
+    form.value.nfechave = nota.value.nfechave;
+    form.value.numero = nota.value.numero;
+    form.value.serie = nota.value.serie;
+    return
+  }
+  form.value.nfechave = null;
+  form.value.numero = 0;
+  form.value.serie = 1;
+}
+
+// Extrai dados da chave NFe (44 dígitos)
+const extrairDadosChaveNFe = (chave) => {
+  if (!chave || chave.length !== 44) return null
+
+  return {
+    cnpj: chave.substring(6, 20), // Posições 7-20: CNPJ do emitente
+    serie: parseInt(chave.substring(22, 25)), // Posições 23-25: Série
+    numero: parseInt(chave.substring(25, 34)), // Posições 26-34: Número
+    modelo: chave.substring(20, 22), // Posições 21-22: Modelo
+  }
+}
+
+// Ref para controlar se deve preencher automaticamente (evitar loops)
+const cnpjPessoaRef = ref(null)
+
+// Watcher para preencher série e número automaticamente quando a chave for informada
+watch(() => form.value?.nfechave, (novaChave) => {
+  if (!novaChave || novaChave.length !== 44 || form.value.emitida) return
+
+  const dados = extrairDadosChaveNFe(novaChave)
+  if (dados) {
+    // Preenche série e número
+    form.value.serie = dados.serie
+    form.value.numero = dados.numero
+    form.value.modelo = dados.modelo
+
+    // Armazena o CNPJ para usar na pesquisa de pessoa
+    cnpjPessoaRef.value = dados.cnpj
+  }
+})
+
 // Lifecycle
 onMounted(() => {
+  console.log(route.params)
+  console.log(route.params.codnotafiscal)
+  console.log(['iseditmode', isEditMode.value])
   loadFormData()
   loadOptions()
 })
@@ -206,15 +293,7 @@ onMounted(() => {
 
 <template>
   <q-page padding>
-    <q-form @submit.prevent="handleSubmit" v-if="nota">
-
-      <!-- FAB para Salvar -->
-      <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab color="primary" icon="save" type="submit" :loading="loading" :disable="notaBloqueada">
-          <q-tooltip>Salvar Nota</q-tooltip>
-        </q-btn>
-      </q-page-sticky>
-
+    <q-form @submit.prevent="handleSubmit" v-if="form">
       <div style="max-width: 700px; margin: 0 auto;">
 
         <!-- Header -->
@@ -229,10 +308,10 @@ onMounted(() => {
           </template>
           <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
             <template v-if="isEditMode">
-              {{ getModeloLabel(nota.modelo) }}
-              {{ formatNumero(nota.numero) }}
+              {{ getModeloLabel(form.modelo) }}
+              {{ formatNumero(form.numero) }}
               - Série
-              {{ nota.serie }}
+              {{ form.serie }}
             </template>
             <template v-else>
               Nova Nota Fiscal
@@ -258,7 +337,7 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Filial -->
               <div class="col-12 col-sm-6">
-                <SelectFilial v-model="form.codfilial" label="Filial *" :disable="notaBloqueada" />
+                <SelectFilial v-model="form.codfilial" label="Filial *" :disable="notaBloqueada" autofocus />
               </div>
 
               <!-- Local de Estoque -->
@@ -267,24 +346,42 @@ onMounted(() => {
                   :disable="notaBloqueada" />
               </div>
 
+              <!-- EMITIDA -->
+              <div class="col-12 col-sm-3">
+                <q-select v-model="form.emitida"
+                  :options="[{ label: 'Nossa', value: true }, { label: 'Terceiro', value: false }]" label="Emissão *"
+                  outlined emit-value map-options :rules="[(val) => val !== null || 'Campo obrigatório']"
+                  :disable="notaBloqueada || (nota && nota.numero != 0)" @update:model-value="resetNumero()" />
+              </div>
+
               <!-- Modelo -->
-              <div class="col-12 col-sm-4">
+              <div class="col-12 col-sm-3">
                 <q-select v-model="form.modelo" :options="modeloOptions" label="Modelo *" outlined emit-value
                   map-options :rules="[(val) => !!val || 'Campo obrigatório']"
                   :disable="notaBloqueada || (nota && nota.numero != 0)" />
               </div>
 
               <!-- Série -->
-              <div class="col-12 col-sm-4">
+              <div class="col-12 col-sm-2">
                 <q-input v-model="form.serie" label="Série *" outlined :rules="[(val) => !!val || 'Campo obrigatório']"
-                  :disable="notaBloqueada || (nota && nota.numero != 0)" />
+                  :disable="notaBloqueada || form.emitida" />
               </div>
 
               <!-- Número -->
               <div class="col-12 col-sm-4">
                 <q-input v-model.number="form.numero" label="Número" outlined type="number"
-                  hint="Deixe em branco para gerar automaticamente" :disable="notaBloqueada || isEditMode"
+                  hint="Deixe em branco para gerar automaticamente" :disable="notaBloqueada || form.emitida"
                   input-class="text-right" />
+              </div>
+
+
+              <!-- CHAVE -->
+              <div class="col-12">
+                <q-input v-model="form.nfechave" label="Chave de Acesso da NFe *" outlined
+                  mask="#### #### #### #### #### #### #### #### #### #### ####" unmasked-value
+                  placeholder="Digite os 44 dígitos da chave de acesso" :rules="[
+                    (val) => validarChaveNFe(val) || 'Chave de acesso inválida (dígito verificador incorreto)',
+                  ]" lazy-rules :disable="notaBloqueada || form.emitida" @paste="handlePaste" />
               </div>
 
               <!-- Data Emissão -->
@@ -358,7 +455,7 @@ onMounted(() => {
               <!-- Cliente/Fornecedor -->
               <div class="col-12">
                 <SelectPessoa v-model="form.codpessoa" label="Cliente/Fornecedor *" :disable="notaBloqueada"
-                  @clear="handleClearPessoa" />
+                  @clear="handleClearPessoa" :search-cnpj="cnpjPessoaRef" />
               </div>
 
               <!-- CPF na Nota (opcional) - Apenas para Consumidor -->
@@ -380,15 +477,9 @@ onMounted(() => {
 
             <div class="row q-col-gutter-md">
               <!-- Natureza de Operação -->
-              <div class="col-12 col-sm-6">
+              <div class="col-12">
                 <SelectNaturezaOperacao v-model="form.codnaturezaoperacao" label="Natureza de Operação *"
                   :disable="notaBloqueada" />
-              </div>
-
-              <!-- Operação -->
-              <div class="col-12 col-sm-6">
-                <q-select v-model="form.codoperacao" :options="operacoesOptions" label="Operação *" outlined emit-value
-                  map-options :rules="[(val) => !!val || 'Campo obrigatório']" :disable="notaBloqueada" />
               </div>
             </div>
           </q-card-section>
@@ -516,6 +607,12 @@ onMounted(() => {
           </q-card-section>
         </q-card>
       </div>
+      <!-- FAB para Salvar -->
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn fab color="primary" icon="save" type="submit" :loading="loading" :disable="notaBloqueada">
+          <q-tooltip>Salvar Nota</q-tooltip>
+        </q-btn>
+      </q-page-sticky>
     </q-form>
   </q-page>
 </template>
