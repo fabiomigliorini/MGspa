@@ -34,6 +34,13 @@ class TributacaoService
         $nota    = $item->NotaFiscal;
         $produto = $item->ProdutoBarra->Produto;
 
+        // Calcula valor total final considerando desconto, frete, seguro e outras
+        $valorTotalFinal = $item->valortotal
+            - ($item->valordesconto ?? 0)
+            + ($item->valorfrete ?? 0)
+            + ($item->valorseguro ?? 0)
+            + ($item->valoroutras ?? 0);
+
         $regras = $this->resolverRegras(
             $nota->codnaturezaoperacao,
             $nota->Pessoa->codcidade,
@@ -48,7 +55,7 @@ class TributacaoService
 
             $dados = $this->montarDadosItemTributo(
                 $regra,
-                $item->valortotal
+                $valorTotalFinal
             );
 
             // 🔹 Upsert controlado

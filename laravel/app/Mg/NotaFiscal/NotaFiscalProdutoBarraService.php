@@ -156,7 +156,6 @@ class NotaFiscalProdutoBarraService
                     $nfpb->irpjpercentual = $trib->irpjpercentual;
                     $nfpb->irpjvalor = round(($nfpb->irpjbase * $nfpb->irpjpercentual) / 100, 2);
                 }
-
             }
         } else {
             $nfpb->csosn = $trib->csosn;
@@ -174,6 +173,5 @@ class NotaFiscalProdutoBarraService
                 }
             }
         }
-
     }
 }

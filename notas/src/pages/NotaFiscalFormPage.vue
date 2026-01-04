@@ -281,6 +281,16 @@ watch(() => form.value?.nfechave, (novaChave) => {
   }
 })
 
+// Computed: Valor Total calculado da Nota Fiscal
+const notaValorTotal = computed(() => {
+  const valorprodutos = nota.value?.valorprodutos || 0
+  const desconto = form.value?.valordesconto || 0
+  const frete = form.value?.valorfrete || 0
+  const seguro = form.value?.valorseguro || 0
+  const outras = form.value?.valoroutras || 0
+  return valorprodutos - desconto + frete + seguro + outras
+})
+
 // Lifecycle
 onMounted(() => {
   console.log(route.params)
@@ -486,36 +496,49 @@ onMounted(() => {
         </q-card>
 
         <!-- Valores -->
-        <q-card flat bordered class="q-mb-md">
+        <q-card flat bordered class="q-mb-md" v-if="nota?.valorprodutos">
           <q-card-section>
             <div class="text-subtitle1 text-weight-bold q-mb-md">
               <q-icon name="payments" size="sm" class="q-mr-xs" />
-              VALORES ADICIONAIS
+              VALORES
             </div>
 
             <div class="row q-col-gutter-md">
+              <!-- Valor Produtos (somente leitura) -->
+              <div class="col-12 col-sm-4" v-if="isEditMode">
+                <q-input :model-value="nota?.valorprodutos?.toFixed(2)" label="Produtos" outlined readonly prefix="R$"
+                  input-class="text-right" />
+              </div>
+
               <!-- Desconto -->
-              <div class="col-12 col-sm-6 col-md-3">
+              <div class="col-12 col-sm-4">
                 <q-input v-model.number="form.valordesconto" label="Desconto" outlined type="number" step="0.01" min="0"
                   prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Frete -->
-              <div class="col-12 col-sm-6 col-md-3">
+              <div class="col-12 col-sm-4">
                 <q-input v-model.number="form.valorfrete" label="Frete" outlined type="number" step="0.01" min="0"
                   prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Seguro -->
-              <div class="col-12 col-sm-6 col-md-3">
+              <div class="col-12 col-sm-4">
                 <q-input v-model.number="form.valorseguro" label="Seguro" outlined type="number" step="0.01" min="0"
                   prefix="R$" :disable="notaBloqueada" input-class="text-right" />
               </div>
 
               <!-- Outras Despesas -->
-              <div class="col-12 col-sm-6 col-md-3">
+              <div class="col-12 col-sm-4">
                 <q-input v-model.number="form.valoroutras" label="Outras Despesas" outlined type="number" step="0.01"
                   min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
+              </div>
+
+              <!-- Valor Total (calculado) -->
+              <div class="col-12 col-sm-4" v-if="isEditMode">
+                <q-input :model-value="notaValorTotal.toFixed(2)" label="Valor Total" outlined readonly prefix="R$"
+                  input-class="text-right text-weight-bold" bg-color="blue-grey-1"
+                  :rules="[() => notaValorTotal >= 0 || 'Valor total não pode ser negativo']" reactive-rules />
               </div>
             </div>
           </q-card-section>

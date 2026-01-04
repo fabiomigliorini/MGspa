@@ -92,7 +92,10 @@ class NotaFiscalProdutoBarraController extends Controller
 
         TributacaoService::recalcularTributosItem($item);
 
-        return (new NotaFiscalDetailResource($item->NotaFiscal->fresh()))
+        // Recalcula os totais da nota
+        NotaFiscalService::recalcularTotais($nota);
+
+        return (new NotaFiscalDetailResource($nota->fresh()))
             ->response()
             ->setStatusCode(201);
     }
@@ -124,7 +127,11 @@ class NotaFiscalProdutoBarraController extends Controller
         }
         NotaFiscalItemTributo::where('codnotafiscalprodutobarra', $codnotafiscalprodutobarra)->whereNotIn('codnotafiscalitemtributo', $codnotafiscalitemtributo)->delete();
 
-        return (new NotaFiscalDetailResource($item->NotaFiscal->fresh()))
+        // Recalcula os totais da nota
+        $nota = $item->NotaFiscal;
+        NotaFiscalService::recalcularTotais($nota);
+
+        return (new NotaFiscalDetailResource($nota->fresh()))
             ->response()
             ->setStatusCode(201);
     }
@@ -138,14 +145,15 @@ class NotaFiscalProdutoBarraController extends Controller
         // Verifica se a nota está bloqueada
         $this->verificarNotaBloqueada($item->NotaFiscal);
 
+        $nota = $item->NotaFiscal;
         $item->delete();
 
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
+        // Recalcula os totais da nota
+        NotaFiscalService::recalcularTotais($nota);
 
-        return (new NotaFiscalDetailResource($nf))
+        return (new NotaFiscalDetailResource($nota->fresh()))
             ->response()
             ->setStatusCode(201);
-
     }
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void

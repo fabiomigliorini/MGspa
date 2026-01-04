@@ -144,16 +144,17 @@ onMounted(() => {
       </q-card-section>
       <q-separator />
       <q-card-section class="q-pa-none col-grow">
-        <q-tabs dense size="xs" v-model="tab" class="text-grey-7" indicator-color="primary" active-bg-color="grey-3">
+        <q-tabs dense size="xs" v-model="tab" class="text-grey-7" indicator-color="primary" active-bg-color="grey-3"
+          inline-label>
 
-          <q-tab label="Rural" name="rural" v-if="tabRural" />
-          <q-tab label="ICMS" name="icms" />
-          <q-tab label="IPI" name="ipi" />
-          <q-tab label="OUTROS" name="outros" />
+          <q-tab label="Rural" name="rural" icon="agriculture" v-if="tabRural" />
+          <q-tab label="ICMS" name="icms" icon="account_balance" />
+          <q-tab label="IPI" name="ipi" icon="inventory" />
+          <q-tab label="OUTROS" name="outros" icon="attach_money" />
 
           <template v-for="trib in item.tributos" :key="trib.codnotafiscalitemtributo">
-            <q-tab :label="trib.tributo?.codigo + ' (' + trib.tributo?.ente.charAt(0) + ')' || 'Tributo'"
-              :name="'tributo-' + trib.codnotafiscalitemtributo" />
+            <q-tab :label="trib.tributo?.codigo" :name="'tributo-' + trib.codnotafiscalitemtributo"
+              :icon="getEnteIcon(trib.tributo.ente)" />
           </template>
         </q-tabs>
 
@@ -427,7 +428,6 @@ onMounted(() => {
                 <div class="col-2">
                   <div class="text-caption text-grey-7">Ente</div>
                   <div class="text-caption ellipsis row items-center q-gutter-xs">
-                    <q-icon :name="getEnteIcon(trib.tributo.ente)" size="xs" />
                     <span>{{ trib.tributo.ente.charAt(0) }}</span>
                   </div>
                 </div>

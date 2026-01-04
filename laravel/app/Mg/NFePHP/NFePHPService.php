@@ -172,6 +172,9 @@ class NFePHPService extends MgService
             $xMotivo = $respStd->xMotivo;
         }
 
+        // atualiza status
+        $nf->update(['status' => NotaFiscalService::calcularStatus($nf)]);
+
         // Retorna Resultado do processo
         return (object) [
             'sucesso' => $sucesso,

@@ -433,6 +433,115 @@ class NotaFiscalService
     }
 
     /**
+     * Recalcula os totais da nota fiscal a partir dos itens
+     */
+    public static function recalcularTotais(NotaFiscal $nota): void
+    {
+        // Carrega os itens se não estiverem carregados
+        if (!$nota->relationLoaded('NotaFiscalProdutoBarraS')) {
+            $nota->load('NotaFiscalProdutoBarraS');
+        }
+
+        $itens = $nota->NotaFiscalProdutoBarraS;
+
+        // Somatórios dos valores
+        $nota->valorprodutos = $itens->sum('valortotal');
+        $nota->valordesconto = $itens->sum('valordesconto');
+        $nota->valorfrete = $itens->sum('valorfrete');
+        $nota->valorseguro = $itens->sum('valorseguro');
+        $nota->valoroutras = $itens->sum('valoroutras');
+
+        // Calcula valor total
+        $nota->valortotal = $nota->valorprodutos
+            - $nota->valordesconto
+            + $nota->valorfrete
+            + $nota->valorseguro
+            + $nota->valoroutras;
+
+        // Somatórios dos impostos
+        $nota->icmsbase = $itens->sum('icmsbase');
+        $nota->icmsvalor = $itens->sum('icmsvalor');
+        $nota->icmsstbase = $itens->sum('icmsstbase');
+        $nota->icmsstvalor = $itens->sum('icmsstvalor');
+        $nota->ipibase = $itens->sum('ipibase');
+        $nota->ipivalor = $itens->sum('ipivalor');
+
+        $nota->save();
+    }
+
+    /**
+     * Rateia valores (desconto, frete, seguro, outras) entre os itens da nota fiscal
+     * proporcional ao valor total de cada item
+     */
+    public static function ratearValoresItens(NotaFiscal $nota, array $valoresAntigos): void
+    {
+        // Campos que devem ser rateados
+        $camposRateio = ['valordesconto', 'valorfrete', 'valorseguro', 'valoroutras'];
+
+        // Verifica se algum valor foi alterado
+        $temAlteracao = false;
+        foreach ($camposRateio as $campo) {
+            $valorNovo = $nota->{$campo} ?? 0;
+            $valorAntigo = $valoresAntigos[$campo] ?? 0;
+            if (abs($valorNovo - $valorAntigo) > 0.001) {
+                $temAlteracao = true;
+                break;
+            }
+        }
+
+        if (!$temAlteracao) {
+            return;
+        }
+
+        // Carrega os itens se não estiverem carregados
+        if (!$nota->relationLoaded('NotaFiscalProdutoBarraS')) {
+            $nota->load('NotaFiscalProdutoBarraS');
+        }
+
+        $itens = $nota->NotaFiscalProdutoBarraS;
+        if ($itens->isEmpty()) {
+            return;
+        }
+
+        // Calcula o valor total dos produtos (soma de valortotal de cada item)
+        $valorTotalProdutos = $itens->sum('valortotal');
+        if ($valorTotalProdutos <= 0) {
+            return;
+        }
+
+        // Rateia cada campo proporcional ao valor do item
+        foreach ($camposRateio as $campo) {
+            $valorTotal = $nota->{$campo} ?? 0;
+            $valorDistribuido = 0;
+
+            foreach ($itens as $index => $item) {
+                // Se for o último item, joga a diferença de arredondamento
+                if ($index === $itens->count() - 1) {
+                    $valorRateado = round($valorTotal - $valorDistribuido, 2);
+                } else {
+                    // Calcula proporcional
+                    $proporcao = $item->valortotal / $valorTotalProdutos;
+                    $valorRateado = round($valorTotal * $proporcao, 2);
+                    $valorDistribuido += $valorRateado;
+                }
+
+                $item->{$campo} = $valorRateado;
+            }
+        }
+
+        // Recalcula tributação e salva cada item
+        foreach ($itens as $item) {
+            NotaFiscalProdutoBarraService::calcularTributacao($item, false);
+            TributacaoService::recalcularTributosItem($item);
+            $item->save();
+        }
+
+        // Recarrega os itens e recalcula os totais da nota
+        $nota->load('NotaFiscalProdutoBarraS');
+        static::recalcularTotais($nota);
+    }
+
+    /**
      * Duplica uma nota fiscal, criando uma nova cópia em digitação
      */
     public static function duplicar(NotaFiscal $notaOriginal): NotaFiscal

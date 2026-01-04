@@ -154,9 +154,23 @@ class NotaFiscalController extends Controller
         // Verifica se a nota está bloqueada
         $this->verificarNotaBloqueada($nota);
 
+        // Captura valores antes da alteração para verificar se houve mudança
+        $valoresAntigos = [
+            'valordesconto' => $nota->valordesconto,
+            'valorfrete' => $nota->valorfrete,
+            'valorseguro' => $nota->valorseguro,
+            'valoroutras' => $nota->valoroutras,
+        ];
+
         $data = $request->validated();
         $data['codoperacao'] = NaturezaOperacao::findOrFail($data['codnaturezaoperacao'])->codoperacao;
+
+        DB::beginTransaction();
         $nota->update($data);
+
+        // Rateia valores entre os itens se algum valor foi alterado
+        NotaFiscalService::ratearValoresItens($nota, $valoresAntigos);
+        DB::commit();
 
         return new NotaFiscalDetailResource($nota->fresh());
     }

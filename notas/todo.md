@@ -1,8 +1,9 @@
-- ratear os valores editaveis da nota fiscal (desconto, frete, seguro, outras)
+- adicionar botao remover desconto do total
 
-- danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
 - carta de correcao nao esta funcionando
 - fazer a "danfe" da carta de correcao
+
+- danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
 
 - desabilitar mgsis
 - publicar o notas.mgpapelaria.com.br
@@ -17,3 +18,4 @@ DONE:
 - botao pra adicionar nova nota fiscal
 - colocar botao nossa emissao
 - Criar o botao do xml
+- ratear os valores editaveis da nota fiscal (desconto, frete, seguro, outras)
