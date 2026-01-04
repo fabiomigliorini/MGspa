@@ -506,4 +506,38 @@ class NotaFiscalController extends Controller
 
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
+
+    /**
+     * Incorpora os valores de frete, seguro, desconto e outras no valor unitário dos itens
+     */
+    public function incorporarValores(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        // Verifica se a nota está bloqueada
+        $this->verificarNotaBloqueada($nota);
+
+        DB::beginTransaction();
+        NotaFiscalService::incorporarValores($nota);
+        DB::commit();
+
+        return new NotaFiscalDetailResource(
+            $nota->fresh([
+                'Filial',
+                'EstoqueLocal',
+                'Pessoa',
+                'NaturezaOperacao',
+                'Operacao',
+                'PessoaTransportador',
+                'EstadoPlaca',
+                'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+                'NotaFiscalProdutoBarraS.Cfop',
+                'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+                'NotaFiscalPagamentoS',
+                'NotaFiscalDuplicatasS',
+                'NotaFiscalReferenciadaS',
+                'NotaFiscalCartaCorrecaoS',
+            ])
+        );
+    }
 }

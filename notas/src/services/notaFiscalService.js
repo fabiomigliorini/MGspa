@@ -98,4 +98,9 @@ export default {
     const response = await api.put(`/v1/nota-fiscal/${codnotafiscal}/status`, data)
     return response.data
   },
+
+  async incorporarValores(codnotafiscal) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/incorporar-valores`)
+    return response.data
+  },
 }

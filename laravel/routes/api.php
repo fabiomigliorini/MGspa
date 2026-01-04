@@ -103,6 +103,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('{codnotafiscal}/danfe', '\Mg\NotaFiscal\NotaFiscalController@danfe');
         Route::get('{codnotafiscal}/xml', '\Mg\NotaFiscal\NotaFiscalController@xml');
         Route::post('{codnotafiscal}/imprimir', '\Mg\NotaFiscal\NotaFiscalController@imprimir');
+        Route::post('{codnotafiscal}/incorporar-valores', '\Mg\NotaFiscal\NotaFiscalController@incorporarValores');
 
         // Relacionamentos nested
         Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')

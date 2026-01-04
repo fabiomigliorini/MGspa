@@ -433,6 +433,80 @@ class NotaFiscalService
     }
 
     /**
+     * Incorpora os valores de frete, seguro, desconto e outras no valor unitário dos itens
+     * zerando esses campos após a incorporação
+     */
+    public static function incorporarValores(NotaFiscal $nota): void
+    {
+        if ($nota->status != static::STATUS_DIGITACAO) {
+            throw new Exception("Nota Fiscal não está em Digitação!", 1);
+        }
+
+        // Carrega os itens se não estiverem carregados
+        if (!$nota->relationLoaded('NotaFiscalProdutoBarraS')) {
+            $nota->load('NotaFiscalProdutoBarraS');
+        }
+
+        $itens = $nota->NotaFiscalProdutoBarraS;
+        if ($itens->isEmpty()) {
+            return;
+        }
+
+        $totalAntigo = $nota->valortotal;
+        $total = 0;
+
+        // Primeira passada: incorpora valores no unitário
+        foreach ($itens as $item) {
+            $valorFinal = $item->valortotal
+                + ($item->valorfrete ?? 0)
+                + ($item->valorseguro ?? 0)
+                - ($item->valordesconto ?? 0)
+                + ($item->valoroutras ?? 0);
+
+            $item->valorunitario = round($valorFinal / $item->quantidade, 2);
+            $item->valortotal = round($item->valorunitario * $item->quantidade, 2);
+            $item->valorfrete = null;
+            $item->valorseguro = null;
+            $item->valordesconto = null;
+            $item->valoroutras = null;
+
+            NotaFiscalProdutoBarraService::calcularTributacao($item, false);
+            TributacaoService::recalcularTributosItem($item);
+            $item->save();
+
+            $total += $item->valortotal;
+        }
+
+        // Segunda passada: ajusta diferença de arredondamento
+        if ($total != $totalAntigo) {
+            $dif = round($totalAntigo - $total, 2);
+            foreach ($itens as $item) {
+                // Só ajusta se a diferença for divisível pela quantidade
+                if (($dif * 100) % $item->quantidade == 0) {
+                    $item->valorunitario = round(($item->valortotal + $dif) / $item->quantidade, 2);
+                    $item->valortotal = round($item->valorunitario * $item->quantidade, 2);
+
+                    NotaFiscalProdutoBarraService::calcularTributacao($item, false);
+                    TributacaoService::recalcularTributosItem($item);
+                    $item->save();
+
+                    $total += $dif;
+                    break;
+                }
+            }
+        }
+
+        // Atualiza totais da nota
+        $nota->valorprodutos = $total;
+        $nota->valortotal = $total;
+        $nota->valorfrete = null;
+        $nota->valorseguro = null;
+        $nota->valordesconto = null;
+        $nota->valoroutras = null;
+        $nota->save();
+    }
+
+    /**
      * Recalcula os totais da nota fiscal a partir dos itens
      */
     public static function recalcularTotais(NotaFiscal $nota): void

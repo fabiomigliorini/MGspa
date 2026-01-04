@@ -1,5 +1,3 @@
-- adicionar botao remover desconto do total
-
 - carta de correcao nao esta funcionando
 - fazer a "danfe" da carta de correcao
 
@@ -19,3 +17,4 @@ DONE:
 - colocar botao nossa emissao
 - Criar o botao do xml
 - ratear os valores editaveis da nota fiscal (desconto, frete, seguro, outras)
+- adicionar botao remover desconto do total (incorporar)

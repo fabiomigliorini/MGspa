@@ -567,6 +567,38 @@ const duplicarNota = () => {
   })
 }
 
+// INCORPORAR VALORES
+const incorporarValores = () => {
+  $q.dialog({
+    title: 'Incorporar Valores aos Produtos',
+    message: 'Esta ação irá incorporar os valores de desconto, frete, seguro e outras despesas no valor dos produtos, refazendo o rateio. Esta ação não pode ser desfeita. Digite INCORPORAR para confirmar:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val === 'INCORPORAR',
+    },
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'warning' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.incorporarValores(nota.value.codnotafiscal)
+      $q.notify({
+        type: 'positive',
+        message: 'Valores incorporados com sucesso!',
+      })
+    } catch (error) {
+      console.log(error)
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao incorporar valores',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
 // ==================== NFE ACTIONS ====================
 const loadingNfe = ref(false)
 const progressoNfe = ref({ status: '', percent: 0 })
@@ -828,6 +860,10 @@ const podeAbrirXml = computed(() => {
   return nota.value && nota.value.emitida && nota.value.nfechave
 })
 
+const podeIncorporar = computed(() => {
+  return nota.value && nota.value.status === 'DIG' && nota.value.valortotal != nota.value.valorprodutos
+})
+
 // Copiar chave da NFe
 const copiarChave = () => {
   if (nota.value?.nfechave) {
@@ -1014,6 +1050,10 @@ onUnmounted(() => {
         </q-btn>
         <q-btn flat dense color="blue-grey" icon="content_copy" @click="duplicarNota" class="q-mr-sm">
           <q-tooltip>Duplicar Nota Fiscal</q-tooltip>
+        </q-btn>
+        <q-btn flat dense color="orange" icon="merge_type" @click="incorporarValores" v-if="podeIncorporar"
+          class="q-mr-sm">
+          <q-tooltip>Incorporar valores (desconto, frete, seguro, outras) aos produtos</q-tooltip>
         </q-btn>
         <q-btn flat dense color="negative" icon="delete" @click="handleDelete" v-if="!notaBloqueada">
           <q-tooltip>Excluir</q-tooltip>
@@ -1480,7 +1520,7 @@ onUnmounted(() => {
                 <!-- Outras Despesas -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Outras Despesas</div>
-                  <div class="text-body2"> {{ formatCurrency(nota.valoroutros) }}</div>
+                  <div class="text-body2"> {{ formatCurrency(nota.valoroutras) }}</div>
                 </div>
 
 

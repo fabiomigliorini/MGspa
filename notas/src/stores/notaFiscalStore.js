@@ -443,6 +443,25 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    async incorporarValores(codnotafiscal) {
+      this.loading.nota = true
+      try {
+        const response = await notaFiscalService.incorporarValores(codnotafiscal)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.data) {
+          this.currentNota = response.data
+        }
+
+        return response.data
+      } catch (error) {
+        console.error('Erro ao incorporar valores:', error)
+        throw error
+      } finally {
+        this.loading.nota = false
+      }
+    },
+
     setFilters(filters) {
       this.filters = { ...this.filters, ...filters }
       // Reset quando altera filtros
