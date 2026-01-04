@@ -104,6 +104,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('{codnotafiscal}/xml', '\Mg\NotaFiscal\NotaFiscalController@xml');
         Route::post('{codnotafiscal}/imprimir', '\Mg\NotaFiscal\NotaFiscalController@imprimir');
         Route::post('{codnotafiscal}/incorporar-valores', '\Mg\NotaFiscal\NotaFiscalController@incorporarValores');
+        Route::post('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalController@cartaCorrecao');
 
         // Relacionamentos nested
         Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')
@@ -118,8 +119,8 @@ Route::group(['prefix' => 'v1'], function () {
         Route::apiResource('{codnotafiscal}/referenciada', '\Mg\NotaFiscal\NotaFiscalReferenciadaController')
             ->parameters(['referenciada' => 'codnotafiscalreferenciada']);
 
-        Route::apiResource('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController')
-            ->parameters(['carta-correcao' => 'codnotafiscalcartacorrecao']);
+        // Route::apiResource('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController')
+        //     ->parameters(['carta-correcao' => 'codnotafiscalcartacorrecao']);
     });
 
     // Negocio

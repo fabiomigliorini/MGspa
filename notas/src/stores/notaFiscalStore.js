@@ -863,84 +863,20 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
 
     // ==================== CARTAS DE CORREÇÃO ====================
 
-    async fetchCartasCorrecao(codnotafiscal) {
-      this.loading.cartasCorrecao = true
+    async enviarCartaCorrecao(codnotafiscal, texto) {
       try {
-        const response = await notaFiscalCartaCorrecaoService.list(codnotafiscal)
-        this.cartasCorrecao = response.data
-        return response.data
-      } catch (error) {
-        console.error('Erro ao buscar cartas de correção:', error)
-        throw error
-      } finally {
-        this.loading.cartasCorrecao = false
-      }
-    },
+        const response = await notaFiscalCartaCorrecaoService.create(codnotafiscal, texto)
 
-    async createCartaCorrecao(codnotafiscal, data) {
-      this.loading.cartasCorrecao = true
-      try {
-        const response = await notaFiscalCartaCorrecaoService.create(codnotafiscal, data)
-        // Adiciona na lista do currentNota
-        if (this.currentNota) {
-          if (!this.currentNota.cartasCorrecao) {
-            this.currentNota.cartasCorrecao = []
-          }
-          this.currentNota.cartasCorrecao.push(response.data)
-        }
-        return response.data
-      } catch (error) {
-        console.error('Erro ao criar carta de correção:', error)
-        throw error
-      } finally {
-        this.loading.cartasCorrecao = false
-      }
-    },
-
-    async updateCartaCorrecao(codnotafiscal, codnotafiscalcartacorrecao, data) {
-      this.loading.cartasCorrecao = true
-      try {
-        const response = await notaFiscalCartaCorrecaoService.update(
-          codnotafiscal,
-          codnotafiscalcartacorrecao,
-          data
-        )
-
-        // Atualiza na lista do currentNota
-        if (this.currentNota && this.currentNota.cartasCorrecao) {
-          const index = this.currentNota.cartasCorrecao.findIndex(
-            (c) => c.codnotafiscalcartacorrecao === codnotafiscalcartacorrecao
-          )
-          if (index !== -1) {
-            this.currentNota.cartasCorrecao[index] = response.data
-          }
+        // Atualiza currentNota com a nota retornada
+        if (response.nota) {
+          this.currentNota = response.nota
         }
 
-        return response.data
+        // Retorna o resultado da operação (sucesso, cStat, xMotivo, protocolo, protocolodata)
+        return response.resultado
       } catch (error) {
-        console.error('Erro ao atualizar carta de correção:', error)
+        console.error('Erro ao enviar carta de correção:', error)
         throw error
-      } finally {
-        this.loading.cartasCorrecao = false
-      }
-    },
-
-    async deleteCartaCorrecao(codnotafiscal, codnotafiscalcartacorrecao) {
-      this.loading.cartasCorrecao = true
-      try {
-        await notaFiscalCartaCorrecaoService.delete(codnotafiscal, codnotafiscalcartacorrecao)
-
-        // Remove da lista do currentNota
-        if (this.currentNota && this.currentNota.cartasCorrecao) {
-          this.currentNota.cartasCorrecao = this.currentNota.cartasCorrecao.filter(
-            (c) => c.codnotafiscalcartacorrecao !== codnotafiscalcartacorrecao
-          )
-        }
-      } catch (error) {
-        console.error('Erro ao excluir carta de correção:', error)
-        throw error
-      } finally {
-        this.loading.cartasCorrecao = false
       }
     },
   },

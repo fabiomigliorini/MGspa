@@ -510,7 +510,7 @@ class NFePHPService extends MgService
         // solicita a sefaz cancelamento
         $nSeqEvento = NotaFiscalCartaCorrecao::where('codnotafiscal', $nf->codnotafiscal)->max('sequencia');
         $nSeqEvento++;
-        $resp = $tools->sefazCCe($nf->nfechave, $texto, $nSeqEvento);
+        $resp = $tools->sefazCCe($nf->nfechave, $justificativa, $nSeqEvento);
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 

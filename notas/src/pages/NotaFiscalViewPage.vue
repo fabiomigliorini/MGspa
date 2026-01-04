@@ -466,73 +466,38 @@ const excluirReferenciada = (referenciada) => {
 
 // ==================== CARTAS DE CORREÇÃO ====================
 const cartaCorrecaoDialog = ref(false)
-const cartaCorrecaoSelecionada = ref(null)
+const cartaCorrecaoDialogRef = ref(null)
 
 const novaCartaCorrecao = () => {
-  cartaCorrecaoSelecionada.value = null
   cartaCorrecaoDialog.value = true
 }
 
-const editarCartaCorrecao = (carta) => {
-  cartaCorrecaoSelecionada.value = carta
-  cartaCorrecaoDialog.value = true
-}
-
-const salvarCartaCorrecao = async (data) => {
+const enviarCartaCorrecao = async (texto) => {
   try {
-    if (data.codnotafiscalcartacorrecao) {
-      await notaFiscalStore.updateCartaCorrecao(
-        route.params.codnotafiscal,
-        data.codnotafiscalcartacorrecao,
-        data
-      )
-      $q.notify({
-        type: 'positive',
-        message: 'Carta de correção atualizada com sucesso',
-      })
-    } else {
-      await notaFiscalStore.createCartaCorrecao(route.params.codnotafiscal, data)
-      $q.notify({
-        type: 'positive',
-        message: 'Carta de correção criada com sucesso',
-      })
+    const response = await notaFiscalStore.enviarCartaCorrecao(route.params.codnotafiscal, texto)
+
+    // Sempre mostra o resultado, independente de sucesso ou erro
+    const tipo = response.sucesso ? 'positive' : 'negative'
+    const mensagem = `${response.cStat} - ${response.xMotivo}`
+
+    $q.dialog({
+      title: 'Carta de Correção',
+      message: mensagem,
+      ok: { label: 'OK', color: tipo },
+    })
+
+    if (response.sucesso) {
+      cartaCorrecaoDialog.value = false
     }
-    cartaCorrecaoDialog.value = false
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: 'Erro ao salvar carta de correção',
+      message: 'Erro ao enviar carta de correção',
       caption: error.response?.data?.message || error.message,
     })
+  } finally {
+    cartaCorrecaoDialogRef.value?.setLoading(false)
   }
-}
-
-const excluirCartaCorrecao = (carta) => {
-  $q.dialog({
-    title: 'Confirmar exclusão',
-    message: 'Deseja realmente excluir esta carta de correção?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
-    persistent: true,
-  }).onOk(async () => {
-    try {
-      await notaFiscalStore.deleteCartaCorrecao(
-        route.params.codnotafiscal,
-        carta.codnotafiscalcartacorrecao
-      )
-      $q.notify({
-        type: 'positive',
-        message: 'Carta de correção excluída com sucesso',
-      })
-      cartaCorrecaoDialog.value = false
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao excluir carta de correção',
-        caption: error.response?.data?.message || error.message,
-      })
-    }
-  })
 }
 
 // DUPLICAR
@@ -1838,59 +1803,39 @@ onUnmounted(() => {
                         <div class="row items-center">
                           <q-icon name="edit_note" size="sm" color="primary" class="q-mr-sm" />
                           <div class="text-subtitle2 text-weight-bold">
-                            Correção Seq {{ carta.sequencia }} Lote {{ carta.lote }}
+                            Correção Seq {{ carta.sequencia }}
                           </div>
                         </div>
-                        <q-badge v-if="carta.status" :color="carta.status === 'AUT' ? 'positive' : 'grey'">
-                          {{ carta.status === 'AUT' ? 'Autorizada' : carta.status }}
+                        <q-badge color="positive">
+                          Autorizada
                         </q-badge>
                       </div>
 
                       <div class="row q-col-gutter-sm">
 
                         <div class="col-12">
-                          <div class="text-caption text-grey-7">Data</div>
+                          <div class="text-caption text-grey-7">Protocolo</div>
                           <div class="text-caption ellipsis">
-                            {{ formatDateTime(carta.data) }}
+                            <span style="font-family: monospace;">
+                              {{ formatProtocolo(carta.protocolo) }}
+                            </span>
+                            <span class="text-grey-7">
+                              | {{ formatDateTime(carta.protocolodata) }}
+                            </span>
                           </div>
                         </div>
 
                         <div class="col-12">
-                          <div v-if="carta.protocolo" class="q-mb-sm">
-                            <div class="text-caption text-grey-7">Protocolo</div>
-                            <div class="text-caption ellipsis">
-                              <span style="font-family: monospace;">
-                                {{ formatProtocolo(carta.protocolo) }}
-                              </span>
-                              <span class="text-grey-7">
-                                | {{ formatDateTime(carta.protocolodata) }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div class="col-12">
-                            <div class="text-caption text-grey-7">Correção</div>
-                            <div class="text-caption "
-                              :class="carta.sequencia !== maiorSequenciaCartaCorrecao ? 'text-grey-8 text-strike' : ''"
-                              style="white-space: pre-wrap">
-                              {{ carta.texto || '-' }}
-                            </div>
+                          <div class="text-caption text-grey-7">Correção</div>
+                          <div class="text-caption"
+                            :class="carta.sequencia !== maiorSequenciaCartaCorrecao ? 'text-grey-8 text-strike' : ''"
+                            style="white-space: pre-wrap">
+                            {{ carta.texto || '-' }}
                           </div>
                         </div>
 
                       </div>
                     </q-card-section>
-
-                    <q-separator v-if="!notaBloqueada" />
-
-                    <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
-                      <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarCartaCorrecao(carta)">
-                        <q-tooltip>Editar</q-tooltip>
-                      </q-btn>
-                      <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirCartaCorrecao(carta)">
-                        <q-tooltip>Excluir</q-tooltip>
-                      </q-btn>
-                    </q-card-actions>
                   </q-card>
                 </div>
               </div>
@@ -1922,9 +1867,8 @@ onUnmounted(() => {
     <NotaFiscalReferenciadaDialog v-model="referenciadaDialog" :referenciada="referenciadaSelecionada"
       :nota-bloqueada="notaBloqueada" @save="salvarReferenciada" @delete="excluirReferenciada" />
 
-    <NotaFiscalCartaCorrecaoDialog v-model="cartaCorrecaoDialog" :carta-correcao="cartaCorrecaoSelecionada"
-      :proxima-sequencia="maiorSequenciaCartaCorrecao + 1" :nota-bloqueada="notaBloqueada" @save="salvarCartaCorrecao"
-      @delete="excluirCartaCorrecao" />
+    <NotaFiscalCartaCorrecaoDialog ref="cartaCorrecaoDialogRef" v-model="cartaCorrecaoDialog"
+      @save="enviarCartaCorrecao" />
 
     <!-- Dialog de Progresso NFe -->
     <q-dialog v-model="loadingNfe" persistent>

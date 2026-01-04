@@ -540,4 +540,41 @@ class NotaFiscalController extends Controller
             ])
         );
     }
+
+    /**
+     * Envia carta de correção para a SEFAZ
+     */
+    public function cartaCorrecao(Request $request, int $codnotafiscal)
+    {
+        $request->validate([
+            'texto' => 'required|string|min:15',
+        ]);
+
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $resultado = NFePHPService::cartaCorrecao($nota, $request->texto);
+
+        // Recarrega a nota e retorna o resource com o resultado da operação
+        $notaAtualizada = NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($codnotafiscal);
+
+        return response()->json([
+            'nota' => new NotaFiscalDetailResource($notaAtualizada),
+            'resultado' => $resultado,
+        ]);
+    }
 }
