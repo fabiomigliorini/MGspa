@@ -1,4 +1,3 @@
-- carta de correcao nao esta funcionando
 - fazer a "danfe" da carta de correcao
 
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
@@ -18,3 +17,4 @@ DONE:
 - Criar o botao do xml
 - ratear os valores editaveis da nota fiscal (desconto, frete, seguro, outras)
 - adicionar botao remover desconto do total (incorporar)
+- carta de correcao nao esta funcionando
