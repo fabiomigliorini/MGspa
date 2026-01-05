@@ -1,7 +1,5 @@
 - fazer a "danfe" da carta de correcao
 
-- fazer link pra tela de negocios a partir da nota
-
 - quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
 
 - criar botao pra recalcular tributacao.
@@ -35,3 +33,4 @@ DONE:
 - adicionar botao remover desconto do total (incorporar)
 - carta de correcao nao esta funcionando
 - quando zera quantidade esta zerando valor unitario
+- fazer link pra tela de negocios a partir da nota

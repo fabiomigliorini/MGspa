@@ -13,6 +13,7 @@ class NotaFiscalProdutoBarraResource extends JsonResource
             'codnotafiscal' => $this->codnotafiscal,
             'codprodutobarra' => $this->codprodutobarra,
             'codnegocioprodutobarra' => $this->codnegocioprodutobarra,
+            'codnegocio' => $this->NegocioProdutoBarra?->codnegocio,
             'codnotafiscalprodutobarraorigem' => $this->codnotafiscalprodutobarraorigem,
 
             // Produto

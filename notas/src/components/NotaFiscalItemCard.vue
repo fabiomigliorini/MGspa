@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
 import { defineProps } from 'vue'
-import { formatCurrency, formatDecimal, formatNCM, formatCEST } from '../utils/formatters'
+import { formatCurrency, formatDecimal, formatNCM, formatCEST, formatCodNegocio } from '../utils/formatters'
 import { getEnteIcon } from 'src/composables/useTributoIcons'
 
 // const props = defineProps({
@@ -16,6 +16,9 @@ const props = defineProps({
   }
 })
 
+// URL base para negócios
+const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
+
 const imagem = computed(() => {
   if (props.item.produtoBarra?.imagem) {
     return props.item.produtoBarra?.imagem
@@ -25,6 +28,12 @@ const imagem = computed(() => {
 
 const tabRural = computed(() => {
   return props.item.funruralpercentual || props.item.senarpercentual || props.item.fethabkg || props.item.iagrokg
+})
+
+// URL do negócio
+const negocioUrl = computed(() => {
+  if (!props.item.codnegocio || !negociosUrl) return null
+  return `${negociosUrl}/negocio/${props.item.codnegocio}`
 })
 
 const emit = defineEmits(['delete'])
@@ -125,6 +134,17 @@ onMounted(() => {
           <div v-if="item.pedidoitem" class="col-6">
             <div class="text-caption text-grey-7">Item do Pedido</div>
             <div class="text-caption">{{ item.pedidoitem }}</div>
+          </div>
+
+          <!-- Negócio -->
+          <div v-if="negocioUrl" class="col-6">
+            <div class="text-caption text-grey-7">Negócio</div>
+            <div class="text-caption">
+              <a :href="negocioUrl" target="_blank" class="text-primary text-weight-medium"
+                style="text-decoration: none;">
+                {{ formatCodNegocio(item.codnegocio) }}
+              </a>
+            </div>
           </div>
 
           <!-- Devolução Percentual -->
