@@ -93,7 +93,7 @@ const editarPessoa = () => {
 }
 
 const urlPessoa = (codpessoa) => {
-  return process.env.MGSIS_URL + "index.php?r=pessoa/view&id=" + codpessoa;
+  return process.env.PESSOAS_URL + "/pessoa/" + codpessoa;
 };
 
 const buscarListagemVendedores = async () => {
