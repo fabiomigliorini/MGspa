@@ -1,5 +1,7 @@
 - fazer a "danfe" da carta de correcao
 
+- nao esta alterando o status quando atribui numero pra notafiscal
+
 - quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
 
 - criar botao pra recalcular tributacao.
@@ -16,7 +18,6 @@
 
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
 
-- desabilitar mgsis
 - publicar o notas.mgpapelaria.com.br
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
 
@@ -34,3 +35,4 @@ DONE:
 - carta de correcao nao esta funcionando
 - quando zera quantidade esta zerando valor unitario
 - fazer link pra tela de negocios a partir da nota
+- desabilitar mgsis
