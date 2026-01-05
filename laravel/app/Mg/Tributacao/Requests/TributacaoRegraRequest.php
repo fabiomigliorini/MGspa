@@ -24,8 +24,8 @@ class TributacaoRegraRequest extends FormRequest
             'codcidadedestino'    => 'nullable|integer',
             'tipocliente'         => 'nullable|string|min:3|max:3',
 
-            'basepercentual'      => 'required|numeric|min:0|max:100',
-            'aliquota'            => 'required|numeric|min:0',
+            'basepercentual'      => 'nullable|numeric|min:0|max:100',
+            'aliquota'            => 'nullable|numeric|min:0',
 
             'cst'                 => 'required|string|max:3',
             'cclasstrib'          => 'required|string|max:20',

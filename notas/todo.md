@@ -1,3 +1,5 @@
+- cards da tributacao em celular
+
 - criar botao pra recalcular tributacao.
 
 - verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)
