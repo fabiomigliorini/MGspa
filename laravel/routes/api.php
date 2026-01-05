@@ -104,6 +104,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('{codnotafiscal}/xml', '\Mg\NotaFiscal\NotaFiscalController@xml');
         Route::post('{codnotafiscal}/imprimir', '\Mg\NotaFiscal\NotaFiscalController@imprimir');
         Route::post('{codnotafiscal}/incorporar-valores', '\Mg\NotaFiscal\NotaFiscalController@incorporarValores');
+        Route::post('{codnotafiscal}/recalcular-tributacao', '\Mg\NotaFiscal\NotaFiscalController@recalcularTributacao');
         Route::post('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalController@cartaCorrecao');
         Route::get('{codnotafiscal}/carta-correcao/pdf', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController@pdf');
 

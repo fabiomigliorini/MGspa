@@ -604,6 +604,39 @@ const incorporarValores = () => {
   })
 }
 
+// RECALCULAR TRIBUTAÇÃO
+const recalcularTributacao = () => {
+  $q.dialog({
+    title: 'Recalcular Tributação',
+    message:
+      'Esta ação irá recalcular todos os tributos dos produtos da nota fiscal com base nas configurações atuais de tributação. Digite RECALCULAR para confirmar:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val === 'RECALCULAR',
+    },
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'warning' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.recalcularTributacao(nota.value.codnotafiscal)
+      $q.notify({
+        type: 'positive',
+        message: 'Tributação recalculada com sucesso!',
+      })
+    } catch (error) {
+      console.log(error)
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao recalcular tributação',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
 // ==================== NFE ACTIONS ====================
 const loadingNfe = ref(false)
 const loadingConsultar = ref(false)
@@ -889,6 +922,10 @@ const podeIncorporar = computed(() => {
   )
 })
 
+const podeRecalcularTributacao = computed(() => {
+  return nota.value && nota.value.status === 'DIG'
+})
+
 // Copiar chave da NFe
 const copiarChave = () => {
   if (nota.value?.nfechave) {
@@ -910,11 +947,18 @@ const abrirDialogStatus = () => {
 }
 
 const alterarStatus = async (novoStatus) => {
+  const statusLabel = STATUS_OPTIONS.find((s) => s.value === novoStatus)?.label
   $q.dialog({
-    title: 'Confirmar alteração',
-    message: `Tem certeza que deseja alterar o status para "${STATUS_OPTIONS.find((s) => s.value === novoStatus)?.label}"?`,
+    title: 'Confirmar alteração de status',
+    message: `Esta ação irá alterar o status da nota para "${statusLabel}". Digite ALTERAR para confirmar:`,
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val === 'ALTERAR',
+    },
     cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'primary' },
+    ok: { label: 'Confirmar', color: 'warning' },
     persistent: true,
   }).onOk(async () => {
     try {
@@ -939,11 +983,17 @@ const alterarStatus = async (novoStatus) => {
 // Limpar autorização/cancelamento
 const limparAutorizacao = async () => {
   $q.dialog({
-    title: 'Confirmar limpeza',
+    title: 'Limpar Autorização',
     message:
-      'Tem certeza que deseja limpar a autorização e cancelamento? O status será alterado para "Erro".',
+      'Esta ação irá limpar a autorização e cancelamento da nota. O status será alterado para "Erro". Digite LIMPAR para confirmar:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val === 'LIMPAR',
+    },
     cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'negative' },
+    ok: { label: 'Confirmar', color: 'warning' },
     persistent: true,
   }).onOk(async () => {
     try {
@@ -972,11 +1022,17 @@ const limparAutorizacao = async () => {
 // Limpar cancelamento
 const limparCancelamento = async () => {
   $q.dialog({
-    title: 'Confirmar limpeza',
+    title: 'Limpar Cancelamento',
     message:
-      'Tem certeza que deseja limpar o cancelamento? O status será alterado para "Autorizada".',
+      'Esta ação irá limpar o cancelamento da nota. O status será alterado para "Autorizada". Digite LIMPAR para confirmar:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val === 'LIMPAR',
+    },
     cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'negative' },
+    ok: { label: 'Confirmar', color: 'warning' },
     persistent: true,
   }).onOk(async () => {
     try {
@@ -1003,10 +1059,17 @@ const limparCancelamento = async () => {
 // Limpar inutilização
 const limparInutilizacao = async () => {
   $q.dialog({
-    title: 'Confirmar limpeza',
-    message: 'Tem certeza que deseja limpar a inutilização? O status será alterado para "Erro".',
+    title: 'Limpar Inutilização',
+    message:
+      'Esta ação irá limpar a inutilização da nota. O status será alterado para "Erro". Digite LIMPAR para confirmar:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val === 'LIMPAR',
+    },
     cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'negative' },
+    ok: { label: 'Confirmar', color: 'warning' },
     persistent: true,
   }).onOk(async () => {
     try {
@@ -1108,6 +1171,17 @@ onUnmounted(() => {
           class="q-mr-sm"
         >
           <q-tooltip>Incorporar valores (desconto, frete, seguro, outras) aos produtos</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          dense
+          color="purple"
+          icon="calculate"
+          @click="recalcularTributacao"
+          v-if="podeRecalcularTributacao"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Recalcular tributação</q-tooltip>
         </q-btn>
         <q-btn
           flat

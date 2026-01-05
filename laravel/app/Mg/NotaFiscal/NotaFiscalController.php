@@ -508,6 +508,42 @@ class NotaFiscalController extends Controller
     }
 
     /**
+     * Recalcula a tributação de todos os itens da nota fiscal
+     */
+    public function recalcularTributacao(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        // Só pode recalcular nota em digitação
+        if ($nota->status !== NotaFiscalService::STATUS_DIGITACAO) {
+            abort(422, "Só é possível recalcular tributação de notas em digitação");
+        }
+
+        DB::beginTransaction();
+        NotaFiscalService::recalcularTributacao($nota);
+        DB::commit();
+
+        return new NotaFiscalDetailResource(
+            $nota->fresh([
+                'Filial',
+                'EstoqueLocal',
+                'Pessoa',
+                'NaturezaOperacao',
+                'Operacao',
+                'PessoaTransportador',
+                'EstadoPlaca',
+                'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+                'NotaFiscalProdutoBarraS.Cfop',
+                'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+                'NotaFiscalPagamentoS',
+                'NotaFiscalDuplicatasS',
+                'NotaFiscalReferenciadaS',
+                'NotaFiscalCartaCorrecaoS',
+            ])
+        );
+    }
+
+    /**
      * Incorpora os valores de frete, seguro, desconto e outras no valor unitário dos itens
      */
     public function incorporarValores(int $codnotafiscal)

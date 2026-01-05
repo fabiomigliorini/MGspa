@@ -464,6 +464,26 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    async recalcularTributacao(codnotafiscal) {
+      this.loading.nota = true
+      try {
+        const response = await notaFiscalService.recalcularTributacao(codnotafiscal)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.data) {
+          this.currentNota = response.data
+          this.syncCurrentNotaToList()
+        }
+
+        return response.data
+      } catch (error) {
+        console.error('Erro ao recalcular tributação:', error)
+        throw error
+      } finally {
+        this.loading.nota = false
+      }
+    },
+
     setFilters(filters) {
       this.filters = { ...this.filters, ...filters }
       // Reset quando altera filtros
