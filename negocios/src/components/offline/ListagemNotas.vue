@@ -10,6 +10,70 @@ moment.locale("pt-br");
 const sNegocio = negocioStore();
 const sSinc = sincronizacaoStore();
 
+const STATUS_OPTIONS = [
+  { label: "Lançada", value: "LAN", icon: "description", color: "blue-grey" },
+  { label: "Em Digitação", value: "DIG", icon: "edit_note", color: "blue" },
+  {
+    label: "Não Autorizada",
+    value: "ERR",
+    icon: "error",
+    color: "deep-orange",
+  },
+  {
+    label: "Autorizada",
+    value: "AUT",
+    icon: "check_circle",
+    color: "positive",
+  },
+  {
+    label: "Cancelada",
+    value: "CAN",
+    icon: "highlight_off",
+    color: "negative",
+  },
+  { label: "Inutilizada", value: "INU", icon: "block", color: "warning" },
+  { label: "Denegada", value: "DEN", icon: "report", color: "negative" },
+];
+
+const getStatusOption = (status) => {
+  return (
+    STATUS_OPTIONS.find((opt) => opt.value === status) || STATUS_OPTIONS[0]
+  );
+};
+
+// Funções para controlar visibilidade dos botões
+const podeEnviar = (nota) => {
+  return nota && ["DIG", "ERR"].includes(nota.status);
+};
+
+const podeConsultar = (nota) => {
+  return nota && ["AUT", "CAN", "ERR"].includes(nota.status);
+};
+
+const podeCancelar = (nota) => {
+  return nota && nota.status === "AUT";
+};
+
+const podeInutilizar = (nota) => {
+  return nota && nota.status === "ERR";
+};
+
+const podeEnviarEmail = (nota) => {
+  return nota && nota.status === "AUT";
+};
+
+const podeAbrirDanfe = (nota) => {
+  return nota && ["AUT", "CAN"].includes(nota.status);
+};
+
+const podeAbrirXml = (nota) => {
+  return nota && nota.emitida && nota.nfechave;
+};
+
+const podeExcluir = (nota) => {
+  return nota && nota.status === "DIG";
+};
+
 const dialogPdf = ref(false);
 const urlPdf = ref(null);
 const btnImprimir = ref(false);
@@ -23,25 +87,6 @@ const formataNumeroNota = (nota) => {
   const prefixo = nota.emitida ? "N" : "T";
   const numero = String(nota.numero).padStart(8, "0");
   return `${prefixo}-${nota.serie}-${nota.modelo}-${numero}`;
-};
-
-const status = (nota) => {
-  if (!nota.emitida) {
-    return "Terceiro";
-  }
-  if (nota.nfecancelamento) {
-    return "Cancelada";
-  }
-  if (nota.nfecancelamento) {
-    return "Inutilizada";
-  }
-  if (nota.nfeautorizacao) {
-    return "Autorizada";
-  }
-  if (nota.numero) {
-    return "Não Autorizada";
-  }
-  return "Em Digitação";
 };
 
 const nova = async (modelo) => {
@@ -408,23 +453,36 @@ defineExpose({
 
       <q-card-actions align="right">
         <q-btn flat label="fechar" color="primary" v-close-popup />
-        <q-btn flat label="imprimir" color="primary" v-close-popup @click="imprimir()" v-if="btnImprimir" />
+        <q-btn
+          flat
+          label="imprimir"
+          color="primary"
+          v-close-popup
+          @click="imprimir()"
+          v-if="btnImprimir"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>
 
-  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-3 col-xl-2" v-for="nota in sNegocio.negocio.notas"
-    :key="nota.codnotafiscal">
+  <div
+    class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3"
+    v-for="nota in sNegocio.negocio.notas"
+    :key="nota.codnotafiscal"
+  >
     <q-card>
-      <q-item clickable v-ripple :href="urlNotaFiscal(nota.codnotafiscal)" target="_blank">
+      <q-item
+        clickable
+        v-ripple
+        :href="urlNotaFiscal(nota.codnotafiscal)"
+        target="_blank"
+      >
         <q-item-section avatar>
-          <q-avatar icon="mdi-file-document" color="primary" text-color="white" v-if="nota.emitida == false" />
-          <q-avatar icon="mdi-file-document-remove" color="negative" text-color="white"
-            v-else-if="nota.nfecancelamento || nota.nfeinutilizacao" />
-          <q-avatar icon="mdi-file-document-check" color="secondary" text-color="white"
-            v-else-if="nota.nfeautorizacao" />
-          <q-avatar icon="mdi-file-document-alert" color="orange" text-color="white" v-else-if="nota.numero" />
-          <q-avatar icon="mdi-file-document-edit" color="grey" text-color="white" v-else />
+          <q-avatar
+            :icon="getStatusOption(nota.status).icon"
+            :color="getStatusOption(nota.status).color"
+            text-color="white"
+          />
         </q-item-section>
 
         <q-item-section>
@@ -477,74 +535,123 @@ defineExpose({
             }}
           </q-item-label>
           <q-item-label caption class="ellipsis">
-            {{ status(nota) }}
+            <q-icon
+              :name="getStatusOption(nota.status).icon"
+              :color="getStatusOption(nota.status).color"
+              size="xs"
+              class="q-mr-xs"
+            />
+            {{ getStatusOption(nota.status).label }}
           </q-item-label>
         </q-item-section>
       </q-item>
+      <q-separator inset />
 
-      <q-card-actions v-if="nota.emitida">
-        <q-btn-group flat>
-          <!-- ENVIAR -->
-          <q-btn dense flat round icon="mdi-send" color="primary" @click="enviar(nota)"
-            v-if="!nota.nfeautorizacao && !nota.nfeinutilizacao">
-            <q-tooltip class="bg-accent">Enviar</q-tooltip>
-          </q-btn>
+      <q-card-actions align="right" v-if="nota.emitida">
+        <!-- Enviar -->
+        <q-btn
+          dense
+          round
+          flat
+          color="positive"
+          icon="send"
+          @click="enviar(nota)"
+          v-if="podeEnviar(nota)"
+        >
+          <q-tooltip>Criar XML e enviar para SEFAZ</q-tooltip>
+        </q-btn>
 
-          <!-- INUTILIZAR -->
-          <q-btn dense flat round icon="mdi-cancel" color="negative" @click="inutilizar(nota)" v-if="
-            nota.numero &&
-            !nota.nfeautorizacao &&
-            !nota.nfeinutilizacao &&
-            !nota.nfecancelamento
-          ">
-            <q-tooltip class="bg-accent">Inutilizar</q-tooltip>
-          </q-btn>
+        <!-- Consultar -->
+        <q-btn
+          dense
+          round
+          flat
+          color="primary"
+          icon="refresh"
+          @click="consultar(nota)"
+          v-if="podeConsultar(nota)"
+        >
+          <q-tooltip>Consultar situação na SEFAZ</q-tooltip>
+        </q-btn>
 
-          <!-- DANFE -->
-          <q-btn dense flat round icon="mdi-file-pdf-box" color="primary" @click="abrirPdf(nota)" v-if="
-            offline(nota) ||
-            (nota.nfeautorizacao &&
-              !nota.nfeinutilizacao &&
-              !nota.nfecancelamento)
-          ">
-            <q-tooltip class="bg-accent">Danfe</q-tooltip>
-          </q-btn>
+        <!-- Abrir DANFE -->
+        <q-btn
+          dense
+          round
+          flat
+          color="positive"
+          icon="picture_as_pdf"
+          @click="abrirPdf(nota)"
+          v-if="podeAbrirDanfe(nota)"
+        >
+          <q-tooltip>Abrir DANFE</q-tooltip>
+        </q-btn>
 
-          <!-- XML -->
-          <q-btn dense flat round icon="mdi-file-xml-box" color="primary" :href="montarUrlXml(nota)" target="_blank"
-            v-if="nota.numero">
-            <q-tooltip class="bg-accent">Arquivo XML da NFe</q-tooltip>
-          </q-btn>
+        <!-- Abrir XML -->
+        <q-btn
+          dense
+          round
+          flat
+          color="orange"
+          icon="code"
+          :href="montarUrlXml(nota)"
+          target="_blank"
+          v-if="podeAbrirXml(nota)"
+        >
+          <q-tooltip>Abrir XML</q-tooltip>
+        </q-btn>
 
-          <!-- EMAIL -->
-          <q-btn dense flat round icon="mdi-gmail" color="primary" @click="perguntarDestinatarioMail(nota)" v-if="
-            nota.nfeautorizacao &&
-            !nota.nfeinutilizacao &&
-            !nota.nfecancelamento
-          ">
-            <q-tooltip class="bg-accent">E-mail</q-tooltip>
-          </q-btn>
+        <!-- Enviar Email -->
+        <q-btn
+          dense
+          round
+          flat
+          color="primary"
+          icon="email"
+          @click="perguntarDestinatarioMail(nota)"
+          v-if="podeEnviarEmail(nota)"
+        >
+          <q-tooltip>Enviar por email</q-tooltip>
+        </q-btn>
 
-          <!-- CANCELAR -->
-          <q-btn dense flat round icon="mdi-cancel" color="negative" @click="cancelar(nota)" v-if="
-            nota.nfeautorizacao &&
-            !nota.nfeinutilizacao &&
-            !nota.nfecancelamento
-          ">
-            <q-tooltip class="bg-accent"> Cancelar </q-tooltip>
-          </q-btn>
+        <!-- Cancelar -->
+        <q-btn
+          dense
+          round
+          flat
+          color="negative"
+          icon="cancel"
+          @click="cancelar(nota)"
+          v-if="podeCancelar(nota)"
+        >
+          <q-tooltip>Cancelar NFe</q-tooltip>
+        </q-btn>
 
-          <!-- CONSULTAR -->
-          <q-btn dense flat round icon="mdi-cloud-refresh-outline" color="primary" @click="consultar(nota)"
-            v-if="nota.nfechave">
-            <q-tooltip class="bg-accent">Consultar</q-tooltip>
-          </q-btn>
+        <!-- Inutilizar -->
+        <q-btn
+          dense
+          round
+          flat
+          color="warning"
+          icon="block"
+          @click="inutilizar(nota)"
+          v-if="podeInutilizar(nota)"
+        >
+          <q-tooltip>Inutilizar NFe</q-tooltip>
+        </q-btn>
 
-          <!-- EXCLUIR -->
-          <q-btn dense flat round icon="delete" color="negative" @click="excluir(nota)" v-if="!nota.numero">
-            <q-tooltip class="bg-accent">Excluir</q-tooltip>
-          </q-btn>
-        </q-btn-group>
+        <!-- Excluir -->
+        <q-btn
+          dense
+          round
+          flat
+          color="negative"
+          icon="delete"
+          @click="excluir(nota)"
+          v-if="podeExcluir(nota)"
+        >
+          <q-tooltip>Excluir</q-tooltip>
+        </q-btn>
       </q-card-actions>
     </q-card>
   </div>

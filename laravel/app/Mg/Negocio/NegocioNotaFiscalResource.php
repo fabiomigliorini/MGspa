@@ -18,7 +18,7 @@ class NegocioNotaFiscalResource extends Resource
         return $this->notas();
     }
 
-    private function notas() 
+    private function notas()
     {
         $sql = '
             select 
@@ -45,7 +45,8 @@ class NegocioNotaFiscalResource extends Resource
                 nf.nfecancelamento,
                 nf.nfedatacancelamento,
                 nf.nfeinutilizacao,
-                nf.nfedatainutilizacao
+                nf.nfedatainutilizacao,
+                nf.status
             from tblnotafiscal nf
             inner join tblfilial f on (f.codfilial = nf.codfilial)
             inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = nf.codnaturezaoperacao)
@@ -58,7 +59,6 @@ class NegocioNotaFiscalResource extends Resource
             return DB::select($sql, [
                 'codnotafiscal' => $this->codnotafiscal,
             ])[0];
-    
         }
         $sql .= '
             where nf.codnotafiscal in (

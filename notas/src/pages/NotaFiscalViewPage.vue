@@ -1388,7 +1388,6 @@ onUnmounted(() => {
                 icon="send"
                 @click="enviarNfe"
                 :loading="loadingNfe"
-                class="q-mr-sm"
               >
                 <q-tooltip>Criar XML e enviar para SEFAZ</q-tooltip>
               </q-btn>
@@ -1403,7 +1402,6 @@ onUnmounted(() => {
                 icon="refresh"
                 @click="consultarNfe"
                 :loading="loadingConsultar"
-                class="q-mr-sm"
               >
                 <q-tooltip>Consultar situação na SEFAZ</q-tooltip>
               </q-btn>
@@ -1417,7 +1415,6 @@ onUnmounted(() => {
                 color="positive"
                 icon="picture_as_pdf"
                 @click="abrirDanfe"
-                class="q-mr-sm"
               >
                 <q-tooltip>Abrir DANFE</q-tooltip>
               </q-btn>
@@ -1431,7 +1428,6 @@ onUnmounted(() => {
                 color="orange"
                 icon="code"
                 @click="abrirXml"
-                class="q-mr-sm"
               >
                 <q-tooltip>Abrir XML</q-tooltip>
               </q-btn>
@@ -1446,7 +1442,6 @@ onUnmounted(() => {
                 icon="email"
                 @click="enviarEmailNfe"
                 :loading="loadingEmail"
-                class="q-mr-sm"
               >
                 <q-tooltip>Enviar por email</q-tooltip>
               </q-btn>
@@ -1461,7 +1456,6 @@ onUnmounted(() => {
                 icon="cancel"
                 @click="cancelarNfe"
                 :loading="loadingCancelar"
-                class="q-mr-sm"
               >
                 <q-tooltip>Cancelar NFe</q-tooltip>
               </q-btn>
@@ -1476,7 +1470,6 @@ onUnmounted(() => {
                 icon="block"
                 @click="inutilizarNfe"
                 :loading="loadingInutilizar"
-                class="q-mr-sm"
               >
                 <q-tooltip>Inutilizar NFe</q-tooltip>
               </q-btn>
@@ -2097,18 +2090,6 @@ onUnmounted(() => {
                   {{ cartasCorrecao.length }}
                 </q-badge>
                 <q-btn
-                  v-if="cartasCorrecao.length > 0"
-                  flat
-                  dense
-                  color="white"
-                  icon="picture_as_pdf"
-                  size="md"
-                  @click="abrirCartaCorrecaoPdf"
-                  class="q-ml-sm"
-                >
-                  <q-tooltip>Abrir PDF da Carta de Correção</q-tooltip>
-                </q-btn>
-                <q-btn
                   v-if="nota.status == 'AUT'"
                   flat
                   dense
@@ -2119,6 +2100,17 @@ onUnmounted(() => {
                   class="q-ml-sm"
                 >
                   <q-tooltip>Adicionar Carta de Correção</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-if="cartasCorrecao.length > 0"
+                  flat
+                  dense
+                  color="white"
+                  icon="picture_as_pdf"
+                  size="md"
+                  @click="abrirCartaCorrecaoPdf"
+                >
+                  <q-tooltip>Abrir PDF da Carta de Correção</q-tooltip>
                 </q-btn>
               </div>
             </q-card-section>

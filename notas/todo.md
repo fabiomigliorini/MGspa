@@ -1,7 +1,5 @@
 - criar botao pra recalcular tributacao.
 
-- Tratar o erro 563 - [+151260007488447]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
-
 - fazer botão devolução (venda e compra)
 
 - fazer botao juntar notas
@@ -18,6 +16,10 @@
 - cards da tributacao em celular
 
 - nao pode alterar nota já enviada (com numero ativo, só se for produtor rural)
+
+- na tela de negocios, quando uma nf está inutilizada, ele mostra como se fosse não autorizada
+
+- criar o "version": "0.15.2" no package.json e mostrar no cabeçalho
 
 DONE:
 
@@ -39,3 +41,4 @@ DONE:
 - nao esta alterando o status quando atribui numero pra notafiscal
 - quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
 - verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)
+- Ignorado (SEFAZ PRECISA HOMOLOGAR A INUTILIZACAO, PRECISA ESPERAR SAIR DO CSTAT 563) Tratar o erro 563 - [+151260007488447]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
