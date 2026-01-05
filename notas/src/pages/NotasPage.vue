@@ -3,7 +3,12 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
-import { getStatusLabel, getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
+import {
+  getStatusLabel,
+  getStatusColor,
+  getStatusIcon,
+  getModeloLabel,
+} from '../constants/notaFiscal'
 import { formatDateTime, formatDate, formatCurrency, formatNumero } from 'src/utils/formatters'
 
 const router = useRouter()
@@ -24,7 +29,7 @@ const onLoad = async (index, done) => {
     $q.notify({
       type: 'negative',
       message: 'Erro ao carregar notas',
-      caption: error.message
+      caption: error.message,
     })
     done(true)
   }
@@ -81,7 +86,7 @@ onMounted(async () => {
       $q.notify({
         type: 'negative',
         message: 'Erro ao carregar notas fiscais',
-        caption: error.response?.data?.message || error.message
+        caption: error.response?.data?.message || error.message,
       })
     }
   }
@@ -103,23 +108,24 @@ onMounted(async () => {
       <q-icon name="description" size="4em" color="grey-5" />
       <div class="text-h6 text-grey-7 q-mt-md">Nenhuma nota fiscal encontrada</div>
       <div class="text-caption text-grey-7 q-mt-sm">
-        <template v-if="hasActiveFilters">
-          Tente ajustar os filtros no menu lateral
-        </template>
-        <template v-else>
-          Clique em "Nova Nota" para criar sua primeira nota fiscal
-        </template>
+        <template v-if="hasActiveFilters">Tente ajustar os filtros no menu lateral</template>
+        <template v-else>Clique em "Nova Nota" para criar sua primeira nota fiscal</template>
       </div>
     </q-card>
 
     <!-- Lista de Notas com Scroll Infinito -->
     <q-infinite-scroll v-else @load="onLoad" :offset="250">
       <q-list separator>
-        <q-item hoverable v-for="nota in notas" :key="nota.codnotafiscal" clickable :to="'/nota/' + nota.codnotafiscal">
+        <q-item
+          hoverable
+          v-for="nota in notas"
+          :key="nota.codnotafiscal"
+          clickable
+          :to="'/nota/' + nota.codnotafiscal"
+        >
           <q-item-section>
-
             <!-- Cabeçalho: Modelo, Número, Série, Filial e Status -->
-            <div class="row q-col-gutter-sm ">
+            <div class="row q-col-gutter-sm">
               <!-- Número  -->
               <div class="col-12 col-sm-3 col-md-3">
                 <div class="text-caption text-grey-7">
@@ -133,7 +139,6 @@ onMounted(async () => {
                   {{ nota.serie }}
                 </div>
               </div>
-
 
               <!-- Valor Total -->
               <div class="col-12 col-sm-3 col-md-2">
@@ -149,7 +154,7 @@ onMounted(async () => {
                   <q-icon name="person" size="xs" class="q-mr-xs" />
                   Pessoa
                 </div>
-                <div class=" text-weight-bold text-secondary ellipsis">
+                <div class="text-weight-bold text-secondary ellipsis">
                   {{ nota.pessoa?.pessoa || 'Sem pessoa' }}
                   <!-- <span v-if="nota.pessoa?.cidade" class="text-caption text-grey-7">
                     {{ nota.pessoa.cidade }}/{{ nota.pessoa.uf }}
@@ -163,22 +168,19 @@ onMounted(async () => {
                   <q-icon name="person" size="xs" class="q-mr-xs" />
                   Cidade
                 </div>
-                <div class="ellipsis">
-                  {{ nota.pessoa.cidade }}/{{ nota.pessoa.uf }}
-                </div>
+                <div class="ellipsis">{{ nota.pessoa.cidade }}/{{ nota.pessoa.uf }}</div>
               </div>
             </div>
 
             <!-- Informações principais -->
-            <div class="row q-col-gutter-sm ">
-
+            <div class="row q-col-gutter-sm">
               <!-- Status -->
               <div class="col-12 col-sm-3 col-md-3">
                 <div class="text-caption text-grey-7">
                   <q-icon name="business" size="xs" class="q-mr-xs" />
                   Status
                 </div>
-                <div class=" ellipsis">
+                <div class="ellipsis">
                   <q-badge :color="getStatusColor(nota.status)">
                     <q-icon :name="getStatusIcon(nota.status)" size="xs" class="q-mr-xs" />
                     {{ getStatusLabel(nota.status) }}
@@ -186,14 +188,13 @@ onMounted(async () => {
                 </div>
               </div>
 
-
               <!-- Filial -->
               <div class="col-12 col-sm-3 col-md-2">
                 <div class="text-caption text-grey-7">
                   <q-icon name="business" size="xs" class="q-mr-xs" />
                   Filial
                 </div>
-                <div class=" ellipsis">
+                <div class="ellipsis">
                   {{ nota.filial.filial }}
                 </div>
               </div>
@@ -204,11 +205,10 @@ onMounted(async () => {
                   <q-icon name="description" size="xs" class="q-mr-xs" />
                   Natureza
                 </div>
-                <div class=" ellipsis">
+                <div class="ellipsis">
                   {{ nota.naturezaOperacao?.naturezaoperacao || '-' }}
                 </div>
               </div>
-
 
               <!-- Data/Hora de Emissão -->
               <div class="col-12 col-sm-2 col-md-3">
@@ -216,7 +216,7 @@ onMounted(async () => {
                   <q-icon name="event" size="xs" class="q-mr-xs" />
                   Emissão e Saída
                 </div>
-                <div class=" ellipsis">
+                <div class="ellipsis">
                   {{ formatDate(nota.emissao) }}
                   <span class="text-caption text-grey-7">
                     |
@@ -224,8 +224,6 @@ onMounted(async () => {
                   </span>
                 </div>
               </div>
-
-
             </div>
           </q-item-section>
 

@@ -405,6 +405,15 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    async getCartaCorrecaoPdfUrl(codnotafiscal) {
+      try {
+        return await notaFiscalService.cartaCorrecaoPdf(codnotafiscal)
+      } catch (error) {
+        console.error('Erro ao obter URL do PDF da Carta de Correção:', error)
+        throw error
+      }
+    },
+
     async getXmlUrl(codnotafiscal) {
       try {
         return await notaFiscalService.xml(codnotafiscal)

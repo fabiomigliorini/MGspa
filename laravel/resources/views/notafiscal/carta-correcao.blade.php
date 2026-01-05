@@ -5,122 +5,106 @@
     <meta charset="UTF-8">
     <style>
         @page {
-            margin: 1.5cm;
+            margin: 1cm;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 10pt;
-            line-height: 1.4;
+            font-size: 9pt;
+            line-height: 1.2;
             color: #000;
         }
 
         .header-box {
             border: 2px solid #000;
-            padding: 15px;
+            padding: 8px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
 
         .header-title {
-            font-size: 16pt;
+            font-size: 14pt;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
         .header-subtitle {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #333;
-            margin-bottom: 10px;
-        }
-
-        .header-note {
-            font-size: 8pt;
-            color: #666;
-            font-style: italic;
         }
 
         .section {
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             border: 1px solid #ccc;
-            padding: 10px;
+            padding: 6px;
         }
 
         .section-title {
-            font-size: 11pt;
+            font-size: 9pt;
             font-weight: bold;
             background-color: #f0f0f0;
-            padding: 5px 10px;
-            margin: -10px -10px 10px -10px;
+            padding: 3px 6px;
+            margin: -6px -6px 6px -6px;
             border-bottom: 1px solid #ccc;
-        }
-
-        .field {
-            margin-bottom: 5px;
-        }
-
-        .field-label {
-            font-weight: bold;
-            display: inline;
-        }
-
-        .field-value {
-            display: inline;
         }
 
         .chave-acesso {
             font-family: 'Courier New', monospace;
-            font-size: 11pt;
+            font-size: 9pt;
             letter-spacing: 1px;
             background-color: #f9f9f9;
-            padding: 8px;
+            padding: 4px;
             border: 1px dashed #999;
             text-align: center;
-            margin: 10px 0;
-            word-break: break-all;
+            margin: 4px 0;
         }
 
         .texto-correcao {
             background-color: #fffef0;
             border: 1px solid #e6e6b8;
-            padding: 15px;
-            margin: 10px 0;
+            padding: 8px;
+            margin: 4px 0;
             white-space: pre-wrap;
-            font-size: 10pt;
+            font-size: 9pt;
         }
 
         .observacoes {
             background-color: #fff5f5;
             border: 1px solid #ffcccc;
-            padding: 10px;
+            padding: 6px;
+            font-size: 8pt;
         }
 
         .observacoes ul {
-            margin: 5px 0;
-            padding-left: 20px;
+            margin: 2px 0;
+            padding-left: 15px;
         }
 
         .observacoes li {
-            margin-bottom: 3px;
+            margin-bottom: 1px;
         }
 
         .footer {
-            margin-top: 30px;
-            padding-top: 10px;
+            margin-top: 10px;
+            padding-top: 6px;
             border-top: 1px solid #ccc;
-            font-size: 8pt;
+            font-size: 7pt;
             text-align: center;
             color: #666;
         }
 
+        .footer p {
+            margin: 0;
+        }
+
         .sem-valor-fiscal {
-            font-size: 12pt;
+            font-size: 10pt;
             font-weight: bold;
             color: #cc0000;
             text-align: center;
-            padding: 10px;
+            padding: 4px;
             border: 2px solid #cc0000;
-            margin: 15px 0;
+            margin: 8px 0;
         }
 
         table.dados {
@@ -129,13 +113,30 @@
         }
 
         table.dados td {
-            padding: 3px 0;
+            padding: 1px 0;
             vertical-align: top;
         }
 
         table.dados td.label {
-            width: 180px;
+            width: 140px;
             font-weight: bold;
+        }
+
+        .two-columns {
+            display: table;
+            width: 100%;
+        }
+
+        .two-columns > div {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding-right: 10px;
+        }
+
+        .two-columns > div:last-child {
+            padding-right: 0;
+            padding-left: 10px;
         }
     </style>
 </head>
@@ -146,106 +147,85 @@
     <div class="header-box">
         <div class="header-title">CARTA DE CORRECAO ELETRONICA</div>
         <div class="header-subtitle">(DOCUMENTO AUXILIAR - SEM VALOR FISCAL)</div>
-        <div class="header-note">
-            Este documento e apenas um espelho da CC-e registrada na NF-e.<br>
-            A validade juridica esta no XML autorizado pela SEFAZ.
-        </div>
     </div>
 
     <div class="sem-valor-fiscal">
         DOCUMENTO AUXILIAR - SEM VALOR FISCAL
     </div>
 
-    <!-- IDENTIFICACAO DO EMITENTE -->
-    <div class="section">
-        <div class="section-title">IDENTIFICACAO DO EMITENTE</div>
-        <table class="dados">
-            <tr>
-                <td class="label">Razao Social:</td>
-                <td>{{ $filial->Pessoa->pessoa }}</td>
-            </tr>
-            <tr>
-                <td class="label">CNPJ:</td>
-                <td>{{ formataCnpj($filial->Pessoa->cnpj) }}</td>
-            </tr>
-            @if(!empty($filial->Pessoa->ie))
-            <tr>
-                <td class="label">Inscricao Estadual:</td>
-                <td>{{ $filial->Pessoa->ie }}</td>
-            </tr>
-            @endif
-            <tr>
-                <td class="label">Endereco:</td>
-                <td>
-                    {{ $filial->Pessoa->endereco }}, {{ $filial->Pessoa->numero }}
-                    @if(!empty($filial->Pessoa->complemento))
-                        - {{ $filial->Pessoa->complemento }}
+    <!-- EMITENTE E NF-e LADO A LADO -->
+    <div class="two-columns">
+        <div>
+            <!-- IDENTIFICACAO DO EMITENTE -->
+            <div class="section" style="margin-bottom: 0;">
+                <div class="section-title">EMITENTE</div>
+                <table class="dados">
+                    <tr>
+                        <td colspan="2"><strong>{{ $filial->Pessoa->pessoa }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="label">CNPJ:</td>
+                        <td>{{ formataCnpj($filial->Pessoa->cnpj) }}</td>
+                    </tr>
+                    @if(!empty($filial->Pessoa->ie))
+                    <tr>
+                        <td class="label">IE:</td>
+                        <td>{{ $filial->Pessoa->ie }}</td>
+                    </tr>
                     @endif
-                    - {{ $filial->Pessoa->bairro }}
-                    - {{ $filial->Pessoa->Cidade->cidade }}/{{ $filial->Pessoa->Cidade->Estado->sigla }}
-                </td>
-            </tr>
-        </table>
+                    <tr>
+                        <td class="label">Endereco:</td>
+                        <td>{{ $filial->Pessoa->Cidade->cidade }}/{{ $filial->Pessoa->Cidade->Estado->sigla }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div>
+            <!-- DADOS DA CARTA DE CORRECAO -->
+            <div class="section" style="margin-bottom: 0;">
+                <div class="section-title">DADOS DA CC-e</div>
+                <table class="dados">
+                    <tr>
+                        <td class="label">Numero CC-e:</td>
+                        <td>{{ $cartaCorrecao->sequencia }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Data/Hora:</td>
+                        <td>
+                            @if($cartaCorrecao->protocolodata)
+                                {{ $cartaCorrecao->protocolodata->format('d/m/Y H:i:s') }}
+                            @else
+                                {{ $cartaCorrecao->criacao->format('d/m/Y H:i:s') }}
+                            @endif
+                        </td>
+                    </tr>
+                    @if(!empty($cartaCorrecao->protocolo))
+                    <tr>
+                        <td class="label">Protocolo:</td>
+                        <td>{{ $cartaCorrecao->protocolo }}</td>
+                    </tr>
+                    @endif
+                    <tr>
+                        <td class="label">Orgao:</td>
+                        <td>SEFAZ/{{ $filial->Pessoa->Cidade->Estado->sigla }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- IDENTIFICACAO DA NF-e CORRIGIDA -->
     <div class="section">
-        <div class="section-title">IDENTIFICACAO DA NF-e CORRIGIDA</div>
-
-        <div class="field">
-            <span class="field-label">Chave de Acesso da NF-e:</span>
-        </div>
+        <div class="section-title">NF-e CORRIGIDA</div>
         <div class="chave-acesso">
-            {{ preg_replace('/(.{4})/', '$1 ', $notaFiscal->nfechave) }}
+            <strong>Chave:</strong> {{ preg_replace('/(.{4})/', '$1 ', $notaFiscal->nfechave) }}
         </div>
-
         <table class="dados">
             <tr>
-                <td class="label">Numero da NF-e:</td>
-                <td>{{ $notaFiscal->numero }}</td>
-            </tr>
-            <tr>
-                <td class="label">Serie:</td>
-                <td>{{ $notaFiscal->serie }}</td>
-            </tr>
-            <tr>
-                <td class="label">Data de Emissao:</td>
-                <td>{{ $notaFiscal->emissao->format('d/m/Y') }}</td>
-            </tr>
-            <tr>
-                <td class="label">Modelo:</td>
-                <td>{{ $notaFiscal->modelo }}</td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- DADOS DA CARTA DE CORRECAO -->
-    <div class="section">
-        <div class="section-title">DADOS DA CARTA DE CORRECAO</div>
-        <table class="dados">
-            <tr>
-                <td class="label">Numero da CC-e:</td>
-                <td>{{ $cartaCorrecao->sequencia }}</td>
-            </tr>
-            <tr>
-                <td class="label">Data/Hora do Registro:</td>
-                <td>
-                    @if($cartaCorrecao->protocolodata)
-                        {{ $cartaCorrecao->protocolodata->format('d/m/Y H:i:s') }}
-                    @else
-                        {{ $cartaCorrecao->criacao->format('d/m/Y H:i:s') }}
-                    @endif
-                </td>
-            </tr>
-            @if(!empty($cartaCorrecao->protocolo))
-            <tr>
-                <td class="label">Protocolo de Autorizacao:</td>
-                <td>{{ $cartaCorrecao->protocolo }}</td>
-            </tr>
-            @endif
-            <tr>
-                <td class="label">Orgao Autorizador:</td>
-                <td>SEFAZ/{{ $filial->Pessoa->Cidade->Estado->sigla }}</td>
+                <td><strong>Numero:</strong> {{ $notaFiscal->numero }}</td>
+                <td><strong>Serie:</strong> {{ $notaFiscal->serie }}</td>
+                <td><strong>Emissao:</strong> {{ $notaFiscal->emissao->format('d/m/Y') }}</td>
+                <td><strong>Modelo:</strong> {{ $notaFiscal->modelo }}</td>
             </tr>
         </table>
     </div>
@@ -253,9 +233,6 @@
     <!-- TEXTO DA CORRECAO -->
     <div class="section">
         <div class="section-title">TEXTO DA CORRECAO</div>
-        <p style="margin: 0 0 10px 0; font-style: italic;">
-            Correcao efetuada nos termos do Ajuste SINIEF 01/2007:
-        </p>
         <div class="texto-correcao">{{ $cartaCorrecao->texto }}</div>
     </div>
 
@@ -263,48 +240,16 @@
     <div class="section">
         <div class="section-title">OBSERVACOES IMPORTANTES</div>
         <div class="observacoes">
-            <p style="margin: 0 0 10px 0;"><strong>Esta Carta de Correcao NAO ALTERA:</strong></p>
-            <ul>
-                <li>Valores do imposto</li>
-                <li>Base de calculo</li>
-                <li>Aliquota</li>
-                <li>Quantidade</li>
-                <li>Valor da operacao</li>
-                <li>Dados cadastrais que alterem o fato gerador</li>
-            </ul>
-            <p style="margin: 10px 0 0 0;">
-                A CC-e deve ser utilizada exclusivamente para correcoes permitidas pela legislacao vigente.
-            </p>
+            <strong>Esta CC-e NAO ALTERA:</strong> valores do imposto, base de calculo, aliquota, quantidade, valor da operacao, dados cadastrais que alterem o fato gerador.
+            <br>A CC-e deve ser utilizada exclusivamente para correcoes permitidas pela legislacao vigente (Ajuste SINIEF 01/2007).
         </div>
-    </div>
-
-    <!-- CONTROLE INTERNO -->
-    <div class="section">
-        <div class="section-title">CONTROLE INTERNO</div>
-        <table class="dados">
-            <tr>
-                <td class="label">Emitido em:</td>
-                <td>{{ now()->format('d/m/Y H:i') }}</td>
-            </tr>
-            @if($cartaCorrecao->UsuarioCriacao)
-            <tr>
-                <td class="label">Usuario Responsavel:</td>
-                <td>{{ $cartaCorrecao->UsuarioCriacao->usuario }}</td>
-            </tr>
-            @endif
-            <tr>
-                <td class="label">Sistema:</td>
-                <td>MGsis ERP</td>
-            </tr>
-        </table>
     </div>
 
     <!-- RODAPE -->
     <div class="footer">
         <p>
-            Documento Auxiliar da Carta de Correcao Eletronica (CC-e)<br>
-            Referente a NF-e modelo {{ $notaFiscal->modelo }}<br>
-            Validade juridica condicionada ao XML autorizado pela SEFAZ
+            Documento Auxiliar da Carta de Correcao Eletronica (CC-e) | NF-e modelo {{ $notaFiscal->modelo }} | Validade juridica condicionada ao XML autorizado pela SEFAZ
+            <br>Emitido em {{ now()->format('d/m/Y H:i') }} | MGsis ERP
         </p>
     </div>
 

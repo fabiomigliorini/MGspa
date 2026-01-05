@@ -77,6 +77,17 @@ export default {
     return URL.createObjectURL(blob)
   },
 
+  async cartaCorrecaoPdf(codnotafiscal) {
+    // Faz o download do PDF da carta de correção via API (com autenticação via header)
+    const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/carta-correcao/pdf`, {
+      responseType: 'blob', // Importante para PDFs
+    })
+
+    // Cria um URL temporário do blob
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    return URL.createObjectURL(blob)
+  },
+
   async xml(codnotafiscal) {
     // Faz o download do XML via API (com autenticação via header)
     const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/xml`, {

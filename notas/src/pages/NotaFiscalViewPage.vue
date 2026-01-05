@@ -89,7 +89,7 @@ const cartasCorrecao = computed(() => {
 // Computa a maior sequência das cartas de correção
 const maiorSequenciaCartaCorrecao = computed(() => {
   if (cartasCorrecao.value.length === 0) return 0
-  return Math.max(...cartasCorrecao.value.map(c => c.sequencia || 0))
+  return Math.max(...cartasCorrecao.value.map((c) => c.sequencia || 0))
 })
 
 // URL base para negócios
@@ -100,7 +100,7 @@ const negociosVinculados = computed(() => {
   const itensData = notaFiscalStore.itens || []
   const negociosMap = new Map()
 
-  itensData.forEach(item => {
+  itensData.forEach((item) => {
     if (item.codnegocio && !negociosMap.has(item.codnegocio)) {
       negociosMap.set(item.codnegocio, item.codnegocio)
     }
@@ -118,11 +118,11 @@ const loadingNota = computed(() => notaFiscalStore.loading.nota)
 
 // Paginação client-side dos itens - dinâmica por breakpoint
 const itensPorPagina = computed(() => {
-  if ($q.screen.xs) return 1  // Desktop pequeno: 4 por linha = 3 linhas
-  if ($q.screen.sm) return 3  // Tablet: 3 por linha = 4 linhas
-  if ($q.screen.md) return 4   // Mobile: 1 por linha = 6 linhas
+  if ($q.screen.xs) return 1 // Desktop pequeno: 4 por linha = 3 linhas
+  if ($q.screen.sm) return 3 // Tablet: 3 por linha = 4 linhas
+  if ($q.screen.md) return 4 // Mobile: 1 por linha = 6 linhas
   // if ($q.screen.lg) return 6   // Mobile: 1 por linha = 6 linhas
-  return 6                     // Desktop grande (lg/xl): 6 por linha = 2 linhas
+  return 6 // Desktop grande (lg/xl): 6 por linha = 2 linhas
 })
 const paginaAtualItens = ref(1)
 
@@ -207,7 +207,7 @@ const novoItem = () => {
 const createItem = async (prod) => {
   try {
     const ret = await notaFiscalStore.createItem(route.params.codnotafiscal, {
-      codprodutobarra: prod.produto.codprodutobarra
+      codprodutobarra: prod.produto.codprodutobarra,
     })
 
     const adicionado = [...ret.itens].sort((a, b) => {
@@ -215,12 +215,12 @@ const createItem = async (prod) => {
       return (b.codnotafiscalprodutobarra || 0) - (a.codnotafiscalprodutobarra || 0)
     })[0]
 
-    console.log(adicionado);
+    console.log(adicionado)
 
     console.log({
       codnotafiscal: adicionado.codnotafiscal,
       codnotafiscalitem: adicionado.codnotafiscalprodutobarra,
-    });
+    })
 
     router.push({
       name: 'nota-fiscal-item-edit',
@@ -242,9 +242,6 @@ const createItem = async (prod) => {
       caption: error.response?.data?.message || error.message,
     })
   }
-
-
-
 }
 
 const handleDeleteItem = (item) => {
@@ -490,9 +487,24 @@ const excluirReferenciada = (referenciada) => {
 // ==================== CARTAS DE CORREÇÃO ====================
 const cartaCorrecaoDialog = ref(false)
 const cartaCorrecaoDialogRef = ref(null)
+const cartaCorrecaoPdfDialog = ref(false)
+const cartaCorrecaoPdfUrl = ref('')
 
 const novaCartaCorrecao = () => {
   cartaCorrecaoDialog.value = true
+}
+
+const abrirCartaCorrecaoPdf = async () => {
+  try {
+    cartaCorrecaoPdfUrl.value = await notaFiscalStore.getCartaCorrecaoPdfUrl(nota.value.codnotafiscal)
+    cartaCorrecaoPdfDialog.value = true
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao abrir PDF da Carta de Correção',
+      caption: error?.response?.data?.message || error?.message || 'Erro desconhecido',
+    })
+  }
 }
 
 const enviarCartaCorrecao = async (texto) => {
@@ -533,7 +545,7 @@ const duplicarNota = () => {
     persistent: true,
   }).onOk(async () => {
     try {
-      await notaFiscalStore.duplicarNota(nota.value.codnotafiscal);
+      await notaFiscalStore.duplicarNota(nota.value.codnotafiscal)
       $q.notify({
         type: 'positive',
         message: 'Nota fiscal duplicada!',
@@ -545,7 +557,7 @@ const duplicarNota = () => {
         },
       })
     } catch (error) {
-      console.log(error);
+      console.log(error)
       $q.notify({
         type: 'negative',
         message: 'Erro ao duplicar nota fiscal',
@@ -559,7 +571,8 @@ const duplicarNota = () => {
 const incorporarValores = () => {
   $q.dialog({
     title: 'Incorporar Valores aos Produtos',
-    message: 'Esta ação irá incorporar os valores de desconto, frete, seguro e outras despesas no valor dos produtos, refazendo o rateio. Esta ação não pode ser desfeita. Digite INCORPORAR para confirmar:',
+    message:
+      'Esta ação irá incorporar os valores de desconto, frete, seguro e outras despesas no valor dos produtos, refazendo o rateio. Esta ação não pode ser desfeita. Digite INCORPORAR para confirmar:',
     prompt: {
       model: '',
       type: 'text',
@@ -608,7 +621,6 @@ const enviarNfe = async () => {
     const tpEmis = xmlDoc.querySelector('tpEmis')?.textContent
 
     if (tpEmis === '9') {
-
       // Modo offline - apenas abre DANFE
       await abrirDanfe()
 
@@ -622,7 +634,6 @@ const enviarNfe = async () => {
       const envioResponse = await notaFiscalStore.enviarNfeSincrono(nota.value.codnotafiscal)
 
       if (envioResponse.sucesso) {
-
         // 3. Enviar Email
         progressoNfe.value = { status: 'Enviando Email...', percent: 75 }
         await notaFiscalStore.enviarEmailNfe(nota.value.codnotafiscal)
@@ -852,7 +863,9 @@ const podeAbrirXml = computed(() => {
 })
 
 const podeIncorporar = computed(() => {
-  return nota.value && nota.value.status === 'DIG' && nota.value.valortotal != nota.value.valorprodutos
+  return (
+    nota.value && nota.value.status === 'DIG' && nota.value.valortotal != nota.value.valorprodutos
+  )
 })
 
 // Copiar chave da NFe
@@ -878,7 +891,7 @@ const abrirDialogStatus = () => {
 const alterarStatus = async (novoStatus) => {
   $q.dialog({
     title: 'Confirmar alteração',
-    message: `Tem certeza que deseja alterar o status para "${STATUS_OPTIONS.find(s => s.value === novoStatus)?.label}"?`,
+    message: `Tem certeza que deseja alterar o status para "${STATUS_OPTIONS.find((s) => s.value === novoStatus)?.label}"?`,
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'primary' },
     persistent: true,
@@ -906,7 +919,8 @@ const alterarStatus = async (novoStatus) => {
 const limparAutorizacao = async () => {
   $q.dialog({
     title: 'Confirmar limpeza',
-    message: 'Tem certeza que deseja limpar a autorização e cancelamento? O status será alterado para "Erro".',
+    message:
+      'Tem certeza que deseja limpar a autorização e cancelamento? O status será alterado para "Erro".',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'negative' },
     persistent: true,
@@ -938,7 +952,8 @@ const limparAutorizacao = async () => {
 const limparCancelamento = async () => {
   $q.dialog({
     title: 'Confirmar limpeza',
-    message: 'Tem certeza que deseja limpar o cancelamento? O status será alterado para "Autorizada".',
+    message:
+      'Tem certeza que deseja limpar o cancelamento? O status será alterado para "Autorizada".',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'negative' },
     persistent: true,
@@ -1024,11 +1039,10 @@ onUnmounted(() => {
 
     <!-- Conteúdo -->
     <div v-else-if="nota">
-
       <!-- Header com Voltar -->
-      <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
-        <q-btn flat dense round icon="arrow_back" to="/nota" class="q-mr-sm" style="flex-shrink: 0;" />
-        <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
+      <div class="row items-center q-mb-md" style="flex-wrap: nowrap">
+        <q-btn flat dense round icon="arrow_back" to="/nota" class="q-mr-sm" style="flex-shrink: 0" />
+        <div class="text-h5 ellipsis" style="flex: 1; min-width: 0">
           {{ getModeloLabel(nota.modelo) }}
           {{ formatNumero(nota.numero) }}
           - Série
@@ -1064,11 +1078,8 @@ onUnmounted(() => {
               </div>
             </q-card-section>
             <q-card-section>
-
               <!-- FILILA / LOCAL -->
-              <div class="text-caption text-grey-7 ">
-                Filial / Local de Estoque
-              </div>
+              <div class="text-caption text-grey-7">Filial / Local de Estoque</div>
               <div class="text-subtitle1 text-weight-bold">
                 {{ nota.filial?.filial || '-' }}
                 <span class="text-grey-7">
@@ -1078,9 +1089,7 @@ onUnmounted(() => {
               </div>
 
               <!-- NATUREZA -->
-              <div class="text-caption text-grey-7">
-                Natureza de Operação
-              </div>
+              <div class="text-caption text-grey-7">Natureza de Operação</div>
               <div class="text-body2 text-weight-medium">
                 {{ nota.codoperacao === 1 ? 'Entrada' : 'Saída' }} |
                 {{ nota.naturezaOperacao?.naturezaoperacao || '-' }}
@@ -1100,8 +1109,9 @@ onUnmounted(() => {
                 <div class="text-body2">
                   <a v-for="(codnegocio, index) in negociosVinculados" :key="codnegocio"
                     :href="getNegocioUrl(codnegocio)" target="_blank" class="text-primary text-weight-medium"
-                    style="text-decoration: none;">
-                    {{ formatCodNegocio(codnegocio) }}<span v-if="index < negociosVinculados.length - 1">, </span>
+                    style="text-decoration: none">
+                    {{ formatCodNegocio(codnegocio) }}
+                    <span v-if="index < negociosVinculados.length - 1">,</span>
                   </a>
                 </div>
               </template>
@@ -1112,7 +1122,6 @@ onUnmounted(() => {
         <!-- TRANSPORTE -->
         <div class="col-12 col-sm-6 col-md-3">
           <q-card flat bordered class="q-mb-md full-height">
-
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
                 <div class="text-h6">
@@ -1136,7 +1145,9 @@ onUnmounted(() => {
 
               <div class="col-6 col-md-3" v-if="nota.placa">
                 <div class="text-caption text-grey-7">Placa</div>
-                <div class="text-body2 ellipsis">{{ nota.placa }}/{{ nota.estadoPlaca.sigla || nota.estadoPlaca }}</div>
+                <div class="text-body2 ellipsis">
+                  {{ nota.placa }}/{{ nota.estadoPlaca.sigla || nota.estadoPlaca }}
+                </div>
               </div>
 
               <div class="col-6 col-md-2" v-if="nota.volumes">
@@ -1145,9 +1156,7 @@ onUnmounted(() => {
                   {{ nota.volumes }}
                   {{ nota.volumesespecie }}
                   {{ nota.volumesmarca }}
-                  <template v-if="nota.volumesnumero">
-                    N {{ nota.volumesnumero }}
-                  </template>
+                  <template v-if="nota.volumesnumero">N {{ nota.volumesnumero }}</template>
                 </div>
               </div>
 
@@ -1167,7 +1176,6 @@ onUnmounted(() => {
         <!-- NFE -->
         <div class="col-12 col-md-6">
           <q-card flat bordered class="full-height flex column">
-
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
                 <div class="text-h6">
@@ -1178,24 +1186,20 @@ onUnmounted(() => {
             </q-card-section>
 
             <q-card-section class="col-grow">
-
               <template v-if="nota.modelo">
-                <div class="text-caption text-grey-7 ">
+                <div class="text-caption text-grey-7">
                   {{ getModeloLabel(nota.modelo) }}
                 </div>
-                <div class="text-caption" style="font-family: monospace;">
+                <div class="text-caption" style="font-family: monospace">
                   {{ formatNumero(nota.numero) }} - Série {{ nota.serie }}
                 </div>
               </template>
 
-
               <!-- Chave de Acesso -->
               <template v-if="nota.nfechave">
-                <div class="text-caption text-grey-7">
-                  Chave
-                </div>
+                <div class="text-caption text-grey-7">Chave</div>
                 <div class="text-caption row items-center">
-                  <span style="font-family: monospace;">
+                  <span style="font-family: monospace">
                     {{ formatChave(nota.nfechave) }}
                   </span>
                   <q-btn flat dense round size="sm" icon="content_copy" color="grey-7" class="q-ml-xs"
@@ -1206,9 +1210,7 @@ onUnmounted(() => {
               </template>
 
               <!-- STATUS -->
-              <div class="text-caption text-grey-7">
-                Status da Nota
-              </div>
+              <div class="text-caption text-grey-7">Status da Nota</div>
               <div class="text-body1">
                 <q-badge :color="getStatusColor(nota.status)" class="text-subtitle2">
                   <q-icon :name="getStatusIcon(nota.status)" size="sm" class="q-mr-xs" />
@@ -1218,15 +1220,12 @@ onUnmounted(() => {
 
               <!-- Autorizacao  -->
               <template v-if="nota.nfeautorizacao">
-                <div class="text-caption text-grey-7">
-                  Autorização
-                </div>
+                <div class="text-caption text-grey-7">Autorização</div>
                 <div class="text-caption row items-center">
-                  <span style="font-family: monospace;">
+                  <span style="font-family: monospace">
                     {{ formatProtocolo(nota.nfeautorizacao) }}
                   </span>
                   <span class="text-grey-7">
-
                     |
                     {{ formatDateTime(nota.nfedataautorizacao) }}
                   </span>
@@ -1239,11 +1238,9 @@ onUnmounted(() => {
 
               <!-- Cancelamento  -->
               <template v-if="nota.nfecancelamento">
-                <div class="text-caption text-grey-7">
-                  Cancelamento
-                </div>
+                <div class="text-caption text-grey-7">Cancelamento</div>
                 <div class="text-caption row items-center">
-                  <span style="font-family: monospace;">
+                  <span style="font-family: monospace">
                     {{ formatProtocolo(nota.nfecancelamento) }}
                   </span>
                   <span class="text-grey-7">
@@ -1259,11 +1256,9 @@ onUnmounted(() => {
 
               <!-- Inutilizacao  -->
               <template v-if="nota.nfeinutilizacao">
-                <div class="text-caption text-grey-7">
-                  Inutilização
-                </div>
+                <div class="text-caption text-grey-7">Inutilização</div>
                 <div class="text-caption row items-center">
-                  <span style="font-family: monospace;">
+                  <span style="font-family: monospace">
                     {{ formatProtocolo(nota.nfeinutilizacao) }}
                   </span>
                   <span class="text-grey-7">
@@ -1279,14 +1274,11 @@ onUnmounted(() => {
 
               <!-- Justificativa  -->
               <template v-if="nota.justificativa">
-                <div class="text-caption text-grey-7">
-                  Justificativa
-                </div>
+                <div class="text-caption text-grey-7">Justificativa</div>
                 <div class="text-caption row items-center">
                   {{ nota.justificativa }}
                 </div>
               </template>
-
             </q-card-section>
 
             <!-- Botões de ação da NFe -->
@@ -1339,7 +1331,6 @@ onUnmounted(() => {
                 <q-tooltip>Alterar status manualmente</q-tooltip>
               </q-btn>
             </q-card-actions>
-
           </q-card>
         </div>
 
@@ -1359,7 +1350,7 @@ onUnmounted(() => {
               <div class="row q-col-gutter-sm">
                 <!-- NOME -->
                 <div class="col-12 col-sm-8 col-md-5">
-                  <div class="text-caption text-grey-7 ">Nome | Razão Social</div>
+                  <div class="text-caption text-grey-7">Nome | Razão Social</div>
                   <div class="text-body1 text-weight-bold text-primary ellipsis">
                     {{ nota.pessoa?.fantasia || '-' }}
                     <span class="text-grey-7">
@@ -1390,7 +1381,6 @@ onUnmounted(() => {
                   <div class="text-caption text-grey-7">E-MAIL</div>
                   <div class="text-body2 ellipsis">{{ nota.pessoa.email }}</div>
                 </div>
-
 
                 <!-- ENDEREÇO -->
                 <div class="col-12 col-sm-8 col-md-3" v-if="nota.pessoa?.endereco">
@@ -1426,7 +1416,6 @@ onUnmounted(() => {
                   <div class="text-caption text-grey-7">Telefone</div>
                   <div class="text-body2 ellipsis">{{ nota.pessoa.telefone1 }}</div>
                 </div>
-
               </div>
             </q-card-section>
           </q-card>
@@ -1445,7 +1434,6 @@ onUnmounted(() => {
             </q-card-section>
             <q-card-section>
               <div class="row q-col-gutter-sm">
-
                 <!-- ICMS -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">ICMS</div>
@@ -1499,33 +1487,34 @@ onUnmounted(() => {
                 <!-- Produtos -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Produtos</div>
-                  <div class="text-body2 text-weight-bold"> {{ formatCurrency(nota.valorprodutos) }}</div>
+                  <div class="text-body2 text-weight-bold">
+                    {{ formatCurrency(nota.valorprodutos) }}
+                  </div>
                 </div>
 
                 <!-- Desconto -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Desconto</div>
-                  <div class="text-body2"> {{ formatCurrency(nota.valordesconto) }}</div>
+                  <div class="text-body2">{{ formatCurrency(nota.valordesconto) }}</div>
                 </div>
 
                 <!-- Frete -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Frete</div>
-                  <div class="text-body2"> {{ formatCurrency(nota.valorfrete) }}</div>
+                  <div class="text-body2">{{ formatCurrency(nota.valorfrete) }}</div>
                 </div>
 
                 <!-- Seguro -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Seguro</div>
-                  <div class="text-body2"> {{ formatCurrency(nota.valorseguro) }}</div>
+                  <div class="text-body2">{{ formatCurrency(nota.valorseguro) }}</div>
                 </div>
 
                 <!-- Outras Despesas -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Outras Despesas</div>
-                  <div class="text-body2"> {{ formatCurrency(nota.valoroutras) }}</div>
+                  <div class="text-body2">{{ formatCurrency(nota.valoroutras) }}</div>
                 </div>
-
 
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Total</div>
@@ -1544,8 +1533,11 @@ onUnmounted(() => {
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
                 <div class="text-h6">
-                  <q-icon name="inventory_2" size="1.5em" class="q-mr-sm" /> Itens
-                  <q-badge color="white" text-color="primary" class="q-ml-sm">{{ itens.length }}</q-badge>
+                  <q-icon name="inventory_2" size="1.5em" class="q-mr-sm" />
+                  Itens
+                  <q-badge color="white" text-color="primary" class="q-ml-sm">
+                    {{ itens.length }}
+                  </q-badge>
                   <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novoItem"
                     class="q-ml-sm">
                     <q-tooltip>Adicionar Item</q-tooltip>
@@ -1560,7 +1552,6 @@ onUnmounted(() => {
               </div>
             </q-card-section>
             <q-card-section>
-
               <!-- Empty State -->
               <div v-if="itens.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
                 Nenhum item adicionado
@@ -1574,7 +1565,6 @@ onUnmounted(() => {
 
               <!-- PAGINACAO RODAPE -->
               <div class="row items-center justify-between" v-if="itens.length > 0">
-
                 <!-- Info da paginação -->
                 <div v-if="itens.length > itensPorPagina" class="text-center text-caption text-grey-7 q-mt-sm">
                   Mostrando {{ (paginaAtualItens - 1) * itensPorPagina + 1 }}
@@ -1588,7 +1578,6 @@ onUnmounted(() => {
                   <q-pagination size="md" v-model="paginaAtualItens" :max="totalPaginasItens" :max-pages="5"
                     direction-links boundary-links @update:model-value="mudarPaginaItens" />
                 </div>
-
               </div>
             </q-card-section>
           </q-card>
@@ -1616,8 +1605,11 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">
-                <q-icon name="payments" size="1.5em" class="q-mr-sm" /> Formas de Pagamento
-                <q-badge color="white" text-color="primary" class="q-ml-sm">{{ pagamentos.length }}</q-badge>
+                <q-icon name="payments" size="1.5em" class="q-mr-sm" />
+                Formas de Pagamento
+                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                  {{ pagamentos.length }}
+                </q-badge>
                 <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novoPagamento"
                   class="q-ml-sm">
                   <q-tooltip>Adicionar Forma de Pagamento</q-tooltip>
@@ -1625,7 +1617,6 @@ onUnmounted(() => {
               </div>
             </q-card-section>
             <q-card-section>
-
               <div v-if="pagamentos.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
                 Nenhuma forma de pagamento adicionada
               </div>
@@ -1633,16 +1624,15 @@ onUnmounted(() => {
               <div v-else class="row q-col-gutter-md">
                 <div v-for="pag in pagamentos" :key="pag.codnotafiscalpagamento"
                   class="col-xs-12 col-sm-4 col-md-6 col-lg-4">
-
                   <q-card flat bordered class="full-height flex column">
                     <q-card-section class="col">
                       <div class="row items-center justify-between q-mb-md">
-                        <div class="row items-center" style="min-width: 0; flex: 1;">
+                        <div class="row items-center" style="min-width: 0; flex: 1">
                           <q-avatar :color="getPagamentoColor(pag.tipo)" text-color="white" size="md" class="q-mr-sm"
-                            style="flex-shrink: 0;">
+                            style="flex-shrink: 0">
                             <q-icon :name="getPagamentoIcon(pag.tipo)" />
                           </q-avatar>
-                          <div style="min-width: 0; flex: 1;">
+                          <div style="min-width: 0; flex: 1">
                             <div class="text-subtitle2 text-weight-bold ellipsis">
                               {{ pag.tipodescricao || '-' }}
                             </div>
@@ -1651,7 +1641,7 @@ onUnmounted(() => {
                             </div>
                           </div>
                         </div>
-                        <q-badge v-if="pag.avista" color="positive" outline style="flex-shrink: 0;">
+                        <q-badge v-if="pag.avista" color="positive" outline style="flex-shrink: 0">
                           À vista
                         </q-badge>
                       </div>
@@ -1669,9 +1659,7 @@ onUnmounted(() => {
 
                       <div v-if="pag.autorizacao" class="row items-center q-mb-xs">
                         <q-icon name="verified" size="xs" class="q-mr-xs text-grey-6" />
-                        <div class="text-caption text-grey-7">
-                          Aut: {{ pag.autorizacao }}
-                        </div>
+                        <div class="text-caption text-grey-7">Aut: {{ pag.autorizacao }}</div>
                       </div>
 
                       <div v-if="pag.troco" class="row items-center">
@@ -1704,8 +1692,11 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">
-                <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" /> Duplicatas
-                <q-badge color="white" text-color="primary" class="q-ml-sm">{{ duplicatas.length }}</q-badge>
+                <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" />
+                Duplicatas
+                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                  {{ duplicatas.length }}
+                </q-badge>
                 <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novaDuplicata"
                   class="q-ml-sm">
                   <q-tooltip>Adicionar Duplicata</q-tooltip>
@@ -1713,7 +1704,6 @@ onUnmounted(() => {
               </div>
             </q-card-section>
             <q-card-section>
-
               <div v-if="duplicatas.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
                 Nenhuma duplicata adicionada
               </div>
@@ -1724,10 +1714,10 @@ onUnmounted(() => {
                   <q-card flat bordered class="full-height flex column">
                     <q-card-section class="col">
                       <div class="row items-center q-mb-md">
-                        <q-avatar color="indigo" text-color="white" size="md" class="q-mr-sm" style="flex-shrink: 0;">
+                        <q-avatar color="indigo" text-color="white" size="md" class="q-mr-sm" style="flex-shrink: 0">
                           <q-icon name="receipt_long" />
                         </q-avatar>
-                        <div style="min-width: 0; flex: 1;">
+                        <div style="min-width: 0; flex: 1">
                           <div class="text-subtitle2 text-weight-bold ellipsis">
                             {{ dup.fatura || '-' }}
                           </div>
@@ -1765,8 +1755,11 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">
-                <q-icon name="link" size="1.5em" class="q-mr-sm" /> Notas Fiscais Referenciadas
-                <q-badge color="white" text-color="primary" class="q-ml-sm">{{ referenciadas.length }}</q-badge>
+                <q-icon name="link" size="1.5em" class="q-mr-sm" />
+                Notas Fiscais Referenciadas
+                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                  {{ referenciadas.length }}
+                </q-badge>
                 <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novaReferenciada"
                   class="q-ml-sm">
                   <q-tooltip>Adicionar Nota Referenciada</q-tooltip>
@@ -1774,7 +1767,6 @@ onUnmounted(() => {
               </div>
             </q-card-section>
             <q-card-section>
-
               <div v-if="referenciadas.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
                 Nenhuma nota fiscal referenciada
               </div>
@@ -1786,13 +1778,11 @@ onUnmounted(() => {
                     <q-card-section class="col">
                       <div class="row items-center q-mb-sm">
                         <q-icon name="link" size="sm" color="primary" class="q-mr-sm" />
-                        <div class="text-subtitle2 text-weight-bold">
-                          Nota Referenciada
-                        </div>
+                        <div class="text-subtitle2 text-weight-bold">Nota Referenciada</div>
                       </div>
 
                       <div class="text-caption text-grey-7">Chave de Acesso</div>
-                      <div class="text-caption" style="font-family: monospace;">
+                      <div class="text-caption" style="font-family: monospace">
                         {{ formatChave(ref.nfechave) }}
                       </div>
                     </q-card-section>
@@ -1819,8 +1809,15 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">
-                <q-icon name="edit_note" size="1.5em" class="q-mr-sm" /> Cartas de Correção
-                <q-badge color="white" text-color="primary" class="q-ml-sm">{{ cartasCorrecao.length }}</q-badge>
+                <q-icon name="edit_note" size="1.5em" class="q-mr-sm" />
+                Cartas de Correção
+                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                  {{ cartasCorrecao.length }}
+                </q-badge>
+                <q-btn v-if="cartasCorrecao.length > 0" flat dense color="white" icon="picture_as_pdf" size="md"
+                  @click="abrirCartaCorrecaoPdf" class="q-ml-sm">
+                  <q-tooltip>Abrir PDF da Carta de Correção</q-tooltip>
+                </q-btn>
                 <q-btn v-if="nota.status == 'AUT'" flat dense color="white" icon="add" size="md"
                   @click="novaCartaCorrecao" class="q-ml-sm">
                   <q-tooltip>Adicionar Carta de Correção</q-tooltip>
@@ -1828,7 +1825,6 @@ onUnmounted(() => {
               </div>
             </q-card-section>
             <q-card-section>
-
               <div v-if="cartasCorrecao.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
                 Nenhuma carta de correção emitida
               </div>
@@ -1844,17 +1840,14 @@ onUnmounted(() => {
                             Correção Seq {{ carta.sequencia }}
                           </div>
                         </div>
-                        <q-badge color="positive">
-                          Autorizada
-                        </q-badge>
+                        <q-badge color="positive">Autorizada</q-badge>
                       </div>
 
                       <div class="row q-col-gutter-sm">
-
                         <div class="col-12">
                           <div class="text-caption text-grey-7">Protocolo</div>
                           <div class="text-caption ellipsis">
-                            <span style="font-family: monospace;">
+                            <span style="font-family: monospace">
                               {{ formatProtocolo(carta.protocolo) }}
                             </span>
                             <span class="text-grey-7">
@@ -1865,13 +1858,13 @@ onUnmounted(() => {
 
                         <div class="col-12">
                           <div class="text-caption text-grey-7">Correção</div>
-                          <div class="text-caption"
-                            :class="carta.sequencia !== maiorSequenciaCartaCorrecao ? 'text-grey-8 text-strike' : ''"
-                            style="white-space: pre-wrap">
+                          <div class="text-caption" :class="carta.sequencia !== maiorSequenciaCartaCorrecao
+                            ? 'text-grey-8 text-strike'
+                            : ''
+                            " style="white-space: pre-wrap">
                             {{ carta.texto || '-' }}
                           </div>
                         </div>
-
                       </div>
                     </q-card-section>
                   </q-card>
@@ -1880,10 +1873,7 @@ onUnmounted(() => {
             </q-card-section>
           </q-card>
         </div>
-
-
       </div>
-
     </div>
 
     <!-- Erro -->
@@ -1922,10 +1912,27 @@ onUnmounted(() => {
       </q-card>
     </q-dialog>
 
+    <!-- Dialog PDF Carta de Correção -->
+    <q-dialog v-model="cartaCorrecaoPdfDialog">
+      <q-card style="width: 800px; max-width: 90vw; height: 90vh">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Carta de Correção</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md" style="height: calc(100% - 56px)">
+          <iframe :src="cartaCorrecaoPdfUrl" style="width: 100%; height: 100%; border: none" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
     <!-- Dialog DANFE -->
     <q-dialog v-model="danfeDialog">
-      <q-card
-        :style="nota.modelo === 65 ? 'width: 400px; max-width: 90vw; height: 90vh' : 'width: 800px; max-width: 90vw; height: 90vh'">
+      <q-card :style="nota.modelo === 65
+        ? 'width: 400px; max-width: 90vw; height: 90vh'
+        : 'width: 800px; max-width: 90vw; height: 90vh'
+        ">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">{{ nota.modelo === 65 ? 'DANFE NFCe' : 'DANFE NFe' }}</div>
           <q-space />
@@ -1946,13 +1953,13 @@ onUnmounted(() => {
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-
           <q-banner class="bg-warning text-grey-8 rounded-borders q-mb-sm">
             <template v-slot:avatar>
               <q-icon name="warning" />
             </template>
             Não altere o status sem ter CERTEZA ABSOLUTA. A alteração pode levar à perda de dados.
-            Somente confirme a operação se você tem as informações da nota fiscal para reparar em caso de erro.
+            Somente confirme a operação se você tem as informações da nota fiscal para reparar em
+            caso de erro.
           </q-banner>
           <div class="text-body2 q-mb-md">Selecione o novo status:</div>
           <div class="row q-col-gutter-sm">

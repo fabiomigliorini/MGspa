@@ -1,5 +1,3 @@
-- fazer a "danfe" da carta de correcao
-
 - nao esta alterando o status quando atribui numero pra notafiscal
 
 - quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
@@ -35,3 +33,4 @@ DONE:
 - fazer link pra tela de negocios a partir da nota
 - desabilitar mgsis
 - tirar a impressao automatica das NFCe
+- fazer a "danfe" da carta de correcao
