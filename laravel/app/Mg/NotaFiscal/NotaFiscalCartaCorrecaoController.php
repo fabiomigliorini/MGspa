@@ -85,4 +85,25 @@ class NotaFiscalCartaCorrecaoController extends Controller
 
         return response()->noContent();
     }
+
+    public function pdf(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        // Busca a última carta de correção (maior sequência)
+        $carta = $nota->NotaFiscalCartaCorrecaoS()
+            ->orderBy('sequencia', 'desc')
+            ->first();
+
+        if (!$carta) {
+            abort(404, "Nenhuma carta de correção encontrada para esta nota fiscal.");
+        }
+
+        $pdf = NotaFiscalCartaCorrecaoPdfService::pdf($nota, $carta);
+
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="CCe-' . $nota->numero . '-' . $carta->sequencia . '.pdf"'
+        ]);
+    }
 }
