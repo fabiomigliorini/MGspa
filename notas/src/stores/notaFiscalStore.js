@@ -202,6 +202,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalService.get(codnotafiscalNum)
         // O backend já retorna todos os dados relacionados no objeto
         this.currentNota = response.data
+        this.syncCurrentNotaToList()
         return response.data
       } catch (error) {
         console.error('Erro ao buscar nota fiscal:', error)
@@ -216,10 +217,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         const response = await notaFiscalService.create(data)
         this.currentNota = response.data
-
-        // Adiciona no início da lista
-        this.notas.unshift(response.data)
-        this.pagination.total++
+        this.syncCurrentNotaToList()
 
         return response.data
       } catch (error) {
@@ -235,12 +233,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         const response = await notaFiscalService.update(codnotafiscal, data)
         this.currentNota = response.data
-
-        // Atualiza na lista se existir
-        const index = this.notas.findIndex((n) => n.codnotafiscal === codnotafiscal)
-        if (index !== -1) {
-          this.notas[index] = response.data
-        }
+        this.syncCurrentNotaToList()
 
         return response.data
       } catch (error) {
@@ -280,14 +273,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
 
         // atualiza nota aberta
         this.currentNota = response.data
-
-        // Atualiza na lista se existir
-        const index = this.notas.findIndex((n) => n.codnotafiscal === codnotafiscal)
-        if (index !== -1) {
-          this.notas[index] = response.data
-        } else {
-          this.notas.push(response.data)
-        }
+        this.syncCurrentNotaToList()
 
         // retorna
         return response.data
@@ -308,6 +294,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.nota) {
           this.currentNota = response.nota
+          this.syncCurrentNotaToList()
         }
 
         // Retorna o resultado da operação
@@ -325,6 +312,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.nota) {
           this.currentNota = response.nota
+          this.syncCurrentNotaToList()
         }
 
         // Retorna o resultado da operação
@@ -342,6 +330,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.nota) {
           this.currentNota = response.nota
+          this.syncCurrentNotaToList()
         }
 
         // Retorna o resultado da operação
@@ -359,6 +348,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.nota) {
           this.currentNota = response.nota
+          this.syncCurrentNotaToList()
         }
 
         // Retorna o resultado da operação
@@ -376,6 +366,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.nota) {
           this.currentNota = response.nota
+          this.syncCurrentNotaToList()
         }
 
         // Retorna o resultado da operação
@@ -443,6 +434,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.data) {
           this.currentNota = response.data
+          this.syncCurrentNotaToList()
         }
 
         return response
@@ -460,6 +452,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.data) {
           this.currentNota = response.data
+          this.syncCurrentNotaToList()
         }
 
         return response.data
@@ -513,6 +506,25 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       this.currentNota = null
     },
 
+    /**
+     * Sincroniza currentNota com a lista notas
+     * Deve ser chamado sempre que currentNota for atualizado
+     */
+    syncCurrentNotaToList() {
+      if (!this.currentNota) return
+
+      const index = this.notas.findIndex(
+        (n) => n.codnotafiscal === this.currentNota.codnotafiscal
+      )
+      if (index !== -1) {
+        this.notas[index] = { ...this.currentNota }
+      } else {
+        // Se não existir na lista, adiciona no início
+        this.notas.unshift({ ...this.currentNota })
+        this.pagination.total++
+      }
+    },
+
     // ==================== ITENS ====================
 
     async fetchItens(codnotafiscal) {
@@ -551,6 +563,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalItemService.create(codnotafiscal, data)
         if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
           this.currentNota = response.data
+          this.syncCurrentNotaToList()
         }
         return response.data
       } catch (error) {
@@ -572,6 +585,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         )
         if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
           this.currentNota = response.data
+          this.syncCurrentNotaToList()
         }
         return response.data
       } catch (error) {
@@ -591,6 +605,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         )
         if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
           this.currentNota = response.data
+          this.syncCurrentNotaToList()
         }
         return response.data
       } catch (error) {
@@ -879,6 +894,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Atualiza currentNota com a nota retornada
         if (response.nota) {
           this.currentNota = response.nota
+          this.syncCurrentNotaToList()
         }
 
         // Retorna o resultado da operação (sucesso, cStat, xMotivo, protocolo, protocolodata)

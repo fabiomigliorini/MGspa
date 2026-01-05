@@ -70,6 +70,15 @@ const loadFormData = async () => {
 }
 
 const handleSubmit = async () => {
+  // Valida se o valor total final é maior ou igual a 0.01
+  if (valorTotalFinal.value < 0.01) {
+    $q.notify({
+      type: 'negative',
+      message: 'O Valor Total Final deve ser maior ou igual a R$ 0,01',
+    })
+    return
+  }
+
   loading.value = true
   try {
     await notaFiscalStore.updateItem(codnotafiscal.value, codnotafiscalitem.value, editingItem.value)
