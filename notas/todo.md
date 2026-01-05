@@ -1,7 +1,5 @@
 - criar botao pra recalcular tributacao.
 
-- verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)
-
 - Tratar o erro 563 - [+151260007488447]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
 
 - fazer botão devolução (venda e compra)
@@ -18,6 +16,8 @@
 - quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
 
 - cards da tributacao em celular
+
+- nao pode alterar nota já enviada (com numero ativo, só se for produtor rural)
 
 DONE:
 
@@ -38,3 +38,4 @@ DONE:
 - fazer a "danfe" da carta de correcao
 - nao esta alterando o status quando atribui numero pra notafiscal
 - quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
+- verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)

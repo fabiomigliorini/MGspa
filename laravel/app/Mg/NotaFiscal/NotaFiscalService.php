@@ -428,7 +428,7 @@ class NotaFiscalService
     public static function recalcularTributacao(NotaFiscal $nota): void
     {
         foreach ($nota->NotaFiscalProdutoBarraS as $nfpb) {
-            NotaFiscalProdutoBarraService::calcularTributacao($nfpb);
+            NotaFiscalProdutoBarraService::calcularTributacao($nfpb, false);
             TributacaoService::recalcularTributosItem($nfpb);  // Reforma Tributaria
             $nfpb->save();
         }

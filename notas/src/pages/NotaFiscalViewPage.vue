@@ -510,6 +510,7 @@ const abrirCartaCorrecaoPdf = async () => {
 }
 
 const enviarCartaCorrecao = async (texto) => {
+  loadingCartaCorrecao.value = true
   try {
     const response = await notaFiscalStore.enviarCartaCorrecao(route.params.codnotafiscal, texto)
 
@@ -533,6 +534,7 @@ const enviarCartaCorrecao = async (texto) => {
       caption: error.response?.data?.message || error.message,
     })
   } finally {
+    loadingCartaCorrecao.value = false
     cartaCorrecaoDialogRef.value?.setLoading(false)
   }
 }
@@ -604,6 +606,11 @@ const incorporarValores = () => {
 
 // ==================== NFE ACTIONS ====================
 const loadingNfe = ref(false)
+const loadingConsultar = ref(false)
+const loadingCancelar = ref(false)
+const loadingInutilizar = ref(false)
+const loadingEmail = ref(false)
+const loadingCartaCorrecao = ref(false)
 const progressoNfe = ref({ status: '', percent: 0 })
 const danfeDialog = ref(false)
 const danfeUrl = ref('')
@@ -673,6 +680,7 @@ const enviarNfe = async () => {
 }
 
 const consultarNfe = async () => {
+  loadingConsultar.value = true
   try {
     const response = await notaFiscalStore.consultarNfe(nota.value.codnotafiscal)
 
@@ -694,6 +702,8 @@ const consultarNfe = async () => {
       message: mensagem,
       position: 'bottom',
     })
+  } finally {
+    loadingConsultar.value = false
   }
 }
 
@@ -711,6 +721,7 @@ const cancelarNfe = async () => {
     ok: { label: 'Confirmar Cancelamento', color: 'negative' },
     persistent: true,
   }).onOk(async (justificativa) => {
+    loadingCancelar.value = true
     try {
       const response = await notaFiscalStore.cancelarNfe(nota.value.codnotafiscal, justificativa)
 
@@ -732,6 +743,8 @@ const cancelarNfe = async () => {
         message: mensagem,
         position: 'bottom',
       })
+    } finally {
+      loadingCancelar.value = false
     }
   })
 }
@@ -750,6 +763,7 @@ const inutilizarNfe = async () => {
     ok: { label: 'Confirmar Inutilização', color: 'negative' },
     persistent: true,
   }).onOk(async (justificativa) => {
+    loadingInutilizar.value = true
     try {
       const response = await notaFiscalStore.inutilizarNfe(nota.value.codnotafiscal, justificativa)
 
@@ -771,6 +785,8 @@ const inutilizarNfe = async () => {
         message: mensagem,
         position: 'bottom',
       })
+    } finally {
+      loadingInutilizar.value = false
     }
   })
 }
@@ -788,6 +804,7 @@ const enviarEmailNfe = async () => {
     ok: { label: 'Enviar', color: 'primary' },
     persistent: true,
   }).onOk(async (email) => {
+    loadingEmail.value = true
     try {
       const response = await notaFiscalStore.enviarEmailNfe(nota.value.codnotafiscal, email)
 
@@ -804,6 +821,8 @@ const enviarEmailNfe = async () => {
         message: 'Erro ao enviar email',
         caption: error.response?.data?.message || error.message,
       })
+    } finally {
+      loadingEmail.value = false
     }
   })
 }
@@ -1383,6 +1402,7 @@ onUnmounted(() => {
                 color="primary"
                 icon="refresh"
                 @click="consultarNfe"
+                :loading="loadingConsultar"
                 class="q-mr-sm"
               >
                 <q-tooltip>Consultar situação na SEFAZ</q-tooltip>
@@ -1425,6 +1445,7 @@ onUnmounted(() => {
                 color="primary"
                 icon="email"
                 @click="enviarEmailNfe"
+                :loading="loadingEmail"
                 class="q-mr-sm"
               >
                 <q-tooltip>Enviar por email</q-tooltip>
@@ -1439,6 +1460,7 @@ onUnmounted(() => {
                 color="negative"
                 icon="cancel"
                 @click="cancelarNfe"
+                :loading="loadingCancelar"
                 class="q-mr-sm"
               >
                 <q-tooltip>Cancelar NFe</q-tooltip>
@@ -1453,6 +1475,7 @@ onUnmounted(() => {
                 color="warning"
                 icon="block"
                 @click="inutilizarNfe"
+                :loading="loadingInutilizar"
                 class="q-mr-sm"
               >
                 <q-tooltip>Inutilizar NFe</q-tooltip>
