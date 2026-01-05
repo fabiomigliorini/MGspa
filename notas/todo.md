@@ -1,23 +1,14 @@
 - fazer botão devolução (venda e compra)
-
 - fazer botao juntar notas
-
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
-
-- publicar o notas.mgpapelaria.com.br
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
-
 - colocar um link pro cadastro do produto
-
 - quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
-
 - cards da tributacao em celular
-
-- nao pode alterar nota já enviada (com numero ativo, só se for produtor rural)
-
 - na tela de negocios, quando uma nf está inutilizada, ele mostra como se fosse não autorizada
-
 - criar o "version": "0.15.2" no package.json e mostrar no cabeçalho
+- limpar endpoints de nota-fiscal não utilizados
+- se for produtor rural pode editar notas com ERR
 
 DONE:
 
@@ -41,3 +32,5 @@ DONE:
 - verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)
 - Ignorado (SEFAZ PRECISA HOMOLOGAR A INUTILIZACAO, PRECISA ESPERAR SAIR DO CSTAT 563) Tratar o erro 563 - [+151260007488447]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
 - criar botao pra recalcular tributacao.
+- publicar o notas.mgpapelaria.com.br
+- nao pode alterar nota já enviada (com numero ativo)

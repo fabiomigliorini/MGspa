@@ -75,7 +75,7 @@ class NotaFiscalDuplicatasController extends Controller
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        if (in_array($nota->status, [NotaFiscalService::STATUS_AUTORIZADA, NotaFiscalService::STATUS_CANCELADA, NotaFiscalService::STATUS_INUTILIZADA])) {
+        if (!NotaFiscalService::isEditable($nota)) {
             abort(422, "Não é possível modificar duplicatas de uma nota com status: {$nota->status}");
         }
     }

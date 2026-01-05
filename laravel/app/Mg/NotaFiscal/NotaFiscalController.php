@@ -15,14 +15,6 @@ use Mg\NFePHP\NFePHPService;
 
 class NotaFiscalController extends Controller
 {
-    /**
-     * Statuses que impedem modificações na nota
-     */
-    private const STATUS_BLOQUEADOS = [
-        NotaFiscalService::STATUS_AUTORIZADA,
-        NotaFiscalService::STATUS_CANCELADA,
-        NotaFiscalService::STATUS_INUTILIZADA
-    ];
 
     public function index(Request $request)
     {
@@ -43,7 +35,7 @@ class NotaFiscalController extends Controller
         }
 
         if ($request->filled('codgrupoeconomico')) {
-            $query->whereHas('Pessoa', function($q) use ($request) {
+            $query->whereHas('Pessoa', function ($q) use ($request) {
                 $q->where('codgrupoeconomico', $request->codgrupoeconomico);
             });
         }
@@ -268,11 +260,11 @@ class NotaFiscalController extends Controller
     /**
      * Verifica se a nota está em um status que impede alterações
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        if (in_array($nota->status, self::STATUS_BLOQUEADOS)) {
+        if (!NotaFiscalService::isEditable($nota)) {
             abort(422, "Não é possível modificar uma nota com status: {$nota->status}");
         }
     }

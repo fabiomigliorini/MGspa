@@ -145,7 +145,8 @@ const mudarPaginaItens = (novaPagina) => {
 
 const notaBloqueada = computed(() => {
   if (!nota.value) return false
-  return ['AUT', 'CAN', 'INU'].includes(nota.value.status)
+  // Mesma lógica do backend: NotaFiscalStatus::isEditable()
+  return ['AUT', 'CAN', 'INU', 'ERR'].includes(nota.value.status)
 })
 
 // Methods

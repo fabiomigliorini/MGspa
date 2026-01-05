@@ -117,6 +117,21 @@ class NotaFiscalService
         return static::isCancelada($nota) || static::isInutilizada($nota);
     }
 
+    /**
+     * Verifica se a nota pode ser editada
+     */
+    public static function isEditable(NotaFiscal $nota): bool
+    {
+        $statusBloqueados = [
+            static::STATUS_AUTORIZADA,
+            static::STATUS_CANCELADA,
+            static::STATUS_INUTILIZADA,
+            static::STATUS_ERRO,
+        ];
+
+        return !in_array($nota->status, $statusBloqueados);
+    }
+
     public static function isAtiva(NotaFiscal $nota): bool
     {
         if (static::isAutorizada($nota)) {
