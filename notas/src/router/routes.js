@@ -18,7 +18,7 @@ const routes = [
         },
       },
       {
-        path: 'notas',
+        path: 'nota',
         name: 'notas',
         component: () => import('pages/NotasPage.vue'),
         meta: {
@@ -29,7 +29,7 @@ const routes = [
         },
       },
       {
-        path: 'notas/criar',
+        path: 'nota/criar',
         name: 'nota-fiscal-create',
         component: () => import('pages/NotaFiscalFormPage.vue'),
         meta: {
@@ -38,7 +38,7 @@ const routes = [
         },
       },
       {
-        path: 'notas/:codnotafiscal',
+        path: 'nota/:codnotafiscal',
         name: 'nota-fiscal-view',
         component: () => import('pages/NotaFiscalViewPage.vue'),
         meta: {
@@ -47,7 +47,7 @@ const routes = [
         },
       },
       {
-        path: 'notas/:codnotafiscal/editar',
+        path: 'nota/:codnotafiscal/editar',
         name: 'nota-fiscal-edit',
         component: () => import('pages/NotaFiscalFormPage.vue'),
         meta: {
@@ -57,7 +57,7 @@ const routes = [
       },
 
       {
-        path: 'notas/:codnotafiscal/item/:codnotafiscalitem/edit',
+        path: 'nota/:codnotafiscal/item/:codnotafiscalitem/edit',
         name: 'nota-fiscal-item-edit',
         component: () => import('pages/NotaFiscalItem/NotaFiscalItemEditPage.vue'),
         meta: {

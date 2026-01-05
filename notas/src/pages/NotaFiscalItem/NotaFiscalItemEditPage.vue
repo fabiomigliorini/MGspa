@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
 
         <!-- Header -->
         <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
-          <q-btn flat dense round icon="arrow_back" :to="'/notas/' + codnotafiscal" class="q-mr-sm"
+          <q-btn flat dense round icon="arrow_back" :to="'/nota/' + codnotafiscal" class="q-mr-sm"
             :disable="notaBloqueada" style="flex-shrink: 0;" />
           <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
             {{ editingItem.produtoBarra.descricao }}

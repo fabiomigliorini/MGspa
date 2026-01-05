@@ -1024,7 +1024,7 @@ onUnmounted(() => {
 
       <!-- Header com Voltar -->
       <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
-        <q-btn flat dense round icon="arrow_back" to="/notas" class="q-mr-sm" style="flex-shrink: 0;" />
+        <q-btn flat dense round icon="arrow_back" to="/nota" class="q-mr-sm" style="flex-shrink: 0;" />
         <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
           {{ getModeloLabel(nota.modelo) }}
           {{ formatNumero(nota.numero) }}
