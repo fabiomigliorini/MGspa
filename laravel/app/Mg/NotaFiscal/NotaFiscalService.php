@@ -337,7 +337,7 @@ class NotaFiscalService
             $notaItem->save();
 
             // Reforma Tributaria
-            TributacaoService::recalcularTributosItem($notaItem);  
+            TributacaoService::recalcularTributosItem($notaItem);
         }
 
         if (empty($nota->codnotafiscal)) {
@@ -653,7 +653,7 @@ class NotaFiscalService
         $notaNova->nfeimpressa = false;
 
         $notaNova->save();
-        
+
 
         // Duplica os itens da nota (NotaFiscalProdutoBarra)
         foreach ($notaOriginal->NotaFiscalProdutoBarraS as $itemOriginal) {

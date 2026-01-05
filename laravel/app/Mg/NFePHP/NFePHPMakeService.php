@@ -3,9 +3,9 @@
 namespace Mg\NFePHP;
 
 use Exception;
-use DB;
 use Carbon\Carbon;
 use stdClass;
+use Illuminate\Support\Facades\DB;
 
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NaturezaOperacao\Operacao;
@@ -926,7 +926,9 @@ class NFePHPMakeService
                     $stdIBSCBS->item = $nItem;
                     $stdIBSCBS->CST = $t->cst;
                     $stdIBSCBS->cClassTrib = $t->cclasstrib;
-                    $stdIBSCBS->vBC = number_format($t->base, 2, '.', '');
+                    if (!empty($t->base)) {
+                        $stdIBSCBS->vBC = number_format($t->base, 2, '.', '');
+                    }
 
                     if (!empty($t->basereducaopercentual)) {
                         $stdIBSCBS->pRedBC = number_format($t->basereducaopercentual, 4, '.', '');
@@ -936,8 +938,8 @@ class NFePHPMakeService
                         $stdIBSCBS->vRedBC = number_format($t->basereducao, 2, '.', '');
                     }
 
-                    if (!empty($t->geracredito)) {
-                        $stdIBSCBS->indCred = $t->geracredito ? 1 : 0;
+                    $stdIBSCBS->indCred = $t->geracredito ? 1 : 0;
+                    if (!empty($t->valorcredito)) {
                         $stdIBSCBS->vCred = number_format($t->valorcredito ?? 0, 2, '.', '');
                     }
 
@@ -954,14 +956,22 @@ class NFePHPMakeService
                 if ($codigoTributo === 'IBS') {
 
                     if ($enteTributo === 'ESTADUAL') {
-                        $stdIBSCBS->gIBSUF_pIBSUF = number_format($t->aliquota, 4, '.', '');
-                        $stdIBSCBS->gIBSUF_vIBSUF = number_format($t->valor, 2, '.', '');
+                        if (!empty($t->aliquota)) {
+                            $stdIBSCBS->gIBSUF_pIBSUF = number_format($t->aliquota, 4, '.', '');
+                        }
+                        if (!empty($t->valor)) {
+                            $stdIBSCBS->gIBSUF_vIBSUF = number_format($t->valor, 2, '.', '');
+                        }
                         $vIBS += $t->valor;
                     }
 
                     if ($enteTributo === 'MUNICIPAL') {
-                        $stdIBSCBS->gIBSMun_pIBSMun = number_format($t->aliquota, 4, '.', '');
-                        $stdIBSCBS->gIBSMun_vIBSMun = number_format($t->valor, 2, '.', '');
+                        if (!empty($t->aliquota)) {
+                            $stdIBSCBS->gIBSMun_pIBSMun = number_format($t->aliquota, 4, '.', '');
+                        }
+                        if (!empty($t->valor)) {
+                            $stdIBSCBS->gIBSMun_vIBSMun = number_format($t->valor, 2, '.', '');
+                        }
                         $vIBS += $t->valor;
                     }
                 }
@@ -969,15 +979,21 @@ class NFePHPMakeService
                 // ---------- CBS ----------
                 if ($codigoTributo === 'CBS') {
                     // CBS é sempre FEDERAL
-                    $stdIBSCBS->gCBS_pCBS = number_format($t->aliquota, 4, '.', '');
-                    $stdIBSCBS->gCBS_vCBS = number_format($t->valor, 2, '.', '');
+                    if (!empty($t->aliquota)) {
+                        $stdIBSCBS->gCBS_pCBS = number_format($t->aliquota, 4, '.', '');
+                    }
+                    if (!empty($t->valor)) {
+                        $stdIBSCBS->gCBS_vCBS = number_format($t->valor, 2, '.', '');
+                    }
                 }
             }
         }
 
         // ---------- Finaliza IBS / CBS ----------
         if ($stdIBSCBS) {
-            $stdIBSCBS->vIBS = number_format($vIBS, 2, '.', '');
+            if (!empty($vIBS)) {
+                $stdIBSCBS->vIBS = number_format($vIBS, 2, '.', '');
+            }
             $nfe->tagIBSCBS($stdIBSCBS);
         }
     }

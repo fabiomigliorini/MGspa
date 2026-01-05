@@ -133,31 +133,38 @@ class TributacaoService
      */
     protected function calcularTributo(object $regra, float $valorItem): array
     {
-        if ($regra->basepercentual < 100) {
-            $baseCalculada = round(
-                $valorItem * ($regra->basepercentual / 100),
+        $baseCalculada     = null;
+        $valorReducao      = null;
+        $percentualReducao = null;
+        $valorTributo      = null;
+
+        if ($regra->basepercentual) {
+            if ($regra->basepercentual < 100) {
+                $baseCalculada = round(
+                    $valorItem * ($regra->basepercentual / 100),
+                    2
+                );
+
+                $valorReducao = round(
+                    $valorItem - $baseCalculada,
+                    2
+                );
+
+                $percentualReducao = round(
+                    100 - $regra->basepercentual,
+                    4
+                );
+            } else {
+                $baseCalculada     = round($valorItem, 2);
+                $valorReducao      = null;
+                $percentualReducao = null;
+            }
+
+            $valorTributo = round(
+                $baseCalculada * ($regra->aliquota / 100),
                 2
             );
-
-            $valorReducao = round(
-                $valorItem - $baseCalculada,
-                2
-            );
-
-            $percentualReducao = round(
-                100 - $regra->basepercentual,
-                4
-            );
-        } else {
-            $baseCalculada     = round($valorItem, 2);
-            $valorReducao      = null;
-            $percentualReducao = null;
         }
-
-        $valorTributo = round(
-            $baseCalculada * ($regra->aliquota / 100),
-            2
-        );
 
         return [
             'basereducaopercentual' => $percentualReducao,
@@ -201,11 +208,11 @@ class TributacaoService
             'codnotafiscalprodutobarra',
             $item->codnotafiscalprodutobarra
         )
-        ->whereNotIn(
-            'codnotafiscalitemtributo',
-            $idsMantidos
-        )
-        ->delete();
+            ->whereNotIn(
+                'codnotafiscalitemtributo',
+                $idsMantidos
+            )
+            ->delete();
     }
 
     /**
