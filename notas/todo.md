@@ -14,8 +14,6 @@
 
 - fazer botao juntar notas
 
-- tirar a impressao automatica das NFCe
-
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
 
 - publicar o notas.mgpapelaria.com.br
@@ -36,3 +34,4 @@ DONE:
 - quando zera quantidade esta zerando valor unitario
 - fazer link pra tela de negocios a partir da nota
 - desabilitar mgsis
+- tirar a impressao automatica das NFCe

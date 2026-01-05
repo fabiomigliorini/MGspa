@@ -115,23 +115,22 @@ onMounted(async () => {
     <!-- Lista de Notas com Scroll Infinito -->
     <q-infinite-scroll v-else @load="onLoad" :offset="250">
       <q-list separator>
-        <q-item hoverable v-for="nota in notas" :key="nota.codnotafiscal" clickable
-          :to="'/nota/' + nota.codnotafiscal">
+        <q-item hoverable v-for="nota in notas" :key="nota.codnotafiscal" clickable :to="'/nota/' + nota.codnotafiscal">
           <q-item-section>
 
             <!-- Cabeçalho: Modelo, Número, Série, Filial e Status -->
             <div class="row q-col-gutter-sm ">
-              <!-- Status -->
+              <!-- Número  -->
               <div class="col-12 col-sm-3 col-md-3">
                 <div class="text-caption text-grey-7">
-                  <q-icon name="business" size="xs" class="q-mr-xs" />
-                  Status
+                  <q-icon name="event" size="xs" class="q-mr-xs" />
+                  Número
                 </div>
-                <div class=" ellipsis">
-                  <q-badge :color="getStatusColor(nota.status)">
-                    <q-icon :name="getStatusIcon(nota.status)" size="xs" class="q-mr-xs" />
-                    {{ getStatusLabel(nota.status) }}
-                  </q-badge>
+                <div class="text-caption ellipsis">
+                  {{ getModeloLabel(nota.modelo) }}
+                  {{ formatNumero(nota.numero) }}
+                  - Série
+                  {{ nota.serie }}
                 </div>
               </div>
 
@@ -173,20 +172,20 @@ onMounted(async () => {
             <!-- Informações principais -->
             <div class="row q-col-gutter-sm ">
 
-              <!-- Número  -->
+              <!-- Status -->
               <div class="col-12 col-sm-3 col-md-3">
                 <div class="text-caption text-grey-7">
-                  <q-icon name="event" size="xs" class="q-mr-xs" />
-                  Número
+                  <q-icon name="business" size="xs" class="q-mr-xs" />
+                  Status
                 </div>
                 <div class=" ellipsis">
-                  {{ formatNumero(nota.numero) }}
-                  <span class="text-caption text-grey-7">
-                    | Série {{ nota.serie }}
-                    | {{ getModeloLabel(nota.modelo) }}
-                  </span>
+                  <q-badge :color="getStatusColor(nota.status)">
+                    <q-icon :name="getStatusIcon(nota.status)" size="xs" class="q-mr-xs" />
+                    {{ getStatusLabel(nota.status) }}
+                  </q-badge>
                 </div>
               </div>
+
 
               <!-- Filial -->
               <div class="col-12 col-sm-3 col-md-2">

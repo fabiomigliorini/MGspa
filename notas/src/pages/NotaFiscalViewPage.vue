@@ -608,26 +608,29 @@ const enviarNfe = async () => {
     const tpEmis = xmlDoc.querySelector('tpEmis')?.textContent
 
     if (tpEmis === '9') {
+
       // Modo offline - apenas abre DANFE
       await abrirDanfe()
-      // Se for NFCe, imprime
-      if (nota.value.modelo === 65) {
-        await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
-      }
+
+      // // Se for NFCe, imprime
+      // if (nota.value.modelo === 65) {
+      //   await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
+      // }
     } else {
       // 2. Enviar para SEFAZ
       progressoNfe.value = { status: 'Enviando NFe para Sefaz...', percent: 50 }
       const envioResponse = await notaFiscalStore.enviarNfeSincrono(nota.value.codnotafiscal)
 
       if (envioResponse.sucesso) {
+
         // 3. Enviar Email
         progressoNfe.value = { status: 'Enviando Email...', percent: 75 }
         await notaFiscalStore.enviarEmailNfe(nota.value.codnotafiscal)
 
-        // 4. Imprimir se for NFCe
-        if (nota.value.modelo === 65) {
-          await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
-        }
+        // // 4. Imprimir se for NFCe
+        // if (nota.value.modelo === 65) {
+        //   await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
+        // }
 
         // 5. Abrir DANFE
         progressoNfe.value = { status: 'Finalizado...', percent: 100 }
