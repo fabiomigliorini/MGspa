@@ -496,7 +496,9 @@ const novaCartaCorrecao = () => {
 
 const abrirCartaCorrecaoPdf = async () => {
   try {
-    cartaCorrecaoPdfUrl.value = await notaFiscalStore.getCartaCorrecaoPdfUrl(nota.value.codnotafiscal)
+    cartaCorrecaoPdfUrl.value = await notaFiscalStore.getCartaCorrecaoPdfUrl(
+      nota.value.codnotafiscal
+    )
     cartaCorrecaoPdfDialog.value = true
   } catch (error) {
     $q.notify({
@@ -1041,26 +1043,61 @@ onUnmounted(() => {
     <div v-else-if="nota">
       <!-- Header com Voltar -->
       <div class="row items-center q-mb-md" style="flex-wrap: nowrap">
-        <q-btn flat dense round icon="arrow_back" to="/nota" class="q-mr-sm" style="flex-shrink: 0" />
+        <q-btn
+          flat
+          dense
+          round
+          icon="arrow_back"
+          to="/nota"
+          class="q-mr-sm"
+          style="flex-shrink: 0"
+        />
         <div class="text-h5 ellipsis" style="flex: 1; min-width: 0">
           {{ getModeloLabel(nota.modelo) }}
           {{ formatNumero(nota.numero) }}
           - Série
           {{ nota.serie }}
         </div>
-        <q-btn flat dense color="primary" icon="edit"
+        <q-btn
+          flat
+          dense
+          color="primary"
+          icon="edit"
           :to="{ name: 'nota-fiscal-edit', params: { codnotafiscal: route.params.codnotafiscal } }"
-          v-if="!notaBloqueada" class="q-mr-sm">
+          v-if="!notaBloqueada"
+          class="q-mr-sm"
+        >
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
-        <q-btn flat dense color="blue-grey" icon="content_copy" @click="duplicarNota" class="q-mr-sm">
+        <q-btn
+          flat
+          dense
+          color="blue-grey"
+          icon="content_copy"
+          @click="duplicarNota"
+          class="q-mr-sm"
+        >
           <q-tooltip>Duplicar Nota Fiscal</q-tooltip>
         </q-btn>
-        <q-btn flat dense color="orange" icon="merge_type" @click="incorporarValores" v-if="podeIncorporar"
-          class="q-mr-sm">
+        <q-btn
+          flat
+          dense
+          color="orange"
+          icon="merge_type"
+          @click="incorporarValores"
+          v-if="podeIncorporar"
+          class="q-mr-sm"
+        >
           <q-tooltip>Incorporar valores (desconto, frete, seguro, outras) aos produtos</q-tooltip>
         </q-btn>
-        <q-btn flat dense color="negative" icon="delete" @click="handleDelete" v-if="!notaBloqueada">
+        <q-btn
+          flat
+          dense
+          color="negative"
+          icon="delete"
+          @click="handleDelete"
+          v-if="!notaBloqueada"
+        >
           <q-tooltip>Excluir</q-tooltip>
         </q-btn>
       </div>
@@ -1107,9 +1144,14 @@ onUnmounted(() => {
               <template v-if="negociosVinculados.length > 0">
                 <div class="text-caption text-grey-7 q-mt-sm">Negócios</div>
                 <div class="text-body2">
-                  <a v-for="(codnegocio, index) in negociosVinculados" :key="codnegocio"
-                    :href="getNegocioUrl(codnegocio)" target="_blank" class="text-primary text-weight-medium"
-                    style="text-decoration: none">
+                  <a
+                    v-for="(codnegocio, index) in negociosVinculados"
+                    :key="codnegocio"
+                    :href="getNegocioUrl(codnegocio)"
+                    target="_blank"
+                    class="text-primary text-weight-medium"
+                    style="text-decoration: none"
+                  >
                     {{ formatCodNegocio(codnegocio) }}
                     <span v-if="index < negociosVinculados.length - 1">,</span>
                   </a>
@@ -1202,8 +1244,16 @@ onUnmounted(() => {
                   <span style="font-family: monospace">
                     {{ formatChave(nota.nfechave) }}
                   </span>
-                  <q-btn flat dense round size="sm" icon="content_copy" color="grey-7" class="q-ml-xs"
-                    @click="copiarChave">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    icon="content_copy"
+                    color="grey-7"
+                    class="q-ml-xs"
+                    @click="copiarChave"
+                  >
                     <q-tooltip>Copiar chave</q-tooltip>
                   </q-btn>
                 </div>
@@ -1229,8 +1279,16 @@ onUnmounted(() => {
                     |
                     {{ formatDateTime(nota.nfedataautorizacao) }}
                   </span>
-                  <q-btn flat dense round size="sm" icon="clear" color="negative" class="q-ml-xs"
-                    @click="limparAutorizacao">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    icon="clear"
+                    color="negative"
+                    class="q-ml-xs"
+                    @click="limparAutorizacao"
+                  >
                     <q-tooltip>Limpar autorização e cancelamento</q-tooltip>
                   </q-btn>
                 </div>
@@ -1247,8 +1305,16 @@ onUnmounted(() => {
                     |
                     {{ formatDateTime(nota.nfedatacancelamento) }}
                   </span>
-                  <q-btn flat dense round size="sm" icon="clear" color="negative" class="q-ml-xs"
-                    @click="limparCancelamento">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    icon="clear"
+                    color="negative"
+                    class="q-ml-xs"
+                    @click="limparCancelamento"
+                  >
                     <q-tooltip>Limpar cancelamento</q-tooltip>
                   </q-btn>
                 </div>
@@ -1265,8 +1331,16 @@ onUnmounted(() => {
                     |
                     {{ formatDateTime(nota.nfedatainutilizacao) }}
                   </span>
-                  <q-btn flat dense round size="sm" icon="clear" color="negative" class="q-ml-xs"
-                    @click="limparInutilizacao">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    icon="clear"
+                    color="negative"
+                    class="q-ml-xs"
+                    @click="limparInutilizacao"
+                  >
                     <q-tooltip>Limpar inutilização</q-tooltip>
                   </q-btn>
                 </div>
@@ -1286,43 +1360,101 @@ onUnmounted(() => {
 
             <q-card-actions align="right" v-if="nota?.emitida">
               <!-- Enviar (F9) -->
-              <q-btn v-if="podeEnviar" dense round flat color="positive" icon="send" @click="enviarNfe"
-                :loading="loadingNfe" class="q-mr-sm">
+              <q-btn
+                v-if="podeEnviar"
+                dense
+                round
+                flat
+                color="positive"
+                icon="send"
+                @click="enviarNfe"
+                :loading="loadingNfe"
+                class="q-mr-sm"
+              >
                 <q-tooltip>Criar XML e enviar para SEFAZ</q-tooltip>
               </q-btn>
 
               <!-- Consultar -->
-              <q-btn v-if="podeConsultar" dense round flat color="primary" icon="refresh" @click="consultarNfe"
-                class="q-mr-sm">
+              <q-btn
+                v-if="podeConsultar"
+                dense
+                round
+                flat
+                color="primary"
+                icon="refresh"
+                @click="consultarNfe"
+                class="q-mr-sm"
+              >
                 <q-tooltip>Consultar situação na SEFAZ</q-tooltip>
               </q-btn>
 
               <!-- Abrir DANFE -->
-              <q-btn v-if="podeAbrirDanfe" dense round flat color="primary" icon="description" @click="abrirDanfe"
-                class="q-mr-sm">
+              <q-btn
+                v-if="podeAbrirDanfe"
+                dense
+                round
+                flat
+                color="positive"
+                icon="picture_as_pdf"
+                @click="abrirDanfe"
+                class="q-mr-sm"
+              >
                 <q-tooltip>Abrir DANFE</q-tooltip>
               </q-btn>
 
               <!-- Abrir XML -->
-              <q-btn v-if="podeAbrirXml" dense round flat color="orange" icon="code" @click="abrirXml" class="q-mr-sm">
+              <q-btn
+                v-if="podeAbrirXml"
+                dense
+                round
+                flat
+                color="orange"
+                icon="code"
+                @click="abrirXml"
+                class="q-mr-sm"
+              >
                 <q-tooltip>Abrir XML</q-tooltip>
               </q-btn>
 
               <!-- Enviar Email -->
-              <q-btn v-if="podeEnviarEmail" dense round flat color="primary" icon="email" @click="enviarEmailNfe"
-                class="q-mr-sm">
+              <q-btn
+                v-if="podeEnviarEmail"
+                dense
+                round
+                flat
+                color="primary"
+                icon="email"
+                @click="enviarEmailNfe"
+                class="q-mr-sm"
+              >
                 <q-tooltip>Enviar por email</q-tooltip>
               </q-btn>
 
               <!-- Cancelar -->
-              <q-btn v-if="podeCancelar" dense round flat color="negative" icon="cancel" @click="cancelarNfe"
-                class="q-mr-sm">
+              <q-btn
+                v-if="podeCancelar"
+                dense
+                round
+                flat
+                color="negative"
+                icon="cancel"
+                @click="cancelarNfe"
+                class="q-mr-sm"
+              >
                 <q-tooltip>Cancelar NFe</q-tooltip>
               </q-btn>
 
               <!-- Inutilizar -->
-              <q-btn v-if="podeInutilizar" dense round flat color="warning" icon="block" @click="inutilizarNfe"
-                class="q-mr-sm">
+              <q-btn
+                v-if="podeInutilizar"
+                dense
+                round
+                flat
+                color="warning"
+                icon="block"
+                @click="inutilizarNfe"
+                class="q-mr-sm"
+              >
                 <q-tooltip>Inutilizar NFe</q-tooltip>
               </q-btn>
 
@@ -1340,7 +1472,11 @@ onUnmounted(() => {
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
                 <div class="text-h6">
-                  <q-icon :name="nota.pessoa?.fisica === true ? 'person' : 'business'" size="1.5em" class="q-mr-sm" />
+                  <q-icon
+                    :name="nota.pessoa?.fisica === true ? 'person' : 'business'"
+                    size="1.5em"
+                    class="q-mr-sm"
+                  />
                   {{ nota.codoperacao === 1 ? 'Destinatário' : 'Remetente' }}
                 </div>
               </div>
@@ -1538,16 +1674,32 @@ onUnmounted(() => {
                   <q-badge color="white" text-color="primary" class="q-ml-sm">
                     {{ itens.length }}
                   </q-badge>
-                  <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novoItem"
-                    class="q-ml-sm">
+                  <q-btn
+                    v-if="!notaBloqueada"
+                    flat
+                    dense
+                    color="white"
+                    icon="add"
+                    size="md"
+                    @click="novoItem"
+                    class="q-ml-sm"
+                  >
                     <q-tooltip>Adicionar Item</q-tooltip>
                   </q-btn>
                 </div>
 
                 <!-- Paginação no topo (mobile/desktop) -->
                 <div v-if="totalPaginasItens > 1">
-                  <q-pagination color="white" size="sm" v-model="paginaAtualItens" :max="totalPaginasItens"
-                    :max-pages="5" direction-links boundary-links @update:model-value="mudarPaginaItens" />
+                  <q-pagination
+                    color="white"
+                    size="sm"
+                    v-model="paginaAtualItens"
+                    :max="totalPaginasItens"
+                    :max-pages="5"
+                    direction-links
+                    boundary-links
+                    @update:model-value="mudarPaginaItens"
+                  />
                 </div>
               </div>
             </q-card-section>
@@ -1559,14 +1711,22 @@ onUnmounted(() => {
 
               <!-- Cards dos Itens -->
               <div v-else class="row q-col-gutter-md">
-                <NotaFiscalItemCard v-for="item in itensPaginados" :key="item.codnotafiscalprodutobarra" :item="item"
-                  :nota-bloqueada="notaBloqueada" @delete="handleDeleteItem" />
+                <NotaFiscalItemCard
+                  v-for="item in itensPaginados"
+                  :key="item.codnotafiscalprodutobarra"
+                  :item="item"
+                  :nota-bloqueada="notaBloqueada"
+                  @delete="handleDeleteItem"
+                />
               </div>
 
               <!-- PAGINACAO RODAPE -->
               <div class="row items-center justify-between" v-if="itens.length > 0">
                 <!-- Info da paginação -->
-                <div v-if="itens.length > itensPorPagina" class="text-center text-caption text-grey-7 q-mt-sm">
+                <div
+                  v-if="itens.length > itensPorPagina"
+                  class="text-center text-caption text-grey-7 q-mt-sm"
+                >
                   Mostrando {{ (paginaAtualItens - 1) * itensPorPagina + 1 }}
                   -
                   {{ Math.min(paginaAtualItens * itensPorPagina, itens.length) }}
@@ -1575,8 +1735,15 @@ onUnmounted(() => {
 
                 <!-- Paginação no rodapé -->
                 <div v-if="totalPaginasItens > 1" class="flex justify-center q-mt-md">
-                  <q-pagination size="md" v-model="paginaAtualItens" :max="totalPaginasItens" :max-pages="5"
-                    direction-links boundary-links @update:model-value="mudarPaginaItens" />
+                  <q-pagination
+                    size="md"
+                    v-model="paginaAtualItens"
+                    :max="totalPaginasItens"
+                    :max-pages="5"
+                    direction-links
+                    boundary-links
+                    @update:model-value="mudarPaginaItens"
+                  />
                 </div>
               </div>
             </q-card-section>
@@ -1610,8 +1777,16 @@ onUnmounted(() => {
                 <q-badge color="white" text-color="primary" class="q-ml-sm">
                   {{ pagamentos.length }}
                 </q-badge>
-                <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novoPagamento"
-                  class="q-ml-sm">
+                <q-btn
+                  v-if="!notaBloqueada"
+                  flat
+                  dense
+                  color="white"
+                  icon="add"
+                  size="md"
+                  @click="novoPagamento"
+                  class="q-ml-sm"
+                >
                   <q-tooltip>Adicionar Forma de Pagamento</q-tooltip>
                 </q-btn>
               </div>
@@ -1622,21 +1797,32 @@ onUnmounted(() => {
               </div>
 
               <div v-else class="row q-col-gutter-md">
-                <div v-for="pag in pagamentos" :key="pag.codnotafiscalpagamento"
-                  class="col-xs-12 col-sm-4 col-md-6 col-lg-4">
+                <div
+                  v-for="pag in pagamentos"
+                  :key="pag.codnotafiscalpagamento"
+                  class="col-xs-12 col-sm-4 col-md-6 col-lg-4"
+                >
                   <q-card flat bordered class="full-height flex column">
                     <q-card-section class="col">
                       <div class="row items-center justify-between q-mb-md">
                         <div class="row items-center" style="min-width: 0; flex: 1">
-                          <q-avatar :color="getPagamentoColor(pag.tipo)" text-color="white" size="md" class="q-mr-sm"
-                            style="flex-shrink: 0">
+                          <q-avatar
+                            :color="getPagamentoColor(pag.tipo)"
+                            text-color="white"
+                            size="md"
+                            class="q-mr-sm"
+                            style="flex-shrink: 0"
+                          >
                             <q-icon :name="getPagamentoIcon(pag.tipo)" />
                           </q-avatar>
                           <div style="min-width: 0; flex: 1">
                             <div class="text-subtitle2 text-weight-bold ellipsis">
                               {{ pag.tipodescricao || '-' }}
                             </div>
-                            <div v-if="pag.bandeiradescricao" class="text-caption text-grey-7 ellipsis">
+                            <div
+                              v-if="pag.bandeiradescricao"
+                              class="text-caption text-grey-7 ellipsis"
+                            >
                               {{ pag.bandeiradescricao }}
                             </div>
                           </div>
@@ -1673,10 +1859,24 @@ onUnmounted(() => {
                     <q-separator v-if="!notaBloqueada" />
 
                     <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
-                      <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarPagamento(pag)">
+                      <q-btn
+                        flat
+                        dense
+                        icon="edit"
+                        color="primary"
+                        size="sm"
+                        @click="editarPagamento(pag)"
+                      >
                         <q-tooltip>Editar</q-tooltip>
                       </q-btn>
-                      <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirPagamento(pag)">
+                      <q-btn
+                        flat
+                        dense
+                        icon="delete"
+                        color="negative"
+                        size="sm"
+                        @click="excluirPagamento(pag)"
+                      >
                         <q-tooltip>Excluir</q-tooltip>
                       </q-btn>
                     </q-card-actions>
@@ -1697,8 +1897,16 @@ onUnmounted(() => {
                 <q-badge color="white" text-color="primary" class="q-ml-sm">
                   {{ duplicatas.length }}
                 </q-badge>
-                <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novaDuplicata"
-                  class="q-ml-sm">
+                <q-btn
+                  v-if="!notaBloqueada"
+                  flat
+                  dense
+                  color="white"
+                  icon="add"
+                  size="md"
+                  @click="novaDuplicata"
+                  class="q-ml-sm"
+                >
                   <q-tooltip>Adicionar Duplicata</q-tooltip>
                 </q-btn>
               </div>
@@ -1709,12 +1917,21 @@ onUnmounted(() => {
               </div>
 
               <div v-else class="row q-col-gutter-md">
-                <div v-for="dup in duplicatas" :key="dup.codnotafiscalduplicatas"
-                  class="col-xs-12 col-sm-4 col-md-6 col-lg-4">
+                <div
+                  v-for="dup in duplicatas"
+                  :key="dup.codnotafiscalduplicatas"
+                  class="col-xs-12 col-sm-4 col-md-6 col-lg-4"
+                >
                   <q-card flat bordered class="full-height flex column">
                     <q-card-section class="col">
                       <div class="row items-center q-mb-md">
-                        <q-avatar color="indigo" text-color="white" size="md" class="q-mr-sm" style="flex-shrink: 0">
+                        <q-avatar
+                          color="indigo"
+                          text-color="white"
+                          size="md"
+                          class="q-mr-sm"
+                          style="flex-shrink: 0"
+                        >
                           <q-icon name="receipt_long" />
                         </q-avatar>
                         <div style="min-width: 0; flex: 1">
@@ -1736,10 +1953,24 @@ onUnmounted(() => {
                     <q-separator v-if="!notaBloqueada" />
 
                     <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
-                      <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarDuplicata(dup)">
+                      <q-btn
+                        flat
+                        dense
+                        icon="edit"
+                        color="primary"
+                        size="sm"
+                        @click="editarDuplicata(dup)"
+                      >
                         <q-tooltip>Editar</q-tooltip>
                       </q-btn>
-                      <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirDuplicata(dup)">
+                      <q-btn
+                        flat
+                        dense
+                        icon="delete"
+                        color="negative"
+                        size="sm"
+                        @click="excluirDuplicata(dup)"
+                      >
                         <q-tooltip>Excluir</q-tooltip>
                       </q-btn>
                     </q-card-actions>
@@ -1760,20 +1991,34 @@ onUnmounted(() => {
                 <q-badge color="white" text-color="primary" class="q-ml-sm">
                   {{ referenciadas.length }}
                 </q-badge>
-                <q-btn v-if="!notaBloqueada" flat dense color="white" icon="add" size="md" @click="novaReferenciada"
-                  class="q-ml-sm">
+                <q-btn
+                  v-if="!notaBloqueada"
+                  flat
+                  dense
+                  color="white"
+                  icon="add"
+                  size="md"
+                  @click="novaReferenciada"
+                  class="q-ml-sm"
+                >
                   <q-tooltip>Adicionar Nota Referenciada</q-tooltip>
                 </q-btn>
               </div>
             </q-card-section>
             <q-card-section>
-              <div v-if="referenciadas.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
+              <div
+                v-if="referenciadas.length === 0"
+                class="text-left q-mt-none q-mb-lg text-grey-7"
+              >
                 Nenhuma nota fiscal referenciada
               </div>
 
               <div v-else class="row q-col-gutter-md">
-                <div v-for="ref in referenciadas" :key="ref.codnotafiscalreferenciada"
-                  class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
+                <div
+                  v-for="ref in referenciadas"
+                  :key="ref.codnotafiscalreferenciada"
+                  class="col-xs-12 col-sm-6 col-md-6 col-lg-4"
+                >
                   <q-card flat bordered class="full-height flex column">
                     <q-card-section class="col">
                       <div class="row items-center q-mb-sm">
@@ -1790,10 +2035,24 @@ onUnmounted(() => {
                     <q-separator v-if="!notaBloqueada" />
 
                     <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
-                      <q-btn flat dense icon="edit" color="primary" size="sm" @click="editarReferenciada(ref)">
+                      <q-btn
+                        flat
+                        dense
+                        icon="edit"
+                        color="primary"
+                        size="sm"
+                        @click="editarReferenciada(ref)"
+                      >
                         <q-tooltip>Editar</q-tooltip>
                       </q-btn>
-                      <q-btn flat dense icon="delete" color="negative" size="sm" @click="excluirReferenciada(ref)">
+                      <q-btn
+                        flat
+                        dense
+                        icon="delete"
+                        color="negative"
+                        size="sm"
+                        @click="excluirReferenciada(ref)"
+                      >
                         <q-tooltip>Excluir</q-tooltip>
                       </q-btn>
                     </q-card-actions>
@@ -1814,23 +2073,46 @@ onUnmounted(() => {
                 <q-badge color="white" text-color="primary" class="q-ml-sm">
                   {{ cartasCorrecao.length }}
                 </q-badge>
-                <q-btn v-if="cartasCorrecao.length > 0" flat dense color="white" icon="picture_as_pdf" size="md"
-                  @click="abrirCartaCorrecaoPdf" class="q-ml-sm">
+                <q-btn
+                  v-if="cartasCorrecao.length > 0"
+                  flat
+                  dense
+                  color="white"
+                  icon="picture_as_pdf"
+                  size="md"
+                  @click="abrirCartaCorrecaoPdf"
+                  class="q-ml-sm"
+                >
                   <q-tooltip>Abrir PDF da Carta de Correção</q-tooltip>
                 </q-btn>
-                <q-btn v-if="nota.status == 'AUT'" flat dense color="white" icon="add" size="md"
-                  @click="novaCartaCorrecao" class="q-ml-sm">
+                <q-btn
+                  v-if="nota.status == 'AUT'"
+                  flat
+                  dense
+                  color="white"
+                  icon="add"
+                  size="md"
+                  @click="novaCartaCorrecao"
+                  class="q-ml-sm"
+                >
                   <q-tooltip>Adicionar Carta de Correção</q-tooltip>
                 </q-btn>
               </div>
             </q-card-section>
             <q-card-section>
-              <div v-if="cartasCorrecao.length === 0" class="text-left q-mt-none q-mb-lg text-grey-7">
+              <div
+                v-if="cartasCorrecao.length === 0"
+                class="text-left q-mt-none q-mb-lg text-grey-7"
+              >
                 Nenhuma carta de correção emitida
               </div>
 
               <div v-else class="row q-col-gutter-md">
-                <div v-for="carta in cartasCorrecao" :key="carta.codnotafiscalcartacorrecao" class="col-xs-12 col-lg-6">
+                <div
+                  v-for="carta in cartasCorrecao"
+                  :key="carta.codnotafiscalcartacorrecao"
+                  class="col-xs-12 col-lg-6"
+                >
                   <q-card flat bordered class="full-height flex column">
                     <q-card-section class="col">
                       <div class="row items-center justify-between q-mb-sm">
@@ -1858,10 +2140,15 @@ onUnmounted(() => {
 
                         <div class="col-12">
                           <div class="text-caption text-grey-7">Correção</div>
-                          <div class="text-caption" :class="carta.sequencia !== maiorSequenciaCartaCorrecao
-                            ? 'text-grey-8 text-strike'
-                            : ''
-                            " style="white-space: pre-wrap">
+                          <div
+                            class="text-caption"
+                            :class="
+                              carta.sequencia !== maiorSequenciaCartaCorrecao
+                                ? 'text-grey-8 text-strike'
+                                : ''
+                            "
+                            style="white-space: pre-wrap"
+                          >
                             {{ carta.texto || '-' }}
                           </div>
                         </div>
@@ -1883,20 +2170,42 @@ onUnmounted(() => {
     </q-card>
 
     <!-- Dialogs -->
-    <NotaFiscalItemDialog v-model="itemDialog" :item="itemSelecionado" :nota-bloqueada="notaBloqueada"
-      @save="createItem" />
+    <NotaFiscalItemDialog
+      v-model="itemDialog"
+      :item="itemSelecionado"
+      :nota-bloqueada="notaBloqueada"
+      @save="createItem"
+    />
 
-    <NotaFiscalPagamentoDialog v-model="pagamentoDialog" :pagamento="pagamentoSelecionado"
-      :nota-bloqueada="notaBloqueada" @save="salvarPagamento" @delete="excluirPagamento" />
+    <NotaFiscalPagamentoDialog
+      v-model="pagamentoDialog"
+      :pagamento="pagamentoSelecionado"
+      :nota-bloqueada="notaBloqueada"
+      @save="salvarPagamento"
+      @delete="excluirPagamento"
+    />
 
-    <NotaFiscalDuplicataDialog v-model="duplicataDialog" :duplicata="duplicataSelecionada"
-      :nota-bloqueada="notaBloqueada" @save="salvarDuplicata" @delete="excluirDuplicata" />
+    <NotaFiscalDuplicataDialog
+      v-model="duplicataDialog"
+      :duplicata="duplicataSelecionada"
+      :nota-bloqueada="notaBloqueada"
+      @save="salvarDuplicata"
+      @delete="excluirDuplicata"
+    />
 
-    <NotaFiscalReferenciadaDialog v-model="referenciadaDialog" :referenciada="referenciadaSelecionada"
-      :nota-bloqueada="notaBloqueada" @save="salvarReferenciada" @delete="excluirReferenciada" />
+    <NotaFiscalReferenciadaDialog
+      v-model="referenciadaDialog"
+      :referenciada="referenciadaSelecionada"
+      :nota-bloqueada="notaBloqueada"
+      @save="salvarReferenciada"
+      @delete="excluirReferenciada"
+    />
 
-    <NotaFiscalCartaCorrecaoDialog ref="cartaCorrecaoDialogRef" v-model="cartaCorrecaoDialog"
-      @save="enviarCartaCorrecao" />
+    <NotaFiscalCartaCorrecaoDialog
+      ref="cartaCorrecaoDialogRef"
+      v-model="cartaCorrecaoDialog"
+      @save="enviarCartaCorrecao"
+    />
 
     <!-- Dialog de Progresso NFe -->
     <q-dialog v-model="loadingNfe" persistent>
@@ -1929,10 +2238,13 @@ onUnmounted(() => {
 
     <!-- Dialog DANFE -->
     <q-dialog v-model="danfeDialog">
-      <q-card :style="nota.modelo === 65
-        ? 'width: 400px; max-width: 90vw; height: 90vh'
-        : 'width: 800px; max-width: 90vw; height: 90vh'
-        ">
+      <q-card
+        :style="
+          nota.modelo === 65
+            ? 'width: 400px; max-width: 90vw; height: 90vh'
+            : 'width: 800px; max-width: 90vw; height: 90vh'
+        "
+      >
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">{{ nota.modelo === 65 ? 'DANFE NFCe' : 'DANFE NFe' }}</div>
           <q-space />
@@ -1963,9 +2275,19 @@ onUnmounted(() => {
           </q-banner>
           <div class="text-body2 q-mb-md">Selecione o novo status:</div>
           <div class="row q-col-gutter-sm">
-            <div v-for="status in STATUS_OPTIONS" :key="status.value" class="col-4"
-              v-show="nota.status !== status.value">
-              <q-btn unelevated :color="status.color" class="full-width" stack @click="alterarStatus(status.value)">
+            <div
+              v-for="status in STATUS_OPTIONS"
+              :key="status.value"
+              class="col-4"
+              v-show="nota.status !== status.value"
+            >
+              <q-btn
+                unelevated
+                :color="status.color"
+                class="full-width"
+                stack
+                @click="alterarStatus(status.value)"
+              >
                 <q-icon :name="status.icon" size="md" />
                 <div class="text-caption q-mt-xs">{{ status.label }}</div>
               </q-btn>

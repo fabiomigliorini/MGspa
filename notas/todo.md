@@ -1,5 +1,3 @@
-- nao esta alterando o status quando atribui numero pra notafiscal
-
 - quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
 
 - criar botao pra recalcular tributacao.
@@ -34,3 +32,4 @@ DONE:
 - desabilitar mgsis
 - tirar a impressao automatica das NFCe
 - fazer a "danfe" da carta de correcao
+- nao esta alterando o status quando atribui numero pra notafiscal
