@@ -25,9 +25,9 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
 
   <!-- Produto e Quantidades -->
-  <div class="text-subtitle1 text-weight-bold q-mb-md">
+  <div class="text-subtitle1 text-weight-bold q-mb-md bg-primary text-white q-pa-sm">
     <q-icon name="inventory_2" size="sm" class="q-mr-xs" />
-    PRODUTO
+    DETALHES
   </div>
 
   <div class="row q-col-gutter-md">

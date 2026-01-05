@@ -337,12 +337,12 @@ onMounted(() => {
         </q-banner>
 
         <!-- Dados Principais -->
-        <q-card flat bordered class="q-mb-md">
+        <q-card flat bordered class="q-mb-md full-height">
+          <q-card-section class="bg-primary text-white">
+            <q-icon name="description" size="sm" class="q-mr-xs" />
+            DADOS PRINCIPAIS
+          </q-card-section>
           <q-card-section>
-            <div class="text-subtitle1 text-weight-bold q-mb-md">
-              <q-icon name="description" size="sm" class="q-mr-xs" />
-              DADOS PRINCIPAIS
-            </div>
 
             <div class="row q-col-gutter-md">
               <!-- Filial -->
@@ -454,12 +454,12 @@ onMounted(() => {
         </q-card>
 
         <!-- Destinatário -->
-        <q-card flat bordered class="q-mb-md">
+        <q-card flat bordered class="q-mb-md full-height">
+          <q-card-section class="bg-primary text-white ">
+            <q-icon name="person" size="sm" class="q-mr-xs" />
+            Destinatário / Remetente
+          </q-card-section>
           <q-card-section>
-            <div class="text-subtitle1 text-weight-bold q-mb-md">
-              <q-icon name="person" size="sm" class="q-mr-xs" />
-              DESTINATÁRIO / REMETENTE
-            </div>
 
             <div class="row q-col-gutter-md">
               <!-- Cliente/Fornecedor -->
@@ -479,8 +479,8 @@ onMounted(() => {
 
         <!-- Operação Fiscal -->
         <q-card flat bordered class="q-mb-md">
-          <q-card-section>
-            <div class="text-subtitle1 text-weight-bold q-mb-md">
+          <q-card-section class="q-pa-none">
+            <div class="text-subtitle1 text-weight-bold q-mb-md text-white bg-primary q-pa-sm">
               <q-icon name="compare_arrows" size="sm" class="q-mr-xs" />
               OPERAÇÃO FISCAL
             </div>
@@ -497,8 +497,8 @@ onMounted(() => {
 
         <!-- Valores -->
         <q-card flat bordered class="q-mb-md" v-if="nota?.valorprodutos">
-          <q-card-section>
-            <div class="text-subtitle1 text-weight-bold q-mb-md">
+          <q-card-section class="q-pa-none">
+            <div class="text-subtitle1 text-weight-bold q-mb-md text-white bg-primary q-pa-sm">
               <q-icon name="payments" size="sm" class="q-mr-xs" />
               VALORES
             </div>
@@ -546,8 +546,8 @@ onMounted(() => {
 
         <!-- Transporte -->
         <q-card flat bordered class="q-mb-md">
-          <q-card-section>
-            <div class="text-subtitle1 text-weight-bold q-mb-md">
+          <q-card-section class="q-pa-none">
+            <div class="text-subtitle1 text-weight-bold q-mb-md text-white bg-primary q-pa-sm">
               <q-icon name="local_shipping" size="sm" class="q-mr-xs" />
               TRANSPORTE
             </div>
@@ -615,8 +615,8 @@ onMounted(() => {
 
         <!-- Observações -->
         <q-card flat bordered class="q-mb-md">
-          <q-card-section>
-            <div class="text-subtitle1 text-weight-bold q-mb-md">
+          <q-card-section class="q-pa-none">
+            <div class="text-subtitle1 text-weight-bold q-mb-md text-white bg-primary q-pa-sm">
               <q-icon name="notes" size="sm" class="q-mr-xs" />
               OBSERVAÇÕES
             </div>
