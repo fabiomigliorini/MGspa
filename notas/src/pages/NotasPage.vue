@@ -116,7 +116,7 @@ onMounted(async () => {
     <q-infinite-scroll v-else @load="onLoad" :offset="250">
       <q-list separator>
         <q-item hoverable v-for="nota in notas" :key="nota.codnotafiscal" clickable
-          :to="'/notas/' + nota.codnotafiscal">
+          :to="'/nota/' + nota.codnotafiscal">
           <q-item-section>
 
             <!-- Cabeçalho: Modelo, Número, Série, Filial e Status -->

@@ -22,6 +22,7 @@ import {
   formatNumero,
   formatChave,
   formatProtocolo,
+  formatCodNegocio,
 } from 'src/utils/formatters'
 import NotaFiscalItemCard from '../components/NotaFiscalItemCard.vue'
 import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamentoDialog.vue'
@@ -90,6 +91,28 @@ const maiorSequenciaCartaCorrecao = computed(() => {
   if (cartasCorrecao.value.length === 0) return 0
   return Math.max(...cartasCorrecao.value.map(c => c.sequencia || 0))
 })
+
+// URL base para negócios
+const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
+
+// Lista de negócios únicos vinculados à nota
+const negociosVinculados = computed(() => {
+  const itensData = notaFiscalStore.itens || []
+  const negociosMap = new Map()
+
+  itensData.forEach(item => {
+    if (item.codnegocio && !negociosMap.has(item.codnegocio)) {
+      negociosMap.set(item.codnegocio, item.codnegocio)
+    }
+  })
+
+  return Array.from(negociosMap.values()).sort((a, b) => a - b)
+})
+
+// Gera URL do negócio
+const getNegocioUrl = (codnegocio) => {
+  return `${negociosUrl}/negocio/${codnegocio}`
+}
 
 const loadingNota = computed(() => notaFiscalStore.loading.nota)
 
@@ -1001,7 +1024,7 @@ onUnmounted(() => {
 
       <!-- Header com Voltar -->
       <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
-        <q-btn flat dense round icon="arrow_back" to="/notas" class="q-mr-sm" style="flex-shrink: 0;" />
+        <q-btn flat dense round icon="arrow_back" to="/nota" class="q-mr-sm" style="flex-shrink: 0;" />
         <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
           {{ getModeloLabel(nota.modelo) }}
           {{ formatNumero(nota.numero) }}
@@ -1067,6 +1090,18 @@ onUnmounted(() => {
               <!-- saida  -->
               <div class="text-caption text-grey-7">Saída/Entrada</div>
               <div class="text-body2">{{ formatDateTime(nota.saida) }}</div>
+
+              <!-- Negócios Vinculados -->
+              <template v-if="negociosVinculados.length > 0">
+                <div class="text-caption text-grey-7 q-mt-sm">Negócios</div>
+                <div class="text-body2">
+                  <a v-for="(codnegocio, index) in negociosVinculados" :key="codnegocio"
+                    :href="getNegocioUrl(codnegocio)" target="_blank" class="text-primary text-weight-medium"
+                    style="text-decoration: none;">
+                    {{ formatCodNegocio(codnegocio) }}<span v-if="index < negociosVinculados.length - 1">, </span>
+                  </a>
+                </div>
+              </template>
             </q-card-section>
           </q-card>
         </div>

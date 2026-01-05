@@ -20,7 +20,15 @@ export function useNotaFiscalItemCalculos(form, store = null) {
    * Calcula valor total (quantidade * valor unitário)
    */
   const atualizaTotal = () => {
-    form.value.valortotal = round((form.value.quantidade || 0) * (form.value.valorunitario || 0), 2)
+    // Não recalcula se quantidade ou valor unitário estão vazios (usuário digitando)
+    const quantidade = form.value.quantidade
+    const valorunitario = form.value.valorunitario
+    if (quantidade === null || quantidade === undefined || quantidade === '' ||
+        valorunitario === null || valorunitario === undefined || valorunitario === '') {
+      return
+    }
+
+    form.value.valortotal = round((quantidade || 0) * (valorunitario || 0), 2)
 
     // Recalcula impostos por KG quando a quantidade muda
     atualizaImpostoKg('fethab', 'kg')
@@ -33,10 +41,16 @@ export function useNotaFiscalItemCalculos(form, store = null) {
    * Calcula valor unitário (total / quantidade)
    */
   const atualizaUnitario = () => {
+    // Não recalcula se valortotal está vazio (usuário digitando)
+    const valortotal = form.value.valortotal
+    if (valortotal === null || valortotal === undefined || valortotal === '') {
+      return
+    }
+
     if ((form.value.quantidade || 0) < 0.01) {
       form.value.quantidade = 1
     }
-    form.value.valorunitario = round((form.value.valortotal || 0) / (form.value.quantidade || 1), 6)
+    form.value.valorunitario = round((valortotal || 0) / (form.value.quantidade || 1), 6)
     atualizaTotalFinal()
   }
 

@@ -1,5 +1,19 @@
 - fazer a "danfe" da carta de correcao
 
+- quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
+
+- criar botao pra recalcular tributacao.
+
+- verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)
+
+- Tratar o erro 563 - [+151260007488447]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
+
+- fazer botão devolução (venda e compra)
+
+- fazer botao juntar notas
+
+- tirar a impressao automatica das NFCe
+
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
 
 - desabilitar mgsis
@@ -18,3 +32,5 @@ DONE:
 - ratear os valores editaveis da nota fiscal (desconto, frete, seguro, outras)
 - adicionar botao remover desconto do total (incorporar)
 - carta de correcao nao esta funcionando
+- quando zera quantidade esta zerando valor unitario
+- fazer link pra tela de negocios a partir da nota

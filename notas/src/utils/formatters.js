@@ -116,6 +116,16 @@ export const formatCodProduto = (numero) => {
 }
 
 /**
+ * Formata um código de negócio com zeros à esquerda
+ * @param {number|string} codnegocio - Código do negócio
+ * @returns {string} Código formatado com # e 8 dígitos (ex: "#00001234")
+ */
+export const formatCodNegocio = (codnegocio) => {
+  if (!codnegocio) return '#00000000'
+  return '#' + String(codnegocio).padStart(8, '0')
+}
+
+/**
  * Formata uma chave de acesso NFe em grupos de 4 dígitos
  * @param {string} chave - Chave de acesso da NFe
  * @returns {string} Chave formatada (ex: "1234 5678 9012 ...") ou "-"

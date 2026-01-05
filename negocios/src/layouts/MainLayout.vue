@@ -114,7 +114,7 @@ const toggleRightDrawer = () => {
         <!-- TITULO -->
         <q-toolbar-title>
           <q-avatar class="q-mr-sm">
-            <img src="MGPapelariaQuadrado.svg" />
+            <img src="/MGPapelariaQuadrado.svg" />
           </q-avatar>
           {{ title }}
         </q-toolbar-title>

@@ -309,11 +309,11 @@ onMounted(() => {
         <!-- Header -->
         <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
           <template v-if="isEditMode">
-            <q-btn flat dense round icon="arrow_back" :to="'/notas/' + route.params.codnotafiscal" class="q-mr-sm"
+            <q-btn flat dense round icon="arrow_back" :to="'/nota/' + route.params.codnotafiscal" class="q-mr-sm"
               :disable="loading" style="flex-shrink: 0;" />
           </template>
           <template v-else>
-            <q-btn flat dense round icon="arrow_back" to="/notas" class="q-mr-sm" size="1.5em" :disable="loading"
+            <q-btn flat dense round icon="arrow_back" to="/nota" class="q-mr-sm" size="1.5em" :disable="loading"
               style="flex-shrink: 0;" />
           </template>
           <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
