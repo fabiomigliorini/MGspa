@@ -152,7 +152,7 @@ const updatedValor = async (ti) => {
   </q-banner>
 
   <!-- Resumo de Valores (se houver tributos) -->
-  <div class="text-subtitle1 text-weight-bold q-mb-md">
+  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
     <q-icon name="calculate" size="sm" class="q-mr-xs" />
     RESUMO
   </div>

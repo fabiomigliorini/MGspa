@@ -19,7 +19,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
 <template>
 
-  <div class="text-subtitle1 text-weight-bold q-mb-md">
+  <div class="text-subtitle1 text-weight-bold q-mb-md bg-primary text-white q-pa-sm">
     <q-icon name="verified" size="sm" class="q-mr-xs" />
     CERTIFICAÇÃO
   </div>
@@ -37,7 +37,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
 
   <!-- FETHAB -->
-  <div class="text-subtitle1 text-weight-bold q-my-md">
+  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
     <q-icon name="nature" size="sm" class="q-mr-xs" />
     FETHAB (Fundo Estadual de Transporte e Habitação)
   </div>
@@ -55,7 +55,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
   </div>
 
   <!-- IAGRO -->
-  <div class="text-subtitle1 text-weight-bold q-my-md">
+  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
     <q-icon name="eco" size="sm" class="q-mr-xs" />
     IAGRO (Instituto de Defesa Agropecuária)
   </div>
@@ -73,7 +73,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
   </div>
 
   <!-- FUNRURAL -->
-  <div class="text-subtitle1 text-weight-bold q-my-md">
+  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
     <q-icon name="agriculture" size="sm" class="q-mr-xs" />
     FUNRURAL (Fundo de Assistência ao Trabalhador Rural)
   </div>
@@ -91,7 +91,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
   </div>
 
   <!-- SENAR -->
-  <div class="text-subtitle1 text-weight-bold q-my-md">
+  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
     <q-icon name="school" size="sm" class="q-mr-xs" />
     SENAR (Serviço Nacional de Aprendizagem Rural)
   </div>

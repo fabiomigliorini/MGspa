@@ -122,9 +122,9 @@ onBeforeUnmount(() => {
         <q-card flat bordered class="q-mb-md">
 
 
-          <q-card-section>
+          <q-card-section class="q-pa-none">
             <!-- Titulo -->
-            <div class="text-subtitle1 text-weight-bold q-mb-md">
+            <div class="text-subtitle1 text-weight-bold text-white bg-primary q-pa-sm q-mb-md">
               <q-icon name="inventory_2" size="sm" class="q-mr-xs" />
               PRODUTO
             </div>
