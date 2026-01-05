@@ -332,10 +332,12 @@ class NotaFiscalService
 
             // calcula tributacao
             NotaFiscalProdutoBarraService::calcularTributacao($notaItem);
-            TributacaoService::recalcularTributosItem($notaItem);  // Reforma Tributaria
 
             // salva o item da nf
             $notaItem->save();
+
+            // Reforma Tributaria
+            TributacaoService::recalcularTributosItem($notaItem);  
         }
 
         if (empty($nota->codnotafiscal)) {
