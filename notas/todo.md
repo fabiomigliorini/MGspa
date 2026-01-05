@@ -1,5 +1,3 @@
-- cards da tributacao em celular
-
 - criar botao pra recalcular tributacao.
 
 - verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)
@@ -14,6 +12,12 @@
 
 - publicar o notas.mgpapelaria.com.br
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
+
+- colocar um link pro cadastro do produto
+
+- quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
+
+- cards da tributacao em celular
 
 DONE:
 
