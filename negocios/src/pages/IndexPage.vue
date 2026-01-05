@@ -671,7 +671,7 @@ onUnmounted(() => {
       <q-card class="full-height column">
         <q-card-section class="col column no-wrap q-pa-sm">
           <iframe ref="iFrameOrcamentoRef" class="col no-border"
-            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento'" />
+            :src="'/offline/' + sNegocio.negocio.uuid + '/orcamento'" />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn color="primary" flat label="Imprimir" @click="imprimirOrcamento()" />
@@ -685,7 +685,7 @@ onUnmounted(() => {
       <q-card class="full-height column" style="width: 500px">
         <q-card-section class="col column no-wrap q-pa-sm">
           <iframe ref="iFrameOrcamentoTermicaRef" class="col no-border"
-            :src="'/#/offline/' + sNegocio.negocio.uuid + '/orcamento-termica'"></iframe>
+            :src="'/offline/' + sNegocio.negocio.uuid + '/orcamento-termica'"></iframe>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn color="primary" flat label="Imprimir" @click="imprimirOrcamentoTermica()" />
