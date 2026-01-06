@@ -1,4 +1,3 @@
-- quando abre pra editar uma forma de pagamento, clica em cancelar, depois abre de novo, o form fica zerado. verificar com com nota referenciada e duplicata se não esta acontecendo o mesmo
 - criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
@@ -37,3 +36,8 @@ DONE:
 - criar botao pra recalcular tributacao.
 - publicar o notas.mgpapelaria.com.br
 - nao pode alterar nota já enviada (com numero ativo)
+
+- 06/01
+- quando abre pra editar uma forma de pagamento, clica em cancelar, depois abre de novo, o form fica zerado. verificar com com nota referenciada e duplicata se não esta acontecendo o mesmo
+- Alinhamento de titles
+- deixar a nota como padrão na abertura do app

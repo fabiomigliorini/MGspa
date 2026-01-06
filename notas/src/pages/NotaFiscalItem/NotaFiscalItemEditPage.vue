@@ -54,11 +54,13 @@ const loadFormData = async () => {
       await notaFiscalStore.fetchNota(codnotafiscal.value)
     }
 
-    if (!editingItem.value || editingItem.value.codnotafiscalprodutobarra !== parseInt(codnotafiscalitem.value)) {
+    if (
+      !editingItem.value ||
+      editingItem.value.codnotafiscalprodutobarra !== parseInt(codnotafiscalitem.value)
+    ) {
       // Inicia a edição do item (cria cópia no store)
       notaFiscalStore.startEditingItem(codnotafiscalitem.value)
     }
-
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -81,13 +83,16 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await notaFiscalStore.updateItem(codnotafiscal.value, codnotafiscalitem.value, editingItem.value)
+    await notaFiscalStore.updateItem(
+      codnotafiscal.value,
+      codnotafiscalitem.value,
+      editingItem.value
+    )
     $q.notify({
       type: 'positive',
       message: 'Item atualizado com sucesso',
     })
     router.push({ name: 'nota-fiscal-view', params: { codnotafiscal: codnotafiscal.value } })
-
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -117,29 +122,35 @@ onBeforeUnmount(() => {
   <q-page padding>
     <q-form @submit.prevent="handleSubmit" v-if="editingItem">
       <div style="max-width: 700px; margin: 0 auto">
-
         <!-- Header -->
-        <div class="row items-center q-mb-md" style="flex-wrap: nowrap;">
-          <q-btn flat dense round icon="arrow_back" :to="'/nota/' + codnotafiscal" class="q-mr-sm"
-            :disable="notaBloqueada" style="flex-shrink: 0;" />
-          <div class="text-h5 ellipsis" style="flex: 1; min-width: 0;">
+        <div class="row items-center q-mb-md" style="flex-wrap: nowrap">
+          <q-btn
+            flat
+            dense
+            round
+            icon="arrow_back"
+            :to="'/nota/' + codnotafiscal"
+            class="q-mr-sm"
+            :disable="notaBloqueada"
+            style="flex-shrink: 0"
+          />
+          <div class="text-h5 ellipsis" style="flex: 1; min-width: 0">
             {{ editingItem.produtoBarra.descricao }}
           </div>
         </div>
 
         <!-- Produto e Quantidades -->
         <q-card flat bordered class="q-mb-md">
+          <!-- Titulo -->
+          <q-card-section
+            class="text-subtitle1 text-weight-bold text-white bg-primary q-pa-sm q-mb-md"
+          >
+            <q-icon name="inventory_2" size="sm" class="q-mr-xs" />
+            PRODUTO
+          </q-card-section>
 
-
-          <q-card-section class="q-pa-none">
-            <!-- Titulo -->
-            <div class="text-subtitle1 text-weight-bold text-white bg-primary q-pa-sm q-mb-md">
-              <q-icon name="inventory_2" size="sm" class="q-mr-xs" />
-              PRODUTO
-            </div>
-
+          <q-card-section class="q-pa-sm">
             <div class="row q-col-gutter-md">
-
               <!-- IMAGEM -->
               <div class="col-12 col-sm-3" v-if="editingItem.produtoBarra.imagem">
                 <q-img :src="editingItem.produtoBarra.imagem" />
@@ -148,70 +159,143 @@ onBeforeUnmount(() => {
               <!-- FORM -->
               <div class="col">
                 <div class="row q-col-gutter-md">
-
                   <!-- Quantidade -->
                   <div class="col-6 col-sm-3">
-                    <q-input v-model.number="editingItem.quantidade" label="Quantidade *" outlined type="number"
-                      step="0.0001" min="0.0001" :rules="[
-                        (val) => val !== null && val !== undefined || 'Campo obrigatório',
+                    <q-input
+                      v-model.number="editingItem.quantidade"
+                      label="Quantidade *"
+                      outlined
+                      type="number"
+                      step="0.0001"
+                      min="0.0001"
+                      :rules="[
+                        (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
                         (val) => val > 0 || 'Deve ser maior que zero',
-                      ]" lazy-rules :disable="notaBloqueada" input-class="text-right" autofocus hint="" />
+                      ]"
+                      lazy-rules
+                      :disable="notaBloqueada"
+                      input-class="text-right"
+                      autofocus
+                      hint=""
+                    />
                   </div>
 
                   <!-- Valor Unitário -->
                   <div class="col-6 col-sm-3">
-                    <q-input v-model.number="editingItem.valorunitario" label="Valor Unitário *" outlined type="number"
-                      step="0.000001" min="0" prefix="R$" :rules="[
-                        (val) => val !== null && val !== undefined || 'Campo obrigatório',
+                    <q-input
+                      v-model.number="editingItem.valorunitario"
+                      label="Valor Unitário *"
+                      outlined
+                      type="number"
+                      step="0.000001"
+                      min="0"
+                      prefix="R$"
+                      :rules="[
+                        (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
                         (val) => val >= 0 || 'Deve ser maior ou igual a zero',
-                      ]" lazy-rules :disable="notaBloqueada" input-class="text-right" hint="" />
+                      ]"
+                      lazy-rules
+                      :disable="notaBloqueada"
+                      input-class="text-right"
+                      hint=""
+                    />
                   </div>
 
                   <!-- Valor Total (calculado) -->
                   <div class="col-6 col-sm-3">
-                    <q-input :model-value="valorTotal.toFixed(2)" label="Total Produto" outlined readonly prefix="R$"
-                      input-class="text-right" hint="" />
+                    <q-input
+                      :model-value="valorTotal.toFixed(2)"
+                      label="Total Produto"
+                      outlined
+                      readonly
+                      prefix="R$"
+                      input-class="text-right"
+                      hint=""
+                    />
                   </div>
 
                   <!-- Desconto -->
                   <div class="col-6 col-sm-3">
-                    <q-input v-model.number="editingItem.valordesconto" label="Desconto" outlined type="number"
-                      step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" hint="" />
+                    <q-input
+                      v-model.number="editingItem.valordesconto"
+                      label="Desconto"
+                      outlined
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      prefix="R$"
+                      :disable="notaBloqueada"
+                      input-class="text-right"
+                      hint=""
+                    />
                   </div>
 
                   <!-- Frete -->
                   <div class="col-6 col-sm-3">
-                    <q-input v-model.number="editingItem.valorfrete" label="Frete" outlined type="number" step="0.01"
-                      min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" hint="" />
+                    <q-input
+                      v-model.number="editingItem.valorfrete"
+                      label="Frete"
+                      outlined
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      prefix="R$"
+                      :disable="notaBloqueada"
+                      input-class="text-right"
+                      hint=""
+                    />
                   </div>
 
                   <!-- Seguro -->
                   <div class="col-6 col-sm-3">
-                    <q-input v-model.number="editingItem.valorseguro" label="Seguro" outlined type="number" step="0.01"
-                      min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" hint="" />
+                    <q-input
+                      v-model.number="editingItem.valorseguro"
+                      label="Seguro"
+                      outlined
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      prefix="R$"
+                      :disable="notaBloqueada"
+                      input-class="text-right"
+                      hint=""
+                    />
                   </div>
 
                   <!-- Outras Despesas -->
                   <div class="col-6 col-sm-3">
-                    <q-input v-model.number="editingItem.valoroutras" label="Outras Despesas" outlined type="number"
-                      step="0.01" min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" hint="" />
+                    <q-input
+                      v-model.number="editingItem.valoroutras"
+                      label="Outras Despesas"
+                      outlined
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      prefix="R$"
+                      :disable="notaBloqueada"
+                      input-class="text-right"
+                      hint=""
+                    />
                   </div>
 
                   <!-- Valor Total Final (calculado) -->
                   <div class="col-6 col-sm-3">
-                    <q-input :model-value="valorTotalFinal.toFixed(2)" label="Valor Total Final" outlined readonly
-                      prefix="R$" input-class="text-right text-weight-bold" hint="" bg-color="blue-grey-1" />
+                    <q-input
+                      :model-value="valorTotalFinal.toFixed(2)"
+                      label="Valor Total Final"
+                      outlined
+                      readonly
+                      prefix="R$"
+                      input-class="text-right text-weight-bold"
+                      hint=""
+                      bg-color="blue-grey-1"
+                    />
                   </div>
                 </div>
               </div>
-
             </div>
-
-
-
           </q-card-section>
         </q-card>
-
 
         <q-banner v-if="notaBloqueada && nota" class="bg-warning text-white q-mb-md" rounded>
           <template v-slot:avatar>
@@ -221,8 +305,16 @@ onBeforeUnmount(() => {
         </q-banner>
 
         <q-card flat bordered>
-          <q-tabs v-model="tab" align="left" class="text-grey-7 bg-grey-2" active-bg-color="primary"
-            active-color="white" indicator-color="transparent" inline-label no-caps>
+          <q-tabs
+            v-model="tab"
+            align="left"
+            class="text-grey-7 bg-grey-2"
+            active-bg-color="primary"
+            active-color="white"
+            indicator-color="transparent"
+            inline-label
+            no-caps
+          >
             <q-tab name="detalhes" label="Detalhes" icon="shopping_cart" />
             <q-tab name="impostos" label="Impostos" icon="calculate" />
             <q-tab name="rural" label="Impostos Rural" icon="agriculture" />
@@ -250,7 +342,14 @@ onBeforeUnmount(() => {
 
       <!-- FAB para Salvar -->
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab color="primary" icon="save" type="submit" :loading="loading" :disable="notaBloqueada">
+        <q-btn
+          fab
+          color="primary"
+          icon="save"
+          type="submit"
+          :loading="loading"
+          :disable="notaBloqueada"
+        >
           <q-tooltip>Salvar Nota</q-tooltip>
         </q-btn>
       </q-page-sticky>

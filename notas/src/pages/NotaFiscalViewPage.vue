@@ -1762,7 +1762,11 @@ onUnmounted(() => {
                 <div class="text-h6">
                   <q-icon name="inventory_2" size="1.5em" class="q-mr-sm" />
                   Itens
-                  <q-badge color="white" text-color="primary" class="q-ml-sm">
+                  <q-badge
+                    color="white"
+                    text-color="primary"
+                    class="q-ml-sm text-weight-bold text-body1"
+                  >
                     {{ itens.length }}
                   </q-badge>
                   <q-btn
@@ -1780,10 +1784,11 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Paginação no topo (mobile/desktop) -->
-                <div v-if="totalPaginasItens > 1">
+                <div v-if="totalPaginasItens > 1 && $q.screen.gt.xs">
                   <q-pagination
+                    :size="$q.screen.lt.sm ? 'sm' : 'md'"
                     color="white"
-                    size="sm"
+                    active-color="blue"
                     v-model="paginaAtualItens"
                     :max="totalPaginasItens"
                     :max-pages="5"
@@ -1825,9 +1830,10 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Paginação no rodapé -->
-                <div v-if="totalPaginasItens > 1" class="flex justify-center q-mt-md">
+                <div v-if="totalPaginasItens > 1 && $q.screen.lt.sm">
                   <q-pagination
-                    size="md"
+                    :size="$q.screen.lt.sm ? 'sm' : 'md'"
+                    color="primary"
                     v-model="paginaAtualItens"
                     :max="totalPaginasItens"
                     :max-pages="5"

@@ -62,7 +62,7 @@ const rightDrawerOpen = ref(false)
     </q-drawer>
 
     <!-- Drawer DIREITA -->
-    <q-drawer
+    <!-- <q-drawer
       v-if="$route.meta.rightDrawer"
       v-model="rightDrawerOpen"
       side="right"
@@ -71,11 +71,11 @@ const rightDrawerOpen = ref(false)
       behavior="mobile"
       class="bg-grey-2"
       :width="350"
-    >
-      <q-scroll-area class="fit">
+    > -->
+    <!-- <q-scroll-area class="fit">
         <component :is="$route.meta.rightDrawer" />
       </q-scroll-area>
-    </q-drawer>
+    </q-drawer> -->
 
     <!-- Conteúdo -->
     <q-page-container>
