@@ -1,5 +1,3 @@
-- quando abre pra editar uma forma de pagamento, clica em cancelar, depois abre de novo, o form fica zerado. verificar com com nota referenciada e duplicata se não esta acontecendo o mesmo
-- deixar a nota como padrão na abertura do app
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
@@ -36,3 +34,8 @@ DONE:
 - criar botao pra recalcular tributacao.
 - publicar o notas.mgpapelaria.com.br
 - nao pode alterar nota já enviada (com numero ativo)
+
+- 06/01
+- quando abre pra editar uma forma de pagamento, clica em cancelar, depois abre de novo, o form fica zerado. verificar com com nota referenciada e duplicata se não esta acontecendo o mesmo
+- Alinhamento de titles
+- deixar a nota como padrão na abertura do app

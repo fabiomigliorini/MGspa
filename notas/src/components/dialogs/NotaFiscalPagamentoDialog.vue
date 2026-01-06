@@ -111,9 +111,22 @@ const resetForm = () => {
   }
 }
 
-// Watch dialog close to reset form
+// Watch dialog open/close
 watch(() => props.modelValue, (newVal) => {
-  if (!newVal) {
+  if (newVal && props.pagamento) {
+    // Quando abre em modo edição, preenche o formulário
+    form.value = {
+      tipo: props.pagamento.tipo ?? null,
+      valorpagamento: props.pagamento.valorpagamento ?? null,
+      avista: props.pagamento.avista !== undefined ? props.pagamento.avista : true,
+      troco: props.pagamento.troco ?? null,
+      bandeira: props.pagamento.bandeira ?? null,
+      autorizacao: props.pagamento.autorizacao ?? '',
+      codpessoa: props.pagamento.codpessoa ?? null,
+      descricao: props.pagamento.descricao ?? '',
+    }
+  } else if (!newVal) {
+    // Quando fecha, reseta o formulário
     resetForm()
   }
 })

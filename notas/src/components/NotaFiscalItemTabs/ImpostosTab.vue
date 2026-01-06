@@ -1,7 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { useNotaFiscalStore } from 'src/stores/notaFiscalStore'
-import { ICMS_CST_OPTIONS, CSOSN_OPTIONS, IPI_CST_OPTIONS, PIS_CST_OPTIONS, COFINS_CST_OPTIONS } from 'src/constants/notaFiscal'
+import {
+  ICMS_CST_OPTIONS,
+  CSOSN_OPTIONS,
+  IPI_CST_OPTIONS,
+  PIS_CST_OPTIONS,
+  COFINS_CST_OPTIONS,
+} from 'src/constants/notaFiscal'
 import { storeToRefs } from 'pinia'
 
 const notaFiscalStore = useNotaFiscalStore()
@@ -15,11 +21,9 @@ const notaBloqueada = computed(() => {
 
 // Usa o editingItem do store diretamente (ref reativa)
 const { editingItem } = storeToRefs(notaFiscalStore)
-
 </script>
 
 <template>
-
   <!-- ICMS -->
   <q-card flat bordered class="q-mb-md full-height">
     <q-card-section class="bg-primary text-white">
@@ -28,238 +32,514 @@ const { editingItem } = storeToRefs(notaFiscalStore)
     </q-card-section>
     <q-card-section>
       <div class="row q-col-gutter-md">
-
         <!-- CFOP -->
         <div class="col-3 col-sm-2">
-          <q-input v-model.number="editingItem.codcfop" label="CFOP *" outlined type="number" :disable="notaBloqueada"
-            input-class="text-right" />
+          <q-input
+            v-model.number="editingItem.codcfop"
+            label="CFOP *"
+            outlined
+            type="number"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
         </div>
 
         <!-- CST / CSOSN -->
         <div class="col-9 col-sm-10" v-if="!editingItem.csosn">
-          <q-select v-model="editingItem.icmscst" :options="ICMS_CST_OPTIONS" label="CST" outlined emit-value
-            map-options clearable :disable="notaBloqueada" />
+          <q-select
+            v-model="editingItem.icmscst"
+            :options="ICMS_CST_OPTIONS"
+            label="CST"
+            outlined
+            emit-value
+            map-options
+            clearable
+            :disable="notaBloqueada"
+          />
         </div>
 
         <div class="col-9 col-sm-10" v-else>
-          <q-select v-model="editingItem.csosn" :options="CSOSN_OPTIONS" label="CSOSN " hint="Simples Nacional" outlined
-            emit-value map-options clearable :disable="notaBloqueada" />
+          <q-select
+            v-model="editingItem.csosn"
+            :options="CSOSN_OPTIONS"
+            label="CSOSN "
+            hint="Simples Nacional"
+            outlined
+            emit-value
+            map-options
+            clearable
+            :disable="notaBloqueada"
+          />
         </div>
 
         <!-- Base de Cálculo -->
         <div class="col-6 col-sm-3">
-          <q-input v-model.number="editingItem.icmsbasepercentual" label="% da Base" outlined type="number" step="0.01"
-            min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
+          <q-input
+            v-model.number="editingItem.icmsbasepercentual"
+            label="% da Base"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
         </div>
 
         <div class="col-6 col-sm-3">
-          <q-input v-model.number="editingItem.icmsbase" label="Base de Cálculo" outlined type="number" step="0.01"
-            min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
+          <q-input
+            v-model.number="editingItem.icmsbase"
+            label="Base de Cálculo"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
         </div>
 
         <!-- Alíquota -->
         <div class="col-6 col-sm-3">
-          <q-input v-model.number="editingItem.icmspercentual" label="Alíquota" outlined type="number" step="0.01"
-            min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
+          <q-input
+            v-model.number="editingItem.icmspercentual"
+            label="Alíquota"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
         </div>
 
         <!-- Valor ICMS -->
         <div class="col-6 col-sm-3">
-          <q-input v-model.number="editingItem.icmsvalor" label="Valor ICMS" outlined type="number" step="0.01" min="0"
-            prefix="R$" :disable="notaBloqueada" input-class="text-right" />
+          <q-input
+            v-model.number="editingItem.icmsvalor"
+            label="Valor ICMS"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
         </div>
-
       </div>
     </q-card-section>
   </q-card>
-  <div class="text-subtitle1 text-weight-bold q-mb-md bg-primary text-white q-pa-sm">
-    <q-icon name="" size="sm" class="q-mr-xs" />
-  </div>
-
-
-
 
   <!-- ICMS ST -->
-  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
-    <q-icon name="account_balance" size="sm" class="q-mr-xs" />
-    ICMS ST (Substituição Tributária)
-  </div>
+  <q-card flat bordered class="q-mb-md full-height">
+    <q-card-section class="text-subtitle1 text-weight-bold bg-primary text-white q-pa-sm">
+      <q-icon name="account_balance" size="sm" class="q-mr-xs" />
+      ICMS ST (Substituição Tributária)
+    </q-card-section>
 
-  <div class="row q-col-gutter-md">
+    <q-card-section>
+      <div class="row q-col-gutter-md">
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.icmsstbase"
+            label="Base "
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <div class="col-4">
-      <q-input v-model.number="editingItem.icmsstbase" label="Base " outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.icmsstpercentual"
+            label="Alíquota "
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <div class="col-4">
-      <q-input v-model.number="editingItem.icmsstpercentual" label="Alíquota " outlined type="number" step="0.01"
-        min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <div class="col-4">
-      <q-input v-model.number="editingItem.icmsstvalor" label="Valor ST" outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-  </div>
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.icmsstvalor"
+            label="Valor ST"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 
   <!-- IPI -->
-  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
-    <q-icon name="inventory" size="sm" class="q-mr-xs" />
-    IPI
-  </div>
+  <q-card flat bordered class="q-mb-md full-height">
+    <q-card-section class="text-subtitle1 text-weight-bold bg-primary text-white q-pa-sm">
+      <q-icon name="inventory" size="sm" class="q-mr-xs" />
+      IPI
+    </q-card-section>
+    <q-card-section>
+      <div class="row q-col-gutter-md">
+        <!-- CST -->
+        <div class="col-12">
+          <q-select
+            v-model="editingItem.ipicst"
+            :options="IPI_CST_OPTIONS"
+            label="IPI CST"
+            outlined
+            emit-value
+            map-options
+            clearable
+            :disable="notaBloqueada"
+          />
+        </div>
 
-  <div class="row q-col-gutter-md">
+        <!-- Base de Cálculo -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.ipibase"
+            label="Base "
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- CST -->
-    <div class="col-12 ">
-      <q-select v-model="editingItem.ipicst" :options="IPI_CST_OPTIONS" label="IPI CST" outlined emit-value map-options
-        clearable :disable="notaBloqueada" />
-    </div>
+        <!-- Alíquota -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.ipipercentual"
+            label="Alíquota"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- Base de Cálculo -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.ipibase" label="Base " outlined type="number" step="0.01" min="0" prefix="R$"
-        :disable="notaBloqueada" input-class="text-right" />
-    </div>
+        <!-- Valor IPI -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.ipivalor"
+            label="Valor IPI"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- Alíquota -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.ipipercentual" label="Alíquota" outlined type="number" step="0.01" min="0"
-        max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
-    </div>
+        <!-- Valor Devolução -->
+        <div class="col-6">
+          <q-input
+            v-model.number="editingItem.ipidevolucaovalor"
+            label="IPI Devolvido "
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- Valor IPI -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.ipivalor" label="Valor IPI" outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <!-- Valor Devolução -->
-    <div class="col-6">
-      <q-input v-model.number="editingItem.ipidevolucaovalor" label="IPI Devolvido " outlined type="number" step="0.01"
-        min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <!-- Devolução Percentual -->
-    <div class="col-6">
-      <q-input v-model.number="editingItem.devolucaopercentual" label="% Devolução" outlined type="number" step="0.01"
-        min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-  </div>
+        <!-- Devolução Percentual -->
+        <div class="col-6">
+          <q-input
+            v-model.number="editingItem.devolucaopercentual"
+            label="% Devolução"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 
   <!-- PIS -->
-  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
-    <q-icon name="money" size="sm" class="q-mr-xs" />
-    PIS
-  </div>
+  <q-card flat bordered class="q-mb-md full-height">
+    <q-card-section class="text-subtitle1 text-weight-bold bg-primary text-white q-pa-sm">
+      <q-icon name="money" size="sm" class="q-mr-xs" />
+      PIS
+    </q-card-section>
+    <q-card-section>
+      <div class="row q-col-gutter-md">
+        <!-- CST -->
+        <div class="col-12">
+          <q-select
+            v-model="editingItem.piscst"
+            :options="PIS_CST_OPTIONS"
+            label="PIS CST"
+            outlined
+            emit-value
+            map-options
+            clearable
+            :disable="notaBloqueada"
+          />
+        </div>
 
-  <div class="row q-col-gutter-md">
-    <!-- CST -->
-    <div class="col-12">
-      <q-select v-model="editingItem.piscst" :options="PIS_CST_OPTIONS" label="PIS CST" outlined emit-value map-options
-        clearable :disable="notaBloqueada" />
-    </div>
+        <!-- Base -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.pisbase"
+            label="Base"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- Base -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.pisbase" label="Base" outlined type="number" step="0.01" min="0" prefix="R$"
-        :disable="notaBloqueada" input-class="text-right" />
-    </div>
+        <!-- Alíquota -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.pispercentual"
+            label="Alíquota"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- Alíquota -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.pispercentual" label="Alíquota" outlined type="number" step="0.01" min="0"
-        max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <!-- Valor -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.pisvalor" label="Valor PIS" outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-  </div>
+        <!-- Valor -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.pisvalor"
+            label="Valor PIS"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 
   <!-- COFINS -->
-  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
-    <q-icon name="attach_money" size="sm" class="q-mr-xs" />
-    COFINS
-  </div>
+  <q-card flat bordered class="q-mb-md full-height">
+    <q-card-section class="text-subtitle1 text-weight-bold bg-primary text-white q-pa-sm">
+      <q-icon name="attach_money" size="sm" class="q-mr-xs" />
+      COFINS
+    </q-card-section>
+    <q-card-section>
+      <div class="row q-col-gutter-md">
+        <!-- CST -->
+        <div class="col-12">
+          <q-select
+            v-model="editingItem.cofinscst"
+            :options="COFINS_CST_OPTIONS"
+            label="COFINS CST"
+            outlined
+            emit-value
+            map-options
+            clearable
+            :disable="notaBloqueada"
+          />
+        </div>
 
-  <div class="row q-col-gutter-md">
+        <!-- Base -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.cofinsbase"
+            label="Base de Cálculo"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- CST -->
-    <div class="col-12">
-      <q-select v-model="editingItem.cofinscst" :options="COFINS_CST_OPTIONS" label="COFINS CST" outlined emit-value
-        map-options clearable :disable="notaBloqueada" />
-    </div>
+        <!-- Alíquota -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.cofinspercentual"
+            label="Alíquota COFINS"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <!-- Base -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.cofinsbase" label="Base de Cálculo" outlined type="number" step="0.01"
-        min="0" prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <!-- Alíquota -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.cofinspercentual" label="Alíquota COFINS" outlined type="number" step="0.01"
-        min="0" max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <!-- Valor -->
-    <div class="col-4">
-      <q-input v-model.number="editingItem.cofinsvalor" label="Valor COFINS" outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-  </div>
+        <!-- Valor -->
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.cofinsvalor"
+            label="Valor COFINS"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 
   <!-- CSLL e IRPJ -->
-  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
-    <q-icon name="gavel" size="sm" class="q-mr-xs" />
-    CSLL
-  </div>
+  <q-card flat bordered class="q-mb-md full-height">
+    <q-card-section class="text-subtitle1 text-weight-bold bg-primary text-white q-pa-sm">
+      <q-icon name="gavel" size="sm" class="q-mr-xs" />
+      CSLL
+    </q-card-section>
+    <q-card-section>
+      <div class="row q-col-gutter-md">
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.csllbase"
+            label="Base"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-  <div class="row q-col-gutter-md">
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.csllpercentual"
+            label="Alíquota"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <div class="col-4">
-      <q-input v-model.number="editingItem.csllbase" label="Base" outlined type="number" step="0.01" min="0" prefix="R$"
-        :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <div class="col-4">
-      <q-input v-model.number="editingItem.csllpercentual" label="Alíquota" outlined type="number" step="0.01" min="0"
-        max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <div class="col-4">
-      <q-input v-model.number="editingItem.csllvalor" label="Valor CSLL" outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-  </div>
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.csllvalor"
+            label="Valor CSLL"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 
   <!-- IRPJ -->
-  <div class="text-subtitle1 text-weight-bold q-my-md bg-primary text-white q-pa-sm">
-    <q-icon name="gavel" size="sm" class="q-mr-xs" />
-    IRPJ
-  </div>
+  <q-card flat bordered class="q-mb-md full-height">
+    <q-card-section class="text-subtitle1 text-weight-bold bg-primary text-white q-pa-sm">
+      <q-icon name="gavel" size="sm" class="q-mr-xs" />
+      IRPJ
+    </q-card-section>
+    <q-card-section>
+      <div class="row q-col-gutter-md">
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.irpjbase"
+            label="Base "
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-  <div class="row q-col-gutter-md">
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.irpjpercentual"
+            label="Alíquota"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            suffix="%"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
 
-    <div class="col-4">
-      <q-input v-model.number="editingItem.irpjbase" label="Base " outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <div class="col-4">
-      <q-input v-model.number="editingItem.irpjpercentual" label="Alíquota" outlined type="number" step="0.01" min="0"
-        max="100" suffix="%" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-
-    <div class="col-4">
-      <q-input v-model.number="editingItem.irpjvalor" label="Valor IRPJ" outlined type="number" step="0.01" min="0"
-        prefix="R$" :disable="notaBloqueada" input-class="text-right" />
-    </div>
-  </div>
-
+        <div class="col-4">
+          <q-input
+            v-model.number="editingItem.irpjvalor"
+            label="Valor IRPJ"
+            outlined
+            type="number"
+            step="0.01"
+            min="0"
+            prefix="R$"
+            :disable="notaBloqueada"
+            input-class="text-right"
+          />
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 </template>
