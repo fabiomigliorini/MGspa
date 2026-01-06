@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 
 export const useSelectCidadeStore = defineStore('selectCidade', {
   state: () => ({

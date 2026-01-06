@@ -2,11 +2,7 @@ import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 import { useAuthStore } from 'src/stores/auth'
 import { Notify } from 'quasar'
-
-// Cria instância da API
-const api = axios.create({
-  baseURL: process.env.API_URL,
-})
+import { api } from 'src/services/api'
 
 export default boot(({ app }) => {
   // <-- REMOVE 'router' aqui
@@ -98,4 +94,3 @@ export default boot(({ app }) => {
   app.config.globalProperties.$api = api
 })
 
-export { api }
