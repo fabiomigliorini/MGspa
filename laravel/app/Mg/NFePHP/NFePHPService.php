@@ -448,15 +448,21 @@ class NFePHPService extends MgService
         if (isset($respStd->infInut->cStat)) {
 
             // Se Inutilizacao Homologada
-            // 102 - Inutilizacao de Numero Homologado
             if ($respStd->infInut->cStat == 102) {
+                // 102 - Inutilizacao de Numero Homologado
                 static::vincularProtocoloInutilizacao($nf, $respStd->infInut->nProt, Carbon::parse($respStd->infInut->dhRecbto), $justificativa);
                 $nf = $nf->fresh();
                 $sucesso = true;
             } elseif ($respStd->infInut->cStat == 256) {
+                // 256 - Rejeicao: uma NF-e da faixa ja esta inutilizada na Base de dados da SEFAZ [nProt:151260000693525]
                 preg_match('/\[nProt:(\d+)\]/', $respStd->infInut->xMotivo, $matches);
                 $prot = $matches[1] ?? null;
-                static::vincularProtocoloInutilizacao($nf, $prot, Carbon::parse($respStd->infInut->dhRecbto), $respStd->infInut->xMotivo);
+                static::vincularProtocoloInutilizacao($nf, $prot, Carbon::parse($respStd->infInut->dhRecbto), "{$respStd->infInut->cStat} - {$respStd->infInut->xMotivo}");
+            } elseif ($respStd->infInut->cStat == 563) {
+                // 563 - [+151260007488494]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
+                preg_match('/\[\+(\d+)\]/', $respStd->infInut->xMotivo, $matches);
+                $prot = $matches[1] ?? null;
+                static::vincularProtocoloInutilizacao($nf, $prot, Carbon::parse($respStd->infInut->dhRecbto), "{$respStd->infInut->cStat} - {$respStd->infInut->xMotivo}");
             }
 
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
