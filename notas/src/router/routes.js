@@ -23,7 +23,7 @@ const routes = [
         component: () => import('pages/NotasPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro', 'Caixa'],
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
           leftDrawer: NotasFiltrosDrawer, // <-- Drawer esquerda
           rightDrawer: NotasDetalhesDrawer, // <-- Drawer direita
         },
@@ -34,7 +34,7 @@ const routes = [
         component: () => import('pages/NotaFiscalFormPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro', 'Caixa'],
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },
       {
@@ -43,7 +43,7 @@ const routes = [
         component: () => import('pages/NotaFiscalViewPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro', 'Caixa'],
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },
       {
@@ -52,7 +52,7 @@ const routes = [
         component: () => import('pages/NotaFiscalFormPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro', 'Caixa'],
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },
 
@@ -62,7 +62,7 @@ const routes = [
         component: () => import('pages/NotaFiscalItem/NotaFiscalItemEditPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro', 'Caixa'],
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },
     ],
