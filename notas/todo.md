@@ -1,5 +1,5 @@
 - quando abre pra editar uma forma de pagamento, clica em cancelar, depois abre de novo, o form fica zerado. verificar com com nota referenciada e duplicata se não esta acontecendo o mesmo
-- deixar a nota como padrão na abertura do app
+- criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
@@ -11,6 +11,7 @@
 - criar o "version": "0.15.2" no package.json e mostrar no cabeçalho
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
+- colocar link pra nfe de terceiro
 
 DONE:
 

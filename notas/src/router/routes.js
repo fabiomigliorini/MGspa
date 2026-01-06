@@ -23,7 +23,7 @@ const routes = [
         component: () => import('pages/NotasPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro'],
+          permissions: ['Administrador', 'Financeiro', 'Caixa'],
           leftDrawer: NotasFiltrosDrawer, // <-- Drawer esquerda
           rightDrawer: NotasDetalhesDrawer, // <-- Drawer direita
         },
@@ -34,7 +34,7 @@ const routes = [
         component: () => import('pages/NotaFiscalFormPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro'],
+          permissions: ['Administrador', 'Financeiro', 'Caixa'],
         },
       },
       {
@@ -43,7 +43,7 @@ const routes = [
         component: () => import('pages/NotaFiscalViewPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro'],
+          permissions: ['Administrador', 'Financeiro', 'Caixa'],
         },
       },
       {
@@ -52,7 +52,7 @@ const routes = [
         component: () => import('pages/NotaFiscalFormPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro'],
+          permissions: ['Administrador', 'Financeiro', 'Caixa'],
         },
       },
 
@@ -62,7 +62,7 @@ const routes = [
         component: () => import('pages/NotaFiscalItem/NotaFiscalItemEditPage.vue'),
         meta: {
           auth: true,
-          permissions: ['Administrador', 'Financeiro'],
+          permissions: ['Administrador', 'Financeiro', 'Caixa'],
         },
       },
     ],
@@ -80,6 +80,7 @@ const routes = [
           auth: true,
           leftDrawer: TributacaoFiltrosDrawer,
           rightDrawer: TributacaoSimuladorDrawer,
+          permissions: ['Administrador', 'Contador'],
         },
       },
     ],
