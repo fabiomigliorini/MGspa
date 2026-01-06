@@ -23,7 +23,9 @@ onMounted(() => {
       authStore.setToken(token)
       status.value = 'Redirecionando...'
 
-      router.replace('/')
+      // Redireciona para a URL original ou home
+      const redirectUrl = authStore.getAndClearRedirectUrl()
+      router.replace(redirectUrl || '/')
     } else {
       console.error('Cookie não encontrado')
       status.value = 'Erro: Cookie não encontrado!'

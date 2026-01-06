@@ -46,6 +46,9 @@ export default route(function (/* { store, ssrContext } */) {
       if (!authStore.token) {
         console.log('Sem token, redirecionando para login...')
 
+        // Salva a URL atual para redirecionar após o login
+        authStore.setRedirectUrl(to.fullPath)
+
         // Incrementa contador de redirects
         const count = parseInt(loopCheck || 0) + 1
         sessionStorage.setItem('login_redirect_check', count)
@@ -64,6 +67,8 @@ export default route(function (/* { store, ssrContext } */) {
 
         if (!isValid) {
           console.log('Token inválido, redirecionando para login...')
+          // Salva a URL atual para redirecionar após o login
+          authStore.setRedirectUrl(to.fullPath)
           const currentUrl = encodeURIComponent(window.location.origin + '/login')
           window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
           return next(false)

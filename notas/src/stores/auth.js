@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('access_token'))
   const user = ref(null)
   const loading = ref(false)
+  const redirectUrl = ref(localStorage.getItem('redirect_after_login'))
 
   function setToken(newToken) {
     token.value = newToken
@@ -18,6 +19,21 @@ export const useAuthStore = defineStore('auth', () => {
     } else {
       localStorage.removeItem('access_token')
     }
+  }
+
+  function setRedirectUrl(url) {
+    redirectUrl.value = url
+    if (url) {
+      localStorage.setItem('redirect_after_login', url)
+    } else {
+      localStorage.removeItem('redirect_after_login')
+    }
+  }
+
+  function getAndClearRedirectUrl() {
+    const url = redirectUrl.value
+    setRedirectUrl(null)
+    return url
   }
 
   async function validateToken() {
@@ -99,7 +115,10 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     loading,
+    redirectUrl,
     setToken,
+    setRedirectUrl,
+    getAndClearRedirectUrl,
     validateToken,
     logout,
     hasAnyPermission,
