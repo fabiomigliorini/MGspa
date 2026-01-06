@@ -1,61 +1,11 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref } from 'vue'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import UserMenu from 'src/components/UserMenu.vue'
 import { version } from '../../package.json'
 
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
-
-// PWA Install
-const deferredPrompt = ref(null)
-const canInstall = ref(false)
-
-const handleBeforeInstallPrompt = (e) => {
-  e.preventDefault()
-  deferredPrompt.value = e
-  canInstall.value = true
-}
-
-const installPwa = async () => {
-  const promptEvent = deferredPrompt.value || window.deferredPwaPrompt
-  if (!promptEvent) return
-
-  promptEvent.prompt()
-  const { outcome } = await promptEvent.userChoice
-
-  if (outcome === 'accepted') {
-    canInstall.value = false
-  }
-  deferredPrompt.value = null
-  window.deferredPwaPrompt = null
-}
-
-onMounted(() => {
-  // Verifica se o evento já foi capturado antes do componente montar
-  if (window.deferredPwaPrompt) {
-    deferredPrompt.value = window.deferredPwaPrompt
-    canInstall.value = true
-  }
-
-  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-
-  // Esconde o botão se já estiver instalado
-  window.addEventListener('appinstalled', () => {
-    canInstall.value = false
-    deferredPrompt.value = null
-    window.deferredPwaPrompt = null
-  })
-
-  // Verifica se está rodando como PWA instalado (standalone)
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    canInstall.value = false
-  }
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-})
 </script>
 
 <template>
@@ -81,11 +31,6 @@ onBeforeUnmount(() => {
         </q-toolbar-title>
 
         <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
-
-        <!-- Botão Instalar PWA -->
-        <q-btn v-if="canInstall" flat dense round icon="install_desktop" @click="installPwa">
-          <q-tooltip>Instalar aplicativo</q-tooltip>
-        </q-btn>
 
         <!-- Menu do Usuário -->
         <user-menu />
