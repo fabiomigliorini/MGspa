@@ -14,7 +14,7 @@ onMounted(() => {
     const cookies = document.cookie.split(';')
     console.log('Cookies atuais:', cookies)
 
-    const tokenCookie = cookies.find(c => c.trim().startsWith('access_token='))
+    const tokenCookie = cookies.find((c) => c.trim().startsWith('access_token='))
 
     if (tokenCookie) {
       const token = tokenCookie.split('=')[1]
@@ -29,7 +29,7 @@ onMounted(() => {
       status.value = 'Erro: Cookie não encontrado!'
 
       setTimeout(() => {
-        window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${encodeURIComponent(window.location.origin + '/#/login')}`
+        window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${encodeURIComponent(window.location.origin + '/login')}`
       }, 2000)
     }
   }, 500)

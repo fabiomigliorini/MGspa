@@ -43,7 +43,7 @@ export const STATUS_OPTIONS = [
   { label: 'Lançada', value: 'LAN', icon: 'description', color: 'blue-grey' },
   { label: 'Em Digitação', value: 'DIG', icon: 'edit_note', color: 'blue' },
   { label: 'Não Autorizada', value: 'ERR', icon: 'error', color: 'deep-orange' },
-  { label: 'Autorizada', value: 'AUT', icon: 'check_circle', color: 'positive' },
+  { label: 'Autorizada', value: 'AUT', icon: 'check_circle', color: 'secondary' },
   { label: 'Cancelada', value: 'CAN', icon: 'highlight_off', color: 'negative' },
   { label: 'Inutilizada', value: 'INU', icon: 'block', color: 'warning' },
   { label: 'Denegada', value: 'DEN', icon: 'report', color: 'negative' },

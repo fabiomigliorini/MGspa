@@ -1459,7 +1459,7 @@ onUnmounted(() => {
                 dense
                 round
                 flat
-                color="positive"
+                color="secondary"
                 icon="send"
                 @click="enviarNfe"
                 :loading="loadingNfe"
@@ -1487,7 +1487,7 @@ onUnmounted(() => {
                 dense
                 round
                 flat
-                color="positive"
+                color="secondary"
                 icon="picture_as_pdf"
                 @click="abrirDanfe"
               >
@@ -1918,7 +1918,7 @@ onUnmounted(() => {
                             </div>
                           </div>
                         </div>
-                        <q-badge v-if="pag.avista" color="positive" outline style="flex-shrink: 0">
+                        <q-badge v-if="pag.avista" color="secondary" outline style="flex-shrink: 0">
                           À vista
                         </q-badge>
                       </div>
@@ -2212,7 +2212,7 @@ onUnmounted(() => {
                             Correção Seq {{ carta.sequencia }}
                           </div>
                         </div>
-                        <q-badge color="positive">Autorizada</q-badge>
+                        <q-badge color="secondary">Autorizada</q-badge>
                       </div>
 
                       <div class="row q-col-gutter-sm">

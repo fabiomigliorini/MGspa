@@ -1,17 +1,24 @@
 import { route } from 'quasar/wrappers'
-import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
+import {
+  createRouter,
+  createMemoryHistory,
+  createWebHistory,
+  createWebHashHistory,
+} from 'vue-router'
 import routes from './routes'
 import { useAuthStore } from 'src/stores/auth'
 
 export default route(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory)
+    : process.env.VUE_ROUTER_MODE === 'history'
+      ? createWebHistory
+      : createWebHashHistory
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
-    history: createHistory(process.env.VUE_ROUTER_BASE)
+    history: createHistory(process.env.VUE_ROUTER_BASE),
   })
 
   // Guard global - verifica autenticação antes de cada rota
@@ -43,7 +50,7 @@ export default route(function (/* { store, ssrContext } */) {
         const count = parseInt(loopCheck || 0) + 1
         sessionStorage.setItem('login_redirect_check', count)
 
-        const currentUrl = encodeURIComponent(window.location.origin + '/#/login')
+        const currentUrl = encodeURIComponent(window.location.origin + '/login')
         window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
         return next(false)
       }
@@ -57,7 +64,7 @@ export default route(function (/* { store, ssrContext } */) {
 
         if (!isValid) {
           console.log('Token inválido, redirecionando para login...')
-          const currentUrl = encodeURIComponent(window.location.origin + '/#/login')
+          const currentUrl = encodeURIComponent(window.location.origin + '/login')
           window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
           return next(false)
         }

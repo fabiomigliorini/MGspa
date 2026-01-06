@@ -23,7 +23,7 @@ const STATUS_OPTIONS = [
     label: "Autorizada",
     value: "AUT",
     icon: "check_circle",
-    color: "positive",
+    color: "secondary",
   },
   {
     label: "Cancelada",
@@ -553,7 +553,7 @@ defineExpose({
           dense
           round
           flat
-          color="positive"
+          color="secondary"
           icon="send"
           @click="enviar(nota)"
           v-if="podeEnviar(nota)"
@@ -579,7 +579,7 @@ defineExpose({
           dense
           round
           flat
-          color="positive"
+          color="secondary"
           icon="picture_as_pdf"
           @click="abrirPdf(nota)"
           v-if="podeAbrirDanfe(nota)"

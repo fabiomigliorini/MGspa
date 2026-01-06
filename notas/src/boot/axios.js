@@ -54,7 +54,7 @@ export default boot(({ app }) => {
             })
 
             // Redireciona para login
-            const currentUrl = encodeURIComponent(window.location.origin + '/#/login')
+            const currentUrl = encodeURIComponent(window.location.origin + '/login')
             setTimeout(() => {
               window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
             }, 1500)
