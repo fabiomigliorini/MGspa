@@ -1,11 +1,47 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import UserMenu from 'src/components/UserMenu.vue'
 import { version } from '../../package.json'
 
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
+
+// PWA Install
+const deferredPrompt = ref(null)
+const canInstall = ref(false)
+
+const handleBeforeInstallPrompt = (e) => {
+  e.preventDefault()
+  deferredPrompt.value = e
+  canInstall.value = true
+}
+
+const installPwa = async () => {
+  if (!deferredPrompt.value) return
+
+  deferredPrompt.value.prompt()
+  const { outcome } = await deferredPrompt.value.userChoice
+
+  if (outcome === 'accepted') {
+    canInstall.value = false
+  }
+  deferredPrompt.value = null
+}
+
+onMounted(() => {
+  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+  // Esconde o botão se já estiver instalado
+  window.addEventListener('appinstalled', () => {
+    canInstall.value = false
+    deferredPrompt.value = null
+  })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+})
 </script>
 
 <template>
@@ -31,6 +67,11 @@ const rightDrawerOpen = ref(false)
         </q-toolbar-title>
 
         <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
+
+        <!-- Botão Instalar PWA -->
+        <q-btn v-if="canInstall" flat dense round icon="install_desktop" @click="installPwa">
+          <q-tooltip>Instalar aplicativo</q-tooltip>
+        </q-btn>
 
         <!-- Menu do Usuário -->
         <user-menu />

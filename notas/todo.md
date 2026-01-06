@@ -31,7 +31,7 @@ DONE:
 - nao esta alterando o status quando atribui numero pra notafiscal
 - quando alera uma nota, volta pra lsitagem, ela nao atualiza o registro na listagem
 - verificar se esta recalculando tributacao quando altera (natureza, cliente, filial)
-- Ignorado (SEFAZ PRECISA HOMOLOGAR A INUTILIZACAO, PRECISA ESPERAR SAIR DO CSTAT 563) Tratar o erro 563 - [+151260007488447]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
+- Ignorado (SEFAZ PRECISA HOMOLOGAR A INUTILIZACAO, PRECISA ESPERAR SAIR DO CSTAT 563)
 - criar botao pra recalcular tributacao.
 - publicar o notas.mgpapelaria.com.br
 - nao pode alterar nota já enviada (com numero ativo)
