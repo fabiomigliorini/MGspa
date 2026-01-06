@@ -1,12 +1,15 @@
 {
-  "name": "Notas",
+  "name": "MG Papelaria - Notas Fiscais",
   "short_name": "MG Notas",
   "description": "Sistema de Notas Fiscais e Documentos Eletrônicos",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#1976D2",
-  "start_url": ".",
+  "start_url": "/",
+  "id": "com.mgpapelaria.notas",
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon-128x128.png",

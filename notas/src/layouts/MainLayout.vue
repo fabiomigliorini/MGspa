@@ -18,25 +18,39 @@ const handleBeforeInstallPrompt = (e) => {
 }
 
 const installPwa = async () => {
-  if (!deferredPrompt.value) return
+  const promptEvent = deferredPrompt.value || window.deferredPwaPrompt
+  if (!promptEvent) return
 
-  deferredPrompt.value.prompt()
-  const { outcome } = await deferredPrompt.value.userChoice
+  promptEvent.prompt()
+  const { outcome } = await promptEvent.userChoice
 
   if (outcome === 'accepted') {
     canInstall.value = false
   }
   deferredPrompt.value = null
+  window.deferredPwaPrompt = null
 }
 
 onMounted(() => {
+  // Verifica se o evento já foi capturado antes do componente montar
+  if (window.deferredPwaPrompt) {
+    deferredPrompt.value = window.deferredPwaPrompt
+    canInstall.value = true
+  }
+
   window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 
   // Esconde o botão se já estiver instalado
   window.addEventListener('appinstalled', () => {
     canInstall.value = false
     deferredPrompt.value = null
+    window.deferredPwaPrompt = null
   })
+
+  // Verifica se está rodando como PWA instalado (standalone)
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    canInstall.value = false
+  }
 })
 
 onBeforeUnmount(() => {
