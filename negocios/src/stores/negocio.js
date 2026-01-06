@@ -460,6 +460,7 @@ export const negocioStore = defineStore("negocio", {
       negocio.codnegocio = null;
       negocio.uuid = uuid;
       negocio.codnegociostatus = 1;
+      negocio.justificativa = null;
       negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
       negocio.criacao = moment().format("YYYY-MM-DD HH:mm:ss");
       negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
