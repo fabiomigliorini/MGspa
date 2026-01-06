@@ -7,7 +7,6 @@
 - quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
 - cards da tributacao em celular
 - na tela de negocios, quando uma nf está inutilizada, ele mostra como se fosse não autorizada
-- criar o "version": "0.15.2" no package.json e mostrar no cabeçalho
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 - colocar link pra nfe de terceiro
@@ -36,6 +35,8 @@ DONE:
 - criar botao pra recalcular tributacao.
 - publicar o notas.mgpapelaria.com.br
 - nao pode alterar nota já enviada (com numero ativo)
+
+- criar o "version": "0.15.2" no package.json e mostrar no cabeçalho
 
 - 06/01
 - quando abre pra editar uma forma de pagamento, clica em cancelar, depois abre de novo, o form fica zerado. verificar com com nota referenciada e duplicata se não esta acontecendo o mesmo

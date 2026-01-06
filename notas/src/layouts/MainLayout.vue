@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import UserMenu from 'src/components/UserMenu.vue'
+import { version } from '../../package.json'
 
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
@@ -28,6 +29,8 @@ const rightDrawerOpen = ref(false)
           </q-avatar>
           Notas & Documentos Fiscais
         </q-toolbar-title>
+
+        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
 
         <!-- Menu do Usuário -->
         <user-menu />
