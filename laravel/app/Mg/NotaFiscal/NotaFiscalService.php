@@ -20,29 +20,51 @@ use Mg\Pessoa\Pessoa;
 class NotaFiscalService
 {
     // Status da Nota Fiscal
-    const STATUS_LANCADA          = 'LAN'; // Lançada (emitida = false)
-    const STATUS_DIGITACAO        = 'DIG'; // Em Digitação (emitida = true e numero vazio)
-    const STATUS_ERRO             = 'ERR'; // Não Autorizada (emitida = true, tem número, sem autorização)
-    const STATUS_AUTORIZADA       = 'AUT'; // Autorizada (nfeautorizacao preenchido e não cancelada/inutilizada)
-    const STATUS_CANCELADA        = 'CAN'; // Cancelada (nfecancelamento preenchido)
-    const STATUS_INUTILIZADA      = 'INU'; // Inutilizada (nfeinutilizacao preenchido)
+    const STATUS_LANCADA             = 'LAN'; // Lançada (emitida = false)
+    const STATUS_DIGITACAO           = 'DIG'; // Em Digitação (emitida = true e numero vazio)
+    const STATUS_ERRO                = 'ERR'; // Não Autorizada (emitida = true, tem número, sem autorização)
+    const STATUS_AUTORIZADA          = 'AUT'; // Autorizada (nfeautorizacao preenchido e não cancelada/inutilizada)
+    const STATUS_CANCELADA           = 'CAN'; // Cancelada (nfecancelamento preenchido)
+    const STATUS_INUTILIZADA         = 'INU'; // Inutilizada (nfeinutilizacao preenchido)
+    const STATUS_DENEGADA            = 'DEN'; // Denegada
 
-    const MODELO_NFE              = 55;
-    const MODELO_NFCE             = 65;
+    const STATUS_LABELS = [
+        self::STATUS_LANCADA     => 'Lançada',
+        self::STATUS_DIGITACAO   => 'Em Digitação',
+        self::STATUS_ERRO        => 'Não Autorizada',
+        self::STATUS_AUTORIZADA  => 'Autorizada',
+        self::STATUS_CANCELADA   => 'Cancelada',
+        self::STATUS_INUTILIZADA => 'Inutilizada',
+        self::STATUS_DENEGADA    => 'Denegada',
+    ];
 
-    const FRETE_EMITENTE          = 0;
-    const FRETE_DESTINATARIO      = 1;
-    const FRETE_TERCEIROS         = 2;
-    const FRETE_SEM               = 9;
+    const MODELO_NFE                 = 55;
+    const MODELO_NFCE                = 65;
 
-    const TPEMIS_NORMAL           = 1; // Emissão normal (não em contingência);
-    const TPEMIS_FS_IA            = 2; // Contingência FS-IA, com impressão do DANFE em formulário de segurança;
-    const TPEMIS_SCAN             = 3; // Contingência SCAN (Sistema de Contingência do Ambiente Nacional) Desativação prevista para 30/06/2014;
-    const TPEMIS_DPEC             = 4; // Contingência DPEC (Declaração Prévia da Emissão em Contingência);
-    const TPEMIS_FS_DA            = 5; // Contingência FS-DA, com impressão do DANFE em formulário de segurança;
-    const TPEMIS_SVC_AN           = 6; // Contingência SVC-AN (SEFAZ Virtual de Contingência do AN);
-    const TPEMIS_SVC_RS           = 7; // Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
-    const TPEMIS_OFFLINE          = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
+    const FRETE_EMITENTE             = 0;
+    const FRETE_DESTINATARIO         = 1;
+    const FRETE_TERCEIROS            = 2;
+    const FRETE_EMITENTE_PROPRIO     = 3;
+    const FRETE_DESTINATARIO_PROPRIO = 4;
+    const FRETE_SEM                  = 9;
+
+    const FRETE_LABELS = [
+        self::FRETE_EMITENTE             => 'Por conta do emitente',
+        self::FRETE_DESTINATARIO         => 'Por conta do destinatário',
+        self::FRETE_TERCEIROS            => 'Por conta de terceiros',
+        self::FRETE_EMITENTE_PROPRIO     => 'Transporte próprio por conta do remetente',
+        self::FRETE_DESTINATARIO_PROPRIO => 'Transporte próprio por conta do destinatário',
+        self::FRETE_SEM                  => 'Sem frete',
+    ];
+
+    const TPEMIS_NORMAL              = 1; // Emissão normal (não em contingência);
+    const TPEMIS_FS_IA               = 2; // Contingência FS-IA, com impressão do DANFE em formulário de segurança;
+    const TPEMIS_SCAN                = 3; // Contingência SCAN (Sistema de Contingência do Ambiente Nacional) Desativação prevista para 30/06/2014;
+    const TPEMIS_DPEC                = 4; // Contingência DPEC (Declaração Prévia da Emissão em Contingência);
+    const TPEMIS_FS_DA               = 5; // Contingência FS-DA, com impressão do DANFE em formulário de segurança;
+    const TPEMIS_SVC_AN              = 6; // Contingência SVC-AN (SEFAZ Virtual de Contingência do AN);
+    const TPEMIS_SVC_RS              = 7; // Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
+    const TPEMIS_OFFLINE             = 9; // Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
 
     /**
      * Calcula o status atual da nota baseado nos campos

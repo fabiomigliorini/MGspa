@@ -570,6 +570,21 @@ class NotaFiscalController extends Controller
     }
 
     /**
+     * Gera o espelho da nota fiscal em PDF
+     */
+    public function espelho(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $pdf = NotaFiscalEspelhoPdfService::pdf($nota);
+
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Espelho-NF-' . $nota->numero . '.pdf"'
+        ]);
+    }
+
+    /**
      * Envia carta de correção para a SEFAZ
      */
     public function cartaCorrecao(Request $request, int $codnotafiscal)

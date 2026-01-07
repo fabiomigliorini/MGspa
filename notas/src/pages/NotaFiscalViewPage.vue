@@ -503,6 +503,23 @@ const abrirCartaCorrecaoPdf = async () => {
   }
 }
 
+// ==================== ESPELHO ====================
+const espelhoPdfDialog = ref(false)
+const espelhoPdfUrl = ref('')
+
+const abrirEspelhoPdf = async () => {
+  try {
+    espelhoPdfUrl.value = await notaFiscalStore.getEspelhoUrl(nota.value.codnotafiscal)
+    espelhoPdfDialog.value = true
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao abrir Espelho da Nota Fiscal',
+      caption: error?.response?.data?.message || error?.message || 'Erro desconhecido',
+    })
+  }
+}
+
 const enviarCartaCorrecao = async (texto) => {
   loadingCartaCorrecao.value = true
   try {
@@ -1161,6 +1178,16 @@ onUnmounted(() => {
           class="q-mr-sm"
         >
           <q-tooltip>Duplicar Nota Fiscal</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          dense
+          color="teal"
+          icon="preview"
+          @click="abrirEspelhoPdf"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Espelho da Nota Fiscal</q-tooltip>
         </q-btn>
         <q-btn
           flat
@@ -2328,6 +2355,21 @@ onUnmounted(() => {
 
         <q-card-section class="q-pa-md" style="height: calc(100% - 56px)">
           <iframe :src="cartaCorrecaoPdfUrl" style="width: 100%; height: 100%; border: none" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog Espelho -->
+    <q-dialog v-model="espelhoPdfDialog">
+      <q-card style="width: 800px; max-width: 90vw; height: 90vh">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Espelho da Nota Fiscal</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md" style="height: calc(100% - 56px)">
+          <iframe :src="espelhoPdfUrl" style="width: 100%; height: 100%; border: none" />
         </q-card-section>
       </q-card>
     </q-dialog>

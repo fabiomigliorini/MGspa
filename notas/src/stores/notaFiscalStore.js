@@ -405,6 +405,15 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    async getEspelhoUrl(codnotafiscal) {
+      try {
+        return await notaFiscalService.espelho(codnotafiscal)
+      } catch (error) {
+        console.error('Erro ao obter URL do Espelho:', error)
+        throw error
+      }
+    },
+
     async getXmlUrl(codnotafiscal) {
       try {
         return await notaFiscalService.xml(codnotafiscal)
