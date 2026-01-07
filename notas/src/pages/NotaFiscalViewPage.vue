@@ -857,7 +857,11 @@ const enviarEmailNfe = async () => {
 const abrirDanfe = async () => {
   try {
     danfeUrl.value = await notaFiscalStore.getDanfeUrl(nota.value.codnotafiscal)
-    if (/Mobi|Android/i.test(navigator.userAgent)) {
+
+    // se for celular android
+    const ua = navigator.userAgent
+    const isAndroidPhone = /Android/i.test(ua) && /Mobile/i.test(ua) && !/CrOS/i.test(ua)
+    if (isAndroidPhone) {
       window.open(danfeUrl.value, '_blank')
     } else {
       danfeDialog.value = true
