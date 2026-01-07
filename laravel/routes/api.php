@@ -490,8 +490,28 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             });
         });
 
+        // NOTA FISCAL DASHBOARD (APIs read-only)
+        Route::prefix('nota-fiscal/dashboard')->group(function () {
+            // Status SEFAZ
+            Route::get('sefaz/status/{codfilial}', '\Mg\NotaFiscal\Dashboard\DashboardSefazController@status');
+
+            // KPIs
+            Route::get('kpis/gerais', '\Mg\NotaFiscal\Dashboard\DashboardKpisController@gerais');
+            Route::get('kpis/por-natureza', '\Mg\NotaFiscal\Dashboard\DashboardKpisController@porNatureza');
+            Route::get('kpis/por-filial', '\Mg\NotaFiscal\Dashboard\DashboardKpisController@porFilial');
+
+            // Graficos
+            Route::get('graficos/volume-mensal', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@volumeMensal');
+            Route::get('graficos/erro-por-filial', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@erroPorFilial');
+
+            // Listas operacionais
+            Route::get('listas/erro', '\Mg\NotaFiscal\Dashboard\DashboardListasController@erro');
+            Route::get('listas/canceladas-inutilizadas', '\Mg\NotaFiscal\Dashboard\DashboardListasController@canceladasInutilizadas');
+            Route::get('listas/digitacao', '\Mg\NotaFiscal\Dashboard\DashboardListasController@digitacao');
+        });
+
         // NOTA FISCAL TRANSFERENCIA
-        Route::get('nota-fiscal/dashboard', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@index');
+        Route::get('nota-fiscal/dashboard-transferencia', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@index');
         Route::get('nota-fiscal/gera-transferencias/{codfilial}', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@GerarNovaTransferencia');
         Route::get('nota-fiscal/notas-por-emitir', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasPorEmitir');
         Route::get('nota-fiscal/notas-nao-autorizadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasNaoAutorizadas');

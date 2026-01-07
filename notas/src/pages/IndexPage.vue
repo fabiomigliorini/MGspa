@@ -1,375 +1,584 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed, watch, shallowRef, ref } from 'vue'
+import { useQuasar } from 'quasar'
 import { useAuth } from 'src/composables/useAuth'
+import { useDashboardStore } from 'src/stores/dashboard'
+import { useNotaFiscalStore } from 'src/stores/notaFiscalStore'
+import { formatDateTime, formatNumero, formatCurrency } from 'src/utils/formatters'
+import VChart from 'vue-echarts'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart, BarChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 
-const { user, validateToken } = useAuth()
+use([CanvasRenderer, LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent])
 
-onMounted(async () => {
-  await validateToken()
+const $q = useQuasar()
+const { validateToken } = useAuth()
+const store = useDashboardStore()
+const notaFiscalStore = useNotaFiscalStore()
+
+const loading = computed(() => store.loading)
+const loadingVolumeMensal = computed(() => store.loadingVolumeMensal)
+const enviandoNota = ref(null)
+const consultandoNota = ref(null)
+const period = computed(() => store.period)
+const modelo = computed(() => store.modelo)
+const sefazStatus = computed(() => store.sefazStatus)
+const kpisGerais = computed(() => store.kpisGerais)
+const volumeMensal = computed(() => store.volumeMensal)
+const erroPorFilial = computed(() => store.erroPorFilial)
+const kpisPorFilial = computed(() => store.kpisPorFilial)
+const listas = computed(() => store.listas)
+
+const periodOptions = [
+  { label: 'Dia', value: 1 },
+  { label: 'Semana', value: 7 },
+  { label: '30 dias', value: 30 },
+  { label: '60 dias', value: 60 },
+  { label: '90 dias', value: 90 },
+]
+
+const modeloOptions = [
+  { label: 'Ambos', value: 'ambos' },
+  { label: 'NFe', value: 'nfe' },
+  { label: 'NFCe', value: 'nfce' },
+]
+
+const sefazOnline = computed(() => {
+  if (!sefazStatus.value) return false
+  const cstat = sefazStatus.value.cstat || sefazStatus.value.cStat
+  return cstat === 107 || cstat === '107' || sefazStatus.value.status === 'online'
 })
-/*
-import { onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuth } from 'src/composables/useAuth'
-import { useDashboardStore } from 'src/stores/dashboardStore'
-import { formatCurrency, formatDateTime } from 'src/utils/formatters'
-import {
-  STATUS_OPTIONS,
-  getStatusColor,
-  getStatusIcon,
-  getStatusLabel,
-} from 'src/constants/notaFiscal'
 
-const router = useRouter()
-const { user, validateToken } = useAuth()
-const dashboardStore = useDashboardStore()
-
-// Computed para dados do dashboard
-const loading = computed(() => dashboardStore.loading)
-const totais = computed(() => dashboardStore.totais)
-const hoje = computed(() => dashboardStore.hoje)
-const semana = computed(() => dashboardStore.semana)
-const mes = computed(() => dashboardStore.mes)
-const porStatus = computed(() => dashboardStore.porStatus)
-const ultimasNotas = computed(() => dashboardStore.ultimasNotas)
-
-// Status para exibir nos cards (em ordem de relevância)
-const statusCards = computed(() => {
-  return STATUS_OPTIONS.map((status) => ({
-    ...status,
-    quantidade: porStatus.value[status.value]?.quantidade || 0,
-    valor: porStatus.value[status.value]?.valor || 0,
-  }))
+const sefazColor = computed(() => {
+  if (!sefazStatus.value) return 'grey'
+  if (sefazOnline.value) return 'positive'
+  const s = sefazStatus.value.status
+  if (s === 'instavel') return 'warning'
+  return 'negative'
 })
 
-// Buscar dados
-const fetchData = async () => {
+const sefazIcon = computed(() => {
+  if (!sefazStatus.value) return 'cloud_off'
+  if (sefazOnline.value) return 'cloud_done'
+  const s = sefazStatus.value.status
+  if (s === 'instavel') return 'cloud_sync'
+  return 'cloud_off'
+})
+
+const sefazLabel = computed(() => {
+  if (!sefazStatus.value) return 'Verificando...'
+  if (sefazOnline.value) return 'Online'
+  const s = sefazStatus.value.status
+  if (s === 'instavel') return 'Instável'
+  return 'Offline'
+})
+
+const kpiCards = computed(() => [
+  {
+    label: 'Total de Notas',
+    value: (kpisGerais.value?.total_notas || 0).toLocaleString('pt-BR'),
+    subtitle: null,
+    icon: 'description',
+    color: 'primary',
+  },
+  {
+    label: 'Autorizadas',
+    value: (kpisGerais.value?.autorizadas?.quantidade || 0).toLocaleString('pt-BR'),
+    subtitle: `${(kpisGerais.value?.autorizadas?.percentual || 0).toFixed(1)}%`,
+    icon: 'check_circle',
+    color: 'positive',
+  },
+  {
+    label: 'Erro',
+    value: (kpisGerais.value?.erro?.quantidade || 0).toLocaleString('pt-BR'),
+    subtitle: `${Math.ceil((kpisGerais.value?.erro?.percentual || 0) * 10) / 10}%`,
+    icon: 'error',
+    color: (kpisGerais.value?.erro?.quantidade || 0) > 0 ? 'negative' : 'grey-7',
+  },
+  {
+    label: 'Canceladas/Inutilizadas',
+    value: (kpisGerais.value?.canceladas?.quantidade || 0).toLocaleString('pt-BR'),
+    subtitle: `${(kpisGerais.value?.canceladas?.percentual || 0).toFixed(1)}%`,
+    icon: 'cancel',
+    color: 'warning',
+  },
+])
+
+const volumeChartOption = shallowRef({})
+watch(
+  volumeMensal,
+  (data) => {
+    if (!data || data.length === 0) {
+      volumeChartOption.value = {}
+      return
+    }
+    volumeChartOption.value = {
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['NFe', 'NFCe'], bottom: 0 },
+      grid: { left: 40, right: 20, top: 20, bottom: 40 },
+      xAxis: {
+        type: 'category',
+        data: data.map((d) => d.mes),
+        axisLabel: { fontSize: 10 },
+      },
+      yAxis: { type: 'value', axisLabel: { fontSize: 10 } },
+      series: [
+        {
+          name: 'NFe',
+          type: 'line',
+          data: data.map((d) => d.nfe || 0),
+          smooth: true,
+          itemStyle: { color: '#1976D2' },
+        },
+        {
+          name: 'NFCe',
+          type: 'line',
+          data: data.map((d) => d.nfce || 0),
+          smooth: true,
+          itemStyle: { color: '#26A69A' },
+        },
+      ],
+    }
+  },
+  { immediate: true }
+)
+
+const erroChartOption = shallowRef({})
+let lastErroPorFilialHash = ''
+watch(
+  erroPorFilial,
+  (data) => {
+    if (!data || data.length === 0) {
+      erroChartOption.value = {}
+      lastErroPorFilialHash = ''
+      return
+    }
+    const hash = JSON.stringify(data.map((d) => ({ f: d.filial, e: d.percent_erro })))
+    if (hash === lastErroPorFilialHash) return
+    lastErroPorFilialHash = hash
+
+    const sorted = [...data].sort((a, b) => (b.percent_erro || 0) - (a.percent_erro || 0))
+    const maxErro = Math.ceil(Math.max(...data.map((d) => d.percent_erro || 0)) * 10) / 10 || 1
+    erroChartOption.value = {
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: 80, right: 20, top: 10, bottom: 20 },
+      xAxis: {
+        type: 'value',
+        max: maxErro,
+        axisLabel: { formatter: '{value}%', fontSize: 10 },
+      },
+      yAxis: {
+        type: 'category',
+        data: sorted.map((d) => d.filial || d.codfilial),
+        axisLabel: { fontSize: 10 },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: sorted.map((d) => d.percent_erro || 0),
+          itemStyle: { color: '#F44336' },
+          barWidth: 12,
+        },
+      ],
+    }
+  },
+  { immediate: true }
+)
+
+const filialColumns = [
+  { name: 'filial', label: 'Filial', field: 'filial', align: 'left', sortable: true },
+  { name: 'total', label: 'Total', field: 'total_notas', align: 'right', sortable: true },
+  {
+    name: 'autorizadas',
+    label: '% Aut.',
+    field: 'percent_autorizadas',
+    align: 'right',
+    sortable: true,
+    format: (v) => `${(v || 0).toFixed(1)}%`,
+  },
+  {
+    name: 'erro',
+    label: '% Erro',
+    field: 'percent_erro',
+    align: 'right',
+    sortable: true,
+    format: (v) => `${Math.ceil((v || 0) * 10) / 10}%`,
+  },
+  {
+    name: 'canceladas',
+    label: '% Canc.',
+    field: 'percent_canceladas',
+    align: 'right',
+    sortable: true,
+    format: (v) => `${(v || 0).toFixed(1)}%`,
+  },
+  {
+    name: 'ultima_nota',
+    label: 'Última Nota',
+    field: 'ultima_nota_emitida',
+    align: 'center',
+    format: (v) => (v ? formatDateTime(v) : '-'),
+  },
+  {
+    name: 'ultimo_erro',
+    label: 'Último Erro',
+    field: 'ultima_nota_com_erro',
+    align: 'center',
+    format: (v) => (v ? formatDateTime(v) : '-'),
+  },
+]
+
+const onPeriodChange = async (val) => {
+  store.setPeriod(val)
+  await store.fetchByPeriod()
+}
+
+const onModeloChange = async (val) => {
+  store.setModelo(val)
+  await store.fetchByPeriod()
+}
+
+const refresh = async () => {
+  await store.fetchAll()
+}
+
+const enviarNfe = async (codnotafiscal, event) => {
+  event.preventDefault()
+  event.stopPropagation()
+
+  enviandoNota.value = codnotafiscal
   try {
-    await dashboardStore.fetchDashboard()
+    await notaFiscalStore.criarNfe(codnotafiscal)
+    const response = await notaFiscalStore.enviarNfeSincrono(codnotafiscal)
+    const resultado = response?.resultado || response
+    const cStat = resultado?.cStat || ''
+    if (resultado?.sucesso || cStat === '100' || cStat === 100) {
+      $q.notify({
+        type: 'positive',
+        message: `${cStat} - ${resultado?.xMotivo || 'NFe enviada com sucesso!'}`,
+      })
+      await store.fetchListas()
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: `${cStat} - ${resultado?.xMotivo || 'Erro ao enviar NFe'}`,
+      })
+    }
   } catch (error) {
-    console.error('Erro ao carregar dashboard:', error)
+    $q.notify({ type: 'negative', message: error.message || 'Erro ao enviar NFe' })
+  } finally {
+    enviandoNota.value = null
   }
 }
 
-// Navegar para nota
-const goToNota = (codnotafiscal) => {
-  router.push(`/notas/${codnotafiscal}`)
-}
+const consultarNfe = async (codnotafiscal, event) => {
+  event.preventDefault()
+  event.stopPropagation()
 
-// Navegar para lista filtrada por status
-const goToNotasByStatus = (status) => {
-  router.push({ path: '/notas', query: { status } })
+  consultandoNota.value = codnotafiscal
+  try {
+    const response = await notaFiscalStore.consultarNfe(codnotafiscal)
+    const cStat = response?.cStat || ''
+    const tipo = response?.sucesso || cStat === '100' || cStat === 100 ? 'positive' : 'negative'
+    $q.notify({
+      type: tipo,
+      message: `${cStat} - ${response?.xMotivo || 'Consulta realizada'}`,
+    })
+    if (tipo === 'positive') {
+      await store.fetchListas()
+    }
+  } catch (error) {
+    $q.notify({ type: 'negative', message: error.message || 'Erro ao consultar NFe' })
+  } finally {
+    consultandoNota.value = null
+  }
 }
 
 onMounted(async () => {
   await validateToken()
-  await fetchData()
+  await store.fetchAll()
 })
-
-  <q-page class="q-pa-md" v-if="dashboardStore.totais">
-
-    <!-- Header -->
-    <div class="row items-center q-mb-md">
-      <div class="col">
-        <div class="text-h5 text-weight-bold">Dashboard</div>
-        <div class="text-caption text-grey">Bem-vindo, {{ user?.usuario }}</div>
-      </div>
-      <div class="col-auto">
-        <q-btn flat round icon="refresh" :loading="loading" @click="fetchData">
-          <q-tooltip>Atualizar dados</q-tooltip>
-        </q-btn>
-      </div>
-    </div>
-
-    <!-- Cards Principais -->
-    <div class="row q-col-gutter-md q-mb-md">
-      <!-- Total de Notas -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-card-section>
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-grey">Total de Notas</div>
-                <div class="text-h4 text-weight-bold">
-                  <q-skeleton v-if="loading" type="text" width="80px" />
-                  <span v-else>{{ totais.quantidade.toLocaleString('pt-BR') }}</span>
-                </div>
-              </div>
-              <q-avatar color="primary" text-color="white" icon="description" />
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Valor Total -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-card-section>
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-grey">Valor Total</div>
-                <div class="text-h5 text-weight-bold">
-                  <q-skeleton v-if="loading" type="text" width="120px" />
-                  <span v-else>R$ {{ formatCurrency(totais.valor) }}</span>
-                </div>
-              </div>
-              <q-avatar color="positive" text-color="white" icon="payments" />
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Notas Hoje -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-card-section>
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-grey">Notas Hoje</div>
-                <div class="text-h4 text-weight-bold">
-                  <q-skeleton v-if="loading" type="text" width="60px" />
-                  <span v-else>{{ hoje.quantidade.toLocaleString('pt-BR') }}</span>
-                </div>
-              </div>
-              <q-avatar color="info" text-color="white" icon="today" />
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Valor Hoje -->
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-card-section>
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-grey">Valor Hoje</div>
-                <div class="text-h5 text-weight-bold">
-                  <q-skeleton v-if="loading" type="text" width="100px" />
-                  <span v-else>R$ {{ formatCurrency(hoje.valor) }}</span>
-                </div>
-              </div>
-              <q-avatar color="accent" text-color="white" icon="attach_money" />
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-    </div>
-
-    <!-- Status das Notas -->
-    <q-card flat bordered class="q-mb-md">
-      <q-card-section>
-        <div class="text-subtitle1 text-weight-medium q-mb-md">Status das Notas</div>
-        <div class="status-grid">
-          <q-card
-            v-for="status in statusCards"
-            :key="status.value"
-            flat
-            bordered
-            class="cursor-pointer status-card"
-            @click="goToNotasByStatus(status.value)"
-          >
-            <q-card-section class="text-weight-bold q-pa-sm text-center">
-              <q-icon :name="status.icon" :color="status.color" size="24px" class="q-mb-xs" />
-              <div class="text-h6">{{ status.quantidade }}</div>
-              <div class="text-caption text-grey-7">{{ status.label }}</div>
-            </q-card-section>
-          </q-card>
-        </div>
-      </q-card-section>
-    </q-card>
-
-    <!-- Notas por Período -->
-    <q-card flat bordered class="q-mb-md">
-      <q-card-section>
-        <div class="text-subtitle1 text-weight-medium q-mb-md">Notas por Periodo</div>
-        <div class="row q-col-gutter-md">
-          <!-- Hoje -->
-          <div class="col-12 col-md-4">
-            <q-card flat bordered class="bg-blue-1">
-              <q-card-section>
-                <div class="row items-center">
-                  <q-icon name="today" color="blue" size="32px" class="q-mr-md" />
-                  <div>
-                    <div class="text-subtitle2 text-grey-8">Hoje</div>
-                    <div class="text-h6 text-weight-bold">
-                      <q-skeleton v-if="loading" type="text" width="80px" />
-                      <span v-else>{{ hoje.quantidade }} notas</span>
-                    </div>
-                    <div class="text-body2 text-grey-7">
-                      <q-skeleton v-if="loading" type="text" width="100px" />
-                      <span v-else>R$ {{ formatCurrency(hoje.valor) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
-          </div>
-
-          <!-- Semana -->
-          <div class="col-12 col-md-4">
-            <q-card flat bordered class="bg-green-1">
-              <q-card-section>
-                <div class="row items-center">
-                  <q-icon name="date_range" color="green" size="32px" class="q-mr-md" />
-                  <div>
-                    <div class="text-subtitle2 text-grey-8">Esta Semana</div>
-                    <div class="text-h6 text-weight-bold">
-                      <q-skeleton v-if="loading" type="text" width="80px" />
-                      <span v-else>{{ semana.quantidade }} notas</span>
-                    </div>
-                    <div class="text-body2 text-grey-7">
-                      <q-skeleton v-if="loading" type="text" width="100px" />
-                      <span v-else>R$ {{ formatCurrency(semana.valor) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
-          </div>
-
-          <!-- Mes -->
-          <div class="col-12 col-md-4">
-            <q-card flat bordered class="bg-purple-1">
-              <q-card-section>
-                <div class="row items-center">
-                  <q-icon name="calendar_month" color="purple" size="32px" class="q-mr-md" />
-                  <div>
-                    <div class="text-subtitle2 text-grey-8">Este Mes</div>
-                    <div class="text-h6 text-weight-bold">
-                      <q-skeleton v-if="loading" type="text" width="80px" />
-                      <span v-else>{{ mes.quantidade }} notas</span>
-                    </div>
-                    <div class="text-body2 text-grey-7">
-                      <q-skeleton v-if="loading" type="text" width="100px" />
-                      <span v-else>R$ {{ formatCurrency(mes.valor) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
-          </div>
-        </div>
-      </q-card-section>
-    </q-card>
-
-    <!-- Ultimas Notas -->
-    <q-card flat bordered>
-      <q-card-section>
-        <div class="row items-center q-mb-md">
-          <div class="col">
-            <div class="text-subtitle1 text-weight-medium">Ultimas Notas Emitidas</div>
-          </div>
-          <div class="col-auto">
-            <q-btn flat dense color="primary" label="Ver todas" to="/notas" />
-          </div>
-        </div>
-
-        <q-list separator>
-          <template v-if="loading">
-            <q-item v-for="i in 5" :key="i">
-              <q-item-section avatar>
-                <q-skeleton type="QAvatar" size="40px" />
-              </q-item-section>
-              <q-item-section>
-                <q-skeleton type="text" width="60%" />
-                <q-skeleton type="text" width="40%" />
-              </q-item-section>
-              <q-item-section side>
-                <q-skeleton type="text" width="80px" />
-              </q-item-section>
-            </q-item>
-          </template>
-
-          <template v-else-if="ultimasNotas.length > 0">
-            <q-item
-              v-for="nota in ultimasNotas"
-              :key="nota.codnotafiscal"
-              clickable
-              @click="goToNota(nota.codnotafiscal)"
-            >
-              <q-item-section avatar>
-                <q-avatar :color="getStatusColor(nota.status)" text-color="white" size="40px">
-                  <q-icon :name="getStatusIcon(nota.status)" size="20px" />
-                </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>
-                  <span class="text-weight-medium">#{{ nota.numero }}</span>
-                  <span class="text-grey-6 q-ml-sm">
-                    {{ nota.pessoa?.pessoa || 'Sem cliente' }}
-                  </span>
-                </q-item-label>
-                <q-item-label caption>
-                  {{ formatDateTime(nota.emissao) }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-item-label class="text-weight-bold">
-                  R$ {{ formatCurrency(nota.valortotal) }}
-                </q-item-label>
-                <q-badge
-                  :color="getStatusColor(nota.status)"
-                  :label="getStatusLabel(nota.status)"
-                />
-              </q-item-section>
-            </q-item>
-          </template>
-
-          <template v-else>
-            <q-item>
-              <q-item-section class="text-center text-grey">Nenhuma nota encontrada</q-item-section>
-            </q-item>
-          </template>
-        </q-list>
-      </q-card-section>
-    </q-card>
-  </q-page>
-
-  .status-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-@media (min-width: 1024px) {
-  .status-grid {
-    flex-wrap: nowrap;
-    justify-content: space-between;
-  }
-  .status-grid .status-card {
-    flex: 1;
-    min-width: 120px;
-    max-width: 150px;
-  }
-}
-
-@media (max-width: 1023px) {
-  .status-grid .status-card {
-    width: 120px;
-    min-width: 120px;
-  }
-}
-
-.status-card {
-  transition: all 0.2s ease;
-}
-.status-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-*/
 </script>
 
 <template>
-  <q-page class="q-pa-md">
-    <div class="row q-col-gutter-md">
+  <q-page class="q-pa-sm">
+    <!-- TOPO: Filtros e Status SEFAZ -->
+    <div class="row items-center q-mb-md q-gutter-x-md">
+      <q-tabs
+        :model-value="period"
+        align="left"
+        class="text-grey-7 bg-grey-2"
+        active-bg-color="primary"
+        active-color="white"
+        indicator-color="transparent"
+        inline-label
+        no-caps
+        dense
+        @update:model-value="onPeriodChange"
+      >
+        <q-tab v-for="opt in periodOptions" :key="opt.value" :name="opt.value" :label="opt.label" />
+      </q-tabs>
+      <q-tabs
+        :model-value="modelo"
+        align="left"
+        class="text-grey-7 bg-grey-2"
+        active-bg-color="primary"
+        active-color="white"
+        indicator-color="transparent"
+        inline-label
+        no-caps
+        dense
+        @update:model-value="onModeloChange"
+      >
+        <q-tab v-for="opt in modeloOptions" :key="opt.value" :name="opt.value" :label="opt.label" />
+      </q-tabs>
+      <q-space />
+      <q-chip :color="sefazColor" text-color="white" :icon="sefazIcon" dense>
+        SEFAZ: {{ sefazLabel }}
+      </q-chip>
+      <q-btn flat round dense icon="refresh" :loading="loading" @click="refresh">
+        <q-tooltip>Atualizar</q-tooltip>
+      </q-btn>
+    </div>
+
+    <!-- LINHA 1: Cards KPI -->
+    <div class="row q-col-gutter-md q-mb-md">
+      <div v-for="kpi in kpiCards" :key="kpi.label" class="col-3">
+        <q-card flat bordered>
+          <q-card-section horizontal class="items-center q-pa-sm">
+            <q-avatar :color="kpi.color" text-color="white" size="36px" class="q-mr-sm">
+              <q-icon :name="kpi.icon" size="20px" />
+            </q-avatar>
+            <div>
+              <div class="text-h6 text-weight-bold">
+                {{ loading ? '...' : kpi.value }}
+              </div>
+              <div class="text-caption text-grey-7 ellipsis">
+                <template v-if="kpi.subtitle">
+                  {{ kpi.subtitle }}
+                </template>
+                {{ kpi.label }}
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- LINHA 2: Gráficos -->
+    <div class="row q-col-gutter-md q-mb-md" style="height: 200px">
+      <div class="col-7">
+        <q-card flat bordered style="height: 100%">
+          <q-card-section class="q-pa-sm column" style="height: 100%">
+            <div class="text-subtitle2 text-weight-medium q-mb-xs">Volume Mensal</div>
+            <div class="col relative-position">
+              <q-spinner v-if="loadingVolumeMensal" color="primary" class="absolute-center" />
+              <v-chart
+                v-else-if="volumeMensal.length"
+                :option="volumeChartOption"
+                autoresize
+                style="height: 100%; width: 100%"
+              />
+              <div v-else class="absolute-center text-grey">Sem dados</div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-5">
+        <q-card flat bordered style="height: 100%">
+          <q-card-section class="q-pa-sm column" style="height: 100%">
+            <div class="text-subtitle2 text-weight-medium q-mb-xs">% Erro por Filial</div>
+            <div class="col relative-position">
+              <q-spinner
+                v-if="loading && !erroPorFilial.length"
+                color="primary"
+                class="absolute-center"
+              />
+              <v-chart
+                v-else-if="erroPorFilial.length"
+                :option="erroChartOption"
+                autoresize
+                style="height: 100%; width: 100%"
+              />
+              <div v-else class="absolute-center text-grey">Sem dados</div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- LINHA 3: Tabela KPIs por Filial -->
+    <div class="row q-mb-md">
       <div class="col-12">
         <q-card flat bordered>
-          <q-card-section class="bg-primary text-white">
-            <div class="text-h4">Bem-vindo, {{ user?.usuario }}! 👋</div>
-            <div class="text-subtitle1">Sistema de Notas Fiscais e Documentos Eletrônicos</div>
+          <q-table
+            :rows="kpisPorFilial"
+            :columns="filialColumns"
+            row-key="codfilial"
+            flat
+            hide-bottom
+            :loading="loading"
+            virtual-scroll
+            :rows-per-page-options="[0]"
+          >
+            <template #body-cell-erro="props">
+              <q-td
+                :props="props"
+                :class="props.row.percent_erro > 0 ? 'text-negative text-weight-bold' : ''"
+              >
+                {{ Math.ceil((props.row.percent_erro || 0) * 10) / 10 }}%
+              </q-td>
+            </template>
+          </q-table>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- LINHA 4: Listas -->
+    <div class="row q-col-gutter-md">
+      <!-- Lista Erro -->
+      <div class="col-4">
+        <q-card flat bordered class="column">
+          <q-card-section class="q-pa-sm q-pb-none">
+            <div class="text-subtitle2 text-weight-medium text-negative">
+              <q-icon name="error" class="q-mr-xs" />
+              Últimas com Erro
+            </div>
+          </q-card-section>
+          <q-card-section class="col q-pa-none scroll">
+            <q-spinner v-if="loading" color="primary" class="absolute-center" />
+            <q-list v-else-if="listas.erro.length" separator>
+              <q-item
+                v-for="item in listas.erro"
+                :key="item.codnotafiscal"
+                :to="`/nota/${item.codnotafiscal}`"
+              >
+                <q-item-section side>
+                  <div class="row no-wrap q-gutter-x-xs">
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="primary"
+                      icon="refresh"
+                      :loading="consultandoNota === item.codnotafiscal"
+                      @click="consultarNfe(item.codnotafiscal, $event)"
+                    >
+                      <q-tooltip>Consultar NFe</q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="secondary"
+                      icon="send"
+                      :loading="enviandoNota === item.codnotafiscal"
+                      @click="enviarNfe(item.codnotafiscal, $event)"
+                    >
+                      <q-tooltip>Enviar NFe</q-tooltip>
+                    </q-btn>
+                  </div>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-caption text-weight-medium">
+                    {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                    {{ formatNumero(item.numero) }} - Série {{ item.serie }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.filial }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.data ? formatDateTime(item.data) : '-' }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side class="text-caption text-weight-medium">
+                  R$ {{ formatCurrency(item.valortotal) }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <div v-else class="absolute-center text-grey text-caption">Nenhum erro</div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- Lista Canceladas/Inutilizadas -->
+      <div class="col-4">
+        <q-card flat bordered class="column">
+          <q-card-section class="q-pa-sm q-pb-none">
+            <div class="text-subtitle2 text-weight-medium text-warning">
+              <q-icon name="block" class="q-mr-xs" />
+              Últimas Canceladas/Inutilizadas
+            </div>
+          </q-card-section>
+          <q-card-section class="col q-pa-none scroll">
+            <q-spinner v-if="loading" color="primary" class="absolute-center" />
+            <q-list v-else-if="listas.canceladasInutilizadas.length" separator>
+              <q-item
+                v-for="item in listas.canceladasInutilizadas"
+                :key="item.codnotafiscal"
+                :to="`/nota/${item.codnotafiscal}`"
+              >
+                <q-item-section>
+                  <q-item-label class="text-caption text-weight-medium">
+                    {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                    {{ formatNumero(item.numero) }} - Série {{ item.serie }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.filial }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.data ? formatDateTime(item.data) : '-' }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side class="text-caption text-weight-medium">
+                  R$ {{ formatCurrency(item.valortotal) }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <div v-else class="absolute-center text-grey text-caption">
+              Nenhuma cancelada/inutilizada
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- Lista Digitação -->
+      <div class="col-4">
+        <q-card flat bordered class="column">
+          <q-card-section class="q-pa-sm q-pb-none">
+            <div class="text-subtitle2 text-weight-medium text-info">
+              <q-icon name="edit" class="q-mr-xs" />
+              Em Digitação
+            </div>
+          </q-card-section>
+          <q-card-section class="col q-pa-none scroll">
+            <q-spinner v-if="loading" color="primary" class="absolute-center" />
+            <q-list v-else-if="listas.digitacao.length" separator>
+              <q-item
+                v-for="item in listas.digitacao"
+                :key="item.codnotafiscal"
+                :to="`/nota/${item.codnotafiscal}`"
+              >
+                <q-item-section>
+                  <q-item-label class="text-caption text-weight-medium">
+                    {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                    {{ formatNumero(item.numero) }} - Série {{ item.serie }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.filial }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.data ? formatDateTime(item.data) : '-' }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side class="text-caption text-weight-medium">
+                  R$ {{ formatCurrency(item.valortotal) }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <div v-else class="absolute-center text-grey text-caption">Nenhuma em digitação</div>
           </q-card-section>
         </q-card>
       </div>
