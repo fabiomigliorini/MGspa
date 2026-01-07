@@ -1161,7 +1161,7 @@ onUnmounted(() => {
         <q-btn
           flat
           dense
-          color="primary"
+          color="grey-7"
           icon="edit"
           :to="{ name: 'nota-fiscal-edit', params: { codnotafiscal: route.params.codnotafiscal } }"
           v-if="!notaBloqueada"
@@ -1169,24 +1169,10 @@ onUnmounted(() => {
         >
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
-        <q-btn
-          flat
-          dense
-          color="blue-grey"
-          icon="content_copy"
-          @click="duplicarNota"
-          class="q-mr-sm"
-        >
+        <q-btn flat dense color="grey-7" icon="content_copy" @click="duplicarNota" class="q-mr-sm">
           <q-tooltip>Duplicar Nota Fiscal</q-tooltip>
         </q-btn>
-        <q-btn
-          flat
-          dense
-          color="teal"
-          icon="preview"
-          @click="abrirEspelhoPdf"
-          class="q-mr-sm"
-        >
+        <q-btn flat dense color="grey-7" icon="print" @click="abrirEspelhoPdf" class="q-mr-sm">
           <q-tooltip>Espelho da Nota Fiscal</q-tooltip>
         </q-btn>
         <q-btn
@@ -1203,7 +1189,7 @@ onUnmounted(() => {
         <q-btn
           flat
           dense
-          color="purple"
+          color="grey-7"
           icon="calculate"
           @click="recalcularTributacao"
           v-if="podeRecalcularTributacao"

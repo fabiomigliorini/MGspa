@@ -25,6 +25,7 @@
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 - colocar link pra nfe de terceiro
+- conferir se todos os subitens da nota, batem com o espelho (duplicatas, pagamento, referenciadas, carta de correcao)
 
 DONE:
 
