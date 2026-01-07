@@ -6,11 +6,8 @@
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
-<<<<<<< HEAD
-=======
 - colocar link pra nfe de terceiro
 - conferir se todos os subitens da nota, batem com o espelho (duplicatas, pagamento, referenciadas, carta de correcao)
->>>>>>> 5caffda2624e6017438e88d8fe22ad10cc4bc380
 
 DONE:
 

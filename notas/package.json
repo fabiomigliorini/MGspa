@@ -1,10 +1,6 @@
 {
   "name": "notas",
-<<<<<<< HEAD
   "version": "0.1.6",
-=======
-  "version": "0.1.5",
->>>>>>> 5caffda2624e6017438e88d8fe22ad10cc4bc380
   "description": "Controle de Notas Fiscais e outros documentos fiscais eletronicos.",
   "productName": "Notas & Docs Fiscais",
   "author": "Fabio Migliorini",
