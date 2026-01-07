@@ -1,12 +1,27 @@
+- popups em geral estourando em celular
+- colocar um link pro cadastro do produto
+- danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog (protected/components/MGNotaFiscalBotoes/\_javascript.php | NFePHPDanfe)
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', "<?php echo MGSPA_NFEPHP_URL; ?>" + codnotafiscal + "/danfe", true);
+      xhr.responseType = 'blob';
+      xhr.onload = function(e) {
+       if (this['status'] == 200) {
+         var blob = new Blob([this['response']], {type: 'application/pdf'});
+         var url = URL.createObjectURL(blob);
+         var printWindow = window.open(url);
+      	 if (recarregar) {
+      		 location.reload();
+      	 }
+       }
+      };
+      xhr.send();
+
 - criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
-- danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
-- colocar um link pro cadastro do produto
 - quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
-- cards da tributacao em celular
-- na tela de negocios, quando uma nf está inutilizada, ele mostra como se fosse não autorizada
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 - colocar link pra nfe de terceiro
@@ -35,7 +50,7 @@ DONE:
 - criar botao pra recalcular tributacao.
 - publicar o notas.mgpapelaria.com.br
 - nao pode alterar nota já enviada (com numero ativo)
-
+- na tela de negocios, quando uma nf está inutilizada, ele mostra como se fosse não autorizada
 - criar o "version": "0.15.2" no package.json e mostrar no cabeçalho
 
 - 06/01
