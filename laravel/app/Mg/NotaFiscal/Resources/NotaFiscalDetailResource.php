@@ -3,12 +3,13 @@
 namespace Mg\NotaFiscal\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Mg\NotaFiscal\NotaFiscalService;
+// use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\Resources\NotaFiscalProdutoBarraResource;
 use Mg\NotaFiscal\Resources\NotaFiscalPagamentoResource;
 use Mg\NotaFiscal\Resources\NotaFiscalDuplicatasResource;
 use Mg\NotaFiscal\Resources\NotaFiscalReferenciadaResource;
 use Mg\NotaFiscal\Resources\NotaFiscalCartaCorrecaoResource;
+use Mg\NfeTerceiro\Resources\NfeTerceiroResource;
 
 class NotaFiscalDetailResource extends JsonResource
 {
@@ -94,6 +95,7 @@ class NotaFiscalDetailResource extends JsonResource
             'duplicatas' => NotaFiscalDuplicatasResource::collection($this->NotaFiscalDuplicatasS),
             'notasReferenciadas' => NotaFiscalReferenciadaResource::collection($this->NotaFiscalReferenciadaS),
             'cartasCorrecao' => NotaFiscalCartaCorrecaoResource::collection($this->NotaFiscalCartaCorrecaoS),
+            'nfeTerceiros' => NfeTerceiroResource::collection($this->NfeTerceiroS),
 
             // Timestamps
             'criacao' => $this->criacao,

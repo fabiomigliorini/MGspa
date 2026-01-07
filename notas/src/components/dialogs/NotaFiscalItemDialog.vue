@@ -9,7 +9,7 @@ const store = useSelectProdutoBarraStore()
 const emit = defineEmits(['update:modelValue', 'save'])
 
 // const busca = ref(null)
-const selectedProd = ref(null);
+const selectedProd = ref(null)
 const scrollAreaRef = ref(null)
 const loading = ref(false)
 
@@ -17,7 +17,7 @@ defineProps({
   modelValue: {
     type: Boolean,
     required: true,
-  }
+  },
 })
 
 // Methods
@@ -32,17 +32,20 @@ const handleSave = () => {
 }
 
 // Watch dialog close to reset form
-watch(() => store.busca, () => {
-  loading.value = true;
-  pesquisar()
-})
+watch(
+  () => store.busca,
+  () => {
+    loading.value = true
+    pesquisar()
+  }
+)
 
 // pesquisa no backend
 const pesquisar = useDebounceFn(async () => {
   try {
     await store.search()
     if (store.produtos.length > 0) {
-      selectedProd.value = store.produtos[0];
+      selectedProd.value = store.produtos[0]
     } else {
       selectedProd.value = null
     }
@@ -54,7 +57,7 @@ const pesquisar = useDebounceFn(async () => {
       caption: error.message,
     })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }, 800) // 800ms de debounce
 
@@ -84,7 +87,7 @@ const handleKeyNavigation = (event) => {
   if (!store.produtos || store.produtos.length === 0) return
 
   const currentIndex = selectedProd.value
-    ? store.produtos.findIndex(p => p === selectedProd.value)
+    ? store.produtos.findIndex((p) => p === selectedProd.value)
     : -1
 
   if (event.key === 'ArrowDown') {
@@ -111,33 +114,37 @@ const handleKeyNavigation = (event) => {
 </script>
 
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)"
-    @keydown="handleKeyNavigation" persistent>
-
-    <q-card style="width: 600px">
+  <q-dialog
+    :model-value="modelValue"
+    @update:model-value="emit('update:modelValue', $event)"
+    @keydown="handleKeyNavigation"
+    persistent
+  >
+    <q-card class="dialog-card">
       <q-form @submit.prevent="handleSave">
-
         <!-- CABECALHO -->
         <q-card-section class="bg-primary text-white">
-          <div class="text-h6 ellipsis">
-            Adicionar item na Nota Fiscal
-          </div>
+          <div class="text-h6 ellipsis">Adicionar item na Nota Fiscal</div>
         </q-card-section>
-
 
         <!-- campo de busca -->
         <q-card-section class="q-pt-md q-pb-md">
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input v-model="store.busca" label="busca produto" outlined unmasked-value
-                hint="Busca por: barras, preço, código ou descrição" autofocus />
+              <q-input
+                v-model="store.busca"
+                label="busca produto"
+                outlined
+                unmasked-value
+                hint="Busca por: barras, preço, código ou descrição"
+                autofocus
+              />
             </div>
           </div>
         </q-card-section>
 
         <!-- Itens -->
-        <q-card-section style="height: 55vh;">
-
+        <q-card-section style="height: 55vh">
           <!-- Carregando -->
           <template v-if="loading">
             <div class="full-height flex justify-center items-center text-grey text-h6">
@@ -148,8 +155,8 @@ const handleKeyNavigation = (event) => {
 
           <!-- ainda nao digitou na busca -->
           <template v-else-if="store.busca == null || store.busca?.length <= 2">
-            <div class="full-height flex justify-center items-center text-grey text-h6">
-              <q-icon name="search" size="50px" class="q-mr-md"></q-icon>
+            <div>
+              <q-icon name="search"></q-icon>
               Digite algo para pesquisar!
             </div>
           </template>
@@ -165,36 +172,51 @@ const handleKeyNavigation = (event) => {
           <!-- produtos -->
           <template v-else>
             <q-scroll-area ref="scrollAreaRef" class="full-height">
-
               <!-- se muitos produtos -->
               <template v-if="store.produtos.length >= 100">
                 <q-banner class="bg-warning text-grey-8 rounded-borders q-mb-sm">
                   <template v-slot:avatar>
                     <q-icon name="warning" />
                   </template>
-                  A pesquisa retornou mais de 100 Itens.
-                  Não é possível mostrar todos.
-                  Refine sua pesquisa! </q-banner>
+                  A pesquisa retornou mais de 100 Itens. Não é possível mostrar todos. Refine sua
+                  pesquisa!
+                </q-banner>
               </template>
 
               <!-- listagem -->
               <q-list separator>
                 <template v-for="prod in store.produtos" :key="prod.codprodutoabarra">
-                  <q-item clickable v-ripple :active="prod == selectedProd" active-class="bg-blue-2"
-                    @click="selectProd(prod)">
+                  <q-item
+                    clickable
+                    v-ripple
+                    :active="prod == selectedProd"
+                    active-class="bg-blue-2"
+                    @click="selectProd(prod)"
+                  >
                     <q-item-section avatar>
-                      <q-img :src="prod.imagem" width="120px" height="80px" class="rounded-borders" v-if="prod.imagem"
-                        style="max-width: 10vw;" />
-                      <q-img src="/produtoSemImagem.png" width="120px" height="80px" class="rounded-borders" v-else
-                        style="max-width: 10vw;" />
+                      <q-img
+                        :src="prod.imagem"
+                        width="120px"
+                        height="80px"
+                        class="rounded-borders"
+                        v-if="prod.imagem"
+                        style="max-width: 10vw"
+                      />
+                      <q-img
+                        src="/produtoSemImagem.png"
+                        width="120px"
+                        height="80px"
+                        class="rounded-borders"
+                        v-else
+                        style="max-width: 10vw"
+                      />
                     </q-item-section>
                     <q-item-section>
-                      <q-item-label class="text-weight-bold text-body1 text-grey-7 ">
+                      <q-item-label class="text-weight-bold text-body1 text-grey-7">
                         {{ prod.descricao }}
                       </q-item-label>
                       <q-item-label caption>
-                        {{ formatCodProduto(prod.codproduto) }} |
-                        Barras {{ prod.barras }} |
+                        {{ formatCodProduto(prod.codproduto) }} | Barras {{ prod.barras }} |
                         {{ prod.referencia }}
                       </q-item-label>
                     </q-item-section>
@@ -209,7 +231,6 @@ const handleKeyNavigation = (event) => {
                   </q-item>
                 </template>
               </q-list>
-
             </q-scroll-area>
           </template>
         </q-card-section>
@@ -218,11 +239,24 @@ const handleKeyNavigation = (event) => {
         <q-card-actions align="right" class="q-pa-md">
           <q-space />
           <q-btn flat label="Cancelar" @click="close" />
-          <q-btn unelevated label="Adicionar" color="primary" icon="save" type="submit" :loading="loading"
-            :disable="!selectedProd" />
+          <q-btn
+            unelevated
+            label="Adicionar"
+            color="primary"
+            icon="save"
+            type="submit"
+            :loading="loading"
+            :disable="!selectedProd"
+          />
         </q-card-actions>
-
       </q-form>
     </q-card>
   </q-dialog>
 </template>
+
+<style scoped>
+.dialog-card {
+  width: 600px;
+  max-width: 95vw;
+}
+</style>

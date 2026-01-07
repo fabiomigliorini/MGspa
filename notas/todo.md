@@ -1,32 +1,15 @@
-- popups em geral estourando em celular
-- colocar um link pro cadastro do produto
-- danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog (protected/components/MGNotaFiscalBotoes/\_javascript.php | NFePHPDanfe)
-
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', "<?php echo MGSPA_NFEPHP_URL; ?>" + codnotafiscal + "/danfe", true);
-      xhr.responseType = 'blob';
-      xhr.onload = function(e) {
-       if (this['status'] == 200) {
-         var blob = new Blob([this['response']], {type: 'application/pdf'});
-         var url = URL.createObjectURL(blob);
-         var printWindow = window.open(url);
-      	 if (recarregar) {
-      		 location.reload();
-      	 }
-       }
-      };
-      xhr.send();
-
+- quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
+- colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
 - criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
-- quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
-- colocar link pra nfe de terceiro
 
 DONE:
+
+05/01
 
 - nao esta salvando as observacoes
 - nao esta trazendo as observacoes da natureza ao informar a natureza.
@@ -53,7 +36,14 @@ DONE:
 - na tela de negocios, quando uma nf está inutilizada, ele mostra como se fosse não autorizada
 - criar o "version": "0.15.2" no package.json e mostrar no cabeçalho
 
-- 06/01
+06/01
+
 - quando abre pra editar uma forma de pagamento, clica em cancelar, depois abre de novo, o form fica zerado. verificar com com nota referenciada e duplicata se não esta acontecendo o mesmo
 - Alinhamento de titles
 - deixar a nota como padrão na abertura do app
+
+07/01
+
+- danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
+- colocar um link pro cadastro do produto ({MGLARA_URL}/produto/{codproduto})
+- popups em geral estourando em celular

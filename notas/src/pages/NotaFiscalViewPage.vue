@@ -92,6 +92,11 @@ const maiorSequenciaCartaCorrecao = computed(() => {
   return Math.max(...cartasCorrecao.value.map((c) => c.sequencia || 0))
 })
 
+// Status disponíveis para alteração (exclui o status atual)
+const statusDisponiveis = computed(() => {
+  return STATUS_OPTIONS.filter((status) => status.value !== nota.value?.status)
+})
+
 // URL base para negócios
 const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
 
@@ -2355,7 +2360,7 @@ onUnmounted(() => {
 
     <!-- Dialog Alterar Status -->
     <q-dialog v-model="statusDialog">
-      <q-card style="min-width: 450px">
+      <q-card>
         <q-card-section>
           <div class="text-h6">Alterar Status da NFe</div>
         </q-card-section>
@@ -2371,12 +2376,7 @@ onUnmounted(() => {
           </q-banner>
           <div class="text-body2 q-mb-md">Selecione o novo status:</div>
           <div class="row q-col-gutter-sm">
-            <div
-              v-for="status in STATUS_OPTIONS"
-              :key="status.value"
-              class="col-4"
-              v-show="nota.status !== status.value"
-            >
+            <div v-for="status in statusDisponiveis" :key="status.value" class="col-6 col-sm-4">
               <q-btn
                 unelevated
                 :color="status.color"
