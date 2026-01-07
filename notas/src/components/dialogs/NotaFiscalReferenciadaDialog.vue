@@ -29,19 +29,22 @@ const loading = ref(false)
 const isEditMode = ref(false)
 
 // Watch para preencher o formulário quando editar
-watch(() => props.referenciada, (newVal) => {
-  if (newVal) {
-    isEditMode.value = true
-    form.value = {
-      nfechave: newVal.nfechave ?? '',
-    }
-  } else {
-    isEditMode.value = false
-    form.value = {
-      nfechave: '',
+watch(
+  () => props.referenciada,
+  (newVal) => {
+    if (newVal) {
+      isEditMode.value = true
+      form.value = {
+        nfechave: newVal.nfechave ?? '',
+      }
+    } else {
+      isEditMode.value = false
+      form.value = {
+        nfechave: '',
+      }
     }
   }
-})
+)
 
 // Methods
 const close = () => {
@@ -89,20 +92,25 @@ const resetForm = () => {
 }
 
 // Watch dialog close to reset form
-watch(() => props.modelValue, (newVal) => {
-  if (!newVal) {
-    resetForm()
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (!newVal) {
+      resetForm()
+    }
   }
-})
+)
 </script>
 
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" persistent>
-    <q-card style="min-width: 600px">
+  <q-dialog
+    :model-value="modelValue"
+    @update:model-value="emit('update:modelValue', $event)"
+    persistent
+  >
+    <q-card class="dialog-card">
       <q-card-section class="bg-primary text-white">
-        <div class="text-h6">
-          {{ isEditMode ? 'Editar' : 'Nova' }} Nota Fiscal Referenciada
-        </div>
+        <div class="text-h6">{{ isEditMode ? 'Editar' : 'Nova' }} Nota Fiscal Referenciada</div>
       </q-card-section>
 
       <q-separator />
@@ -121,7 +129,9 @@ watch(() => props.modelValue, (newVal) => {
                 placeholder="Digite os 44 dígitos da chave de acesso"
                 :rules="[
                   (val) => !!val || 'Campo obrigatório',
-                  (val) => validarChaveNFe(val) || 'Chave de acesso inválida (dígito verificador incorreto)',
+                  (val) =>
+                    validarChaveNFe(val) ||
+                    'Chave de acesso inválida (dígito verificador incorreto)',
                 ]"
                 lazy-rules
                 :disable="notaBloqueada"
@@ -156,3 +166,10 @@ watch(() => props.modelValue, (newVal) => {
     </q-card>
   </q-dialog>
 </template>
+
+<style scoped>
+.dialog-card {
+  width: 600px;
+  max-width: 95vw;
+}
+</style>

@@ -47,23 +47,26 @@ const formDateToIso = (formDate) => {
 }
 
 // Watch para preencher o formulário quando editar
-watch(() => props.duplicata, (newVal) => {
-  if (newVal) {
-    isEditMode.value = true
-    form.value = {
-      fatura: newVal.fatura ?? '',
-      vencimento: isoToFormDate(newVal.vencimento) ?? '',
-      valor: newVal.valor ?? null,
-    }
-  } else {
-    isEditMode.value = false
-    form.value = {
-      fatura: '',
-      vencimento: '',
-      valor: null,
+watch(
+  () => props.duplicata,
+  (newVal) => {
+    if (newVal) {
+      isEditMode.value = true
+      form.value = {
+        fatura: newVal.fatura ?? '',
+        vencimento: isoToFormDate(newVal.vencimento) ?? '',
+        valor: newVal.valor ?? null,
+      }
+    } else {
+      isEditMode.value = false
+      form.value = {
+        fatura: '',
+        vencimento: '',
+        valor: null,
+      }
     }
   }
-})
+)
 
 // Methods
 const close = () => {
@@ -97,91 +100,96 @@ const resetForm = () => {
 }
 
 // Watch dialog close to reset form
-watch(() => props.modelValue, (newVal) => {
-  if (!newVal) {
-    resetForm()
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (!newVal) {
+      resetForm()
+    }
   }
-})
+)
 </script>
 
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" persistent>
-    <q-card style="min-width: 500px">
+  <q-dialog
+    :model-value="modelValue"
+    @update:model-value="emit('update:modelValue', $event)"
+    persistent
+  >
+    <q-card class="dialog-card">
       <q-card-section class="bg-primary text-white">
-        <div class="text-h6">
-          {{ isEditMode ? 'Editar' : 'Nova' }} Duplicata
-        </div>
+        <div class="text-h6">{{ isEditMode ? 'Editar' : 'Nova' }} Duplicata</div>
       </q-card-section>
 
       <q-separator />
 
       <q-form @submit.prevent="handleSave">
         <q-card-section class="q-pt-md q-pb-md">
-        <div class="row q-col-gutter-md">
-          <!-- Fatura -->
-          <div class="col-12">
-            <q-input
-              v-model="form.fatura"
-              label="Número da Fatura *"
-              outlined
-              maxlength="50"
-              placeholder="Ex: 001/01"
-              :rules="[(val) => !!val || 'Campo obrigatório']"
-              lazy-rules
-              :disable="notaBloqueada"
-              autofocus
-            />
-          </div>
+          <div class="row q-col-gutter-md">
+            <!-- Fatura -->
+            <div class="col-12">
+              <q-input
+                v-model="form.fatura"
+                label="Número da Fatura *"
+                outlined
+                maxlength="50"
+                placeholder="Ex: 001/01"
+                :rules="[(val) => !!val || 'Campo obrigatório']"
+                lazy-rules
+                :disable="notaBloqueada"
+                autofocus
+              />
+            </div>
 
-          <!-- Vencimento -->
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model="form.vencimento"
-              label="Vencimento *"
-              outlined
-              placeholder="DD/MM/AAAA"
-              mask="##/##/####"
-              :rules="[
-                (val) => !!val || 'Campo obrigatório',
-                (val) => val?.length === 10 || 'Data inválida',
-              ]"
-              lazy-rules
-              :disable="notaBloqueada"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-date v-model="form.vencimento" mask="DD/MM/YYYY">
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Fechar" color="primary" flat />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
-          </div>
+            <!-- Vencimento -->
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model="form.vencimento"
+                label="Vencimento *"
+                outlined
+                placeholder="DD/MM/AAAA"
+                mask="##/##/####"
+                :rules="[
+                  (val) => !!val || 'Campo obrigatório',
+                  (val) => val?.length === 10 || 'Data inválida',
+                ]"
+                lazy-rules
+                :disable="notaBloqueada"
+              >
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="form.vencimento" mask="DD/MM/YYYY">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Fechar" color="primary" flat />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
 
-          <!-- Valor -->
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model.number="form.valor"
-              label="Valor *"
-              outlined
-              type="number"
-              min="0"
-              step="0.01"
-              prefix="R$"
-              :rules="[
-                (val) => val !== null && val !== undefined || 'Campo obrigatório',
-                (val) => val > 0 || 'Valor deve ser maior que zero',
-              ]"
-              lazy-rules
-              :disable="notaBloqueada"
-              input-class="text-right"
-            />
+            <!-- Valor -->
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model.number="form.valor"
+                label="Valor *"
+                outlined
+                type="number"
+                min="0"
+                step="0.01"
+                prefix="R$"
+                :rules="[
+                  (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
+                  (val) => val > 0 || 'Valor deve ser maior que zero',
+                ]"
+                lazy-rules
+                :disable="notaBloqueada"
+                input-class="text-right"
+              />
+            </div>
           </div>
-        </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
@@ -208,3 +216,10 @@ watch(() => props.modelValue, (newVal) => {
     </q-card>
   </q-dialog>
 </template>
+
+<style scoped>
+.dialog-card {
+  width: 600px;
+  max-width: 95vw;
+}
+</style>

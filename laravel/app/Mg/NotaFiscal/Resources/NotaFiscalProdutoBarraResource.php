@@ -113,6 +113,7 @@ class NotaFiscalProdutoBarraResource extends JsonResource
 
         return [
             'codprodutobarra' => $produtoBarra->codprodutobarra,
+            'codproduto' => $produtoBarra->ProdutoVariacao?->Produto?->codproduto,
             'barras' => $produtoBarra->barras,
             'descricao' => $produtoBarra->descricao,
             'ncm' => $produtoBarra->ProdutoVariacao->Produto?->Ncm?->ncm,
