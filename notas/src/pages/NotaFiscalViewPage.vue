@@ -216,13 +216,6 @@ const createItem = async (prod) => {
       return (b.codnotafiscalprodutobarra || 0) - (a.codnotafiscalprodutobarra || 0)
     })[0]
 
-    console.log(adicionado)
-
-    console.log({
-      codnotafiscal: adicionado.codnotafiscal,
-      codnotafiscalitem: adicionado.codnotafiscalprodutobarra,
-    })
-
     router.push({
       name: 'nota-fiscal-item-edit',
       params: {
@@ -864,8 +857,11 @@ const enviarEmailNfe = async () => {
 const abrirDanfe = async () => {
   try {
     danfeUrl.value = await notaFiscalStore.getDanfeUrl(nota.value.codnotafiscal)
-    console.log('URL do DANFE:', danfeUrl.value)
-    danfeDialog.value = true
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+      window.open(danfeUrl.value, '_blank')
+    } else {
+      danfeDialog.value = true
+    }
   } catch (error) {
     $q.notify({
       type: 'negative',
