@@ -1,3 +1,14 @@
+- no dashboard
+  - deixar responsivo (celular e tablet na vertical)
+  - colcoar natureza de operacao nas listagens
+  - quando filtra modelo (nfe/nfce) totais lá encima ficam zerados
+  - deixar o padding dos totais la encima igual no vertical e no horizontal
+  - Trocar o grafico de % de Erro Por Filial para % de Canceladas/Inutilizadas por Filial
+  - Adicionar um grafico de autorizadas por Usuario Alteração.
+  - criar um % de cancelado/inutilizado por usuario Criacao
+  - Mudar os labels pra 7 dias e Hoje.
+  - criar os indices no banco de dados pra não pesar
+  - mostrar de alguma forma que são as ultimas 20 de cada lista
 - quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
 - colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
 - criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
