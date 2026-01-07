@@ -88,6 +88,17 @@ export default {
     return URL.createObjectURL(blob)
   },
 
+  async espelho(codnotafiscal) {
+    // Faz o download do PDF do espelho via API (com autenticação via header)
+    const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/espelho`, {
+      responseType: 'blob', // Importante para PDFs
+    })
+
+    // Cria um URL temporário do blob
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    return URL.createObjectURL(blob)
+  },
+
   async xml(codnotafiscal) {
     // Faz o download do XML via API (com autenticação via header)
     const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/xml`, {

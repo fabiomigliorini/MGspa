@@ -107,6 +107,7 @@ Route::group(['prefix' => 'v1'], function () {
         Route::post('{codnotafiscal}/recalcular-tributacao', '\Mg\NotaFiscal\NotaFiscalController@recalcularTributacao');
         Route::post('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalController@cartaCorrecao');
         Route::get('{codnotafiscal}/carta-correcao/pdf', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController@pdf');
+        Route::get('{codnotafiscal}/espelho', '\Mg\NotaFiscal\NotaFiscalController@espelho');
 
         // Relacionamentos nested
         Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')
