@@ -1889,7 +1889,11 @@ onUnmounted(() => {
               <div class="text-h6">
                 <q-icon name="payments" size="1.5em" class="q-mr-sm" />
                 Formas de Pagamento
-                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                <q-badge
+                  color="white"
+                  text-color="primary"
+                  class="q-ml-sm text-weight-bold text-body1"
+                >
                   {{ pagamentos.length }}
                 </q-badge>
                 <q-btn
@@ -2009,7 +2013,11 @@ onUnmounted(() => {
               <div class="text-h6">
                 <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" />
                 Duplicatas
-                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                <q-badge
+                  color="white"
+                  text-color="primary"
+                  class="q-ml-sm text-weight-bold text-body1"
+                >
                   {{ duplicatas.length }}
                 </q-badge>
                 <q-btn
@@ -2103,7 +2111,11 @@ onUnmounted(() => {
               <div class="text-h6">
                 <q-icon name="link" size="1.5em" class="q-mr-sm" />
                 Notas Fiscais Referenciadas
-                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                <q-badge
+                  color="white"
+                  text-color="primary"
+                  class="q-ml-sm text-weight-bold text-body1"
+                >
                   {{ referenciadas.length }}
                 </q-badge>
                 <q-btn
@@ -2142,7 +2154,10 @@ onUnmounted(() => {
                       </div>
 
                       <div class="text-caption text-grey-7">Chave de Acesso</div>
-                      <div class="text-caption" style="font-family: monospace">
+                      <div
+                        class="text-caption"
+                        style="font-family: monospace"
+                      >
                         {{ formatChave(ref.nfechave) }}
                       </div>
                     </q-card-section>
@@ -2185,7 +2200,11 @@ onUnmounted(() => {
               <div class="text-h6">
                 <q-icon name="edit_note" size="1.5em" class="q-mr-sm" />
                 Cartas de Correção
-                <q-badge color="white" text-color="primary" class="q-ml-sm">
+                <q-badge
+                  color="white"
+                  text-color="primary"
+                  class="q-ml-sm text-weight-bold text-body1"
+                >
                   {{ cartasCorrecao.length }}
                 </q-badge>
                 <q-btn

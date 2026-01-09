@@ -1,26 +1,25 @@
+- Parametrização de Outras Saídas
+- Tratamento de erro quando não tem tributação da natureza de operação
+- Pesquisa não aperece os produtos
+
 - no dashboard
-  - deixar responsivo (celular e tablet na vertical)
-  - colcoar natureza de operacao nas listagens
-  - quando filtra modelo (nfe/nfce) totais lá encima ficam zerados
-  - deixar o padding dos totais la encima igual no vertical e no horizontal
-  - Trocar o grafico de % de Erro Por Filial para % de Canceladas/Inutilizadas por Filial
   - Adicionar um grafico de autorizadas por Usuario Alteração.
   - criar um % de cancelado/inutilizado por usuario Criacao
-  - Mudar os labels pra 7 dias e Hoje.
   - criar os indices no banco de dados pra não pesar
-  - mostrar de alguma forma que são as ultimas 20 de cada lista
-- quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
+
 - colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
-- criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
-- colocar link pra nfe de terceiro
 - conferir se todos os subitens da nota, batem com o espelho (duplicatas, pagamento, referenciadas, carta de correcao)
 
 DONE:
+
+Ao criar o dashboard, matamos essa questão:
+
+- criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 
 05/01
 
@@ -60,3 +59,18 @@ DONE:
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
 - colocar um link pro cadastro do produto ({MGLARA_URL}/produto/{codproduto})
 - popups em geral estourando em celular
+
+08/01
+
+- Dashboard
+- deixar responsivo (celular e tablet na vertical)
+- colcoar natureza de operacao nas listagens
+- deixar o padding dos totais la encima igual no vertical e no horizontal
+- Mudar os labels pra 7 dias e Hoje.
+- mostrar de alguma forma que são as ultimas 20 de cada lista
+- quando filtra modelo (nfe/nfce) totais lá encima ficam zerados
+
+09/01
+
+- Trocar o grafico de % de Erro Por Filial para % de Canceladas/inutilizadas por Filial
+- quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia

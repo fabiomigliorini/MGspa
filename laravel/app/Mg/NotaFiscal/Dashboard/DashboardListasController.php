@@ -22,10 +22,13 @@ class DashboardListasController extends Controller
                 f.valortotal,
                 fi.filial,
                 f.status,
-                f.saida AS data
+                f.saida AS data,
+                no.naturezaoperacao
             FROM tblnotafiscal f
             JOIN tblfilial fi
               ON fi.codfilial = f.codfilial
+            LEFT JOIN tblnaturezaoperacao no
+              ON no.codnaturezaoperacao = f.codnaturezaoperacao
             WHERE f.status IN ('ERR','DEN')
             ORDER BY f.criacao DESC
             LIMIT 20
@@ -51,10 +54,13 @@ class DashboardListasController extends Controller
                 f.valortotal,
                 fi.filial,
                 f.status,
-                f.saida AS data
+                f.saida AS data,
+                no.naturezaoperacao
             FROM tblnotafiscal f
             JOIN tblfilial fi
               ON fi.codfilial = f.codfilial
+            LEFT JOIN tblnaturezaoperacao no
+              ON no.codnaturezaoperacao = f.codnaturezaoperacao
             WHERE f.status IN ('CAN','INU')
             ORDER BY f.saida DESC
             LIMIT 20
@@ -80,10 +86,13 @@ class DashboardListasController extends Controller
                 f.valortotal,
                 fi.filial,
                 f.status,
-                f.saida AS data
+                f.saida AS data,
+                no.naturezaoperacao
             FROM tblnotafiscal f
             JOIN tblfilial fi
               ON fi.codfilial = f.codfilial
+            LEFT JOIN tblnaturezaoperacao no
+              ON no.codnaturezaoperacao = f.codnaturezaoperacao
             WHERE f.status = 'DIG'
             ORDER BY f.criacao DESC
             LIMIT 20
@@ -109,6 +118,7 @@ class DashboardListasController extends Controller
                 'filial' => $row->filial,
                 'status' => $row->status,
                 'data' => $row->data,
+                'naturezaOperacao' => $row->naturezaoperacao,
             ];
         }, $results);
     }

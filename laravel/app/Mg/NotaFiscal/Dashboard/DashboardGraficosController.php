@@ -9,6 +9,20 @@ use Illuminate\Support\Facades\DB;
 class DashboardGraficosController extends Controller
 {
     /**
+     * Converte string de modelo para código numérico
+     */
+    private function parseModelo($modelo)
+    {
+        if ($modelo === 'nfe' || $modelo === '55') {
+            return 55;
+        }
+        if ($modelo === 'nfce' || $modelo === '65') {
+            return 65;
+        }
+        return null; // 'ambos' ou 'all'
+    }
+
+    /**
      * GET /nota-fiscal/dashboard/graficos/volume-mensal
      * Volume de notas por mes (ultimos 12 meses)
      */
@@ -39,20 +53,21 @@ class DashboardGraficosController extends Controller
 
     /**
      * GET /nota-fiscal/dashboard/graficos/erro-por-filial
-     * Percentual de erro por filial
+     * Percentual de canceladas/inutilizadas por filial
      */
     public function erroPorFilial(Request $request)
     {
         $period = (int) $request->input('period', 30);
-        $modelo = $request->input('modelo', 'all');
+        $modeloParam = $request->input('modelo', 'ambos');
+        $modelo = $this->parseModelo($modeloParam);
 
         $where = "f.status IN ('AUT','ERR','DEN','CAN','INU','DIG')
               AND f.saida >= CURRENT_DATE - INTERVAL '{$period} days'";
         $bindings = [];
 
-        if ($modelo !== 'all') {
+        if ($modelo !== null) {
             $where .= ' AND f.modelo = :modelo';
-            $bindings['modelo'] = (int) $modelo;
+            $bindings['modelo'] = $modelo;
         }
 
         $sql = "
@@ -60,15 +75,15 @@ class DashboardGraficosController extends Controller
                 f.codfilial,
                 fi.filial,
                 ROUND(
-                    100.0 * SUM((f.status IN ('ERR','DEN'))::int) / NULLIF(COUNT(*), 0),
+                    100.0 * SUM((f.status IN ('CAN','INU'))::int) / NULLIF(COUNT(*), 0),
                     2
-                ) AS percent_erro
+                ) AS percent_canceladas
             FROM tblnotafiscal f
             JOIN tblfilial fi
               ON fi.codfilial = f.codfilial
             WHERE {$where}
             GROUP BY f.codfilial, fi.filial
-            ORDER BY percent_erro DESC
+            ORDER BY percent_canceladas DESC
         ";
 
         $results = DB::select($sql, $bindings);
@@ -77,7 +92,7 @@ class DashboardGraficosController extends Controller
             return [
                 'codfilial' => (int) $row->codfilial,
                 'filial' => $row->filial,
-                'percent_erro' => (float) ($row->percent_erro ?? 0),
+                'percent_canceladas' => (float) ($row->percent_canceladas ?? 0),
             ];
         }, $results));
     }
