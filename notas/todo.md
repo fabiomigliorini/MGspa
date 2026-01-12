@@ -1,25 +1,22 @@
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 - Pesquisa não aperece os produtos
+- Na tela de nota, precisamos ter um link para o cadastro da pessoa.
+- enviar por fabio:https://notas.mgpapelaria.com.br/nota/3327717
+  -Erro de endereço longo
 
 - no dashboard
   - Adicionar um grafico de autorizadas por Usuario Alteração.
   - criar um % de cancelado/inutilizado por usuario Criacao
   - criar os indices no banco de dados pra não pesar
 
-- colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
-- conferir se todos os subitens da nota, batem com o espelho (duplicatas, pagamento, referenciadas, carta de correcao)
 
 DONE:
-
-Ao criar o dashboard, matamos essa questão:
-
-- criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 
 05/01
 
@@ -69,8 +66,14 @@ Ao criar o dashboard, matamos essa questão:
 - Mudar os labels pra 7 dias e Hoje.
 - mostrar de alguma forma que são as ultimas 20 de cada lista
 - quando filtra modelo (nfe/nfce) totais lá encima ficam zerados
+- criar um dashboard com um resumo das notas com problema e as notas emitidas na inialização. totais por nat operacao, etc. assim fica mais facil de gerenciar os problemas.
 
 09/01
 
 - Trocar o grafico de % de Erro Por Filial para % de Canceladas/inutilizadas por Filial
 - quando passar o mouse encima da imagem, ver se tem como mostrar ela cheia
+
+12/01
+
+- colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
+- conferir se todos os subitens da nota, batem com o espelho (duplicatas, pagamento, referenciadas, carta de correcao)

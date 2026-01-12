@@ -1166,6 +1166,17 @@ onUnmounted(() => {
         <q-btn
           flat
           dense
+          color="black"
+          icon="reply"
+          @click="recalcularTributacao"
+          v-if="podeRecalcularTributacao"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Realizar Devolução</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          dense
           color="grey-7"
           icon="edit"
           :to="{ name: 'nota-fiscal-edit', params: { codnotafiscal: route.params.codnotafiscal } }"
@@ -2154,12 +2165,14 @@ onUnmounted(() => {
                       </div>
 
                       <div class="text-caption text-grey-7">Chave de Acesso</div>
-                      <div
-                        class="text-caption"
-                        style="font-family: monospace"
+                      <a
+                        :href="`https://sistema.mgpapelaria.com.br/MGsis/index.php?r=nfeTerceiro/view&id=${ref.codnotafiscalreferenciada}`"
+                        target="blank"
+                        class="text-caption text-primary"
+                        style="font-family: monospace; text-decoration: none"
                       >
                         {{ formatChave(ref.nfechave) }}
-                      </div>
+                      </a>
                     </q-card-section>
 
                     <q-separator v-if="!notaBloqueada" />
