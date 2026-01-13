@@ -58,7 +58,7 @@ onMounted(() => {
 })
 
 const getProdutoUrl = (codproduto) => {
-  return `https://sistema-dev.mgpapelaria.com.br/MGLara/produto/${codproduto}`
+  return `https://sistema.mgpapelaria.com.br/MGLara/produto/${codproduto}`
 }
 </script>
 
@@ -80,27 +80,27 @@ const getProdutoUrl = (codproduto) => {
         </q-item-section>
 
         <q-item-section style="height: 70px">
-          <div>
-            <q-item-label lines="3">
+          <a
+            :href="getProdutoUrl(item.produtoBarra?.codproduto)"
+            target="_blank"
+            class="text-primary text-weight-medium text-caption"
+            style="text-decoration: none"
+          >
+            <q-item-label lines="3" class="text-black text-body2">
               {{ item.descricaoalternativa }}
-              <span :class="item.descricaoalternativa ? 'text-strike text-weight-thin' : null">
+              <span :class="item.descricaoalternativa ? 'text-strike text-weight-thin ' : null">
                 {{ item.produtoBarra?.descricao }}
               </span>
             </q-item-label>
             <q-item-label caption>{{ item.produtoBarra?.barras || '-' }}</q-item-label>
-            <a
-              :key="codproduto"
-              :href="getProdutoUrl(item.produtoBarra?.codproduto)"
-              target="_blank"
-              class="text-primary text-weight-medium text-caption"
-              style="text-decoration: none"
-            >
-              #{{ item.produtoBarra.codproduto }}
-            </a>
-          </div>
+          </a>
         </q-item-section>
       </q-item>
-      <q-img :src="imagem" class="bg-grey-3" :ratio="4 / 2" />
+
+      <a v-if="imagem" :href="imagem" target="_blank" style="width: 100%">
+        <q-img :src="imagem" :ratio="4 / 2" class="rounded-borders" />
+      </a>
+
       <q-separator />
       <q-card-section class="q-pa-md">
         <div class="row q-col-gutter-sm">

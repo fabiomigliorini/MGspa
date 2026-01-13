@@ -147,7 +147,7 @@ const handleKeyNavigation = (event) => {
         <q-card-section style="height: 55vh">
           <!-- Carregando -->
           <template v-if="loading">
-            <div class="full-height flex justify-center items-center text-grey text-h6">
+            <div class="flex justify-center items-center text-grey text-h6">
               <q-spinner color="grey" size="50px" class="q-mr-md" />
               Carregando...
             </div>

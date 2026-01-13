@@ -9,22 +9,37 @@ use Illuminate\Support\Facades\DB;
 class DashboardKpisController extends Controller
 {
     /**
+     * Converte string de modelo para código numérico
+     */
+    private function parseModelo($modelo)
+    {
+        if ($modelo === 'nfe' || $modelo === '55') {
+            return 55;
+        }
+        if ($modelo === 'nfce' || $modelo === '65') {
+            return 65;
+        }
+        return null; // 'ambos' ou 'all'
+    }
+
+    /**
      * GET /nota-fiscal/dashboard/kpis/gerais
      * KPIs gerais (cards do topo)
      */
     public function gerais(Request $request)
     {
         $period = (int) $request->input('period', 30);
-        $modelo = $request->input('modelo', 'all');
+        $modeloParam = $request->input('modelo', 'ambos');
+        $modelo = $this->parseModelo($modeloParam);
         $filial = $request->input('filial', 'all');
 
         $where = "status IN ('AUT','ERR','DEN','CAN','INU','DIG')
               AND saida >= CURRENT_DATE - INTERVAL '{$period} days'";
         $bindings = [];
 
-        if ($modelo !== 'all') {
+        if ($modelo !== null) {
             $where .= ' AND modelo = :modelo';
-            $bindings['modelo'] = (int) $modelo;
+            $bindings['modelo'] = $modelo;
         }
 
         if ($filial !== 'all') {
@@ -73,16 +88,17 @@ class DashboardKpisController extends Controller
     public function porNatureza(Request $request)
     {
         $period = (int) $request->input('period', 30);
-        $modelo = $request->input('modelo', 'all');
+        $modeloParam = $request->input('modelo', 'ambos');
+        $modelo = $this->parseModelo($modeloParam);
         $filial = $request->input('filial', 'all');
 
         $where = "f.status = 'AUT'
               AND f.saida >= CURRENT_DATE - INTERVAL '{$period} days'";
         $bindings = [];
 
-        if ($modelo !== 'all') {
+        if ($modelo !== null) {
             $where .= ' AND f.modelo = :modelo';
-            $bindings['modelo'] = (int) $modelo;
+            $bindings['modelo'] = $modelo;
         }
 
         if ($filial !== 'all') {
@@ -119,15 +135,16 @@ class DashboardKpisController extends Controller
     public function porFilial(Request $request)
     {
         $period = (int) $request->input('period', 30);
-        $modelo = $request->input('modelo', 'all');
+        $modeloParam = $request->input('modelo', 'ambos');
+        $modelo = $this->parseModelo($modeloParam);
 
         $where = "f.status IN ('AUT','ERR','DEN','CAN','INU','DIG')
               AND f.saida >= CURRENT_DATE - INTERVAL '{$period} days'";
         $bindings = [];
 
-        if ($modelo !== 'all') {
+        if ($modelo !== null) {
             $where .= ' AND f.modelo = :modelo';
-            $bindings['modelo'] = (int) $modelo;
+            $bindings['modelo'] = $modelo;
         }
 
         $sql = "

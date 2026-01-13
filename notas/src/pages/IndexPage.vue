@@ -24,6 +24,8 @@ const enviandoNota = ref(null)
 const consultandoNota = ref(null)
 const period = computed(() => store.period)
 const modelo = computed(() => store.modelo)
+const isMobile = computed(() => $q.screen.lt.sm)
+const carouselSlide = ref('erro')
 const sefazStatus = computed(() => store.sefazStatus)
 const kpisGerais = computed(() => store.kpisGerais)
 const volumeMensal = computed(() => store.volumeMensal)
@@ -32,8 +34,8 @@ const kpisPorFilial = computed(() => store.kpisPorFilial)
 const listas = computed(() => store.listas)
 
 const periodOptions = [
-  { label: 'Dia', value: 1 },
-  { label: 'Semana', value: 7 },
+  { label: 'Hoje', value: 1 },
+  { label: '7 dias', value: 7 },
   { label: '30 dias', value: 30 },
   { label: '60 dias', value: 60 },
   { label: '90 dias', value: 90 },
@@ -78,6 +80,7 @@ const sefazLabel = computed(() => {
 const kpiCards = computed(() => [
   {
     label: 'Total de Notas',
+    labelShort: 'Total',
     value: (kpisGerais.value?.total_notas || 0).toLocaleString('pt-BR'),
     subtitle: null,
     icon: 'description',
@@ -85,6 +88,7 @@ const kpiCards = computed(() => [
   },
   {
     label: 'Autorizadas',
+    labelShort: 'Aut.',
     value: (kpisGerais.value?.autorizadas?.quantidade || 0).toLocaleString('pt-BR'),
     subtitle: `${(kpisGerais.value?.autorizadas?.percentual || 0).toFixed(1)}%`,
     icon: 'check_circle',
@@ -92,16 +96,18 @@ const kpiCards = computed(() => [
   },
   {
     label: 'Erro',
+    labelShort: 'Erro',
     value: (kpisGerais.value?.erro?.quantidade || 0).toLocaleString('pt-BR'),
     subtitle: `${Math.ceil((kpisGerais.value?.erro?.percentual || 0) * 10) / 10}%`,
-    icon: 'error',
+    icon: 'highlight_off',
     color: (kpisGerais.value?.erro?.quantidade || 0) > 0 ? 'negative' : 'grey-7',
   },
   {
     label: 'Canceladas/Inutilizadas',
+    labelShort: 'Canc.',
     value: (kpisGerais.value?.canceladas?.quantidade || 0).toLocaleString('pt-BR'),
     subtitle: `${(kpisGerais.value?.canceladas?.percentual || 0).toFixed(1)}%`,
-    icon: 'cancel',
+    icon: 'block',
     color: 'warning',
   },
 ])
@@ -145,28 +151,31 @@ watch(
   { immediate: true }
 )
 
-const erroChartOption = shallowRef({})
-let lastErroPorFilialHash = ''
+const canceladasChartOption = shallowRef({})
+let lastCanceladasPorFilialHash = ''
 watch(
   erroPorFilial,
   (data) => {
     if (!data || data.length === 0) {
-      erroChartOption.value = {}
-      lastErroPorFilialHash = ''
+      canceladasChartOption.value = {}
+      lastCanceladasPorFilialHash = ''
       return
     }
-    const hash = JSON.stringify(data.map((d) => ({ f: d.filial, e: d.percent_erro })))
-    if (hash === lastErroPorFilialHash) return
-    lastErroPorFilialHash = hash
+    const hash = JSON.stringify(data.map((d) => ({ f: d.filial, c: d.percent_canceladas })))
+    if (hash === lastCanceladasPorFilialHash) return
+    lastCanceladasPorFilialHash = hash
 
-    const sorted = [...data].sort((a, b) => (b.percent_erro || 0) - (a.percent_erro || 0))
-    const maxErro = Math.ceil(Math.max(...data.map((d) => d.percent_erro || 0)) * 10) / 10 || 1
-    erroChartOption.value = {
+    const sorted = [...data].sort(
+      (a, b) => (b.percent_canceladas || 0) - (a.percent_canceladas || 0)
+    )
+    const maxCanceladas =
+      Math.ceil(Math.max(...data.map((d) => d.percent_canceladas || 0)) * 10) / 10 || 1
+    canceladasChartOption.value = {
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       grid: { left: 80, right: 20, top: 10, bottom: 20 },
       xAxis: {
         type: 'value',
-        max: maxErro,
+        max: maxCanceladas,
         axisLabel: { formatter: '{value}%', fontSize: 10 },
       },
       yAxis: {
@@ -177,8 +186,8 @@ watch(
       series: [
         {
           type: 'bar',
-          data: sorted.map((d) => d.percent_erro || 0),
-          itemStyle: { color: '#F44336' },
+          data: sorted.map((d) => d.percent_canceladas || 0),
+          itemStyle: { color: '#FF9800' },
           barWidth: 12,
         },
       ],
@@ -303,63 +312,102 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page class="q-pa-sm">
+  <q-page class="q-pa-sm bg-grey-">
     <!-- TOPO: Filtros e Status SEFAZ -->
-    <div class="row items-center q-mb-md q-gutter-x-md">
-      <q-tabs
-        :model-value="period"
-        align="left"
-        class="text-grey-7 bg-grey-2"
-        active-bg-color="primary"
-        active-color="white"
-        indicator-color="transparent"
-        inline-label
-        no-caps
-        dense
-        @update:model-value="onPeriodChange"
-      >
-        <q-tab v-for="opt in periodOptions" :key="opt.value" :name="opt.value" :label="opt.label" />
-      </q-tabs>
-      <q-tabs
-        :model-value="modelo"
-        align="left"
-        class="text-grey-7 bg-grey-2"
-        active-bg-color="primary"
-        active-color="white"
-        indicator-color="transparent"
-        inline-label
-        no-caps
-        dense
-        @update:model-value="onModeloChange"
-      >
-        <q-tab v-for="opt in modeloOptions" :key="opt.value" :name="opt.value" :label="opt.label" />
-      </q-tabs>
-      <q-space />
-      <q-chip :color="sefazColor" text-color="white" :icon="sefazIcon" dense>
-        SEFAZ: {{ sefazLabel }}
-      </q-chip>
-      <q-btn flat round dense icon="refresh" :loading="loading" @click="refresh">
-        <q-tooltip>Atualizar</q-tooltip>
-      </q-btn>
+    <div
+      :class="isMobile ? 'column q-gutter-y-sm q-mb-sm' : 'row items-center q-mb-md q-gutter-x-md'"
+    >
+      <div class="column q-pa-none">
+        <div v-if="!isMobile" class="text-grey-7 q-mt-xs q-pa-none text-caption">Período:</div>
+        <q-tabs
+          :model-value="period"
+          :class="isMobile ? 'text-grey-7 bg-grey-3 compact-tabs' : 'text-grey-7 bg-grey-3'"
+          active-bg-color="primary"
+          active-color="white"
+          indicator-color="transparent"
+          inline-label
+          no-caps
+          dense
+          @update:model-value="onPeriodChange"
+        >
+          <q-tab
+            v-for="opt in periodOptions"
+            :key="opt.value"
+            :name="opt.value"
+            :label="opt.label"
+            :class="isMobile ? 'rounded-borders compact-tab' : 'rounded-borders'"
+          />
+        </q-tabs>
+      </div>
+
+      <div class="column q-pa-none">
+        <div v-if="!isMobile" class="text-grey-7 q-mt-xs q-pa-none text-caption">Modelo:</div>
+        <q-tabs
+          :model-value="modelo"
+          :class="isMobile ? 'text-grey-7 bg-grey-3 compact-tabs' : 'text-grey-7 bg-grey-3'"
+          active-bg-color="primary"
+          active-color="white"
+          indicator-color="transparent"
+          inline-label
+          no-caps
+          dense
+          @update:model-value="onModeloChange"
+        >
+          <q-tab
+            v-for="opt in modeloOptions"
+            :key="opt.value"
+            :name="opt.value"
+            :label="opt.label"
+            :class="isMobile ? 'rounded-borders compact-tab' : 'rounded-borders'"
+          />
+        </q-tabs>
+      </div>
+
+      <q-space v-if="!isMobile" />
+
+      <div :class="isMobile ? 'row items-center justify-end q-mr-md q-my-sm' : 'row items-center'">
+        <q-chip :color="sefazColor" text-color="white" :icon="sefazIcon" class="q-mr-none q-pa-sm">
+          SEFAZ: {{ sefazLabel }}
+        </q-chip>
+        <q-btn flat icon="refresh" :loading="loading" @click="refresh">
+          <q-tooltip>Atualizar</q-tooltip>
+        </q-btn>
+      </div>
     </div>
 
     <!-- LINHA 1: Cards KPI -->
-    <div class="row q-col-gutter-md q-mb-md">
-      <div v-for="kpi in kpiCards" :key="kpi.label" class="col-3">
+    <div flat :class="isMobile ? 'row q-col-gutter-xs q-mb-sm' : 'row q-col-gutter-md q-mb-md'">
+      <div v-for="kpi in kpiCards" :key="kpi.label" class="col">
         <q-card flat bordered>
-          <q-card-section horizontal class="items-center q-pa-sm">
-            <q-avatar :color="kpi.color" text-color="white" size="36px" class="q-mr-sm">
-              <q-icon :name="kpi.icon" size="20px" />
+          <q-card-section
+            :horizontal="!isMobile"
+            :class="isMobile ? 'items-center text-center q-pa-xs' : 'items-center q-pa-sm'"
+          >
+            <q-avatar
+              :color="kpi.color"
+              text-color="white"
+              :size="isMobile ? '24px' : '36px'"
+              square
+              style="border-radius: 4px"
+              :class="isMobile ? 'q-mb-xs' : 'q-mr-sm'"
+            >
+              <q-icon :name="kpi.icon" :size="isMobile ? '14px' : '20px'" />
             </q-avatar>
             <div>
-              <div class="text-h6 text-weight-bold">
+              <div
+                :class="
+                  isMobile ? 'text-subtitle2 text-weight-bold' : 'text-body1 text-weight-bold'
+                "
+              >
                 {{ loading ? '...' : kpi.value }}
               </div>
-              <div class="text-caption text-grey-7 ellipsis">
-                <template v-if="kpi.subtitle">
+              <div
+                :class="isMobile ? 'text-caption text-grey-7' : 'text-caption text-grey-7 ellipsis'"
+              >
+                <template v-if="kpi.subtitle && !isMobile">
                   {{ kpi.subtitle }}
                 </template>
-                {{ kpi.label }}
+                {{ isMobile ? kpi.labelShort : kpi.label }}
               </div>
             </div>
           </q-card-section>
@@ -368,8 +416,11 @@ onMounted(async () => {
     </div>
 
     <!-- LINHA 2: Gráficos -->
-    <div class="row q-col-gutter-md q-mb-md" style="height: 200px">
-      <div class="col-7">
+    <div
+      :class="isMobile ? 'column q-gutter-y-sm q-mb-sm' : 'row q-col-gutter-md q-mb-md'"
+      :style="isMobile ? '' : 'height: 200px'"
+    >
+      <div :class="isMobile ? '' : 'col-7'" :style="isMobile ? 'height: 180px' : ''">
         <q-card flat bordered style="height: 100%">
           <q-card-section class="q-pa-sm column" style="height: 100%">
             <div class="text-subtitle2 text-weight-medium q-mb-xs">Volume Mensal</div>
@@ -386,10 +437,12 @@ onMounted(async () => {
           </q-card-section>
         </q-card>
       </div>
-      <div class="col-5">
+      <div :class="isMobile ? '' : 'col-5'" :style="isMobile ? 'height: 180px' : ''">
         <q-card flat bordered style="height: 100%">
           <q-card-section class="q-pa-sm column" style="height: 100%">
-            <div class="text-subtitle2 text-weight-medium q-mb-xs">% Erro por Filial</div>
+            <div class="text-subtitle2 text-weight-medium q-mb-xs">
+              Canceladas/Inutilizadas por Filial
+            </div>
             <div class="col relative-position">
               <q-spinner
                 v-if="loading && !erroPorFilial.length"
@@ -398,7 +451,7 @@ onMounted(async () => {
               />
               <v-chart
                 v-else-if="erroPorFilial.length"
-                :option="erroChartOption"
+                :option="canceladasChartOption"
                 autoresize
                 style="height: 100%; width: 100%"
               />
@@ -420,6 +473,7 @@ onMounted(async () => {
             flat
             hide-bottom
             :loading="loading"
+            :dense="isMobile"
             virtual-scroll
             :rows-per-page-options="[0]"
           >
@@ -437,151 +491,394 @@ onMounted(async () => {
     </div>
 
     <!-- LINHA 4: Listas -->
-    <div class="row q-col-gutter-md">
-      <!-- Lista Erro -->
-      <div class="col-4">
-        <q-card flat bordered class="column">
-          <q-card-section class="q-pa-sm q-pb-none">
-            <div class="text-subtitle2 text-weight-medium text-negative">
-              <q-icon name="error" class="q-mr-xs" />
-              Últimas com Erro
-            </div>
-          </q-card-section>
-          <q-card-section class="col q-pa-none scroll">
-            <q-spinner v-if="loading" color="primary" class="absolute-center" />
-            <q-list v-else-if="listas.erro.length" separator>
-              <q-item
-                v-for="item in listas.erro"
-                :key="item.codnotafiscal"
-                :to="`/nota/${item.codnotafiscal}`"
-              >
-                <q-item-section side>
-                  <div class="row no-wrap q-gutter-x-xs">
-                    <q-btn
-                      flat
-                      round
-                      size="sm"
-                      color="primary"
-                      icon="refresh"
-                      :loading="consultandoNota === item.codnotafiscal"
-                      @click="consultarNfe(item.codnotafiscal, $event)"
-                    >
-                      <q-tooltip>Consultar NFe</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      flat
-                      round
-                      size="sm"
-                      color="secondary"
-                      icon="send"
-                      :loading="enviandoNota === item.codnotafiscal"
-                      @click="enviarNfe(item.codnotafiscal, $event)"
-                    >
-                      <q-tooltip>Enviar NFe</q-tooltip>
-                    </q-btn>
-                  </div>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-caption text-weight-medium">
-                    {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
-                    {{ formatNumero(item.numero) }} - Série {{ item.serie }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.filial }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.data ? formatDateTime(item.data) : '-' }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side class="text-caption text-weight-medium">
-                  R$ {{ formatCurrency(item.valortotal) }}
-                </q-item-section>
-              </q-item>
-            </q-list>
-            <div v-else class="absolute-center text-grey text-caption">Nenhum erro</div>
-          </q-card-section>
-        </q-card>
-      </div>
+    <q-card flat bordered>
+      <q-card-section class="q-pa-sm q-pb-none">
+        <div class="text-subtitle2 text-weight-medium text-grey-8">
+          As 20 notas mais recentes em
+        </div>
+      </q-card-section>
+      <q-card-section class="q-pa-sm">
+        <!-- Desktop -->
+        <div v-if="!isMobile" class="row q-col-gutter-md">
+          <!-- Lista Erro -->
+          <div class="col-4">
+            <q-card flat bordered class="column">
+              <q-card-section class="q-pa-sm q-pb-none">
+                <div class="text-subtitle2 text-weight-medium text-negative">
+                  <q-icon name="highlight_off" class="q-mr-xs" />
+                  Erro
+                </div>
+              </q-card-section>
+              <q-card-section class="col q-pa-none scroll">
+                <q-spinner v-if="loading" color="primary" class="absolute-center" />
+                <q-list v-else-if="listas.erro.length" separator>
+                  <q-item
+                    v-for="item in listas.erro"
+                    :key="item.codnotafiscal"
+                    :to="`/nota/${item.codnotafiscal}`"
+                  >
+                    <q-item-section side>
+                      <div class="row no-wrap q-gutter-x-xs">
+                        <q-btn
+                          flat
+                          round
+                          size="sm"
+                          color="primary"
+                          icon="refresh"
+                          :loading="consultandoNota === item.codnotafiscal"
+                          @click="consultarNfe(item.codnotafiscal, $event)"
+                        >
+                          <q-tooltip>Consultar NFe</q-tooltip>
+                        </q-btn>
+                        <q-btn
+                          flat
+                          round
+                          size="sm"
+                          color="secondary"
+                          icon="send"
+                          :loading="enviandoNota === item.codnotafiscal"
+                          @click="enviarNfe(item.codnotafiscal, $event)"
+                        >
+                          <q-tooltip>Enviar NFe</q-tooltip>
+                        </q-btn>
+                      </div>
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label class="text-caption text-weight-medium">
+                        {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                        {{ formatNumero(item.numero) }} - Série {{ item.serie }}
+                      </q-item-label>
+                      <q-item-label caption>
+                        {{ item.filial }}
+                      </q-item-label>
+                      <q-item-label caption>
+                        {{ item.data ? formatDateTime(item.data) : '-' }}
+                      </q-item-label>
+                    </q-item-section>
+                    <div class="column q-mt-md">
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7 q-mb-none"
+                      >
+                        R$ {{ formatCurrency(item.valortotal) }}
+                      </q-item-section>
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7"
+                      >
+                        {{ item.naturezaOperacao }}
+                      </q-item-section>
+                    </div>
+                  </q-item>
+                </q-list>
+                <div v-else class="absolute-center text-grey text-caption">Nenhum erro</div>
+              </q-card-section>
+            </q-card>
+          </div>
 
-      <!-- Lista Canceladas/Inutilizadas -->
-      <div class="col-4">
-        <q-card flat bordered class="column">
-          <q-card-section class="q-pa-sm q-pb-none">
-            <div class="text-subtitle2 text-weight-medium text-warning">
-              <q-icon name="block" class="q-mr-xs" />
-              Últimas Canceladas/Inutilizadas
-            </div>
-          </q-card-section>
-          <q-card-section class="col q-pa-none scroll">
-            <q-spinner v-if="loading" color="primary" class="absolute-center" />
-            <q-list v-else-if="listas.canceladasInutilizadas.length" separator>
-              <q-item
-                v-for="item in listas.canceladasInutilizadas"
-                :key="item.codnotafiscal"
-                :to="`/nota/${item.codnotafiscal}`"
-              >
-                <q-item-section>
-                  <q-item-label class="text-caption text-weight-medium">
-                    {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
-                    {{ formatNumero(item.numero) }} - Série {{ item.serie }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.filial }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.data ? formatDateTime(item.data) : '-' }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side class="text-caption text-weight-medium">
-                  R$ {{ formatCurrency(item.valortotal) }}
-                </q-item-section>
-              </q-item>
-            </q-list>
-            <div v-else class="absolute-center text-grey text-caption">
-              Nenhuma cancelada/inutilizada
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
+          <!-- Lista Canceladas/Inutilizadas -->
+          <div class="col-4">
+            <q-card flat bordered class="column">
+              <q-card-section class="q-pa-sm q-pb-none">
+                <div class="text-subtitle2 text-weight-medium text-warning">
+                  <q-icon name="block" class="q-mr-xs" />
+                  Canceladas e Inutilizadas
+                </div>
+              </q-card-section>
+              <q-card-section class="col q-pa-none scroll">
+                <q-spinner v-if="loading" color="primary" class="absolute-center" />
+                <q-list v-else-if="listas.canceladasInutilizadas.length" separator>
+                  <q-item
+                    v-for="item in listas.canceladasInutilizadas"
+                    :key="item.codnotafiscal"
+                    :to="`/nota/${item.codnotafiscal}`"
+                  >
+                    <q-item-section>
+                      <q-item-label class="text-caption text-weight-medium">
+                        {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                        {{ formatNumero(item.numero) }} - Série {{ item.serie }}
+                      </q-item-label>
+                      <q-item-label caption>
+                        {{ item.filial }}
+                      </q-item-label>
+                      <q-item-label caption>
+                        {{ item.data ? formatDateTime(item.data) : '-' }}
+                      </q-item-label>
+                    </q-item-section>
+                    <div class="column q-mt-md">
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7 q-mb-none"
+                      >
+                        R$ {{ formatCurrency(item.valortotal) }}
+                      </q-item-section>
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7"
+                      >
+                        {{ item.naturezaOperacao }}
+                      </q-item-section>
+                    </div>
+                  </q-item>
+                </q-list>
+                <div v-else class="absolute-center text-grey text-caption">
+                  Nenhuma cancelada/inutilizada
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
 
-      <!-- Lista Digitação -->
-      <div class="col-4">
-        <q-card flat bordered class="column">
-          <q-card-section class="q-pa-sm q-pb-none">
-            <div class="text-subtitle2 text-weight-medium text-info">
-              <q-icon name="edit" class="q-mr-xs" />
-              Em Digitação
-            </div>
-          </q-card-section>
-          <q-card-section class="col q-pa-none scroll">
-            <q-spinner v-if="loading" color="primary" class="absolute-center" />
-            <q-list v-else-if="listas.digitacao.length" separator>
-              <q-item
-                v-for="item in listas.digitacao"
-                :key="item.codnotafiscal"
-                :to="`/nota/${item.codnotafiscal}`"
-              >
-                <q-item-section>
-                  <q-item-label class="text-caption text-weight-medium">
-                    {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
-                    {{ formatNumero(item.numero) }} - Série {{ item.serie }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.filial }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.data ? formatDateTime(item.data) : '-' }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side class="text-caption text-weight-medium">
-                  R$ {{ formatCurrency(item.valortotal) }}
-                </q-item-section>
-              </q-item>
-            </q-list>
-            <div v-else class="absolute-center text-grey text-caption">Nenhuma em digitação</div>
-          </q-card-section>
-        </q-card>
-      </div>
-    </div>
+          <!-- Lista Digitação -->
+          <div class="col-4">
+            <q-card flat bordered class="column">
+              <q-card-section class="q-pa-sm q-pb-none">
+                <div class="text-subtitle2 text-weight-medium text-primary">
+                  <q-icon name="edit" class="q-mr-xs" />
+                  Digitação
+                </div>
+              </q-card-section>
+              <q-card-section class="col q-pa-none scroll">
+                <q-spinner v-if="loading" color="primary" class="absolute-center" />
+                <q-list v-else-if="listas.digitacao.length" separator>
+                  <q-item
+                    v-for="item in listas.digitacao"
+                    :key="item.codnotafiscal"
+                    :to="`/nota/${item.codnotafiscal}`"
+                  >
+                    <q-item-section>
+                      <q-item-label class="text-caption text-weight-medium">
+                        {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                        {{ formatNumero(item.numero) }} - Série {{ item.serie }}
+                      </q-item-label>
+                      <q-item-label caption>
+                        {{ item.filial }}
+                      </q-item-label>
+                      <q-item-label caption>
+                        {{ item.data ? formatDateTime(item.data) : '-' }}
+                      </q-item-label>
+                    </q-item-section>
+                    <div class="column q-mt-md">
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7 q-mb-none"
+                      >
+                        R$ {{ formatCurrency(item.valortotal) }}
+                      </q-item-section>
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7"
+                      >
+                        {{ item.naturezaOperacao }}
+                      </q-item-section>
+                    </div>
+                  </q-item>
+                </q-list>
+                <div v-else class="absolute-center text-grey text-caption">
+                  Nenhuma em digitação
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <!-- Mobile (Carrossel) -->
+        <q-carousel
+          v-else
+          v-model="carouselSlide"
+          swipeable
+          animated
+          navigation
+          padding
+          control-color="primary"
+          class="bg-transparent"
+          style="height: 320px"
+        >
+          <!-- Slide Erro -->
+          <q-carousel-slide name="erro" class="q-pa-none">
+            <q-card flat bordered class="column full-height">
+              <q-card-section class="q-pa-sm q-pb-none">
+                <div class="text-subtitle2 text-weight-medium text-negative">
+                  <q-icon name="highlight_off" class="q-mr-xs" />
+                  Erro
+                </div>
+              </q-card-section>
+              <q-card-section class="col q-pa-none scroll">
+                <q-spinner v-if="loading" color="primary" class="absolute-center" />
+                <q-list v-else-if="listas.erro.length" separator dense>
+                  <q-item
+                    v-for="item in listas.erro"
+                    :key="item.codnotafiscal"
+                    :to="`/nota/${item.codnotafiscal}`"
+                    dense
+                  >
+                    <q-item-section side>
+                      <div class="row no-wrap q-gutter-x-xs">
+                        <q-btn
+                          flat
+                          round
+                          size="xs"
+                          color="primary"
+                          icon="refresh"
+                          :loading="consultandoNota === item.codnotafiscal"
+                          @click="consultarNfe(item.codnotafiscal, $event)"
+                        />
+                        <q-btn
+                          flat
+                          round
+                          size="xs"
+                          color="secondary"
+                          icon="send"
+                          :loading="enviandoNota === item.codnotafiscal"
+                          @click="enviarNfe(item.codnotafiscal, $event)"
+                        />
+                      </div>
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label class="text-caption text-weight-medium">
+                        {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                        {{ formatNumero(item.numero) }} - S{{ item.serie }}
+                      </q-item-label>
+                      <q-item-label caption>{{ item.filial }}</q-item-label>
+                      <q-item-label caption>
+                        {{ item.data ? formatDateTime(item.data) : '-' }}
+                      </q-item-label>
+                    </q-item-section>
+                    <div class="column q-mt-md">
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7 q-mb-none"
+                      >
+                        R$ {{ formatCurrency(item.valortotal) }}
+                      </q-item-section>
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7"
+                      >
+                        {{ item.naturezaOperacao }}
+                      </q-item-section>
+                    </div>
+                  </q-item>
+                </q-list>
+                <div v-else class="absolute-center text-grey text-caption">Nenhum erro</div>
+              </q-card-section>
+            </q-card>
+          </q-carousel-slide>
+
+          <!-- Slide Canceladas -->
+          <q-carousel-slide name="canceladas" class="q-pa-none">
+            <q-card flat bordered class="column full-height">
+              <q-card-section class="q-pa-sm q-pb-none">
+                <div class="text-subtitle2 text-weight-medium text-warning">
+                  <q-icon name="block" class="q-mr-xs" />
+                  Canceladas/Inutilizadas
+                </div>
+              </q-card-section>
+              <q-card-section class="col q-pa-none scroll">
+                <q-spinner v-if="loading" color="primary" class="absolute-center" />
+                <q-list v-else-if="listas.canceladasInutilizadas.length" separator dense>
+                  <q-item
+                    v-for="item in listas.canceladasInutilizadas"
+                    :key="item.codnotafiscal"
+                    :to="`/nota/${item.codnotafiscal}`"
+                    dense
+                  >
+                    <q-item-section>
+                      <q-item-label class="text-caption text-weight-medium">
+                        {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                        {{ formatNumero(item.numero) }} - S{{ item.serie }}
+                      </q-item-label>
+                      <q-item-label caption>{{ item.filial }}</q-item-label>
+                      <q-item-label caption>
+                        {{ item.data ? formatDateTime(item.data) : '-' }}
+                      </q-item-label>
+                    </q-item-section>
+                    <div class="column q-mt-md">
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7 q-mb-none"
+                      >
+                        R$ {{ formatCurrency(item.valortotal) }}
+                      </q-item-section>
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7"
+                      >
+                        {{ item.naturezaOperacao }}
+                      </q-item-section>
+                    </div>
+                  </q-item>
+                </q-list>
+                <div v-else class="absolute-center text-grey text-caption">Nenhuma</div>
+              </q-card-section>
+            </q-card>
+          </q-carousel-slide>
+
+          <!-- Slide Digitação -->
+          <q-carousel-slide name="digitacao" class="q-pa-none">
+            <q-card flat bordered class="column full-height">
+              <q-card-section class="q-pa-sm q-pb-none">
+                <div class="text-subtitle2 text-weight-medium text-primary">
+                  <q-icon name="edit" class="q-mr-xs" />
+                  Digitação
+                </div>
+              </q-card-section>
+              <q-card-section class="col q-pa-none scroll">
+                <q-spinner v-if="loading" color="primary" class="absolute-center" />
+                <q-list v-else-if="listas.digitacao.length" separator dense>
+                  <q-item
+                    v-for="item in listas.digitacao"
+                    :key="item.codnotafiscal"
+                    :to="`/nota/${item.codnotafiscal}`"
+                    dense
+                  >
+                    <q-item-section>
+                      <q-item-label class="text-caption text-weight-medium">
+                        {{ item.modelo === 55 ? 'NFe' : 'NFCe' }}
+                        {{ formatNumero(item.numero) }} - S{{ item.serie }}
+                      </q-item-label>
+                      <q-item-label caption>{{ item.filial }}</q-item-label>
+                      <q-item-label caption>
+                        {{ item.data ? formatDateTime(item.data) : '-' }}
+                      </q-item-label>
+                    </q-item-section>
+                    <div class="column q-mt-md">
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7 q-mb-none"
+                      >
+                        R$ {{ formatCurrency(item.valortotal) }}
+                      </q-item-section>
+                      <q-item-section
+                        align="right"
+                        class="text-caption text-weight-medium text-grey-7"
+                      >
+                        {{ item.naturezaOperacao }}
+                      </q-item-section>
+                    </div>
+                  </q-item>
+                </q-list>
+                <div v-else class="absolute-center text-grey text-caption">Nenhuma</div>
+              </q-card-section>
+            </q-card>
+          </q-carousel-slide>
+        </q-carousel>
+      </q-card-section>
+    </q-card>
   </q-page>
 </template>
+
+<style scoped>
+.compact-tabs {
+  min-height: 30px;
+}
+
+.compact-tab {
+  min-height: 30px;
+  padding: 0px;
+  font-size: 11px;
+}
+
+.compact-tab :deep(.q-tab__label) {
+  font-size: 15px;
+}
+</style>
