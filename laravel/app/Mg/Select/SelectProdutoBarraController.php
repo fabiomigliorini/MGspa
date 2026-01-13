@@ -18,7 +18,7 @@ class SelectProdutoBarraController extends Controller
 
         // monta sql base
         $sql = "SELECT 
-                    similarity(descricao, :frase) AS score,
+                    similarity(unaccent(descricao), unaccent(:frase)) AS score,
                     codprodutobarra, 
                     codproduto, 
                     barras, 
@@ -38,7 +38,7 @@ class SelectProdutoBarraController extends Controller
         }
 
         // ordem padrao
-        $ordem = 'descricao ASC, preco ASC';
+        $ordem = null;
 
         // inicializa filtro
         $frase = '';
@@ -60,6 +60,9 @@ class SelectProdutoBarraController extends Controller
                     AND codproduto = :palavra_{$i}::bigint
                 ";
                 $filtro["palavra_{$i}"] = $palavra;
+                if (is_null($ordem)) {
+                    $ordem = 'descricao ASC, preco ASC';
+                }
                 continue;
             }
 
@@ -71,6 +74,9 @@ class SelectProdutoBarraController extends Controller
                 $preco = str_replace('.', '', $palavra);
                 $preco = str_replace(',', '.', $preco);
                 $filtro["palavra_{$i}"] = $preco;
+                if (is_null($ordem)) {
+                    $ordem = 'descricao ASC, preco ASC';
+                }
                 continue;
             }
 
@@ -82,15 +88,11 @@ class SelectProdutoBarraController extends Controller
         $filtro["frase"] = trim($frase);
         if (!empty($filtro["frase"])) {
             $sql .= "
-                AND to_tsvector(
-                    'portuguese',
-                    descricao || ' ' || barras
-                )
-                @@ plainto_tsquery(
-                    'portuguese',
-                    :frase
-                ) 
+                AND similarity(unaccent(descricao), unaccent(:frase)) > 0.2
             ";
+        }
+
+        if (is_null($ordem)) {
             $ordem = 'score DESC, descricao ASC, preco ASC';
         }
 
