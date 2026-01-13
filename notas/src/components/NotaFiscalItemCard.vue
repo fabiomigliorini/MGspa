@@ -47,6 +47,9 @@ const negocioUrl = computed(() => {
   return `${negociosUrl}/negocio/${props.item.codnegocio}`
 })
 
+// URL base para MGLara
+const mglaraUrl = import.meta.env.VITE_MGLARA_URL || process.env.MGLARA_URL
+
 const emit = defineEmits(['delete'])
 
 const tab = ref('icms')
@@ -58,7 +61,7 @@ onMounted(() => {
 })
 
 const getProdutoUrl = (codproduto) => {
-  return `https://sistema.mgpapelaria.com.br/MGLara/produto/${codproduto}`
+  return `${mglaraUrl}/produto/${codproduto}`
 }
 </script>
 

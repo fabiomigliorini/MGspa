@@ -1,6 +1,5 @@
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
-- Na tela de nota, precisamos ter um link para o cadastro da pessoa.
 - Erro de endereço longo ao gerar notas.
 
 - no dashboard
@@ -73,9 +72,10 @@ DONE:
 
 12/01
 
-- colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
 - conferir se todos os subitens da nota, batem com o espelho (duplicatas, pagamento, referenciadas, carta de correcao)
+- Na tela de nota, precisamos ter um link para o cadastro da pessoa.
 
 13/01
 
 - Pesquisa não aperece os produtos
+- colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank

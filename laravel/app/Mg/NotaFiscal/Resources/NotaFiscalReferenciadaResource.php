@@ -4,11 +4,14 @@ namespace Mg\NotaFiscal\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NfeTerceiro\NfeTerceiro;
+
 class NotaFiscalReferenciadaResource extends JsonResource
 {
     public function toArray($request): array
     {
-        return [
+        $ret = [
             'codnotafiscalreferenciada' => $this->codnotafiscalreferenciada,
             'codnotafiscal' => $this->codnotafiscal,
 
@@ -19,5 +22,10 @@ class NotaFiscalReferenciadaResource extends JsonResource
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
         ];
+
+        $ret['notas'] = NotaFiscal::where('nfechave', $this->nfechave)->select('codnotafiscal')->get();
+        $ret['nfeterceiros'] = NfeTerceiro::where('nfechave', $this->nfechave)->select('codnfeterceiro')->get();
+
+        return $ret;
     }
 }

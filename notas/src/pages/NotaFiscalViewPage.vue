@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
@@ -99,6 +99,7 @@ const statusDisponiveis = computed(() => {
 
 // URL base para negócios
 const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
+const mgsisUrl = import.meta.env.VITE_MGSIS_URL || process.env.MGSIS_URL
 
 // Lista de negócios únicos vinculados à nota
 const negociosVinculados = computed(() => {
@@ -1132,6 +1133,17 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
 })
 
+// Recarrega os dados quando o parâmetro da rota muda (navegação entre notas)
+watch(
+  () => route.params.codnotafiscal,
+  (newCod, oldCod) => {
+    if (newCod && newCod !== oldCod) {
+      paginaAtualItens.value = 1
+      loadData()
+    }
+  }
+)
+
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
 })
@@ -1164,7 +1176,7 @@ onUnmounted(() => {
           {{ nota.serie }}
         </div>
 
-        <q-btn flat dense color="black" icon="reply" @click="teste" class="q-mr-sm">
+        <q-btn flat dense color="black" icon="reply" class="q-mr-sm">
           <q-tooltip>Realizar Devolução</q-tooltip>
         </q-btn>
 
@@ -2166,39 +2178,61 @@ onUnmounted(() => {
                       </div>
 
                       <div class="text-caption text-grey-7">Chave de Acesso</div>
-                      <a
-                        :href="`https://sistema.mgpapelaria.com.br/MGsis/index.php?r=nfeTerceiro/view&id=${ref.codnotafiscalreferenciada}`"
-                        target="blank"
-                        class="text-caption text-primary"
-                        style="font-family: monospace; text-decoration: none"
-                      >
+                      <span style="font-family: monospace">
                         {{ formatChave(ref.nfechave) }}
-                      </a>
+                      </span>
                     </q-card-section>
 
-                    <q-separator v-if="!notaBloqueada" />
+                    <q-separator />
 
-                    <q-card-actions v-if="!notaBloqueada" align="right" class="col-auto">
-                      <q-btn
-                        flat
-                        dense
-                        icon="edit"
-                        color="primary"
-                        size="sm"
-                        @click="editarReferenciada(ref)"
-                      >
-                        <q-tooltip>Editar</q-tooltip>
-                      </q-btn>
-                      <q-btn
-                        flat
-                        dense
-                        icon="delete"
-                        color="negative"
-                        size="sm"
-                        @click="excluirReferenciada(ref)"
-                      >
-                        <q-tooltip>Excluir</q-tooltip>
-                      </q-btn>
+                    <q-card-actions align="right" class="col-auto">
+                      <template v-for="n in ref.notas" :key="n.codnotafiscal">
+                        <q-btn
+                          flat
+                          dense
+                          icon="description"
+                          color="grey-7"
+                          size="sm"
+                          :to="`/nota/${n.codnotafiscal}`"
+                        >
+                          <q-tooltip>Abrir Nota Referenciada</q-tooltip>
+                        </q-btn>
+                      </template>
+                      <template v-for="n in ref.nfeterceiros" :key="n.codnfeterceiro">
+                        <q-btn
+                          flat
+                          dense
+                          icon="open_in_new"
+                          color="grey-7"
+                          size="sm"
+                          target="_blank"
+                          :href="`${mgsisUrl}/index.php?r=nfeTerceiro/view&id=${n.codnfeterceiro}`"
+                        >
+                          <q-tooltip>Abrir Nfe Terceiro</q-tooltip>
+                        </q-btn>
+                      </template>
+                      <template v-if="!notaBloqueada">
+                        <q-btn
+                          flat
+                          dense
+                          icon="edit"
+                          color="primary"
+                          size="sm"
+                          @click="editarReferenciada(ref)"
+                        >
+                          <q-tooltip>Editar</q-tooltip>
+                        </q-btn>
+                        <q-btn
+                          flat
+                          dense
+                          icon="delete"
+                          color="negative"
+                          size="sm"
+                          @click="excluirReferenciada(ref)"
+                        >
+                          <q-tooltip>Excluir</q-tooltip>
+                        </q-btn>
+                      </template>
                     </q-card-actions>
                   </q-card>
                 </div>
