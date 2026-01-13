@@ -4,7 +4,8 @@ namespace Mg\Pessoa;
 
 use Illuminate\Http\Request;
 use Mg\MgController;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Exception;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Usuario\Autorizador;
 use App\Rules\InscricaoEstadual;

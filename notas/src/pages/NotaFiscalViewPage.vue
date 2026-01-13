@@ -100,6 +100,7 @@ const statusDisponiveis = computed(() => {
 // URL base para negócios
 const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
 const mgsisUrl = import.meta.env.VITE_MGSIS_URL || process.env.MGSIS_URL
+const pessoasUrl = import.meta.env.VITE_PESSOAS_URL || process.env.PESSOAS_URL
 
 // Lista de negócios únicos vinculados à nota
 const negociosVinculados = computed(() => {
@@ -1615,7 +1616,7 @@ onUnmounted(() => {
                   <div class="text-caption text-grey-7">Nome | Razão Social</div>
                   <div class="text-body1 text-weight-bold text-primary ellipsis">
                     <a
-                      :href="`https://pessoas.mgpapelaria.com.br/pessoa/${nota.pessoa?.codpessoa}`"
+                      :href="`${pessoasUrl}/pessoa/${nota.pessoa?.codpessoa}`"
                       target="_blank"
                       class="text-primary text-weight-bold"
                       style="text-decoration: none"

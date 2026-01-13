@@ -1,6 +1,5 @@
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
-- Erro de endereço longo ao gerar notas.
 
 - no dashboard
   - Adicionar um grafico de autorizadas por Usuario Alteração.
@@ -79,3 +78,4 @@ DONE:
 
 - Pesquisa não aperece os produtos
 - colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
+- Erro de endereço longo ao gerar notas.

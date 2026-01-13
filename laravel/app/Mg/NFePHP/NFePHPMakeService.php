@@ -187,7 +187,7 @@ class NFePHPMakeService
         // Endereço Emitente
         if ($end = $nf->Filial->Pessoa->PessoaEnderecoS()->where('nfe', true)->orderBy('ordem')->first()) {
             $std = new stdClass();
-            $std->xLgr = Strings::replaceSpecialsChars($end->endereco);
+            $std->xLgr = Strings::replaceSpecialsChars(substr($end->endereco, 0, 60));
             $std->nro = Strings::replaceSpecialsChars($end->numero);
             $std->xCpl = Strings::replaceSpecialsChars($end->complemento);
             $std->xBairro = Strings::replaceSpecialsChars($end->bairro);
@@ -254,7 +254,7 @@ class NFePHPMakeService
             // Endereco Destinatario
             $std = new stdClass();
             if ($end = $nf->Pessoa->PessoaEnderecoS()->where('nfe', true)->orderBy('ordem')->first()) {
-                $std->xLgr = Strings::replaceSpecialsChars($end->endereco);
+                $std->xLgr = Strings::replaceSpecialsChars(substr($end->endereco, 0, 60));
                 $std->nro = Strings::replaceSpecialsChars($end->numero);
                 if (!empty($end->complemento)) {
                     $std->xCpl = Strings::replaceSpecialsChars($end->complemento);
@@ -702,7 +702,7 @@ class NFePHPMakeService
             }
             if ($end = $nf->PessoaTransportador->PessoaEnderecoS()->where('nfe', true)->orderBy('ordem')->first()) {
                 $arr = [
-                    Strings::replaceSpecialsChars($end->endereco),
+                    Strings::replaceSpecialsChars(substr($end->endereco, 0, 60)),
                     Strings::replaceSpecialsChars($end->numero),
                     Strings::replaceSpecialsChars($end->complemento),
                     Strings::replaceSpecialsChars($end->bairro),

@@ -293,7 +293,7 @@ class PessoaService
                     $end = PessoaEnderecoService::create([
                         'codpessoa' => $pessoa->codpessoa,
                         'cep' => numeroLimpo($end['CEP'] ?? '00000000'),
-                        'endereco' => substr($end['xLgr'] ?? 'Nao Informado', 0, 100),
+                        'endereco' => substr($end['xLgr'] ?? 'Nao Informado', 0, 60),
                         'numero' => substr($end['nro'] ?? 'S/N', 0, 10),
                         'complemento' => substr($end['xCpl'] ?? null, 0, 50),
                         'bairro' => substr($end['xBairro'] ?? 'Nao Informado', 0, 50),
@@ -315,13 +315,13 @@ class PessoaService
                     $end = PessoaEnderecoService::create([
                         'codpessoa' => $pessoa->codpessoa,
                         'cep' => numeroLimpo($rec['cep'] ?? '00000000'),
-                        'endereco' => substr($rec['logradouro'] ?? 'Nao Informado', 0, 100),
+                        'endereco' => substr($rec['logradouro'] ?? 'Nao Informado', 0, 60),
                         'numero' => substr($rec['numero'] ?? 'S/N', 0, 10),
                         'complemento' => substr($rec['complemento'] ?? null, 0, 50),
                         'bairro' => substr($rec['bairro'] ?? 'Nao Informado', 0, 50),
                         'codcidade' => $cidade->codcidade,
                     ]);
-                }    
+                }
             }
             if (isset($rec['email'])) {
                 PessoaEmailService::createOrUpdate([
@@ -571,10 +571,10 @@ class PessoaService
             foreach ($retIe->ender as $endIe) {
                 PessoaEnderecoService::createOrUpdate([
                     'codpessoa' => $pessoa->codpessoa,
-                    'endereco' => $endIe->xLgr,
-                    'numero' => @$endIe->nro,
+                    'endereco' => substr($endIe->xLgr, 0, 60),
+                    'numero' => substr(@$endIe->nro, 0, 10),
                     'complemento' => substr(trim($endIe->xCpl ?? null), 0, 50),
-                    'bairro' => $endIe->xBairro,
+                    'bairro' => substr($endIe->xBairro, 0, 50),
                     'codcidade' => $cidade->codcidade,
                     'cep'   => numeroLimpo($endIe->CEP)
                 ]);
@@ -638,9 +638,9 @@ class PessoaService
                 // Endereco
                 PessoaEnderecoService::createOrUpdate([
                     'codpessoa' => $pessoa->codpessoa,
-                    'endereco' => $retReceita['logradouro'],
-                    'numero' => $retReceita['numero'],
-                    'bairro' => $retReceita['bairro'],
+                    'endereco' => substr($retReceita['logradouro'], 0, 60),
+                    'numero' => substr($retReceita['numero'], 0, 10),
+                    'bairro' => substr($retReceita['bairro'], 0, 50),
                     'complemento' => substr(trim($retReceita['complemento']), 0, 50),
                     'codcidade' => $pessoa->codcidade,
                     'cep'   => numeroLimpo($retReceita['cep'])
@@ -754,7 +754,7 @@ class PessoaService
         return Pix::select(['nome'])->where('cpf', $cpf)->orderBy('criacao', 'desc')->first();
     }
 
-    public static function buscarNomePeloPixCnpj($cnpj) 
+    public static function buscarNomePeloPixCnpj($cnpj)
     {
         return Pix::select(['nome'])->where('cnpj', $cnpj)->orderBy('criacao', 'desc')->first();
     }
