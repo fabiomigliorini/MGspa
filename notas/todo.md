@@ -2,8 +2,7 @@
 - Tratamento de erro quando não tem tributação da natureza de operação
 - Pesquisa não aperece os produtos
 - Na tela de nota, precisamos ter um link para o cadastro da pessoa.
-- enviar por fabio:https://notas.mgpapelaria.com.br/nota/3327717
-  -Erro de endereço longo
+- Erro de endereço longo ao gerar notas.
 
 - no dashboard
   - Adicionar um grafico de autorizadas por Usuario Alteração.

@@ -1163,17 +1163,11 @@ onUnmounted(() => {
           - Série
           {{ nota.serie }}
         </div>
-        <q-btn
-          flat
-          dense
-          color="black"
-          icon="reply"
-          @click="recalcularTributacao"
-          v-if="podeRecalcularTributacao"
-          class="q-mr-sm"
-        >
+
+        <q-btn flat dense color="black" icon="reply" @click="teste" class="q-mr-sm">
           <q-tooltip>Realizar Devolução</q-tooltip>
         </q-btn>
+
         <q-btn
           flat
           dense
@@ -1608,18 +1602,25 @@ onUnmounted(() => {
                 <div class="col-12 col-sm-8 col-md-5">
                   <div class="text-caption text-grey-7">Nome | Razão Social</div>
                   <div class="text-body1 text-weight-bold text-primary ellipsis">
-                    {{ nota.pessoa?.fantasia || '-' }}
-                    <span class="text-grey-7">
-                      |
-                      {{ nota.pessoa?.pessoa || '-' }}
-                    </span>
+                    <a
+                      :href="`https://pessoas.mgpapelaria.com.br/pessoa/${nota.pessoa?.codpessoa}`"
+                      target="_blank"
+                      class="text-primary text-weight-bold"
+                      style="text-decoration: none"
+                    >
+                      {{ nota.pessoa?.fantasia || '-' }}
+                      <span class="text-grey-7">
+                        |
+                        {{ nota.pessoa?.pessoa || '-' }}
+                      </span>
+                    </a>
                   </div>
                 </div>
 
                 <!-- CNPJ -->
                 <div class="col-12 col-sm-4 col-md-2">
                   <div class="text-caption text-grey-7">
-                    {{ nota.pessoa?.fisica === 1 ? 'CPF' : 'CNPJ' }}
+                    {{ nota.pessoa?.fisica ? 'CPF' : 'CNPJ' }}
                   </div>
                   <div class="text-body1 text-weight-bold text-primary ellipsis">
                     {{ formatCnpjCpf(nota.pessoa?.cnpj, nota.pessoa?.fisica) }}
