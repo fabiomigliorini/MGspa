@@ -1,6 +1,5 @@
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
-- Pesquisa não aperece os produtos
 - Na tela de nota, precisamos ter um link para o cadastro da pessoa.
 - Erro de endereço longo ao gerar notas.
 
@@ -76,3 +75,7 @@ DONE:
 
 - colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
 - conferir se todos os subitens da nota, batem com o espelho (duplicatas, pagamento, referenciadas, carta de correcao)
+
+13/01
+
+- Pesquisa não aperece os produtos
