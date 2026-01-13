@@ -65,6 +65,15 @@ const routes = [
           permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },
+      {
+        path: 'nota/:codnotafiscal/devolucao',
+        name: 'nota-fiscal-devolucao',
+        component: () => import('pages/NotaFiscalDevolucaoPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
     ],
   },
 

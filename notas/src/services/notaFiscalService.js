@@ -130,4 +130,9 @@ export default {
     const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/recalcular-tributacao`)
     return response.data
   },
+
+  async devolucao(codnotafiscal, data) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/devolucao`, data)
+    return response.data
+  },
 }

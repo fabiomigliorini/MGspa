@@ -258,6 +258,45 @@ class NotaFiscalController extends Controller
     }
 
     /**
+     * Gera uma nota fiscal de devolução parcial
+     */
+    public function devolucao(Request $request, int $codnotafiscal)
+    {
+        // Carrega a nota original com todos os relacionamentos
+        $notaOriginal = NotaFiscal::with([
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS',
+        ])->findOrFail($codnotafiscal);
+
+        // Validação condicional: codpessoa obrigatório se nota original for Consumidor (1)
+        $rules = [
+            'itens' => 'required|array|min:1',
+            'itens.*.codnotafiscalprodutobarra' => 'required|integer',
+            'itens.*.quantidade' => 'required|numeric|min:0.001',
+        ];
+
+        if ($notaOriginal->codpessoa == 1) {
+            $rules['codpessoa'] = 'required|integer|min:2';
+        }
+
+        $request->validate($rules);
+
+        // Define o codpessoa a ser usado na devolução
+        $codpessoa = $notaOriginal->codpessoa == 1
+            ? $request->codpessoa
+            : $notaOriginal->codpessoa;
+
+        // Gera a nota de devolução dentro de uma transação
+        DB::beginTransaction();
+        $notaDevolucao = NotaFiscalService::gerarDevolucao($notaOriginal, $request->itens, $codpessoa);
+        DB::commit();
+
+        // retorna o resource de nf
+        return (new NotaFiscalDetailResource($notaDevolucao))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    /**
      * Verifica se a nota está em um status que impede alterações
      *
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException

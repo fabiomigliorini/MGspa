@@ -1,3 +1,5 @@
+- fazer botao juntar notas
+
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 
@@ -6,8 +8,6 @@
   - criar um % de cancelado/inutilizado por usuario Criacao
   - criar os indices no banco de dados pra não pesar
 
-- fazer botão devolução (venda e compra)
-- fazer botao juntar notas
 - dar uma olhada em como amarrar o cclasstrib ao produto. talvez vai ter que refatorar todo motor de calculo da ibs/cbs
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
@@ -79,3 +79,4 @@ DONE:
 - Pesquisa não aperece os produtos
 - colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
 - Erro de endereço longo ao gerar notas.
+- fazer botão devolução (venda e compra)

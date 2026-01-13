@@ -93,6 +93,9 @@ Route::group(['prefix' => 'v1'], function () {
         // Duplicar nota fiscal
         Route::post('{codnotafiscal}/duplicar', '\Mg\NotaFiscal\NotaFiscalController@duplicar');
 
+        // Gerar nota de devolução parcial
+        Route::post('{codnotafiscal}/devolucao', '\Mg\NotaFiscal\NotaFiscalController@devolucao');
+
         // Ações da nota fiscal (novos endpoints)
         Route::post('{codnotafiscal}/criar', '\Mg\NotaFiscal\NotaFiscalController@criar');
         Route::post('{codnotafiscal}/enviar-sincrono', '\Mg\NotaFiscal\NotaFiscalController@enviarSincrono');

@@ -933,5 +933,20 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         throw error
       }
     },
+
+    // ==================== DEVOLUÇÃO ====================
+
+    async criarDevolucao(codnotafiscal, data) {
+      this.loading.nota = true
+      try {
+        const response = await notaFiscalService.devolucao(codnotafiscal, data)
+        return response.data
+      } catch (error) {
+        console.error('Erro ao criar devolução:', error)
+        throw error
+      } finally {
+        this.loading.nota = false
+      }
+    },
   },
 })
