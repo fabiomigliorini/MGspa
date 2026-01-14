@@ -795,6 +795,7 @@ class NotaFiscalService
         $notaNova->numero = 0;
         $notaNova->emissao = date('Y-m-d H:i:s');
         $notaNova->saida = $notaNova->emissao;
+        $notaNova->emitida = true;
         $notaNova->nfechave = null;
         $notaNova->nfereciboenvio = null;
         $notaNova->nfedataenvio = null;

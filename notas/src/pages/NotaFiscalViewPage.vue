@@ -1253,21 +1253,6 @@ onUnmounted(() => {
         </div>
 
         <q-btn
-          v-if="nota.status === 'AUT' || nota.status === 'LAN'"
-          flat
-          dense
-          color="grey-7"
-          icon="assignment_returned"
-          :to="{
-            name: 'nota-fiscal-devolucao',
-            params: { codnotafiscal: route.params.codnotafiscal },
-          }"
-          class="q-mr-sm"
-        >
-          <q-tooltip>Realizar Devolução</q-tooltip>
-        </q-btn>
-
-        <q-btn
           flat
           dense
           color="grey-7"
@@ -1311,6 +1296,22 @@ onUnmounted(() => {
         >
           <q-tooltip>Incorporar valores (desconto, frete, seguro, outras) aos produtos</q-tooltip>
         </q-btn>
+
+        <q-btn
+          v-if="nota.status === 'AUT' || nota.status === 'LAN'"
+          flat
+          dense
+          color="grey-7"
+          icon="assignment_returned"
+          :to="{
+            name: 'nota-fiscal-devolucao',
+            params: { codnotafiscal: route.params.codnotafiscal },
+          }"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Realizar Devolução</q-tooltip>
+        </q-btn>
+
         <q-btn
           flat
           dense
