@@ -297,6 +297,66 @@ class NotaFiscalController extends Controller
     }
 
     /**
+     * Lista notas fiscais que podem ser unificadas com a nota informada
+     */
+    public function listarParaUnificar(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::with(['Filial', 'NaturezaOperacao'])->findOrFail($codnotafiscal);
+
+        // Só pode unificar notas em digitação
+        if ($nota->status !== NotaFiscalService::STATUS_DIGITACAO) {
+            abort(422, "Só é possível unificar notas em digitação");
+        }
+
+        // Busca notas com mesmo status, natureza e pessoa (exceto a própria nota)
+        $notas = NotaFiscal::with(['Filial', 'NaturezaOperacao'])
+            ->where('status', NotaFiscalService::STATUS_DIGITACAO)
+            ->where('codnaturezaoperacao', $nota->codnaturezaoperacao)
+            ->where('codpessoa', $nota->codpessoa)
+            ->where('codnotafiscal', '!=', $codnotafiscal)
+            ->orderBy('emissao', 'desc')
+            ->get();
+
+        return response()->json($notas->map(function ($nf) {
+            return [
+                'codnotafiscal' => $nf->codnotafiscal,
+                'codfilial' => $nf->codfilial,
+                'filial' => $nf->Filial->filial ?? null,
+                'natureza' => $nf->NaturezaOperacao->naturezaoperacao ?? null,
+                'emissao' => $nf->emissao,
+                'valortotal' => $nf->valortotal,
+            ];
+        }));
+    }
+
+    /**
+     * Unifica notas fiscais na nota informada
+     */
+    public function unificar(Request $request, int $codnotafiscal)
+    {
+        $request->validate([
+            '*.codnotafiscal' => 'required|integer',
+        ]);
+
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        // Só pode unificar notas em digitação
+        if ($nota->status !== NotaFiscalService::STATUS_DIGITACAO) {
+            abort(422, "Só é possível unificar notas em digitação");
+        }
+
+        // Extrai os códigos das notas a serem unificadas
+        $codigosNotas = collect($request->all())->pluck('codnotafiscal')->toArray();
+
+        // Unifica dentro de uma transação
+        DB::beginTransaction();
+        $notaUnificada = NotaFiscalService::unificarNotas($nota, $codigosNotas);
+        DB::commit();
+
+        return new NotaFiscalDetailResource($notaUnificada);
+    }
+
+    /**
      * Verifica se a nota está em um status que impede alterações
      *
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException

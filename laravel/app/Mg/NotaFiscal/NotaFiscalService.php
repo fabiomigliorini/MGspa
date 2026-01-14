@@ -938,4 +938,101 @@ class NotaFiscalService
             'NotaFiscalCartaCorrecaoS',
         ])->findOrFail($notaNova->codnotafiscal);
     }
+
+    /**
+     * Unifica múltiplas notas fiscais em uma única nota
+     *
+     * @param NotaFiscal $notaDestino Nota fiscal que receberá os itens
+     * @param array $codigosNotas Array com os códigos das notas a serem unificadas
+     * @return NotaFiscal
+     */
+    public static function unificarNotas(NotaFiscal $notaDestino, array $codigosNotas): NotaFiscal
+    {
+        // Valida se a nota destino está em digitação
+        if ($notaDestino->status !== static::STATUS_DIGITACAO) {
+            throw new Exception("A nota destino não está em digitação. Status atual: {$notaDestino->status}");
+        }
+
+        // Carrega as notas a serem unificadas com todos os relacionamentos
+        $notasOrigem = NotaFiscal::with([
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+        ])->whereIn('codnotafiscal', $codigosNotas)->get();
+
+        foreach ($notasOrigem as $notaOrigem) {
+            // Valida se a nota origem está em digitação
+            if ($notaOrigem->status !== static::STATUS_DIGITACAO) {
+                throw new Exception("A nota #{$notaOrigem->codnotafiscal} não está em digitação. Status: {$notaOrigem->status}");
+            }
+
+            // Valida se tem mesma natureza de operação
+            if ($notaOrigem->codnaturezaoperacao !== $notaDestino->codnaturezaoperacao) {
+                throw new Exception("A nota #{$notaOrigem->codnotafiscal} possui natureza de operação diferente");
+            }
+
+            // Valida se tem mesma pessoa
+            if ($notaOrigem->codpessoa !== $notaDestino->codpessoa) {
+                throw new Exception("A nota #{$notaOrigem->codnotafiscal} possui pessoa diferente");
+            }
+
+            // Move os itens (NotaFiscalProdutoBarra)
+            foreach ($notaOrigem->NotaFiscalProdutoBarraS as $item) {
+                $item->codnotafiscal = $notaDestino->codnotafiscal;
+                $item->save();
+            }
+
+            // Move as notas referenciadas
+            foreach ($notaOrigem->NotaFiscalReferenciadaS as $referenciada) {
+                // Verifica se já não existe essa referência na nota destino
+                $existe = NotaFiscalReferenciada::where('codnotafiscal', $notaDestino->codnotafiscal)
+                    ->where('nfechave', $referenciada->nfechave)
+                    ->exists();
+
+                if (!$existe) {
+                    $referenciada->codnotafiscal = $notaDestino->codnotafiscal;
+                    $referenciada->save();
+                } else {
+                    $referenciada->delete();
+                }
+            }
+
+            // Move os pagamentos
+            foreach ($notaOrigem->NotaFiscalPagamentoS as $pagamento) {
+                $pagamento->codnotafiscal = $notaDestino->codnotafiscal;
+                $pagamento->save();
+            }
+
+            // Move as duplicatas
+            foreach ($notaOrigem->NotaFiscalDuplicatasS as $duplicata) {
+                $duplicata->codnotafiscal = $notaDestino->codnotafiscal;
+                $duplicata->save();
+            }
+
+            // Exclui a nota origem (agora vazia)
+            $notaOrigem->delete();
+        }
+
+        // Recalcula os totais da nota destino
+        static::recalcularTotais($notaDestino);
+
+        // Recarrega a nota com todos os relacionamentos
+        return NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+        ])->findOrFail($notaDestino->codnotafiscal);
+    }
 }
