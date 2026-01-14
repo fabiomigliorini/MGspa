@@ -313,6 +313,7 @@ class NotaFiscalController extends Controller
             ->where('status', NotaFiscalService::STATUS_DIGITACAO)
             ->where('codnaturezaoperacao', $nota->codnaturezaoperacao)
             ->where('codpessoa', $nota->codpessoa)
+            ->where('codfilial', $nota->codfilial)
             ->where('codnotafiscal', '!=', $codnotafiscal)
             ->orderBy('emissao', 'desc')
             ->get();
