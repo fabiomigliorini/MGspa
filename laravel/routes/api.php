@@ -610,6 +610,9 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // Permissões
         Route::apiResource('permissao', '\Mg\Permissao\PermissaoController');
 
+        // CFOP
+        Route::apiResource('cfop', '\Mg\NaturezaOperacao\CfopController')->parameters(['cfop' => 'codcfop']);
+
         // Estoque Estatística
         Route::apiResource('estoque-estatistica', '\Mg\Estoque\EstoqueEstatisticaController');
 

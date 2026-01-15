@@ -171,7 +171,11 @@ watch(
     const maxCanceladas =
       Math.ceil(Math.max(...data.map((d) => d.percent_canceladas || 0)) * 10) / 10 || 1
     canceladasChartOption.value = {
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params) => `${params[0].marker} ${params[0].name}: ${params[0].value}%`,
+      },
       grid: { left: 80, right: 20, top: 10, bottom: 20 },
       xAxis: {
         type: 'value',
