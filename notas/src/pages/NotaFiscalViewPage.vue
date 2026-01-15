@@ -655,6 +655,81 @@ const recalcularTributacao = () => {
   })
 }
 
+// ==================== UNIFICAR NOTAS ====================
+const unificarDialog = ref(false)
+const notasParaUnificar = ref([])
+const notasSelecionadas = ref([])
+const loadingUnificar = ref(false)
+
+const podeUnificar = computed(() => {
+  return nota.value && nota.value.status === 'DIG'
+})
+
+const abrirUnificarDialog = async () => {
+  loadingUnificar.value = true
+  try {
+    const notas = await notaFiscalStore.getNotasParaUnificar(nota.value.codnotafiscal)
+    notasParaUnificar.value = notas || []
+    notasSelecionadas.value = []
+    if (notasParaUnificar.value.length === 0) {
+      $q.notify({
+        type: 'warning',
+        message: 'Não há notas disponíveis para unificar',
+      })
+      return
+    }
+    unificarDialog.value = true
+  } catch (error) {
+    console.log(error)
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao buscar notas para unificar',
+      caption: error.response?.data?.message || error.message,
+    })
+  } finally {
+    loadingUnificar.value = false
+  }
+}
+
+const confirmarUnificar = async () => {
+  if (notasSelecionadas.value.length === 0) {
+    $q.notify({
+      type: 'warning',
+      message: 'Selecione ao menos uma nota para unificar',
+    })
+    return
+  }
+
+  loadingUnificar.value = true
+  try {
+    const notas = notasSelecionadas.value.map((codnotafiscal) => ({ codnotafiscal }))
+    await notaFiscalStore.unificarNotas(nota.value.codnotafiscal, notas)
+    $q.notify({
+      type: 'positive',
+      message: 'Notas unificadas com sucesso!',
+    })
+    unificarDialog.value = false
+  } catch (error) {
+    console.log(error)
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao unificar notas',
+      caption: error.response?.data?.message || error.message,
+    })
+  } finally {
+    loadingUnificar.value = false
+  }
+}
+
+const toggleNotaSelecionada = (codnotafiscal) => {
+  const index = notasSelecionadas.value.indexOf(codnotafiscal)
+  if (index === -1) {
+    notasSelecionadas.value.push(codnotafiscal)
+  } else {
+    notasSelecionadas.value.splice(index, 1)
+  }
+}
+
 // ==================== NFE ACTIONS ====================
 const loadingNfe = ref(false)
 const loadingConsultar = ref(false)
@@ -1178,6 +1253,51 @@ onUnmounted(() => {
         </div>
 
         <q-btn
+          flat
+          dense
+          color="grey-7"
+          icon="edit"
+          :to="{ name: 'nota-fiscal-edit', params: { codnotafiscal: route.params.codnotafiscal } }"
+          v-if="!notaBloqueada"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Editar</q-tooltip>
+        </q-btn>
+
+        <q-btn flat dense color="grey-7" icon="content_copy" @click="duplicarNota" class="q-mr-sm">
+          <q-tooltip>Duplicar Nota Fiscal</q-tooltip>
+        </q-btn>
+
+        <q-btn
+          v-if="podeUnificar"
+          flat
+          dense
+          color="grey-7"
+          icon="merge"
+          @click="abrirUnificarDialog"
+          :loading="loadingUnificar"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Unificar Notas</q-tooltip>
+        </q-btn>
+
+        <q-btn flat dense color="grey-7" icon="print" @click="abrirEspelhoPdf" class="q-mr-sm">
+          <q-tooltip>Espelho da Nota Fiscal</q-tooltip>
+        </q-btn>
+
+        <q-btn
+          flat
+          dense
+          color="grey-7"
+          icon="rebase_edit"
+          @click="incorporarValores"
+          v-if="podeIncorporar || true"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Incorporar valores (desconto, frete, seguro, outras) aos produtos</q-tooltip>
+        </q-btn>
+
+        <q-btn
           v-if="nota.status === 'AUT' || nota.status === 'LAN'"
           flat
           dense
@@ -1192,34 +1312,6 @@ onUnmounted(() => {
           <q-tooltip>Realizar Devolução</q-tooltip>
         </q-btn>
 
-        <q-btn
-          flat
-          dense
-          color="grey-7"
-          icon="edit"
-          :to="{ name: 'nota-fiscal-edit', params: { codnotafiscal: route.params.codnotafiscal } }"
-          v-if="!notaBloqueada"
-          class="q-mr-sm"
-        >
-          <q-tooltip>Editar</q-tooltip>
-        </q-btn>
-        <q-btn flat dense color="grey-7" icon="content_copy" @click="duplicarNota" class="q-mr-sm">
-          <q-tooltip>Duplicar Nota Fiscal</q-tooltip>
-        </q-btn>
-        <q-btn flat dense color="grey-7" icon="print" @click="abrirEspelhoPdf" class="q-mr-sm">
-          <q-tooltip>Espelho da Nota Fiscal</q-tooltip>
-        </q-btn>
-        <q-btn
-          flat
-          dense
-          color="orange"
-          icon="merge_type"
-          @click="incorporarValores"
-          v-if="podeIncorporar"
-          class="q-mr-sm"
-        >
-          <q-tooltip>Incorporar valores (desconto, frete, seguro, outras) aos produtos</q-tooltip>
-        </q-btn>
         <q-btn
           flat
           dense
@@ -2500,6 +2592,72 @@ onUnmounted(() => {
 
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-7" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog Unificar Notas -->
+    <q-dialog v-model="unificarDialog">
+      <q-card style="min-width: 400px; max-width: 600px">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6">
+            <q-icon name="call_merge" class="q-mr-sm" />
+            Unificar Notas
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-md">
+          <div class="text-body2 q-mb-md">
+            Selecione as notas que deseja unificar com a nota atual:
+          </div>
+
+          <q-list separator>
+            <q-item
+              v-for="notaUnificar in notasParaUnificar"
+              :key="notaUnificar.codnotafiscal"
+              clickable
+              @click="toggleNotaSelecionada(notaUnificar.codnotafiscal)"
+            >
+              <q-item-section side>
+                <q-checkbox v-model="notasSelecionadas" :val="notaUnificar.codnotafiscal" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>
+                  {{ notaUnificar.filial || '-' }}
+                  | {{ notaUnificar.natureza }}
+                </q-item-label>
+                <q-item-label caption>
+                  {{ formatDateTime(notaUnificar.emissao) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side class="text-right">
+                <q-item-label class="text-weight-bold">
+                  {{ formatCurrency(notaUnificar.valortotal) }}
+                </q-item-label>
+                <q-item-label caption>
+                  <q-badge :color="getStatusColor(notaUnificar.status)">
+                    {{ getStatusLabel(notaUnificar.status) }}
+                  </q-badge>
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+
+          <div v-if="notasParaUnificar.length === 0" class="text-center text-grey q-py-md">
+            Nenhuma nota disponível para unificar
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-7" v-close-popup />
+          <q-btn
+            unelevated
+            label="Unificar"
+            color="primary"
+            :loading="loadingUnificar"
+            :disable="notasSelecionadas.length === 0"
+            @click="confirmarUnificar"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>

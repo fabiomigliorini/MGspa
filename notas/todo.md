@@ -1,10 +1,8 @@
-- fazer botao juntar notas
-
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 
 - no dashboard
-  - Adicionar um grafico de autorizadas por Usuario Alteração.
+  - Adicionar um grafico de autorizadas por Usuario Criacao.
   - criar um % de cancelado/inutilizado por usuario Criacao
   - criar os indices no banco de dados pra não pesar
 
@@ -80,3 +78,4 @@ DONE:
 - colocar link pra nfe de terceiro ({MGSIS_URL}/index.php?r=nfeTerceiro/view&id={codnfeterceiro}) -> \_blank
 - Erro de endereço longo ao gerar notas.
 - fazer botão devolução (venda e compra)
+- fazer botao juntar notas

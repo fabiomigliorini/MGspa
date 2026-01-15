@@ -135,4 +135,14 @@ export default {
     const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/devolucao`, data)
     return response.data
   },
+
+  async getNotasParaUnificar(codnotafiscal) {
+    const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/unificar`)
+    return response.data
+  },
+
+  async unificar(codnotafiscal, notas) {
+    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/unificar`, notas)
+    return response.data
+  },
 }

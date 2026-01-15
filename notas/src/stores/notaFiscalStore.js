@@ -948,5 +948,42 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         this.loading.nota = false
       }
     },
+
+    // ==================== UNIFICAR NOTAS ====================
+
+    async getNotasParaUnificar(codnotafiscal) {
+      try {
+        const response = await notaFiscalService.getNotasParaUnificar(codnotafiscal)
+        return response
+      } catch (error) {
+        console.error('Erro ao buscar notas para unificar:', error)
+        throw error
+      }
+    },
+
+    async unificarNotas(codnotafiscal, notas) {
+      this.loading.nota = true
+      try {
+        const response = await notaFiscalService.unificar(codnotafiscal, notas)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.data) {
+          this.currentNota = response.data
+          this.syncCurrentNotaToList()
+        }
+
+        // Remove as notas unificadas do array notas
+        const codnotasUnificadas = notas.map((n) => n.codnotafiscal)
+        this.notas = this.notas.filter((n) => !codnotasUnificadas.includes(n.codnotafiscal))
+        this.pagination.total -= codnotasUnificadas.length
+
+        return response.data
+      } catch (error) {
+        console.error('Erro ao unificar notas:', error)
+        throw error
+      } finally {
+        this.loading.nota = false
+      }
+    },
   },
 })
