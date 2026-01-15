@@ -2,6 +2,7 @@ import NotasFiltrosDrawer from 'src/components/drawers/NotasFiltrosDrawer.vue'
 import NotasDetalhesDrawer from 'src/components/drawers/NotasDetalhesDrawer.vue'
 import TributacaoFiltrosDrawer from 'src/components/drawers/TributacaoFiltrosDrawer.vue'
 import TributacaoSimuladorDrawer from 'src/components/drawers/TributacaoSimuladorDrawer.vue'
+import CfopFiltrosDrawer from 'src/components/drawers/CfopFiltrosDrawer.vue'
 
 const routes = [
   {
@@ -89,6 +90,41 @@ const routes = [
           auth: true,
           leftDrawer: TributacaoFiltrosDrawer,
           rightDrawer: TributacaoSimuladorDrawer,
+          permissions: ['Administrador', 'Contador'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/cfop',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'cfop',
+        component: () => import('pages/CfopListPage.vue'),
+        meta: {
+          auth: true,
+          leftDrawer: CfopFiltrosDrawer,
+          permissions: ['Administrador', 'Contador'],
+        },
+      },
+      {
+        path: 'criar',
+        name: 'cfop-create',
+        component: () => import('pages/CfopFormPage.vue'),
+        meta: {
+          auth: true,
+          permissions: ['Administrador', 'Contador'],
+        },
+      },
+      {
+        path: ':codcfop/editar',
+        name: 'cfop-edit',
+        component: () => import('pages/CfopFormPage.vue'),
+        meta: {
+          auth: true,
           permissions: ['Administrador', 'Contador'],
         },
       },

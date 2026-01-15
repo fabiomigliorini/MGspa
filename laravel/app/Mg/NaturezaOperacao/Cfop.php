@@ -19,7 +19,9 @@ class Cfop extends MgModel
 
 
     protected $fillable = [
-        'cfop'
+        'codcfop',
+        'cfop',
+        'descricao',
     ];
 
     protected $dates = [
