@@ -250,7 +250,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         await notaFiscalService.delete(codnotafiscal)
 
         // Remove da lista
-        this.notas = this.notas.filter((n) => n.codnotafiscal !== codnotafiscal)
+        this.notas = this.notas.filter((n) => n.codnotafiscal != codnotafiscal)
         this.pagination.total--
 
         // Limpa a nota atual se for a mesma
