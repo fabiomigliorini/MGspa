@@ -10,6 +10,13 @@
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 
+Eduardo
+
+- Tela Natureza Operacao
+- Tela DFE
+- Tela NFeTrceiro
+- Tela de Tributacoes
+
 DONE:
 
 05/01
