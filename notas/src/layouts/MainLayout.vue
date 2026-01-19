@@ -1,11 +1,17 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import UserMenu from 'src/components/UserMenu.vue'
 import { version } from '../../package.json'
 
+const router = useRouter()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
+
+const goToDashboard = () => {
+  router.push({ name: 'home' })
+}
 </script>
 
 <template>
@@ -24,8 +30,9 @@ const rightDrawerOpen = ref(false)
         />
 
         <q-toolbar-title class="q-ml-sm">
-          <q-avatar size="36px" class="q-mr-sm">
+          <q-avatar size="36px" class="q-mr-sm cursor-pointer" @click="goToDashboard">
             <img src="/MGPapelariaQuadrado.svg" alt="MG Papelaria" />
+            <q-tooltip>Inicio</q-tooltip>
           </q-avatar>
           Notas & Documentos Fiscais
         </q-toolbar-title>

@@ -499,14 +499,14 @@ const handleSaveCidade = async () => {
     <q-infinite-scroll v-else-if="selectedEstado" @load="onLoad" :offset="250">
       <div class="row q-col-gutter-sm">
         <div v-for="cidade in cidades" :key="cidade.codcidade" class="col-6 col-sm-4 col-md-3">
-          <q-card class="q-pa-none bg-grey-2" flat bordered>
+          <q-card class="q-pa-none" flat bordered>
             <div class="text-weight-bold text-primary q-pa-sm">
               <q-icon name="location_city" class="q-mr-xs" />
               {{ cidade.cidade }}
             </div>
             <q-separator />
             <div class="q-pa-sm">
-              <div class="row items-center text-body2 text-grey-8">
+              <div class="row items-center text-caption text-grey-8">
                 IBGE: {{ cidade.codigooficial }}
               </div>
             </div>
