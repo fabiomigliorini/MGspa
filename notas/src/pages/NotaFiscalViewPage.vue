@@ -1501,6 +1501,21 @@ onUnmounted(() => {
                 </q-badge>
               </div>
 
+              <!-- NFE TERCEIRO -->
+              <template v-if="nota.nfeTerceiros?.length">
+                <div class="text-caption text-grey-7">NFe Terceiro</div>
+                <div v-for="nfeTerceiro in nota.nfeTerceiros" :key="nfeTerceiro.codnfeterceiro">
+                  <a
+                    :href="`${mgsisUrl}/index.php?r=nfeTerceiro/view&id=${nfeTerceiro.codnfeterceiro}`"
+                    target="_blank"
+                    class="text-primary text-body2"
+                    style="text-decoration: none"
+                  >
+                    #{{ nfeTerceiro.nsu }} - {{ nfeTerceiro.emitente }}
+                  </a>
+                </div>
+              </template>
+
               <!-- Autorizacao  -->
               <template v-if="nota.nfeautorizacao">
                 <div class="text-caption text-grey-7">Autorização</div>

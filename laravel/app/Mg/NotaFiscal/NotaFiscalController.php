@@ -228,7 +228,13 @@ class NotaFiscalController extends Controller
         // Verifica se a nota está bloqueada
         $this->verificarNotaBloqueada($nota);
 
+        DB::beginTransaction();
+        foreach ($nota->NfeTerceiroS as $ter) {
+            $ter->codnotafiscal = null;
+            $ter->save();
+        }
         $nota->delete();
+        DB::commit();
 
         return response()->noContent();
     }
