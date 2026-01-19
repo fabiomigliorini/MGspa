@@ -613,6 +613,17 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // CFOP
         Route::apiResource('cfop', '\Mg\NaturezaOperacao\CfopController')->parameters(['cfop' => 'codcfop']);
 
+        // País / Estado / Cidade
+        Route::prefix('pais')->group(function () {
+            Route::apiResource('/', '\Mg\Cidade\PaisController')->parameters(['' => 'codpais']);
+
+            Route::apiResource('{codpais}/estado', '\Mg\Cidade\EstadoController')
+                ->parameters(['estado' => 'codestado']);
+
+            Route::apiResource('{codpais}/estado/{codestado}/cidade', '\Mg\Cidade\CidadeController')
+                ->parameters(['cidade' => 'codcidade']);
+        });
+
         // Estoque Estatística
         Route::apiResource('estoque-estatistica', '\Mg\Estoque\EstoqueEstatisticaController');
 

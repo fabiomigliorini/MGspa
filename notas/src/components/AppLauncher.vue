@@ -6,6 +6,7 @@ const cadastrosItems = [{ label: 'Dashboard Inicial', icon: 'home', color: 'brow
 const fiscaisItems = [
   { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
   { label: 'CFOPs', icon: 'swap_horiz', color: 'warning', to: '/cfop' },
+  { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
 ]
 </script>
 

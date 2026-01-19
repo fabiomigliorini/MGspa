@@ -3,6 +3,7 @@ import NotasDetalhesDrawer from 'src/components/drawers/NotasDetalhesDrawer.vue'
 import TributacaoFiltrosDrawer from 'src/components/drawers/TributacaoFiltrosDrawer.vue'
 import TributacaoSimuladorDrawer from 'src/components/drawers/TributacaoSimuladorDrawer.vue'
 import CfopFiltrosDrawer from 'src/components/drawers/CfopFiltrosDrawer.vue'
+import CidadeFiltrosDrawer from 'src/components/drawers/CidadeFiltrosDrawer.vue'
 
 const routes = [
   {
@@ -125,6 +126,23 @@ const routes = [
         component: () => import('pages/CfopFormPage.vue'),
         meta: {
           auth: true,
+          permissions: ['Administrador', 'Contador'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/cidade',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'cidade',
+        component: () => import('pages/CidadeListPage.vue'),
+        meta: {
+          auth: true,
+          leftDrawer: CidadeFiltrosDrawer,
           permissions: ['Administrador', 'Contador'],
         },
       },
