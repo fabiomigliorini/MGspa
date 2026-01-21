@@ -95,9 +95,6 @@ onMounted(async () => {
 
 <template>
   <q-page>
-    <!-- Header com título -->
-    <div class="text-h5 q-mb-md q-pa-md">Notas Fiscais</div>
-
     <!-- Loading inicial -->
     <div v-if="loading && notas.length === 0" class="row justify-center q-py-xl">
       <q-spinner color="primary" size="3em" />
@@ -123,7 +120,7 @@ onMounted(async () => {
           clickable
           :to="'/nota/' + nota.codnotafiscal"
         >
-          <q-item-section>
+          <q-item-section class="q-py-sm">
             <!-- Cabeçalho: Modelo, Número, Série, Filial e Status -->
             <div class="row q-col-gutter-sm">
               <!-- Número  -->

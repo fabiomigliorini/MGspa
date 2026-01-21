@@ -661,7 +661,9 @@ const handleSaveCidade = async () => {
             label="Codigo IBGE"
             outlined
             dense
-            type="number"
+            mask="#######"
+            unmasked-value
+            inputmode="numeric"
           />
         </q-card-section>
 

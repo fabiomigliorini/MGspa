@@ -652,6 +652,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
 
+        // Tributacao
+        Route::apiResource('tributacao', '\Mg\Tributacao\TributacaoController')
+            ->parameters(['tributacao' => 'codtributacao']);
+
         // Autocomplete / Select
         Route::get('select/pessoa', '\Mg\Select\SelectPessoaController@index');
         Route::get('select/cidade', '\Mg\Select\SelectCidadeController@index');
