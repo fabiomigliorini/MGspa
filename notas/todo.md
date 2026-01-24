@@ -1,5 +1,9 @@
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
+- https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
+- nao achou codigo barras 7891191003733 na pesquisa
+- link pra pessoas nao esta abrindo na producao
+- https://notas.mgpapelaria.com.br/nota/3319596 notas importadas ficando como em digitacao
 
 - no dashboard
   - Adicionar um grafico de autorizadas por Usuario Criacao.

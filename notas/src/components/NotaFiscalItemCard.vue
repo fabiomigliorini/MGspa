@@ -1,6 +1,5 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { defineProps } from 'vue'
 import {
   formatCurrency,
   formatDecimal,
