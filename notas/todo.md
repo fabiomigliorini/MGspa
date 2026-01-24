@@ -14,12 +14,14 @@
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 
+- Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
+- Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
+
 Eduardo
 
 - Tela Natureza Operacao
 - Tela DFE
 - Tela NFeTrceiro
-- Tela de Tributacoes
 
 DONE:
 
@@ -59,7 +61,7 @@ DONE:
 07/01
 
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
-- colocar um link pro cadastro do produto ({MGLARA_URL}/produto/{codproduto})
+- colocar um link pro cadastro do produto ({MGLARA_URL}/produt- Tela de Tributacoeso/{codproduto})
 - popups em geral estourando em celular
 
 08/01
@@ -90,3 +92,12 @@ DONE:
 - Erro de endereço longo ao gerar notas.
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
+
+19/01
+
+- Tela de CFOP
+- Tela de Cidades
+
+20/01
+
+- Tela de Tributação

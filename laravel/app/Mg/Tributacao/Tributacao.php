@@ -1,30 +1,28 @@
 <?php
 
-namespace Mg\Cidade;
+namespace Mg\Tributacao;
 
 use Mg\MgModel;
 use Mg\Usuario\Usuario;
 
-class Pais extends MgModel
+class Tributacao extends MgModel
 {
-    protected $table = 'tblpais';
-    protected $primaryKey = 'codpais';
+    protected $table = 'tbltributacao';
+    protected $primaryKey = 'codtributacao';
 
     protected $fillable = [
-        'pais',
-        'sigla',
-        'codigooficial',
+        'tributacao',
+        'aliquotaicmsecf',
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo',
     ];
 
     protected $casts = [
-        'codpais' => 'integer',
-        'codigooficial' => 'integer',
+        'codtributacao' => 'integer',
+        'aliquotaicmsecf' => 'float',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
     ];
@@ -38,11 +36,5 @@ class Pais extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-    // Tabelas Filhas
-    public function EstadoS()
-    {
-        return $this->hasMany(Estado::class, 'codpais', 'codpais');
     }
 }

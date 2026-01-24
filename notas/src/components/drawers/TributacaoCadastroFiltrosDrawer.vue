@@ -1,9 +1,9 @@
 <script setup>
 import { reactive, onMounted, watch, ref, computed } from 'vue'
-import { useCfopStore } from '../../stores/cfopStore'
+import { useTributacaoCadastroStore } from '../../stores/tributacaoCadastroStore'
 import { useDebounceFn } from '@vueuse/core'
 
-const cfopStore = useCfopStore()
+const tributacaoStore = useTributacaoCadastroStore()
 const isInitializing = ref(true)
 
 const activeFiltersCount = computed(() => {
@@ -25,13 +25,12 @@ const debouncedApplyFilters = useDebounceFn(() => {
 }, 800)
 
 const filters = reactive({
-  cfop: null,
-  descricao: null,
+  tributacao: null,
 })
 
 const handleFilter = () => {
-  cfopStore.setFilters({ ...filters })
-  cfopStore.fetchCfops(true)
+  tributacaoStore.setFilters({ ...filters })
+  tributacaoStore.fetchTributacoes(true)
 }
 
 const handleClearFilters = () => {
@@ -40,15 +39,15 @@ const handleClearFilters = () => {
     filters[key] = null
   })
   // Limpa filtros da store
-  cfopStore.clearFilters()
+  tributacaoStore.clearFilters()
   // Recarrega dados
-  cfopStore.fetchCfops(true)
+  tributacaoStore.fetchTributacoes(true)
 }
 
 // Carrega filtros salvos da store ao montar
 onMounted(() => {
   Object.keys(filters).forEach((key) => {
-    filters[key] = cfopStore.filters[key] || null
+    filters[key] = tributacaoStore.filters[key] || null
   })
 
   // Aguarda um pouco e entao ativa o watcher
@@ -61,7 +60,7 @@ onMounted(() => {
       () => {
         debouncedApplyFilters()
       },
-      { deep: true }
+      { deep: true },
     )
   }, 200)
 })
@@ -99,33 +98,18 @@ onMounted(() => {
 
     <!-- Filtros -->
     <div class="q-pa-md">
-      <!-- Codigo CFOP -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Busque pelo CFOP:</div>
+      <!-- Nome da Tributacao -->
+      <div class="text-grey-7 text-body2 q-mb-sm">Busque pela Tributacao:</div>
       <div class="q-mb-md">
         <q-input
-          v-model="filters.cfop"
-          label="Código CFOP"
+          v-model="filters.tributacao"
+          label="Tributacao"
           outlined
           clearable
-          placeholder="Ex: 5102"
+          placeholder="Ex: Tributado"
         >
           <template v-slot:prepend>
-            <q-icon name="tag" />
-          </template>
-        </q-input>
-      </div>
-
-      <!-- Descricao -->
-      <div class="q-mb-md">
-        <q-input
-          v-model="filters.descricao"
-          label="Descrição"
-          outlined
-          clearable
-          placeholder="Ex: Venda"
-        >
-          <template v-slot:prepend>
-            <q-icon name="description" />
+            <q-icon name="receipt_long" />
           </template>
         </q-input>
       </div>

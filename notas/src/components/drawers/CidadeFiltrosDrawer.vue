@@ -1,9 +1,9 @@
 <script setup>
 import { reactive, onMounted, watch, ref, computed } from 'vue'
-import { useCfopStore } from '../../stores/cfopStore'
+import { useCidadeStore } from '../../stores/cidadeStore'
 import { useDebounceFn } from '@vueuse/core'
 
-const cfopStore = useCfopStore()
+const cidadeStore = useCidadeStore()
 const isInitializing = ref(true)
 
 const activeFiltersCount = computed(() => {
@@ -25,13 +25,13 @@ const debouncedApplyFilters = useDebounceFn(() => {
 }, 800)
 
 const filters = reactive({
-  cfop: null,
-  descricao: null,
+  cidade: null,
+  codigooficial: null,
 })
 
 const handleFilter = () => {
-  cfopStore.setFilters({ ...filters })
-  cfopStore.fetchCfops(true)
+  cidadeStore.setFilters({ ...filters })
+  cidadeStore.fetchCidades(true)
 }
 
 const handleClearFilters = () => {
@@ -40,15 +40,15 @@ const handleClearFilters = () => {
     filters[key] = null
   })
   // Limpa filtros da store
-  cfopStore.clearFilters()
+  cidadeStore.clearFilters()
   // Recarrega dados
-  cfopStore.fetchCfops(true)
+  cidadeStore.fetchCidades(true)
 }
 
 // Carrega filtros salvos da store ao montar
 onMounted(() => {
   Object.keys(filters).forEach((key) => {
-    filters[key] = cfopStore.filters[key] || null
+    filters[key] = cidadeStore.filters[key] || null
   })
 
   // Aguarda um pouco e entao ativa o watcher
@@ -99,33 +99,21 @@ onMounted(() => {
 
     <!-- Filtros -->
     <div class="q-pa-md">
-      <!-- Codigo CFOP -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Busque pelo CFOP:</div>
+      <!-- Nome da Cidade -->
+      <div class="text-grey-7 text-body2 q-mb-sm">Busque pela Cidade:</div>
       <div class="q-mb-md">
-        <q-input
-          v-model="filters.cfop"
-          label="Código CFOP"
-          outlined
-          clearable
-          placeholder="Ex: 5102"
-        >
+        <q-input v-model="filters.cidade" label="Nome da Cidade" outlined clearable>
           <template v-slot:prepend>
-            <q-icon name="tag" />
+            <q-icon name="location_city" />
           </template>
         </q-input>
       </div>
 
-      <!-- Descricao -->
+      <!-- Codigo Oficial -->
       <div class="q-mb-md">
-        <q-input
-          v-model="filters.descricao"
-          label="Descrição"
-          outlined
-          clearable
-          placeholder="Ex: Venda"
-        >
+        <q-input v-model="filters.codigooficial" label="Codigo Oficial (IBGE)" outlined clearable>
           <template v-slot:prepend>
-            <q-icon name="description" />
+            <q-icon name="tag" />
           </template>
         </q-input>
       </div>

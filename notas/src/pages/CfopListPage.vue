@@ -81,12 +81,6 @@ onMounted(async () => {
 
 <template>
   <q-page class="q-pa-md">
-    <!-- Header -->
-    <div class="row items-center q-mb-md">
-      <q-btn flat dense round icon="arrow_back" to="/" class="q-mr-sm" />
-      <div class="text-h5">CFOPs</div>
-    </div>
-
     <!-- Loading inicial -->
     <div v-if="loading && cfops.length === 0" class="row justify-center q-mt-xl">
       <q-spinner color="primary" size="3em" />
@@ -108,25 +102,29 @@ onMounted(async () => {
     <q-infinite-scroll v-else @load="onLoad" :offset="250">
       <div class="row q-col-gutter-sm">
         <div v-for="cfop in cfops" :key="cfop.codcfop" class="col-6 col-sm-4 col-md-3">
-          <q-card class="q-pa-none bg-grey-2" flat bordered>
-            <div class="text-weight-bold text-primary text-h6 q-pa-sm">
+          <q-card class="q-pa-none" flat bordered>
+            <div class="text-weight-bold text-primary text-body2 q-pa-sm">
               CFOP: {{ cfop.codcfop }}
             </div>
             <q-separator />
-            <div class="q-pa-sm text-body1 ellipsis">{{ cfop.descricao }}</div>
+            <div class="q-pa-sm text-caption ellipsis text-grey-7">{{ cfop.descricao }}</div>
 
             <q-separator />
             <q-card-section class="q-pa-none" align="right">
               <q-btn
                 flat
                 dense
+                size="sm"
+                rounded
                 icon="edit"
-                class="text-grey-7 q-mr-sm"
+                color="primary"
                 @click="handleEditCfop(cfop.codcfop)"
               />
               <q-btn
                 flat
                 dense
+                size="sm"
+                rounded
                 icon="delete"
                 color="negative"
                 class="q-mr-sm"
