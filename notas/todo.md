@@ -12,6 +12,8 @@
 
 - Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
 - Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
+- Ao emitir uma nota, deixar salvo quem fez a operação.
+- Link para o cliente na nota Fiscal não está funcionando.
 
 Eduardo
 
