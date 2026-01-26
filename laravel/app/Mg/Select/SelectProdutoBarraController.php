@@ -18,7 +18,7 @@ class SelectProdutoBarraController extends Controller
 
         // monta sql base
         $sql = "SELECT 
-                    similarity(unaccent(descricao), unaccent(:frase)) AS score,
+                    similarity(unaccent(descricao || ' ' || barras), unaccent(:frase)) AS score,
                     codprodutobarra, 
                     codproduto, 
                     barras, 
@@ -88,7 +88,7 @@ class SelectProdutoBarraController extends Controller
         $filtro["frase"] = trim($frase);
         if (!empty($filtro["frase"])) {
             $sql .= "
-                AND similarity(unaccent(descricao), unaccent(:frase)) > 0.2
+                AND similarity(unaccent(descricao || ' ' || barras), unaccent(:frase)) > 0.2
             ";
         }
 
