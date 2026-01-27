@@ -106,7 +106,6 @@ onMounted(() => {
           v-model="filters.cfop"
           label="Código CFOP"
           outlined
-          dense
           clearable
           placeholder="Ex: 5102"
         >
@@ -122,7 +121,6 @@ onMounted(() => {
           v-model="filters.descricao"
           label="Descrição"
           outlined
-          dense
           clearable
           placeholder="Ex: Venda"
         >

@@ -180,7 +180,12 @@ Route::group(['prefix' => 'v1'], function () {
     Route::match(['POST', 'PUT', 'PATCH'], 'pix/webhook', '\Mg\Pix\PixController@webhook');
 
     // NATUREZA DA OPERACAO
-    Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
+    Route::apiResource('natureza-operacao', '\Mg\NaturezaOperacao\NaturezaOperacaoController')
+        ->parameters(['natureza-operacao' => 'codnaturezaoperacao']);
+
+    // Tributações da Natureza de Operação (rota aninhada)
+    Route::apiResource('natureza-operacao/{codnaturezaoperacao}/tributacao', '\Mg\NaturezaOperacao\TributacaoNaturezaOperacaoController')
+        ->parameters(['tributacao' => 'codtributacaonaturezaoperacao']);
 
     // Pessoa autocomplete
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
@@ -613,6 +618,17 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // CFOP
         Route::apiResource('cfop', '\Mg\NaturezaOperacao\CfopController')->parameters(['cfop' => 'codcfop']);
 
+        // País / Estado / Cidade
+        Route::prefix('pais')->group(function () {
+            Route::apiResource('/', '\Mg\Cidade\PaisController')->parameters(['' => 'codpais']);
+
+            Route::apiResource('{codpais}/estado', '\Mg\Cidade\EstadoController')
+                ->parameters(['estado' => 'codestado']);
+
+            Route::apiResource('{codpais}/estado/{codestado}/cidade', '\Mg\Cidade\CidadeController')
+                ->parameters(['cidade' => 'codcidade']);
+        });
+
         // Estoque Estatística
         Route::apiResource('estoque-estatistica', '\Mg\Estoque\EstoqueEstatisticaController');
 
@@ -640,6 +656,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         Route::get('estoque-local', '\Mg\Estoque\EstoqueLocalController@index');
         Route::get('estoque-local/{id}', '\Mg\Estoque\EstoqueLocalController@show');
+
+        // Tributacao
+        Route::apiResource('tributacao', '\Mg\Tributacao\TributacaoController')
+            ->parameters(['tributacao' => 'codtributacao']);
 
         // Autocomplete / Select
         Route::get('select/pessoa', '\Mg\Select\SelectPessoaController@index');

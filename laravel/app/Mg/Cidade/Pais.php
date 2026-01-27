@@ -3,20 +3,30 @@
 namespace Mg\Cidade;
 
 use Mg\MgModel;
+use Mg\Usuario\Usuario;
 
-class Pais extends MGModel
+class Pais extends MgModel
 {
     protected $table = 'tblpais';
     protected $primaryKey = 'codpais';
+
     protected $fillable = [
         'pais',
         'sigla',
         'codigooficial',
     ];
+
     protected $dates = [
         'alteracao',
         'criacao',
         'inativo',
+    ];
+
+    protected $casts = [
+        'codpais' => 'integer',
+        'codigooficial' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
     ];
 
     // Chaves Estrangeiras
@@ -35,5 +45,4 @@ class Pais extends MGModel
     {
         return $this->hasMany(Estado::class, 'codpais', 'codpais');
     }
-
 }

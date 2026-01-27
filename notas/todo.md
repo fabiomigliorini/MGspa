@@ -1,6 +1,7 @@
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 - https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
+- https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
 - nao achou codigo barras 7891191003733 na pesquisa
 - link pra pessoas nao esta abrindo na producao
 - https://notas.mgpapelaria.com.br/nota/3319596 notas importadas ficando como em digitacao
@@ -14,12 +15,16 @@
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 
+- Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
+- Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
+- Ao emitir uma nota, deixar salvo quem fez a operação.
+- Link para o cliente na nota Fiscal não está funcionando.
+
 Eduardo
 
 - Tela Natureza Operacao
 - Tela DFE
 - Tela NFeTrceiro
-- Tela de Tributacoes
 
 DONE:
 
@@ -59,7 +64,7 @@ DONE:
 07/01
 
 - danfe no mobile fazer aquele esquema do mgsis ao inves de abrir a dialog
-- colocar um link pro cadastro do produto ({MGLARA_URL}/produto/{codproduto})
+- colocar um link pro cadastro do produto ({MGLARA_URL}/produt- Tela de Tributacoeso/{codproduto})
 - popups em geral estourando em celular
 
 08/01
@@ -90,3 +95,18 @@ DONE:
 - Erro de endereço longo ao gerar notas.
 - fazer botão devolução (venda e compra)
 - fazer botao juntar notas
+
+19/01
+
+- Tela de CFOP
+- Tela de Cidades
+
+20/01
+
+- Tela de Tributação
+
+24/01
+
+- nao achou codigo barras 7891191003733 na pesquisa
+- link pra pessoas nao esta abrindo na producao
+- https://notas.mgpapelaria.com.br/nota/3319596 notas importadas ficando como em digitacao

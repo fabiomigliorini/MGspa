@@ -1,11 +1,20 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import UserMenu from 'src/components/UserMenu.vue'
 import { version } from '../../package.json'
 
+const router = useRouter()
+const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
+
+const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscais')
+
+const goToDashboard = () => {
+  router.push({ name: 'home' })
+}
 </script>
 
 <template>
@@ -24,10 +33,11 @@ const rightDrawerOpen = ref(false)
         />
 
         <q-toolbar-title class="q-ml-sm">
-          <q-avatar size="36px" class="q-mr-sm">
+          <q-avatar size="36px" class="q-mr-sm cursor-pointer" @click="goToDashboard">
             <img src="/MGPapelariaQuadrado.svg" alt="MG Papelaria" />
+            <q-tooltip>Inicio</q-tooltip>
           </q-avatar>
-          Notas & Documentos Fiscais
+          {{ pageTitle }}
         </q-toolbar-title>
 
         <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
