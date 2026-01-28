@@ -85,12 +85,12 @@ const handleDelete = () => {
   })
 }
 
-const handleCreateTributacao = () => {
-  router.push({
-    name: 'tributacao-natureza-operacao-create',
-    params: { codnaturezaoperacao: codnaturezaoperacao.value },
-  })
-}
+// const handleCreateTributacao = () => {
+//   router.push({
+//     name: 'tributacao-natureza-operacao-create',
+//     params: { codnaturezaoperacao: codnaturezaoperacao.value },
+//   })
+// }
 
 const handleViewTributacao = (codtributacaonaturezaoperacao) => {
   router.push({
@@ -157,10 +157,10 @@ onMounted(loadData)
       <div class="row q-col-gutter-md q-mb-lg">
         <div class="col-12 col-md-6">
           <q-card flat bordered>
-            <q-list dense separator>
-              <q-card-section class="bg-primary text-white q-px-md q-py-sm q-mb-sm">
-                <div class="text-body2 text-weight-bold">DETALHES</div>
-              </q-card-section>
+            <q-card-section class="bg-primary text-white q-px-md q-py-sm q-mb-sm">
+              <div class="text-body2 text-weight-bold">DETALHES</div>
+            </q-card-section>
+            <q-list separator>
               <q-item>
                 <q-item-section class="text-caption">
                   <q-item-label class="text-subtitle2 text-grey-7">Código</q-item-label>
@@ -217,10 +217,10 @@ onMounted(loadData)
 
         <div class="col-12 col-md-6">
           <q-card flat bordered>
-            <q-list dense separator>
-              <q-card-section class="bg-primary text-white q-px-md q-py-sm q-mb-sm">
-                <div class="text-body2 text-weight-bold">CONTABILIDADE</div>
-              </q-card-section>
+            <q-card-section class="bg-primary text-white q-px-md q-py-sm q-mb-sm">
+              <div class="text-body2 text-weight-bold">CONTABILIDADE</div>
+            </q-card-section>
+            <q-list separator>
               <q-item>
                 <q-item-section class="text-caption">
                   <q-item-label class="text-subtitle2 text-grey-7">Configurações</q-item-label>
@@ -319,109 +319,166 @@ onMounted(loadData)
       </div>
 
       <!-- Tributações -->
-      <div class="row items-center q-mb-md">
-        <div class="text-h6">
-          <q-icon name="receipt_long" class="q-mr-sm" />
-          Tributações da Natureza de Operação
-        </div>
-        <q-space />
-        <q-btn flat dense color="primary" icon="add" label="Nova" @click="handleCreateTributacao" />
-      </div>
+      <q-card flat bordered class="full-height">
+        <q-card-section class="bg-primary text-white">
+          <div class="row items-center justify-between">
+            <div class="text-h6">
+              <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" />
+              Tributações
+              <q-badge
+                color="white"
+                text-color="primary"
+                class="q-ml-sm text-weight-bold text-body1"
+              >
+                {{ tributacoes.length }}
+              </q-badge>
+              <q-btn
+                v-if="!notaBloqueada"
+                flat
+                dense
+                color="white"
+                icon="add"
+                size="md"
+                :to="{
+                  name: 'tributacao-natureza-operacao-create',
+                  params: { codnaturezaoperacao: codnaturezaoperacao.value },
+                }"
+                class="q-ml-sm"
+              >
+                <q-tooltip>Adicionar Item</q-tooltip>
+              </q-btn>
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-section>
+          <!-- Loading tributações -->
+          <div
+            v-if="tributacoesLoading && tributacoes.length === 0"
+            class="row justify-center q-py-md"
+          >
+            <q-spinner color="primary" size="2em" />
+          </div>
+          <div v-else-if="tributacoes.length === 0" class="row justify-center q-py-md">
+            <q-icon name="receipt_long" size="3em" color="grey-5" />
+            <div class="text-body2 text-grey-7 q-mt-sm">Nenhuma tributação cadastrada</div>
+          </div>
 
-      <!-- Loading tributações -->
-      <div v-if="tributacoesLoading && tributacoes.length === 0" class="row justify-center q-py-md">
-        <q-spinner color="primary" size="2em" />
-      </div>
+          <!-- Lista de tributações -->
+          <q-infinite-scroll v-else @load="onLoadTributacoes" :offset="250">
+            <div class="row q-col-gutter-md">
+              <template v-for="trib in tributacoes" :key="trib.codtributacaonaturezaoperacao">
+                <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
+                  <q-card flat bordered class="full-height flex column">
+                    <q-item class="bg-grey-3">
+                      <q-item-section avatar>
+                        <q-avatar
+                          color="primary"
+                          text-color="blue-2"
+                          size="md"
+                          class="q-mr-sm text-weight-bolder"
+                        >
+                          {{ trib.codtributacaonaturezaoperacao }}
+                        </q-avatar>
+                      </q-item-section>
+                      <q-item-section style="height: 70px">
+                        <q-item-label lines="3" class="text-black text-body2">
+                          {{ trib.codcfop }}
+                        </q-item-label>
+                        <q-item-label caption>
+                          {{ trib.tributacao }}
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-card>
+                </div>
+              </template>
+            </div>
 
-      <!-- Empty state -->
-      <q-card v-else-if="tributacoes.length === 0" flat bordered class="q-pa-md text-center">
-        <q-icon name="receipt_long" size="3em" color="grey-5" />
-        <div class="text-body2 text-grey-7 q-mt-sm">Nenhuma tributação cadastrada</div>
+            <q-card
+              flat
+              bordered
+              class="q-mb-sm"
+              v-for="trib in tributacoes"
+              :key="trib.codtributacaonaturezaoperacao"
+            >
+              <q-card-section
+                class="q-py-sm cursor-pointer"
+                @click="handleViewTributacao(trib.codtributacaonaturezaoperacao)"
+              >
+                <!-- Linha 1: Identificação -->
+                <div class="items-center row q-mb-xs q-gutter-lg">
+                  <div class="text-body2 text-primary text-weight-bold">
+                    #{{ trib.codtributacaonaturezaoperacao }}
+                  </div>
+                  <div v-if="trib.tributacao" class="col-auto text-grey-7 text-weight-bold">
+                    {{ trib.tributacao }}
+                  </div>
+                  <div class="text-body2 text-grey-7 text-weight-bold">
+                    {{ getTipoProdutoLabel(trib.codtipoproduto) }}
+                  </div>
+                  <div v-if="trib.tipotributacao" class="text-body2 text-grey-7 text-weight-bold">
+                    {{ trib.tipotributacao }}
+                  </div>
+                  <div v-if="trib.ncm" class="text-body2 text-grey-7 text-weight-bold">
+                    NCM: {{ trib.ncm }}
+                  </div>
+                  <div
+                    class="text-body2 text-white bg-primary text-weight-bold ellipsis rounded-borders q-px-xs"
+                    style="max-width: 500px"
+                  >
+                    CFOP: {{ trib.codcfop }} - {{ trib.cfop }}
+                  </div>
+                </div>
+
+                <!-- Linha 2: Tributos -->
+                <div class="row q-col-gutter-xs text-caption">
+                  <!-- Simples -->
+                  <div class="col-6 col-sm-4 col-md-2">
+                    <div class="text-grey-7 text-weight-bold">Simples:</div>
+                    <div>{{ trib.csosn || '-' }}</div>
+                    <div>{{ formatPercent(trib.icmsbase) }}</div>
+                    <div>{{ formatPercent(trib.icmspercentualSimples) }}</div>
+                  </div>
+                  <!-- ICMS -->
+                  <div class="col-6 col-sm-4 col-md-2">
+                    <div class="text-grey-7 text-weight-bold">ICMS</div>
+                    <div>{{ trib.icmscst ?? '-' }}</div>
+                    <div>{{ formatPercent(trib.icmslpbase) }}</div>
+                    <div>{{ formatPercent(trib.icmspercentual) }}</div>
+                  </div>
+                  <!-- PIS -->
+                  <div class="col-6 col-sm-4 col-md-2">
+                    <div class="text-grey-7 text-weight-bold">PIS</div>
+                    <div>{{ trib.piscst ?? '-' }}</div>
+                    <div>{{ formatPercent(trib.pispercentual) }}</div>
+                  </div>
+                  <!-- COFINS -->
+                  <div class="col-6 col-sm-4 col-md-2">
+                    <div class="text-grey-7 text-weight-bold">Cofins</div>
+                    <div>{{ trib.cofinscst ?? '-' }}</div>
+                    <div>{{ formatPercent(trib.cofinspercentual) }}</div>
+                  </div>
+                  <!-- IPI/CSLL/IRPJ -->
+                  <div class="col-6 col-sm-4 col-md-2">
+                    <div class="text-grey-7 text-weight-bold">IPI/CSLL/IRPJ</div>
+                    <div>{{ trib.ipicst ?? '-' }}</div>
+                    <div>{{ formatPercent(trib.csllpercentual) }}</div>
+                    <div>{{ formatPercent(trib.irpjpercentual) }}</div>
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
+
+            <template v-slot:loading>
+              <div class="row justify-center q-my-md">
+                <q-spinner-dots color="primary" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
+        </q-card-section>
       </q-card>
 
-      <!-- Lista de tributações -->
-      <q-infinite-scroll v-else @load="onLoadTributacoes" :offset="250">
-        <q-card
-          flat
-          bordered
-          class="q-mb-sm"
-          v-for="trib in tributacoes"
-          :key="trib.codtributacaonaturezaoperacao"
-        >
-          <q-card-section
-            class="q-py-sm cursor-pointer"
-            @click="handleViewTributacao(trib.codtributacaonaturezaoperacao)"
-          >
-            <!-- Linha 1: Identificação -->
-            <div class="items-center row q-mb-xs q-gutter-lg">
-              <div class="text-body2 text-primary text-weight-bold">
-                #{{ trib.codtributacaonaturezaoperacao }}
-              </div>
-              <div v-if="trib.tributacao" class="col-auto text-grey-7 text-weight-bold">
-                {{ trib.tributacao }}
-              </div>
-              <div class="text-body2 text-grey-7 text-weight-bold">
-                {{ getTipoProdutoLabel(trib.codtipoproduto) }}
-              </div>
-              <div v-if="trib.tipotributacao" class="text-body2 text-grey-7 text-weight-bold">
-                {{ trib.tipotributacao }}
-              </div>
-              <div v-if="trib.ncm" class="text-body2 text-grey-7 text-weight-bold">
-                NCM: {{ trib.ncm }}
-              </div>
-              <div
-                class="text-body2 text-white bg-primary text-weight-bold ellipsis rounded-borders q-px-xs"
-                style="max-width: 500px"
-              >
-                CFOP: {{ trib.codcfop }} - {{ trib.cfop }}
-              </div>
-            </div>
-
-            <!-- Linha 2: Tributos -->
-            <div class="row q-col-gutter-xs text-caption">
-              <!-- Simples -->
-              <div class="col-6 col-sm-4 col-md-2">
-                <div class="text-grey-7 text-weight-bold">Simples:</div>
-                <div>{{ trib.csosn || '-' }}</div>
-                <div>{{ formatPercent(trib.icmsbase) }}</div>
-                <div>{{ formatPercent(trib.icmspercentualSimples) }}</div>
-              </div>
-              <!-- ICMS -->
-              <div class="col-6 col-sm-4 col-md-2">
-                <div class="text-grey-7 text-weight-bold">ICMS</div>
-                <div>{{ trib.icmscst ?? '-' }}</div>
-                <div>{{ formatPercent(trib.icmslpbase) }}</div>
-                <div>{{ formatPercent(trib.icmspercentual) }}</div>
-              </div>
-              <!-- PIS -->
-              <div class="col-6 col-sm-4 col-md-2">
-                <div class="text-grey-7 text-weight-bold">PIS</div>
-                <div>{{ trib.piscst ?? '-' }}</div>
-                <div>{{ formatPercent(trib.pispercentual) }}</div>
-              </div>
-              <!-- COFINS -->
-              <div class="col-6 col-sm-4 col-md-2">
-                <div class="text-grey-7 text-weight-bold">Cofins</div>
-                <div>{{ trib.cofinscst ?? '-' }}</div>
-                <div>{{ formatPercent(trib.cofinspercentual) }}</div>
-              </div>
-              <!-- IPI/CSLL/IRPJ -->
-              <div class="col-6 col-sm-4 col-md-2">
-                <div class="text-grey-7 text-weight-bold">IPI/CSLL/IRPJ</div>
-                <div>{{ trib.ipicst ?? '-' }}</div>
-                <div>{{ formatPercent(trib.csllpercentual) }}</div>
-                <div>{{ formatPercent(trib.irpjpercentual) }}</div>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-
-        <template v-slot:loading>
-          <div class="row justify-center q-my-md">
-            <q-spinner-dots color="primary" size="40px" />
-          </div>
-        </template>
-      </q-infinite-scroll>
+      <!-- Empty state -->
 
       <!-- Auditoria -->
       <div v-if="naturezaOperacao.usuarioAlteracao" class="text-caption text-grey q-mt-lg">

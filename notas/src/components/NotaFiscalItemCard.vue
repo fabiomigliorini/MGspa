@@ -69,15 +69,13 @@ const getProdutoUrl = (codproduto) => {
     <q-card flat bordered class="full-height flex column">
       <q-item class="bg-grey-3">
         <q-item-section avatar>
-          <q-avatar>
-            <q-avatar
-              color="primary"
-              text-color="blue-2"
-              size="md"
-              class="q-mr-sm text-weight-bolder"
-            >
-              {{ item.ordem }}
-            </q-avatar>
+          <q-avatar
+            color="primary"
+            text-color="blue-2"
+            size="md"
+            class="q-mr-sm text-weight-bolder"
+          >
+            {{ item.ordem }}
           </q-avatar>
         </q-item-section>
 
