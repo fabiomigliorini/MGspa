@@ -1,12 +1,15 @@
 <script setup>
-const emissoesItems = [{ label: 'Notas Fiscais', icon: 'description', color: 'blue', to: '/nota' }]
+const emissoesItems = [
+  { label: 'Not. Fiscais', icon: 'description', color: 'blue', to: '/nota' },
+  { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
+]
 
 const cadastrosItems = [{ label: 'Dashboard Inicial', icon: 'home', color: 'brown', to: '/' }]
 
 const fiscaisItems = [
-  { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
+  { label: 'Nat. Operações', icon: 'percent', color: 'green', to: '/natureza-operacao' },
   { label: 'Tributações', icon: 'receipt_long', color: 'teal', to: '/tributacao-cadastro' },
-  { label: 'CFOPs', icon: 'swap_horiz', color: 'warning', to: '/cfop' },
+  { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
   { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
 ]
 </script>
@@ -26,7 +29,7 @@ const fiscaisItems = [
               <q-btn flat no-caps class="full-width app-launcher-item" :to="item.to" v-close-popup>
                 <div class="column items-center">
                   <q-icon :name="item.icon" size="32px" :color="item.color" />
-                  <div class="text-caption text-center">
+                  <div class="text-caption text-center q-mt-xs">
                     {{ item.label }}
                   </div>
                 </div>
@@ -43,7 +46,7 @@ const fiscaisItems = [
               <q-btn flat no-caps class="full-width app-launcher-item" :to="item.to" v-close-popup>
                 <div class="column items-center">
                   <q-icon :name="item.icon" size="32px" :color="item.color" />
-                  <div class="text-caption text-center" style="line-height: 1.2">
+                  <div class="text-caption text-center q-mt-xs">
                     {{ item.label }}
                   </div>
                 </div>
@@ -59,7 +62,7 @@ const fiscaisItems = [
               <q-btn flat no-caps class="full-width app-launcher-item" :to="item.to" v-close-popup>
                 <div class="column items-center">
                   <q-icon :name="item.icon" size="32px" :color="item.color" />
-                  <div class="text-caption text-center" style="line-height: 1.2">
+                  <div class="text-caption text-center q-mt-xs">
                     {{ item.label }}
                   </div>
                 </div>

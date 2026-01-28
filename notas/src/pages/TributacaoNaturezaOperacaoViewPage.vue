@@ -148,10 +148,29 @@ onMounted(loadData)
                   </q-item-label>
                 </q-item-section>
               </q-item>
-              <q-item>
+              <q-item
+                v-if="tributacao.codtributacao"
+                clickable
+                :to="{
+                  name: 'tributacao-cadastro-edit',
+                  params: { codtributacao: tributacao.codtributacao },
+                }"
+                target="_blank"
+              >
                 <q-item-section>
                   <q-item-label caption>Tributação</q-item-label>
-                  <q-item-label>{{ tributacao.tributacao?.tributacao || '-' }}</q-item-label>
+                  <q-item-label class="text-primary">
+                    {{ tributacao.tributacao?.tributacao || '-' }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="chevron_right" color="grey" />
+                </q-item-section>
+              </q-item>
+              <q-item v-else>
+                <q-item-section>
+                  <q-item-label caption>Tributação</q-item-label>
+                  <q-item-label>-</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item>
@@ -172,18 +191,51 @@ onMounted(loadData)
                   <q-item-label>{{ tributacao.ncm || '-' }}</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-item>
+              <q-item
+                v-if="tributacao.codestado"
+                clickable
+                :to="{ name: 'cidade' }"
+                target="_blank"
+              >
                 <q-item-section>
                   <q-item-label caption>Estado</q-item-label>
-                  <q-item-label>{{ tributacao.estado?.sigla || '-' }}</q-item-label>
+                  <q-item-label class="text-primary">
+                    {{ tributacao.estado?.estado || '-' }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="chevron_right" color="grey" />
                 </q-item-section>
               </q-item>
-              <q-item>
+              <q-item v-else>
+                <q-item-section>
+                  <q-item-label caption>Estado</q-item-label>
+                  <q-item-label>-</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item
+                v-if="tributacao.codcfop"
+                clickable
+                :to="{
+                  name: 'cfop-edit',
+                  params: { codcfop: tributacao.codcfop },
+                }"
+                target="_blank"
+              >
                 <q-item-section>
                   <q-item-label caption>CFOP</q-item-label>
-                  <q-item-label>
+                  <q-item-label class="text-primary">
                     {{ formatCfop(tributacao.cfop?.codcfop) }} - {{ tributacao.cfop?.cfop || '' }}
                   </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="chevron_right" color="grey" />
+                </q-item-section>
+              </q-item>
+              <q-item v-else>
+                <q-item-section>
+                  <q-item-label caption>CFOP</q-item-label>
+                  <q-item-label>-</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>

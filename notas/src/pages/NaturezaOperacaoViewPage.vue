@@ -401,13 +401,13 @@ onMounted(loadData)
               </div>
               <!-- COFINS -->
               <div class="col-6 col-sm-4 col-md-2">
-                <div class="text-grey-7">Cofins</div>
+                <div class="text-grey-7 text-weight-bold">Cofins</div>
                 <div>{{ trib.cofinscst ?? '-' }}</div>
                 <div>{{ formatPercent(trib.cofinspercentual) }}</div>
               </div>
               <!-- IPI/CSLL/IRPJ -->
               <div class="col-6 col-sm-4 col-md-2">
-                <div class="text-grey-7">IPI/CSLL/IRPJ</div>
+                <div class="text-grey-7 text-weight-bold">IPI/CSLL/IRPJ</div>
                 <div>{{ trib.ipicst ?? '-' }}</div>
                 <div>{{ formatPercent(trib.csllpercentual) }}</div>
                 <div>{{ formatPercent(trib.irpjpercentual) }}</div>

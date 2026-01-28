@@ -61,6 +61,7 @@ class PessoaController extends MgController
         $inativo = $request->inativo ?? null;
         $codformapagamento = $request->codformapagamento ?? null;
         $codgrupocliente = $request->codgrupocliente ?? null;
+        $fisica = $request->fisica ?? null;
 
         $limit = $request->per_page ?? 108;
         $offset = (($request->page ?? 1) - 1) * $limit;
@@ -78,6 +79,7 @@ class PessoaController extends MgController
             $inativo,
             $codformapagamento,
             $codgrupocliente,
+            $fisica,
         );
 
         return PessoaResource::collection($pessoas);

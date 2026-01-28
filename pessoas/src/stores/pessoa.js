@@ -28,6 +28,7 @@ export const pessoaStore = defineStore("pessoa", {
       inativo: "A",
       codformapagamento: null,
       codgrupocliente: null,
+      fisica: null,
       page: 1,
       per_page: 108,
     },

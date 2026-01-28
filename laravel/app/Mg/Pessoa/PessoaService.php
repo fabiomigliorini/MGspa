@@ -65,7 +65,8 @@ class PessoaService
         $codcidade,
         $inativo,
         $codformapagamento,
-        $codgrupocliente
+        $codgrupocliente,
+        $fisica = null
     ) {
 
         $sql = '
@@ -140,6 +141,15 @@ class PessoaService
             case 'I':
                 $where[] = 'p.inativo is not null';
                 break;
+        }
+
+        if ($fisica !== null && is_string($fisica)) {
+            $fisica = strtolower($fisica) === 'true' ? true : (strtolower($fisica) === 'false' ? false : null);
+        }
+
+        if ($fisica !== null) {
+            $where[] = 'p.fisica = :fisica';
+            $params['fisica'] = $fisica;
         }
 
         if (sizeof($where) > 0) {
