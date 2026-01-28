@@ -23,6 +23,18 @@ class NaturezaOperacao extends MgModel
     protected $table = 'tblnaturezaoperacao';
     protected $primaryKey = 'codnaturezaoperacao';
 
+    // Constantes para Finalidade NFe
+    const FINNFE_NORMAL = 1;
+    const FINNFE_COMPLEMENTAR = 2;
+    const FINNFE_AJUSTE = 3;
+    const FINNFE_DEVOLUCAO = 4;
+
+    const FINNFE_DESCRICOES = [
+        self::FINNFE_NORMAL => 'Normal',
+        self::FINNFE_COMPLEMENTAR => 'Complementar',
+        self::FINNFE_AJUSTE => 'Ajuste',
+        self::FINNFE_DEVOLUCAO => 'Devolução / Retorno',
+    ];
 
     protected $fillable = [
         'codcontacontabil',
@@ -93,6 +105,11 @@ class NaturezaOperacao extends MgModel
         return $this->belongsTo(TipoTitulo::class, 'codtipotitulo', 'codtipotitulo');
     }
 
+    public function Operacao()
+    {
+        return $this->belongsTo(Operacao::class, 'codoperacao', 'codoperacao');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -140,4 +157,9 @@ class NaturezaOperacao extends MgModel
         return $this->hasMany(TributacaoRegra::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
     }
 
+    // Accessor para descrição da finalidade NFe
+    public function getFinnfeDescricaoAttribute(): ?string
+    {
+        return self::FINNFE_DESCRICOES[$this->finnfe] ?? null;
+    }
 }

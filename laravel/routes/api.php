@@ -180,7 +180,12 @@ Route::group(['prefix' => 'v1'], function () {
     Route::match(['POST', 'PUT', 'PATCH'], 'pix/webhook', '\Mg\Pix\PixController@webhook');
 
     // NATUREZA DA OPERACAO
-    Route::apiResource('natureza-operacao/autocompletar', '\Mg\NaturezaOperacao\NaturezaOperacaoController');
+    Route::apiResource('natureza-operacao', '\Mg\NaturezaOperacao\NaturezaOperacaoController')
+        ->parameters(['natureza-operacao' => 'codnaturezaoperacao']);
+
+    // Tributações da Natureza de Operação (rota aninhada)
+    Route::apiResource('natureza-operacao/{codnaturezaoperacao}/tributacao', '\Mg\NaturezaOperacao\TributacaoNaturezaOperacaoController')
+        ->parameters(['tributacao' => 'codtributacaonaturezaoperacao']);
 
     // Pessoa autocomplete
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
