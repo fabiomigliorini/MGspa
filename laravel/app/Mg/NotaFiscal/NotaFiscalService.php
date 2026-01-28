@@ -780,6 +780,10 @@ class NotaFiscalService
             throw new Exception("A nota fiscal original não possui chave NFe!");
         }
 
+        if (empty($notaOriginal->NaturezaOperacao->codnaturezaoperacaodevolucao)) {
+            throw new Exception("Natureza de operação '{$notaOriginal->NaturezaOperacao->naturezaoperacao}' não tem cadastro de Natureza vinculada para Devolução!");
+        }
+
         // Indexa os itens da requisição por codnotafiscalprodutobarra
         $itensRequest = collect($itens)->keyBy('codnotafiscalprodutobarra');
 
@@ -791,6 +795,7 @@ class NotaFiscalService
         $notaNova->codpessoa = $codpessoa;
 
         // Atualiza os campos específicos para devolução
+        $notaNova->modelo = static::MODELO_NFE;
         $notaNova->serie = 1;
         $notaNova->numero = 0;
         $notaNova->emissao = date('Y-m-d H:i:s');
@@ -809,6 +814,7 @@ class NotaFiscalService
         $notaNova->status = static::STATUS_DIGITACAO;
         $notaNova->nfeimpressa = false;
         $notaNova->codnaturezaoperacao = $notaOriginal->NaturezaOperacao->codnaturezaoperacaodevolucao;
+        $notaNova->codoperacao = $notaNova->NaturezaOperacao->codoperacao;
         $notaNova->observacoes = "Devolução da Nota Fiscal {$notaOriginal->numero} modelo {$notaOriginal->modelo}";
 
         // Zera os totais - serão recalculados
