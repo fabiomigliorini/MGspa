@@ -7,6 +7,7 @@ import {
   FINNFE_OPTIONS,
   OPERACAO_OPTIONS,
 } from '../stores/naturezaOperacaoStore'
+import api from '../services/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,6 +17,12 @@ const naturezaOperacaoStore = useNaturezaOperacaoStore()
 const loading = ref(false)
 const isEditMode = computed(() => !!route.params.codnaturezaoperacao)
 const naturezaOperacao = computed(() => naturezaOperacaoStore.currentNaturezaOperacao)
+
+// Options para selects assíncronos
+const naturezaDevolucaoOptions = ref([])
+const tipoTituloOptions = ref([])
+const contaContabilOptions = ref([])
+const estoqueMovimentoTipoOptions = ref([])
 
 const form = ref({
   naturezaoperacao: '',
@@ -37,6 +44,109 @@ const form = ref({
   observacoesnf: '',
   mensagemprocom: '',
 })
+
+// Funções de filtro para os selects
+const filterNaturezaDevolucao = async (val, update, abort) => {
+  if (val.length < 2) {
+    abort()
+    return
+  }
+  try {
+    const res = await api.get('/v1/select/natureza-operacao', { params: { busca: val } })
+    update(() => {
+      naturezaDevolucaoOptions.value = res.data
+    })
+  } catch {
+    abort()
+  }
+}
+
+const filterTipoTitulo = async (val, update, abort) => {
+  if (val.length < 2) {
+    abort()
+    return
+  }
+  try {
+    const res = await api.get('/v1/select/tipo-titulo', { params: { busca: val } })
+    update(() => {
+      tipoTituloOptions.value = res.data
+    })
+  } catch {
+    abort()
+  }
+}
+
+const filterContaContabil = async (val, update, abort) => {
+  if (val.length < 2) {
+    abort()
+    return
+  }
+  try {
+    const res = await api.get('/v1/select/conta-contabil', { params: { busca: val } })
+    update(() => {
+      contaContabilOptions.value = res.data
+    })
+  } catch {
+    abort()
+  }
+}
+
+const filterEstoqueMovimentoTipo = async (val, update, abort) => {
+  if (val.length < 2) {
+    abort()
+    return
+  }
+  try {
+    const res = await api.get('/v1/select/estoque-movimento-tipo', { params: { busca: val } })
+    update(() => {
+      estoqueMovimentoTipoOptions.value = res.data
+    })
+  } catch {
+    abort()
+  }
+}
+
+// Carrega opções iniciais para modo edição
+const loadInitialOptions = async () => {
+  const promises = []
+  if (form.value.codnaturezaoperacaodevolucao) {
+    promises.push(
+      api.get('/v1/select/natureza-operacao', {
+        params: { codnaturezaoperacao: form.value.codnaturezaoperacaodevolucao },
+      }).then((res) => {
+        naturezaDevolucaoOptions.value = res.data
+      })
+    )
+  }
+  if (form.value.codtipotitulo) {
+    promises.push(
+      api.get('/v1/select/tipo-titulo', {
+        params: { codtipotitulo: form.value.codtipotitulo },
+      }).then((res) => {
+        tipoTituloOptions.value = res.data
+      })
+    )
+  }
+  if (form.value.codcontacontabil) {
+    promises.push(
+      api.get('/v1/select/conta-contabil', {
+        params: { codcontacontabil: form.value.codcontacontabil },
+      }).then((res) => {
+        contaContabilOptions.value = res.data
+      })
+    )
+  }
+  if (form.value.codestoquemovimentotipo) {
+    promises.push(
+      api.get('/v1/select/estoque-movimento-tipo', {
+        params: { codestoquemovimentotipo: form.value.codestoquemovimentotipo },
+      }).then((res) => {
+        estoqueMovimentoTipoOptions.value = res.data
+      })
+    )
+  }
+  await Promise.all(promises)
+}
 
 const formatValidationErrors = (error) => {
   if (error.response?.data?.errors) {
@@ -76,6 +186,7 @@ const loadFormData = async () => {
           observacoesnf: naturezaOperacao.value.observacoesnf || '',
           mensagemprocom: naturezaOperacao.value.mensagemprocom || '',
         }
+        await loadInitialOptions()
       }
     } catch (error) {
       const errorMessage = formatValidationErrors(error)
@@ -134,7 +245,7 @@ const handleSubmit = async () => {
       if (isEditMode.value) {
         await naturezaOperacaoStore.updateNaturezaOperacao(
           route.params.codnaturezaoperacao,
-          form.value,
+          form.value
         )
         $q.notify({
           type: 'positive',
@@ -180,9 +291,9 @@ onMounted(() => {
         <div class="row items-center q-mb-md">
           <q-btn flat dense round icon="arrow_back" @click="handleCancel" :disable="loading" />
           <div class="text-h5 q-ml-sm">
-            <template v-if="isEditMode"
-              >Alterar Natureza de Operação #{{ route.params.codnaturezaoperacao }}</template
-            >
+            <template v-if="isEditMode">
+              Alterar Natureza de Operação #{{ route.params.codnaturezaoperacao }}
+            </template>
             <template v-else>Nova Natureza de Operação</template>
           </div>
         </div>
@@ -258,7 +369,7 @@ onMounted(() => {
             </div>
 
             <!-- Toggle Emitida -->
-            <div class="q-mt-md">
+            <div align="right" class="q-mt-md">
               <q-toggle v-model="form.emitida" label="Nossa Emissão" :disable="loading" />
             </div>
           </q-card-section>
@@ -274,66 +385,118 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Natureza de Devolução -->
               <div class="col-12 col-sm-6">
-                <q-input
+                <q-select
                   v-model="form.codnaturezaoperacaodevolucao"
+                  :options="naturezaDevolucaoOptions"
+                  option-value="codnaturezaoperacao"
+                  option-label="naturezaoperacao"
+                  emit-value
+                  map-options
                   outlined
-                  type="number"
-                  label="Cód. Natureza Devolução"
+                  clearable
+                  use-input
+                  input-debounce="300"
+                  label="Natureza Devolução"
+                  hint="Digite para buscar"
                   :disable="loading"
-                  hint="Código da natureza de operação para devolução"
+                  @filter="filterNaturezaDevolucao"
                 >
                   <template v-slot:prepend>
                     <q-icon name="undo" />
                   </template>
-                </q-input>
+                  <template v-slot:no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">Digite para buscar...</q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
               </div>
 
               <!-- Tipo Título -->
               <div class="col-12 col-sm-6">
-                <q-input
+                <q-select
                   v-model="form.codtipotitulo"
+                  :options="tipoTituloOptions"
+                  option-value="codtipotitulo"
+                  option-label="tipotitulo"
+                  emit-value
+                  map-options
                   outlined
-                  type="number"
-                  label="Cód. Tipo Título"
+                  use-input
+                  input-debounce="300"
+                  label="Tipo Título *"
+                  hint="Digite para buscar"
                   :disable="loading"
-                  hint="Código do tipo de título financeiro"
+                  :rules="[(val) => val !== null || 'Tipo Título é obrigatório']"
+                  @filter="filterTipoTitulo"
                 >
                   <template v-slot:prepend>
                     <q-icon name="receipt" />
                   </template>
-                </q-input>
+                  <template v-slot:no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">Digite para buscar...</q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
               </div>
 
               <!-- Conta Contábil -->
               <div class="col-12 col-sm-6">
-                <q-input
+                <q-select
                   v-model="form.codcontacontabil"
+                  :options="contaContabilOptions"
+                  option-value="codcontacontabil"
+                  option-label="contacontabil"
+                  emit-value
+                  map-options
                   outlined
-                  type="number"
-                  label="Cód. Conta Contábil"
+                  clearable
+                  use-input
+                  input-debounce="300"
+                  label="Conta Contábil"
+                  hint="Digite para buscar"
                   :disable="loading"
-                  hint="Código da conta contábil"
+                  @filter="filterContaContabil"
                 >
                   <template v-slot:prepend>
                     <q-icon name="account_balance" />
                   </template>
-                </q-input>
+                  <template v-slot:no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">Digite para buscar...</q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
               </div>
 
               <!-- Tipo Movimento Estoque -->
               <div class="col-12 col-sm-6">
-                <q-input
+                <q-select
                   v-model="form.codestoquemovimentotipo"
+                  :options="estoqueMovimentoTipoOptions"
+                  option-value="codestoquemovimentotipo"
+                  option-label="descricao"
+                  emit-value
+                  map-options
                   outlined
-                  type="number"
-                  label="Cód. Tipo Mov. Estoque"
+                  clearable
+                  use-input
+                  input-debounce="300"
+                  label="Tipo Mov. Estoque"
+                  hint="Digite para buscar"
                   :disable="loading"
-                  hint="Código do tipo de movimento de estoque"
+                  @filter="filterEstoqueMovimentoTipo"
                 >
                   <template v-slot:prepend>
                     <q-icon name="inventory" />
                   </template>
-                </q-input>
+                  <template v-slot:no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">Digite para buscar...</q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
               </div>
             </div>
           </q-card-section>

@@ -30,19 +30,36 @@ const form = ref({
   codtipoproduto: null,
   ncm: null,
   bit: false,
-  icmscst: null,
+  // Simples Nacional
+  csosn: null,
   icmsbase: null,
   icmspercentual: null,
+  // Lucro Presumido ICMS
+  icmscst: null,
   icmslpbase: null,
   icmslppercentual: null,
-  csosn: null,
-  ipicst: null,
+  // PIS/COFINS
   piscst: null,
   pispercentual: null,
   cofinscst: null,
   cofinspercentual: null,
+  // IPI/CSLL/IRPJ
+  ipicst: null,
   csllpercentual: null,
   irpjpercentual: null,
+  // Produtor Rural
+  certidaosefazmt: false,
+  fethabkg: null,
+  iagrokg: null,
+  funruralpercentual: null,
+  senarpercentual: null,
+  // Contábil
+  acumuladordominiovista: null,
+  acumuladordominioprazo: null,
+  historicodominio: null,
+  movimentacaofisica: false,
+  movimentacaocontabil: false,
+  // Observações
   observacoesnf: null,
 })
 
@@ -61,15 +78,15 @@ const formatValidationErrors = (error) => {
 const loadOptions = async () => {
   try {
     const [tributacoesRes, estadosRes, cfopsRes] = await Promise.all([
-      api.get('/v1/select/tributo'),
+      api.get('/v1/select/tributacao'),
       api.get('/v1/select/estado'),
       api.get('/v1/cfop', { params: { per_page: 1000 } }),
     ])
-    tributacaoOptions.value = tributacoesRes.data?.data || []
-    estadoOptions.value = estadosRes.data?.data || []
+    tributacaoOptions.value = tributacoesRes.data || []
+    estadoOptions.value = estadosRes.data || []
     cfopOptions.value = (cfopsRes.data?.data || []).map((c) => ({
       ...c,
-      label: `${c.cfop} - ${c.descricao}`,
+      label: `${c.codcfop} - ${c.descricao}`,
     }))
   } catch (error) {
     console.error('Erro ao carregar opções:', error)
@@ -90,19 +107,36 @@ const loadFormData = async () => {
           codtipoproduto: tributacao.value.codtipoproduto,
           ncm: tributacao.value.ncm,
           bit: tributacao.value.bit || false,
-          icmscst: tributacao.value.icmscst,
+          // Simples Nacional
+          csosn: tributacao.value.csosn,
           icmsbase: tributacao.value.icmsbase,
           icmspercentual: tributacao.value.icmspercentual,
+          // Lucro Presumido ICMS
+          icmscst: tributacao.value.icmscst,
           icmslpbase: tributacao.value.icmslpbase,
           icmslppercentual: tributacao.value.icmslppercentual,
-          csosn: tributacao.value.csosn,
-          ipicst: tributacao.value.ipicst,
+          // PIS/COFINS
           piscst: tributacao.value.piscst,
           pispercentual: tributacao.value.pispercentual,
           cofinscst: tributacao.value.cofinscst,
           cofinspercentual: tributacao.value.cofinspercentual,
+          // IPI/CSLL/IRPJ
+          ipicst: tributacao.value.ipicst,
           csllpercentual: tributacao.value.csllpercentual,
           irpjpercentual: tributacao.value.irpjpercentual,
+          // Produtor Rural
+          certidaosefazmt: tributacao.value.certidaosefazmt || false,
+          fethabkg: tributacao.value.fethabkg,
+          iagrokg: tributacao.value.iagrokg,
+          funruralpercentual: tributacao.value.funruralpercentual,
+          senarpercentual: tributacao.value.senarpercentual,
+          // Contábil
+          acumuladordominiovista: tributacao.value.acumuladordominiovista,
+          acumuladordominioprazo: tributacao.value.acumuladordominioprazo,
+          historicodominio: tributacao.value.historicodominio,
+          movimentacaofisica: tributacao.value.movimentacaofisica || false,
+          movimentacaocontabil: tributacao.value.movimentacaocontabil || false,
+          // Observações
           observacoesnf: tributacao.value.observacoesnf,
         }
       }
@@ -135,7 +169,7 @@ const handleSubmit = async () => {
       if (isEditMode.value) {
         await tributacaoStore.updateTributacao(
           route.params.codtributacaonaturezaoperacao,
-          form.value,
+          form.value
         )
         $q.notify({ type: 'positive', message: 'Tributação atualizada com sucesso' })
       } else {
@@ -261,7 +295,7 @@ onMounted(async () => {
                 <q-select
                   v-model="form.codestado"
                   :options="estadoOptions"
-                  option-value="codcidade"
+                  option-value="value"
                   option-label="sigla"
                   emit-value
                   map-options
@@ -278,13 +312,7 @@ onMounted(async () => {
 
               <!-- NCM -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model="form.ncm"
-                  outlined
-                  label="NCM"
-                  maxlength="10"
-                  :disable="loading"
-                >
+                <q-input v-model="form.ncm" outlined label="NCM" maxlength="10" :disable="loading">
                   <template v-slot:prepend>
                     <q-icon name="tag" />
                   </template>
@@ -476,7 +504,118 @@ onMounted(async () => {
           </q-card-section>
         </q-card>
 
-        <!-- Card 6 - Observações -->
+        <!-- Card 6 - Produtor Rural -->
+        <q-card class="q-mb-md">
+          <div class="text-subtitle1 text-white bg-green q-pa-sm">
+            <q-icon name="agriculture" class="q-mr-sm" />
+            Produtor Rural
+          </div>
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-12 col-sm-4">
+                <q-toggle
+                  v-model="form.certidaosefazmt"
+                  label="Certidão SEFAZ MT"
+                  :disable="loading"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <q-input
+                  v-model.number="form.fethabkg"
+                  outlined
+                  label="FETHAB por KG"
+                  type="number"
+                  step="0.0001"
+                  :disable="loading"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <q-input
+                  v-model.number="form.iagrokg"
+                  outlined
+                  label="IAGRO por KG"
+                  type="number"
+                  step="0.0001"
+                  :disable="loading"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <q-input
+                  v-model.number="form.funruralpercentual"
+                  outlined
+                  label="FUNRURAL (%)"
+                  type="number"
+                  step="0.01"
+                  :disable="loading"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <q-input
+                  v-model.number="form.senarpercentual"
+                  outlined
+                  label="SENAR (%)"
+                  type="number"
+                  step="0.01"
+                  :disable="loading"
+                />
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <!-- Card 7 - Contábil -->
+        <q-card class="q-mb-md">
+          <div class="text-subtitle1 text-white bg-indigo q-pa-sm">
+            <q-icon name="account_balance" class="q-mr-sm" />
+            Contábil
+          </div>
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-12 col-sm-6">
+                <q-input
+                  v-model="form.acumuladordominiovista"
+                  outlined
+                  label="Acumulador Domínio Vista"
+                  :disable="loading"
+                />
+              </div>
+              <div class="col-12 col-sm-6">
+                <q-input
+                  v-model="form.acumuladordominioprazo"
+                  outlined
+                  label="Acumulador Domínio Prazo"
+                  :disable="loading"
+                />
+              </div>
+              <div class="col-12">
+                <q-input
+                  v-model="form.historicodominio"
+                  outlined
+                  type="textarea"
+                  label="Histórico Domínio"
+                  :disable="loading"
+                  rows="2"
+                />
+              </div>
+              <div class="col-12 col-sm-6">
+                <q-toggle
+                  v-model="form.movimentacaofisica"
+                  label="Movimentação Física"
+                  :disable="loading"
+                />
+              </div>
+              <div class="col-12 col-sm-6">
+                <q-toggle
+                  v-model="form.movimentacaocontabil"
+                  label="Movimentação Contábil"
+                  :disable="loading"
+                />
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <!-- Card 8 - Observações -->
         <q-card class="q-mb-md">
           <div class="text-subtitle1 text-white bg-grey-7 q-pa-sm">
             <q-icon name="notes" class="q-mr-sm" />

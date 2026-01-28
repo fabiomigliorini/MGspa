@@ -677,6 +677,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('select/grupo-economico', '\Mg\Select\SelectGrupoEconomicoController@index');
         Route::get('select/tipo-produto', '\Mg\Select\SelectTipoProdutoController@index');
         Route::get('select/tributo', '\Mg\Select\SelectTributoController@index');
+        Route::get('select/tipo-titulo', '\Mg\Select\SelectTipoTituloController@index');
+        Route::get('select/conta-contabil', '\Mg\Select\SelectContaContabilController@index');
+        Route::get('select/estoque-movimento-tipo', '\Mg\Select\SelectEstoqueMovimentoTipoController@index');
+        Route::get('select/tributacao', '\Mg\Select\SelectTributacaoController@index');
 
         Route::get('veiculo', '\Mg\Veiculo\VeiculoController@index');
         Route::get('veiculo/{id}', '\Mg\Veiculo\VeiculoController@show');

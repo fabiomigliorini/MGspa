@@ -1,6 +1,7 @@
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 - https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
+- https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
 
 - no dashboard
   - Adicionar um grafico de autorizadas por Usuario Criacao.
@@ -14,11 +15,9 @@
 - Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
 - Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
 - Ao emitir uma nota, deixar salvo quem fez a operação.
-- Link para o cliente na nota Fiscal não está funcionando.
 
 Eduardo
 
-- Tela Natureza Operacao
 - Tela DFE
 - Tela NFeTrceiro
 
@@ -106,3 +105,7 @@ DONE:
 - nao achou codigo barras 7891191003733 na pesquisa
 - link pra pessoas nao esta abrindo na producao
 - https://notas.mgpapelaria.com.br/nota/3319596 notas importadas ficando como em digitacao
+
+27/01
+
+- Tela Natureza Operacao
