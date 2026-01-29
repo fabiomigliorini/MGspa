@@ -1,13 +1,14 @@
 <script setup>
 const emissoesItems = [
-  { label: 'Not. Fiscais', icon: 'description', color: 'blue', to: '/nota' },
-  { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
+  { label: 'Início', icon: 'home', color: 'brown', to: '/' },
+  { label: 'Notas', icon: 'description', color: 'blue', to: '/nota' },
 ]
 
-const cadastrosItems = [{ label: 'Dashboard Inicial', icon: 'home', color: 'brown', to: '/' }]
+// const cadastrosItems = []
 
 const fiscaisItems = [
-  { label: 'Nat. Operações', icon: 'percent', color: 'green', to: '/natureza-operacao' },
+  { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
+  { label: 'Naturezas', icon: 'percent', color: 'green', to: '/natureza-operacao' },
   { label: 'Tributações', icon: 'receipt_long', color: 'teal', to: '/tributacao-cadastro' },
   { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
   { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
@@ -19,11 +20,11 @@ const fiscaisItems = [
     <q-menu anchor="bottom left" self="top left" :offset="[0, 8]" max-width="400px">
       <q-card style="min-width: 350px">
         <q-card-section class="q-pa-md">
-          <div class="text-h6">Aplicações</div>
-          <q-separator class="q-my-sm" />
+          <!-- <div class="text-h6">Aplicações</div>
+          <q-separator class="q-my-sm" /> -->
 
           <!-- EMISSÕES -->
-          <div class="text-subtitle2 text-grey-7">Emissões</div>
+          <div class="text-subtitle2 text-grey-7 q-mb-md">Emissões</div>
           <div class="row q-col-gutter-sm">
             <div class="col-3" v-for="item in emissoesItems" :key="item.label">
               <q-btn flat no-caps class="full-width app-launcher-item" :to="item.to" v-close-popup>
@@ -37,10 +38,10 @@ const fiscaisItems = [
             </div>
           </div>
 
-          <q-separator class="q-mb-sm" />
+          <!-- <q-separator class="q-mb-sm" /> -->
 
           <!-- CADASTROS FISCAIS -->
-          <div class="text-subtitle2 text-grey-7">Cadastros Fiscais</div>
+          <div class="text-subtitle2 text-grey-7 q-my-md">Parametrização</div>
           <div class="row q-col-gutter-sm">
             <div class="col-3" v-for="item in fiscaisItems" :key="item.label">
               <q-btn flat no-caps class="full-width app-launcher-item" :to="item.to" v-close-popup>
@@ -53,9 +54,11 @@ const fiscaisItems = [
               </q-btn>
             </div>
           </div>
-          <q-separator class="q-mb-sm" />
 
           <!-- INICIO -->
+          <!--
+          <q-separator class="q-mb-sm" />
+
           <div class="text-subtitle2 text-grey-7">Inicio</div>
           <div class="row q-col-gutter-sm">
             <div class="col-3" v-for="item in cadastrosItems" :key="item.label">
@@ -69,6 +72,7 @@ const fiscaisItems = [
               </q-btn>
             </div>
           </div>
+          -->
         </q-card-section>
       </q-card>
     </q-menu>

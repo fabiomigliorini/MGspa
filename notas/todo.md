@@ -1,3 +1,32 @@
+- Cidades
+  - form está como dense,
+  - deixar o esc fechar a janela
+  - Substituir o (+ novo pais por somente o "+")
+  - Eliminar o espacinho entre os tabs e as navbars
+  - padronizar espaçamento e titulos da aba de filtros da Notas/Tributacoes/Paises/etc
+
+- Natureza
+  - deixar cards com o mesmo formato do Notas (fonte/icone)
+  - filtro operacao nao funciona (entrada/saida)
+  - bordinha quando nao acha nada
+  - terminar cards da tributacao dentro da natureza
+  - link editar com :to
+  - transformar todos selects em componentes
+  - padronizar borda do card e titulos do card igual a nota fiscal
+  - deixar listagem por ordem alfabetica
+    (naturezaoperacao)
+  - filtro das tributacoes nessa ordem (pra filtrar e pra listar)
+    - codestado
+    - codtributacao
+    - codtipoproduto
+    - bit
+    - ncm
+    - cfop (select)
+
+- Tributacao / CFOP
+  - deixar card no padrao da tela de notas
+  - onde mostra a chave primaria, sempre padronizar a mascara #99999999
+
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 - https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
@@ -15,6 +44,8 @@
 - Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
 - Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
 - Ao emitir uma nota, deixar salvo quem fez a operação.
+
+- refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
 
 Eduardo
 
