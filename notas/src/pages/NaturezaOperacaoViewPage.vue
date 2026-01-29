@@ -69,7 +69,6 @@ const handleDelete = () => {
     message: `Deseja realmente excluir a natureza de operação "${naturezaOperacao.value?.naturezaoperacao}"?`,
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Excluir', color: 'negative' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await naturezaOperacaoStore.deleteNaturezaOperacao(codnaturezaoperacao.value)

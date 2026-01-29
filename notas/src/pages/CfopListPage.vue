@@ -46,7 +46,6 @@ const handleDeleteCfop = (cfop) => {
       label: 'Excluir',
       color: 'negative',
     },
-    persistent: true,
   }).onOk(async () => {
     try {
       await cfopStore.deleteCfop(cfop.codcfop)

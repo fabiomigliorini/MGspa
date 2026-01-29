@@ -74,7 +74,6 @@ const handleDelete = () => {
     message: `Deseja excluir esta tributação?`,
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Excluir', color: 'negative' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await tributacaoStore.deleteTributacao(codtributacaonaturezaoperacao.value)

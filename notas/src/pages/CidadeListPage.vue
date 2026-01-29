@@ -145,7 +145,6 @@ const handleDeleteCidade = (cidade) => {
       label: 'Excluir',
       color: 'negative',
     },
-    persistent: true,
   }).onOk(async () => {
     try {
       await cidadeStore.deleteCidade(cidade.codcidade)
@@ -294,7 +293,6 @@ const handleDeleteEstado = () => {
       label: 'Excluir',
       color: 'negative',
     },
-    persistent: true,
   }).onOk(async () => {
     try {
       await cidadeStore.deleteEstado(currentEstado.value.codestado)
@@ -354,7 +352,7 @@ const handleSaveCidade = async () => {
 </script>
 
 <template>
-  <q-page class="q-pa-md">
+  <q-page>
     <!-- Tabs de Paises -->
     <div class="q-mb-sm">
       <q-tabs
@@ -376,19 +374,10 @@ const handleSaveCidade = async () => {
           class="q-px-lg"
         />
         <!-- Botao para adicionar novo pais -->
-        <q-btn flat icon="add" label="Novo Pais" unelevated @click="handleCreatePais" />
-        <!-- Botao para excluir pais selecionado -->
-        <!-- <q-btn
-          v-if="selectedPais"
-          flat
-          icon="delete"
-          label="Excluir Pais"
-          unelevated
-          color="negative"
-          @click="handleDeletePais"
-        /> -->
+        <q-btn flat icon="add" unelevated @click="handleCreatePais">
+          <q-tooltip>Novo Pais</q-tooltip>
+        </q-btn>
       </q-tabs>
-      <q-separator />
     </div>
 
     <!-- Tabs de Estados (apenas para Brasil/Argentina) -->
@@ -415,7 +404,9 @@ const handleSaveCidade = async () => {
           <q-tooltip>{{ estado.estado }}</q-tooltip>
         </q-tab>
         <!-- Botao para adicionar novo estado -->
-        <q-btn flat icon="add" label="Novo Estado" unelevated @click="handleCreateEstado" />
+        <q-btn flat icon="add" unelevated @click="handleCreateEstado">
+          <q-tooltip>Novo Estado</q-tooltip>
+        </q-btn>
       </q-tabs>
       <q-separator />
     </div>
@@ -432,7 +423,6 @@ const handleSaveCidade = async () => {
             </q-chip>
             <q-btn
               flat
-              dense
               round
               size="sm"
               icon="edit"
@@ -442,15 +432,7 @@ const handleSaveCidade = async () => {
             >
               <q-tooltip>Editar Estado</q-tooltip>
             </q-btn>
-            <q-btn
-              flat
-              dense
-              round
-              size="sm"
-              icon="delete"
-              color="negative"
-              @click="handleDeleteEstado"
-            >
+            <q-btn flat round size="sm" icon="delete" color="negative" @click="handleDeleteEstado">
               <q-tooltip>Excluir Estado</q-tooltip>
             </q-btn>
           </template>
@@ -558,7 +540,7 @@ const handleSaveCidade = async () => {
     </q-page-sticky>
 
     <!-- Dialog Estado (Novo/Editar) -->
-    <q-dialog v-model="dialogEstado" persistent>
+    <q-dialog v-model="dialogEstado">
       <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">
@@ -571,7 +553,6 @@ const handleSaveCidade = async () => {
             v-model="estadoForm.estado"
             label="Nome do Estado"
             outlined
-            dense
             autofocus
             class="q-mb-md"
           />
@@ -579,7 +560,6 @@ const handleSaveCidade = async () => {
             v-model="estadoForm.sigla"
             label="Sigla (ex: MT, SP, RJ)"
             outlined
-            dense
             maxlength="2"
             class="text-uppercase"
             @update:model-value="(val) => (estadoForm.sigla = val?.toUpperCase())"
@@ -599,7 +579,7 @@ const handleSaveCidade = async () => {
     </q-dialog>
 
     <!-- Dialog Novo Pais -->
-    <q-dialog v-model="dialogPais" persistent>
+    <q-dialog v-model="dialogPais">
       <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">Novo Pais</div>
@@ -638,7 +618,7 @@ const handleSaveCidade = async () => {
     </q-dialog>
 
     <!-- Dialog Cidade (Nova/Editar) -->
-    <q-dialog v-model="dialogCidade" persistent>
+    <q-dialog v-model="dialogCidade">
       <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">
@@ -652,7 +632,6 @@ const handleSaveCidade = async () => {
             v-model="cidadeForm.cidade"
             label="Nome da Cidade"
             outlined
-            dense
             autofocus
             class="q-mb-md"
           />
@@ -660,7 +639,6 @@ const handleSaveCidade = async () => {
             v-model="cidadeForm.codigooficial"
             label="Codigo IBGE"
             outlined
-            dense
             mask="#######"
             unmasked-value
             inputmode="numeric"

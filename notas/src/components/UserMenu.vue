@@ -10,7 +10,6 @@ function handleLogout() {
     message: 'Deseja realmente sair do sistema?',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Sair', color: 'negative' },
-    persistent: true,
   }).onOk(() => {
     logout()
   })
@@ -31,7 +30,8 @@ function handleLogout() {
           <q-item-section>
             <q-item-label class="text-weight-bold">{{ user?.usuario }}</q-item-label>
             <q-item-label caption v-if="isAdmin">
-              <q-icon name="star" size="xs" color="amber" /> Administrador
+              <q-icon name="star" size="xs" color="amber" />
+              Administrador
             </q-item-label>
           </q-item-section>
         </q-item>

@@ -120,7 +120,7 @@ onMounted(async () => {
     <!-- Filtros -->
     <div class="q-pa-md">
       <!-- Tributação -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Tributação:</div>
+      <div class="text-caption text-grey-7 q-mb-md">Tributação:</div>
       <div class="q-mb-md">
         <q-select
           v-model="filters.codtributacao"

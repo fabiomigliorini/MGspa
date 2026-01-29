@@ -100,7 +100,7 @@ onMounted(() => {
     <!-- Filtros -->
     <div class="q-pa-md">
       <!-- Codigo CFOP -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Busque pelo CFOP:</div>
+      <div class="text-caption text-grey-7 q-mb-md">Busque pelo CFOP:</div>
       <div class="q-mb-md">
         <q-input
           v-model="filters.cfop"

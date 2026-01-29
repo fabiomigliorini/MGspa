@@ -106,7 +106,7 @@ onMounted(() => {
     <!-- Filtros -->
     <div class="q-pa-md">
       <!-- Nome da Natureza de Operação -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Busque pela Natureza:</div>
+      <div class="text-caption text-grey-7 q-mb-md">Busque pela Natureza:</div>
       <div class="q-mb-md">
         <q-input
           v-model="filters.naturezaoperacao"

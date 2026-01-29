@@ -170,7 +170,7 @@ const limparResultados = () => {
           >
             <template v-slot:no-option>
               <q-item>
-                <q-item-section class="text-grey"> Nenhum resultado </q-item-section>
+                <q-item-section class="text-grey">Nenhum resultado</q-item-section>
               </q-item>
             </template>
           </q-select>
@@ -192,7 +192,7 @@ const limparResultados = () => {
           >
             <template v-slot:no-option>
               <q-item>
-                <q-item-section class="text-grey"> Nenhum resultado </q-item-section>
+                <q-item-section class="text-grey">Nenhum resultado</q-item-section>
               </q-item>
             </template>
           </q-select>

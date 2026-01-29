@@ -60,7 +60,7 @@ onMounted(() => {
       () => {
         debouncedApplyFilters()
       },
-      { deep: true },
+      { deep: true }
     )
   }, 200)
 })
@@ -99,7 +99,7 @@ onMounted(() => {
     <!-- Filtros -->
     <div class="q-pa-md">
       <!-- Nome da Tributacao -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Busque pela Tributacao:</div>
+      <div class="text-caption text-grey-7 q-mb-md">Busque pela Tributacao:</div>
       <div class="q-mb-md">
         <q-input
           v-model="filters.tributacao"

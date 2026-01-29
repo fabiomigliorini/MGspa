@@ -111,38 +111,46 @@ const loadInitialOptions = async () => {
   const promises = []
   if (form.value.codnaturezaoperacaodevolucao) {
     promises.push(
-      api.get('/v1/select/natureza-operacao', {
-        params: { codnaturezaoperacao: form.value.codnaturezaoperacaodevolucao },
-      }).then((res) => {
-        naturezaDevolucaoOptions.value = res.data
-      })
+      api
+        .get('/v1/select/natureza-operacao', {
+          params: { codnaturezaoperacao: form.value.codnaturezaoperacaodevolucao },
+        })
+        .then((res) => {
+          naturezaDevolucaoOptions.value = res.data
+        })
     )
   }
   if (form.value.codtipotitulo) {
     promises.push(
-      api.get('/v1/select/tipo-titulo', {
-        params: { codtipotitulo: form.value.codtipotitulo },
-      }).then((res) => {
-        tipoTituloOptions.value = res.data
-      })
+      api
+        .get('/v1/select/tipo-titulo', {
+          params: { codtipotitulo: form.value.codtipotitulo },
+        })
+        .then((res) => {
+          tipoTituloOptions.value = res.data
+        })
     )
   }
   if (form.value.codcontacontabil) {
     promises.push(
-      api.get('/v1/select/conta-contabil', {
-        params: { codcontacontabil: form.value.codcontacontabil },
-      }).then((res) => {
-        contaContabilOptions.value = res.data
-      })
+      api
+        .get('/v1/select/conta-contabil', {
+          params: { codcontacontabil: form.value.codcontacontabil },
+        })
+        .then((res) => {
+          contaContabilOptions.value = res.data
+        })
     )
   }
   if (form.value.codestoquemovimentotipo) {
     promises.push(
-      api.get('/v1/select/estoque-movimento-tipo', {
-        params: { codestoquemovimentotipo: form.value.codestoquemovimentotipo },
-      }).then((res) => {
-        estoqueMovimentoTipoOptions.value = res.data
-      })
+      api
+        .get('/v1/select/estoque-movimento-tipo', {
+          params: { codestoquemovimentotipo: form.value.codestoquemovimentotipo },
+        })
+        .then((res) => {
+          estoqueMovimentoTipoOptions.value = res.data
+        })
     )
   }
   await Promise.all(promises)
@@ -238,7 +246,6 @@ const handleSubmit = async () => {
       label: 'Salvar',
       color: 'primary',
     },
-    persistent: true,
   }).onOk(async () => {
     loading.value = true
     try {
