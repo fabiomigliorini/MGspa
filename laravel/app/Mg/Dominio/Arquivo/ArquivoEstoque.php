@@ -3,7 +3,7 @@
 namespace Mg\Dominio\Arquivo;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\Dominio\Arquivo\Arquivo;
 use Mg\Filial\Filial;
@@ -79,21 +79,20 @@ class ArquivoEstoque extends Arquivo
             order by 7 desc, p.produto, p.codproduto
         ";
 
-    	$params = [
+        $params = [
             'mes' => $dataSaldo,
             'codfilial' => $this->filial->codfilial
         ];
 
-    	$saldos = DB::select($sql, $params);
+        $saldos = DB::select($sql, $params);
 
-    	foreach ($saldos as $saldo) {
+        foreach ($saldos as $saldo) {
 
             $reg = new RegistroProduto4();
             $reg->codigoProduto = str_pad($saldo->codproduto, 6, '0', STR_PAD_LEFT);
             $reg->codigoEmpresa = $this->filial->empresadominio;
 
-            switch ($saldo->codtipoproduto)
-            {
+            switch ($saldo->codtipoproduto) {
                 case 8: // Imobilizado
                     $reg->codigoGrupo = 3;
                     break;
@@ -118,7 +117,6 @@ class ArquivoEstoque extends Arquivo
             $reg->quantidadeFinalEstoque = $saldo->saldoquantidade;
 
             $this->registros[] = $reg;
-
         }
 
         return parent::processa();

@@ -3,7 +3,7 @@
 namespace Mg\Estoque;
 
 use Mg\MgService;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class EstoqueSaldoConferenciaService extends MgService
@@ -206,10 +206,10 @@ class EstoqueSaldoConferenciaService extends MgService
         int $page
     ) {
 
-        if(!empty($codmarca)){
+        if (!empty($codmarca)) {
             $marca = \Mg\Marca\Marca::findOrFail($codmarca);
         }
-        
+
         $estoquelocal = EstoqueLocal::findOrFail($codestoquelocal);
 
         // Monta query para buscar produtos
@@ -231,8 +231,8 @@ class EstoqueSaldoConferenciaService extends MgService
             left join tblestoquesaldo es on (es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao and es.fiscal = :fiscal)
             where p.estoque = true
         ';
-        
-        if (!empty($codmarca)){
+
+        if (!empty($codmarca)) {
             $sql .= '
                 and p.codmarca = :codmarca
             ';
@@ -259,7 +259,7 @@ class EstoqueSaldoConferenciaService extends MgService
                 ';
                 break;
         }
-        
+
         // filtra conferidos
         if ($conferidos) {
             $sql .= '
@@ -271,8 +271,8 @@ class EstoqueSaldoConferenciaService extends MgService
             ';
         }
 
-         // filtra conferencia periodica
-         if ($conferenciaperiodica) {
+        // filtra conferencia periodica
+        if ($conferenciaperiodica) {
             $sql .= '
                 and p.conferenciaperiodica = true
             ';
@@ -309,14 +309,14 @@ class EstoqueSaldoConferenciaService extends MgService
             'offset' => $offset,
         ];
 
-        if(!empty($codmarca)){
+        if (!empty($codmarca)) {
             $params['codmarca'] = $codmarca;
-           }
+        }
 
-        $produtos = DB::select($sql,$params);
+        $produtos = DB::select($sql, $params);
 
-       
-        
+
+
         foreach ($produtos as $i => $produto) {
 
             $produtos[$i]->saldoquantidade = (float)$produtos[$i]->saldoquantidade;
@@ -335,7 +335,7 @@ class EstoqueSaldoConferenciaService extends MgService
             }
         }
 
-        
+
         $res = [
             'local' => [
                 'codestoquelocal' => $estoquelocal->codestoquelocal,
@@ -344,10 +344,10 @@ class EstoqueSaldoConferenciaService extends MgService
             'produtos' => $produtos,
         ];
 
-        if(!empty($codmarca)){
+        if (!empty($codmarca)) {
             $res['marca'] =  [
-                    'marca' => $marca->marca,
-                    'codmarca' => $marca->codmarca
+                'marca' => $marca->marca,
+                'codmarca' => $marca->codmarca
             ];
         }
 

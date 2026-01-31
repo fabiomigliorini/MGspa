@@ -5,7 +5,7 @@ namespace Mg\Pdv;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Exception;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;

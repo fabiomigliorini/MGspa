@@ -2,7 +2,7 @@
 
 namespace Mg\Estoque\MinimoMaximo;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -68,31 +68,31 @@ class ComprasService
 
         $params = [];
         if (!empty($marca)) {
-            $sql .="
+            $sql .= "
                 and p.codmarca = :codmarca
             ";
             $params['codmarca'] = $marca->codmarca;
         } else {
-            $sql .="
+            $sql .= "
                 and m.controlada = true
             ";
         }
 
-        $sql .="
+        $sql .= "
             order by m.marca, p.codmarca, p.produto, p.codproduto, pv.variacao, pv.codprodutovariacao
         ";
         $produtos = DB::select($sql, $params);
         foreach ($produtos as $prod) {
             $prod->comprar = static::decideQuantidadeComprar(
-                ($prod->estoque??0) + ($prod->chegando??0),
-                $prod->estoqueminimo??0,
-                $prod->estoquemaximo??0,
-                $prod->lotecompra??1,
+                ($prod->estoque ?? 0) + ($prod->chegando ?? 0),
+                $prod->estoqueminimo ?? 0,
+                $prod->estoquemaximo ?? 0,
+                $prod->lotecompra ?? 1,
                 !empty($prod->descontinuado)
             );
             $prod->critico = static::decideEstoqueCritico(
-                ($prod->estoque??0) + ($prod->chegando??0),
-                $prod->estoqueminimo??0
+                ($prod->estoque ?? 0) + ($prod->chegando ?? 0),
+                $prod->estoqueminimo ?? 0
             );
         }
 
@@ -129,7 +129,7 @@ class ComprasService
         } else {
             $lotes = round($lotes, 0);
         }
-        return empty($lotes)?null:$lotes * $lote;
+        return empty($lotes) ? null : $lotes * $lote;
     }
 
     public static function criarPlanilhaPedido(Marca $marca)
@@ -142,7 +142,7 @@ class ComprasService
         $spreadsheet->getDefaultStyle()->getFont()
             ->setName('Liberation Sans')
             ->setSize(10)
-            ;
+        ;
         $titulo = "Pedido {$marca->marca}";
         $spreadsheet->getProperties()
             ->setCreator("MG Papelaria")
@@ -289,7 +289,7 @@ class ComprasService
             $linha++;
         }
 
-        $linhaFinal = $linha-1;
+        $linhaFinal = $linha - 1;
 
         // Filtro
         $spreadsheet->getActiveSheet()->setAutoFilter("A{$linhaCabecalho}:N20");

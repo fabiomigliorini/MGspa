@@ -2,7 +2,7 @@
 
 namespace Mg\Dfe;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Mg\NFePHP\NFePHPDistDfeService;
@@ -16,8 +16,7 @@ class DfeService
         $nfechave = null,
         int $nsude = null,
         int $nsuate = null
-        )
-    {
+    ) {
         $qry = DistribuicaoDfe::query();
 
         if (!empty($codfilial)) {
@@ -53,12 +52,10 @@ class DfeService
         $xml = NFePHPDistDfeService::carregarXml($dd);
         return $xml;
     }
-    
+
     public static function processar($coddistribuicaodfe)
     {
         $dd = DistribuicaoDfe::findOrFail($coddistribuicaodfe);
         return NFePHPDistDfeService::processar($dd);
     }
-
-
 }

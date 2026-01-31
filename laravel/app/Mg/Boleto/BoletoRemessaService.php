@@ -4,7 +4,7 @@ namespace Mg\Boleto;
 
 use Illuminate\Support\Facades\Storage;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Mg\Portador\Portador;
@@ -60,7 +60,7 @@ class BoletoRemessaService
         ];
     }
 
-    public static function gerarArquivoRemessa ($portador, $remessa)
+    public static function gerarArquivoRemessa($portador, $remessa)
     {
         // monta o nome do arquivo de remessa
         $data = Carbon::now();
@@ -193,7 +193,7 @@ class BoletoRemessaService
             $linha .= '00';
 
             // 161 a 173 Valor a ser cobrado por Dia de Atraso
-            $juros = round((double)$titulo->saldo * (0.04 / 30), 2);
+            $juros = round((float)$titulo->saldo * (0.04 / 30), 2);
             $linha .= str_pad($juros * 100, 13, '0', STR_PAD_LEFT);
 
             // 174 a 179 Data Limite P/Concessão de Desconto
@@ -209,7 +209,7 @@ class BoletoRemessaService
             $linha .= str_pad(0, 13, '0', STR_PAD_LEFT);
 
             // 219 a 220 Identificação do Tipo de Inscrição do Pagador
-            $linha .= $titulo->Pessoa->fisica?'01':'02';
+            $linha .= $titulo->Pessoa->fisica ? '01' : '02';
 
             // 221 a 234 No Inscrição do Pagador
             $linha .= str_pad($titulo->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
@@ -254,7 +254,7 @@ class BoletoRemessaService
         $linha .= str_pad($iLinha, 6, '0', STR_PAD_LEFT);
         $linhas[] = $linha;
 
-         // Linha em branco pro bradesco ficar feliz
+        // Linha em branco pro bradesco ficar feliz
         $linhas[] = '';
 
         // salva arquivo
@@ -282,7 +282,7 @@ class BoletoRemessaService
             // soma o resultado para totalização
             $intTotalNumero += $intNumero;
             // se o multiplicador for maior que 2 decrementa-o caso contrario atribuir valor padrao original
-            $intMultiplicador = ($intMultiplicador < 7)?$intMultiplicador + 1:2;
+            $intMultiplicador = ($intMultiplicador < 7) ? $intMultiplicador + 1 : 2;
         }
 
         // calcula o resto da divisao do total por 11
@@ -302,7 +302,5 @@ class BoletoRemessaService
                 break;
         }
         return $digito;
-
     }
-
 }

@@ -5,14 +5,14 @@ namespace Mg\Pedido;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgService;
 
 class PedidoItemService extends MgService
 {
 
-    public static function validate ($data)
+    public static function validate($data)
     {
 
         $rules = [
@@ -25,10 +25,9 @@ class PedidoItemService extends MgService
         if (!$validator->passes()) {
             throw new ValidationException($validator);
         }
-
     }
 
-    public static function insert ($data)
+    public static function insert($data)
     {
         static::validate($data);
         $model = new PedidoItem();
@@ -38,7 +37,7 @@ class PedidoItemService extends MgService
         return $model;
     }
 
-    public static function update (PedidoItem $model, $data)
+    public static function update(PedidoItem $model, $data)
     {
         $model->fill($data);
         $data = $model->getAttributes();
@@ -47,7 +46,7 @@ class PedidoItemService extends MgService
         return $model;
     }
 
-    public static function delete (PedidoItem $model)
+    public static function delete(PedidoItem $model)
     {
         $sql = "
           SELECT COUNT(npbpi.codnegocioprodutobarrapedidoitem) AS count
@@ -64,5 +63,4 @@ class PedidoItemService extends MgService
         $model->delete();
         return $model;
     }
-
 }

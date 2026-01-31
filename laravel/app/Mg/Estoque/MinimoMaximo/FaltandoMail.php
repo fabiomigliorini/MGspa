@@ -7,7 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\Marca\Marca;
 
@@ -36,7 +36,7 @@ class FaltandoMail extends Mailable
     {
 
 
-      // $marca = Marca::findOrFail(10000064);
+        // $marca = Marca::findOrFail(10000064);
 
         // $produtos = ComprasService::buscarProdutos($marca);
         $produtos = ComprasService::buscarProdutos();
@@ -47,14 +47,14 @@ class FaltandoMail extends Mailable
             }
             if (!isset($marcas[$prod->codmarca])) {
                 $marcas[$prod->codmarca] = (object) [
-            'codmarca' => $prod->codmarca,
-            'marca' => $prod->marca,
-            'total' => 0,
-            'comprar' => 0,
-            'critico' => 0,
-            'abaixominimo' => 0,
-            'produtos' => collect()
-          ];
+                    'codmarca' => $prod->codmarca,
+                    'marca' => $prod->marca,
+                    'total' => 0,
+                    'comprar' => 0,
+                    'critico' => 0,
+                    'abaixominimo' => 0,
+                    'produtos' => collect()
+                ];
             }
             $marcas[$prod->codmarca]->total += ($prod->comprar * $prod->custoultimacompra);
             $marcas[$prod->codmarca]->comprar++;
@@ -74,9 +74,9 @@ class FaltandoMail extends Mailable
         // dd($marcas);
 
         return $this
-        ->subject("Produtos Faltando")
-        ->view('faltando-mail.faltando')
-        ->with(['marcas' => $marcas]);
+            ->subject("Produtos Faltando")
+            ->view('faltando-mail.faltando')
+            ->with(['marcas' => $marcas]);
 
         /*
           $pathNFeAutorizada = NFePHPPathService::pathNFeAutorizada($this->marca);

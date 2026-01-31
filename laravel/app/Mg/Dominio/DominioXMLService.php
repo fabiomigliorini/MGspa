@@ -4,7 +4,7 @@ namespace Mg\Dominio;
 
 use ZipArchive;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -60,14 +60,14 @@ class DominioXMLService
          */
         ini_set('memory_limit', '256M');
         $nfs = NotaFiscal::where('codfilial', $codfilial)
-                ->where('emissao', '>=', $mes->startOfMonth()->format('Y-m-d H:i:s'))
-                ->where('emissao', '<=', $mes->endOfMonth()->format('Y-m-d H:i:s'))
-                ->where('emitida', 'true')
-                ->where('codoperacao', 2) // saidas
-                ->where('modelo', $modelo)
-                ->whereNull('nfeinutilizacao')
-                ->whereNotNull('nfeautorizacao')
-                ->get();
+            ->where('emissao', '>=', $mes->startOfMonth()->format('Y-m-d H:i:s'))
+            ->where('emissao', '<=', $mes->endOfMonth()->format('Y-m-d H:i:s'))
+            ->where('emitida', 'true')
+            ->where('codoperacao', 2) // saidas
+            ->where('modelo', $modelo)
+            ->whereNull('nfeinutilizacao')
+            ->whereNotNull('nfeautorizacao')
+            ->get();
 
         // Cria o Arquivo ZIP
         $za = new ZipArchive();
@@ -176,7 +176,6 @@ class DominioXMLService
             if ($adicionados = $za->addGlob($pattern, 0, ['remove_all_path' => true])) {
                 $registros += 1;
             }
-
         }
 
         // Fecha o ZIP
@@ -195,5 +194,4 @@ class DominioXMLService
             'registrosTotal' => $total,
         ];
     }
-
 }

@@ -3,7 +3,7 @@
 namespace Mg\Dominio\Arquivo;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\Dominio\Arquivo\Arquivo;
 use Mg\Filial\Filial;
@@ -45,7 +45,7 @@ class ArquivoPessoa extends Arquivo
     function processa()
     {
 
-    	$sql = "
+        $sql = "
             with ent as (
             	select distinct nf.codpessoa
             	from tblnotafiscal nf
@@ -81,15 +81,15 @@ class ArquivoPessoa extends Arquivo
             order by tblpessoa.codpessoa
         ";
 
-    	$params = [
+        $params = [
             'codfilial' => $this->filial->codfilial,
             'inicio' => $this->inicio,
             'fim' => $this->fim,
         ];
 
-    	$pessoas = DB::select($sql, $params);
+        $pessoas = DB::select($sql, $params);
 
-    	foreach ($pessoas as $pessoa) {
+        foreach ($pessoas as $pessoa) {
 
             $reg = new RegistroPessoa();
             $reg->codigoEmpresa = $this->filial->empresadominio;
@@ -108,7 +108,7 @@ class ArquivoPessoa extends Arquivo
             $reg->inscricaoEstadual = $pessoa->ie;
             $reg->fone = preg_replace('/[^0-9]/', '', $pessoa->telefone1);
             $reg->fax = preg_replace('/[^0-9]/', '', $pessoa->telefone2);
-            $reg->tipoInscricao = (!$pessoa->fisica)?'1':'2';
+            $reg->tipoInscricao = (!$pessoa->fisica) ? '1' : '2';
             $reg->bairro = $pessoa->bairro;
 
 
@@ -141,7 +141,6 @@ class ArquivoPessoa extends Arquivo
             // // $reg->quantidadeFinalEstoque = $pessoa->saldoquantidade;
             //
             $this->registros[] = $reg;
-
         }
 
         return parent::processa();

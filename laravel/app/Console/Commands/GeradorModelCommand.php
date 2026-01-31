@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\User;
 use App\DripEmailer;
 use Illuminate\Console\Command;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Illuminate\Support\Str;
 
@@ -56,7 +56,7 @@ class GeradorModelCommand extends Command
                 WHERE  i.indrelid = :tabela::regclass
                 AND    i.indisprimary';
         $codigos = DB::select($sql, [
-          'tabela' => $tabela
+            'tabela' => $tabela
         ]);
         foreach ($codigos as $codigo) {
             return $codigo->attname;
@@ -261,7 +261,6 @@ class {$this->classe} extends MgModel
             $count = $obj->$metodo()->count();
             $this->line("$count registros");
         }
-
     }
 
     public function montarChavesExtrangeiras()
@@ -282,7 +281,7 @@ class {$this->classe} extends MgModel
           ORDER BY kcu.column_name
         ';
         $chaves = DB::select($sql, [
-          'tabela' => $this->tabela
+            'tabela' => $this->tabela
         ]);
         foreach ($chaves as $chave) {
             $this->montarBelongsTo($chave->coluna, $chave->tabela, $chave->pk);
@@ -304,7 +303,7 @@ class {$this->classe} extends MgModel
           ORDER BY tc.table_name, kcu.column_name
         ';
         $chaves = DB::select($sql, [
-          'tabela' => $this->tabela
+            'tabela' => $this->tabela
         ]);
         foreach ($chaves as $chave) {
             $this->montarHasMany($chave->coluna, $chave->tabela, $chave->pk);
@@ -346,7 +345,7 @@ class {$this->classe} extends MgModel
         return $model;
     }
 
-    public function montarCaminhoArquivoModel ($namespace, $classe = null)
+    public function montarCaminhoArquivoModel($namespace, $classe = null)
     {
         // monta caminho diretorio
         $caminho = explode('\\', "app\\$namespace");
@@ -357,7 +356,7 @@ class {$this->classe} extends MgModel
         return "{$caminho}/{$classe}.php";
     }
 
-    public function sugereNomeMetodoRelacionamento ($coluna, $tabela)
+    public function sugereNomeMetodoRelacionamento($coluna, $tabela)
     {
         if (isset($this->models[$tabela])) {
             $metodo = $this->models[$tabela]['classe'];
@@ -373,7 +372,7 @@ class {$this->classe} extends MgModel
         return $metodo;
     }
 
-    public function descobrirMetodoBelongsTo ($coluna, $tabela)
+    public function descobrirMetodoBelongsTo($coluna, $tabela)
     {
         if (!@$metodo = $this->models[$this->tabela]['belongsTo'][$coluna]['metodo']) {
             switch ($coluna) {
@@ -386,7 +385,7 @@ class {$this->classe} extends MgModel
                     break;
 
                 default:
-                    $metodo = $this->sugereNomeMetodoRelacionamento ($coluna, $tabela);
+                    $metodo = $this->sugereNomeMetodoRelacionamento($coluna, $tabela);
                     break;
             }
         }

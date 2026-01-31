@@ -5,14 +5,14 @@ namespace Mg\Pedido;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgService;
 use Mg\Produto\ProdutoBarra;
 
 class PedidoService extends MgService
 {
-    public static function validate ($data)
+    public static function validate($data)
     {
 
         $rules = [
@@ -47,10 +47,9 @@ class PedidoService extends MgService
                 throw new ValidationException($validator);
             }
         }
-
     }
 
-    public static function insert ($data)
+    public static function insert($data)
     {
         static::validate($data);
         $model = new Pedido();
@@ -60,7 +59,7 @@ class PedidoService extends MgService
         return $model;
     }
 
-    public static function update (Pedido $model, $data)
+    public static function update(Pedido $model, $data)
     {
         $model->fill($data);
         $data = $model->getAttributes();
@@ -69,7 +68,7 @@ class PedidoService extends MgService
         return $model;
     }
 
-    public static function delete (Pedido $model)
+    public static function delete(Pedido $model)
     {
         $sql = "
           SELECT COUNT(npbpi.codnegocioprodutobarrapedidoitem) AS count
@@ -88,7 +87,7 @@ class PedidoService extends MgService
         return $model;
     }
 
-    public static function produtosParaTransferir ($codestoquelocalorigem, $codestoquelocaldestino)
+    public static function produtosParaTransferir($codestoquelocalorigem, $codestoquelocaldestino)
     {
 
         $sql = "
@@ -126,60 +125,57 @@ class PedidoService extends MgService
         ";
 
         $res = collect(DB::select($sql, [
-          'codestoquelocalorigem' => $codestoquelocalorigem,
-          'codestoquelocaldestino' => $codestoquelocaldestino
+            'codestoquelocalorigem' => $codestoquelocalorigem,
+            'codestoquelocaldestino' => $codestoquelocaldestino
         ]));
 
         foreach ($res as $key => $item) {
 
-          // Busca Codigos de Barras dos produtos
-          $pbs = ProdutoBarra::where('codprodutovariacao', $item->codprodutovariacao)->with('ProdutoEmbalagem')->get();
-          $barras = [];
-          $lotetransferencia = null;
-          foreach ($pbs as $pb) {
-            $barras[$pb->codprodutobarra] = (object) [
-              'codprodutobarra' => $pb->codprodutobarra,
-              'barras' => $pb->barras,
-              'sigla' => $pb->ProdutoEmbalagem->UnidadeMedida->sigla??null,
-              'quantidade' => $pb->ProdutoEmbalagem->quantidade??null,
-            ];
-            if (!empty($pb->codprodutoembalagem)) {
-              if (empty($lotetransferencia) || ($lotetransferencia >= $pb->ProdutoEmbalagem->quantidade)) {
-                $lotetransferencia = $pb->ProdutoEmbalagem->quantidade;
-              }
+            // Busca Codigos de Barras dos produtos
+            $pbs = ProdutoBarra::where('codprodutovariacao', $item->codprodutovariacao)->with('ProdutoEmbalagem')->get();
+            $barras = [];
+            $lotetransferencia = null;
+            foreach ($pbs as $pb) {
+                $barras[$pb->codprodutobarra] = (object) [
+                    'codprodutobarra' => $pb->codprodutobarra,
+                    'barras' => $pb->barras,
+                    'sigla' => $pb->ProdutoEmbalagem->UnidadeMedida->sigla ?? null,
+                    'quantidade' => $pb->ProdutoEmbalagem->quantidade ?? null,
+                ];
+                if (!empty($pb->codprodutoembalagem)) {
+                    if (empty($lotetransferencia) || ($lotetransferencia >= $pb->ProdutoEmbalagem->quantidade)) {
+                        $lotetransferencia = $pb->ProdutoEmbalagem->quantidade;
+                    }
+                }
             }
-          }
-          $res[$key]->embalagem = $lotetransferencia;
-          $res[$key]->barras = $barras;
+            $res[$key]->embalagem = $lotetransferencia;
+            $res[$key]->barras = $barras;
 
-          // Calcula Percentual do Saldo
-          $max = $item->estoquemaximo ?? 1;
-          $res[$key]->saldopercentual = ($item->saldoquantidade / $max) * 100;
+            // Calcula Percentual do Saldo
+            $max = $item->estoquemaximo ?? 1;
+            $res[$key]->saldopercentual = ($item->saldoquantidade / $max) * 100;
 
-          // Calcula quanto é pra transferir
-          $lotetransferencia = $lotetransferencia??1;
-          if (($lotetransferencia >= $max) || ($lotetransferencia >= $item->saldoquantidade_origem)) {
-              $lotetransferencia = 1;
-          }
-          $lotes = ceil(ceil($max - $item->saldoquantidade) / $lotetransferencia);
-          $lotesorigem = floor($item->saldoquantidade_origem / $lotetransferencia);
-          if ($lotes > $lotesorigem) {
-            $lotes = $lotesorigem;
-          }
-          $transferir = $lotes * $lotetransferencia;
-
-          // se quantidad calculada pra transferir > saldo na origem, diminui 1 lote
-          if ($transferir >= $item->saldoquantidade_origem && $item->saldoquantidade > 0) {
-            $lotes--;
+            // Calcula quanto é pra transferir
+            $lotetransferencia = $lotetransferencia ?? 1;
+            if (($lotetransferencia >= $max) || ($lotetransferencia >= $item->saldoquantidade_origem)) {
+                $lotetransferencia = 1;
+            }
+            $lotes = ceil(ceil($max - $item->saldoquantidade) / $lotetransferencia);
+            $lotesorigem = floor($item->saldoquantidade_origem / $lotetransferencia);
+            if ($lotes > $lotesorigem) {
+                $lotes = $lotesorigem;
+            }
             $transferir = $lotes * $lotetransferencia;
-          }
 
-          $res[$key]->transferir = intval($transferir);
-          $res[$key]->lotetransferencia = intval($lotetransferencia);
+            // se quantidad calculada pra transferir > saldo na origem, diminui 1 lote
+            if ($transferir >= $item->saldoquantidade_origem && $item->saldoquantidade > 0) {
+                $lotes--;
+                $transferir = $lotes * $lotetransferencia;
+            }
 
+            $res[$key]->transferir = intval($transferir);
+            $res[$key]->lotetransferencia = intval($lotetransferencia);
         }
         return $res;
     }
-
-
 }

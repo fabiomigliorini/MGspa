@@ -2,7 +2,7 @@
 
 namespace Mg\NFePHP;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Pessoa\Pessoa;
@@ -39,7 +39,7 @@ class NFePHPValidacaoService
         }
         if (!$nf->Pessoa->fisica) {
             throw new \Exception('Não é permitida emissão de NFCe para CNPJ!');
-        }        
+        }
         return true;
     }
 
@@ -100,6 +100,4 @@ class NFePHPValidacaoService
             throw new \Exception("Valor dos pagamentos '{$pago}' maior que valor da nota '{$nota}'!");
         }
     }
-
-
 }

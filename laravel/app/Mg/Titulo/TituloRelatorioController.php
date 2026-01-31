@@ -4,7 +4,7 @@ namespace Mg\Titulo;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-// use DB;
+// use Illuminate\Support\Facades\DB;
 
 
 class TituloRelatorioController extends Controller
@@ -20,7 +20,7 @@ class TituloRelatorioController extends Controller
         $pdf = TituloRelatorioService::pdf($request->all());
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="RelatorioAberto'. date('YmdHis') .'.pdf"'
+            'Content-Disposition' => 'inline; filename="RelatorioAberto' . date('YmdHis') . '.pdf"'
         ]);
     }
 }

@@ -3,7 +3,7 @@
 namespace Mg\Pessoa;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgService;
 use Mg\Cidade\Cidade;
@@ -40,7 +40,7 @@ class GrupoClienteService
 
         $qry->orderBy('fantasia', 'asc');
         $ret = $qry->limit(100)->get();
-        
+
         return $ret;
     }
 
@@ -59,7 +59,7 @@ class GrupoClienteService
         return $qry;
     }
 
-    public static function buscarPorCnpjIe ($cnpj, $ie)
+    public static function buscarPorCnpjIe($cnpj, $ie)
     {
         $qry = Pessoa::where('cnpj', $cnpj);
         $ie = (int) numeroLimpo($ie);
@@ -72,22 +72,22 @@ class GrupoClienteService
     }
 
     public static function podeVenderAPrazo(Pessoa $pessoa, $valorAvaliar = 0)
-	{
+    {
         // se nao esta vendendo a prazo
         if ($valorAvaliar <= 0) {
             return true;
         }
 
-		// se esta com o credito marcado como bloqueado
-		if ($pessoa->creditobloqueado) {
+        // se esta com o credito marcado como bloqueado
+        if ($pessoa->creditobloqueado) {
             return false;
         }
 
-		// se tem valor limite definido
+        // se tem valor limite definido
         if (!empty($pessoa->credito)) {
             // busca no banco total dos titulos
-    		$saldo = $pessoa->TituloS()->sum('saldo');
-    		$creditototal = $saldo + $valorAvaliar;
+            $saldo = $pessoa->TituloS()->sum('saldo');
+            $creditototal = $saldo + $valorAvaliar;
             if ($creditototal > ($pessoa->credito * 1.05)) {
                 return false;
             }
@@ -101,13 +101,13 @@ class GrupoClienteService
             }
         }
 
-		return true;
-	}
+        return true;
+    }
 
-    public static function create ($data)
+    public static function create($data)
     {
 
-     
+
         if (empty($data['ordem'])) {
             $data['ordem'] = GrupoCliente::where('codpessoa', $data['codpessoa'])->max('ordem') + 1;
         }
@@ -116,12 +116,11 @@ class GrupoClienteService
         $grupo->save();
 
         return $grupo->refresh();
-
     }
 
-    public static function createOrUpdate ($data)
+    public static function createOrUpdate($data)
     {
-    
+
         $grupo = GrupoCliente::where('codpessoa', $data['codpessoa'])
             ->whereNull('inativo')->orderBy('ordem')
             ->first();
@@ -133,20 +132,20 @@ class GrupoClienteService
         }
     }
 
-    public static function update ($pessoa, $data)
+    public static function update($pessoa, $data)
     {
-        
+
         $pessoa->fill($data);
         $pessoa->save();
         return $pessoa;
     }
 
-    
-    public static function delete ($pessoa)
+
+    public static function delete($pessoa)
     {
         return $pessoa->delete();
     }
-  
+
 
     public static function buscarPeloCnpjCpfGrupoCliente(bool $fisica, string $cnpj)
     {
@@ -171,5 +170,4 @@ class GrupoClienteService
         }
         return null;
     }
-
 }

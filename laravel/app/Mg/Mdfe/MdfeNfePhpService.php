@@ -2,7 +2,7 @@
 
 namespace Mg\Mdfe;
 
-// use DB;
+// use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use NFePHP\MDFe\Make;
@@ -15,13 +15,13 @@ use NFePHP\DA\MDFe\Damdfe;
 class MdfeNfePhpService
 {
 
-    public static function validarPreenchimento (Mdfe $mdfe)
+    public static function validarPreenchimento(Mdfe $mdfe)
     {
         //if (empty($mdfe->Filial->Pessoa->rntrc)) {
-            //throw new \Exception("RNTRC da Filial não informado!", 1);
+        //throw new \Exception("RNTRC da Filial não informado!", 1);
         //}
         $mdfeVeiculos = $mdfe->MdfeVeiculoS()->count();
-        if ($mdfeVeiculos==0) {
+        if ($mdfeVeiculos == 0) {
             throw new \Exception("Nenhum Veículo informado!", 1);
         }
         foreach ($mdfe->MdfeVeiculoS as $mdfeVeiculo) {
@@ -33,7 +33,7 @@ class MdfeNfePhpService
         }
     }
 
-    public static function criarXml (Mdfe $mdfe)
+    public static function criarXml(Mdfe $mdfe)
     {
 
         static::validarPreenchimento($mdfe);
@@ -52,12 +52,12 @@ class MdfeNfePhpService
         $std->tpEmit = $mdfe->tipoemitente;
         // 458 - Rejeição: Tipo de Transportador não deve ser informado para Emitente de Carga Própria proprietário do veículo
         //foreach ($mdfe->MdfeVeiculoS as $mdfeVeiculo) {
-            //if ($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj != $mdfe->Filial->Pessoa->cnpj) {
-            //if (!$mdfeVeiculo->Veiculo->PessoaProprietario->fisica) {
-                //$std->tpTransp = $mdfe->tipotransportador;
-            //}
+        //if ($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj != $mdfe->Filial->Pessoa->cnpj) {
+        //if (!$mdfeVeiculo->Veiculo->PessoaProprietario->fisica) {
+        //$std->tpTransp = $mdfe->tipotransportador;
         //}
-	//$std->tpTransp = $mdfe->tipotransportador;
+        //}
+        //$std->tpTransp = $mdfe->tipotransportador;
         $std->mod = $mdfe->modelo;
         $std->serie = $mdfe->serie;
         $std->nMDF = $mdfe->numero;
@@ -126,12 +126,12 @@ class MdfeNfePhpService
          */
 
         /* Grupo infANTT */
-	if (!empty($mdfe->Filial->Pessoa->rntrc)) {
-          $infANTT = new \stdClass();
-          //$infANTT->RNTRC = $mdfe->Filial->Pessoa->rntrc;
-	  $infANTT->RNTRC = substr($mdfe->Filial->Pessoa->rntrc, -8);
-	  $make->taginfANTT($infANTT);
-	}
+        if (!empty($mdfe->Filial->Pessoa->rntrc)) {
+            $infANTT = new \stdClass();
+            //$infANTT->RNTRC = $mdfe->Filial->Pessoa->rntrc;
+            $infANTT->RNTRC = substr($mdfe->Filial->Pessoa->rntrc, -8);
+            $make->taginfANTT($infANTT);
+        }
 
         /* informações do CIOT */
         // for {
@@ -169,7 +169,7 @@ class MdfeNfePhpService
                 $veicTracao = new \stdClass();
                 $veicTracao->cInt = $mdfeVeiculo->Veiculo->codveiculo;
                 $veicTracao->placa = $mdfeVeiculo->Veiculo->placa;
-                $veicTracao->tara = $mdfeVeiculo->Veiculo->tara??0;
+                $veicTracao->tara = $mdfeVeiculo->Veiculo->tara ?? 0;
                 if (!empty($mdfeVeiculo->Veiculo->capacidade)) {
                     $veicTracao->capKG = $mdfeVeiculo->Veiculo->capacidade;
                 }
@@ -211,14 +211,13 @@ class MdfeNfePhpService
 
                 $make->tagveicTracao($veicTracao);
                 /* fim veicTracao */
-
             } elseif ($mdfeVeiculo->Veiculo->VeiculoTipo->reboque) {
 
                 /* Grupo veicReboque */
                 $veicReboque = new \stdClass();
                 $veicReboque->cInt = $mdfeVeiculo->Veiculo->codveiculo;
                 $veicReboque->placa = $mdfeVeiculo->Veiculo->placa;
-                $veicReboque->tara = $mdfeVeiculo->Veiculo->tara??0;
+                $veicReboque->tara = $mdfeVeiculo->Veiculo->tara ?? 0;
                 if (!empty($mdfeVeiculo->Veiculo->capacidade)) {
                     $veicReboque->capKG = $mdfeVeiculo->Veiculo->capacidade;
                 }
@@ -241,15 +240,14 @@ class MdfeNfePhpService
                     }
                     $prop->RNTRC = substr($mdfeVeiculo->Veiculo->PessoaProprietario->rntrc, -8);
                     $prop->xNome = $mdfeVeiculo->Veiculo->PessoaProprietario->pessoa;
-                    $prop->IE = $mdfeVeiculo->Veiculo->PessoaProprietario->ie??'ISENTO';
+                    $prop->IE = $mdfeVeiculo->Veiculo->PessoaProprietario->ie ?? 'ISENTO';
                     $prop->UF = $mdfeVeiculo->Veiculo->PessoaProprietario->Cidade->Estado->sigla;
-                    $prop->tpProp = $mdfeVeiculo->Veiculo->tipoproprietario??9;
+                    $prop->tpProp = $mdfeVeiculo->Veiculo->tipoproprietario ?? 9;
                     $veicReboque->prop = $prop;
                 }
 
                 $make->tagveicReboque($veicReboque);
                 /* fim veicReboque */
-
             }
         }
 
@@ -565,7 +563,7 @@ class MdfeNfePhpService
         return $xmlAssinado;
     }
 
-    public static function enviar (Mdfe $mdfe)
+    public static function enviar(Mdfe $mdfe)
     {
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
 
@@ -636,12 +634,12 @@ class MdfeNfePhpService
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
             'recibo' => $recibo,
-            'recebimento' => empty($recebimento)?null:$recebimento->format('Y-m-d H:i:s'),
+            'recebimento' => empty($recebimento) ? null : $recebimento->format('Y-m-d H:i:s'),
             'resp' => $resp,
         ];
     }
 
-    public static function consultarEnvio (MdfeEnvioSefaz $envio)
+    public static function consultarEnvio(MdfeEnvioSefaz $envio)
     {
         $mdfe = $envio->Mdfe;
 
@@ -683,7 +681,7 @@ class MdfeNfePhpService
         ];
     }
 
-    public static function consultar (Mdfe $mdfe)
+    public static function consultar(Mdfe $mdfe)
     {
         if (empty($mdfe->chmdfe)) {
             throw new \Exception("MDFe não tem chave!", 1);
@@ -731,7 +729,7 @@ class MdfeNfePhpService
         ];
     }
 
-    public static function cancelar (Mdfe $mdfe, $justificativa)
+    public static function cancelar(Mdfe $mdfe, $justificativa)
     {
         if (empty($mdfe->chmdfe)) {
             throw new \Exception('MDFe não tem chave!', 1);
@@ -783,7 +781,7 @@ class MdfeNfePhpService
         ];
     }
 
-    public static function encerrar (Mdfe $mdfe)
+    public static function encerrar(Mdfe $mdfe)
     {
         if (empty($mdfe->chmdfe)) {
             throw new \Exception('MDFe não tem chave!', 1);
@@ -902,7 +900,7 @@ class MdfeNfePhpService
     }
 
 
-    public static function damdfe (Mdfe $mdfe)
+    public static function damdfe(Mdfe $mdfe)
     {
         $path = MdfeNfePhpPathService::pathMdfeAutorizado($mdfe);
 
@@ -925,5 +923,4 @@ class MdfeNfePhpService
 
         return $pathDamdfe;
     }
-
 }

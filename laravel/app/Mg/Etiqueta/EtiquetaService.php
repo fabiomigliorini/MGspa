@@ -2,7 +2,7 @@
 
 namespace Mg\Etiqueta;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Mg\Produto\ProdutoBarra;
@@ -59,7 +59,7 @@ class EtiquetaService
         foreach ($etiquetas as $etiqueta) {
             $pb = ProdutoBarra::findOrFail($etiqueta['codprodutobarra']);
 
-            for ($i=0; $i<$etiqueta['quantidadeetiqueta']; $i++) {
+            for ($i = 0; $i < $etiqueta['quantidadeetiqueta']; $i++) {
                 $linhas[$linha][$coluna]['DescricaoLinha1'] = trim(substr($pb->descricao, 0, $tamanhoDescricao));
                 $linhas[$linha][$coluna]['DescricaoLinha2'] = trim(substr($pb->descricao, $tamanhoDescricao, $tamanhoDescricao));
                 $linhas[$linha][$coluna]['Codigo'] = '#' . str_pad($pb->codproduto, 6, "0", STR_PAD_LEFT);
@@ -71,7 +71,7 @@ class EtiquetaService
                         ' C/' .
                         (int) $pb->ProdutoEmbalagem->quantidade;
                     $linhas[$linha][$coluna]['Preco'] =
-                        number_format($pb->ProdutoEmbalagem->preco??($pb->Produto->preco*$pb->ProdutoEmbalagem->quantidade), 2, ',', '.');
+                        number_format($pb->ProdutoEmbalagem->preco ?? ($pb->Produto->preco * $pb->ProdutoEmbalagem->quantidade), 2, ',', '.');
                 }
                 if (strlen($linhas[$linha][$coluna]['Preco']) < 6 && $modelo != '4colunas') {
                     $linhas[$linha][$coluna]['Preco'] = str_pad($linhas[$linha][$coluna]['Preco'], 6, ' ', STR_PAD_LEFT);
@@ -113,12 +113,12 @@ class EtiquetaService
                     $linhas[$linha][$coluna]['Marca'] = '';
                 }
 
-                $linhas[$linha][$coluna]['Referencia'] = $pb->referencia??$pb->ProdutoVariacao->referencia??$pb->Produto->referencia;
+                $linhas[$linha][$coluna]['Referencia'] = $pb->referencia ?? $pb->ProdutoVariacao->referencia ?? $pb->Produto->referencia;
 
                 $linhas[$linha][$coluna]['Data'] = date('d/m/y');
 
                 $coluna++;
-                if ($coluna>$colunas) {
+                if ($coluna > $colunas) {
                     $coluna = 1;
                     $linha++;
                 }

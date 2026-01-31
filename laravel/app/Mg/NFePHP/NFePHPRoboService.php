@@ -2,7 +2,7 @@
 
 namespace Mg\NFePHP;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\NotaFiscal\NotaFiscal;
 
@@ -10,7 +10,7 @@ class NFePHPRoboService
 {
     public static function pendentes($minutos, $per_page = 50, $current_page = 1, $desc = false)
     {
-        $desc = ($desc)?'DESC':'ASC';
+        $desc = ($desc) ? 'DESC' : 'ASC';
         $offset = ($per_page * ($current_page - 1));
         $sql = "
             select
@@ -86,7 +86,7 @@ class NFePHPRoboService
             // Se excecao no envio, provavelmente por problema na geracao do XML
         } catch (\Exception $e) {
 
-          // tenta criar o XML e enviar novamente
+            // tenta criar o XML e enviar novamente
             try {
                 $resCriar = NFePHPService::criar($nf);
                 $nf = $nf->fresh();
@@ -96,9 +96,9 @@ class NFePHPRoboService
                 // se ainda assim der excecao, retorna erro
             } catch (\Exception $e2) {
                 return (object) [
-                'resolvido' => false,
-                'erro' => $e2->getMessage()
-              ];
+                    'resolvido' => false,
+                    'erro' => $e2->getMessage()
+                ];
             }
         }
 
@@ -110,9 +110,9 @@ class NFePHPRoboService
                 $resMail = $e->getMessage();
             }
             return (object) [
-              'resolvido' => true,
-              'resEnvioSincrono' => $resEnvioSincrono,
-              'resMail' => $resMail??null
+                'resolvido' => true,
+                'resEnvioSincrono' => $resEnvioSincrono,
+                'resMail' => $resMail ?? null
             ];
         }
 
@@ -124,9 +124,9 @@ class NFePHPRoboService
             // se excecao ao consultar, retorna mensagem
         } catch (\Exception $e) {
             return (object) [
-              'resolvido' => false,
-              'resEnvioSincrono' => $resEnvioSincrono,
-              'resConsulta' => $e->getMessage()
+                'resolvido' => false,
+                'resEnvioSincrono' => $resEnvioSincrono,
+                'resConsulta' => $e->getMessage()
             ];
         }
 
@@ -140,10 +140,10 @@ class NFePHPRoboService
                 }
             }
             return (object) [
-              'resolvido' => true,
-              'resEnvioSincrono' => $resEnvioSincrono,
-              'resConsulta' => $resConsulta,
-              'resMail' => $resMail??null
+                'resolvido' => true,
+                'resEnvioSincrono' => $resEnvioSincrono,
+                'resConsulta' => $resConsulta,
+                'resMail' => $resMail ?? null
             ];
         }
 
@@ -160,10 +160,10 @@ class NFePHPRoboService
                 // caso execao, retorna mensagem
             } catch (\Exception $e) {
                 return (object) [
-                  'resolvido' => false,
-                  'resEnvioSincrono' => $resEnvioSincrono??$e->getMessage(),
-                  'resConsulta' => $resConsulta??null,
-                  'resCriar' => $resCriar??$e->getMessage(),
+                    'resolvido' => false,
+                    'resEnvioSincrono' => $resEnvioSincrono ?? $e->getMessage(),
+                    'resConsulta' => $resConsulta ?? null,
+                    'resCriar' => $resCriar ?? $e->getMessage(),
                 ];
             }
 
@@ -175,20 +175,20 @@ class NFePHPRoboService
                     $resMail = $e->getMessage();
                 }
                 return (object) [
-                  'resolvido' => true,
-                  'resEnvioSincrono' => $resEnvioSincrono,
-                  'resCriar' => $resCriar,
-                  'resMail' => $resMail??null
+                    'resolvido' => true,
+                    'resEnvioSincrono' => $resEnvioSincrono,
+                    'resCriar' => $resCriar,
+                    'resMail' => $resMail ?? null
                 ];
             }
         }
 
         // se nao conseguiu resolver, retorna resultados das tentativas
         return (object) [
-          'resolvido' => false,
-          'resEnvioSincrono' => $resEnvioSincrono??null,
-          'resConsulta' => $resConsulta??null,
-          'resCriar' => $resCriar??null
+            'resolvido' => false,
+            'resEnvioSincrono' => $resEnvioSincrono ?? null,
+            'resConsulta' => $resConsulta ?? null,
+            'resCriar' => $resCriar ?? null
         ];
     }
 }

@@ -4,7 +4,7 @@ namespace Mg\Titulo\BoletoBb;
 
 use Illuminate\Support\Facades\Log;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Dompdf\Dompdf;
@@ -30,7 +30,7 @@ class BoletoBbService
      * Verifica se o Token do Portador ainda não expirou
      * se expirou renova o token
      */
-    public static function verificaTokenValido (Portador $portador)
+    public static function verificaTokenValido(Portador $portador)
     {
         if (!empty($portador->bbtokenexpiracao)) {
             if ($portador->bbtokenexpiracao->isFuture()) {
@@ -53,7 +53,7 @@ class BoletoBbService
      * seguinte forma:  “000” +  (número do convênio com 7 dígitos) + (10
      * algarismos - se necessário, completar com zeros à esquerda).
      */
-    public static function atribuirNossoNumero (Titulo $titulo)
+    public static function atribuirNossoNumero(Titulo $titulo)
     {
         // Caso ja tenha numero atribuido, aborta
         // if (!empty($titulo->nossonumero)) {
@@ -151,7 +151,7 @@ class BoletoBbService
         $tituloBoleto->codtitulo = $titulo->codtitulo;
         $tituloBoleto->save();
 
-        $telefone = ($titulo->Pessoa->telefone1??$titulo->Pessoa->telefone2)??$titulo->Pessoa->telefone3;
+        $telefone = ($titulo->Pessoa->telefone1 ?? $titulo->Pessoa->telefone2) ?? $titulo->Pessoa->telefone3;
         $telefone = preg_replace('/\D/', '', $telefone);
 
         // registra o boleto no BB
@@ -166,14 +166,14 @@ class BoletoBbService
             $titulo->saldo,
             $numeroTituloBeneficiario,
             $nossonumero,
-            $titulo->Pessoa->fisica?1:2,
+            $titulo->Pessoa->fisica ? 1 : 2,
             (int)$titulo->Pessoa->cnpj,
             $titulo->Pessoa->pessoa,
             $endereco,
             $titulo->Pessoa->cepcobranca,
             $titulo->Pessoa->CidadeCobranca->cidade,
             $titulo->Pessoa->bairrocobranca,
-                    $titulo->Pessoa->CidadeCobranca->Estado->sigla,
+            $titulo->Pessoa->CidadeCobranca->Estado->sigla,
             $telefone
         );
 
@@ -189,12 +189,12 @@ class BoletoBbService
         $tituloBoleto->qrcodeurl = $ret['qrCode']['url'];
         $tituloBoleto->qrcodetxid = $ret['qrCode']['txId'];
         $tituloBoleto->qrcodeemv = $ret['qrCode']['emv'];
-        $tituloBoleto->estadotitulocobranca = $tituloBoleto->estadotitulocobranca??1; //Normal
-        $tituloBoleto->vencimento = $tituloBoleto->vencimento??$titulo->vencimento;
-        $tituloBoleto->dataregistro = $tituloBoleto->dataregistro??Carbon::now();
-        $tituloBoleto->databaixaautomatica = $tituloBoleto->databaixaautomatica??$titulo->vencimento->addDays(95);
-        $tituloBoleto->valororiginal = $tituloBoleto->valororiginal??$titulo->saldo;
-        $tituloBoleto->valoratual = $tituloBoleto->valoratual??$titulo->saldo;
+        $tituloBoleto->estadotitulocobranca = $tituloBoleto->estadotitulocobranca ?? 1; //Normal
+        $tituloBoleto->vencimento = $tituloBoleto->vencimento ?? $titulo->vencimento;
+        $tituloBoleto->dataregistro = $tituloBoleto->dataregistro ?? Carbon::now();
+        $tituloBoleto->databaixaautomatica = $tituloBoleto->databaixaautomatica ?? $titulo->vencimento->addDays(95);
+        $tituloBoleto->valororiginal = $tituloBoleto->valororiginal ?? $titulo->saldo;
+        $tituloBoleto->valoratual = $tituloBoleto->valoratual ?? $titulo->saldo;
         $tituloBoleto->save();
         return $tituloBoleto;
     }
@@ -202,7 +202,7 @@ class BoletoBbService
     /**
      * Registra boleto de todos os titulos do Negocio
      */
-    public static function registrarPeloNegocio (Negocio $negocio)
+    public static function registrarPeloNegocio(Negocio $negocio)
     {
         $tituloBoletos = collect();
         foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
@@ -231,26 +231,26 @@ class BoletoBbService
         );
 
         if (isset($ret['errors'])) {
-            throw new \Exception ($ret['errors'][0]['message']);
+            throw new \Exception($ret['errors'][0]['message']);
         }
 
         $tituloBoleto->update([
             'linhadigitavel' => $ret['codigoLinhaDigitavel'],
             'canalpagamento' => $ret['codigoCanalPagamento'],
             'estadotitulocobranca' => $ret['codigoEstadoTituloCobranca'],
-            'dataregistro' => (!empty($ret['dataRegistroTituloCobranca']))?Carbon::parse($ret['dataRegistroTituloCobranca']):null,
-            'vencimento' => (!empty($ret['dataVencimentoTituloCobranca']))?Carbon::parse($ret['dataVencimentoTituloCobranca']):null,
+            'dataregistro' => (!empty($ret['dataRegistroTituloCobranca'])) ? Carbon::parse($ret['dataRegistroTituloCobranca']) : null,
+            'vencimento' => (!empty($ret['dataVencimentoTituloCobranca'])) ? Carbon::parse($ret['dataVencimentoTituloCobranca']) : null,
             'valororiginal' => $ret['valorOriginalTituloCobranca'],
             'valoratual' => $ret['valorAtualTituloCobranca'],
             'valorpagamentoparcial' => $ret['valorPagamentoParcialTitulo'],
             'valorabatimento' => $ret['valorAbatimentoTituloCobranca'],
-            'databaixaautomatica' => (!empty($ret['dataBaixaAutomaticoTitulo']))?Carbon::parse($ret['dataBaixaAutomaticoTitulo']):null,
+            'databaixaautomatica' => (!empty($ret['dataBaixaAutomaticoTitulo'])) ? Carbon::parse($ret['dataBaixaAutomaticoTitulo']) : null,
             'valorjuromora' => $ret['valorJuroMoraRecebido'],
             'valordesconto' => $ret['valorDescontoUtilizado'],
             'valorpago' => $ret['valorPagoSacado'],
             'valorliquido' => $ret['valorCreditoCedente'],
-            'datarecebimento' => (!empty($ret['dataRecebimentoTitulo']))?Carbon::parse($ret['dataRecebimentoTitulo']):null,
-            'datacredito' => (!empty($ret['dataCreditoLiquidacao']))?Carbon::parse($ret['dataCreditoLiquidacao']):null,
+            'datarecebimento' => (!empty($ret['dataRecebimentoTitulo'])) ? Carbon::parse($ret['dataRecebimentoTitulo']) : null,
+            'datacredito' => (!empty($ret['dataCreditoLiquidacao'])) ? Carbon::parse($ret['dataCreditoLiquidacao']) : null,
             'tipobaixatitulo' => $ret['codigoTipoBaixaTitulo'],
             'valormulta' => $ret['valorMultaRecebido'],
             'valorreajuste' => $ret['valorReajuste'],
@@ -293,7 +293,7 @@ class BoletoBbService
     /**
      * Gera o arquivo PDF do Boleto
      */
-    public static function pdf (TituloBoleto $tituloBoleto)
+    public static function pdf(TituloBoleto $tituloBoleto)
     {
         $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
         Instructions::prepare($report); // prepara o relatorio lendo o arquivo
@@ -311,7 +311,7 @@ class BoletoBbService
     /**
      * Gera o arquivo PDF dos Boleto do Negocio
      */
-    public static function pdfPeloNegocio (Negocio $negocio)
+    public static function pdfPeloNegocio(Negocio $negocio)
     {
         $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
         Instructions::prepare($report); // prepara o relatorio lendo o arquivo
@@ -337,7 +337,7 @@ class BoletoBbService
     /**
      * Gera o registro da liquidacao do Boleto caso estado 6 - Liquidado
      */
-    public static function liquidar (TituloBoleto $tituloBoleto)
+    public static function liquidar(TituloBoleto $tituloBoleto)
     {
 
         /*
@@ -432,25 +432,22 @@ class BoletoBbService
         }
 
         // apaga movimentos que sobraram
-        MovimentoTitulo::
-            where('codtituloboleto', $tituloBoleto->codtituloboleto)
+        MovimentoTitulo::where('codtituloboleto', $tituloBoleto->codtituloboleto)
             ->whereNotIn('codmovimentotitulo', $codmovimentotitulos)
             ->delete();
 
         // retorna o mesmo objeto que recebeu
         return $tituloBoleto;
-
     }
 
     /**
      * Consulta listagem de titulos liquidados e processa os novos
      */
-    public static function consultarLiquidados ()
+    public static function consultarLiquidados()
     {
 
         // busca todos os portadores com bbdevappkey
-        $portadores = Portador::
-            whereNull('inativo')
+        $portadores = Portador::whereNull('inativo')
             ->whereNotNull('bbdevappkey')
             ->orderBy('codportador')
             ->get();
@@ -475,7 +472,7 @@ class BoletoBbService
                 $bbtoken = static::verificaTokenValido($portador);
 
                 // pega listagem dos boletos baixados / pagos
-                $listagem = BoletoBbApiService::consultarListagem (
+                $listagem = BoletoBbApiService::consultarListagem(
                     $bbtoken,
                     $portador->bbdevappkey,
                     'B',
@@ -503,7 +500,7 @@ class BoletoBbService
                 //  ]
                 //]
                 if (isset($listagem['erros'][0]['codigoRetorno'])) {
-                    if ($listagem['erros'][0]['codigoRetorno'] == '1047')  {
+                    if ($listagem['erros'][0]['codigoRetorno'] == '1047') {
                         break;
                     }
                 }
@@ -524,8 +521,10 @@ class BoletoBbService
 
                     // se tem valor pago != do registrado no banco
                     // ou se o estado do boleto e diferente
-                    if ($tituloBoleto->valorpago != $bol['valorPago'] ||
-                        $tituloBoleto->estadotitulocobranca != $bol['codigoEstadoTituloCobranca']) {
+                    if (
+                        $tituloBoleto->valorpago != $bol['valorPago'] ||
+                        $tituloBoleto->estadotitulocobranca != $bol['codigoEstadoTituloCobranca']
+                    ) {
                         // consulta o boleto
                         Log::info("Boleto BB - Consultando TituloBoleto #{$tituloBoleto->codtituloboleto}");
                         $tituloBoleto = static::consultar($tituloBoleto);
@@ -550,9 +549,8 @@ class BoletoBbService
                 // pega o indice para continuar consulta
                 $indice = $listagem['proximoIndice'];
 
-            // repete enquanto api retornar indicadorContinuidade
+                // repete enquanto api retornar indicadorContinuidade
             } while ($listagem['indicadorContinuidade'] == 'S');
         }
     }
-
 }

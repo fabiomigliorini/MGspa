@@ -2,7 +2,7 @@
 
 namespace Mg\Produto;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Mg\Estoque\EstoqueMesService;
@@ -12,7 +12,7 @@ use Mg\Estoque\EstoqueSaldoConferencia;
 class ProdutoVariacaoService
 {
 
-    public static function unificaVariacoes ($codprodutovariacaoorigem, $codprodutovariacaodestino)
+    public static function unificaVariacoes($codprodutovariacaoorigem, $codprodutovariacaodestino)
     {
         $pv_origem = ProdutoVariacao::findOrFail($codprodutovariacaoorigem);
         $pv_destino = ProdutoVariacao::findOrFail($codprodutovariacaodestino);
@@ -89,14 +89,13 @@ class ProdutoVariacaoService
             $mes->conferencias = EstoqueSaldoConferencia::where('codestoquesaldo', $mes->codestoquesaldoorigem)->update([
                 'codestoquesaldo' => $mes->codestoquesaldodestino
             ]);
-
         }
 
         // transfere codigos de barra
         foreach ($pv_origem->ProdutoBarraS as $pb) {
-            $pb->variacao = $pb->variacao??$pv_origem->variacao;
-            $pb->referencia = $pb->referencia??$pv_origem->referencia;
-            $pb->codmarca = $pb->codmarca??$pv_origem->codmarca;
+            $pb->variacao = $pb->variacao ?? $pv_origem->variacao;
+            $pb->referencia = $pb->referencia ?? $pv_origem->referencia;
+            $pb->codmarca = $pb->codmarca ?? $pv_origem->codmarca;
             $pb->codprodutovariacao = $codprodutovariacaodestino;
             $pb->save();
         }

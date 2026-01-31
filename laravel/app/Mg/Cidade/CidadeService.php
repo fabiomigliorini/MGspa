@@ -2,9 +2,9 @@
 
 namespace Mg\Cidade;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
-class CidadeService 
+class CidadeService
 {
 
     public static function buscaPeloNomeUf($cidade, $uf)
