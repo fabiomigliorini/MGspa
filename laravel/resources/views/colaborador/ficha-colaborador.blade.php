@@ -126,13 +126,13 @@
             <tr>
                 <td class="label">ESTADO CIVIL</td>
                 <td colspan="3">
-                    {{ $pessoa->EstadoCivil->estadocivil }}
+                    {{ $pessoa->EstadoCivil?->estadocivil }}
                 </td>
             </tr>
             <tr>
                 <td class="label">GRAU DE INSTRUÇÃO</td>
                 <td colspan="3">
-                    {{ $pessoa->GrauInstrucao->grauinstrucao }}
+                    {{ $pessoa->GrauInstrucao?->grauinstrucao }}
                 </td>
             </tr>
             <tr>
