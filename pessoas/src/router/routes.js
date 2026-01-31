@@ -123,6 +123,21 @@ const routes = [
         name: "metas",
         component: () => import("pages/Metas/Index.vue"),
       },
+      {
+        path: "/etnia",
+        name: "etnia",
+        component: () => import("pages/etnia/Index.vue"),
+      },
+      {
+        path: "/grau-instrucao",
+        name: "grauinstrucao",
+        component: () => import("pages/grau-instrucao/Index.vue"),
+      },
+      {
+        path: "/estado-civil",
+        name: "estadocivil",
+        component: () => import("pages/estado-civil/Index.vue"),
+      },
     ],
     meta: {
       auth: true,
