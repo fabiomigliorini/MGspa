@@ -2,6 +2,8 @@
 
 namespace Mg\Colaborador;
 
+use Mg\Pessoa\PessoaGoogleDriveService;
+
 class ColaboradorService
 {
 
@@ -9,6 +11,7 @@ class ColaboradorService
     {
         $colaborador = new Colaborador($data);
         $colaborador->save();
+        static::criarFolderGoogleDrive($colaborador);
         return $colaborador->refresh();
     }
 
@@ -16,7 +19,8 @@ class ColaboradorService
     {
         $colaborador->fill($data);
         $colaborador->save();
-        return $colaborador;
+        static::criarFolderGoogleDrive($colaborador);
+        return $colaborador->refresh();
     }
 
 
@@ -38,5 +42,17 @@ class ColaboradorService
         return $grupo;
     }
 
-  
+    public static function criarFolderGoogleDrive(Colaborador $colaborador)
+    {
+        if (!empty($colaborador->googledrivefolderid)) {
+            return true;
+        }
+        $drive = new PessoaGoogleDriveService();
+        $result = $drive->createColaboradorFolder(
+            $colaborador->Filial->Empresa->empresa,
+            $colaborador->Pessoa->pessoa
+        );
+        $colaborador->googledrivefolderid = $result['folder_id'];
+        $colaborador->save();
+    }
 }

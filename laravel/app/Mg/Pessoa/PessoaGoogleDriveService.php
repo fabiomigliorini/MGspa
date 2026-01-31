@@ -32,7 +32,8 @@ class PessoaGoogleDriveService
         ]);
 
         return $this->driveService->files->create($fileMetadata, [
-            'fields' => 'id, name, webViewLink'
+            'fields' => 'id, name, webViewLink',
+            'supportsAllDrives' => true,  // Adicione isso
         ]);
     }
 
@@ -50,7 +51,9 @@ class PessoaGoogleDriveService
         $response = $this->driveService->files->listFiles([
             'q' => $query,
             'fields' => 'files(id, name, webViewLink)',
-            'pageSize' => 1
+            'pageSize' => 1,
+            'supportsAllDrives' => true,      // Adicione isso
+            'includeItemsFromAllDrives' => true,  // E isso
         ]);
 
         $files = $response->getFiles();
@@ -108,7 +111,8 @@ class PessoaGoogleDriveService
             'data' => $content,
             'mimeType' => $mimeType ?? mime_content_type($filePath),
             'uploadType' => 'multipart',
-            'fields' => 'id, name, webViewLink'
+            'fields' => 'id, name, webViewLink',
+            'supportsAllDrives' => true,  // Adicione isso
         ]);
     }
 }

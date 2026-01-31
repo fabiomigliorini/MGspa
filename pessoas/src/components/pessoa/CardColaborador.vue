@@ -83,7 +83,10 @@
               flat
               round
               icon="folder"
-              :href="colaborador.drive.folder_url"
+              :href="
+                'https://drive.google.com/drive/folders/' +
+                colaborador.googledrivefolderid
+              "
               target="_blank"
             >
               <q-tooltip>Arquivos do Colaborador</q-tooltip>
@@ -424,6 +427,16 @@
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Ficha do Colaborador</div>
         <q-space />
+        <q-btn
+          icon="upload"
+          flat
+          round
+          dense
+          @click="uploadFichaParaDrive"
+          :loading="uploadingFicha"
+        >
+          <q-tooltip>Upload para Google Drive</q-tooltip>
+        </q-btn>
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
       <q-card-section class="q-pt-none" style="height: calc(90vh - 60px)">
@@ -456,6 +469,7 @@ export default defineComponent({
   methods: {
     async visualizarFicha(colaborador) {
       try {
+        this.colaboradorAtual = colaborador;
         const response = await this.sColaborador.getFichaColaborador(
           colaborador.codcolaborador
         );
@@ -474,11 +488,49 @@ export default defineComponent({
       }
     },
 
+    async uploadFichaParaDrive() {
+      if (!this.colaboradorAtual) return;
+
+      this.uploadingFicha = true;
+      try {
+        const response = await this.sColaborador.uploadFichaColaborador(
+          this.colaboradorAtual.codcolaborador
+        );
+
+        if (response.data.folder_url) {
+          window.open(response.data.folder_url, '_blank');
+        }
+
+        if (response.data.file_url) {
+          window.open(response.data.file_url, '_blank');
+        }
+
+        this.$q.notify({
+          color: "green-5",
+          textColor: "white",
+          icon: "done",
+          message: "Ficha enviada para o Google Drive!",
+        });
+      } catch (error) {
+        this.$q.notify({
+          color: "red-5",
+          textColor: "white",
+          icon: "error",
+          message:
+            error.response?.data?.message ||
+            "Erro ao enviar a ficha para o Google Drive",
+        });
+      } finally {
+        this.uploadingFicha = false;
+      }
+    },
+
     fecharPdfFicha() {
       if (this.pdfUrl) {
         URL.revokeObjectURL(this.pdfUrl);
         this.pdfUrl = null;
       }
+      this.colaboradorAtual = null;
       this.dialogPdfFicha = false;
     },
 
@@ -793,6 +845,8 @@ export default defineComponent({
     const refCardColaboradorCargo = ref(null);
     const dialogPdfFicha = ref(false);
     const pdfUrl = ref(null);
+    const colaboradorAtual = ref(null);
+    const uploadingFicha = ref(false);
 
     return {
       sPessoa,
@@ -809,6 +863,8 @@ export default defineComponent({
       refCardColaboradorCargo,
       dialogPdfFicha,
       pdfUrl,
+      colaboradorAtual,
+      uploadingFicha,
       brasil: {
         days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
         daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),

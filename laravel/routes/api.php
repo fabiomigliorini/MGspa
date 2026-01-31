@@ -428,6 +428,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::put('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@update');
         Route::delete('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@delete');
         Route::get('colaborador/{codcolaborador}/ficha', '\Mg\Colaborador\ColaboradorFichaController@ficha');
+        Route::post('colaborador/{codcolaborador}/ficha', '\Mg\Colaborador\ColaboradorFichaController@uploadFicha');
 
         // Colaborador Cargo
         Route::post('colaborador/cargo/', '\Mg\Colaborador\ColaboradorCargoController@create');

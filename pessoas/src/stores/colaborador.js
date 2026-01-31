@@ -142,5 +142,10 @@ export const colaboradorStore = defineStore("colaborador", {
       return ret;
     },
 
+    async uploadFichaColaborador(codcolaborador) {
+      const ret = await api.post('v1/colaborador/' + codcolaborador + '/ficha');
+      return ret;
+    },
+
   },
 });
