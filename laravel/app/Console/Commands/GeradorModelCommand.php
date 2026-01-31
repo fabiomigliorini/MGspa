@@ -22,6 +22,10 @@ class GeradorModelCommand extends Command
     protected $conteudo;
     protected $arquivo;
 
+    public $arquivoIndice = null;
+    public $models = null;
+    public $colunas = null;
+
     public function __construct()
     {
         parent::__construct();
