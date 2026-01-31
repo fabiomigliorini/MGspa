@@ -691,6 +691,40 @@ class NotaFiscalController extends Controller
     }
 
     /**
+     * Unifica itens da nota fiscal (agrupa itens com mesmo produto)
+     */
+    public function unificarItens(int $codnotafiscal)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        // Verifica se a nota está bloqueada
+        $this->verificarNotaBloqueada($nota);
+
+        DB::beginTransaction();
+        NotaFiscalService::unificarItens($nota);
+        DB::commit();
+
+        return new NotaFiscalDetailResource(
+            $nota->fresh([
+                'Filial',
+                'EstoqueLocal',
+                'Pessoa',
+                'NaturezaOperacao',
+                'Operacao',
+                'PessoaTransportador',
+                'EstadoPlaca',
+                'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+                'NotaFiscalProdutoBarraS.Cfop',
+                'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+                'NotaFiscalPagamentoS',
+                'NotaFiscalDuplicatasS',
+                'NotaFiscalReferenciadaS',
+                'NotaFiscalCartaCorrecaoS',
+            ])
+        );
+    }
+
+    /**
      * Envia carta de correção para a SEFAZ
      */
     public function cartaCorrecao(Request $request, int $codnotafiscal)

@@ -985,5 +985,25 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         this.loading.nota = false
       }
     },
+
+    async unificarItens(codnotafiscal) {
+      this.loading.nota = true
+      try {
+        const response = await notaFiscalService.unificarItens(codnotafiscal)
+
+        // Atualiza currentNota com a nota retornada
+        if (response.data) {
+          this.currentNota = response.data
+          this.syncCurrentNotaToList()
+        }
+
+        return response.data
+      } catch (error) {
+        console.error('Erro ao unificar itens:', error)
+        throw error
+      } finally {
+        this.loading.nota = false
+      }
+    },
   },
 })

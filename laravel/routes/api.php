@@ -100,6 +100,9 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('{codnotafiscal}/unificar', '\Mg\NotaFiscal\NotaFiscalController@listarParaUnificar');
         Route::post('{codnotafiscal}/unificar', '\Mg\NotaFiscal\NotaFiscalController@unificar');
 
+        // Unificar itens da nota fiscal
+        Route::post('{codnotafiscal}/unificar-itens', '\Mg\NotaFiscal\NotaFiscalController@unificarItens');
+
         // Ações da nota fiscal (novos endpoints)
         Route::post('{codnotafiscal}/criar', '\Mg\NotaFiscal\NotaFiscalController@criar');
         Route::post('{codnotafiscal}/enviar-sincrono', '\Mg\NotaFiscal\NotaFiscalController@enviarSincrono');
