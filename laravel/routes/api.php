@@ -427,6 +427,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('pessoa/{codpessoa}/colaborador/', '\Mg\Colaborador\ColaboradorController@show');
         Route::put('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@update');
         Route::delete('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@delete');
+        Route::get('colaborador/{codcolaborador}/ficha', '\Mg\Colaborador\ColaboradorFichaController@ficha');
 
         // Colaborador Cargo
         Route::post('colaborador/cargo/', '\Mg\Colaborador\ColaboradorCargoController@create');

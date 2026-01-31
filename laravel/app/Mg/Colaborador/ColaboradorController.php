@@ -39,7 +39,7 @@ class ColaboradorController extends MgController
         Autorizador::autoriza(['Recursos Humanos']);
         $colaborador = Colaborador::findOrFail($codcolaborador);
         $colaborador = ColaboradorService::delete($colaborador);
-        
+
         return response()->json([
             'result' => true
         ], 200);
