@@ -52,7 +52,6 @@ const handleDeleteTributacao = (tributacao) => {
       label: 'Excluir',
       color: 'negative',
     },
-    persistent: true,
   }).onOk(async () => {
     try {
       await tributacaoStore.deleteTributacao(tributacao.codtributacao)

@@ -56,11 +56,7 @@ defineExpose({
 </script>
 
 <template>
-  <q-dialog
-    :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
-    persistent
-  >
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card class="dialog-card">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">Nova Carta de Correção</div>

@@ -74,7 +74,6 @@ const handleSubmit = async () => {
       label: 'Salvar',
       color: 'primary',
     },
-    persistent: true,
   }).onOk(async () => {
     loading.value = true
     try {
@@ -124,9 +123,9 @@ onMounted(() => {
         <div class="row items-center q-mb-md">
           <q-btn flat dense round icon="arrow_back" @click="handleCancel" :disable="loading" />
           <div class="text-h5 q-ml-sm">
-            <template v-if="isEditMode"
-              >Alterar Tributacao #{{ route.params.codtributacao }}</template
-            >
+            <template v-if="isEditMode">
+              Alterar Tributacao #{{ route.params.codtributacao }}
+            </template>
             <template v-else>Nova Tributacao</template>
           </div>
         </div>

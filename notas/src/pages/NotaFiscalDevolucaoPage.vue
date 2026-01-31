@@ -114,7 +114,6 @@ const confirmarDevolucao = () => {
     title: 'Confirmar Devolução',
     message: `Deseja criar uma nota fiscal de devolução no valor de ${formatCurrency(valorTotalDevolucao.value)}?`,
     cancel: true,
-    persistent: true,
   }).onOk(() => {
     submitDevolucao()
   })

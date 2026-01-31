@@ -118,7 +118,6 @@ const handleKeyNavigation = (event) => {
     :model-value="modelValue"
     @update:model-value="emit('update:modelValue', $event)"
     @keydown="handleKeyNavigation"
-    persistent
   >
     <q-card class="dialog-card">
       <q-form @submit.prevent="handleSave">

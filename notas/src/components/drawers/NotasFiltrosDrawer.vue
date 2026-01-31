@@ -10,7 +10,7 @@ import {
   MODELO_OPTIONS,
   STATUS_OPTIONS,
   EMITIDA_OPTIONS,
-  OPERACAO_OPTIONS
+  OPERACAO_OPTIONS,
 } from '../../constants/notaFiscal'
 
 const notaFiscalStore = useNotaFiscalStore()
@@ -130,7 +130,7 @@ watch(
       // Limpa a pessoa selecionada pois pode ser de outro grupo econômico
       filters.codpessoa = null
     }
-  },
+  }
 )
 
 // Carrega filtros salvos da store ao montar
@@ -160,7 +160,7 @@ onMounted(() => {
       () => {
         debouncedApplyFilters()
       },
-      { deep: true },
+      { deep: true }
     )
   }, 200)
 })
@@ -198,7 +198,7 @@ onMounted(() => {
 
     <!-- Filtros -->
     <div class="q-pa-md">
-      <div class="text-caption text-grey-7 q-mb-md">Identificação</div>
+      <div class="text-caption text-grey-7 q-mb-md">Busque pela Nota</div>
 
       <!-- Número -->
       <div class="q-mb-md">
@@ -218,13 +218,7 @@ onMounted(() => {
 
       <!-- Série -->
       <div class="q-mb-md">
-        <q-input
-          v-model="filters.serie"
-          label="Série"
-          outlined
-          clearable
-          :bottom-slots="false"
-        >
+        <q-input v-model="filters.serie" label="Série" outlined clearable :bottom-slots="false">
           <template v-slot:prepend>
             <q-icon name="numbers" />
           </template>
@@ -505,7 +499,6 @@ onMounted(() => {
           </template>
         </q-input>
       </div>
-
     </div>
   </div>
 </template>

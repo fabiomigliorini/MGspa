@@ -184,7 +184,6 @@ const handleDelete = () => {
       label: 'Excluir',
       color: 'negative',
     },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.deleteNota(route.params.codnotafiscal)
@@ -257,7 +256,6 @@ const handleDeleteItem = (item) => {
       label: 'Excluir',
       color: 'negative',
     },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.deleteItem(route.params.codnotafiscal, item.codnotafiscalprodutobarra)
@@ -324,7 +322,6 @@ const excluirPagamento = (pagamento) => {
     message: 'Deseja realmente excluir esta forma de pagamento?',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Excluir', color: 'negative' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.deletePagamento(
@@ -395,7 +392,6 @@ const excluirDuplicata = (duplicata) => {
     message: 'Deseja realmente excluir esta duplicata?',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Excluir', color: 'negative' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.deleteDuplicata(
@@ -463,7 +459,6 @@ const excluirReferenciada = (referenciada) => {
     message: 'Deseja realmente excluir esta nota referenciada?',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Excluir', color: 'negative' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.deleteReferenciada(
@@ -564,7 +559,6 @@ const duplicarNota = () => {
     message: 'Deseja realmente duplicar esta nota fsical?',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Duplicar', color: 'primary' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.duplicarNota(nota.value.codnotafiscal)
@@ -603,7 +597,6 @@ const incorporarValores = () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'warning' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.incorporarValores(nota.value.codnotafiscal)
@@ -636,7 +629,6 @@ const recalcularTributacao = () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'warning' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.recalcularTributacao(nota.value.codnotafiscal)
@@ -878,7 +870,6 @@ const cancelarNfe = async () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar Cancelamento', color: 'negative' },
-    persistent: true,
   }).onOk(async (justificativa) => {
     loadingCancelar.value = true
     try {
@@ -920,7 +911,6 @@ const inutilizarNfe = async () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar Inutilização', color: 'negative' },
-    persistent: true,
   }).onOk(async (justificativa) => {
     loadingInutilizar.value = true
     try {
@@ -961,7 +951,6 @@ const enviarEmailNfe = async () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Enviar', color: 'primary' },
-    persistent: true,
   }).onOk(async (email) => {
     loadingEmail.value = true
     try {
@@ -1092,7 +1081,6 @@ const alterarStatus = async (novoStatus) => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'warning' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, novoStatus)
@@ -1127,7 +1115,6 @@ const limparAutorizacao = async () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'warning' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
@@ -1166,7 +1153,6 @@ const limparCancelamento = async () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'warning' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
@@ -1203,7 +1189,6 @@ const limparInutilizacao = async () => {
     },
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Confirmar', color: 'warning' },
-    persistent: true,
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
@@ -2553,7 +2538,7 @@ onUnmounted(() => {
     />
 
     <!-- Dialog de Progresso NFe -->
-    <q-dialog v-model="loadingNfe" persistent>
+    <q-dialog v-model="loadingNfe">
       <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">Processando NFe</div>

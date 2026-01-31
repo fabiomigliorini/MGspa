@@ -100,7 +100,7 @@ onMounted(() => {
     <!-- Filtros -->
     <div class="q-pa-md">
       <!-- Nome da Cidade -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Busque pela Cidade:</div>
+      <div class="text-caption text-grey-7 q-mb-md">Busque pela Cidade:</div>
       <div class="q-mb-md">
         <q-input v-model="filters.cidade" label="Nome da Cidade" outlined clearable>
           <template v-slot:prepend>

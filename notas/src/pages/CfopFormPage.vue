@@ -73,7 +73,6 @@ const handleSubmit = async () => {
       label: 'Salvar',
       color: 'primary',
     },
-    persistent: true,
   }).onOk(async () => {
     loading.value = true
     try {
@@ -121,71 +120,67 @@ onMounted(() => {
       <q-form @submit.prevent="handleSubmit">
         <!-- Header -->
         <div class="row items-center q-mb-md">
-        <q-btn flat dense round icon="arrow_back" @click="handleCancel" :disable="loading" />
-        <div class="text-h5 q-ml-sm">
-          <template v-if="isEditMode">Alterar CFOP {{ route.params.codcfop }}</template>
-          <template v-else>Novo CFOP</template>
+          <q-btn flat dense round icon="arrow_back" @click="handleCancel" :disable="loading" />
+          <div class="text-h5 q-ml-sm">
+            <template v-if="isEditMode">Alterar CFOP {{ route.params.codcfop }}</template>
+            <template v-else>Novo CFOP</template>
+          </div>
         </div>
-      </div>
 
-      <!-- Codigo CFOP (apenas para criacao) -->
-      <q-card v-if="!isEditMode" class="q-mb-md">
-        <div class="text-subtitle1 text-white bg-primary q-pa-sm">Código CFOP</div>
-        <q-card-section>
-          <q-input
-            v-model="form.codcfop"
-            outlined
-            autofocus
-            mask="####"
-            placeholder="Ex: 5102"
-            :disable="loading"
-            :rules="[
-              (val) => !!val || 'Código CFOP é obrigatório',
-              (val) => /^\d{4}$/.test(val) || 'Código CFOP deve ter 4 dígitos',
-              (val) => (parseInt(val) >= 1000 && parseInt(val) <= 9999) || 'CFOP deve estar entre 1000 e 9999',
-            ]"
-          />
-        </q-card-section>
-      </q-card>
+        <!-- Codigo CFOP (apenas para criacao) -->
+        <q-card v-if="!isEditMode" class="q-mb-md">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">Código CFOP</div>
+          <q-card-section>
+            <q-input
+              v-model="form.codcfop"
+              outlined
+              autofocus
+              mask="####"
+              placeholder="Ex: 5102"
+              :disable="loading"
+              :rules="[
+                (val) => !!val || 'Código CFOP é obrigatório',
+                (val) => /^\d{4}$/.test(val) || 'Código CFOP deve ter 4 dígitos',
+                (val) =>
+                  (parseInt(val) >= 1000 && parseInt(val) <= 9999) ||
+                  'CFOP deve estar entre 1000 e 9999',
+              ]"
+            />
+          </q-card-section>
+        </q-card>
 
-      <!-- Descricao -->
-      <q-card class="q-mb-md">
-        <div class="text-subtitle1 text-white bg-primary q-pa-sm">Descrição</div>
-        <q-card-section>
-          <q-input
-            v-model="form.cfop"
-            type="textarea"
-            rows="6"
-            outlined
-            :autofocus="isEditMode"
-            maxlength="500"
-            placeholder="Ex: Venda de Mercadoria Adquirida ou Recebida de Terceiros"
-            :disable="loading"
-            :rules="[(val) => !!val || 'Descrição é obrigatória']"
-          />
-        </q-card-section>
-      </q-card>
+        <!-- Descricao -->
+        <q-card class="q-mb-md">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">Descrição</div>
+          <q-card-section>
+            <q-input
+              v-model="form.cfop"
+              type="textarea"
+              rows="6"
+              outlined
+              :autofocus="isEditMode"
+              maxlength="500"
+              placeholder="Ex: Venda de Mercadoria Adquirida ou Recebida de Terceiros"
+              :disable="loading"
+              :rules="[(val) => !!val || 'Descrição é obrigatória']"
+            />
+          </q-card-section>
+        </q-card>
 
-      <!-- Auditoria -->
-      <div v-if="isEditMode && cfop" class="text-caption text-grey q-mt-md">
-        <span v-if="cfop.usuarioAlteracao">
-          Alterado em {{ new Date(cfop.alteracao).toLocaleString('pt-BR') }} por
-          {{ cfop.usuarioAlteracao.usuario }}
-        </span>
-      </div>
+        <!-- Auditoria -->
+        <div v-if="isEditMode && cfop" class="text-caption text-grey q-mt-md">
+          <span v-if="cfop.usuarioAlteracao">
+            Alterado em {{ new Date(cfop.alteracao).toLocaleString('pt-BR') }} por
+            {{ cfop.usuarioAlteracao.usuario }}
+          </span>
+        </div>
 
-      <!-- FAB Salvar -->
-      <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn
-          fab
-          color="primary"
-          icon="save"
-          type="submit"
-          :loading="loading"
-        >
-          <q-tooltip>Salvar</q-tooltip>
-        </q-btn>
-      </q-page-sticky>
+        <!-- FAB Salvar -->
+        <q-page-sticky position="bottom-right" :offset="[18, 18]">
+          <q-btn fab color="primary" icon="save" type="submit" :loading="loading">
+            <q-tooltip>Salvar</q-tooltip>
+          </q-btn>
+        </q-page-sticky>
       </q-form>
     </div>
   </q-page>

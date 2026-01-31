@@ -1,10 +1,3 @@
-- Cidades
-  - form está como dense,
-  - deixar o esc fechar a janela
-  - Substituir o (+ novo pais por somente o "+")
-  - Eliminar o espacinho entre os tabs e as navbars
-  - padronizar espaçamento e titulos da aba de filtros da Notas/Tributacoes/Paises/etc
-
 - Natureza
   - deixar cards com o mesmo formato do Notas (fonte/icone)
   - filtro operacao nao funciona (entrada/saida)
@@ -140,3 +133,12 @@ DONE:
 27/01
 
 - Tela Natureza Operacao
+
+29/01
+
+- Cidades
+  - form está como dense, ok
+  - deixar o esc fechar a janela
+  - Substituir o (+ novo pais por somente o "+")
+  - Eliminar o espacinho entre os tabs e as navbars
+  - padronizar espaçamento e titulos da aba de filtros da Notas/Tributacoes/Paises/etc
