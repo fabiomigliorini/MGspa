@@ -44,6 +44,9 @@
             <q-btn flat round icon="add" @click="novoColaboradorCargo(iColaborador, colaborador)" />
             Férias
             <q-btn flat round icon="add" @click="novaFerias(iColaborador, colaborador)" />
+            <q-btn flat round icon="description" @click="visualizarFicha(colaborador)">
+              <q-tooltip>Ficha do Colaborador</q-tooltip>
+            </q-btn>
           </q-item-label>
         </q-item>
 
@@ -251,6 +254,24 @@
       </q-form>
     </q-card>
   </q-dialog>
+
+  <!-- Dialog Visualizar Ficha PDF -->
+  <q-dialog v-model="dialogPdfFicha" @hide="fecharPdfFicha">
+    <q-card style="width: 90vw; height: 90vh; max-width: 90vw">
+      <q-card-section class="row items-center q-pb-none">
+        <div class="text-h6">Ficha do Colaborador</div>
+        <q-space />
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+      <q-card-section class="q-pt-none" style="height: calc(90vh - 60px)">
+        <iframe
+          v-if="pdfUrl"
+          :src="pdfUrl"
+          style="width: 100%; height: 100%; border: none"
+        ></iframe>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
@@ -270,6 +291,30 @@ export default defineComponent({
   name: "CardColaborador",
 
   methods: {
+    async visualizarFicha(colaborador) {
+      try {
+        const response = await this.sColaborador.getFichaColaborador(colaborador.codcolaborador);
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        this.pdfUrl = URL.createObjectURL(blob);
+        this.dialogPdfFicha = true;
+      } catch (error) {
+        this.$q.notify({
+          color: "red-5",
+          textColor: "white",
+          icon: "error",
+          message: error.response?.data?.message || "Erro ao carregar a ficha do colaborador",
+        });
+      }
+    },
+
+    fecharPdfFicha() {
+      if (this.pdfUrl) {
+        URL.revokeObjectURL(this.pdfUrl);
+        this.pdfUrl = null;
+      }
+      this.dialogPdfFicha = false;
+    },
+
     novaFerias(iColaborador, colaborador) {
       this.$refs.refCardFerias[iColaborador].nova(colaborador);
     },
@@ -577,8 +622,8 @@ export default defineComponent({
     const colaboradores = ref([]);
     const refCardFerias = ref(null);
     const refCardColaboradorCargo = ref(null);
-
-
+    const dialogPdfFicha = ref(false);
+    const pdfUrl = ref(null);
 
     return {
       sPessoa,
@@ -593,6 +638,8 @@ export default defineComponent({
       modelNovoColaborador,
       refCardFerias,
       refCardColaboradorCargo,
+      dialogPdfFicha,
+      pdfUrl,
       brasil: {
         days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
         daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),

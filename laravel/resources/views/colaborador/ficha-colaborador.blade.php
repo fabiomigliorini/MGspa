@@ -196,11 +196,16 @@
             $cargoAtual = $colaborador->ColaboradorCargoS->first();
         @endphp
 
-        <p><strong>Data de admissão:</strong>
+        <p>
+            <strong>Data de admissão:</strong>
             {{ $colaborador->contratacao ? $colaborador->contratacao->format('d/m/Y') : '' }}
-            <strong>Cargo:</strong> {{ $cargoAtual->Cargo->cargo ?? '' }}
         </p>
-        <p><strong>Salário:</strong>
+        <p>
+            <strong>Cargo:</strong>
+            {{ $cargoAtual->Cargo->cargo ?? '' }}
+        </p>
+        <p>
+            <strong>Salário:</strong>
             {{ $cargoAtual && $cargoAtual->Cargo ? 'R$ ' . number_format($cargoAtual->salario ?? 0, 2, ',', '.') : '' }}
             {{-- <strong>Horário:</strong> --}}
         </p>
