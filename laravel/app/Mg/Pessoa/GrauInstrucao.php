@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 31/Jan/2026 11:43:01
+ * Date: 31/Jan/2026 11:45:09
  */
 
 namespace Mg\Pessoa;
@@ -10,14 +10,14 @@ use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
 
-class EstadoCivil extends MgModel
+class GrauInstrucao extends MgModel
 {
-    protected $table = 'tblestadocivil';
-    protected $primaryKey = 'codestadocivil';
+    protected $table = 'tblgrauinstrucao';
+    protected $primaryKey = 'codgrauinstrucao';
 
 
     protected $fillable = [
-        'estadocivil',
+        'grauinstrucao',
         'inativo'
     ];
 
@@ -28,7 +28,7 @@ class EstadoCivil extends MgModel
     ];
 
     protected $casts = [
-        'codestadocivil' => 'integer',
+        'codgrauinstrucao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
     ];
@@ -49,7 +49,7 @@ class EstadoCivil extends MgModel
     // Tabelas Filhas
     public function PessoaS()
     {
-        return $this->hasMany(Pessoa::class, 'codestadocivil', 'codestadocivil');
+        return $this->hasMany(Pessoa::class, 'codgrauinstrucao', 'codgrauinstrucao');
     }
 
 }
