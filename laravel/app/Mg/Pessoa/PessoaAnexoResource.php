@@ -17,5 +17,4 @@ class PessoaAnexoResource extends JsonResource
         $ret = PessoaAnexoService::listagem($this->codpessoa);
         return $ret;
     }
-    
 }

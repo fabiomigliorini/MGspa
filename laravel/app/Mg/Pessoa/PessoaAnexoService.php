@@ -151,10 +151,13 @@ class PessoaAnexoService
         ];
         $dir = static::diretorio($codpessoa);
         $indice = static::indice($dir);
-        // dd($indice);
         foreach (['ativos', 'inativos'] as $status) {
             $caminho = "{$dir}/{$status}/";
-            $arqs = Storage::disk('pessoa-anexo')->allFiles($caminho);
+            try {
+                $arqs = Storage::disk('pessoa-anexo')->allFiles($caminho);
+            } catch (\Throwable $th) {
+                $arqs = [];
+            }
             foreach ($arqs as $arq) {
                 $nome = basename($arq);
                 $ret[$status][] = [
