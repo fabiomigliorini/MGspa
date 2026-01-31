@@ -93,7 +93,7 @@ class NotaFiscalProdutoBarraController extends Controller
         TributacaoService::recalcularTributosItem($item);
 
         // Recalcula os totais da nota
-        NotaFiscalService::recalcularTotais($nota);
+        NotaFiscalItemService::recalcularTotais($nota);
 
         return (new NotaFiscalDetailResource($nota->fresh()))
             ->response()
@@ -129,7 +129,7 @@ class NotaFiscalProdutoBarraController extends Controller
 
         // Recalcula os totais da nota
         $nota = $item->NotaFiscal;
-        NotaFiscalService::recalcularTotais($nota);
+        NotaFiscalItemService::recalcularTotais($nota);
 
         return (new NotaFiscalDetailResource($nota->fresh()))
             ->response()
@@ -149,7 +149,7 @@ class NotaFiscalProdutoBarraController extends Controller
         $item->delete();
 
         // Recalcula os totais da nota
-        NotaFiscalService::recalcularTotais($nota);
+        NotaFiscalItemService::recalcularTotais($nota);
 
         return (new NotaFiscalDetailResource($nota->fresh()))
             ->response()
@@ -158,7 +158,7 @@ class NotaFiscalProdutoBarraController extends Controller
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        if (!NotaFiscalService::isEditable($nota)) {
+        if (!NotaFiscalStatusService::isEditable($nota)) {
             abort(422, "Não é possível modificar itens de uma nota com status: {$nota->status}");
         }
     }

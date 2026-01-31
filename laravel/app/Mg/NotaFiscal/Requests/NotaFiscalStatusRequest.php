@@ -4,7 +4,7 @@ namespace Mg\NotaFiscal\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Mg\NotaFiscal\NotaFiscalService;
+use Mg\NotaFiscal\NotaFiscalStatusService;
 
 class NotaFiscalStatusRequest extends FormRequest
 {
@@ -20,12 +20,12 @@ class NotaFiscalStatusRequest extends FormRequest
                 'required',
                 'string',
                 Rule::in([
-                    NotaFiscalService::STATUS_LANCADA,
-                    NotaFiscalService::STATUS_DIGITACAO,
-                    NotaFiscalService::STATUS_ERRO,
-                    NotaFiscalService::STATUS_AUTORIZADA,
-                    NotaFiscalService::STATUS_CANCELADA,
-                    NotaFiscalService::STATUS_INUTILIZADA,
+                    NotaFiscalStatusService::STATUS_LANCADA,
+                    NotaFiscalStatusService::STATUS_DIGITACAO,
+                    NotaFiscalStatusService::STATUS_ERRO,
+                    NotaFiscalStatusService::STATUS_AUTORIZADA,
+                    NotaFiscalStatusService::STATUS_CANCELADA,
+                    NotaFiscalStatusService::STATUS_INUTILIZADA,
                 ]),
             ],
             'nfeautorizacao' => 'nullable|string|max:100',

@@ -12,6 +12,7 @@ use Mg\NotaFiscal\Requests\NotaFiscalStatusRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalResource;
 use Mg\NotaFiscal\Resources\NotaFiscalDetailResource;
 use Mg\NFePHP\NFePHPService;
+use Mg\NotaFiscal\NotaFiscalDevolucaoService;
 
 class NotaFiscalController extends Controller
 {
@@ -161,7 +162,7 @@ class NotaFiscalController extends Controller
         $nota->update($data);
 
         // Rateia valores entre os itens se algum valor foi alterado
-        NotaFiscalService::ratearValoresItens($nota, $valoresAntigos);
+        NotaFiscalItemService::ratearValoresItens($nota, $valoresAntigos);
         DB::commit();
 
         return new NotaFiscalDetailResource($nota->fresh());
@@ -293,7 +294,7 @@ class NotaFiscalController extends Controller
 
         // Gera a nota de devolução dentro de uma transação
         DB::beginTransaction();
-        $notaDevolucao = NotaFiscalService::gerarDevolucao($notaOriginal, $request->itens, $codpessoa);
+        $notaDevolucao = NotaFiscalDevolucaoService::gerarDevolucao($notaOriginal, $request->itens, $codpessoa);
         DB::commit();
 
         // retorna o resource de nf
@@ -310,13 +311,13 @@ class NotaFiscalController extends Controller
         $nota = NotaFiscal::with(['Filial', 'NaturezaOperacao'])->findOrFail($codnotafiscal);
 
         // Só pode unificar notas em digitação
-        if ($nota->status !== NotaFiscalService::STATUS_DIGITACAO) {
+        if ($nota->status !== NotaFiscalStatusService::STATUS_DIGITACAO) {
             abort(422, "Só é possível unificar notas em digitação");
         }
 
         // Busca notas com mesmo status, natureza e pessoa (exceto a própria nota)
         $notas = NotaFiscal::with(['Filial', 'NaturezaOperacao'])
-            ->where('status', NotaFiscalService::STATUS_DIGITACAO)
+            ->where('status', NotaFiscalStatusService::STATUS_DIGITACAO)
             ->where('codnaturezaoperacao', $nota->codnaturezaoperacao)
             ->where('codpessoa', $nota->codpessoa)
             ->where('codfilial', $nota->codfilial)
@@ -348,7 +349,7 @@ class NotaFiscalController extends Controller
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
         // Só pode unificar notas em digitação
-        if ($nota->status !== NotaFiscalService::STATUS_DIGITACAO) {
+        if ($nota->status !== NotaFiscalStatusService::STATUS_DIGITACAO) {
             abort(422, "Só é possível unificar notas em digitação");
         }
 
@@ -370,7 +371,7 @@ class NotaFiscalController extends Controller
      */
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        if (!NotaFiscalService::isEditable($nota)) {
+        if (!NotaFiscalStatusService::isEditable($nota)) {
             abort(422, "Não é possível modificar uma nota com status: {$nota->status}");
         }
     }
@@ -613,12 +614,12 @@ class NotaFiscalController extends Controller
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
         // Só pode recalcular nota em digitação
-        if ($nota->status !== NotaFiscalService::STATUS_DIGITACAO) {
+        if ($nota->status !== NotaFiscalStatusService::STATUS_DIGITACAO) {
             abort(422, "Só é possível recalcular tributação de notas em digitação");
         }
 
         DB::beginTransaction();
-        NotaFiscalService::recalcularTributacao($nota);
+        NotaFiscalItemService::recalcularTributacao($nota);
         DB::commit();
 
         return new NotaFiscalDetailResource(
@@ -652,7 +653,7 @@ class NotaFiscalController extends Controller
         $this->verificarNotaBloqueada($nota);
 
         DB::beginTransaction();
-        NotaFiscalService::incorporarValores($nota);
+        NotaFiscalItemService::incorporarValores($nota);
         DB::commit();
 
         return new NotaFiscalDetailResource(
@@ -701,7 +702,7 @@ class NotaFiscalController extends Controller
         $this->verificarNotaBloqueada($nota);
 
         DB::beginTransaction();
-        NotaFiscalService::unificarItens($nota);
+        NotaFiscalItemService::unificarItens($nota);
         DB::commit();
 
         return new NotaFiscalDetailResource(

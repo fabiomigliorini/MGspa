@@ -5,6 +5,7 @@ namespace Mg\NotaFiscal;
 use App\Http\Controllers\Controller;
 use Mg\NotaFiscal\Requests\NotaFiscalDuplicatasRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalDuplicatasResource;
+use Mg\NotaFiscal\NotaFiscalStatusService;
 use Illuminate\Http\Request;
 
 class NotaFiscalDuplicatasController extends Controller
@@ -75,7 +76,7 @@ class NotaFiscalDuplicatasController extends Controller
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        if (!NotaFiscalService::isEditable($nota)) {
+        if (!NotaFiscalStatusService::isEditable($nota)) {
             abort(422, "Não é possível modificar duplicatas de uma nota com status: {$nota->status}");
         }
     }
