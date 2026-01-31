@@ -6,7 +6,7 @@ use Carbon\Carbon;
 
 class EstadoCivilService
 {
-    public static function index($estadocivil = null, $inativo = null)
+    public static function index($estadocivil = null, $status = null)
     {
         $query = EstadoCivil::orderBy('estadocivil');
 
@@ -14,10 +14,18 @@ class EstadoCivilService
             $query->where('estadocivil', 'ilike', "%{$estadocivil}%");
         }
 
-        if ($inativo === false) {
-            $query->whereNull('inativo');
-        } elseif ($inativo === true) {
-            $query->whereNotNull('inativo');
+        switch ($status) {
+            case 'inativos':
+                $query->whereNotNull('inativo');
+                break;
+
+            case 'ativos':
+                $query->whereNull('inativo');
+                break;
+
+            case 'todos':
+            default:
+                break;
         }
 
         return $query->get();

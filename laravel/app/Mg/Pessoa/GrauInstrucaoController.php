@@ -10,9 +10,8 @@ class GrauInstrucaoController extends MgController
     public function index(Request $request)
     {
         $grauinstrucao = $request->grauinstrucao ?? null;
-        $inativo = $request->has('inativo') ? filter_var($request->inativo, FILTER_VALIDATE_BOOLEAN) : null;
 
-        $grausInstrucao = GrauInstrucaoService::index($grauinstrucao, $inativo);
+        $grausInstrucao = GrauInstrucaoService::index($grauinstrucao, $request->status ?? 'todos');
 
         return GrauInstrucaoResource::collection($grausInstrucao);
     }

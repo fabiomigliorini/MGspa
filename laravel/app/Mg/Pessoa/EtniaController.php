@@ -10,9 +10,8 @@ class EtniaController extends MgController
     public function index(Request $request)
     {
         $etnia = $request->etnia ?? null;
-        $inativo = $request->has('inativo') ? filter_var($request->inativo, FILTER_VALIDATE_BOOLEAN) : null;
 
-        $etnias = EtniaService::index($etnia, $inativo);
+        $etnias = EtniaService::index($etnia, $request->status ?? 'todos');
 
         return EtniaResource::collection($etnias);
     }

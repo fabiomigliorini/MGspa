@@ -6,7 +6,7 @@ use Carbon\Carbon;
 
 class GrauInstrucaoService
 {
-    public static function index($grauinstrucao = null, $inativo = null)
+    public static function index($grauinstrucao = null, $status = null)
     {
         $query = GrauInstrucao::orderBy('grauinstrucao');
 
@@ -14,10 +14,18 @@ class GrauInstrucaoService
             $query->where('grauinstrucao', 'ilike', "%{$grauinstrucao}%");
         }
 
-        if ($inativo === false) {
-            $query->whereNull('inativo');
-        } elseif ($inativo === true) {
-            $query->whereNotNull('inativo');
+        switch ($status) {
+            case 'inativos':
+                $query->whereNotNull('inativo');
+                break;
+
+            case 'ativos':
+                $query->whereNull('inativo');
+                break;
+
+            case 'todos':
+            default:
+                break;
         }
 
         return $query->get();

@@ -6,7 +6,7 @@ use Carbon\Carbon;
 
 class EtniaService
 {
-    public static function index($etnia = null, $inativo = null)
+    public static function index($etnia = null, $status = null)
     {
         $query = Etnia::orderBy('etnia');
 
@@ -14,10 +14,18 @@ class EtniaService
             $query->where('etnia', 'ilike', "%{$etnia}%");
         }
 
-        if ($inativo === false) {
-            $query->whereNull('inativo');
-        } elseif ($inativo === true) {
-            $query->whereNotNull('inativo');
+        switch ($status) {
+            case 'inativos':
+                $query->whereNotNull('inativo');
+                break;
+
+            case 'ativos':
+                $query->whereNull('inativo');
+                break;
+
+            case 'todos':
+            default:
+                break;
         }
 
         return $query->get();

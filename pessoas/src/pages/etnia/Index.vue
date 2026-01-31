@@ -1,3 +1,185 @@
+<script setup>
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useQuasar } from "quasar";
+import { etniaStore } from "src/stores/etnia";
+
+const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
+
+const $q = useQuasar();
+const store = etniaStore();
+
+const etnias = ref([]);
+const loading = ref(false);
+const dialog = ref(false);
+const editando = ref(false);
+const model = ref({ etnia: "" });
+const filtro = ref({
+  etnia: null,
+  status: "ativos",
+});
+
+const statusOptions = [
+  { label: "Ativos", value: "ativos" },
+  { label: "Inativos", value: "inativos" },
+  { label: "Todos", value: "todos" },
+];
+const pagination = ref({
+  rowsPerPage: 50,
+});
+
+const columns = [
+  {
+    name: "codetnia",
+    label: "Código",
+    field: "codetnia",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "etnia",
+    label: "Descrição",
+    field: "etnia",
+    align: "left",
+    sortable: true,
+  },
+  {
+    name: "inativo",
+    label: "Status",
+    field: "inativo",
+    align: "center",
+  },
+  {
+    name: "acoes",
+    label: "Ações",
+    field: "acoes",
+    align: "center",
+  },
+];
+
+const buscar = async () => {
+  loading.value = true;
+  $q.loadingBar.start();
+  try {
+    store.filtro = filtro.value;
+    await store.index();
+    etnias.value = store.etnias;
+  } catch (error) {
+    $q.notify({
+      type: "negative",
+      message: "Erro ao carregar etnias",
+    });
+  } finally {
+    loading.value = false;
+    $q.loadingBar.stop();
+  }
+};
+
+const abrirNovo = () => {
+  model.value = { etnia: "" };
+  editando.value = false;
+  dialog.value = true;
+};
+
+const abrirEditar = (item) => {
+  model.value = { ...item };
+  editando.value = true;
+  dialog.value = true;
+};
+
+const salvar = async () => {
+  if (!model.value.etnia || model.value.etnia.trim() === "") {
+    $q.notify({
+      type: "warning",
+      message: "Informe a descrição",
+    });
+    return;
+  }
+
+  loading.value = true;
+  try {
+    if (editando.value) {
+      await store.update(model.value.codetnia, model.value);
+      $q.notify({
+        type: "positive",
+        message: "Etnia atualizada com sucesso",
+      });
+    } else {
+      await store.store(model.value);
+      $q.notify({
+        type: "positive",
+        message: "Etnia criada com sucesso",
+      });
+    }
+    etnias.value = store.etnias;
+    dialog.value = false;
+  } catch (error) {
+    $q.notify({
+      type: "negative",
+      message: "Erro ao salvar etnia",
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
+const toggleInativo = async (item) => {
+  loading.value = true;
+  try {
+    if (item.inativo) {
+      await store.ativar(item.codetnia);
+      $q.notify({
+        type: "positive",
+        message: "Etnia ativada com sucesso",
+      });
+    } else {
+      await store.inativar(item.codetnia);
+      $q.notify({
+        type: "positive",
+        message: "Etnia inativada com sucesso",
+      });
+    }
+    etnias.value = store.etnias;
+  } catch (error) {
+    $q.notify({
+      type: "negative",
+      message: "Erro ao alterar status",
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
+const excluir = (item) => {
+  $q.dialog({
+    title: "Confirmar exclusão",
+    message: `Deseja realmente excluir a etnia "${item.etnia}"?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    loading.value = true;
+    try {
+      await store.destroy(item.codetnia);
+      etnias.value = store.etnias;
+      $q.notify({
+        type: "positive",
+        message: "Etnia excluída com sucesso",
+      });
+    } catch (error) {
+      $q.notify({
+        type: "negative",
+        message: "Erro ao excluir etnia. Verifique se não está em uso.",
+      });
+    } finally {
+      loading.value = false;
+    }
+  });
+};
+
+onMounted(() => {
+  buscar();
+});
+</script>
+
 <template>
   <MGLayout drawer>
     <template #tituloPagina>
@@ -11,6 +193,7 @@
           :columns="columns"
           row-key="codetnia"
           :loading="loading"
+          :pagination="pagination"
           flat
           bordered
         >
@@ -129,9 +312,13 @@
             </template>
           </q-input>
 
-          <q-toggle
-            v-model="filtro.inativo"
-            label="Mostrar inativos"
+          <q-select
+            outlined
+            v-model="filtro.status"
+            :options="statusOptions"
+            label="Status"
+            emit-value
+            map-options
             @update:model-value="buscar"
           />
         </div>
@@ -139,199 +326,3 @@
     </template>
   </MGLayout>
 </template>
-
-<script>
-import { defineComponent, defineAsyncComponent, ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { etniaStore } from "src/stores/etnia";
-
-export default defineComponent({
-  name: "EtniaIndex",
-  components: {
-    MGLayout: defineAsyncComponent(() => import("layouts/MGLayout.vue")),
-  },
-
-  setup() {
-    const $q = useQuasar();
-    const store = etniaStore();
-
-    const etnias = ref([]);
-    const loading = ref(false);
-    const dialog = ref(false);
-    const editando = ref(false);
-    const model = ref({ etnia: "" });
-    const filtro = ref({
-      etnia: null,
-      inativo: false,
-    });
-
-    const columns = [
-      {
-        name: "codetnia",
-        label: "Código",
-        field: "codetnia",
-        align: "left",
-        sortable: true,
-      },
-      {
-        name: "etnia",
-        label: "Descrição",
-        field: "etnia",
-        align: "left",
-        sortable: true,
-      },
-      {
-        name: "inativo",
-        label: "Status",
-        field: "inativo",
-        align: "center",
-      },
-      {
-        name: "acoes",
-        label: "Ações",
-        field: "acoes",
-        align: "center",
-      },
-    ];
-
-    async function buscar() {
-      loading.value = true;
-      $q.loadingBar.start();
-      try {
-        store.filtro = filtro.value;
-        await store.index();
-        etnias.value = store.etnias;
-      } catch (error) {
-        $q.notify({
-          type: "negative",
-          message: "Erro ao carregar etnias",
-        });
-      } finally {
-        loading.value = false;
-        $q.loadingBar.stop();
-      }
-    }
-
-    function abrirNovo() {
-      model.value = { etnia: "" };
-      editando.value = false;
-      dialog.value = true;
-    }
-
-    function abrirEditar(item) {
-      model.value = { ...item };
-      editando.value = true;
-      dialog.value = true;
-    }
-
-    async function salvar() {
-      if (!model.value.etnia || model.value.etnia.trim() === "") {
-        $q.notify({
-          type: "warning",
-          message: "Informe a descrição",
-        });
-        return;
-      }
-
-      loading.value = true;
-      try {
-        if (editando.value) {
-          await store.update(model.value.codetnia, model.value);
-          $q.notify({
-            type: "positive",
-            message: "Etnia atualizada com sucesso",
-          });
-        } else {
-          await store.store(model.value);
-          $q.notify({
-            type: "positive",
-            message: "Etnia criada com sucesso",
-          });
-        }
-        etnias.value = store.etnias;
-        dialog.value = false;
-      } catch (error) {
-        $q.notify({
-          type: "negative",
-          message: "Erro ao salvar etnia",
-        });
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    async function toggleInativo(item) {
-      loading.value = true;
-      try {
-        if (item.inativo) {
-          await store.ativar(item.codetnia);
-          $q.notify({
-            type: "positive",
-            message: "Etnia ativada com sucesso",
-          });
-        } else {
-          await store.inativar(item.codetnia);
-          $q.notify({
-            type: "positive",
-            message: "Etnia inativada com sucesso",
-          });
-        }
-        etnias.value = store.etnias;
-      } catch (error) {
-        $q.notify({
-          type: "negative",
-          message: "Erro ao alterar status",
-        });
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    function excluir(item) {
-      $q.dialog({
-        title: "Confirmar exclusão",
-        message: `Deseja realmente excluir a etnia "${item.etnia}"?`,
-        cancel: true,
-        persistent: true,
-      }).onOk(async () => {
-        loading.value = true;
-        try {
-          await store.destroy(item.codetnia);
-          etnias.value = store.etnias;
-          $q.notify({
-            type: "positive",
-            message: "Etnia excluída com sucesso",
-          });
-        } catch (error) {
-          $q.notify({
-            type: "negative",
-            message: "Erro ao excluir etnia. Verifique se não está em uso.",
-          });
-        } finally {
-          loading.value = false;
-        }
-      });
-    }
-
-    onMounted(() => {
-      buscar();
-    });
-
-    return {
-      etnias,
-      loading,
-      dialog,
-      editando,
-      model,
-      filtro,
-      columns,
-      buscar,
-      abrirNovo,
-      abrirEditar,
-      salvar,
-      toggleInativo,
-      excluir,
-    };
-  },
-});
-</script>

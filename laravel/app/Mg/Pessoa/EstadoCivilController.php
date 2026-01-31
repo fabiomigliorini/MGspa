@@ -10,9 +10,8 @@ class EstadoCivilController extends MgController
     public function index(Request $request)
     {
         $estadocivil = $request->estadocivil ?? null;
-        $inativo = $request->has('inativo') ? filter_var($request->inativo, FILTER_VALIDATE_BOOLEAN) : null;
 
-        $estadosCivis = EstadoCivilService::index($estadocivil, $inativo);
+        $estadosCivis = EstadoCivilService::index($estadocivil, $request->status ?? 'todos');
 
         return EstadoCivilResource::collection($estadosCivis);
     }
