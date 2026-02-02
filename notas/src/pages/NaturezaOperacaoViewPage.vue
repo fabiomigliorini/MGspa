@@ -394,6 +394,7 @@ onMounted(loadData)
                         >
                           {{ trib.cfop?.cfop || trib.cfop || '' }}
                         </span>
+                        <q-badge v-if="trib.bit">BIT</q-badge>
                       </div>
                     </router-link>
 

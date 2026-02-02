@@ -54,6 +54,16 @@ class TributacaoNaturezaOperacaoController extends Controller
             $query->where('codcfop', $request->codcfop);
         }
 
+        // Filtro por BIT
+        if ($request->has('bit') && $request->input('bit') !== null && $request->input('bit') !== '') {
+            $bitValue = $request->input('bit');
+            // Converte string "true"/"false" ou boolean para boolean
+            if (is_string($bitValue)) {
+                $bitValue = $bitValue === 'true' || $bitValue === '1';
+            }
+            $query->where('bit', (bool) $bitValue);
+        }
+
         // Ordenação
         $sortField = $request->get('sort', 'codtributacaonaturezaoperacao');
         $sortOrder = $request->get('order', 'asc');

@@ -1,21 +1,3 @@
-- Natureza
-  - deixar cards com o mesmo formato do Notas (fonte/icone) - ok
-  - filtro operacao nao funciona (entrada/saida) - ok
-  - bordinha quando nao acha nada - ok
-  - terminar cards da tributacao dentro da natureza - ok
-  - link editar com :to - ok
-  - transformar todos selects em componentes
-  - padronizar borda do card e titulos do card igual a nota fiscal - ok
-  - deixar listagem por ordem alfabetica - ok
-    (naturezaoperacao)
-  - filtro das tributacoes nessa ordem (pra filtrar e pra listar)
-    - codestado
-    - codtributacao
-    - codtipoproduto
-    - bit
-    - ncm
-    - cfop (select)
-
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 - https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
@@ -142,3 +124,23 @@ DONE:
 - Tributacao / CFOP
   - deixar card no padrao da tela de notas -ok
   - onde mostra a chave primaria, sempre padronizar a mascara #99999999 -ok
+
+02/02
+
+- Natureza
+  - deixar cards com o mesmo formato do Notas (fonte/icone) - ok
+  - filtro operacao nao funciona (entrada/saida) - ok
+  - bordinha quando nao acha nada - ok
+  - terminar cards da tributacao dentro da natureza - ok
+  - link editar com :to - ok
+  - transformar todos selects em componentes
+  - padronizar borda do card e titulos do card igual a nota fiscal - ok
+  - deixar listagem por ordem alfabetica - ok
+    (naturezaoperacao)
+  - filtro das tributacoes nessa ordem (pra filtrar e pra listar) - ok
+    - codestado
+    - codtributacao
+    - codtipoproduto
+    - bit
+    - ncm
+    - cfop (select)
