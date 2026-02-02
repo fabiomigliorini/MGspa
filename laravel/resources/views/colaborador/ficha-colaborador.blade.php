@@ -141,31 +141,33 @@
                 <td colspan="2">MUNICIPIO: {{ $pessoa->CidadeNascimento->cidade ?? '' }} /
                     {{ $pessoa->CidadeNascimento->Estado->sigla ?? '' }}</td>
             </tr>
-            <tr>
-                <td class="label">ENDEREÇO</td>
-                <td colspan="3">
-                    {{ $pessoa->endereco ?? '' }},
-                    {{ $pessoa->numero ?? '' }}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">COMPLEMENTO</td>
-                <td colspan="3">
-                    {{ $pessoa->complemento ?? '' }}
-                </td>
-            </tr>
-            <tr>
-                <td class="label">BAIRRO</td>
-                <td colspan="3">{{ $pessoa->bairro ?? '' }}</td>
-            </tr>
-            <tr>
-                <td class="label">MUNICÍPIO</td>
-                <td colspan="2">
-                    {{ $pessoa->Cidade->cidade ?? '' }} /
-                    {{ $pessoa->Cidade->Estado->sigla ?? '' }}
-                </td>
-                <td>CEP: {{ formataCep($pessoa->cep) ?? '' }}</td>
-            </tr>
+            @foreach ($pessoa->PessoaEnderecoS()->orderBy('ordem')->get() as $pe)
+                <tr>
+                    <td class="label">ENDEREÇO</td>
+                    <td colspan="3">
+                        {{ $pe->endereco ?? '' }},
+                        {{ $pe->numero ?? '' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">COMPLEMENTO</td>
+                    <td colspan="3">
+                        {{ $pe->complemento ?? '' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">BAIRRO</td>
+                    <td colspan="3">{{ $pe->bairro ?? '' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">MUNICÍPIO</td>
+                    <td colspan="2">
+                        {{ $pe->Cidade->cidade ?? '' }} /
+                        {{ $pe->Cidade->Estado->sigla ?? '' }}
+                    </td>
+                    <td>CEP: {{ formataCep($pe->cep) ?? '' }}</td>
+                </tr>
+            @endforeach
             {{-- 
         <tr>
             <td class="label">POSSUI DEPENDENTES?</td>
@@ -176,9 +178,18 @@
             <tr>
                 <td class="label">TELEFONE/CONTATO:</td>
                 <td colspan="3">
-                    {{ $pessoa->telefone1 ?? '' }}
-                    {{ $pessoa->telefone2 ? ' / ' . $pessoa->telefone2 : '' }}
-                    {{ $pessoa->telefone3 ? ' / ' . $pessoa->telefone3 : '' }}
+                    @foreach ($pessoa->PessoaTelefoneS()->orderBy('ordem')->get() as $pt)
+                        ({{ $pt->ddd }})
+                        {{ formataPorMascara($pt->telefone, '#-####-####') }}
+                    @endforeach
+                </td>
+            </tr>
+            <tr>
+                <td class="label">E-MAIL:</td>
+                <td colspan="3">
+                    @foreach ($pessoa->PessoaEmailS()->orderBy('ordem')->get() as $pe)
+                        {{ $pe->email }}
+                    @endforeach
                 </td>
             </tr>
             {{-- 

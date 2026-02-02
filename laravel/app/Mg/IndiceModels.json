@@ -2833,6 +2833,16 @@
                 "tabela": "tblportador",
                 "coluna": "codpessoa",
                 "metodo": "PortadorS"
+            },
+            "tbldependente.codpessoa": {
+                "tabela": "tbldependente",
+                "coluna": "codpessoa",
+                "metodo": "DependenteS"
+            },
+            "tbldependente.codpessoaresponsavel": {
+                "tabela": "tbldependente",
+                "coluna": "codpessoaresponsavel",
+                "metodo": "DependeteResponsavelS"
             }
         }
     },
@@ -8949,5 +8959,35 @@
                 "metodo": "PessoaS"
             }
         }
+    },
+    "tbldependente": {
+        "tabela": "tbldependente",
+        "campocodigo": "coddependente",
+        "namespace": "Mg\\Pessoa",
+        "classe": "Dependente",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Dependente.php",
+        "belongsTo": {
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codpessoaresponsavel": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoaresponsavel",
+                "metodo": "PessoaResponsavel"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": []
     }
 }
