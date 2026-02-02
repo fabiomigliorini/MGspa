@@ -2,7 +2,7 @@
 
 /**
  * Created by php artisan gerador:model.
- * Date: 31/Jan/2026 11:45:47
+ * Date: 02/Feb/2026 11:46:43
  */
 
 namespace Mg\Pessoa;
@@ -41,6 +41,7 @@ use Mg\Colaborador\Colaborador;
 use Mg\NotaFiscal\NotaFiscalPagamento;
 use Mg\Meta\MetaVendedor;
 use Mg\Portador\Portador;
+use Mg\Pessoa\Dependente;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -269,6 +270,16 @@ class Pessoa extends MgModel
     public function CupomFiscalS()
     {
         return $this->hasMany(CupomFiscal::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function DependenteS()
+    {
+        return $this->hasMany(Dependente::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function DependeteResponsavelS()
+    {
+        return $this->hasMany(Dependente::class, 'codpessoaresponsavel', 'codpessoa');
     }
 
     public function FilialS()
