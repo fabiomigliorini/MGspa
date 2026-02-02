@@ -1,7 +1,9 @@
 <?php
+
 namespace Mg\Estoque;
+
 use Mg\MgService;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class EstoqueSaldoService extends MgService
 {
@@ -10,8 +12,7 @@ class EstoqueSaldoService extends MgService
         $elpv = EstoqueLocalProdutoVariacaoService::buscaOuCria($codestoquelocal, $codprodutovariacao);
 
         $es = EstoqueSaldo::where('codestoquelocalprodutovariacao', $elpv->codestoquelocalprodutovariacao)->where('fiscal', $fiscal)->first();
-        if ($es == false)
-        {
+        if ($es == false) {
             $es = new EstoqueSaldo();
             $es->codestoquelocalprodutovariacao = $elpv->codestoquelocalprodutovariacao;
             $es->fiscal = $fiscal;
@@ -62,8 +63,7 @@ class EstoqueSaldoService extends MgService
         $inicialquantidade = 0;
         $inicialvalor = 0;
         $anterior = EstoqueMesService::buscaAnteriores($mes->codestoquesaldo, $mes->mes, 1);
-        if (isset($anterior[0]))
-        {
+        if (isset($anterior[0])) {
             $inicialquantidade = $anterior[0]->saldoquantidade;
             $inicialvalor = $anterior[0]->saldovalor;
         }
@@ -71,14 +71,13 @@ class EstoqueSaldoService extends MgService
         //calcula custo medio
         $valor = $mov->entradavalor - $mov->saidavalor;
         $quantidade = $mov->entradaquantidade - $mov->saidaquantidade;
-        if ($inicialquantidade > 0 && $inicialvalor > 0)
-        {
+        if ($inicialquantidade > 0 && $inicialvalor > 0) {
             $valor += $inicialvalor;
             $quantidade += $inicialquantidade;
         }
         $customedio = 0;
         if ($quantidade != 0) {
-            $customedio = abs($valor/$quantidade);
+            $customedio = abs($valor / $quantidade);
         }
         if (empty($customedio) && isset($anterior[0])) {
             $customedio = $anterior[0]->customedio;
@@ -135,8 +134,7 @@ class EstoqueSaldoService extends MgService
         // verifica quais meses são afetados pelo novo custo medio calculado
         $mesesRecalcular = [];
         $customediodiferenca = abs($customedio - $customedioanterior);
-        if ($customediodiferenca > 0.01)
-        {
+        if ($customediodiferenca > 0.01) {
             $sql = "
                 select distinct dest.codestoquemes
                 from tblestoquemovimento orig
@@ -156,7 +154,6 @@ class EstoqueSaldoService extends MgService
         // empilha mes seguinte na variavel de meses à recalcular
         if (isset($proximo[0])) {
             $mesesRecalcular[] = $proximo[0]->codestoquemes;
-
         } else {
             $mes->EstoqueSaldo->saldoquantidade = $mes->saldoquantidade;
             $mes->EstoqueSaldo->saldovalor = $mes->saldovalor;
@@ -189,7 +186,6 @@ class EstoqueSaldoService extends MgService
             "), [
                 'codestoquesaldo' => $mes->codestoquesaldo
             ]);
-
         }
 
         /*
@@ -203,5 +199,4 @@ class EstoqueSaldoService extends MgService
             // $this->dispatch((new EstoqueCalculaCustoMedio($mes, $this->ciclo +1))->onQueue('urgent'));
         }
     }
-
 }

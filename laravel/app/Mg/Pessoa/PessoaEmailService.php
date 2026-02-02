@@ -3,7 +3,7 @@
 namespace Mg\Pessoa;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;

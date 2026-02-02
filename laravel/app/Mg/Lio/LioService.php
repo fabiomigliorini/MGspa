@@ -4,7 +4,7 @@ namespace Mg\Lio;
 
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
-// use DB;
+// use Illuminate\Support\Facades\DB;
 
 use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
@@ -105,7 +105,7 @@ class LioService
                     $pagamento->transacao = carbon::createFromFormat('d/m/y', $payment->paymentFields->originalTransactionDate);
                 }
             }
-            $pagamento->codigov40 = $payment->paymentFields->v40Code??null;
+            $pagamento->codigov40 = $payment->paymentFields->v40Code ?? null;
             $pagamento->codlioproduto = $produto->codlioproduto;
             $pagamento->codlioterminal = $terminal->codlioterminal;
             if (empty($pagamento->criacao)) {
@@ -139,5 +139,4 @@ class LioService
 
         return $pedido;
     }
-
 }

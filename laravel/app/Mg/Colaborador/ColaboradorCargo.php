@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2024 15:00:51
+ * Date: 31/Jan/2026 16:53:52
  */
 
 namespace Mg\Colaborador;
@@ -28,7 +28,8 @@ class ColaboradorCargo extends MgModel
         'fim',
         'gratificacao',
         'inicio',
-        'observacoes'
+        'observacoes',
+        'salario'
     ];
 
     protected $dates = [
@@ -48,7 +49,8 @@ class ColaboradorCargo extends MgModel
         'comissaoloja' => 'float',
         'comissaovenda' => 'float',
         'comissaoxerox' => 'float',
-        'gratificacao' => 'float'
+        'gratificacao' => 'float',
+        'salario' => 'float'
     ];
 
 

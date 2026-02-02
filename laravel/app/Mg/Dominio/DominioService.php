@@ -3,7 +3,7 @@
 namespace Mg\Dominio;
 
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -66,5 +66,4 @@ class DominioService
             'registros' => count($arquivo->registros),
         ];
     }
-
 }

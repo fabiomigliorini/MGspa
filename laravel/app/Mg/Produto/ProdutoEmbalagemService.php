@@ -2,7 +2,7 @@
 
 namespace Mg\Produto;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class ProdutoEmbalagemService
 {

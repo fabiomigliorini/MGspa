@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Mg\PagarMe\PagarMePostPedidoRequest;
 //use Illuminate\Support\Facades\Auth;
 //use App\Http\Requests;
-//use DB;
+//use Illuminate\Support\Facades\DB;
 
 use Mg\MgController;
 
@@ -20,8 +20,8 @@ class PagarMeController extends MgController
         $arquivo = PagarMeJsonService::salvar($request->getContent());
         PagarMeWebhookJob::dispatch($arquivo);
         return response()->json([
-            'success'=>true,
-            'arquivo'=>$arquivo
+            'success' => true,
+            'arquivo' => $arquivo
         ], 200);
     }
 
@@ -47,8 +47,8 @@ class PagarMeController extends MgController
         );
         // PagarMeWebhookJob::dispatch($arquivo);
         return response()->json([
-            'success'=>true,
-            'pedido'=>$ped->getAttributes()
+            'success' => true,
+            'pedido' => $ped->getAttributes()
         ], 201);
     }
 
@@ -57,8 +57,8 @@ class PagarMeController extends MgController
         $ped = PagarMePedido::findOrFail($codpagarmepedido);
         PagarMeService::cancelarPedido($ped);
         return response()->json([
-            'success'=>true,
-            'pedido'=>$ped->getAttributes()
+            'success' => true,
+            'pedido' => $ped->getAttributes()
         ], 200);
     }
 
@@ -67,9 +67,8 @@ class PagarMeController extends MgController
         $ped = PagarMePedido::findOrFail($codpagarmepedido);
         PagarMeService::consultarPedido($ped);
         return response()->json([
-            'success'=>true,
-            'pedido'=>$ped->getAttributes()
+            'success' => true,
+            'pedido' => $ped->getAttributes()
         ], 200);
     }
-
 }

@@ -74,6 +74,23 @@ const user = guardaToken();
                         </q-btn>
                     </q-item>
                 </template>
+
+                <q-separator inset color="yelllow-6" />
+                <q-item-label header class="text-yellow-6">Cadastros</q-item-label>
+                <q-item class="q-px-sm">
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'etnia' }">
+                        <q-icon name="diversity_1" size="35px" />
+                        <div>Etnia</div>
+                    </q-btn>
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'grauinstrucao' }">
+                        <q-icon name="school" size="35px" />
+                        <div>Grau Instrução</div>
+                    </q-btn>
+                    <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'estadocivil' }">
+                        <q-icon name="favorite" size="35px" />
+                        <div>Estado Civil</div>
+                    </q-btn>
+                </q-item>
             </q-list>
 
         </q-menu>

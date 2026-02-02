@@ -2,42 +2,41 @@
 
 namespace Mg\Estoque;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Mg\Produto\Produto;
 
 class EstoqueEstatisticaService
 {
-    public static function standardDeviationSample ($a)
+    public static function standardDeviationSample($a)
     {
-      //variable and initializations
-      $the_standard_deviation = 0.0;
-      $the_variance = 0.0;
-      $the_mean = 0.0;
-      $the_array_sum = array_sum($a); //sum the elements
-      $number_elements = count($a); //count the number of elements
-      if ($number_elements <= 1) {
-        return 0;
-      }
+        //variable and initializations
+        $the_standard_deviation = 0.0;
+        $the_variance = 0.0;
+        $the_mean = 0.0;
+        $the_array_sum = array_sum($a); //sum the elements
+        $number_elements = count($a); //count the number of elements
+        if ($number_elements <= 1) {
+            return 0;
+        }
 
-      //calculate the mean
-      $the_mean = $the_array_sum / $number_elements;
+        //calculate the mean
+        $the_mean = $the_array_sum / $number_elements;
 
-      //calculate the variance
-      for ($i = 0; $i < $number_elements; $i++)
-      {
-        //sum the array
-        $the_variance = $the_variance + ($a[$i] - $the_mean) * ($a[$i] - $the_mean);
-      }
+        //calculate the variance
+        for ($i = 0; $i < $number_elements; $i++) {
+            //sum the array
+            $the_variance = $the_variance + ($a[$i] - $the_mean) * ($a[$i] - $the_mean);
+        }
 
-      $the_variance = $the_variance / ($number_elements - 1.0);
+        $the_variance = $the_variance / ($number_elements - 1.0);
 
-      //calculate the standard deviation
-      $the_standard_deviation = pow( $the_variance, 0.5);
+        //calculate the standard deviation
+        $the_standard_deviation = pow($the_variance, 0.5);
 
-      //return the variance
-      return $the_standard_deviation;
+        //return the variance
+        return $the_standard_deviation;
     }
 
     /**
@@ -81,26 +80,24 @@ class EstoqueEstatisticaService
         $q = 0;
         $r = 0;
         $normSInv = 0;
-        if ($probability < 0 ||
-          $probability > 1)
-        {
-          throw new \Exception("normSInv: Argument out of range.");
+        if (
+            $probability < 0 ||
+            $probability > 1
+        ) {
+            throw new \Exception("normSInv: Argument out of range.");
         } else if ($probability < $p_low) {
 
-          $q = sqrt(-2 * log($probability));
-          $normSInv = ((((($c1 * $q + $c2) * $q + $c3) * $q + $c4) * $q + $c5) * $q + $c6) / (((($d1 * $q + $d2) * $q + $d3) * $q + $d4) * $q + 1);
-
+            $q = sqrt(-2 * log($probability));
+            $normSInv = ((((($c1 * $q + $c2) * $q + $c3) * $q + $c4) * $q + $c5) * $q + $c6) / (((($d1 * $q + $d2) * $q + $d3) * $q + $d4) * $q + 1);
         } else if ($probability <= $p_high) {
 
-          $q = $probability - 0.5;
-          $r = $q * $q;
-          $normSInv = ((((($a1 * $r + $a2) * $r + $a3) * $r + $a4) * $r + $a5) * $r + $a6) * $q / ((((($b1 * $r + $b2) * $r + $b3) * $r + $b4) * $r + $b5) * $r + 1);
-
+            $q = $probability - 0.5;
+            $r = $q * $q;
+            $normSInv = ((((($a1 * $r + $a2) * $r + $a3) * $r + $a4) * $r + $a5) * $r + $a6) * $q / ((((($b1 * $r + $b2) * $r + $b3) * $r + $b4) * $r + $b5) * $r + 1);
         } else {
 
-          $q = sqrt(-2 * log(1 - $probability));
-          $normSInv = -((((($c1 * $q + $c2) * $q + $c3) * $q + $c4) * $q + $c5) * $q + $c6) /(((($d1 * $q + $d2) * $q + $d3) * $q + $d4) * $q + 1);
-
+            $q = sqrt(-2 * log(1 - $probability));
+            $normSInv = - ((((($c1 * $q + $c2) * $q + $c3) * $q + $c4) * $q + $c5) * $q + $c6) / (((($d1 * $q + $d2) * $q + $d3) * $q + $d4) * $q + 1);
         }
 
         return $normSInv;
@@ -114,7 +111,7 @@ class EstoqueEstatisticaService
      * @param  double $nivel_servico Nivel de Servico (95% = 0.95)
      * @return array previsão
      */
-    public static function calculaEstoqueMinimoPeloDesvioPadrao ($vendas, $tempo_minimo = 0.7, $tempo_maximo = 2.5, $nivel_servico = null)
+    public static function calculaEstoqueMinimoPeloDesvioPadrao($vendas, $tempo_minimo = 0.7, $tempo_maximo = 2.5, $nivel_servico = null)
     {
 
         $vendas_filtradas = $vendas;
@@ -166,11 +163,11 @@ class EstoqueEstatisticaService
         return $ret;
     }
 
-    public static function buscaSerieHistoricaVendasProduto ($codproduto, $meses = 49, $codprodutovariacao = null, $codestoquelocal = null)
+    public static function buscaSerieHistoricaVendasProduto($codproduto, $meses = 49, $codprodutovariacao = null, $codestoquelocal = null)
     {
 
         $mes_final = Carbon::now()->startOfMonth();
-        $mes_inicial = (clone $mes_final)->addMonths(($meses -1) * -1);
+        $mes_inicial = (clone $mes_final)->addMonths(($meses - 1) * -1);
 
         $binds = [
             'codproduto' => $codproduto,
@@ -302,10 +299,9 @@ class EstoqueEstatisticaService
         }
 
         return $indice_mes;
-
     }
 
-    public static function sumarizaVendasVoltaAsAulas ($vendas)
+    public static function sumarizaVendasVoltaAsAulas($vendas)
     {
         // inicializa retorno
         $ret = collect();
@@ -338,7 +334,7 @@ class EstoqueEstatisticaService
         return $ret;
     }
 
-    public static function buscaSaldoEstoqueComparadoVendaAnualPorLocal ($codproduto, $codprodutovariacao = null)
+    public static function buscaSaldoEstoqueComparadoVendaAnualPorLocal($codproduto, $codprodutovariacao = null)
     {
 
         $binds = [
@@ -399,10 +395,9 @@ class EstoqueEstatisticaService
 
         $regs = collect(DB::select(DB::raw($sql), $binds));
         return $regs;
-
     }
 
-    public static function buscaSaldoEstoqueComparadoVendaAnualPorVariacao ($codproduto, $codestoquelocal = null)
+    public static function buscaSaldoEstoqueComparadoVendaAnualPorVariacao($codproduto, $codestoquelocal = null)
     {
 
         $binds = [
@@ -466,16 +461,14 @@ class EstoqueEstatisticaService
 
         $regs = collect(DB::select(DB::raw($sql), $binds));
         return $regs;
-
     }
 
-    public static function buscaEstatisticaProduto (
+    public static function buscaEstatisticaProduto(
         $codproduto,
         $meses = null,
         $codprodutovariacao = null,
         $codestoquelocal = null
-    )
-    {
+    ) {
 
         // Busca Produto
         $p = Produto::with('Marca')->findOrFail($codproduto);
@@ -495,7 +488,7 @@ class EstoqueEstatisticaService
         if (!empty($codprodutovariacao)) {
             if ($pv = $variacoes->where('codprodutovariacao', $codprodutovariacao)->first()) {
                 $variacao = $pv->variacao;
-		if (!empty($pv->vendainicio)) {
+                if (!empty($pv->vendainicio)) {
                     $vendainicio = Carbon::createFromFormat('Y-m-d', $pv->vendainicio);
                 }
                 $vendaquantidade = $pv->vendaquantidade;
@@ -504,13 +497,13 @@ class EstoqueEstatisticaService
         }
 
         // Calcula quantidade de meses de venda para analisar
-        $meses_venda = $vendainicio->startOfMonth()->diffInMonths() +1;
+        $meses_venda = $vendainicio->startOfMonth()->diffInMonths() + 1;
         if (!empty($meses) && $meses < $meses_venda) {
             $meses_venda = $meses;
         }
 
         // Busca Todos Locais de Estoque
-        $locais = static::buscaSaldoEstoqueComparadoVendaAnualPorLocal ($codproduto, $codprodutovariacao);
+        $locais = static::buscaSaldoEstoqueComparadoVendaAnualPorLocal($codproduto, $codprodutovariacao);
 
         // TOtaliza venda do ano e saldo do estoque
         if (empty($codestoquelocal)) {
@@ -584,5 +577,4 @@ class EstoqueEstatisticaService
 
         return $ret;
     }
-
 }

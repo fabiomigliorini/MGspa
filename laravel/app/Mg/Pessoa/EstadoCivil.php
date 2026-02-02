@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jul/2020 11:55:58
+ * Date: 31/Jan/2026 11:43:01
  */
 
 namespace Mg\Pessoa;
@@ -17,7 +17,8 @@ class EstadoCivil extends MgModel
 
 
     protected $fillable = [
-        'estadocivil'
+        'estadocivil',
+        'inativo'
     ];
 
     protected $dates = [

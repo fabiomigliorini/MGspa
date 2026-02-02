@@ -11,6 +11,7 @@ use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscalService;
+use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixService;
 use Mg\PagarMe\PagarMeService;
@@ -584,7 +585,7 @@ class PdvController
         PdvService::autoriza($request->pdv);
         $modelo = intval($request->modelo ?? 65);
         $negocio = Negocio::findOrFail($request->codnegocio);
-        NotaFiscalService::gerarNotaFiscalDoNegocio($negocio, $modelo);
+        NotaFiscalNegocioService::gerarNotaFiscalDoNegocio($negocio, $modelo);
         return new NegocioResource($negocio);
     }
 

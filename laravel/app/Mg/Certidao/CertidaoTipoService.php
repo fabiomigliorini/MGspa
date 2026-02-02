@@ -3,13 +3,14 @@
 namespace Mg\Certidao;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgService;
 use Mg\Cidade\Cidade;
 use Mg\NFePHP\NFePHPService;
 use Mg\Filial\Filial;
 use Illuminate\Support\Facades\Http;
+
 class CertidaoTipoService
 {
     /**
@@ -54,7 +55,7 @@ class CertidaoTipoService
         return $qry;
     }
 
-    public static function buscarPorCnpjIe ($cnpj, $ie)
+    public static function buscarPorCnpjIe($cnpj, $ie)
     {
         $qry = Pessoa::where('cnpj', $cnpj);
         $ie = (int) numeroLimpo($ie);
@@ -67,22 +68,22 @@ class CertidaoTipoService
     }
 
     public static function podeVenderAPrazo(Pessoa $pessoa, $valorAvaliar = 0)
-	{
+    {
         // se nao esta vendendo a prazo
         if ($valorAvaliar <= 0) {
             return true;
         }
 
-		// se esta com o credito marcado como bloqueado
-		if ($pessoa->creditobloqueado) {
+        // se esta com o credito marcado como bloqueado
+        if ($pessoa->creditobloqueado) {
             return false;
         }
 
-		// se tem valor limite definido
+        // se tem valor limite definido
         if (!empty($pessoa->credito)) {
             // busca no banco total dos titulos
-    		$saldo = $pessoa->TituloS()->sum('saldo');
-    		$creditototal = $saldo + $valorAvaliar;
+            $saldo = $pessoa->TituloS()->sum('saldo');
+            $creditototal = $saldo + $valorAvaliar;
             if ($creditototal > ($pessoa->credito * 1.05)) {
                 return false;
             }
@@ -96,30 +97,27 @@ class CertidaoTipoService
             }
         }
 
-		return true;
-	}
+        return true;
+    }
 
-    public static function create ($data)
+    public static function create($data)
     {
 
         $pessoa = new CertidaoTipo($data);
         $pessoa->save();
         return $pessoa->refresh();
-        
     }
 
-    public static function update ($pessoa, $data)
+    public static function update($pessoa, $data)
     {
         $pessoa->fill($data);
         $pessoa->save();
         return $pessoa;
     }
 
-    
-    public static function delete ($pessoa)
+
+    public static function delete($pessoa)
     {
         return $pessoa->delete();
     }
-  
-
 }

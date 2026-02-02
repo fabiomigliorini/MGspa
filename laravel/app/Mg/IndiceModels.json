@@ -2646,6 +2646,16 @@
                 "tabela": "tblestado",
                 "coluna": "codestadoctps",
                 "metodo": "EstadoCtps"
+            },
+            "codetnia": {
+                "tabela": "tbletnia",
+                "coluna": "codetnia",
+                "metodo": "Etnia"
+            },
+            "codgrauinstrucao": {
+                "tabela": "tblgrauinstrucao",
+                "coluna": "codgrauinstrucao",
+                "metodo": "GrauInstrucao"
             }
         },
         "hasMany": {
@@ -8887,5 +8897,57 @@
             }
         },
         "hasMany": []
+    },
+    "tbletnia": {
+        "tabela": "tbletnia",
+        "campocodigo": "codetnia",
+        "namespace": "Mg\\Pessoa",
+        "classe": "Etnia",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Etnia.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoa.codetnia": {
+                "tabela": "tblpessoa",
+                "coluna": "codetnia",
+                "metodo": "PessoaS"
+            }
+        }
+    },
+    "tblgrauinstrucao": {
+        "tabela": "tblgrauinstrucao",
+        "campocodigo": "codgrauinstrucao",
+        "namespace": "Mg\\Pessoa",
+        "classe": "GrauInstrucao",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/GrauInstrucao.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblpessoa.codgrauinstrucao": {
+                "tabela": "tblpessoa",
+                "coluna": "codgrauinstrucao",
+                "metodo": "PessoaS"
+            }
+        }
     }
 }

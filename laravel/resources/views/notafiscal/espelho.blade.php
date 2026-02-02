@@ -387,17 +387,17 @@
                         </tr>
                         <tr>
                             <td>
-                                @if ($notaFiscal->status == \Mg\NotaFiscal\NotaFiscalService::STATUS_AUTORIZADA)
+                                @if ($notaFiscal->status == \Mg\NotaFiscal\NotaFiscalStatusService::STATUS_AUTORIZADA)
                                     <span
-                                        class="status-autorizada">{{ \Mg\NotaFiscal\NotaFiscalService::STATUS_LABELS[$notaFiscal->status] }}</span>
+                                        class="status-autorizada">{{ \Mg\NotaFiscal\NotaFiscalStatusService::STATUS_LABELS[$notaFiscal->status] }}</span>
                                 @elseif(
-                                    $notaFiscal->status == \Mg\NotaFiscal\NotaFiscalService::STATUS_CANCELADA ||
-                                        $notaFiscal->status == \Mg\NotaFiscal\NotaFiscalService::STATUS_DENEGADA)
+                                    $notaFiscal->status == \Mg\NotaFiscal\NotaFiscalStatusService::STATUS_CANCELADA ||
+                                        $notaFiscal->status == \Mg\NotaFiscal\NotaFiscalStatusService::STATUS_DENEGADA)
                                     <span
-                                        class="status-cancelada">{{ \Mg\NotaFiscal\NotaFiscalService::STATUS_LABELS[$notaFiscal->status] }}</span>
+                                        class="status-cancelada">{{ \Mg\NotaFiscal\NotaFiscalStatusService::STATUS_LABELS[$notaFiscal->status] }}</span>
                                 @else
                                     <span
-                                        class="status-digitacao">{{ \Mg\NotaFiscal\NotaFiscalService::STATUS_LABELS[$notaFiscal->status] ?? $notaFiscal->status }}</span>
+                                        class="status-digitacao">{{ \Mg\NotaFiscal\NotaFiscalStatusService::STATUS_LABELS[$notaFiscal->status] ?? $notaFiscal->status }}</span>
                                 @endif
                             </td>
                         </tr>

@@ -8,7 +8,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Mg\Marca\Marca;
 use Mg\Produto\ProdutoVariacao;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DistribuicaoService

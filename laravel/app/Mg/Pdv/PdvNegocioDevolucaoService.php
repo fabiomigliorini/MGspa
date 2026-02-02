@@ -10,6 +10,8 @@ use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioService;
 use Mg\NotaFiscal\NotaFiscalService;
+use Mg\NotaFiscal\NotaFiscalStatusService;
+use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
 
@@ -132,7 +134,7 @@ class PdvNegocioDevolucaoService
 
                 //Verifica quais notas fiscais referenciar na devolucao
                 foreach ($npb_original->NotaFiscalProdutoBarras as $nfpb) {
-                    if (NotaFiscalService::isAtiva($nfpb->NotaFiscal)) {
+                    if (NotaFiscalStatusService::isAtiva($nfpb->NotaFiscal)) {
                         $gerarNotaDevolucao = true;
                     }
                 }
@@ -180,7 +182,7 @@ class PdvNegocioDevolucaoService
 
         // Gera a nota fiscal
         if ($gerarNotaDevolucao) {
-            NotaFiscalService::gerarNotaFiscalDoNegocio($negocio, NotaFiscalService::MODELO_NFE);
+            NotaFiscalNegocioService::gerarNotaFiscalDoNegocio($negocio, NotaFiscalService::MODELO_NFE);
         }
 
         // agenda movimentacao de estoque

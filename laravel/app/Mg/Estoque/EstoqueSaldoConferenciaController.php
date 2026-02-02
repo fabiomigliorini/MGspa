@@ -8,7 +8,7 @@ use Mg\Marca\MarcaService;
 use Mg\Produto\ProdutoService;
 use Mg\Estoque\EstoqueSaldoConferencia;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class EstoqueSaldoConferenciaController extends MgController
 {
@@ -30,8 +30,8 @@ class EstoqueSaldoConferenciaController extends MgController
             'dataCorte' => 'required|date',
         ]);
 
-        $codmarca =intval($request->codmarca);
-        $codestoquelocal =intval($request->codestoquelocal);
+        $codmarca = intval($request->codmarca);
+        $codestoquelocal = intval($request->codestoquelocal);
         $fiscal = boolval($request->fiscal);
         $inativo = intval($request->inativo);
         $conferidos = boolval($request->conferidos);
@@ -46,7 +46,7 @@ class EstoqueSaldoConferenciaController extends MgController
             $dataCorte,
             $conferidos,
             $conferenciaperiodica,
-            $request->page??1
+            $request->page ?? 1
         );
 
         return response()->json($res, 206);
@@ -174,14 +174,14 @@ class EstoqueSaldoConferenciaController extends MgController
 
         DB::beginTransaction();
         EstoqueSaldoConferenciaService::inativar($model);
-        DB:: commit();
+        DB::commit();
 
         $res = EstoqueSaldoConferenciaService::buscaProduto(
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codprodutovariacao,
             $model->EstoqueSaldo->EstoqueLocalProdutoVariacao->codestoquelocal,
-            $model->EstoqueSaldo->fiscal);
+            $model->EstoqueSaldo->fiscal
+        );
 
         return response()->json($res, 200);
     }
-
 }

@@ -5,6 +5,7 @@ namespace Mg\NotaFiscal;
 use App\Http\Controllers\Controller;
 use Mg\NotaFiscal\Requests\NotaFiscalReferenciadaRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalReferenciadaResource;
+use Mg\NotaFiscal\NotaFiscalStatusService;
 use Illuminate\Http\Request;
 
 class NotaFiscalReferenciadaController extends Controller
@@ -72,7 +73,7 @@ class NotaFiscalReferenciadaController extends Controller
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        if (!NotaFiscalService::isEditable($nota)) {
+        if (!NotaFiscalStatusService::isEditable($nota)) {
             abort(422, "Não é possível modificar notas referenciadas de uma nota com status: {$nota->status}");
         }
     }

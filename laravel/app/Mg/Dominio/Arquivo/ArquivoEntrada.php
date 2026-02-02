@@ -3,7 +3,7 @@
 namespace Mg\Dominio\Arquivo;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\DominioAcumulador;
@@ -50,7 +50,7 @@ class ArquivoEntrada extends Arquivo
         $reg->dataFinal = $this->fim;
         $this->registros[] = $reg;
 
-    	$sql = "
+        $sql = "
             select
                   tblnotafiscal.codnotafiscal
                 , (SELECT COUNT(codNotaFiscalDuplicatas) FROM tblNotaFiscalDuplicatas WHERE tblNotaFiscalDuplicatas.codNotaFiscal = tblNotaFiscal.codNotaFiscal) as duplicatas
@@ -97,13 +97,13 @@ class ArquivoEntrada extends Arquivo
             --limit 5
         ";
 
-    	$params = [
+        $params = [
             'codfilial' => $this->filial->codfilial,
             'inicio' => $this->inicio,
             'fim' => $this->fim,
         ];
 
-    	$docs = DB::select($sql, $params);
+        $docs = DB::select($sql, $params);
 
         $nSeq = 0;
         foreach ($docs as $doc) {
@@ -114,7 +114,7 @@ class ArquivoEntrada extends Arquivo
         return parent::processa();
     }
 
-    public function processaDocumento ($doc, $nSeq)
+    public function processaDocumento($doc, $nSeq)
     {
 
         /*
@@ -186,7 +186,7 @@ class ArquivoEntrada extends Arquivo
                 $valorTotalSegmento = 0;
                 $acum = DominioAcumulador::where('codcfop', $seg->codcfop)->first();
 
-            // se nao totaliza o segmento e busca tributacao
+                // se nao totaliza o segmento e busca tributacao
             } else {
 
                 // Totaliza o segmento
@@ -203,12 +203,10 @@ class ArquivoEntrada extends Arquivo
                 }
 
                 // busca dados da tributacao
-                $acum = DominioAcumulador::
-                    where('codcfop', $seg->codcfop)
+                $acum = DominioAcumulador::where('codcfop', $seg->codcfop)
                     ->where('icmscst', $seg->icmscst)
                     ->where('codfilial', $this->filial->codfilial)
                     ->first();
-
             }
 
             // se mesmo assim nao achou, nao pode continuar
@@ -284,7 +282,7 @@ class ArquivoEntrada extends Arquivo
             // percorre os produtos
             foreach ($prods as $prod) {
                 $valorTotalProduto = $prod->valortotal + $prod->icmsstvalor + $prod->ipivalor;
-                $this->criaRegistroProduto ($doc, $nSeq, $seg, $nSeg, $acum, $prod, $valorTotalProduto);
+                $this->criaRegistroProduto($doc, $nSeq, $seg, $nSeg, $acum, $prod, $valorTotalProduto);
             }
 
             if ($nSeg == 1 && $doc->duplicatas > 0) {
@@ -303,24 +301,22 @@ class ArquivoEntrada extends Arquivo
 
                 // percorre as parcelas
                 foreach ($parcs as $parc) {
-                    $this->criaRegistroParcela ($doc, $nSeq, $parc);
+                    $this->criaRegistroParcela($doc, $nSeq, $parc);
                 }
-
             }
-
         }
     }
 
-    public function criaRegistroParcela ($doc, $nSeq, $parc)
+    public function criaRegistroParcela($doc, $nSeq, $parc)
     {
         $reg = new RegistroEntradaParcela();
         $reg->sequencial = $nSeq;
-        $reg->vencimento = Carbon::parse($parc->vencimento??$doc->saida);
+        $reg->vencimento = Carbon::parse($parc->vencimento ?? $doc->saida);
         $reg->valorParcela = $parc->valor;
         $this->registros[] = $reg;
     }
 
-    public function criaRegistroProduto ($doc, $nSeq, $seg, $nSeg, $acum, $prod, $valorTotalProduto)
+    public function criaRegistroProduto($doc, $nSeq, $seg, $nSeg, $acum, $prod, $valorTotalProduto)
     {
         $reg = new RegistroEntradaProduto();
         $reg->sequencial = $prod->ordem;
@@ -337,18 +333,18 @@ class ArquivoEntrada extends Arquivo
         $reg->quantidade = $prod->quantidade;
         $reg->valorTotal = round($valorTotalProduto, 2);
         $reg->valorIpi = (float) $prod->ipivalor;
-        $reg->valorBcIcms = (float)(($prod->icmsstvalor>0)?0:$prod->icmsbase);
+        $reg->valorBcIcms = (float)(($prod->icmsstvalor > 0) ? 0 : $prod->icmsbase);
         $reg->data = Carbon::parse($doc->saida);
-        $reg->cstIcms = $seg->csosn??$seg->icmscst;
+        $reg->cstIcms = $seg->csosn ?? $seg->icmscst;
         $reg->valorBrutoProduto = round($valorTotalProduto, 2);
         $reg->valorDesconto = (float)$prod->valordesconto;
-        $reg->valorBcIcmsB = (float)(($prod->icmsstvalor>0)?0:$prod->icmsbase);
+        $reg->valorBcIcmsB = (float)(($prod->icmsstvalor > 0) ? 0 : $prod->icmsbase);
         $reg->valorBcIcmsSt = 0;
-        $reg->aliquotaIcms = (float)(($prod->icmsstvalor>0)?0:$prod->icmspercentual);
+        $reg->aliquotaIcms = (float)(($prod->icmsstvalor > 0) ? 0 : $prod->icmspercentual);
         $reg->valorFrete = (float) $prod->valorfrete;
         $reg->valorSeguro = (float) $prod->valorseguro;
         $reg->valorOutras = (float) $prod->valoroutras;
-        $reg->valorIcms = (float)(($prod->icmsstvalor>0)?0:$prod->icmsvalor);
+        $reg->valorIcms = (float)(($prod->icmsstvalor > 0) ? 0 : $prod->icmsvalor);
         if ($prod->valortotal > $prod->ipibase) {
             $reg->valorOutrasIpi = (float) ($prod->valortotal - $prod->ipibase);
         } else {
@@ -365,15 +361,16 @@ class ArquivoEntrada extends Arquivo
         $reg->cfop = $seg->codcfop;
         $reg->custoTotal = round($valorTotalProduto, 2);
         $reg->quantidadeProduto = $prod->quantidade;
-        $reg->movimentacaoFisica = $acum->movimentacaofisica?'S':'N';
+        $reg->movimentacaoFisica = $acum->movimentacaofisica ? 'S' : 'N';
         $reg->valorContabil =
             round(
                 $valorTotalProduto
-                - $reg->valorDesconto
-                + $reg->valorFrete
-                + $reg->valorSeguro
-                + $reg->valorOutras
-            , 2);
+                    - $reg->valorDesconto
+                    + $reg->valorFrete
+                    + $reg->valorSeguro
+                    + $reg->valorOutras,
+                2
+            );
         if ($seg->codtipoproduto == 8) {
             $reg->baseCredito = 10;
         } else {
@@ -381,10 +378,9 @@ class ArquivoEntrada extends Arquivo
         }
 
         $this->registros[] = $reg;
-
     }
 
-    public function criaRegistroIcmsSt ($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
+    public function criaRegistroIcmsSt($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
     {
         $reg = new RegistroEntradaImposto();
         $reg->sequencial = $nSeq;
@@ -396,7 +392,7 @@ class ArquivoEntrada extends Arquivo
         $this->registros[] = $reg;
     }
 
-    public function criaRegistroIcms ($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
+    public function criaRegistroIcms($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
     {
         $reg = new RegistroEntradaImposto();
         $reg->codigoImposto = 1; // ICMS
@@ -418,7 +414,7 @@ class ArquivoEntrada extends Arquivo
         $this->registros[] = $reg;
     }
 
-    public function criaRegistroSegmento ($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
+    public function criaRegistroSegmento($doc, $nSeq, $seg, $nSeg, $acum, $valorTotalSegmento)
     {
         // cria registro do segmento
         $reg = new RegistroEntradaSegmento();
@@ -463,11 +459,11 @@ class ArquivoEntrada extends Arquivo
         $reg->dataEmissao = Carbon::parse($doc->emissao);
         $reg->valorContabil = $valorTotalSegmento;
         $reg->estadoFornecedor = $doc->sigla;
-        $reg->emitenteNota = ($doc->emitida == 1)?'P':'T';
+        $reg->emitenteNota = ($doc->emitida == 1) ? 'P' : 'T';
         $reg->codigoMunicipio = $doc->codigooficial;
-        $reg->valorFrete = $seg->valorfrete??0;
-        $reg->valorSeguro = $seg->valorseguro??0;
-        $reg->valorOutras = $seg->valoroutras??0;
+        $reg->valorFrete = $seg->valorfrete ?? 0;
+        $reg->valorSeguro = $seg->valorseguro ?? 0;
+        $reg->valorOutras = $seg->valoroutras ?? 0;
         $reg->valorPis = 0;
         $reg->valorCofins = 0;
         $reg->valorProdutos =
@@ -478,11 +474,10 @@ class ArquivoEntrada extends Arquivo
             $seg->valortotal
             + $seg->icmsstvalor
             + $seg->ipivalor;
-        $reg->codigoModelo = empty($doc->nfecancelamento)?0:2;
-        $reg->codigoSituacaoTributaria = $seg->csosn??$seg->icmscst;
+        $reg->codigoModelo = empty($doc->nfecancelamento) ? 0 : 2;
+        $reg->codigoSituacaoTributaria = $seg->csosn ?? $seg->icmscst;
         $reg->inscricaoEstadual = $doc->ie;
         $reg->chaveNFe = $doc->nfechave;
         $this->registros[] = $reg;
-
     }
 }

@@ -3,16 +3,24 @@
     <q-list>
       <q-item-label header>
         Registro de Colaborador
-        <q-btn flat round icon="add" @click="
-          (dialogNovoColaborador = true),
-          (modelNovoColaborador = {}),
-          (editColaborador = false)
-          " />
+        <q-btn
+          flat
+          round
+          icon="add"
+          @click="
+            (dialogNovoColaborador = true),
+              (modelNovoColaborador = {}),
+              (editColaborador = false)
+          "
+        />
       </q-item-label>
     </q-list>
   </q-card>
 
-  <div v-for="(colaborador, iColaborador) in sColaborador.colaboradores" v-bind:key="colaborador.codcolaborador">
+  <div
+    v-for="(colaborador, iColaborador) in sColaborador.colaboradores"
+    v-bind:key="colaborador.codcolaborador"
+  >
     <q-card bordered class="q-mb-md">
       <q-list>
         <q-item>
@@ -23,27 +31,66 @@
             <span v-if="colaborador.vinculo == 91">Diarista</span>
             em
             {{ colaborador.Filial }}
-            <q-btn flat round icon="edit" @click="
-              editarColaborador(
-                colaborador.codcolaborador,
-                colaborador.codfilial,
-                colaborador.contratacao,
-                colaborador.vinculo,
-                colaborador.experiencia,
-                colaborador.renovacaoexperiencia,
-                colaborador.rescisao,
-                colaborador.numeroponto,
-                colaborador.numerocontabilidade,
-                colaborador.observacoes
-              )
-              " />
-            <q-btn flat round icon="delete" @click="excluirColaborador(colaborador)" />
+            <q-btn
+              flat
+              round
+              icon="edit"
+              @click="
+                editarColaborador(
+                  colaborador.codcolaborador,
+                  colaborador.codfilial,
+                  colaborador.contratacao,
+                  colaborador.vinculo,
+                  colaborador.experiencia,
+                  colaborador.renovacaoexperiencia,
+                  colaborador.rescisao,
+                  colaborador.numeroponto,
+                  colaborador.numerocontabilidade,
+                  colaborador.observacoes
+                )
+              "
+            />
+            <q-btn
+              flat
+              round
+              icon="delete"
+              @click="excluirColaborador(colaborador)"
+            />
             Cargo
 
-
-            <q-btn flat round icon="add" @click="novoColaboradorCargo(iColaborador, colaborador)" />
+            <q-btn
+              flat
+              round
+              icon="add"
+              @click="novoColaboradorCargo(iColaborador, colaborador)"
+            />
             Férias
-            <q-btn flat round icon="add" @click="novaFerias(iColaborador, colaborador)" />
+            <q-btn
+              flat
+              round
+              icon="add"
+              @click="novaFerias(iColaborador, colaborador)"
+            />
+            <q-btn
+              flat
+              round
+              icon="description"
+              @click="visualizarFicha(colaborador)"
+            >
+              <q-tooltip>Ficha do Colaborador</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              round
+              icon="folder"
+              :href="
+                'https://drive.google.com/drive/folders/' +
+                colaborador.googledrivefolderid
+              "
+              target="_blank"
+            >
+              <q-tooltip>Arquivos do Colaborador</q-tooltip>
+            </q-btn>
           </q-item-label>
         </q-item>
 
@@ -87,15 +134,20 @@
           </q-item>
         </template>
 
-        <template v-if="colaborador.numeroponto || colaborador.numerocontabilidade">
+        <template
+          v-if="colaborador.numeroponto || colaborador.numerocontabilidade"
+        >
           <q-separator inset />
           <q-item>
             <q-item-section avatar>
               <q-icon name="timer" color="primary"></q-icon>
             </q-item-section>
             <q-item-section>
-              <q-item-label v-if="colaborador.numeroponto || colaborador.numerocontabilidade
-                ">
+              <q-item-label
+                v-if="
+                  colaborador.numeroponto || colaborador.numerocontabilidade
+                "
+              >
                 <span v-if="colaborador.numeroponto">{{
                   colaborador.numeroponto
                 }}</span>
@@ -103,8 +155,12 @@
                   / {{ colaborador.numerocontabilidade }}
                 </span>
               </q-item-label>
-              <q-item-label caption v-if="colaborador.numeroponto || colaborador.numerocontabilidade
-                ">
+              <q-item-label
+                caption
+                v-if="
+                  colaborador.numeroponto || colaborador.numerocontabilidade
+                "
+              >
                 Ponto / Contabilidade
               </q-item-label>
             </q-item-section>
@@ -118,7 +174,10 @@
               <q-icon name="comment" color="primary"></q-icon>
             </q-item-section>
             <q-item-section>
-              <q-item-label v-if="colaborador.observacoes" style="white-space: pre-line">
+              <q-item-label
+                v-if="colaborador.observacoes"
+                style="white-space: pre-line"
+              >
                 {{ colaborador.observacoes }}
               </q-item-label>
               <q-item-label caption v-if="colaborador.observacoes">
@@ -129,7 +188,10 @@
         </template>
 
         <q-separator inset />
-        <card-colaborador-cargo ref="refCardColaboradorCargo" :colaboradorCargos="colaborador" />
+        <card-colaborador-cargo
+          ref="refCardColaboradorCargo"
+          :colaboradorCargos="colaborador"
+        />
 
         <card-ferias ref="refCardFerias" :colaborador="colaborador" />
       </q-list>
@@ -139,43 +201,76 @@
   <!-- Dialog novo Colaborador -->
   <q-dialog v-model="dialogNovoColaborador">
     <q-card style="min-width: 350px">
-      <q-form @submit="
-        editColaborador == true ? salvarColaborador() : novoColaborador()
-        ">
+      <q-form
+        @submit="
+          editColaborador == true ? salvarColaborador() : novoColaborador()
+        "
+      >
         <q-card-section>
           <div v-if="editColaborador" class="text-h6">Editar Colaborador</div>
           <div v-else class="text-h6">Novo Colaborador</div>
         </q-card-section>
         <q-card-section>
-          <select-filial v-model="modelNovoColaborador.codfilial" :rules="[
-            (val) =>
-              (val !== null && val !== '' && val !== undefined) ||
-              'Filial Obrigatório',
-          ]">
+          <select-filial
+            v-model="modelNovoColaborador.codfilial"
+            :rules="[
+              (val) =>
+                (val !== null && val !== '' && val !== undefined) ||
+                'Filial Obrigatório',
+            ]"
+          >
           </select-filial>
 
-          <q-select outlined v-model="modelNovoColaborador.vinculo" label="Vinculo" :options="[
-            { label: 'CLT', value: 1 },
-            { label: 'Menor Aprendiz', value: 2 },
-            { label: 'Terceirizado', value: 90 },
-            { label: 'Diarista', value: 91 },
-                ]" map-options emit-value :rules="[
-        (val) =>
-          (val !== null && val !== '' && val !== undefined) ||
-          'Vinculo Obrigatório',
-      ]" />
+          <q-select
+            outlined
+            v-model="modelNovoColaborador.vinculo"
+            label="Vinculo"
+            :options="[
+              { label: 'CLT', value: 1 },
+              { label: 'Menor Aprendiz', value: 2 },
+              { label: 'Terceirizado', value: 90 },
+              { label: 'Diarista', value: 91 },
+            ]"
+            map-options
+            emit-value
+            :rules="[
+              (val) =>
+                (val !== null && val !== '' && val !== undefined) ||
+                'Vinculo Obrigatório',
+            ]"
+          />
 
           <div class="row">
             <div class="col-6">
-              <q-input outlined v-model="modelNovoColaborador.contratacao" class="q-pr-md" mask="##/##/####"
-                label="Contratação" :rules="[validaObrigatorio, validaData, validaContratacao]"
-                @change="preencheExperiencia()" input-class="text-center">
+              <q-input
+                outlined
+                v-model="modelNovoColaborador.contratacao"
+                class="q-pr-md"
+                mask="##/##/####"
+                label="Contratação"
+                :rules="[validaObrigatorio, validaData, validaContratacao]"
+                @change="preencheExperiencia()"
+                input-class="text-center"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelNovoColaborador.contratacao" :locale="brasil" mask="DD/MM/YYYY">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-date
+                        v-model="modelNovoColaborador.contratacao"
+                        :locale="brasil"
+                        mask="DD/MM/YYYY"
+                      >
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Fechar" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -184,14 +279,33 @@
               </q-input>
             </div>
             <div class="col-6">
-              <q-input outlined v-model="modelNovoColaborador.experiencia" mask="##/##/####" label="Experiência"
-                :rules="[validaData, validaExperiencia]" input-class="text-center">
+              <q-input
+                outlined
+                v-model="modelNovoColaborador.experiencia"
+                mask="##/##/####"
+                label="Experiência"
+                :rules="[validaData, validaExperiencia]"
+                input-class="text-center"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelNovoColaborador.experiencia" :locale="brasil" mask="DD/MM/YYYY">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-date
+                        v-model="modelNovoColaborador.experiencia"
+                        :locale="brasil"
+                        mask="DD/MM/YYYY"
+                      >
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Fechar" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -200,14 +314,34 @@
               </q-input>
             </div>
             <div class="col-6">
-              <q-input outlined v-model="modelNovoColaborador.renovacaoexperiencia" mask="##/##/####"
-                label="Renovação Experiência" :rules="[validaData, validaRenovacaoExperiencia]" class="q-pr-md" input-class="text-center">
+              <q-input
+                outlined
+                v-model="modelNovoColaborador.renovacaoexperiencia"
+                mask="##/##/####"
+                label="Renovação Experiência"
+                :rules="[validaData, validaRenovacaoExperiencia]"
+                class="q-pr-md"
+                input-class="text-center"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelNovoColaborador.renovacaoexperiencia" :locale="brasil" mask="DD/MM/YYYY">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-date
+                        v-model="modelNovoColaborador.renovacaoexperiencia"
+                        :locale="brasil"
+                        mask="DD/MM/YYYY"
+                      >
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Fechar" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -217,14 +351,33 @@
             </div>
 
             <div class="col-6">
-              <q-input outlined v-model="modelNovoColaborador.rescisao" mask="##/##/####" label="Rescisão"
-                :rules="[validaData, validaRescisao]" input-class="text-center">
+              <q-input
+                outlined
+                v-model="modelNovoColaborador.rescisao"
+                mask="##/##/####"
+                label="Rescisão"
+                :rules="[validaData, validaRescisao]"
+                input-class="text-center"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="modelNovoColaborador.rescisao" :locale="brasil" mask="DD/MM/YYYY">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-date
+                        v-model="modelNovoColaborador.rescisao"
+                        :locale="brasil"
+                        mask="DD/MM/YYYY"
+                      >
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Fechar" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -233,15 +386,31 @@
               </q-input>
             </div>
             <div class="col-6">
-              <q-input outlined v-model="modelNovoColaborador.numeroponto" label="Número Ponto" class="q-pr-md" />
+              <q-input
+                outlined
+                v-model="modelNovoColaborador.numeroponto"
+                label="Número Ponto"
+                class="q-pr-md"
+              />
             </div>
             <div class="col-6">
-              <q-input outlined v-model="modelNovoColaborador.numerocontabilidade" label="Número Contabilidade" />
+              <q-input
+                outlined
+                v-model="modelNovoColaborador.numerocontabilidade"
+                label="Número Contabilidade"
+              />
             </div>
           </div>
 
-          <q-input outlined autogrow bordeless v-model="modelNovoColaborador.observacoes" class="q-pt-md"
-            label="Observações" type="textarea" />
+          <q-input
+            outlined
+            autogrow
+            bordeless
+            v-model="modelNovoColaborador.observacoes"
+            class="q-pt-md"
+            label="Observações"
+            type="textarea"
+          />
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
@@ -249,6 +418,34 @@
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
+    </q-card>
+  </q-dialog>
+
+  <!-- Dialog Visualizar Ficha PDF -->
+  <q-dialog v-model="dialogPdfFicha" @hide="fecharPdfFicha">
+    <q-card style="width: 90vw; height: 90vh; max-width: 90vw">
+      <q-card-section class="row items-center q-pb-none">
+        <div class="text-h6">Ficha do Colaborador</div>
+        <q-space />
+        <q-btn
+          icon="upload"
+          flat
+          round
+          dense
+          @click="uploadFichaParaDrive"
+          :loading="uploadingFicha"
+        >
+          <q-tooltip>Upload para Google Drive</q-tooltip>
+        </q-btn>
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+      <q-card-section class="q-pt-none" style="height: calc(90vh - 60px)">
+        <iframe
+          v-if="pdfUrl"
+          :src="pdfUrl"
+          style="width: 100%; height: 100%; border: none"
+        ></iframe>
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>
@@ -270,12 +467,81 @@ export default defineComponent({
   name: "CardColaborador",
 
   methods: {
+    async visualizarFicha(colaborador) {
+      try {
+        this.colaboradorAtual = colaborador;
+        const response = await this.sColaborador.getFichaColaborador(
+          colaborador.codcolaborador
+        );
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        this.pdfUrl = URL.createObjectURL(blob);
+        this.dialogPdfFicha = true;
+      } catch (error) {
+        this.$q.notify({
+          color: "red-5",
+          textColor: "white",
+          icon: "error",
+          message:
+            error.response?.data?.message ||
+            "Erro ao carregar a ficha do colaborador",
+        });
+      }
+    },
+
+    async uploadFichaParaDrive() {
+      if (!this.colaboradorAtual) return;
+
+      this.uploadingFicha = true;
+      try {
+        const response = await this.sColaborador.uploadFichaColaborador(
+          this.colaboradorAtual.codcolaborador
+        );
+
+        if (response.data.folder_url) {
+          window.open(response.data.folder_url, '_blank');
+        }
+
+        if (response.data.file_url) {
+          window.open(response.data.file_url, '_blank');
+        }
+
+        this.$q.notify({
+          color: "green-5",
+          textColor: "white",
+          icon: "done",
+          message: "Ficha enviada para o Google Drive!",
+        });
+      } catch (error) {
+        this.$q.notify({
+          color: "red-5",
+          textColor: "white",
+          icon: "error",
+          message:
+            error.response?.data?.message ||
+            "Erro ao enviar a ficha para o Google Drive",
+        });
+      } finally {
+        this.uploadingFicha = false;
+      }
+    },
+
+    fecharPdfFicha() {
+      if (this.pdfUrl) {
+        URL.revokeObjectURL(this.pdfUrl);
+        this.pdfUrl = null;
+      }
+      this.colaboradorAtual = null;
+      this.dialogPdfFicha = false;
+    },
+
     novaFerias(iColaborador, colaborador) {
       this.$refs.refCardFerias[iColaborador].nova(colaborador);
     },
 
     novoColaboradorCargo(iColaborador, colaborador) {
-      this.$refs.refCardColaboradorCargo[iColaborador].novoColaboradorCargo(colaborador);
+      this.$refs.refCardColaboradorCargo[iColaborador].novoColaboradorCargo(
+        colaborador
+      );
     },
 
     preencheExperiencia() {
@@ -400,7 +666,7 @@ export default defineComponent({
             });
             await this.sColaborador.getColaboradores(this.route.params.id);
           } catch (error) {
-            console.log(error)
+            console.log(error);
             this.$q.notify({
               color: "red-5",
               textColor: "white",
@@ -577,8 +843,10 @@ export default defineComponent({
     const colaboradores = ref([]);
     const refCardFerias = ref(null);
     const refCardColaboradorCargo = ref(null);
-
-
+    const dialogPdfFicha = ref(false);
+    const pdfUrl = ref(null);
+    const colaboradorAtual = ref(null);
+    const uploadingFicha = ref(false);
 
     return {
       sPessoa,
@@ -593,6 +861,10 @@ export default defineComponent({
       modelNovoColaborador,
       refCardFerias,
       refCardColaboradorCargo,
+      dialogPdfFicha,
+      pdfUrl,
+      colaboradorAtual,
+      uploadingFicha,
       brasil: {
         days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
         daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),

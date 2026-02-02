@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 use App\Models\Imagem;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Libraries\SlimImageCropper\Slim;
 use Mg\Marca\Marca;
@@ -20,7 +20,7 @@ class ImagemService
         // Busca Codigo
         $seq = DB::select('select nextval(\'tblimagem_codimagem_seq\') as codimagem');
         $model->codimagem = $seq[0]->codimagem;
-        $model->arquivo = $model->codimagem .'.jpg';
+        $model->arquivo = $model->codimagem . '.jpg';
 
         // TODO: Remover isto depois que desativar o MGLara
         $model->observacoes = $model->arquivo;
@@ -101,7 +101,8 @@ class ImagemService
         return $model;
     }
 
-    public static function inativarImagem ($model, $data) {
+    public static function inativarImagem($model, $data)
+    {
         $model->inativo = Carbon::now();
         $model->save();
 

@@ -107,6 +107,15 @@
               </template>
             </q-input>
 
+            <!-- ESTADO CIVIL -->
+            <select-estado-civil class="col-md-4 col-sm-6 col-xs-12" v-model="modelPessoa.codestadocivil" />
+
+            <!-- ETNIA -->
+            <select-etnia class="col-md-4 col-sm-6 col-xs-12" v-model="modelPessoa.codetnia" />
+
+            <!-- GRAU INSTRUCAO -->
+            <select-grau-instrucao class="col-md-4 col-sm-6 col-xs-12" v-model="modelPessoa.codgrauinstrucao" />
+
           </template>
 
           <!-- RNTRC -->
@@ -330,6 +339,31 @@
           </q-item>
           <q-separator inset />
 
+          <q-item v-if="sPessoa.item.fisica && (sPessoa.item.estadocivil || sPessoa.item.etnia || sPessoa.item.grauinstrucao)">
+            <q-item-section avatar top>
+              <q-avatar icon="school" color="grey-2" text-color="primary" />
+            </q-item-section>
+            <q-item-section top>
+              <q-item-label>
+                <template v-if="sPessoa.item.estadocivil">
+                  {{ sPessoa.item.estadocivil }}
+                </template>
+                <template v-if="sPessoa.item.etnia">
+                  {{ sPessoa.item.estadocivil ? ' / ' : '' }}{{ sPessoa.item.etnia }}
+                </template>
+                <template v-if="sPessoa.item.grauinstrucao">
+                  {{ (sPessoa.item.estadocivil || sPessoa.item.etnia) ? ' / ' : '' }}{{ sPessoa.item.grauinstrucao }}
+                </template>
+              </q-item-label>
+              <q-item-label caption>
+                <template v-if="sPessoa.item.estadocivil">Estado Civil</template>
+                <template v-if="sPessoa.item.etnia">{{ sPessoa.item.estadocivil ? ' / ' : '' }}Etnia</template>
+                <template v-if="sPessoa.item.grauinstrucao">{{ (sPessoa.item.estadocivil || sPessoa.item.etnia) ? ' / ' : '' }}Grau de Instrução</template>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-separator inset v-if="sPessoa.item.fisica && (sPessoa.item.estadocivil || sPessoa.item.etnia || sPessoa.item.grauinstrucao)" />
+
         </div>
         <div class="col-xs-12 col-sm-6">
           <template v-if="sPessoa.item.rntrc || sPessoa.item.tipotransportador">
@@ -461,6 +495,9 @@ export default defineComponent({
     InputIe: defineAsyncComponent(() => import('components/pessoa/InputIe.vue')),
     InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue')),
     SelectPessoa: defineAsyncComponent(() => import('components/select/SelectPessoa.vue')),
+    SelectEstadoCivil: defineAsyncComponent(() => import('components/pessoa/SelectEstadoCivil.vue')),
+    SelectEtnia: defineAsyncComponent(() => import('components/pessoa/SelectEtnia.vue')),
+    SelectGrauInstrucao: defineAsyncComponent(() => import('components/pessoa/SelectGrauInstrucao.vue')),
   },
 
   methods: {
@@ -568,7 +605,10 @@ export default defineComponent({
         ctps: this.sPessoa.item.ctps,
         seriectps: this.sPessoa.item.seriectps,
         emissaoctps: this.sPessoa.item.emissaoctps ? moment(this.sPessoa.item.emissaoctps).format('DD-MM-YYYY') : null,
-        codestadoctps: this.sPessoa.item.codestadoctps
+        codestadoctps: this.sPessoa.item.codestadoctps,
+        codestadocivil: this.sPessoa.item.codestadocivil,
+        codetnia: this.sPessoa.item.codetnia,
+        codgrauinstrucao: this.sPessoa.item.codgrauinstrucao
       }
 
       const ret = await this.sPessoa.consultaCidade(this.sPessoa.item.codcidadenascimento)

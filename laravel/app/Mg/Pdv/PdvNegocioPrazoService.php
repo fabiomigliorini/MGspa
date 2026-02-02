@@ -2,7 +2,7 @@
 
 namespace Mg\Pdv;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use \Exception;
 

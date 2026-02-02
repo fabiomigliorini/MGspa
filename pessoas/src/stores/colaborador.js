@@ -125,7 +125,7 @@ export const colaboradorStore = defineStore("colaborador", {
 
     async atualizaTodasFerias(model) {
       const ret = await api.put('v1/ferias/atualiza-todas-ferias/', model);
-     
+
       // const colaborador = this.findColaborador(model.codcolaborador);
       // const i = colaborador.Ferias.findIndex((el) => {
       //   return el.codferias == model.codferias;
@@ -135,7 +135,17 @@ export const colaboradorStore = defineStore("colaborador", {
       return ret;
     },
 
+    async getFichaColaborador(codcolaborador) {
+      const ret = await api.get('v1/colaborador/' + codcolaborador + '/ficha', {
+        responseType: 'blob'
+      });
+      return ret;
+    },
 
+    async uploadFichaColaborador(codcolaborador) {
+      const ret = await api.post('v1/colaborador/' + codcolaborador + '/ficha');
+      return ret;
+    },
 
   },
 });

@@ -14,6 +14,7 @@ use Mg\Filial\Filial;
 use Mg\Filial\Empresa;
 use Mg\NaturezaOperacao\NaturezaOperacaoService;
 use Mg\NotaFiscal\NotaFiscalService;
+use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use NFePHP\NFe\Make;
 use NFePHP\Common\Strings;
@@ -43,7 +44,7 @@ class NFePHPMakeService
             'numero' => $ret[0]->numero,
             'emissao' => $emissao,
             'saida' => $emissao,
-            'status' => NotaFiscalService::STATUS_ERRO
+            'status' => NotaFiscalStatusService::STATUS_ERRO
         ]);
 
         return true;

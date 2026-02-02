@@ -3,26 +3,26 @@
 namespace Mg\Pessoa;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgService;
 use Mg\Cidade\Cidade;
 use Mg\NFePHP\NFePHPService;
 use Mg\Filial\Filial;
 use Illuminate\Support\Facades\Http;
+
 class PessoaContaService
 {
 
-    public static function create ($data)
+    public static function create($data)
     {
 
         $pessoa = new PessoaConta($data);
         $pessoa->save();
         return $pessoa->refresh();
-        
     }
 
-    public static function update ($pessoa, $data)
+    public static function update($pessoa, $data)
     {
         $pessoa->fill($data);
         $pessoa->save();
@@ -31,9 +31,9 @@ class PessoaContaService
 
 
 
-    public static function createOrUpdate ($data)
+    public static function createOrUpdate($data)
     {
-    
+
         $conta = PessoaConta::where('codpessoa', $data['codpessoa'])
             ->whereNull('inativo')->orderBy('alteracao')
             ->first();
@@ -44,8 +44,8 @@ class PessoaContaService
             return static::create($data);
         }
     }
-    
-    public static function delete ($pessoa)
+
+    public static function delete($pessoa)
     {
         return $pessoa->delete();
     }
@@ -66,6 +66,4 @@ class PessoaContaService
         $pessoaConta->update();
         return $pessoaConta;
     }
-  
-
 }

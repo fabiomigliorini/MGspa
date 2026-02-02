@@ -10,6 +10,7 @@ use Mg\NotaFiscal\NotaFiscalCartaCorrecao;
 use Mg\Filial\Filial;
 use Mg\Filial\Empresa;
 use Mg\NotaFiscal\NotaFiscalService;
+use Mg\NotaFiscal\NotaFiscalStatusService;
 use NFePHP\NFe\Complements;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Strings;
@@ -173,7 +174,7 @@ class NFePHPService extends MgService
         }
 
         // atualiza status
-        $nf->update(['status' => NotaFiscalService::calcularStatus($nf)]);
+        $nf->update(['status' => NotaFiscalStatusService::calcularStatus($nf)]);
 
         // Retorna Resultado do processo
         return (object) [
@@ -696,7 +697,7 @@ class NFePHPService extends MgService
             }
         }
 
-        $nf->update(['status' => NotaFiscalService::calcularStatus($nf)]);
+        $nf->update(['status' => NotaFiscalStatusService::calcularStatus($nf)]);
 
         return (object) [
             'sucesso' => $sucesso,

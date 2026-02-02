@@ -4,13 +4,13 @@ namespace Mg\Pessoa;
 
 use Illuminate\Http\Request;
 // use Mg\MgController;
-// use DB;
+// use Illuminate\Support\Facades\DB;
 // use Mg\FormaPagamento\FormaPagamento;
 // use Mg\Usuario\Autorizador;
 // use App\Rules\InscricaoEstadual;
 // use Mg\Mercos\MercosCliente;
 
-class PessoaAnexoController 
+class PessoaAnexoController
 {
 
     public function upload(Request $request, $codpessoa)
@@ -35,7 +35,7 @@ class PessoaAnexoController
     public function update(Request $request, $codpessoa, $nome)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);
-        PessoaAnexoService::update($codpessoa, $nome, $request->label, $request->observacoes??null);
+        PessoaAnexoService::update($codpessoa, $nome, $request->label, $request->observacoes ?? null);
         return new PessoaAnexoResource($pessoa);
     }
 

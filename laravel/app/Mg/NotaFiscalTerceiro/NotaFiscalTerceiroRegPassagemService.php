@@ -1,6 +1,7 @@
 <?php
 
 namespace Mg\NotaFiscalTerceiro;
+
 use Mg\MgService;
 
 use Mg\Filial\Filial;
@@ -9,12 +10,13 @@ use Mg\NotaFiscal\NotaFiscal;
 use Mg\Estoque\EstoqueLocal;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class NotaFiscalTerceiroRegPassagemService extends MgService
 {
 
-    public static function armazenaDadosEvento ($filial) {
+    public static function armazenaDadosEvento($filial)
+    {
 
         $qry = NotaFiscalTerceiroDistribuicaoDfe::select('*')->where('schema', 'resEvento_v1.01.xsd')->orderBy('nsu', 'DESC')->get();
         $qry = end($qry);
@@ -23,13 +25,13 @@ class NotaFiscalTerceiroRegPassagemService extends MgService
 
             $path = NotaFiscalTerceiroPathService::pathDFe($filial, $file->nsu);
 
-            if(file_exists($path)){
+            if (file_exists($path)) {
                 $xmlData = file_get_contents($path);
                 $st = new Standardize();
                 $xml = $st->toStd($xmlData);
 
                 $coddistribuicaodfe = NotaFiscalTerceiroDistribuicaoDfe::select('coddistribuicaodfe')
-                ->where( 'nsu', $file->nsu )->get();
+                    ->where('nsu', $file->nsu)->get();
 
                 $resEvento = NotaFiscaleTerceiroEvento::firstOrNew([
                     'coddistribuicaodfe' => $coddistribuicaodfe[0]->coddistribuicaodfe
@@ -51,7 +53,6 @@ class NotaFiscalTerceiroRegPassagemService extends MgService
         }
 
         return true;
-
     } // FIM DO armazenaDadosEvento
 
 

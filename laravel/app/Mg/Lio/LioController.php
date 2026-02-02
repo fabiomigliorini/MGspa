@@ -5,7 +5,7 @@ namespace Mg\Lio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgController;
 
@@ -15,7 +15,7 @@ class LioController extends MgController
     public function vendasAbertas(Request $request)
     {
         $request->validate([
-          'terminal' => ['required', 'string'],
+            'terminal' => ['required', 'string'],
         ]);
         $terminal = $request->terminal;
         $codusuario = Auth::user()->codusuario;
@@ -54,7 +54,7 @@ class LioController extends MgController
         ';
 
         $negocios = DB::select($sql, [
-           'codusuario' => $codusuario
+            'codusuario' => $codusuario
         ]);
         return $negocios;
     }
@@ -62,7 +62,7 @@ class LioController extends MgController
     public function order(Request $request)
     {
         $request->validate([
-          'order' => ['required', 'json'],
+            'order' => ['required', 'json'],
         ]);
         $id = LioJsonService::salvar($request->order, $request->pagamentos);
         DB::beginTransaction();
@@ -88,5 +88,4 @@ class LioController extends MgController
         $file = LioJsonService::salvarCallback($request->getContent());
         return $file;
     }
-
 }

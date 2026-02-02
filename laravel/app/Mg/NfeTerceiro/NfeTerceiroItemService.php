@@ -2,7 +2,7 @@
 
 namespace Mg\NfeTerceiro;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\NFePHP\NFePHPManifestacaoService;
 use Mg\Produto\ProdutoService;
@@ -55,6 +55,5 @@ class NfeTerceiroItemService
         }
 
         return $destino;
-
     }
 }

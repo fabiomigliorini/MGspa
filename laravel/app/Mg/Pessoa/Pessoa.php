@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2025 12:04:07
+ * Date: 31/Jan/2026 11:45:47
  */
 
 namespace Mg\Pessoa;
@@ -47,6 +48,8 @@ use Mg\Pessoa\GrupoCliente;
 use Mg\GrupoEconomico\GrupoEconomico;
 use Mg\Pessoa\Sexo;
 use Mg\Cidade\Estado;
+use Mg\Pessoa\Etnia;
+use Mg\Pessoa\GrauInstrucao;
 
 class Pessoa extends MgModel
 {
@@ -75,7 +78,9 @@ class Pessoa extends MgModel
         'codcidadenascimento',
         'codestadocivil',
         'codestadoctps',
+        'codetnia',
         'codformapagamento',
+        'codgrauinstrucao',
         'codgrupocliente',
         'codgrupoeconomico',
         'codsexo',
@@ -141,7 +146,9 @@ class Pessoa extends MgModel
         'codcidadenascimento' => 'integer',
         'codestadocivil' => 'integer',
         'codestadoctps' => 'integer',
+        'codetnia' => 'integer',
         'codformapagamento' => 'integer',
+        'codgrauinstrucao' => 'integer',
         'codgrupocliente' => 'integer',
         'codgrupoeconomico' => 'integer',
         'codpessoa' => 'integer',
@@ -202,9 +209,19 @@ class Pessoa extends MgModel
         return $this->belongsTo(Estado::class, 'codestadoctps', 'codestado');
     }
 
+    public function Etnia()
+    {
+        return $this->belongsTo(Etnia::class, 'codetnia', 'codetnia');
+    }
+
     public function FormaPagamento()
     {
         return $this->belongsTo(FormaPagamento::class, 'codformapagamento', 'codformapagamento');
+    }
+
+    public function GrauInstrucao()
+    {
+        return $this->belongsTo(GrauInstrucao::class, 'codgrauinstrucao', 'codgrauinstrucao');
     }
 
     public function GrupoCliente()
@@ -408,5 +425,4 @@ class Pessoa extends MgModel
     {
         return $this->hasMany(Veiculo::class, 'codpessoaproprietario', 'codpessoa');
     }
-
 }

@@ -5,13 +5,15 @@ namespace Mg\Pdv;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Exception;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
 use Mg\NotaFiscal\NotaFiscalService;
+use Mg\NotaFiscal\NotaFiscalStatusService;
+use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
@@ -364,11 +366,11 @@ class PdvNegocioService
             throw new Exception("Status do Negócio Não Permite Cancelamento!", 1);
         }
 
-        $nfs = NotaFiscalService::notasDoNegocio($negocio->codnegocio);
+        $nfs = NotaFiscalNegocioService::notasDoNegocio($negocio->codnegocio);
         foreach ($nfs as $nf) {
-            if (NotaFiscalService::isAtiva($nf)) {
+            if (NotaFiscalStatusService::isAtiva($nf)) {
                 throw new Exception("Negócio possui Nota Fiscal ativa!", 1);
-            } else if (NotaFiscalService::isDigitacao($nf)) {
+            } else if (NotaFiscalStatusService::isDigitacao($nf)) {
                 NotaFiscalService::excluir($nf);
             }
         }

@@ -3,7 +3,6 @@
 namespace Mg\NotaFiscal\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Mg\NotaFiscal\NotaFiscalService;
 
 class NotaFiscalResource extends JsonResource
 {

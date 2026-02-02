@@ -4,7 +4,7 @@ namespace Mg\Select;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\Cidade\Cidade;
 
@@ -41,7 +41,7 @@ class SelectCidadeController extends Controller
                 $ipalavra++;
             }
         }
-        $sql .='
+        $sql .= '
             order by c.cidade, e.estado, c.codcidade
             limit 100
         ';

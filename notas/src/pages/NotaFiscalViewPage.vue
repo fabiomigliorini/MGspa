@@ -647,6 +647,39 @@ const recalcularTributacao = () => {
   })
 }
 
+// UNIFICAR ITENS
+const unificarItens = () => {
+  $q.dialog({
+    title: 'Unificar Itens',
+    message:
+      'Esta ação irá unificar os itens da nota fiscal que possuem o mesmo produto, somando as quantidades. Esta ação não pode ser desfeita. Digite UNIFICAR para confirmar:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val === 'UNIFICAR',
+    },
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'warning' },
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await notaFiscalStore.unificarItens(nota.value.codnotafiscal)
+      $q.notify({
+        type: 'positive',
+        message: 'Itens unificados com sucesso!',
+      })
+    } catch (error) {
+      console.log(error)
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao unificar itens',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
 // ==================== UNIFICAR NOTAS ====================
 const unificarDialog = ref(false)
 const notasParaUnificar = ref([])
@@ -1308,6 +1341,7 @@ onUnmounted(() => {
         >
           <q-tooltip>Recalcular tributação</q-tooltip>
         </q-btn>
+
         <q-btn
           flat
           dense
@@ -1926,6 +1960,17 @@ onUnmounted(() => {
                     class="q-ml-sm"
                   >
                     <q-tooltip>Adicionar Item</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    flat
+                    dense
+                    color="white"
+                    icon="merge"
+                    @click="unificarItens"
+                    v-if="!notaBloqueada"
+                    class="q-mr-sm"
+                  >
+                    <q-tooltip>Unificar itens duplicados</q-tooltip>
                   </q-btn>
                 </div>
 

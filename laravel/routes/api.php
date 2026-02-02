@@ -100,6 +100,9 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('{codnotafiscal}/unificar', '\Mg\NotaFiscal\NotaFiscalController@listarParaUnificar');
         Route::post('{codnotafiscal}/unificar', '\Mg\NotaFiscal\NotaFiscalController@unificar');
 
+        // Unificar itens da nota fiscal
+        Route::post('{codnotafiscal}/unificar-itens', '\Mg\NotaFiscal\NotaFiscalController@unificarItens');
+
         // Ações da nota fiscal (novos endpoints)
         Route::post('{codnotafiscal}/criar', '\Mg\NotaFiscal\NotaFiscalController@criar');
         Route::post('{codnotafiscal}/enviar-sincrono', '\Mg\NotaFiscal\NotaFiscalController@enviarSincrono');
@@ -344,6 +347,33 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         //GrupoCliente
         Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index');
 
+        // Etnia
+        Route::get('etnia/', '\Mg\Pessoa\EtniaController@index');
+        Route::post('etnia/', '\Mg\Pessoa\EtniaController@store');
+        Route::get('etnia/{codetnia}', '\Mg\Pessoa\EtniaController@show');
+        Route::put('etnia/{codetnia}', '\Mg\Pessoa\EtniaController@update');
+        Route::delete('etnia/{codetnia}', '\Mg\Pessoa\EtniaController@destroy');
+        Route::post('etnia/{codetnia}/inativo', '\Mg\Pessoa\EtniaController@inativar');
+        Route::delete('etnia/{codetnia}/inativo', '\Mg\Pessoa\EtniaController@ativar');
+
+        // Grau de Instrução
+        Route::get('grau-instrucao/', '\Mg\Pessoa\GrauInstrucaoController@index');
+        Route::post('grau-instrucao/', '\Mg\Pessoa\GrauInstrucaoController@store');
+        Route::get('grau-instrucao/{codgrauinstrucao}', '\Mg\Pessoa\GrauInstrucaoController@show');
+        Route::put('grau-instrucao/{codgrauinstrucao}', '\Mg\Pessoa\GrauInstrucaoController@update');
+        Route::delete('grau-instrucao/{codgrauinstrucao}', '\Mg\Pessoa\GrauInstrucaoController@destroy');
+        Route::post('grau-instrucao/{codgrauinstrucao}/inativo', '\Mg\Pessoa\GrauInstrucaoController@inativar');
+        Route::delete('grau-instrucao/{codgrauinstrucao}/inativo', '\Mg\Pessoa\GrauInstrucaoController@ativar');
+
+        // Estado Civil
+        Route::get('estado-civil/', '\Mg\Pessoa\EstadoCivilController@index');
+        Route::post('estado-civil/', '\Mg\Pessoa\EstadoCivilController@store');
+        Route::get('estado-civil/{codestadocivil}', '\Mg\Pessoa\EstadoCivilController@show');
+        Route::put('estado-civil/{codestadocivil}', '\Mg\Pessoa\EstadoCivilController@update');
+        Route::delete('estado-civil/{codestadocivil}', '\Mg\Pessoa\EstadoCivilController@destroy');
+        Route::post('estado-civil/{codestadocivil}/inativo', '\Mg\Pessoa\EstadoCivilController@inativar');
+        Route::delete('estado-civil/{codestadocivil}/inativo', '\Mg\Pessoa\EstadoCivilController@ativar');
+
         // Pessoa Telefone
         Route::get('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@index');
         Route::post('pessoa/{codpessoa}/telefone/', '\Mg\Pessoa\PessoaTelefoneController@create');
@@ -397,6 +427,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('pessoa/{codpessoa}/colaborador/', '\Mg\Colaborador\ColaboradorController@show');
         Route::put('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@update');
         Route::delete('colaborador/{codcolaborador}/', '\Mg\Colaborador\ColaboradorController@delete');
+        Route::get('colaborador/{codcolaborador}/ficha', '\Mg\Colaborador\ColaboradorFichaController@ficha');
+        Route::post('colaborador/{codcolaborador}/ficha', '\Mg\Colaborador\ColaboradorFichaController@uploadFicha');
 
         // Colaborador Cargo
         Route::post('colaborador/cargo/', '\Mg\Colaborador\ColaboradorCargoController@create');

@@ -3,7 +3,7 @@
 namespace Mg\Dominio\Arquivo;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\Dominio\Arquivo\Arquivo;
 use Mg\Filial\Filial;
@@ -73,22 +73,21 @@ class ArquivoProduto extends Arquivo
             order by codproduto
         ";
 
-      	$params = [
+        $params = [
             'codfilial' => $this->filial->codfilial,
             'inicio' => $this->inicio,
             'fim' => $this->fim,
         ];
 
-      	$produtos = DB::select($sql, $params);
+        $produtos = DB::select($sql, $params);
 
-      	foreach ($produtos as $produto) {
+        foreach ($produtos as $produto) {
 
             $reg = new RegistroProduto4();
             $reg->codigoProduto = str_pad($produto->codproduto, 6, '0', STR_PAD_LEFT);
             $reg->codigoEmpresa = $this->filial->empresadominio;
 
-            switch ($produto->codtipoproduto)
-            {
+            switch ($produto->codtipoproduto) {
                 case 8: // Imobilizado
                     $reg->codigoGrupo = 3;
                     break;
@@ -122,11 +121,10 @@ class ArquivoProduto extends Arquivo
                 $reg->descricaoProduto = "{$produto->produto} C/{$quant}";
                 $reg->unidadeMedida = $emb->unidadeMedida->sigla;
                 // $reg->unidade = $emb->unidadeMedida->sigla;
-                $reg->valorUnitario = $emb->preco??($emb->quantidade * $produto->preco);
+                $reg->valorUnitario = $emb->preco ?? ($emb->quantidade * $produto->preco);
                 $this->unidadeInventariadaDiferente = 'S';
                 $this->registros[] = $reg;
             }
-
         }
 
         return parent::processa();

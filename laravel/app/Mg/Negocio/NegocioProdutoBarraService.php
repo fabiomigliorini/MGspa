@@ -2,7 +2,7 @@
 
 namespace Mg\Negocio;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class NegocioProdutoBarraService
 {

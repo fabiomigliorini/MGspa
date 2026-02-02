@@ -2,7 +2,7 @@
 
 namespace Mg\Sequence;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class SequenceService
 {
@@ -29,6 +29,4 @@ class SequenceService
         $seq = DB::select("select last_value, increment_by from {$sequence}");
         return $seq[0]->last_value + $seq[0]->increment_by;
     }
-
-
 }

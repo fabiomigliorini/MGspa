@@ -4,7 +4,7 @@ namespace Mg\Select;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 
 class SelectTributacaoController extends Controller

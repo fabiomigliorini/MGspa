@@ -3,7 +3,8 @@
 namespace Mg\NotaFiscal\Observers;
 
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\NotaFiscal\NotaFiscalService;
+use Mg\NotaFiscal\NotaFiscalStatusService;
+use Mg\NotaFiscal\NotaFiscalItemService;
 
 class NotaFiscalObserver
 {
@@ -33,7 +34,7 @@ class NotaFiscalObserver
      */
     public function creating(NotaFiscal $notaFiscal): void
     {
-        $notaFiscal->status = NotaFiscalService::calcularStatus($notaFiscal);
+        $notaFiscal->status = NotaFiscalStatusService::calcularStatus($notaFiscal);
     }
 
     /**
@@ -45,7 +46,7 @@ class NotaFiscalObserver
         // Atualiza status se campos relevantes mudaram
         foreach (self::CAMPOS_STATUS as $campo) {
             if ($notaFiscal->isDirty($campo)) {
-                $notaFiscal->status = NotaFiscalService::calcularStatus($notaFiscal);
+                $notaFiscal->status = NotaFiscalStatusService::calcularStatus($notaFiscal);
                 break;
             }
         }
@@ -66,7 +67,7 @@ class NotaFiscalObserver
             }
         }
         if ($recalcular) {
-            NotaFiscalService::recalcularTributacao($notaFiscal);
+            NotaFiscalItemService::recalcularTributacao($notaFiscal);
         }
     }
 }

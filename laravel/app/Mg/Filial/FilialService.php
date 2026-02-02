@@ -2,7 +2,7 @@
 
 namespace Mg\Filial;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgService;
 use Mg\Pessoa\Pessoa;
@@ -29,7 +29,7 @@ class FilialService extends MgService
     }
 
 
-    public static function buscarPorCnpjIe ($cnpj, $ie, $primeiroComDfeHabilitada = true)
+    public static function buscarPorCnpjIe($cnpj, $ie, $primeiroComDfeHabilitada = true)
     {
         // Se nao tem IE
         if (empty($ie)) {
@@ -43,7 +43,7 @@ class FilialService extends MgService
                 'cnpj' => $cnpj
             ]))->pluck('codpessoa');
 
-        // Se tem IE
+            // Se tem IE
         } else {
             $ie = (int) numeroLimpo($ie);
             $sql = "
@@ -62,8 +62,7 @@ class FilialService extends MgService
         if ($primeiroComDfeHabilitada) {
             $qry = $qry->orderBy('dfe', 'desc');
         }
-        
+
         return $qry->first();
     }
-
 }

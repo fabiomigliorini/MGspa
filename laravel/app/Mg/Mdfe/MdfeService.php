@@ -2,7 +2,7 @@
 
 namespace Mg\Mdfe;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 use Mg\NotaFiscal\NotaFiscal;
@@ -18,7 +18,7 @@ class MdfeService
         $mdfe->codmdfestatus = MdfeStatus::EM_DIGITACAO;
         $mdfe->codfilial = $nf->codfilial;
         $mdfe->tipoemitente = Mdfe::TIPO_EMITENTE_CARGA_PROPRIA;
-        $mdfe->tipotransportador = $nf->Filial->Pessoa->tipotransportador??Mdfe::TIPO_TRANSPORTADOR_TAC;
+        $mdfe->tipotransportador = $nf->Filial->Pessoa->tipotransportador ?? Mdfe::TIPO_TRANSPORTADOR_TAC;
         $mdfe->modelo = Mdfe::MODELO;
         $mdfe->serie = $nf->Filial->nfeserie;
         $mdfe->modal = Mdfe::MODAL_RODOVIARIO;
@@ -36,7 +36,7 @@ class MdfeService
         $mdfeNfe->nfechave = $nf->nfechave;
         $mdfeNfe->codnotafiscal = $nf->codnotafiscal;
         $mdfeNfe->valor = $nf->valortotal;
-        $mdfeNfe->peso = $nf->pesobruto??$nf->pesoliquido??$nf->NotaFiscalProdutoBarraS()->sum('quantidade');
+        $mdfeNfe->peso = $nf->pesobruto ?? $nf->pesoliquido ?? $nf->NotaFiscalProdutoBarraS()->sum('quantidade');
         $mdfeNfe->save();
 
         // Busca Conjunto de Veiculo com a Placa da Nota Fiscal
@@ -66,7 +66,7 @@ class MdfeService
         return $mdfe;
     }
 
-    public static function atribuirNumero (Mdfe $mdfe)
+    public static function atribuirNumero(Mdfe $mdfe)
     {
         // Caso ja tenha numero atribuido, aborta
         if (!empty($mdfe->numero)) {
@@ -97,5 +97,4 @@ class MdfeService
         ]);
         return $mdfe->fresh();
     }
-
 }

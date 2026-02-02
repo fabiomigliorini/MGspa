@@ -1,6 +1,7 @@
 <?php
 
 namespace Mg\NotaFiscalTerceiro;
+
 use Mg\MgService;
 
 use Mg\Filial\Filial;
@@ -13,28 +14,29 @@ use Mg\NFePHP\NFePHPManifestacaoService;
 use NFePHP\NFe\Common\Standardize;
 
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class NotaFiscalTerceiroService extends MgService
 {
 
-    public static function atualizaItem($request) {
+    public static function atualizaItem($request)
+    {
         dd('aqui');
         return;
-
     }
 
-    public static function atualizaNFe($request) {
+    public static function atualizaNFe($request)
+    {
         dd('aqui');
         return;
-
     }
 
-    public static function consultaSefaz(Filial $filial){
+    public static function consultaSefaz(Filial $filial)
+    {
 
         // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
         $ultimoNsu = NotaFiscalTerceiroDistribuicaoDfe::where('codfilial', $filial->codfilial)
-        ->orderBy('nsu', 'DESC')->first();
+            ->orderBy('nsu', 'DESC')->first();
 
         $resConsulta = NFePHPConsultaSefazService::consultaSefaz($filial, $ultimoNsu->nsu);
 
@@ -56,7 +58,7 @@ class NotaFiscalTerceiroService extends MgService
             // CONVERTE O XML EM UM OBJETO
             $st = new Standardize();
             $res = $st->toStd($content);
-            $chave = $res->chNFe??$res->protNFe->infProt->chNFe??$res->retEvento->infEvento->chNFe;
+            $chave = $res->chNFe ?? $res->protNFe->infProt->chNFe ?? $res->retEvento->infEvento->chNFe;
 
             // SALVA NA BASE DE DADOS O RESULTADO DA CONSULTA DFE
             $dfe = NotaFiscalTerceiroDistribuicaoDfe::firstOrNew([
@@ -70,58 +72,58 @@ class NotaFiscalTerceiroService extends MgService
             $dfe->save();
 
             // BUSCA O coddistribuicaodfe  DA ULTIMA DFE ARMAZENADA
-            $distribuicaodfe = NotaFiscalTerceiroDistribuicaoDfe::where([['nsu',$numnsu],['nfechave',$chave]])->first();
+            $distribuicaodfe = NotaFiscalTerceiroDistribuicaoDfe::where([['nsu', $numnsu], ['nfechave', $chave]])->first();
 
             // SALVA NA PASTA O ARQUIVO DFE DA CONSULTA
             $pathNFeTerceiro = NotaFiscalTerceiroPathService::pathDFe($filial, $numnsu, true);
             file_put_contents($pathNFeTerceiro, $content);
 
             // ARMAZENA PARCIALMENTE OS DADOS DA NOTA
-            if($schema == 'resNFe_v1.01.xsd'){
+            if ($schema == 'resNFe_v1.01.xsd') {
                 // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
                 static::armazenaResNFe($filial, $res, $distribuicaodfe->coddistribuicaodfe);
             }
             // SE HOUVER  A NOTA COMPLETA JA ARMAZENA OS DADOS
-            if($schema == 'procNFe_v4.00.xsd' || $schema == 'procNFe_v3.10.xsd'){
+            if ($schema == 'procNFe_v4.00.xsd' || $schema == 'procNFe_v3.10.xsd') {
                 // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
                 NotaFiscalTerceiroCarregarXmlService::armazenaDadosNFe($filial, $xml);
             }
-
         }
 
         return true;
-
     } // FIM consultaSefaz
 
 
-        public static function armazenaResNFe($filial, $xml, $coddistribuicaodfe){
+    public static function armazenaResNFe($filial, $xml, $coddistribuicaodfe)
+    {
 
-            $pessoa = Pessoa::where([['ie', $xml->IE],['cnpj', $xml->CNPJ]])->first();
+        $pessoa = Pessoa::where([['ie', $xml->IE], ['cnpj', $xml->CNPJ]])->first();
 
-            $NFe = NotaFiscalTerceiro::firstOrNew([
-                'nfechave' => $xml->chNFe,
-                'protocolo' => $xml->nProt
-            ]);
-            $NFe->coddistribuicaodfe = $coddistribuicaodfe;
-            $NFe->codfilial = $filial->codfilial;
-            $NFe->codpessoa = $pessoa->codpessoa??null;
-            $NFe->nfechave = $xml->chNFe;
-            $NFe->cnpj = $xml->CNPJ;
-            $NFe->emitente = $xml->xNome;
-            $NFe->ie = $xml->IE;
-            $NFe->emissao = Carbon::parse($xml->dhEmi);
-            $NFe->valortotal = $xml->vNF;
-            $NFe->digito = $xml->digVal;
-            $NFe->protocolo = $xml->nProt;
-            $NFe->tipo = $xml->tpNF;
-            $NFe->indsituacao = $xml->cSitNFe;
-            $NFe->recebimento = $xml->dhRecbto;
-            // dd($NFe);
-            $NFe->save();
-        }
+        $NFe = NotaFiscalTerceiro::firstOrNew([
+            'nfechave' => $xml->chNFe,
+            'protocolo' => $xml->nProt
+        ]);
+        $NFe->coddistribuicaodfe = $coddistribuicaodfe;
+        $NFe->codfilial = $filial->codfilial;
+        $NFe->codpessoa = $pessoa->codpessoa ?? null;
+        $NFe->nfechave = $xml->chNFe;
+        $NFe->cnpj = $xml->CNPJ;
+        $NFe->emitente = $xml->xNome;
+        $NFe->ie = $xml->IE;
+        $NFe->emissao = Carbon::parse($xml->dhEmi);
+        $NFe->valortotal = $xml->vNF;
+        $NFe->digito = $xml->digVal;
+        $NFe->protocolo = $xml->nProt;
+        $NFe->tipo = $xml->tpNF;
+        $NFe->indsituacao = $xml->cSitNFe;
+        $NFe->recebimento = $xml->dhRecbto;
+        // dd($NFe);
+        $NFe->save();
+    }
 
-    public static function armazenaDadosConsulta ($filial) {
-    // public static function armazenaDadosConsulta ($filial, $res) {
+    public static function armazenaDadosConsulta($filial)
+    {
+        // public static function armazenaDadosConsulta ($filial, $res) {
         // $filial = Filial::findOrFail($filial);
 
         // 000000000023238
@@ -133,20 +135,20 @@ class NotaFiscalTerceiroService extends MgService
         foreach ($qry as $key => $file) {
             $path = NotaFiscalTerceiroPathService::pathDFe($filial, $file->nsu);
 
-            if(file_exists($path)){
+            if (file_exists($path)) {
                 $xmlData = file_get_contents($path);
                 $st = new Standardize();
                 $xml = $st->toStd($xmlData);
 
                 // ARMAZENA PARCIALMENTE OS DADOS DA NOTA
-                if($file->schema == 'resNFe_v1.01.xsd'){
+                if ($file->schema == 'resNFe_v1.01.xsd') {
                     // echo "<script>console.log( 'Debug Objects:" . $xml->chNFe . "' );</script>";
                     static::armazenaResNFe($filial, $xml, $file->coddistribuicaodfe);
                 }
 
                 // SE HOUVER  A NOTA COMPLETA JA ARMAZENA OS DADOS
-                if($file->schema == 'procNFe_v3.10.xsd' || $file->schema == 'procNFe_v4.00.xsd'){
-                    echo "<script>console.log( 'Debug:".$loop."====" . $file->nfechave . "' );</script>";
+                if ($file->schema == 'procNFe_v3.10.xsd' || $file->schema == 'procNFe_v4.00.xsd') {
+                    echo "<script>console.log( 'Debug:" . $loop . "====" . $file->nfechave . "' );</script>";
                     NotaFiscalTerceiroCarregarXmlService::armazenaDadosNFe($filial, $xml);
                 }
 
@@ -155,11 +157,11 @@ class NotaFiscalTerceiroService extends MgService
         }
 
         return true;
-
     } // FIM DO armazenaDadosConsulta
 
     // TRAZ DA BASE TODAS AS DFEs
-    public static function listaNotas ($request) {
+    public static function listaNotas($request)
+    {
 
         // PREPARA OS PARAMETROS PARA A CONDITIONAL QUERY
         $filial = $request->filial;
@@ -197,67 +199,70 @@ class NotaFiscalTerceiroService extends MgService
         }
 
         // EXECUTA A CONDITIONAL QUERY CONFORME FILTRO REQUISITADO
-        $qry = NotaFiscalTerceiro::when($filial, function($query, $filial){
+        $qry = NotaFiscalTerceiro::when($filial, function ($query, $filial) {
             $query->where('tblnotafiscalterceiro.codfilial', $filial);
         })
-        ->when($chave, function($query, $chave){
-            $query->where('nfechave', $chave);
-        })
-        ->when($manifestacao, function($query, $manifestacao){
-            $query->where('indmanifestacao', $manifestacao);
-        })
-        ->when($filtroSituacao, function($query, $filtroSituacao){
-            $query->whereIn('indsituacao', [$filtroSituacao[0],$filtroSituacao[1],$filtroSituacao[2]]);
-        })
-        ->when($datainicial, function($query, $datainicial){
-            $query->whereDate('emissao', '>=', $datainicial);
-        })
-        ->when($datafinal, function($query, $datafinal){
-            $query->whereDate('emissao', '<=', $datafinal);
-        })
-        ->when($codpessoa, function($query, $codpessoa){
-            $query->where('tblnotafiscalterceiro.codpessoa', $codpessoa );
-        })
-        ->join('tblfilial', 'tblnotafiscalterceiro.codfilial', '=', 'tblfilial.codfilial')
-        ->select('tblnotafiscalterceiro.*', 'tblfilial.filial')
-        ->orderBy('emissao', 'DESC')
-        ->paginate(100);
+            ->when($chave, function ($query, $chave) {
+                $query->where('nfechave', $chave);
+            })
+            ->when($manifestacao, function ($query, $manifestacao) {
+                $query->where('indmanifestacao', $manifestacao);
+            })
+            ->when($filtroSituacao, function ($query, $filtroSituacao) {
+                $query->whereIn('indsituacao', [$filtroSituacao[0], $filtroSituacao[1], $filtroSituacao[2]]);
+            })
+            ->when($datainicial, function ($query, $datainicial) {
+                $query->whereDate('emissao', '>=', $datainicial);
+            })
+            ->when($datafinal, function ($query, $datafinal) {
+                $query->whereDate('emissao', '<=', $datafinal);
+            })
+            ->when($codpessoa, function ($query, $codpessoa) {
+                $query->where('tblnotafiscalterceiro.codpessoa', $codpessoa);
+            })
+            ->join('tblfilial', 'tblnotafiscalterceiro.codfilial', '=', 'tblfilial.codfilial')
+            ->select('tblnotafiscalterceiro.*', 'tblfilial.filial')
+            ->orderBy('emissao', 'DESC')
+            ->paginate(100);
 
         return $qry;
     }
 
     // BUSCA NA BASE A NFETERCEIRO REQUISITADA
-    public static function buscaNFeTerceiro ($chave) {
+    public static function buscaNFeTerceiro($chave)
+    {
         $qry = NotaFiscalTerceiro::where('nfechave', $chave)
-        ->join('tblfilial', 'tblnotafiscalterceiro.codfilial', '=', 'tblfilial.codfilial')
-        ->select('tblnotafiscalterceiro.*', 'tblfilial.filial')->get();
+            ->join('tblfilial', 'tblnotafiscalterceiro.codfilial', '=', 'tblfilial.codfilial')
+            ->select('tblnotafiscalterceiro.*', 'tblfilial.filial')->get();
         return ($qry);
     }
 
     // BUSCA NA BASE DE DADOS A ULTIMA NSU CONSULTADA DA FILIAL
-    public static function ultimaNSU ($filial) {
+    public static function ultimaNSU($filial)
+    {
 
         $ultimoNsu = NotaFiscalTerceiroDistribuicaoDfe::where('codfilial', $filial->codfilial)
-        ->orderBy('nsu', 'DESC')->first();
+            ->orderBy('nsu', 'DESC')->first();
 
         return $ultimoNsu->nsu;
     }
 
-    public static function listaItem ($codnotafiscalterceiro) {
+    public static function listaItem($codnotafiscalterceiro)
+    {
         // BUSCA NA tblnotafiscalterceirogrupo o codnotafiscalterceirogrupo
         $codGrupo = NotaFiscalTerceiroGrupo::where('codnotafiscalterceiro', $codnotafiscalterceiro)->first();
 
         // BUSCA NA tblnotafiscalterceiroitem TODOS OS ITENS VINCULADOS A NOTA
         $itens = NotaFiscalTerceiroItem::where('codnotafiscalterceirogrupo', $codGrupo->codnotafiscalterceirogrupo)
-        ->orderBy('numero', 'ASC')->get();
+            ->orderBy('numero', 'ASC')->get();
 
         // dd($itens);
         return $itens;
-
     }
 
     // FAZ O ENVIO DA MANIFESTACAO PARA O SEFAZ E ARMAZENA NA BASE O indmanifestacao
-    public static function manifestacao($request) {
+    public static function manifestacao($request)
+    {
 
         $res = NFePHPManifestacaoService::manifestacao($request);
 
@@ -269,11 +274,11 @@ class NotaFiscalTerceiroService extends MgService
         $NF->save();
 
         return true;
-
     }
 
     // FAZ O DOWNLOAD NA NFe COMPLETA BUSCANDO NO SERVIDOR DA SEFAZ
-    public static function downloadNotaFiscalTerceiro(Filial $filial, $chave){
+    public static function downloadNotaFiscalTerceiro(Filial $filial, $chave)
+    {
 
         $xml = NFePHPDownloadService::downloadNotaFiscalTerceiro($filial, $chave);
 
@@ -281,5 +286,4 @@ class NotaFiscalTerceiroService extends MgService
 
         return true;
     }
-
 } // FIM DA CLASSE

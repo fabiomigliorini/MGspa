@@ -5,6 +5,7 @@ namespace Mg\NotaFiscal;
 use App\Http\Controllers\Controller;
 use Mg\NotaFiscal\Requests\NotaFiscalPagamentoRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalPagamentoResource;
+use Mg\NotaFiscal\NotaFiscalStatusService;
 use Illuminate\Http\Request;
 
 class NotaFiscalPagamentoController extends Controller
@@ -73,7 +74,7 @@ class NotaFiscalPagamentoController extends Controller
 
     private function verificarNotaBloqueada(NotaFiscal $nota): void
     {
-        if (!NotaFiscalService::isEditable($nota)) {
+        if (!NotaFiscalStatusService::isEditable($nota)) {
             abort(422, "Não é possível modificar pagamentos de uma nota com status: {$nota->status}");
         }
     }

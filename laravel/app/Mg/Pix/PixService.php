@@ -12,7 +12,7 @@ use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Portador\Portador;
 use Mg\Pix\GerenciaNet\GerenciaNetService;
 use Mg\FormaPagamento\FormaPagamento;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Mg\Pdv\Pdv;
 
 class PixService
@@ -533,6 +533,6 @@ class PixService
             'cnpjCpf' => $cnpjCpf
         ]);
 
-        return $result[0]??null;
+        return $result[0] ?? null;
     }
 }

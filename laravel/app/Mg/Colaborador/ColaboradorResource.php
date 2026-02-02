@@ -4,7 +4,6 @@
 namespace Mg\Colaborador;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
 
 class ColaboradorResource extends JsonResource
 {
@@ -22,7 +21,6 @@ class ColaboradorResource extends JsonResource
         $ret['Ferias'] = $this->FeriasS()->orderBy('aquisitivofim', 'desc')->get();
         $ret['Filial'] = @$this->Filial->filial;
         $ret['ColaboradorCargo'] = ColaboradorCargoResource::collection($this->ColaboradorCargoS()->orderBy('inicio', 'desc')->get());
-
         return $ret;
     }
 }

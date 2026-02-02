@@ -2,7 +2,7 @@
 
 namespace Mg\Produto;
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Mg\MgService;
 
 class ProdutoService extends MgService
@@ -27,16 +27,14 @@ class ProdutoService extends MgService
                 $quantidade = (int) preg_replace('/[^0-9]/', '', $arr[1]);
 
                 if ($barras == "$codigo-$quantidade") {
-                    if ($pb = ProdutoBarra::where('codproduto', $codigo)->whereHas('ProdutoEmbalagem', function($query) use ($quantidade) {
+                    if ($pb = ProdutoBarra::where('codproduto', $codigo)->whereHas('ProdutoEmbalagem', function ($query) use ($quantidade) {
                         $query->where('quantidade', $quantidade);
                     })->first())
-                    return $pb;
+                        return $pb;
                 }
             }
         }
 
         return false;
-
     }
-
 }

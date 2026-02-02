@@ -3,7 +3,7 @@
 namespace Mg\Boleto;
 
 
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -114,7 +114,7 @@ class BoletoService
         return $arquivos;
     }
 
-    public static function retorno ($codportador, $arquivo, $dataretorno)
+    public static function retorno($codportador, $arquivo, $dataretorno)
     {
         $regs = BoletoRetorno::where([
             'codportador' => $codportador,
@@ -243,16 +243,16 @@ class BoletoService
                 order by remessa desc
             ";
             $arquivos =
-            $ret[] = [
-                'codportador' => $portador->codportador,
-                'portador' => $portador->portador,
-                'remessas' => DB::select($sql, ['codportador' => $portador->codportador])
-            ];
+                $ret[] = [
+                    'codportador' => $portador->codportador,
+                    'portador' => $portador->portador,
+                    'remessas' => DB::select($sql, ['codportador' => $portador->codportador])
+                ];
         }
         return $ret;
     }
 
-    public static function remessa ($codportador, $remessa)
+    public static function remessa($codportador, $remessa)
     {
         $regs = Titulo::where([
             'codportador' => $codportador,
@@ -279,6 +279,4 @@ class BoletoService
         }
         return $ret;
     }
-
-
 }
