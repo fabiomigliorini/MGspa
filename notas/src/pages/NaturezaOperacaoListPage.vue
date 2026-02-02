@@ -1,6 +1,5 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import {
   useNaturezaOperacaoStore,
@@ -8,12 +7,15 @@ import {
   OPERACAO_OPTIONS,
 } from '../stores/naturezaOperacaoStore'
 
-const router = useRouter()
 const $q = useQuasar()
 const naturezaOperacaoStore = useNaturezaOperacaoStore()
 
 const loading = computed(() => naturezaOperacaoStore.pagination.loading)
-const naturezaOperacoes = computed(() => naturezaOperacaoStore.naturezaOperacoes)
+const naturezaOperacoes = computed(() =>
+  [...naturezaOperacaoStore.naturezaOperacoes].sort((a, b) =>
+    (a.naturezaoperacao || '').localeCompare(b.naturezaoperacao || '', 'pt-BR')
+  )
+)
 const hasActiveFilters = computed(() => naturezaOperacaoStore.hasActiveFilters)
 
 // Retorna label da finalidade NFe
@@ -45,28 +47,6 @@ const formatCodigo = (codigo) => {
   return String(codigo).padStart(8, '0')
 }
 
-const onLoad = async (index, done) => {
-  try {
-    await naturezaOperacaoStore.fetchNaturezaOperacoes()
-    done(!naturezaOperacaoStore.pagination.hasMore)
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao carregar Naturezas de Operação',
-      caption: error.message,
-    })
-    done(true)
-  }
-}
-
-const handleCreateNaturezaOperacao = () => {
-  router.push({ name: 'natureza-operacao-create' })
-}
-
-const handleViewNaturezaOperacao = (codnaturezaoperacao) => {
-  router.push({ name: 'natureza-operacao-view', params: { codnaturezaoperacao } })
-}
-
 onMounted(async () => {
   if (!naturezaOperacaoStore.initialLoadDone) {
     try {
@@ -90,7 +70,7 @@ onMounted(async () => {
     </div>
 
     <!-- Empty State -->
-    <q-card v-else-if="naturezaOperacoes.length === 0" flat bordered class="q-pa-xl text-center">
+    <q-card v-else-if="naturezaOperacoes.length === 0" flat class="q-pa-xl text-center">
       <q-icon name="swap_horiz" size="4em" color="grey-5" />
       <div class="text-h6 text-grey-7 q-mt-md">Nenhuma natureza de operação encontrada</div>
       <div class="text-caption text-grey-7 q-mt-sm">
@@ -99,75 +79,70 @@ onMounted(async () => {
       </div>
     </q-card>
 
-    <!-- Lista de Naturezas de Operação com Scroll Infinito -->
-    <q-infinite-scroll v-else @load="onLoad" :offset="250">
-      <q-list separator>
-        <q-item
-          v-for="naturezaOperacao in naturezaOperacoes"
-          :key="naturezaOperacao.codnaturezaoperacao"
-          clickable
-          @click="handleViewNaturezaOperacao(naturezaOperacao.codnaturezaoperacao)"
-        >
-          <q-item-section class="q-pa-sm">
-            <div class="row q-col-gutter-sm q-pa-none">
-              <div class="col-4 col-sm-2">
-                <div class="text-caption text-grey-7">
-                  <q-icon name="tag" size="xs" class="q-mr-xs" />
-                  Código
-                </div>
-                <div class="text-caption">
-                  #{{ formatCodigo(naturezaOperacao.codnaturezaoperacao) }}
-                </div>
+    <!-- Lista de Naturezas de Operação -->
+    <q-list v-else separator>
+      <q-item
+        v-for="naturezaOperacao in naturezaOperacoes"
+        :key="naturezaOperacao.codnaturezaoperacao"
+        clickable
+        :to="{
+          name: 'natureza-operacao-view',
+          params: { codnaturezaoperacao: naturezaOperacao.codnaturezaoperacao },
+        }"
+      >
+        <q-item-section class="q-pa-sm">
+          <div class="row q-col-gutter-sm q-pa-none">
+            <div class="col-4 col-sm-2">
+              <div class="text-caption text-grey-7">
+                <q-icon name="tag" size="xs" class="q-mr-xs" />
+                Código
               </div>
-              <div class="col-6 col-sm-3">
-                <div class="text-caption text-grey-7">
-                  <q-icon name="swap_horiz" size="xs" class="q-mr-xs" />
-                  Natureza de Operação
-                </div>
-                <div class="text-weight-bold text-primary ellipsis">
-                  {{ naturezaOperacao.naturezaoperacao }}
-                </div>
-              </div>
-              <div class="col-4 col-sm-2">
-                <div class="text-caption text-grey-7">
-                  <q-icon name="compare_arrows" size="xs" class="q-mr-xs" />
-                  Operação
-                </div>
-                <q-badge :color="getOperacaoColor(naturezaOperacao.codoperacao)">
-                  <q-icon
-                    :name="getOperacaoIcon(naturezaOperacao.codoperacao)"
-                    size="xs"
-                    class="q-mr-xs"
-                  />
-                  {{ getOperacaoLabel(naturezaOperacao.codoperacao) }}
-                </q-badge>
-              </div>
-              <div class="col-4 col-sm-2">
-                <div class="text-caption text-grey-7">
-                  <q-icon name="send" size="xs" class="q-mr-xs" />
-                  Emissão
-                </div>
-                <q-badge v-if="naturezaOperacao.emitida" color="orange">Nossa Emissão</q-badge>
-                <span v-else class="text-caption text-grey-6">Terceiros</span>
-              </div>
-              <div class="col-4 col-sm-2">
-                <div class="text-caption text-grey-7">
-                  <q-icon name="description" size="xs" class="q-mr-xs" />
-                  Finalidade
-                </div>
-                <div class="text-caption">{{ getFinnfeLabel(naturezaOperacao.finnfe) }}</div>
+              <div class="text-caption">
+                #{{ formatCodigo(naturezaOperacao.codnaturezaoperacao) }}
               </div>
             </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
-
-      <template v-slot:loading>
-        <div class="row justify-center q-my-md">
-          <q-spinner-dots color="primary" size="40px" />
-        </div>
-      </template>
-    </q-infinite-scroll>
+            <div class="col-6 col-sm-3">
+              <div class="text-caption text-grey-7">
+                <q-icon name="swap_horiz" size="xs" class="q-mr-xs" />
+                Natureza de Operação
+              </div>
+              <div class="text-weight-bold text-primary ellipsis">
+                {{ naturezaOperacao.naturezaoperacao }}
+              </div>
+            </div>
+            <div class="col-4 col-sm-2">
+              <div class="text-caption text-grey-7">
+                <q-icon name="compare_arrows" size="xs" class="q-mr-xs" />
+                Operação
+              </div>
+              <q-badge :color="getOperacaoColor(naturezaOperacao.codoperacao)">
+                <q-icon
+                  :name="getOperacaoIcon(naturezaOperacao.codoperacao)"
+                  size="xs"
+                  class="q-mr-xs"
+                />
+                {{ getOperacaoLabel(naturezaOperacao.codoperacao) }}
+              </q-badge>
+            </div>
+            <div class="col-4 col-sm-2">
+              <div class="text-caption text-grey-7">
+                <q-icon name="send" size="xs" class="q-mr-xs" />
+                Emissão
+              </div>
+              <q-badge v-if="naturezaOperacao.emitida" color="orange">Nossa Emissão</q-badge>
+              <span v-else class="text-caption text-grey-6">Terceiros</span>
+            </div>
+            <div class="col-4 col-sm-2">
+              <div class="text-caption text-grey-7">
+                <q-icon name="description" size="xs" class="q-mr-xs" />
+                Finalidade
+              </div>
+              <div class="text-caption">{{ getFinnfeLabel(naturezaOperacao.finnfe) }}</div>
+            </div>
+          </div>
+        </q-item-section>
+      </q-item>
+    </q-list>
 
     <!-- FAB para Nova Natureza de Operação -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
@@ -175,7 +150,7 @@ onMounted(async () => {
         fab
         icon="add"
         color="primary"
-        @click="handleCreateNaturezaOperacao"
+        :to="{ name: 'natureza-operacao-create' }"
         :disable="loading"
       >
         <q-tooltip>Nova Natureza de Operação</q-tooltip>

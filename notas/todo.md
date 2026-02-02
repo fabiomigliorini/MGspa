@@ -1,12 +1,12 @@
 - Natureza
-  - deixar cards com o mesmo formato do Notas (fonte/icone)
-  - filtro operacao nao funciona (entrada/saida)
-  - bordinha quando nao acha nada
-  - terminar cards da tributacao dentro da natureza
-  - link editar com :to
+  - deixar cards com o mesmo formato do Notas (fonte/icone) - ok
+  - filtro operacao nao funciona (entrada/saida) - ok
+  - bordinha quando nao acha nada - ok
+  - terminar cards da tributacao dentro da natureza - ok
+  - link editar com :to - ok
   - transformar todos selects em componentes
-  - padronizar borda do card e titulos do card igual a nota fiscal
-  - deixar listagem por ordem alfabetica
+  - padronizar borda do card e titulos do card igual a nota fiscal - ok
+  - deixar listagem por ordem alfabetica - ok
     (naturezaoperacao)
   - filtro das tributacoes nessa ordem (pra filtrar e pra listar)
     - codestado
@@ -15,10 +15,6 @@
     - bit
     - ncm
     - cfop (select)
-
-- Tributacao / CFOP
-  - deixar card no padrao da tela de notas
-  - onde mostra a chave primaria, sempre padronizar a mascara #99999999
 
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
@@ -142,3 +138,7 @@ DONE:
   - Substituir o (+ novo pais por somente o "+")
   - Eliminar o espacinho entre os tabs e as navbars
   - padronizar espaçamento e titulos da aba de filtros da Notas/Tributacoes/Paises/etc
+
+- Tributacao / CFOP
+  - deixar card no padrao da tela de notas -ok
+  - onde mostra a chave primaria, sempre padronizar a mascara #99999999 -ok

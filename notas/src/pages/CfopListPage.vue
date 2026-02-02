@@ -1,10 +1,8 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useCfopStore } from '../stores/cfopStore'
 
-const router = useRouter()
 const $q = useQuasar()
 const cfopStore = useCfopStore()
 
@@ -24,14 +22,6 @@ const onLoad = async (index, done) => {
     })
     done(true)
   }
-}
-
-const handleCreateCfop = () => {
-  router.push({ name: 'cfop-create' })
-}
-
-const handleEditCfop = (codcfop) => {
-  router.push({ name: 'cfop-edit', params: { codcfop } })
 }
 
 const handleDeleteCfop = (cfop) => {
@@ -112,21 +102,20 @@ onMounted(async () => {
             <q-card-section class="q-pa-none" align="right">
               <q-btn
                 flat
-                dense
                 size="sm"
                 rounded
                 icon="edit"
+                class="q-px-sm"
                 color="primary"
-                @click="handleEditCfop(cfop.codcfop)"
+                :to="{ name: 'cfop-edit', params: { codcfop: cfop.codcfop } }"
               />
               <q-btn
                 flat
-                dense
                 size="sm"
                 rounded
                 icon="delete"
                 color="negative"
-                class="q-mr-sm"
+                class="q-mr-sm q-px-sm"
                 @click="handleDeleteCfop(cfop)"
               />
             </q-card-section>
@@ -143,7 +132,7 @@ onMounted(async () => {
 
     <!-- FAB para Novo CFOP -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" @click="handleCreateCfop" :disable="loading">
+      <q-btn fab icon="add" color="primary" :to="{ name: 'cfop-create' }" :disable="loading">
         <q-tooltip>Novo CFOP</q-tooltip>
       </q-btn>
     </q-page-sticky>

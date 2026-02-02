@@ -30,6 +30,11 @@ class NaturezaOperacaoController extends Controller
             $query->where('finnfe', $request->finnfe);
         }
 
+        // Filtro por tipo de operação (Entrada/Saída)
+        if ($request->filled('codoperacao')) {
+            $query->where('codoperacao', $request->codoperacao);
+        }
+
         // Ordenação
         $sortField = $request->get('sort', 'codnaturezaoperacao');
         $sortOrder = $request->get('order', 'asc');
