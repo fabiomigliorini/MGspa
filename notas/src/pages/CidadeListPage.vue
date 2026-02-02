@@ -497,7 +497,6 @@ const handleSaveCidade = async () => {
             <q-card-section class="q-pa-none" align="right">
               <q-btn
                 flat
-                dense
                 round
                 icon="edit"
                 color="primary"
@@ -506,7 +505,6 @@ const handleSaveCidade = async () => {
               />
               <q-btn
                 flat
-                dense
                 size="sm"
                 round
                 icon="delete"

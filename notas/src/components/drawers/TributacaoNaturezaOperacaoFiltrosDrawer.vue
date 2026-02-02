@@ -13,6 +13,7 @@ const isInitializing = ref(true)
 // Options para selects
 const tributacaoOptions = ref([])
 const estadoOptions = ref([])
+const cfopOptions = ref([])
 
 const activeFiltersCount = computed(() => {
   let count = 0
@@ -32,9 +33,10 @@ const debouncedApplyFilters = useDebounceFn(() => {
 }, 800)
 
 const filters = reactive({
+  codtributacaonaturezaoperacao: null,
+  codestado: null,
   codtributacao: null,
   codtipoproduto: null,
-  codestado: null,
   ncm: null,
   codcfop: null,
 })
@@ -55,12 +57,17 @@ const handleClearFilters = () => {
 // Carrega opções dos selects
 const loadOptions = async () => {
   try {
-    const [tributacoesRes, estadosRes] = await Promise.all([
-      api.get('/v1/select/tributo'),
+    const [tributacoesRes, estadosRes, cfopsRes] = await Promise.all([
+      api.get('/v1/select/tributacao'),
       api.get('/v1/select/estado'),
+      api.get('/v1/cfop', { params: { per_page: 1000 } }),
     ])
-    tributacaoOptions.value = tributacoesRes.data?.data || []
-    estadoOptions.value = estadosRes.data?.data || []
+    tributacaoOptions.value = tributacoesRes.data || []
+    estadoOptions.value = estadosRes.data || []
+    cfopOptions.value = (cfopsRes.data?.data || []).map((cfop) => ({
+      label: `${cfop.codcfop} - ${cfop.descricao}`,
+      value: cfop.codcfop,
+    }))
   } catch (error) {
     console.error('Erro ao carregar opções:', error)
   }
@@ -70,7 +77,7 @@ onMounted(async () => {
   await loadOptions()
 
   Object.keys(filters).forEach((key) => {
-    filters[key] = tributacaoStore.filters[key] || null
+    filters[key] = tributacaoStore.filters[key] ?? null
   })
 
   setTimeout(() => {
@@ -119,8 +126,45 @@ onMounted(async () => {
 
     <!-- Filtros -->
     <div class="q-pa-md">
+      <!-- Código -->
+      <div class="text-grey-7 text-body2">Código:</div>
+      <div class="q-mb-md">
+        <q-input
+          v-model="filters.codtributacaonaturezaoperacao"
+          label="Código"
+          outlined
+          clearable
+          placeholder="Ex: 123"
+          type="number"
+        >
+          <template v-slot:prepend>
+            <q-icon name="tag" />
+          </template>
+        </q-input>
+      </div>
+
+      <!-- Estado -->
+      <div class="text-grey-7 text-body2">Estado:</div>
+      <div class="q-mb-md">
+        <q-select
+          v-model="filters.codestado"
+          :options="estadoOptions"
+          option-value="value"
+          option-label="sigla"
+          emit-value
+          map-options
+          outlined
+          clearable
+          label="Estado"
+        >
+          <template v-slot:prepend>
+            <q-icon name="map" />
+          </template>
+        </q-select>
+      </div>
+
       <!-- Tributação -->
-      <div class="text-caption text-grey-7 q-mb-md">Tributação:</div>
+      <div class="text-caption text-grey-7">Tributação:</div>
       <div class="q-mb-md">
         <q-select
           v-model="filters.codtributacao"
@@ -140,7 +184,7 @@ onMounted(async () => {
       </div>
 
       <!-- Tipo de Produto -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Tipo de Produto:</div>
+      <div class="text-grey-7 text-body2">Tipo de Produto:</div>
       <div class="q-mb-md">
         <q-select
           v-model="filters.codtipoproduto"
@@ -159,28 +203,8 @@ onMounted(async () => {
         </q-select>
       </div>
 
-      <!-- Estado -->
-      <div class="text-grey-7 text-body2 q-mb-sm">Estado:</div>
-      <div class="q-mb-md">
-        <q-select
-          v-model="filters.codestado"
-          :options="estadoOptions"
-          option-value="codcidade"
-          option-label="sigla"
-          emit-value
-          map-options
-          outlined
-          clearable
-          label="Estado"
-        >
-          <template v-slot:prepend>
-            <q-icon name="map" />
-          </template>
-        </q-select>
-      </div>
-
       <!-- NCM -->
-      <div class="text-grey-7 text-body2 q-mb-sm">NCM:</div>
+      <div class="text-grey-7 text-body2">NCM:</div>
       <div class="q-mb-md">
         <q-input v-model="filters.ncm" label="NCM" outlined clearable placeholder="Ex: 4901">
           <template v-slot:prepend>
@@ -190,20 +214,31 @@ onMounted(async () => {
       </div>
 
       <!-- CFOP -->
-      <div class="text-grey-7 text-body2 q-mb-sm">CFOP:</div>
+      <div class="text-grey-7 text-body2">CFOP:</div>
       <div class="q-mb-md">
-        <q-input
+        <q-select
           v-model="filters.codcfop"
-          label="CFOP"
+          :options="cfopOptions"
+          option-value="value"
+          option-label="label"
+          emit-value
+          map-options
           outlined
           clearable
-          placeholder="Ex: 5102"
-          type="number"
+          label="CFOP"
+          use-input
+          input-debounce="0"
+          @filter="(val, update) => update()"
         >
           <template v-slot:prepend>
             <q-icon name="numbers" />
           </template>
-        </q-input>
+          <template v-slot:no-option>
+            <q-item>
+              <q-item-section class="text-grey">Nenhum resultado</q-item-section>
+            </q-item>
+          </template>
+        </q-select>
       </div>
     </div>
   </div>

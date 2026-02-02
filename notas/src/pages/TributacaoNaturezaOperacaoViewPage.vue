@@ -50,23 +50,11 @@ const titulo = computed(() => {
   return parts.join(' / ')
 })
 
-// Ações
-const handleBack = () => {
-  router.push({
-    name: 'natureza-operacao-view',
-    params: { codnaturezaoperacao: codnaturezaoperacao.value },
-  })
-}
-
-const handleEdit = () => {
-  router.push({
-    name: 'tributacao-natureza-operacao-edit',
-    params: {
-      codnaturezaoperacao: codnaturezaoperacao.value,
-      codtributacaonaturezaoperacao: codtributacaonaturezaoperacao.value,
-    },
-  })
-}
+// Rota de voltar (usada no template e após exclusão)
+const backRoute = computed(() => ({
+  name: 'natureza-operacao-view',
+  params: { codnaturezaoperacao: codnaturezaoperacao.value },
+}))
 
 const handleDelete = () => {
   $q.dialog({
@@ -78,7 +66,7 @@ const handleDelete = () => {
     try {
       await tributacaoStore.deleteTributacao(codtributacaonaturezaoperacao.value)
       $q.notify({ type: 'positive', message: 'Tributação excluída com sucesso' })
-      handleBack()
+      router.push(backRoute.value)
     } catch (error) {
       $q.notify({
         type: 'negative',
@@ -100,7 +88,7 @@ const loadData = async () => {
       message: 'Erro ao carregar Tributação',
       caption: error.response?.data?.message || error.message,
     })
-    handleBack()
+    router.push(backRoute.value)
   } finally {
     loading.value = false
   }
@@ -119,10 +107,22 @@ onMounted(loadData)
     <template v-else-if="tributacao">
       <!-- Header -->
       <div class="row items-center q-mb-md">
-        <q-btn flat dense round icon="arrow_back" @click="handleBack" />
+        <q-btn flat dense round icon="arrow_back" :to="backRoute" />
         <div class="text-h6 q-ml-sm ellipsis" style="max-width: 80%">{{ titulo }}</div>
         <q-space />
-        <q-btn flat round icon="edit" color="primary" @click="handleEdit">
+        <q-btn
+          flat
+          round
+          icon="edit"
+          color="primary"
+          :to="{
+            name: 'tributacao-natureza-operacao-edit',
+            params: {
+              codnaturezaoperacao: codnaturezaoperacao,
+              codtributacaonaturezaoperacao: codtributacaonaturezaoperacao,
+            },
+          }"
+        >
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
         <q-btn flat round icon="delete" color="negative" @click="handleDelete">

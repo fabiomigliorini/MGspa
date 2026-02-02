@@ -1,6 +1,5 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
 import {
@@ -11,7 +10,6 @@ import {
 } from '../constants/notaFiscal'
 import { formatDateTime, formatDate, formatCurrency, formatNumero } from 'src/utils/formatters'
 
-const router = useRouter()
 const $q = useQuasar()
 const notaFiscalStore = useNotaFiscalStore()
 
@@ -33,10 +31,6 @@ const onLoad = async (index, done) => {
     })
     done(true)
   }
-}
-
-const handleCreateNota = () => {
-  router.push({ name: 'nota-fiscal-create' })
 }
 
 // const handleEditNota = (codnotafiscal) => {
@@ -269,7 +263,7 @@ onMounted(async () => {
 
     <!-- FAB para Nova Nota -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" @click="handleCreateNota" :disable="loading">
+      <q-btn fab icon="add" color="primary" :to="{ name: 'nota-fiscal-create' }" :disable="loading">
         <q-tooltip>Nova Nota</q-tooltip>
       </q-btn>
     </q-page-sticky>

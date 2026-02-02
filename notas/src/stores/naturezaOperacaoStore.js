@@ -24,7 +24,7 @@ export const useNaturezaOperacaoStore = defineStore('naturezaOperacao', {
     naturezaOperacoes: [],
     pagination: {
       page: 1,
-      perPage: 20,
+      perPage: 9999,
       hasMore: true,
       loading: false,
       total: 0,

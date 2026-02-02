@@ -51,18 +51,6 @@ const formatPercent = (value) => {
   return `${parseFloat(value).toFixed(2)}%`
 }
 
-// Ações
-const handleBack = () => {
-  router.push({ name: 'natureza-operacao' })
-}
-
-const handleEdit = () => {
-  router.push({
-    name: 'natureza-operacao-edit',
-    params: { codnaturezaoperacao: codnaturezaoperacao.value },
-  })
-}
-
 const handleDelete = () => {
   $q.dialog({
     title: 'Confirmar exclusão',
@@ -90,16 +78,6 @@ const handleDelete = () => {
 //     params: { codnaturezaoperacao: codnaturezaoperacao.value },
 //   })
 // }
-
-const handleViewTributacao = (codtributacaonaturezaoperacao) => {
-  router.push({
-    name: 'tributacao-natureza-operacao-view',
-    params: {
-      codnaturezaoperacao: codnaturezaoperacao.value,
-      codtributacaonaturezaoperacao,
-    },
-  })
-}
 
 const onLoadTributacoes = async (index, done) => {
   try {
@@ -141,10 +119,19 @@ onMounted(loadData)
     <template v-else-if="naturezaOperacao">
       <!-- Header -->
       <div class="row items-center q-mb-md">
-        <q-btn flat dense round icon="arrow_back" @click="handleBack" />
+        <q-btn flat dense round icon="arrow_back" :to="{ name: 'natureza-operacao' }" />
         <div class="text-h5 q-ml-sm">{{ naturezaOperacao.naturezaoperacao }}</div>
         <q-space />
-        <q-btn flat round icon="edit" color="primary" @click="handleEdit">
+        <q-btn
+          flat
+          round
+          icon="edit"
+          color="primary"
+          :to="{
+            name: 'natureza-operacao-edit',
+            params: { codnaturezaoperacao: codnaturezaoperacao },
+          }"
+        >
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
         <q-btn flat round icon="delete" color="negative" @click="handleDelete">
@@ -332,7 +319,6 @@ onMounted(loadData)
                 {{ tributacoes.length }}
               </q-badge>
               <q-btn
-                v-if="!notaBloqueada"
                 flat
                 dense
                 color="white"
@@ -340,11 +326,11 @@ onMounted(loadData)
                 size="md"
                 :to="{
                   name: 'tributacao-natureza-operacao-create',
-                  params: { codnaturezaoperacao: codnaturezaoperacao.value },
+                  params: { codnaturezaoperacao: codnaturezaoperacao },
                 }"
                 class="q-ml-sm"
               >
-                <q-tooltip>Adicionar Item</q-tooltip>
+                <q-tooltip>Adicionar Tributação</q-tooltip>
               </q-btn>
             </div>
           </div>
@@ -366,107 +352,147 @@ onMounted(loadData)
           <q-infinite-scroll v-else @load="onLoadTributacoes" :offset="250">
             <div class="row q-col-gutter-md">
               <template v-for="trib in tributacoes" :key="trib.codtributacaonaturezaoperacao">
-                <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
                   <q-card flat bordered class="full-height flex column">
-                    <q-item class="bg-grey-3">
-                      <q-item-section avatar>
-                        <q-avatar
-                          color="primary"
-                          text-color="blue-2"
-                          size="md"
-                          class="q-mr-sm text-weight-bolder"
+                    <!-- Header -->
+                    <router-link
+                      :to="{
+                        name: 'tributacao-natureza-operacao-view',
+                        params: {
+                          codnaturezaoperacao: codnaturezaoperacao,
+                          codtributacaonaturezaoperacao: trib.codtributacaonaturezaoperacao,
+                        },
+                      }"
+                      class="bg-grey-3 q-pa-sm cursor-pointer block"
+                      style="text-decoration: none; color: inherit"
+                    >
+                      <div class="row items-center q-gutter-sm text-caption">
+                        <q-badge color="primary" class="text-weight-bold">
+                          #{{ String(trib.codtributacaonaturezaoperacao).padStart(8, '0') }}
+                        </q-badge>
+                        <span class="text-weight-bold text-secondary">
+                          {{ trib.tributacao?.tributacao || trib.tributacao || '-' }}
+                        </span>
+                        <span class="text-tertiary">
+                          {{ getTipoProdutoLabel(trib.codtipoproduto) }}
+                        </span>
+                        <span v-if="trib.estado?.sigla" class="text-grey-7">
+                          {{ trib.estado.sigla }}
+                        </span>
+                        <span v-if="trib.ncm" class="text-grey-7">NCM: {{ trib.ncm }}</span>
+                        <span class="text-yellow-9">CFOP: {{ trib.codcfop }}</span>
+                        <span
+                          class="text-yellow-9"
+                          style="
+                            display: inline-block;
+                            max-width: 150px;
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
+                            vertical-align: middle;
+                          "
                         >
-                          {{ trib.codtributacaonaturezaoperacao }}
-                        </q-avatar>
-                      </q-item-section>
-                      <q-item-section style="height: 70px">
-                        <q-item-label lines="3" class="text-black text-body2">
-                          {{ trib.codcfop }}
-                        </q-item-label>
-                        <q-item-label caption>
-                          {{ trib.tributacao }}
-                        </q-item-label>
-                      </q-item-section>
-                    </q-item>
+                          {{ trib.cfop?.cfop || trib.cfop || '' }}
+                        </span>
+                      </div>
+                    </router-link>
+
+                    <q-separator />
+
+                    <!-- Tributos -->
+                    <q-card-section class="q-pa-sm col-grow justify-center">
+                      <div class="row q-col-gutter-x-xs q-col-gutter-y-sm text-caption">
+                        <!-- Simples -->
+                        <div class="col-6">
+                          <div class="text-grey-7">Simples</div>
+                          <div>{{ trib.csosn ?? '-' }}</div>
+                          <div>{{ formatPercent(trib.icmsbase) }}</div>
+                          <div>{{ formatPercent(trib.icmspercentual) }}</div>
+                        </div>
+                        <!-- ICMS LP -->
+                        <div class="col-6">
+                          <div class="text-grey-7">ICMS</div>
+                          <div>{{ trib.icmscst ?? '-' }}</div>
+                          <div>{{ formatPercent(trib.icmslpbase) }}</div>
+                          <div>{{ formatPercent(trib.icmslppercentual) }}</div>
+                        </div>
+                        <!-- PIS -->
+                        <div class="col-6">
+                          <div class="text-grey-7">PIS</div>
+                          <div>{{ trib.piscst ?? '-' }}</div>
+                          <div>{{ formatPercent(trib.pispercentual) }}</div>
+                        </div>
+                        <!-- COFINS -->
+                        <div class="col-6">
+                          <div class="text-grey-7">Cofins</div>
+                          <div>{{ trib.cofinscst ?? '-' }}</div>
+                          <div>{{ formatPercent(trib.cofinspercentual) }}</div>
+                        </div>
+                        <!-- IPI/CSLL/IRPJ -->
+                        <div class="col-6">
+                          <div class="text-grey-7">IPI/CSLL/IRPJ</div>
+                          <div>{{ trib.ipicst ?? '-' }}</div>
+                          <div>{{ formatPercent(trib.csllpercentual) }}</div>
+                          <div>{{ formatPercent(trib.irpjpercentual) }}</div>
+                        </div>
+                        <!-- Rural (se houver) -->
+                        <div
+                          v-if="
+                            trib.fethabkg ||
+                            trib.iagrokg ||
+                            trib.funruralpercentual ||
+                            trib.senarpercentual
+                          "
+                          class="col-6"
+                        >
+                          <div class="text-grey-7">Rural</div>
+                          <div v-if="trib.funruralpercentual">
+                            {{ formatPercent(trib.funruralpercentual) }}
+                          </div>
+                          <div v-if="trib.senarpercentual">
+                            {{ formatPercent(trib.senarpercentual) }}
+                          </div>
+                          <div v-if="trib.fethabkg">{{ trib.fethabkg }}/kg</div>
+                          <div v-if="trib.iagrokg">{{ trib.iagrokg }}/kg</div>
+                        </div>
+                      </div>
+                    </q-card-section>
+
+                    <q-separator />
+
+                    <!-- Ações -->
+                    <q-card-actions align="right">
+                      <q-btn
+                        flat
+                        round
+                        icon="edit"
+                        color="primary"
+                        size="sm"
+                        :to="{
+                          name: 'tributacao-natureza-operacao-edit',
+                          params: {
+                            codnaturezaoperacao: codnaturezaoperacao,
+                            codtributacaonaturezaoperacao: trib.codtributacaonaturezaoperacao,
+                          },
+                        }"
+                      >
+                        <q-tooltip>Editar</q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        flat
+                        round
+                        icon="delete"
+                        color="negative"
+                        size="sm"
+                        @click="handleDelete(trib)"
+                      >
+                        <q-tooltip>Excluir</q-tooltip>
+                      </q-btn>
+                    </q-card-actions>
                   </q-card>
                 </div>
               </template>
             </div>
-
-            <q-card
-              flat
-              bordered
-              class="q-mb-sm"
-              v-for="trib in tributacoes"
-              :key="trib.codtributacaonaturezaoperacao"
-            >
-              <q-card-section
-                class="q-py-sm cursor-pointer"
-                @click="handleViewTributacao(trib.codtributacaonaturezaoperacao)"
-              >
-                <!-- Linha 1: Identificação -->
-                <div class="items-center row q-mb-xs q-gutter-lg">
-                  <div class="text-body2 text-primary text-weight-bold">
-                    #{{ trib.codtributacaonaturezaoperacao }}
-                  </div>
-                  <div v-if="trib.tributacao" class="col-auto text-grey-7 text-weight-bold">
-                    {{ trib.tributacao }}
-                  </div>
-                  <div class="text-body2 text-grey-7 text-weight-bold">
-                    {{ getTipoProdutoLabel(trib.codtipoproduto) }}
-                  </div>
-                  <div v-if="trib.tipotributacao" class="text-body2 text-grey-7 text-weight-bold">
-                    {{ trib.tipotributacao }}
-                  </div>
-                  <div v-if="trib.ncm" class="text-body2 text-grey-7 text-weight-bold">
-                    NCM: {{ trib.ncm }}
-                  </div>
-                  <div
-                    class="text-body2 text-white bg-primary text-weight-bold ellipsis rounded-borders q-px-xs"
-                    style="max-width: 500px"
-                  >
-                    CFOP: {{ trib.codcfop }} - {{ trib.cfop }}
-                  </div>
-                </div>
-
-                <!-- Linha 2: Tributos -->
-                <div class="row q-col-gutter-xs text-caption">
-                  <!-- Simples -->
-                  <div class="col-6 col-sm-4 col-md-2">
-                    <div class="text-grey-7 text-weight-bold">Simples:</div>
-                    <div>{{ trib.csosn || '-' }}</div>
-                    <div>{{ formatPercent(trib.icmsbase) }}</div>
-                    <div>{{ formatPercent(trib.icmspercentualSimples) }}</div>
-                  </div>
-                  <!-- ICMS -->
-                  <div class="col-6 col-sm-4 col-md-2">
-                    <div class="text-grey-7 text-weight-bold">ICMS</div>
-                    <div>{{ trib.icmscst ?? '-' }}</div>
-                    <div>{{ formatPercent(trib.icmslpbase) }}</div>
-                    <div>{{ formatPercent(trib.icmspercentual) }}</div>
-                  </div>
-                  <!-- PIS -->
-                  <div class="col-6 col-sm-4 col-md-2">
-                    <div class="text-grey-7 text-weight-bold">PIS</div>
-                    <div>{{ trib.piscst ?? '-' }}</div>
-                    <div>{{ formatPercent(trib.pispercentual) }}</div>
-                  </div>
-                  <!-- COFINS -->
-                  <div class="col-6 col-sm-4 col-md-2">
-                    <div class="text-grey-7 text-weight-bold">Cofins</div>
-                    <div>{{ trib.cofinscst ?? '-' }}</div>
-                    <div>{{ formatPercent(trib.cofinspercentual) }}</div>
-                  </div>
-                  <!-- IPI/CSLL/IRPJ -->
-                  <div class="col-6 col-sm-4 col-md-2">
-                    <div class="text-grey-7 text-weight-bold">IPI/CSLL/IRPJ</div>
-                    <div>{{ trib.ipicst ?? '-' }}</div>
-                    <div>{{ formatPercent(trib.csllpercentual) }}</div>
-                    <div>{{ formatPercent(trib.irpjpercentual) }}</div>
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
 
             <template v-slot:loading>
               <div class="row justify-center q-my-md">

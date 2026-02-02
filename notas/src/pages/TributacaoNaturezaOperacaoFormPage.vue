@@ -219,7 +219,7 @@ onMounted(async () => {
         </div>
 
         <!-- Card 1 - Identificação -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="badge" class="q-mr-sm" />
             Identificação
@@ -327,7 +327,7 @@ onMounted(async () => {
         </q-card>
 
         <!-- Card 2 - Simples Nacional -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-teal q-pa-sm">
             <q-icon name="store" class="q-mr-sm" />
             Simples Nacional
@@ -372,7 +372,7 @@ onMounted(async () => {
         </q-card>
 
         <!-- Card 3 - ICMS -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-blue q-pa-sm">
             <q-icon name="account_balance" class="q-mr-sm" />
             ICMS
@@ -413,7 +413,7 @@ onMounted(async () => {
         </q-card>
 
         <!-- Card 4 - PIS/COFINS -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-purple q-pa-sm">
             <q-icon name="paid" class="q-mr-sm" />
             PIS / COFINS
@@ -463,7 +463,7 @@ onMounted(async () => {
         </q-card>
 
         <!-- Card 5 - IPI/CSLL/IRPJ -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-orange q-pa-sm">
             <q-icon name="receipt_long" class="q-mr-sm" />
             IPI / CSLL / IRPJ
@@ -504,7 +504,7 @@ onMounted(async () => {
         </q-card>
 
         <!-- Card 6 - Produtor Rural -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-green q-pa-sm">
             <q-icon name="agriculture" class="q-mr-sm" />
             Produtor Rural
@@ -563,7 +563,7 @@ onMounted(async () => {
         </q-card>
 
         <!-- Card 7 - Contábil -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-indigo q-pa-sm">
             <q-icon name="account_balance" class="q-mr-sm" />
             Contábil
@@ -615,7 +615,7 @@ onMounted(async () => {
         </q-card>
 
         <!-- Card 8 - Observações -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-grey-7 q-pa-sm">
             <q-icon name="notes" class="q-mr-sm" />
             Observações

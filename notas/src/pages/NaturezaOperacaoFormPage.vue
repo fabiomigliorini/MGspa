@@ -306,7 +306,7 @@ onMounted(() => {
         </div>
 
         <!-- Card 1 - Identificação -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="badge" class="q-mr-sm" />
             Identificação
@@ -383,7 +383,7 @@ onMounted(() => {
         </q-card>
 
         <!-- Card 2 - Relacionamentos -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="link" class="q-mr-sm" />
             Relacionamentos
@@ -510,7 +510,7 @@ onMounted(() => {
         </q-card>
 
         <!-- Card 3 - Configurações -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="settings" class="q-mr-sm" />
             Configurações
@@ -546,7 +546,7 @@ onMounted(() => {
         </q-card>
 
         <!-- Card 4 - Observações -->
-        <q-card class="q-mb-md">
+        <q-card class="q-mb-md" flat bordered>
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="notes" class="q-mr-sm" />
             Observações
