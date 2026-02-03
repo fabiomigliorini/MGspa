@@ -16,12 +16,12 @@
 - Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
 - Ao emitir uma nota, deixar salvo quem fez a operação.
 
-- refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
-
 Eduardo
 
+- Em notas, ao editar uma nota em digitação, devo poder ajustar o valor total da nota e os valores dos produtos se ajustam automaticamente para manter o novo valor total.
 - Tela DFE
 - Tela NFeTrceiro
+- refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
 
 DONE:
 

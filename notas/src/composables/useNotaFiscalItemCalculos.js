@@ -9,6 +9,9 @@ export function useNotaFiscalItemCalculos(form, store = null) {
   // Armazena o valor anterior do total final para cálculos
   let valorTotalFinalAnterior = 0
 
+  // Flag para controle de loops entre watchers
+  let atualizandoFromTotalFinal = false
+
   /**
    * Compara dois valores float com tolerância
    */
@@ -20,6 +23,9 @@ export function useNotaFiscalItemCalculos(form, store = null) {
    * Calcula valor total (quantidade * valor unitário)
    */
   const atualizaTotal = () => {
+    // Não executa se está sendo chamado pelo cálculo inverso
+    if (atualizandoFromTotalFinal) return
+
     // Não recalcula se quantidade ou valor unitário estão vazios (usuário digitando)
     const quantidade = form.value.quantidade
     const valorunitario = form.value.valorunitario
@@ -41,6 +47,9 @@ export function useNotaFiscalItemCalculos(form, store = null) {
    * Calcula valor unitário (total / quantidade)
    */
   const atualizaUnitario = () => {
+    // Não executa se está sendo chamado pelo cálculo inverso
+    if (atualizandoFromTotalFinal) return
+
     // Não recalcula se valortotal está vazio (usuário digitando)
     const valortotal = form.value.valortotal
     if (valortotal === null || valortotal === undefined || valortotal === '') {
@@ -76,6 +85,55 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     if (Math.abs(novoTotalFinal - valorTotalFinalAnterior) > 0.001) {
       atualizaBaseImpostos()
     }
+  }
+
+  /**
+   * Calcula valor unitário a partir do valor total final editado pelo usuário
+   * Fórmula inversa:
+   *   valortotal = valortotalfinal + desconto - frete - seguro - outras
+   *   valorunitario = valortotal / quantidade
+   */
+  const atualizaUnitarioFromTotalFinal = () => {
+    // Não executa se está sendo chamado por outro cálculo
+    if (atualizandoFromTotalFinal) return
+
+    const valortotalfinal = form.value.valortotalfinal
+    // Não recalcula se valor total final está vazio (usuário digitando)
+    if (valortotalfinal === null || valortotalfinal === undefined || valortotalfinal === '') {
+      return
+    }
+
+    const valordesconto = Number(form.value.valordesconto || 0)
+    const valorfrete = Number(form.value.valorfrete || 0)
+    const valorseguro = Number(form.value.valorseguro || 0)
+    const valoroutras = Number(form.value.valoroutras || 0)
+
+    // Calcula o valor total (inverso da fórmula do total final)
+    const valortotal = valortotalfinal + valordesconto - valorfrete - valorseguro - valoroutras
+
+    // Calcula o valor unitário
+    const quantidade = form.value.quantidade || 1
+    if (quantidade < 0.0001) {
+      form.value.quantidade = 1
+    }
+
+    const valorunitario = valortotal / (form.value.quantidade || 1)
+
+    // Ativa flag para evitar loop
+    atualizandoFromTotalFinal = true
+
+    // Atualiza os campos
+    form.value.valortotal = round(valortotal, 2)
+    form.value.valorunitario = round(valorunitario, 6)
+
+    // Guarda o valor anterior ANTES de atualizar bases
+    valorTotalFinalAnterior = form.value.valortotalfinal || 0
+
+    // Atualiza bases de impostos (o total final mudou)
+    atualizaBaseImpostos()
+
+    // Desativa flag
+    atualizandoFromTotalFinal = false
   }
 
   /**
@@ -324,6 +382,9 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     watch(() => form.value.valorseguro, atualizaTotalFinal)
     watch(() => form.value.valoroutras, atualizaTotalFinal)
 
+    // Watcher para cálculo inverso (valor total final -> valor unitário)
+    watch(() => form.value.valortotalfinal, atualizaUnitarioFromTotalFinal)
+
     // Watchers para ICMS
     watch(
       () => form.value.icmsbase,
@@ -481,6 +542,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
   return {
     atualizaTotal,
     atualizaUnitario,
+    atualizaUnitarioFromTotalFinal,
     atualizaTotalFinal,
     atualizaBaseImpostos,
     atualizaImposto,
