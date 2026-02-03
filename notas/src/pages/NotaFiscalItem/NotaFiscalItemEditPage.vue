@@ -278,22 +278,14 @@ onBeforeUnmount(() => {
                     />
                   </div>
 
-                  <!-- Valor Total Final (editável) -->
+                  <!-- Valor Total Final (calculado) -->
                   <div class="col-6 col-sm-3">
                     <q-input
-                      v-model.number="editingItem.valortotalfinal"
+                      :model-value="valorTotalFinal.toFixed(2)"
                       label="Valor Total Final"
                       outlined
-                      type="number"
-                      step="0.01"
-                      min="0.01"
+                      readonly
                       prefix="R$"
-                      :rules="[
-                        (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
-                        (val) => val >= 0.01 || 'Deve ser maior ou igual a R$ 0,01',
-                      ]"
-                      lazy-rules
-                      :disable="notaBloqueada"
                       input-class="text-right text-weight-bold"
                       hint=""
                       bg-color="blue-grey-1"
