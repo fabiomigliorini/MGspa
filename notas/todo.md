@@ -18,7 +18,6 @@
 
 Eduardo
 
-- Em notas, ao editar uma nota em digitação, devo poder ajustar o valor total da nota e os valores dos produtos se ajustam automaticamente para manter o novo valor total.
 - Tela DFE
 - Tela NFeTrceiro
 - refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
@@ -144,3 +143,7 @@ DONE:
     - bit
     - ncm
     - cfop (select)
+
+Rejeitado
+
+- Em notas, ao editar uma nota em digitação, devo poder ajustar o valor total da nota e os valores dos produtos se ajustam automaticamente para manter o novo valor total.
