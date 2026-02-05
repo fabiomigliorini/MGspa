@@ -12,15 +12,15 @@
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 
-- Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
-- Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
-- Ao emitir uma nota, deixar salvo quem fez a operação.
-
 Eduardo
 
+- Tela de Empresas. (FAZER EM PESSOAS)
+- Tela de Emissores de Certidões (FAZER EM PESSOAS)
 - Tela DFE
 - Tela NFeTrceiro
 - refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
+- Ao emitir uma nota, deixar salvo quem fez a operação.
+- Conferir como está o site sinopel.mrxempresas.com.br
 
 DONE:
 
@@ -106,6 +106,8 @@ DONE:
 - nao achou codigo barras 7891191003733 na pesquisa
 - link pra pessoas nao esta abrindo na producao
 - https://notas.mgpapelaria.com.br/nota/3319596 notas importadas ficando como em digitacao
+- Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
+- Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
 
 27/01
 

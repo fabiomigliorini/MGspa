@@ -68,7 +68,7 @@ const routes = [
       {
         path: 'nota/:codnotafiscal/item/:codnotafiscalitem/edit',
         name: 'nota-fiscal-item-edit',
-        component: () => import('pages/NotaFiscalItem/NotaFiscalItemEditPage.vue'),
+        component: () => import('src/pages/items/NotaFiscalItemEditPage.vue'),
         meta: {
           auth: true,
           title: 'Notas Fiscais',
