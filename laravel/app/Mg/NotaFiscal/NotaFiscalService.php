@@ -57,7 +57,7 @@ class NotaFiscalService
         $notaNova->fill($notaOriginal->getAttributes());
 
         // Atualiza os campos específicos conforme solicitado
-        $notaNova->serie = 1;
+        $notaNova->serie = $notaOriginal->Filial->nfeserie;
         $notaNova->numero = 0;
         $notaNova->emissao = date('Y-m-d H:i:s');
         $notaNova->saida = $notaNova->emissao;
