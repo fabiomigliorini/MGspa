@@ -29,6 +29,7 @@ export const useSelectFilialStore = defineStore('selectFilial', {
           .map((item) => ({
             label: item.label,
             value: item.value,
+            nfeserie: item.nfeserie,
           }))
           .sort((a, b) => a.value - b.value)
 

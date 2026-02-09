@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
+import { useSelectFilialStore } from '../stores/selects/filial'
 import SelectNaturezaOperacao from '../components/selects/SelectNaturezaOperacao.vue'
 import SelectFilial from '../components/selects/SelectFilial.vue'
 import SelectEstoqueLocal from '../components/selects/SelectEstoqueLocal.vue'
@@ -16,6 +17,7 @@ const router = useRouter()
 const route = useRoute()
 const $q = useQuasar()
 const notaFiscalStore = useNotaFiscalStore()
+const filialStore = useSelectFilialStore()
 
 // Funções de conversão de data/hora
 // Converte ISO datetime (YYYY-MM-DDTHH:MM:SS) para DD/MM/YYYY HH:mm:ss
@@ -284,6 +286,24 @@ watch(
   }
 )
 
+// Atualiza a série conforme a filial selecionada
+watch(
+  () => form.value?.codfilial,
+  (codfilial) => {
+    // se nao tem codfilial ignora
+    if (!codfilial) return
+
+    // se nao estiver em DIGITACAO
+    if (isEditMode.value && nota.value?.status !== 'DIG') return
+
+    // busca serie da filial
+    const filial = filialStore.getByCode(codfilial)
+    if (filial?.nfeserie) {
+      form.value.serie = filial.nfeserie
+    }
+  }
+)
+
 // Computed: Valor Total calculado da Nota Fiscal
 const notaValorTotal = computed(() => {
   const valorprodutos = nota.value?.valorprodutos || 0
@@ -296,9 +316,6 @@ const notaValorTotal = computed(() => {
 
 // Lifecycle
 onMounted(() => {
-  console.log(route.params)
-  console.log(route.params.codnotafiscal)
-  console.log(['iseditmode', isEditMode.value])
   loadFormData()
   loadOptions()
 })

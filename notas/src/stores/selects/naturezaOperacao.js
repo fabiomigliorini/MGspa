@@ -57,11 +57,9 @@ export const useSelectNaturezaOperacaoStore = defineStore('selectNaturezaOperaca
     async fetch(codnaturezaoperacao) {
       // Verifica se já está no cache
       if (this.naturezasById[codnaturezaoperacao]) {
-        console.log('📦 Usando cache - Natureza de Operação:', codnaturezaoperacao)
         return this.naturezasById[codnaturezaoperacao]
       }
 
-      console.log('🌐 Buscando da API - Natureza de Operação:', codnaturezaoperacao)
       try {
         const response = await api.get('v1/select/natureza-operacao', {
           params: { codnaturezaoperacao },

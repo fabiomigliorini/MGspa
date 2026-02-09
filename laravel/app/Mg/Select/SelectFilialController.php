@@ -14,7 +14,8 @@ class SelectFilialController extends Controller
         // busca filiais
         $qry = Filial::ativo()->select([
             'codfilial',
-            'filial'
+            'filial',
+            'nfeserie',
         ])->orderBy('codempresa')->orderBy('codfilial');
         if (filter_var($request->dfe, FILTER_VALIDATE_BOOLEAN)) {
             $qry->where('dfe', true);
@@ -26,6 +27,7 @@ class SelectFilialController extends Controller
             return [
                 'value' => $item->codfilial,
                 'label' => $item->filial,
+                'nfeserie' => $item->nfeserie,
             ];
         });
 
