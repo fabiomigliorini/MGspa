@@ -30,7 +30,7 @@ const routes = [
       },
       {
         path: "/pessoa/:id",
-        name: "pessoaview",
+        name: "pessoaView",
         component: () => import("pages/pessoa/PessoaView"),
       },
       {

@@ -64,6 +64,10 @@ class PessoaResource extends JsonResource
 
         $ret['PessoaContaS'] = PessoaContaResource::collection($this->PessoaContaS()->orderBy('alteracao')->get());
 
+        $ret['DependenteS'] = DependenteResource::collection($this->DependenteS()->orderBy('coddependente', 'desc')->get());
+
+        $ret['DependenteResponsavelS'] = DependenteResource::collection($this->DependeteResponsavelS()->orderBy('coddependente', 'desc')->get());
+
         return $ret;
     }
 }

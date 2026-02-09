@@ -168,13 +168,64 @@
                     <td>CEP: {{ formataCep($pe->cep) ?? '' }}</td>
                 </tr>
             @endforeach
-            {{-- 
-        <tr>
-            <td class="label">POSSUI DEPENDENTES?</td>
-            <td colspan="3">Anexar certidão nasc., Declaração escolar, Cart. de vacinação e <strong
-                    class="highlight">CPF</strong></td>
-        </tr> 
-        --}}
+
+            @php
+                $dependentes = $pessoa
+                    ->DependeteResponsavelS()
+                    ->whereNull('inativo')
+                    ->orderBy('datainicio', 'desc')
+                    ->get();
+            @endphp
+
+            @if ($dependentes->count() > 0)
+                <tr>
+                    <td class="label" colspan="4" style="text-align: center; background-color: #e0e0e0;">
+                        <strong>DEPENDENTES</strong>
+                    </td>
+                </tr>
+                @foreach ($dependentes as $dep)
+                    <tr>
+                        <td class="label">NOME</td>
+                        <td colspan="3">{{ $dep->Pessoa->pessoa ?? '' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">TIPO</td>
+                        <td>{{ \Mg\Pessoa\DependenteService::TIPDEP_LABELS[$dep->tipdep] ?? $dep->tipdep }}</td>
+                        <td class="label">CPF</td>
+                        <td>{{ formataCpf($dep->Pessoa->cnpj ?? '') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">NASC.</td>
+                        <td>{{ $dep->Pessoa->nascimento ? $dep->Pessoa->nascimento->format('d/m/Y') : '' }}</td>
+                        <td class="label">INÍCIO</td>
+                        <td>{{ $dep->datainicio ? \Carbon\Carbon::parse($dep->datainicio)->format('d/m/Y') : '' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">BENEFÍCIOS</td>
+                        <td colspan="3">
+                            @if ($dep->depirrf)
+                                <span>(Dependente IRRF)</span>
+                            @endif
+                            @if ($dep->depsfam)
+                                <span>(Salário-Família)</span>
+                            @endif
+                            @if ($dep->depplano)
+                                <span>(Plano de Saúde)</span>
+                            @endif
+                            @if ($dep->incsocfam)
+                                <span>(Incapaz para trabalho)</span>
+                            @endif
+                            @if ($dep->guardajudicial)
+                                <span>(Guarda Judicial)</span>
+                            @endif
+                            @if ($dep->pensaoalimenticia)
+                                <span>(Pensão em folha)</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            @endif
+
             <tr>
                 <td class="label">TELEFONE/CONTATO:</td>
                 <td colspan="3">

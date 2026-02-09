@@ -519,6 +519,13 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::put('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@update');
         Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', '\Mg\Cobranca\CobrancaHistoricoController@delete');
 
+        // Dependente
+        Route::post('dependente/', '\Mg\Pessoa\DependenteController@create');
+        Route::put('dependente/{coddependente}/', '\Mg\Pessoa\DependenteController@update');
+        Route::delete('dependente/{coddependente}/', '\Mg\Pessoa\DependenteController@delete');
+        Route::post('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@inativar');
+        Route::delete('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@ativar');
+
         Route::group(['prefix' => 'produto'], function () {
             Route::get('{codproduto}', '\Mg\Produto\ProdutoController@show');
         });
