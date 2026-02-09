@@ -32,7 +32,7 @@ use Mg\Colaborador\Colaborador;
 use Mg\Colaborador\ColaboradorCargo;
 use Mg\NaturezaOperacao\DominioAcumulador;
 use Mg\Saurus\SaurusPdv;
-use Mg\Filial\Empresa;
+use Mg\Empresa\Empresa;
 use Mg\Pessoa\Pessoa;
 
 class Filial extends MgModel

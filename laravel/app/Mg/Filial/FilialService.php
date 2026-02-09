@@ -22,6 +22,10 @@ class FilialService extends MgService
             $qry->palavras('filial', $filter['filial']);
         }
 
+        if (!empty($filter['codempresa'])) {
+            $qry->where('codempresa', $filter['codempresa']);
+        }
+
 
         $qry = self::qryOrdem($qry, $sort);
         $qry = self::qryColunas($qry, $fields);

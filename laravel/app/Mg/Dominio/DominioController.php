@@ -5,7 +5,7 @@ namespace Mg\Dominio;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
-use Mg\Filial\Empresa;
+use Mg\Empresa\Empresa;
 
 use Carbon\Carbon;
 use Mg\NaturezaOperacao\DominioAcumulador;

@@ -16,6 +16,8 @@ Eduardo
 
 - Tela de Empresas. (FAZER EM PESSOAS)
 - Tela de Emissores de Certidões (FAZER EM PESSOAS)
+
+- Nota com erro de (531 - Rejeicao: Total da BC ICMS difere do somatorio dos itens)
 - Tela DFE
 - Tela NFeTrceiro
 - refatorar telas de listagem (notas/tributacao/natureza). estão muito feias

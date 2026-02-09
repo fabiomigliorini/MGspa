@@ -356,6 +356,13 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('etnia/{codetnia}/inativo', '\Mg\Pessoa\EtniaController@inativar');
         Route::delete('etnia/{codetnia}/inativo', '\Mg\Pessoa\EtniaController@ativar');
 
+        // Empresa
+        Route::get('empresa/', '\Mg\Empresa\EmpresaController@index');
+        Route::post('empresa/', '\Mg\Empresa\EmpresaController@store');
+        Route::get('empresa/{codempresa}', '\Mg\Empresa\EmpresaController@show');
+        Route::put('empresa/{codempresa}', '\Mg\Empresa\EmpresaController@update');
+        Route::delete('empresa/{codempresa}', '\Mg\Empresa\EmpresaController@destroy');
+
         // Grau de Instrução
         Route::get('grau-instrucao/', '\Mg\Pessoa\GrauInstrucaoController@index');
         Route::post('grau-instrucao/', '\Mg\Pessoa\GrauInstrucaoController@store');

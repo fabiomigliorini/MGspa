@@ -138,6 +138,33 @@ const routes = [
         name: "estadocivil",
         component: () => import("pages/estado-civil/Index.vue"),
       },
+
+      // Empresa
+      {
+        path: "/empresa",
+        name: "empresa",
+        component: () => import("pages/empresa/Index.vue"),
+      },
+      {
+        path: "/empresa/nova",
+        name: "empresanova",
+        component: () => import("pages/empresa/NovaEmpresa.vue"),
+      },
+      {
+        path: "/empresa/:codempresa",
+        name: "empresaview",
+        component: () => import("pages/empresa/EmpresaView.vue"),
+      },
+      {
+        path: "/empresa/:codempresa/editar",
+        name: "empresaeditar",
+        component: () => import("pages/empresa/EmpresaEditar.vue"),
+      },
+      {
+        path: "/filial/:codfilial",
+        name: "filialview",
+        component: () => import("pages/empresa/FilialView.vue"),
+      },
     ],
     meta: {
       auth: true,
