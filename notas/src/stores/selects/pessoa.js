@@ -72,11 +72,9 @@ export const useSelectPessoaStore = defineStore('selectPessoa', {
     async fetch(codpessoa) {
       // Verifica se já está no cache
       if (this.pessoasById[codpessoa]) {
-        console.log('📦 Usando cache - Pessoa:', codpessoa)
         return this.pessoasById[codpessoa]
       }
 
-      console.log('🌐 Buscando da API - Pessoa:', codpessoa)
       try {
         const response = await api.get('v1/select/pessoa', {
           params: { codpessoa },

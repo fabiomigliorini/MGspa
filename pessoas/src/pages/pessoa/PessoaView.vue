@@ -67,6 +67,12 @@
               </card-pessoa-conta>
             </div>
 
+            <!-- DEPENDENTES -->
+            <div class="q-pb-md">
+              <card-dependentes>
+              </card-dependentes>
+            </div>
+
             <!-- ARQUIVOS -->
             <div class="q-pb-md">
               <card-arquivos />
@@ -117,6 +123,7 @@ export default defineComponent({
     CardPessoaConta: defineAsyncComponent(() => import('components/pessoa/CardPessoaConta.vue')),
     CardColaborador: defineAsyncComponent(() => import('components/pessoa/CardColaborador.vue')),
     CardArquivos: defineAsyncComponent(() => import('components/pessoa/CardArquivos.vue')),
+    CardDependentes: defineAsyncComponent(() => import('components/pessoa/CardDependentes.vue')),
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))
   },
 
