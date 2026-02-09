@@ -3,98 +3,76 @@ import { api } from 'src/services/api'
 
 export const useSelectCfopStore = defineStore('selectCfop', {
   state: () => ({
-    // Cache de CFOPs por busca
-    cfopCache: {},
-    // Cache acumulativo de CFOPs já carregados por código
-    cfopsById: {},
+    cfops: [],
+    cfopsLoaded: false,
   }),
 
   getters: {},
 
   actions: {
     /**
-     * Busca CFOP por texto
+     * Carrega todos os CFOPs (apenas uma vez)
      */
-    async search(busca) {
-      if (!busca || busca.length < 1) {
-        return []
-      }
-
-      // Verifica cache
-      const cacheKey = busca.toLowerCase()
-      if (this.cfopCache[cacheKey]) {
-        return this.cfopCache[cacheKey]
+    async loadAll(force = false) {
+      if (this.cfopsLoaded && !force) {
+        return this.cfops
       }
 
       try {
-        const response = await api.get('v1/select/cfop', {
-          params: { busca },
-        })
-        const cfops = response.data.map((item) => ({
-          label: `${item.codigo} - ${item.nome}`,
+        const response = await api.get('v1/cfop', { params: { per_page: 1000 } })
+        this.cfops = (response.data?.data || []).map((item) => ({
+          label: `${item.codcfop} - ${item.descricao}`,
           value: item.codcfop,
-          codigo: item.codigo,
-          nome: item.nome,
+          codcfop: item.codcfop,
+          cfop: item.cfop,
           descricao: item.descricao,
         }))
-
-        // Salva no cache de busca
-        this.cfopCache[cacheKey] = cfops
-
-        // Adiciona cada CFOP ao cache por ID
-        cfops.forEach((cfop) => {
-          this.cfopsById[cfop.value] = cfop
-        })
-
-        return cfops
+        this.cfopsLoaded = true
+        return this.cfops
       } catch (error) {
-        console.error('Erro ao buscar CFOP:', error)
+        console.error('Erro ao carregar CFOPs:', error)
         throw error
       }
+    },
+
+    /**
+     * Busca CFOP por texto (filtra localmente)
+     */
+    async search(busca) {
+      if (!this.cfopsLoaded) {
+        await this.loadAll()
+      }
+
+      if (!busca || busca.length < 1) {
+        return this.cfops
+      }
+
+      const needle = busca.toLowerCase()
+      return this.cfops.filter(
+        (c) =>
+          String(c.codcfop)?.toLowerCase().indexOf(needle) > -1 ||
+          c.cfop?.toLowerCase().indexOf(needle) > -1 ||
+          c.descricao?.toLowerCase().indexOf(needle) > -1,
+      )
     },
 
     /**
      * Busca um CFOP específico por código
      */
     async fetch(codcfop) {
-      // Verifica se já está no cache
-      if (this.cfopsById[codcfop]) {
-        console.log('📦 Usando cache - CFOP:', codcfop)
-        return this.cfopsById[codcfop]
+      if (!this.cfopsLoaded) {
+        await this.loadAll()
       }
 
-      console.log('🌐 Buscando da API - CFOP:', codcfop)
-      try {
-        const response = await api.get('v1/select/cfop', {
-          params: { codcfop },
-        })
-        if (response.data.length > 0) {
-          const item = response.data[0]
-          const cfop = {
-            label: `${item.codigo} - ${item.nome}`,
-            value: item.codcfop,
-            codigo: item.codigo,
-            nome: item.nome,
-            descricao: item.descricao,
-          }
-
-          // Adiciona ao cache
-          this.cfopsById[codcfop] = cfop
-          return cfop
-        }
-        return null
-      } catch (error) {
-        console.error('Erro ao buscar CFOP:', error)
-        throw error
-      }
+      return this.cfops.find((c) => c.value === codcfop) || null
     },
 
     /**
-     * Limpa o cache de CFOP
+     * Limpa o cache
      */
     clear() {
-      this.cfopCache = {}
-      this.cfopsById = {}
+      this.cfops = []
+      this.cfopsLoaded = false
     },
   },
 })

@@ -1,21 +1,3 @@
-- Natureza
-  - deixar cards com o mesmo formato do Notas (fonte/icone) - ok
-  - filtro operacao nao funciona (entrada/saida) - ok
-  - bordinha quando nao acha nada - ok
-  - terminar cards da tributacao dentro da natureza - ok
-  - link editar com :to - ok
-  - transformar todos selects em componentes
-  - padronizar borda do card e titulos do card igual a nota fiscal - ok
-  - deixar listagem por ordem alfabetica - ok
-    (naturezaoperacao)
-  - filtro das tributacoes nessa ordem (pra filtrar e pra listar)
-    - codestado
-    - codtributacao
-    - codtipoproduto
-    - bit
-    - ncm
-    - cfop (select)
-
 - Parametrização de Outras Saídas
 - Tratamento de erro quando não tem tributação da natureza de operação
 - https://notas.mgpapelaria.com.br/nota/3333270 ficou com valor de icms em alguns itens com cst 60 (ST)
@@ -30,16 +12,15 @@
 - limpar endpoints de nota-fiscal não utilizados
 - se for produtor rural pode editar notas com ERR
 
-- Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
-- Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
-- Ao emitir uma nota, deixar salvo quem fez a operação.
-
-- refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
-
 Eduardo
 
+- Tela de Empresas. (FAZER EM PESSOAS)
+- Tela de Emissores de Certidões (FAZER EM PESSOAS)
 - Tela DFE
 - Tela NFeTrceiro
+- refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
+- Ao emitir uma nota, deixar salvo quem fez a operação.
+- Conferir como está o site sinopel.mrxempresas.com.br
 
 DONE:
 
@@ -125,6 +106,8 @@ DONE:
 - nao achou codigo barras 7891191003733 na pesquisa
 - link pra pessoas nao esta abrindo na producao
 - https://notas.mgpapelaria.com.br/nota/3319596 notas importadas ficando como em digitacao
+- Não está buscando alguns produtos pelo código, especifocos, como as distintas colorações de EVA.
+- Ao fazer o fechamento de um cliente com vários negócios, com os mesmos produtos, a listagem na nota fiscal fica com vários quadros do mesmo produto, devemos juntar esse produtos em um só slote da nota. (PAMELA)
 
 27/01
 
@@ -142,3 +125,27 @@ DONE:
 - Tributacao / CFOP
   - deixar card no padrao da tela de notas -ok
   - onde mostra a chave primaria, sempre padronizar a mascara #99999999 -ok
+
+02/02
+
+- Natureza
+  - deixar cards com o mesmo formato do Notas (fonte/icone) - ok
+  - filtro operacao nao funciona (entrada/saida) - ok
+  - bordinha quando nao acha nada - ok
+  - terminar cards da tributacao dentro da natureza - ok
+  - link editar com :to - ok
+  - transformar todos selects em componentes
+  - padronizar borda do card e titulos do card igual a nota fiscal - ok
+  - deixar listagem por ordem alfabetica - ok
+    (naturezaoperacao)
+  - filtro das tributacoes nessa ordem (pra filtrar e pra listar) - ok
+    - codestado
+    - codtributacao
+    - codtipoproduto
+    - bit
+    - ncm
+    - cfop (select)
+
+Rejeitado
+
+- Em notas, ao editar uma nota em digitação, devo poder ajustar o valor total da nota e os valores dos produtos se ajustam automaticamente para manter o novo valor total.

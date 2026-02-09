@@ -15,7 +15,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     notas: [],
     pagination: {
       page: 1,
-      perPage: 9999,
+      perPage: 50,
       hasMore: true,
       loading: false,
       total: 0,
@@ -542,9 +542,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     syncCurrentNotaToList() {
       if (!this.currentNota) return
 
-      const index = this.notas.findIndex(
-        (n) => n.codnotafiscal === this.currentNota.codnotafiscal
-      )
+      const index = this.notas.findIndex((n) => n.codnotafiscal === this.currentNota.codnotafiscal)
       if (index !== -1) {
         this.notas[index] = { ...this.currentNota }
       } else {

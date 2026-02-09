@@ -9,6 +9,7 @@ import {
   COFINS_CST_OPTIONS,
 } from 'src/constants/notaFiscal'
 import { storeToRefs } from 'pinia'
+import SelectCfop from '../selects/SelectCfop.vue'
 
 const notaFiscalStore = useNotaFiscalStore()
 
@@ -33,19 +34,16 @@ const { editingItem } = storeToRefs(notaFiscalStore)
     <q-card-section>
       <div class="row q-col-gutter-md">
         <!-- CFOP -->
-        <div class="col-3 col-sm-2">
-          <q-input
-            v-model.number="editingItem.codcfop"
+        <div class="col-6 col-sm-4">
+          <SelectCfop
+            v-model="editingItem.codcfop"
             label="CFOP *"
-            outlined
-            type="number"
             :disable="notaBloqueada"
-            input-class="text-right"
           />
         </div>
 
         <!-- CST / CSOSN -->
-        <div class="col-9 col-sm-10" v-if="!editingItem.csosn">
+        <div class="col-6 col-sm-8" v-if="!editingItem.csosn">
           <q-select
             v-model="editingItem.icmscst"
             :options="ICMS_CST_OPTIONS"
@@ -58,7 +56,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
           />
         </div>
 
-        <div class="col-9 col-sm-10" v-else>
+        <div class="col-6 col-sm-8" v-else>
           <q-select
             v-model="editingItem.csosn"
             :options="CSOSN_OPTIONS"

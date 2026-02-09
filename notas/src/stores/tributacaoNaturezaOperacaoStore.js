@@ -38,6 +38,7 @@ export const useTributacaoNaturezaOperacaoStore = defineStore('tributacaoNaturez
       codtipoproduto: null,
       ncm: null,
       codcfop: null,
+      bit: null,
     },
     initialLoadDone: false,
 
@@ -96,8 +97,19 @@ export const useTributacaoNaturezaOperacaoStore = defineStore('tributacaoNaturez
       try {
         this.pagination.loading = true
 
+        // Filtra apenas os filtros com valor definido (não null/undefined/string vazia)
+        // Mas mantém valores booleanos false
+        const activeFilters = Object.entries(this.filters).reduce((acc, [key, value]) => {
+          if (value !== null && value !== undefined && value !== '') {
+            acc[key] = value
+          } else if (value === false) {
+            acc[key] = value
+          }
+          return acc
+        }, {})
+
         const params = {
-          ...this.filters,
+          ...activeFilters,
           page: this.pagination.page,
           per_page: this.pagination.perPage,
         }
@@ -239,6 +251,7 @@ export const useTributacaoNaturezaOperacaoStore = defineStore('tributacaoNaturez
         codtipoproduto: null,
         ncm: null,
         codcfop: null,
+        bit: null,
       }
       this.initialLoadDone = false
     },

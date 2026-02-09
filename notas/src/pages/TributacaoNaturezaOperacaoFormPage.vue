@@ -6,7 +6,9 @@ import {
   useTributacaoNaturezaOperacaoStore,
   TIPO_PRODUTO_OPTIONS,
 } from '../stores/tributacaoNaturezaOperacaoStore'
-import api from '../services/api'
+import SelectEstado from '../components/selects/SelectEstado.vue'
+import SelectTributacao from '../components/selects/SelectTributacao.vue'
+import SelectCfop from '../components/selects/SelectCfop.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,11 +19,6 @@ const loading = ref(false)
 const codnaturezaoperacao = computed(() => route.params.codnaturezaoperacao)
 const isEditMode = computed(() => !!route.params.codtributacaonaturezaoperacao)
 const tributacao = computed(() => tributacaoStore.currentTributacao)
-
-// Options para selects
-const tributacaoOptions = ref([])
-const estadoOptions = ref([])
-const cfopOptions = ref([])
 
 const form = ref({
   codtributacao: null,
@@ -73,24 +70,6 @@ const formatValidationErrors = (error) => {
     return messages.join('\n')
   }
   return error.response?.data?.message || error.message
-}
-
-const loadOptions = async () => {
-  try {
-    const [tributacoesRes, estadosRes, cfopsRes] = await Promise.all([
-      api.get('/v1/select/tributacao'),
-      api.get('/v1/select/estado'),
-      api.get('/v1/cfop', { params: { per_page: 1000 } }),
-    ])
-    tributacaoOptions.value = tributacoesRes.data || []
-    estadoOptions.value = estadosRes.data || []
-    cfopOptions.value = (cfopsRes.data?.data || []).map((c) => ({
-      ...c,
-      label: `${c.codcfop} - ${c.descricao}`,
-    }))
-  } catch (error) {
-    console.error('Erro ao carregar opções:', error)
-  }
 }
 
 const loadFormData = async () => {
@@ -198,7 +177,6 @@ const handleCancel = () => {
 }
 
 onMounted(async () => {
-  await loadOptions()
   await loadFormData()
 })
 </script>
@@ -228,45 +206,22 @@ onMounted(async () => {
             <div class="row q-col-gutter-md">
               <!-- Tributação -->
               <div class="col-12 col-sm-6">
-                <q-select
+                <SelectTributacao
                   v-model="form.codtributacao"
-                  :options="tributacaoOptions"
-                  option-value="codtributacao"
-                  option-label="tributacao"
-                  emit-value
-                  map-options
-                  outlined
                   label="Tributação *"
                   :disable="loading"
                   :rules="[(val) => val !== null || 'Tributação é obrigatória']"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="receipt" />
-                  </template>
-                </q-select>
+                />
               </div>
 
               <!-- CFOP -->
               <div class="col-12 col-sm-6">
-                <q-select
+                <SelectCfop
                   v-model="form.codcfop"
-                  :options="cfopOptions"
-                  option-value="codcfop"
-                  option-label="label"
-                  emit-value
-                  map-options
-                  outlined
                   label="CFOP *"
                   :disable="loading"
-                  use-input
-                  input-debounce="300"
                   :rules="[(val) => val !== null || 'CFOP é obrigatório']"
-                  @filter="(val, update) => update(() => {})"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="numbers" />
-                  </template>
-                </q-select>
+                />
               </div>
 
               <!-- Tipo de Produto -->
@@ -291,22 +246,7 @@ onMounted(async () => {
 
               <!-- Estado -->
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="form.codestado"
-                  :options="estadoOptions"
-                  option-value="value"
-                  option-label="sigla"
-                  emit-value
-                  map-options
-                  outlined
-                  clearable
-                  label="Estado"
-                  :disable="loading"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="map" />
-                  </template>
-                </q-select>
+                <SelectEstado v-model="form.codestado" label="Estado" :disable="loading" />
               </div>
 
               <!-- NCM -->
