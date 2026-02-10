@@ -1,13 +1,15 @@
 <?php
 
-namespace Mg\Filial;
+namespace Mg\Empresa;
 
 use Mg\MgModel;
+use Mg\Usuario\Usuario;
+use Mg\Filial\Filial;
 
-class Empresa extends MGModel
+class Empresa extends MgModel
 {
     const MODOEMISSAONFCE_NORMAL = 1;
-	const MODOEMISSAONFCE_OFFLINE = 9;
+    const MODOEMISSAONFCE_OFFLINE = 9;
 
     protected $table = 'tblempresa';
     protected $primaryKey = 'codempresa';
@@ -39,5 +41,4 @@ class Empresa extends MGModel
     {
         return $this->hasMany(Filial::class, 'codempresa', 'codempresa');
     }
-
 }
