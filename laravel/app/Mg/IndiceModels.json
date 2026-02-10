@@ -7894,7 +7894,13 @@
                 "metodo": "UsuarioCriacao"
             }
         },
-        "hasMany": []
+        "hasMany": {
+            "tbleventocalendario.codferias": {
+                "tabela": "tbleventocalendario",
+                "coluna": "codferias",
+                "metodo": "EventoCalendarioS"
+            }
+        }
     },
     "tblcolaborador": {
         "tabela": "tblcolaborador",
@@ -7934,6 +7940,11 @@
                 "tabela": "tblferias",
                 "coluna": "codcolaborador",
                 "metodo": "FeriasS"
+            },
+            "tbleventocalendario.codcolaborador": {
+                "tabela": "tbleventocalendario",
+                "coluna": "codcolaborador",
+                "metodo": "EventoCalendarioS"
             }
         }
     },
@@ -8976,6 +8987,47 @@
                 "tabela": "tblpessoa",
                 "coluna": "codpessoaresponsavel",
                 "metodo": "PessoaResponsavel"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tbleventocalendario.coddependente": {
+                "tabela": "tbleventocalendario",
+                "coluna": "coddependente",
+                "metodo": "EventoCalendarioS"
+            }
+        }
+    },
+    "tbleventocalendario": {
+        "tabela": "tbleventocalendario",
+        "campocodigo": "codeventocalendario",
+        "namespace": "Mg\\Pessoa\\Calendario",
+        "classe": "EventoCalendario",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pessoa\/Calendario\/EventoCalendario.php",
+        "belongsTo": {
+            "codcolaborador": {
+                "tabela": "tblcolaborador",
+                "coluna": "codcolaborador",
+                "metodo": "Colaborador"
+            },
+            "coddependente": {
+                "tabela": "tbldependente",
+                "coluna": "coddependente",
+                "metodo": "Dependente"
+            },
+            "codferias": {
+                "tabela": "tblferias",
+                "coluna": "codferias",
+                "metodo": "Ferias"
             },
             "codusuarioalteracao": {
                 "tabela": "tblusuario",
