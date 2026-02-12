@@ -68,9 +68,25 @@ export default {
     };
 
     const confirmarExclusao = () => {
+      if (sEmpresa.filiais.length > 0) {
+        $q.notify({
+          color: "red-5",
+          textColor: "white",
+          icon: "error",
+          message:
+            "Não é possível excluir uma empresa que possui filiais. Exclua as filiais primeiro.",
+        });
+        return;
+      }
+
       $q.dialog({
         title: "Confirmar Exclusão",
-        message: `Deseja realmente excluir a empresa "${sEmpresa.item.empresa}"?`,
+        message: `Para excluir a empresa "${sEmpresa.item.empresa}", digite EXCLUIR abaixo:`,
+        prompt: {
+          model: "",
+          type: "text",
+          isValid: (val) => val === "EXCLUIR",
+        },
         cancel: true,
         persistent: true,
       }).onOk(async () => {

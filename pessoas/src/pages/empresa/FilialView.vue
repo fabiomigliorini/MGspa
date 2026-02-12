@@ -76,7 +76,12 @@ export default {
     const confirmarExclusao = () => {
       $q.dialog({
         title: "Confirmar Exclusão",
-        message: `Deseja realmente excluir a filial "${sEmpresa.filial.filial}"?`,
+        message: `Para excluir a filial "${sEmpresa.filial.filial}", digite EXCLUIR abaixo:`,
+        prompt: {
+          model: "",
+          type: "text",
+          isValid: (val) => val === "EXCLUIR",
+        },
         cancel: true,
         persistent: true,
       }).onOk(async () => {
