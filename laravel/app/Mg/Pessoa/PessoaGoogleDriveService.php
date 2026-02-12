@@ -14,7 +14,7 @@ class PessoaGoogleDriveService
     public function __construct()
     {
         $client = new Client();
-        $client->setAuthConfig(base_path(env('GOOGLE_DRIVE_CREDENTIALS_PATH')));
+        $client->setAuthConfig(base_path(env('GOOGLE_CREDENTIALS_PATH')));
         $client->addScope(Drive::DRIVE);
 
         $this->driveService = new Drive($client);

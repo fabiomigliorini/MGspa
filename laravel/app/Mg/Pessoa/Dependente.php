@@ -1,12 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Feb/2026 11:45:46
+ * Date: 10/Feb/2026 11:16:33
  */
 
 namespace Mg\Pessoa;
 
 use Mg\MgModel;
+use Mg\Pessoa\Calendario\EventoCalendario;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
 
@@ -84,6 +85,13 @@ class Dependente extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
+    public function EventoCalendarioS()
+    {
+        return $this->hasMany(EventoCalendario::class, 'coddependente', 'coddependente');
     }
 
 }

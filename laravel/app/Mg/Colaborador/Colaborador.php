@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2024 15:01:49
+ * Date: 10/Feb/2026 11:13:44
  */
 
 namespace Mg\Colaborador;
@@ -9,6 +9,7 @@ namespace Mg\Colaborador;
 use Mg\MgModel;
 use Mg\Colaborador\ColaboradorCargo;
 use Mg\Colaborador\Ferias;
+use Mg\Pessoa\Calendario\EventoCalendario;
 use Mg\Filial\Filial;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
@@ -24,6 +25,7 @@ class Colaborador extends MgModel
         'codpessoa',
         'contratacao',
         'experiencia',
+        'googledrivefolderid',
         'numerocontabilidade',
         'numeroponto',
         'observacoes',
@@ -77,6 +79,11 @@ class Colaborador extends MgModel
     public function ColaboradorCargoS()
     {
         return $this->hasMany(ColaboradorCargo::class, 'codcolaborador', 'codcolaborador');
+    }
+
+    public function EventoCalendarioS()
+    {
+        return $this->hasMany(EventoCalendario::class, 'codcolaborador', 'codcolaborador');
     }
 
     public function FeriasS()

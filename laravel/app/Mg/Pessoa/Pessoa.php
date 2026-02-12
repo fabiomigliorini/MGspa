@@ -2,7 +2,7 @@
 
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Feb/2026 11:46:43
+ * Date: 10/Feb/2026 11:14:09
  */
 
 namespace Mg\Pessoa;
