@@ -16,6 +16,7 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const loading = ref(false);
+    const erro = ref(false);
 
     const formatarCodigo = (cod) => {
       if (!cod) return "";
@@ -47,16 +48,26 @@ export default {
 
     const carregarFilial = async () => {
       loading.value = true;
+      erro.value = false;
       try {
         await sEmpresa.getFilial(route.params.codfilial);
+        if (!sEmpresa.filial || !sEmpresa.filial.codfilial) {
+          erro.value = true;
+          $q.notify({
+            color: "red-5",
+            textColor: "white",
+            icon: "error",
+            message: "Filial não encontrada",
+          });
+        }
       } catch (error) {
+        erro.value = true;
         $q.notify({
           color: "red-5",
           textColor: "white",
           icon: "error",
           message: "Erro ao carregar filial",
         });
-        router.push("/empresa");
       } finally {
         loading.value = false;
       }
@@ -83,8 +94,7 @@ export default {
             color: "red-5",
             textColor: "white",
             icon: "error",
-            message:
-              error.response?.data?.message || "Erro ao excluir filial",
+            message: error.response?.data?.message || "Erro ao excluir filial",
           });
         }
       });
@@ -97,6 +107,7 @@ export default {
     return {
       sEmpresa,
       loading,
+      erro,
       formatarCodigo,
       ambienteNfeLabel,
       criacaoFormatada,
@@ -117,7 +128,20 @@ export default {
           <q-spinner-gears size="50px" color="primary" />
         </q-inner-loading>
 
-        <div v-if="!loading && sEmpresa.filial.codfilial">
+        <div v-if="!loading && erro" class="text-center q-pa-xl">
+          <q-icon name="error_outline" size="64px" color="grey" />
+          <div class="text-h6 text-grey q-mt-md">Filial não encontrada</div>
+          <q-btn
+            flat
+            color="primary"
+            label="Voltar para empresas"
+            icon="arrow_back"
+            to="/empresa"
+            class="q-mt-md"
+          />
+        </div>
+
+        <div v-if="!loading && !erro && sEmpresa.filial?.codfilial">
           <div class="q-pa-sm items-center row">
             <q-btn
               flat
@@ -125,7 +149,7 @@ export default {
               :to="'/empresa/' + sEmpresa.filial.codempresa"
               round
             />
-            <span class="text-h6">{{ sEmpresa.filial.filial }}</span>
+            <span class="text-h6">{{ sEmpresa.filial.Empresa.empresa }}</span>
           </div>
 
           <q-card style="max-width: 1000px; margin: 0 auto">
@@ -143,6 +167,13 @@ export default {
                   <q-btn
                     flat
                     round
+                    color="primary"
+                    icon="edit"
+                    :to="'/filial/' + sEmpresa.filial.codfilial + '/editar'"
+                  />
+                  <q-btn
+                    flat
+                    round
                     color="negative"
                     icon="delete"
                     @click="confirmarExclusao"
@@ -153,154 +184,216 @@ export default {
 
             <q-separator />
 
-            <q-list>
-              <q-item>
-                <q-item-section side>
-                  <q-icon name="business" color="primary" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Empresa</q-item-label>
-                  <q-item-label>
-                    <router-link
-                      :to="'/empresa/' + sEmpresa.filial.codempresa"
-                      class="text-primary"
-                    >
-                      {{ sEmpresa.filial.Empresa?.empresa || sEmpresa.filial.codempresa }}
-                    </router-link>
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+            <q-card-section class="row">
+              <!-- Empresa -->
+              <div class="col-6 row items-center q-pa-sm q-gutter-sm">
+                <q-icon name="business" color="primary" size="sm" />
+                <span class="text-caption text-grey-7">Empresa:</span>
+                <router-link
+                  :to="'/empresa/' + sEmpresa.filial.codempresa"
+                  class="text-primary ellipsis"
+                  style="text-decoration: none"
+                >
+                  {{
+                    sEmpresa.filial.Empresa?.empresa ||
+                    sEmpresa.filial.codempresa
+                  }}
+                </router-link>
+              </div>
 
-              <q-item v-if="sEmpresa.filial.codpessoa">
-                <q-item-section side>
-                  <q-icon name="person" color="primary" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Pessoa</q-item-label>
-                  <q-item-label>
-                    <router-link
-                      :to="'/pessoa/' + sEmpresa.filial.codpessoa"
-                      class="text-primary"
-                    >
-                      {{ sEmpresa.filial.Pessoa?.pessoa || sEmpresa.filial.codpessoa }}
-                    </router-link>
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- Pessoa -->
+              <div
+                v-if="sEmpresa.filial.codpessoa"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="person" color="primary" size="sm" />
+                <span class="text-caption text-grey-7">Pessoa:</span>
+                <router-link
+                  :to="'/pessoa/' + sEmpresa.filial.codpessoa"
+                  class="text-primary ellipsis"
+                  style="text-decoration: none"
+                >
+                  {{
+                    sEmpresa.filial.Pessoa?.pessoa || sEmpresa.filial.codpessoa
+                  }}
+                </router-link>
+              </div>
 
-              <q-item>
-                <q-item-section side>
-                  <q-icon name="receipt" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>CRT - Código do Regime Tributário</q-item-label>
-                  <q-item-label>{{ sEmpresa.filial.crt || '-' }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- CRT -->
+              <div class="col-6 row items-center q-pa-sm q-gutter-sm">
+                <q-icon name="receipt" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">CRT:</span>
+                <span>{{ sEmpresa.filial.crt || "-" }}</span>
+              </div>
 
-              <q-item>
-                <q-item-section side>
-                  <q-icon name="cloud" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Ambiente NFe</q-item-label>
-                  <q-item-label>
-                    <q-badge
-                      :color="sEmpresa.filial.nfeambiente === 1 ? 'green' : 'orange'"
-                      :label="ambienteNfeLabel"
-                    />
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- Ambiente NFe -->
+              <div class="col-6 row items-center q-pa-sm q-gutter-sm">
+                <q-icon name="cloud" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Ambiente NFe:</span>
+                <q-badge
+                  :color="
+                    sEmpresa.filial.nfeambiente === 1 ? 'green' : 'orange'
+                  "
+                  :label="ambienteNfeLabel"
+                />
+              </div>
 
-              <q-item>
-                <q-item-section side>
-                  <q-icon name="tag" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Série NFe</q-item-label>
-                  <q-item-label>{{ sEmpresa.filial.nfeserie || '-' }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- Série NFe -->
+              <div class="col-6 row items-center q-pa-sm q-gutter-sm">
+                <q-icon name="tag" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Série NFe:</span>
+                <span>{{ sEmpresa.filial.nfeserie || "-" }}</span>
+              </div>
 
-              <q-item>
-                <q-item-section side>
-                  <q-icon name="verified" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Emite NFe</q-item-label>
-                  <q-item-label>
-                    <q-badge
-                      :color="sEmpresa.filial.emitenfe ? 'green' : 'grey'"
-                      :label="sEmpresa.filial.emitenfe ? 'Sim' : 'Não'"
-                    />
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- Emite NFe -->
+              <div class="col-6 row items-center q-pa-sm q-gutter-sm">
+                <q-icon name="verified" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Emite NFe:</span>
+                <q-badge
+                  :color="sEmpresa.filial.emitenfe ? 'green' : 'grey'"
+                  :label="sEmpresa.filial.emitenfe ? 'Sim' : 'Não'"
+                />
+              </div>
 
-              <q-item>
-                <q-item-section side>
-                  <q-icon name="sync" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>DF-e</q-item-label>
-                  <q-item-label>
-                    <q-badge
-                      :color="sEmpresa.filial.dfe ? 'green' : 'grey'"
-                      :label="sEmpresa.filial.dfe ? 'Sim' : 'Não'"
-                    />
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- DF-e -->
+              <div class="col-6 row items-center q-pa-sm q-gutter-sm">
+                <q-icon name="sync" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">DF-e:</span>
+                <q-badge
+                  :color="sEmpresa.filial.dfe ? 'green' : 'grey'"
+                  :label="sEmpresa.filial.dfe ? 'Sim' : 'Não'"
+                />
+              </div>
 
-              <q-item v-if="sEmpresa.filial.empresadominio">
-                <q-item-section side>
-                  <q-icon name="domain" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Empresa Domínio</q-item-label>
-                  <q-item-label>{{ sEmpresa.filial.empresadominio }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- Empresa Domínio -->
+              <div
+                v-if="sEmpresa.filial.empresadominio"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="domain" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Empresa Domínio:</span>
+                <span>{{ sEmpresa.filial.empresadominio }}</span>
+              </div>
 
-              <q-item v-if="sEmpresa.filial.stonecode">
-                <q-item-section side>
-                  <q-icon name="payment" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Stone Code</q-item-label>
-                  <q-item-label>{{ sEmpresa.filial.stonecode }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- Token NFCe -->
+              <div
+                v-if="sEmpresa.filial.tokennfce"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="key" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Token NFCe:</span>
+                <span class="ellipsis">{{ sEmpresa.filial.tokennfce }}</span>
+              </div>
 
-              <q-item v-if="sEmpresa.filial.ultimonsu">
-                <q-item-section side>
-                  <q-icon name="numbers" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Último NSU</q-item-label>
-                  <q-item-label>{{ sEmpresa.filial.ultimonsu }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <!-- ID Token NFCe -->
+              <div
+                v-if="sEmpresa.filial.idtokennfce"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="pin" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">ID Token NFCe:</span>
+                <span>{{ sEmpresa.filial.idtokennfce }}</span>
+              </div>
 
-              <q-item v-if="sEmpresa.filial.validadecertificado">
-                <q-item-section side>
-                  <q-icon name="security" color="grey" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label caption>Validade Certificado</q-item-label>
-                  <q-item-label>{{ validadeCertificadoFormatada }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
+              <!-- Token IBPT -->
+              <div
+                v-if="sEmpresa.filial.tokenibpt"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="token" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Token IBPT:</span>
+                <span class="ellipsis">{{ sEmpresa.filial.tokenibpt }}</span>
+              </div>
+
+              <!-- ACBR Monitor -->
+              <div
+                v-if="
+                  sEmpresa.filial.acbrmonitorip ||
+                  sEmpresa.filial.acbrmonitorporta
+                "
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="dns" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">ACBR Monitor:</span>
+                <span>{{
+                  [
+                    sEmpresa.filial.acbrmonitorip,
+                    sEmpresa.filial.acbrmonitorporta,
+                  ]
+                    .filter(Boolean)
+                    .join(":")
+                }}</span>
+              </div>
+
+              <!-- Caminho Monitor ACBR -->
+              <div
+                v-if="sEmpresa.filial.caminhomonitoracbr"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="folder" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">
+                  Caminho Monitor ACBR:</span
+                >
+                <span style="word-break: break-all">{{
+                  sEmpresa.filial.caminhomonitoracbr
+                }}</span>
+              </div>
+
+              <!-- Caminho Rede ACBR -->
+              <div
+                v-if="sEmpresa.filial.caminhoredeacbr"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="lan" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Caminho Rede ACBR:</span>
+                <span style="word-break: break-all">
+                  {{ sEmpresa.filial.caminhoredeacbr }}
+                </span>
+              </div>
+
+              <!-- Stone Code -->
+              <div
+                v-if="sEmpresa.filial.stonecode"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="payment" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Stone Code:</span>
+                <span>{{ sEmpresa.filial.stonecode }}</span>
+              </div>
+
+              <!-- Último NSU -->
+              <div
+                v-if="sEmpresa.filial.ultimonsu"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="numbers" color="grey" size="sm" />
+                <span class="text-caption text-grey-7">Último NSU:</span>
+                <span>{{ sEmpresa.filial.ultimonsu }}</span>
+              </div>
+
+              <!-- Validade Certificado -->
+              <div
+                v-if="sEmpresa.filial.validadecertificado"
+                class="col-6 row items-center q-pa-sm q-gutter-sm"
+              >
+                <q-icon name="security" color="grey" size="sm" />
+                <span class="text-caption text-grey-7"> Certificado até: </span>
+                <span>{{ validadeCertificadoFormatada }}</span>
+              </div>
+            </q-card-section>
 
             <q-separator />
 
             <q-card-section class="row q-gutter-md q-pa-sm">
-              <q-item v-if="sEmpresa.filial.criacao" class="q-gutter-sm q-pa-none">
+              <q-item
+                v-if="sEmpresa.filial.criacao"
+                class="q-gutter-sm q-pa-none"
+              >
                 <q-icon name="add_circle" color="grey" size="sm" side />
                 <q-item-section>
-                  <q-item-label caption>Criação</q-item-label>
+                  <q-item-label caption class="text-grey-7">
+                    Criação
+                  </q-item-label>
                   <q-item-label class="text-caption">
                     {{ criacaoFormatada }}
                   </q-item-label>
@@ -309,7 +402,9 @@ export default {
               <q-item class="q-gutter-sm q-pa-none">
                 <q-icon name="update" color="grey" size="sm" side />
                 <q-item-section>
-                  <q-item-label caption>Última Alteração</q-item-label>
+                  <q-item-label caption class="text-grey-7">
+                    Última Alteração
+                  </q-item-label>
                   <q-item-label class="text-caption">
                     {{ alteracaoFormatada }}
                   </q-item-label>

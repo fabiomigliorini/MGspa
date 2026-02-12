@@ -31,9 +31,9 @@ class FilialController extends MgController
      */
     public function show(Request $request, $id)
     {
-        $model = Filial::findOrFail($id, $request->get('fields'));
+        $model = Filial::with(['Pessoa', 'Empresa'])->findOrFail($id);
 
-        return response()->json($model, 200);
+        return new FilialResource($model);
     }
 
     /**
@@ -59,7 +59,8 @@ class FilialController extends MgController
         $model->fill($request->all());
         $model->save();
 
-        return response()->json($model, 201);
+        $model->load(['Pessoa', 'Empresa']);
+        return (new FilialResource($model))->response()->setStatusCode(201);
     }
 
     /**
@@ -91,7 +92,8 @@ class FilialController extends MgController
 
         $model->update();
 
-        return response()->json($model, 201);
+        $model->load(['Pessoa', 'Empresa']);
+        return new FilialResource($model);
     }
 
     /**

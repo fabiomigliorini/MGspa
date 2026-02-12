@@ -42,7 +42,7 @@ export const empresaStore = defineStore("empresa", {
 
     async getFilial(codfilial) {
       const ret = await api.get("v1/filial/" + codfilial);
-      this.filial = ret.data.data;
+      this.filial = ret.data.data || {};
       return ret;
     },
 
@@ -72,6 +72,17 @@ export const empresaStore = defineStore("empresa", {
     async atualizarEmpresa(codempresa, model) {
       const ret = await api.put("v1/empresa/" + codempresa, model);
       this.item = ret.data.data;
+      return ret;
+    },
+
+    async criarFilial(model) {
+      const ret = await api.post("v1/filial", model);
+      return ret;
+    },
+
+    async atualizarFilial(codfilial, model) {
+      const ret = await api.put("v1/filial/" + codfilial, model);
+      this.filial = ret.data.data;
       return ret;
     },
 

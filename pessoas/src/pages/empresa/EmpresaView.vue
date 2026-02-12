@@ -147,14 +147,18 @@ export default {
                     color="primary"
                     icon="edit"
                     :to="'/empresa/' + sEmpresa.item.codempresa + '/editar'"
-                  />
+                  >
+                    <q-tooltip> Editar Empresa </q-tooltip>
+                  </q-btn>
                   <q-btn
                     flat
                     round
                     color="negative"
                     icon="delete"
                     @click="confirmarExclusao"
-                  />
+                  >
+                    <q-tooltip> Excluir Empresa </q-tooltip>
+                  </q-btn>
                 </div>
               </div>
             </q-card-section>
@@ -230,49 +234,60 @@ export default {
 
           <!-- Seção Filiais -->
           <div style="max-width: 1000px; margin: 0 auto" class="q-mt-lg">
-            <div class="row items-center q-mb-md">
-              <span class="text-h5">Filial</span>
-              <span class="text-primary text-bold cursor-pointer q-ml-sm">
-                + Nova
-              </span>
+            <div class="row items-center q-py-md">
+              <div class="text-h5 col">Filiais</div>
+              <q-btn
+                color="primary"
+                flat
+                round
+                icon="add"
+                :to="'/empresa/' + sEmpresa.item.codempresa + '/filial/nova'"
+              >
+                <q-tooltip> Nova Filial </q-tooltip>
+              </q-btn>
             </div>
 
             <div class="row q-mb-md q-gutter-sm">
               <q-input
                 v-model="filtroFilial"
                 outlined
-                dense
-                placeholder="Filial"
+                label="Filial"
                 class="col"
                 @keyup.enter="buscarFiliais"
               />
-              <q-btn
-                color="primary"
-                icon="search"
-                @click="buscarFiliais"
-              />
+              <q-btn color="primary" icon="search" @click="buscarFiliais" />
             </div>
 
             <q-inner-loading :showing="sEmpresa.loadingFiliais">
               <q-spinner-gears size="30px" color="primary" />
             </q-inner-loading>
 
-            <div v-if="!sEmpresa.loadingFiliais && sEmpresa.filiais.length === 0" class="text-grey text-center q-pa-md">
+            <div
+              v-if="!sEmpresa.loadingFiliais && sEmpresa.filiais.length === 0"
+              class="text-grey text-center q-pa-md"
+            >
               Nenhuma filial cadastrada
             </div>
 
             <div v-if="!sEmpresa.loadingFiliais">
-              <template v-for="(filial, index) in sEmpresa.filiais" :key="filial.codfilial">
+              <template
+                v-for="(filial, index) in sEmpresa.filiais"
+                :key="filial.codfilial"
+              >
                 <q-separator v-if="index > 0" />
-                <router-link :to="'/filial/' + filial.codfilial" class="row items-center q-pa-sm" style="text-decoration: none; color: inherit">
-                  <div class="text-caption text-grey q-mr-md" style="min-width: 90px">
+                <router-link
+                  :to="'/filial/' + filial.codfilial"
+                  class="row items-center q-pa-sm"
+                  style="text-decoration: none; color: inherit"
+                >
+                  <div class="text-caption text-grey q-mr-md">
                     {{ formatarCodigo(filial.codfilial) }}
                   </div>
-                  <div class="text-bold text-primary q-mr-md">
+                  <div class="text-bold text-primary" style="width: 100px">
                     {{ filial.filial }}
                   </div>
                   <div class="text-grey">
-                    {{ filial.Pessoa?.pessoa || '' }}
+                    {{ filial.Pessoa?.fantasia || "-" }}
                   </div>
                 </router-link>
               </template>
