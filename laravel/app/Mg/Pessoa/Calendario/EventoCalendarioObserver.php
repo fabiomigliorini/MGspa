@@ -18,6 +18,10 @@ class EventoCalendarioObserver
     protected array $camposIgnorados = [
         'status',
         'googleeventid',
+        'alteracao',
+        'criacao',
+        'codusuarioalteracao',
+        'codusuariocriacao',
     ];
 
     /**
@@ -56,8 +60,9 @@ class EventoCalendarioObserver
         }
 
         try {
+            $calendarId = EventoCalendarioService::resolverCalendarId($evento->tipo);
             app(GoogleCalendarService::class)
-                ->deleteEvent($evento->googleeventid);
+                ->deleteEvent($calendarId, $evento->googleeventid);
         } catch (\Throwable $e) {
             // opcional: logar erro
             report($e);

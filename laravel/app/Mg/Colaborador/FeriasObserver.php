@@ -11,6 +11,8 @@ namespace Mg\Colaborador;
 
 use Carbon\Carbon;
 use Mg\Pessoa\Calendario\EventoCalendario;
+use Mg\Pessoa\Calendario\EventoCalendarioService;
+use Mg\Pessoa\Calendario\GoogleCalendarService;
 
 class FeriasObserver
 {
@@ -22,6 +24,26 @@ class FeriasObserver
         'FER_INI' => 'gozoinicio',
         'FER_FIM' => 'gozofim',
     ];
+
+    /**
+     * Antes de excluir Férias, remove os eventos do Google e do banco
+     */
+    public function deleting(Ferias $ferias): void
+    {
+        $eventos = EventoCalendario::where('codferias', $ferias->codferias)->get();
+
+        foreach ($eventos as $evento) {
+            if ($evento->googleeventid) {
+                try {
+                    $calendarId = EventoCalendarioService::resolverCalendarId($evento->tipo);
+                    app(GoogleCalendarService::class)->deleteEvent($calendarId, $evento->googleeventid);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+            $evento->delete();
+        }
+    }
 
     /**
      * Após criar Férias, gera os eventos de calendário

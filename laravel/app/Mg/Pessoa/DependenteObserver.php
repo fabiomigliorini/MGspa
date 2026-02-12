@@ -11,9 +11,31 @@ namespace Mg\Pessoa;
 
 use Carbon\Carbon;
 use Mg\Pessoa\Calendario\EventoCalendario;
+use Mg\Pessoa\Calendario\EventoCalendarioService;
+use Mg\Pessoa\Calendario\GoogleCalendarService;
 
 class DependenteObserver
 {
+    /**
+     * Antes de excluir um Dependente, remove os eventos do Google e do banco
+     */
+    public function deleting(Dependente $dependente): void
+    {
+        $eventos = EventoCalendario::where('coddependente', $dependente->coddependente)->get();
+
+        foreach ($eventos as $evento) {
+            if ($evento->googleeventid) {
+                try {
+                    $calendarId = EventoCalendarioService::resolverCalendarId($evento->tipo);
+                    app(GoogleCalendarService::class)->deleteEvent($calendarId, $evento->googleeventid);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+            $evento->delete();
+        }
+    }
+
     /**
      * Após criar um Dependente, gera o evento de aniversário
      */
