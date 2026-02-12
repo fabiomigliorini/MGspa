@@ -5,14 +5,13 @@ namespace Mg\Filial;
 use Illuminate\Support\Facades\DB;
 
 use Mg\MgService;
-use Mg\Pessoa\Pessoa;
 
 class FilialService extends MgService
 {
 
     public static function pesquisar(array $filter = null, array $sort = null, array $fields = null)
     {
-        $qry = Filial::query();
+        $qry = Filial::with(['Pessoa', 'Empresa']);
 
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);
@@ -28,6 +27,9 @@ class FilialService extends MgService
 
 
         $qry = self::qryOrdem($qry, $sort);
+        if (empty($sort)) {
+            $qry->orderBy('codfilial', 'asc');
+        }
         $qry = self::qryColunas($qry, $fields);
         return $qry;
     }

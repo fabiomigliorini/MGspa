@@ -93,14 +93,39 @@ defineExpose({
       v-model="contingenciaDataFormatada"
       label="Data de Contingência"
       mask="##/##/#### ##:##"
+      clearable
+      @clear="model.contingenciadata = null"
     >
       <template v-slot:prepend>
-        <q-icon name="event" class="cursor-pointer" />
-        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-          <q-date v-model="model.contingenciadata" mask="YYYY-MM-DD HH:mm:ss">
-            <q-btn v-close-popup label="Fechar" color="primary" flat />
-          </q-date>
-        </q-popup-proxy>
+        <q-icon name="event" class="cursor-pointer">
+          <q-popup-proxy
+            cover
+            transition-show="scale"
+            transition-hide="scale"
+          >
+            <q-date
+              v-model="model.contingenciadata"
+              mask="YYYY-MM-DD HH:mm:ss"
+            >
+              <q-btn v-close-popup label="OK" color="primary" flat />
+            </q-date>
+          </q-popup-proxy>
+        </q-icon>
+        <q-icon name="access_time" class="cursor-pointer">
+          <q-popup-proxy
+            cover
+            transition-show="scale"
+            transition-hide="scale"
+          >
+            <q-time
+              v-model="model.contingenciadata"
+              mask="YYYY-MM-DD HH:mm:ss"
+              format24h
+            >
+              <q-btn v-close-popup label="OK" color="primary" flat />
+            </q-time>
+          </q-popup-proxy>
+        </q-icon>
       </template>
     </q-input>
 

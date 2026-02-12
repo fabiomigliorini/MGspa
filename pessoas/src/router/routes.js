@@ -161,9 +161,19 @@ const routes = [
         component: () => import("pages/empresa/EmpresaEditar.vue"),
       },
       {
+        path: "/empresa/:codempresa/filial/nova",
+        name: "filialNova",
+        component: () => import("pages/empresa/NovaFilial.vue"),
+      },
+      {
         path: "/filial/:codfilial",
         name: "filialview",
         component: () => import("pages/empresa/FilialView.vue"),
+      },
+      {
+        path: "/filial/:codfilial/editar",
+        name: "filialeditar",
+        component: () => import("pages/empresa/FilialEditar.vue"),
       },
     ],
     meta: {

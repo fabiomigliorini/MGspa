@@ -463,6 +463,8 @@ import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
 
+const DIAS_EXPERIENCIA = 30;
+
 export default defineComponent({
   name: "CardColaborador",
 
@@ -498,11 +500,11 @@ export default defineComponent({
         );
 
         if (response.data.folder_url) {
-          window.open(response.data.folder_url, '_blank');
+          window.open(response.data.folder_url, "_blank");
         }
 
         if (response.data.file_url) {
-          window.open(response.data.file_url, '_blank');
+          window.open(response.data.file_url, "_blank");
         }
 
         this.$q.notify({
@@ -549,13 +551,13 @@ export default defineComponent({
         this.modelNovoColaborador.contratacao,
         "DD/MM/YYYY"
       )
-        .add(44, "days")
+        .add(DIAS_EXPERIENCIA, "days")
         .format("DD/MM/YYYY");
       this.modelNovoColaborador.renovacaoexperiencia = moment(
         this.modelNovoColaborador.experiencia,
         "DD/MM/YYYY"
       )
-        .add(44, "days")
+        .add(DIAS_EXPERIENCIA, "days")
         .format("DD/MM/YYYY");
     },
 
@@ -744,42 +746,24 @@ export default defineComponent({
       return true;
     },
 
-    validaExperiencia(value) {
-      const minimo = moment(
-        this.modelNovoColaborador.contratacao,
-        "DD/MM/YYYY"
-      );
-      const maximo = moment(
-        this.modelNovoColaborador.contratacao,
-        "DD/MM/YYYY"
-      ).add(44, "days");
-      const exp = moment(value, "DD/MM/YYYY");
-      if (maximo.isBefore(exp)) {
+    validaPeriodo(value, dataBase, msgAnterior) {
+      const base = moment(dataBase, "DD/MM/YYYY");
+      const data = moment(value, "DD/MM/YYYY");
+      if (data.isAfter(base.clone().add(DIAS_EXPERIENCIA, "days"))) {
         return "Data Muito no Futuro!";
       }
-      if (minimo.isAfter(exp)) {
-        return "Experiencia não pode ser anterior á Constratação!";
+      if (data.isBefore(base)) {
+        return msgAnterior;
       }
       return true;
     },
 
+    validaExperiencia(value) {
+      return this.validaPeriodo(value, this.modelNovoColaborador.contratacao, "Experiência não pode ser anterior à Contratação!");
+    },
+
     validaRenovacaoExperiencia(value) {
-      const minimo = moment(
-        this.modelNovoColaborador.experiencia,
-        "DD/MM/YYYY"
-      );
-      const maximo = moment(
-        this.modelNovoColaborador.experiencia,
-        "DD/MM/YYYY"
-      ).add(44, "days");
-      const exp = moment(value, "DD/MM/YYYY");
-      if (maximo.isBefore(exp)) {
-        return "Data Muito no Futuro!";
-      }
-      if (minimo.isAfter(exp)) {
-        return "Renovação não pode ser anterior a experiência";
-      }
-      return true;
+      return this.validaPeriodo(value, this.modelNovoColaborador.experiencia, "Renovação não pode ser anterior à Experiência!");
     },
 
     validaRescisao(value) {
