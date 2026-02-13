@@ -97,7 +97,7 @@ class PdvNegocioPrazoService
             // data atual para calcular vencimentos
             $dataInicial = Carbon::now();
             if ($nfp->FormaPagamento->fechamento) {
-                $dataInicial->addDays(5)->startOfMonth();
+                $dataInicial->startOfMonth();
             }
 
             // faz um looping para gerar duplicatas
