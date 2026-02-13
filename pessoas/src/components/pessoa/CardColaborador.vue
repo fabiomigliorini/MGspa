@@ -1,18 +1,507 @@
+<script setup>
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useQuasar } from "quasar";
+import { useRoute } from "vue-router";
+import { pessoaStore } from "stores/pessoa";
+import { colaboradorStore } from "stores/colaborador";
+import { guardaToken } from "src/stores";
+import { formataDocumetos } from "src/stores/formataDocumentos";
+import moment from "moment";
+import "moment/min/locales";
+moment.locale("pt-br");
+
+const DIAS_EXPERIENCIA = 30;
+
+const CardColaboradorCargo = defineAsyncComponent(() =>
+  import("components/pessoa/CardColaboradorCargo.vue")
+);
+const CardFerias = defineAsyncComponent(() =>
+  import("components/pessoa/CardFerias.vue")
+);
+const SelectFilial = defineAsyncComponent(() =>
+  import("components/pessoa/SelectFilial.vue")
+);
+
+const $q = useQuasar();
+const sPessoa = pessoaStore();
+const sColaborador = colaboradorStore();
+const route = useRoute();
+const user = guardaToken();
+const Documentos = formataDocumetos();
+
+const modelColaborador = ref({});
+const editColaborador = ref(false);
+const dialogNovoColaborador = ref(false);
+const colaboradores = ref([]);
+const refCardFerias = ref(null);
+const refCardColaboradorCargo = ref(null);
+const dialogPdfFicha = ref(false);
+const pdfUrl = ref(null);
+const colaboradorAtual = ref(null);
+const uploadingFicha = ref(false);
+
+const brasil = {
+  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
+  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
+  months:
+    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
+      "_"
+    ),
+  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
+  firstDayOfWeek: 0,
+  format24h: true,
+  pluralDay: "dias",
+};
+
+async function visualizarFicha(colaborador) {
+  try {
+    colaboradorAtual.value = colaborador;
+    const response = await sColaborador.getFichaColaborador(
+      colaborador.codcolaborador
+    );
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    pdfUrl.value = URL.createObjectURL(blob);
+    dialogPdfFicha.value = true;
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message:
+        error.response?.data?.message ||
+        "Erro ao carregar a ficha do colaborador",
+    });
+  }
+}
+
+async function uploadFichaParaDrive() {
+  if (!colaboradorAtual.value) return;
+
+  uploadingFicha.value = true;
+  try {
+    const response = await sColaborador.uploadFichaColaborador(
+      colaboradorAtual.value.codcolaborador
+    );
+
+    if (response.data.folder_url) {
+      window.open(response.data.folder_url, "_blank");
+    }
+
+    if (response.data.file_url) {
+      window.open(response.data.file_url, "_blank");
+    }
+
+    $q.notify({
+      color: "green-5",
+      textColor: "white",
+      icon: "done",
+      message: "Ficha enviada para o Google Drive!",
+    });
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message:
+        error.response?.data?.message ||
+        "Erro ao enviar a ficha para o Google Drive",
+    });
+  } finally {
+    uploadingFicha.value = false;
+  }
+}
+
+function fecharPdfFicha() {
+  if (pdfUrl.value) {
+    URL.revokeObjectURL(pdfUrl.value);
+    pdfUrl.value = null;
+  }
+  colaboradorAtual.value = null;
+  dialogPdfFicha.value = false;
+}
+
+function novaFerias(iColaborador, colaborador) {
+  refCardFerias.value[iColaborador].nova(colaborador);
+}
+
+function novoColaboradorCargo(iColaborador, colaborador) {
+  refCardColaboradorCargo.value[iColaborador].novoColaboradorCargo(colaborador);
+}
+
+function preencheExperiencia() {
+  const diasExp = modelColaborador.value.diasExperiencia || DIAS_EXPERIENCIA;
+  modelColaborador.value.diasExperiencia = diasExp;
+  modelColaborador.value.experiencia = moment(
+    modelColaborador.value.contratacao,
+    "DD/MM/YYYY"
+  )
+    .add(diasExp - 1, "days")
+    .format("DD/MM/YYYY");
+  const diasRen = modelColaborador.value.diasRenovacao || DIAS_EXPERIENCIA;
+  modelColaborador.value.diasRenovacao = diasRen;
+  modelColaborador.value.renovacaoexperiencia = moment(
+    modelColaborador.value.experiencia,
+    "DD/MM/YYYY"
+  )
+    .add(diasRen, "days")
+    .format("DD/MM/YYYY");
+}
+
+function alterouDiasExperiencia() {
+  if (!modelColaborador.value.diasExperiencia) {
+    modelColaborador.value.experiencia = null;
+    modelColaborador.value.diasExperiencia = null;
+    return;
+  }
+  if (modelColaborador.value.contratacao) {
+    const contratacao = moment(
+      modelColaborador.value.contratacao,
+      "DD/MM/YYYY"
+    );
+    if (contratacao.isValid()) {
+      modelColaborador.value.experiencia = contratacao
+        .add(modelColaborador.value.diasExperiencia - 1, "days")
+        .format("DD/MM/YYYY");
+      alterouDiasRenovacao();
+    }
+  }
+}
+
+function alterouDiasRenovacao() {
+  if (!modelColaborador.value.diasRenovacao) {
+    modelColaborador.value.renovacaoexperiencia = null;
+    modelColaborador.value.diasRenovacao = null;
+    return;
+  }
+  if (modelColaborador.value.experiencia) {
+    const experiencia = moment(
+      modelColaborador.value.experiencia,
+      "DD/MM/YYYY"
+    );
+    if (experiencia.isValid()) {
+      modelColaborador.value.renovacaoexperiencia = experiencia
+        .add(modelColaborador.value.diasRenovacao, "days")
+        .format("DD/MM/YYYY");
+    }
+  }
+}
+
+function alterouExperiencia() {
+  if (
+    modelColaborador.value.contratacao &&
+    modelColaborador.value.experiencia
+  ) {
+    const contratacao = moment(
+      modelColaborador.value.contratacao,
+      "DD/MM/YYYY"
+    );
+    const experiencia = moment(
+      modelColaborador.value.experiencia,
+      "DD/MM/YYYY"
+    );
+    if (contratacao.isValid() && experiencia.isValid()) {
+      modelColaborador.value.diasExperiencia =
+        experiencia.diff(contratacao, "days") + 1;
+    }
+  }
+  alterouDiasRenovacao();
+}
+
+function alterouRenovacao() {
+  if (
+    modelColaborador.value.experiencia &&
+    modelColaborador.value.renovacaoexperiencia
+  ) {
+    const experiencia = moment(
+      modelColaborador.value.experiencia,
+      "DD/MM/YYYY"
+    );
+    const renovacao = moment(
+      modelColaborador.value.renovacaoexperiencia,
+      "DD/MM/YYYY"
+    );
+    if (experiencia.isValid() && renovacao.isValid()) {
+      modelColaborador.value.diasRenovacao = renovacao.diff(
+        experiencia,
+        "days"
+      );
+    }
+  }
+}
+
+async function novoColaborador() {
+  modelColaborador.value.codpessoa = route.params.id;
+
+  const colab = { ...modelColaborador.value };
+  delete colab.diasExperiencia;
+  delete colab.diasRenovacao;
+
+  if (colab.contratacao) {
+    colab.contratacao = Documentos.dataFormatoSql(colab.contratacao);
+  }
+  if (colab.experiencia) {
+    colab.experiencia = Documentos.dataFormatoSql(colab.experiencia);
+  }
+  if (colab.renovacaoexperiencia) {
+    colab.renovacaoexperiencia = Documentos.dataFormatoSql(
+      colab.renovacaoexperiencia
+    );
+  }
+  if (colab.rescisao) {
+    colab.rescisao = Documentos.dataFormatoSql(colab.rescisao);
+  }
+
+  try {
+    const ret = await sColaborador.novoColaborador(colab);
+    if (ret.data.data) {
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Colaborador criado!",
+      });
+      dialogNovoColaborador.value = false;
+      sColaborador.colaboradores.push(ret.data.data);
+    }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response.data.message,
+    });
+  }
+}
+
+async function salvarColaborador() {
+  const colab = { ...modelColaborador.value };
+  delete colab.diasExperiencia;
+  delete colab.diasRenovacao;
+
+  if (colab.contratacao) {
+    colab.contratacao = Documentos.dataFormatoSql(colab.contratacao);
+  }
+  if (colab.experiencia) {
+    colab.experiencia = Documentos.dataFormatoSql(colab.experiencia);
+  }
+  if (colab.renovacaoexperiencia) {
+    colab.renovacaoexperiencia = Documentos.dataFormatoSql(
+      colab.renovacaoexperiencia
+    );
+  }
+  if (colab.rescisao) {
+    colab.rescisao = Documentos.dataFormatoSql(colab.rescisao);
+  }
+
+  try {
+    const ret = await sColaborador.salvarColaborador(colab);
+
+    if (ret.data.data) {
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Colaborador Alterado!",
+      });
+      dialogNovoColaborador.value = false;
+      const i = sColaborador.colaboradores.findIndex(
+        (item) => item.codcolaborador === modelColaborador.value.codcolaborador
+      );
+      sColaborador.colaboradores[i] = ret.data.data;
+    }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response.data.message,
+    });
+  }
+}
+
+async function excluirColaborador(colaborador) {
+  $q.dialog({
+    title: "Excluir Colaborador",
+    message: "Tem certeza que deseja excluir esse colaborador?",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await sColaborador.excluirColaborador(colaborador);
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Colaborador excluido!",
+      });
+      await sColaborador.getColaboradores(route.params.id);
+    } catch (error) {
+      console.log(error);
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response.data.message,
+      });
+    }
+  });
+}
+
+function editarColaborador(
+  codcolaborador,
+  codfilial,
+  contratacao,
+  vinculo,
+  experiencia,
+  renovacaoexperiencia,
+  rescisao,
+  numeroponto,
+  numerocontabilidade,
+  observacoes
+) {
+  dialogNovoColaborador.value = true;
+  editColaborador.value = true;
+
+  modelColaborador.value = {
+    codcolaborador,
+    codfilial,
+    contratacao:
+      contratacao !== null ? Documentos.formataDatasemHr(contratacao) : null,
+    vinculo,
+    experiencia:
+      experiencia !== null ? Documentos.formataDatasemHr(experiencia) : null,
+    renovacaoexperiencia:
+      renovacaoexperiencia !== null
+        ? Documentos.formataDatasemHr(renovacaoexperiencia)
+        : null,
+    rescisao: rescisao !== null ? Documentos.formataDatasemHr(rescisao) : null,
+    numeroponto,
+    numerocontabilidade,
+    observacoes,
+  };
+
+  if (contratacao && experiencia) {
+    const cont = moment(modelColaborador.value.contratacao, "DD/MM/YYYY");
+    const exp = moment(modelColaborador.value.experiencia, "DD/MM/YYYY");
+    if (cont.isValid() && exp.isValid()) {
+      modelColaborador.value.diasExperiencia = exp.diff(cont, "days") + 1;
+    }
+  }
+  if (experiencia && renovacaoexperiencia) {
+    const exp = moment(modelColaborador.value.experiencia, "DD/MM/YYYY");
+    const ren = moment(
+      modelColaborador.value.renovacaoexperiencia,
+      "DD/MM/YYYY"
+    );
+    if (exp.isValid() && ren.isValid()) {
+      modelColaborador.value.diasRenovacao = ren.diff(exp, "days");
+    }
+  }
+}
+
+function validaObrigatorio(value) {
+  if (!value) {
+    return "Preenchimento Obrigatório!";
+  }
+  return true;
+}
+
+function validaData(value) {
+  if (!value) {
+    return true;
+  }
+  const data = moment(value, "DD/MM/YYYY");
+  if (!data.isValid()) {
+    return "Data Inválida!";
+  }
+  return true;
+}
+
+function validaContratacao(value) {
+  const maximo = moment().add(7, "days");
+  const cont = moment(value, "DD/MM/YYYY");
+  if (maximo.isBefore(cont)) {
+    return "Data Muito no Futuro!";
+  }
+  return true;
+}
+
+function validaPeriodo(value, dataBase, msgAnterior) {
+  const base = moment(dataBase, "DD/MM/YYYY");
+  const data = moment(value, "DD/MM/YYYY");
+  if (data.isAfter(base.clone().add(60, "days"))) {
+    return "Data Muito no Futuro!";
+  }
+  if (data.isBefore(base)) {
+    return msgAnterior;
+  }
+  return true;
+}
+
+function validaExperiencia(value) {
+  return validaPeriodo(
+    value,
+    modelColaborador.value.contratacao,
+    "Experiência não pode ser anterior à Contratação!"
+  );
+}
+
+function validaRenovacaoExperiencia(value) {
+  return validaPeriodo(
+    value,
+    modelColaborador.value.experiencia,
+    "Renovação não pode ser anterior à Experiência!"
+  );
+}
+
+function validaRescisao(value) {
+  if (!value) {
+    return true;
+  }
+  const res = moment(value, "DD/MM/YYYY");
+  const contratacao = moment(modelColaborador.value.contratacao, "DD/MM/YYYY");
+  if (contratacao.isAfter(res)) {
+    return "Rescisão não pode ser anterior à Contratação!";
+  }
+  if (editColaborador.value == true) {
+    const colaborador = sColaborador.colaboradores.find(
+      (c) => c.codcolaborador === modelColaborador.value.codcolaborador
+    );
+    let min = contratacao;
+    colaborador.ColaboradorCargo.forEach((cc) => {
+      min = moment.max(min, moment(cc.inicio));
+      if (cc.fim) {
+        min = moment.max(min, moment(cc.fim));
+      }
+    });
+    if (min.isAfter(res)) {
+      return "Existe cargo com data inicial/final posterior à Recisão!";
+    }
+  }
+  return true;
+}
+
+function abrirNovoColaborador() {
+  editColaborador.value = false;
+  modelColaborador.value = {
+    contratacao: moment().format("DD/MM/YYYY"),
+    diasExperiencia: DIAS_EXPERIENCIA,
+    diasRenovacao: DIAS_EXPERIENCIA,
+  };
+  preencheExperiencia();
+  dialogNovoColaborador.value = true;
+}
+
+onMounted(() => {
+  sColaborador.getColaboradores(route.params.id);
+});
+</script>
+
 <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
   <q-card bordered class="q-mb-md">
     <q-list>
       <q-item-label header>
         Registro de Colaborador
-        <q-btn
-          flat
-          round
-          icon="add"
-          @click="
-            (dialogNovoColaborador = true),
-              (modelNovoColaborador = {}),
-              (editColaborador = false)
-          "
-        />
+        <q-btn flat round icon="add" @click="abrirNovoColaborador()" />
       </q-item-label>
     </q-list>
   </q-card>
@@ -186,15 +675,15 @@
             </q-item-section>
           </q-item>
         </template>
-
-        <q-separator inset />
-        <card-colaborador-cargo
-          ref="refCardColaboradorCargo"
-          :colaboradorCargos="colaborador"
-        />
-
-        <card-ferias ref="refCardFerias" :colaborador="colaborador" />
       </q-list>
+
+      <!-- <q-separator inset /> -->
+      <card-colaborador-cargo
+        ref="refCardColaboradorCargo"
+        :colaboradorCargos="colaborador"
+      />
+
+      <card-ferias ref="refCardFerias" :colaborador="colaborador" />
     </q-card>
   </div>
 
@@ -211,41 +700,47 @@
           <div v-else class="text-h6">Novo Colaborador</div>
         </q-card-section>
         <q-card-section>
-          <select-filial
-            v-model="modelNovoColaborador.codfilial"
-            :rules="[
-              (val) =>
-                (val !== null && val !== '' && val !== undefined) ||
-                'Filial Obrigatório',
-            ]"
-          >
-          </select-filial>
+          <div class="row q-col-gutter-md">
+            <!-- FILIAL -->
+            <div class="col-6">
+              <select-filial
+                v-model="modelColaborador.codfilial"
+                :rules="[
+                  (val) =>
+                    (val !== null && val !== '' && val !== undefined) ||
+                    'Filial Obrigatório',
+                ]"
+              >
+              </select-filial>
+            </div>
 
-          <q-select
-            outlined
-            v-model="modelNovoColaborador.vinculo"
-            label="Vinculo"
-            :options="[
-              { label: 'CLT', value: 1 },
-              { label: 'Menor Aprendiz', value: 2 },
-              { label: 'Terceirizado', value: 90 },
-              { label: 'Diarista', value: 91 },
-            ]"
-            map-options
-            emit-value
-            :rules="[
-              (val) =>
-                (val !== null && val !== '' && val !== undefined) ||
-                'Vinculo Obrigatório',
-            ]"
-          />
+            <!-- VINCULO -->
+            <div class="col-6">
+              <q-select
+                outlined
+                v-model="modelColaborador.vinculo"
+                label="Vinculo"
+                :options="[
+                  { label: 'CLT', value: 1 },
+                  { label: 'Menor Aprendiz', value: 2 },
+                  { label: 'Terceirizado', value: 90 },
+                  { label: 'Diarista', value: 91 },
+                ]"
+                map-options
+                emit-value
+                :rules="[
+                  (val) =>
+                    (val !== null && val !== '' && val !== undefined) ||
+                    'Vinculo Obrigatório',
+                ]"
+              />
+            </div>
 
-          <div class="row">
+            <!-- CONTRATACAO -->
             <div class="col-6">
               <q-input
                 outlined
-                v-model="modelNovoColaborador.contratacao"
-                class="q-pr-md"
+                v-model="modelColaborador.contratacao"
                 mask="##/##/####"
                 label="Contratação"
                 :rules="[validaObrigatorio, validaData, validaContratacao]"
@@ -260,80 +755,10 @@
                       transition-hide="scale"
                     >
                       <q-date
-                        v-model="modelNovoColaborador.contratacao"
+                        v-model="modelColaborador.contratacao"
                         :locale="brasil"
                         mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model="modelNovoColaborador.experiencia"
-                mask="##/##/####"
-                label="Experiência"
-                :rules="[validaData, validaExperiencia]"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelNovoColaborador.experiencia"
-                        :locale="brasil"
-                        mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-            </div>
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model="modelNovoColaborador.renovacaoexperiencia"
-                mask="##/##/####"
-                label="Renovação Experiência"
-                :rules="[validaData, validaRenovacaoExperiencia]"
-                class="q-pr-md"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelNovoColaborador.renovacaoexperiencia"
-                        :locale="brasil"
-                        mask="DD/MM/YYYY"
+                        @update:model-value="preencheExperiencia()"
                       >
                         <div class="row items-center justify-end">
                           <q-btn
@@ -350,10 +775,11 @@
               </q-input>
             </div>
 
+            <!-- RESCISAO -->
             <div class="col-6">
               <q-input
                 outlined
-                v-model="modelNovoColaborador.rescisao"
+                v-model="modelColaborador.rescisao"
                 mask="##/##/####"
                 label="Rescisão"
                 :rules="[validaData, validaRescisao]"
@@ -367,7 +793,7 @@
                       transition-hide="scale"
                     >
                       <q-date
-                        v-model="modelNovoColaborador.rescisao"
+                        v-model="modelColaborador.rescisao"
                         :locale="brasil"
                         mask="DD/MM/YYYY"
                       >
@@ -385,32 +811,138 @@
                 </template>
               </q-input>
             </div>
+
+            <!-- DIAS DE EXPERIENCIA -->
+            <div class="col-2">
+              <q-input
+                outlined
+                v-model.number="modelColaborador.diasExperiencia"
+                min="0"
+                type="number"
+                label="Dias Exp."
+                input-class="text-center"
+                @change="alterouDiasExperiencia()"
+              />
+            </div>
+
+            <!-- FIM DA EXPERIENCIA -->
+            <div class="col-4">
+              <q-input
+                outlined
+                v-model="modelColaborador.experiencia"
+                mask="##/##/####"
+                label="Experiência"
+                :rules="[validaData, validaExperiencia]"
+                input-class="text-center"
+                @change="alterouExperiencia()"
+              >
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-date
+                        v-model="modelColaborador.experiencia"
+                        :locale="brasil"
+                        mask="DD/MM/YYYY"
+                        @update:model-value="alterouExperiencia()"
+                      >
+                        <div class="row items-center justify-end">
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+
+            <!-- DIAS DA RENOVACAO -->
+            <div class="col-2">
+              <q-input
+                outlined
+                v-model.number="modelColaborador.diasRenovacao"
+                min="0"
+                type="number"
+                label="Dias Ren."
+                input-class="text-center"
+                @change="alterouDiasRenovacao()"
+              />
+            </div>
+
+            <!-- FINAL DA RENOVACAO DA EXPERIENCIA -->
+            <div class="col-4">
+              <q-input
+                outlined
+                v-model="modelColaborador.renovacaoexperiencia"
+                mask="##/##/####"
+                label="Renovação Experiência"
+                :rules="[validaData, validaRenovacaoExperiencia]"
+                input-class="text-center"
+                @change="alterouRenovacao()"
+              >
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-date
+                        v-model="modelColaborador.renovacaoexperiencia"
+                        :locale="brasil"
+                        mask="DD/MM/YYYY"
+                        @update:model-value="alterouRenovacao()"
+                      >
+                        <div class="row items-center justify-end">
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+
             <div class="col-6">
               <q-input
                 outlined
-                v-model="modelNovoColaborador.numeroponto"
+                v-model="modelColaborador.numeroponto"
                 label="Número Ponto"
-                class="q-pr-md"
               />
             </div>
             <div class="col-6">
               <q-input
                 outlined
-                v-model="modelNovoColaborador.numerocontabilidade"
+                v-model="modelColaborador.numerocontabilidade"
                 label="Número Contabilidade"
               />
             </div>
-          </div>
 
-          <q-input
-            outlined
-            autogrow
-            bordeless
-            v-model="modelNovoColaborador.observacoes"
-            class="q-pt-md"
-            label="Observações"
-            type="textarea"
-          />
+            <div class="col-12">
+              <q-input
+                outlined
+                autogrow
+                bordeless
+                v-model="modelColaborador.observacoes"
+                class="q-pt-md"
+                label="Observações"
+                type="textarea"
+              />
+            </div>
+          </div>
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
@@ -449,427 +981,5 @@
     </q-card>
   </q-dialog>
 </template>
-
-<script>
-import { defineComponent, defineAsyncComponent, watch } from "vue";
-import { useQuasar, debounce } from "quasar";
-import { ref } from "vue";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { colaboradorStore } from "stores/colaborador";
-import { guardaToken } from "src/stores";
-import { formataDocumetos } from "src/stores/formataDocumentos";
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
-
-const DIAS_EXPERIENCIA = 30;
-
-export default defineComponent({
-  name: "CardColaborador",
-
-  methods: {
-    async visualizarFicha(colaborador) {
-      try {
-        this.colaboradorAtual = colaborador;
-        const response = await this.sColaborador.getFichaColaborador(
-          colaborador.codcolaborador
-        );
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        this.pdfUrl = URL.createObjectURL(blob);
-        this.dialogPdfFicha = true;
-      } catch (error) {
-        this.$q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message:
-            error.response?.data?.message ||
-            "Erro ao carregar a ficha do colaborador",
-        });
-      }
-    },
-
-    async uploadFichaParaDrive() {
-      if (!this.colaboradorAtual) return;
-
-      this.uploadingFicha = true;
-      try {
-        const response = await this.sColaborador.uploadFichaColaborador(
-          this.colaboradorAtual.codcolaborador
-        );
-
-        if (response.data.folder_url) {
-          window.open(response.data.folder_url, "_blank");
-        }
-
-        if (response.data.file_url) {
-          window.open(response.data.file_url, "_blank");
-        }
-
-        this.$q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Ficha enviada para o Google Drive!",
-        });
-      } catch (error) {
-        this.$q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message:
-            error.response?.data?.message ||
-            "Erro ao enviar a ficha para o Google Drive",
-        });
-      } finally {
-        this.uploadingFicha = false;
-      }
-    },
-
-    fecharPdfFicha() {
-      if (this.pdfUrl) {
-        URL.revokeObjectURL(this.pdfUrl);
-        this.pdfUrl = null;
-      }
-      this.colaboradorAtual = null;
-      this.dialogPdfFicha = false;
-    },
-
-    novaFerias(iColaborador, colaborador) {
-      this.$refs.refCardFerias[iColaborador].nova(colaborador);
-    },
-
-    novoColaboradorCargo(iColaborador, colaborador) {
-      this.$refs.refCardColaboradorCargo[iColaborador].novoColaboradorCargo(
-        colaborador
-      );
-    },
-
-    preencheExperiencia() {
-      this.modelNovoColaborador.experiencia = moment(
-        this.modelNovoColaborador.contratacao,
-        "DD/MM/YYYY"
-      )
-        .add(DIAS_EXPERIENCIA, "days")
-        .format("DD/MM/YYYY");
-      this.modelNovoColaborador.renovacaoexperiencia = moment(
-        this.modelNovoColaborador.experiencia,
-        "DD/MM/YYYY"
-      )
-        .add(DIAS_EXPERIENCIA, "days")
-        .format("DD/MM/YYYY");
-    },
-
-    async novoColaborador() {
-      this.modelNovoColaborador.codpessoa = this.route.params.id;
-
-      const colab = { ...this.modelNovoColaborador };
-
-      if (colab.contratacao) {
-        colab.contratacao = this.Documentos.dataFormatoSql(colab.contratacao);
-      }
-
-      if (colab.experiencia) {
-        colab.experiencia = this.Documentos.dataFormatoSql(colab.experiencia);
-      }
-      if (colab.renovacaoexperiencia) {
-        colab.renovacaoexperiencia = this.Documentos.dataFormatoSql(
-          colab.renovacaoexperiencia
-        );
-      }
-      if (colab.rescisao) {
-        colab.rescisao = this.Documentos.dataFormatoSql(colab.rescisao);
-      }
-
-      try {
-        const ret = await this.sColaborador.novoColaborador(colab);
-        if (ret.data.data) {
-          this.$q.notify({
-            color: "green-5",
-            textColor: "white",
-            icon: "done",
-            message: "Colaborador criado!",
-          });
-          this.dialogNovoColaborador = false;
-          this.sColaborador.colaboradores.push(ret.data.data);
-        }
-      } catch (error) {
-        this.$q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: error.response.data.message,
-        });
-      }
-    },
-
-    async salvarColaborador() {
-      const colab = { ...this.modelNovoColaborador };
-
-      if (colab.contratacao) {
-        colab.contratacao = this.Documentos.dataFormatoSql(colab.contratacao);
-      }
-
-      if (colab.experiencia) {
-        colab.experiencia = this.Documentos.dataFormatoSql(colab.experiencia);
-      }
-      if (colab.renovacaoexperiencia) {
-        colab.renovacaoexperiencia = this.Documentos.dataFormatoSql(
-          colab.renovacaoexperiencia
-        );
-      }
-      if (colab.rescisao) {
-        colab.rescisao = this.Documentos.dataFormatoSql(colab.rescisao);
-      }
-
-      try {
-        const ret = await this.sColaborador.salvarColaborador(colab);
-
-        if (ret.data.data) {
-          this.$q.notify({
-            color: "green-5",
-            textColor: "white",
-            icon: "done",
-            message: "Colaborador Alterado!",
-          });
-          this.dialogNovoColaborador = false;
-          const i = this.sColaborador.colaboradores.findIndex(
-            (item) =>
-              item.codcolaborador === this.modelNovoColaborador.codcolaborador
-          );
-          this.sColaborador.colaboradores[i] = ret.data.data;
-        }
-      } catch (error) {
-        this.$q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: error.response.data.message,
-        });
-      }
-    },
-
-    async excluirColaborador(colaborador) {
-      this.$q
-        .dialog({
-          title: "Excluir Colaborador",
-          message: "Tem certeza que deseja excluir esse colaborador?",
-          cancel: true,
-        })
-        .onOk(async () => {
-          try {
-            const ret = await this.sColaborador.excluirColaborador(colaborador);
-            this.$q.notify({
-              color: "green-5",
-              textColor: "white",
-              icon: "done",
-              message: "Colaborador excluido!",
-            });
-            await this.sColaborador.getColaboradores(this.route.params.id);
-          } catch (error) {
-            console.log(error);
-            this.$q.notify({
-              color: "red-5",
-              textColor: "white",
-              icon: "error",
-              message: error.response.data.message,
-            });
-          }
-        });
-    },
-
-    editarColaborador(
-      codcolaborador,
-      codfilial,
-      contratacao,
-      vinculo,
-      experiencia,
-      renovacaoexperiencia,
-      rescisao,
-      numeroponto,
-      numerocontabilidade,
-      observacoes
-    ) {
-      this.dialogNovoColaborador = true;
-      this.editColaborador = true;
-
-      this.modelNovoColaborador = {
-        codcolaborador: codcolaborador,
-        codfilial: codfilial,
-        contratacao:
-          contratacao !== null
-            ? this.Documentos.formataDatasemHr(contratacao)
-            : null,
-        vinculo: vinculo,
-        experiencia:
-          experiencia !== null
-            ? this.Documentos.formataDatasemHr(experiencia)
-            : null,
-        renovacaoexperiencia:
-          renovacaoexperiencia !== null
-            ? this.Documentos.formataDatasemHr(renovacaoexperiencia)
-            : null,
-        rescisao:
-          rescisao !== null ? this.Documentos.formataDatasemHr(rescisao) : null,
-        numeroponto: numeroponto,
-        numerocontabilidade: numerocontabilidade,
-        observacoes: observacoes,
-      };
-    },
-
-    validaObrigatorio(value) {
-      if (!value) {
-        return "Preenchimento Obrigatório!";
-      }
-      return true;
-    },
-
-    validaData(value) {
-      if (!value) {
-        return true;
-      }
-      const data = moment(value, "DD/MM/YYYY");
-      if (!data.isValid()) {
-        return "Data Inválida!";
-      }
-      return true;
-    },
-
-    validaContratacao(value) {
-      const maximo = moment().add(7, "days");
-      const cont = moment(value, "DD/MM/YYYY");
-      if (maximo.isBefore(cont)) {
-        return "Data Muito no Futuro!";
-      }
-
-      return true;
-    },
-
-    validaPeriodo(value, dataBase, msgAnterior) {
-      const base = moment(dataBase, "DD/MM/YYYY");
-      const data = moment(value, "DD/MM/YYYY");
-      if (data.isAfter(base.clone().add(DIAS_EXPERIENCIA, "days"))) {
-        return "Data Muito no Futuro!";
-      }
-      if (data.isBefore(base)) {
-        return msgAnterior;
-      }
-      return true;
-    },
-
-    validaExperiencia(value) {
-      return this.validaPeriodo(value, this.modelNovoColaborador.contratacao, "Experiência não pode ser anterior à Contratação!");
-    },
-
-    validaRenovacaoExperiencia(value) {
-      return this.validaPeriodo(value, this.modelNovoColaborador.experiencia, "Renovação não pode ser anterior à Experiência!");
-    },
-
-    validaRescisao(value) {
-      if (!value) {
-        return true;
-      }
-      const res = moment(value, "DD/MM/YYYY");
-      const contratacao = moment(
-        this.modelNovoColaborador.contratacao,
-        "DD/MM/YYYY"
-      );
-      if (contratacao.isAfter(res)) {
-        return "Rescisão não pode ser anterior à Contratação!";
-      }
-      if (this.editColaborador == true) {
-        const colaborador = this.sColaborador.colaboradores.find(
-          (colaborador) =>
-            colaborador.codcolaborador ===
-            this.modelNovoColaborador.codcolaborador
-        );
-        let min = contratacao;
-        colaborador.ColaboradorCargo.forEach((cc) => {
-          min = moment.max(min, moment(cc.inicio));
-          if (cc.fim) {
-            min = moment.max(min, moment(cc.fim));
-          }
-        });
-        if (min.isAfter(res)) {
-          return "Existe cargo com data inicial/final posterior à Recisão!";
-        }
-      }
-      return true;
-    },
-  },
-
-  components: {
-    CardColaboradorCargo: defineAsyncComponent(() =>
-      import("components/pessoa/CardColaboradorCargo.vue")
-    ),
-    CardFerias: defineAsyncComponent(() =>
-      import("components/pessoa/CardFerias.vue")
-    ),
-    SelectFilial: defineAsyncComponent(() =>
-      import("components/pessoa/SelectFilial.vue")
-    ),
-    // SelectCargo: defineAsyncComponent(() =>
-    //   import("components/pessoa/SelectCargo.vue")
-    // ),
-  },
-
-  setup() {
-    const $q = useQuasar();
-    const sPessoa = pessoaStore();
-    const sColaborador = colaboradorStore();
-    const route = useRoute();
-    const modelNovoColaborador = ref({});
-    const user = guardaToken();
-    const Documentos = formataDocumetos();
-    const editColaborador = ref(false);
-    const dialogNovoColaborador = ref(false);
-    const colaboradores = ref([]);
-    const refCardFerias = ref(null);
-    const refCardColaboradorCargo = ref(null);
-    const dialogPdfFicha = ref(false);
-    const pdfUrl = ref(null);
-    const colaboradorAtual = ref(null);
-    const uploadingFicha = ref(false);
-
-    return {
-      sPessoa,
-      sColaborador,
-      Documentos,
-      route,
-      user,
-      colaboradores,
-      editColaborador,
-      dialogNovoColaborador,
-      moment,
-      modelNovoColaborador,
-      refCardFerias,
-      refCardColaboradorCargo,
-      dialogPdfFicha,
-      pdfUrl,
-      colaboradorAtual,
-      uploadingFicha,
-      brasil: {
-        days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-        daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-        months:
-          "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-            "_"
-          ),
-        monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split(
-          "_"
-        ),
-        firstDayOfWeek: 0,
-        format24h: true,
-        pluralDay: "dias",
-      },
-    };
-  },
-
-  mounted() {
-    this.sColaborador.getColaboradores(this.route.params.id);
-  },
-});
-</script>
 
 <style scoped></style>

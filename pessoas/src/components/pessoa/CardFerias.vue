@@ -1,84 +1,80 @@
 <template>
   <template v-if="colaborador.Ferias.length > 0">
-    <q-item>
-      <q-item-section>
-      <div class="row q-col-gutter-md">
-        <div
-          v-for="ferias in colaborador.Ferias"
-          v-bind:key="ferias.codferias"
-          class="q-pa-md"
+    <div class="row q-pa-md q-col-gutter-md">
+      <div
+        v-for="ferias in colaborador.Ferias"
+        v-bind:key="ferias.codferias"
+        class="col-4"
+      >
+        <q-card
+          bordered
+          :class="ferias.prevista == true ? 'bg-orange-3' : null"
         >
-          <q-card
-            bordered
-            :class="ferias.prevista == true ? 'bg-orange-3' : null"
-          >
-            <q-item>
-              <q-item-label header>
-                {{ ferias.dias }} dias em
-                {{ moment(ferias.gozoinicio).format("MMM/YY") }}
-                <q-btn flat round icon="edit" @click="editar(ferias)" />
-                <q-btn flat round icon="delete" @click="excluir(ferias)" />
+          <q-item>
+            <q-item-label header>
+              {{ ferias.dias }} dias em
+              {{ moment(ferias.gozoinicio).format("MMM/YY") }}
+              <q-btn flat round icon="edit" @click="editar(ferias)" />
+              <q-btn flat round icon="delete" @click="excluir(ferias)" />
+            </q-item-label>
+          </q-item>
+
+          <q-separator inset />
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="celebration" color="primary"></q-icon>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label v-if="ferias.diasgozo">
+                {{ moment(ferias.gozoinicio).format("DD/MMM") }} a
+                {{ moment(ferias.gozofim).format("DD/MMM/YYYY") }}
               </q-item-label>
-            </q-item>
+              <q-item-label caption>
+                {{ ferias.diasgozo }} Dias Gozo
+                <span v-if="ferias.diasabono">
+                  / {{ ferias.diasabono }} de Abono
+                </span>
+                <span v-if="ferias.diasdescontados">
+                  / {{ ferias.diasdescontados }} Descontados
+                </span>
+                <span v-if="ferias.dias != ferias.diasgozo">
+                  = {{ ferias.dias }} Total
+                </span>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
 
+          <q-separator inset />
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="event" color="primary"></q-icon>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>
+                {{ moment(ferias.aquisitivoinicio).format("DD/MMM") }} a
+                {{ moment(ferias.aquisitivofim).format("DD/MMM/YYYY") }}
+              </q-item-label>
+              <q-item-label caption> Período Aquisitivo </q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <template v-if="ferias.observacoes">
             <q-separator inset />
             <q-item>
               <q-item-section avatar>
-                <q-icon name="celebration" color="primary"></q-icon>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label v-if="ferias.diasgozo">
-                  {{ moment(ferias.gozoinicio).format("DD/MMM") }} a
-                  {{ moment(ferias.gozofim).format("DD/MMM/YYYY") }}
-                </q-item-label>
-                <q-item-label caption>
-                  {{ ferias.diasgozo }} Dias Gozo
-                  <span v-if="ferias.diasabono">
-                    / {{ ferias.diasabono }} de Abono
-                  </span>
-                  <span v-if="ferias.diasdescontados">
-                    / {{ ferias.diasdescontados }} Descontados
-                  </span>
-                  <span v-if="ferias.dias != ferias.diasgozo">
-                    = {{ ferias.dias }} Total
-                  </span>
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-separator inset />
-            <q-item>
-              <q-item-section avatar>
-                <q-icon name="event" color="primary"></q-icon>
+                <q-icon name="comment" color="primary"></q-icon>
               </q-item-section>
               <q-item-section>
                 <q-item-label>
-                  {{ moment(ferias.aquisitivoinicio).format("DD/MMM") }} a
-                  {{ moment(ferias.aquisitivofim).format("DD/MMM/YYYY") }}
+                  {{ ferias.observacoes }}
                 </q-item-label>
-                <q-item-label caption> Período Aquisitivo </q-item-label>
+                <q-item-label caption> Observações </q-item-label>
               </q-item-section>
             </q-item>
-
-            <template v-if="ferias.observacoes">
-              <q-separator inset />
-              <q-item>
-                <q-item-section avatar>
-                  <q-icon name="comment" color="primary"></q-icon>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                    {{ ferias.observacoes }}
-                  </q-item-label>
-                  <q-item-label caption> Observações </q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-card>
-        </div>
+          </template>
+        </q-card>
       </div>
-    </q-item-section>
-    </q-item>
+    </div>
   </template>
 
   <!-- Dialog novo Colaborador Ferias -->
@@ -589,5 +585,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped></style>

@@ -1,96 +1,92 @@
 <template>
-  <div class="row">
+  <div class="row q-col-gutter-md q-pa-md">
     <div
       v-for="colaboradorCargo in colaboradorCargos.ColaboradorCargo"
       v-bind:key="colaboradorCargo.codcolaboradorcargo"
+      class="col-4"
     >
-      <div class="q-pa-md">
-        <q-card bordered>
-          <q-item-label header>
-            {{ colaboradorCargo.Cargo }}
-            <q-btn
-              flat
-              round
-              icon="edit"
-              @click="
-                editarColaboradorCargo(
-                  colaboradorCargo.codcolaboradorcargo,
-                  colaboradorCargo.codcolaborador,
-                  colaboradorCargo.codcargo,
-                  colaboradorCargo.codfilial,
-                  colaboradorCargo.inicio,
-                  colaboradorCargo.fim,
-                  colaboradorCargo.comissaoloja,
-                  colaboradorCargo.comissaovenda,
-                  colaboradorCargo.comissaoxerox,
-                  colaboradorCargo.gratificacao,
-                  colaboradorCargo.salario,
-                  colaboradorCargo.observacoes
-                )
-              "
-            />
-            <q-btn
-              flat
-              round
-              icon="delete"
-              @click="excluir(colaboradorCargo)"
-            />
-          </q-item-label>
-
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="corporate_fare" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label v-if="colaboradorCargo.inicio">
-                {{ colaboradorCargo.Filial }}
-              </q-item-label>
-              <q-item-label caption v-if="!colaboradorCargo.fim">
-                {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a
-                ({{ Documentos.formataFromNow(colaboradorCargo.inicio) }})
-              </q-item-label>
-              <q-item-label caption v-else>
-                {{ moment(colaboradorCargo.inicio).format("DD/MMM") }} a
-                {{ moment(colaboradorCargo.fim).format("DD/MMM/YYYY") }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-
-          <q-separator inset />
-
-          <q-item :to="'/cargo/' + colaboradorCargo.codcargo" clickable>
-            <q-item-section avatar>
-              <q-icon name="engineering" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label v-if="colaboradorCargo.inicio">
-                {{ colaboradorCargo.Cargo }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
-          <q-item
-            v-if="
-              colaboradorCargo.comissaoloja ||
-              colaboradorCargo.comissaovenda ||
-              colaboradorCargo.comissaoxerox
+      <q-card bordered>
+        <q-item-label header>
+          {{ colaboradorCargo.Cargo }}
+          <q-btn
+            flat
+            round
+            icon="edit"
+            @click="
+              editarColaboradorCargo(
+                colaboradorCargo.codcolaboradorcargo,
+                colaboradorCargo.codcolaborador,
+                colaboradorCargo.codcargo,
+                colaboradorCargo.codfilial,
+                colaboradorCargo.inicio,
+                colaboradorCargo.fim,
+                colaboradorCargo.comissaoloja,
+                colaboradorCargo.comissaovenda,
+                colaboradorCargo.comissaoxerox,
+                colaboradorCargo.gratificacao,
+                colaboradorCargo.salario,
+                colaboradorCargo.observacoes
+              )
             "
-          >
-            <q-item-section avatar>
-              <q-icon name="money" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>
-                <span> Loja: {{ colaboradorCargo.comissaoloja }}% </span>
-                <span>Venda: {{ colaboradorCargo.comissaovenda }}% </span>
-                <span>Xerox: {{ colaboradorCargo.comissaoxerox }}% </span>
-              </q-item-label>
-              <q-item-label caption> Comissão </q-item-label>
-            </q-item-section>
-          </q-item>
+          />
+          <q-btn flat round icon="delete" @click="excluir(colaboradorCargo)" />
+        </q-item-label>
 
-          <!--
+        <q-separator inset />
+        <q-item>
+          <q-item-section avatar>
+            <q-icon name="corporate_fare" color="primary"></q-icon>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label v-if="colaboradorCargo.inicio">
+              {{ colaboradorCargo.Filial }}
+            </q-item-label>
+            <q-item-label caption v-if="!colaboradorCargo.fim">
+              {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a ({{
+                Documentos.formataFromNow(colaboradorCargo.inicio)
+              }})
+            </q-item-label>
+            <q-item-label caption v-else>
+              {{ moment(colaboradorCargo.inicio).format("DD/MMM") }} a
+              {{ moment(colaboradorCargo.fim).format("DD/MMM/YYYY") }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-separator inset />
+
+        <q-item :to="'/cargo/' + colaboradorCargo.codcargo" clickable>
+          <q-item-section avatar>
+            <q-icon name="engineering" color="primary"></q-icon>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label v-if="colaboradorCargo.inicio">
+              {{ colaboradorCargo.Cargo }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-separator inset />
+        <q-item
+          v-if="
+            colaboradorCargo.comissaoloja ||
+            colaboradorCargo.comissaovenda ||
+            colaboradorCargo.comissaoxerox
+          "
+        >
+          <q-item-section avatar>
+            <q-icon name="money" color="primary"></q-icon>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>
+              <span> Loja: {{ colaboradorCargo.comissaoloja }}% </span>
+              <span>Venda: {{ colaboradorCargo.comissaovenda }}% </span>
+              <span>Xerox: {{ colaboradorCargo.comissaoxerox }}% </span>
+            </q-item-label>
+            <q-item-label caption> Comissão </q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <!--
           <template v-if="colaboradorCargo.gratificacao">
             <q-separator inset />
             <q-item>
@@ -131,22 +127,21 @@
           </template>
           -->
 
-          <template v-if="colaboradorCargo.observacoes">
-            <q-separator inset />
-            <q-item>
-              <q-item-section avatar>
-                <q-icon name="comment" color="primary"></q-icon>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>
-                  {{ colaboradorCargo.observacoes }}
-                </q-item-label>
-                <q-item-label caption> Observações </q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-card>
-      </div>
+        <template v-if="colaboradorCargo.observacoes">
+          <q-separator inset />
+          <q-item>
+            <q-item-section avatar>
+              <q-icon name="comment" color="primary"></q-icon>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>
+                {{ colaboradorCargo.observacoes }}
+              </q-item-label>
+              <q-item-label caption> Observações </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-card>
     </div>
   </div>
 
