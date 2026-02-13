@@ -8,11 +8,11 @@ moment.locale("pt-br");
 const user = guardaToken();
 </script>
 <template>
-  <q-btn flat dense round color="blue-grey" icon="apps">
+  <q-btn flat dense round color="text-grey-9" icon="apps">
     <q-menu
       transition-show="fade"
       transition-hide="fade"
-      class="bg-blue-grey text-yellow-6 q-pa-xs"
+      class="bg-grey-9 text-yellow-6 q-pa-xs"
     >
       <q-list>
         <q-item class="q-px-sm">

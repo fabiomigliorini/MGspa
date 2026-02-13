@@ -1,3 +1,59 @@
+<script setup>
+import { defineAsyncComponent, ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { pessoaStore } from "stores/pessoa";
+
+const CardDetalhesPessoa = defineAsyncComponent(() =>
+  import("components/pessoa/CardDetalhesPessoa.vue")
+);
+const CardCliente = defineAsyncComponent(() =>
+  import("components/pessoa/CardCliente.vue")
+);
+const CardHistoricoCobranca = defineAsyncComponent(() =>
+  import("components/pessoa/CardHistoricoCobranca.vue")
+);
+const CardColaborador = defineAsyncComponent(() =>
+  import("components/pessoa/CardColaborador.vue")
+);
+const ItemTelefone = defineAsyncComponent(() =>
+  import("components/pessoa/ItemTelefone.vue")
+);
+const ItemEmail = defineAsyncComponent(() =>
+  import("components/pessoa/ItemEmail.vue")
+);
+const ItemEndereco = defineAsyncComponent(() =>
+  import("components/pessoa/ItemEndereco.vue")
+);
+const CardPessoaConta = defineAsyncComponent(() =>
+  import("components/pessoa/CardPessoaConta.vue")
+);
+const CardDependentes = defineAsyncComponent(() =>
+  import("components/pessoa/CardDependentes.vue")
+);
+const CardArquivos = defineAsyncComponent(() =>
+  import("components/pessoa/CardArquivos.vue")
+);
+const CardRegistroSpc = defineAsyncComponent(() =>
+  import("components/pessoa/CardRegistroSpc.vue")
+);
+const CardCertidoes = defineAsyncComponent(() =>
+  import("components/pessoa/CardCertidoes.vue")
+);
+const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
+
+const route = useRoute();
+const sPessoa = pessoaStore();
+const totalNegocioPessoa = ref([]);
+
+onMounted(async () => {
+  sPessoa.get(route.params.id);
+  const ret = await sPessoa.totaisNegocios(1, {
+    codpessoa: route.params.id,
+  });
+  totalNegocioPessoa.value = ret.data;
+});
+</script>
+
 <template>
   <MGLayout back-button>
     <template #tituloPagina>
@@ -5,156 +61,47 @@
     </template>
 
     <template #botaoVoltar>
-      <q-btn flat dense round :to="{ name: 'pessoa' }" icon="arrow_back" aria-label="Voltar">
-      </q-btn>
+      <q-btn
+        flat
+        dense
+        round
+        :to="{ name: 'pessoa' }"
+        icon="arrow_back"
+        aria-label="Voltar"
+      />
     </template>
 
     <template #content>
-      <q-page class="bg-white ">
-        <div class="row q-py-md q-pr-md" v-if="sPessoa.item">
-          <!-- <div class="col-lg-4 col-md-8 col-sm-12 col-xs-12 q-pl-md"> -->
-          <div class="col-md-8 col-sm-12 col-xs-12 q-pl-md">
-
-            <!--  DETALHES PESSOA -->
-            <div class="q-pb-md">
-              <card-detalhes-pessoa>
-              </card-detalhes-pessoa>
+      <q-page>
+        <div
+          class="row q-pa-md q-col-gutter-md"
+          v-if="sPessoa.item"
+          style="max-width: 1366px; margin: auto"
+        >
+          <div class="col-md-8 col-12">
+            <div class="column q-gutter-y-md">
+              <card-detalhes-pessoa />
+              <card-cliente />
+              <card-historico-cobranca />
+              <card-colaborador />
             </div>
-
-            <!-- CLIENTE -->
-            <div class="q-pb-md">
-              <card-cliente>
-              </card-cliente>
-            </div>
-
-            <!-- Histórico de cobrança -->
-            <div class="q-pb-md">
-              <card-historico-cobranca>
-              </card-historico-cobranca>
-            </div>
-
-            <!-- Card Colaborador -->
-            <div class="q-pb-md">
-              <card-colaborador>
-              </card-colaborador>
-            </div>
-
           </div>
-
-          <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 q-pl-md">
-
-            <!-- TELEFONE -->
-            <div class="q-pb-md">
-              <item-telefone>
-              </item-telefone>
-            </div>
-
-            <!-- EMAIL -->
-            <div class="q-pb-md">
-              <item-email>
-              </item-email>
-            </div>
-
-            <!-- ENDERECO -->
-            <div class="q-pb-md">
-              <item-endereco>
-              </item-endereco>
-            </div>
-
-            <!-- CONTAS -->
-            <div class="q-pb-md">
-              <card-pessoa-conta>
-              </card-pessoa-conta>
-            </div>
-
-            <!-- DEPENDENTES -->
-            <div class="q-pb-md">
-              <card-dependentes>
-              </card-dependentes>
-            </div>
-
-            <!-- ARQUIVOS -->
-            <div class="q-pb-md">
+          <div class="col-md-4 col-12">
+            <div class="column q-gutter-y-md">
+              <item-telefone />
+              <item-email />
+              <item-endereco />
+              <card-pessoa-conta />
+              <card-dependentes />
               <card-arquivos />
+              <card-registro-spc />
+              <card-certidoes />
             </div>
-
-
-
-            <!-- Registro Spc -->
-            <div class="q-pb-md">
-              <card-registro-spc></card-registro-spc>
-            </div>
-
-            <!-- certidoes -->
-            <div class="q-pb-md">
-              <card-certidoes></card-certidoes>
-            </div>
-
-
           </div>
         </div>
-
-
       </q-page>
     </template>
   </MGLayout>
 </template>
-
-<script>
-import { defineComponent, defineAsyncComponent, onMounted, ref } from 'vue'
-import { useQuasar } from "quasar"
-import { useRoute } from 'vue-router'
-import { pessoaStore } from 'stores/pessoa'
-import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
-
-
-
-export default defineComponent({
-  name: "PessoaView",
-  components: {
-    CardDetalhesPessoa: defineAsyncComponent(() => import('components/pessoa/CardDetalhesPessoa.vue')),
-    CardCliente: defineAsyncComponent(() => import('components/pessoa/CardCliente.vue')),
-    ItemTelefone: defineAsyncComponent(() => import('components/pessoa/ItemTelefone.vue')),
-    ItemEmail: defineAsyncComponent(() => import('components/pessoa/ItemEmail.vue')),
-    ItemEndereco: defineAsyncComponent(() => import('components/pessoa/ItemEndereco.vue')),
-    CardHistoricoCobranca: defineAsyncComponent(() => import('components/pessoa/CardHistoricoCobranca.vue')),
-    CardRegistroSpc: defineAsyncComponent(() => import('components/pessoa/CardRegistroSpc.vue')),
-    CardCertidoes: defineAsyncComponent(() => import('components/pessoa/CardCertidoes.vue')),
-    CardPessoaConta: defineAsyncComponent(() => import('components/pessoa/CardPessoaConta.vue')),
-    CardColaborador: defineAsyncComponent(() => import('components/pessoa/CardColaborador.vue')),
-    CardArquivos: defineAsyncComponent(() => import('components/pessoa/CardArquivos.vue')),
-    CardDependentes: defineAsyncComponent(() => import('components/pessoa/CardDependentes.vue')),
-    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))
-  },
-
-  methods: {
-    updateTabelaNegocio(event) {
-      this.totalNegocioPessoa = event
-    },
-  },
-
-  setup() {
-
-    const $q = useQuasar()
-    const route = useRoute()
-    const sPessoa = pessoaStore()
-    const totalNegocioPessoa = ref([])
-    const sGrupoEconomico = GrupoEconomicoStore()
-
-    onMounted(async () => {
-      //   $q.loading.show({})
-      const get = sPessoa.get(route.params.id)
-      //    $q.loading.hide()
-      const ret = await sPessoa.totaisNegocios(1, { codpessoa: route.params.id })
-      totalNegocioPessoa.value = ret.data
-    })
-
-    return {
-      sPessoa,
-      totalNegocioPessoa,
-    }
-  },
-})
-</script>
 
 <style scoped></style>
