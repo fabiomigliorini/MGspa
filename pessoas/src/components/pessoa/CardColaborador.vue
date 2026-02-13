@@ -335,7 +335,6 @@ async function excluirColaborador(colaborador) {
       });
       await sColaborador.getColaboradores(route.params.id);
     } catch (error) {
-      console.log(error);
       $q.notify({
         color: "red-5",
         textColor: "white",
@@ -498,12 +497,24 @@ onMounted(() => {
 
 <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
   <q-card bordered class="q-mb-md">
-    <q-list>
-      <q-item-label header>
-        Registro de Colaborador
-        <q-btn flat round icon="add" @click="abrirNovoColaborador()" />
-      </q-item-label>
-    </q-list>
+    <q-card-section class="bg-yellow text-grey-9 q-py-sm">
+      <div class="row items-center no-wrap q-gutter-x-sm">
+        <q-icon name="badge" size="sm" />
+        <span class="text-subtitle1 text-weight-medium"
+          >Registro de Colaborador</span
+        >
+        <q-space />
+        <q-btn
+          flat
+          round
+          dense
+          icon="add"
+          size="sm"
+          color="grey-9"
+          @click="abrirNovoColaborador()"
+        />
+      </div>
+    </q-card-section>
   </q-card>
 
   <div
@@ -511,173 +522,157 @@ onMounted(() => {
     v-bind:key="colaborador.codcolaborador"
   >
     <q-card bordered class="q-mb-md">
-      <q-list>
-        <q-item>
-          <q-item-label header>
+      <q-card-section class="bg-yellow text-grey-9 q-py-sm">
+        <div class="row items-center no-wrap q-gutter-x-sm">
+          <q-icon name="badge" size="sm" />
+          <span class="text-subtitle1 text-weight-medium">
             <span v-if="colaborador.vinculo == 1">CLT</span>
             <span v-if="colaborador.vinculo == 2">Menor Aprendiz</span>
             <span v-if="colaborador.vinculo == 90">Terceirizado</span>
             <span v-if="colaborador.vinculo == 91">Diarista</span>
-            em
-            {{ colaborador.Filial }}
-            <q-btn
-              flat
-              round
-              icon="edit"
-              @click="
-                editarColaborador(
-                  colaborador.codcolaborador,
-                  colaborador.codfilial,
-                  colaborador.contratacao,
-                  colaborador.vinculo,
-                  colaborador.experiencia,
-                  colaborador.renovacaoexperiencia,
-                  colaborador.rescisao,
-                  colaborador.numeroponto,
-                  colaborador.numerocontabilidade,
-                  colaborador.observacoes
-                )
-              "
-            />
-            <q-btn
-              flat
-              round
-              icon="delete"
-              @click="excluirColaborador(colaborador)"
-            />
-            Cargo
+            em {{ colaborador.Filial }}
+          </span>
+          <q-space />
+          <q-btn
+            flat
+            round
+            dense
+            icon="edit"
+            size="sm"
+            color="grey-9"
+            @click="
+              editarColaborador(
+                colaborador.codcolaborador,
+                colaborador.codfilial,
+                colaborador.contratacao,
+                colaborador.vinculo,
+                colaborador.experiencia,
+                colaborador.renovacaoexperiencia,
+                colaborador.rescisao,
+                colaborador.numeroponto,
+                colaborador.numerocontabilidade,
+                colaborador.observacoes
+              )
+            "
+          />
+          <q-btn
+            flat
+            round
+            dense
+            icon="delete"
+            size="sm"
+            color="grey-9"
+            @click="excluirColaborador(colaborador)"
+          />
+          <q-btn
+            flat
+            round
+            dense
+            icon="description"
+            size="sm"
+            color="grey-9"
+            @click="visualizarFicha(colaborador)"
+          >
+            <q-tooltip>Ficha do Colaborador</q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            round
+            dense
+            icon="folder"
+            size="sm"
+            color="grey-9"
+            :href="
+              'https://drive.google.com/drive/folders/' +
+              colaborador.googledrivefolderid
+            "
+            target="_blank"
+          >
+            <q-tooltip>Arquivos do Colaborador</q-tooltip>
+          </q-btn>
+        </div>
+      </q-card-section>
 
-            <q-btn
-              flat
-              round
-              icon="add"
-              @click="novoColaboradorCargo(iColaborador, colaborador)"
-            />
-            Férias
-            <q-btn
-              flat
-              round
-              icon="add"
-              @click="novaFerias(iColaborador, colaborador)"
-            />
-            <q-btn
-              flat
-              round
-              icon="description"
-              @click="visualizarFicha(colaborador)"
-            >
-              <q-tooltip>Ficha do Colaborador</q-tooltip>
-            </q-btn>
-            <q-btn
-              flat
-              round
-              icon="folder"
-              :href="
-                'https://drive.google.com/drive/folders/' +
-                colaborador.googledrivefolderid
-              "
-              target="_blank"
-            >
-              <q-tooltip>Arquivos do Colaborador</q-tooltip>
-            </q-btn>
-          </q-item-label>
-        </q-item>
+      <div class="row q-col-gutter-sm q-pa-md">
+        <div class="col-6">
+          <div class="text-overline text-grey-7">Contratação / Rescisão</div>
+          <div class="text-body2" v-if="!colaborador.rescisao">
+            {{ moment(colaborador.contratacao).format("DD/MMM/YYYY") }} ({{
+              moment(colaborador.contratacao).fromNow()
+            }})
+          </div>
+          <div class="text-body2" v-else>
+            {{ moment(colaborador.contratacao).format("DD/MMM") }} a
+            {{ moment(colaborador.rescisao).format("DD/MMM/YYYY") }}
+          </div>
+        </div>
 
-        <q-separator inset />
-        <q-item>
-          <q-item-section avatar>
-            <q-icon name="event" color="primary"></q-icon>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label v-if="!colaborador.rescisao">
-              {{ moment(colaborador.contratacao).format("DD/MMM/YYYY") }} ({{
-                moment(colaborador.contratacao).fromNow()
-              }})
-            </q-item-label>
-            <q-item-label v-else>
-              {{ moment(colaborador.contratacao).format("DD/MMM") }} a
-              {{ moment(colaborador.rescisao).format("DD/MMM/YYYY") }}
-            </q-item-label>
-            <q-item-label caption> Contratação / Rescisão </q-item-label>
-          </q-item-section>
-        </q-item>
+        <div class="col-6" v-if="colaborador.experiencia">
+          <div class="text-overline text-grey-7">Experiência / Renovação</div>
+          <div class="text-body2">
+            {{ moment(colaborador.experiencia).format("DD/MMM/YYYY") }} ({{
+              moment(colaborador.experiencia).fromNow()
+            }}) /
+            {{ moment(colaborador.renovacaoexperiencia).format("DD/MMM/YYYY") }}
+            ({{ moment(colaborador.renovacaoexperiencia).fromNow() }})
+          </div>
+        </div>
 
-        <template v-if="colaborador.experiencia">
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="event" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>
-                {{ moment(colaborador.experiencia).format("DD/MMM/YYYY") }} ({{
-                  moment(colaborador.experiencia).fromNow()
-                }}) /
-                {{
-                  moment(colaborador.renovacaoexperiencia).format("DD/MMM/YYYY")
-                }}
-                ({{ moment(colaborador.renovacaoexperiencia).fromNow() }})
-              </q-item-label>
-              <q-item-label caption> Experiência / Renovação </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-
-        <template
+        <div
+          class="col-6"
           v-if="colaborador.numeroponto || colaborador.numerocontabilidade"
         >
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="timer" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label
-                v-if="
-                  colaborador.numeroponto || colaborador.numerocontabilidade
-                "
-              >
-                <span v-if="colaborador.numeroponto">{{
-                  colaborador.numeroponto
-                }}</span>
-                <span v-if="colaborador.numerocontabilidade">
-                  / {{ colaborador.numerocontabilidade }}
-                </span>
-              </q-item-label>
-              <q-item-label
-                caption
-                v-if="
-                  colaborador.numeroponto || colaborador.numerocontabilidade
-                "
-              >
-                Ponto / Contabilidade
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
+          <div class="text-overline text-grey-7">Ponto / Contabilidade</div>
+          <div class="text-body2">
+            <span v-if="colaborador.numeroponto">{{
+              colaborador.numeroponto
+            }}</span>
+            <span v-if="colaborador.numerocontabilidade">
+              / {{ colaborador.numerocontabilidade }}
+            </span>
+          </div>
+        </div>
 
-        <template v-if="colaborador.observacoes">
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="comment" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label
-                v-if="colaborador.observacoes"
-                style="white-space: pre-line"
-              >
-                {{ colaborador.observacoes }}
-              </q-item-label>
-              <q-item-label caption v-if="colaborador.observacoes">
-                Observações
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </q-list>
+        <div class="col-12" v-if="colaborador.observacoes">
+          <div class="text-overline text-grey-7">Observações</div>
+          <div
+            class="text-body2 bg-grey-2 rounded-borders q-pa-sm"
+            style="white-space: pre-line"
+          >
+            {{ colaborador.observacoes }}
+          </div>
+        </div>
+      </div>
 
-      <!-- <q-separator inset /> -->
+      <q-separator />
+      <q-card-section class="q-py-xs q-px-sm">
+        <div class="row items-center q-gutter-x-xs">
+          <span class="text-caption text-weight-medium text-grey-7">Cargo</span>
+          <q-btn
+            flat
+            round
+            dense
+            icon="add"
+            size="xs"
+            color="grey-7"
+            @click="novoColaboradorCargo(iColaborador, colaborador)"
+          />
+          <q-separator vertical class="q-mx-xs" />
+          <span class="text-caption text-weight-medium text-grey-7"
+            >Férias</span
+          >
+          <q-btn
+            flat
+            round
+            dense
+            icon="add"
+            size="xs"
+            color="grey-7"
+            @click="novaFerias(iColaborador, colaborador)"
+          />
+        </div>
+      </q-card-section>
+
       <card-colaborador-cargo
         ref="refCardColaboradorCargo"
         :colaboradorCargos="colaborador"
@@ -695,10 +690,11 @@ onMounted(() => {
           editColaborador == true ? salvarColaborador() : novoColaborador()
         "
       >
-        <q-card-section>
-          <div v-if="editColaborador" class="text-h6">Editar Colaborador</div>
-          <div v-else class="text-h6">Novo Colaborador</div>
+        <q-card-section class="bg-yellow text-grey-9 text-h6 q-mb-md">
+          <template v-if="editColaborador"> Editar Colaborador </template>
+          <template v-else> Novo Colaborador </template>
         </q-card-section>
+
         <q-card-section>
           <div class="row q-col-gutter-md">
             <!-- FILIAL -->
@@ -710,8 +706,8 @@ onMounted(() => {
                     (val !== null && val !== '' && val !== undefined) ||
                     'Filial Obrigatório',
                 ]"
-              >
-              </select-filial>
+                autofocus
+              />
             </div>
 
             <!-- VINCULO -->
@@ -946,7 +942,13 @@ onMounted(() => {
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn
+            flat
+            label="Cancelar"
+            v-close-popup
+            color="grey-8"
+            tabindex="-1"
+          />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>

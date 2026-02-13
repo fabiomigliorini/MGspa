@@ -1,3 +1,217 @@
+<script setup>
+import { defineAsyncComponent, ref } from "vue";
+import { useQuasar } from "quasar";
+import { colaboradorStore } from "stores/colaborador";
+import { formataDocumetos } from "src/stores/formataDocumentos";
+import moment from "moment";
+import "moment/min/locales";
+moment.locale("pt-br");
+
+const SelectFilial = defineAsyncComponent(() =>
+  import("components/pessoa/SelectFilial.vue")
+);
+const SelectCargo = defineAsyncComponent(() =>
+  import("components/pessoa/SelectCargo.vue")
+);
+
+const props = defineProps(["colaboradorCargos"]);
+
+const $q = useQuasar();
+const sColaborador = colaboradorStore();
+const Documentos = formataDocumetos();
+
+const dialogColaboradorCargo = ref(false);
+const modelColaboradorCargo = ref({});
+
+const brasil = {
+  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
+  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
+  months:
+    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
+      "_"
+    ),
+  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
+  firstDayOfWeek: 1,
+  format24h: true,
+  pluralDay: "dias",
+};
+
+function preencheCargo(colaborador) {
+  if (colaborador.ColaboradorCargo.length > 0) {
+    var dataAtual = moment();
+    modelColaboradorCargo.value = {
+      inicio: moment(dataAtual).format("DD/MM/YYYY"),
+      codcolaborador: colaborador.codcolaborador,
+    };
+  } else {
+    modelColaboradorCargo.value = {
+      inicio: moment(colaborador.contratacao, "YYYY-MM-DD").format(
+        "DD/MM/YYYY"
+      ),
+      codcolaborador: colaborador.codcolaborador,
+    };
+  }
+}
+
+function novoColaboradorCargo(colaborador) {
+  dialogColaboradorCargo.value = true;
+  preencheCargo(colaborador);
+}
+
+async function salvar() {
+  const model = { ...modelColaboradorCargo.value };
+
+  if (modelColaboradorCargo.value.codcolaboradorcargo) {
+    if (model.inicio) {
+      model.inicio = Documentos.dataFormatoSql(model.inicio);
+    }
+    if (model.fim) {
+      model.fim = Documentos.dataFormatoSql(model.fim);
+    }
+    try {
+      const ret = await sColaborador.salvarColaboradorCargo(model);
+      if (ret.data.data) {
+        $q.notify({
+          color: "green-5",
+          textColor: "white",
+          icon: "done",
+          message: "Colaborador Cargo Alterado!",
+        });
+        dialogColaboradorCargo.value = false;
+      }
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response.data.message,
+      });
+    }
+  } else {
+    if (model.inicio) {
+      model.inicio = Documentos.dataFormatoSql(model.inicio);
+    }
+    if (model.fim) {
+      model.fim = Documentos.dataFormatoSql(model.fim);
+    }
+    try {
+      const ret = await sColaborador.novoColaboradorCargo(model);
+      if (ret.data.data) {
+        $q.notify({
+          color: "green-5",
+          textColor: "white",
+          icon: "done",
+          message: "Colaborador Cargo criado!",
+        });
+        dialogColaboradorCargo.value = false;
+      }
+      dialogColaboradorCargo.value = false;
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response.data.message,
+      });
+    }
+  }
+}
+
+async function excluir(colaboradorCargo) {
+  $q.dialog({
+    title: "Excluir Colaborador Cargo",
+    message: "Tem certeza que deseja excluir esse Cargo?",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await sColaborador.deleteColaboradorCargo(colaboradorCargo);
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Colaborador Cargo excluido!",
+      });
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response.data.message,
+      });
+    }
+  });
+}
+
+function editarColaboradorCargo(
+  codcolaboradorcargo,
+  codcolaborador,
+  codcargo,
+  codfilial,
+  inicio,
+  fim,
+  comissaoloja,
+  comissaovenda,
+  comissaoxerox,
+  gratificacao,
+  salario,
+  observacoes
+) {
+  modelColaboradorCargo.value = {
+    codcolaboradorcargo: codcolaboradorcargo,
+    codcolaborador: codcolaborador,
+    codcargo: codcargo,
+    codfilial: codfilial,
+    inicio: inicio !== null ? Documentos.formataDatasemHr(inicio) : null,
+    fim: fim !== null ? Documentos.formataDatasemHr(fim) : null,
+    comissaoloja: comissaoloja,
+    comissaovenda: comissaovenda,
+    comissaoxerox: comissaoxerox,
+    gratificacao: gratificacao,
+    salario: salario,
+    observacoes: observacoes,
+  };
+  dialogColaboradorCargo.value = true;
+}
+
+function validaObrigatorio(value) {
+  if (!value) {
+    return "Preenchimento Obrigatório!";
+  }
+  return true;
+}
+
+function validaDataValida(value) {
+  if (!value) {
+    return true;
+  }
+  const data = moment(value, "DD/MM/YYYY");
+  if (!data.isValid()) {
+    return "Data Inválida!";
+  }
+  return true;
+}
+
+function validaInicio(value) {
+  const inicio = moment(value, "DD/MM/YYYY");
+  const contratacao = moment(props.colaboradorCargos.contratacao);
+  if (contratacao.isAfter(inicio)) {
+    return "Inicio não pode ser anterior á Contratação!";
+  }
+  return true;
+}
+
+function validaFim(value) {
+  const fim = moment(value, "DD/MM/YYYY");
+  const inicio = moment(modelColaboradorCargo.value.inicio, "DD/MM/YYYY");
+  if (inicio.isAfter(fim)) {
+    return "Fim não pode ser anterior ao inicio!";
+  }
+  return true;
+}
+
+defineExpose({ novoColaboradorCargo });
+</script>
+
 <template>
   <div class="row q-col-gutter-md q-pa-md">
     <div
@@ -6,141 +220,88 @@
       class="col-4"
     >
       <q-card bordered>
-        <q-item-label header>
-          {{ colaboradorCargo.Cargo }}
-          <q-btn
-            flat
-            round
-            icon="edit"
-            @click="
-              editarColaboradorCargo(
-                colaboradorCargo.codcolaboradorcargo,
-                colaboradorCargo.codcolaborador,
-                colaboradorCargo.codcargo,
-                colaboradorCargo.codfilial,
-                colaboradorCargo.inicio,
-                colaboradorCargo.fim,
-                colaboradorCargo.comissaoloja,
-                colaboradorCargo.comissaovenda,
-                colaboradorCargo.comissaoxerox,
-                colaboradorCargo.gratificacao,
-                colaboradorCargo.salario,
-                colaboradorCargo.observacoes
-              )
-            "
-          />
-          <q-btn flat round icon="delete" @click="excluir(colaboradorCargo)" />
-        </q-item-label>
+        <q-card-section class="bg-yellow text-grey-9 q-py-xs">
+          <div class="row items-center no-wrap q-gutter-x-xs">
+            <span class="text-caption text-weight-medium">
+              {{ colaboradorCargo.Cargo }}
+            </span>
+            <q-space />
+            <q-btn
+              flat
+              round
+              dense
+              icon="edit"
+              size="xs"
+              color="grey-9"
+              @click="
+                editarColaboradorCargo(
+                  colaboradorCargo.codcolaboradorcargo,
+                  colaboradorCargo.codcolaborador,
+                  colaboradorCargo.codcargo,
+                  colaboradorCargo.codfilial,
+                  colaboradorCargo.inicio,
+                  colaboradorCargo.fim,
+                  colaboradorCargo.comissaoloja,
+                  colaboradorCargo.comissaovenda,
+                  colaboradorCargo.comissaoxerox,
+                  colaboradorCargo.gratificacao,
+                  colaboradorCargo.salario,
+                  colaboradorCargo.observacoes
+                )
+              "
+            />
+            <q-btn
+              flat
+              round
+              dense
+              icon="delete"
+              size="xs"
+              color="grey-9"
+              @click="excluir(colaboradorCargo)"
+            />
+          </div>
+        </q-card-section>
 
-        <q-separator inset />
-        <q-item>
-          <q-item-section avatar>
-            <q-icon name="corporate_fare" color="primary"></q-icon>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label v-if="colaboradorCargo.inicio">
+        <div class="row q-col-gutter-xs q-pa-sm">
+          <div class="col-12">
+            <div class="text-overline text-grey-7">Filial / Período</div>
+            <div class="text-body2">
               {{ colaboradorCargo.Filial }}
-            </q-item-label>
-            <q-item-label caption v-if="!colaboradorCargo.fim">
+            </div>
+            <div class="text-caption text-grey-7" v-if="!colaboradorCargo.fim">
               {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a ({{
                 Documentos.formataFromNow(colaboradorCargo.inicio)
               }})
-            </q-item-label>
-            <q-item-label caption v-else>
+            </div>
+            <div class="text-caption text-grey-7" v-else>
               {{ moment(colaboradorCargo.inicio).format("DD/MMM") }} a
               {{ moment(colaboradorCargo.fim).format("DD/MMM/YYYY") }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
+            </div>
+          </div>
 
-        <q-separator inset />
-
-        <q-item :to="'/cargo/' + colaboradorCargo.codcargo" clickable>
-          <q-item-section avatar>
-            <q-icon name="engineering" color="primary"></q-icon>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label v-if="colaboradorCargo.inicio">
-              {{ colaboradorCargo.Cargo }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-separator inset />
-        <q-item
-          v-if="
-            colaboradorCargo.comissaoloja ||
-            colaboradorCargo.comissaovenda ||
-            colaboradorCargo.comissaoxerox
-          "
-        >
-          <q-item-section avatar>
-            <q-icon name="money" color="primary"></q-icon>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>
-              <span> Loja: {{ colaboradorCargo.comissaoloja }}% </span>
+          <div
+            class="col-12"
+            v-if="
+              colaboradorCargo.comissaoloja ||
+              colaboradorCargo.comissaovenda ||
+              colaboradorCargo.comissaoxerox
+            "
+          >
+            <div class="text-overline text-grey-7">Comissão</div>
+            <div class="text-body2">
+              <span>Loja: {{ colaboradorCargo.comissaoloja }}% </span>
               <span>Venda: {{ colaboradorCargo.comissaovenda }}% </span>
               <span>Xerox: {{ colaboradorCargo.comissaoxerox }}% </span>
-            </q-item-label>
-            <q-item-label caption> Comissão </q-item-label>
-          </q-item-section>
-        </q-item>
+            </div>
+          </div>
 
-        <!--
-          <template v-if="colaboradorCargo.gratificacao">
-            <q-separator inset />
-            <q-item>
-              <q-item-section avatar>
-                <q-icon name="payments" color="primary"></q-icon>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>
-                  {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(colaboradorCargo.gratificacao)
-                  }}
-                </q-item-label>
-                <q-item-label caption> Gratificação </q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
-
-          <template v-if="colaboradorCargo.salario">
-              <q-separator inset />
-              <q-item>
-                  <q-item-section avatar>
-                      <q-icon name="attach_money" color="primary"></q-icon>
-                  </q-item-section>
-                  <q-item-section>
-                      <q-item-label>
-                          {{ new Intl.NumberFormat('pt-BR', {
-                              style: 'currency', currency: 'BRL'
-                          }).format(colaboradorCargo.salario) }}
-                      </q-item-label>
-                      <q-item-label caption>
-                          Salário
-                      </q-item-label>
-                  </q-item-section>
-              </q-item>
-          </template>
-          -->
-
-        <template v-if="colaboradorCargo.observacoes">
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="comment" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>
-                {{ colaboradorCargo.observacoes }}
-              </q-item-label>
-              <q-item-label caption> Observações </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
+          <div class="col-12" v-if="colaboradorCargo.observacoes">
+            <div class="text-overline text-grey-7">Observações</div>
+            <div class="text-caption">
+              {{ colaboradorCargo.observacoes }}
+            </div>
+          </div>
+        </div>
       </q-card>
     </div>
   </div>
@@ -162,7 +323,7 @@
                 (val !== null && val !== '' && val !== undefined) ||
                 'Cargo Obrigatório',
             ]"
-          ></select-cargo>
+          />
 
           <select-filial
             v-model="modelColaboradorCargo.codfilial"
@@ -172,8 +333,7 @@
                 (val !== null && val !== '' && val !== undefined) ||
                 'Filial obrigatório',
             ]"
-          >
-          </select-filial>
+          />
 
           <div class="row q-col-gutter-md">
             <div class="col-6">
@@ -330,265 +490,5 @@
     </q-card>
   </q-dialog>
 </template>
-
-<script>
-import { defineComponent, defineAsyncComponent, computed } from "vue";
-import { useQuasar, debounce, TouchSwipe } from "quasar";
-import { ref } from "vue";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import { colaboradorStore } from "stores/colaborador";
-
-import { formataDocumetos } from "src/stores/formataDocumentos";
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
-
-export default defineComponent({
-  name: "CardColaboradorCargo",
-
-  methods: {
-    preencheCargo(colaborador) {
-      if (colaborador.ColaboradorCargo.length > 0) {
-        var dataAtual = moment();
-        this.modelColaboradorCargo = {
-          inicio: moment(dataAtual).format("DD/MM/YYYY"),
-          codcolaborador: colaborador.codcolaborador,
-        };
-      } else {
-        this.modelColaboradorCargo = {
-          inicio: moment(colaborador.contratacao, "YYYY-MM-DD").format(
-            "DD/MM/YYYY"
-          ),
-          codcolaborador: colaborador.codcolaborador,
-        };
-      }
-    },
-
-    novoColaboradorCargo(colaborador) {
-      this.dialogColaboradorCargo = true;
-
-      const preencheCargo = this.preencheCargo(colaborador);
-    },
-
-    async salvar() {
-      const model = { ...this.modelColaboradorCargo };
-
-      if (this.modelColaboradorCargo.codcolaboradorcargo) {
-        // editar colaborador cargo
-        if (model.inicio) {
-          model.inicio = this.Documentos.dataFormatoSql(model.inicio);
-        }
-
-        if (model.fim) {
-          model.fim = this.Documentos.dataFormatoSql(model.fim);
-        }
-
-        try {
-          const ret = await this.sColaborador.salvarColaboradorCargo(model);
-          if (ret.data.data) {
-            this.$q.notify({
-              color: "green-5",
-              textColor: "white",
-              icon: "done",
-              message: "Colaborador Cargo Alterado!",
-            });
-            this.dialogColaboradorCargo = false;
-          }
-        } catch (error) {
-          console.log(error);
-          this.$q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
-            message: error.response.data.message,
-          });
-        }
-      } else {
-        // novo colaborador cargo
-        if (model.inicio) {
-          model.inicio = this.Documentos.dataFormatoSql(model.inicio);
-        }
-
-        if (model.fim) {
-          model.fim = this.Documentos.dataFormatoSql(model.fim);
-        }
-
-        try {
-          const ret = await this.sColaborador.novoColaboradorCargo(model);
-          if (ret.data.data) {
-            this.$q.notify({
-              color: "green-5",
-              textColor: "white",
-              icon: "done",
-              message: "Colaborador Cargo criado!",
-            });
-            this.dialogColaboradorCargo = false;
-          }
-          this.dialogColaboradorCargo = false;
-        } catch (error) {
-          console.log(error);
-          this.$q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
-            message: error.response.data.message,
-          });
-        }
-      }
-    },
-
-    async excluir(colaboradorCargo) {
-      this.$q
-        .dialog({
-          title: "Excluir Colaborador Cargo",
-          message: "Tem certeza que deseja excluir esse Cargo?",
-          cancel: true,
-        })
-        .onOk(async () => {
-          try {
-            const ret = await this.sColaborador.deleteColaboradorCargo(
-              colaboradorCargo
-            );
-            this.$q.notify({
-              color: "green-5",
-              textColor: "white",
-              icon: "done",
-              message: "Colaborador Cargo excluido!",
-            });
-          } catch (error) {
-            this.$q.notify({
-              color: "red-5",
-              textColor: "white",
-              icon: "error",
-              message: error.response.data.message,
-            });
-          }
-        });
-    },
-
-    async editarColaboradorCargo(
-      codcolaboradorcargo,
-      codcolaborador,
-      codcargo,
-      codfilial,
-      inicio,
-      fim,
-      comissaoloja,
-      comissaovenda,
-      comissaoxerox,
-      gratificacao,
-      salario,
-      observacoes
-    ) {
-      this.modelColaboradorCargo = {
-        codcolaboradorcargo: codcolaboradorcargo,
-        codcolaborador: codcolaborador,
-        codcargo: codcargo,
-        codfilial: codfilial,
-        inicio:
-          inicio !== null ? this.Documentos.formataDatasemHr(inicio) : null,
-        fim: fim !== null ? this.Documentos.formataDatasemHr(fim) : null,
-        comissaoloja: comissaoloja,
-        comissaovenda: comissaovenda,
-        comissaoxerox: comissaoxerox,
-        gratificacao: gratificacao,
-        salario: salario,
-        observacoes: observacoes,
-      };
-      this.dialogColaboradorCargo = true;
-    },
-
-    validaObrigatorio(value) {
-      if (!value) {
-        return "Preenchimento Obrigatório!";
-      }
-      return true;
-    },
-
-    validaDataValida(value) {
-      if (!value) {
-        return true;
-      }
-      const data = moment(value, "DD/MM/YYYY");
-      if (!data.isValid()) {
-        return "Data Inválida!";
-      }
-      return true;
-    },
-
-    validaInicio(value) {
-      const inicio = moment(value, "DD/MM/YYYY");
-      const contratacao = moment(this.colaboradorCargos.contratacao);
-
-      if (contratacao.isAfter(inicio)) {
-        return "Inicio não pode ser anterior á Contratação!";
-      }
-
-      return true;
-    },
-
-    validaFim(value) {
-      const fim = moment(value, "DD/MM/YYYY");
-      const inicio = moment(this.modelColaboradorCargo.inicio, "DD/MM/YYYY");
-
-      if (inicio.isAfter(fim)) {
-        return "Fim não pode ser anterior ao inicio!";
-      }
-      return true;
-    },
-  },
-
-  components: {
-    SelectFilial: defineAsyncComponent(() =>
-      import("components/pessoa/SelectFilial.vue")
-    ),
-    SelectCargo: defineAsyncComponent(() =>
-      import("components/pessoa/SelectCargo.vue")
-    ),
-  },
-
-  props: ["colaboradorCargos"],
-
-  setup(props, ctx) {
-    const $q = useQuasar();
-    const sPessoa = pessoaStore();
-    const sColaborador = colaboradorStore();
-    const route = useRoute();
-    const user = guardaToken();
-    const Documentos = formataDocumetos();
-    const colaboradores = ref([]);
-    const dialogColaboradorCargo = ref(false);
-    const modelColaboradorCargo = ref({});
-
-    return {
-      sPessoa,
-      Documentos,
-      moment,
-      dialogColaboradorCargo,
-      modelColaboradorCargo,
-      route,
-      user,
-      sColaborador,
-      colaboradores,
-      brasil: {
-        days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-        daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-        months:
-          "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-            "_"
-          ),
-        monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split(
-          "_"
-        ),
-        firstDayOfWeek: 1,
-        format24h: true,
-        pluralDay: "dias",
-      },
-    };
-  },
-});
-</script>
 
 <style scoped></style>

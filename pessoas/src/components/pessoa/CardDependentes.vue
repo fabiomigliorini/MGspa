@@ -6,6 +6,7 @@ import moment from "moment";
 import { pessoaStore } from "stores/pessoa";
 import { dependenteStore } from "stores/dependente";
 import { guardaToken } from "src/stores";
+import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
 
 const SelectPessoa = defineAsyncComponent(() =>
   import("components/select/SelectPessoa.vue")
@@ -72,13 +73,12 @@ const cardsConfig = computed(() => [
     key: "responsavel",
     titulo: "Meus Dependentes",
     dados: sPessoa.item?.DependenteResponsavelS || [],
-    icon: "person",
+    icon: "people",
     modo: "responsavel",
     tooltipAdd: "Adicionar dependente",
     emptyMessage: "Nenhum dependente cadastrado",
     getNome: (dep) => dep.dependente,
     getCodPessoaLink: (dep) => dep.codpessoa,
-    isLast: false,
   },
   {
     key: "dependente",
@@ -90,7 +90,6 @@ const cardsConfig = computed(() => [
     emptyMessage: "Não é dependente de ninguém",
     getNome: (dep) => dep.responsavel,
     getCodPessoaLink: (dep) => dep.codpessoaresponsavel,
-    isLast: true,
   },
 ]);
 
@@ -106,10 +105,6 @@ const formataData = (data) => {
   return moment(data).format("DD/MM/YYYY");
 };
 
-const formataDataHora = (data) => {
-  if (!data) return "";
-  return moment(data).format("DD/MM/YYYY HH:mm");
-};
 
 const resetModel = () => {
   model.value = { ...modelInicial };
@@ -179,8 +174,6 @@ const salvar = async () => {
   };
 
   if (isNovo.value) {
-    // No modo responsável: pessoa atual é o responsável, selecionada é o dependente
-    // No modo dependente: pessoa atual é o dependente, selecionada é o responsável
     if (modoAdicao.value === "responsavel") {
       payload.codpessoaresponsavel = parseInt(codpessoaAtual);
       payload.codpessoa = model.value.codpessoaselecionada;
@@ -214,7 +207,6 @@ const salvar = async () => {
   } catch (error) {
     const errors = error.response?.data?.errors;
     if (errors) {
-      // Mostra cada erro de validação
       Object.values(errors).forEach((mensagens) => {
         mensagens.forEach((msg) => {
           $q.notify({
@@ -306,6 +298,7 @@ const ativar = async (coddependente) => {
 </script>
 
 <template>
+  <div>
   <!-- DIALOG NOVO/EDITAR DEPENDENTE -->
   <q-dialog v-model="dialogDependente" persistent>
     <q-card
@@ -497,141 +490,177 @@ const ativar = async (coddependente) => {
     v-for="card in cardsConfig"
     :key="card.key"
     bordered
-    :class="{ 'q-mb-md': !card.isLast }"
+    :class="{ 'q-mb-md': card.key === 'responsavel' }"
   >
-    <q-list>
-      <q-item-label header>
-        {{ card.titulo }}
+    <q-card-section class="bg-yellow text-grey-9 q-py-sm">
+      <div class="row items-center no-wrap q-gutter-x-sm">
+        <q-icon :name="card.icon" size="sm" />
+        <span class="text-subtitle1 text-weight-medium">
+          {{ card.titulo }}
+        </span>
+        <q-space />
         <q-btn
           v-if="user.verificaPermissaoUsuario('Publico')"
           flat
           round
+          dense
           icon="add"
+          size="sm"
+          color="grey-9"
           @click="abrirNovo(card.modo)"
         >
           <q-tooltip>{{ card.tooltipAdd }}</q-tooltip>
         </q-btn>
-      </q-item-label>
+      </div>
+    </q-card-section>
 
-      <template v-if="card.dados && card.dados.length > 0">
-        <div v-for="dep in card.dados" :key="dep.coddependente">
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar top>
-              <q-btn
-                round
-                flat
-                class="bg-grey-2"
-                text-color="primary"
-                :icon="card.icon"
-                :to="{
-                  name: 'pessoaView',
-                  params: { id: card.getCodPessoaLink(dep) },
-                }"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>
-                {{ card.getNome(dep) }}
-                <q-badge v-if="dep.inativo" color="red" class="q-ml-sm"
-                  >Inativo</q-badge
-                >
-              </q-item-label>
-              <q-item-label caption>
-                {{ dep.tipdepdescricao }}
-              </q-item-label>
-              <q-item-label caption v-if="dep.datainicio || dep.datafim">
-                Início: {{ formataData(dep.datainicio) }}
-                <template v-if="dep.datafim">
-                  | Fim: {{ formataData(dep.datafim) }}
-                </template>
-              </q-item-label>
-              <q-item-label caption class="row q-gutter-xs">
-                <q-badge v-if="dep.depirrf" color="grey" outline
-                  >Dependente IRRF</q-badge
-                >
-                <q-badge v-if="dep.depsfam" color="grey" outline
-                  >Salário-Família</q-badge
-                >
-                <q-badge v-if="dep.depplano" color="grey" outline
-                  >Plano de Saúde</q-badge
-                >
-                <q-badge v-if="dep.incsocfam" color="grey" outline
-                  >Incapaz para trabalho</q-badge
-                >
-                <q-badge v-if="dep.guardajudicial" color="grey" outline
-                  >Guarda Judicial</q-badge
-                >
-                <q-badge v-if="dep.pensaoalimenticia" color="grey" outline
-                  >Pensão em folha</q-badge
-                >
-              </q-item-label>
-              <q-item-label
-                caption
-                style="white-space: pre-line"
-                v-if="dep.observacao"
-                >{{ dep.observacao }}</q-item-label
-              >
-            </q-item-section>
-
-            <q-btn-dropdown
+    <q-list separator v-if="card.dados && card.dados.length > 0">
+      <template v-for="dep in card.dados" :key="dep.coddependente">
+        <q-item>
+          <q-item-section avatar>
+            <q-btn
+              round
               flat
-              auto-close
+              :icon="card.icon"
+              color="primary"
+              :to="{
+                name: 'pessoaView',
+                params: { id: card.getCodPessoaLink(dep) },
+              }"
+            />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label :class="dep.inativo ? 'text-strike' : null">
+              {{ card.getNome(dep) }}
+              <q-badge v-if="dep.inativo" color="red" class="q-ml-sm">
+                Inativo
+              </q-badge>
+
+              <!-- INFO -->
+              <icone-info-criacao
+                :usuariocriacao="dep.usuariocriacao"
+                :criacao="dep.criacao"
+                :usuarioalteracao="dep.usuarioalteracao"
+                :alteracao="dep.alteracao"
+              />
+            </q-item-label>
+
+            <q-item-label caption>
+              {{ dep.tipdepdescricao }}
+            </q-item-label>
+
+            <q-item-label
+              caption
+              v-if="dep.datainicio || dep.datafim"
+            >
+              Início: {{ formataData(dep.datainicio) }}
+              <template v-if="dep.datafim">
+                | Fim: {{ formataData(dep.datafim) }}
+              </template>
+            </q-item-label>
+
+            <q-item-label caption v-if="dep.depirrf || dep.depsfam || dep.depplano || dep.incsocfam || dep.guardajudicial || dep.pensaoalimenticia">
+              <div class="row q-gutter-xs">
+                <q-badge v-if="dep.depirrf" color="grey" outline>
+                  Dependente IRRF
+                </q-badge>
+                <q-badge v-if="dep.depsfam" color="grey" outline>
+                  Salário-Família
+                </q-badge>
+                <q-badge v-if="dep.depplano" color="grey" outline>
+                  Plano de Saúde
+                </q-badge>
+                <q-badge v-if="dep.incsocfam" color="grey" outline>
+                  Incapaz para trabalho
+                </q-badge>
+                <q-badge v-if="dep.guardajudicial" color="grey" outline>
+                  Guarda Judicial
+                </q-badge>
+                <q-badge v-if="dep.pensaoalimenticia" color="grey" outline>
+                  Pensão em folha
+                </q-badge>
+              </div>
+            </q-item-label>
+
+            <q-item-label
+              caption
+              style="white-space: pre-line"
+              v-if="dep.observacao"
+            >
+              {{ dep.observacao }}
+            </q-item-label>
+          </q-item-section>
+
+          <q-item-section side>
+            <q-item-label
+              caption
               v-if="user.verificaPermissaoUsuario('Publico')"
             >
-              <q-btn flat round icon="edit" @click="editar(dep, card.modo)">
-                <q-tooltip>Editar</q-tooltip>
-              </q-btn>
+              <!-- EDITAR -->
               <q-btn
                 flat
+                dense
                 round
-                icon="delete"
-                @click="excluir(dep.coddependente)"
+                icon="edit"
+                size="sm"
+                color="grey-7"
+                @click="editar(dep, card.modo)"
               >
-                <q-tooltip>Excluir</q-tooltip>
+                <q-tooltip>Editar</q-tooltip>
               </q-btn>
+
+              <!-- INATIVAR -->
               <q-btn
                 v-if="!dep.inativo"
                 flat
+                dense
                 round
                 icon="pause"
+                size="sm"
+                color="grey-7"
                 @click="inativar(dep.coddependente)"
               >
                 <q-tooltip>Inativar</q-tooltip>
               </q-btn>
+
+              <!-- ATIVAR -->
               <q-btn
                 v-if="dep.inativo"
                 flat
+                dense
                 round
                 icon="play_arrow"
+                size="sm"
+                color="grey-7"
                 @click="ativar(dep.coddependente)"
               >
                 <q-tooltip>Ativar</q-tooltip>
               </q-btn>
-              <q-btn flat round icon="info">
-                <q-tooltip>
-                  <div>
-                    Criado por: {{ dep.usuariocriacao }} em
-                    {{ formataDataHora(dep.criacao) }}
-                  </div>
-                  <div v-if="dep.alteracao">
-                    Alterado por: {{ dep.usuarioalteracao }} em
-                    {{ formataDataHora(dep.alteracao) }}
-                  </div>
-                </q-tooltip>
-              </q-btn>
-            </q-btn-dropdown>
-          </q-item>
-        </div>
-      </template>
 
-      <q-item v-else>
-        <q-item-section>
-          <q-item-label caption class="text-center text-grey">
-            {{ card.emptyMessage }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
+              <!-- EXCLUIR -->
+              <q-btn
+                flat
+                dense
+                round
+                icon="delete"
+                size="sm"
+                color="grey-7"
+                @click="excluir(dep.coddependente)"
+              >
+                <q-tooltip>Excluir</q-tooltip>
+              </q-btn>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
     </q-list>
+
+    <div v-else class="q-pa-md text-center text-grey">
+      {{ card.emptyMessage }}
+    </div>
   </q-card>
+  </div>
 </template>
+
+<style scoped></style>

@@ -1,3 +1,14 @@
+import moment from "moment";
+
+export const formataData = (data) => {
+  return moment(data).format("DD/MM/YYYY hh:mm");
+};
+
+export const formataCep = (cep) => {
+  if (cep == null) return cep;
+  cep = cep.toString().padStart(8);
+  return cep.slice(0, 2) + "." + cep.slice(2, 5) + "-" + cep.slice(5, 8);
+};
 
 export const formataIe = (uf, ie) => {
     switch (uf) {

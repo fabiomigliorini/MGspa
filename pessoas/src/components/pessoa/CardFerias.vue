@@ -1,3 +1,284 @@
+<script setup>
+import { ref } from "vue";
+import { useQuasar } from "quasar";
+import { colaboradorStore } from "stores/colaborador";
+import moment from "moment";
+import "moment/min/locales";
+moment.locale("pt-br");
+
+const props = defineProps(["colaborador"]);
+
+const $q = useQuasar();
+const sColaborador = colaboradorStore();
+const model = ref({});
+const dialogEditar = ref(false);
+
+const brasil = {
+  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
+  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
+  months:
+    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
+      "_"
+    ),
+  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
+  firstDayOfWeek: 0,
+  format24h: true,
+  pluralDay: "dias",
+};
+
+function calculaPeriodoAquisitivo(colaborador) {
+  var inicio = moment(colaborador.contratacao);
+  var dias = 0;
+  colaborador.Ferias.forEach((ferias) => {
+    var ultima = moment(ferias.aquisitivoinicio);
+    if (inicio.isSame(ultima)) {
+      dias += ferias.dias;
+    } else if (inicio.isBefore(ultima)) {
+      inicio = ultima;
+      dias = ferias.dias;
+    }
+  });
+  if (dias >= 30) {
+    inicio.add(1, "year");
+    dias = 30;
+  } else {
+    dias = 30 - dias;
+  }
+  return {
+    inicio: inicio,
+    fim: inicio.clone().add(1, "year").subtract(1, "day"),
+    dias: dias,
+  };
+}
+
+function sugereAquisitivoFim() {
+  const inicio = moment(model.value.aquisitivoinicio, "DD/MM/YYYY");
+  model.value.aquisitivofim = inicio
+    .add(1, "year")
+    .subtract(1, "day")
+    .format("DD/MM/YYYY");
+}
+
+function nova(colaborador) {
+  dialogEditar.value = true;
+  const aquisitivo = calculaPeriodoAquisitivo(colaborador);
+  const aquisitivoinicio = aquisitivo.inicio;
+  const aquisitivofim = aquisitivo.fim;
+  const dias = aquisitivo.dias;
+  const gozoinicio = aquisitivofim.clone().add(1, "day");
+  const gozofim = gozoinicio.clone().add(dias, "day");
+  model.value = {
+    codcolaborador: colaborador.codcolaborador,
+    aquisitivoinicio: aquisitivoinicio.format("DD/MM/YYYY"),
+    aquisitivofim: aquisitivofim.format("DD/MM/YYYY"),
+    gozo: {
+      from: gozoinicio.format("DD/MM/YYYY"),
+      to: gozofim.format("DD/MM/YYYY"),
+    },
+    dias: dias,
+    diasabono: 0,
+    diasdescontados: 0,
+    diasgozo: dias,
+    observacoes: null,
+    prevista: true,
+  };
+}
+
+async function salvar() {
+  const m = { ...model.value };
+
+  if (m.gozo == null) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: "Selecione o período de Gozo das Férias!",
+    });
+    return;
+  }
+
+  m.aquisitivoinicio = moment(m.aquisitivoinicio, "DD/MM/YYYY").format(
+    "YYYY-MM-DD"
+  );
+  m.aquisitivofim = moment(m.aquisitivofim, "DD/MM/YYYY").format("YYYY-MM-DD");
+  m.gozoinicio = moment(m.gozo.from, "DD/MM/YYYY").format("YYYY-MM-DD");
+  m.gozofim = moment(m.gozo.to, "DD/MM/YYYY").format("YYYY-MM-DD");
+  delete m.gozo;
+
+  if (m.codferias) {
+    try {
+      const ret = await sColaborador.putFerias(m);
+      if (ret.data.data) {
+        $q.notify({
+          color: "green-5",
+          textColor: "white",
+          icon: "done",
+          message: "Férias Alterada!",
+        });
+        dialogEditar.value = false;
+      }
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response.data.message,
+      });
+    }
+  } else {
+    try {
+      const ret = await sColaborador.postFerias(m);
+      if (ret.data.data) {
+        $q.notify({
+          color: "green-5",
+          textColor: "white",
+          icon: "done",
+          message: "Férias Criada!",
+        });
+        dialogEditar.value = false;
+      }
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response.data.message,
+      });
+    }
+  }
+}
+
+async function excluir(ferias) {
+  $q.dialog({
+    title: "Excluir Férias",
+    message: "Tem certeza que deseja excluir essas Férias?",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await sColaborador.deleteFerias(ferias);
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Férias excluida!",
+      });
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response.data.message,
+      });
+    }
+  });
+}
+
+function editar(ferias) {
+  const m = { ...ferias };
+  m.aquisitivoinicio = moment(m.aquisitivoinicio, "YYYY-MM-DD").format(
+    "DD/MM/YYYY"
+  );
+  m.aquisitivofim = moment(m.aquisitivofim, "YYYY-MM-DD").format("DD/MM/YYYY");
+  m.gozo = {
+    from: moment(m.gozoinicio, "YYYY-MM-DD").format("DD/MM/YYYY"),
+    to: moment(m.gozofim, "YYYY-MM-DD").format("DD/MM/YYYY"),
+  };
+  delete m.gozoinicio;
+  delete m.gozofim;
+  model.value = m;
+  dialogEditar.value = true;
+}
+
+function validaObrigatorio(value) {
+  if (!value) {
+    return "Preenchimento Obrigatório!";
+  }
+  return true;
+}
+
+function validaData(value) {
+  if (!value) {
+    return true;
+  }
+  const data = moment(value, "DD/MM/YYYY");
+  if (!data.isValid()) {
+    return "Data Inválida!";
+  }
+  return true;
+}
+
+function validaAqInicio(value) {
+  const colaborador = sColaborador.findColaborador(model.value.codcolaborador);
+  const inicio = moment(value, "DD/MM/YYYY");
+  const contratacao = moment(colaborador.contratacao);
+  if (contratacao.isAfter(inicio)) {
+    return "Aquisitivo início não pode ser anterior a contratação!";
+  }
+  return true;
+}
+
+function validaAqFim(value) {
+  const colaborador = sColaborador.findColaborador(model.value.codcolaborador);
+  const aqFim = moment(value, "DD/MM/YYYY");
+  const rescisao = moment(colaborador.rescisao);
+  if (rescisao.isBefore(aqFim)) {
+    return "Aquisitivo fim tem que ser anterior a rescisão!";
+  }
+  const inicio = moment(model.value.aquisitivoinicio, "DD/MM/YYYY");
+  if (inicio.isAfter(aqFim)) {
+    return "Aquisitivo fim tem que ser depois do inicio!";
+  }
+  return true;
+}
+
+function validaDias(value) {
+  if (value > 50) {
+    return "Valor muito alto!";
+  }
+  if (value < 1) {
+    return "Valor muito baixo!";
+  }
+  return true;
+}
+
+function calculaDiasGozo() {
+  if (!model.value.diasabono || !model.value.diasdescontados) {
+    model.value.diasabono = "0";
+    model.value.diasdescontados = "0";
+  }
+  var diasgozo =
+    model.value.dias - model.value.diasabono - model.value.diasdescontados;
+  model.value.diasgozo = diasgozo;
+  const inicio = moment(model.value.gozo.from, "DD/MM/YYYY");
+  model.value.gozo.to = inicio.add(diasgozo - 1, "days").format("DD/MM/YYYY");
+}
+
+function calculaFimGozo() {
+  if (model.value.gozo == null) {
+    return;
+  }
+  var mFrom;
+  switch (typeof model.value.gozo) {
+    case "string":
+      mFrom = moment(model.value.gozo, "DD/MM/YYYY");
+      break;
+    case "object":
+      mFrom = moment(model.value.gozo.from, "DD/MM/YYYY");
+      break;
+    default:
+      mFrom = moment();
+      break;
+  }
+  const mTo = mFrom.clone().add(model.value.diasgozo - 1, "days");
+  model.value.gozo = {
+    from: mFrom.format("DD/MM/YYYY"),
+    to: mTo.format("DD/MM/YYYY"),
+  };
+}
+
+defineExpose({ nova });
+</script>
+
 <template>
   <template v-if="colaborador.Ferias.length > 0">
     <div class="row q-pa-md q-col-gutter-md">
@@ -10,26 +291,41 @@
           bordered
           :class="ferias.prevista == true ? 'bg-orange-3' : null"
         >
-          <q-item>
-            <q-item-label header>
-              {{ ferias.dias }} dias em
-              {{ moment(ferias.gozoinicio).format("MMM/YY") }}
-              <q-btn flat round icon="edit" @click="editar(ferias)" />
-              <q-btn flat round icon="delete" @click="excluir(ferias)" />
-            </q-item-label>
-          </q-item>
+          <q-card-section class="q-py-xs q-px-sm">
+            <div class="row items-center no-wrap q-gutter-x-xs">
+              <q-icon name="celebration" size="xs" color="primary" />
+              <span class="text-caption text-weight-medium">
+                {{ ferias.dias }} dias em
+                {{ moment(ferias.gozoinicio).format("MMM/YY") }}
+              </span>
+              <q-space />
+              <q-btn
+                flat
+                round
+                dense
+                icon="edit"
+                size="xs"
+                @click="editar(ferias)"
+              />
+              <q-btn
+                flat
+                round
+                dense
+                icon="delete"
+                size="xs"
+                @click="excluir(ferias)"
+              />
+            </div>
+          </q-card-section>
 
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="celebration" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label v-if="ferias.diasgozo">
+          <div class="row q-col-gutter-xs q-pa-sm">
+            <div class="col-12" v-if="ferias.diasgozo">
+              <div class="text-overline text-grey-7">Gozo</div>
+              <div class="text-body2">
                 {{ moment(ferias.gozoinicio).format("DD/MMM") }} a
                 {{ moment(ferias.gozofim).format("DD/MMM/YYYY") }}
-              </q-item-label>
-              <q-item-label caption>
+              </div>
+              <div class="text-caption text-grey-7">
                 {{ ferias.diasgozo }} Dias Gozo
                 <span v-if="ferias.diasabono">
                   / {{ ferias.diasabono }} de Abono
@@ -40,38 +336,24 @@
                 <span v-if="ferias.dias != ferias.diasgozo">
                   = {{ ferias.dias }} Total
                 </span>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
+              </div>
+            </div>
 
-          <q-separator inset />
-          <q-item>
-            <q-item-section avatar>
-              <q-icon name="event" color="primary"></q-icon>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>
+            <div class="col-12">
+              <div class="text-overline text-grey-7">Período Aquisitivo</div>
+              <div class="text-body2">
                 {{ moment(ferias.aquisitivoinicio).format("DD/MMM") }} a
                 {{ moment(ferias.aquisitivofim).format("DD/MMM/YYYY") }}
-              </q-item-label>
-              <q-item-label caption> Período Aquisitivo </q-item-label>
-            </q-item-section>
-          </q-item>
+              </div>
+            </div>
 
-          <template v-if="ferias.observacoes">
-            <q-separator inset />
-            <q-item>
-              <q-item-section avatar>
-                <q-icon name="comment" color="primary"></q-icon>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>
-                  {{ ferias.observacoes }}
-                </q-item-label>
-                <q-item-label caption> Observações </q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
+            <div class="col-12" v-if="ferias.observacoes">
+              <div class="text-overline text-grey-7">Observações</div>
+              <div class="text-caption">
+                {{ ferias.observacoes }}
+              </div>
+            </div>
+          </div>
         </q-card>
       </div>
     </div>
@@ -246,8 +528,7 @@
                 mask="DD/MM/YYYY"
                 landscape
                 @update:model-value="calculaFimGozo"
-              >
-              </q-date>
+              />
             </div>
           </div>
 
@@ -270,318 +551,3 @@
     </q-card>
   </q-dialog>
 </template>
-
-<script>
-import { defineComponent } from "vue";
-import { useQuasar } from "quasar";
-import { ref } from "vue";
-import { colaboradorStore } from "stores/colaborador";
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
-
-export default defineComponent({
-  name: "CardFerias",
-
-  methods: {
-    calculaPeriodoAquisitivo(colaborador) {
-      var inicio = moment(colaborador.contratacao);
-      var dias = 0;
-      colaborador.Ferias.forEach((ferias) => {
-        var ultima = moment(ferias.aquisitivoinicio);
-        if (inicio.isSame(ultima)) {
-          dias += ferias.dias;
-        } else if (inicio.isBefore(ultima)) {
-          inicio = ultima;
-          dias = ferias.dias;
-        }
-      });
-      if (dias >= 30) {
-        inicio.add(1, "year");
-        dias = 30;
-      } else {
-        dias = 30 - dias;
-      }
-      return {
-        inicio: inicio,
-        fim: inicio.clone().add(1, "year").subtract(1, "day"),
-        dias: dias,
-      };
-    },
-
-    sugereAquisitivoFim() {
-      const inicio = moment(this.model.aquisitivoinicio, "DD/MM/YYYY");
-      this.model.aquisitivofim = inicio
-        .add(1, "year")
-        .subtract(1, "day")
-        .format("DD/MM/YYYY");
-    },
-
-    nova(colaborador) {
-      this.dialogEditar = true;
-      const aquisitivo = this.calculaPeriodoAquisitivo(colaborador);
-      const aquisitivoinicio = aquisitivo.inicio;
-      const aquisitivofim = aquisitivo.fim;
-      const dias = aquisitivo.dias;
-      const gozoinicio = aquisitivofim.clone().add(1, "day");
-      const gozofim = gozoinicio.clone().add(dias, "day");
-      this.model = {
-        codcolaborador: colaborador.codcolaborador,
-        aquisitivoinicio: aquisitivoinicio.format("DD/MM/YYYY"),
-        aquisitivofim: aquisitivofim.format("DD/MM/YYYY"),
-        gozo: {
-          from: gozoinicio.format("DD/MM/YYYY"),
-          to: gozofim.format("DD/MM/YYYY"),
-        },
-        dias: dias,
-        diasabono: 0,
-        diasdescontados: 0,
-        diasgozo: dias,
-        observacoes: null,
-        prevista: true,
-      };
-    },
-
-    async salvar() {
-      const model = { ...this.model };
-
-      if (model.gozo == null) {
-        this.$q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: "Selecione o período de Gozo das Férias!",
-        });
-        return;
-      }
-
-      model.aquisitivoinicio = moment(
-        model.aquisitivoinicio,
-        "DD/MM/YYYY"
-      ).format("YYYY-MM-DD");
-      model.aquisitivofim = moment(model.aquisitivofim, "DD/MM/YYYY").format(
-        "YYYY-MM-DD"
-      );
-      model.gozoinicio = moment(model.gozo.from, "DD/MM/YYYY").format(
-        "YYYY-MM-DD"
-      );
-      model.gozofim = moment(model.gozo.to, "DD/MM/YYYY").format("YYYY-MM-DD");
-      delete model.gozo;
-
-      if (model.codferias) {
-        try {
-          const ret = await this.sColaborador.putFerias(model);
-          if (ret.data.data) {
-            this.$q.notify({
-              color: "green-5",
-              textColor: "white",
-              icon: "done",
-              message: "Férias Alterada!",
-            });
-            this.dialogEditar = false;
-          }
-        } catch (error) {
-          console.log(error);
-          this.$q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
-            message: error.response.data.message,
-          });
-        }
-      } else {
-        try {
-          const ret = await this.sColaborador.postFerias(model);
-          if (ret.data.data) {
-            this.$q.notify({
-              color: "green-5",
-              textColor: "white",
-              icon: "done",
-              message: "Férias Criada!",
-            });
-            this.dialogEditar = false;
-          }
-        } catch (error) {
-          console.log(error);
-          this.$q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
-            message: error.response.data.message,
-          });
-        }
-      }
-    },
-
-    async excluir(ferias) {
-      this.$q
-        .dialog({
-          title: "Excluir Férias",
-          message: "Tem certeza que deseja excluir essas Férias?",
-          cancel: true,
-        })
-        .onOk(async () => {
-          try {
-            const ret = await this.sColaborador.deleteFerias(ferias);
-            this.$q.notify({
-              color: "green-5",
-              textColor: "white",
-              icon: "done",
-              message: "Férias excluida!",
-            });
-          } catch (error) {
-            console.log(error);
-            this.$q.notify({
-              color: "red-5",
-              textColor: "white",
-              icon: "error",
-              message: error.response.data.message,
-            });
-          }
-        });
-    },
-
-    editar(ferias) {
-      const model = { ...ferias };
-      model.aquisitivoinicio = moment(
-        model.aquisitivoinicio,
-        "YYYY-MM-DD"
-      ).format("DD/MM/YYYY");
-      model.aquisitivofim = moment(model.aquisitivofim, "YYYY-MM-DD").format(
-        "DD/MM/YYYY"
-      );
-      model.gozo = {
-        from: moment(model.gozoinicio, "YYYY-MM-DD").format("DD/MM/YYYY"),
-        to: moment(model.gozofim, "YYYY-MM-DD").format("DD/MM/YYYY"),
-      };
-      delete model.gozoinicio;
-      delete model.gozofim;
-      this.model = model;
-      this.dialogEditar = true;
-    },
-
-    validaObrigatorio(value) {
-      if (!value) {
-        return "Preenchimento Obrigatório!";
-      }
-      return true;
-    },
-
-    validaData(value) {
-      if (!value) {
-        return true;
-      }
-      const data = moment(value, "DD/MM/YYYY");
-      if (!data.isValid()) {
-        return "Data Inválida!";
-      }
-      return true;
-    },
-
-    validaAqInicio(value) {
-      const colaborador = this.sColaborador.findColaborador(
-        this.model.codcolaborador
-      );
-      const inicio = moment(value, "DD/MM/YYYY");
-      const contratacao = moment(colaborador.contratacao);
-      if (contratacao.isAfter(inicio)) {
-        return "Aquisitivo início não pode ser anterior a contratação!";
-      }
-      return true;
-    },
-
-    validaAqFim(value) {
-      const colaborador = this.sColaborador.findColaborador(
-        this.model.codcolaborador
-      );
-      const aqFim = moment(value, "DD/MM/YYYY");
-      const rescisao = moment(colaborador.rescisao);
-      if (rescisao.isBefore(aqFim)) {
-        return "Aquisitivo fim tem que ser anterior a rescisão!";
-      }
-      const inicio = moment(this.model.aquisitivoinicio, "DD/MM/YYYY");
-      if (inicio.isAfter(aqFim)) {
-        return "Aquisitivo fim tem que ser depois do inicio!";
-      }
-      return true;
-    },
-
-    validaDias(value) {
-      if (value > 50) {
-        return "Valor muito alto!";
-      }
-      if (value < 1) {
-        return "Valor muito baixo!";
-      }
-      return true;
-    },
-
-    calculaDiasGozo() {
-      if (!this.model.diasabono || !this.model.diasdescontados) {
-        this.model.diasabono = "0";
-        this.model.diasdescontados = "0";
-      }
-      var diasgozo =
-        this.model.dias - this.model.diasabono - this.model.diasdescontados;
-      this.model.diasgozo = diasgozo;
-      const inicio = moment(this.model.gozo.from, "DD/MM/YYYY");
-      this.model.gozo.to = inicio
-        .add(diasgozo - 1, "days")
-        .format("DD/MM/YYYY");
-    },
-
-    calculaFimGozo() {
-      if (this.model.gozo == null) {
-        return;
-      }
-      switch (typeof this.model.gozo) {
-        case "string":
-          var mFrom = moment(this.model.gozo, "DD/MM/YYYY");
-          break;
-
-        case "object":
-          var mFrom = moment(this.model.gozo.from, "DD/MM/YYYY");
-          break;
-
-        default:
-          var mFrom = moment();
-          break;
-      }
-      const mTo = mFrom.clone().add(this.model.diasgozo - 1, "days");
-      this.model.gozo = {
-        from: mFrom.format("DD/MM/YYYY"),
-        to: mTo.format("DD/MM/YYYY"),
-      };
-    },
-  },
-
-  props: ["colaborador"],
-
-  setup() {
-    const $q = useQuasar();
-    const sColaborador = colaboradorStore();
-    const model = ref({});
-    const dialogEditar = ref(false);
-    return {
-      moment,
-      sColaborador,
-      dialogEditar,
-      model,
-      brasil: {
-        days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-        daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-        months:
-          "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-            "_"
-          ),
-        monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split(
-          "_"
-        ),
-        firstDayOfWeek: 0,
-        format24h: true,
-        pluralDay: "dias",
-      },
-    };
-  },
-});
-</script>

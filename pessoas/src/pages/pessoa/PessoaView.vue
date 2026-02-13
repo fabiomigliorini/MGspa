@@ -74,28 +74,74 @@ onMounted(async () => {
     <template #content>
       <q-page>
         <div
-          class="row q-pa-md q-col-gutter-md"
           v-if="sPessoa.item"
-          style="max-width: 1366px; margin: auto"
+          class="row q-col-gutter-md"
+          style="max-width: 1280px; margin: auto"
         >
-          <div class="col-md-8 col-12">
-            <div class="column q-gutter-y-md">
-              <card-detalhes-pessoa />
-              <card-cliente />
-              <card-historico-cobranca />
-              <card-colaborador />
+          <div class="col-md-8 col-sm-12">
+            <div class="row q-col-gutter-md">
+              <!-- CARD PESSOA -->
+              <div class="col-12">
+                <card-detalhes-pessoa />
+              </div>
+
+              <!-- CLIENTE -->
+              <div class="col-12">
+                <card-cliente />
+              </div>
+
+              <!-- COBRANCA -->
+              <div class="col-12">
+                <card-historico-cobranca />
+              </div>
+
+              <!-- COLABORADOR -->
+              <div class="col-12">
+                <card-colaborador />
+              </div>
             </div>
           </div>
-          <div class="col-md-4 col-12">
-            <div class="column q-gutter-y-md">
-              <item-telefone />
-              <item-email />
-              <item-endereco />
-              <card-pessoa-conta />
-              <card-dependentes />
-              <card-arquivos />
-              <card-registro-spc />
-              <card-certidoes />
+          <div class="col-md-4 col-sm-12">
+            <div class="row q-col-gutter-md">
+              <!-- TELEFONE -->
+              <div class="col-12">
+                <item-telefone />
+              </div>
+
+              <!-- EMAIL -->
+              <div class="col-12">
+                <item-email />
+              </div>
+
+              <!-- ENDERECO -->
+              <div class="col-12">
+                <item-endereco />
+              </div>
+
+              <!-- CONTA -->
+              <div class="col-12">
+                <card-pessoa-conta />
+              </div>
+
+              <!-- DEPENDENTES -->
+              <div class="col-12">
+                <card-dependentes />
+              </div>
+
+              <!-- ARQUIVOS -->
+              <div class="col-12">
+                <card-arquivos />
+              </div>
+
+              <!-- SPC -->
+              <div class="col-12">
+                <card-registro-spc />
+              </div>
+
+              <!-- CERT -->
+              <div class="col-12">
+                <card-certidoes />
+              </div>
             </div>
           </div>
         </div>
