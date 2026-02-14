@@ -300,7 +300,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
   <!-- DIALOG NOVO EMAIL/EDITAR EMAIL -->
   <q-dialog v-model="dialogEmail">
       <q-card bordered flat style="width: 600px; max-width: 90vw">
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           <template v-if="emailNovo">NOVO EMAIL</template>
           <template v-else>EDITAR EMAIL</template>
         </q-card-section>

@@ -289,7 +289,7 @@ const buscarListagem = async () => {
   <!-- Dialog Upload -->
   <q-dialog v-model="dialogUpload">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline row">
+      <q-card-section class="text-grey-9 text-overline row items-center">
         NOVO ANEXO
       </q-card-section>
 
@@ -355,7 +355,7 @@ const buscarListagem = async () => {
   <q-dialog v-model="dialogEditar">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
       <q-form @submit="salvar">
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           DETALHES DO ARQUIVO
         </q-card-section>
 

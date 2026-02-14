@@ -265,7 +265,7 @@ const fecharRelatorio = () => {
   <q-dialog v-model="modelDialogCliente">
     <q-card bordered flat>
       <q-form @submit="salvarCliente()">
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           EDITAR CLIENTE E CRÉDITO
         </q-card-section>
 

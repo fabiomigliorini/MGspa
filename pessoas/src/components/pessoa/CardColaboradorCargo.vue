@@ -28,6 +28,7 @@ const cargosOrdenados = computed(() =>
 
 const dialogColaboradorCargo = ref(false);
 const modelColaboradorCargo = ref({});
+const editarCargo = ref(false);
 
 const brasil = {
   days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
@@ -60,68 +61,71 @@ function preencheCargo(colaborador) {
 }
 
 function novoColaboradorCargo(colaborador) {
+  editarCargo.value = false;
   dialogColaboradorCargo.value = true;
   preencheCargo(colaborador);
 }
 
-async function salvar() {
+function preparaModel() {
   const model = { ...modelColaboradorCargo.value };
+  if (model.inicio) {
+    model.inicio = Documentos.dataFormatoSql(model.inicio);
+  }
+  if (model.fim) {
+    model.fim = Documentos.dataFormatoSql(model.fim);
+  }
+  return model;
+}
 
-  if (modelColaboradorCargo.value.codcolaboradorcargo) {
-    if (model.inicio) {
-      model.inicio = Documentos.dataFormatoSql(model.inicio);
-    }
-    if (model.fim) {
-      model.fim = Documentos.dataFormatoSql(model.fim);
-    }
-    try {
-      const ret = await sColaborador.salvarColaboradorCargo(model);
-      if (ret.data.data) {
-        $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Colaborador Cargo Alterado!",
-        });
-        dialogColaboradorCargo.value = false;
-      }
-    } catch (error) {
+async function novoCargo() {
+  try {
+    const model = preparaModel();
+    const ret = await sColaborador.novoColaboradorCargo(model);
+    if (ret.data.data) {
       $q.notify({
-        color: "red-5",
+        color: "green-5",
         textColor: "white",
-        icon: "error",
-        message: error.response.data.message,
+        icon: "done",
+        message: "Colaborador Cargo criado!",
       });
-    }
-  } else {
-    if (model.inicio) {
-      model.inicio = Documentos.dataFormatoSql(model.inicio);
-    }
-    if (model.fim) {
-      model.fim = Documentos.dataFormatoSql(model.fim);
-    }
-    try {
-      const ret = await sColaborador.novoColaboradorCargo(model);
-      if (ret.data.data) {
-        $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Colaborador Cargo criado!",
-        });
-        dialogColaboradorCargo.value = false;
-      }
       dialogColaboradorCargo.value = false;
-    } catch (error) {
-      $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: error.response.data.message,
-      });
     }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response.data.message,
+    });
   }
 }
+
+async function salvarCargo() {
+  try {
+    const model = preparaModel();
+    const ret = await sColaborador.salvarColaboradorCargo(model);
+    if (ret.data.data) {
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Colaborador Cargo Alterado!",
+      });
+      dialogColaboradorCargo.value = false;
+    }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response.data.message,
+    });
+  }
+}
+
+const submit = () => {
+  editarCargo.value ? salvarCargo() : novoCargo();
+};
 
 async function excluir(colaboradorCargo) {
   $q.dialog({
@@ -176,6 +180,7 @@ function editarColaboradorCargo(
     salario: salario,
     observacoes: observacoes,
   };
+  editarCargo.value = true;
   dialogColaboradorCargo.value = true;
 }
 
@@ -325,11 +330,13 @@ defineExpose({ novoColaboradorCargo });
 
   <!-- Dialog Colaborador Cargo -->
   <q-dialog v-model="dialogColaboradorCargo">
-    <q-card style="min-width: 350px">
-      <q-form @submit="salvar()">
-        <q-card-section>
-          <div class="text-h6">Colaborador Cargo</div>
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
+      <q-form @submit="submit()">
+        <q-card-section class="text-grey-9 text-overline row items-center">
+          <template v-if="editarCargo">EDITAR CARGO</template>
+          <template v-else>NOVO CARGO</template>
         </q-card-section>
+        <q-separator inset />
         <q-card-section>
           <select-cargo
             v-model="modelColaboradorCargo.codcargo"

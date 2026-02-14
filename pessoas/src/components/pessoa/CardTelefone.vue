@@ -323,7 +323,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
   <!-- DIALOG NOVO/EDITAR TELEFONE -->
   <q-dialog v-model="dialogTel">
     <q-card bordered flat style="width: 400px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline row">
+      <q-card-section class="text-grey-9 text-overline row items-center">
         <template v-if="telNovo">NOVO TELEFONE</template>
         <template v-else>EDITAR TELEFONE</template>
       </q-card-section>
@@ -477,7 +477,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
     </q-card>
   </q-dialog>
 
-  <q-card bordered flat class="rounded-xl">
+  <q-card bordered flat>
     <q-card-section class="text-grey-9 text-overline row items-center">
       TELEFONES
       <q-space />

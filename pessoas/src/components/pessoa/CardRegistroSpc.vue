@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
@@ -20,17 +20,13 @@ const dialogNovoRegistroSpc = ref(false);
 const modelRegistroSpc = ref({});
 const editarRegistro = ref(false);
 const filtroRegistroSpc = ref("abertos");
-const registrosS = ref([]);
 
-const filtroSpc = () => {
-  if (filtroRegistroSpc.value == "abertos") {
-    let todos = sPessoa.item.RegistroSpc.filter((x) => !x.baixa);
-    sPessoa.item.RegistroSpc = todos;
-  }
-  if (filtroRegistroSpc.value == "todos") {
-    sPessoa.item.RegistroSpc = registrosS.value;
-  }
-};
+const registrosFiltrados = computed(() => {
+  const lista = sPessoa.item?.RegistroSpc || [];
+  if (filtroRegistroSpc.value === "abertos")
+    return lista.filter((x) => !x.baixa);
+  return lista;
+});
 
 const novoRegistroSpc = async () => {
   modelRegistroSpc.value.codpessoa = route.params.id;
@@ -164,23 +160,13 @@ const submit = () => {
   editarRegistro.value === false ? novoRegistroSpc() : salvarRegistro();
 };
 
-watch(
-  () => sPessoa.item,
-  (newItem) => {
-    if (!newItem) return;
-    registrosS.value = newItem.RegistroSpc;
-    filtroRegistroSpc.value = "abertos";
-    newItem.RegistroSpc = newItem.RegistroSpc.filter((x) => !x.baixa);
-  },
-  { immediate: true }
-);
 </script>
 
 <template>
   <!-- Dialog novo Registro Spc -->
   <q-dialog v-model="dialogNovoRegistroSpc">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline row">
+      <q-card-section class="text-grey-9 text-overline row items-center">
         <template v-if="editarRegistro === false">NOVO REGISTRO SPC</template>
         <template v-else>EDITAR REGISTRO SPC</template>
       </q-card-section>
@@ -315,7 +301,6 @@ watch(
           { label: 'Abertos', value: 'abertos' },
           { label: 'Todos', value: 'todos' },
         ]"
-        @update:model-value="filtroSpc()"
       />
       <q-btn
         flat
@@ -333,9 +318,9 @@ watch(
       />
     </q-card-section>
 
-    <q-list v-if="sPessoa.item?.RegistroSpc?.length > 0">
+    <q-list v-if="registrosFiltrados.length > 0">
       <template
-        v-for="registro in sPessoa.item?.RegistroSpc"
+        v-for="registro in registrosFiltrados"
         v-bind:key="registro.codregistrospc"
       >
         <q-separator inset />

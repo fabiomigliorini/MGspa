@@ -86,6 +86,8 @@ const toggleLeftDrawer = () => {
           <slot name="tituloPagina"></slot>
         </q-toolbar-title>
 
+        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
+
         <!-- Renderiza o menu -->
         <mg-menu></mg-menu>
 

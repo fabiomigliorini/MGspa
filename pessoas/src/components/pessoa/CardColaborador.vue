@@ -473,6 +473,10 @@ const abrirNovoColaborador = () => {
   dialogNovoColaborador.value = true;
 };
 
+const submit = () => {
+  editColaborador.value ? salvarColaborador() : novoColaborador();
+};
+
 const colaboradoresOrdenados = computed(() =>
   [...sColaborador.colaboradores].sort(
     (a, b) => new Date(b.contratacao) - new Date(a.contratacao)
@@ -698,11 +702,9 @@ watch(
   <q-dialog v-model="dialogNovoColaborador">
     <q-card bordered flat style="min-width: 350px">
       <q-form
-        @submit="
-          editColaborador == true ? salvarColaborador() : novoColaborador()
-        "
+        @submit="submit()"
       >
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           <template v-if="editColaborador">EDITAR COLABORADOR</template>
           <template v-else>NOVO COLABORADOR</template>
         </q-card-section>

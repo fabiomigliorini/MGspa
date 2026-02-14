@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
@@ -23,19 +23,13 @@ const editCertidao = ref(false);
 const dialogCertidao = ref(false);
 const modelCertidao = ref({});
 const filtroCertidaomodel = ref("validas");
-const certidoesS = ref([]);
 
-const filtroCertidao = () => {
-  if (filtroCertidaomodel.value == "validas") {
-    let validas = sPessoa.item.PessoaCertidaoS.filter(
-      (x) => x.validade >= dataAtual()
-    );
-    sPessoa.item.PessoaCertidaoS = validas;
-  }
-  if (filtroCertidaomodel.value == "todas") {
-    sPessoa.item.PessoaCertidaoS = certidoesS.value;
-  }
-};
+const certidoesFiltradas = computed(() => {
+  const lista = sPessoa.item?.PessoaCertidaoS || [];
+  if (filtroCertidaomodel.value === "validas")
+    return lista.filter((x) => x.validade >= dataAtual());
+  return lista;
+});
 
 const novaCertidao = async () => {
   modelCertidao.value.codpessoa = route.params.id;
@@ -199,27 +193,14 @@ const deletarCertidao = async (codpessoacertidao) => {
 const submit = () => {
   editCertidao.value === false ? novaCertidao() : salvarCertidao();
 };
-
-watch(
-  () => sPessoa.item,
-  (newItem) => {
-    if (!newItem) return;
-    certidoesS.value = newItem.PessoaCertidaoS;
-    filtroCertidaomodel.value = "validas";
-    newItem.PessoaCertidaoS = newItem.PessoaCertidaoS.filter(
-      (x) => x.validade >= dataAtual()
-    );
-  },
-  { immediate: true }
-);
 </script>
 
 <template>
   <!-- Dialog Certidões -->
   <q-dialog v-model="dialogCertidao">
-    <q-card bordered flat style="width: 600px; max-width: 90vw">
+    <q-card bordered flat style="width: 400px; max-width: 90vw">
       <q-form @submit="submit()">
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           <template v-if="editCertidao">EDITAR CERTIDÃO</template>
           <template v-else>NOVA CERTIDÃO</template>
         </q-card-section>
@@ -227,63 +208,73 @@ watch(
         <q-separator inset />
 
         <q-card-section>
-          <q-input
-            outlined
-            v-model="modelCertidao.numero"
-            mask="####################"
-            autofocus
-            label="Número"
-            :rules="[(val) => (val && val.length > 0) || 'Numero obrigatório']"
-          />
-
-          <q-input
-            outlined
-            v-model="modelCertidao.autenticacao"
-            class="q-mb-md"
-            label="Autenticação"
-          />
-
-          <q-input
-            outlined
-            v-model="modelCertidao.validade"
-            mask="##/##/####"
-            label="Validade"
-            :rules="[
-              (val) => (val && val.length > 0) || 'Validade obrigatório',
-            ]"
-          >
-            <template v-slot:append>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date
-                    v-model="modelCertidao.validade"
-                    :locale="localeBrasil"
-                    mask="DD/MM/YYYY"
-                  >
-                    <div class="row items-center justify-end">
-                      <q-btn
-                        v-close-popup
-                        label="Fechar"
-                        color="primary"
-                        flat
-                      />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-
-          <select-certidao-emissor v-model="modelCertidao.codcertidaoemissor" />
-
-          <select-certidao-tipo
-            v-model="modelCertidao.codcertidaotipo"
-            class="q-mt-md"
-          />
+          <div class="row q-col-gutter-md">
+            <div class="col-6">
+              <select-certidao-emissor
+                v-model="modelCertidao.codcertidaoemissor"
+                autofocus
+              />
+            </div>
+            <div class="col-6">
+              <select-certidao-tipo v-model="modelCertidao.codcertidaotipo" />
+            </div>
+            <div class="col-6">
+              <q-input
+                outlined
+                v-model="modelCertidao.numero"
+                mask="####################"
+                label="Número"
+                :rules="[
+                  (val) => (val && val.length > 0) || 'Numero obrigatório',
+                ]"
+              />
+            </div>
+            <div class="col-6">
+              <q-input
+                outlined
+                v-model="modelCertidao.autenticacao"
+                class="q-mb-md"
+                label="Autenticação"
+              />
+            </div>
+            <div class="col-12">
+              <q-input
+                outlined
+                v-model="modelCertidao.validade"
+                mask="##/##/####"
+                label="Validade"
+                :rules="[
+                  (val) => (val && val.length > 0) || 'Validade obrigatório',
+                ]"
+                input-class="text-center"
+              >
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-date
+                        v-model="modelCertidao.validade"
+                        :locale="localeBrasil"
+                        mask="DD/MM/YYYY"
+                      >
+                        <div class="row items-center justify-end">
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+          </div>
         </q-card-section>
 
         <q-separator inset />
@@ -320,7 +311,6 @@ watch(
           { label: 'Válidas', value: 'validas' },
           { label: 'Todas', value: 'todas' },
         ]"
-        @update:model-value="filtroCertidao()"
       />
       <q-btn
         flat
@@ -336,9 +326,9 @@ watch(
       />
     </q-card-section>
 
-    <q-list v-if="sPessoa.item?.PessoaCertidaoS?.length > 0">
+    <q-list v-if="certidoesFiltradas.length > 0">
       <template
-        v-for="certidao in sPessoa.item?.PessoaCertidaoS"
+        v-for="certidao in certidoesFiltradas"
         v-bind:key="certidao.codpessoacertidao"
       >
         <q-separator inset />

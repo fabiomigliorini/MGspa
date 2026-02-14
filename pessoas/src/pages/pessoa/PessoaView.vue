@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import CardDetalhesPessoa from "components/pessoa/CardDetalhesPessoa.vue";
@@ -19,12 +19,8 @@ import { formataFromNow } from "src/utils/formatador";
 
 const route = useRoute();
 const sPessoa = pessoaStore();
-const totalNegocioPessoa = ref([]);
-
-async function carregarPessoa(id) {
+function carregarPessoa(id) {
   sPessoa.get(id);
-  const ret = await sPessoa.totaisNegocios(1, { codpessoa: id });
-  totalNegocioPessoa.value = ret.data;
 }
 
 onMounted(() => {
@@ -64,8 +60,8 @@ watch(
           <q-item class="q-pt-lg q-pb-sm">
             <q-item-section avatar>
               <q-avatar
-                color="grey-9"
-                text-color="grey-5"
+                color="grey-8"
+                text-color="grey-4"
                 size="80px"
                 v-if="sPessoa.item.fantasia"
               >

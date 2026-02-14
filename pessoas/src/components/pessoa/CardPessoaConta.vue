@@ -211,7 +211,7 @@ const submit = () => {
   <!-- Dialog nova conta -->
   <q-dialog v-model="dialogNovaConta">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline row">
+      <q-card-section class="text-grey-9 text-overline row items-center">
         <template v-if="editarConta === false">NOVA CONTA BANCÁRIA</template>
         <template v-else>EDITAR CONTA BANCÁRIA</template>
       </q-card-section>

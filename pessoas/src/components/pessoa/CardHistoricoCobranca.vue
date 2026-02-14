@@ -172,7 +172,7 @@ watch(
       <q-form
         @submit="submit()"
       >
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           <template v-if="cobrancaNova">NOVO HISTÓRICO DE COBRANÇA</template>
           <template v-else>EDITAR HISTÓRICO DE COBRANÇA</template>
         </q-card-section>
@@ -204,7 +204,7 @@ watch(
 
   <q-infinite-scroll @load="scrollHistorico" :disable="loading">
     <q-card bordered flat>
-      <q-card-section class="text-grey-9 text-overline row">
+      <q-card-section class="text-grey-9 text-overline row items-center">
         HISTÓRICO DE COBRANÇA
         <q-space />
         <q-btn

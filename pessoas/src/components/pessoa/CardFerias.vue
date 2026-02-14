@@ -12,6 +12,7 @@ const $q = useQuasar();
 const sColaborador = colaboradorStore();
 const model = ref({});
 const dialogEditar = ref(false);
+const editarFerias = ref(false);
 
 const feriasOrdenadas = computed(() =>
   [...(props.colaborador.Ferias || [])].sort(
@@ -66,6 +67,7 @@ function sugereAquisitivoFim() {
 }
 
 function nova(colaborador) {
+  editarFerias.value = false;
   dialogEditar.value = true;
   const aquisitivo = calculaPeriodoAquisitivo(colaborador);
   const aquisitivoinicio = aquisitivo.inicio;
@@ -90,7 +92,7 @@ function nova(colaborador) {
   };
 }
 
-async function salvar() {
+function preparaModel() {
   const m = { ...model.value };
 
   if (m.gozo == null) {
@@ -100,7 +102,7 @@ async function salvar() {
       icon: "error",
       message: "Selecione o período de Gozo das Férias!",
     });
-    return;
+    return null;
   }
 
   m.aquisitivoinicio = moment(m.aquisitivoinicio, "DD/MM/YYYY").format(
@@ -110,49 +112,60 @@ async function salvar() {
   m.gozoinicio = moment(m.gozo.from, "DD/MM/YYYY").format("YYYY-MM-DD");
   m.gozofim = moment(m.gozo.to, "DD/MM/YYYY").format("YYYY-MM-DD");
   delete m.gozo;
+  return m;
+}
 
-  if (m.codferias) {
-    try {
-      const ret = await sColaborador.putFerias(m);
-      if (ret.data.data) {
-        $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Férias Alterada!",
-        });
-        dialogEditar.value = false;
-      }
-    } catch (error) {
+async function novaFerias() {
+  const m = preparaModel();
+  if (!m) return;
+  try {
+    const ret = await sColaborador.postFerias(m);
+    if (ret.data.data) {
       $q.notify({
-        color: "red-5",
+        color: "green-5",
         textColor: "white",
-        icon: "error",
-        message: error.response.data.message,
+        icon: "done",
+        message: "Férias Criada!",
       });
+      dialogEditar.value = false;
     }
-  } else {
-    try {
-      const ret = await sColaborador.postFerias(m);
-      if (ret.data.data) {
-        $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Férias Criada!",
-        });
-        dialogEditar.value = false;
-      }
-    } catch (error) {
-      $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: error.response.data.message,
-      });
-    }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response.data.message,
+    });
   }
 }
+
+async function salvarFerias() {
+  const m = preparaModel();
+  if (!m) return;
+  try {
+    const ret = await sColaborador.putFerias(m);
+    if (ret.data.data) {
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Férias Alterada!",
+      });
+      dialogEditar.value = false;
+    }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response.data.message,
+    });
+  }
+}
+
+const submit = () => {
+  editarFerias.value ? salvarFerias() : novaFerias();
+};
 
 async function excluir(ferias) {
   $q.dialog({
@@ -192,6 +205,7 @@ function editar(ferias) {
   delete m.gozoinicio;
   delete m.gozofim;
   model.value = m;
+  editarFerias.value = true;
   dialogEditar.value = true;
 }
 
@@ -367,11 +381,13 @@ defineExpose({ nova });
 
   <!-- Dialog novo Colaborador Ferias -->
   <q-dialog v-model="dialogEditar">
-    <q-card style="min-width: 350px">
-      <q-form @submit="salvar()">
-        <q-card-section>
-          <div class="text-h6">Férias</div>
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
+      <q-form @submit="submit()">
+        <q-card-section class="text-grey-9 text-overline row items-center">
+          <template v-if="editarFerias">EDITAR FÉRIAS</template>
+          <template v-else>NOVA FÉRIAS</template>
         </q-card-section>
+        <q-separator inset />
         <q-card-section>
           <div class="row q-col-gutter-md">
             <!-- DIAS -->

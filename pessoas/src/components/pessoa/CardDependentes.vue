@@ -148,7 +148,7 @@ const editar = (dep, modo) => {
   dialogDependente.value = true;
 };
 
-const salvar = async () => {
+const submit = async () => {
   const codpessoaAtual = route.params.id;
 
   // Monta o payload conforme o modo
@@ -301,12 +301,12 @@ const ativar = async (coddependente) => {
   <!-- DIALOG NOVO/EDITAR DEPENDENTE -->
   <q-dialog v-model="dialogDependente" persistent>
     <q-card bordered flat style="width: 600px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline row">
+      <q-card-section class="text-grey-9 text-overline row items-center">
         <template v-if="isNovo">NOVO DEPENDENTE</template>
         <template v-else>EDITAR DEPENDENTE</template>
       </q-card-section>
 
-      <q-form @submit="salvar">
+      <q-form @submit="submit()">
         <q-separator inset />
 
         <q-card-section class="q-pt-none scroll" style="max-height: 60vh">

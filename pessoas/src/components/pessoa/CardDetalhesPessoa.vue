@@ -238,7 +238,7 @@ const salvarDetalhes = async () => {
   <q-dialog v-model="DialogDetalhes">
     <q-card bordered flat style="width: 800px; max-width: 80vw">
       <q-form @submit="salvarDetalhes()">
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           EDITAR DETALHES
         </q-card-section>
 
@@ -513,7 +513,7 @@ const salvarDetalhes = async () => {
   <q-dialog v-model="DialogMercos">
     <q-card bordered flat style="width: 300px">
       <q-form @submit="salvarMercos">
-        <q-card-section class="text-grey-9 text-overline row">
+        <q-card-section class="text-grey-9 text-overline row items-center">
           TRANSFERIR MERCOS ID
         </q-card-section>
 

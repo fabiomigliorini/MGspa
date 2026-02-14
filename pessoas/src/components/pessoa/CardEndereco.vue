@@ -331,7 +331,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
   <!-- DIALOG NOVO/EDITAR ENDEREÇO -->
   <q-dialog v-model="dialogEndereco">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline row">
+      <q-card-section class="text-grey-9 text-overline row items-center">
         <template v-if="enderecoNovo"> NOVO ENDEREÇO </template>
         <template v-else> EDITAR ENDEREÇO </template>
       </q-card-section>
