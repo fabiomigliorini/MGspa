@@ -682,12 +682,15 @@ const salvarDetalhes = async () => {
       <div class="col-6" v-if="sPessoa.item.codgrupoeconomico">
         <div class="text-overline text-grey-7">Grupo Economico</div>
         <div class="text-body2">
-          <router-link
+          <q-btn
+            flat
+            dense
+            no-caps
+            padding="0"
+            color="primary"
             :to="'/grupoeconomico/' + sPessoa.item.codgrupoeconomico"
-            class="text-primary"
-          >
-            {{ sPessoa.item.GrupoEconomico.grupoeconomico }}
-          </router-link>
+            :label="sPessoa.item.GrupoEconomico.grupoeconomico"
+          />
         </div>
       </div>
 
